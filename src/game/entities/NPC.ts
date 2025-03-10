@@ -103,7 +103,7 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     
     // Handle movement based on pattern
     if (this.movementPattern === 'patrol' && this.patrolPoints.length > 0) {
-      this.handlePatrolMovement(time, delta);
+      this.handlePatrolMovement(delta);
     }
     
     // Add some idle animation
@@ -114,7 +114,7 @@ export class NPC extends Phaser.Physics.Arcade.Sprite {
     }
   }
   
-  private handlePatrolMovement(time: number, delta: number): void {
+  private handlePatrolMovement(delta: number): void {
     const target = this.patrolPoints[this.currentPatrolIndex];
     
     // Check if we need to wait at the current point

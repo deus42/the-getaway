@@ -8,7 +8,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   
   private isMoving: boolean = false;
   private isSprinting: boolean = false;
-  private staminaRegenTimer: Phaser.Time.TimerEvent | null = null;
   
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private sprintKey: Phaser.Input.Keyboard.Key;
@@ -28,12 +27,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDrag(0.2);
     
     // Set up controls
+    if (!scene.input.keyboard) {
+      throw new Error('Keyboard input not available');
+    }
+    
     this.cursors = scene.input.keyboard.createCursorKeys();
     this.sprintKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
     this.interactKey = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     
     // Set up stamina regeneration
-    this.staminaRegenTimer = scene.time.addEvent({
+    scene.time.addEvent({
       delay: 100,
       callback: this.regenStamina,
       callbackScope: this,
@@ -80,7 +83,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
     
     // Normalize diagonal movement
-    if (this.body.velocity.x !== 0 && this.body.velocity.y !== 0) {
+    if (this.body && this.body.velocity.x !== 0 && this.body.velocity.y !== 0) {
       this.body.velocity.normalize().scale(currentSpeed);
     }
     

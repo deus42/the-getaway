@@ -84,17 +84,15 @@ export class BootScene extends Phaser.Scene {
   }
 
   private loadAssets(): void {
-    // Load simple images instead of trying to load spritesheets from SVGs
+    // Player character
     this.load.image('player', 'assets/images/player.svg');
-    this.load.image('npc-resistance', 'assets/images/player.svg');
+    
+    // NPCs
     this.load.image('npc-civilian', 'assets/images/player.svg'); 
     this.load.image('npc-regime', 'assets/images/player.svg');
     
     // Tileset for the map
     this.load.image('tileset', 'assets/images/tileset.svg');
-    
-    // Audio - temporarily disabled due to file issue
-    // this.load.audio('background', 'assets/audio/background.mp3');
   }
   
   private createGameTextures(): void {
