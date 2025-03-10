@@ -71,21 +71,89 @@ export class BootScene extends Phaser.Scene {
       loadingText.destroy();
       percentText.destroy();
       assetText.destroy();
+      
+      // Create textures needed for the game before transitioning
+      this.createGameTextures();
+      
+      // Start the main menu scene
       this.scene.start('MainMenuScene');
     });
     
-    // Load assets
+    // Load assets - use direct image loads instead of spritesheets for now
     this.loadAssets();
   }
 
   private loadAssets(): void {
-    // Images
-    this.load.svg('player', 'assets/images/player.svg');
-    this.load.svg('tileset', 'assets/images/tileset.svg');
+    // Load simple images instead of trying to load spritesheets from SVGs
+    this.load.image('player', 'assets/images/player.svg');
+    this.load.image('npc-resistance', 'assets/images/player.svg');
+    this.load.image('npc-civilian', 'assets/images/player.svg'); 
+    this.load.image('npc-regime', 'assets/images/player.svg');
     
-    // Audio - Creating empty audio file for now
-    this.load.audio('background', 'assets/audio/background.mp3');
+    // Tileset for the map
+    this.load.image('tileset', 'assets/images/tileset.svg');
     
-    // Add more assets as needed
+    // Audio - temporarily disabled due to file issue
+    // this.load.audio('background', 'assets/audio/background.mp3');
+  }
+  
+  private createGameTextures(): void {
+    // Create programmer art for player character
+    const graphics = this.make.graphics({ x: 0, y: 0 });
+    
+    // Player texture
+    graphics.clear();
+    graphics.fillStyle(0x3B6EFF); // Blue player
+    graphics.fillCircle(16, 10, 6); // Head
+    graphics.fillRect(10, 16, 12, 16); // Body
+    graphics.fillRect(8, 20, 4, 10); // Left arm
+    graphics.fillRect(20, 20, 4, 10); // Right arm
+    graphics.generateTexture('player-texture', 32, 32);
+    
+    // Resistance NPC texture
+    graphics.clear();
+    graphics.fillStyle(0x6666FF); // Resistance color 
+    graphics.fillCircle(16, 10, 6);
+    graphics.fillRect(10, 16, 12, 16);
+    graphics.fillRect(8, 20, 4, 10);
+    graphics.fillRect(20, 20, 4, 10);
+    graphics.generateTexture('resistance-texture', 32, 32);
+    
+    // Smuggler NPC texture
+    graphics.clear(); 
+    graphics.fillStyle(0xFF6666); // Smuggler color
+    graphics.fillCircle(16, 10, 6);
+    graphics.fillRect(10, 16, 12, 16);
+    graphics.fillRect(8, 20, 4, 10);
+    graphics.fillRect(20, 20, 4, 10);
+    graphics.generateTexture('smuggler-texture', 32, 32);
+    
+    // Refugee NPC texture
+    graphics.clear();
+    graphics.fillStyle(0x66FF66); // Refugee color
+    graphics.fillCircle(16, 10, 6);
+    graphics.fillRect(10, 16, 12, 16);
+    graphics.fillRect(8, 20, 4, 10);
+    graphics.fillRect(20, 20, 4, 10);
+    graphics.generateTexture('refugee-texture', 32, 32);
+    
+    // Item textures
+    graphics.clear();
+    graphics.fillStyle(0xFF0000);
+    graphics.fillRect(0, 0, 20, 20);
+    graphics.generateTexture('medkit-texture', 20, 20);
+    
+    graphics.clear();
+    graphics.fillStyle(0xFFFF00);
+    graphics.fillRect(0, 0, 20, 20);
+    graphics.generateTexture('ammo-texture', 20, 20);
+    
+    graphics.clear();
+    graphics.fillStyle(0x00FF00);
+    graphics.fillRect(0, 0, 20, 20);
+    graphics.generateTexture('food-texture', 20, 20);
+    
+    // Debug to ensure the scene is working
+    console.log('Game textures created successfully');
   }
 } 

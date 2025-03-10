@@ -86,11 +86,9 @@ export class MainMenuScene extends Phaser.Scene {
 
     // Create a background atmosphere with dark gradient
     const graphics = this.add.graphics();
-    const gradient = graphics.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, '#000033');
-    gradient.addColorStop(1, '#000000');
     
-    graphics.fillStyle(gradient);
+    // Using a solid color instead of gradient since createLinearGradient isn't supported
+    graphics.fillStyle(0x000033, 1);
     graphics.fillRect(0, 0, width, height);
     graphics.setDepth(-1);
   }
