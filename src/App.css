@@ -1,0 +1,65 @@
+/* Custom styles */
+
+/* Header styles */
+.app-header {
+  background-color: #121212;
+  padding: 1rem;
+  border-bottom: 1px solid #333;
+  text-align: center;
+}
+
+.app-header h1 {
+  font-size: 1.5rem;
+  line-height: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #ff3b3b;
+  font-weight: 700;
+  text-shadow: 0 0 10px rgba(255, 59, 59, 0.6);
+}
+
+.app-header .subtitle {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: #9ca3af;
+  display: block;
+  margin-top: 0.25rem;
+}
+
+/* Game container styles */
+.game-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #000;
+  overflow: hidden;
+}
+
+.game-container canvas {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* Footer styles */
+.app-footer {
+  background-color: #121212;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #666;
+  border-top: 1px solid #333;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .app-header h1 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+  
+  .app-header .subtitle {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+}

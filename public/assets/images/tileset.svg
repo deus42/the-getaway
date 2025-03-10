@@ -1,0 +1,19 @@
+<svg width="96" height="32" viewBox="0 0 96 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Ground tile -->
+  <rect x="0" y="0" width="32" height="32" fill="#333333"/>
+  <rect x="4" y="4" width="4" height="4" fill="#444444"/>
+  <rect x="16" y="12" width="6" height="6" fill="#444444"/>
+  <rect x="24" y="24" width="4" height="4" fill="#444444"/>
+  
+  <!-- Wall tile -->
+  <rect x="32" y="0" width="32" height="32" fill="#555555"/>
+  <rect x="32" y="0" width="32" height="4" fill="#666666"/>
+  <rect x="32" y="8" width="32" height="4" fill="#666666"/>
+  <rect x="32" y="16" width="32" height="4" fill="#666666"/>
+  <rect x="32" y="24" width="32" height="4" fill="#666666"/>
+  
+  <!-- Obstacle tile -->
+  <rect x="64" y="0" width="32" height="32" fill="#772222"/>
+  <path d="M64 0L96 32" stroke="#993333" stroke-width="2"/>
+  <path d="M96 0L64 32" stroke="#993333" stroke-width="2"/>
+</svg> 
