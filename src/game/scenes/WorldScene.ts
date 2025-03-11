@@ -27,20 +27,26 @@ export class WorldScene extends Phaser.Scene {
     // Set up world boundaries (will be replaced with tilemap dimensions)
     this.physics.world.setBounds(0, 0, 2000, 2000);
     
-    // Create a simple background (will be replaced with tilemap)
-    const background = this.add.rectangle(0, 0, 2000, 2000, 0x333333);
+    // Create a more atmospheric background
+    const background = this.add.rectangle(0, 0, 2000, 2000, 0x111111);
     background.setOrigin(0);
     
-    // Create simple "buildings" - will be replaced with tilemap
-    this.createSimpleCity();
+    // Add atmospheric elements - distant city lights
+    this.createAtmosphericBackground();
     
-    // Create player
+    // Create a dystopian city with our new textures
+    this.createDystopianCity();
+    
+    // Create player with enhanced sprite
     this.player = new Player(this, 400, 300);
     
     // Setup camera
     this.cameras.main.setBounds(0, 0, 2000, 2000);
     this.cameras.main.startFollow(this.player, true, 0.5, 0.5);
     this.cameras.main.setZoom(1);
+    
+    // Add a subtle vignette effect
+    this.addVignetteEffect();
     
     // Create systems
     this.dialogSystem = new DialogSystem(this);
@@ -96,79 +102,269 @@ export class WorldScene extends Phaser.Scene {
     this.checkDangerZones();
   }
   
-  private createSimpleCity(): void {
+  private createAtmosphericBackground(): void {
+    // Add a gradient background
+    const gradientTexture = this.createGradientTexture();
+    const background = this.add.image(0, 0, gradientTexture);
+    background.setOrigin(0);
+    background.setScale(2000 / 256, 2000 / 256);
+    background.setDepth(-100);
+    
+    // Add distant lights
+    for (let i = 0; i < 100; i++) {
+      const x = Phaser.Math.Between(0, 2000);
+      const y = Phaser.Math.Between(0, 2000);
+      
+      // Small distant light
+      const lightSize = Phaser.Math.Between(1, 3);
+      const light = this.add.rectangle(x, y, lightSize, lightSize, 0xAAFFFF, 0.3);
+      light.setDepth(-90);
+      
+      // Add a subtle pulse animation
+      this.tweens.add({
+        targets: light,
+        alpha: { from: 0.2, to: 0.4 },
+        duration: Phaser.Math.Between(1000, 3000),
+        yoyo: true,
+        repeat: -1
+      });
+    }
+    
+    // Add distant city silhouette
+    for (let x = 0; x < 2000; x += 40) {
+      const height = Phaser.Math.Between(10, 80);
+      const building = this.add.rectangle(x, 2000 - height, 30, height, 0x222222);
+      building.setOrigin(0, 0);
+      building.setDepth(-80);
+      
+      // Add some windows
+      for (let y = 2000 - height + 10; y < 2000 - 5; y += 15) {
+        if (Math.random() > 0.7) {
+          const window = this.add.rectangle(x + 10, y, 4, 4, 0xFFFF99, 0.4);
+          window.setDepth(-79);
+        }
+      }
+    }
+  }
+  
+  private createGradientTexture(): string {
+    const textureKey = 'gradient-bg';
+    
+    // Don't recreate if exists
+    if (this.textures.exists(textureKey)) {
+      return textureKey;
+    }
+    
+    // Create a gradient background texture
+    const size = 256;
+    const canvas = this.textures.createCanvas(textureKey, size, size);
+    const ctx = canvas.getContext();
+    
+    // Create a gradient
+    const gradient = ctx.createLinearGradient(0, 0, 0, size);
+    gradient.addColorStop(0, '#0A0A0F');
+    gradient.addColorStop(0.4, '#111318');
+    gradient.addColorStop(1, '#1A1A22');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+    
+    // Add some "stars"
+    ctx.fillStyle = '#FFFFFF';
+    for (let i = 0; i < 50; i++) {
+      const x = Math.random() * size;
+      const y = Math.random() * size;
+      const radius = Math.random() * 1;
+      ctx.globalAlpha = Math.random() * 0.5;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    canvas.refresh();
+    return textureKey;
+  }
+  
+  private createDystopianCity(): void {
     // This will be replaced with a proper tilemap
     this.obstacles = this.physics.add.staticGroup();
     
-    // Create a grid of "buildings"
+    // Create a grid of buildings with our new textures
     const gridSize = 5;
     const cellSize = 350;
-    const buildingColors = [0x555555, 0x666666, 0x777777]; // Different building colors
     
+    // Building types
+    const buildingTypes = [
+      'building-corporate',
+      'building-residential',
+      'building-government'
+    ];
+    
+    // Create a city grid
     for (let x = 0; x < gridSize; x++) {
       for (let y = 0; y < gridSize; y++) {
         if (Math.random() > 0.3) { // 70% chance of a building
           const buildingX = 100 + x * cellSize;
           const buildingY = 100 + y * cellSize;
-          const width = Phaser.Math.Between(50, 200);
-          const height = Phaser.Math.Between(50, 200);
-          const color = Phaser.Utils.Array.GetRandom(buildingColors);
           
-          const building = this.add.rectangle(buildingX, buildingY, width, height, color);
+          // Select a building type
+          const buildingType = Phaser.Utils.Array.GetRandom(buildingTypes);
           
-          // Add some details to buildings
-          this.add.rectangle(
-            buildingX, 
-            buildingY + height / 2 - 10, 
-            width * 0.8, 
-            10, 
-            0x000000, 
-            0.3
-          );
+          // Scale and size depend on building type
+          let scaleX = 1;
+          let scaleY = 1;
+          
+          switch (buildingType) {
+            case 'building-corporate':
+              scaleX = Phaser.Math.FloatBetween(0.8, 1.2);
+              scaleY = Phaser.Math.FloatBetween(0.9, 1.4);
+              break;
+            case 'building-residential':
+              scaleX = Phaser.Math.FloatBetween(1.0, 1.6);
+              scaleY = Phaser.Math.FloatBetween(1.0, 1.3);
+              break;
+            case 'building-government':
+              scaleX = Phaser.Math.FloatBetween(1.0, 1.3);
+              scaleY = 1;
+              break;
+          }
+          
+          // Create the building with our new texture
+          const building = this.add.image(buildingX, buildingY, buildingType);
+          building.setScale(scaleX, scaleY);
+          building.setOrigin(0.5);
+          
+          // Add a physics body for collision
+          this.physics.add.existing(building, true);
           
           // Add to obstacles group
           this.obstacles.add(building);
           
-          // Add shadows for depth
-          const shadow = this.add.rectangle(
-            buildingX + 10, 
-            buildingY + 10, 
-            width, 
-            height, 
-            0x000000, 
-            0.5
-          );
-          shadow.setDepth(-1);
+          // Add some post-processing for dystopian feel
+          if (Math.random() > 0.7) {
+            // Add smoke particles from some buildings
+            this.createSmokeEmitter(buildingX, buildingY - (building.height * scaleY) / 2);
+          }
+          
+          // Add neon signs to some buildings
+          if (Math.random() > 0.8) {
+            this.createNeonSign(buildingX, buildingY);
+          }
         }
       }
     }
     
-    // Add some roads
-    for (let x = 0; x < gridSize + 1; x++) {
-      const roadX = x * cellSize;
-      const road = this.add.rectangle(roadX, 1000, 30, 2000, 0x333333);
-      road.setDepth(-2);
+    // Add roads using our road texture
+    this.createRoads(gridSize, cellSize);
+  }
+  
+  private createRoads(gridSize: number, cellSize: number): void {
+    // Create horizontal roads
+    for (let y = 0; y <= gridSize; y++) {
+      const roadY = y * cellSize;
+      const road = this.add.tileSprite(0, roadY, 2000, 50, 'road-texture');
+      road.setOrigin(0, 0.5);
+      road.setDepth(-10);
       
-      // Add road lines
-      const lineY = 100;
-      for (let y = 0; y < 20; y++) {
-        const line = this.add.rectangle(roadX, lineY + y * 100, 5, 30, 0xffffff, 0.5);
-        line.setDepth(-1);
+      // Add some details to the roads
+      for (let x = 100; x < 2000; x += 200) {
+        if (Math.random() > 0.7) {
+          // Random road debris
+          const debris = this.add.rectangle(x, roadY + Phaser.Math.Between(-20, 20), 
+            Phaser.Math.Between(4, 10), Phaser.Math.Between(4, 10), 0x888888);
+          debris.setDepth(-9);
+        }
       }
     }
     
-    for (let y = 0; y < gridSize + 1; y++) {
-      const roadY = y * cellSize;
-      const road = this.add.rectangle(1000, roadY, 2000, 30, 0x333333);
-      road.setDepth(-2);
-      
-      // Add road lines
-      const lineX = 100;
-      for (let x = 0; x < 20; x++) {
-        const line = this.add.rectangle(lineX + x * 100, roadY, 30, 5, 0xffffff, 0.5);
-        line.setDepth(-1);
-      }
+    // Create vertical roads
+    for (let x = 0; x <= gridSize; x++) {
+      const roadX = x * cellSize;
+      const road = this.add.tileSprite(roadX, 0, 50, 2000, 'road-texture');
+      road.setOrigin(0.5, 0);
+      road.setDepth(-10);
+      road.angle = 90;
     }
+  }
+  
+  private createSmokeEmitter(x: number, y: number): void {
+    const particles = this.add.particles(x, y, 'particle', {
+      angle: { min: 240, max: 300 },
+      speed: { min: 10, max: 30 },
+      quantity: 1,
+      lifespan: { min: 2000, max: 4000 },
+      alpha: { start: 0.2, end: 0 },
+      scale: { min: 0.5, max: 1.5 },
+      tint: [0x666666, 0x777777, 0x888888],
+      frequency: 500
+    });
+    
+    particles.setDepth(10);
+  }
+  
+  private createNeonSign(x: number, y: number): void {
+    const signTexts = [
+      'NEON', 'CYBER', 'CLUB', 'BAR', '2036', 'CAFE',
+      'HOTEL', 'SYNTH', 'DATA', 'TECH', 'CORP'
+    ];
+    
+    const colors = [0xFF3366, 0x33CCFF, 0x66FF33, 0xFFCC00];
+    const text = Phaser.Utils.Array.GetRandom(signTexts);
+    const color = Phaser.Utils.Array.GetRandom(colors);
+    
+    // Create neon sign text
+    const sign = this.add.text(x, y, text, {
+      fontFamily: 'monospace',
+      fontSize: '24px'
+    });
+    sign.setOrigin(0.5);
+    sign.setTint(color);
+    sign.setDepth(5);
+    
+    // Add glow effect
+    sign.setShadow(0, 0, color, 8, false, true);
+    
+    // Flickering animation for neon effect
+    this.tweens.add({
+      targets: sign,
+      alpha: { from: 0.7, to: 1 },
+      duration: Phaser.Math.Between(500, 2000),
+      yoyo: true,
+      repeat: -1
+    });
+  }
+  
+  private addVignetteEffect(): void {
+    // Create a vignette effect (darkened edges)
+    const width = this.scale.width;
+    const height = this.scale.height;
+    
+    const vignetteKey = 'vignette';
+    const graphics = this.make.graphics({});
+    
+    // Create a radial gradient for the vignette
+    const canvas = this.textures.createCanvas(vignetteKey, width, height);
+    const ctx = canvas.getContext();
+    
+    const gradient = ctx.createRadialGradient(
+      width / 2, height / 2, height * 0.3,
+      width / 2, height / 2, height * 0.7
+    );
+    
+    gradient.addColorStop(0, 'rgba(0,0,0,0)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0.8)');
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+    
+    canvas.refresh();
+    
+    // Add the vignette as an overlay
+    const vignette = this.add.image(0, 0, vignetteKey);
+    vignette.setOrigin(0);
+    vignette.setScrollFactor(0);
+    vignette.setDepth(1000);
+    vignette.setAlpha(0.7);
   }
   
   private createNPCs(): void {

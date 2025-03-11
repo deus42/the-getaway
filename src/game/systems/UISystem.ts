@@ -34,116 +34,188 @@ export class UISystem {
   }
   
   private createHealthBar(): void {
-    // Background
-    const healthBg = this.scene.add.rectangle(20, 20, 200, 20, 0x000000, 0.7);
+    // Create styled container
+    const healthContainer = this.scene.add.container(20, 20);
+    
+    // Background with scanlines effect
+    const healthBg = this.scene.add.rectangle(0, 0, 200, 30, 0x000000, 0.5);
     healthBg.setOrigin(0);
-    healthBg.setStrokeStyle(1, 0xffffff);
+    healthBg.setStrokeStyle(2, 0xff3b3b);
     
-    // Health bar
+    // Add scanlines overlay
+    const scanlines = this.scene.add.image(0, 0, 'scanlines');
+    scanlines.setOrigin(0);
+    scanlines.setAlpha(0.1);
+    scanlines.setDisplaySize(200, 30);
+    
+    // Create a red glowing bar
     this.healthBar = this.scene.add.graphics();
-    this.updateHealthBar();
     
-    // Icon and label
-    const healthIcon = this.scene.add.text(10, 20, '❤️', { fontSize: '16px' });
-    healthIcon.setOrigin(0, 0.5);
-    
-    const healthLabel = this.scene.add.text(230, 20, 'Health', {
-      fontFamily: 'Arial',
+    // Add label with cyberpunk style
+    const healthLabel = this.scene.add.text(10, 15, 'Health', {
+      fontFamily: 'monospace',
       fontSize: '14px',
       color: '#ff3b3b'
     });
     healthLabel.setOrigin(0, 0.5);
+    healthLabel.setShadow(0, 0, '#ff0000', 5);
     
     // Add to container
-    this.container.add([healthBg, this.healthBar, healthIcon, healthLabel]);
+    healthContainer.add([healthBg, this.healthBar, scanlines, healthLabel]);
+    this.container.add(healthContainer);
+    
+    // Update the initial state
+    this.updateHealthBar();
   }
   
   private createStaminaBar(): void {
-    // Background
-    const staminaBg = this.scene.add.rectangle(20, 50, 200, 10, 0x000000, 0.7);
+    // Create styled container
+    const staminaContainer = this.scene.add.container(20, 60);
+    
+    // Background with scanlines effect
+    const staminaBg = this.scene.add.rectangle(0, 0, 200, 20, 0x000000, 0.5);
     staminaBg.setOrigin(0);
-    staminaBg.setStrokeStyle(1, 0xffffff);
+    staminaBg.setStrokeStyle(2, 0xffcc00);
     
-    // Stamina bar
+    // Add scanlines overlay
+    const scanlines = this.scene.add.image(0, 0, 'scanlines');
+    scanlines.setOrigin(0);
+    scanlines.setAlpha(0.1);
+    scanlines.setDisplaySize(200, 20);
+    
+    // Create a yellow glowing bar
     this.staminaBar = this.scene.add.graphics();
-    this.updateStaminaBar();
     
-    // Icon and label
-    const staminaIcon = this.scene.add.text(10, 50, '⚡', { fontSize: '14px' });
-    staminaIcon.setOrigin(0, 0.5);
-    
-    const staminaLabel = this.scene.add.text(230, 50, 'Stamina', {
-      fontFamily: 'Arial',
+    // Add label with cyberpunk style
+    const staminaLabel = this.scene.add.text(10, 10, 'Stamina', {
+      fontFamily: 'monospace',
       fontSize: '12px',
       color: '#ffcc00'
     });
     staminaLabel.setOrigin(0, 0.5);
+    staminaLabel.setShadow(0, 0, '#ffaa00', 5);
     
     // Add to container
-    this.container.add([staminaBg, this.staminaBar, staminaIcon, staminaLabel]);
+    staminaContainer.add([staminaBg, this.staminaBar, scanlines, staminaLabel]);
+    this.container.add(staminaContainer);
+    
+    // Update the initial state
+    this.updateStaminaBar();
   }
   
   private createMinimap(): void {
-    // Minimap background
-    const minimapBg = this.scene.add.rectangle(
-      this.scene.cameras.main.width - 120, 
-      120, 
-      200, 
-      200, 
-      0x000000, 
-      0.7
+    // Container positioned at top-right corner
+    const minimapContainer = this.scene.add.container(
+      this.scene.cameras.main.width - 150,
+      20
     );
-    minimapBg.setOrigin(0.5);
-    minimapBg.setStrokeStyle(2, 0xff3b3b);
     
-    // Minimap
+    // Create styled border
+    const minimapBorder = this.scene.add.rectangle(0, 0, 120, 120, 0x000000, 0.7);
+    minimapBorder.setOrigin(0);
+    minimapBorder.setStrokeStyle(2, 0xff3b3b);
+    
+    // Create actual minimap graphics
     this.minimap = this.scene.add.graphics();
-    this.updateMinimap();
+    this.minimap.setX(0);
+    this.minimap.setY(0);
+    
+    // Create grid lines for the minimap
+    const gridGraphics = this.scene.add.graphics();
+    gridGraphics.lineStyle(1, 0x333333, 0.5);
+    
+    // Draw grid lines
+    for (let i = 0; i <= 120; i += 20) {
+      gridGraphics.moveTo(i, 0);
+      gridGraphics.lineTo(i, 120);
+      gridGraphics.moveTo(0, i);
+      gridGraphics.lineTo(120, i);
+    }
+    gridGraphics.strokePath();
+    
+    // Add scanlines effect
+    const scanlines = this.scene.add.image(0, 0, 'scanlines');
+    scanlines.setOrigin(0);
+    scanlines.setAlpha(0.1);
+    scanlines.setDisplaySize(120, 120);
+    
+    // Add minimap label
+    const minimapLabel = this.scene.add.text(60, -10, 'TACTICAL MAP', {
+      fontFamily: 'monospace',
+      fontSize: '10px',
+      color: '#ffffff'
+    });
+    minimapLabel.setOrigin(0.5, 0);
     
     // Add to container
-    this.container.add([minimapBg, this.minimap]);
+    minimapContainer.add([minimapBorder, gridGraphics, this.minimap, scanlines, minimapLabel]);
+    this.container.add(minimapContainer);
   }
   
   private createLocationDisplay(): void {
-    // Location text
-    this.locationText = this.scene.add.text(
-      this.scene.cameras.main.width / 2, 
-      20, 
-      'Miami Underground - 2036', 
-      {
-        fontFamily: 'Arial',
-        fontSize: '18px',
-        color: '#ffffff',
-        fontStyle: 'bold',
-        backgroundColor: '#00000080',
-        padding: { x: 10, y: 5 }
-      }
+    // Container at the top center
+    const locationContainer = this.scene.add.container(
+      this.scene.cameras.main.width / 2,
+      20
     );
-    this.locationText.setOrigin(0.5, 0);
+    
+    // Create a styled background
+    const locationBg = this.scene.add.rectangle(0, 0, 300, 40, 0x000000, 0.5);
+    locationBg.setOrigin(0.5, 0);
+    locationBg.setStrokeStyle(1, 0x666666);
+    
+    // Location text with style
+    this.locationText = this.scene.add.text(0, 20, 'Downtown Miami', {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      fontStyle: 'bold',
+      color: '#ffffff'
+    });
+    this.locationText.setOrigin(0.5, 0.5);
+    this.locationText.setShadow(0, 0, '#33ccff', 5);
     
     // Add to container
-    this.container.add(this.locationText);
+    locationContainer.add([locationBg, this.locationText]);
+    this.container.add(locationContainer);
   }
   
   private createObjectiveDisplay(): void {
-    // Objective text
-    this.objectiveText = this.scene.add.text(
-      this.scene.cameras.main.width - 20, 
-      80, 
-      'Objective: Find the resistance', 
-      {
-        fontFamily: 'Arial',
-        fontSize: '14px',
-        color: '#ffffff',
-        align: 'right',
-        backgroundColor: '#00000080',
-        padding: { x: 10, y: 5 }
-      }
+    // Position in the top right of the minimap
+    const objectiveContainer = this.scene.add.container(
+      this.scene.cameras.main.width - 150,
+      150
     );
-    this.objectiveText.setOrigin(1, 0);
+    
+    // Create a styled background
+    const objectiveBg = this.scene.add.rectangle(0, 0, 220, 30, 0x000000, 0.7);
+    objectiveBg.setOrigin(0);
+    objectiveBg.setStrokeStyle(1, 0xff3b3b);
+    
+    // Add scanlines overlay
+    const scanlines = this.scene.add.image(0, 0, 'scanlines');
+    scanlines.setOrigin(0);
+    scanlines.setAlpha(0.1);
+    scanlines.setDisplaySize(220, 30);
+    
+    // Objective text with prefix
+    const objectivePrefix = this.scene.add.text(10, 15, 'Objective:', {
+      fontFamily: 'monospace',
+      fontSize: '12px',
+      color: '#ff3b3b'
+    });
+    objectivePrefix.setOrigin(0, 0.5);
+    
+    // Actual objective text
+    this.objectiveText = this.scene.add.text(85, 15, 'Find the resistance contact', {
+      fontFamily: 'monospace',
+      fontSize: '12px',
+      color: '#ffffff'
+    });
+    this.objectiveText.setOrigin(0, 0.5);
     
     // Add to container
-    this.container.add(this.objectiveText);
+    objectiveContainer.add([objectiveBg, scanlines, objectivePrefix, this.objectiveText]);
+    this.container.add(objectiveContainer);
   }
   
   public update(): void {
@@ -154,70 +226,149 @@ export class UISystem {
   
   private updateHealthBar(): void {
     const health = this.player.getHealth();
+    const maxHealth = this.player.getMaxHealth();
+    const percentage = Math.max(0, health / maxHealth);
     
-    // Clear and redraw health bar
     this.healthBar.clear();
-    this.healthBar.fillStyle(0xff3b3b, 1);
-    this.healthBar.fillRect(20, 20, 200 * (health / 100), 20);
     
-    // Add danger effect when health is low
-    if (health < 25) {
-      this.healthBar.fillStyle(0xff0000, Math.sin(this.scene.time.now / 200) * 0.3 + 0.7);
-      this.healthBar.fillRect(20, 20, 200 * (health / 100), 20);
+    // Draw background 
+    this.healthBar.fillStyle(0x660000);
+    this.healthBar.fillRect(10, 5, 180, 20);
+    
+    // Draw health bar with gradient
+    const color1 = 0xff0000;
+    const color2 = 0xff3b3b;
+    const width = 180 * percentage;
+    
+    // Create gradient effect
+    this.healthBar.fillStyle(color1);
+    this.healthBar.fillRect(10, 5, width, 20);
+    
+    // Add glow effect
+    this.healthBar.fillStyle(color2, 0.3);
+    this.healthBar.fillRect(10, 5, width, 5);
+    
+    // Add segmented bar effect
+    this.healthBar.lineStyle(1, 0x000000, 0.3);
+    for (let i = 0; i < 9; i++) {
+      const x = 10 + (i * 20);
+      this.healthBar.lineBetween(x, 5, x, 25);
     }
   }
   
   private updateStaminaBar(): void {
     const stamina = this.player.getStamina();
+    const maxStamina = this.player.getMaxStamina();
+    const percentage = Math.max(0, stamina / maxStamina);
     
-    // Clear and redraw stamina bar
     this.staminaBar.clear();
-    this.staminaBar.fillStyle(0xffcc00, 1);
-    this.staminaBar.fillRect(20, 50, 200 * (stamina / 100), 10);
+    
+    // Draw background
+    this.staminaBar.fillStyle(0x665500);
+    this.staminaBar.fillRect(10, 5, 180, 10);
+    
+    // Draw stamina bar with gradient
+    const color1 = 0xffaa00;
+    const color2 = 0xffcc00;
+    const width = 180 * percentage;
+    
+    // Create gradient effect
+    this.staminaBar.fillStyle(color1);
+    this.staminaBar.fillRect(10, 5, width, 10);
+    
+    // Add glow effect
+    this.staminaBar.fillStyle(color2, 0.3);
+    this.staminaBar.fillRect(10, 5, width, 3);
+    
+    // Add segmented bar effect
+    this.staminaBar.lineStyle(1, 0x000000, 0.3);
+    for (let i = 0; i < 9; i++) {
+      const x = 10 + (i * 20);
+      this.staminaBar.lineBetween(x, 5, x, 15);
+    }
   }
   
   private updateMinimap(): void {
-    // This would be implemented with actual game world data
-    // For now, we'll just create a simple placeholder
     this.minimap.clear();
     
-    // Draw a simple minimap representation
-    this.minimap.fillStyle(0x333333);
-    this.minimap.fillRect(
-      this.scene.cameras.main.width - 120 - 90, 
-      120 - 90, 
-      180, 
-      180
-    );
+    // Get scene information
+    const worldBounds = this.scene.physics.world.bounds;
+    const minimapSize = 120;
     
-    // Draw obstacles on the minimap (simulated)
-    this.minimap.fillStyle(0x555555);
-    this.minimap.fillRect(
-      this.scene.cameras.main.width - 120 - 60, 
-      120 - 70, 
-      40, 
-      80
-    );
-    this.minimap.fillRect(
-      this.scene.cameras.main.width - 120 + 30, 
-      120 - 20, 
-      60, 
-      40
-    );
-    this.minimap.fillRect(
-      this.scene.cameras.main.width - 120 - 40, 
-      120 + 50, 
-      70, 
-      30
-    );
+    // Scale factors to convert world coordinates to minimap
+    const scaleX = minimapSize / worldBounds.width;
+    const scaleY = minimapSize / worldBounds.height;
     
     // Draw player position
-    this.minimap.fillStyle(0xff3b3b);
-    this.minimap.fillCircle(
-      this.scene.cameras.main.width - 120, 
-      120, 
-      5
-    );
+    const playerX = this.player.x * scaleX;
+    const playerY = this.player.y * scaleY;
+    
+    // Player dot with pulsing effect
+    const time = this.scene.time.now;
+    const pulseScale = 1 + (Math.sin(time / 200) * 0.2);
+    const pulseAlpha = 0.7 + (Math.sin(time / 200) * 0.3);
+    
+    // Draw player indicator with pulsing effects
+    this.minimap.fillStyle(0x00ffff, pulseAlpha);
+    this.minimap.fillCircle(playerX, playerY, 4 * pulseScale);
+    
+    this.minimap.fillStyle(0xffffff);
+    this.minimap.fillCircle(playerX, playerY, 2);
+    
+    // Draw field of view indicator
+    this.minimap.lineStyle(1, 0x00ffff, 0.3);
+    this.minimap.beginPath();
+    this.minimap.arc(playerX, playerY, 15, Math.PI * 1.25, Math.PI * 1.75);
+    this.minimap.strokePath();
+    
+    // Draw static building placeholders for the minimap
+    // This is more reliable than trying to access physics bodies which may cause typing issues
+    this.drawMinimapBuildings(scaleX, scaleY);
+    
+    // Draw a border around the player's current view area
+    const camera = this.scene.cameras.main;
+    const viewX = camera.scrollX * scaleX;
+    const viewY = camera.scrollY * scaleY;
+    const viewWidth = camera.width * scaleX;
+    const viewHeight = camera.height * scaleY;
+    
+    this.minimap.lineStyle(1, 0xff3b3b, 0.8);
+    this.minimap.strokeRect(viewX, viewY, viewWidth, viewHeight);
+  }
+  
+  /**
+   * Draws simplified building representations on the minimap
+   */
+  private drawMinimapBuildings(scaleX: number, scaleY: number): void {
+    // These would ideally be generated based on actual game data
+    // For now, we're using static positions for demonstration
+    const buildingPositions = [
+      { x: 300, y: 300, width: 100, height: 100 },
+      { x: 600, y: 400, width: 150, height: 80 },
+      { x: 800, y: 600, width: 120, height: 120 },
+      { x: 400, y: 800, width: 130, height: 90 },
+      { x: 1000, y: 300, width: 140, height: 110 },
+      { x: 1200, y: 900, width: 100, height: 100 },
+      { x: 1500, y: 500, width: 90, height: 160 },
+      { x: 900, y: 1200, width: 120, height: 100 },
+      { x: 1400, y: 1400, width: 110, height: 110 },
+      { x: 300, y: 1600, width: 140, height: 80 }
+    ];
+    
+    // Draw each building on the minimap
+    buildingPositions.forEach(building => {
+      const x = building.x * scaleX;
+      const y = building.y * scaleY;
+      const width = building.width * scaleX;
+      const height = building.height * scaleY;
+      
+      this.minimap.fillStyle(0x666666, 0.7);
+      this.minimap.fillRect(x, y, width, height);
+      
+      // Add a slight outline to buildings
+      this.minimap.lineStyle(1, 0x444444, 0.5);
+      this.minimap.strokeRect(x, y, width, height);
+    });
   }
   
   public setLocation(locationName: string): void {
