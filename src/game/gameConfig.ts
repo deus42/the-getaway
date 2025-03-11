@@ -2,8 +2,12 @@ import Phaser from 'phaser';
 import { BootScene } from './scenes/BootScene';
 import { WorldScene } from './scenes/WorldScene';
 import { GameOverScene } from './scenes/GameOverScene';
-import { MainMenuScene } from './scenes/MainMenuScene';
+import { MainMenuScene as PhaserMainMenuScene } from './scenes/MainMenuScene';
+import { MainScene } from './engine/MainScene';
 
+/**
+ * Phaser game configuration
+ */
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   width: 1280,
@@ -14,10 +18,16 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     default: 'arcade',
     arcade: {
       gravity: { x: 0, y: 0 },
-      debug: false
+      debug: process.env.NODE_ENV === 'development'
     }
   },
-  scene: [BootScene, MainMenuScene, WorldScene, GameOverScene],
+  scene: [
+    BootScene, 
+    PhaserMainMenuScene, 
+    WorldScene, 
+    MainScene, 
+    GameOverScene
+  ],
   render: {
     pixelArt: true,
     antialias: false,
@@ -32,27 +42,38 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     min: 30
   },
   callbacks: {
-    postBoot: function() {
+    postBoot: function(game) {
       // Apply CSS to make the game container look better
+      console.log('Game post-boot callback executing');
+      
       const container = document.getElementById('game-container');
       if (container) {
         container.style.boxShadow = '0 4px 20px rgba(0,0,0,0.4)';
         container.style.borderRadius = '8px';
         container.style.overflow = 'hidden';
-        
-        // Create a stylish background behind the game
-        document.body.style.backgroundColor = '#1a1a2e';
-        document.body.style.margin = '0';
-        document.body.style.padding = '0';
-        document.body.style.height = '100vh';
-        document.body.style.display = 'flex';
-        document.body.style.justifyContent = 'center';
-        document.body.style.alignItems = 'center';
       }
     }
-  }
+  },
+  // Make sure autoFocus is true to ensure keyboard input works
+  autoFocus: true
 };
 
+/**
+ * Creates and returns a new Phaser game instance
+ */
 export const createGame = (): Phaser.Game => {
-  return new Phaser.Game(gameConfig);
+  console.log('Creating Phaser game with config:', {
+    width: gameConfig.width,
+    height: gameConfig.height,
+    parent: gameConfig.parent,
+    type: gameConfig.type
+  });
+  
+  try {
+    const game = new Phaser.Game(gameConfig);
+    return game;
+  } catch (error) {
+    console.error('Error creating Phaser game instance:', error);
+    throw error;
+  }
 }; 

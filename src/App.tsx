@@ -1,39 +1,35 @@
-import { useEffect, useRef } from "react";
-import { initGame, destroyGame } from "./game/index";
-import "./App.css";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import MainMenu from "./pages/MainMenu";
+import CharacterCreation from "./pages/CharacterCreation";
+import GameView from "./pages/GameView";
+import ErrorBoundary from "./components/ErrorBoundary";
+import PhaserWrapper from "./components/PhaserWrapper";
+import "./styles/index.css";
 
 function App() {
-  const gameContainerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    // Initialize game when component mounts
-    if (gameContainerRef.current) {
-      initGame();
-    }
-
-    // Cleanup on unmount
-    return () => {
-      destroyGame();
-    };
-  }, []);
-
   return (
-    <div className="container-game">
-      <header className="app-header">
-        <h1>The Getaway</h1>
-        <span className="subtitle">Escape from Tyranny</span>
-      </header>
-
-      <main
-        className="game-container"
-        id="game-container"
-        ref={gameContainerRef}
-      ></main>
-
-      <footer className="app-footer">
-        <p>© 2036 Resistance Network - v0.1</p>
-      </footer>
-    </div>
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainMenu />} />
+          <Route path="/character-creation" element={<CharacterCreation />} />
+          <Route
+            path="/game"
+            element={
+              <PhaserWrapper>
+                <GameView />
+              </PhaserWrapper>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ErrorBoundary>
   );
 }
 

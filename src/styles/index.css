@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
+/* Custom dystopian theme styling */
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: var(--color-textcolor);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: var(--font-bold);
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-textcolor);
+  }
+  h1 {
+    font-size: var(--font-size-3xl);
+  }
+  @media (min-width: 768px) {
+    h1 {
+      font-size: var(--font-size-4xl);
+    }
+  }
+  @media (min-width: 1024px) {
+    h1 {
+      font-size: var(--font-size-5xl);
+    }
+  }
+  h2 {
+    font-size: var(--font-size-2xl);
+  }
+  @media (min-width: 768px) {
+    h2 {
+      font-size: var(--font-size-3xl);
+    }
+  }
+  h3 {
+    font-size: var(--font-size-xl);
+  }
+  @media (min-width: 768px) {
+    h3 {
+      font-size: var(--font-size-2xl);
+    }
+  }
+  button {
+    transition-property: all;
+    transition-duration: 200ms;
+    opacity: 1;
+  }
+  button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  .btn {
+    padding-left: var(--spacing-4);
+    padding-right: var(--spacing-4);
+    padding-top: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+    border-radius: var(--rounded);
+    font-weight: var(--font-medium);
+    transition-property: all;
+    transition-duration: 200ms;
+  }
+  .btn:focus {
+    outline: none;
+    --ring-opacity: 0.5;
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+  }
+  .btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: var(--color-textcolor);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-primary-hover);
+  }
+  .btn-primary:focus {
+    --tw-ring-color: rgba(255, 59, 59, 0.5);
+  }
+  .btn-primary:active {
+    background-color: var(--color-primary-dark);
+  }
+  
+  .btn-secondary {
+    background-color: var(--color-surface);
+    color: var(--color-textcolor);
+  }
+  .btn-secondary:hover {
+    background-color: var(--color-surface-hover);
+  }
+  .btn-secondary:focus {
+    --tw-ring-color: rgba(18, 18, 18, 0.5);
+  }
+  .btn-secondary:active {
+    background-color: var(--color-surface-dark);
+  }
+  
+  .container-game {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-background);
+  }
+
+  .card {
+    background-color: var(--color-surface);
+    border-radius: var(--rounded-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-4);
+    border-width: 1px;
+    border-color: var(--color-surface-light);
+  }
+  
+  .input {
+    background-color: var(--color-surface);
+    border-width: 1px;
+    border-color: var(--color-surface-light);
+    border-radius: var(--rounded);
+    padding-left: var(--spacing-3);
+    padding-right: var(--spacing-3);
+    padding-top: var(--spacing-2);
+    padding-bottom: var(--spacing-2);
+    color: var(--color-textcolor);
+  }
+  .input::placeholder {
+    color: var(--color-textcolor-muted);
+  }
+  .input:focus {
+    outline: none;
+    --tw-ring-color: rgba(255, 59, 59, 0.5);
+    --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
+    --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
+    box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
+    border-color: rgba(255, 59, 59, 0.5);
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-duration: 200ms;
+  }
+
+  .stat-bar {
+    height: var(--spacing-2);
+    background-color: var(--color-surface-light);
+    border-radius: var(--rounded-full);
+    overflow: hidden;
+  }
+
+  .stat-bar-fill {
+    height: 100%;
+    background-color: var(--color-primary);
+    transition-property: all;
+    transition-duration: 200ms;
+  }
+}
+
+/* Custom game UI animations */
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 0.5rem #ff3b3b;
+  }
+  50% { 
+    box-shadow: 0 0 0.25rem #ff5252;
+  }
+}
+
+.pulse-effect {
+  animation: pulse-glow 2s infinite;
+}
+
+/* Scanlines effect for dystopian UI */
+.scanlines {
+  position: relative;
+  overflow: hidden;
+}
+
+.scanlines::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0.3;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 0.5%,
+    transparent 1%
+  );
+  animation: scanlines 10s linear infinite;
+}
+
+@keyframes scanlines {
+  from { background-position: 0 0; }
+  to { background-position: 0 100%; }
+}
+
+#game-container {
+  width: 100%;
+  height: 100%;
+  display: block;
+  min-height: 300px;
+}
+
+#game-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}

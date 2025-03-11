@@ -1,5 +1,3 @@
-import Phaser from 'phaser';
-
 /**
  * Player states enum
  */
@@ -24,7 +22,6 @@ interface StateTransitions {
  * Manages state and state transitions for the player
  */
 export class PlayerStateMachine {
-  private entity: Phaser.GameObjects.GameObject;
   private currentState: PlayerState = PlayerState.IDLE;
   private previousState: PlayerState | null = null;
   private stateData: any = {};
@@ -83,10 +80,9 @@ export class PlayerStateMachine {
   
   /**
    * Creates a new state machine
-   * @param entity Associated entity
    */
-  constructor(entity: Phaser.GameObjects.GameObject) {
-    this.entity = entity;
+  constructor() {
+    // No need for entity parameter
   }
   
   /**

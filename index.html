@@ -6,6 +6,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="The Getaway - A dystopian adventure game set in 2036 America" />
     <title>The Getaway - Escape from Tyranny</title>
+    <!-- Load Phaser directly before any other scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    <!-- Set required Phaser globals -->
+    <script>
+      // Ensure Phaser global constants exist
+      window.WEBGL_RENDERER = true;
+      window.CANVAS_RENDERER = true;
+      
+      // Log Phaser status on load
+      window.addEventListener('DOMContentLoaded', function() {
+        console.log("Phaser availability check:", {
+          exists: typeof Phaser !== 'undefined',
+          version: Phaser ? Phaser.VERSION : 'not loaded'
+        });
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

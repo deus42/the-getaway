@@ -48,7 +48,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDrag(0.2);
     
     // Initialize components
-    this.stateMachine = new PlayerStateMachine(this);
+    this.stateMachine = new PlayerStateMachine();
     this.health = new HealthComponent(100, 100);
     this.inventory = new InventoryComponent(20); // 20 slots
     this.animations = new AnimationController(this, scene);
@@ -90,10 +90,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   
   /**
    * Update method called each frame
-   * @param time Current time
+   * @param _time Current time (unused)
    * @param delta Time elapsed since last frame
    */
-  update(time: number, delta: number): void {
+  update(_time: number, delta: number): void {
     // Update all components
     this.inputHandler.update();
     
@@ -102,7 +102,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     
     // Apply movement based on current state
     if (this.currentTurn || !this.isInTurnBasedMode()) {
-      this.movement.update(delta);
+      this.movement.update();
     }
     
     // Update animations based on state

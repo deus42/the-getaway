@@ -41,9 +41,8 @@ export class MovementController {
   
   /**
    * Update method to be called each frame
-   * @param delta Time since last frame
    */
-  public update(delta: number): void {
+  public update(): void {
     if (!this.enabled) {
       this.entity.setVelocity(0, 0);
       return;

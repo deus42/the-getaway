@@ -5,18 +5,10 @@ import { DialogSystem } from '../systems/DialogSystem';
 import { UISystem } from '../systems/UISystem';
 
 export class WorldScene extends Phaser.Scene {
-  // Player
+  // Core systems
   private player!: Player;
-  
-  // Systems
   private dialogSystem!: DialogSystem;
   private uiSystem!: UISystem;
-  
-  // Map layers
-  private map!: Phaser.Tilemaps.Tilemap;
-  private groundLayer!: Phaser.Tilemaps.TilemapLayer;
-  private buildingsLayer!: Phaser.Tilemaps.TilemapLayer;
-  private collisionLayer!: Phaser.Tilemaps.TilemapLayer;
   
   // Game objects
   private npcs: NPC[] = [];
@@ -82,7 +74,7 @@ export class WorldScene extends Phaser.Scene {
   
   update(time: number, delta: number): void {
     // Update player
-    this.player.update();
+    this.player.update(time, delta);
     
     // Update NPCs
     this.npcs.forEach(npc => {
@@ -125,7 +117,7 @@ export class WorldScene extends Phaser.Scene {
           const building = this.add.rectangle(buildingX, buildingY, width, height, color);
           
           // Add some details to buildings
-          const detail = this.add.rectangle(
+          this.add.rectangle(
             buildingX, 
             buildingY + height / 2 - 10, 
             width * 0.8, 
@@ -333,9 +325,15 @@ export class WorldScene extends Phaser.Scene {
       'explain-resistance': {
         text: "I've heard they've been helping families reunite, getting people out of detention centers. If anyone can find your family, it's them. There's a contact in the eastern district who might help.",
         nextId: "promise-help",
-        action: () => {
-          this.uiSystem.showNotification('New side quest: Find the refugee\'s family', 3000);
-        }
+        choices: [
+          {
+            text: "Continue",
+            nextId: "promise-help",
+            action: () => {
+              this.uiSystem.showNotification('New side quest: Find the refugee\'s family', 3000);
+            }
+          }
+        ]
       },
       'end': {
         text: "Please... if you hear anything... anything at all..."
@@ -462,11 +460,23 @@ export class WorldScene extends Phaser.Scene {
     
     // Overlap with items
     if (this.items) {
-      this.physics.add.overlap(this.player, this.items, this.collectItem, undefined, this);
+      // Use a direct function with the proper parameter types for overlap
+      this.physics.add.overlap(
+        this.player, 
+        this.items, 
+        (_obj1, obj2) => {
+          // Type guard to ensure we have a GameObject
+          if (obj2 instanceof Phaser.GameObjects.GameObject) {
+            this.collectItem(obj2);
+          }
+        },
+        undefined, 
+        this
+      );
     }
   }
   
-  private collectItem(player: Phaser.GameObjects.GameObject, item: Phaser.GameObjects.GameObject): void {
+  private collectItem(item: Phaser.GameObjects.GameObject): void {
     const itemType = item.getData('type');
     
     // Handle different item types

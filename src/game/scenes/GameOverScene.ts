@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 
+interface GameOverData {
+  reason?: string;
+}
+
 export class GameOverScene extends Phaser.Scene {
   constructor() {
     super({ key: 'GameOverScene' });
@@ -24,7 +28,8 @@ export class GameOverScene extends Phaser.Scene {
     gameOverText.setOrigin(0.5);
     
     // Reason text (will be passed as data when starting this scene)
-    const reason = this.scene.settings.data?.reason || 'You were captured by the regime.';
+    const data = this.scene.settings.data as GameOverData || {};
+    const reason = data.reason || 'You were captured by the regime.';
     const reasonText = this.add.text(width / 2, height / 2, reason, {
       fontFamily: 'Arial',
       fontSize: '24px',
@@ -80,9 +85,18 @@ export class GameOverScene extends Phaser.Scene {
       this.scene.start('MainMenuScene');
     });
     
-    // Create a blood-like effect using particles (optional)
-    const particles = this.add.particles('player');
-    const emitter = particles.createEmitter({
+    // Load particle texture if not available
+    if (!this.textures.exists('particle')) {
+      // Create a small circle as a particle
+      const graphics = this.add.graphics();
+      graphics.fillStyle(0xffffff);
+      graphics.fillCircle(8, 8, 8);
+      graphics.generateTexture('particle', 16, 16);
+      graphics.destroy();
+    }
+    
+    // Create a blood-like effect using particles
+    const particles = this.add.particles(0, 0, 'particle', {
       tint: 0xff0000,
       alpha: { start: 1, end: 0 },
       scale: { start: 0.5, end: 1 },
@@ -99,9 +113,9 @@ export class GameOverScene extends Phaser.Scene {
       }
     });
     
-    // Play once then stop
+    // Auto-stop after 2 seconds
     this.time.delayedCall(2000, () => {
-      emitter.stop();
+      particles.destroy();
     });
   }
 } 
