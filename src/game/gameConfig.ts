@@ -18,7 +18,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     default: 'arcade',
     arcade: {
       gravity: { x: 0, y: 0 },
-      debug: process.env.NODE_ENV === 'development'
+      debug: false // Disable physics debug rendering in all environments
     }
   },
   scene: [
@@ -29,9 +29,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     GameOverScene
   ],
   render: {
-    pixelArt: true,
-    antialias: false,
-    roundPixels: true
+    pixelArt: false, // Set to false for smoother graphics
+    antialias: true, // Enable antialiasing for smoother edges
+    roundPixels: false // Disable pixel rounding for smoother movement
   },
   scale: {
     mode: Phaser.Scale.FIT,
@@ -44,38 +44,31 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
     min: 30
   },
   callbacks: {
-    postBoot: function(game) {
-      // Apply CSS to make the game container look better
-      console.log('Game post-boot callback executing');
-      
+    postBoot: (game) => {
+      // Add shadow and other effects to the game container
       const container = document.getElementById('game-container');
       if (container) {
-        container.style.boxShadow = '0 0 20px rgba(255, 59, 59, 0.2)';
-        container.style.overflow = 'hidden';
+        container.style.boxShadow = '0 0 20px rgba(255, 59, 59, 0.3)';
+        container.style.borderRadius = '4px';
       }
       
-      // Add a global filter to match our dystopian UI theme
-      try {
-        if (game && game.canvas) {
-          // Add subtle red tint filter to match theme
-          const canvas = game.canvas as HTMLCanvasElement;
-          canvas.style.filter = 'brightness(0.95) contrast(1.05) saturate(1.1)';
-        }
-      } catch (e) {
-        console.warn('Could not apply canvas filter:', e);
+      // Apply a slight red tint filter to the canvas for dystopian feel
+      const canvas = document.querySelector('#game-container canvas');
+      if (canvas instanceof HTMLElement) {
+        canvas.style.filter = 'brightness(1.05) contrast(1.1) saturate(1.2) sepia(0.1)';
       }
     }
   },
-  // Make sure autoFocus is true to ensure keyboard input works
+  // Disable default banner
+  banner: false,
+  // Ensure focus for keyboard controls
   autoFocus: true,
-  // Disable default loader bar (we'll use our own)
+  // Disable loader bar for custom loading screen
   loader: {
-    path: 'assets/'
+    path: 'assets/images/'
   },
   // Transparent background to blend with our UI
-  transparent: false,
-  // Set the banner to false to avoid console spam
-  banner: false
+  transparent: false
 };
 
 /**
