@@ -13,7 +13,7 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   width: 1280,
   height: 720,
   parent: 'game-container',
-  backgroundColor: '#121212',
+  backgroundColor: '#030303', // Match the background color from our theme
   physics: {
     default: 'arcade',
     arcade: {
@@ -35,7 +35,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
   },
   scale: {
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 1280,
+    height: 720
   },
   fps: {
     target: 60,
@@ -48,14 +50,32 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       
       const container = document.getElementById('game-container');
       if (container) {
-        container.style.boxShadow = '0 4px 20px rgba(0,0,0,0.4)';
-        container.style.borderRadius = '8px';
+        container.style.boxShadow = '0 0 20px rgba(255, 59, 59, 0.2)';
         container.style.overflow = 'hidden';
+      }
+      
+      // Add a global filter to match our dystopian UI theme
+      try {
+        if (game && game.canvas) {
+          // Add subtle red tint filter to match theme
+          const canvas = game.canvas as HTMLCanvasElement;
+          canvas.style.filter = 'brightness(0.95) contrast(1.05) saturate(1.1)';
+        }
+      } catch (e) {
+        console.warn('Could not apply canvas filter:', e);
       }
     }
   },
   // Make sure autoFocus is true to ensure keyboard input works
-  autoFocus: true
+  autoFocus: true,
+  // Disable default loader bar (we'll use our own)
+  loader: {
+    path: 'assets/'
+  },
+  // Transparent background to blend with our UI
+  transparent: false,
+  // Set the banner to false to avoid console spam
+  banner: false
 };
 
 /**
@@ -71,6 +91,12 @@ export const createGame = (): Phaser.Game => {
   
   try {
     const game = new Phaser.Game(gameConfig);
+    
+    // Additional game setup after initialization
+    game.events.on('ready', () => {
+      console.log('Game is ready and initialized');
+    });
+    
     return game;
   } catch (error) {
     console.error('Error creating Phaser game instance:', error);

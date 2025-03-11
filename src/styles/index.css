@@ -9,6 +9,7 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     font-weight: var(--font-bold);
@@ -65,7 +66,27 @@
     font-weight: var(--font-medium);
     transition-property: all;
     transition-duration: 200ms;
+    position: relative;
+    overflow: hidden;
   }
+  
+  /* Add glitch effect on hover for buttons */
+  .btn:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transform: translateX(-100%);
+  }
+  
+  .btn:hover:after {
+    transform: translateX(100%);
+    transition: transform 0.6s;
+  }
+  
   .btn:focus {
     outline: none;
     --ring-opacity: 0.5;
@@ -81,23 +102,30 @@
   .btn-primary {
     background-color: var(--color-primary);
     color: var(--color-textcolor);
+    box-shadow: 0 0 10px rgba(255, 59, 59, 0.3);
+    border: 1px solid var(--color-primary-dark);
   }
   .btn-primary:hover {
     background-color: var(--color-primary-hover);
+    box-shadow: 0 0 15px rgba(255, 59, 59, 0.5);
+    transform: translateY(-2px);
   }
   .btn-primary:focus {
     --tw-ring-color: rgba(255, 59, 59, 0.5);
   }
   .btn-primary:active {
     background-color: var(--color-primary-dark);
+    transform: translateY(1px);
   }
   
   .btn-secondary {
     background-color: var(--color-surface);
     color: var(--color-textcolor);
+    border: 1px solid var(--color-surface-light);
   }
   .btn-secondary:hover {
     background-color: var(--color-surface-hover);
+    box-shadow: 0 0 10px rgba(34, 34, 34, 0.5);
   }
   .btn-secondary:focus {
     --tw-ring-color: rgba(18, 18, 18, 0.5);
@@ -120,6 +148,26 @@
     padding: var(--spacing-4);
     border-width: 1px;
     border-color: var(--color-surface-light);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Add scanline effect for card elements */
+  .card:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent 50%,
+      rgba(0, 0, 0, 0.05) 50%
+    );
+    background-size: 100% 4px;
   }
   
   .input {
@@ -164,16 +212,22 @@
 
 /* Custom game UI animations */
 @keyframes pulse-glow {
-  0%, 100% { 
-    box-shadow: 0 0 0.5rem #ff3b3b;
+  0% { 
+    box-shadow: 0 0 0.5rem rgba(255, 59, 59, 0.3);
+    text-shadow: 0 0 5px rgba(255, 59, 59, 0.3);
   }
   50% { 
-    box-shadow: 0 0 0.25rem #ff5252;
+    box-shadow: 0 0 1rem rgba(255, 59, 59, 0.5);
+    text-shadow: 0 0 10px rgba(255, 59, 59, 0.7);
+  }
+  100% { 
+    box-shadow: 0 0 0.5rem rgba(255, 59, 59, 0.3);
+    text-shadow: 0 0 5px rgba(255, 59, 59, 0.3);
   }
 }
 
 .pulse-effect {
-  animation: pulse-glow 2s infinite;
+  animation: pulse-glow 3s infinite;
 }
 
 /* Scanlines effect for dystopian UI */
@@ -188,7 +242,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 10;
-  opacity: 0.3;
+  opacity: 0.15;
   background: repeating-linear-gradient(
     to bottom,
     transparent 0%,
@@ -203,15 +257,47 @@
   to { background-position: 0 100%; }
 }
 
+/* Glitch text effect for titles */
+@keyframes glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+.glitch-text:hover {
+  animation: glitch 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+}
+
+/* Game container styling */
 #game-container {
   width: 100%;
   height: 100%;
   display: block;
   min-height: 300px;
+  background-color: var(--color-background);
+  position: relative;
 }
 
 #game-container canvas {
   display: block;
   width: 100%;
   height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
