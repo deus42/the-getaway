@@ -1,359 +1,448 @@
 import Phaser from 'phaser';
+import { eventBus, GameEvents } from '../engine/core/gameEvents';
 
 export class BootScene extends Phaser.Scene {
+  private isLoading: boolean = false;
+  private loadingText: Phaser.GameObjects.Text | null = null;
+  private progressBar: Phaser.GameObjects.Graphics | null = null;
+  private progressBox: Phaser.GameObjects.Graphics | null = null;
+  private assetLoadCount: number = 0;
+  private assetsLoaded: boolean = false;
+  private fallbackAssetsCreated: boolean = false;
+
   constructor() {
     super({ key: 'BootScene' });
+    console.log('BootScene constructor called');
+  }
+
+  init() {
+    console.log('BootScene init called');
+    this.isLoading = false;
+    this.assetLoadCount = 0;
+    this.assetsLoaded = false;
+    this.fallbackAssetsCreated = false;
   }
 
   preload(): void {
-    // Create loading bar
-    const progressBar = this.add.graphics();
-    const progressBox = this.add.graphics();
-    progressBox.fillStyle(0x222222, 0.8);
-    progressBox.fillRect(240, 270, 320, 50);
+    console.log('BootScene preload started');
+    this.isLoading = true;
+
+    // Set up error handling for asset loading
+    this.load.on('loaderror', (file: Phaser.Loader.File) => {
+      console.error(`Error loading asset: ${file.key} (${file.url})`, file);
+      // Continue loading other assets
+      this.assetLoadCount++;
+      
+      // If too many errors, create fallback assets
+      if (!this.fallbackAssetsCreated && this.assetLoadCount >= 3) {
+        this.createFallbackAssets();
+      }
+    });
+
+    // Create loading UI elements
+    this.createLoadingUI();
+
+    // Listen for progress events
+    this.load.on('progress', (value: number) => {
+      if (this.progressBar) {
+        this.progressBar.clear();
+        this.progressBar.fillStyle(0xff3b3b, 1);
+        this.progressBar.fillRect(
+          this.cameras.main.width / 4,
+          this.cameras.main.height / 2 - 15,
+          (this.cameras.main.width / 2) * value,
+          30
+        );
+      }
+      
+      if (this.loadingText) {
+        this.loadingText.setText(`Loading... ${Math.floor(value * 100)}%`);
+      }
+    });
+
+    // When all assets are loaded
+    this.load.on('complete', () => {
+      console.log('All assets loaded');
+      this.assetsLoaded = true;
+      if (this.progressBar) this.progressBar.destroy();
+      if (this.progressBox) this.progressBox.destroy();
+      if (this.loadingText) this.loadingText.destroy();
+      
+      // Proceed to the next scene
+      this.startGame();
+    });
+
+    // Load essential assets with error handling
+    this.safeLoadAssets();
+  }
+  
+  create(): void {
+    console.log('BootScene create called');
+    
+    // If loading failed, create fallback assets
+    if (!this.assetsLoaded && !this.fallbackAssetsCreated) {
+      this.createFallbackAssets();
+    }
+    
+    // Start the game (main menu) if not already started in preload
+    if (!this.isLoading) {
+      this.startGame();
+    }
+    
+    // Notify that the boot scene is ready
+    eventBus.publish(GameEvents.SCENE_CHANGED, 'BootScene');
+  }
+  
+  private safeLoadAssets(): void {
+    try {
+      // Load essential assets with try-catch
+      try {
+        // Try to load the loading screen image first
+        this.load.svg('loading', 'assets/images/loading.svg');
+        this.load.svg('player', 'assets/images/player.svg');
+      } catch (e) {
+        console.error('Error loading initial assets:', e);
+        // Create fallback assets if loading fails
+        this.createFallbackAssets();
+      }
+      
+      // Background
+      this.load.image('background', 'assets/images/background.png');
+      
+      // Essential UI elements
+      this.load.image('ui-frame', 'assets/images/ui-frame.png');
+      this.load.image('button', 'assets/images/button.png');
+      
+      // Start loading in background
+      this.load.start();
+    } catch (e) {
+      console.error('Error in safeLoadAssets:', e);
+      this.createFallbackAssets();
+    }
+  }
+  
+  private createLoadingUI(): void {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+    
+    // Create loading box
+    this.progressBox = this.add.graphics();
+    this.progressBox.fillStyle(0x222222, 0.8);
+    this.progressBox.fillRect(width / 4, height / 2 - 15, width / 2, 30);
+    
+    // Create progress bar (empty initially)
+    this.progressBar = this.add.graphics();
+    
+    // Loading text
+    this.loadingText = this.add.text(width / 2, height / 2 - 35, 'Loading...', {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#ffffff'
+    });
+    this.loadingText.setOrigin(0.5, 0.5);
+    
+    // Game title above loading bar
+    const titleText = this.add.text(width / 2, height / 3, 'THE GETAWAY', {
+      fontFamily: 'monospace',
+      fontSize: '32px',
+      fontStyle: 'bold',
+      color: '#ff3b3b'
+    });
+    titleText.setOrigin(0.5, 0.5);
+  }
+  
+  private createFallbackAssets(): void {
+    if (this.fallbackAssetsCreated) return;
+    
+    console.log('Creating fallback assets');
+    this.fallbackAssetsCreated = true;
+    
+    // Create a blank texture for missing assets
+    const graphics = this.add.graphics({ x: 0, y: 0 });
+    
+    // Create a missing texture indicator
+    graphics.fillStyle(0x333333);
+    graphics.fillRect(0, 0, 64, 64);
+    graphics.lineStyle(2, 0xff0000);
+    graphics.strokeRect(1, 1, 62, 62);
+    graphics.lineTo(62, 62);
+    graphics.moveTo(1, 62);
+    graphics.lineTo(62, 1);
+    graphics.generateTexture('missing-asset', 64, 64);
+    
+    // Create a proper player texture with multiple frames
+    this.createPlayerSpritesheet(graphics);
+    
+    // Create button texture
+    graphics.clear();
+    graphics.fillStyle(0x444444);
+    graphics.fillRect(0, 0, 200, 50);
+    graphics.lineStyle(2, 0xff3b3b);
+    graphics.strokeRect(0, 0, 200, 50);
+    graphics.generateTexture('button', 200, 50);
+    
+    // UI frame
+    graphics.clear();
+    graphics.fillStyle(0x333333);
+    graphics.fillRect(0, 0, 400, 300);
+    graphics.lineStyle(2, 0xff3b3b);
+    graphics.strokeRect(0, 0, 400, 300);
+    graphics.generateTexture('ui-frame', 400, 300);
+    
+    // Background
+    graphics.clear();
+    graphics.fillStyle(0x111111);
+    graphics.fillRect(0, 0, 800, 600);
+    
+    // Add some grid lines for visual reference
+    graphics.lineStyle(1, 0x222222);
+    for (let i = 0; i < 800; i += 40) {
+      graphics.moveTo(i, 0);
+      graphics.lineTo(i, 600);
+    }
+    for (let i = 0; i < 600; i += 40) {
+      graphics.moveTo(0, i);
+      graphics.lineTo(800, i);
+    }
+    
+    graphics.generateTexture('background', 800, 600);
+    graphics.destroy();
+    
+    // Create the animation data for the player
+    this.createPlayerAnimations();
+    
+    // Notify that we're using fallback assets
+    console.log('Using fallback assets due to loading errors');
+  }
+  
+  /**
+   * Creates a proper player spritesheet with multiple frames
+   */
+  private createPlayerSpritesheet(graphics: Phaser.GameObjects.Graphics): void {
+    // Create a larger canvas for the spritesheet (5 frames side by side)
+    const frameWidth = 32;
+    const frameHeight = 32;
+    const frames = 5;
+    const sheetWidth = frameWidth * frames;
+    
+    graphics.clear();
+    
+    // Background color (transparent)
+    graphics.fillStyle(0x000000, 0);
+    graphics.fillRect(0, 0, sheetWidth, frameHeight);
+    
+    // Draw frame 0 (idle)
+    let x = 0;
+    graphics.fillStyle(0x3333ff); // Blue base
+    graphics.fillRect(x + 8, 4, 16, 24); // Body
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(x + 10, 8, 4, 4); // Left eye
+    graphics.fillRect(x + 18, 8, 4, 4); // Right eye
+    graphics.fillRect(x + 12, 16, 8, 2); // Mouth
+    
+    // Draw frame 1 (walk 1)
+    x = frameWidth;
+    graphics.fillStyle(0x3333ff);
+    graphics.fillRect(x + 8, 4, 16, 24); // Body
+    graphics.fillRect(x + 6, 20, 4, 8); // Left leg extended
+    graphics.fillRect(x + 22, 16, 4, 8); // Right leg back
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(x + 10, 8, 4, 4); // Left eye
+    graphics.fillRect(x + 18, 8, 4, 4); // Right eye
+    graphics.fillRect(x + 12, 16, 8, 2); // Mouth
+    
+    // Draw frame 2 (walk 2)
+    x = frameWidth * 2;
+    graphics.fillStyle(0x3333ff);
+    graphics.fillRect(x + 8, 4, 16, 24); // Body
+    graphics.fillRect(x + 6, 16, 4, 8); // Left leg back
+    graphics.fillRect(x + 22, 20, 4, 8); // Right leg extended
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(x + 10, 8, 4, 4); // Left eye
+    graphics.fillRect(x + 18, 8, 4, 4); // Right eye
+    graphics.fillRect(x + 12, 16, 8, 2); // Mouth
+    
+    // Draw frame 3 (hurt)
+    x = frameWidth * 3;
+    graphics.fillStyle(0xff3333); // Red tint for hurt
+    graphics.fillRect(x + 8, 4, 16, 24); // Body
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(x + 10, 8, 4, 4); // Left eye (x)
+    graphics.fillRect(x + 18, 8, 4, 4); // Right eye (x)
+    graphics.fillRect(x + 12, 18, 8, 2); // Mouth (frown)
+    
+    // Draw frame 4 (dead)
+    x = frameWidth * 4;
+    graphics.fillStyle(0x3333ff);
+    graphics.fillRect(x + 8, 4, 16, 24); // Body (rotated)
+    graphics.rotate(0.2); // Tilt slightly
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(x + 10, 8, 4, 2); // Left eye (closed)
+    graphics.fillRect(x + 18, 8, 4, 2); // Right eye (closed)
+    graphics.fillRect(x + 12, 18, 8, 2); // Mouth (flat)
+    graphics.rotate(-0.2); // Reset rotation
+    
+    // Generate the complete spritesheet texture
+    graphics.generateTexture('player-texture', sheetWidth, frameHeight);
+    
+    // Also create a simpler fallback in case animation systems encounter issues
+    graphics.clear();
+    graphics.fillStyle(0x3333ff);
+    graphics.fillRect(0, 0, 32, 32);
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(8, 8, 4, 4); // Eye
+    graphics.fillRect(20, 8, 4, 4); // Eye
+    graphics.fillRect(12, 18, 8, 2); // Mouth
+    graphics.generateTexture('player', 32, 32);
+  }
+  
+  /**
+   * Creates animations from the spritesheet
+   */
+  private createPlayerAnimations(): void {
+    // Make sure the animation factory is ready
+    if (!this.anims) {
+      console.warn('Animation factory not ready');
+      return;
+    }
+    
+    try {
+      // Idle animation
+      this.anims.create({
+        key: 'player-idle',
+        frames: this.anims.generateFrameNumbers('player-texture', { start: 0, end: 0 }),
+        frameRate: 10,
+        repeat: -1
+      });
+      
+      // Walk animation
+      this.anims.create({
+        key: 'player-walk',
+        frames: this.anims.generateFrameNumbers('player-texture', { frames: [1, 0, 2, 0] }),
+        frameRate: 8,
+        repeat: -1
+      });
+      
+      // Run animation
+      this.anims.create({
+        key: 'player-run',
+        frames: this.anims.generateFrameNumbers('player-texture', { frames: [1, 0, 2, 0] }),
+        frameRate: 12,
+        repeat: -1
+      });
+      
+      // Hurt animation
+      this.anims.create({
+        key: 'player-hurt',
+        frames: this.anims.generateFrameNumbers('player-texture', { frames: [3, 0] }),
+        frameRate: 8,
+        repeat: 0
+      });
+      
+      // Death animation
+      this.anims.create({
+        key: 'player-death',
+        frames: this.anims.generateFrameNumbers('player-texture', { frames: [3, 4] }),
+        frameRate: 4,
+        repeat: 0
+      });
+      
+      // Create other game animations as needed
+      
+      console.log('Player animations created successfully in BootScene');
+    } catch (e) {
+      console.error('Error creating animations in BootScene:', e);
+    }
+  }
+  
+  private startGame(): void {
+    this.isLoading = false;
+    
+    console.log('Starting game (transitioning to MainMenuScene)');
+    
+    // Try to start the main menu scene, with fallbacks
+    try {
+      // First check if MainMenuScene exists
+      if (this.scene.get('MainMenuScene')) {
+        this.scene.start('MainMenuScene');
+      }
+      // Try PhaserMainMenuScene as an alternative
+      else if (this.scene.get('PhaserMainMenuScene')) {
+        this.scene.start('PhaserMainMenuScene');
+      }
+      // If all else fails, use WorldScene
+      else if (this.scene.get('WorldScene')) {
+        this.scene.start('WorldScene');
+      } else {
+        console.error('No valid scene found to transition to');
+        
+        // Create a simple main menu scene on the fly as a last resort
+        this.createEmergencyMainMenu();
+      }
+    } catch (e) {
+      console.error('Error starting next scene:', e);
+      // Create emergency menu as fallback
+      this.createEmergencyMainMenu();
+    }
+  }
+  
+  private createEmergencyMainMenu(): void {
+    console.log('Creating emergency main menu');
+    
+    // Clear existing objects
+    this.children.removeAll();
     
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
     
-    // Loading text
-    const loadingText = this.make.text({
-      x: width / 2,
-      y: height / 2 - 50,
-      text: 'Loading...',
-      style: {
-        font: '20px monospace',
-        color: '#ffffff'
-      }
-    });
-    loadingText.setOrigin(0.5, 0.5);
+    // Add a background
+    this.add.rectangle(0, 0, width, height, 0x000000)
+      .setOrigin(0, 0);
     
-    // Loading percentages
-    const percentText = this.make.text({
-      x: width / 2,
-      y: height / 2 - 5,
-      text: '0%',
-      style: {
-        font: '18px monospace',
-        color: '#ffffff'
-      }
-    });
-    percentText.setOrigin(0.5, 0.5);
+    // Title
+    this.add.text(width / 2, height / 4, 'THE GETAWAY', {
+      fontFamily: 'monospace',
+      fontSize: '36px',
+      fontStyle: 'bold',
+      color: '#ff3b3b'
+    }).setOrigin(0.5);
     
-    // Loading assets text
-    const assetText = this.make.text({
-      x: width / 2,
-      y: height / 2 + 50,
-      text: '',
-      style: {
-        font: '18px monospace',
-        color: '#ffffff'
-      }
-    });
-    assetText.setOrigin(0.5, 0.5);
+    // Sub-title
+    this.add.text(width / 2, height / 4 + 50, 'Emergency Mode', {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
     
-    // Update progress bar as assets load
-    this.load.on('progress', (value: number) => {
-      percentText.setText(parseInt(String(value * 100)) + '%');
-      progressBar.clear();
-      progressBar.fillStyle(0xffffff, 1);
-      progressBar.fillRect(250, 280, 300 * value, 30);
+    // Start game button
+    const startButton = this.add.rectangle(width / 2, height / 2, 200, 50, 0x333333)
+      .setInteractive({ useHandCursor: true });
+    
+    const startText = this.add.text(width / 2, height / 2, 'START GAME', {
+      fontFamily: 'monospace',
+      fontSize: '18px',
+      color: '#ffffff'
+    }).setOrigin(0.5);
+    
+    // Button hover effects
+    startButton.on('pointerover', () => {
+      startButton.fillColor = 0x444444;
     });
     
-    // Update file progress text
-    this.load.on('fileprogress', (file: Phaser.Loader.File) => {
-      assetText.setText('Loading asset: ' + file.key);
+    startButton.on('pointerout', () => {
+      startButton.fillColor = 0x333333;
     });
     
-    // Remove progress bar when complete
-    this.load.on('complete', () => {
-      progressBar.destroy();
-      progressBox.destroy();
-      loadingText.destroy();
-      percentText.destroy();
-      assetText.destroy();
-      
-      // Create textures needed for the game before transitioning
-      this.createGameTextures();
-      
-      // Start the main menu scene
-      this.scene.start('MainMenuScene');
+    // Start the world scene on click
+    startButton.on('pointerdown', () => {
+      if (this.scene.get('WorldScene')) {
+        this.scene.start('WorldScene');
+      } else {
+        alert('Unable to start game. Please refresh the page.');
+      }
     });
     
-    // Load assets - use direct image loads instead of spritesheets for now
-    this.loadAssets();
-  }
-
-  private loadAssets(): void {
-    // Load UI elements
-    this.load.image('ui-frame', 'assets/images/ui-frame.png');
-    this.load.image('healthbar', 'assets/images/healthbar.png');
-    this.load.image('staminabar', 'assets/images/staminabar.png');
-    this.load.image('scanlines', 'assets/images/scanlines.png');
-    this.load.image('particle', 'assets/images/particle.png');
-    
-    // Load environment textures
-    this.load.image('building', 'assets/images/building.png');
-    this.load.image('road', 'assets/images/road.png');
-    
-    // Load placeholders but we'll generate better textures programmatically
-    this.load.image('player', 'assets/images/player.svg');
-    this.load.image('npc', 'assets/images/player.svg');
-  }
-  
-  private createGameTextures(): void {
-    // Create programmer art for player character with better styling
-    const graphics = this.make.graphics({ x: 0, y: 0 });
-    
-    // Player texture - cyberpunk character
-    graphics.clear();
-    
-    // Character base 
-    graphics.fillStyle(0x111111); // Dark base
-    graphics.fillRect(12, 8, 8, 24); // Body
-    
-    // Neon blue highlights
-    graphics.fillStyle(0x00AAFF);
-    graphics.fillRect(10, 12, 12, 2); // Shoulders
-    graphics.fillRect(14, 8, 4, 16); // Center line
-    
-    // Face/mask
-    graphics.fillStyle(0xCCCCCC); // Light face
-    graphics.fillRect(12, 4, 8, 6); // Head
-    
-    // Visor
-    graphics.fillStyle(0x00FFFF); // Cyan visor
-    graphics.fillRect(13, 6, 6, 2); // Eyes
-    
-    // Limbs with highlights
-    graphics.fillStyle(0x222222); // Dark limbs
-    graphics.fillRect(8, 16, 4, 10); // Left arm
-    graphics.fillRect(20, 16, 4, 10); // Right arm
-    graphics.fillRect(12, 30, 3, 8); // Left leg
-    graphics.fillRect(17, 30, 3, 8); // Right leg
-    
-    // Neon highlights on limbs
-    graphics.fillStyle(0x00AAFF);
-    graphics.fillRect(8, 18, 4, 2); // Left arm highlight
-    graphics.fillRect(20, 18, 4, 2); // Right arm highlight
-    graphics.fillRect(12, 34, 3, 2); // Left leg highlight
-    graphics.fillRect(17, 34, 3, 2); // Right leg highlight
-    
-    // Generate the improved texture
-    graphics.generateTexture('player-texture', 32, 40);
-    
-    // Resistance NPC texture - blue resistance fighter
-    graphics.clear();
-    
-    // Base
-    graphics.fillStyle(0x111111);
-    graphics.fillRect(12, 8, 8, 24);
-    
-    // Resistance colors
-    graphics.fillStyle(0x6666FF); // Purple/blue resistance  
-    graphics.fillRect(14, 8, 4, 16);
-    graphics.fillRect(10, 12, 12, 2);
-    
-    // Face with mask
-    graphics.fillStyle(0xAAAAAA);
-    graphics.fillRect(12, 4, 8, 6);
-    
-    // Resistance symbol
-    graphics.fillStyle(0xFF3333); // Red resistance symbol
-    graphics.fillRect(14, 6, 4, 2);
-    
-    // Limbs
-    graphics.fillStyle(0x222222);
-    graphics.fillRect(8, 16, 4, 10);
-    graphics.fillRect(20, 16, 4, 10);
-    graphics.fillRect(12, 30, 3, 8);
-    graphics.fillRect(17, 30, 3, 8);
-    
-    // Limb highlights
-    graphics.fillStyle(0x6666FF);
-    graphics.fillRect(8, 18, 4, 2);
-    graphics.fillRect(20, 18, 4, 2);
-    graphics.fillRect(12, 34, 3, 2);
-    graphics.fillRect(17, 34, 3, 2);
-    
-    graphics.generateTexture('resistance-texture', 32, 40);
-    
-    // Smuggler NPC texture
-    graphics.clear();
-    
-    // Base
-    graphics.fillStyle(0x111111);
-    graphics.fillRect(12, 8, 8, 24);
-    
-    // Smuggler colors - gold/amber
-    graphics.fillStyle(0xFFAA00); 
-    graphics.fillRect(14, 8, 4, 16);
-    graphics.fillRect(10, 12, 12, 2);
-    
-    // Face 
-    graphics.fillStyle(0x996633); // Darker face tone
-    graphics.fillRect(12, 4, 8, 6);
-    
-    // Smuggler visor
-    graphics.fillStyle(0xFFDD44); // Gold visor
-    graphics.fillRect(13, 6, 6, 2);
-    
-    // Limbs
-    graphics.fillStyle(0x222222);
-    graphics.fillRect(8, 16, 4, 10);
-    graphics.fillRect(20, 16, 4, 10);
-    graphics.fillRect(12, 30, 3, 8);
-    graphics.fillRect(17, 30, 3, 8);
-    
-    // Limb highlights
-    graphics.fillStyle(0xFFAA00);
-    graphics.fillRect(8, 18, 4, 2);
-    graphics.fillRect(20, 18, 4, 2);
-    graphics.fillRect(12, 34, 3, 2);
-    graphics.fillRect(17, 34, 3, 2);
-    
-    graphics.generateTexture('smuggler-texture', 32, 40);
-    
-    // Regime soldier - regime agent
-    graphics.clear();
-    
-    // Base
-    graphics.fillStyle(0x111111);
-    graphics.fillRect(12, 8, 8, 24);
-    
-    // Regime colors - red
-    graphics.fillStyle(0xFF3333);
-    graphics.fillRect(14, 8, 4, 16);
-    graphics.fillRect(10, 12, 12, 2);
-    
-    // Face/helmet
-    graphics.fillStyle(0x333333); // Dark helmet 
-    graphics.fillRect(12, 4, 8, 6);
-    
-    // Visor
-    graphics.fillStyle(0xFF0000); // Red visor
-    graphics.fillRect(13, 6, 6, 2);
-    
-    // Limbs
-    graphics.fillStyle(0x222222);
-    graphics.fillRect(8, 16, 4, 10);
-    graphics.fillRect(20, 16, 4, 10);
-    graphics.fillRect(12, 30, 3, 8);
-    graphics.fillRect(17, 30, 3, 8);
-    
-    // Limb highlights
-    graphics.fillStyle(0xFF3333);
-    graphics.fillRect(8, 18, 4, 2);
-    graphics.fillRect(20, 18, 4, 2);
-    graphics.fillRect(12, 34, 3, 2);
-    graphics.fillRect(17, 34, 3, 2);
-    
-    graphics.generateTexture('regime-texture', 32, 40);
-    
-    // Building textures - create a variety of building styles
-    this.createBuildingTextures();
-  }
-  
-  private createBuildingTextures(): void {
-    const graphics = this.make.graphics({ x: 0, y: 0 });
-    
-    // Create different building styles
-    
-    // Corporate skyscraper
-    graphics.clear();
-    // Base building
-    graphics.fillStyle(0x333333);
-    graphics.fillRect(0, 0, 128, 256);
-    
-    // Windows grid 
-    graphics.fillStyle(0x666666);
-    for (let y = 16; y < 256; y += 24) {
-      for (let x = 16; x < 128; x += 24) {
-        graphics.fillRect(x, y, 16, 16);
-      }
-    }
-    
-    // Highlights/lights in windows (random)
-    graphics.fillStyle(0xAAFFFF);
-    for (let y = 16; y < 256; y += 24) {
-      for (let x = 16; x < 128; x += 24) {
-        if (Math.random() > 0.7) {
-          graphics.fillRect(x + 4, y + 4, 8, 8);
-        }
-      }
-    }
-    
-    // Building top
-    graphics.fillStyle(0x222222);
-    graphics.fillRect(0, 0, 128, 8);
-    
-    graphics.generateTexture('building-corporate', 128, 256);
-    
-    // Residential building
-    graphics.clear();
-    // Base
-    graphics.fillStyle(0x444444);
-    graphics.fillRect(0, 0, 96, 128);
-    
-    // Windows
-    graphics.fillStyle(0x888888);
-    for (let y = 8; y < 128; y += 20) {
-      for (let x = 8; x < 96; x += 24) {
-        graphics.fillRect(x, y, 16, 12);
-      }
-    }
-    
-    // Random lights
-    graphics.fillStyle(0xFFCC66);
-    for (let y = 8; y < 128; y += 20) {
-      for (let x = 8; x < 96; x += 24) {
-        if (Math.random() > 0.6) {
-          graphics.fillRect(x + 4, y + 3, 8, 6);
-        }
-      }
-    }
-    
-    graphics.generateTexture('building-residential', 96, 128);
-    
-    // Government building
-    graphics.clear();
-    // Base
-    graphics.fillStyle(0x555555);
-    graphics.fillRect(0, 0, 192, 144);
-    
-    // Columns
-    graphics.fillStyle(0x777777);
-    for (let x = 16; x < 192; x += 32) {
-      graphics.fillRect(x, 0, 16, 144);
-    }
-    
-    // Door
-    graphics.fillStyle(0x333333);
-    graphics.fillRect(80, 110, 32, 34);
-    
-    // Regime emblem
-    graphics.fillStyle(0xFF0000);
-    graphics.fillRect(80, 24, 32, 32);
-    
-    graphics.generateTexture('building-government', 192, 144);
-    
-    // Create street texture
-    graphics.clear();
-    
-    // Base road
-    graphics.fillStyle(0x222222);
-    graphics.fillRect(0, 0, 128, 512);
-    
-    // Center line
-    graphics.fillStyle(0xFFFF00);
-    graphics.fillRect(60, 0, 8, 512);
-    
-    // Side markings
-    graphics.fillStyle(0xFFFFFF);
-    for (let y = 0; y < 512; y += 64) {
-      graphics.fillRect(8, y, 16, 32);
-      graphics.fillRect(104, y, 16, 32);
-    }
-    
-    graphics.generateTexture('road-texture', 128, 512);
+    // Notify that the emergency menu is ready
+    eventBus.publish(GameEvents.SCENE_CHANGED, 'EmergencyMenu');
   }
 } 

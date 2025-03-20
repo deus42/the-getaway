@@ -4,104 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phaser Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #030303;
-            color: #e0e0e0;
-            font-family: Arial, sans-serif;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 20px;
-        }
-        h1 {
-            color: #ff3b3b;
-            margin-bottom: 20px;
+            height: 100vh;
+            background-color: #030303;
+            color: #fff;
+            font-family: sans-serif;
         }
         #game-container {
             width: 800px;
             height: 600px;
-            border: 2px solid #ff3b3b;
-            margin-bottom: 20px;
+            border: 1px solid rgba(255, 59, 59, 0.2);
+            box-shadow: 0 0 20px rgba(255, 59, 59, 0.3);
         }
-        .info {
-            margin-top: 20px;
+        #log {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
             padding: 10px;
-            background-color: #121212;
-            border-radius: 4px;
-            width: 800px;
+            width: 80%;
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+            border: 1px solid rgba(255, 59, 59, 0.3);
         }
-        button {
-            background-color: #ff3b3b;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-top: 10px;
+        .log-entry {
+            margin: 4px 0;
         }
-        button:hover {
-            background-color: #ff5252;
-        }
-        #status {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #121212;
-            border-radius: 4px;
-            width: 800px;
-        }
+        .error { color: #ff5555; }
+        .success { color: #55ff55; }
+        .info { color: #5555ff; }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
-    <h1>Phaser Standalone Test</h1>
     <div id="game-container"></div>
-    <div id="status">Loading status information...</div>
-    <button onclick="startGame()">Start Phaser Game</button>
-    <button onclick="checkPhaser()">Check Phaser Status</button>
-    <div class="info">
-        <p>This page tests if Phaser works outside of React to isolate the issue.</p>
-        <p>If the game loads here but not in the main app, the issue is with the React integration.</p>
-    </div>
+    <div id="log"></div>
 
     <script>
-        // Update status area with Phaser info
-        function updateStatus(message, isError = false) {
-            const statusEl = document.getElementById('status');
+        // Simple logging function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
             const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
             entry.textContent = message;
-            if (isError) {
-                entry.style.color = '#ff3b3b';
-            }
-            statusEl.appendChild(entry);
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(`[${type.toUpperCase()}] ${message}`);
         }
 
-        // Check if Phaser is loaded
-        function checkPhaser() {
-            try {
-                if (typeof Phaser !== 'undefined') {
-                    updateStatus(`✅ Phaser is loaded! Version: ${Phaser.VERSION}`);
-                    return true;
-                } else {
-                    updateStatus('❌ Phaser is not loaded!', true);
-                    return false;
-                }
-            } catch (e) {
-                updateStatus(`❌ Error checking Phaser: ${e.message}`, true);
-                return false;
+        // Check if Phaser is available
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof Phaser === 'undefined') {
+                log('Phaser is not available!', 'error');
+            } else {
+                log(`Phaser is available, version: ${Phaser.VERSION}`, 'success');
+                initGame();
+            }
+        });
+
+        // Basic scene
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+            }
+
+            create() {
+                log('MainScene created', 'success');
+                this.add.text(400, 300, 'Phaser is working!', {
+                    color: '#ffffff',
+                    fontSize: '32px'
+                }).setOrigin(0.5);
             }
         }
 
-        // Initialize Phaser game
-        function startGame() {
+        // Initialize game
+        function initGame() {
             try {
-                updateStatus('Starting Phaser game...');
-                
-                if (!checkPhaser()) {
-                    throw new Error('Phaser is not available');
-                }
+                log('Initializing game...', 'info');
                 
                 const config = {
                     type: Phaser.AUTO,
@@ -109,63 +96,19 @@
                     height: 600,
                     parent: 'game-container',
                     backgroundColor: '#121212',
-                    scene: {
-                        preload: function() {
-                            updateStatus('Preload phase started...');
-                            this.load.on('complete', function() {
-                                updateStatus('Assets loaded successfully!');
-                            });
-                            
-                            // Create a simple graphic
-                            this.load.image('logo', 'data:image/png;base64,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');
-                        },
-                        create: function() {
-                            updateStatus('Create phase started...');
-                            try {
-                                // Display some text
-                                this.add.text(400, 100, 'Phaser Test Game', { 
-                                    fontSize: '32px',
-                                    color: '#ff3b3b'
-                                }).setOrigin(0.5);
-                                
-                                // Add a logo
-                                const logo = this.add.image(400, 300, 'logo');
-                                
-                                // Add some animation
-                                this.tweens.add({
-                                    targets: logo,
-                                    y: 350,
-                                    duration: 2000,
-                                    ease: 'Power2',
-                                    yoyo: true,
-                                    loop: -1
-                                });
-                                
-                                updateStatus('Game initialized successfully!');
-                            } catch (e) {
-                                updateStatus(`❌ Error in create: ${e.message}`, true);
-                            }
-                        }
-                    }
+                    scene: [MainScene]
                 };
-                
+
                 const game = new Phaser.Game(config);
                 
-                window.gameInstance = game; // Save for debugging
+                // Make the game instance available globally
+                window.game = game;
                 
-                updateStatus('Game instance created');
-            } catch (e) {
-                updateStatus(`❌ Error creating game: ${e.message}`, true);
-                console.error('Error creating game:', e);
+                log('Game created successfully', 'success');
+            } catch (error) {
+                log(`Error initializing game: ${error.message}`, 'error');
             }
         }
-
-        // Check Phaser status when page loads
-        window.onload = function() {
-            document.getElementById('status').innerHTML = '';
-            checkPhaser();
-            updateStatus('Page loaded. Click "Start Phaser Game" to test.');
-        };
     </script>
 </body>
 </html> 

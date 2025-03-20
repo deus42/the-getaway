@@ -1,6 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="16" cy="10" r="6" fill="#3B6EFF"/>
-  <rect x="10" y="16" width="12" height="16" rx="2" fill="#3B6EFF"/>
-  <rect x="8" y="20" width="4" height="10" rx="1" fill="#3B6EFF"/>
-  <rect x="20" y="20" width="4" height="10" rx="1" fill="#3B6EFF"/>
+  <!-- Player character -->
+  <rect x="12" y="8" width="8" height="16" fill="#333333" />
+  <rect x="12" y="4" width="8" height="6" fill="#666666" />
+  <rect x="8" y="16" width="4" height="10" fill="#444444" />
+  <rect x="20" y="16" width="4" height="10" fill="#444444" />
+  <rect x="12" y="24" width="3" height="8" fill="#444444" />
+  <rect x="17" y="24" width="3" height="8" fill="#444444" />
 </svg> 

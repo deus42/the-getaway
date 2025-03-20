@@ -39,13 +39,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
    * @param y Initial y position
    */
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player-texture');
+    // Try to use the player texture if it exists, otherwise use a fallback
+    const textureKey = scene.textures.exists('player-texture') ? 
+      'player-texture' : (scene.textures.exists('player') ? 'player' : 'player-texture');
+    
+    super(scene, x, y, textureKey);
     
     // Setup basic physics and add to scene
     scene.add.existing(this as unknown as Phaser.GameObjects.GameObject);
     scene.physics.add.existing(this as unknown as Phaser.GameObjects.GameObject);
     this.setCollideWorldBounds(true);
     this.setDrag(0.2);
+    
+    // Check if we need to create a texture (might be missing at this point)
+    if (this.texture.key === '__MISSING') {
+      this.createFallbackTexture();
+    }
     
     // Initialize components
     this.stateMachine = new PlayerStateMachine();
@@ -55,21 +64,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     
     // Setup input with safer keyboard checks
     if (!scene.input.keyboard) {
-      throw new Error('Keyboard input not available');
+      console.warn('Keyboard input not available, using fallback controls');
+      this.inputHandler = this.createFallbackInputHandler();
+    } else {
+      try {
+        this.inputHandler = new InputHandler(
+          scene.input.keyboard.createCursorKeys(),
+          scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT),
+          scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
+          scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I) // Inventory key
+        );
+      } catch (e) {
+        console.error('Error setting up input handler:', e);
+        this.inputHandler = this.createFallbackInputHandler();
+      }
     }
-    
-    this.inputHandler = new InputHandler(
-      scene.input.keyboard.createCursorKeys(),
-      scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT),
-      scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
-      scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.I) // Inventory key
-    );
     
     // Initialize movement after input is available
     this.movement = new MovementController(this, this.inputHandler, 200);
     
     // Register animations
-    this.animations.registerAnimations();
+    try {
+      this.animations.registerAnimations();
+    } catch (e) {
+      console.error('Error registering animations:', e);
+    }
     
     // Set initial state
     this.stateMachine.setState(PlayerState.IDLE);
@@ -89,24 +108,78 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
   
   /**
+   * Creates a fallback texture if the main texture is missing
+   */
+  private createFallbackTexture(): void {
+    console.log('Creating fallback player texture');
+    
+    // Create a simple player texture as fallback
+    const graphics = this.scene.add.graphics({ x: 0, y: 0 });
+    
+    // Blue square for player - simple but functional
+    graphics.fillStyle(0x3333ff);
+    graphics.fillRect(0, 0, 32, 32);
+    
+    // Add some details to make it look a bit like a character
+    graphics.fillStyle(0xffffff);
+    graphics.fillRect(8, 8, 5, 5); // Eye
+    graphics.fillRect(19, 8, 5, 5); // Eye
+    graphics.fillRect(12, 20, 8, 3); // Mouth
+    
+    // Generate the texture
+    graphics.generateTexture('player-texture', 32, 32);
+    graphics.destroy();
+    
+    // Set the texture
+    this.setTexture('player-texture');
+  }
+  
+  /**
+   * Creates a fallback input handler if keyboard is not available
+   */
+  private createFallbackInputHandler(): InputHandler {
+    // Create a dummy input handler that doesn't rely on keyboard
+    const dummyInput = {
+      isLeftDown: () => false,
+      isRightDown: () => false,
+      isUpDown: () => false,
+      isDownDown: () => false,
+      isRunDown: () => false,
+      isInteractKeyJustPressed: () => false,
+      isInventoryKeyJustPressed: () => false,
+      update: () => {}
+    };
+    
+    return dummyInput as unknown as InputHandler;
+  }
+  
+  /**
    * Update method called each frame
    * @param _time Current time (unused)
    * @param delta Time elapsed since last frame
    */
   update(_time: number, delta: number): void {
-    // Update all components
-    this.inputHandler.update();
-    
-    // State machine controls what actions are allowed based on state
-    this.stateMachine.update(delta);
-    
-    // Apply movement based on current state
-    if (this.currentTurn || !this.isInTurnBasedMode()) {
-      this.movement.update();
+    try {
+      // Update all components
+      this.inputHandler.update();
+      
+      // State machine controls what actions are allowed based on state
+      this.stateMachine.update(delta);
+      
+      // Apply movement based on current state
+      if (this.currentTurn || !this.isInTurnBasedMode()) {
+        this.movement.update();
+      }
+      
+      // Update animations based on state - with error handling
+      try {
+        this.animations.update(this.stateMachine.getCurrentState());
+      } catch (e) {
+        console.error('Animation update error:', e);
+      }
+    } catch (e) {
+      console.error('Error in player update:', e);
     }
-    
-    // Update animations based on state
-    this.animations.update(this.stateMachine.getCurrentState());
   }
   
   /**

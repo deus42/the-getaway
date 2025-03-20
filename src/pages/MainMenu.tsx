@@ -1,21 +1,10 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const MainMenu: React.FC = () => {
   const navigate = useNavigate();
-  const [showCredits, setShowCredits] = useState(false);
 
-  const handleNewGame = () => {
+  const handleOpenGame = () => {
     navigate("/game");
-  };
-
-  const handleOptions = () => {
-    // TODO: Show options modal
-    console.log("Options clicked");
-  };
-
-  const toggleCredits = () => {
-    setShowCredits(!showCredits);
   };
 
   return (
@@ -67,46 +56,48 @@ const MainMenu: React.FC = () => {
           <p className="text-lg mt-2 text-textcolor/60">2036</p>
         </div>
 
-        {/* Menu buttons */}
-        <div className="flex flex-col gap-5 w-72">
+        {/* Single prominent Open Game button */}
+        <div className="flex flex-col items-center mb-12">
           <button
-            onClick={handleNewGame}
-            className="btn-primary py-4 text-xl relative hover:translate-y-[-2px] transition-all duration-300 scanlines"
+            onClick={handleOpenGame}
+            className="btn-primary py-5 px-12 text-2xl relative hover:translate-y-[-3px] transition-all duration-300 bg-primary text-black font-bold shadow-[0_0_20px_rgba(255,59,59,0.5)] hover:shadow-[0_0_30px_rgba(255,59,59,0.8)] border-2 border-primary w-64"
           >
-            New Game
+            <span className="relative z-10 glitch-text tracking-wider">
+              OPEN GAME
+            </span>
+            <div className="absolute inset-0 bg-primary/20 scanlines"></div>
           </button>
 
-          <button
-            onClick={handleOptions}
-            className="btn-secondary py-3 text-lg relative hover:translate-y-[-2px] transition-all duration-300"
-          >
-            Options
-          </button>
-
-          <button
-            onClick={toggleCredits}
-            className="btn-secondary py-3 text-lg relative hover:translate-y-[-2px] transition-all duration-300"
-          >
-            {showCredits ? "Hide Credits" : "Credits"}
-          </button>
+          <div className="text-textcolor/40 mt-4 font-mono text-sm">
+            <span className="text-primary/60">[ SYSTEM STATUS: </span>READY
+            <span className="text-primary/60"> ]</span>
+          </div>
         </div>
 
-        {/* Credits panel */}
-        {showCredits && (
-          <div className="card mt-10 max-w-md z-10 bg-surface/90 backdrop-blur-sm border border-primary/30">
-            <h3 className="text-center mb-4 text-primary">Credits</h3>
-            <p className="text-sm mb-3">
-              A dystopian tactical RPG set in a world under authoritarian rule.
-              Fight for freedom in a battle against tyranny.
+        {/* Game description */}
+        <div className="mt-4 max-w-md text-center">
+          <div className="card bg-surface/30 backdrop-blur-sm border border-primary/20 p-6 shadow-[0_0_15px_rgba(255,59,59,0.1)]">
+            <div className="text-xs text-primary/60 font-mono mb-2 tracking-wider">
+              TRANSMISSION INCOMING
+            </div>
+            <p className="mb-3 text-textcolor/70 font-mono">
+              <span className="text-primary/90 font-bold">[CLASSIFIED]</span> A
+              dystopian tactical RPG set in 2036 under authoritarian rule.
             </p>
-            <p className="text-sm mt-2">Created in 2024 by the Resistance.</p>
+            <p className="text-textcolor/70 font-mono mb-4">
+              Fight for freedom, navigate through{" "}
+              <span className="text-primary">danger</span>, and escape tyranny.
+            </p>
+            <div className="text-xs text-primary/60 font-mono pt-2 border-t border-primary/20">
+              Created in 2036 by the Resistance
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Version info */}
-      <div className="absolute bottom-4 right-4 text-textcolor/30 text-xs z-10">
-        v0.1.0-alpha
+      <div className="absolute bottom-4 right-4 text-textcolor/30 text-xs z-10 font-mono">
+        v0.1.0-alpha | <span className="text-primary/30">SYSTEM READY</span>
       </div>
     </div>
   );
