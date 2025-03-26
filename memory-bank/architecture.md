@@ -291,3 +291,70 @@ Game logic functions are pure and don't directly interact with Redux. Instead:
 - This separation allows for easier testing and maintenance
 
 This architecture provides a solid foundation for implementing the features outlined in the implementation plan while maintaining code organization and scalability.
+
+## Game Engine Integration
+
+The game engine integration connects Phaser with React and Redux to handle game rendering and state management.
+
+### Components
+
+#### GameCanvas Component (`src/components/GameCanvas.tsx`)
+
+This component serves as the primary connection between React and Phaser:
+
+- Initializes and renders the Phaser game in a React component
+- Maintains a reference to the game instance throughout component lifecycle
+- Handles the creation and destruction of the Phaser game
+- Displays a UI overlay with game state information from Redux
+- Uses a responsive container to fit various screen sizes
+
+#### GameController Component (`src/components/GameController.tsx`)
+
+The GameController handles user input and dispatches appropriate actions:
+
+- Listens for keyboard events (arrow keys and WASD)
+- Translates user input into game actions via Redux
+- Implements collision detection with the game world
+- Manages action points during combat
+- Follows React's event handling patterns with useEffect/useCallback
+
+### Game Engine
+
+#### MainScene Class (`src/game/scenes/MainScene.ts`)
+
+This is the central Phaser scene that renders the game world:
+
+- Subscribes to the Redux store to reflect state changes
+- Renders the grid-based map with different tile types
+- Handles player sprite positioning and movement
+- Manages rendering updates when game state changes
+- Implements proper cleanup on scene shutdown
+
+### State Management
+
+The Redux store serves as the single source of truth for game state:
+
+- Player state (position, health, inventory) is managed in `playerSlice.ts`
+- World state (map, entities, time) is managed in `worldSlice.ts`
+- Game actions are dispatched through Redux actions
+- Phaser subscribes to state changes and updates visuals accordingly
+
+### Data Flow
+
+1. User input (e.g., keyboard press) is captured by `GameController`
+2. `GameController` dispatches Redux actions (e.g., `movePlayer`)
+3. Redux reducers update the store state
+4. The `MainScene`, subscribed to the store, detects changes
+5. `MainScene` updates the visual representation based on new state
+
+This architecture creates a clean separation of concerns:
+- Game logic and state are managed in Redux
+- Rendering and graphics are handled by Phaser
+- UI components are built with React
+- Communication between layers is handled through Redux state
+
+This approach provides several benefits:
+- Game state can be easily saved/loaded
+- Time travel debugging is possible with Redux DevTools
+- Components can be tested independently
+- Game logic is decoupled from rendering details
