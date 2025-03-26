@@ -1,12 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
+import playerReducer from './playerSlice';
+import worldReducer from './worldSlice';
+import questsReducer from './questsSlice';
 
-// Create empty root reducer for now
-const rootReducer = {
-  // We'll add specific reducers in later steps
-};
-
+// Configure the store with all reducers
 export const store = configureStore({
-  reducer: rootReducer,
+  reducer: {
+    player: playerReducer,
+    world: worldReducer,
+    quests: questsReducer
+  },
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
