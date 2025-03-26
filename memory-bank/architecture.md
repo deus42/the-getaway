@@ -358,3 +358,83 @@ This approach provides several benefits:
 - Time travel debugging is possible with Redux DevTools
 - Components can be tested independently
 - Game logic is decoupled from rendering details
+
+## Grid-Based Movement System
+
+The grid-based movement system is a core component of the game, providing the foundation for player navigation, combat positioning, and interaction with the environment.
+
+### Key Components
+
+#### Grid System (`/src/game/world/grid.ts`)
+
+This file defines the core grid functionality:
+
+- **Grid Creation**: Functions to create empty grids, basic map areas, and test maps with obstacles
+  - `createEmptyGrid`: Creates a 2D array of MapTile objects with default properties
+  - `createBasicMapArea`: Generates a map area with walls around the edges
+  - `createTestMapArea`: Creates a more complex map with internal walls and cover for testing
+
+- **Position Validation**:
+  - `isPositionInBounds`: Checks if a position is within the map boundaries
+  - `isPositionWalkable`: Determines if a position can be moved to (not a wall or out of bounds)
+  - `getAdjacentWalkablePositions`: Returns all valid positions that can be reached in one step
+
+- **Map Manipulation**:
+  - `addWalls`: Adds walls to specific positions in a map area
+  - `addCover`: Adds cover elements that provide tactical advantages during combat
+
+- **Coordinate Conversion**:
+  - `gridToPixel`: Converts grid coordinates to pixel positions for rendering
+  - `pixelToGrid`: Converts pixel coordinates to grid positions for input handling
+
+#### Movement Controller (`/src/components/GameController.tsx`)
+
+Manages player input and movement:
+
+- Captures keyboard input (arrow keys and WASD)
+- Validates movement against the grid before updating position
+- Handles action point costs for movement during combat
+- Provides visual feedback when movement is blocked
+- Prevents movement during combat if it's not the player's turn
+
+#### Visual Rendering (`/src/game/scenes/MainScene.ts`)
+
+Renders the grid and player:
+
+- Draws the grid with visual elements for different tile types
+- Updates player sprite position based on grid coordinates
+- Uses distinctive visual indicators for walls, cover, and floor tiles
+- Subscribes to Redux state changes to refresh rendering when needed
+
+### Movement Workflow
+
+1. **Input**: Player presses movement key (arrow or WASD)
+2. **Validation**: GameController checks if the new position is walkable
+3. **State Update**: If valid, Redux action updates player position
+4. **Rendering**: MainScene responds to state change and updates visual position
+5. **Feedback**: If invalid, feedback message appears to indicate blocked movement
+
+### Map Structure
+
+Maps use a 2D array of MapTile objects with properties:
+- **type**: The tile type (FLOOR, WALL, COVER, etc.)
+- **position**: Grid coordinates
+- **isWalkable**: Whether the player can move onto this tile
+- **provideCover**: Whether the tile offers combat advantages
+
+### Integration with Redux
+
+The grid system integrates with Redux through:
+- **worldSlice**: Stores the current map area and handles map state changes
+- **playerSlice**: Manages player position and movement-related actions
+- **Subscription**: MainScene subscribes to state changes to update rendering
+
+### Testing
+
+The movement system is thoroughly tested with unit tests that verify:
+- Grid creation with correct dimensions
+- Wall and cover placement
+- Pathfinding and adjacency calculation
+- Position validation and boundary checking
+
+This grid-based system provides a foundation for future enhancements like combat, NPC movement, and more complex environments.

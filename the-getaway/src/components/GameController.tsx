@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { movePlayer, updateActionPoints } from "../store/playerSlice";
 import { RootState } from "../store";
@@ -14,6 +14,43 @@ const GameController: React.FC = () => {
   const isPlayerTurn = useSelector(
     (state: RootState) => state.world.isPlayerTurn
   );
+
+  // Reference to the div element for focusing
+  const controllerRef = useRef<HTMLDivElement>(null);
+
+  // State for movement feedback message
+  const [feedbackMessage, setFeedbackMessage] = useState<string>("");
+
+  // Auto-focus when component mounts
+  useEffect(() => {
+    if (controllerRef.current) {
+      controllerRef.current.focus();
+    }
+
+    // Re-focus when clicked anywhere on the document
+    const handleClick = () => {
+      if (controllerRef.current) {
+        controllerRef.current.focus();
+      }
+    };
+
+    document.addEventListener("click", handleClick);
+
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, []);
+
+  // Clear feedback message after 2 seconds
+  useEffect(() => {
+    if (feedbackMessage) {
+      const timer = setTimeout(() => {
+        setFeedbackMessage("");
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [feedbackMessage]);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
@@ -38,6 +75,11 @@ const GameController: React.FC = () => {
 
       // Only allow movement if player has action points and it's their turn (if in combat)
       if (inCombat && (!isPlayerTurn || player.actionPoints <= 0)) {
+        if (player.actionPoints <= 0) {
+          setFeedbackMessage("Not enough action points to move!");
+        } else if (!isPlayerTurn) {
+          setFeedbackMessage("It's not your turn!");
+        }
         return;
       }
 
@@ -67,11 +109,15 @@ const GameController: React.FC = () => {
       // Check if the new position is walkable
       if (isPositionWalkable(newPosition, currentMapArea)) {
         dispatch(movePlayer(newPosition));
+        setFeedbackMessage(`Moved to (${newPosition.x}, ${newPosition.y})`);
 
         // If in combat, movement costs action points
         if (inCombat) {
           dispatch(updateActionPoints(-1)); // Reduce action points by 1
         }
+      } else {
+        // Show feedback for obstacles
+        setFeedbackMessage("Cannot move there! Path is blocked.");
       }
     },
     [
@@ -81,16 +127,25 @@ const GameController: React.FC = () => {
       dispatch,
       inCombat,
       isPlayerTurn,
+      setFeedbackMessage,
     ]
   );
 
   return (
     <div
+      ref={controllerRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       className="fixed inset-0 focus:outline-none"
       style={{ zIndex: 1 }}
-    />
+      data-testid="game-controller"
+    >
+      {feedbackMessage && (
+        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 bg-opacity-75 text-white py-2 px-4 rounded text-sm">
+          {feedbackMessage}
+        </div>
+      )}
+    </div>
   );
 };
 

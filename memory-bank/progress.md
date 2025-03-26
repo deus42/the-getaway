@@ -179,3 +179,44 @@ Date: March 26, 2024
 ### Next Steps:
 
 - Proceed to Step 4: Add Grid-Based Player Movement, which will focus on enhancing movement with proper collision detection and obstacles.
+
+## Step 4: Add Grid-Based Player Movement (Completed)
+
+Date: March 26, 2024
+
+### Tasks Accomplished:
+
+1. Enhanced the grid system for player movement:
+   - Created a test map with internal walls and obstacles in `grid.ts`
+   - Implemented a maze-like pattern of obstacles for more interesting navigation
+   - Added cover elements that are visually distinct and provide tactical advantages
+
+2. Improved the visual representation of the grid:
+   - Added grid lines for better visual clarity
+   - Used distinct colors for different tile types (floor, wall, cover)
+   - Added visual markers (X for walls, circles for cover) for better readability
+   - Enhanced the contrast between walkable and non-walkable areas
+
+3. Refined player movement mechanics:
+   - Ensured player stops at obstacles and cannot pass through walls
+   - Implemented position validation before movement
+   - Added visual feedback when player attempts to move to a non-walkable tile
+   - Maintained action point system for movement during combat
+
+4. Created comprehensive tests for the grid system:
+   - Verified grid creation with the correct dimensions
+   - Tested wall and obstacle placement
+   - Confirmed pathfinding functionality with adjacent walkable positions
+   - Validated bounds checking and walkable position detection
+
+### Notes:
+
+- The game now features a more engaging environment with obstacles to navigate around
+- Player movement is restricted by walls and the map boundaries
+- Visual feedback appears when the player tries to move to a blocked position
+- The grid system is robust and ready for the combat system in the next step
+- Tests validate all core functionality of the grid-based movement system
+
+### Next Steps:
+
+- Proceed to Step 5: Build a Basic Combat System, which will focus on implementing turn-based combat with a player and enemy.

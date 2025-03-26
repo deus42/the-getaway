@@ -16,7 +16,7 @@ export const DEFAULT_SKILLS: PlayerSkills = {
 export const DEFAULT_PLAYER: Player = {
   id: uuidv4(),
   name: 'Player',
-  position: { x: 0, y: 0 },
+  position: { x: 3, y: 1 },
   health: 100,
   maxHealth: 100,
   actionPoints: 6,

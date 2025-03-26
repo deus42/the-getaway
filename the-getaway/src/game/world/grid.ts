@@ -182,4 +182,54 @@ export const pixelToGrid = (position: Position, tileSize: number = DEFAULT_TILE_
     x: Math.floor(position.x / tileSize),
     y: Math.floor(position.y / tileSize)
   };
+};
+
+export const createTestMapArea = (
+  name: string = "Test Area",
+  width: number = DEFAULT_GRID_SIZE,
+  height: number = DEFAULT_GRID_SIZE
+): MapArea => {
+  // Start with a basic map area (walls around the edges)
+  const mapArea = createBasicMapArea(name, width, height);
+  
+  // Add internal walls in a maze-like pattern
+  const wallPositions: Position[] = [
+    // Vertical wall in the middle with a gap
+    { x: 5, y: 2 },
+    { x: 5, y: 3 },
+    { x: 5, y: 4 },
+    // Skip y=5 to create a doorway
+    { x: 5, y: 6 },
+    { x: 5, y: 7 },
+    
+    // Horizontal wall with a gap
+    { x: 2, y: 3 },
+    { x: 3, y: 3 },
+    { x: 4, y: 3 },
+    // Skip x=5 (already part of vertical wall)
+    { x: 6, y: 3 },
+    { x: 7, y: 3 },
+    
+    // Wall in top-left corner
+    { x: 2, y: 2 },
+    
+    // Wall in bottom-right corner
+    { x: 7, y: 7 },
+    { x: 8, y: 7 },
+    { x: 7, y: 8 },
+  ];
+  
+  // Add cover elements
+  const coverPositions: Position[] = [
+    { x: 3, y: 5 },
+    { x: 7, y: 2 },
+    { x: 2, y: 7 },
+    { x: 8, y: 5 }
+  ];
+  
+  // Add walls and cover to the map
+  let updatedMapArea = addWalls(mapArea, wallPositions);
+  updatedMapArea = addCover(updatedMapArea, coverPositions);
+  
+  return updatedMapArea;
 }; 

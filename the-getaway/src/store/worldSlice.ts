@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
-import { createBasicMapArea } from '../game/world/grid';
+import { createTestMapArea } from '../game/world/grid';
 
 export interface WorldState {
   currentMapArea: MapArea;
@@ -10,7 +10,7 @@ export interface WorldState {
 }
 
 const initialState: WorldState = {
-  currentMapArea: createBasicMapArea('Default Area'),
+  currentMapArea: createTestMapArea('Test Area'),
   currentTime: 0, // Time in seconds since game start
   inCombat: false,
   isPlayerTurn: true
