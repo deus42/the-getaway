@@ -220,3 +220,51 @@ Date: March 26, 2024
 ### Next Steps:
 
 - Proceed to Step 5: Build a Basic Combat System, which will focus on implementing turn-based combat with a player and enemy.
+
+## Step 5: Build a Basic Combat System (Completed)
+
+Date: March 26, 2024
+
+### Tasks Accomplished:
+
+1. Implemented turn-based combat system with player and enemies:
+   - Added 6 Action Points (AP) per turn for both player and enemies
+   - Configured movement to cost 1 AP per tile
+   - Set up attacks to cost 2 AP and deal 5 damage (configurable)
+   - Implemented turn-switching when entities run out of AP
+
+2. Enhanced the MainScene to visualize combat:
+   - Added enemy rendering with red squares and health indicators
+   - Displayed player health and AP information
+   - Added combat status indicators to show whose turn it is
+   - Implemented visual feedback when entering combat mode
+
+3. Developed a combat controller in GameController.tsx:
+   - Used spacebar to attack the nearest enemy
+   - Automatically entered combat when moving adjacent to an enemy
+   - Added feedback messages for combat actions (hits, misses, etc.)
+   - Implemented turn management for player and enemies
+
+4. Improved enemy AI in combat:
+   - Added decision-making logic to attack when within range
+   - Implemented movement toward player when out of range
+   - Added cover-seeking behavior for wounded enemies
+   - Created utility functions for finding the best tactical position
+
+5. Created a comprehensive test suite for the combat system:
+   - Added tests for attack mechanics and hit calculation
+   - Verified movement functionality during combat
+   - Tested turn management and AP reset
+   - Validated enemy AI decision-making
+
+### Notes:
+
+- Combat is now fully functional with a clear turn-based structure
+- The player can engage enemies with spacebar when in range
+- Enemy AI makes tactical decisions based on health, position, and cover
+- Visual indicators make it clear when combat is active and whose turn it is
+- The foundation is now in place for adding cover mechanics in the next step
+
+### Next Steps:
+
+- Proceed to Step 6: Introduce Cover Mechanics, which will enhance the combat system with strategic elements.

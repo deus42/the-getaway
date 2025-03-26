@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
 import { createTestMapArea } from '../game/world/grid';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface WorldState {
   currentMapArea: MapArea;
@@ -133,5 +134,32 @@ export const {
   addItemToMap,
   removeItemFromMap
 } = worldSlice.actions;
+
+// Helper function to create an enemy
+export const createEnemy = (
+  name: string,
+  position: Position,
+  health: number = 30,
+  actionPoints: number = 6,
+  damage: number = 5,
+  attackRange: number = 1
+): Enemy => {
+  return {
+    id: uuidv4(),
+    name,
+    position,
+    health,
+    maxHealth: health,
+    actionPoints,
+    maxActionPoints: actionPoints,
+    damage,
+    attackRange,
+    isHostile: true
+  };
+};
+
+export const spawnEnemy = (name: string, position: Position): Enemy => {
+  return createEnemy(name, position);
+};
 
 export default worldSlice.reducer; 
