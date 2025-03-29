@@ -1,73 +1,140 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
 import { createTestMapArea } from '../game/world/grid';
-import { v4 as uuidv4 } from 'uuid';
 
 export interface WorldState {
   currentMapArea: MapArea;
   currentTime: number;
   inCombat: boolean;
   isPlayerTurn: boolean;
+  turnCount: number;
 }
 
+// Create initial enemy using only properties from the type definition
+const initialMap = createTestMapArea('Test Area'); // Use existing helper
+const initialEnemy: Enemy = {
+  id: crypto.randomUUID(),
+  name: "Guard",
+  position: { x: 7, y: 4 },
+  maxHealth: 25,
+  health: 25, // Correct property
+  actionPoints: 6,
+  maxActionPoints: 6,
+  damage: 5,        // Property from Enemy type
+  attackRange: 1,   // Property from Enemy type
+  isHostile: true,  // Property from Enemy type
+};
+initialMap.entities.enemies.push(initialEnemy);
+console.log("[worldSlice] Initial map generated with enemy:", initialEnemy);
+
 const initialState: WorldState = {
-  currentMapArea: createTestMapArea('Test Area'),
-  currentTime: 0, // Time in seconds since game start
+  currentMapArea: initialMap,
+  currentTime: 0,
   inCombat: false,
-  isPlayerTurn: true
+  isPlayerTurn: true,
+  turnCount: 1, // Start at turn 1
 };
 
 export const worldSlice = createSlice({
   name: 'world',
   initialState,
   reducers: {
-    // Set the current map area
-    setCurrentMapArea: (state, action: PayloadAction<MapArea>) => {
+    setMapArea: (state, action: PayloadAction<MapArea>) => {
       state.currentMapArea = action.payload;
+      state.inCombat = false;
+      state.isPlayerTurn = true;
+      state.turnCount = 1;
     },
     
-    // Update game time
     updateGameTime: (state, action: PayloadAction<number>) => {
       state.currentTime += action.payload;
     },
     
-    // Set game time directly
     setGameTime: (state, action: PayloadAction<number>) => {
       state.currentTime = action.payload;
     },
     
-    // Enter combat mode
     enterCombat: (state) => {
-      state.inCombat = true;
-      state.isPlayerTurn = true;
-    },
-    
-    // Exit combat mode
-    exitCombat: (state) => {
-      state.inCombat = false;
-    },
-    
-    // Switch turns in combat
-    switchTurn: (state) => {
-      state.isPlayerTurn = !state.isPlayerTurn;
-    },
-    
-    // Update an enemy in the current map
-    updateEnemy: (state, action: PayloadAction<Enemy>) => {
-      const enemy = action.payload;
-      const index = state.currentMapArea.entities.enemies.findIndex(e => e.id === enemy.id);
-      
-      if (index !== -1) {
-        state.currentMapArea.entities.enemies[index] = enemy;
+      if (!state.inCombat) {
+        console.log("[worldSlice] Entering Combat Mode");
+        state.inCombat = true;
+        state.isPlayerTurn = true;
+        state.turnCount = 1;
       }
     },
     
-    // Add an enemy to the current map
+    exitCombat: (state) => {
+      if (state.inCombat) {
+        console.log("[worldSlice] Exiting Combat Mode");
+        state.inCombat = false;
+        state.isPlayerTurn = true;
+        state.turnCount = 1;
+      }
+    },
+    
+    switchTurn: (state) => {
+      if (!state.inCombat) return;
+
+      state.isPlayerTurn = !state.isPlayerTurn;
+
+      if (state.isPlayerTurn) {
+        // Just switched TO player turn
+        state.turnCount++; // Increment turn count here
+        console.log(`[worldSlice] switchTurn: Starting Player Turn ${state.turnCount}`);
+        // Player AP reset is handled in GameController
+      } else {
+        // Just switched TO enemy turn
+         console.log(`[worldSlice] switchTurn: Starting Enemy Turn (during Player Turn ${state.turnCount})`);
+        console.log("[worldSlice] switchTurn: Resetting AP for all living enemies");
+        state.currentMapArea.entities.enemies.forEach((enemy, index) => {
+          if (enemy.health > 0) {
+            // Modify draft directly
+            state.currentMapArea.entities.enemies[index].actionPoints = enemy.maxActionPoints;
+          }
+        });
+      }
+    },
+    
+    updateEnemy: (state, action: PayloadAction<Enemy>) => {
+      const updatedEnemy = action.payload;
+      const index = state.currentMapArea.entities.enemies.findIndex(
+        (e) => e.id === updatedEnemy.id
+      );
+      if (index !== -1) {
+        const healthBefore = state.currentMapArea.entities.enemies[index].health;
+        state.currentMapArea.entities.enemies[index] = updatedEnemy;
+         console.log("[worldSlice] updateEnemy reducer: UPDATING state", {
+            enemyId: updatedEnemy.id, healthBefore, healthAfter: updatedEnemy.health });
+
+        if (updatedEnemy.health <= 0) {
+          console.log(`[worldSlice updateEnemy] Enemy ${updatedEnemy.id} health <= 0. Checking remaining enemies.`);
+          // Get the current list of enemies *after* the update within this reducer step
+          const currentEnemiesInState = state.currentMapArea.entities.enemies;
+          console.log('[worldSlice updateEnemy] Enemies in state for check:', JSON.stringify(currentEnemiesInState.map(e => ({id: e.id, health: e.health}))));
+
+          // Check if any enemies in the updated list still have health > 0
+          const livingEnemiesAfterUpdate = currentEnemiesInState.filter(e => e.health > 0);
+          console.log('[worldSlice updateEnemy] Living enemies count after update:', livingEnemiesAfterUpdate.length);
+
+          if (livingEnemiesAfterUpdate.length === 0) {
+            console.log("[worldSlice updateEnemy] NO enemies left alive. Setting inCombat=false.");
+            state.inCombat = false;
+            state.isPlayerTurn = true; // Ensure player gets control
+            state.turnCount = 1; // Reset turn count
+            console.log("[worldSlice updateEnemy] State after setting inCombat=false:", { inCombat: state.inCombat, isPlayerTurn: state.isPlayerTurn, turnCount: state.turnCount });
+          } else {
+             console.log(`[worldSlice updateEnemy] ${livingEnemiesAfterUpdate.length} enemies still alive. Combat continues.`);
+          }
+        }
+      } else {
+         console.warn(`[worldSlice] updateEnemy reducer: Enemy ${updatedEnemy.id} not found.`);
+      }
+    },
+    
     addEnemy: (state, action: PayloadAction<Enemy>) => {
       state.currentMapArea.entities.enemies.push(action.payload);
     },
     
-    // Remove an enemy from the current map
     removeEnemy: (state, action: PayloadAction<string>) => {
       const enemyId = action.payload;
       state.currentMapArea.entities.enemies = state.currentMapArea.entities.enemies.filter(
@@ -75,7 +142,6 @@ export const worldSlice = createSlice({
       );
     },
     
-    // Update an NPC in the current map
     updateNPC: (state, action: PayloadAction<NPC>) => {
       const npc = action.payload;
       const index = state.currentMapArea.entities.npcs.findIndex(n => n.id === npc.id);
@@ -85,12 +151,10 @@ export const worldSlice = createSlice({
       }
     },
     
-    // Add an NPC to the current map
     addNPC: (state, action: PayloadAction<NPC>) => {
       state.currentMapArea.entities.npcs.push(action.payload);
     },
     
-    // Remove an NPC from the current map
     removeNPC: (state, action: PayloadAction<string>) => {
       const npcId = action.payload;
       state.currentMapArea.entities.npcs = state.currentMapArea.entities.npcs.filter(
@@ -98,7 +162,6 @@ export const worldSlice = createSlice({
       );
     },
     
-    // Add an item to the current map
     addItemToMap: (state, action: PayloadAction<{item: Item, position: Position}>) => {
       const { item, position } = action.payload;
       const itemWithPosition = {
@@ -108,7 +171,6 @@ export const worldSlice = createSlice({
       state.currentMapArea.entities.items.push(itemWithPosition as Item & { position: Position });
     },
     
-    // Remove an item from the current map
     removeItemFromMap: (state, action: PayloadAction<string>) => {
       const itemId = action.payload;
       state.currentMapArea.entities.items = state.currentMapArea.entities.items.filter(
@@ -119,7 +181,7 @@ export const worldSlice = createSlice({
 });
 
 export const {
-  setCurrentMapArea,
+  setMapArea,
   updateGameTime,
   setGameTime,
   enterCombat,
@@ -134,32 +196,5 @@ export const {
   addItemToMap,
   removeItemFromMap
 } = worldSlice.actions;
-
-// Helper function to create an enemy
-export const createEnemy = (
-  name: string,
-  position: Position,
-  health: number = 30,
-  actionPoints: number = 6,
-  damage: number = 5,
-  attackRange: number = 1
-): Enemy => {
-  return {
-    id: uuidv4(),
-    name,
-    position,
-    health,
-    maxHealth: health,
-    actionPoints,
-    maxActionPoints: actionPoints,
-    damage,
-    attackRange,
-    isHostile: true
-  };
-};
-
-export const spawnEnemy = (name: string, position: Position): Enemy => {
-  return createEnemy(name, position);
-};
 
 export default worldSlice.reducer; 

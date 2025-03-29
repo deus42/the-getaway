@@ -1,13 +1,13 @@
 import React, { useCallback, useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { movePlayer, updateActionPoints } from "../store/playerSlice";
 import {
-  updateEnemy,
-  enterCombat,
-  switchTurn,
-  addEnemy,
-  spawnEnemy,
-} from "../store/worldSlice";
+  movePlayer,
+  updateActionPoints,
+  setPlayerData,
+  resetActionPoints,
+} from "../store/playerSlice";
+import { updateEnemy, enterCombat, switchTurn } from "../store/worldSlice";
+import { addLogMessage } from "../store/logSlice";
 import { RootState } from "../store";
 import { isPositionWalkable } from "../game/world/grid";
 import {
@@ -15,7 +15,7 @@ import {
   isInAttackRange,
   DEFAULT_ATTACK_COST,
 } from "../game/combat/combatSystem";
-import { Enemy, Position } from "../game/interfaces/types";
+import { Enemy, Position, MapArea } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
 
 const GameController: React.FC = () => {
@@ -31,12 +31,16 @@ const GameController: React.FC = () => {
   const enemies = useSelector(
     (state: RootState) => state.world.currentMapArea.entities.enemies
   );
+  const turnCount = useSelector((state: RootState) => state.world.turnCount);
+  const prevInCombat = useRef(inCombat); // Ref to track previous value
+
+  // State to track current enemy turn processing
+  const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
+  const [isProcessingEnemyAction, setIsProcessingEnemyAction] =
+    useState<boolean>(false);
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
-
-  // State for movement feedback message
-  const [feedbackMessage, setFeedbackMessage] = useState<string>("");
 
   // Auto-focus when component mounts
   useEffect(() => {
@@ -53,131 +57,249 @@ const GameController: React.FC = () => {
 
     document.addEventListener("click", handleClick);
 
-    // Spawn a test enemy on component mount if no enemies exist
-    if (enemies.length === 0) {
-      const testEnemy = spawnEnemy("Test Enemy", { x: 7, y: 4 });
-      dispatch(addEnemy(testEnemy));
-    }
-
     return () => {
       document.removeEventListener("click", handleClick);
     };
-  }, [dispatch, enemies.length]);
+  }, []);
 
-  // Effect to handle enemy turn
+  // --- Enemy Turn Logic ---
   useEffect(() => {
-    // Skip if not in combat or it's player's turn
-    if (!inCombat || isPlayerTurn || enemies.length === 0) {
+    console.log(
+      `[GameController] === useEffect RUNNING === Turn: ${
+        isPlayerTurn ? "Player" : "Enemy"
+      }, Combat: ${inCombat}, Processing: ${isProcessingEnemyAction}, EnemyIdx: ${currentEnemyTurnIndex}`
+    );
+
+    // Exit conditions
+    if (
+      !inCombat ||
+      isPlayerTurn ||
+      enemies.length === 0 ||
+      isProcessingEnemyAction
+    ) {
+      if (!inCombat || isPlayerTurn) {
+        setCurrentEnemyTurnIndex(0); // Reset index if combat ends or player turn starts
+      }
       return;
     }
 
-    // Process each enemy's turn
-    const enemyTurnTimer = setTimeout(() => {
-      // Get wall positions for obstacle detection
-      const walls: Position[] = [];
-      for (let y = 0; y < currentMapArea.height; y++) {
-        for (let x = 0; x < currentMapArea.width; x++) {
-          if (!currentMapArea.tiles[y][x].isWalkable) {
-            walls.push({ x, y });
-          }
-        }
-      }
-
-      // Get cover positions
-      const coverPositions: Position[] = [];
-      for (let y = 0; y < currentMapArea.height; y++) {
-        for (let x = 0; x < currentMapArea.width; x++) {
-          if (currentMapArea.tiles[y][x].provideCover) {
-            coverPositions.push({ x, y });
-          }
-        }
-      }
-
-      // Process each enemy's turn
-      let allEnemiesDone = true;
-
-      enemies.forEach((enemy) => {
-        if (enemy.actionPoints > 0) {
-          allEnemiesDone = false;
-
-          // Determine enemy action
-          const result = determineEnemyMove(
-            enemy,
-            player,
-            walls,
-            coverPositions
-          );
-
-          // Update enemy state
-          dispatch(updateEnemy(result.enemy));
-
-          // Show feedback based on action
-          if (result.action === "attack") {
-            setFeedbackMessage(
-              `${enemy.name} attacks for ${
-                result.player.health - player.health
-              } damage!`
-            );
-          } else if (result.action === "move") {
-            setFeedbackMessage(`${enemy.name} moves closer!`);
-          } else if (result.action === "seek_cover") {
-            setFeedbackMessage(`${enemy.name} seeks cover!`);
-          }
-        }
-      });
-
-      // If all enemies have used their AP, switch turn back to player
-      if (allEnemiesDone) {
-        dispatch(switchTurn());
-      }
-    }, 1000); // 1 second delay for enemy actions
-
-    return () => clearTimeout(enemyTurnTimer);
-  }, [inCombat, isPlayerTurn, enemies, player, currentMapArea, dispatch]);
-
-  // Clear feedback message after 2 seconds
-  useEffect(() => {
-    if (feedbackMessage) {
-      const timer = setTimeout(() => {
-        setFeedbackMessage("");
-      }, 2000);
-
-      return () => clearTimeout(timer);
+    const livingEnemies = enemies.filter((e) => e.health > 0);
+    if (livingEnemies.length === 0) {
+      // Should be handled by exitCombat in reducer, but as safety check:
+      console.warn(
+        "[GameController] Enemy turn effect running but no living enemies found."
+      );
+      // dispatch(exitCombat()); // Let reducer handle this via updateEnemy
+      return;
     }
-  }, [feedbackMessage]);
+
+    const currentEnemy = enemies[currentEnemyTurnIndex];
+
+    // --- Check if current enemy can act ---
+    if (
+      !currentEnemy ||
+      currentEnemy.health <= 0 ||
+      currentEnemy.actionPoints <= 0
+    ) {
+      console.log(
+        `[GameController] Enemy ${
+          currentEnemy?.id ?? `at index ${currentEnemyTurnIndex}`
+        } cannot act (Dead or 0 AP). Checking next.`
+      );
+      const nextIndex = currentEnemyTurnIndex + 1;
+      if (nextIndex >= enemies.length) {
+        // All enemies processed for this turn cycle, end enemy phase
+        console.log(
+          "[GameController] All enemies processed, switching back to player."
+        );
+        dispatch(switchTurn());
+        dispatch(resetActionPoints());
+        setCurrentEnemyTurnIndex(0); // Reset index for next player turn
+      } else {
+        // Move to the next enemy for the next effect run
+        setCurrentEnemyTurnIndex(nextIndex);
+      }
+      return; // Exit effect, it will re-run for the next index or end the turn
+    }
+
+    // --- Process Current Enemy Action ---
+    console.log(
+      `[GameController] Scheduling action for enemy index ${currentEnemyTurnIndex}: ${currentEnemy.id} (AP: ${currentEnemy.actionPoints})`
+    );
+
+    const enemyActionTimer = setTimeout(() => {
+      // SET FLAG HERE, right before processing starts
+      setIsProcessingEnemyAction(true);
+      console.log(
+        `[GameController] >>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
+      );
+      try {
+        console.log(
+          `[GameController] Enemy Turn AI: START for ${currentEnemy.id}`
+        );
+
+        // Get cover positions
+        const coverPositions: Position[] = [];
+        for (let y = 0; y < currentMapArea.height; y++) {
+          for (let x = 0; x < currentMapArea.width; x++) {
+            if (currentMapArea.tiles[y][x].provideCover) {
+              coverPositions.push({ x, y });
+            }
+          }
+        }
+        console.log(
+          `[GameController] Enemy Turn AI: Got cover positions for ${currentEnemy.id}`
+        );
+
+        // Determine and execute action
+        console.log(
+          `[GameController] Enemy Turn AI: BEFORE determineEnemyMove for ${currentEnemy.id}`
+        );
+        const result = determineEnemyMove(
+          currentEnemy,
+          player,
+          currentMapArea,
+          enemies,
+          coverPositions
+        );
+        console.log(
+          `[GameController] Enemy ${currentEnemy.id} action: ${result.action}, AP left: ${result.enemy.actionPoints}`
+        );
+
+        console.log(
+          `[GameController] Enemy Turn AI: BEFORE dispatching updates for ${currentEnemy.id}`
+        );
+
+        // Dispatch updates based on the result
+        console.log(
+          `[GameController] Enemy Turn AI: BEFORE dispatch(updateEnemy) for ${currentEnemy.id}`
+        );
+        dispatch(updateEnemy(result.enemy));
+        console.log(
+          `[GameController] Enemy Turn AI: AFTER dispatch(updateEnemy) for ${currentEnemy.id}`
+        );
+
+        console.log(
+          `[GameController] Enemy Turn AI: BEFORE player update check for ${currentEnemy.id}`
+        );
+        if (result.player.id === player.id) {
+          console.log(
+            `[GameController] Enemy Turn AI: BEFORE dispatch(setPlayerData) for ${currentEnemy.id}`
+          );
+          dispatch(setPlayerData(result.player));
+          console.log(
+            `[GameController] Enemy Turn AI: AFTER dispatch(setPlayerData) for ${currentEnemy.id}`
+          );
+        }
+
+        console.log(
+          `[GameController] Enemy Turn AI: END AI & Dispatches for ${currentEnemy.id}`
+        );
+      } catch (error) {
+        console.error("[GameController] Error during enemy turn AI:", {
+          enemyId: currentEnemy?.id,
+          error: error,
+        });
+        // Optionally add more error handling here if needed
+      } finally {
+        console.log(
+          `[GameController] Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Setting processing=false`
+        );
+        // Reset flag HERE. This state change should trigger useEffect re-run.
+        setIsProcessingEnemyAction(false);
+      }
+    }, 500); // Delay for visibility
+
+    // Cleanup timeout if effect re-runs before timeout finishes
+    return () => {
+      console.log(
+        `[GameController] <<< useEffect CLEANUP running. Clearing timeout for index ${currentEnemyTurnIndex}.`
+      );
+      clearTimeout(enemyActionTimer);
+    };
+  }, [
+    inCombat,
+    isPlayerTurn,
+    currentEnemyTurnIndex,
+    enemies.length,
+    isProcessingEnemyAction,
+    dispatch,
+    player,
+    currentMapArea,
+  ]);
+
+  // --- End Enemy Turn Logic ---
+
+  // Effect to show feedback when combat ends
+  useEffect(() => {
+    // Check if the value changed from true to false
+    if (prevInCombat.current && !inCombat) {
+      dispatch(addLogMessage("Combat Over!"));
+      console.log(
+        "[GameController] Combat ended (detected via useEffect watching inCombat)."
+      );
+      // Optional: Explicitly reset player AP here if needed, although it shouldn't be necessary
+      // if handleKeyDown correctly checks inCombat.
+      // dispatch(resetActionPoints()); // Maybe add this if AP doesn't behave correctly post-combat
+    }
+    // Update the ref *after* the check for the next render
+    prevInCombat.current = inCombat;
+  }, [inCombat, dispatch]); // Run whenever inCombat changes (add dispatch if used inside)
 
   // Handle attacking an enemy
   const attackEnemy = useCallback(
-    (enemy: Enemy) => {
+    (enemy: Enemy, mapArea: MapArea) => {
       // Check if player has enough AP
       if (player.actionPoints < DEFAULT_ATTACK_COST) {
-        setFeedbackMessage("Not enough action points to attack!");
+        dispatch(addLogMessage("Not enough AP to attack!"));
         return;
       }
 
       // Check if enemy is in range
       if (!isInAttackRange(player.position, enemy.position, 1)) {
-        setFeedbackMessage("Enemy is out of range!");
+        dispatch(addLogMessage("Enemy out of range!"));
         return;
       }
 
-      // Execute attack
-      const isBehindCover = false; // TODO: Implement cover detection
-      const result = executeAttack(player, enemy, isBehindCover);
+      // Determine if the enemy is behind cover
+      const isBehindCover =
+        mapArea.tiles[enemy.position.y][enemy.position.x].provideCover;
 
-      if (result.success) {
-        setFeedbackMessage(
-          `Hit! Dealt ${result.damage} damage to ${enemy.name}`
-        );
-      } else {
-        setFeedbackMessage(`Missed ${enemy.name}!`);
-      }
+      // Log cover status before attacking
+      console.log("[GameController] attackEnemy: PRE-ATTACK", {
+        enemyId: enemy.id,
+        enemyPosition: enemy.position,
+        isBehindCover: isBehindCover,
+        playerAP_before: player.actionPoints,
+      });
+
+      // Execute attack
+      const result = executeAttack(player, enemy, isBehindCover);
 
       // Update player AP
       dispatch(updateActionPoints(-DEFAULT_ATTACK_COST));
 
+      console.log("[GameController] attackEnemy: POST-ATTACK AP DEDUCTION", {
+        apCost: DEFAULT_ATTACK_COST,
+        playerAP_after: player.actionPoints - DEFAULT_ATTACK_COST, // Simulate state update for logging
+      });
+
+      if (result.success) {
+        dispatch(
+          addLogMessage(`You hit ${enemy.name} for ${result.damage} damage.`)
+        );
+      } else {
+        dispatch(addLogMessage(`You missed ${enemy.name}.`));
+      }
+
       // Update enemy
-      dispatch(updateEnemy(result.newTarget as Enemy));
+      const updatedEnemyTarget = result.newTarget as Enemy;
+      console.log("[GameController] attackEnemy: PRE-DISPATCH updateEnemy", {
+        enemyId: updatedEnemyTarget.id,
+        healthBeforeUpdate: enemy.health, // Health of original enemy object passed to function
+        healthInNewTarget: updatedEnemyTarget.health, // Health in the object to be dispatched
+      });
+      dispatch(updateEnemy(updatedEnemyTarget));
 
       // If no enemies left with health > 0, exit combat
       const anyEnemiesAlive = enemies.some(
@@ -187,9 +309,12 @@ const GameController: React.FC = () => {
       );
 
       if (!anyEnemiesAlive) {
-        setFeedbackMessage("All enemies defeated!");
-      } else if (player.actionPoints - DEFAULT_ATTACK_COST <= 0) {
-        // If player has no more AP, switch turn
+        dispatch(addLogMessage("All enemies defeated!"));
+      } else if (player.actionPoints <= DEFAULT_ATTACK_COST) {
+        // If player has no more AP or exactly enough for this attack, switch turn
+        console.log(
+          "[GameController] attackEnemy: Player out of AP after attack, switching turn."
+        );
         dispatch(switchTurn());
       }
     },
@@ -247,7 +372,7 @@ const GameController: React.FC = () => {
             isInAttackRange(player.position, nearbyEnemy.position, 1)
           ) {
             dispatch(enterCombat());
-            setFeedbackMessage("Entered combat mode!");
+            dispatch(addLogMessage("Entered combat mode!"));
             return;
           }
         }
@@ -259,10 +384,10 @@ const GameController: React.FC = () => {
             nearbyEnemy &&
             isInAttackRange(player.position, nearbyEnemy.position, 1)
           ) {
-            attackEnemy(nearbyEnemy);
+            attackEnemy(nearbyEnemy, currentMapArea);
             return;
           } else {
-            setFeedbackMessage("No enemies in range to attack!");
+            dispatch(addLogMessage("No enemies in range to attack!"));
             return;
           }
         }
@@ -273,9 +398,9 @@ const GameController: React.FC = () => {
       // Only allow movement if player has action points and it's their turn (if in combat)
       if (inCombat && (!isPlayerTurn || player.actionPoints <= 0)) {
         if (player.actionPoints <= 0) {
-          setFeedbackMessage("Not enough action points to move!");
+          dispatch(addLogMessage("Not enough action points to move!"));
         } else if (!isPlayerTurn) {
-          setFeedbackMessage("It's not your turn!");
+          dispatch(addLogMessage("It's not your turn!"));
         }
         return;
       }
@@ -304,37 +429,34 @@ const GameController: React.FC = () => {
       }
 
       // Check if the new position is walkable
-      if (isPositionWalkable(newPosition, currentMapArea)) {
+      if (isPositionWalkable(newPosition, currentMapArea, player, enemies)) {
         dispatch(movePlayer(newPosition));
-        setFeedbackMessage(`Moved to (${newPosition.x}, ${newPosition.y})`);
-
-        // If in combat, movement costs action points
+        // dispatch(addLogMessage({ type: "info", message: `Moved to (${newPosition.x}, ${newPosition.y})` })); // COMMENTED OUT
         if (inCombat) {
+          console.log("[GameController] handleKeyDown: PRE-MOVE AP DEDUCTION", {
+            apCost: 1,
+            playerAP_before: player.actionPoints,
+          });
           dispatch(updateActionPoints(-1)); // Reduce action points by 1
+          console.log(
+            "[GameController] handleKeyDown: POST-MOVE AP DEDUCTION",
+            {
+              apCost: 1,
+              playerAP_after: player.actionPoints - 1, // Simulate state update for logging
+            }
+          );
 
           // If player has no more AP, switch turn
-          if (player.actionPoints - 1 <= 0) {
-            dispatch(switchTurn());
-          }
-
-          // Check if moved adjacent to an enemy, and if so, enter combat if not already
-          if (!inCombat) {
-            const adjacentEnemy = enemies.find(
-              (enemy) =>
-                Math.abs(enemy.position.x - newPosition.x) +
-                  Math.abs(enemy.position.y - newPosition.y) <=
-                1
+          if (player.actionPoints <= 1) {
+            console.log(
+              "[GameController] handleKeyDown: Player out of AP after move, switching turn."
             );
-
-            if (adjacentEnemy) {
-              dispatch(enterCombat());
-              setFeedbackMessage("Entered combat mode!");
-            }
+            dispatch(switchTurn());
           }
         }
       } else {
         // Show feedback for obstacles
-        setFeedbackMessage("Cannot move there! Path is blocked.");
+        // dispatch(addLogMessage({ type: "warning", message: "Cannot move there! Path is blocked." })); // COMMENTED OUT
       }
     },
     [
@@ -365,19 +487,12 @@ const GameController: React.FC = () => {
       style={{ zIndex: 1 }}
       data-testid="game-controller"
     >
-      {feedbackMessage && (
-        <div className="absolute top-16 left-1/2 transform -translate-x-1/2 bg-gray-800 bg-opacity-75 text-white py-2 px-4 rounded text-sm">
-          {feedbackMessage}
-        </div>
-      )}
       {inCombat && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-900 bg-opacity-75 text-white py-2 px-4 rounded text-sm">
-          Combat Mode: {isPlayerTurn ? "Your Turn" : "Enemy Turn"}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-900 bg-opacity-75 text-white py-2 px-4 rounded text-sm z-20 flex space-x-4">
+          <span>{isPlayerTurn ? "Your Turn" : "Enemy Turn"}</span>
+          <span>Turn: {turnCount}</span>
         </div>
       )}
-      <div className="absolute bottom-4 left-4 bg-gray-800 bg-opacity-75 text-white py-2 px-4 rounded text-sm">
-        Controls: Arrow Keys/WASD to move, Spacebar to attack
-      </div>
     </div>
   );
 };

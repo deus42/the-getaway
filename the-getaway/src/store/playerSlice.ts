@@ -85,6 +85,11 @@ export const playerSlice = createSlice({
     // Reset player to default
     resetPlayer: (state) => {
       state.data = DEFAULT_PLAYER;
+    },
+
+    // Set the entire player data object (useful after complex operations)
+    setPlayerData: (state, action: PayloadAction<Player>) => {
+      state.data = action.payload;
     }
   }
 });
@@ -100,7 +105,8 @@ export const {
   updateSkill,
   addItem,
   removeItem,
-  resetPlayer
+  resetPlayer,
+  setPlayerData
 } = playerSlice.actions;
 
 export default playerSlice.reducer; 

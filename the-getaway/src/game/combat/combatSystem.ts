@@ -1,4 +1,5 @@
-import { Enemy, Player, Position } from '../interfaces/types';
+import { Enemy, Player, Position, MapArea } from '../interfaces/types';
+import { isPositionWalkable } from '../world/grid';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
@@ -23,7 +24,8 @@ export const isInAttackRange = (attacker: Position, target: Position, range: num
   const distance = Math.sqrt(
     Math.pow(target.x - attacker.x, 2) + Math.pow(target.y - attacker.y, 2)
   );
-  return distance <= range;
+  // Ensure distance is greater than 0 and within range
+  return distance > 0 && distance <= range;
 };
 
 // Calculate distance between two positions
@@ -57,7 +59,20 @@ export const calculateHitChance = (
   }
   
   // Ensure hit chance is between 0.1 and 0.95
-  return Math.max(0.1, Math.min(0.95, hitChance));
+  const finalHitChance = Math.max(0.1, Math.min(0.95, hitChance));
+
+  console.log('[CombatSystem] calculateHitChance:', {
+    attacker: attacker,
+    target: target,
+    distance: distance,
+    isBehindCover: isBehindCover,
+    initialChance: 0.9,
+    chanceAfterDistance: 0.9 - (distance * 0.05),
+    chanceAfterCover: isBehindCover ? (0.9 - (distance * 0.05)) * (1 - COVER_DAMAGE_REDUCTION) : (0.9 - (distance * 0.05)),
+    finalHitChance: finalHitChance
+  });
+
+  return finalHitChance;
 };
 
 // Execute an attack
@@ -107,11 +122,13 @@ export const executeAttack = (
   };
 };
 
-// Check if entity can move to position
+// Check if entity can move to position (considers AP, adjacency, obstacles, player, other enemies)
 export const canMoveToPosition = (
   entity: Player | Enemy,
   targetPosition: Position,
-  obstacles: Position[]
+  mapArea: MapArea, // Need mapArea for full walkability check
+  player: Player,   // Need player
+  enemies: Enemy[]  // Need enemies
 ): boolean => {
   // Check if entity has enough AP
   if (entity.actionPoints < DEFAULT_MOVEMENT_COST) {
@@ -120,13 +137,18 @@ export const canMoveToPosition = (
   
   // Check if target position is adjacent
   if (!areEntitiesAdjacent(entity.position, targetPosition)) {
+    // Note: This check might be redundant if called only on adjacent positions
     return false;
   }
   
-  // Check if target position is occupied by obstacle
-  return !obstacles.some(obstacle => 
-    obstacle.x === targetPosition.x && obstacle.y === targetPosition.y
-  );
+  // Check if target position is walkable (considering map, player, enemies)
+  // Exclude the moving entity itself from the collision check
+  const otherEnemies = enemies.filter(e => e.id !== entity.id);
+  const effectivePlayer = (entity.id === player.id) ? 
+      {...player, position: {x: -1, y: -1}} : // Temporarily move player off-grid if it's the entity moving
+      player; 
+
+  return isPositionWalkable(targetPosition, mapArea, effectivePlayer, otherEnemies);
 };
 
 // Execute a move

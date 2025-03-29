@@ -1,4 +1,4 @@
-import { MapArea, MapTile, Position, TileType } from '../interfaces/types';
+import { MapArea, MapTile, Position, TileType, Player, Enemy } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Constants for grid creation
@@ -117,17 +117,44 @@ export const isPositionInBounds = (position: Position, mapArea: MapArea): boolea
   );
 };
 
-// Check if a position is walkable
-export const isPositionWalkable = (position: Position, mapArea: MapArea): boolean => {
+// Check if a position is walkable (considers bounds, tile type, and entities)
+export const isPositionWalkable = (
+  position: Position, 
+  mapArea: MapArea,
+  player: Player,
+  enemies: Enemy[]
+): boolean => {
+  // 1. Check bounds
   if (!isPositionInBounds(position, mapArea)) {
     return false;
   }
   
-  return mapArea.tiles[position.y][position.x].isWalkable;
+  // 2. Check tile walkability
+  if (!mapArea.tiles[position.y][position.x].isWalkable) {
+    return false;
+  }
+
+  // 3. Check if player is at the target position
+  if (player.position.x === position.x && player.position.y === position.y) {
+    return false;
+  }
+
+  // 4. Check if any enemy is at the target position
+  if (enemies.some(enemy => enemy.position.x === position.x && enemy.position.y === position.y)) {
+    return false;
+  }
+  
+  // If all checks pass, the position is walkable
+  return true;
 };
 
 // Get all walkable positions adjacent to a position
-export const getAdjacentWalkablePositions = (position: Position, mapArea: MapArea): Position[] => {
+export const getAdjacentWalkablePositions = (
+  position: Position, 
+  mapArea: MapArea,
+  player: Player, 
+  enemies: Enemy[]
+): Position[] => {
   const adjacentPositions = [
     { x: position.x + 1, y: position.y },
     { x: position.x - 1, y: position.y },
@@ -135,7 +162,8 @@ export const getAdjacentWalkablePositions = (position: Position, mapArea: MapAre
     { x: position.x, y: position.y - 1 }
   ];
   
-  return adjacentPositions.filter(pos => isPositionWalkable(pos, mapArea));
+  // Filter using the updated isPositionWalkable
+  return adjacentPositions.filter(pos => isPositionWalkable(pos, mapArea, player, enemies));
 };
 
 // Get positions that provide cover

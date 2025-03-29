@@ -3,6 +3,7 @@ import Phaser from "phaser";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
 import { MainScene } from "../game/scenes/MainScene";
+import { BootScene } from "../game/scenes/BootScene";
 
 const GameCanvas: React.FC = () => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
@@ -23,7 +24,7 @@ const GameCanvas: React.FC = () => {
       height: 600,
       backgroundColor: "#2d2d2d",
       parent: gameContainerRef.current,
-      scene: [MainScene],
+      scene: [BootScene, MainScene],
       physics: {
         default: "arcade",
         arcade: {
@@ -52,13 +53,32 @@ const GameCanvas: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative w-full" style={{ zIndex: 0 }}>
-      <div ref={gameContainerRef} className="w-full h-screen" />
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <div
-        className="absolute top-2 right-2 bg-gray-800 bg-opacity-75 p-2 rounded text-white text-xs"
-        style={{ zIndex: 2 }}
+        ref={gameContainerRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          top: "0.5rem",
+          right: "0.5rem",
+          backgroundColor: "rgba(31, 41, 55, 0.75)",
+          padding: "0.5rem",
+          borderRadius: "0.25rem",
+          fontSize: "0.75rem",
+          color: "white",
+          zIndex: 2,
+        }}
       >
-        Player Position: x={playerPosition.x}, y={playerPosition.y}
+        Player Position: x={playerPosition?.x ?? "?"}, y=
+        {playerPosition?.y ?? "?"}
       </div>
     </div>
   );

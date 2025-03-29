@@ -1,62 +1,74 @@
 import Phaser from 'phaser';
-import { MapArea, TileType, Position, Player, Enemy } from '../interfaces/types';
-import { DEFAULT_TILE_SIZE, gridToPixel } from '../world/grid';
-import { store, RootState } from '../../store';
+import { MapArea, TileType, Position, Enemy, MapTile } from '../interfaces/types';
+import { DEFAULT_TILE_SIZE } from '../world/grid';
+import { store } from '../../store';
+
+// Change EnemySpriteData to use Rectangle
+interface EnemySpriteData {
+  sprite: Phaser.GameObjects.Rectangle; // Changed from Sprite to Rectangle
+  healthText: Phaser.GameObjects.Text;
+  markedForRemoval: boolean;
+}
 
 export class MainScene extends Phaser.Scene {
   private tileSize: number = DEFAULT_TILE_SIZE;
   private mapGraphics!: Phaser.GameObjects.Graphics;
   private playerSprite!: Phaser.GameObjects.Rectangle;
-  private enemySprites: Map<string, Phaser.GameObjects.Rectangle> = new Map();
-  private playerInfoText!: Phaser.GameObjects.Text;
-  private combatInfoText!: Phaser.GameObjects.Text;
+  private enemySprites: Map<string, EnemySpriteData> = new Map(); // Type uses Rectangle now
   private currentMapArea: MapArea | null = null;
   private unsubscribe: (() => void) | null = null;
+  private playerInitialPosition?: Position;
 
   constructor() {
     super({ key: 'MainScene' });
   }
 
-  public init(): void {
-    // Initialize properties but don't subscribe to Redux yet
-    this.currentMapArea = null;
-    this.unsubscribe = null;
+  public init(data: { mapArea: MapArea, playerPosition: Position }): void {
+    this.currentMapArea = data.mapArea;
+    this.playerInitialPosition = data.playerPosition;
+    this.enemySprites = new Map<string, EnemySpriteData>(); // Reset map on init
   }
 
   public create(): void {
-    // Initialize graphics for map rendering
+    console.log('[MainScene] create method called.');
+
+    if (!this.currentMapArea) {
+      console.error("[MainScene] currentMapArea is null on create!");
+      return;
+    }
+
+    // Setup map graphics
     this.mapGraphics = this.add.graphics();
-    
-    // Create a temporary player sprite (rectangle)
-    this.playerSprite = this.add.rectangle(0, 0, this.tileSize * 0.8, this.tileSize * 0.8, 0x0000ff);
-    this.playerSprite.setOrigin(0.5);
-    
-    // Get current state from Redux
-    const state = store.getState() as RootState;
-    this.currentMapArea = state.world.currentMapArea;
-    
-    // Initial render
-    this.renderMap();
-    this.updatePlayerPosition(state.player.data.position);
-    
-    // Create and update enemy sprites
-    this.updateEnemies(state.world.currentMapArea.entities.enemies);
-    
-    // Add text to show we're in the main scene
-    this.add.text(10, 10, 'The Getaway - Main Scene', { color: '#ffffff' });
-    
-    // Add player info display
-    this.playerInfoText = this.add.text(10, 40, '', { color: '#ffffff', fontSize: '14px' });
-    this.updatePlayerInfo(state.player.data);
-    
-    // Add combat info display
-    this.combatInfoText = this.add.text(10, 100, '', { color: '#ffffff', fontSize: '14px' });
-    this.updateCombatInfo(state.world.inCombat, state.world.isPlayerTurn);
-    
-    // IMPORTANT: Subscribe to Redux store changes AFTER all UI elements are created
-    this.unsubscribe = store.subscribe(() => {
-      this.handleStateChange();
-    });
+    this.mapGraphics.setDepth(0);
+    this.drawMap(this.currentMapArea.tiles);
+
+    // Setup player sprite
+    if (this.playerInitialPosition) {
+       const playerPixelPos = this.calculatePixelPosition(this.playerInitialPosition.x, this.playerInitialPosition.y);
+       this.playerSprite = this.add.rectangle(playerPixelPos.x, playerPixelPos.y, this.tileSize * 0.8, this.tileSize * 0.8, 0x0000ff);
+       this.playerSprite.setOrigin(0.5);
+       this.playerSprite.setDepth(10);
+       console.log('[MainScene] Player sprite created at pixelPos:', playerPixelPos);
+    } else { console.error('[MainScene] playerInitialPosition is null'); }
+
+    // Subscribe to Redux store updates for SUBSEQUENT changes
+    this.unsubscribe = store.subscribe(this.handleStateChange.bind(this));
+
+    // Explicitly process INITIAL enemies slightly deferred
+    setTimeout(() => {
+      // Ensure scene is still active when the timeout runs
+      if (this.sys.isActive()) {
+        console.log('[MainScene create setTimeout] Processing initial enemies...');
+        const initialState = store.getState();
+        if (initialState?.world?.currentMapArea?.entities?.enemies) {
+           this.updateEnemies(initialState.world.currentMapArea.entities.enemies);
+        } else {
+           console.warn('[MainScene create setTimeout] Could not find initial enemies in state.');
+        }
+      } else {
+         console.log('[MainScene create setTimeout] Scene became inactive before initial enemy processing.');
+      }
+    }, 0); // 0ms delay defers execution until after current stack/render cycle
   }
 
   public update(): void {
@@ -64,23 +76,21 @@ export class MainScene extends Phaser.Scene {
   }
   
   private handleStateChange(): void {
-    const state = store.getState() as RootState;
-    
-    // Update map if it changed
-    if (state.world.currentMapArea.id !== this.currentMapArea?.id) {
-      this.currentMapArea = state.world.currentMapArea;
-      this.renderMap();
+    // This handles updates AFTER the initial one from setTimeout
+    if (!this.sys.isActive() || !this.currentMapArea) return;
+
+    const newState = store.getState();
+    const playerState = newState.player.data;
+    const worldState = newState.world;
+    const currentEnemies = worldState.currentMapArea.entities.enemies;
+
+    if(this.currentMapArea.id !== worldState.currentMapArea.id) {
+        console.warn("[MainScene handleStateChange] Map area mismatch, scene might need restarting.");
+        return;
     }
-    
-    // Update player position and info
-    this.updatePlayerPosition(state.player.data.position);
-    this.updatePlayerInfo(state.player.data);
-    
-    // Update enemies
-    this.updateEnemies(state.world.currentMapArea.entities.enemies);
-    
-    // Update combat info
-    this.updateCombatInfo(state.world.inCombat, state.world.isPlayerTurn);
+
+    this.updatePlayerPosition(playerState.position);
+    this.updateEnemies(currentEnemies);
   }
   
   private renderMap(): void {
@@ -113,7 +123,7 @@ export class MainScene extends Phaser.Scene {
     for (let y = 0; y < this.currentMapArea.height; y++) {
       for (let x = 0; x < this.currentMapArea.width; x++) {
         const tile = this.currentMapArea.tiles[y][x];
-        const pixelPos = gridToPixel({x, y}, this.tileSize);
+        const pixelPos = this.calculatePixelPosition(x, y);
         
         // Set fill color based on tile type
         switch (tile.type) {
@@ -177,101 +187,105 @@ export class MainScene extends Phaser.Scene {
   }
   
   private updatePlayerPosition(position: Position): void {
-    // Add null check
-    if (!this.playerSprite) return;
-    
-    const pixelPos = gridToPixel(position, this.tileSize);
-    this.playerSprite.setPosition(
-      pixelPos.x + this.tileSize / 2,
-      pixelPos.y + this.tileSize / 2
-    );
-  }
-  
-  private updatePlayerInfo(player: Player): void {
-    // Add null check
-    if (!this.playerInfoText) return;
-    
-    this.playerInfoText.setText(
-      `Health: ${player.health}/${player.maxHealth}\n` +
-      `AP: ${player.actionPoints}/${player.maxActionPoints}`
-    );
-  }
-  
-  private updateCombatInfo(inCombat: boolean, isPlayerTurn: boolean): void {
-    // Add null check to ensure combatInfoText exists
-    if (!this.combatInfoText) return;
-    
-    if (inCombat) {
-      this.combatInfoText.setText(
-        `COMBAT MODE\n` +
-        `Current Turn: ${isPlayerTurn ? 'PLAYER' : 'ENEMY'}`
-      );
-      this.combatInfoText.setColor('#ff0000');
+    if (this.playerSprite) {
+       const pixelPos = this.calculatePixelPosition(position.x, position.y);
+       this.playerSprite.setPosition(pixelPos.x, pixelPos.y);
     } else {
-      this.combatInfoText.setText('');
+       console.warn("[MainScene] Player sprite not available for position update.");
     }
   }
   
-  private updateEnemies(enemies: Enemy[]): void {
-    // Add null check
-    if (!this.enemySprites) return;
-    
-    // Remove sprites for enemies that no longer exist
-    const enemyIds = new Set(enemies.map(enemy => enemy.id));
-    
-    this.enemySprites.forEach((sprite, enemyId) => {
-      if (!enemyIds.has(enemyId)) {
-        sprite.destroy();
-        this.enemySprites.delete(enemyId);
+  private updateEnemies(enemies: Enemy[]) {
+    if (!this.mapGraphics || !this.sys.isActive()) {
+      return;
+    }
+    if (!this.enemySprites) {
+      this.enemySprites = new Map<string, EnemySpriteData>();
+    }
+
+    this.enemySprites.forEach((spriteData) => { spriteData.markedForRemoval = true; });
+
+    for (const enemy of enemies) {
+      const existingSpriteData = this.enemySprites.get(enemy.id);
+      const pixelPos = this.calculatePixelPosition(enemy.position.x, enemy.position.y);
+
+      if (!existingSpriteData) {
+         if(enemy.health <= 0) continue;
+
+         const enemySprite = this.add.rectangle(pixelPos.x, pixelPos.y, this.tileSize * 0.8, this.tileSize * 0.8, 0xff0000);
+         enemySprite.setOrigin(0.5);
+         enemySprite.setDepth(10);
+
+         const healthText = this.add.text(pixelPos.x, pixelPos.y + this.tileSize / 2, `${enemy.health}/${enemy.maxHealth}`, { fontSize: '12px', color: '#ffffff', align: 'center', resolution: 2 }).setOrigin(0.5, 0).setDepth(11);
+
+         this.enemySprites.set(enemy.id, { sprite: enemySprite, healthText: healthText, markedForRemoval: false });
+         console.log(`[MainScene updateEnemies] Created sprite & health for ${enemy.id}`);
+      } else {
+         if(enemy.health <= 0) {
+             existingSpriteData.markedForRemoval = true;
+         } else {
+             existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
+             existingSpriteData.healthText.setPosition(pixelPos.x, pixelPos.y + this.tileSize / 2).setText(`${enemy.health}/${enemy.maxHealth}`);
+             existingSpriteData.markedForRemoval = false;
+         }
       }
-    });
-    
-    // Update or create sprites for enemies
-    enemies.forEach(enemy => {
-      let enemySprite = this.enemySprites.get(enemy.id);
-      
-      // Create sprite if it doesn't exist
-      if (!enemySprite) {
-        enemySprite = this.add.rectangle(0, 0, this.tileSize * 0.8, this.tileSize * 0.8, 0xff0000);
-        enemySprite.setOrigin(0.5);
-        this.enemySprites.set(enemy.id, enemySprite);
-        
-        // Add health text above enemy
-        const healthText = this.add.text(0, 0, `${enemy.health}`, { 
-          fontSize: '12px', 
-          color: '#ffffff',
-          backgroundColor: '#000000' 
-        });
-        healthText.setOrigin(0.5, 1.5);
-        
-        // Store the health text as a property of the enemy sprite
-        (enemySprite as Phaser.GameObjects.Rectangle & { healthText: Phaser.GameObjects.Text }).healthText = healthText;
-      }
-      
-      // Update position
-      const pixelPos = gridToPixel(enemy.position, this.tileSize);
-      enemySprite.setPosition(
-        pixelPos.x + this.tileSize / 2,
-        pixelPos.y + this.tileSize / 2
-      );
-      
-      // Update health text
-      const healthText = (enemySprite as Phaser.GameObjects.Rectangle & { healthText: Phaser.GameObjects.Text }).healthText;
-      if (healthText) {
-        healthText.setText(`${enemy.health}`);
-        healthText.setPosition(
-          pixelPos.x + this.tileSize / 2,
-          pixelPos.y + this.tileSize / 2
-        );
+    }
+
+    this.enemySprites.forEach((spriteData, id) => {
+      if (spriteData.markedForRemoval) {
+        spriteData.sprite.destroy();
+        spriteData.healthText.destroy();
+        this.enemySprites.delete(id);
       }
     });
   }
   
   public shutdown(): void {
-    // Unsubscribe from Redux when scene shuts down
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+    console.log('[MainScene] shutdown complete.');
+  }
+
+  private drawMap(tiles: MapTile[][]) {
+    if (!this.mapGraphics) return;
+    this.mapGraphics.clear();
+    for (let y = 0; y < tiles.length; y++) {
+      for (let x = 0; x < tiles[y].length; x++) {
+        const tile = tiles[y][x];
+        const pixelPos = this.calculatePixelPosition(x, y);
+        let color = 0x555555; // Default floor
+        if (tile.type === TileType.WALL) color = 0xaaaaaa;
+        else if (tile.type === TileType.COVER) color = 0x7777cc; // Blueish for cover
+        else if (tile.type === TileType.DOOR) color = 0x88aa88;
+
+        this.mapGraphics.fillStyle(color, 1);
+        this.mapGraphics.fillRect(
+          pixelPos.x - this.tileSize / 2,
+          pixelPos.y - this.tileSize / 2,
+          this.tileSize,
+          this.tileSize
+        );
+        this.mapGraphics.lineStyle(1, 0x222222, 1);
+        this.mapGraphics.strokeRect(
+            pixelPos.x - this.tileSize / 2,
+            pixelPos.y - this.tileSize / 2,
+            this.tileSize,
+            this.tileSize
+        );
+      }
+    }
+  }
+
+  // Helper needed for updateEnemies and updatePlayerPosition
+  private calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number } {
+    // Simple calculation assuming TILE_SIZE is defined
+    const offsetX = this.tileSize / 2; // Center sprites in tiles
+    const offsetY = this.tileSize / 2;
+    return {
+        x: gridX * this.tileSize + offsetX,
+        y: gridY * this.tileSize + offsetY,
+    };
   }
 } 

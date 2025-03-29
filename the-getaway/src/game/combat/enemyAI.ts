@@ -1,4 +1,4 @@
-import { Enemy, Player, Position } from '../interfaces/types';
+import { Enemy, Player, Position, MapArea } from '../interfaces/types';
 import { 
   calculateManhattanDistance, 
   isInAttackRange,
@@ -14,7 +14,8 @@ export const HEALTH_THRESHOLD_SEEK_COVER = 0.3; // 30% health
 export const determineEnemyMove = (
   enemy: Enemy,
   player: Player,
-  obstacles: Position[],
+  mapArea: MapArea,
+  enemies: Enemy[],
   coverPositions: Position[]
 ): { enemy: Enemy, player: Player, action: string } => {
   let updatedEnemy = { ...enemy };
@@ -28,9 +29,9 @@ export const determineEnemyMove = (
   
   // If health is low, try to seek cover
   if (enemy.health <= enemy.maxHealth * HEALTH_THRESHOLD_SEEK_COVER) {
-    const coverMove = seekCover(enemy, coverPositions, obstacles);
+    const coverMove = seekCover(enemy, player, mapArea, enemies, coverPositions);
     if (coverMove) {
-      updatedEnemy = executeMove(enemy, coverMove);
+      updatedEnemy = executeMove(enemy, coverMove) as Enemy;
       return { enemy: updatedEnemy, player: updatedPlayer, action: 'seek_cover' };
     }
   }
@@ -46,11 +47,19 @@ export const determineEnemyMove = (
     const attackResult = executeAttack(enemy, player, playerBehindCover);
     
     if (attackResult.success) {
-      updatedEnemy = attackResult.newAttacker as Enemy;
-      updatedPlayer = attackResult.newTarget as Player;
+      // Safely cast attacker back to Enemy and target back to Player
+      if (attackResult.newAttacker.id === enemy.id) {
+        updatedEnemy = attackResult.newAttacker as Enemy;
+      }
+      if (attackResult.newTarget.id === player.id) {
+        updatedPlayer = attackResult.newTarget as Player;
+      }
       actionTaken = 'attack';
     } else {
-      updatedEnemy = attackResult.newAttacker as Enemy;
+      // Even if miss, attacker AP might change, so update enemy
+      if (attackResult.newAttacker.id === enemy.id) {
+        updatedEnemy = attackResult.newAttacker as Enemy;
+      }
       actionTaken = 'attack_missed';
     }
     
@@ -62,9 +71,9 @@ export const determineEnemyMove = (
   }
   
   // Otherwise, try to move toward player
-  const nextMove = moveTowardPlayer(enemy, player, obstacles);
+  const nextMove = moveTowardPlayer(enemy, player, mapArea, enemies);
   if (nextMove) {
-    updatedEnemy = executeMove(enemy, nextMove);
+    updatedEnemy = executeMove(enemy, nextMove) as Enemy;
     return { enemy: updatedEnemy, player: updatedPlayer, action: 'move' };
   }
   
@@ -76,14 +85,15 @@ export const determineEnemyMove = (
 export const moveTowardPlayer = (
   enemy: Enemy,
   player: Player,
-  obstacles: Position[]
+  mapArea: MapArea,
+  enemies: Enemy[]
 ): Position | null => {
   // Get all possible adjacent positions
   const adjacentPositions = getAdjacentPositions(enemy.position);
   
   // Filter to positions that are valid moves
   const validMoves = adjacentPositions.filter(
-    pos => canMoveToPosition(enemy, pos, obstacles)
+    pos => canMoveToPosition(enemy, pos, mapArea, player, enemies)
   );
   
   if (validMoves.length === 0) {
@@ -102,8 +112,10 @@ export const moveTowardPlayer = (
 // Find a position to move toward cover
 export const seekCover = (
   enemy: Enemy,
-  coverPositions: Position[],
-  obstacles: Position[]
+  player: Player,
+  mapArea: MapArea,
+  enemies: Enemy[],
+  coverPositions: Position[]
 ): Position | null => {
   // If no cover positions, can't seek cover
   if (coverPositions.length === 0) {
@@ -115,7 +127,7 @@ export const seekCover = (
   
   // Filter to positions that are valid moves
   const validMoves = adjacentPositions.filter(
-    pos => canMoveToPosition(enemy, pos, obstacles)
+    pos => canMoveToPosition(enemy, pos, mapArea, player, enemies)
   );
   
   if (validMoves.length === 0) {

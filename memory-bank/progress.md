@@ -268,3 +268,37 @@ Date: March 26, 2024
 ### Next Steps:
 
 - Proceed to Step 6: Introduce Cover Mechanics, which will enhance the combat system with strategic elements.
+
+## Step 6: Introduce Cover Mechanics & UI Overhaul (Completed)
+
+Date: March 27, 2024
+
+### Tasks Accomplished:
+
+1.  **Combat System Refinements & Bug Fixes:**
+    *   Resolved issues with enemy turn processing getting stuck, ensuring turns cycle correctly between player and enemies.
+    *   Fixed initial enemy visibility bug where the enemy sprite would only appear after the first player action. Introduced a `setTimeout` workaround in `MainScene.create` to ensure initial rendering aligns with Phaser's lifecycle.
+    *   Addressed various scene initialization bugs, including `currentMapArea` being null and `this` context errors in Redux subscription callbacks.
+    *   Introduced a `BootScene` to handle fetching initial state from Redux and correctly passing data to `MainScene`'s `init` method.
+
+2.  **UI Overhaul & Integration:**
+    *   Implemented the planned three-column UI layout (Status | Game | Log) using CSS (initially Tailwind, then inline styles for robustness).
+    *   Resolved CSS conflicts (e.g., `display: flex` on `body`) that were preventing the intended layout.
+    *   Created and integrated `PlayerStatusPanel.tsx` to display player HP/AP bars, reading data from `playerSlice`.
+    *   Created and integrated `LogPanel.tsx` to display game messages, reading data from the new `logSlice`.
+    *   Removed old feedback message UI from `GameController.tsx`.
+    *   Removed redundant player info display from `MainScene.ts`.
+    *   Integrated `addLogMessage` dispatches into `GameController.tsx` for combat actions (attacks, hits, misses, combat start/end, enemy actions).
+    *   Refined UI formatting (e.g., whitespace in status panel values).
+    *   Filtered out player movement messages from the action log for better readability.
+
+### Notes:
+
+*   The core combat loop (player turn, enemy turns) is functioning reliably.
+*   The UI now reflects the target layout and displays relevant game state information (player status, action logs) correctly.
+*   Initial game state, including enemy presence, is rendered correctly when the game loads.
+*   While the specific cover *logic* (hit chance reduction) hasn't been explicitly added yet, the combat system structure, map rendering capable of showing cover, and AI foundations are in place, fulfilling the core goals of this step alongside the significant UI refactor.
+
+### Next Steps:
+
+*   Proceed to Step 7: Design a Small Explorable Map, focusing on expanding the game world.

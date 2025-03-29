@@ -41,6 +41,13 @@ Contains all static assets for the game including:
 React components that make up the game's user interface:
 - **`GameCanvas.tsx`**: The main component that integrates Phaser with React. It initializes the Phaser game instance and provides the canvas where the game is rendered.
 
+### `/the-getaway/src/components/ui`
+
+Dedicated folder for reusable React UI components, separate from core game logic/controllers.
+
+- **`PlayerStatusPanel.tsx`**: Displays player health, action points, and potentially other stats using data from the Redux `playerSlice`.
+- **`LogPanel.tsx`**: Displays a scrolling list of game events and messages, reading data from the Redux `logSlice`.
+
 ### `/the-getaway/src/game`
 
 Contains all game logic, separated into modules:
@@ -131,6 +138,13 @@ Character attributes and core game interfaces:
   - Experience and leveling system
   - Character skill manipulation
 
+#### `/the-getaway/src/game/scenes`
+
+Contains Phaser Scene classes.
+
+- **`BootScene.ts`**: A preliminary Phaser scene that runs first. Its primary role is to read the initial game state (map, player position) from the Redux store and then start the `MainScene`, passing the necessary data via the scene's `init` method. This ensures `MainScene` has the data it needs before its `create` method runs.
+- **`MainScene.ts`**: The main Phaser scene responsible for rendering the game world (map tiles, player sprite, enemy sprites, health bars). It subscribes to the Redux store (`worldSlice`, `playerSlice`) and updates the visual representation based on state changes received via its `handleStateChange` method. It also handles the creation, update, and removal of Phaser game objects representing entities.
+
 ### `/the-getaway/src/store`
 
 Redux state management:
@@ -157,6 +171,8 @@ Redux state management:
   - Quest objectives and progress
   - Dialogue tracking and history
   - Active dialogue state for UI rendering
+
+- **`logSlice.ts`**: Manages a list of log messages for display in the UI. Provides an `addLogMessage` action to push new messages (e.g., combat events, warnings) onto the log stack.
 
 ### `/the-getaway/src/styles`
 
@@ -302,21 +318,22 @@ The game engine integration connects Phaser with React and Redux to handle game 
 
 This component serves as the primary connection between React and Phaser:
 
-- Initializes and renders the Phaser game in a React component
-- Maintains a reference to the game instance throughout component lifecycle
-- Handles the creation and destruction of the Phaser game
-- Displays a UI overlay with game state information from Redux
-- Uses a responsive container to fit various screen sizes
+- Initializes and renders the Phaser game within a dedicated `div` container.
+- Uses `BootScene` as the initial scene to ensure proper data loading before `MainScene` starts.
+- Manages the Phaser game instance lifecycle (creation/destruction).
+- Can include UI overlays (like player position) positioned absolutely over the canvas.
 
 #### GameController Component (`src/components/GameController.tsx`)
 
-The GameController handles user input and dispatches appropriate actions:
+The GameController acts as the central hub for handling user input and orchestrating game flow, especially combat turns:
 
-- Listens for keyboard events (arrow keys and WASD)
-- Translates user input into game actions via Redux
-- Implements collision detection with the game world
-- Manages action points during combat
-- Follows React's event handling patterns with useEffect/useCallback
+- Listens for keyboard events (movement, attack, end turn).
+- Dispatches Redux actions based on input (e.g., `movePlayer`, `executeAttack`, `switchTurn`).
+- Validates player actions against game rules (walkable tiles, AP cost).
+- Manages the enemy turn sequence using `useEffect` hooks, state variables (`currentEnemyTurnIndex`, `isProcessingEnemyAction`), and `setTimeout` for delays.
+- Calls enemy AI (`determineEnemyMove`) and dispatches resulting enemy actions.
+- Dispatches messages to the `logSlice` for display in the `LogPanel`.
+- Displays a minimal turn indicator UI.
 
 ### Game Engine
 
@@ -341,11 +358,11 @@ The Redux store serves as the single source of truth for game state:
 
 ### Data Flow
 
-1. User input (e.g., keyboard press) is captured by `GameController`
-2. `GameController` dispatches Redux actions (e.g., `movePlayer`)
-3. Redux reducers update the store state
-4. The `MainScene`, subscribed to the store, detects changes
-5. `MainScene` updates the visual representation based on new state
+1. User input captured by `GameController`.
+2. `GameController` validates input and dispatches Redux actions (`playerSlice`, `worldSlice`, `logSlice`).
+3. Redux reducers update the store state.
+4. `MainScene` (subscribed to `worldSlice`, `playerSlice`) detects changes and updates Phaser visuals (player/enemy position, health text).
+5. React UI components (`PlayerStatusPanel`, `LogPanel`, subscribed to `playerSlice`, `logSlice`) detect changes and re-render.
 
 This architecture creates a clean separation of concerns:
 - Game logic and state are managed in Redux
