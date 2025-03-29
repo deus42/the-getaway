@@ -31,7 +31,6 @@ const GameController: React.FC = () => {
   const enemies = useSelector(
     (state: RootState) => state.world.currentMapArea.entities.enemies
   );
-  const turnCount = useSelector((state: RootState) => state.world.turnCount);
   const prevInCombat = useRef(inCombat); // Ref to track previous value
 
   // State to track current enemy turn processing
@@ -238,9 +237,8 @@ const GameController: React.FC = () => {
       console.log(
         "[GameController] Combat ended (detected via useEffect watching inCombat)."
       );
-      // Optional: Explicitly reset player AP here if needed, although it shouldn't be necessary
-      // if handleKeyDown correctly checks inCombat.
-      // dispatch(resetActionPoints()); // Maybe add this if AP doesn't behave correctly post-combat
+      // Explicitly reset player AP when combat ends.
+      dispatch(resetActionPoints());
     }
     // Update the ref *after* the check for the next render
     prevInCombat.current = inCombat;
@@ -487,12 +485,8 @@ const GameController: React.FC = () => {
       style={{ zIndex: 1 }}
       data-testid="game-controller"
     >
-      {inCombat && (
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-red-900 bg-opacity-75 text-white py-2 px-4 rounded text-sm z-20 flex space-x-4">
-          <span>{isPlayerTurn ? "Your Turn" : "Enemy Turn"}</span>
-          <span>Turn: {turnCount}</span>
-        </div>
-      )}
+      {/* Remove the combat turn indicator UI from here */}
+      {/* {inCombat && ( ... )} */}
     </div>
   );
 };

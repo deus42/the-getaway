@@ -547,3 +547,56 @@ The combat system is thoroughly tested with:
 - Tests for enemy AI decision-making logic
 
 This combat architecture provides a foundation for tactical gameplay and can be extended with additional features like different weapon types, special abilities, and more complex enemy behaviors.
+
+## Grid Rendering System
+
+The grid rendering system is a core visual component that displays the game map, which serves as the foundation for player movement, enemy positioning, and tactical gameplay.
+
+### Grid Rendering Techniques
+
+The grid rendering system in `MainScene.ts` uses several techniques to create a clean, consistent visual representation:
+
+#### Pixel-Perfect Rendering
+
+- **Whole Pixel Alignment**: Uses `Math.floor()` for all pixel coordinates to avoid sub-pixel rendering issues that could cause inconsistent border thickness.
+- **Grid Cell Drawing**: Each cell is drawn with precise dimensions, with inset filling that leaves exactly 1px for borders.
+- **Consistent Border Approach**: Rather than relying on gaps between cells or overlapping borders, explicitly draws uniform 1px borders around each cell.
+
+#### Visual Styling
+
+- **Alternating Floor Patterns**: Floor tiles use a checkerboard pattern (alternating between `0x333333` and `0x3a3a3a`) for improved visual clarity.
+- **Color Coding**: Different tile types (wall, floor, cover, door) have distinct colors for easy identification.
+- **Visual Indicators**: Uses symbols like X marks for walls and circles for cover positions to enhance readability.
+- **Background Fill**: Sets a consistent dark background (`0x1a1a1a`) that serves as the grid line color.
+
+#### Render Process
+
+The rendering follows a two-step process:
+1. **Background Fill**: Fills the entire map area with the background color.
+2. **Cell Drawing**: For each cell:
+   - Determines the appropriate color based on tile type
+   - Draws the cell with a 1px offset from all sides
+   - Explicitly draws 1px border lines with consistent styling
+
+### Responsive Handling
+
+The grid system handles screen resizing through several mechanisms:
+
+#### Camera System
+
+- **Dynamic Zoom**: Calculates optimal zoom level based on available screen space and map dimensions.
+- **Padding**: Maintains a small padding (5% of available space) to ensure edge cells remain visible.
+- **Centered View**: Positions the camera to center the map in the available space.
+
+#### Resize Management
+
+- **Event Handling**: Listens for resize events from the Phaser scale manager.
+- **Simplified Handling**: Uses direct camera and rendering updates rather than complex debouncing to prevent visual artifacts.
+- **Consistent Updates**: Ensures the grid rendering is refreshed properly after resize.
+
+#### Phaser Configuration
+
+- **Scaling Mode**: Uses `Phaser.Scale.FIT` for consistent dimensions during resizing.
+- **Pixel Art Optimization**: Enables `pixelArt: true` and `roundPixels: true` to maintain crisp grid lines at different zoom levels.
+
+This rendering approach ensures the game grid maintains consistent visual quality across different screen sizes and resizing operations, providing a solid foundation for the tactical grid-based gameplay.

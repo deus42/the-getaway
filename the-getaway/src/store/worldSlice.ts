@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
-import { createTestMapArea } from '../game/world/grid';
+import { createOpenMapArea } from '../game/world/grid';
 
 export interface WorldState {
   currentMapArea: MapArea;
@@ -10,29 +10,30 @@ export interface WorldState {
   turnCount: number;
 }
 
-// Create initial enemy using only properties from the type definition
-const initialMap = createTestMapArea('Test Area'); // Use existing helper
+// Use the new function to create the initial map (20x20)
+const initialMap = createOpenMapArea('Open Area', 20, 20);
 const initialEnemy: Enemy = {
   id: crypto.randomUUID(),
   name: "Guard",
-  position: { x: 7, y: 4 },
+  // Update initial position to be within the 20x20 map (avoiding walls)
+  position: { x: 15, y: 15 },
   maxHealth: 25,
-  health: 25, // Correct property
+  health: 25,
   actionPoints: 6,
   maxActionPoints: 6,
-  damage: 5,        // Property from Enemy type
-  attackRange: 1,   // Property from Enemy type
-  isHostile: true,  // Property from Enemy type
+  damage: 5,
+  attackRange: 1,
+  isHostile: true,
 };
 initialMap.entities.enemies.push(initialEnemy);
-console.log("[worldSlice] Initial map generated with enemy:", initialEnemy);
+console.log("[worldSlice] Initial open map generated with enemy:", initialEnemy);
 
 const initialState: WorldState = {
   currentMapArea: initialMap,
   currentTime: 0,
   inCombat: false,
   isPlayerTurn: true,
-  turnCount: 1, // Start at turn 1
+  turnCount: 1,
 };
 
 export const worldSlice = createSlice({

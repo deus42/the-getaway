@@ -3,15 +3,23 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 
 const PlayerStatusPanel: React.FC = () => {
-  const { health, maxHealth, actionPoints, maxActionPoints } = useSelector(
-    (state: RootState) => state.player.data
+  const player = useSelector((state: RootState) => state.player.data);
+  // Get position directly here
+  const position = useSelector(
+    (state: RootState) => state.player.data.position
   );
+  // Get combat status and turn count
+  const inCombat = useSelector((state: RootState) => state.world.inCombat);
+  const turnCount = useSelector((state: RootState) => state.world.turnCount);
 
   // Calculate health percentage for potential bar display
-  const healthPercent = maxHealth > 0 ? (health / maxHealth) * 100 : 0;
+  const healthPercent =
+    player.maxHealth > 0 ? (player.health / player.maxHealth) * 100 : 0;
   // Calculate AP percentage
   const apPercent =
-    maxActionPoints > 0 ? (actionPoints / maxActionPoints) * 100 : 0;
+    player.maxActionPoints > 0
+      ? (player.actionPoints / player.maxActionPoints) * 100
+      : 0;
 
   const renderBar = (
     label: string,
@@ -31,7 +39,9 @@ const PlayerStatusPanel: React.FC = () => {
         >
           <span>{label}</span>
           <span>
-            {value} / {maxValue}
+            {value}
+            &nbsp;/&nbsp; {/* Added non-breaking space for clarity */}
+            {maxValue}
           </span>
         </div>
         <div
@@ -57,8 +67,26 @@ const PlayerStatusPanel: React.FC = () => {
 
   return (
     <div style={{ color: "white", fontSize: "0.9rem" }}>
-      {renderBar("Health", health, maxHealth, "#ef4444")}
-      {renderBar("Action Points", actionPoints, maxActionPoints, "#3b82f6")}
+      {renderBar("Health", player.health, player.maxHealth, "#ef4444")}
+      {renderBar(
+        "Action Points",
+        player.actionPoints,
+        player.maxActionPoints,
+        "#3b82f6"
+      )}
+      {/* Position Display */}
+      <div style={{ marginTop: "1rem" }}>
+        <span>
+          Position: ({position?.x ?? "?"}, {position?.y ?? "?"})
+        </span>
+      </div>
+      {/* Turn Counter Display (only in combat) */}
+      {inCombat && (
+        <div style={{ marginTop: "1rem" }}>
+          <span>Turn: {turnCount}</span>
+        </div>
+      )}
+      {/* Add other stats as needed */}
     </div>
   );
 };

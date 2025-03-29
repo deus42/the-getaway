@@ -260,4 +260,46 @@ export const createTestMapArea = (
   updatedMapArea = addCover(updatedMapArea, coverPositions);
   
   return updatedMapArea;
+};
+
+// NEW FUNCTION: Create an open map area with edge walls and random obstacles
+export const createOpenMapArea = (
+  name: string,
+  width: number = 20, // Default to 20x20
+  height: number = 20,
+  obstacleDensity: number = 0.1 // Percentage of inner floor tiles to be obstacles
+): MapArea => {
+  // Start with a basic map area (walls around the edges)
+  const mapArea = createBasicMapArea(name, width, height);
+  const innerWidth = width - 2;
+  const innerHeight = height - 2;
+  const numberOfObstacles = Math.floor(innerWidth * innerHeight * obstacleDensity);
+
+  const coverPositions: Position[] = [];
+  let placedObstacles = 0;
+
+  // Keep track of placed obstacle locations to avoid duplicates
+  const placedLocations = new Set<string>();
+
+  while (placedObstacles < numberOfObstacles) {
+    // Generate random coordinates within the inner area (excluding walls)
+    const x = Math.floor(Math.random() * innerWidth) + 1;
+    const y = Math.floor(Math.random() * innerHeight) + 1;
+    const posKey = `${x},${y}`;
+
+    // Check if it's a floor tile and not already an obstacle
+    if (mapArea.tiles[y][x].type === TileType.FLOOR && !placedLocations.has(posKey)) {
+      coverPositions.push({ x, y });
+      placedLocations.add(posKey);
+      placedObstacles++;
+    }
+    
+    // Safety break to prevent infinite loops if density is too high / unlucky RNG
+    if (placedObstacles >= innerWidth * innerHeight) break; 
+  }
+
+  // Add the cover obstacles to the map
+  const updatedMapArea = addCover(mapArea, coverPositions);
+
+  return updatedMapArea;
 }; 

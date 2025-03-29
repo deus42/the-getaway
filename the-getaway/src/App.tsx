@@ -56,7 +56,7 @@ function App() {
           </div>
           <div
             style={{
-              width: "60%",
+              width: "50%",
               height: "100%",
               position: "relative",
               overflow: "hidden",
@@ -67,7 +67,7 @@ function App() {
           </div>
           <div
             style={{
-              width: "20%",
+              width: "30%",
               height: "100%",
               borderLeft: "1px solid #333",
               overflow: "auto",

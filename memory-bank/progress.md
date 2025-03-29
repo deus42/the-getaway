@@ -292,11 +292,22 @@ Date: March 27, 2024
     *   Refined UI formatting (e.g., whitespace in status panel values).
     *   Filtered out player movement messages from the action log for better readability.
 
+3.  **Grid Rendering Enhancements:**
+    *   Improved the grid rendering system in `MainScene.ts` to ensure consistent cell borders.
+    *   Implemented pixel-perfect rendering by using `Math.floor()` to avoid sub-pixel rendering issues.
+    *   Created a precise rendering approach with explicit border drawing to ensure uniform 1px borders.
+    *   Added alternating floor colors for better visual differentiation of tiles.
+    *   Enhanced the contrast between different tile types with improved color selection.
+    *   Updated the camera and scaling system to handle window resizing more gracefully.
+    *   Modified Phaser scaling configuration in `GameCanvas.tsx` for smoother visual transitions.
+    *   Simplified resize handling to prevent flickering and visual artifacts during window resizing.
+
 ### Notes:
 
 *   The core combat loop (player turn, enemy turns) is functioning reliably.
 *   The UI now reflects the target layout and displays relevant game state information (player status, action logs) correctly.
 *   Initial game state, including enemy presence, is rendered correctly when the game loads.
+*   The grid rendering is now visually consistent with uniform borders and improved aesthetics.
 *   While the specific cover *logic* (hit chance reduction) hasn't been explicitly added yet, the combat system structure, map rendering capable of showing cover, and AI foundations are in place, fulfilling the core goals of this step alongside the significant UI refactor.
 
 ### Next Steps:

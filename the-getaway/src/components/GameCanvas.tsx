@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from "react";
 import Phaser from "phaser";
-import { useSelector } from "react-redux";
-import { RootState } from "../store";
+// Remove useSelector and RootState if no longer needed here
+// import { useSelector } from "react-redux";
+// import { RootState } from "../store";
 import { MainScene } from "../game/scenes/MainScene";
 import { BootScene } from "../game/scenes/BootScene";
 
@@ -9,22 +10,31 @@ const GameCanvas: React.FC = () => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const gameInstanceRef = useRef<Phaser.Game | null>(null);
 
-  // Connect to Redux store to get player position
-  const playerPosition = useSelector(
-    (state: RootState) => state.player.data.position
-  );
+  // Remove position selector
+  // const playerPosition = useSelector(
+  //   (state: RootState) => state.player.data.position
+  // );
 
   useEffect(() => {
     if (!gameContainerRef.current) return;
 
-    // Basic Phaser configuration
+    // Make config width/height potentially dynamic based on parent
+    const parentWidth = gameContainerRef.current.offsetWidth;
+    const parentHeight = gameContainerRef.current.offsetHeight;
+
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
-      width: 800,
-      height: 600,
-      backgroundColor: "#2d2d2d",
+      width: parentWidth > 0 ? parentWidth : 800,
+      height: parentHeight > 0 ? parentHeight : 600,
+      backgroundColor: "#1a1a1a",
       parent: gameContainerRef.current,
       scene: [BootScene, MainScene],
+      scale: {
+        mode: Phaser.Scale.FIT, // Use FIT mode to avoid constant resizing
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: parentWidth > 0 ? parentWidth : 800,
+        height: parentHeight > 0 ? parentHeight : 600,
+      },
       physics: {
         default: "arcade",
         arcade: {
@@ -36,14 +46,26 @@ const GameCanvas: React.FC = () => {
       roundPixels: true,
     };
 
-    // Initialize Phaser game only if it doesn't exist yet
     if (!gameInstanceRef.current) {
       gameInstanceRef.current = new Phaser.Game(config);
       console.log("Phaser game initialized");
     }
 
-    // Cleanup function
+    // Simple resize handler - fewer options to avoid blinking
+    const handleResize = () => {
+      if (gameInstanceRef.current && gameContainerRef.current) {
+        const newWidth = gameContainerRef.current.offsetWidth;
+        const newHeight = gameContainerRef.current.offsetHeight;
+
+        // Simple resize without too many options
+        gameInstanceRef.current.scale.resize(newWidth, newHeight);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
+      window.removeEventListener("resize", handleResize);
       if (gameInstanceRef.current) {
         gameInstanceRef.current.destroy(true);
         gameInstanceRef.current = null;
@@ -53,33 +75,38 @@ const GameCanvas: React.FC = () => {
   }, []);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div
+      style={{
+        position: "relative",
+        width: "100%",
+        height: "100%",
+        backgroundColor: "#1a1a1a",
+        overflow: "hidden",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
       <div
         ref={gameContainerRef}
         style={{
           position: "absolute",
+          width: "100%",
+          height: "100%",
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#1a1a1a",
+          minWidth: "400px", // Ensure minimum width to prevent extreme squishing
+          minHeight: "300px", // Ensure minimum height
         }}
       />
-      <div
-        style={{
-          position: "absolute",
-          top: "0.5rem",
-          right: "0.5rem",
-          backgroundColor: "rgba(31, 41, 55, 0.75)",
-          padding: "0.5rem",
-          borderRadius: "0.25rem",
-          fontSize: "0.75rem",
-          color: "white",
-          zIndex: 2,
-        }}
-      >
-        Player Position: x={playerPosition?.x ?? "?"}, y=
-        {playerPosition?.y ?? "?"}
-      </div>
+      {/* Remove position display overlay */}
+      {/* <div ... > ... </div> */}
     </div>
   );
 };

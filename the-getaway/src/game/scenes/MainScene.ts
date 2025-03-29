@@ -18,6 +18,7 @@ export class MainScene extends Phaser.Scene {
   private currentMapArea: MapArea | null = null;
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
+  private _resizeTimeout: number | null = null;
 
   constructor() {
     super({ key: 'MainScene' });
@@ -37,11 +38,19 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
+    // Fill the entire canvas with background color
+    this.cameras.main.setBackgroundColor(0x1a1a1a);
+
     // Setup map graphics
     this.mapGraphics = this.add.graphics();
     this.mapGraphics.setDepth(0);
-    this.drawMap(this.currentMapArea.tiles);
 
+    // Initial setup of camera and map
+    this.setupCameraAndMap();
+    
+    // Listen for resize events
+    this.scale.on('resize', this.handleResize, this);
+    
     // Setup player sprite
     if (this.playerInitialPosition) {
        const playerPixelPos = this.calculatePixelPosition(this.playerInitialPosition.x, this.playerInitialPosition.y);
@@ -51,24 +60,19 @@ export class MainScene extends Phaser.Scene {
        console.log('[MainScene] Player sprite created at pixelPos:', playerPixelPos);
     } else { console.error('[MainScene] playerInitialPosition is null'); }
 
-    // Subscribe to Redux store updates for SUBSEQUENT changes
+    // Subscribe to Redux store updates
     this.unsubscribe = store.subscribe(this.handleStateChange.bind(this));
 
-    // Explicitly process INITIAL enemies slightly deferred
+    // Process initial enemies
     setTimeout(() => {
-      // Ensure scene is still active when the timeout runs
       if (this.sys.isActive()) {
         console.log('[MainScene create setTimeout] Processing initial enemies...');
         const initialState = store.getState();
         if (initialState?.world?.currentMapArea?.entities?.enemies) {
            this.updateEnemies(initialState.world.currentMapArea.entities.enemies);
-        } else {
-           console.warn('[MainScene create setTimeout] Could not find initial enemies in state.');
         }
-      } else {
-         console.log('[MainScene create setTimeout] Scene became inactive before initial enemy processing.');
       }
-    }, 0); // 0ms delay defers execution until after current stack/render cycle
+    }, 0);
   }
 
   public update(): void {
@@ -250,42 +254,92 @@ export class MainScene extends Phaser.Scene {
 
   private drawMap(tiles: MapTile[][]) {
     if (!this.mapGraphics) return;
+    
     this.mapGraphics.clear();
-    for (let y = 0; y < tiles.length; y++) {
-      for (let x = 0; x < tiles[y].length; x++) {
-        const tile = tiles[y][x];
-        const pixelPos = this.calculatePixelPosition(x, y);
-        let color = 0x555555; // Default floor
-        if (tile.type === TileType.WALL) color = 0xaaaaaa;
-        else if (tile.type === TileType.COVER) color = 0x7777cc; // Blueish for cover
-        else if (tile.type === TileType.DOOR) color = 0x88aa88;
 
-        this.mapGraphics.fillStyle(color, 1);
+    // Fill the entire background with dark color
+    this.mapGraphics.fillStyle(0x1a1a1a);
+    const fullWidth = tiles[0].length * this.tileSize;
+    const fullHeight = tiles.length * this.tileSize;
+    this.mapGraphics.fillRect(0, 0, fullWidth, fullHeight);
+
+    // Draw cells with precise borders
+    for (let y = 0; y < tiles.length; y++) {
+      for (let x = 0; x < tiles[0].length; x++) {
+        const tile = tiles[y][x];
+        const pixelX = Math.floor(x * this.tileSize); // Ensure pixel-perfect alignment
+        const pixelY = Math.floor(y * this.tileSize);
+
+        // Set color based on tile type
+        let color: number;
+        if (tile.type === TileType.WALL) {
+          color = 0xcccccc; // Wall
+        } else if (tile.type === TileType.COVER) {
+          color = 0x6666dd; // Cover
+        } else if (tile.type === TileType.DOOR) {
+          color = 0x99cc99; // Door
+        } else {
+          // Alternate floor colors
+          color = (x + y) % 2 === 0 ? 0x333333 : 0x3a3a3a;
+        }
+
+        // Draw cell with exact 1px border
+        this.mapGraphics.fillStyle(color);
         this.mapGraphics.fillRect(
-          pixelPos.x - this.tileSize / 2,
-          pixelPos.y - this.tileSize / 2,
+          pixelX + 1,
+          pixelY + 1,
+          this.tileSize - 1,
+          this.tileSize - 1
+        );
+
+        // Draw cell borders with consistent 1px width
+        this.mapGraphics.lineStyle(1, 0x1a1a1a, 1);
+        this.mapGraphics.strokeRect(
+          pixelX,
+          pixelY,
           this.tileSize,
           this.tileSize
-        );
-        this.mapGraphics.lineStyle(1, 0x222222, 1);
-        this.mapGraphics.strokeRect(
-            pixelPos.x - this.tileSize / 2,
-            pixelPos.y - this.tileSize / 2,
-            this.tileSize,
-            this.tileSize
         );
       }
     }
   }
 
-  // Helper needed for updateEnemies and updatePlayerPosition
+  // Update calculatePixelPosition to match the new grid drawing approach
   private calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number } {
-    // Simple calculation assuming TILE_SIZE is defined
-    const offsetX = this.tileSize / 2; // Center sprites in tiles
-    const offsetY = this.tileSize / 2;
     return {
-        x: gridX * this.tileSize + offsetX,
-        y: gridY * this.tileSize + offsetY,
+      x: gridX * this.tileSize + this.tileSize / 2,
+      y: gridY * this.tileSize + this.tileSize / 2
     };
+  }
+
+  // Handler for resize events from Phaser - simplify to prevent flickering
+  private handleResize(): void {
+    // Simple resize without debouncing to avoid blinking
+    if (this.sys.isActive() && this.currentMapArea) {
+      this.setupCameraAndMap();
+    }
+  }
+  
+  // Simplified camera setup to be more stable during resize
+  private setupCameraAndMap(): void {
+    if (!this.currentMapArea) return;
+    
+    // Get dimensions
+    const mapWidthPx = this.currentMapArea.width * this.tileSize;
+    const mapHeightPx = this.currentMapArea.height * this.tileSize;
+    const canvasWidth = this.scale.width;
+    const canvasHeight = this.scale.height;
+    
+    // Simple zoom calculation
+    const zoomX = canvasWidth / mapWidthPx;
+    const zoomY = canvasHeight / mapHeightPx;
+    const zoom = Math.min(zoomX, zoomY) * 0.95; // 5% margin
+    
+    // Set camera
+    this.cameras.main.setZoom(zoom);
+    this.cameras.main.centerOn(mapWidthPx / 2, mapHeightPx / 2);
+    
+    // Draw map
+    this.drawMap(this.currentMapArea.tiles);
   }
 } 
