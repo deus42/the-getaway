@@ -77,7 +77,7 @@ const PlayerStatusPanel: React.FC = () => {
       {/* Position Display */}
       <div style={{ marginTop: "1rem" }}>
         <span>
-          Position: ({position?.x ?? "?"}, {position?.y ?? "?"})
+          Player position: ({position?.x ?? "?"}, {position?.y ?? "?"})
         </span>
       </div>
       {/* Turn Counter Display (only in combat) */}

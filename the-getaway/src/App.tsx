@@ -53,10 +53,25 @@ function App() {
               Status
             </h2>
             <PlayerStatusPanel />
+
+            <h2
+              style={{
+                color: "#60a5fa",
+                marginTop: "2rem",
+                marginBottom: "1rem",
+                fontSize: "1.25rem",
+                fontWeight: "bold",
+              }}
+            >
+              Action Log
+            </h2>
+            <div style={{ flexGrow: 1, overflowY: "auto" }}>
+              <LogPanel />
+            </div>
           </div>
           <div
             style={{
-              width: "50%",
+              width: "60%",
               height: "100%",
               position: "relative",
               overflow: "hidden",
@@ -67,7 +82,7 @@ function App() {
           </div>
           <div
             style={{
-              width: "30%",
+              width: "20%",
               height: "100%",
               borderLeft: "1px solid #333",
               overflow: "auto",
@@ -78,15 +93,17 @@ function App() {
           >
             <h2
               style={{
-                color: "#60a5fa",
+                color: "#e879f9",
                 marginBottom: "1rem",
                 fontSize: "1.25rem",
                 fontWeight: "bold",
               }}
             >
-              Action Log
+              Dialog
             </h2>
-            <LogPanel />
+            <div style={{ fontStyle: "italic", color: "#666" }}>
+              Available in future update
+            </div>
           </div>
         </div>
       </div>
