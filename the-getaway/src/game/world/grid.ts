@@ -119,10 +119,10 @@ export const isPositionInBounds = (position: Position, mapArea: MapArea): boolea
 
 // Check if a position is walkable (considers bounds, tile type, and entities)
 export const isPositionWalkable = (
-  position: Position, 
+  position: Position,
   mapArea: MapArea,
-  player: Player,
-  enemies: Enemy[]
+  player?: Player,
+  enemies: Enemy[] = []
 ): boolean => {
   // 1. Check bounds
   if (!isPositionInBounds(position, mapArea)) {
@@ -135,12 +135,20 @@ export const isPositionWalkable = (
   }
 
   // 3. Check if player is at the target position
-  if (player.position.x === position.x && player.position.y === position.y) {
+  if (
+    player &&
+    player.position.x === position.x &&
+    player.position.y === position.y
+  ) {
     return false;
   }
 
   // 4. Check if any enemy is at the target position
-  if (enemies.some(enemy => enemy.position.x === position.x && enemy.position.y === position.y)) {
+  if (
+    enemies.some(
+      (enemy) => enemy.position.x === position.x && enemy.position.y === position.y
+    )
+  ) {
     return false;
   }
   
@@ -150,10 +158,10 @@ export const isPositionWalkable = (
 
 // Get all walkable positions adjacent to a position
 export const getAdjacentWalkablePositions = (
-  position: Position, 
+  position: Position,
   mapArea: MapArea,
-  player: Player, 
-  enemies: Enemy[]
+  player?: Player,
+  enemies: Enemy[] = []
 ): Position[] => {
   const adjacentPositions = [
     { x: position.x + 1, y: position.y },
@@ -163,7 +171,9 @@ export const getAdjacentWalkablePositions = (
   ];
   
   // Filter using the updated isPositionWalkable
-  return adjacentPositions.filter(pos => isPositionWalkable(pos, mapArea, player, enemies));
+  return adjacentPositions.filter((pos) =>
+    isPositionWalkable(pos, mapArea, player, enemies)
+  );
 };
 
 // Get positions that provide cover
