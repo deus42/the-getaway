@@ -6,6 +6,7 @@ import {
   isPositionInBounds,
   getAdjacentWalkablePositions
 } from '../game/world/grid';
+
 import { Position, MapArea, TileType, Player, Enemy } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 
@@ -154,7 +155,6 @@ describe('Grid System', () => {
       expect(isPositionWalkable(pos, testMap, dummyPlayer, dummyEnemies)).toBe(
         true
       );
-    });
     
     // Should not include the original position
     expect(adjacentPositions.some(pos => pos.x === position.x && pos.y === position.y)).toBe(false);
