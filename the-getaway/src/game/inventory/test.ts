@@ -1,2 +1,6 @@
 // This file exists to test imports from the inventory directory
-export const inventoryTest = 'Inventory module loaded successfully'; 
+export const inventoryTest = 'Inventory module loaded successfully';
+
+test('inventory module placeholder', () => {
+  expect(inventoryTest).toBe('Inventory module loaded successfully');
+});
