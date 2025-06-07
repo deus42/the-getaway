@@ -6,14 +6,39 @@ import {
   isPositionInBounds,
   getAdjacentWalkablePositions
 } from '../game/world/grid';
-import { Position, MapArea, TileType } from '../game/interfaces/types';
+import { Position, MapArea, TileType, Player, Enemy } from '../game/interfaces/types';
 
 describe('Grid System', () => {
   let testMap: MapArea;
+  let dummyPlayer: Player;
+  let dummyEnemies: Enemy[];
   
   beforeEach(() => {
     // Create a fresh test map for each test
     testMap = createTestMapArea('Test Map');
+    // Dummy player and empty enemy array for walkable checks
+    dummyPlayer = {
+      id: 'player',
+      name: 'Dummy',
+      position: { x: -1, y: -1 },
+      health: 1,
+      maxHealth: 1,
+      actionPoints: 0,
+      maxActionPoints: 0,
+      skills: {
+        strength: 0,
+        perception: 0,
+        endurance: 0,
+        charisma: 0,
+        intelligence: 0,
+        agility: 0,
+        luck: 0
+      },
+      level: 1,
+      experience: 0,
+      inventory: { items: [], maxWeight: 0, currentWeight: 0 }
+    } as Player;
+    dummyEnemies = [];
   });
   
   test('creates an empty grid of the correct size', () => {
@@ -102,20 +127,33 @@ describe('Grid System', () => {
   });
   
   test('walkable checking handles walls correctly', () => {
+    // isPositionWalkable expects (position, mapArea, player, enemies). We
+    // pass a dummy player and empty enemy array for these checks.
+
     // Walkable floor tile
-    expect(isPositionWalkable({ x: 2, y: 5 }, testMap)).toBe(true);
-    
+    expect(
+      isPositionWalkable({ x: 2, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(true);
+
     // Wall tile
-    expect(isPositionWalkable({ x: 5, y: 3 }, testMap)).toBe(false);
-    
+    expect(
+      isPositionWalkable({ x: 5, y: 3 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(false);
+
     // Cover tile (should be walkable)
-    expect(isPositionWalkable({ x: 3, y: 5 }, testMap)).toBe(true);
-    
+    expect(
+      isPositionWalkable({ x: 3, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(true);
+
     // Edge wall
-    expect(isPositionWalkable({ x: 0, y: 5 }, testMap)).toBe(false);
-    
+    expect(
+      isPositionWalkable({ x: 0, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(false);
+
     // Out of bounds
-    expect(isPositionWalkable({ x: -1, y: 5 }, testMap)).toBe(false);
+    expect(
+      isPositionWalkable({ x: -1, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(false);
   });
   
   test('getAdjacentWalkablePositions returns valid positions', () => {
