@@ -6,14 +6,20 @@ import {
   isPositionInBounds,
   getAdjacentWalkablePositions
 } from '../game/world/grid';
-import { Position, MapArea, TileType } from '../game/interfaces/types';
+import { Position, MapArea, TileType, Player, Enemy } from '../game/interfaces/types';
+import { DEFAULT_PLAYER } from '../game/interfaces/player';
 
 describe('Grid System', () => {
   let testMap: MapArea;
+  let dummyPlayer: Player;
+  let dummyEnemies: Enemy[];
   
   beforeEach(() => {
     // Create a fresh test map for each test
     testMap = createTestMapArea('Test Map');
+    // Dummy player and enemy array for walkable checks
+    dummyPlayer = { ...DEFAULT_PLAYER, position: { x: -1, y: -1 } } as Player;
+    dummyEnemies = [];
   });
   
   test('creates an empty grid of the correct size', () => {
@@ -102,32 +108,52 @@ describe('Grid System', () => {
   });
   
   test('walkable checking handles walls correctly', () => {
+    // isPositionWalkable expects (position, mapArea, player, enemies).
+    // Use the dummy player and an empty enemy array for these checks.
+
     // Walkable floor tile
-    expect(isPositionWalkable({ x: 2, y: 5 }, testMap)).toBe(true);
-    
+    expect(
+      isPositionWalkable({ x: 2, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(true);
+
     // Wall tile
-    expect(isPositionWalkable({ x: 5, y: 3 }, testMap)).toBe(false);
-    
+    expect(
+      isPositionWalkable({ x: 5, y: 3 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(false);
+
     // Cover tile (should be walkable)
-    expect(isPositionWalkable({ x: 3, y: 5 }, testMap)).toBe(true);
-    
+    expect(
+      isPositionWalkable({ x: 3, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(true);
+
     // Edge wall
-    expect(isPositionWalkable({ x: 0, y: 5 }, testMap)).toBe(false);
-    
+    expect(
+      isPositionWalkable({ x: 0, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(false);
+
     // Out of bounds
-    expect(isPositionWalkable({ x: -1, y: 5 }, testMap)).toBe(false);
+    expect(
+      isPositionWalkable({ x: -1, y: 5 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(false);
   });
   
   test('getAdjacentWalkablePositions returns valid positions', () => {
     const position: Position = { x: 2, y: 5 };
-    const adjacentPositions = getAdjacentWalkablePositions(position, testMap);
+    const adjacentPositions = getAdjacentWalkablePositions(
+      position,
+      testMap,
+      dummyPlayer,
+      dummyEnemies
+    );
     
     // Should have at least some adjacent walkable positions
     expect(adjacentPositions.length).toBeGreaterThan(0);
     
     // All returned positions should be walkable
     adjacentPositions.forEach(pos => {
-      expect(isPositionWalkable(pos, testMap)).toBe(true);
+      expect(isPositionWalkable(pos, testMap, dummyPlayer, dummyEnemies)).toBe(
+        true
+      );
     });
     
     // Should not include the original position
@@ -142,4 +168,4 @@ describe('Grid System', () => {
       expect((dx === 1 && dy === 0) || (dx === 0 && dy === 1)).toBe(true);
     });
   });
-}); 
+});
