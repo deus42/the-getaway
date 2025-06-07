@@ -11,7 +11,7 @@ jest.mock('phaser', () => ({
 
 // Import after mocking
 import { store } from '../store';
-import { setCurrentMapArea } from '../store/worldSlice';
+import { setMapArea } from '../store/worldSlice';
 import { movePlayer } from '../store/playerSlice';
 import { createBasicMapArea } from '../game/world/grid';
 
@@ -21,7 +21,7 @@ describe('Game Engine Integration', () => {
     const testMap = createBasicMapArea('Test Map', 15, 15);
     
     // Update the store
-    store.dispatch(setCurrentMapArea(testMap));
+    store.dispatch(setMapArea(testMap));
     
     // Verify that the store was updated correctly
     const state = store.getState();

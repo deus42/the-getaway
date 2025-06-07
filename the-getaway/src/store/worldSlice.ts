@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { randomUUID } from 'crypto';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
 import { createOpenMapArea } from '../game/world/grid';
 
@@ -13,7 +14,7 @@ export interface WorldState {
 // Use the new function to create the initial map (20x20)
 const initialMap = createOpenMapArea('Open Area', 20, 20);
 const initialEnemy: Enemy = {
-  id: crypto.randomUUID(),
+  id: randomUUID(),
   name: "Guard",
   // Update initial position to be within the 20x20 map (avoiding walls)
   position: { x: 15, y: 15 },

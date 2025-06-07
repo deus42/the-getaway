@@ -1,0 +1,1 @@
+run = "yarn --cwd the-getaway dev --host 0.0.0.0 --port $PORT"
