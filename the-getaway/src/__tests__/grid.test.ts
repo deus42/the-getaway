@@ -7,6 +7,7 @@ import {
   getAdjacentWalkablePositions
 } from '../game/world/grid';
 import { Position, MapArea, TileType, Player, Enemy } from '../game/interfaces/types';
+import { DEFAULT_PLAYER } from '../game/interfaces/player';
 
 describe('Grid System', () => {
   let testMap: MapArea;
@@ -16,28 +17,8 @@ describe('Grid System', () => {
   beforeEach(() => {
     // Create a fresh test map for each test
     testMap = createTestMapArea('Test Map');
-    // Dummy player and empty enemy array for walkable checks
-    dummyPlayer = {
-      id: 'player',
-      name: 'Dummy',
-      position: { x: -1, y: -1 },
-      health: 1,
-      maxHealth: 1,
-      actionPoints: 0,
-      maxActionPoints: 0,
-      skills: {
-        strength: 0,
-        perception: 0,
-        endurance: 0,
-        charisma: 0,
-        intelligence: 0,
-        agility: 0,
-        luck: 0
-      },
-      level: 1,
-      experience: 0,
-      inventory: { items: [], maxWeight: 0, currentWeight: 0 }
-    } as Player;
+    // Dummy player and enemy array for walkable checks
+    dummyPlayer = { ...DEFAULT_PLAYER, position: { x: -1, y: -1 } } as Player;
     dummyEnemies = [];
   });
   
@@ -158,14 +139,21 @@ describe('Grid System', () => {
   
   test('getAdjacentWalkablePositions returns valid positions', () => {
     const position: Position = { x: 2, y: 5 };
-    const adjacentPositions = getAdjacentWalkablePositions(position, testMap);
+    const adjacentPositions = getAdjacentWalkablePositions(
+      position,
+      testMap,
+      dummyPlayer,
+      dummyEnemies
+    );
     
     // Should have at least some adjacent walkable positions
     expect(adjacentPositions.length).toBeGreaterThan(0);
     
     // All returned positions should be walkable
     adjacentPositions.forEach(pos => {
-      expect(isPositionWalkable(pos, testMap)).toBe(true);
+      expect(isPositionWalkable(pos, testMap, dummyPlayer, dummyEnemies)).toBe(
+        true
+      );
     });
     
     // Should not include the original position
