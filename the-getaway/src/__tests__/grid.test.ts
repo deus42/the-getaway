@@ -150,22 +150,23 @@ describe('Grid System', () => {
     // Should have at least some adjacent walkable positions
     expect(adjacentPositions.length).toBeGreaterThan(0);
     
-    // All returned positions should be walkable
-    adjacentPositions.forEach(pos => {
-      expect(isPositionWalkable(pos, testMap, dummyPlayer, dummyEnemies)).toBe(
-        true
-      );
-    
-    // Should not include the original position
-    expect(adjacentPositions.some(pos => pos.x === position.x && pos.y === position.y)).toBe(false);
-    
-    // Should only include positions that are one step away
-    adjacentPositions.forEach(pos => {
-      const dx = Math.abs(pos.x - position.x);
-      const dy = Math.abs(pos.y - position.y);
-      
-      // Should be either horizontal or vertical neighbor (not diagonal)
-      expect((dx === 1 && dy === 0) || (dx === 0 && dy === 1)).toBe(true);
-    });
+  // All returned positions should be walkable
+  adjacentPositions.forEach(pos => {
+    expect(isPositionWalkable(pos, testMap, dummyPlayer, dummyEnemies)).toBe(
+      true
+    );
   });
-}); 
+
+  // Should not include the original position
+  expect(adjacentPositions.some(pos => pos.x === position.x && pos.y === position.y)).toBe(false);
+
+  // Should only include positions that are one step away
+  adjacentPositions.forEach(pos => {
+    const dx = Math.abs(pos.x - position.x);
+    const dy = Math.abs(pos.y - position.y);
+
+    // Should be either horizontal or vertical neighbor (not diagonal)
+    expect((dx === 1 && dy === 0) || (dx === 0 && dy === 1)).toBe(true);
+  });
+});
+});

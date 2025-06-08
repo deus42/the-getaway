@@ -313,3 +313,26 @@ Date: March 27, 2024
 ### Next Steps:
 
 *   Proceed to Step 7: Design a Small Explorable Map, focusing on expanding the game world.
+
+## Step 7: Design a Small Explorable Map (Completed)
+
+Date: June 7, 2025
+
+### Tasks Accomplished:
+
+1. Created two distinct map areas using the grid utilities:
+   * **Slums** – a 20x20 zone with building obstacles and a door on the east side.
+   * **Downtown** – another 20x20 zone with its own arrangement of walls and a door on the west side.
+2. Implemented a simple world map module (`worldMap.ts`) that stores these areas and defines connections between them.
+3. Extended `worldSlice` to keep a dictionary of map areas and set the initial map to the Slums.
+4. Updated `GameController` to detect door tiles. Moving onto a door now triggers a map change and positions the player at the appropriate entry point in the destination area.
+5. Modified `MainScene` so it redraws the map and enemies whenever the current map area changes, enabling seamless transitions.
+
+### Notes:
+
+* Walking through a door moves the player between Slums and Downtown without restarting the scene.
+* Walls inside each area prevent movement through buildings as intended.
+
+### Next Steps:
+
+* Continue with Step 8: Add a Day-Night Cycle to affect visibility in the world.
