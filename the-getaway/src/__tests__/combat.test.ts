@@ -9,9 +9,32 @@ import {
   DEFAULT_ATTACK_COST,
   DEFAULT_MOVEMENT_COST
 } from '../game/combat/combatSystem';
-import { createEnemy } from '../store/worldSlice';
+import { randomUUID } from 'crypto';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { determineEnemyMove } from '../game/combat/enemyAI';
+import { createBasicMapArea } from '../game/world/grid';
+
+function createEnemy(
+  name: string,
+  position: { x: number; y: number },
+  maxHealth: number,
+  actionPoints: number,
+  damage = 5,
+  attackRange = 1
+): any {
+  return {
+    id: randomUUID(),
+    name,
+    position,
+    maxHealth,
+    health: maxHealth,
+    actionPoints,
+    maxActionPoints: actionPoints,
+    damage,
+    attackRange,
+    isHostile: true,
+  };
+}
 
 describe('Combat System Tests', () => {
   // Test the basic attack functionality
@@ -94,34 +117,43 @@ describe('Combat System Tests', () => {
         position: { x: 5, y: 5 },
         actionPoints: 6
       };
-      
-      const obstacles = [
-        { x: 7, y: 5 }, // Not adjacent
-        { x: 5, y: 7 }  // Not adjacent
-      ];
-      
-      // Check valid moves
-      expect(canMoveToPosition(player, { x: 6, y: 5 }, obstacles)).toBe(true); // Right
-      expect(canMoveToPosition(player, { x: 4, y: 5 }, obstacles)).toBe(true); // Left
-      expect(canMoveToPosition(player, { x: 5, y: 4 }, obstacles)).toBe(true); // Up
-      expect(canMoveToPosition(player, { x: 5, y: 6 }, obstacles)).toBe(true); // Down
+
+      const mapArea = createBasicMapArea('Test', 10, 10);
+
+      expect(
+        canMoveToPosition(player, { x: 6, y: 5 }, mapArea, player, [])
+      ).toBe(true); // Right
+      expect(
+        canMoveToPosition(player, { x: 4, y: 5 }, mapArea, player, [])
+      ).toBe(true); // Left
+      expect(
+        canMoveToPosition(player, { x: 5, y: 4 }, mapArea, player, [])
+      ).toBe(true); // Up
+      expect(
+        canMoveToPosition(player, { x: 5, y: 6 }, mapArea, player, [])
+      ).toBe(true); // Down
     });
-    
+
     test('canMoveToPosition should return false for non-adjacent or obstructed positions', () => {
       const player = {
         ...DEFAULT_PLAYER,
         position: { x: 5, y: 5 },
         actionPoints: 6
       };
-      
-      const obstacles = [
-        { x: 6, y: 5 } // Obstacle to the right
-      ];
-      
-      // Check invalid moves
-      expect(canMoveToPosition(player, { x: 6, y: 5 }, obstacles)).toBe(false); // Obstructed
-      expect(canMoveToPosition(player, { x: 7, y: 5 }, obstacles)).toBe(false); // Not adjacent
-      expect(canMoveToPosition(player, { x: 6, y: 6 }, obstacles)).toBe(false); // Diagonal
+
+      const mapArea = createBasicMapArea('Test', 10, 10);
+      // Add an obstacle directly to the right
+      mapArea.tiles[5][6].isWalkable = false;
+
+      expect(
+        canMoveToPosition(player, { x: 6, y: 5 }, mapArea, player, [])
+      ).toBe(false); // Obstructed
+      expect(
+        canMoveToPosition(player, { x: 7, y: 5 }, mapArea, player, [])
+      ).toBe(false); // Not adjacent
+      expect(
+        canMoveToPosition(player, { x: 6, y: 6 }, mapArea, player, [])
+      ).toBe(false); // Diagonal
     });
     
     test('executeMove should update position and reduce AP', () => {
@@ -189,16 +221,17 @@ describe('Combat System Tests', () => {
   // Test enemy AI
   describe('Enemy AI', () => {
     test('determineEnemyMove should attack when in range', () => {
-      const enemy = createEnemy("Enemy", { x: 1, y: 0 }, 30, 6, 5, 1);
+      const mapArea = createBasicMapArea('Test', 10, 10);
+      const enemy = createEnemy('Enemy', { x: 1, y: 0 }, 30, 6, 5, 1);
       const player = { ...DEFAULT_PLAYER, position: { x: 0, y: 0 } };
-      const obstacles: Array<{x: number, y: number}> = [];
-      const coverPositions: Array<{x: number, y: number}> = [];
+      const enemies = [enemy];
+      const coverPositions: Array<{ x: number; y: number }> = [];
       
       // Mock Math.random to force a hit
       const originalRandom = Math.random;
       Math.random = jest.fn().mockReturnValue(0.1);
       
-      const result = determineEnemyMove(enemy, player, obstacles, coverPositions);
+      const result = determineEnemyMove(enemy, player, mapArea, enemies, coverPositions);
       
       // Restore Math.random
       Math.random = originalRandom;
@@ -209,12 +242,13 @@ describe('Combat System Tests', () => {
     });
     
     test('determineEnemyMove should move toward player when out of range', () => {
-      const enemy = createEnemy("Enemy", { x: 3, y: 0 }, 30, 6, 5, 1);
+      const mapArea = createBasicMapArea('Test', 10, 10);
+      const enemy = createEnemy('Enemy', { x: 3, y: 1 }, 30, 6, 5, 1);
       const player = { ...DEFAULT_PLAYER, position: { x: 0, y: 0 } };
-      const obstacles: Array<{x: number, y: number}> = [];
-      const coverPositions: Array<{x: number, y: number}> = [];
+      const enemies = [enemy];
+      const coverPositions: Array<{ x: number; y: number }> = [];
       
-      const result = determineEnemyMove(enemy, player, obstacles, coverPositions);
+      const result = determineEnemyMove(enemy, player, mapArea, enemies, coverPositions);
       
       expect(result.action).toBe('move');
       expect(result.enemy.actionPoints).toBeLessThan(enemy.actionPoints);
@@ -230,25 +264,26 @@ describe('Combat System Tests', () => {
     });
     
     test('determineEnemyMove should seek cover when health is low', () => {
+      const mapArea = createBasicMapArea('Test', 10, 10);
       const enemy = createEnemy(
-        "Enemy", 
-        { x: 2, y: 2 },  
-        30,   // max health
-        6,    // AP
-        5,    // damage
-        1     // range
+        'Enemy',
+        { x: 2, y: 2 },
+        30,
+        6,
+        5,
+        1
       );
       
       // Set health to 10% of max (below the threshold)
       enemy.health = enemy.maxHealth * 0.1;
       
       const player = { ...DEFAULT_PLAYER, position: { x: 0, y: 0 } };
-      const obstacles: Array<{x: number, y: number}> = [];
+      const enemies = [enemy];
       const coverPositions = [
         { x: 3, y: 2 } // Cover position adjacent to enemy
       ];
       
-      const result = determineEnemyMove(enemy, player, obstacles, coverPositions);
+      const result = determineEnemyMove(enemy, player, mapArea, enemies, coverPositions);
       
       expect(result.action).toBe('seek_cover');
       expect(result.enemy.position).toEqual(coverPositions[0]);
