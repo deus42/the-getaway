@@ -12,14 +12,14 @@ const PlayerStatusPanel: React.FC = () => {
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const turnCount = useSelector((state: RootState) => state.world.turnCount);
 
-  // Calculate health percentage for potential bar display
-  const healthPercent =
-    player.maxHealth > 0 ? (player.health / player.maxHealth) * 100 : 0;
-  // Calculate AP percentage
-  const apPercent =
-    player.maxActionPoints > 0
-      ? (player.actionPoints / player.maxActionPoints) * 100
-      : 0;
+  // These variables are not currently used but could be for a visual bar.
+  // I am commenting them out to remove the TS warning.
+  // const healthPercent =
+  //   player.maxHealth > 0 ? (player.health / player.maxHealth) * 100 : 0;
+  // const apPercent =
+  //   player.maxActionPoints > 0
+  //     ? (player.actionPoints / player.maxActionPoints) * 100
+  //     : 0;
 
   const renderBar = (
     label: string,

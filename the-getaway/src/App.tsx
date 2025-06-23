@@ -5,8 +5,14 @@ import { store } from "./store";
 import "./App.css";
 import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
 import LogPanel from "./components/ui/LogPanel";
+import { useEffect } from "react";
 
 function App() {
+  useEffect(() => {
+    console.log("[App] Component mounted");
+    console.log("[App] Store state:", store.getState());
+  }, []);
+
   return (
     <Provider store={store}>
       <div

@@ -16,11 +16,25 @@ const GameCanvas: React.FC = () => {
   // );
 
   useEffect(() => {
-    if (!gameContainerRef.current) return;
+    console.log("[GameCanvas] useEffect running");
+    console.log(
+      "[GameCanvas] gameContainerRef.current:",
+      gameContainerRef.current
+    );
+
+    if (!gameContainerRef.current) {
+      console.error("[GameCanvas] No container ref available");
+      return;
+    }
 
     // Make config width/height potentially dynamic based on parent
     const parentWidth = gameContainerRef.current.offsetWidth;
     const parentHeight = gameContainerRef.current.offsetHeight;
+
+    console.log("[GameCanvas] Container dimensions:", {
+      parentWidth,
+      parentHeight,
+    });
 
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
@@ -46,9 +60,15 @@ const GameCanvas: React.FC = () => {
       roundPixels: true,
     };
 
+    console.log("[GameCanvas] Phaser config:", config);
+
     if (!gameInstanceRef.current) {
-      gameInstanceRef.current = new Phaser.Game(config);
-      console.log("Phaser game initialized");
+      try {
+        gameInstanceRef.current = new Phaser.Game(config);
+        console.log("[GameCanvas] Phaser game initialized successfully");
+      } catch (error) {
+        console.error("[GameCanvas] Error initializing Phaser:", error);
+      }
     }
 
     // Simple resize handler - fewer options to avoid blinking
@@ -65,14 +85,17 @@ const GameCanvas: React.FC = () => {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      console.log("[GameCanvas] Cleanup running");
       window.removeEventListener("resize", handleResize);
       if (gameInstanceRef.current) {
         gameInstanceRef.current.destroy(true);
         gameInstanceRef.current = null;
-        console.log("Phaser game destroyed");
+        console.log("[GameCanvas] Phaser game destroyed");
       }
     };
   }, []);
+
+  console.log("[GameCanvas] Rendering component");
 
   return (
     <div

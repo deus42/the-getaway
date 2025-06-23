@@ -220,7 +220,7 @@ const GameController: React.FC = () => {
     inCombat,
     isPlayerTurn,
     currentEnemyTurnIndex,
-    enemies.length,
+    enemies,
     isProcessingEnemyAction,
     dispatch,
     player,

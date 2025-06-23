@@ -12,9 +12,26 @@ const LogPanel: React.FC = () => {
   }, [messages]);
 
   return (
-    <div className="flex-grow bg-gray-800 p-2 rounded overflow-y-auto text-xs space-y-1">
+    <div
+      style={{
+        flexGrow: 1,
+        backgroundColor: "#1f2937",
+        padding: "0.5rem",
+        borderRadius: "0.25rem",
+        overflowY: "auto",
+        fontSize: "0.75rem",
+        color: "white",
+      }}
+    >
       {messages.map((msg, index) => (
-        <p key={index} className="whitespace-pre-wrap break-words">
+        <p
+          key={index}
+          style={{
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            marginBottom: "0.25rem",
+          }}
+        >
           {/* Add simple indicator or timestamp if desired */}
           &gt; {msg}
         </p>
