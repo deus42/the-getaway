@@ -1,18 +1,19 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
-import { createOpenMapArea } from '../game/world/grid';
+import { mapAreas, slumsArea } from '../game/world/worldMap';
 
 export interface WorldState {
   currentMapArea: MapArea;
+  mapAreas: Record<string, MapArea>;
   currentTime: number;
   inCombat: boolean;
   isPlayerTurn: boolean;
   turnCount: number;
 }
 
-// Use the new function to create the initial map (20x20)
-const initialMap = createOpenMapArea('Open Area', 20, 20);
+// Initial map areas are created in worldMap.ts
+const initialMap = slumsArea;
 const initialEnemy: Enemy = {
   id: uuidv4(),
   name: "Guard",
@@ -27,10 +28,11 @@ const initialEnemy: Enemy = {
   isHostile: true,
 };
 initialMap.entities.enemies.push(initialEnemy);
-console.log("[worldSlice] Initial open map generated with enemy:", initialEnemy);
+console.log("[worldSlice] Initial map generated with enemy:", initialEnemy);
 
 const initialState: WorldState = {
   currentMapArea: initialMap,
+  mapAreas,
   currentTime: 0,
   inCombat: false,
   isPlayerTurn: true,

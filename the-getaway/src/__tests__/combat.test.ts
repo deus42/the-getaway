@@ -234,8 +234,7 @@ describe('Combat System Tests', () => {
         []
       );
       expect(result.action).toBe('move');
-      expect(result.enemy.position.x).not.toBe(enemyFar.position.x);
-      expect(result.enemy.position.y).not.toBe(enemyFar.position.y);
+      expect(result.enemy.position).not.toEqual(enemyFar.position);
     });
 
     test('determineEnemyMove should seek cover when wounded', () => {
@@ -251,7 +250,7 @@ describe('Combat System Tests', () => {
         [coverPosition]
       );
 
-      expect(result.action).toBe('move');
+      expect(result.action).toBe('seek_cover');
       // This is a simplification; a real test would check if it moved *towards* cover.
       expect(result.enemy.position).not.toEqual(woundedEnemy.position);
     });

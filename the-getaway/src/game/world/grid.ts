@@ -99,7 +99,7 @@ export const addCover = (mapArea: MapArea, coverPositions: Position[]): MapArea 
         ...updatedGrid[pos.y][pos.x],
         type: TileType.COVER,
         provideCover: true,
-        isWalkable: false,
+        isWalkable: true,
       };
     }
   }

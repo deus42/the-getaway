@@ -15,8 +15,10 @@ import {
   isInAttackRange,
   DEFAULT_ATTACK_COST,
 } from "../game/combat/combatSystem";
-import { Enemy, Position, MapArea } from "../game/interfaces/types";
+import { Enemy, Position, MapArea, TileType } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
+import { mapAreas, getConnectionForPosition } from "../game/world/worldMap";
+import { setMapArea } from "../store/worldSlice";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -428,7 +430,19 @@ const GameController: React.FC = () => {
 
       // Check if the new position is walkable
       if (isPositionWalkable(newPosition, currentMapArea, player, enemies)) {
-        dispatch(movePlayer(newPosition));
+        const tile = currentMapArea.tiles[newPosition.y][newPosition.x];
+        const connection = getConnectionForPosition(
+          currentMapArea.id,
+          newPosition
+        );
+
+        if (tile.type === TileType.DOOR && connection) {
+          const targetArea = mapAreas[connection.toAreaId];
+          dispatch(setMapArea(targetArea));
+          dispatch(movePlayer(connection.toPosition));
+        } else {
+          dispatch(movePlayer(newPosition));
+        }
         // dispatch(addLogMessage({ type: "info", message: `Moved to (${newPosition.x}, ${newPosition.y})` })); // COMMENTED OUT
         if (inCombat) {
           console.log("[GameController] handleKeyDown: PRE-MOVE AP DEDUCTION", {

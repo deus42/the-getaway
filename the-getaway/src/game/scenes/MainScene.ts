@@ -87,9 +87,16 @@ export class MainScene extends Phaser.Scene {
     const worldState = newState.world;
     const currentEnemies = worldState.currentMapArea.entities.enemies;
 
-    if(this.currentMapArea.id !== worldState.currentMapArea.id) {
-        console.warn("[MainScene handleStateChange] Map area mismatch, scene might need restarting.");
-        return;
+    if (this.currentMapArea.id !== worldState.currentMapArea.id) {
+      console.log('[MainScene] Map area changed, updating scene');
+      this.currentMapArea = worldState.currentMapArea;
+      // clear existing enemy sprites
+      this.enemySprites.forEach((data) => {
+        data.sprite.destroy();
+        data.healthText.destroy();
+      });
+      this.enemySprites.clear();
+      this.setupCameraAndMap();
     }
 
     this.updatePlayerPosition(playerState.position);
