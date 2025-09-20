@@ -1,0 +1,47 @@
+# Repository Guidelines
+
+## Project Structure & Module Organization
+- Root app lives in `the-getaway/` (Vite + React + TypeScript).
+- Source code in `the-getaway/src/`:
+  - `components/` (UI like `GameCanvas.tsx`, `GameController.tsx`)
+  - `game/` (core logic: `combat/`, `world/`, `quests/`, `interfaces/`, `scenes/`)
+  - `store/` (Redux Toolkit slices: `playerSlice.ts`, `worldSlice.ts`)
+  - `__tests__/` (unit/integration tests)
+  - `assets/` and `public/` for static files
+- Build output in `the-getaway/dist/`. Jest mocks in `the-getaway/__mocks__/`.
+
+## Build, Test, and Development Commands
+- Dev server: `cd the-getaway && yarn dev` (Vite on localhost)
+- Build: `yarn build` (type-check + production bundle to `dist/`)
+- Preview build: `yarn preview`
+- Lint: `yarn lint` (ESLint per `eslint.config.js`)
+- Tests: `yarn test` or `yarn test:watch` (Jest + jsdom)
+
+## Coding Style & Naming Conventions
+- TypeScript throughout; prefer explicit types on public APIs.
+- Indentation: 2 spaces; single quotes; trailing semicolons.
+- React components and files: PascalCase (e.g., `GameCanvas.tsx`).
+- Functions, variables, and Redux slices: camelCase (e.g., `playerSlice.ts`).
+- Avoid default exports for shared utilities; prefer named exports.
+- Linting: ESLint with `react-hooks` and `react-refresh` rules. Fix warnings before PR.
+
+## Testing Guidelines
+- Framework: Jest (`ts-jest`, `jest-environment-jsdom`) with React Testing Library.
+- Setup file: `src/setupTests.ts` (includes `@testing-library/jest-dom`).
+- Test files live in `src/__tests__/` and end with `.test.ts` or `.test.tsx`.
+- Aim to cover reducers, selectors, and core game logic (`game/*`). Optional coverage: `yarn test --coverage`.
+
+## Commit & Pull Request Guidelines
+- Use imperative, concise commits. Conventional Commits are welcome (e.g., `fix(build): ...`).
+- PRs should include:
+  - Summary of changes and rationale
+  - Linked issues (e.g., `Closes #123`)
+  - Screenshots/GIFs for UI changes
+  - Notes on tests added/updated and any breaking changes
+
+## Security & Configuration Tips
+- Do not commit secrets. For runtime config, prefer Vite envs prefixed with `VITE_` and keep local values in `.env.local` (gitignored).
+- Large assets belong in `public/` and should be optimized.
+
+## Agent-Specific Instructions
+- Follow this AGENTS.md across the repo. Keep changes minimal and focused. Prefer `yarn` for scripts. When adding files, mirror existing naming and structure.
