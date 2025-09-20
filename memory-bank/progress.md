@@ -365,3 +365,25 @@ Date: June 7, 2025
 ### Next Steps:
 
 * Continue with Step 8: Add a Day-Night Cycle to affect visibility in the world.
+
+## Step 8: Add a Day-Night Cycle (Completed)
+
+Date: April 5, 2024
+
+### Tasks Accomplished:
+
+1. Connected Redux world state to the temporal system:
+   * Added `timeOfDay`, `curfewActive`, and `currentTime` synchronization in `worldSlice.ts`.
+   * Exposed the cycle data to UI and combat logic so other systems can react to curfew.
+2. Drove the cycle inside Phaser:
+   * `MainScene` advances world time each frame, applies a fullscreen overlay that adapts to zoom/resize, and keeps the tint alive after tab switches.
+   * The overlay palette now transitions through cool dawn tones, neutral daylight, violet dusk, and deeper night blues.
+3. Increased nighttime pressure:
+   * `GameController` blocks door travel under curfew, spawns patrol reinforcements if the player is caught in the open at night, and logs dawn/nightfall events.
+4. Surfaced the world clock to players:
+   * Added `DayNightIndicator` overlay in the HUD to display cycle timer, current phase, and curfew status.
+
+### Validation:
+
+* `yarn lint`
+* Manual playtest covering day/night transitions, tab focus changes, patrol spawning, and door restrictions under curfew.
