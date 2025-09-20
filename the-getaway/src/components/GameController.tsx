@@ -6,7 +6,12 @@ import {
   setPlayerData,
   resetActionPoints,
 } from "../store/playerSlice";
-import { updateEnemy, enterCombat, switchTurn } from "../store/worldSlice";
+import {
+  updateEnemy,
+  enterCombat,
+  switchTurn,
+  addEnemy,
+} from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
 import { RootState } from "../store";
 import { isPositionWalkable } from "../game/world/grid";
@@ -19,6 +24,7 @@ import { Enemy, Position, MapArea, TileType } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
 import { mapAreas, getConnectionForPosition } from "../game/world/worldMap";
 import { setMapArea } from "../store/worldSlice";
+import { v4 as uuidv4 } from "uuid";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -30,15 +36,21 @@ const GameController: React.FC = () => {
   const isPlayerTurn = useSelector(
     (state: RootState) => state.world.isPlayerTurn
   );
+  const timeOfDay = useSelector((state: RootState) => state.world.timeOfDay);
+  const curfewActive = useSelector(
+    (state: RootState) => state.world.curfewActive
+  );
   const enemies = useSelector(
     (state: RootState) => state.world.currentMapArea.entities.enemies
   );
   const prevInCombat = useRef(inCombat); // Ref to track previous value
+  const previousTimeOfDay = useRef(timeOfDay);
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
   const [isProcessingEnemyAction, setIsProcessingEnemyAction] =
     useState<boolean>(false);
+  const [curfewAlertRaised, setCurfewAlertRaised] = useState<boolean>(false);
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
@@ -62,6 +74,28 @@ const GameController: React.FC = () => {
       document.removeEventListener("click", handleClick);
     };
   }, []);
+
+  useEffect(() => {
+    if (previousTimeOfDay.current !== timeOfDay) {
+      if (timeOfDay === "night") {
+        dispatch(
+          addLogMessage(
+            "Night falls over the Slums. Curfew squadrons sweep the streets."
+          )
+        );
+        setCurfewAlertRaised(false);
+      } else if (previousTimeOfDay.current === "night") {
+        dispatch(
+          addLogMessage(
+            "Dawn breaks. The regime eases the curfew for a few precious hours."
+          )
+        );
+        setCurfewAlertRaised(false);
+      }
+
+      previousTimeOfDay.current = timeOfDay;
+    }
+  }, [timeOfDay, dispatch]);
 
   // --- Enemy Turn Logic ---
   useEffect(() => {
@@ -340,6 +374,60 @@ const GameController: React.FC = () => {
     [enemies]
   );
 
+  const findPatrolSpawnPosition = useCallback(
+    (center: Position): Position | null => {
+      if (!currentMapArea) {
+        return null;
+      }
+
+      const offsets: Position[] = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 },
+        { x: 1, y: 1 },
+        { x: -1, y: -1 },
+        { x: -1, y: 1 },
+        { x: 1, y: -1 },
+      ];
+
+      for (const offset of offsets) {
+        const candidate: Position = {
+          x: center.x + offset.x,
+          y: center.y + offset.y,
+        };
+
+        if (
+          candidate.x < 0 ||
+          candidate.y < 0 ||
+          candidate.x >= currentMapArea.width ||
+          candidate.y >= currentMapArea.height
+        ) {
+          continue;
+        }
+
+        const tileRow = currentMapArea.tiles[candidate.y];
+        const tile = tileRow ? tileRow[candidate.x] : undefined;
+        if (!tile || !tile.isWalkable) {
+          continue;
+        }
+
+        const occupied = enemies.some(
+          (enemy) =>
+            enemy.position.x === candidate.x &&
+            enemy.position.y === candidate.y
+        );
+
+        if (!occupied) {
+          return candidate;
+        }
+      }
+
+      return null;
+    },
+    [currentMapArea, enemies]
+  );
+
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       const gameKeys = [
@@ -436,12 +524,75 @@ const GameController: React.FC = () => {
           newPosition
         );
 
+        if (curfewActive && tile.type === TileType.DOOR) {
+          dispatch(
+            addLogMessage(
+              "Checkpoint sealed. The regime's curfew keeps the district locked down."
+            )
+          );
+          return;
+        }
+
         if (tile.type === TileType.DOOR && connection) {
           const targetArea = mapAreas[connection.toAreaId];
           dispatch(setMapArea(targetArea));
           dispatch(movePlayer(connection.toPosition));
         } else {
           dispatch(movePlayer(newPosition));
+        }
+
+        if (
+          curfewActive &&
+          !tile.provideCover &&
+          tile.type !== TileType.DOOR &&
+          !curfewAlertRaised
+        ) {
+          const spawnPosition = findPatrolSpawnPosition(newPosition);
+
+          dispatch(
+            addLogMessage(
+              "Searchlights pin you in the open—curfew patrols are converging."
+            )
+          );
+          setCurfewAlertRaised(true);
+
+          if (spawnPosition) {
+            const patrol: Enemy = {
+              id: uuidv4(),
+              name: "Curfew Patrol",
+              position: spawnPosition,
+              maxHealth: 30,
+              health: 30,
+              actionPoints: 6,
+              maxActionPoints: 6,
+              damage: 6,
+              attackRange: 1,
+              isHostile: true,
+            };
+
+            dispatch(addEnemy(patrol));
+
+            if (!inCombat) {
+              dispatch(enterCombat());
+              dispatch(
+                addLogMessage(
+                  "Curfew patrol opens fire! Survive until the sirens fade."
+                )
+              );
+            } else {
+              dispatch(
+                addLogMessage(
+                  "Another patrol joins the skirmish, tightening the net."
+                )
+              );
+            }
+          } else {
+            dispatch(
+              addLogMessage(
+                "You hear armored boots closing in, but they can't reach you yet."
+              )
+            );
+          }
         }
         // dispatch(addLogMessage({ type: "info", message: `Moved to (${newPosition.x}, ${newPosition.y})` })); // COMMENTED OUT
         if (inCombat) {
@@ -480,6 +631,9 @@ const GameController: React.FC = () => {
       enemies,
       attackEnemy,
       findClosestEnemy,
+      curfewActive,
+      curfewAlertRaised,
+      findPatrolSpawnPosition,
     ]
   );
 

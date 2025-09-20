@@ -118,6 +118,35 @@ Date: March 26, 2024
 
 12. Fixed TypeScript configuration issues:
     - Updated `tsconfig.json` for proper JSX support
+
+## Step 8: Add a Day-Night Cycle (Completed)
+
+Date: April 5, 2024
+
+### Tasks Accomplished:
+
+1. Connected Redux world state to the temporal system:
+   - Added `timeOfDay`, `curfewActive`, and `currentTime` synchronization in `worldSlice.ts`.
+   - Exposed the current cycle state to UI components and gameplay logic.
+
+2. Drove the cycle from Phaser:
+   - `MainScene` now advances game time every frame and dispatches updates to Redux.
+   - Implemented a fullscreen overlay that scales with camera zoom and recenters on resize to visualize light changes.
+   - Added visibility-change handling so the tint persists when switching tabs.
+
+3. Introduced nighttime gameplay pressure:
+   - `GameController` blocks door transitions during curfew, spawns patrol reinforcements when the player is caught in the open, and logs narrative cues for dawn/nightfall.
+
+4. Surfaced the world clock in the HUD:
+   - Created `DayNightIndicator` to show cycle time, phase, and curfew status above the canvas.
+
+5. Tuned aesthetics:
+   - Refined overlay colors to cooler dawn/dusk tones and deeper night blues to avoid muddy visuals.
+
+### Validation:
+
+- Ran `yarn lint` to confirm TypeScript/ESLint pass.
+- Manually verified that the overlay persists after tab switches and that curfew patrol triggers at night while daytime travel remains unrestricted.
     - Added ESM interoperability for better module support
     - Fixed configuration for proper Jest testing
 

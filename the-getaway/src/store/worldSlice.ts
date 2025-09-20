@@ -2,11 +2,19 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
 import { mapAreas, slumsArea } from '../game/world/worldMap';
+import {
+  TimeOfDay,
+  getCurrentTimeOfDay,
+  isCurfewTime,
+  DEFAULT_DAY_NIGHT_CONFIG,
+} from '../game/world/dayNightCycle';
 
 export interface WorldState {
   currentMapArea: MapArea;
   mapAreas: Record<string, MapArea>;
   currentTime: number;
+  timeOfDay: TimeOfDay;
+  curfewActive: boolean;
   inCombat: boolean;
   isPlayerTurn: boolean;
   turnCount: number;
@@ -34,6 +42,8 @@ const initialState: WorldState = {
   currentMapArea: initialMap,
   mapAreas,
   currentTime: 0,
+  timeOfDay: getCurrentTimeOfDay(0, DEFAULT_DAY_NIGHT_CONFIG),
+  curfewActive: isCurfewTime(0, DEFAULT_DAY_NIGHT_CONFIG),
   inCombat: false,
   isPlayerTurn: true,
   turnCount: 1,
@@ -52,10 +62,14 @@ export const worldSlice = createSlice({
     
     updateGameTime: (state, action: PayloadAction<number>) => {
       state.currentTime += action.payload;
+      state.timeOfDay = getCurrentTimeOfDay(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
+      state.curfewActive = isCurfewTime(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
     },
-    
+
     setGameTime: (state, action: PayloadAction<number>) => {
       state.currentTime = action.payload;
+      state.timeOfDay = getCurrentTimeOfDay(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
+      state.curfewActive = isCurfewTime(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
     },
     
     enterCombat: (state) => {

@@ -6,6 +6,7 @@ import "./App.css";
 import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
 import LogPanel from "./components/ui/LogPanel";
 import { useEffect } from "react";
+import DayNightIndicator from "./components/ui/DayNightIndicator";
 
 function App() {
   useEffect(() => {
@@ -85,6 +86,7 @@ function App() {
           >
             <GameCanvas />
             <GameController />
+            <DayNightIndicator />
           </div>
           <div
             style={{

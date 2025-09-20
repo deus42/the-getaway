@@ -80,17 +80,17 @@ export const getDayNightOverlayColor = (
   
   switch (timeOfDay) {
     case 'morning':
-      // Soft orange/yellow tint during morning
-      return `rgba(255, 204, 102, ${1 - lightLevel})`;
+      // Cool dawn tint to soften the morning light
+      return `rgba(180, 208, 255, ${(1 - lightLevel) * 0.22})`;
     case 'day':
       // No tint during full day
       return 'rgba(255, 255, 255, 0)';
     case 'evening':
-      // Soft orange/red tint during evening
-      return `rgba(255, 153, 102, ${1 - lightLevel})`;
+      // Muted violet wash during dusk
+      return `rgba(214, 179, 255, ${(1 - lightLevel) * 0.28})`;
     case 'night':
       // Deep blue tint during night
-      return `rgba(25, 25, 112, ${0.7 * (1 - lightLevel)})`;
+      return `rgba(18, 30, 64, ${0.72 * (1 - lightLevel)})`;
     default:
       return 'rgba(0, 0, 0, 0)';
   }

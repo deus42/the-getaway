@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { MapArea, TileType, Position, Enemy, MapTile } from '../interfaces/types';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
+import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
+import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 
 // Change EnemySpriteData to use Rectangle
 interface EnemySpriteData {
@@ -18,6 +20,19 @@ export class MainScene extends Phaser.Scene {
   private currentMapArea: MapArea | null = null;
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
+  private dayNightOverlay!: Phaser.GameObjects.Rectangle;
+  private currentGameTime = 0;
+  private timeDispatchAccumulator = 0;
+  private handleVisibilityChange = () => {
+    if (!this.sys.isActive()) return;
+    if (document.visibilityState === 'visible') {
+      this.resizeDayNightOverlay();
+      this.updateDayNightOverlay();
+      if (this.dayNightOverlay) {
+        this.dayNightOverlay.setVisible(true);
+      }
+    }
+  };
 
   constructor() {
     super({ key: 'MainScene' });
@@ -46,9 +61,17 @@ export class MainScene extends Phaser.Scene {
 
     // Initial setup of camera and map
     this.setupCameraAndMap();
-    
+
+    // Cache initial world time and set up overlay
+    const worldState = store.getState().world;
+    this.currentGameTime = worldState.currentTime;
+    this.timeDispatchAccumulator = 0;
+    this.initializeDayNightOverlay();
+    this.updateDayNightOverlay();
+
     // Listen for resize events
     this.scale.on('resize', this.handleResize, this);
+    document.addEventListener('visibilitychange', this.handleVisibilityChange);
     
     // Setup player sprite
     if (this.playerInitialPosition) {
@@ -74,10 +97,6 @@ export class MainScene extends Phaser.Scene {
     }, 0);
   }
 
-  public update(): void {
-    // Game loop update logic goes here
-  }
-  
   private handleStateChange(): void {
     // This handles updates AFTER the initial one from setTimeout
     if (!this.sys.isActive() || !this.currentMapArea) return;
@@ -86,6 +105,10 @@ export class MainScene extends Phaser.Scene {
     const playerState = newState.player.data;
     const worldState = newState.world;
     const currentEnemies = worldState.currentMapArea.entities.enemies;
+
+    // Sync local time cache with store updates (e.g., external adjustments)
+    this.currentGameTime = worldState.currentTime;
+    this.updateDayNightOverlay();
 
     if (this.currentMapArea.id !== worldState.currentMapArea.id) {
       console.log('[MainScene] Map area changed, updating scene');
@@ -162,6 +185,8 @@ export class MainScene extends Phaser.Scene {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+    this.scale.off('resize', this.handleResize, this);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     console.log('[MainScene] shutdown complete.');
   }
 
@@ -230,6 +255,7 @@ export class MainScene extends Phaser.Scene {
     // Simple resize without debouncing to avoid blinking
     if (this.sys.isActive() && this.currentMapArea) {
       this.setupCameraAndMap();
+      this.resizeDayNightOverlay();
     }
   }
   
@@ -254,5 +280,71 @@ export class MainScene extends Phaser.Scene {
     
     // Draw map
     this.drawMap(this.currentMapArea.tiles);
+
+    // Ensure overlay matches latest viewport size after camera adjustments
+    this.resizeDayNightOverlay();
   }
-} 
+
+  private initializeDayNightOverlay(): void {
+    const width = this.scale.width;
+    const height = this.scale.height;
+
+    this.dayNightOverlay = this.add.rectangle(0, 0, width, height, 0x000000, 0);
+    this.dayNightOverlay.setOrigin(0.5, 0.5);
+    this.dayNightOverlay.setScrollFactor(0);
+    this.dayNightOverlay.setDepth(100);
+    this.dayNightOverlay.setBlendMode(Phaser.BlendModes.NORMAL);
+    this.dayNightOverlay.setSize(width, height);
+    this.dayNightOverlay.setDisplaySize(width, height);
+    this.applyOverlayZoom();
+  }
+
+  private applyOverlayZoom(): void {
+    if (!this.dayNightOverlay) return;
+    const zoom = this.cameras.main.zoom || 1;
+    const inverseZoom = 1 / zoom;
+    this.dayNightOverlay.setScale(inverseZoom, inverseZoom);
+    const centerX = this.scale.width / 2;
+    const centerY = this.scale.height / 2;
+    this.dayNightOverlay.setPosition(centerX, centerY);
+  }
+
+  private resizeDayNightOverlay(): void {
+    if (!this.dayNightOverlay) return;
+    const width = this.scale.width;
+    const height = this.scale.height;
+    this.dayNightOverlay.setSize(width, height);
+    this.dayNightOverlay.setDisplaySize(width, height);
+    this.applyOverlayZoom();
+  }
+
+  private updateDayNightOverlay(): void {
+    if (!this.dayNightOverlay) return;
+
+    const overlayColor = getDayNightOverlayColor(this.currentGameTime, DEFAULT_DAY_NIGHT_CONFIG);
+    const match = overlayColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)/);
+
+    if (match) {
+      const [, r, g, b, a] = match;
+      const color = Phaser.Display.Color.GetColor(Number(r), Number(g), Number(b));
+      this.dayNightOverlay.setFillStyle(color, Number(a));
+    }
+  }
+
+  public update(_time: number, delta: number): void {
+    if (!this.sys.isActive()) {
+      return;
+    }
+
+    const deltaSeconds = delta / 1000;
+    this.currentGameTime += deltaSeconds;
+    this.timeDispatchAccumulator += deltaSeconds;
+
+    this.updateDayNightOverlay();
+
+    if (this.timeDispatchAccumulator >= 0.5) {
+      store.dispatch(updateGameTimeAction(this.timeDispatchAccumulator));
+      this.timeDispatchAccumulator = 0;
+    }
+  }
+}
