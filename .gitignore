@@ -87,3 +87,8 @@ $RECYCLE.BIN/
 
 # Cursor
 .cursor/ 
+
+# Context Portal output
+.portal/
+context_portal/
+.conport-venv/
