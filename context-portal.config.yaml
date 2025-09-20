@@ -1,0 +1,60 @@
+# Context Portal configuration for The Getaway
+# Adjust provider/model settings to your environment.
+
+version: 1
+
+outDir: .portal
+
+sources:
+  - name: memory-bank
+    root: memory-bank
+    include:
+      - "**/*.md"
+    tags: [docs, design]
+
+  - name: game-src
+    root: the-getaway/src
+    include:
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.md"
+    tags: [code]
+
+  - name: project-docs
+    root: the-getaway
+    include:
+      - "README.md"
+    tags: [docs]
+
+exclude:
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/*.tsbuildinfo"
+  - "**/__mocks__/**"
+  - "**/.DS_Store"
+
+chunking:
+  markdown:
+    by: heading
+    minTokens: 150
+    maxTokens: 600
+    overlap: 80
+  code:
+    by: syntax
+    size: 220
+    overlap: 60
+    languages: [ts, tsx]
+
+embeddings:
+  # Set provider to what your environment supports.
+  # Example for OpenAI: export OPENAI_API_KEY=... and choose a model.
+  provider: openai
+  model: text-embedding-3-small
+
+site:
+  # Optional: emit a static site. Change outDir if you want to publish.
+  enabled: true
+  outDir: .portal/site
+  title: The Getaway – Context Portal
+  description: Unified index of code and design docs for The Getaway.
+
