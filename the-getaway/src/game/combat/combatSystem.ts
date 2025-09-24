@@ -7,6 +7,28 @@ export const DEFAULT_ATTACK_COST = 2;
 export const DEFAULT_MOVEMENT_COST = 1;
 export const COVER_DAMAGE_REDUCTION = 0.5;
 
+export type RandomGenerator = () => number;
+
+let randomGenerator: RandomGenerator = () => Math.random();
+
+export const setRandomGenerator = (generator?: RandomGenerator): void => {
+  randomGenerator = generator ?? (() => Math.random());
+};
+
+const getRandomRoll = (): number => {
+  const roll = randomGenerator();
+
+  if (!Number.isFinite(roll) || Number.isNaN(roll)) {
+    throw new Error('[CombatSystem] Random generator must return a finite number between 0 and 1.');
+  }
+
+  if (roll < 0 || roll > 1) {
+    throw new Error('[CombatSystem] Random generator must return a value between 0 and 1.');
+  }
+
+  return roll;
+};
+
 // Types for combat actions
 export type CombatAction = 
   | { type: 'move', targetPosition: Position, cost: number }
@@ -95,7 +117,7 @@ export const executeAttack = (
   const hitChance = calculateHitChance(attacker.position, target.position, isBehindCover);
   
   // Roll to hit
-  const roll = Math.random();
+  const roll = getRandomRoll();
   const hit = roll <= hitChance;
   
   // Calculate damage

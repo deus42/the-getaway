@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach } from '@jest/globals';
+import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
 import { Player, Enemy, Position } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { 
@@ -9,7 +9,8 @@ import {
   initializeCombat,
   endCombatTurn,
   DEFAULT_ATTACK_COST,
-  DEFAULT_MOVEMENT_COST
+  DEFAULT_MOVEMENT_COST,
+  setRandomGenerator
 } from '../game/combat/combatSystem';
 import { MapArea } from '../game/interfaces/types';
 import { createBasicMapArea } from '../game/world/grid';
@@ -47,18 +48,17 @@ describe('Combat System Tests', () => {
     mapArea = createBasicMapArea('Combat Test Map', 10, 10);
   });
 
+  afterEach(() => {
+    setRandomGenerator();
+  });
+
   // Test the basic attack functionality
   describe('Basic Attack Functionality', () => {
     test('executeAttack should reduce target health on hit', () => {
-      // Mock Math.random to force a hit
-      const originalRandom = Math.random;
-      Math.random = jest.fn().mockReturnValue(0.1);
+      setRandomGenerator(() => 0.1);
       
       // Execute attack
       const result = executeAttack(player, enemy, false);
-      
-      // Restore Math.random
-      Math.random = originalRandom;
       
       // Check if hit was successful
       expect(result.success).toBe(true);
@@ -213,6 +213,7 @@ describe('Combat System Tests', () => {
   describe('Enemy AI', () => {
     test('determineEnemyMove should attack if player is in range', () => {
       const enemyClose = createEnemy({ x: 2, y: 1 });
+      setRandomGenerator(() => 0.1);
       const result = determineEnemyMove(
         enemyClose,
         player,

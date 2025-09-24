@@ -1,11 +1,15 @@
 import { createBasicMapArea, isPositionWalkable } from '../game/world/grid';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
-import { executeAttack, calculateHitChance } from '../game/combat/combatSystem';
+import { executeAttack, calculateHitChance, setRandomGenerator } from '../game/combat/combatSystem';
 import { canAddItemToInventory, createWeapon } from '../game/inventory/inventorySystem';
 import { createQuest, areAllObjectivesCompleted } from '../game/quests/questSystem';
 import { TileType } from '../game/interfaces/types';
 
 describe('Game Types and Basic Functionality', () => {
+  afterEach(() => {
+    setRandomGenerator();
+  });
+
   // Player tests
   describe('Player', () => {
     test('DEFAULT_PLAYER should have correct initial values', () => {
@@ -47,15 +51,10 @@ describe('Game Types and Basic Functionality', () => {
         health: 100
       };
       
-      // Mock Math.random to force a hit
-      const originalRandom = Math.random;
-      Math.random = jest.fn().mockReturnValue(0.1);
+      setRandomGenerator(() => 0.1);
       
       const result = executeAttack(attacker, target, false);
-      
-      // Restore original Math.random
-      Math.random = originalRandom;
-      
+
       expect(result.success).toBe(true);
       expect(result.damage).toBeGreaterThan(0);
       expect(result.newTarget.health).toBeLessThan(target.health);
