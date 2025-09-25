@@ -114,38 +114,52 @@ export const worldSlice = createSlice({
     },
     
     updateEnemy: (state, action: PayloadAction<Enemy>) => {
-      const updatedEnemy = action.payload;
-      const index = state.currentMapArea.entities.enemies.findIndex(
-        (e) => e.id === updatedEnemy.id
-      );
-      if (index !== -1) {
-        const healthBefore = state.currentMapArea.entities.enemies[index].health;
-        state.currentMapArea.entities.enemies[index] = updatedEnemy;
-         console.log("[worldSlice] updateEnemy reducer: UPDATING state", {
-            enemyId: updatedEnemy.id, healthBefore, healthAfter: updatedEnemy.health });
+      const incoming = action.payload;
 
-        if (updatedEnemy.health <= 0) {
-          console.log(`[worldSlice updateEnemy] Enemy ${updatedEnemy.id} health <= 0. Checking remaining enemies.`);
-          // Get the current list of enemies *after* the update within this reducer step
-          const currentEnemiesInState = state.currentMapArea.entities.enemies;
-          console.log('[worldSlice updateEnemy] Enemies in state for check:', JSON.stringify(currentEnemiesInState.map(e => ({id: e.id, health: e.health}))));
+      const syncEnemyInArea = (area: MapArea) => {
+        const enemyIndex = area.entities.enemies.findIndex(
+          (enemy) => enemy.id === incoming.id
+        );
 
-          // Check if any enemies in the updated list still have health > 0
-          const livingEnemiesAfterUpdate = currentEnemiesInState.filter(e => e.health > 0);
-          console.log('[worldSlice updateEnemy] Living enemies count after update:', livingEnemiesAfterUpdate.length);
-
-          if (livingEnemiesAfterUpdate.length === 0) {
-            console.log("[worldSlice updateEnemy] NO enemies left alive. Setting inCombat=false.");
-            state.inCombat = false;
-            state.isPlayerTurn = true; // Ensure player gets control
-            state.turnCount = 1; // Reset turn count
-            console.log("[worldSlice updateEnemy] State after setting inCombat=false:", { inCombat: state.inCombat, isPlayerTurn: state.isPlayerTurn, turnCount: state.turnCount });
-          } else {
-             console.log(`[worldSlice updateEnemy] ${livingEnemiesAfterUpdate.length} enemies still alive. Combat continues.`);
-          }
+        if (enemyIndex === -1) {
+          return;
         }
-      } else {
-         console.warn(`[worldSlice] updateEnemy reducer: Enemy ${updatedEnemy.id} not found.`);
+
+        if (incoming.health <= 0) {
+          area.entities.enemies.splice(enemyIndex, 1);
+        } else {
+          area.entities.enemies[enemyIndex] = incoming;
+        }
+      };
+
+      console.log("[worldSlice] updateEnemy reducer running", {
+        enemyId: incoming.id,
+        health: incoming.health,
+      });
+
+      syncEnemyInArea(state.currentMapArea);
+
+      Object.values(state.mapAreas).forEach((area) => {
+        syncEnemyInArea(area);
+      });
+
+      if (incoming.health <= 0) {
+        console.log(
+          `[worldSlice updateEnemy] Enemy ${incoming.id} removed from all areas.`
+        );
+
+        const livingEnemies = state.currentMapArea.entities.enemies.filter(
+          (enemy) => enemy.health > 0
+        );
+
+        if (livingEnemies.length === 0) {
+          console.log(
+            "[worldSlice updateEnemy] No living enemies remain. Clearing combat state."
+          );
+          state.inCombat = false;
+          state.isPlayerTurn = true;
+          state.turnCount = 1;
+        }
       }
     },
     
