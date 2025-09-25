@@ -208,27 +208,28 @@ export class MainScene extends Phaser.Scene {
         const pixelX = Math.floor(x * this.tileSize); // Ensure pixel-perfect alignment
         const pixelY = Math.floor(y * this.tileSize);
 
-        // Set color based on tile type
-        let color: number;
-        if (tile.type === TileType.WALL) {
-          color = 0xcccccc; // Wall
-        } else if (tile.type === TileType.COVER) {
-          color = 0x6666dd; // Cover
-        } else if (tile.type === TileType.DOOR) {
-          color = 0x99cc99; // Door
+        if (tile.type === TileType.DOOR) {
+          this.drawDoorTile(pixelX, pixelY);
         } else {
-          // Alternate floor colors
-          color = (x + y) % 2 === 0 ? 0x333333 : 0x3a3a3a;
-        }
+          let color: number;
+          if (tile.type === TileType.WALL) {
+            color = 0xcccccc; // Wall
+          } else if (tile.type === TileType.COVER) {
+            color = 0x6666dd; // Cover
+          } else {
+            // Alternate floor colors
+            color = (x + y) % 2 === 0 ? 0x333333 : 0x3a3a3a;
+          }
 
-        // Draw cell with exact 1px border
-        this.mapGraphics.fillStyle(color);
-        this.mapGraphics.fillRect(
-          pixelX + 1,
-          pixelY + 1,
-          this.tileSize - 1,
-          this.tileSize - 1
-        );
+          // Draw cell with exact 1px border
+          this.mapGraphics.fillStyle(color);
+          this.mapGraphics.fillRect(
+            pixelX + 1,
+            pixelY + 1,
+            this.tileSize - 1,
+            this.tileSize - 1
+          );
+        }
 
         // Draw cell borders with consistent 1px width
         this.mapGraphics.lineStyle(1, 0x1a1a1a, 1);
@@ -240,6 +241,59 @@ export class MainScene extends Phaser.Scene {
         );
       }
     }
+  }
+
+  private drawDoorTile(pixelX: number, pixelY: number): void {
+    if (!this.mapGraphics) {
+      return;
+    }
+
+    const edgeInset = 1;
+    const baseWidth = this.tileSize - edgeInset * 2;
+    const baseHeight = this.tileSize - edgeInset * 2;
+
+    // Dark floor base to blend with surrounding tiles
+    this.mapGraphics.fillStyle(0x2f2f2f);
+    this.mapGraphics.fillRect(
+      pixelX + edgeInset,
+      pixelY + edgeInset,
+      baseWidth,
+      baseHeight
+    );
+
+    const frameInset = edgeInset + Math.max(2, Math.floor(this.tileSize * 0.12));
+    const doorWidth = Math.max(4, this.tileSize - frameInset * 2);
+    const doorHeight = baseHeight;
+
+    // Main door panel
+    this.mapGraphics.fillStyle(0x6f4a2d);
+    this.mapGraphics.fillRect(
+      pixelX + frameInset,
+      pixelY + edgeInset,
+      doorWidth,
+      doorHeight
+    );
+
+    // Central plank highlight for depth
+    const panelWidth = Math.max(2, Math.floor(doorWidth / 4));
+    this.mapGraphics.fillStyle(0x8a6146);
+    this.mapGraphics.fillRect(
+      pixelX + frameInset + doorWidth / 2 - panelWidth / 2,
+      pixelY + edgeInset,
+      panelWidth,
+      doorHeight
+    );
+
+    // Simple door knob accent
+    const knobSize = Math.max(2, Math.floor(this.tileSize * 0.08));
+    const knobOffset = Math.max(2, Math.floor(this.tileSize * 0.05));
+    this.mapGraphics.fillStyle(0xd6b370);
+    this.mapGraphics.fillRect(
+      pixelX + frameInset + doorWidth - knobOffset - knobSize,
+      pixelY + edgeInset + doorHeight / 2 - knobSize / 2,
+      knobSize,
+      knobSize
+    );
   }
 
   // Update calculatePixelPosition to match the new grid drawing approach
