@@ -5,7 +5,6 @@ import GameController from "./components/GameController";
 import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
 import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
-import TurnIndicator from "./components/ui/TurnIndicator";
 import GameMenu from "./components/ui/GameMenu";
 import { PERSISTED_STATE_KEY, resetGame, store } from "./store";
 import { addLogMessage } from "./store/logSlice";
@@ -203,7 +202,6 @@ function App() {
                 <GameCanvas />
                 <GameController />
                 <DayNightIndicator />
-                <TurnIndicator />
               </div>
               <div style={rightSidebarStyle}>
                 <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
