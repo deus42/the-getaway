@@ -112,6 +112,117 @@ export const getLightLevelRGBA = (
   return (red << 16) + (green << 8) + blue;
 };
 
+interface PhaseDefinition {
+  phase: TimeOfDay;
+  start: number;
+}
+
+export interface PhaseTimingInfo {
+  currentPhase: TimeOfDay;
+  nextPhase: TimeOfDay;
+  secondsUntilNextPhase: number;
+  secondsIntoCurrentPhase: number;
+  currentPhaseDurationSeconds: number;
+  phaseProgress: number;
+}
+
+const buildOrderedPhases = (config: DayNightConfig): PhaseDefinition[] => {
+  const phases: PhaseDefinition[] = [
+    { phase: 'morning', start: config.morningStartTime },
+    { phase: 'day', start: config.dayStartTime },
+    { phase: 'evening', start: config.eveningStartTime },
+    { phase: 'night', start: config.dayEndTime },
+  ];
+
+  return phases.sort((a, b) => a.start - b.start);
+};
+
+export const getPhaseTimingInfo = (
+  currentTime: number,
+  config: DayNightConfig = DEFAULT_DAY_NIGHT_CONFIG
+): PhaseTimingInfo => {
+  const cycleDuration = config.cycleDuration;
+  if (cycleDuration <= 0) {
+    const phase = getCurrentTimeOfDay(currentTime, config);
+    return {
+      currentPhase: phase,
+      nextPhase: phase,
+      secondsUntilNextPhase: 0,
+      secondsIntoCurrentPhase: 0,
+      currentPhaseDurationSeconds: 0,
+      phaseProgress: 1,
+    };
+  }
+
+  const orderedPhases = buildOrderedPhases(config);
+  const currentPhase = getCurrentTimeOfDay(currentTime, config);
+  const currentPhaseIndex = orderedPhases.findIndex(
+    (entry) => entry.phase === currentPhase
+  );
+
+  if (currentPhaseIndex === -1) {
+    const fallbackPhase = orderedPhases[0];
+    return {
+      currentPhase,
+      nextPhase: fallbackPhase.phase,
+      secondsUntilNextPhase: 0,
+      secondsIntoCurrentPhase: 0,
+      currentPhaseDurationSeconds: 0,
+      phaseProgress: 1,
+    };
+  }
+
+  const nextPhaseIndex = (currentPhaseIndex + 1) % orderedPhases.length;
+  const currentStart = orderedPhases[currentPhaseIndex].start;
+  let nextStart = orderedPhases[nextPhaseIndex].start;
+
+  const cycleSeconds = ((currentTime % cycleDuration) + cycleDuration) % cycleDuration;
+  let cycleProgress = cycleSeconds / cycleDuration;
+
+  if (nextStart <= currentStart) {
+    nextStart += 1;
+  }
+
+  if (cycleProgress < currentStart) {
+    cycleProgress += 1;
+  }
+
+  const phaseDurationFraction = nextStart - currentStart;
+  const phaseDurationSeconds = phaseDurationFraction * cycleDuration;
+  const secondsIntoCurrentPhase = Math.max(
+    0,
+    (cycleProgress - currentStart) * cycleDuration
+  );
+  const rawSecondsUntilNextPhase = phaseDurationSeconds - secondsIntoCurrentPhase;
+  const secondsUntilNextPhase = Math.max(0, rawSecondsUntilNextPhase);
+  const phaseProgress = phaseDurationSeconds > 0
+    ? Math.min(1, secondsIntoCurrentPhase / phaseDurationSeconds)
+    : 1;
+
+  return {
+    currentPhase,
+    nextPhase: orderedPhases[nextPhaseIndex].phase,
+    secondsUntilNextPhase,
+    secondsIntoCurrentPhase,
+    currentPhaseDurationSeconds: phaseDurationSeconds,
+    phaseProgress,
+  };
+};
+
+export const getSecondsUntilCycleReset = (
+  currentTime: number,
+  config: DayNightConfig = DEFAULT_DAY_NIGHT_CONFIG
+): number => {
+  const cycleDuration = config.cycleDuration;
+  if (cycleDuration <= 0) {
+    return 0;
+  }
+
+  const cycleSeconds = ((currentTime % cycleDuration) + cycleDuration) % cycleDuration;
+  const remaining = cycleDuration - cycleSeconds;
+  return remaining === 0 ? cycleDuration : remaining;
+};
+
 // Check if it's curfew time (for game mechanics)
 export const isCurfewTime = (
   currentTime: number,

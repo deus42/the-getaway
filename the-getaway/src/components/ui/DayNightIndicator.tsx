@@ -1,7 +1,12 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
-import { DEFAULT_DAY_NIGHT_CONFIG, TimeOfDay } from "../../game/world/dayNightCycle";
+import {
+  DEFAULT_DAY_NIGHT_CONFIG,
+  TimeOfDay,
+  getPhaseTimingInfo,
+  getSecondsUntilCycleReset,
+} from "../../game/world/dayNightCycle";
 
 const timeOfDayLabels: Record<TimeOfDay, string> = {
   morning: "Morning",
@@ -10,11 +15,11 @@ const timeOfDayLabels: Record<TimeOfDay, string> = {
   night: "Night",
 };
 
-const formatCycleTime = (currentTime: number) => {
-  const cycleSeconds = currentTime % DEFAULT_DAY_NIGHT_CONFIG.cycleDuration;
-  const minutes = Math.floor(cycleSeconds / 60);
-  const seconds = Math.floor(cycleSeconds % 60);
-  return `${minutes.toString().padStart(2, "0")}:${seconds
+const formatDuration = (seconds: number) => {
+  const safeSeconds = Math.max(0, Math.round(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${minutes.toString().padStart(2, "0")}:${remainingSeconds
     .toString()
     .padStart(2, "0")}`;
 };
@@ -25,7 +30,16 @@ const DayNightIndicator: React.FC = () => {
   );
 
   const label = timeOfDayLabels[timeOfDay];
-  const cycleStamp = formatCycleTime(currentTime);
+  const phaseTiming = getPhaseTimingInfo(currentTime, DEFAULT_DAY_NIGHT_CONFIG);
+  const cycleResetSeconds = getSecondsUntilCycleReset(
+    currentTime,
+    DEFAULT_DAY_NIGHT_CONFIG
+  );
+
+  const nextPhaseLabel = timeOfDayLabels[phaseTiming.nextPhase];
+  const phaseCountdown = formatDuration(phaseTiming.secondsUntilNextPhase);
+  const cycleResetCountdown = formatDuration(cycleResetSeconds);
+  const phaseProgressPercent = Math.round(phaseTiming.phaseProgress * 100);
 
   return (
     <div
@@ -58,9 +72,9 @@ const DayNightIndicator: React.FC = () => {
         }}
       >
         <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.9 }}>
-          CYCLE
+          PHASE
         </span>
-        <span style={{ fontSize: "0.9rem", fontWeight: 600 }}>{cycleStamp}</span>
+        <span style={{ fontSize: "0.92rem", fontWeight: 600 }}>{label}</span>
       </div>
       <div
         style={{
@@ -69,10 +83,73 @@ const DayNightIndicator: React.FC = () => {
           alignItems: "center",
         }}
       >
-        <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.9 }}>
-          PHASE
+        <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.85 }}>
+          NEXT
         </span>
-        <span style={{ fontSize: "0.92rem", fontWeight: 600 }}>{label}</span>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-end",
+            lineHeight: 1.05,
+          }}
+        >
+          <span style={{ fontSize: "0.86rem", fontWeight: 600 }}>
+            {nextPhaseLabel}
+          </span>
+          <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+            in {phaseCountdown}
+          </span>
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "0.2rem",
+        }}
+      >
+        <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.85 }}>
+          RESET
+        </span>
+        <span style={{ fontSize: "0.84rem", fontWeight: 600 }}>
+          {cycleResetCountdown}
+        </span>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          fontSize: "0.7rem",
+          color: "#94a3b8",
+          opacity: 0.85,
+        }}
+      >
+        <span>PROGRESS</span>
+        <span>{phaseProgressPercent}%</span>
+      </div>
+      <div
+        style={{
+          width: "100%",
+          height: "0.4rem",
+          borderRadius: "9999px",
+          background: "rgba(148, 163, 184, 0.25)",
+          overflow: "hidden",
+          position: "relative",
+        }}
+        aria-hidden="true"
+      >
+        <div
+          style={{
+            width: `${Math.min(100, Math.max(0, phaseTiming.phaseProgress * 100))}%`,
+            height: "100%",
+            background:
+              "linear-gradient(90deg, rgba(96, 165, 250, 0.75), rgba(59, 130, 246, 0.95))",
+            transition: "width 0.25s ease-out",
+          }}
+        />
       </div>
       <div
         style={{
