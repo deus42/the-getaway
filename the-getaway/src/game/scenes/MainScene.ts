@@ -21,6 +21,9 @@ export class MainScene extends Phaser.Scene {
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   private dayNightOverlay!: Phaser.GameObjects.Rectangle;
+  private coverMarkers: Phaser.GameObjects.Rectangle[] = [];
+  private coverMarkerTweens: Phaser.Tweens.Tween[] = [];
+  private curfewActive = false;
   private currentGameTime = 0;
   private timeDispatchAccumulator = 0;
   private handleVisibilityChange = () => {
@@ -68,6 +71,8 @@ export class MainScene extends Phaser.Scene {
     this.timeDispatchAccumulator = 0;
     this.initializeDayNightOverlay();
     this.updateDayNightOverlay();
+    this.curfewActive = worldState.curfewActive;
+    this.refreshCoverHighlights(this.curfewActive);
 
     // Listen for resize events
     this.scale.on('resize', this.handleResize, this);
@@ -120,6 +125,11 @@ export class MainScene extends Phaser.Scene {
       });
       this.enemySprites.clear();
       this.setupCameraAndMap();
+      this.refreshCoverHighlights(this.curfewActive);
+    }
+
+    if (this.curfewActive !== worldState.curfewActive) {
+      this.refreshCoverHighlights(worldState.curfewActive);
     }
 
     this.updatePlayerPosition(playerState.position);
@@ -181,6 +191,7 @@ export class MainScene extends Phaser.Scene {
   }
   
   public shutdown(): void {
+    this.clearCoverHighlights();
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
@@ -337,6 +348,7 @@ export class MainScene extends Phaser.Scene {
 
     // Ensure overlay matches latest viewport size after camera adjustments
     this.resizeDayNightOverlay();
+    this.refreshCoverHighlights(this.curfewActive);
   }
 
   private initializeDayNightOverlay(): void {
@@ -400,5 +412,61 @@ export class MainScene extends Phaser.Scene {
       store.dispatch(updateGameTimeAction(this.timeDispatchAccumulator));
       this.timeDispatchAccumulator = 0;
     }
+  }
+
+  private refreshCoverHighlights(isCurfewActive: boolean): void {
+    this.curfewActive = isCurfewActive;
+    this.clearCoverHighlights();
+
+    if (!this.currentMapArea || !this.sys.isActive()) {
+      return;
+    }
+
+    const highlightColor = isCurfewActive ? 0x4ade80 : 0x22c55e;
+    const baseAlpha = isCurfewActive ? 0.4 : 0.18;
+    const borderAlpha = isCurfewActive ? 0.9 : 0.35;
+
+    for (let y = 0; y < this.currentMapArea.height; y += 1) {
+      for (let x = 0; x < this.currentMapArea.width; x += 1) {
+        const tile = this.currentMapArea.tiles[y][x];
+        if (!tile.provideCover) {
+          continue;
+        }
+
+        const pixelPos = this.calculatePixelPosition(x, y);
+        const marker = this.add.rectangle(
+          pixelPos.x,
+          pixelPos.y,
+          this.tileSize * 0.6,
+          this.tileSize * 0.6,
+          highlightColor,
+          baseAlpha
+        );
+        marker.setOrigin(0.5);
+        marker.setDepth(6);
+        marker.setStrokeStyle(2, highlightColor, borderAlpha);
+
+        this.coverMarkers.push(marker);
+
+        if (isCurfewActive) {
+          const tween = this.tweens.add({
+            targets: marker,
+            alpha: { from: baseAlpha, to: baseAlpha * 0.25 },
+            duration: 900,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1,
+          });
+          this.coverMarkerTweens.push(tween);
+        }
+      }
+    }
+  }
+
+  private clearCoverHighlights(): void {
+    this.coverMarkerTweens.forEach((tween) => tween.remove());
+    this.coverMarkerTweens = [];
+    this.coverMarkers.forEach((marker) => marker.destroy());
+    this.coverMarkers = [];
   }
 }
