@@ -54,7 +54,9 @@ const GameController: React.FC = () => {
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
   const [isProcessingEnemyAction, setIsProcessingEnemyAction] =
     useState<boolean>(false);
-  const [curfewAlertRaised, setCurfewAlertRaised] = useState<boolean>(false);
+  type CurfewAlertState = "clear" | "warning" | "spawned";
+  const [curfewAlertState, setCurfewAlertState] =
+    useState<CurfewAlertState>("clear");
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
@@ -87,14 +89,14 @@ const GameController: React.FC = () => {
             "Night falls over the Slums. Curfew squadrons sweep the streets."
           )
         );
-        setCurfewAlertRaised(false);
+        setCurfewAlertState("clear");
       } else if (previousTimeOfDay.current === "night") {
         dispatch(
           addLogMessage(
             "Dawn breaks. The regime eases the curfew for a few precious hours."
           )
         );
-        setCurfewAlertRaised(false);
+        setCurfewAlertState("clear");
       }
 
       previousTimeOfDay.current = timeOfDay;
@@ -577,58 +579,59 @@ const GameController: React.FC = () => {
           dispatch(movePlayer(newPosition));
         }
 
-        if (
-          curfewActive &&
-          !tile.provideCover &&
-          tile.type !== TileType.DOOR &&
-          !curfewAlertRaised
-        ) {
-          const spawnPosition = findPatrolSpawnPosition(newPosition);
+        if (curfewActive && !tile.provideCover && tile.type !== TileType.DOOR) {
+          if (curfewAlertState === "clear") {
+            dispatch(
+              addLogMessage(
+                "Searchlights pin you in the open—take cover before the patrols lock on."
+              )
+            );
+            setCurfewAlertState("warning");
+          } else if (curfewAlertState === "warning") {
+            const spawnPosition = findPatrolSpawnPosition(newPosition);
 
-          dispatch(
-            addLogMessage(
-              "Searchlights pin you in the open—curfew patrols are converging."
-            )
-          );
-          setCurfewAlertRaised(true);
+            if (spawnPosition) {
+              const patrol: Enemy = {
+                id: uuidv4(),
+                name: "Curfew Patrol",
+                position: spawnPosition,
+                maxHealth: 30,
+                health: 30,
+                actionPoints: 6,
+                maxActionPoints: 6,
+                damage: 6,
+                attackRange: 1,
+                isHostile: true,
+              };
 
-          if (spawnPosition) {
-            const patrol: Enemy = {
-              id: uuidv4(),
-              name: "Curfew Patrol",
-              position: spawnPosition,
-              maxHealth: 30,
-              health: 30,
-              actionPoints: 6,
-              maxActionPoints: 6,
-              damage: 6,
-              attackRange: 1,
-              isHostile: true,
-            };
+              dispatch(addEnemy(patrol));
 
-            dispatch(addEnemy(patrol));
-
-            if (!inCombat) {
-              dispatch(enterCombat());
-              dispatch(
-                addLogMessage(
-                  "Curfew patrol opens fire! Survive until the sirens fade."
-                )
-              );
+              if (!inCombat) {
+                dispatch(enterCombat());
+                dispatch(
+                  addLogMessage(
+                    "Curfew patrol opens fire! Survive until the sirens fade."
+                  )
+                );
+              } else {
+                dispatch(
+                  addLogMessage(
+                    "Another patrol joins the skirmish, tightening the net."
+                  )
+                );
+              }
             } else {
               dispatch(
                 addLogMessage(
-                  "Another patrol joins the skirmish, tightening the net."
+                  "You hear armored boots closing in, but they can't reach you yet."
                 )
               );
             }
-          } else {
-            dispatch(
-              addLogMessage(
-                "You hear armored boots closing in, but they can't reach you yet."
-              )
-            );
+
+            setCurfewAlertState("spawned");
           }
+        } else if (curfewAlertState !== "clear") {
+          setCurfewAlertState("clear");
         }
         // dispatch(addLogMessage({ type: "info", message: `Moved to (${newPosition.x}, ${newPosition.y})` })); // COMMENTED OUT
         if (inCombat) {
@@ -668,7 +671,7 @@ const GameController: React.FC = () => {
       attackEnemy,
       findClosestEnemy,
       curfewActive,
-      curfewAlertRaised,
+      curfewAlertState,
       findPatrolSpawnPosition,
       mapDirectory,
     ]
