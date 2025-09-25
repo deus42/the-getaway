@@ -10,6 +10,7 @@ import {
   updateEnemy,
   enterCombat,
   switchTurn,
+  exitCombat,
   addEnemy,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
@@ -485,11 +486,36 @@ const GameController: React.FC = () => {
 
       // Only allow movement if player has action points and it's their turn (if in combat)
       if (inCombat && (!isPlayerTurn || player.actionPoints <= 0)) {
-        if (player.actionPoints <= 0) {
-          dispatch(addLogMessage("Not enough action points to move!"));
-        } else if (!isPlayerTurn) {
-          dispatch(addLogMessage("It's not your turn!"));
+        const livingEnemies = enemies.filter((enemy) => enemy.health > 0);
+
+        if (livingEnemies.length === 0) {
+          dispatch(exitCombat());
+          dispatch(resetActionPoints());
+          dispatch(
+            addLogMessage(
+              "Zone secured. The street is yours again."
+            )
+          );
+          return;
         }
+
+        if (!isPlayerTurn) {
+          dispatch(addLogMessage("It's not your turn!"));
+          return;
+        }
+
+        if (player.actionPoints <= 0) {
+          dispatch(
+            addLogMessage(
+              "You're out of action points. The opposition seizes the initiative."
+            )
+          );
+
+          dispatch(switchTurn());
+
+          return;
+        }
+
         return;
       }
 
