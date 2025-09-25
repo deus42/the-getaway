@@ -23,7 +23,7 @@ import {
 } from "../game/combat/combatSystem";
 import { Enemy, Position, MapArea, TileType } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
-import { mapAreas, getConnectionForPosition } from "../game/world/worldMap";
+import { getConnectionForPosition } from "../game/world/worldMap";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
 
@@ -43,6 +43,9 @@ const GameController: React.FC = () => {
   );
   const enemies = useSelector(
     (state: RootState) => state.world.currentMapArea.entities.enemies
+  );
+  const mapDirectory = useSelector(
+    (state: RootState) => state.world.mapAreas
   );
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
@@ -560,9 +563,16 @@ const GameController: React.FC = () => {
         }
 
         if (tile.type === TileType.DOOR && connection) {
-          const targetArea = mapAreas[connection.toAreaId];
-          dispatch(setMapArea(targetArea));
-          dispatch(movePlayer(connection.toPosition));
+          const targetArea = mapDirectory[connection.toAreaId];
+
+          if (targetArea) {
+            dispatch(setMapArea(targetArea));
+            dispatch(movePlayer(connection.toPosition));
+          } else {
+            console.warn(
+              `[GameController] Missing target area in state for ${connection.toAreaId}`
+            );
+          }
         } else {
           dispatch(movePlayer(newPosition));
         }
@@ -660,6 +670,7 @@ const GameController: React.FC = () => {
       curfewActive,
       curfewAlertRaised,
       findPatrolSpawnPosition,
+      mapDirectory,
     ]
   );
 
