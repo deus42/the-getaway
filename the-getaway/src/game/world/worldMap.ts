@@ -1,5 +1,5 @@
 import { MapArea, Position, TileType } from '../interfaces/types';
-import { createBasicMapArea, addWalls } from './grid';
+import { createBasicMapArea, addWalls, addCover } from './grid';
 
 export interface MapConnection {
   fromAreaId: string;
@@ -7,6 +7,13 @@ export interface MapConnection {
   toAreaId: string;
   toPosition: Position;
 }
+
+const SLUMS_COVER_SPOTS: Position[] = [
+  { x: 3, y: 3 },
+  { x: 8, y: 3 },
+  { x: 11, y: 6 },
+  { x: 6, y: 15 },
+];
 
 const createSlumsArea = (): MapArea => {
   const area = createBasicMapArea('Slums', 20, 20);
@@ -25,11 +32,12 @@ const createSlumsArea = (): MapArea => {
   }
 
   const withWalls = addWalls(area, walls);
+  const withCover = addCover(withWalls, SLUMS_COVER_SPOTS);
   // Door to Downtown on the east edge
-  const door = withWalls.tiles[10][19];
+  const door = withCover.tiles[10][19];
   door.type = TileType.DOOR;
   door.isWalkable = true;
-  return withWalls;
+  return withCover;
 };
 
 const createDowntownArea = (): MapArea => {
@@ -63,6 +71,8 @@ export const mapAreas: Record<string, MapArea> = {
   [slumsArea.id]: slumsArea,
   [downtownArea.id]: downtownArea,
 };
+
+export const SLUMS_COVER_POSITIONS = SLUMS_COVER_SPOTS;
 
 export const mapConnections: MapConnection[] = [
   {

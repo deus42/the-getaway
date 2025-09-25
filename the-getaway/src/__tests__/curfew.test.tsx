@@ -5,6 +5,7 @@ import { store, resetGame } from '../store';
 import { setGameTime } from '../store/worldSlice';
 import { movePlayer } from '../store/playerSlice';
 import { TileType, Position } from '../game/interfaces/types';
+import { SLUMS_COVER_POSITIONS } from '../game/world/worldMap';
 
 const NIGHT_TIME_SECONDS = 200;
 const CORRIDOR_LENGTH = 4; // starting tile plus three moves to the right
@@ -50,9 +51,6 @@ describe('Curfew patrol behaviour', () => {
     store.dispatch(resetGame());
     store.dispatch(setGameTime(NIGHT_TIME_SECONDS));
     expect(store.getState().world.curfewActive).toBe(true);
-
-    const startPosition = findOpenCorridorStart();
-    store.dispatch(movePlayer(startPosition));
   });
 
   afterEach(() => {
@@ -61,6 +59,9 @@ describe('Curfew patrol behaviour', () => {
   });
 
   it('warns once before spawning a patrol during curfew', () => {
+    const startPosition = findOpenCorridorStart();
+    store.dispatch(movePlayer(startPosition));
+
     const initialEnemyCount =
       store.getState().world.currentMapArea.entities.enemies.length;
 
@@ -80,6 +81,9 @@ describe('Curfew patrol behaviour', () => {
   });
 
   it('spawns only a single patrol after the warning has been issued', () => {
+    const startPosition = findOpenCorridorStart();
+    store.dispatch(movePlayer(startPosition));
+
     const baseEnemyCount =
       store.getState().world.currentMapArea.entities.enemies.length;
 
@@ -102,6 +106,43 @@ describe('Curfew patrol behaviour', () => {
 
     const lastMessage = state.log.messages[state.log.messages.length - 1];
     expect(lastMessage).toMatch(/curfew patrol opens fire/i);
+
+    unmount();
+  });
+
+  it('lets the player reset the alert by reaching cover', () => {
+    const coverSpot = SLUMS_COVER_POSITIONS[0];
+    const { x, y } = coverSpot;
+
+    store.dispatch(movePlayer({ x, y: y - 2 }));
+
+    const baseEnemyCount =
+      store.getState().world.currentMapArea.entities.enemies.length;
+
+    const { getByTestId, unmount } = renderController();
+    const controller = getByTestId('game-controller');
+
+    fireEvent.keyDown(controller, { key: 'ArrowDown', code: 'ArrowDown' });
+    let state = store.getState();
+    expect(state.world.currentMapArea.entities.enemies.length).toBe(
+      baseEnemyCount
+    );
+    let lastMessage = state.log.messages[state.log.messages.length - 1];
+    expect(lastMessage).toMatch(/take cover before the patrols lock on/i);
+
+    fireEvent.keyDown(controller, { key: 'ArrowDown', code: 'ArrowDown' });
+    state = store.getState();
+    expect(state.world.currentMapArea.entities.enemies.length).toBe(
+      baseEnemyCount
+    );
+
+    fireEvent.keyDown(controller, { key: 'ArrowRight', code: 'ArrowRight' });
+    state = store.getState();
+    expect(state.world.currentMapArea.entities.enemies.length).toBe(
+      baseEnemyCount
+    );
+    lastMessage = state.log.messages[state.log.messages.length - 1];
+    expect(lastMessage).toMatch(/take cover before the patrols lock on/i);
 
     unmount();
   });
