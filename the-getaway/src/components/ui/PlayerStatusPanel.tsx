@@ -10,6 +10,13 @@ const PlayerStatusPanel: React.FC = () => {
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const turnCount = useSelector((state: RootState) => state.world.turnCount);
   const curfewActive = useSelector((state: RootState) => state.world.curfewActive);
+  const isPlayerTurn = useSelector(
+    (state: RootState) => state.world.isPlayerTurn
+  );
+  const hostileCount = useSelector((state: RootState) => {
+    const enemies = state.world.currentMapArea?.entities?.enemies ?? [];
+    return enemies.reduce((count, enemy) => (enemy.health > 0 ? count + 1 : count), 0);
+  });
   const mapName = useSelector(
     (state: RootState) => state.world.currentMapArea.name
   );
@@ -17,6 +24,10 @@ const PlayerStatusPanel: React.FC = () => {
   const healthRatio =
     player.maxHealth > 0 ? player.health / player.maxHealth : 0;
   const healthPercent = Math.max(0, Math.min(1, healthRatio)) * 100;
+  const apRatio = player.maxActionPoints
+    ? Math.max(0, Math.min(1, player.actionPoints / player.maxActionPoints))
+    : 0;
+  const apPercent = apRatio * 100;
 
   return (
     <div
@@ -161,15 +172,82 @@ const PlayerStatusPanel: React.FC = () => {
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              color: "rgba(216, 180, 254, 0.92)",
-              letterSpacing: "0.055em",
-              textTransform: "uppercase",
+              flexDirection: "column",
+              gap: "0.7rem",
+              background: "rgba(79, 70, 229, 0.16)",
+              borderRadius: "12px",
+              padding: "0.8rem 0.85rem",
+              border: "1px solid rgba(129, 140, 248, 0.18)",
             }}
           >
-            <span>Engagement</span>
-            <span>Turn {Math.max(1, turnCount)}</span>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                color: "rgba(196, 181, 253, 0.95)",
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+              }}
+            >
+              <span>Engagement</span>
+              <span>Round {Math.max(1, turnCount)}</span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.76rem",
+                color: "rgba(226, 232, 240, 0.88)",
+              }}
+            >
+              <span>Action Points</span>
+              <span>
+                {player.actionPoints}/{player.maxActionPoints}
+              </span>
+            </div>
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                height: "0.55rem",
+                borderRadius: "999px",
+                overflow: "hidden",
+                background: "rgba(148, 163, 184, 0.25)",
+              }}
+            >
+              <div
+                style={{
+                  width: `${apPercent}%`,
+                  height: "100%",
+                  background:
+                    "linear-gradient(90deg, rgba(129, 212, 250, 0.95), rgba(59, 130, 246, 0.9))",
+                  boxShadow: "0 10px 18px rgba(59, 130, 246, 0.32)",
+                  transition: "width 0.3s ease",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "radial-gradient(circle at 20% 40%, rgba(255, 255, 255, 0.28), transparent)",
+                  pointerEvents: "none",
+                }}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontSize: "0.74rem",
+                color: "rgba(148, 163, 184, 0.78)",
+                letterSpacing: "0.05em",
+              }}
+            >
+              <span>{isPlayerTurn ? "Your move" : "Enemy advance"}</span>
+              <span>{hostileCount} hostiles</span>
+            </div>
           </div>
         ) : (
           <div

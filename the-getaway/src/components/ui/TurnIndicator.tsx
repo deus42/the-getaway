@@ -8,10 +8,6 @@ const TurnIndicator: React.FC = () => {
   );
   const player = useSelector((state: RootState) => state.player.data);
 
-  const apPercent = player.maxActionPoints
-    ? Math.max(0, Math.min(1, player.actionPoints / player.maxActionPoints))
-    : 0;
-
   const modeLabel = inCombat ? "COMBAT" : "FREE ROAM";
   const modeAccent = inCombat
     ? "linear-gradient(120deg, rgba(248, 113, 113, 0.9), rgba(239, 68, 68, 0.8))"
@@ -115,66 +111,21 @@ const TurnIndicator: React.FC = () => {
       </div>
 
       {inCombat ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.55rem" }}>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              fontSize: "0.78rem",
-              color: "rgba(226, 232, 240, 0.9)",
-            }}
-          >
-            <span>Action Points</span>
-            <span>
-              {player.actionPoints}/{player.maxActionPoints}
-            </span>
-          </div>
-          <div
-            style={{
-              height: "0.55rem",
-              width: "100%",
-              background: "rgba(148, 163, 184, 0.2)",
-              borderRadius: "999px",
-              overflow: "hidden",
-              position: "relative",
-            }}
-          >
-            <div
-              style={{
-                width: `${apPercent * 100}%`,
-                height: "100%",
-                background:
-                  "linear-gradient(90deg, rgba(129, 212, 250, 0.95), rgba(59, 130, 246, 0.95))",
-                boxShadow: "0 6px 14px rgba(59, 130, 246, 0.35)",
-                transition: "width 0.25s ease-out",
-              }}
-            />
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background:
-                  "radial-gradient(circle at 15% 30%, rgba(255, 255, 255, 0.25), transparent)",
-                pointerEvents: "none",
-              }}
-            />
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              fontSize: "0.72rem",
-              color: "rgba(148, 163, 184, 0.8)",
-              letterSpacing: "0.05em",
-            }}
-          >
-            <span>Plan moves before AP runs dry.</span>
-            <span>{isPlayerTurn ? "Waiting on you" : "Hold position"}</span>
-          </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "rgba(79, 70, 229, 0.2)",
+            color: "rgba(196, 181, 253, 0.95)",
+            borderRadius: "12px",
+            padding: "0.65rem 0.8rem",
+            fontSize: "0.78rem",
+            letterSpacing: "0.04em",
+          }}
+        >
+          <span>Keep pressure on. Refer left recon panel for squad stats.</span>
+          <span>{isPlayerTurn ? "⇢" : "☍"}</span>
         </div>
       ) : (
         <div
