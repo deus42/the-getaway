@@ -9,6 +9,10 @@ const PlayerStatusPanel: React.FC = () => {
   );
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const turnCount = useSelector((state: RootState) => state.world.turnCount);
+  const curfewActive = useSelector((state: RootState) => state.world.curfewActive);
+  const mapName = useSelector(
+    (state: RootState) => state.world.currentMapArea.name
+  );
 
   const healthRatio =
     player.maxHealth > 0 ? player.health / player.maxHealth : 0;
@@ -114,10 +118,24 @@ const PlayerStatusPanel: React.FC = () => {
           padding: "1.05rem 1.1rem",
           display: "flex",
           flexDirection: "column",
-          gap: "0.65rem",
+          gap: "0.75rem",
           fontSize: "0.82rem",
         }}
       >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            color: "rgba(148, 163, 184, 0.85)",
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+          }}
+        >
+          <span>Sector</span>
+          <span>{mapName}</span>
+        </div>
+
         <div
           style={{
             display: "flex",
@@ -156,11 +174,18 @@ const PlayerStatusPanel: React.FC = () => {
         ) : (
           <div
             style={{
-              color: "rgba(148, 163, 184, 0.78)",
-              letterSpacing: "0.04em",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              color: curfewActive
+                ? "rgba(248, 113, 113, 0.86)"
+                : "rgba(52, 211, 153, 0.92)",
+              letterSpacing: "0.055em",
+              textTransform: "uppercase",
             }}
           >
-            Sector quiet. Free movement authorized.
+            <span>{curfewActive ? "Curfew" : "Free Roam"}</span>
+            <span>{curfewActive ? "Shelter required" : "Clear skies"}</span>
           </div>
         )}
       </div>

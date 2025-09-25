@@ -193,7 +193,7 @@ function App() {
               <div style={leftSidebarStyle}>
                 <div style={{ ...panelBaseStyle, marginTop: "auto" }}>
                   <span style={panelLabelStyle("#38bdf8")}>Squad</span>
-                  <h2 style={panelTitleStyle}>Status</h2>
+                  <h2 style={panelTitleStyle}>Recon Status</h2>
                   <div style={scrollSectionStyle}>
                     <PlayerStatusPanel />
                   </div>
