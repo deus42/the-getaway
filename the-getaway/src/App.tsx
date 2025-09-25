@@ -44,37 +44,30 @@ function App() {
               width: "20%",
               height: "100%",
               borderRight: "1px solid #333",
-              overflow: "auto",
+              overflow: "hidden",
               padding: "1rem",
               display: "flex",
               flexDirection: "column",
+              gap: "1.25rem",
+              minHeight: 0,
             }}
           >
-            <h2
-              style={{
-                color: "#4ade80",
-                marginBottom: "1rem",
-                fontSize: "1.25rem",
-                fontWeight: "bold",
-              }}
-            >
-              Status
-            </h2>
-            <PlayerStatusPanel />
-
-            <h2
-              style={{
-                color: "#60a5fa",
-                marginTop: "2rem",
-                marginBottom: "1rem",
-                fontSize: "1.25rem",
-                fontWeight: "bold",
-              }}
-            >
-              Action Log
-            </h2>
-            <div style={{ flexGrow: 1, overflowY: "auto" }}>
-              <LogPanel />
+            <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
+              <h2
+                style={{
+                  color: "#4ade80",
+                  marginBottom: "1rem",
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                }}
+              >
+                Status
+              </h2>
+              <div
+                style={{ flex: 1, overflowY: "auto", paddingRight: "0.5rem", minHeight: 0 }}
+              >
+                <PlayerStatusPanel />
+              </div>
             </div>
           </div>
           <div
@@ -95,24 +88,73 @@ function App() {
               width: "20%",
               height: "100%",
               borderLeft: "1px solid #333",
-              overflow: "auto",
+              overflow: "hidden",
               padding: "1rem",
               display: "flex",
               flexDirection: "column",
+              gap: "1.25rem",
+              minHeight: 0,
             }}
           >
-            <h2
+            <div
               style={{
-                color: "#e879f9",
-                marginBottom: "1rem",
-                fontSize: "1.25rem",
-                fontWeight: "bold",
+                flex: "1 1 50%",
+                display: "flex",
+                flexDirection: "column",
+                borderBottom: "1px solid #2d2d2d",
+                paddingBottom: "1rem",
+                minHeight: 0,
               }}
             >
-              Dialog
-            </h2>
-            <div style={{ fontStyle: "italic", color: "#666" }}>
-              Available in future update
+              <h2
+                style={{
+                  color: "#e879f9",
+                  marginBottom: "1rem",
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                }}
+              >
+                Dialog
+              </h2>
+              <div
+                style={{
+                  flex: 1,
+                  fontStyle: "italic",
+                  color: "#666",
+                  overflowY: "auto",
+                }}
+              >
+                Available in future update
+              </div>
+            </div>
+            <div
+              style={{
+                flex: "1 1 50%",
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 0,
+              }}
+            >
+              <h2
+                style={{
+                  color: "#60a5fa",
+                  marginBottom: "1rem",
+                  fontSize: "1.25rem",
+                  fontWeight: "bold",
+                }}
+              >
+                Action Log
+              </h2>
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  paddingRight: "0.5rem",
+                  minHeight: 0,
+                }}
+              >
+                <LogPanel />
+              </div>
             </div>
           </div>
         </div>
