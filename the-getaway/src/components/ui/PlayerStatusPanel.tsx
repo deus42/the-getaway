@@ -253,17 +253,56 @@ const PlayerStatusPanel: React.FC = () => {
           <div
             style={{
               display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              color: curfewActive
-                ? "rgba(248, 113, 113, 0.86)"
-                : "rgba(52, 211, 153, 0.92)",
-              letterSpacing: "0.055em",
-              textTransform: "uppercase",
+              flexDirection: "column",
+              gap: "0.35rem",
+              background: curfewActive
+                ? "rgba(248, 113, 113, 0.15)"
+                : "rgba(34, 197, 94, 0.15)",
+              borderRadius: "12px",
+              padding: "0.75rem 0.85rem",
+              border: curfewActive
+                ? "1px solid rgba(248, 113, 113, 0.25)"
+                : "1px solid rgba(34, 197, 94, 0.25)",
             }}
           >
-            <span>{curfewActive ? "Curfew" : "Free Roam"}</span>
-            <span>{curfewActive ? "Shelter required" : "Clear skies"}</span>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                fontSize: "0.78rem",
+                color: curfewActive
+                  ? "rgba(248, 113, 113, 0.88)"
+                  : "rgba(52, 211, 153, 0.9)",
+              }}
+            >
+              <span>{curfewActive ? "Curfew" : "Free Roam"}</span>
+              <span>{curfewActive ? "Shelter required" : "Clear skies"}</span>
+            </span>
+            {!curfewActive && (
+              <span
+                style={{
+                  fontSize: "0.76rem",
+                  color: "rgba(148, 163, 184, 0.85)",
+                  letterSpacing: "0.045em",
+                }}
+              >
+                Explore the district. Intel opportunities surface between patrols.
+              </span>
+            )}
+            {curfewActive && (
+              <span
+                style={{
+                  fontSize: "0.76rem",
+                  color: "rgba(248, 113, 113, 0.85)",
+                  letterSpacing: "0.045em",
+                }}
+              >
+                Secure cover or hunker down until the sweep ends.
+              </span>
+            )}
           </div>
         )}
       </div>

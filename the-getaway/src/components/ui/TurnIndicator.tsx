@@ -16,7 +16,7 @@ const TurnIndicator: React.FC = () => {
     ? isPlayerTurn
       ? "Your Move"
       : "Enemy Advance"
-    : "Explore the district";
+    : "Awaiting Directives";
   const phaseColor = inCombat
     ? isPlayerTurn
       ? "#38bdf8"
@@ -124,7 +124,7 @@ const TurnIndicator: React.FC = () => {
             letterSpacing: "0.04em",
           }}
         >
-          <span>Keep pressure on. Refer left recon panel for squad stats.</span>
+          <span>Recon panel tracks current combat readiness.</span>
           <span>{isPlayerTurn ? "⇢" : "☍"}</span>
         </div>
       ) : (
@@ -140,7 +140,7 @@ const TurnIndicator: React.FC = () => {
             fontSize: "0.78rem",
           }}
         >
-          <span>District calm. Free movement enabled.</span>
+          <span>District calm. Recon panel lists roaming advisories.</span>
           <span style={{ fontSize: "0.9rem" }}>⇢</span>
         </div>
       )}
