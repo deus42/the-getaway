@@ -13,7 +13,6 @@ const PlayerStatusPanel: React.FC = () => {
   const isPlayerTurn = useSelector(
     (state: RootState) => state.world.isPlayerTurn
   );
-  const tickRate = useSelector((state: RootState) => state.world.isPlayerTurn);
   const hostileCount = useSelector((state: RootState) => {
     const enemies = state.world.currentMapArea?.entities?.enemies ?? [];
     return enemies.reduce((count, enemy) => (enemy.health > 0 ? count + 1 : count), 0);

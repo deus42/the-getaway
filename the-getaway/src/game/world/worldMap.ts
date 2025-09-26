@@ -29,13 +29,8 @@ export interface MapConnection {
   toPosition: Position;
 }
 
-const SLUMS_WIDTH = 56;
-const SLUMS_HEIGHT = 40;
-const SLUMS_GATE: Position = { x: SLUMS_WIDTH - 1, y: 20 };
-
 const DOWNTOWN_WIDTH = 144;
 const DOWNTOWN_HEIGHT = 108;
-const DOWNTOWN_GATE: Position = { x: 0, y: 54 };
 
 const SLUMS_COVER_SPOTS: Position[] = [
   { x: 12, y: 20 },
@@ -104,6 +99,37 @@ const SLUMS_NEON_STRIPS: Position[] = [
   { x: 24, y: 26 },
   { x: 25, y: 26 },
   { x: 26, y: 26 },
+  // Expanded city canals
+  { x: 32, y: 34 },
+  { x: 33, y: 34 },
+  { x: 34, y: 34 },
+  { x: 52, y: 36 },
+  { x: 53, y: 36 },
+  { x: 54, y: 36 },
+  { x: 70, y: 34 },
+  { x: 71, y: 34 },
+  { x: 72, y: 34 },
+  { x: 88, y: 32 },
+  { x: 89, y: 32 },
+  { x: 90, y: 32 },
+  { x: 48, y: 64 },
+  { x: 49, y: 64 },
+  { x: 50, y: 64 },
+  { x: 86, y: 64 },
+  { x: 87, y: 64 },
+  { x: 88, y: 64 },
+  { x: 108, y: 66 },
+  { x: 109, y: 66 },
+  { x: 110, y: 66 },
+  { x: 20, y: 88 },
+  { x: 21, y: 88 },
+  { x: 22, y: 88 },
+  { x: 60, y: 92 },
+  { x: 61, y: 92 },
+  { x: 62, y: 92 },
+  { x: 98, y: 90 },
+  { x: 99, y: 90 },
+  { x: 100, y: 90 },
 ];
 
 const DOWNTOWN_BEACONS: Position[] = [
@@ -121,6 +147,13 @@ const DOWNTOWN_BEACONS: Position[] = [
   { x: 54, y: 98 },
   { x: 90, y: 98 },
 ];
+
+const CITY_COVER_SPOTS: Position[] = [
+  ...SLUMS_COVER_SPOTS,
+  ...DOWNTOWN_COVER_SPOTS,
+];
+
+const CITY_NEON_STRIPS: Position[] = [...SLUMS_NEON_STRIPS];
 
 const SLUMS_BUILDINGS: BuildingDefinition[] = [
   {
@@ -373,6 +406,21 @@ const DOWNTOWN_ITEM_BLUEPRINTS: Array<Omit<Item, 'id'>> = [
   },
 ];
 
+const CITY_BUILDINGS: BuildingDefinition[] = [
+  ...SLUMS_BUILDINGS,
+  ...DOWNTOWN_BUILDINGS,
+];
+
+const CITY_NPC_BLUEPRINTS: Array<Omit<NPC, 'id'>> = [
+  ...SLUMS_NPC_BLUEPRINTS,
+  ...DOWNTOWN_NPC_BLUEPRINTS,
+];
+
+const CITY_ITEM_BLUEPRINTS: Array<Omit<Item, 'id'>> = [
+  ...SLUMS_ITEM_BLUEPRINTS,
+  ...DOWNTOWN_ITEM_BLUEPRINTS,
+];
+
 const createInteriorArea = (name: string, width: number, height: number): InteriorSpec => {
   const interior = createBasicMapArea(name, width, height);
   const doorPosition: Position = { x: Math.floor(width / 2), y: height - 1 };
@@ -436,91 +484,24 @@ const applyBuildingConnections = (
   return { connections, interiors };
 };
 
-const isSlumsAvenue = (x: number, y: number) =>
-  y === 18 || y === 19 || x === 18 || x === 34 ||
-  (x === 44 && y >= 12 && y <= SLUMS_HEIGHT - 4) ||
-  (y === 10 && x >= 12 && x <= 40);
-
-const createSlumsArea = (): GeneratedArea => {
-  const area = createBasicMapArea('Slums', SLUMS_WIDTH, SLUMS_HEIGHT);
-  const walls: Position[] = [];
-
-  const addBlock = (x1: number, y1: number, x2: number, y2: number) => {
-    for (let y = y1; y <= y2; y++) {
-      for (let x = x1; x <= x2; x++) {
-        if (!isSlumsAvenue(x, y)) {
-          walls.push({ x, y });
-        }
-      }
-    }
-  };
-
-  SLUMS_BUILDINGS.forEach((building) => {
-    addBlock(
-      building.footprint.from.x,
-      building.footprint.from.y,
-      building.footprint.to.x,
-      building.footprint.to.y
-    );
-  });
-
-  addBlock(14, 12, 16, 32); // Alley partitions
-  addBlock(32, 26, 34, 34); // Narrow alleys near depot
-  addBlock(24, 16, 28, 20); // Elevated walkway supports
-
-  const withWalls = addWalls(area, walls);
-  const withCover = addCover(withWalls, SLUMS_COVER_SPOTS);
-
-  SLUMS_NPC_BLUEPRINTS.forEach((npc) => {
-    withCover.entities.npcs.push({ ...npc, id: uuidv4() });
-  });
-  SLUMS_ITEM_BLUEPRINTS.forEach((item) => {
-    withCover.entities.items.push({ ...item, id: uuidv4() });
-  });
-
-  SLUMS_NEON_STRIPS.forEach(({ x, y }) => {
-    if (withCover.tiles[y]?.[x]) {
-      const tile = withCover.tiles[y][x];
-      tile.type = TileType.WATER;
-      tile.isWalkable = true;
-    }
-  });
-
-  const { connections, interiors } = applyBuildingConnections(
-    withCover,
-    'Slums',
-    SLUMS_BUILDINGS
-  );
-
-  const gateTile = withCover.tiles[SLUMS_GATE.y][SLUMS_GATE.x];
-  gateTile.type = TileType.FLOOR;
-  gateTile.isWalkable = true;
-
-  return {
-    area: withCover,
-    connections,
-    interiorAreas: interiors,
-  };
-};
-
-const isDowntownBoulevard = (x: number, y: number) =>
+const isCityBoulevard = (x: number, y: number) =>
   y === 26 || y === 56 || y === 86 || x === 36 || x === 72 || x === 108;
 
-const createDowntownArea = (): GeneratedArea => {
+const createCityArea = (): GeneratedArea => {
   const area = createBasicMapArea('Downtown', DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT);
   const walls: Position[] = [];
 
   const addBlock = (x1: number, y1: number, x2: number, y2: number) => {
     for (let y = y1; y <= y2; y++) {
       for (let x = x1; x <= x2; x++) {
-        if (!isDowntownBoulevard(x, y)) {
+        if (!isCityBoulevard(x, y)) {
           walls.push({ x, y });
         }
       }
     }
   };
 
-  DOWNTOWN_BUILDINGS.forEach((building) => {
+  CITY_BUILDINGS.forEach((building) => {
     addBlock(
       building.footprint.from.x,
       building.footprint.from.y,
@@ -529,16 +510,22 @@ const createDowntownArea = (): GeneratedArea => {
     );
   });
 
-  addBlock(18, 10, 20, 28); // Skybridge pylons
-
   const withWalls = addWalls(area, walls);
-  const withCover = addCover(withWalls, DOWNTOWN_COVER_SPOTS);
+  const withCover = addCover(withWalls, CITY_COVER_SPOTS);
 
-  DOWNTOWN_NPC_BLUEPRINTS.forEach((npc) => {
+  CITY_NPC_BLUEPRINTS.forEach((npc) => {
     withCover.entities.npcs.push({ ...npc, id: uuidv4() });
   });
-  DOWNTOWN_ITEM_BLUEPRINTS.forEach((item) => {
+  CITY_ITEM_BLUEPRINTS.forEach((item) => {
     withCover.entities.items.push({ ...item, id: uuidv4() });
+  });
+
+  CITY_NEON_STRIPS.forEach(({ x, y }) => {
+    if (withCover.tiles[y]?.[x]) {
+      const tile = withCover.tiles[y][x];
+      tile.type = TileType.WATER;
+      tile.isWalkable = true;
+    }
   });
 
   DOWNTOWN_BEACONS.forEach(({ x, y }) => {
@@ -552,12 +539,8 @@ const createDowntownArea = (): GeneratedArea => {
   const { connections, interiors } = applyBuildingConnections(
     withCover,
     'Downtown',
-    DOWNTOWN_BUILDINGS
+    CITY_BUILDINGS
   );
-
-  const gateTile = withCover.tiles[DOWNTOWN_GATE.y][DOWNTOWN_GATE.x];
-  gateTile.type = TileType.FLOOR;
-  gateTile.isWalkable = true;
 
   return {
     area: withCover,
@@ -566,13 +549,12 @@ const createDowntownArea = (): GeneratedArea => {
   };
 };
 
-const slumsResult = createSlumsArea();
-const downtownResult = createDowntownArea();
+const cityResult = createCityArea();
 
-export const slumsArea = slumsResult.area;
-export const downtownArea = downtownResult.area;
+export const slumsArea = cityResult.area;
+export const downtownArea = cityResult.area;
 
-const interiorAreas = [...slumsResult.interiorAreas, ...downtownResult.interiorAreas];
+const interiorAreas = [...cityResult.interiorAreas];
 
 export const mapAreas: Record<string, MapArea> = interiorAreas.reduce(
   (acc, interior) => {
@@ -581,33 +563,12 @@ export const mapAreas: Record<string, MapArea> = interiorAreas.reduce(
   },
   {
     [slumsArea.id]: slumsArea,
-    [downtownArea.id]: downtownArea,
   } as Record<string, MapArea>
 );
 
-export const SLUMS_COVER_POSITIONS = SLUMS_COVER_SPOTS;
+export const SLUMS_COVER_POSITIONS = CITY_COVER_SPOTS;
 
-const buildingConnections = [...slumsResult.connections, ...downtownResult.connections];
-
-const districtConnections: MapConnection[] = [
-  {
-    fromAreaId: slumsArea.id,
-    fromPosition: SLUMS_GATE,
-    toAreaId: downtownArea.id,
-    toPosition: { x: DOWNTOWN_GATE.x + 1, y: DOWNTOWN_GATE.y },
-  },
-  {
-    fromAreaId: downtownArea.id,
-    fromPosition: DOWNTOWN_GATE,
-    toAreaId: slumsArea.id,
-    toPosition: { x: SLUMS_GATE.x - 1, y: SLUMS_GATE.y },
-  },
-];
-
-export const mapConnections: MapConnection[] = [
-  ...buildingConnections,
-  ...districtConnections,
-];
+export const mapConnections: MapConnection[] = [...cityResult.connections];
 
 export const getConnectionForPosition = (
   areaId: string,

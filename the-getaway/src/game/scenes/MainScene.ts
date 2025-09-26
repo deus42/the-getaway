@@ -16,6 +16,12 @@ const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number
   DEFAULT: { even: 0x1e2432, odd: 0x232838 },
 };
 
+const DEFAULT_FIT_ZOOM_FACTOR = 1.35;
+const MIN_CAMERA_ZOOM = 0.45;
+const MAX_CAMERA_ZOOM = 2.4;
+const CAMERA_BOUND_PADDING_TILES = 6;
+const CAMERA_FOLLOW_LERP = 0.18;
+
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
   sprite: Phaser.GameObjects.Ellipse;
@@ -41,6 +47,7 @@ export class MainScene extends Phaser.Scene {
   private timeDispatchAccumulator = 0;
   private isoOriginX = 0;
   private isoOriginY = 0;
+  private isCameraFollowingPlayer = false;
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
     if (document.visibilityState === 'visible') {
@@ -60,6 +67,7 @@ export class MainScene extends Phaser.Scene {
     this.currentMapArea = data.mapArea;
     this.playerInitialPosition = data.playerPosition;
     this.enemySprites = new Map<string, EnemySpriteData>(); // Reset map on init
+    this.isCameraFollowingPlayer = false;
   }
 
   public create(): void {
@@ -85,6 +93,8 @@ export class MainScene extends Phaser.Scene {
 
     // Initial setup of camera and map
     this.setupCameraAndMap();
+    this.cameras.main.setRoundPixels(true);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanupScene, this);
 
     // Cache initial world time and set up overlay
     const worldState = store.getState().world;
@@ -102,6 +112,7 @@ export class MainScene extends Phaser.Scene {
 
     if (this.input) {
       this.input.on('pointerdown', this.handlePointerDown, this);
+      this.input.on('wheel', this.handleWheel);
     }
     
     // Setup player sprite
@@ -116,6 +127,7 @@ export class MainScene extends Phaser.Scene {
          0x00b4ff
        );
        this.playerSprite.setDepth(playerPixelPos.y + 8);
+       this.enablePlayerCameraFollow();
        console.log('[MainScene] Player sprite created at pixelPos:', playerPixelPos);
     } else { console.error('[MainScene] playerInitialPosition is null'); }
 
@@ -132,6 +144,21 @@ export class MainScene extends Phaser.Scene {
         }
       }
     }, 0);
+  }
+
+  private cleanupScene(): void {
+    if (this.input) {
+      this.input.off('pointerdown', this.handlePointerDown, this);
+      this.input.off('wheel', this.handleWheel);
+    }
+    this.scale.off('resize', this.handleResize, this);
+    window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+
+    if (this.unsubscribe) {
+      this.unsubscribe();
+      this.unsubscribe = null;
+    }
   }
 
   private handleStateChange(): void {
@@ -159,6 +186,7 @@ export class MainScene extends Phaser.Scene {
       this.setupCameraAndMap();
       this.refreshCoverHighlights(this.curfewActive);
       this.clearPathPreview();
+      this.enablePlayerCameraFollow();
     }
 
     if (this.curfewActive !== worldState.curfewActive) {
@@ -177,6 +205,17 @@ export class MainScene extends Phaser.Scene {
     } else {
        console.warn("[MainScene] Player sprite not available for position update.");
     }
+  }
+
+  private enablePlayerCameraFollow(): void {
+    if (!this.playerSprite || !this.sys.isActive()) {
+      return;
+    }
+
+    const camera = this.cameras.main;
+    camera.startFollow(this.playerSprite, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
+    camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
+    this.isCameraFollowingPlayer = true;
   }
   
   private updateEnemies(enemies: Enemy[]) {
@@ -562,6 +601,53 @@ export class MainScene extends Phaser.Scene {
     );
   }
 
+  private handleWheel = (
+    pointer: Phaser.Input.Pointer,
+    _gameObjects: Phaser.GameObjects.GameObject[],
+    _deltaX: number,
+    deltaY: number
+  ): void => {
+    if (!this.sys.isActive()) {
+      return;
+    }
+
+    const camera = this.cameras.main;
+    const zoomMultiplier = deltaY > 0 ? 0.88 : 1.12;
+    const currentZoom = camera.zoom;
+    const targetZoom = Phaser.Math.Clamp(
+      currentZoom * zoomMultiplier,
+      MIN_CAMERA_ZOOM,
+      MAX_CAMERA_ZOOM
+    );
+
+    if (Math.abs(targetZoom - currentZoom) < 0.0005) {
+      return;
+    }
+
+    let worldPointBefore: Phaser.Math.Vector2 | null = null;
+
+    if (!this.isCameraFollowingPlayer) {
+      worldPointBefore = camera.getWorldPoint(pointer.x, pointer.y);
+    }
+
+    camera.setZoom(targetZoom);
+
+    if (this.isCameraFollowingPlayer) {
+      camera.setDeadzone(
+        Math.max(120, this.scale.width * 0.22),
+        Math.max(160, this.scale.height * 0.28)
+      );
+    }
+
+    if (!this.isCameraFollowingPlayer && worldPointBefore) {
+      const worldPointAfter = camera.getWorldPoint(pointer.x, pointer.y);
+      camera.scrollX += worldPointBefore.x - worldPointAfter.x;
+      camera.scrollY += worldPointBefore.y - worldPointAfter.y;
+    }
+
+    this.applyOverlayZoom();
+  };
+
   private handlePathPreview = (event: Event): void => {
     if (!this.sys.isActive()) {
       return;
@@ -684,6 +770,7 @@ export class MainScene extends Phaser.Scene {
     // Simple resize without debouncing to avoid blinking
     if (this.sys.isActive() && this.currentMapArea) {
       this.setupCameraAndMap();
+      this.enablePlayerCameraFollow();
       this.resizeDayNightOverlay();
     }
   }
@@ -704,14 +791,39 @@ export class MainScene extends Phaser.Scene {
     const isoHeight = (width + height) * halfTileHeight;
     const zoomX = canvasWidth / isoWidth;
     const zoomY = canvasHeight / isoHeight;
-    const zoom = Math.min(zoomX, zoomY) * 0.94;
+    const fitZoom = Math.min(zoomX, zoomY);
+    const desiredZoom = Phaser.Math.Clamp(
+      fitZoom * DEFAULT_FIT_ZOOM_FACTOR,
+      MIN_CAMERA_ZOOM,
+      MAX_CAMERA_ZOOM
+    );
 
-    this.cameras.main.setZoom(zoom);
+    const camera = this.cameras.main;
+    camera.setZoom(desiredZoom);
+
+    const bounds = this.computeIsoBounds();
+    const padding = this.tileSize * CAMERA_BOUND_PADDING_TILES;
+    camera.setBounds(
+      bounds.minX - padding,
+      bounds.minY - padding,
+      bounds.maxX - bounds.minX + padding * 2,
+      bounds.maxY - bounds.minY + padding * 2
+    );
 
     const centerX = (width - 1) / 2;
     const centerY = (height - 1) / 2;
     const centerPoint = this.calculatePixelPosition(centerX, centerY);
-    this.cameras.main.centerOn(centerPoint.x, centerPoint.y + tileHeight * 0.25);
+    const spawnPoint = this.playerInitialPosition
+      ? this.calculatePixelPosition(
+          this.playerInitialPosition.x,
+          this.playerInitialPosition.y
+        )
+      : null;
+    const focusPoint = spawnPoint ?? centerPoint;
+
+    if (!this.isCameraFollowingPlayer) {
+      camera.centerOn(focusPoint.x, focusPoint.y + tileHeight * 0.25);
+    }
 
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);

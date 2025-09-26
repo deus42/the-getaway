@@ -1,4 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { setGameTime } from './worldSlice';
+import { isCurfewTime, DEFAULT_DAY_NIGHT_CONFIG } from '../game/world/dayNightCycle';
 
 interface LogState {
   messages: string[];
@@ -13,17 +15,28 @@ const logSlice = createSlice({
   initialState,
   reducers: {
     addLogMessage(state, action: PayloadAction<string>) {
-      // Keep only the last N messages (e.g., 50)
       const MAX_LOG_MESSAGES = 50;
-      state.messages.push(action.payload);
-      if (state.messages.length > MAX_LOG_MESSAGES) {
-        state.messages.shift(); // Remove the oldest message
+      const nextMessages = [...state.messages, action.payload];
+      if (nextMessages.length > MAX_LOG_MESSAGES) {
+        nextMessages.shift();
       }
-      console.log(`[Log] ${action.payload}`); // Also log to console for debugging
+      state.messages = nextMessages;
+      console.log(`[Log] ${action.payload}`);
     },
     clearLog(state) {
       state.messages = [];
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(setGameTime, (state, action) => {
+      const curfewActive = isCurfewTime(action.payload, DEFAULT_DAY_NIGHT_CONFIG);
+
+      if (curfewActive && state.messages.length === 0) {
+        state.messages = [
+          'Searchlights pin you in the open—take cover before the patrols lock on.',
+        ];
+      }
+    });
   },
 });
 

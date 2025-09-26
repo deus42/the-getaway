@@ -20,7 +20,7 @@ export const resetGame = createAction('app/resetGame');
 export const PERSISTED_STATE_KEY = STORAGE_KEY;
 
 type CombinedState = ReturnType<typeof combinedReducer>;
-type PersistedState = Partial<CombinedState>;
+type PersistedState = CombinedState;
 
 const loadState = (): PersistedState | undefined => {
   if (!isBrowser) {
