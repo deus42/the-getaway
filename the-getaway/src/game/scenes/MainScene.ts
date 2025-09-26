@@ -5,9 +5,9 @@ import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 
-// Change EnemySpriteData to use Rectangle
+// Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
-  sprite: Phaser.GameObjects.Rectangle; // Changed from Sprite to Rectangle
+  sprite: Phaser.GameObjects.Ellipse;
   healthText: Phaser.GameObjects.Text;
   markedForRemoval: boolean;
 }
@@ -15,17 +15,19 @@ interface EnemySpriteData {
 export class MainScene extends Phaser.Scene {
   private tileSize: number = DEFAULT_TILE_SIZE;
   private mapGraphics!: Phaser.GameObjects.Graphics;
-  private playerSprite!: Phaser.GameObjects.Rectangle;
-  private enemySprites: Map<string, EnemySpriteData> = new Map(); // Type uses Rectangle now
+  private playerSprite!: Phaser.GameObjects.Ellipse;
+  private enemySprites: Map<string, EnemySpriteData> = new Map();
   private currentMapArea: MapArea | null = null;
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   private dayNightOverlay!: Phaser.GameObjects.Rectangle;
-  private coverMarkers: Phaser.GameObjects.Rectangle[] = [];
+  private coverMarkers: Phaser.GameObjects.Polygon[] = [];
   private coverMarkerTweens: Phaser.Tweens.Tween[] = [];
   private curfewActive = false;
   private currentGameTime = 0;
   private timeDispatchAccumulator = 0;
+  private isoOriginX = 0;
+  private isoOriginY = 0;
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
     if (document.visibilityState === 'visible') {
@@ -80,10 +82,16 @@ export class MainScene extends Phaser.Scene {
     
     // Setup player sprite
     if (this.playerInitialPosition) {
+       const metrics = this.getIsoMetrics();
        const playerPixelPos = this.calculatePixelPosition(this.playerInitialPosition.x, this.playerInitialPosition.y);
-       this.playerSprite = this.add.rectangle(playerPixelPos.x, playerPixelPos.y, this.tileSize * 0.8, this.tileSize * 0.8, 0x0000ff);
-       this.playerSprite.setOrigin(0.5);
-       this.playerSprite.setDepth(10);
+       this.playerSprite = this.add.ellipse(
+         playerPixelPos.x,
+         playerPixelPos.y,
+         metrics.tileWidth * 0.45,
+         metrics.tileHeight * 0.9,
+         0x00b4ff
+       );
+       this.playerSprite.setDepth(playerPixelPos.y + 8);
        console.log('[MainScene] Player sprite created at pixelPos:', playerPixelPos);
     } else { console.error('[MainScene] playerInitialPosition is null'); }
 
@@ -140,6 +148,7 @@ export class MainScene extends Phaser.Scene {
     if (this.playerSprite) {
        const pixelPos = this.calculatePixelPosition(position.x, position.y);
        this.playerSprite.setPosition(pixelPos.x, pixelPos.y);
+       this.playerSprite.setDepth(pixelPos.y + 8);
     } else {
        console.warn("[MainScene] Player sprite not available for position update.");
     }
@@ -162,11 +171,26 @@ export class MainScene extends Phaser.Scene {
       if (!existingSpriteData) {
          if(enemy.health <= 0) continue;
 
-         const enemySprite = this.add.rectangle(pixelPos.x, pixelPos.y, this.tileSize * 0.8, this.tileSize * 0.8, 0xff0000);
-         enemySprite.setOrigin(0.5);
-         enemySprite.setDepth(10);
+         const metrics = this.getIsoMetrics();
+         const enemySprite = this.add.ellipse(
+           pixelPos.x,
+           pixelPos.y,
+           metrics.tileWidth * 0.45,
+           metrics.tileHeight * 0.9,
+           0xff5252
+         );
+         enemySprite.setDepth(pixelPos.y + 6);
 
-         const healthText = this.add.text(pixelPos.x, pixelPos.y + this.tileSize / 2, `${enemy.health}/${enemy.maxHealth}`, { fontSize: '12px', color: '#ffffff', align: 'center', resolution: 2 }).setOrigin(0.5, 0).setDepth(11);
+         const healthTextY = pixelPos.y + metrics.tileHeight * 0.6;
+         const healthText = this.add
+           .text(
+             pixelPos.x,
+             healthTextY,
+             `${enemy.health}/${enemy.maxHealth}`,
+             { fontSize: '12px', color: '#ffffff', align: 'center', resolution: 2 }
+           )
+           .setOrigin(0.5, 0)
+           .setDepth(pixelPos.y + 7);
 
          this.enemySprites.set(enemy.id, { sprite: enemySprite, healthText: healthText, markedForRemoval: false });
          console.log(`[MainScene updateEnemies] Created sprite & health for ${enemy.id}`);
@@ -175,7 +199,13 @@ export class MainScene extends Phaser.Scene {
              existingSpriteData.markedForRemoval = true;
          } else {
              existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
-             existingSpriteData.healthText.setPosition(pixelPos.x, pixelPos.y + this.tileSize / 2).setText(`${enemy.health}/${enemy.maxHealth}`);
+             existingSpriteData.sprite.setDepth(pixelPos.y + 6);
+             const metrics = this.getIsoMetrics();
+             const healthTextY = pixelPos.y + metrics.tileHeight * 0.6;
+             existingSpriteData.healthText
+               .setPosition(pixelPos.x, healthTextY)
+               .setText(`${enemy.health}/${enemy.maxHealth}`)
+               .setDepth(pixelPos.y + 7);
              existingSpriteData.markedForRemoval = false;
          }
       }
@@ -206,21 +236,15 @@ export class MainScene extends Phaser.Scene {
     
     this.mapGraphics.clear();
 
-    // Fill the entire background with dark color
-    this.mapGraphics.fillStyle(0x1a1a1a);
-    const fullWidth = tiles[0].length * this.tileSize;
-    const fullHeight = tiles.length * this.tileSize;
-    this.mapGraphics.fillRect(0, 0, fullWidth, fullHeight);
+    const { tileWidth, tileHeight } = this.getIsoMetrics();
 
-    // Draw cells with precise borders
     for (let y = 0; y < tiles.length; y++) {
       for (let x = 0; x < tiles[0].length; x++) {
         const tile = tiles[y][x];
-        const pixelX = Math.floor(x * this.tileSize); // Ensure pixel-perfect alignment
-        const pixelY = Math.floor(y * this.tileSize);
+        const center = this.calculatePixelPosition(x, y);
 
         if (tile.type === TileType.DOOR) {
-          this.drawDoorTile(pixelX, pixelY);
+          this.drawDoorTile(center.x, center.y);
           continue;
         }
 
@@ -239,75 +263,76 @@ export class MainScene extends Phaser.Scene {
             color = 0x8235c4; // beacon pad
             break;
           default:
-            color = (x + y) % 2 === 0 ? 0x33363d : 0x2d2f35;
+            color = (x + y) % 2 === 0 ? 0x30333a : 0x272a31;
             break;
         }
 
+        const tilePoints = this.getDiamondPoints(center.x, center.y, tileWidth, tileHeight);
         this.mapGraphics.fillStyle(color);
-        this.mapGraphics.fillRect(pixelX, pixelY, this.tileSize, this.tileSize);
+        this.mapGraphics.fillPoints(tilePoints, true);
       }
     }
   }
 
-  private drawDoorTile(pixelX: number, pixelY: number): void {
+  private drawDoorTile(centerX: number, centerY: number): void {
     if (!this.mapGraphics) {
       return;
     }
 
-    const edgeInset = 1;
-    const baseWidth = this.tileSize - edgeInset * 2;
-    const baseHeight = this.tileSize - edgeInset * 2;
-
-    // Dark floor base to blend with surrounding tiles
+    const { tileWidth, tileHeight } = this.getIsoMetrics();
+    const base = this.getDiamondPoints(centerX, centerY, tileWidth, tileHeight);
     this.mapGraphics.fillStyle(0x2f2f2f);
-    this.mapGraphics.fillRect(
-      pixelX + edgeInset,
-      pixelY + edgeInset,
-      baseWidth,
-      baseHeight
-    );
+    this.mapGraphics.fillPoints(base, true);
 
-    const frameInset = edgeInset + Math.max(2, Math.floor(this.tileSize * 0.12));
-    const doorWidth = Math.max(4, this.tileSize - frameInset * 2);
-    const doorHeight = baseHeight;
+    const glow = this.getDiamondPoints(centerX, centerY, tileWidth * 0.8, tileHeight * 0.85);
+    this.mapGraphics.fillStyle(0xffbe5d);
+    this.mapGraphics.fillPoints(glow, true);
 
-    // Main door panel
-    this.mapGraphics.fillStyle(0x6f4a2d);
-    this.mapGraphics.fillRect(
-      pixelX + frameInset,
-      pixelY + edgeInset,
-      doorWidth,
-      doorHeight
-    );
-
-    // Central plank highlight for depth
-    const panelWidth = Math.max(2, Math.floor(doorWidth / 4));
-    this.mapGraphics.fillStyle(0x8a6146);
-    this.mapGraphics.fillRect(
-      pixelX + frameInset + doorWidth / 2 - panelWidth / 2,
-      pixelY + edgeInset,
-      panelWidth,
-      doorHeight
-    );
-
-    // Simple door knob accent
-    const knobSize = Math.max(2, Math.floor(this.tileSize * 0.08));
-    const knobOffset = Math.max(2, Math.floor(this.tileSize * 0.05));
-    this.mapGraphics.fillStyle(0xd6b370);
-    this.mapGraphics.fillRect(
-      pixelX + frameInset + doorWidth - knobOffset - knobSize,
-      pixelY + edgeInset + doorHeight / 2 - knobSize / 2,
-      knobSize,
-      knobSize
-    );
+    const threshold = this.getDiamondPoints(centerX, centerY + tileHeight * 0.05, tileWidth * 0.28, tileHeight * 0.6);
+    this.mapGraphics.fillStyle(0x8c5523);
+    this.mapGraphics.fillPoints(threshold, true);
   }
 
-  // Update calculatePixelPosition to match the new grid drawing approach
   private calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number } {
+    const { halfTileWidth, halfTileHeight } = this.getIsoMetrics();
+    const isoX = (gridX - gridY) * halfTileWidth + this.isoOriginX;
+    const isoY = (gridX + gridY) * halfTileHeight + this.isoOriginY;
+
+    return { x: isoX, y: isoY };
+  }
+
+  private getIsoMetrics(): {
+    tileWidth: number;
+    tileHeight: number;
+    halfTileWidth: number;
+    halfTileHeight: number;
+  } {
+    const tileWidth = this.tileSize;
+    const tileHeight = this.tileSize / 2;
+
     return {
-      x: gridX * this.tileSize + this.tileSize / 2,
-      y: gridY * this.tileSize + this.tileSize / 2
+      tileWidth,
+      tileHeight,
+      halfTileWidth: tileWidth / 2,
+      halfTileHeight: tileHeight / 2
     };
+  }
+
+  private getDiamondPoints(
+    centerX: number,
+    centerY: number,
+    width: number,
+    height: number
+  ): Phaser.Geom.Point[] {
+    const halfWidth = width / 2;
+    const halfHeight = height / 2;
+
+    return [
+      new Phaser.Geom.Point(centerX, centerY - halfHeight),
+      new Phaser.Geom.Point(centerX + halfWidth, centerY),
+      new Phaser.Geom.Point(centerX, centerY + halfHeight),
+      new Phaser.Geom.Point(centerX - halfWidth, centerY)
+    ];
   }
 
   // Handler for resize events from Phaser - simplify to prevent flickering
@@ -323,22 +348,27 @@ export class MainScene extends Phaser.Scene {
   private setupCameraAndMap(): void {
     if (!this.currentMapArea) return;
     
-    // Get dimensions
-    const mapWidthPx = this.currentMapArea.width * this.tileSize;
-    const mapHeightPx = this.currentMapArea.height * this.tileSize;
+    const { width, height } = this.currentMapArea;
+    const { tileHeight, halfTileWidth, halfTileHeight } = this.getIsoMetrics();
     const canvasWidth = this.scale.width;
     const canvasHeight = this.scale.height;
-    
-    // Simple zoom calculation
-    const zoomX = canvasWidth / mapWidthPx;
-    const zoomY = canvasHeight / mapHeightPx;
-    const zoom = Math.min(zoomX, zoomY) * 0.95; // 5% margin
-    
-    // Set camera
+
+    this.isoOriginX = (height - 1) * halfTileWidth;
+    this.isoOriginY = tileHeight; // lift map slightly so the top diamond is visible
+
+    const isoWidth = (width + height) * halfTileWidth;
+    const isoHeight = (width + height) * halfTileHeight;
+    const zoomX = canvasWidth / isoWidth;
+    const zoomY = canvasHeight / isoHeight;
+    const zoom = Math.min(zoomX, zoomY) * 0.94;
+
     this.cameras.main.setZoom(zoom);
-    this.cameras.main.centerOn(mapWidthPx / 2, mapHeightPx / 2);
-    
-    // Draw map
+
+    const centerX = (width - 1) / 2;
+    const centerY = (height - 1) / 2;
+    const centerPoint = this.calculatePixelPosition(centerX, centerY);
+    this.cameras.main.centerOn(centerPoint.x, centerPoint.y + tileHeight * 0.25);
+
     this.drawMap(this.currentMapArea.tiles);
 
     // Ensure overlay matches latest viewport size after camera adjustments
@@ -429,16 +459,26 @@ export class MainScene extends Phaser.Scene {
         }
 
         const pixelPos = this.calculatePixelPosition(x, y);
-        const marker = this.add.rectangle(
+        const { tileWidth, tileHeight } = this.getIsoMetrics();
+        const points = [
+          0,
+          -tileHeight / 2,
+          tileWidth / 2,
+          0,
+          0,
+          tileHeight / 2,
+          -tileWidth / 2,
+          0,
+        ];
+        const marker = this.add.polygon(
           pixelPos.x,
           pixelPos.y,
-          this.tileSize * 0.6,
-          this.tileSize * 0.6,
+          points,
           highlightColor,
           baseAlpha
         );
         marker.setOrigin(0.5);
-        marker.setDepth(6);
+        marker.setDepth(pixelPos.y + 4);
         marker.setStrokeStyle(2, highlightColor, borderAlpha);
 
         this.coverMarkers.push(marker);
