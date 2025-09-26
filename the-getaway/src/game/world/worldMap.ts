@@ -49,6 +49,36 @@ const DOWNTOWN_COVER_SPOTS: Position[] = [
   { x: 42, y: 16 },
 ];
 
+const SLUMS_NEON_STRIPS: Position[] = [
+  { x: 18, y: 18 },
+  { x: 19, y: 18 },
+  { x: 20, y: 18 },
+  { x: 34, y: 10 },
+  { x: 35, y: 10 },
+  { x: 36, y: 10 },
+  { x: 40, y: 28 },
+  { x: 41, y: 28 },
+  { x: 42, y: 28 },
+  { x: 24, y: 26 },
+  { x: 25, y: 26 },
+  { x: 26, y: 26 },
+];
+
+const DOWNTOWN_BEACONS: Position[] = [
+  { x: 22, y: 15 },
+  { x: 23, y: 15 },
+  { x: 24, y: 15 },
+  { x: 32, y: 11 },
+  { x: 33, y: 11 },
+  { x: 34, y: 11 },
+  { x: 32, y: 23 },
+  { x: 33, y: 23 },
+  { x: 34, y: 23 },
+  { x: 18, y: 23 },
+  { x: 19, y: 23 },
+  { x: 20, y: 23 },
+];
+
 const SLUMS_NPC_BLUEPRINTS: Array<Omit<NPC, 'id'>> = [
   {
     name: 'Lira the Smuggler',
@@ -179,6 +209,14 @@ const createSlumsArea = (): MapArea => {
     withCover.entities.items.push({ ...item, id: uuidv4() });
   });
 
+  SLUMS_NEON_STRIPS.forEach(({ x, y }) => {
+    if (withCover.tiles[y]?.[x]) {
+      const tile = withCover.tiles[y][x];
+      tile.type = TileType.WATER;
+      tile.isWalkable = true;
+    }
+  });
+
   const door = withCover.tiles[SLUMS_DOOR.y][SLUMS_DOOR.x];
   door.type = TileType.DOOR;
   door.isWalkable = true;
@@ -218,6 +256,14 @@ const createDowntownArea = (): MapArea => {
   });
   DOWNTOWN_ITEM_BLUEPRINTS.forEach((item) => {
     withCover.entities.items.push({ ...item, id: uuidv4() });
+  });
+
+  DOWNTOWN_BEACONS.forEach(({ x, y }) => {
+    if (withCover.tiles[y]?.[x]) {
+      const tile = withCover.tiles[y][x];
+      tile.type = TileType.TRAP;
+      tile.isWalkable = true;
+    }
   });
 
   const door = withCover.tiles[DOWNTOWN_DOOR.y][DOWNTOWN_DOOR.x];

@@ -225,12 +225,22 @@ export class MainScene extends Phaser.Scene {
         }
 
         let color: number;
-        if (tile.type === TileType.WALL) {
-          color = 0xbfc3c9;
-        } else if (tile.type === TileType.COVER) {
-          color = 0x5b6ee1;
-        } else {
-          color = (x + y) % 2 === 0 ? 0x33363d : 0x2d2f35;
+        switch (tile.type) {
+          case TileType.WALL:
+            color = 0xbfc3c9;
+            break;
+          case TileType.COVER:
+            color = 0x5b6ee1;
+            break;
+          case TileType.WATER:
+            color = 0x1f6b7a; // neon ground glow
+            break;
+          case TileType.TRAP:
+            color = 0x8235c4; // beacon pad
+            break;
+          default:
+            color = (x + y) % 2 === 0 ? 0x33363d : 0x2d2f35;
+            break;
         }
 
         this.mapGraphics.fillStyle(color);
