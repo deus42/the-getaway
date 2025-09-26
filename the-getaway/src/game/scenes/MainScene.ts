@@ -15,6 +15,7 @@ interface EnemySpriteData {
 export class MainScene extends Phaser.Scene {
   private tileSize: number = DEFAULT_TILE_SIZE;
   private mapGraphics!: Phaser.GameObjects.Graphics;
+  private backdropGraphics!: Phaser.GameObjects.Graphics;
   private playerSprite!: Phaser.GameObjects.Ellipse;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private currentMapArea: MapArea | null = null;
@@ -61,8 +62,11 @@ export class MainScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x1a1a1a);
 
     // Setup map graphics
+    this.backdropGraphics = this.add.graphics();
+    this.backdropGraphics.setDepth(-20);
+
     this.mapGraphics = this.add.graphics();
-    this.mapGraphics.setDepth(0);
+    this.mapGraphics.setDepth(-5);
 
     // Initial setup of camera and map
     this.setupCameraAndMap();
@@ -243,33 +247,11 @@ export class MainScene extends Phaser.Scene {
         const tile = tiles[y][x];
         const center = this.calculatePixelPosition(x, y);
 
+        this.renderTile(tile, center, tileWidth, tileHeight, x, y);
+
         if (tile.type === TileType.DOOR) {
           this.drawDoorTile(center.x, center.y);
-          continue;
         }
-
-        let color: number;
-        switch (tile.type) {
-          case TileType.WALL:
-            color = 0xbfc3c9;
-            break;
-          case TileType.COVER:
-            color = 0x5b6ee1;
-            break;
-          case TileType.WATER:
-            color = 0x1f6b7a; // neon ground glow
-            break;
-          case TileType.TRAP:
-            color = 0x8235c4; // beacon pad
-            break;
-          default:
-            color = (x + y) % 2 === 0 ? 0x30333a : 0x272a31;
-            break;
-        }
-
-        const tilePoints = this.getDiamondPoints(center.x, center.y, tileWidth, tileHeight);
-        this.mapGraphics.fillStyle(color);
-        this.mapGraphics.fillPoints(tilePoints, true);
       }
     }
   }
@@ -280,17 +262,185 @@ export class MainScene extends Phaser.Scene {
     }
 
     const { tileWidth, tileHeight } = this.getIsoMetrics();
-    const base = this.getDiamondPoints(centerX, centerY, tileWidth, tileHeight);
-    this.mapGraphics.fillStyle(0x2f2f2f);
-    this.mapGraphics.fillPoints(base, true);
+    const frameColor = 0x623d1a;
+    const glowColor = 0xffc67a;
 
-    const glow = this.getDiamondPoints(centerX, centerY, tileWidth * 0.8, tileHeight * 0.85);
-    this.mapGraphics.fillStyle(0xffbe5d);
-    this.mapGraphics.fillPoints(glow, true);
+    const frame = this.getDiamondPoints(centerX, centerY, tileWidth * 0.82, tileHeight * 0.88);
+    this.mapGraphics.lineStyle(2, frameColor, 0.9);
+    this.mapGraphics.strokePoints(frame, true);
 
-    const threshold = this.getDiamondPoints(centerX, centerY + tileHeight * 0.05, tileWidth * 0.28, tileHeight * 0.6);
-    this.mapGraphics.fillStyle(0x8c5523);
-    this.mapGraphics.fillPoints(threshold, true);
+    const panel = this.getDiamondPoints(centerX, centerY, tileWidth * 0.55, tileHeight * 0.64);
+    this.mapGraphics.fillStyle(0x2c2118, 0.95);
+    this.mapGraphics.fillPoints(panel, true);
+
+    this.mapGraphics.fillStyle(glowColor, 0.45);
+    this.mapGraphics.fillPoints(
+      this.getDiamondPoints(centerX, centerY - tileHeight * 0.12, tileWidth * 0.38, tileHeight * 0.36),
+      true
+    );
+
+    const handle = this.getDiamondPoints(centerX + tileWidth * 0.15, centerY, tileWidth * 0.08, tileHeight * 0.2);
+    this.mapGraphics.fillStyle(glowColor, 0.7);
+    this.mapGraphics.fillPoints(handle, true);
+  }
+
+  private renderTile(
+    tile: MapTile,
+    center: { x: number; y: number },
+    tileWidth: number,
+    tileHeight: number,
+    gridX: number,
+    gridY: number
+  ): void {
+    const halfWidth = tileWidth / 2;
+    const halfHeight = tileHeight / 2;
+    const baseColor = this.getTileBaseColor(tile, gridX, gridY);
+    const variationSeed = ((gridX * 13 + gridY * 7) % 6) * 0.02;
+    const modulatedBase = this.adjustColor(baseColor, variationSeed);
+    const highlightColor = this.adjustColor(modulatedBase, 0.22);
+    const shadowColor = this.adjustColor(modulatedBase, -0.28);
+
+    const tilePoints = this.getDiamondPoints(center.x, center.y, tileWidth, tileHeight);
+
+    const dropColor = this.adjustColor(modulatedBase, -0.55);
+    const shadowWidth = tileWidth * (tile.type === TileType.WALL ? 1.12 : 1.04);
+    const shadowHeight = tileHeight * (tile.type === TileType.WALL ? 1.28 : 1.16);
+    const shadowOffsetY = halfHeight * (tile.type === TileType.WALL ? 1.05 : 0.85);
+    const shadowPoints = this.getDiamondPoints(
+      center.x + halfWidth * 0.18,
+      center.y + shadowOffsetY,
+      shadowWidth,
+      shadowHeight
+    );
+    this.mapGraphics.fillStyle(dropColor, tile.type === TileType.WALL ? 0.65 : 0.4);
+    this.mapGraphics.fillPoints(shadowPoints, true);
+
+    this.mapGraphics.fillStyle(modulatedBase, 1);
+    this.mapGraphics.fillPoints(tilePoints, true);
+
+    const topPoint = new Phaser.Geom.Point(center.x, center.y - halfHeight);
+    const rightPoint = new Phaser.Geom.Point(center.x + halfWidth, center.y);
+    const leftPoint = new Phaser.Geom.Point(center.x - halfWidth, center.y);
+    const bottomPoint = new Phaser.Geom.Point(center.x, center.y + halfHeight);
+    const centerPoint = new Phaser.Geom.Point(center.x, center.y);
+
+    this.mapGraphics.fillStyle(highlightColor, 0.62);
+    this.mapGraphics.fillPoints([topPoint, rightPoint, centerPoint], true);
+    this.mapGraphics.fillPoints([topPoint, centerPoint, leftPoint], true);
+
+    this.mapGraphics.fillStyle(shadowColor, 0.55);
+    this.mapGraphics.fillPoints([bottomPoint, centerPoint, rightPoint], true);
+    this.mapGraphics.fillPoints([bottomPoint, leftPoint, centerPoint], true);
+
+    switch (tile.type) {
+      case TileType.COVER: {
+        const coverAccent = this.adjustColor(modulatedBase, 0.35);
+        const coverFrame = this.getDiamondPoints(center.x, center.y, tileWidth * 0.7, tileHeight * 0.74);
+        this.mapGraphics.fillStyle(coverAccent, 0.18);
+        this.mapGraphics.fillPoints(
+          this.getDiamondPoints(center.x, center.y, tileWidth * 0.56, tileHeight * 0.6),
+          true
+        );
+        this.mapGraphics.lineStyle(2, 0x58ffc8, 0.7);
+        this.mapGraphics.strokePoints(coverFrame, true);
+        break;
+      }
+      case TileType.WALL: {
+        const crest = this.getDiamondPoints(center.x, center.y - halfHeight * 0.65, tileWidth * 0.88, tileHeight * 0.82);
+        this.mapGraphics.fillStyle(this.adjustColor(modulatedBase, 0.18), 1);
+        this.mapGraphics.fillPoints(crest, true);
+
+        const facade = [
+          new Phaser.Geom.Point(center.x + halfWidth, center.y),
+          new Phaser.Geom.Point(center.x + halfWidth * 0.35, center.y + tileHeight * 0.85),
+          new Phaser.Geom.Point(center.x - halfWidth * 0.35, center.y + tileHeight * 0.85),
+          new Phaser.Geom.Point(center.x - halfWidth, center.y)
+        ];
+        this.mapGraphics.fillStyle(this.adjustColor(modulatedBase, -0.35), 0.95);
+        this.mapGraphics.fillPoints(facade, true);
+        break;
+      }
+      case TileType.WATER: {
+        const sheenColor = this.adjustColor(modulatedBase, 0.55);
+        this.mapGraphics.fillStyle(sheenColor, 0.32);
+        this.mapGraphics.fillPoints(
+          this.getDiamondPoints(center.x, center.y - tileHeight * 0.08, tileWidth * 0.62, tileHeight * 0.52),
+          true
+        );
+        this.mapGraphics.lineStyle(1, this.adjustColor(sheenColor, 0.25), 0.5);
+        for (let ripple = 0; ripple < 3; ripple++) {
+          const scale = 0.8 - ripple * 0.18;
+          const ripplePoints = this.getDiamondPoints(center.x, center.y, tileWidth * scale, tileHeight * scale);
+          this.mapGraphics.strokePoints(ripplePoints, true);
+        }
+        break;
+      }
+      case TileType.TRAP: {
+        const pulseColor = this.adjustColor(modulatedBase, 0.75);
+        this.mapGraphics.fillStyle(pulseColor, 0.28);
+        this.mapGraphics.fillPoints(
+          this.getDiamondPoints(center.x, center.y, tileWidth * 0.6, tileHeight * 0.64),
+          true
+        );
+        this.mapGraphics.fillStyle(pulseColor, 0.18);
+        this.mapGraphics.fillPoints(
+          this.getDiamondPoints(center.x, center.y, tileWidth * 0.28, tileHeight * 1.02),
+          true
+        );
+        this.mapGraphics.fillPoints(
+          this.getDiamondPoints(center.x, center.y, tileWidth * 1.02, tileHeight * 0.28),
+          true
+        );
+        this.mapGraphics.lineStyle(1.5, this.adjustColor(pulseColor, 0.3), 0.85);
+        this.mapGraphics.strokePoints(
+          this.getDiamondPoints(center.x, center.y, tileWidth * 0.86, tileHeight * 0.32),
+          true
+        );
+        break;
+      }
+      default:
+        break;
+    }
+
+    const outlineColor = this.adjustColor(modulatedBase, -0.45);
+    this.mapGraphics.lineStyle(1, outlineColor, 0.4);
+    this.mapGraphics.strokePoints(tilePoints, true);
+  }
+
+  private getTileBaseColor(tile: MapTile, gridX: number, gridY: number): number {
+    const checker = (gridX + gridY) % 2 === 0;
+
+    switch (tile.type) {
+      case TileType.WALL:
+        return checker ? 0x3b4657 : 0x333c4b;
+      case TileType.COVER:
+        return checker ? 0x243546 : 0x1f2f3f;
+      case TileType.WATER:
+        return checker ? 0x103d5f : 0x0d3452;
+      case TileType.TRAP:
+        return checker ? 0x2d0f46 : 0x230c38;
+      case TileType.DOOR:
+        return checker ? 0x211d1a : 0x1b1815;
+      default:
+        return checker ? 0x181c24 : 0x1e212b;
+    }
+  }
+
+  private adjustColor(color: number, factor: number): number {
+    const { red, green, blue } = Phaser.Display.Color.IntegerToColor(color);
+
+    if (factor >= 0) {
+      const r = Phaser.Math.Clamp(Math.round(red + (255 - red) * factor), 0, 255);
+      const g = Phaser.Math.Clamp(Math.round(green + (255 - green) * factor), 0, 255);
+      const b = Phaser.Math.Clamp(Math.round(blue + (255 - blue) * factor), 0, 255);
+      return Phaser.Display.Color.GetColor(r, g, b);
+    }
+
+    const scale = Math.max(0, 1 + factor);
+    const r = Phaser.Math.Clamp(Math.round(red * scale), 0, 255);
+    const g = Phaser.Math.Clamp(Math.round(green * scale), 0, 255);
+    const b = Phaser.Math.Clamp(Math.round(blue * scale), 0, 255);
+    return Phaser.Display.Color.GetColor(r, g, b);
   }
 
   private calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number } {
@@ -335,6 +485,75 @@ export class MainScene extends Phaser.Scene {
     ];
   }
 
+  private drawBackdrop(): void {
+    if (!this.backdropGraphics || !this.currentMapArea) {
+      return;
+    }
+
+    const bounds = this.computeIsoBounds();
+    const margin = this.tileSize * 4;
+    const width = bounds.maxX - bounds.minX + margin * 2;
+    const height = bounds.maxY - bounds.minY + margin * 2;
+    const originX = bounds.minX - margin;
+    const originY = bounds.minY - margin;
+
+    this.backdropGraphics.clear();
+    this.backdropGraphics.fillGradientStyle(
+      0x060712,
+      0x0d1a38,
+      0x04060d,
+      0x0a1e3f,
+      1,
+      1,
+      1,
+      1
+    );
+    this.backdropGraphics.fillRect(originX, originY, width, height);
+
+    const horizonY = originY + height * 0.28;
+    this.backdropGraphics.fillStyle(0x1a315f, 0.28);
+    this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.05, height * 0.52);
+
+    this.backdropGraphics.fillStyle(0x070b14, 0.55);
+    this.backdropGraphics.fillRect(originX, originY + height * 0.62, width, height * 0.55);
+
+    for (let i = 0; i < 4; i++) {
+      const alpha = 0.18 - i * 0.03;
+      if (alpha <= 0) {
+        continue;
+      }
+      const factor = 1.2 + i * 0.25;
+      this.backdropGraphics.lineStyle(2, 0x0c1527, alpha);
+      this.backdropGraphics.strokeEllipse(
+        originX + width / 2,
+        originY + height * 0.78,
+        width * factor,
+        height * 0.46 * factor
+      );
+    }
+  }
+
+  private computeIsoBounds(): { minX: number; maxX: number; minY: number; maxY: number } {
+    if (!this.currentMapArea) {
+      return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
+    }
+
+    const { width, height } = this.currentMapArea;
+    const corners = [
+      this.calculatePixelPosition(0, 0),
+      this.calculatePixelPosition(width - 1, 0),
+      this.calculatePixelPosition(0, height - 1),
+      this.calculatePixelPosition(width - 1, height - 1),
+    ];
+
+    const minX = Math.min(...corners.map((point) => point.x));
+    const maxX = Math.max(...corners.map((point) => point.x));
+    const minY = Math.min(...corners.map((point) => point.y));
+    const maxY = Math.max(...corners.map((point) => point.y));
+
+    return { minX, maxX, minY, maxY };
+  }
+
   // Handler for resize events from Phaser - simplify to prevent flickering
   private handleResize(): void {
     // Simple resize without debouncing to avoid blinking
@@ -369,6 +588,7 @@ export class MainScene extends Phaser.Scene {
     const centerPoint = this.calculatePixelPosition(centerX, centerY);
     this.cameras.main.centerOn(centerPoint.x, centerPoint.y + tileHeight * 0.25);
 
+    this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
 
     // Ensure overlay matches latest viewport size after camera adjustments
@@ -384,7 +604,7 @@ export class MainScene extends Phaser.Scene {
     this.dayNightOverlay.setOrigin(0.5, 0.5);
     this.dayNightOverlay.setScrollFactor(0);
     this.dayNightOverlay.setDepth(100);
-    this.dayNightOverlay.setBlendMode(Phaser.BlendModes.NORMAL);
+    this.dayNightOverlay.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.dayNightOverlay.setSize(width, height);
     this.dayNightOverlay.setDisplaySize(width, height);
     this.applyOverlayZoom();
@@ -479,6 +699,7 @@ export class MainScene extends Phaser.Scene {
         );
         marker.setOrigin(0.5);
         marker.setDepth(pixelPos.y + 4);
+        marker.setBlendMode(Phaser.BlendModes.ADD);
         marker.setStrokeStyle(2, highlightColor, borderAlpha);
 
         this.coverMarkers.push(marker);
