@@ -221,35 +221,20 @@ export class MainScene extends Phaser.Scene {
 
         if (tile.type === TileType.DOOR) {
           this.drawDoorTile(pixelX, pixelY);
-        } else {
-          let color: number;
-          if (tile.type === TileType.WALL) {
-            color = 0xcccccc; // Wall
-          } else if (tile.type === TileType.COVER) {
-            color = 0x6666dd; // Cover
-          } else {
-            // Alternate floor colors
-            color = (x + y) % 2 === 0 ? 0x333333 : 0x3a3a3a;
-          }
-
-          // Draw cell with exact 1px border
-          this.mapGraphics.fillStyle(color);
-          this.mapGraphics.fillRect(
-            pixelX + 1,
-            pixelY + 1,
-            this.tileSize - 1,
-            this.tileSize - 1
-          );
+          continue;
         }
 
-        // Draw cell borders with consistent 1px width
-        this.mapGraphics.lineStyle(1, 0x1a1a1a, 1);
-        this.mapGraphics.strokeRect(
-          pixelX,
-          pixelY,
-          this.tileSize,
-          this.tileSize
-        );
+        let color: number;
+        if (tile.type === TileType.WALL) {
+          color = 0xbfc3c9;
+        } else if (tile.type === TileType.COVER) {
+          color = 0x5b6ee1;
+        } else {
+          color = (x + y) % 2 === 0 ? 0x33363d : 0x2d2f35;
+        }
+
+        this.mapGraphics.fillStyle(color);
+        this.mapGraphics.fillRect(pixelX, pixelY, this.tileSize, this.tileSize);
       }
     }
   }
