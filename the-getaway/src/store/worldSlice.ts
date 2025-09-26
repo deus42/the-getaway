@@ -25,8 +25,7 @@ const initialMap = slumsArea;
 const initialEnemy: Enemy = {
   id: uuidv4(),
   name: "Guard",
-  // Update initial position to be within the 20x20 map (avoiding walls)
-  position: { x: 15, y: 15 },
+  position: { x: 34, y: 24 },
   maxHealth: 25,
   health: 25,
   actionPoints: 6,
