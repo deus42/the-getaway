@@ -555,16 +555,16 @@ const GameController: React.FC = () => {
           newPosition
         );
 
-        if (curfewActive && tile.type === TileType.DOOR) {
-          dispatch(
-            addLogMessage(
-              "Checkpoint sealed. The regime's curfew keeps the district locked down."
-            )
-          );
-          return;
-        }
+        if (connection) {
+          if (curfewActive && tile.type === TileType.DOOR) {
+            dispatch(
+              addLogMessage(
+                "Checkpoint sealed. The regime's curfew keeps the district locked down."
+              )
+            );
+            return;
+          }
 
-        if (tile.type === TileType.DOOR && connection) {
           const targetArea = mapDirectory[connection.toAreaId];
 
           if (targetArea) {
@@ -575,9 +575,11 @@ const GameController: React.FC = () => {
               `[GameController] Missing target area in state for ${connection.toAreaId}`
             );
           }
-        } else {
-          dispatch(movePlayer(newPosition));
+
+          return;
         }
+
+        dispatch(movePlayer(newPosition));
 
         if (curfewActive && !tile.provideCover && tile.type !== TileType.DOOR) {
           if (curfewAlertState === "clear") {

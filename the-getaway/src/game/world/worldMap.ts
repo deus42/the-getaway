@@ -2,6 +2,26 @@ import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Position, TileType, NPC, Item } from '../interfaces/types';
 import { createBasicMapArea, addWalls, addCover } from './grid';
 
+interface BuildingDefinition {
+  id: string;
+  name: string;
+  footprint: { from: Position; to: Position };
+  door: Position;
+  interior: { width: number; height: number };
+}
+
+interface GeneratedArea {
+  area: MapArea;
+  connections: MapConnection[];
+  interiorAreas: MapArea[];
+}
+
+interface InteriorSpec {
+  area: MapArea;
+  entryPosition: Position;
+  doorPosition: Position;
+}
+
 export interface MapConnection {
   fromAreaId: string;
   fromPosition: Position;
@@ -11,11 +31,11 @@ export interface MapConnection {
 
 const SLUMS_WIDTH = 56;
 const SLUMS_HEIGHT = 40;
-const SLUMS_DOOR: Position = { x: SLUMS_WIDTH - 1, y: 20 };
+const SLUMS_GATE: Position = { x: SLUMS_WIDTH - 1, y: 20 };
 
 const DOWNTOWN_WIDTH = 48;
 const DOWNTOWN_HEIGHT = 32;
-const DOWNTOWN_DOOR: Position = { x: 0, y: 16 };
+const DOWNTOWN_GATE: Position = { x: 0, y: 16 };
 
 const SLUMS_COVER_SPOTS: Position[] = [
   { x: 12, y: 20 },
@@ -77,6 +97,96 @@ const DOWNTOWN_BEACONS: Position[] = [
   { x: 18, y: 23 },
   { x: 19, y: 23 },
   { x: 20, y: 23 },
+];
+
+const SLUMS_BUILDINGS: BuildingDefinition[] = [
+  {
+    id: 'slums_tenement',
+    name: 'Riverside Tenement',
+    footprint: { from: { x: 4, y: 6 }, to: { x: 12, y: 16 } },
+    door: { x: 8, y: 16 },
+    interior: { width: 12, height: 8 },
+  },
+  {
+    id: 'slums_storage',
+    name: 'Delta Storage Yard',
+    footprint: { from: { x: 6, y: 24 }, to: { x: 14, y: 34 } },
+    door: { x: 10, y: 24 },
+    interior: { width: 10, height: 8 },
+  },
+  {
+    id: 'slums_workshop',
+    name: 'Ordnance Workshops',
+    footprint: { from: { x: 20, y: 6 }, to: { x: 30, y: 16 } },
+    door: { x: 25, y: 6 },
+    interior: { width: 12, height: 8 },
+  },
+  {
+    id: 'slums_terraces',
+    name: 'Stacked Terraces',
+    footprint: { from: { x: 22, y: 26 }, to: { x: 34, y: 36 } },
+    door: { x: 28, y: 26 },
+    interior: { width: 12, height: 10 },
+  },
+  {
+    id: 'slums_market',
+    name: 'Night Market Canopy',
+    footprint: { from: { x: 36, y: 10 }, to: { x: 40, y: 20 } },
+    door: { x: 38, y: 20 },
+    interior: { width: 8, height: 6 },
+  },
+  {
+    id: 'slums_depot',
+    name: 'Depot Barracks',
+    footprint: { from: { x: 42, y: 24 }, to: { x: 52, y: 34 } },
+    door: { x: 47, y: 24 },
+    interior: { width: 14, height: 10 },
+  },
+];
+
+const DOWNTOWN_BUILDINGS: BuildingDefinition[] = [
+  {
+    id: 'downtown_towers',
+    name: 'North Towers',
+    footprint: { from: { x: 6, y: 6 }, to: { x: 16, y: 14 } },
+    door: { x: 11, y: 14 },
+    interior: { width: 12, height: 8 },
+  },
+  {
+    id: 'downtown_plaza',
+    name: 'Plaza Retail Wing',
+    footprint: { from: { x: 26, y: 6 }, to: { x: 34, y: 14 } },
+    door: { x: 30, y: 14 },
+    interior: { width: 10, height: 8 },
+  },
+  {
+    id: 'downtown_admin',
+    name: 'Administratum Offices',
+    footprint: { from: { x: 38, y: 6 }, to: { x: 44, y: 14 } },
+    door: { x: 41, y: 14 },
+    interior: { width: 10, height: 8 },
+  },
+  {
+    id: 'downtown_transit',
+    name: 'Metro Staging Hub',
+    footprint: { from: { x: 8, y: 22 }, to: { x: 16, y: 30 } },
+    door: { x: 12, y: 30 },
+    interior: { width: 12, height: 8 },
+  },
+  {
+    id: 'downtown_campus',
+    name: 'Corporate Campus',
+    footprint: { from: { x: 26, y: 22 }, to: { x: 36, y: 30 } },
+    door: { x: 31, y: 22 },
+    interior: { width: 14, height: 10 },
+  },
+  {
+    id: 'downtown_staging',
+    name: 'Security Staging Deck',
+    footprint: { from: { x: 38, y: 22 }, to: { x: 44, y: 28 } },
+    door: { x: 41, y: 22 },
+    interior: { width: 10, height: 8 },
+  },
 ];
 
 const SLUMS_NPC_BLUEPRINTS: Array<Omit<NPC, 'id'>> = [
@@ -170,12 +280,75 @@ const DOWNTOWN_ITEM_BLUEPRINTS: Array<Omit<Item, 'id'>> = [
   },
 ];
 
+const createInteriorArea = (name: string, width: number, height: number): InteriorSpec => {
+  const interior = createBasicMapArea(name, width, height);
+  const doorPosition: Position = { x: Math.floor(width / 2), y: height - 1 };
+  const entryPosition: Position = {
+    x: doorPosition.x,
+    y: Math.max(1, doorPosition.y - 1),
+  };
+
+  const doorTile = interior.tiles[doorPosition.y][doorPosition.x];
+  doorTile.type = TileType.DOOR;
+  doorTile.isWalkable = true;
+
+  return {
+    area: interior,
+    entryPosition,
+    doorPosition,
+  };
+};
+
+const applyBuildingConnections = (
+  hostArea: MapArea,
+  settlementName: string,
+  buildings: BuildingDefinition[]
+): { connections: MapConnection[]; interiors: MapArea[] } => {
+  const connections: MapConnection[] = [];
+  const interiors: MapArea[] = [];
+
+  buildings.forEach((building) => {
+    const doorTile = hostArea.tiles[building.door.y]?.[building.door.x];
+
+    if (!doorTile) {
+      return;
+    }
+
+    doorTile.type = TileType.DOOR;
+    doorTile.isWalkable = true;
+
+    const interiorSpec = createInteriorArea(
+      `${settlementName} :: ${building.name}`,
+      building.interior.width,
+      building.interior.height
+    );
+
+    interiors.push(interiorSpec.area);
+
+    connections.push({
+      fromAreaId: hostArea.id,
+      fromPosition: { ...building.door },
+      toAreaId: interiorSpec.area.id,
+      toPosition: { ...interiorSpec.entryPosition },
+    });
+
+    connections.push({
+      fromAreaId: interiorSpec.area.id,
+      fromPosition: { ...interiorSpec.doorPosition },
+      toAreaId: hostArea.id,
+      toPosition: { ...building.door },
+    });
+  });
+
+  return { connections, interiors };
+};
+
 const isSlumsAvenue = (x: number, y: number) =>
   y === 18 || y === 19 || x === 18 || x === 34 ||
   (x === 44 && y >= 12 && y <= SLUMS_HEIGHT - 4) ||
   (y === 10 && x >= 12 && x <= 40);
 
-const createSlumsArea = (): MapArea => {
+const createSlumsArea = (): GeneratedArea => {
   const area = createBasicMapArea('Slums', SLUMS_WIDTH, SLUMS_HEIGHT);
   const walls: Position[] = [];
 
@@ -189,12 +362,15 @@ const createSlumsArea = (): MapArea => {
     }
   };
 
-  addBlock(4, 6, 12, 16); // Tenement block
-  addBlock(6, 24, 14, 34); // Storage yards
-  addBlock(20, 6, 30, 16); // Workshops
-  addBlock(22, 26, 34, 36); // Housing terraces
-  addBlock(36, 10, 40, 20); // Market canopies
-  addBlock(42, 24, 52, 34); // Guard depot near exit
+  SLUMS_BUILDINGS.forEach((building) => {
+    addBlock(
+      building.footprint.from.x,
+      building.footprint.from.y,
+      building.footprint.to.x,
+      building.footprint.to.y
+    );
+  });
+
   addBlock(14, 12, 16, 32); // Alley partitions
   addBlock(32, 26, 34, 34); // Narrow alleys near depot
   addBlock(24, 16, 28, 20); // Elevated walkway supports
@@ -217,16 +393,23 @@ const createSlumsArea = (): MapArea => {
     }
   });
 
-  const door = withCover.tiles[SLUMS_DOOR.y][SLUMS_DOOR.x];
-  door.type = TileType.DOOR;
-  door.isWalkable = true;
-  return withCover;
+  const { connections, interiors } = applyBuildingConnections(
+    withCover,
+    'Slums',
+    SLUMS_BUILDINGS
+  );
+
+  return {
+    area: withCover,
+    connections,
+    interiorAreas: interiors,
+  };
 };
 
 const isDowntownBoulevard = (x: number, y: number) =>
   y === 15 || y === 16 || x === 22 || x === 36;
 
-const createDowntownArea = (): MapArea => {
+const createDowntownArea = (): GeneratedArea => {
   const area = createBasicMapArea('Downtown', DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT);
   const walls: Position[] = [];
 
@@ -240,12 +423,15 @@ const createDowntownArea = (): MapArea => {
     }
   };
 
-  addBlock(6, 6, 16, 14); // Housing towers
-  addBlock(26, 6, 34, 14); // Plaza shops
-  addBlock(38, 6, 44, 14); // Admin complex
-  addBlock(8, 22, 16, 30); // Transit hub
-  addBlock(26, 22, 36, 30); // Corporate campus
-  addBlock(38, 22, 44, 28); // Guard staging
+  DOWNTOWN_BUILDINGS.forEach((building) => {
+    addBlock(
+      building.footprint.from.x,
+      building.footprint.from.y,
+      building.footprint.to.x,
+      building.footprint.to.y
+    );
+  });
+
   addBlock(18, 10, 20, 28); // Skybridge pylons
 
   const withWalls = addWalls(area, walls);
@@ -266,35 +452,60 @@ const createDowntownArea = (): MapArea => {
     }
   });
 
-  const door = withCover.tiles[DOWNTOWN_DOOR.y][DOWNTOWN_DOOR.x];
-  door.type = TileType.DOOR;
-  door.isWalkable = true;
-  return withCover;
+  const { connections, interiors } = applyBuildingConnections(
+    withCover,
+    'Downtown',
+    DOWNTOWN_BUILDINGS
+  );
+
+  return {
+    area: withCover,
+    connections,
+    interiorAreas: interiors,
+  };
 };
 
-export const slumsArea = createSlumsArea();
-export const downtownArea = createDowntownArea();
+const slumsResult = createSlumsArea();
+const downtownResult = createDowntownArea();
 
-export const mapAreas: Record<string, MapArea> = {
-  [slumsArea.id]: slumsArea,
-  [downtownArea.id]: downtownArea,
-};
+export const slumsArea = slumsResult.area;
+export const downtownArea = downtownResult.area;
+
+const interiorAreas = [...slumsResult.interiorAreas, ...downtownResult.interiorAreas];
+
+export const mapAreas: Record<string, MapArea> = interiorAreas.reduce(
+  (acc, interior) => {
+    acc[interior.id] = interior;
+    return acc;
+  },
+  {
+    [slumsArea.id]: slumsArea,
+    [downtownArea.id]: downtownArea,
+  } as Record<string, MapArea>
+);
 
 export const SLUMS_COVER_POSITIONS = SLUMS_COVER_SPOTS;
 
-export const mapConnections: MapConnection[] = [
+const buildingConnections = [...slumsResult.connections, ...downtownResult.connections];
+
+const districtConnections: MapConnection[] = [
   {
     fromAreaId: slumsArea.id,
-    fromPosition: SLUMS_DOOR,
+    fromPosition: SLUMS_GATE,
     toAreaId: downtownArea.id,
-    toPosition: { x: DOWNTOWN_DOOR.x + 1, y: DOWNTOWN_DOOR.y },
+    toPosition: { x: DOWNTOWN_GATE.x + 1, y: DOWNTOWN_GATE.y },
   },
   {
     fromAreaId: downtownArea.id,
-    fromPosition: DOWNTOWN_DOOR,
+    fromPosition: DOWNTOWN_GATE,
     toAreaId: slumsArea.id,
-    toPosition: { x: SLUMS_DOOR.x - 1, y: SLUMS_DOOR.y },
+    toPosition: { x: SLUMS_GATE.x - 1, y: SLUMS_GATE.y },
   },
+];
+
+export const mapConnections: MapConnection[] = [
+  ...buildingConnections,
+  ...districtConnections,
 ];
 
 export const getConnectionForPosition = (
