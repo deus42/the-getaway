@@ -4,6 +4,7 @@ import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
+import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail } from '../events';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
@@ -26,6 +27,7 @@ export class MainScene extends Phaser.Scene {
   private tileSize: number = DEFAULT_TILE_SIZE;
   private mapGraphics!: Phaser.GameObjects.Graphics;
   private backdropGraphics!: Phaser.GameObjects.Graphics;
+  private pathGraphics!: Phaser.GameObjects.Graphics;
   private playerSprite!: Phaser.GameObjects.Ellipse;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private currentMapArea: MapArea | null = null;
@@ -78,6 +80,9 @@ export class MainScene extends Phaser.Scene {
     this.mapGraphics = this.add.graphics();
     this.mapGraphics.setDepth(-5);
 
+    this.pathGraphics = this.add.graphics();
+    this.pathGraphics.setDepth(4);
+
     // Initial setup of camera and map
     this.setupCameraAndMap();
 
@@ -93,6 +98,11 @@ export class MainScene extends Phaser.Scene {
     // Listen for resize events
     this.scale.on('resize', this.handleResize, this);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    window.addEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+
+    if (this.input) {
+      this.input.on('pointerdown', this.handlePointerDown, this);
+    }
     
     // Setup player sprite
     if (this.playerInitialPosition) {
@@ -148,6 +158,7 @@ export class MainScene extends Phaser.Scene {
       this.enemySprites.clear();
       this.setupCameraAndMap();
       this.refreshCoverHighlights(this.curfewActive);
+      this.clearPathPreview();
     }
 
     if (this.curfewActive !== worldState.curfewActive) {
@@ -242,6 +253,10 @@ export class MainScene extends Phaser.Scene {
     }
     this.scale.off('resize', this.handleResize, this);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    if (this.input) {
+      this.input.off('pointerdown', this.handlePointerDown, this);
+    }
     console.log('[MainScene] shutdown complete.');
   }
 
@@ -485,6 +500,116 @@ export class MainScene extends Phaser.Scene {
     ];
   }
 
+  private worldToGrid(worldX: number, worldY: number): Position | null {
+    const { halfTileWidth, halfTileHeight } = this.getIsoMetrics();
+
+    const relativeX = worldX - this.isoOriginX;
+    const relativeY = worldY - this.isoOriginY;
+
+    const gridX = (relativeY / halfTileHeight + relativeX / halfTileWidth) * 0.5;
+    const gridY = (relativeY / halfTileHeight - relativeX / halfTileWidth) * 0.5;
+
+    const roundedX = Math.round(gridX);
+    const roundedY = Math.round(gridY);
+
+    if (Number.isNaN(roundedX) || Number.isNaN(roundedY)) {
+      return null;
+    }
+
+    return { x: roundedX, y: roundedY };
+  }
+
+  private handlePointerDown(pointer: Phaser.Input.Pointer): void {
+    if (!this.currentMapArea || !this.sys.isActive()) {
+      return;
+    }
+
+    if (!pointer.leftButtonDown()) {
+      return;
+    }
+
+    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const gridPosition = this.worldToGrid(worldPoint.x, worldPoint.y);
+
+    if (!gridPosition) {
+      return;
+    }
+
+    const { x, y } = gridPosition;
+
+    if (
+      x < 0 ||
+      y < 0 ||
+      x >= this.currentMapArea.width ||
+      y >= this.currentMapArea.height
+    ) {
+      return;
+    }
+
+    const tile = this.currentMapArea.tiles[y][x];
+
+    if (!tile.isWalkable && tile.type !== TileType.DOOR) {
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(TILE_CLICK_EVENT, {
+        detail: {
+          position: gridPosition,
+          areaId: this.currentMapArea.id,
+        },
+      })
+    );
+  }
+
+  private handlePathPreview = (event: Event): void => {
+    if (!this.sys.isActive()) {
+      return;
+    }
+
+    const customEvent = event as CustomEvent<PathPreviewDetail>;
+    const detail = customEvent.detail;
+
+    if (!detail) {
+      this.clearPathPreview();
+      return;
+    }
+
+    if (!this.currentMapArea || detail.areaId !== this.currentMapArea.id) {
+      this.clearPathPreview();
+      return;
+    }
+
+    this.pathGraphics.clear();
+
+    if (!detail.path || detail.path.length === 0) {
+      return;
+    }
+
+    const { tileWidth, tileHeight } = this.getIsoMetrics();
+
+    detail.path.forEach((position, index) => {
+      const center = this.calculatePixelPosition(position.x, position.y);
+      const scale = index === detail.path.length - 1 ? 0.8 : 0.55;
+      const points = this.getDiamondPoints(
+        center.x,
+        center.y,
+        tileWidth * scale,
+        tileHeight * scale
+      );
+      const color = index === detail.path.length - 1 ? 0xffc857 : 0x38d9ff;
+      const alpha = index === detail.path.length - 1 ? 0.45 : 0.3;
+      this.pathGraphics.fillStyle(color, alpha);
+      this.pathGraphics.fillPoints(points, true);
+    });
+  };
+
+  private clearPathPreview(): void {
+    if (this.pathGraphics) {
+      this.pathGraphics.clear();
+    }
+  }
+
   private drawBackdrop(): void {
     if (!this.backdropGraphics || !this.currentMapArea) {
       return;
@@ -590,6 +715,7 @@ export class MainScene extends Phaser.Scene {
 
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
+    this.clearPathPreview();
 
     // Ensure overlay matches latest viewport size after camera adjustments
     this.resizeDayNightOverlay();

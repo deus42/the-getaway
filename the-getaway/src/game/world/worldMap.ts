@@ -33,9 +33,9 @@ const SLUMS_WIDTH = 56;
 const SLUMS_HEIGHT = 40;
 const SLUMS_GATE: Position = { x: SLUMS_WIDTH - 1, y: 20 };
 
-const DOWNTOWN_WIDTH = 48;
-const DOWNTOWN_HEIGHT = 32;
-const DOWNTOWN_GATE: Position = { x: 0, y: 16 };
+const DOWNTOWN_WIDTH = 144;
+const DOWNTOWN_HEIGHT = 108;
+const DOWNTOWN_GATE: Position = { x: 0, y: 54 };
 
 const SLUMS_COVER_SPOTS: Position[] = [
   { x: 12, y: 20 },
@@ -57,16 +57,38 @@ const SLUMS_COVER_SPOTS: Position[] = [
 ];
 
 const DOWNTOWN_COVER_SPOTS: Position[] = [
-  { x: 6, y: 18 },
-  { x: 12, y: 24 },
-  { x: 16, y: 12 },
-  { x: 22, y: 26 },
-  { x: 26, y: 16 },
-  { x: 32, y: 20 },
-  { x: 34, y: 28 },
-  { x: 40, y: 22 },
-  { x: 18, y: 28 },
-  { x: 42, y: 16 },
+  { x: 12, y: 18 },
+  { x: 20, y: 20 },
+  { x: 42, y: 18 },
+  { x: 52, y: 20 },
+  { x: 74, y: 18 },
+  { x: 84, y: 20 },
+  { x: 106, y: 18 },
+  { x: 118, y: 20 },
+  { x: 14, y: 40 },
+  { x: 22, y: 44 },
+  { x: 44, y: 38 },
+  { x: 56, y: 44 },
+  { x: 76, y: 40 },
+  { x: 88, y: 44 },
+  { x: 108, y: 38 },
+  { x: 120, y: 44 },
+  { x: 16, y: 68 },
+  { x: 26, y: 70 },
+  { x: 46, y: 66 },
+  { x: 58, y: 68 },
+  { x: 80, y: 66 },
+  { x: 92, y: 68 },
+  { x: 112, y: 66 },
+  { x: 124, y: 68 },
+  { x: 18, y: 94 },
+  { x: 30, y: 96 },
+  { x: 48, y: 94 },
+  { x: 62, y: 92 },
+  { x: 82, y: 94 },
+  { x: 100, y: 92 },
+  { x: 116, y: 96 },
+  { x: 132, y: 94 },
 ];
 
 const SLUMS_NEON_STRIPS: Position[] = [
@@ -85,18 +107,19 @@ const SLUMS_NEON_STRIPS: Position[] = [
 ];
 
 const DOWNTOWN_BEACONS: Position[] = [
-  { x: 22, y: 15 },
-  { x: 23, y: 15 },
-  { x: 24, y: 15 },
-  { x: 32, y: 11 },
-  { x: 33, y: 11 },
-  { x: 34, y: 11 },
-  { x: 32, y: 23 },
-  { x: 33, y: 23 },
-  { x: 34, y: 23 },
-  { x: 18, y: 23 },
-  { x: 19, y: 23 },
-  { x: 20, y: 23 },
+  { x: 36, y: 26 },
+  { x: 72, y: 26 },
+  { x: 108, y: 26 },
+  { x: 36, y: 56 },
+  { x: 72, y: 56 },
+  { x: 108, y: 56 },
+  { x: 36, y: 86 },
+  { x: 72, y: 86 },
+  { x: 108, y: 86 },
+  { x: 54, y: 70 },
+  { x: 90, y: 70 },
+  { x: 54, y: 98 },
+  { x: 90, y: 98 },
 ];
 
 const SLUMS_BUILDINGS: BuildingDefinition[] = [
@@ -146,46 +169,116 @@ const SLUMS_BUILDINGS: BuildingDefinition[] = [
 
 const DOWNTOWN_BUILDINGS: BuildingDefinition[] = [
   {
-    id: 'downtown_towers',
-    name: 'North Towers',
-    footprint: { from: { x: 6, y: 6 }, to: { x: 16, y: 14 } },
-    door: { x: 11, y: 14 },
-    interior: { width: 12, height: 8 },
+    id: 'downtown_arcology',
+    name: 'Arcology Spires',
+    footprint: { from: { x: 6, y: 6 }, to: { x: 30, y: 22 } },
+    door: { x: 18, y: 26 },
+    interior: { width: 18, height: 10 },
   },
   {
-    id: 'downtown_plaza',
-    name: 'Plaza Retail Wing',
-    footprint: { from: { x: 26, y: 6 }, to: { x: 34, y: 14 } },
-    door: { x: 30, y: 14 },
-    interior: { width: 10, height: 8 },
+    id: 'downtown_exchange',
+    name: 'Grand Exchange',
+    footprint: { from: { x: 40, y: 8 }, to: { x: 66, y: 22 } },
+    door: { x: 54, y: 26 },
+    interior: { width: 20, height: 10 },
   },
   {
-    id: 'downtown_admin',
-    name: 'Administratum Offices',
-    footprint: { from: { x: 38, y: 6 }, to: { x: 44, y: 14 } },
-    door: { x: 41, y: 14 },
-    interior: { width: 10, height: 8 },
+    id: 'downtown_conclave',
+    name: 'Magistrate Conclave',
+    footprint: { from: { x: 76, y: 8 }, to: { x: 102, y: 22 } },
+    door: { x: 90, y: 26 },
+    interior: { width: 18, height: 12 },
+  },
+  {
+    id: 'downtown_embassy',
+    name: 'Embassy Row',
+    footprint: { from: { x: 112, y: 8 }, to: { x: 138, y: 22 } },
+    door: { x: 126, y: 26 },
+    interior: { width: 18, height: 12 },
+  },
+  {
+    id: 'downtown_archives',
+    name: 'Civic Archives',
+    footprint: { from: { x: 6, y: 32 }, to: { x: 30, y: 48 } },
+    door: { x: 18, y: 56 },
+    interior: { width: 16, height: 10 },
   },
   {
     id: 'downtown_transit',
-    name: 'Metro Staging Hub',
-    footprint: { from: { x: 8, y: 22 }, to: { x: 16, y: 30 } },
-    door: { x: 12, y: 30 },
-    interior: { width: 12, height: 8 },
+    name: 'Transit Nexus',
+    footprint: { from: { x: 40, y: 32 }, to: { x: 66, y: 48 } },
+    door: { x: 54, y: 56 },
+    interior: { width: 20, height: 12 },
   },
   {
-    id: 'downtown_campus',
-    name: 'Corporate Campus',
-    footprint: { from: { x: 26, y: 22 }, to: { x: 36, y: 30 } },
-    door: { x: 31, y: 22 },
+    id: 'downtown_research',
+    name: 'Research Core',
+    footprint: { from: { x: 76, y: 32 }, to: { x: 102, y: 48 } },
+    door: { x: 90, y: 56 },
+    interior: { width: 18, height: 12 },
+  },
+  {
+    id: 'downtown_embassy_plaza',
+    name: 'Embassy Plaza',
+    footprint: { from: { x: 112, y: 32 }, to: { x: 138, y: 48 } },
+    door: { x: 126, y: 56 },
+    interior: { width: 18, height: 12 },
+  },
+  {
+    id: 'downtown_residential',
+    name: 'Residential Terraces',
+    footprint: { from: { x: 6, y: 60 }, to: { x: 30, y: 78 } },
+    door: { x: 18, y: 86 },
+    interior: { width: 16, height: 12 },
+  },
+  {
+    id: 'downtown_citadel',
+    name: 'Security Citadel',
+    footprint: { from: { x: 40, y: 60 }, to: { x: 66, y: 78 } },
+    door: { x: 54, y: 86 },
+    interior: { width: 18, height: 12 },
+  },
+  {
+    id: 'downtown_biotech_garden',
+    name: 'Biotech Gardens',
+    footprint: { from: { x: 76, y: 60 }, to: { x: 102, y: 78 } },
+    door: { x: 90, y: 86 },
+    interior: { width: 18, height: 12 },
+  },
+  {
+    id: 'downtown_aerial_port',
+    name: 'Aerostat Port',
+    footprint: { from: { x: 112, y: 60 }, to: { x: 138, y: 78 } },
+    door: { x: 126, y: 86 },
+    interior: { width: 18, height: 12 },
+  },
+  {
+    id: 'downtown_theatre',
+    name: 'Holo Theatre',
+    footprint: { from: { x: 6, y: 84 }, to: { x: 34, y: 102 } },
+    door: { x: 18, y: 86 },
+    interior: { width: 16, height: 10 },
+  },
+  {
+    id: 'downtown_barracks',
+    name: 'Sentry Barracks',
+    footprint: { from: { x: 40, y: 84 }, to: { x: 70, y: 102 } },
+    door: { x: 54, y: 86 },
+    interior: { width: 16, height: 10 },
+  },
+  {
+    id: 'downtown_logistics',
+    name: 'Harbor Logistics',
+    footprint: { from: { x: 76, y: 84 }, to: { x: 106, y: 102 } },
+    door: { x: 90, y: 86 },
+    interior: { width: 18, height: 10 },
+  },
+  {
+    id: 'downtown_solar_farm',
+    name: 'Solar Farm Annex',
+    footprint: { from: { x: 112, y: 84 }, to: { x: 138, y: 102 } },
+    door: { x: 126, y: 86 },
     interior: { width: 14, height: 10 },
-  },
-  {
-    id: 'downtown_staging',
-    name: 'Security Staging Deck',
-    footprint: { from: { x: 38, y: 22 }, to: { x: 44, y: 28 } },
-    door: { x: 41, y: 22 },
-    interior: { width: 10, height: 8 },
   },
 ];
 
@@ -399,6 +492,10 @@ const createSlumsArea = (): GeneratedArea => {
     SLUMS_BUILDINGS
   );
 
+  const gateTile = withCover.tiles[SLUMS_GATE.y][SLUMS_GATE.x];
+  gateTile.type = TileType.FLOOR;
+  gateTile.isWalkable = true;
+
   return {
     area: withCover,
     connections,
@@ -407,7 +504,7 @@ const createSlumsArea = (): GeneratedArea => {
 };
 
 const isDowntownBoulevard = (x: number, y: number) =>
-  y === 15 || y === 16 || x === 22 || x === 36;
+  y === 26 || y === 56 || y === 86 || x === 36 || x === 72 || x === 108;
 
 const createDowntownArea = (): GeneratedArea => {
   const area = createBasicMapArea('Downtown', DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT);
@@ -457,6 +554,10 @@ const createDowntownArea = (): GeneratedArea => {
     'Downtown',
     DOWNTOWN_BUILDINGS
   );
+
+  const gateTile = withCover.tiles[DOWNTOWN_GATE.y][DOWNTOWN_GATE.x];
+  gateTile.type = TileType.FLOOR;
+  gateTile.isWalkable = true;
 
   return {
     area: withCover,

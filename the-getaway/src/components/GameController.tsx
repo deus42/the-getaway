@@ -26,6 +26,8 @@ import { determineEnemyMove } from "../game/combat/enemyAI";
 import { getConnectionForPosition } from "../game/world/worldMap";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
+import { findPath } from "../game/world/pathfinding";
+import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT } from "../game/events";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -57,6 +59,7 @@ const GameController: React.FC = () => {
   type CurfewAlertState = "clear" | "warning" | "spawned";
   const [curfewAlertState, setCurfewAlertState] =
     useState<CurfewAlertState>("clear");
+  const [queuedPath, setQueuedPath] = useState<Position[]>([]);
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
@@ -80,6 +83,148 @@ const GameController: React.FC = () => {
       document.removeEventListener("click", handleClick);
     };
   }, []);
+
+  useEffect(() => {
+    const handleTileClick = (event: Event) => {
+      const customEvent = event as CustomEvent<TileClickDetail>;
+      const detail = customEvent.detail;
+
+      if (!detail || !currentMapArea) {
+        return;
+      }
+
+      if (detail.areaId !== currentMapArea.id) {
+        return;
+      }
+
+      if (inCombat) {
+        return;
+      }
+
+      const target = detail.position;
+
+      if (
+        target.x === player.position.x &&
+        target.y === player.position.y
+      ) {
+        setQueuedPath([]);
+        return;
+      }
+
+      const path = findPath(player.position, target, currentMapArea, {
+        player,
+        enemies,
+      });
+
+      if (path.length === 0) {
+        window.dispatchEvent(
+          new CustomEvent(PATH_PREVIEW_EVENT, {
+            detail: { areaId: currentMapArea.id, path: [] },
+          })
+        );
+        return;
+      }
+
+      setQueuedPath(path);
+    };
+
+    window.addEventListener(
+      TILE_CLICK_EVENT,
+      handleTileClick as EventListener
+    );
+
+    return () => {
+      window.removeEventListener(
+        TILE_CLICK_EVENT,
+        handleTileClick as EventListener
+      );
+    };
+  }, [currentMapArea, player, enemies, inCombat]);
+
+  useEffect(() => {
+    if (!currentMapArea) {
+      return;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent(PATH_PREVIEW_EVENT, {
+        detail: { areaId: currentMapArea.id, path: queuedPath },
+      })
+    );
+  }, [queuedPath, currentMapArea]);
+
+  useEffect(() => {
+    setQueuedPath((previous) => (previous.length > 0 ? [] : previous));
+  }, [currentMapArea?.id]);
+
+  useEffect(() => {
+    if (queuedPath.length === 0) {
+      return;
+    }
+
+    if (inCombat) {
+      setQueuedPath([]);
+      return;
+    }
+
+    const nextStep = queuedPath[0];
+    const playerX = player.position.x;
+    const playerY = player.position.y;
+
+    if (playerX === nextStep.x && playerY === nextStep.y) {
+      setQueuedPath((prev) => prev.slice(1));
+      return;
+    }
+
+    if (!isPositionWalkable(nextStep, currentMapArea, player, enemies)) {
+      setQueuedPath([]);
+      return;
+    }
+
+    const tile = currentMapArea.tiles[nextStep.y][nextStep.x];
+    const connection = getConnectionForPosition(
+      currentMapArea.id,
+      nextStep
+    );
+
+    if (connection) {
+      if (curfewActive && tile.type === TileType.DOOR) {
+        dispatch(
+          addLogMessage(
+            "Checkpoint sealed. The regime's curfew keeps the district locked down."
+          )
+        );
+        setQueuedPath([]);
+        return;
+      }
+
+      const targetArea = mapDirectory[connection.toAreaId];
+
+      if (targetArea) {
+        dispatch(setMapArea(targetArea));
+        dispatch(movePlayer(connection.toPosition));
+      } else {
+        console.warn(
+          `[GameController] Missing target area in state for ${connection.toAreaId}`
+        );
+      }
+
+      setQueuedPath([]);
+      return;
+    }
+
+    dispatch(movePlayer(nextStep));
+  }, [
+    queuedPath,
+    player.position.x,
+    player.position.y,
+    currentMapArea,
+    enemies,
+    inCombat,
+    curfewActive,
+    dispatch,
+    mapDirectory,
+  ]);
 
   useEffect(() => {
     if (previousTimeOfDay.current !== timeOfDay) {
@@ -458,6 +603,9 @@ const GameController: React.FC = () => {
 
       // Handle spacebar for attacking
       if (event.key === " ") {
+        if (queuedPath.length > 0) {
+          setQueuedPath([]);
+        }
         // If not in combat and enemies nearby, enter combat
         if (!inCombat) {
           const nearbyEnemy = findClosestEnemy(player.position);
@@ -522,6 +670,10 @@ const GameController: React.FC = () => {
         }
 
         return;
+      }
+
+      if (queuedPath.length > 0) {
+        setQueuedPath([]);
       }
 
       const newPosition = { ...player.position };
@@ -676,6 +828,8 @@ const GameController: React.FC = () => {
       curfewAlertState,
       findPatrolSpawnPosition,
       mapDirectory,
+      queuedPath,
+      setQueuedPath,
     ]
   );
 
