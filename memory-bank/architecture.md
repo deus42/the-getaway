@@ -51,6 +51,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`MiniMap.tsx`**: Renders a tactical overview of the current map with player/enemy markers, cover overlays, and curfew perimeter glow.
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
+- **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 
 ### `/the-getaway/src/game`
 

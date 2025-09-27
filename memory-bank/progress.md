@@ -469,6 +469,26 @@ Date: September 26, 2025
 
 - `yarn test src/__tests__/curfew.test.tsx`
 
+## Step 13: Set Up a Dialogue System (Completed)
+
+Date: February 14, 2026
+
+### Tasks Accomplished:
+
+1. Enabled proximity-based interaction in `GameController.tsx`; pressing `E` near an interactive NPC now opens the appropriate dialogue while freezing movement.
+2. Added `DialogueOverlay.tsx` to render NPC monologues and branching response options, wiring quest effects into `questsSlice` actions.
+3. Implemented Escape-to-close behaviour and log feedback so players can disengage gracefully.
+4. Created `dialogueOverlay.test.tsx` to ensure dialogue text and option transitions render as expected, augmenting the test suite with UI coverage.
+
+### Notes:
+
+- Friendly contacts (Lira, Naila, Brant) now provide narrative exposition and quest hooks directly inside the command shell.
+- Dialogue data remains centralized in `questsSlice`, making future narrative additions a data-driven operation.
+
+### Validation:
+
+- `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
+
 ## Step 16: Seed Dialogue and Quest Threads (Completed)
 
 Date: September 26, 2025

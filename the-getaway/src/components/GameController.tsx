@@ -29,6 +29,7 @@ import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
 import { findPath } from "../game/world/pathfinding";
 import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT } from "../game/events";
+import { startDialogue, endDialogue } from "../store/questsSlice";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -49,6 +50,10 @@ const GameController: React.FC = () => {
   );
   const mapDirectory = useSelector(
     (state: RootState) => state.world.mapAreas
+  );
+  const dialogues = useSelector((state: RootState) => state.quests.dialogues);
+  const activeDialogueId = useSelector(
+    (state: RootState) => state.quests.activeDialogue.dialogueId
   );
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
@@ -694,28 +699,76 @@ const GameController: React.FC = () => {
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
-      const gameKeys = [
-        "ArrowUp",
-        "ArrowDown",
-        "ArrowLeft",
-        "ArrowRight",
-        "w",
-        "a",
-        "s",
-        "d",
-        " ", // Spacebar for attacking
-      ];
+      const key = event.key;
 
-      if (!gameKeys.includes(event.key)) {
+      if (activeDialogueId) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (key === "Escape") {
+          dispatch(endDialogue());
+          dispatch(
+            addLogMessage(
+              "You end the conversation and refocus on the street."
+            )
+          );
+        }
         return;
       }
 
-      // Prevent default only for game keys
-      event.preventDefault();
-      event.stopPropagation();
+      if (key === "e" || key === "E") {
+        event.preventDefault();
+        event.stopPropagation();
 
-      // Handle spacebar for attacking
-      if (event.key === " ") {
+        if (!currentMapArea) {
+          return;
+        }
+
+        const interactiveNpc = currentMapArea.entities.npcs.find((npc) => {
+          if (!npc.isInteractive || !npc.dialogueId) {
+            return false;
+          }
+
+          const distance =
+            Math.abs(npc.position.x - player.position.x) +
+            Math.abs(npc.position.y - player.position.y);
+          return distance <= 1;
+        });
+
+        if (!interactiveNpc) {
+          dispatch(
+            addLogMessage(
+              "No friendly contact within whisper range."
+            )
+          );
+          return;
+        }
+
+        const dialogue = dialogues.find(
+          (entry) => entry.id === interactiveNpc.dialogueId
+        );
+
+        if (!dialogue || dialogue.nodes.length === 0) {
+          dispatch(
+            addLogMessage(
+              `${interactiveNpc.name} has nothing new to share right now.`
+            )
+          );
+          return;
+        }
+
+        const initialNodeId = dialogue.nodes[0].id;
+        dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId }));
+        dispatch(
+          addLogMessage(`You open a quiet channel with ${interactiveNpc.name}.`)
+        );
+        return;
+      }
+
+      if (key === " ") {
+        event.preventDefault();
+        event.stopPropagation();
+
         if (queuedPath.length > 0) {
           setQueuedPath([]);
         }
@@ -791,26 +844,33 @@ const GameController: React.FC = () => {
 
       const newPosition = { ...player.position };
 
-      switch (event.key) {
+      switch (key) {
         case "ArrowUp":
         case "w":
+        case "W":
           newPosition.y -= 1;
           break;
         case "ArrowDown":
         case "s":
+        case "S":
           newPosition.y += 1;
           break;
         case "ArrowLeft":
         case "a":
+        case "A":
           newPosition.x -= 1;
           break;
         case "ArrowRight":
         case "d":
+        case "D":
           newPosition.x += 1;
           break;
         default:
           return; // Exit if not a movement key
       }
+
+      event.preventDefault();
+      event.stopPropagation();
 
       // Check if the new position is walkable
       if (isPositionWalkable(newPosition, currentMapArea, player, enemies)) {
@@ -943,6 +1003,8 @@ const GameController: React.FC = () => {
       mapDirectory,
       queuedPath,
       setQueuedPath,
+      dialogues,
+      activeDialogueId,
     ]
   );
 
