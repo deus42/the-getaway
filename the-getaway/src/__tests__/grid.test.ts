@@ -1,10 +1,11 @@
-import { 
-  createEmptyGrid, 
-  createBasicMapArea, 
+import {
+  createEmptyGrid,
+  createBasicMapArea,
   createTestMapArea,
-  isPositionWalkable, 
+  isPositionWalkable,
   isPositionInBounds,
-  getAdjacentWalkablePositions
+  getAdjacentWalkablePositions,
+  findNearestWalkablePosition,
 } from '../game/world/grid';
 
 import { Position, MapArea, TileType, Player, Enemy } from '../game/interfaces/types';
@@ -170,3 +171,16 @@ describe('Grid System', () => {
     });
   });
 });
+
+describe('findNearestWalkablePosition', () => {
+  it('returns nearest walkable tile when start is blocked', () => {
+    const area = createBasicMapArea('Nearest Walkable', 5, 5);
+    area.tiles[2][2].type = TileType.WALL;
+    area.tiles[2][2].isWalkable = false;
+
+    const nearest = findNearestWalkablePosition({ x: 2, y: 2 }, area);
+    expect(nearest).not.toBeNull();
+    expect(nearest).toEqual({ x: 3, y: 2 });
+  });
+});
+

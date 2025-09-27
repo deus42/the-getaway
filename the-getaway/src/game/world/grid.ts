@@ -210,6 +210,62 @@ export const getWallPositions = (mapArea: MapArea): Position[] => {
   return wallPositions;
 };
 
+export const findNearestWalkablePosition = (
+  start: Position,
+  mapArea: MapArea,
+  player?: Player,
+  enemies: Enemy[] = []
+): Position | null => {
+  if (isPositionWalkable(start, mapArea, player, enemies)) {
+    return start;
+  }
+
+  const visited = new Set<string>();
+  const queue: Position[] = [start];
+
+  const serialize = (position: Position) => `${position.x},${position.y}`;
+  visited.add(serialize(start));
+
+  const directions = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (!current) {
+      break;
+    }
+
+    for (const direction of directions) {
+      const next: Position = {
+        x: current.x + direction.x,
+        y: current.y + direction.y,
+      };
+
+      const key = serialize(next);
+      if (visited.has(key)) {
+        continue;
+      }
+      visited.add(key);
+
+      if (!isPositionInBounds(next, mapArea)) {
+        continue;
+      }
+
+      if (isPositionWalkable(next, mapArea, player, enemies)) {
+        return next;
+      }
+
+      queue.push(next);
+    }
+  }
+
+  return null;
+};
+
 // Convert grid position to pixel position (for rendering)
 export const gridToPixel = (position: Position, tileSize: number = DEFAULT_TILE_SIZE): Position => {
   return {

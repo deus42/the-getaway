@@ -1,6 +1,11 @@
 import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Position, TileType, NPC, Item } from '../interfaces/types';
-import { createBasicMapArea, addWalls, addCover } from './grid';
+import {
+  createBasicMapArea,
+  addWalls,
+  addCover,
+  findNearestWalkablePosition,
+} from './grid';
 
 interface BuildingDefinition {
   id: string;
@@ -523,11 +528,19 @@ const createCityArea = (): GeneratedArea => {
   const withWalls = addWalls(area, walls);
   const withCover = addCover(withWalls, CITY_COVER_SPOTS);
 
-  CITY_NPC_BLUEPRINTS.forEach((npc) => {
-    withCover.entities.npcs.push({ ...npc, id: uuidv4() });
+  CITY_NPC_BLUEPRINTS.forEach((npcBlueprint) => {
+    const safePosition =
+      findNearestWalkablePosition(npcBlueprint.position, withCover) ??
+      npcBlueprint.position;
+
+    withCover.entities.npcs.push({
+      ...npcBlueprint,
+      id: uuidv4(),
+      position: safePosition,
+    });
   });
-  CITY_ITEM_BLUEPRINTS.forEach((item) => {
-    withCover.entities.items.push({ ...item, id: uuidv4() });
+  CITY_ITEM_BLUEPRINTS.forEach((itemBlueprint) => {
+    withCover.entities.items.push({ ...itemBlueprint, id: uuidv4() });
   });
 
   CITY_NEON_STRIPS.forEach(({ x, y }) => {
