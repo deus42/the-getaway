@@ -450,7 +450,26 @@ Date: September 26, 2025
 
 - Manual traversal through multiple doorways (Slums streets → interiors → return) to confirm state resets, enemy persistence, and camera bounds.
 
-## Step 12: Seed Dialogue and Quest Threads (Completed)
+## Step 12: Create an NPC with a Routine (Completed)
+
+Date: September 26, 2025
+
+### Tasks Accomplished:
+
+1. Enabled scheduled NPC relocation inside `GameController.tsx`, advancing non-player characters toward their time-of-day targets whenever the world clock transitions.
+2. Extended the shared `findPath` helper to honor custom blocked positions so routine walkers steer around fellow NPCs while still respecting walls, doors, and enemies.
+3. Added resilient movement orchestration with timeout tracking, ensuring overlapping schedules do not double-trigger and timeouts clean up on area changes.
+
+### Notes:
+
+- NPCs now visibly migrate between routine points (e.g., market stalls by day, safehouses at night), matching the blueprint data seeded in the world map.
+- The routing system reuses existing pathfinding, making future routines or patrol logic easy to expand.
+
+### Validation:
+
+- `yarn test src/__tests__/curfew.test.tsx`
+
+## Step 16: Seed Dialogue and Quest Threads (Completed)
 
 Date: September 26, 2025
 
@@ -469,7 +488,7 @@ Date: September 26, 2025
 
 - Pending UI integration; smoke-tested by dispatching quest reducer actions in the Redux devtools.
 
-## Step 13: Pivot Rendering to Neon Isometric Grid (Completed)
+## Step 17: Pivot Rendering to Neon Isometric Grid (Completed)
 
 Date: September 26, 2025
 
@@ -489,7 +508,7 @@ Date: September 26, 2025
 
 - Manual playtest validating zoom limits, pointer hit detection, and overlay transitions across day/night cycles.
 
-## Step 14: Click-to-Move Navigation and Path Preview (Completed)
+## Step 18: Click-to-Move Navigation and Path Preview (Completed)
 
 Date: September 26, 2025
 

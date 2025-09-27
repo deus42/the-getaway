@@ -5,6 +5,7 @@ interface FindPathOptions {
   allowDiagonals?: boolean;
   player?: Player;
   enemies?: Enemy[];
+  blockedPositions?: Position[];
 }
 
 const serialize = (position: Position): string => `${position.x},${position.y}`;
@@ -44,7 +45,9 @@ export const findPath = (
 
   visited.add(serialize(start));
 
-  const { player, enemies = [] } = options;
+  const { player, enemies = [], blockedPositions = [] } = options;
+
+  const blockedSet = new Set(blockedPositions.map(serialize));
 
   const inBounds = (pos: Position) =>
     pos.x >= 0 &&
@@ -83,6 +86,9 @@ export const findPath = (
       }
 
       if (!isGoal) {
+        if (blockedSet.has(key)) {
+          continue;
+        }
         if (!isPositionWalkable(next, mapArea, player, enemies)) {
           continue;
         }

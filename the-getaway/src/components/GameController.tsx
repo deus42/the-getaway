@@ -12,6 +12,7 @@ import {
   switchTurn,
   exitCombat,
   addEnemy,
+  updateNPC,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
 import { RootState } from "../store";
@@ -21,7 +22,7 @@ import {
   isInAttackRange,
   DEFAULT_ATTACK_COST,
 } from "../game/combat/combatSystem";
-import { Enemy, Position, MapArea, TileType } from "../game/interfaces/types";
+import { Enemy, Position, MapArea, TileType, NPC } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
 import { getConnectionForPosition } from "../game/world/worldMap";
 import { setMapArea } from "../store/worldSlice";
@@ -60,6 +61,8 @@ const GameController: React.FC = () => {
   const [curfewAlertState, setCurfewAlertState] =
     useState<CurfewAlertState>("clear");
   const [queuedPath, setQueuedPath] = useState<Position[]>([]);
+  const activeNpcMovements = useRef<Set<string>>(new Set());
+  const npcMovementTimeouts = useRef<number[]>([]);
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
@@ -156,6 +159,101 @@ const GameController: React.FC = () => {
   useEffect(() => {
     setQueuedPath((previous) => (previous.length > 0 ? [] : previous));
   }, [currentMapArea?.id]);
+
+  useEffect(() => {
+    activeNpcMovements.current.clear();
+    npcMovementTimeouts.current.forEach((timeoutId) => {
+      window.clearTimeout(timeoutId);
+    });
+    npcMovementTimeouts.current = [];
+  }, [currentMapArea?.id]);
+
+  const scheduleNpcMovement = useCallback(
+    (npc: NPC, path: Position[]) => {
+      if (path.length === 0) {
+        return;
+      }
+
+      if (activeNpcMovements.current.has(npc.id)) {
+        return;
+      }
+
+      activeNpcMovements.current.add(npc.id);
+
+      const stepDelayMs = 320;
+      let stepIndex = 0;
+      let currentNpcState = npc;
+
+      const step = () => {
+        if (stepIndex >= path.length) {
+          activeNpcMovements.current.delete(npc.id);
+          return;
+        }
+
+        const nextPosition = path[stepIndex];
+        stepIndex += 1;
+        currentNpcState = { ...currentNpcState, position: nextPosition };
+        dispatch(updateNPC(currentNpcState));
+
+        if (stepIndex < path.length) {
+          const timeoutId = window.setTimeout(step, stepDelayMs);
+          npcMovementTimeouts.current.push(timeoutId);
+        } else {
+          activeNpcMovements.current.delete(npc.id);
+        }
+      };
+
+      step();
+    },
+    [dispatch]
+  );
+
+  useEffect(() => {
+    if (!currentMapArea) {
+      return;
+    }
+
+    currentMapArea.entities.npcs.forEach((npc) => {
+      const targetPoint = npc.routine.find(
+        (point) => point.timeOfDay === timeOfDay
+      );
+
+      if (!targetPoint) {
+        return;
+      }
+
+      if (
+        npc.position.x === targetPoint.position.x &&
+        npc.position.y === targetPoint.position.y
+      ) {
+        return;
+      }
+
+      const otherNpcPositions = currentMapArea.entities.npcs
+        .filter((otherNpc) => otherNpc.id !== npc.id)
+        .map((otherNpc) => otherNpc.position);
+
+      const path = findPath(npc.position, targetPoint.position, currentMapArea, {
+        player,
+        enemies,
+        blockedPositions: otherNpcPositions,
+      });
+
+      if (path.length > 0) {
+        scheduleNpcMovement(npc, path);
+      }
+    });
+  }, [currentMapArea, timeOfDay, player, enemies, scheduleNpcMovement]);
+
+  useEffect(() => {
+    return () => {
+      npcMovementTimeouts.current.forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      npcMovementTimeouts.current = [];
+      activeNpcMovements.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (queuedPath.length === 0) {
