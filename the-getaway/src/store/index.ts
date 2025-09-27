@@ -66,6 +66,13 @@ const preloadedState = loadState();
 export const store = configureStore({
   reducer: rootReducer,
   preloadedState,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: ['app/resetGame'],
+        warnAfter: 128,
+      },
+    }),
 });
 
 store.subscribe(() => {
