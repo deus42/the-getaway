@@ -5,6 +5,7 @@ import GameController from "./components/GameController";
 import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
 import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
+import MiniMap from "./components/ui/MiniMap";
 import GameMenu from "./components/ui/GameMenu";
 import { PERSISTED_STATE_KEY, resetGame, store } from "./store";
 import { addLogMessage } from "./store/logSlice";
@@ -105,6 +106,7 @@ function App() {
     ...sidebarBaseStyle,
     borderRight: "1px solid rgba(51, 65, 85, 0.65)",
     background: "linear-gradient(180deg, rgba(15, 23, 42, 0.78) 0%, rgba(15, 23, 42, 0.92) 100%)",
+    justifyContent: "flex-start",
   };
 
   const rightSidebarStyle: CSSProperties = {
@@ -190,7 +192,12 @@ function App() {
             )}
             <div style={mainStageStyle}>
               <div style={leftSidebarStyle}>
-                <div style={{ ...panelBaseStyle, marginTop: "auto" }}>
+                <div style={{ ...panelBaseStyle }}>
+                  <span style={panelLabelStyle("#38bdf8")}>Recon</span>
+                  <h2 style={panelTitleStyle}>Tactical Feed</h2>
+                  <MiniMap />
+                </div>
+                <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
                   <span style={panelLabelStyle("#38bdf8")}>Squad</span>
                   <h2 style={panelTitleStyle}>Recon Status</h2>
                   <div style={scrollSectionStyle}>
