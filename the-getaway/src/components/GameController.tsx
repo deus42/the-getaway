@@ -63,6 +63,7 @@ const GameController: React.FC = () => {
   const [queuedPath, setQueuedPath] = useState<Position[]>([]);
   const activeNpcMovements = useRef<Set<string>>(new Set());
   const npcMovementTimeouts = useRef<number[]>([]);
+  const npcReservedDestinations = useRef<Map<string, Position>>(new Map());
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
@@ -166,17 +167,22 @@ const GameController: React.FC = () => {
       window.clearTimeout(timeoutId);
     });
     npcMovementTimeouts.current = [];
+    npcReservedDestinations.current.clear();
   }, [currentMapArea?.id]);
 
   const scheduleNpcMovement = useCallback(
     (npc: NPC, path: Position[]) => {
       if (path.length === 0) {
+        npcReservedDestinations.current.delete(npc.id);
         return;
       }
 
       if (activeNpcMovements.current.has(npc.id)) {
         return;
       }
+
+      const destination = path[path.length - 1];
+      npcReservedDestinations.current.set(npc.id, destination);
 
       activeNpcMovements.current.add(npc.id);
 
@@ -187,6 +193,7 @@ const GameController: React.FC = () => {
       const step = () => {
         if (stepIndex >= path.length) {
           activeNpcMovements.current.delete(npc.id);
+          npcReservedDestinations.current.delete(npc.id);
           return;
         }
 
@@ -200,6 +207,7 @@ const GameController: React.FC = () => {
           npcMovementTimeouts.current.push(timeoutId);
         } else {
           activeNpcMovements.current.delete(npc.id);
+          npcReservedDestinations.current.delete(npc.id);
         }
       };
 
@@ -233,10 +241,16 @@ const GameController: React.FC = () => {
         .filter((otherNpc) => otherNpc.id !== npc.id)
         .map((otherNpc) => otherNpc.position);
 
+      const reservedPositions = Array.from(
+        npcReservedDestinations.current.entries()
+      )
+        .filter(([reservedNpcId]) => reservedNpcId !== npc.id)
+        .map(([, position]) => position);
+
       const path = findPath(npc.position, targetPoint.position, currentMapArea, {
         player,
         enemies,
-        blockedPositions: otherNpcPositions,
+        blockedPositions: [...otherNpcPositions, ...reservedPositions],
       });
 
       if (path.length > 0) {
@@ -252,6 +266,7 @@ const GameController: React.FC = () => {
       });
       npcMovementTimeouts.current = [];
       activeNpcMovements.current.clear();
+      npcReservedDestinations.current.clear();
     };
   }, []);
 

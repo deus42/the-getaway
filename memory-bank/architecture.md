@@ -40,13 +40,16 @@ Contains all static assets for the game including:
 
 React components that make up the game's user interface:
 - **`GameCanvas.tsx`**: The main component that integrates Phaser with React. It initializes the Phaser game instance and provides the canvas where the game is rendered.
+- **`GameController.tsx`**: Bridges Redux state with Phaser events, handling player input, combat flow, click-to-move execution, curfew enforcement, and NPC routine scheduling.
 
 ### `/the-getaway/src/components/ui`
 
 Dedicated folder for reusable React UI components, separate from core game logic/controllers.
 
-- **`PlayerStatusPanel.tsx`**: Displays player health, action points, and potentially other stats using data from the Redux `playerSlice`.
+- **`PlayerStatusPanel.tsx`**: Displays player vitals, action points, hostile counts, and curfew state using Redux data.
 - **`LogPanel.tsx`**: Displays a scrolling list of game events and messages, reading data from the Redux `logSlice`.
+- **`MiniMap.tsx`**: Renders a tactical overview of the current map with player/enemy markers, cover overlays, and curfew perimeter glow.
+- **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 
 ### `/the-getaway/src/game`
 
@@ -88,6 +91,8 @@ Manages the game world and environment:
   - Visual effects through color overlays
   - Curfew mechanics for gameplay restrictions
   - Time progression based on real elapsed time
+- **`pathfinding.ts`**: Breadth-first pathfinder supporting enemy avoidance and reserved tiles used by both player click-to-move and NPC routines.
+- **`worldMap.ts`**: Generates large districts, interior connections, and seeds NPCs, enemies, and items with routines and dialogue IDs.
 
 #### `/the-getaway/src/game/quests`
 
@@ -143,7 +148,7 @@ Character attributes and core game interfaces:
 Contains Phaser Scene classes.
 
 - **`BootScene.ts`**: A preliminary Phaser scene that runs first. Its primary role is to read the initial game state (map, player position) from the Redux store and then start the `MainScene`, passing the necessary data via the scene's `init` method. This ensures `MainScene` has the data it needs before its `create` method runs.
-- **`MainScene.ts`**: The main Phaser scene responsible for rendering the game world (map tiles, player sprite, enemy sprites, health bars). It subscribes to the Redux store (`worldSlice`, `playerSlice`) and updates the visual representation based on state changes received via its `handleStateChange` method. It also handles the creation, update, and removal of Phaser game objects representing entities.
+- **`MainScene.ts`**: The main Phaser scene rendering the world in an isometric projection (tiles, enemies, player, cover highlights, overlays). It subscribes to Redux (`worldSlice`, `playerSlice`, `logSlice`), reacts to state changes, and emits pointer events that power click-to-move path previews.
 
 ### `/the-getaway/src/store`
 
@@ -198,6 +203,8 @@ The Redux store serves as the central state management system, with:
 - Separate slices for different game aspects
 - Actions and reducers for state updates
 - Selectors for efficient state access
+- Local storage persistence (`store/index.ts`) so the command hub menu can resume prior sessions.
+- `worldSlice` coordinates map directories, time-of-day/curfew state, NPC/enemy collections, and exposes helpers (`updateNPC`, `updateEnemy`, `setMapArea`) used by controllers and scenes.
 
 ## Data Flow
 
