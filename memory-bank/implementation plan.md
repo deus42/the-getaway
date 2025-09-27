@@ -104,7 +104,38 @@
 
 ## Phase 5: Narrative and Quest Layer
 
-### Step 12: Seed Dialogue and Quest Threads
+### Step 12: Create an NPC with a Routine
+- **Instructions**: Add a non-player character (NPC) that moves between locations.
+- **Details**: 
+  - Define an NPC in `src/game/world` with a schedule (e.g., moves from one location to another during the day).
+  - Use basic pathfinding to guide the NPC.
+  - Implement simple AI behavior reflecting the dystopian setting (e.g., a merchant, guard patrol, or civilian with routines).
+- **Test**: Watch the NPC during the day phase. Verify it moves smoothly from start to end point without getting stuck.
+
+### Step 13: Set Up a Dialogue System
+- **Instructions**: Build a text-based dialogue system with choices that can reflect the game's backstory.
+- **Details**: 
+  - Create a dialogue manager in `src/game/quests`.
+  - Define a simple dialogue tree with options that reflect the dystopian setting (e.g., NPC discusses curfew or regime authorities).
+  - Display dialogue in a React overlay above the game canvas with a visually appropriate UI for the setting.
+- **Test**: Interact with an NPC. Confirm the dialogue appears, choices are selectable, and the NPC's response changes based on the selection.
+
+### Step 14: Add a Skill Check to Dialogue
+- **Instructions**: Integrate a skill-based condition into dialogue options.
+- **Details**: 
+  - Define player skills relevant to the setting (e.g., Charisma, Intelligence, Stealth) with default values.
+  - Add dialogue options that require skill checks (e.g., "Persuade" requiring Charisma > 5).
+- **Test**: Set the required skill to a level below the threshold; the option should be locked. Increase it above the threshold; the option should unlock and work when selected.
+
+### Step 15: Implement a Simple Quest
+- **Instructions**: Create a basic quest with an objective and reward that fits the game's setting.
+- **Details**: 
+  - Define a quest in `src/game/quests` that reflects the game's backstory (e.g., "Deliver a message to a resistance member").
+  - Track progress in state and show it in a React-based quest log.
+  - Reward XP and possibly an item upon completion.
+- **Test**: Accept the quest, complete the objective, and turn it in. Verify the quest log updates and rewards are awarded correctly.
+
+### Step 16: Seed Dialogue and Quest Threads
 - **Instructions**: Stand up the narrative data layer that ties NPCs, quests, and rewards together.
 - **Details**: 
   - Populate `questsSlice` with dialogue trees for key NPCs, including quest-triggering options and terminal nodes.
@@ -112,7 +143,9 @@
   - Keep dialogue state in Redux so UI components can drive conversations without local component state.
 - **Test**: Dispatch dialogue and quest reducer actions (e.g., `startDialogue`, `startQuest`, `updateObjectiveCounter`) in Redux devtools and confirm quest state updates as expected.
 
-### Step 13: Pivot Rendering to a Neon Isometric Grid
+## Phase 6: Visual and Navigation Upgrades
+
+### Step 17: Pivot Rendering to a Neon Isometric Grid
 - **Instructions**: Rebuild the scene renderer around an isometric projection that reinforces the game's style.
 - **Details**: 
   - Recalculate tile metrics, camera bounds, and pointer hit detection to operate in isometric space while keeping movement/auth checks grid-based.
@@ -120,7 +153,7 @@
   - Synchronize the day-night tint with the new projection and eliminate flicker when visibility changes or the browser tab regains focus.
 - **Test**: Playtest with aggressive zooming/resizing, verifying player movement, tile selection accuracy, and smooth overlay transitions through day/night.
 
-### Step 14: Click-to-Move Navigation and Path Preview
+### Step 18: Click-to-Move Navigation and Path Preview
 - **Instructions**: Modernize free-roam navigation with click targeting and visual path confirmation.
 - **Details**: 
   - Implement a breadth-first pathfinder that respects obstacles, enemies, and map bounds while allowing door traversal when applicable.
@@ -128,18 +161,16 @@
   - Extend `GameController` to execute queued paths, bridge door transitions automatically, and abort paths when combat or curfew restrictions intervene.
 - **Test**: Click long-distance destinations across multiple doors, confirm the preview matches the executed path, and ensure curfew-locked doors cancel movement.
 
----
+## Phase 7: Character Progression and Inventory
 
-## Phase 6: Character Progression and Inventory
-
-### Step 15: Define Player Stats
+### Step 19: Define Player Stats
 - **Instructions**: Set up character attributes that suit the dystopian setting.
 - **Details**: 
   - Create a player profile in `src/game/interfaces` with appropriate stats (Strength, Perception, Endurance, etc. similar to Fallout's S.P.E.C.I.A.L. system).
   - Display stats in a React component with a UI that matches the game's aesthetic.
 - **Test**: Load the game and check the stats UI. Change a stat value and confirm the UI reflects the update.
 
-### Step 16: Add a Leveling System
+### Step 20: Add a Leveling System
 - **Instructions**: Implement XP-based leveling.
 - **Details**: 
   - Award XP for completing quests or defeating enemies.
@@ -147,7 +178,7 @@
   - Design the system to be expandable for higher levels and more complex progression.
 - **Test**: Earn 100 XP through quests or combat. Confirm the player levels up and receives skill points that can be allocated.
 
-### Step 17: Build an Inventory System
+### Step 21: Build an Inventory System
 - **Instructions**: Create a weight-based inventory system.
 - **Details**: 
   - Define an inventory in `src/game/inventory` with a realistic weight limit.
@@ -155,11 +186,9 @@
   - Implement item categories and sorting options for scalability.
 - **Test**: Add items until reaching near the weight limit, then try adding a heavy item. Verify the addition fails due to the weight limit. Check the inventory UI updates correctly.
 
----
+## Phase 8: Testing and Final Touches
 
-## Phase 7: Testing and Final Touches
-
-### Step 18: Test the Full Game
+### Step 22: Test the Full Game
 - **Instructions**: Playtest the base game to ensure all mechanics work together.
 - **Details**: 
   - Explore the map, engage in combat, complete quests, and level up.
@@ -167,7 +196,7 @@
   - Ensure the game runs smoothly in modern browsers.
 - **Test**: Confirm combat, exploration, dialogue, and progression function without crashes or major performance issues.
 
-### Step 19: Expand Save Functionality
+### Step 23: Expand Save Functionality
 - **Instructions**: Upgrade the single-slot persistence into a full multi-slot save manager.
 - **Details**: 
   - Provide a save/load interface that lists available slots, timestamps, and key metadata (location, time of day).
@@ -175,7 +204,7 @@
   - Ensure save operations capture player stats, inventory, quest progress, world state, and menu visibility.
 - **Test**: Create several saves at different progression points, reload each, and confirm the restored state matches the recorded metadata.
 
-### Step 20: Polish the UI
+### Step 24: Polish the UI
 - **Instructions**: Enhance the user interface for clarity and thematic consistency.
 - **Details**: 
   - Style all UI elements (dialogue box, quest log, inventory, status displays) with consistent visuals that fit the dystopian setting.
@@ -186,12 +215,12 @@
 ---
 
 ## Summary
-This plan now outlines 20 implementable steps to build the base version of "The Getaway." It focuses on:
+This plan now outlines 24 implementable steps to build the base version of "The Getaway." It focuses on:
 - **Command & Atmosphere**: Establishing the resistance command hub UI, neon isometric presentation, and curfew pressure loops.
-- **Combat**: Turn-based encounters with cover, enemy AI, and readable navigation/preview systems.
-- **Exploration**: A contiguous city grid with day-night cycles, enterable interiors, and click-to-move traversal.
-- **Narrative & Progression**: Redux-driven dialogue/quest data, future skill-gated conversations, player stats, leveling, and inventory.
-- **Stability**: Save/load expansion, holistic playtesting, and UI polish.
+- **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
+- **Combat & Navigation**: Turn-based encounters with cover awareness, click-to-move traversal, and readable path previews.
+- **Progression Systems**: Player stats, leveling, inventory, and loot structures.
+- **Stability & Polish**: Save/load expansion, holistic playtests, and UI refinement.
 
 Each step includes a concrete validation target to keep development measurable. The architecture prioritizes modularity and scalability, drawing inspiration from Fallout 2 while focusing on a maintainable modern web stack. Iterative playtesting complements automated checks to preserve feel and performance.
 
