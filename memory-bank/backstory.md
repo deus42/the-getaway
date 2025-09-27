@@ -33,3 +33,22 @@ In this near-ruined metropolis lives our 20-year-old protagonist—a survivor wh
 
 ### The Path Ahead
 From the shattered streets of Miami to the corridors of power in the new federal capital, the protagonist’s journey reveals the hidden networks of spies, smugglers, and freedom fighters. At the same time, the North Atlantic Resistance Coalition eagerly awaits any chance to weaken the dictator’s grip. Whether or not the invasion of Canada can be stopped—and if the nation can be liberated—depends on the protagonist’s courage and choices.
+
+## Story Overview & Thematic Arcs
+
+The United States of 2036 is a fortified police state. Alliances have collapsed, the regime rules through propaganda and violence, and the North Atlantic Resistance Coalition (NARC) is the last line trying to prevent an invasion of Canada. Miami—still under curfew after the Battle of Miami—is where our 20-year-old protagonist ekes out a living until a resistance cell draws them into the larger conflict.
+
+### Major Campaign Arcs
+
+1. **Miami Underground** – Establish trust with local resistance, sabotage surveillance, and gather the resources to slip past martial-law checkpoints.
+2. **Road to the North** – Navigate interdicted highways and refugee routes, making moral choices while reaching NARC handlers.
+3. **Espionage & Infiltration** – Operate inside the regime’s new capital, forcing internal fractures while uncovering war plans.
+4. **Final Showdown** – Disrupt the northern invasion staging grounds, rally allies, and buy time for NARC to respond.
+
+### Themes & Tone
+- High-tech authoritarianism contrasted with improvised resistance tactics.
+- Human cost of prolonged occupation (famine, black markets, displaced families).
+- Moral ambiguity—victory often comes at a price.
+- Persistent hope: small wins ignite momentum against a seemingly invincible regime.
+
+Use this backstory document as the single source of narrative truth. When expanding plots or introducing new factions, anchor them here so gameplay, quests, and dialogue stay thematically coherent.
