@@ -528,3 +528,25 @@ Date: September 26, 2025
 ### Validation:
 
 - Manual roam test covering long-distance click movement, door traversal, and curfew door blocks.
+
+## Step 25: Surface Level & Objective HUD (Completed)
+
+Date: February 14, 2026
+
+### Tasks Accomplished:
+
+1. Extended `MapArea` definitions (and factories in `grid.ts`) with `level` metadata and objective lists, tagging the Slums sector as **Level 0** with initial resistance tasks.
+2. Populated world generation (`worldMap.ts`) with Level 0 objectives and ensured interior maps inherit appropriate defaults without overlapping building geometry.
+3. Introduced `LevelIndicator.tsx`, mirroring the day/night widget on the upper-left HUD and presenting level data plus mission objectives without blocking play.
+4. Wired the new indicator into `App.tsx`, guaranteeing overlays float above the canvas yet stay clear of building sprites.
+5. Hardened NPC routine scheduling by reserving target tiles so civilians no longer stack on the same square when moving between buildings.
+
+### Notes:
+
+- The HUD now communicates both environmental (day/night) and mission context at a glance, keeping the command shell fiction consistent.
+- Level metadata lives with map definitions, simplifying future chapter unlocks or alternate mission sets.
+
+### Validation:
+
+- `yarn test src/__tests__/pathfinding.test.ts --watch=false`
+- `yarn test src/__tests__/npcRoutine.test.tsx --watch=false`

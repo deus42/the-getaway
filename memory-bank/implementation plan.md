@@ -212,10 +212,18 @@
   - Ensure UI is responsive and performs well on modern browsers.
 - **Test**: Open each UI element. Ensure they look cohesive and tooltips appear when hovering over interactive elements.
 
+### Step 25: Surface Level & Objective HUD
+- **Instructions**: Display the current level metadata and mission objectives directly in the game overlay.
+- **Details**: 
+  - Extend `MapArea` definitions with `level` numbers and objective lists (starting with Level 0 for the Slums sector).
+  - Render a `LevelIndicator` panel in the HUD that mirrors the day/night widget placement, listing active tasks without blocking gameplay.
+  - Ensure all map entities respect their building boundaries so overlays and sprites do not intersect structures.
+- **Test**: Load Level 0 and verify the panel shows the level number and objectives, and that NPCs/items appear outside building footprints.
+
 ---
 
 ## Summary
-This plan now outlines 24 implementable steps to build the base version of "The Getaway." It focuses on:
+This plan now outlines 25 implementable steps to build the base version of "The Getaway." It focuses on:
 - **Command & Atmosphere**: Establishing the resistance command hub UI, neon isometric presentation, and curfew pressure loops.
 - **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
 - **Combat & Navigation**: Turn-based encounters with cover awareness, click-to-move traversal, and readable path previews.

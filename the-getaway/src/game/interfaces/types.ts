@@ -191,6 +191,8 @@ export interface MapTile {
 export interface MapArea {
   id: string;
   name: string;
+  level?: number;
+  objectives?: string[];
   width: number;
   height: number;
   tiles: MapTile[][];

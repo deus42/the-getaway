@@ -6,6 +6,7 @@ import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
 import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
+import LevelIndicator from "./components/ui/LevelIndicator";
 import GameMenu from "./components/ui/GameMenu";
 import { PERSISTED_STATE_KEY, resetGame, store } from "./store";
 import { addLogMessage } from "./store/logSlice";
@@ -208,6 +209,7 @@ function App() {
               <div style={centerStageStyle}>
                 <GameCanvas />
                 <GameController />
+                <LevelIndicator />
                 <DayNightIndicator />
               </div>
               <div style={rightSidebarStyle}>

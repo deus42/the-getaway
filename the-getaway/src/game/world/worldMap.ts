@@ -421,8 +421,8 @@ const CITY_ITEM_BLUEPRINTS: Array<Omit<Item, 'id'>> = [
   ...DOWNTOWN_ITEM_BLUEPRINTS,
 ];
 
-const createInteriorArea = (name: string, width: number, height: number): InteriorSpec => {
-  const interior = createBasicMapArea(name, width, height);
+const createInteriorArea = (name: string, width: number, height: number, level: number): InteriorSpec => {
+  const interior = createBasicMapArea(name, width, height, { level });
   const doorPosition: Position = { x: Math.floor(width / 2), y: height - 1 };
   const entryPosition: Position = {
     x: doorPosition.x,
@@ -461,7 +461,8 @@ const applyBuildingConnections = (
     const interiorSpec = createInteriorArea(
       `${settlementName} :: ${building.name}`,
       building.interior.width,
-      building.interior.height
+      building.interior.height,
+      hostArea.level ?? 0
     );
 
     interiors.push(interiorSpec.area);
@@ -487,8 +488,17 @@ const applyBuildingConnections = (
 const isCityBoulevard = (x: number, y: number) =>
   y === 26 || y === 56 || y === 86 || x === 36 || x === 72 || x === 108;
 
+const LEVEL_ZERO_OBJECTIVES = [
+  'Survey the Slums perimeter and mark hostile patrols',
+  'Establish contact with Lira the Smuggler',
+  'Secure shelter before curfew sweeps begin',
+];
+
 const createCityArea = (): GeneratedArea => {
-  const area = createBasicMapArea('Downtown', DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT);
+  const area = createBasicMapArea('Downtown', DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT, {
+    level: 0,
+    objectives: LEVEL_ZERO_OBJECTIVES,
+  });
   const walls: Position[] = [];
 
   const addBlock = (x1: number, y1: number, x2: number, y2: number) => {
@@ -541,6 +551,11 @@ const createCityArea = (): GeneratedArea => {
     'Downtown',
     CITY_BUILDINGS
   );
+
+  interiors.forEach((interior) => {
+    interior.level = interior.level ?? 0;
+    interior.objectives = interior.objectives ?? [];
+  });
 
   return {
     area: withCover,

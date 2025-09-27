@@ -28,7 +28,8 @@ export const createEmptyGrid = (width: number, height: number): MapTile[][] => {
 export const createBasicMapArea = (
   name: string,
   width: number = DEFAULT_GRID_SIZE,
-  height: number = DEFAULT_GRID_SIZE
+  height: number = DEFAULT_GRID_SIZE,
+  options: { level?: number; objectives?: string[] } = {}
 ): MapArea => {
   const grid = createEmptyGrid(width, height);
   
@@ -52,6 +53,8 @@ export const createBasicMapArea = (
   return {
     id: uuidv4(),
     name,
+    level: options.level ?? 0,
+    objectives: options.objectives ?? [],
     width,
     height,
     tiles: grid,
