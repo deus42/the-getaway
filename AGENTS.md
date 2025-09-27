@@ -31,6 +31,11 @@
 - Test files live in `src/__tests__/` and end with `.test.ts` or `.test.tsx`.
 - Aim to cover reducers, selectors, and core game logic (`game/*`). Optional coverage: `yarn test --coverage`.
 
+## Roadmap Tracking
+- The 24-step implementation roadmap lives in `memory-bank/implementation plan.md` (Phases 1–8). Keep numbering intact and update the plan whenever scope changes.
+- Mirror completed work in `memory-bank/progress.md`; each new milestone should reference the matching step number and live in chronological order.
+- Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
+
 ## Commit & Pull Request Guidelines
 - Use imperative, concise commits. Conventional Commits are welcome (e.g., `fix(build): ...`).
 - PRs should include:
