@@ -298,6 +298,11 @@ Date: March 26, 2024
 
 - Proceed to Step 6: Introduce Cover Mechanics, which will enhance the combat system with strategic elements.
 
+### Maintenance Notes (September 27, 2025):
+
+- Patched enemy AI to surrender its remaining action points when trapped so the turn cycle always returns to the player, halting a rare “not your turn” soft lock after consecutive patrol spawns.
+- Added a regression test to ensure stalled enemies no longer freeze the loop.
+
 ## Step 6: Introduce Cover Mechanics & UI Overhaul (Completed)
 
 Date: March 27, 2024
@@ -489,6 +494,21 @@ Date: February 14, 2026
 
 - `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
 
+## Step 14: Add a Skill Check to Dialogue (Completed)
+
+Date: September 27, 2025
+
+### Tasks Accomplished:
+
+1. Wired dialogue options to inspect the player skill sheet so responses with `skillCheck` requirements now lock when the threshold isn’t met and display the exact requirement in the UI.
+2. Prevented locked options from firing quest effects or node transitions, ensuring interaction flow can’t desync when the player fails a check.
+3. Smoothed quest data by marking Lira’s trade prompt as a Charisma gate and refreshed the overlay styling for locked vs. available choices.
+4. Extended the dialogue test suite to simulate skill upgrades mid-conversation, proving options unlock once the player meets the check.
+
+### Validation:
+
+- `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
+
 ## Step 16: Seed Dialogue and Quest Threads (Completed)
 
 Date: September 26, 2025
@@ -506,6 +526,7 @@ Date: September 26, 2025
 
 ### Validation:
 
+- `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
 - Pending UI integration; smoke-tested by dispatching quest reducer actions in the Redux devtools.
 
 ## Step 17: Pivot Rendering to Neon Isometric Grid (Completed)

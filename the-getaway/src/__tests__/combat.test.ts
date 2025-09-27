@@ -255,5 +255,45 @@ describe('Combat System Tests', () => {
       // This is a simplification; a real test would check if it moved *towards* cover.
       expect(result.enemy.position).not.toEqual(woundedEnemy.position);
     });
+
+    test('determineEnemyMove should forfeit AP when no action is possible', () => {
+      const blockedEnemy = {
+        ...createEnemy({ x: 4, y: 4 }),
+        actionPoints: 3,
+        maxActionPoints: 3,
+      };
+
+      const isolatedPlayer = {
+        ...DEFAULT_PLAYER,
+        position: { x: 1, y: 1 },
+      };
+
+      const testMap = createBasicMapArea('Blocked Enemy', 6, 6);
+
+      const adjacentOffsets: Position[] = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 },
+      ];
+
+      adjacentOffsets.forEach(({ x, y }) => {
+        const tile = testMap.tiles[blockedEnemy.position.y + y]?.[blockedEnemy.position.x + x];
+        if (tile) {
+          tile.isWalkable = false;
+        }
+      });
+
+      const result = determineEnemyMove(
+        blockedEnemy,
+        isolatedPlayer,
+        testMap,
+        [blockedEnemy],
+        []
+      );
+
+      expect(result.action).toBe('no_valid_move');
+      expect(result.enemy.actionPoints).toBe(0);
+    });
   });
 }); 

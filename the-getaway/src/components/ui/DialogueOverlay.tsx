@@ -10,6 +10,10 @@ import {
 } from "../../store/questsSlice";
 import { DialogueNode, DialogueOption } from "../../game/interfaces/types";
 
+const formatSkillName = (skill: string) => {
+  return skill.charAt(0).toUpperCase() + skill.slice(1);
+};
+
 const DialogueOverlay: React.FC = () => {
   const dispatch = useDispatch();
   const handleQuestEffect = useCallback(
@@ -48,6 +52,7 @@ const DialogueOverlay: React.FC = () => {
     activeDialogue: { dialogueId, currentNodeId },
     dialogues,
   } = useSelector((state: RootState) => state.quests);
+  const playerSkills = useSelector((state: RootState) => state.player.data.skills);
 
   if (!dialogueId) {
     return null;
@@ -61,7 +66,21 @@ const DialogueOverlay: React.FC = () => {
   const currentNode: DialogueNode | undefined =
     dialogue.nodes.find((node) => node.id === currentNodeId) ?? dialogue.nodes[0];
 
+  const isOptionLocked = (option: DialogueOption) => {
+    if (!option.skillCheck) {
+      return false;
+    }
+
+    const { skill, threshold } = option.skillCheck;
+    const playerValue = playerSkills[skill] ?? 0;
+    return playerValue < threshold;
+  };
+
   const handleOptionSelect = (option: DialogueOption) => {
+    if (isOptionLocked(option)) {
+      return;
+    }
+
     handleQuestEffect(option);
 
     if (option.nextNodeId) {
@@ -157,24 +176,36 @@ const DialogueOverlay: React.FC = () => {
             gap: "0.75rem",
           }}
         >
-          {currentNode?.options.map((option, index) => (
+          {currentNode?.options.map((option, index) => {
+            const locked = isOptionLocked(option);
+            const requirementLabel = option.skillCheck
+              ? `${formatSkillName(option.skillCheck.skill)} ${option.skillCheck.threshold}`
+              : null;
+
+            return (
             <button
               key={`${option.text}-${index}`}
               type="button"
               onClick={() => handleOptionSelect(option)}
               style={{
-                border: "1px solid rgba(96, 165, 250, 0.4)",
+                border: locked
+                  ? "1px solid rgba(148, 163, 184, 0.3)"
+                  : "1px solid rgba(96, 165, 250, 0.4)",
                 borderRadius: "12px",
                 padding: "0.85rem 1rem",
                 background:
-                  "linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(56, 189, 248, 0.18))",
-                color: "#e2e8f0",
+                  locked
+                    ? "linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(30, 41, 59, 0.75))"
+                    : "linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(56, 189, 248, 0.18))",
+                color: locked ? "rgba(148, 163, 184, 0.8)" : "#e2e8f0",
                 fontSize: "0.9rem",
                 textAlign: "left",
                 cursor: "pointer",
                 display: "flex",
                 gap: "0.6rem",
                 alignItems: "center",
+                opacity: locked ? 0.75 : 1,
+                pointerEvents: locked ? "none" : "auto",
               }}
             >
               <span
@@ -185,17 +216,32 @@ const DialogueOverlay: React.FC = () => {
                   width: "1.25rem",
                   height: "1.25rem",
                   borderRadius: "50%",
-                  background: "rgba(96, 165, 250, 0.35)",
-                  color: "#bfdbfe",
+                  background: locked
+                    ? "rgba(148, 163, 184, 0.25)"
+                    : "rgba(96, 165, 250, 0.35)",
+                  color: locked ? "#cbd5f5" : "#bfdbfe",
                   fontWeight: 600,
                   fontSize: "0.75rem",
                 }}
               >
                 {index + 1}
               </span>
-              <span>{option.text}</span>
+              <span style={{ flex: 1 }}>{option.text}</span>
+              {requirementLabel && (
+                <span
+                  style={{
+                    fontSize: "0.68rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.16em",
+                    color: locked ? "#f87171" : "#5eead4",
+                  }}
+                >
+                  {locked ? `Requires ${requirementLabel}` : `Check ${requirementLabel}`}
+                </span>
+              )}
             </button>
-          ))}
+            );
+          })}
         </div>
         <span
           style={{

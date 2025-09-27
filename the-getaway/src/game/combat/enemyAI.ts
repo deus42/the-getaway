@@ -77,7 +77,11 @@ export const determineEnemyMove = (
     return { enemy: updatedEnemy, player: updatedPlayer, action: 'move' };
   }
   
-  // If no valid move found
+  // If no valid move found, forfeit remaining AP to avoid stalling the turn
+  updatedEnemy = {
+    ...updatedEnemy,
+    actionPoints: 0,
+  };
   return { enemy: updatedEnemy, player: updatedPlayer, action: 'no_valid_move' };
 };
 

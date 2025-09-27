@@ -22,6 +22,10 @@ const initialDialogues: Dialogue[] = [
           {
             text: 'Show me what’s moving on the street.',
             nextNodeId: 'trade',
+            skillCheck: {
+              skill: 'charisma',
+              threshold: 6,
+            },
           },
           {
             text: 'Any shipments gone missing recently?',
