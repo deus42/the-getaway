@@ -387,3 +387,125 @@ Date: April 5, 2024
 
 * `yarn lint`
 * Manual playtest covering day/night transitions, tab focus changes, patrol spawning, and door restrictions under curfew.
+
+## Step 9: Establish Command Hub and Persisted Sessions (Completed)
+
+Date: September 25, 2025
+
+### Tasks Accomplished:
+
+1. Introduced a persistent `GameMenu` overlay (`components/ui/GameMenu.tsx`) with start/continue controls, wiring it into `App.tsx` so players can resume suspended runs or reset the campaign.
+2. Replaced the top-level shell in `App.tsx` with a three-column command layout that frames the minimap, recon status, game canvas, and action log in dedicated panels for clearer situational awareness.
+3. Consolidated squad telemetry inside `PlayerStatusPanel.tsx`, folding combat turn data, curfew status, hostile counts, and free-roam directives into a single recon feed while removing the redundant `TurnIndicator` component.
+4. Added Redux persistence in `store/index.ts` with a `resetGame` action and localStorage hydration so the menu’s continue option reflects real save data.
+
+### Notes:
+
+- The HUD now mirrors the fiction of a resistance command post and keeps critical stats (HP/AP, sector, threat level) within one glance.
+- Local storage acts as a lightweight save system until full slot management is built.
+
+### Validation:
+
+- `yarn test src/__tests__/App.test.tsx`
+
+## Step 10: Harden Curfew Pressure and Cover Feedback (Completed)
+
+Date: September 25, 2025
+
+### Tasks Accomplished:
+
+1. Extended `GameController.tsx` with a curfew alert state machine that issues a single warning, spawns one patrol if the player lingers in the open, and clears the alert once cover is reached.
+2. Added `src/__tests__/curfew.test.tsx` to exercise the warning → patrol → reset loop and ensure patrol counts do not stack.
+3. Marked additional safe cover exits in `world/worldMap.ts` (exported via `SLUMS_COVER_POSITIONS`) so tests and gameplay share the same shelter data.
+4. Highlighted cover tiles inside `MainScene.ts` with pulsing neon overlays during curfew, making evacuation points instantly readable in the isometric view.
+5. Capped the action log history in `store/logSlice.ts` and seeded a default curfew warning message when the patrol state initializes, keeping alerts visible even before the player moves.
+
+### Notes:
+
+- Curfew now feels lethal but fair: players get a single audible warning and a clear visual path to safety.
+- Cover highlights integrate with the day–night overlay without introducing flicker.
+
+### Validation:
+
+- `yarn test src/__tests__/curfew.test.tsx`
+
+## Step 11: Expand Downtown into Enterable Megablocks (Completed)
+
+Date: September 26, 2025
+
+### Tasks Accomplished:
+
+1. Rebuilt `worldMap.ts` into a 144×108 mega-district that merges the Slums and Downtown, layers in neon canal strips, and distributes cover for tactical play across the full city grid.
+2. Generated building definitions with automatic interior maps, two-way `MapConnection`s, and door placement so every block can be entered without bespoke scene code.
+3. Seeded resident data: NPC blueprints with day/evening/night routines plus lootable item caches, all stamped with UUIDs at load for consistent state tracking.
+4. Updated `GameController.tsx` door handling to honor the new connection graph, repositioning the player when swapping areas while respecting curfew lockdowns.
+5. Synced `worldSlice.ts` with the expanded map directory and ensured spawned enemies persist across area transitions.
+
+### Notes:
+
+- The city now feels contiguous: interiors, patrol routes, and loot pools all live in the same coordinate space.
+- Future quests can target specific buildings or NPC schedules without extra scaffolding.
+
+### Validation:
+
+- Manual traversal through multiple doorways (Slums streets → interiors → return) to confirm state resets, enemy persistence, and camera bounds.
+
+## Step 12: Seed Dialogue and Quest Threads (Completed)
+
+Date: September 26, 2025
+
+### Tasks Accomplished:
+
+1. Bootstrapped `store/questsSlice.ts` with branching dialogue trees for Lira, Archivist Naila, and Courier Brant, including quest-start hooks per choice.
+2. Authored three quest lines (market cache, patrol manifests, courier rescue) complete with objective tracking, counters, and reward payloads for XP, currency, and items.
+3. Added Redux reducers for updating objectives, counting collectibles, and managing active dialogue state so UI layers can drive conversations without ad hoc state.
+
+### Notes:
+
+- Dialogue content reflects the dystopian fiction and ties NPC routines to gameplay incentives.
+- Quest log UI is still pending; the data layer is ready for integration.
+
+### Validation:
+
+- Pending UI integration; smoke-tested by dispatching quest reducer actions in the Redux devtools.
+
+## Step 13: Pivot Rendering to Neon Isometric Grid (Completed)
+
+Date: September 26, 2025
+
+### Tasks Accomplished:
+
+1. Converted `MainScene.ts` to an isometric projection, recalculating tile metrics, grid hit-testing, and camera bounds to keep the player centered while roaming the enlarged map.
+2. Painted layered neon ambiance—gradient backdrops, horizon glows, canal strips, and additive cover markers—to match the cyber-noir art direction.
+3. Tuned the day–night overlay to scale with zoom, avoid sub-pixel jitter, and keep tint values consistent after tab visibility changes.
+4. Simplified grid rendering by removing outline tiles and introducing alternating floor tones for depth without aliasing.
+
+### Notes:
+
+- The visual rewrite establishes the long-term look of The Getaway and pairs cleanly with the new HUD.
+- Camera zooming and resizing now feel stable even on window resizes.
+
+### Validation:
+
+- Manual playtest validating zoom limits, pointer hit detection, and overlay transitions across day/night cycles.
+
+## Step 14: Click-to-Move Navigation and Path Preview (Completed)
+
+Date: September 26, 2025
+
+### Tasks Accomplished:
+
+1. Added a breadth-first `findPath` helper (`game/world/pathfinding.ts`) with enemy avoidance, respecting map bounds and door tiles.
+2. Instrumented `MainScene.ts` to emit `TILE_CLICK_EVENT`s on pointer input and render diamond path previews via `PATH_PREVIEW_EVENT`, giving immediate feedback on reachable routes.
+3. Enhanced `GameController.tsx` to queue path steps, walk the player automatically toward the selected tile, and seamlessly transition through door connections when the path reaches a linked area.
+4. Expanded camera and log handling (`MainScene.ts`, `store/logSlice.ts`) so the larger city stays framed and long patrol logs do not overwhelm the feed.
+5. Updated `tsconfig.node.json` to align tooling with the new event module structure.
+
+### Notes:
+
+- Free-roam navigation now matches modern tactics games: one click previews the route, a second confirms movement, and curfew rules still apply.
+- Path preview clears automatically on map switches, preventing stale overlays.
+
+### Validation:
+
+- Manual roam test covering long-distance click movement, door traversal, and curfew door blocks.
