@@ -33,7 +33,7 @@ const logSlice = createSlice({
 
       if (curfewActive && state.messages.length === 0) {
         state.messages = [
-          'Searchlights pin you in the open—take cover before the patrols lock on.',
+          'Searchlights pin you in the open—duck inside before the patrols lock on.',
         ];
       }
     });

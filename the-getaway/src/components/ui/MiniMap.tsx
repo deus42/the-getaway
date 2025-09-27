@@ -35,17 +35,20 @@ const MiniMap: React.FC = () => {
   const playerPosition = useSelector((state: RootState) => state.player.data.position);
   const curfewActive = useSelector((state: RootState) => state.world.curfewActive);
   const enemies = useSelector((state: RootState) => state.world.currentMapArea.entities.enemies);
+  const npcs = useSelector((state: RootState) => state.world.currentMapArea.entities.npcs);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 140, height: 110 });
 
-  const enemySignature = useMemo(
+  const entitySignature = useMemo(
     () =>
-      enemies
-        .filter((enemy) => enemy.health > 0)
-        .map((enemy) => `${enemy.id}:${enemy.position.x}:${enemy.position.y}:${enemy.health}`)
-        .join("|"),
-    [enemies]
+      [
+        ...enemies
+          .filter((enemy) => enemy.health > 0)
+          .map((enemy) => `enemy:${enemy.id}:${enemy.position.x}:${enemy.position.y}:${enemy.health}`),
+        ...npcs.map((npc) => `npc:${npc.id}:${npc.position.x}:${npc.position.y}`),
+      ].join("|"),
+    [enemies, npcs]
   );
 
   useEffect(() => {
@@ -155,13 +158,17 @@ const MiniMap: React.FC = () => {
         drawBlip(enemy.position, "#ef4444", "rgba(248, 113, 113, 0.85)", 0.4);
       });
 
+    npcs.forEach((npc) => {
+      drawBlip(npc.position, "#22c55e", "rgba(187, 247, 208, 0.9)", 0.35);
+    });
+
     // District perimeter glow
     context.lineWidth = Math.max(2, scale * 0.6);
     context.strokeStyle = curfewActive
       ? "rgba(126, 232, 201, 0.6)"
       : "rgba(59, 130, 246, 0.55)";
     context.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
-  }, [mapArea, playerPosition, curfewActive, enemySignature]);
+  }, [mapArea, playerPosition, curfewActive, entitySignature]);
 
   if (!mapArea) {
     return null;

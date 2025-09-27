@@ -193,6 +193,7 @@ export interface MapArea {
   name: string;
   level?: number;
   objectives?: string[];
+  isInterior?: boolean;
   width: number;
   height: number;
   tiles: MapTile[][];

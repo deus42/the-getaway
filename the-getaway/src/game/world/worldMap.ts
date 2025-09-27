@@ -5,6 +5,7 @@ import {
   addWalls,
   addCover,
   findNearestWalkablePosition,
+  getAdjacentWalkablePositions,
 } from './grid';
 
 interface BuildingDefinition {
@@ -91,74 +92,10 @@ const DOWNTOWN_COVER_SPOTS: Position[] = [
   { x: 132, y: 94 },
 ];
 
-const SLUMS_NEON_STRIPS: Position[] = [
-  { x: 18, y: 18 },
-  { x: 19, y: 18 },
-  { x: 20, y: 18 },
-  { x: 34, y: 10 },
-  { x: 35, y: 10 },
-  { x: 36, y: 10 },
-  { x: 40, y: 28 },
-  { x: 41, y: 28 },
-  { x: 42, y: 28 },
-  { x: 24, y: 26 },
-  { x: 25, y: 26 },
-  { x: 26, y: 26 },
-  // Expanded city canals
-  { x: 32, y: 34 },
-  { x: 33, y: 34 },
-  { x: 34, y: 34 },
-  { x: 52, y: 36 },
-  { x: 53, y: 36 },
-  { x: 54, y: 36 },
-  { x: 70, y: 34 },
-  { x: 71, y: 34 },
-  { x: 72, y: 34 },
-  { x: 88, y: 32 },
-  { x: 89, y: 32 },
-  { x: 90, y: 32 },
-  { x: 48, y: 64 },
-  { x: 49, y: 64 },
-  { x: 50, y: 64 },
-  { x: 86, y: 64 },
-  { x: 87, y: 64 },
-  { x: 88, y: 64 },
-  { x: 108, y: 66 },
-  { x: 109, y: 66 },
-  { x: 110, y: 66 },
-  { x: 20, y: 88 },
-  { x: 21, y: 88 },
-  { x: 22, y: 88 },
-  { x: 60, y: 92 },
-  { x: 61, y: 92 },
-  { x: 62, y: 92 },
-  { x: 98, y: 90 },
-  { x: 99, y: 90 },
-  { x: 100, y: 90 },
-];
-
-const DOWNTOWN_BEACONS: Position[] = [
-  { x: 36, y: 26 },
-  { x: 72, y: 26 },
-  { x: 108, y: 26 },
-  { x: 36, y: 56 },
-  { x: 72, y: 56 },
-  { x: 108, y: 56 },
-  { x: 36, y: 86 },
-  { x: 72, y: 86 },
-  { x: 108, y: 86 },
-  { x: 54, y: 70 },
-  { x: 90, y: 70 },
-  { x: 54, y: 98 },
-  { x: 90, y: 98 },
-];
-
 const CITY_COVER_SPOTS: Position[] = [
   ...SLUMS_COVER_SPOTS,
   ...DOWNTOWN_COVER_SPOTS,
 ];
-
-const CITY_NEON_STRIPS: Position[] = [...SLUMS_NEON_STRIPS];
 
 const SLUMS_BUILDINGS: BuildingDefinition[] = [
   {
@@ -427,7 +364,10 @@ const CITY_ITEM_BLUEPRINTS: Array<Omit<Item, 'id'>> = [
 ];
 
 const createInteriorArea = (name: string, width: number, height: number, level: number): InteriorSpec => {
-  const interior = createBasicMapArea(name, width, height, { level });
+  const interior = createBasicMapArea(name, width, height, {
+    level,
+    isInterior: true,
+  });
   const doorPosition: Position = { x: Math.floor(width / 2), y: height - 1 };
   const entryPosition: Position = {
     x: doorPosition.x,
@@ -526,37 +466,56 @@ const createCityArea = (): GeneratedArea => {
   });
 
   const withWalls = addWalls(area, walls);
-  const withCover = addCover(withWalls, CITY_COVER_SPOTS);
+
+  const coverSpotsOnWalkableTiles = CITY_COVER_SPOTS.filter((position) => {
+    const tile = withWalls.tiles[position.y]?.[position.x];
+
+    if (!tile) {
+      return false;
+    }
+
+    return tile.isWalkable;
+  });
+
+  const withCover = addCover(withWalls, coverSpotsOnWalkableTiles);
+
+  const isTileOpen = (position: Position): boolean => {
+    const tile = withCover.tiles[position.y]?.[position.x];
+    if (!tile) {
+      return false;
+    }
+
+    return tile.isWalkable && tile.type !== TileType.DOOR && tile.type !== TileType.WALL;
+  };
+
+  const resolveOpenPosition = (seed: Position): Position | null => {
+    const nearest = findNearestWalkablePosition(seed, withCover) ?? seed;
+
+    if (isTileOpen(nearest)) {
+      return nearest;
+    }
+
+    const adjacent = getAdjacentWalkablePositions(nearest, withCover);
+    const fallback = adjacent.find((candidate) => isTileOpen(candidate));
+    return fallback ?? null;
+  };
 
   CITY_NPC_BLUEPRINTS.forEach((npcBlueprint) => {
-    const safePosition =
-      findNearestWalkablePosition(npcBlueprint.position, withCover) ??
-      npcBlueprint.position;
+    const position = resolveOpenPosition(npcBlueprint.position);
+
+    if (!position) {
+      return;
+    }
 
     withCover.entities.npcs.push({
       ...npcBlueprint,
       id: uuidv4(),
-      position: safePosition,
+      position,
     });
   });
+
   CITY_ITEM_BLUEPRINTS.forEach((itemBlueprint) => {
     withCover.entities.items.push({ ...itemBlueprint, id: uuidv4() });
-  });
-
-  CITY_NEON_STRIPS.forEach(({ x, y }) => {
-    if (withCover.tiles[y]?.[x]) {
-      const tile = withCover.tiles[y][x];
-      tile.type = TileType.WATER;
-      tile.isWalkable = true;
-    }
-  });
-
-  DOWNTOWN_BEACONS.forEach(({ x, y }) => {
-    if (withCover.tiles[y]?.[x]) {
-      const tile = withCover.tiles[y][x];
-      tile.type = TileType.TRAP;
-      tile.isWalkable = true;
-    }
   });
 
   const { connections, interiors } = applyBuildingConnections(

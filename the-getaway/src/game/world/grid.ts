@@ -29,7 +29,7 @@ export const createBasicMapArea = (
   name: string,
   width: number = DEFAULT_GRID_SIZE,
   height: number = DEFAULT_GRID_SIZE,
-  options: { level?: number; objectives?: string[] } = {}
+  options: { level?: number; objectives?: string[]; isInterior?: boolean } = {}
 ): MapArea => {
   const grid = createEmptyGrid(width, height);
   
@@ -55,6 +55,7 @@ export const createBasicMapArea = (
     name,
     level: options.level ?? 0,
     objectives: options.objectives ?? [],
+    isInterior: options.isInterior ?? false,
     width,
     height,
     tiles: grid,

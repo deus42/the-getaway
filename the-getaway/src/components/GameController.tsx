@@ -37,6 +37,8 @@ const GameController: React.FC = () => {
   const currentMapArea = useSelector(
     (state: RootState) => state.world.currentMapArea
   );
+  const mapAreaId = currentMapArea?.id;
+  const mapAreaIsInterior = currentMapArea?.isInterior ?? false;
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const isPlayerTurn = useSelector(
     (state: RootState) => state.world.isPlayerTurn
@@ -165,6 +167,12 @@ const GameController: React.FC = () => {
   useEffect(() => {
     setQueuedPath((previous) => (previous.length > 0 ? [] : previous));
   }, [currentMapArea?.id]);
+
+  useEffect(() => {
+    if (mapAreaIsInterior) {
+      setCurfewAlertState("clear");
+    }
+  }, [mapAreaId, mapAreaIsInterior]);
 
   useEffect(() => {
     activeNpcMovements.current.clear();
@@ -700,6 +708,7 @@ const GameController: React.FC = () => {
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent) => {
       const key = event.key;
+      const areaIsInterior = currentMapArea?.isInterior ?? false;
 
       if (activeDialogueId) {
         event.preventDefault();
@@ -881,7 +890,9 @@ const GameController: React.FC = () => {
         );
 
         if (connection) {
-          if (curfewActive && tile.type === TileType.DOOR) {
+          const targetArea = mapDirectory[connection.toAreaId];
+
+          if (curfewActive && tile.type === TileType.DOOR && targetArea && !targetArea.isInterior) {
             dispatch(
               addLogMessage(
                 "Checkpoint sealed. The regime's curfew keeps the district locked down."
@@ -890,27 +901,36 @@ const GameController: React.FC = () => {
             return;
           }
 
-          const targetArea = mapDirectory[connection.toAreaId];
-
           if (targetArea) {
             dispatch(setMapArea(targetArea));
             dispatch(movePlayer(connection.toPosition));
+
+            if (targetArea.isInterior) {
+              dispatch(
+                addLogMessage(
+                  "You slip inside the structure. Patrol scanners lose your trail."
+                )
+              );
+              setCurfewAlertState("clear");
+            }
           } else {
             console.warn(
               `[GameController] Missing target area in state for ${connection.toAreaId}`
             );
           }
 
+          setQueuedPath([]);
+
           return;
         }
 
         dispatch(movePlayer(newPosition));
 
-        if (curfewActive && !tile.provideCover && tile.type !== TileType.DOOR) {
+        if (curfewActive && !areaIsInterior) {
           if (curfewAlertState === "clear") {
             dispatch(
               addLogMessage(
-                "Searchlights pin you in the open—take cover before the patrols lock on."
+                "Searchlights pin you in the open—duck inside before the patrols lock on."
               )
             );
             setCurfewAlertState("warning");

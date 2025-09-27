@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MapArea, TileType, Position, Enemy, MapTile } from '../interfaces/types';
+import { MapArea, TileType, Position, Enemy, MapTile, NPC } from '../interfaces/types';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
@@ -29,6 +29,11 @@ interface EnemySpriteData {
   markedForRemoval: boolean;
 }
 
+interface NpcSpriteData {
+  sprite: Phaser.GameObjects.Ellipse;
+  markedForRemoval: boolean;
+}
+
 export class MainScene extends Phaser.Scene {
   private tileSize: number = DEFAULT_TILE_SIZE;
   private mapGraphics!: Phaser.GameObjects.Graphics;
@@ -36,6 +41,7 @@ export class MainScene extends Phaser.Scene {
   private pathGraphics!: Phaser.GameObjects.Graphics;
   private playerSprite!: Phaser.GameObjects.Ellipse;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
+  private npcSprites: Map<string, NpcSpriteData> = new Map();
   private currentMapArea: MapArea | null = null;
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
@@ -67,6 +73,7 @@ export class MainScene extends Phaser.Scene {
     this.currentMapArea = data.mapArea;
     this.playerInitialPosition = data.playerPosition;
     this.enemySprites = new Map<string, EnemySpriteData>(); // Reset map on init
+    this.npcSprites = new Map<string, NpcSpriteData>();
     this.isCameraFollowingPlayer = false;
   }
 
@@ -142,6 +149,9 @@ export class MainScene extends Phaser.Scene {
         if (initialState?.world?.currentMapArea?.entities?.enemies) {
            this.updateEnemies(initialState.world.currentMapArea.entities.enemies);
         }
+        if (initialState?.world?.currentMapArea?.entities?.npcs) {
+           this.updateNpcs(initialState.world.currentMapArea.entities.npcs);
+        }
       }
     }, 0);
   }
@@ -183,6 +193,10 @@ export class MainScene extends Phaser.Scene {
         data.healthText.destroy();
       });
       this.enemySprites.clear();
+      this.npcSprites.forEach((data) => {
+        data.sprite.destroy();
+      });
+      this.npcSprites.clear();
       this.setupCameraAndMap();
       this.refreshCoverHighlights(this.curfewActive);
       this.clearPathPreview();
@@ -195,6 +209,7 @@ export class MainScene extends Phaser.Scene {
 
     this.updatePlayerPosition(playerState.position);
     this.updateEnemies(currentEnemies);
+    this.updateNpcs(worldState.currentMapArea.entities.npcs);
   }
   
   private updatePlayerPosition(position: Position): void {
@@ -216,6 +231,55 @@ export class MainScene extends Phaser.Scene {
     camera.startFollow(this.playerSprite, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
     this.isCameraFollowingPlayer = true;
+  }
+
+  private updateNpcs(npcs: NPC[]) {
+    if (!this.mapGraphics || !this.sys.isActive()) {
+      return;
+    }
+
+    if (!this.npcSprites) {
+      this.npcSprites = new Map<string, NpcSpriteData>();
+    }
+
+    this.npcSprites.forEach((spriteData) => {
+      spriteData.markedForRemoval = true;
+    });
+
+    for (const npc of npcs) {
+      const existingSpriteData = this.npcSprites.get(npc.id);
+      const pixelPos = this.calculatePixelPosition(npc.position.x, npc.position.y);
+      const metrics = this.getIsoMetrics();
+
+      if (!existingSpriteData) {
+        const npcSprite = this.add.ellipse(
+          pixelPos.x,
+          pixelPos.y,
+          metrics.tileWidth * 0.32,
+          metrics.tileHeight * 0.7,
+          0x22c55e,
+          0.92
+        );
+        npcSprite.setDepth(pixelPos.y + 5);
+        npcSprite.setStrokeStyle(1.5, 0xf0fdf4, 0.7);
+
+        this.npcSprites.set(npc.id, {
+          sprite: npcSprite,
+          markedForRemoval: false,
+        });
+      } else {
+        existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
+        existingSpriteData.sprite.setDepth(pixelPos.y + 5);
+        existingSpriteData.markedForRemoval = false;
+      }
+    }
+
+    this.npcSprites.forEach((spriteData, id) => {
+      if (spriteData.markedForRemoval) {
+        spriteData.sprite.destroy();
+        this.npcSprites.delete(id);
+      }
+    });
   }
   
   private updateEnemies(enemies: Enemy[]) {
@@ -290,6 +354,10 @@ export class MainScene extends Phaser.Scene {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+    this.npcSprites.forEach((data) => {
+      data.sprite.destroy();
+    });
+    this.npcSprites.clear();
     this.scale.off('resize', this.handleResize, this);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
@@ -900,61 +968,6 @@ export class MainScene extends Phaser.Scene {
   private refreshCoverHighlights(isCurfewActive: boolean): void {
     this.curfewActive = isCurfewActive;
     this.clearCoverHighlights();
-
-    if (!this.currentMapArea || !this.sys.isActive()) {
-      return;
-    }
-
-    const highlightColor = isCurfewActive ? 0x7ee8c9 : 0x4fc5d6;
-    const baseAlpha = isCurfewActive ? 0.36 : 0.2;
-    const borderAlpha = isCurfewActive ? 0.75 : 0.38;
-
-    for (let y = 0; y < this.currentMapArea.height; y += 1) {
-      for (let x = 0; x < this.currentMapArea.width; x += 1) {
-        const tile = this.currentMapArea.tiles[y][x];
-        if (!tile.provideCover) {
-          continue;
-        }
-
-        const pixelPos = this.calculatePixelPosition(x, y);
-        const { tileWidth, tileHeight } = this.getIsoMetrics();
-        const points = [
-          0,
-          -tileHeight / 2,
-          tileWidth / 2,
-          0,
-          0,
-          tileHeight / 2,
-          -tileWidth / 2,
-          0,
-        ];
-        const marker = this.add.polygon(
-          pixelPos.x,
-          pixelPos.y,
-          points,
-          highlightColor,
-          baseAlpha
-        );
-        marker.setOrigin(0.5);
-        marker.setDepth(pixelPos.y + 4);
-        marker.setBlendMode(Phaser.BlendModes.ADD);
-        marker.setStrokeStyle(2, highlightColor, borderAlpha);
-
-        this.coverMarkers.push(marker);
-
-        if (isCurfewActive) {
-          const tween = this.tweens.add({
-            targets: marker,
-            alpha: { from: baseAlpha, to: baseAlpha * 0.25 },
-            duration: 900,
-            ease: 'Sine.easeInOut',
-            yoyo: true,
-            repeat: -1,
-          });
-          this.coverMarkerTweens.push(tween);
-        }
-      }
-    }
   }
 
   private clearCoverHighlights(): void {
