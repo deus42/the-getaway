@@ -71,6 +71,48 @@ const GameController: React.FC = () => {
   const activeNpcMovements = useRef<Set<string>>(new Set());
   const npcMovementTimeouts = useRef<number[]>([]);
   const npcReservedDestinations = useRef<Map<string, Position>>(new Map());
+  const [pendingNpcInteractionId, setPendingNpcInteractionId] = useState<string | null>(null);
+  const beginDialogueWithNpc = useCallback(
+    (npc: NPC): boolean => {
+      if (!npc.isInteractive || !npc.dialogueId) {
+        dispatch(
+          addLogMessage(`${npc.name} isn’t ready to talk right now.`)
+        );
+        return false;
+      }
+
+      if (activeDialogueId === npc.dialogueId) {
+        return true;
+      }
+
+      const dialogue = dialogues.find((entry) => entry.id === npc.dialogueId);
+
+      if (!dialogue || dialogue.nodes.length === 0) {
+        dispatch(
+          addLogMessage(
+            `${npc.name} has nothing new to share right now.`
+          )
+        );
+        return false;
+      }
+
+      const initialNodeId = dialogue.nodes[0]?.id;
+
+      if (!initialNodeId) {
+        dispatch(
+          addLogMessage(
+            `${npc.name} falls silent—the channel is empty.`
+          )
+        );
+        return false;
+      }
+
+      dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId }));
+      dispatch(addLogMessage(`You open a quiet channel with ${npc.name}.`));
+      return true;
+    },
+    [dispatch, dialogues, activeDialogueId]
+  );
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
@@ -114,6 +156,8 @@ const GameController: React.FC = () => {
 
       const target = detail.position;
 
+      setPendingNpcInteractionId(null);
+
       if (
         target.x === player.position.x &&
         target.y === player.position.y
@@ -122,9 +166,103 @@ const GameController: React.FC = () => {
         return;
       }
 
+      const npcAtTarget = currentMapArea.entities.npcs.find(
+        (npc) => npc.position.x === target.x && npc.position.y === target.y
+      );
+
+      if (npcAtTarget) {
+        if (inCombat) {
+          dispatch(
+            addLogMessage(
+              "Combat chatter overrides civilian channels—clear the area first."
+            )
+          );
+          return;
+        }
+
+        const distance =
+          Math.abs(npcAtTarget.position.x - player.position.x) +
+          Math.abs(npcAtTarget.position.y - player.position.y);
+
+        if (distance <= 1) {
+          beginDialogueWithNpc(npcAtTarget);
+          return;
+        }
+
+        const approachOffsets: Position[] = [
+          { x: 1, y: 0 },
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+          { x: 0, y: -1 },
+        ];
+
+        let selectedPath: Position[] | null = null;
+
+        for (const offset of approachOffsets) {
+          const candidate = {
+            x: npcAtTarget.position.x + offset.x,
+            y: npcAtTarget.position.y + offset.y,
+          };
+
+          if (
+            candidate.x === player.position.x &&
+            candidate.y === player.position.y
+          ) {
+            continue;
+          }
+
+          if (
+            candidate.x < 0 ||
+            candidate.y < 0 ||
+            candidate.x >= currentMapArea.width ||
+            candidate.y >= currentMapArea.height
+          ) {
+            continue;
+          }
+
+          if (
+            !isPositionWalkable(candidate, currentMapArea, player, enemies, {
+              npcs: currentMapArea.entities.npcs,
+            })
+          ) {
+            continue;
+          }
+
+          const pathToCandidate = findPath(
+            player.position,
+            candidate,
+            currentMapArea,
+            {
+              player,
+              enemies,
+              npcs: currentMapArea.entities.npcs,
+            }
+          );
+
+          if (pathToCandidate.length > 0) {
+            selectedPath = pathToCandidate;
+            break;
+          }
+        }
+
+        if (selectedPath) {
+          setPendingNpcInteractionId(npcAtTarget.id);
+          setQueuedPath(selectedPath);
+        } else {
+          dispatch(
+            addLogMessage(
+              `${npcAtTarget.name} is boxed in—you can’t reach their position.`
+            )
+          );
+        }
+
+        return;
+      }
+
       const path = findPath(player.position, target, currentMapArea, {
         player,
         enemies,
+        npcs: currentMapArea.entities.npcs,
       });
 
       if (path.length === 0) {
@@ -150,7 +288,7 @@ const GameController: React.FC = () => {
         handleTileClick as EventListener
       );
     };
-  }, [currentMapArea, player, enemies, inCombat]);
+  }, [currentMapArea, player, enemies, inCombat, dispatch, beginDialogueWithNpc]);
 
   useEffect(() => {
     if (!currentMapArea) {
@@ -166,6 +304,7 @@ const GameController: React.FC = () => {
 
   useEffect(() => {
     setQueuedPath((previous) => (previous.length > 0 ? [] : previous));
+    setPendingNpcInteractionId(null);
   }, [currentMapArea?.id]);
 
   useEffect(() => {
@@ -290,6 +429,7 @@ const GameController: React.FC = () => {
 
     if (inCombat) {
       setQueuedPath([]);
+      setPendingNpcInteractionId(null);
       return;
     }
 
@@ -302,8 +442,13 @@ const GameController: React.FC = () => {
       return;
     }
 
-    if (!isPositionWalkable(nextStep, currentMapArea, player, enemies)) {
+    if (
+      !isPositionWalkable(nextStep, currentMapArea, player, enemies, {
+        npcs: currentMapArea.entities.npcs,
+      })
+    ) {
       setQueuedPath([]);
+      setPendingNpcInteractionId(null);
       return;
     }
 
@@ -321,6 +466,7 @@ const GameController: React.FC = () => {
           )
         );
         setQueuedPath([]);
+        setPendingNpcInteractionId(null);
         return;
       }
 
@@ -336,6 +482,7 @@ const GameController: React.FC = () => {
       }
 
       setQueuedPath([]);
+      setPendingNpcInteractionId(null);
       return;
     }
 
@@ -350,6 +497,58 @@ const GameController: React.FC = () => {
     curfewActive,
     dispatch,
     mapDirectory,
+  ]);
+
+  useEffect(() => {
+    if (!pendingNpcInteractionId || !currentMapArea) {
+      return;
+    }
+
+    const npc = currentMapArea.entities.npcs.find(
+      (entry) => entry.id === pendingNpcInteractionId
+    );
+
+    if (!npc) {
+      setPendingNpcInteractionId(null);
+      return;
+    }
+
+    const distance =
+      Math.abs(npc.position.x - player.position.x) +
+      Math.abs(npc.position.y - player.position.y);
+
+    if (distance <= 1) {
+      if (!inCombat) {
+        const started = beginDialogueWithNpc(npc);
+        setPendingNpcInteractionId(null);
+
+        if (started) {
+          setQueuedPath([]);
+        }
+      } else {
+        setPendingNpcInteractionId(null);
+      }
+
+      return;
+    }
+
+    if (queuedPath.length === 0) {
+      dispatch(
+        addLogMessage(
+          `${npc.name} is out of reach—their channel fades into static.`
+        )
+      );
+      setPendingNpcInteractionId(null);
+    }
+  }, [
+    pendingNpcInteractionId,
+    currentMapArea,
+    player.position.x,
+    player.position.y,
+    inCombat,
+    beginDialogueWithNpc,
+    queuedPath.length,
+    dispatch,
   ]);
 
   useEffect(() => {
@@ -780,6 +979,7 @@ const GameController: React.FC = () => {
 
         if (queuedPath.length > 0) {
           setQueuedPath([]);
+          setPendingNpcInteractionId(null);
         }
         // If not in combat and enemies nearby, enter combat
         if (!inCombat) {
@@ -849,6 +1049,7 @@ const GameController: React.FC = () => {
 
       if (queuedPath.length > 0) {
         setQueuedPath([]);
+        setPendingNpcInteractionId(null);
       }
 
       const newPosition = { ...player.position };
@@ -882,7 +1083,11 @@ const GameController: React.FC = () => {
       event.stopPropagation();
 
       // Check if the new position is walkable
-      if (isPositionWalkable(newPosition, currentMapArea, player, enemies)) {
+      if (
+        isPositionWalkable(newPosition, currentMapArea, player, enemies, {
+          npcs: currentMapArea.entities.npcs,
+        })
+      ) {
         const tile = currentMapArea.tiles[newPosition.y][newPosition.x];
         const connection = getConnectionForPosition(
           currentMapArea.id,
@@ -920,6 +1125,7 @@ const GameController: React.FC = () => {
           }
 
           setQueuedPath([]);
+          setPendingNpcInteractionId(null);
 
           return;
         }
@@ -1023,7 +1229,8 @@ const GameController: React.FC = () => {
       mapDirectory,
       queuedPath,
       setQueuedPath,
-      dialogues,
+      beginDialogueWithNpc,
+      setPendingNpcInteractionId,
       activeDialogueId,
     ]
   );

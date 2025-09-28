@@ -1,4 +1,4 @@
-import { Position, MapArea, Player, Enemy } from '../interfaces/types';
+import { Position, MapArea, Player, Enemy, NPC } from '../interfaces/types';
 import { isPositionWalkable } from './grid';
 
 interface FindPathOptions {
@@ -6,6 +6,8 @@ interface FindPathOptions {
   player?: Player;
   enemies?: Enemy[];
   blockedPositions?: Position[];
+  npcs?: NPC[];
+  ignoreNpcIds?: string[];
 }
 
 const serialize = (position: Position): string => `${position.x},${position.y}`;
@@ -45,7 +47,13 @@ export const findPath = (
 
   visited.add(serialize(start));
 
-  const { player, enemies = [], blockedPositions = [] } = options;
+  const {
+    player,
+    enemies = [],
+    blockedPositions = [],
+    npcs = [],
+    ignoreNpcIds = [],
+  } = options;
 
   const blockedSet = new Set(blockedPositions.map(serialize));
 
@@ -89,7 +97,12 @@ export const findPath = (
         if (blockedSet.has(key)) {
           continue;
         }
-        if (!isPositionWalkable(next, mapArea, player, enemies)) {
+        if (
+          !isPositionWalkable(next, mapArea, player, enemies, {
+            npcs,
+            ignoreNpcIds,
+          })
+        ) {
           continue;
         }
       } else {
@@ -98,7 +111,14 @@ export const findPath = (
           (enemy) => enemy.position.x === next.x && enemy.position.y === next.y
         );
 
-        if (occupiedByEnemy) {
+        const occupiedByNpc = npcs.some(
+          (npc) =>
+            !ignoreNpcIds.includes(npc.id) &&
+            npc.position.x === next.x &&
+            npc.position.y === next.y
+        );
+
+        if (occupiedByEnemy || occupiedByNpc) {
           continue;
         }
       }
