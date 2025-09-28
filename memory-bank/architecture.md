@@ -54,6 +54,13 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 - **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
 
+### `/the-getaway/src/content`
+
+Authorial data that defines the playable world, separated from runtime systems so levels can be versioned and reviewed independently.
+
+- **`levels/level0`**: The foundation sandbox (Level 0) that aggregates quests, dialogues, NPC/item blueprints, building footprints, and cover positions. Each file exports immutable baselines that slices/scenes clone before mutating, giving us clean governance for future levels.
+- **`levels/index.ts`** (future): Intended as the registry once additional districts come online, enabling per-level loading without touching game logic.
+
 ### `/the-getaway/src/game`
 
 Contains all game logic, separated into modules:
@@ -179,6 +186,7 @@ Redux state management:
   - Quest objectives and progress
   - Dialogue tracking and history
   - Active dialogue state for UI rendering
+  - Seeds Redux state by cloning Level 0 resources from `/content/levels/level0`, keeping authoring data immutable
   - Reward definitions for each quest plus guards that lock dialogue options when quest state disallows progression
   - Persistent `lastBriefing` pointer kept for audit trails even though quest intel now lives in the HUD log
 
