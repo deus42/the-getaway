@@ -11,12 +11,13 @@
 3. **Three-Column Command UI** – Status, canvas, and logs stay visible at all times so players never lose critical intel.
 4. **Quest-Driven Dialogue** – Conversations gate objectives, rewards, and state transitions directly through Redux slices.
 5. **Safety-First Movement** – Click-to-move navigation, NPC collision checks, and curfew logic form the baseline feel.
+6. **Locale-Aware Content** – Resources ship in English and Ukrainian, with runtime toggles that swap quests, dialogues, and HUD strings without mutating source data.
 
 ## Architecture Snapshot
 - **React + Vite** host the HUD and game shell.
 - **Phaser** renders grid scenes, path previews, and entity sprites.
 - **Redux Toolkit** manages player/world/quest slices with persistence.
-- **Content Pipeline**: `src/content/levels/level0` exports quests, dialogues, NPC & item blueprints, building footprints, and cover placements. Future levels drop into sibling folders and plug in via slice registries.
+- **Content Pipeline**: `src/content/levels/level0/locales` exports quests, dialogues, NPC & item blueprints, building footprints, and cover placements per locale. Future levels drop into sibling folders and plug in via slice registries.
 
 ## Gameplay Loop (Level 0)
 1. Scout the Slums hub, meet faction contacts, and accept AI-authored quests.

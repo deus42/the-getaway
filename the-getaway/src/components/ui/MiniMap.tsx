@@ -168,7 +168,7 @@ const MiniMap: React.FC = () => {
       ? "rgba(126, 232, 201, 0.6)"
       : "rgba(59, 130, 246, 0.55)";
     context.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
-  }, [mapArea, playerPosition, curfewActive, entitySignature]);
+  }, [mapArea, playerPosition, curfewActive, entitySignature, enemies, npcs]);
 
   if (!mapArea) {
     return null;

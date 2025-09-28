@@ -1,4 +1,11 @@
 import React from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { SUPPORTED_LOCALES, Locale } from "../../content/locales";
+import { getUIStrings } from "../../content/ui";
+import { setLocale } from "../../store/settingsSlice";
+import { applyLocaleToQuests } from "../../store/questsSlice";
+import { applyLocaleToWorld } from "../../store/worldSlice";
+import { RootState, AppDispatch } from "../../store";
 
 interface GameMenuProps {
   onStartNewGame: () => void;
@@ -11,6 +18,20 @@ const GameMenu: React.FC<GameMenuProps> = ({
   onContinue,
   hasActiveGame,
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const strings = getUIStrings(locale);
+
+  const handleLocaleSelect = (nextLocale: Locale) => {
+    if (nextLocale === locale) {
+      return;
+    }
+
+    dispatch(setLocale(nextLocale));
+    dispatch(applyLocaleToQuests(nextLocale));
+    dispatch(applyLocaleToWorld(nextLocale));
+  };
+
   return (
     <div
       data-testid="game-menu"
@@ -47,7 +68,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
               marginBottom: "0.75rem",
             }}
           >
-            The Getaway
+            {strings.menu.tag}
           </p>
           <h1
             style={{
@@ -57,7 +78,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
               marginBottom: "0.75rem",
             }}
           >
-            Escape the Regime
+            {strings.menu.title}
           </h1>
           <p
             style={{
@@ -67,8 +88,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
               maxWidth: "28ch",
             }}
           >
-            Lead your cell through the fortified Slums. Stealth or strike?
-            Every move echoes through the city.
+            {strings.menu.tagline}
           </p>
         </div>
 
@@ -91,7 +111,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
               transition: "transform 120ms ease, box-shadow 120ms ease",
             }}
           >
-            Start New Game
+            {strings.menu.start}
           </button>
 
           <button
@@ -114,26 +134,71 @@ const GameMenu: React.FC<GameMenuProps> = ({
               transition: "transform 120ms ease, box-shadow 120ms ease",
             }}
           >
-            Continue
+            {strings.menu.resume}
           </button>
+        </div>
 
-          <button
-            type="button"
-            disabled
-            style={{
-              width: "100%",
-              padding: "1rem",
-              borderRadius: "12px",
-              border: "1px solid rgba(148,163,184,0.15)",
-              backgroundColor: "rgba(15,23,42,0.35)",
-              color: "#475569",
-              fontSize: "1rem",
-              fontWeight: 500,
-              cursor: "not-allowed",
-            }}
-          >
-            Settings (Coming Soon)
-          </button>
+        <div
+          style={{
+            marginTop: "2rem",
+            padding: "1.25rem",
+            borderRadius: "14px",
+            border: "1px solid rgba(148,163,184,0.25)",
+            backgroundColor: "rgba(15,23,42,0.6)",
+            display: "flex",
+            flexDirection: "column",
+            gap: "1rem",
+          }}
+        >
+          <div>
+            <h2
+              style={{
+                fontSize: "1.15rem",
+                fontWeight: 600,
+                margin: 0,
+                marginBottom: "0.35rem",
+              }}
+            >
+              {strings.menu.settingsHeading}
+            </h2>
+            <p
+              style={{
+                fontSize: "0.85rem",
+                color: "#cbd5f5",
+                margin: 0,
+              }}
+            >
+              {strings.menu.languageLabel}
+            </p>
+          </div>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            {SUPPORTED_LOCALES.map((localeOption) => {
+              const isActive = localeOption === locale;
+              return (
+                <button
+                  type="button"
+                  key={localeOption}
+                  onClick={() => handleLocaleSelect(localeOption)}
+                  style={{
+                    padding: "0.5rem 0.9rem",
+                    borderRadius: "999px",
+                    border: isActive
+                      ? "1px solid rgba(96,165,250,0.75)"
+                      : "1px solid rgba(148,163,184,0.3)",
+                    backgroundColor: isActive
+                      ? "rgba(37,99,235,0.35)"
+                      : "rgba(15,23,42,0.6)",
+                    color: isActive ? "#e2e8f0" : "#94a3b8",
+                    fontSize: "0.85rem",
+                    letterSpacing: "0.05em",
+                    cursor: "pointer",
+                  }}
+                >
+                  {strings.menu.languageNames[localeOption]}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div
@@ -146,7 +211,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
             textAlign: "center",
           }}
         >
-          Alpha Build {new Date().getFullYear()}
+          {strings.menu.alphaLabel(new Date().getFullYear())}
         </div>
       </div>
     </div>

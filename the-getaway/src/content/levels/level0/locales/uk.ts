@@ -1,0 +1,571 @@
+import { Level0LocaleContent } from '../types';
+
+export const level0UkrainianContent: Level0LocaleContent = {
+  dialogues: [
+    {
+      id: 'npc_lira_vendor',
+      npcId: 'Ліра-контрабандистка',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Ліра струшує попіл із контрабандної сигарети. "Потрібне спорядження, розвідка чи послуга? Срібло купує мовчання, але послуги дарують шанс вижити."',
+          options: [
+            {
+              text: 'Покажи, що зараз ходить на вулицях.',
+              nextNodeId: 'trade',
+              skillCheck: {
+                skill: 'charisma',
+                threshold: 6,
+              },
+            },
+            {
+              text: 'Останнім часом якісь поставки зникали?',
+              nextNodeId: 'quest',
+              questEffect: {
+                questId: 'quest_market_cache',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Твій тайник знову в надійних руках.',
+              nextNodeId: 'quest_complete',
+              questEffect: {
+                questId: 'quest_market_cache',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Тримайся тихіше, Ліро.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'trade',
+          text: '"Товару мало, але кредити говорять. Принеси трамвайні жетони — відкрию резервне сховище."',
+          options: [
+            {
+              text: 'Пошукаю, що знайду.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'quest',
+          text: '"Корпоративний патруль перехопив мій вуличний тайник. Прослизни в Центр і поверни моє — обидві сторони виграють."',
+          options: [
+            {
+              text: 'Вважай, вже роблю.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'quest_complete',
+          text: '"Й не сумнівалась у тобі. Перекрою маршрути через безпечніші провулки."',
+          options: [
+            {
+              text: 'Будь пильна, Ліро.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_archivist_naila',
+      npcId: 'Архіварка Найла',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Найла поправляє тріснуті лінзи. "Знання — це важіль. Допоможи викрити патрульні маніфести, і я розчищу тобі шлях."',
+          options: [
+            {
+              text: 'Що потрібно повернути?',
+              nextNodeId: 'mission',
+              questEffect: {
+                questId: 'quest_datapad_truth',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Маніфести вже розкодовані.',
+              nextNodeId: 'mission_complete',
+              questEffect: {
+                questId: 'quest_datapad_truth',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Пізніше.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'mission',
+          text: '"Чутки кажуть, що Ліра тримає дата-пад із потрібними мені маніфестами. Дістань його — і я простелю тобі безпечні вікна патрулів."',
+          options: [
+            {
+              text: 'Поверну цей дата-пад.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'mission_complete',
+          text: '"З цим маршрути патрулів наші. Я завантажу безпечні проміжки на твій пульт."',
+          options: [
+            {
+              text: 'Ціную дані, Найло.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_courier_brant',
+      npcId: 'Кур’єр Брант',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Брант поправляє пошарпаний месенджерський наплічник. "Мої зв’язкові зникли після комендантської години. Допоможи знайти — поділюся маршрутами."',
+          options: [
+            {
+              text: 'Де вони зникли востаннє?',
+              nextNodeId: 'task',
+              questEffect: {
+                questId: 'quest_courier_network',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Твої кур’єри в безпеці.',
+              nextNodeId: 'task_complete',
+              questEffect: {
+                questId: 'quest_courier_network',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Не зараз.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'task',
+          text: '"Вони фіксували трамвайні жетони біля транспортного вузла. Обійди площі й поверни, що заховали."',
+          options: [
+            {
+              text: 'Тримай мережу живою.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'task_complete',
+          text: '"Ти витягнув їх із вогню. Ці маршрути триматимуть тебе попереду облав."',
+          options: [
+            {
+              text: 'Не зупиняйся, Бранте.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  quests: [
+    {
+      id: 'quest_market_cache',
+      name: 'Повернення ринкового тайника',
+      description: 'Ліра хоче повернути конфіскований тайник із контрабандою на патрульному маршруті в Центрі.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'recover-keycard',
+          description: 'Добудьте корпоративну ключ-картку, заховану в Центрі.',
+          isCompleted: false,
+          type: 'collect',
+          target: 'Корпоративна ключ-картка',
+          count: 1,
+          currentCount: 0,
+        },
+        {
+          id: 'return-to-lira',
+          description: 'Поверніться до Ліри в Нетрищах.',
+          isCompleted: false,
+          type: 'talk',
+          target: 'Ліра-контрабандистка',
+        },
+      ],
+      rewards: [
+        { type: 'currency', amount: 80 },
+        { type: 'item', id: 'Зашифрований дата-пад', amount: 1 },
+      ],
+    },
+    {
+      id: 'quest_datapad_truth',
+      name: 'Маніфести контролю',
+      description: 'Архіварці Найлі потрібен зашифрований дата-пад, щоб оприлюднити маршрути патрулів.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'obtain-datapad',
+          description: 'Знайдіть зашифрований дата-пад у тайнику Нетрищ.',
+          isCompleted: false,
+          type: 'collect',
+          target: 'Зашифрований дата-пад',
+          count: 1,
+          currentCount: 0,
+        },
+        {
+          id: 'deliver-naila',
+          description: 'Передайте дата-пад Архіварці Найлі в Центрі.',
+          isCompleted: false,
+          type: 'talk',
+          target: 'Архіварка Найла',
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 120 },
+        { type: 'item', id: 'Трамвайні жетони', amount: 1 },
+      ],
+    },
+    {
+      id: 'quest_courier_network',
+      name: 'Порятунок кур’єрської мережі',
+      description: 'Кур’єр Брант втратив зв’язок зі своїми бігунами біля транспортного вузла.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'find-transit-tokens',
+          description: 'Зберіть трамвайні жетони, розкидані по площах Центру.',
+          isCompleted: false,
+          type: 'collect',
+          target: 'Трамвайні жетони',
+          count: 3,
+          currentCount: 0,
+        },
+        {
+          id: 'report-brant',
+          description: 'Доповісти кур’єру Бранту про повернені жетони.',
+          isCompleted: false,
+          type: 'talk',
+          target: 'Кур’єр Брант',
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 90 },
+        { type: 'currency', amount: 60 },
+      ],
+    },
+  ],
+  npcBlueprints: [
+    {
+      name: 'Ліра-контрабандистка',
+      position: { x: 26, y: 20 },
+      health: 12,
+      maxHealth: 12,
+      routine: [
+        { position: { x: 26, y: 20 }, timeOfDay: 'day', duration: 240 },
+        { position: { x: 30, y: 26 }, timeOfDay: 'evening', duration: 240 },
+        { position: { x: 22, y: 19 }, timeOfDay: 'night', duration: 240 },
+      ],
+      dialogueId: 'npc_lira_vendor',
+      isInteractive: true,
+    },
+    {
+      name: 'Вартовий Орн-патруля',
+      position: { x: 46, y: 28 },
+      health: 20,
+      maxHealth: 20,
+      routine: [
+        { position: { x: 46, y: 28 }, timeOfDay: 'day', duration: 180 },
+        { position: { x: 50, y: 20 }, timeOfDay: 'evening', duration: 180 },
+        { position: { x: 40, y: 34 }, timeOfDay: 'night', duration: 180 },
+      ],
+      dialogueId: 'npc_guard_orn',
+      isInteractive: false,
+    },
+    {
+      name: 'Архіварка Найла',
+      position: { x: 28, y: 14 },
+      health: 14,
+      maxHealth: 14,
+      routine: [
+        { position: { x: 28, y: 14 }, timeOfDay: 'day', duration: 300 },
+        { position: { x: 32, y: 24 }, timeOfDay: 'evening', duration: 300 },
+      ],
+      dialogueId: 'npc_archivist_naila',
+      isInteractive: true,
+    },
+    {
+      name: 'Кур’єр Брант',
+      position: { x: 14, y: 24 },
+      health: 16,
+      maxHealth: 16,
+      routine: [
+        { position: { x: 14, y: 24 }, timeOfDay: 'day', duration: 180 },
+        { position: { x: 10, y: 16 }, timeOfDay: 'evening', duration: 180 },
+        { position: { x: 34, y: 16 }, timeOfDay: 'night', duration: 180 },
+      ],
+      dialogueId: 'npc_courier_brant',
+      isInteractive: true,
+    },
+  ],
+  itemBlueprints: [
+    {
+      name: 'Покинута аптечка',
+      description: 'Напівпорожня аптечка біля торгового прилавка.',
+      weight: 2,
+      value: 40,
+      isQuestItem: false,
+    },
+    {
+      name: 'Зашифрований дата-пад',
+      description: 'Містить чорноринкові маніфести, якими керує Ліра.',
+      weight: 1,
+      value: 150,
+      isQuestItem: true,
+    },
+    {
+      name: 'Корпоративна ключ-картка',
+      description: 'Перепустка, вкрадена у топменеджера вежі.',
+      weight: 0.2,
+      value: 200,
+      isQuestItem: true,
+    },
+    {
+      name: 'Трамвайні жетони',
+      description: 'Старі жетони метро. Їх і досі беруть деякі торговці.',
+      weight: 0.5,
+      value: 30,
+      isQuestItem: false,
+    },
+  ],
+  buildingDefinitions: [
+    {
+      id: 'slums_tenement',
+      name: 'Набережний гуртожиток',
+      footprint: { from: { x: 4, y: 6 }, to: { x: 12, y: 16 } },
+      door: { x: 8, y: 16 },
+      interior: { width: 12, height: 8 },
+    },
+    {
+      id: 'slums_storage',
+      name: 'Складський двір «Дельта»',
+      footprint: { from: { x: 6, y: 24 }, to: { x: 14, y: 34 } },
+      door: { x: 10, y: 24 },
+      interior: { width: 10, height: 8 },
+    },
+    {
+      id: 'slums_workshop',
+      name: 'Майстерні озброєнь',
+      footprint: { from: { x: 20, y: 6 }, to: { x: 30, y: 16 } },
+      door: { x: 25, y: 6 },
+      interior: { width: 12, height: 8 },
+    },
+    {
+      id: 'slums_terraces',
+      name: 'Каскадні тераси',
+      footprint: { from: { x: 22, y: 26 }, to: { x: 34, y: 36 } },
+      door: { x: 28, y: 26 },
+      interior: { width: 12, height: 10 },
+    },
+    {
+      id: 'slums_market',
+      name: 'Навіс нічного ринку',
+      footprint: { from: { x: 36, y: 10 }, to: { x: 40, y: 20 } },
+      door: { x: 38, y: 20 },
+      interior: { width: 8, height: 6 },
+    },
+    {
+      id: 'slums_depot',
+      name: 'Казарми депо',
+      footprint: { from: { x: 42, y: 24 }, to: { x: 52, y: 34 } },
+      door: { x: 47, y: 24 },
+      interior: { width: 14, height: 10 },
+    },
+    {
+      id: 'downtown_arcology',
+      name: 'Аркологічні шпилі',
+      footprint: { from: { x: 6, y: 6 }, to: { x: 30, y: 22 } },
+      door: { x: 18, y: 26 },
+      interior: { width: 18, height: 10 },
+    },
+    {
+      id: 'downtown_exchange',
+      name: 'Велика біржа',
+      footprint: { from: { x: 40, y: 8 }, to: { x: 66, y: 22 } },
+      door: { x: 54, y: 26 },
+      interior: { width: 20, height: 10 },
+    },
+    {
+      id: 'downtown_conclave',
+      name: 'Магістратський конклав',
+      footprint: { from: { x: 76, y: 8 }, to: { x: 102, y: 22 } },
+      door: { x: 90, y: 26 },
+      interior: { width: 18, height: 12 },
+    },
+    {
+      id: 'downtown_embassy',
+      name: 'Алея посольств',
+      footprint: { from: { x: 112, y: 8 }, to: { x: 138, y: 22 } },
+      door: { x: 126, y: 26 },
+      interior: { width: 18, height: 12 },
+    },
+    {
+      id: 'downtown_archives',
+      name: 'Міські архіви',
+      footprint: { from: { x: 6, y: 32 }, to: { x: 30, y: 48 } },
+      door: { x: 18, y: 56 },
+      interior: { width: 16, height: 10 },
+    },
+    {
+      id: 'downtown_transit',
+      name: 'Транспортний вузол',
+      footprint: { from: { x: 40, y: 32 }, to: { x: 66, y: 48 } },
+      door: { x: 54, y: 56 },
+      interior: { width: 20, height: 12 },
+    },
+    {
+      id: 'downtown_research',
+      name: 'Дослідницьке ядро',
+      footprint: { from: { x: 76, y: 32 }, to: { x: 102, y: 48 } },
+      door: { x: 90, y: 56 },
+      interior: { width: 18, height: 12 },
+    },
+    {
+      id: 'downtown_embassy_plaza',
+      name: 'Площа посольств',
+      footprint: { from: { x: 112, y: 32 }, to: { x: 138, y: 48 } },
+      door: { x: 126, y: 56 },
+      interior: { width: 18, height: 12 },
+    },
+    {
+      id: 'downtown_residential',
+      name: 'Житлові тераси',
+      footprint: { from: { x: 6, y: 60 }, to: { x: 30, y: 78 } },
+      door: { x: 18, y: 86 },
+      interior: { width: 16, height: 12 },
+    },
+    {
+      id: 'downtown_citadel',
+      name: 'Цитадель безпеки',
+      footprint: { from: { x: 40, y: 60 }, to: { x: 66, y: 78 } },
+      door: { x: 54, y: 86 },
+      interior: { width: 18, height: 12 },
+    },
+    {
+      id: 'downtown_biotech_garden',
+      name: 'Біотехнологічні сади',
+      footprint: { from: { x: 76, y: 60 }, to: { x: 102, y: 78 } },
+      door: { x: 90, y: 86 },
+      interior: { width: 18, height: 12 },
+    },
+    {
+      id: 'downtown_embassy_port',
+      name: 'Порт аеростатів',
+      footprint: { from: { x: 112, y: 60 }, to: { x: 138, y: 78 } },
+      door: { x: 126, y: 86 },
+      interior: { width: 18, height: 12 },
+    },
+    {
+      id: 'downtown_theatre',
+      name: 'Голо-театр',
+      footprint: { from: { x: 6, y: 84 }, to: { x: 34, y: 102 } },
+      door: { x: 18, y: 86 },
+      interior: { width: 16, height: 10 },
+    },
+    {
+      id: 'downtown_barracks',
+      name: 'Казарми вартових',
+      footprint: { from: { x: 40, y: 84 }, to: { x: 70, y: 102 } },
+      door: { x: 54, y: 86 },
+      interior: { width: 16, height: 10 },
+    },
+    {
+      id: 'downtown_logistics',
+      name: 'Логістика порту',
+      footprint: { from: { x: 76, y: 84 }, to: { x: 106, y: 102 } },
+      door: { x: 90, y: 86 },
+      interior: { width: 18, height: 10 },
+    },
+    {
+      id: 'downtown_solar_farm',
+      name: 'Анекс сонячної ферми',
+      footprint: { from: { x: 112, y: 84 }, to: { x: 138, y: 102 } },
+      door: { x: 126, y: 86 },
+      interior: { width: 14, height: 10 },
+    },
+  ],
+  coverSpots: {
+    slums: [
+      { x: 12, y: 20 },
+      { x: 18, y: 14 },
+      { x: 24, y: 24 },
+      { x: 28, y: 30 },
+      { x: 34, y: 22 },
+      { x: 40, y: 28 },
+      { x: 8, y: 24 },
+      { x: 14, y: 32 },
+      { x: 22, y: 8 },
+      { x: 30, y: 10 },
+      { x: 44, y: 24 },
+      { x: 48, y: 32 },
+      { x: 36, y: 12 },
+      { x: 50, y: 18 },
+      { x: 18, y: 34 },
+      { x: 10, y: 12 },
+    ],
+    downtown: [
+      { x: 12, y: 18 },
+      { x: 20, y: 20 },
+      { x: 42, y: 18 },
+      { x: 52, y: 20 },
+      { x: 74, y: 18 },
+      { x: 84, y: 20 },
+      { x: 106, y: 18 },
+      { x: 118, y: 20 },
+      { x: 14, y: 40 },
+      { x: 22, y: 44 },
+      { x: 44, y: 38 },
+      { x: 56, y: 44 },
+      { x: 76, y: 40 },
+      { x: 88, y: 44 },
+      { x: 108, y: 38 },
+      { x: 120, y: 44 },
+      { x: 16, y: 68 },
+      { x: 26, y: 70 },
+      { x: 46, y: 66 },
+      { x: 58, y: 68 },
+      { x: 80, y: 66 },
+      { x: 92, y: 68 },
+      { x: 112, y: 66 },
+      { x: 124, y: 68 },
+      { x: 18, y: 94 },
+      { x: 30, y: 96 },
+      { x: 48, y: 94 },
+      { x: 62, y: 92 },
+      { x: 82, y: 94 },
+      { x: 100, y: 92 },
+      { x: 116, y: 96 },
+      { x: 132, y: 94 },
+    ],
+  },
+  world: {
+    areaName: 'Центр міста',
+    objectives: [
+      'Обстежте периметр Нетрищ і позначте ворожі патрулі',
+      'Встановіть контакт із Лірою-контрабандисткою',
+      'Знайдіть укриття до початку комендантських облав',
+    ],
+    initialEnemyName: 'Гвардієць',
+  },
+};

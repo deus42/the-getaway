@@ -1,20 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Position, TileType, NPC, Item } from '../interfaces/types';
-import {
-  level0SlumsCoverSpots,
-  level0DowntownCoverSpots,
-  level0AllCoverSpots,
-  level0SlumsBuildings,
-  level0DowntownBuildings,
-  level0AllBuildings,
-  level0SlumsNPCs,
-  level0DowntownNPCs,
-  level0AllNPCs,
-  level0SlumsItems,
-  level0DowntownItems,
-  level0AllItems,
-  LevelBuildingDefinition,
-} from '../../content/levels/level0';
+import { Locale } from '../../content/locales';
+import { getLevel0Content } from '../../content/levels/level0';
+import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 import {
   createBasicMapArea,
   addWalls,
@@ -23,7 +11,8 @@ import {
   getAdjacentWalkablePositions,
 } from './grid';
 
-type BuildingDefinition = LevelBuildingDefinition;
+type NPCBlueprint = Omit<NPC, 'id'>;
+type ItemBlueprint = Omit<Item, 'id'>;
 
 interface GeneratedArea {
   area: MapArea;
@@ -46,52 +35,11 @@ export interface MapConnection {
 
 const DOWNTOWN_WIDTH = 144;
 const DOWNTOWN_HEIGHT = 108;
-type NPCBlueprint = Omit<NPC, 'id'>;
-type ItemBlueprint = Omit<Item, 'id'>;
 
-const clonePosition = (position: Position): Position => ({ ...position });
+const isCityBoulevard = (x: number, y: number) =>
+  y === 26 || y === 56 || y === 86 || x === 36 || x === 72 || x === 108;
 
-const cloneCoverSpots = (spots: Position[]): Position[] =>
-  spots.map((spot) => clonePosition(spot));
 
-const cloneBuildingDefinition = (building: BuildingDefinition): BuildingDefinition => ({
-  ...building,
-  footprint: {
-    from: clonePosition(building.footprint.from),
-    to: clonePosition(building.footprint.to),
-  },
-  door: clonePosition(building.door),
-  interior: { ...building.interior },
-});
-
-const cloneNPCDefinition = (npc: NPCBlueprint): NPCBlueprint => ({
-  ...npc,
-  position: clonePosition(npc.position),
-  routine: npc.routine.map((step) => ({
-    ...step,
-    position: clonePosition(step.position),
-  })),
-});
-
-const cloneItemBlueprint = (item: ItemBlueprint): ItemBlueprint => ({
-  ...item,
-});
-
-const SLUMS_COVER_SPOTS: Position[] = cloneCoverSpots(level0SlumsCoverSpots);
-const DOWNTOWN_COVER_SPOTS: Position[] = cloneCoverSpots(level0DowntownCoverSpots);
-const CITY_COVER_SPOTS: Position[] = cloneCoverSpots(level0AllCoverSpots);
-
-const SLUMS_BUILDINGS: BuildingDefinition[] = level0SlumsBuildings.map(cloneBuildingDefinition);
-const DOWNTOWN_BUILDINGS: BuildingDefinition[] = level0DowntownBuildings.map(cloneBuildingDefinition);
-const CITY_BUILDINGS: BuildingDefinition[] = level0AllBuildings.map(cloneBuildingDefinition);
-
-const SLUMS_NPC_BLUEPRINTS: NPCBlueprint[] = level0SlumsNPCs.map(cloneNPCDefinition);
-const DOWNTOWN_NPC_BLUEPRINTS: NPCBlueprint[] = level0DowntownNPCs.map(cloneNPCDefinition);
-const CITY_NPC_BLUEPRINTS: NPCBlueprint[] = level0AllNPCs.map(cloneNPCDefinition);
-
-const SLUMS_ITEM_BLUEPRINTS: ItemBlueprint[] = level0SlumsItems.map(cloneItemBlueprint);
-const DOWNTOWN_ITEM_BLUEPRINTS: ItemBlueprint[] = level0DowntownItems.map(cloneItemBlueprint);
-const CITY_ITEM_BLUEPRINTS: ItemBlueprint[] = level0AllItems.map(cloneItemBlueprint);
 const createInteriorArea = (name: string, width: number, height: number, level: number): InteriorSpec => {
   const interior = createBasicMapArea(name, width, height, {
     level,
@@ -117,7 +65,7 @@ const createInteriorArea = (name: string, width: number, height: number, level: 
 const applyBuildingConnections = (
   hostArea: MapArea,
   settlementName: string,
-  buildings: BuildingDefinition[]
+  buildings: LevelBuildingDefinition[]
 ): { connections: MapConnection[]; interiors: MapArea[] } => {
   const connections: MapConnection[] = [];
   const interiors: MapArea[] = [];
@@ -159,19 +107,21 @@ const applyBuildingConnections = (
   return { connections, interiors };
 };
 
-const isCityBoulevard = (x: number, y: number) =>
-  y === 26 || y === 56 || y === 86 || x === 36 || x === 72 || x === 108;
+interface BuildWorldParams {
+  locale: Locale;
+}
 
-const LEVEL_ZERO_OBJECTIVES = [
-  'Survey the Slums perimeter and mark hostile patrols',
-  'Establish contact with Lira the Smuggler',
-  'Secure shelter before curfew sweeps begin',
-];
-
-const createCityArea = (): GeneratedArea => {
-  const area = createBasicMapArea('Downtown', DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT, {
+const createCityArea = (
+  areaName: string,
+  objectives: string[],
+  buildings: LevelBuildingDefinition[],
+  coverSpots: Position[],
+  npcBlueprints: NPCBlueprint[],
+  itemBlueprints: ItemBlueprint[]
+): GeneratedArea => {
+  const area = createBasicMapArea(areaName, DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT, {
     level: 0,
-    objectives: LEVEL_ZERO_OBJECTIVES,
+    objectives,
   });
   const walls: Position[] = [];
 
@@ -185,7 +135,7 @@ const createCityArea = (): GeneratedArea => {
     }
   };
 
-  CITY_BUILDINGS.forEach((building) => {
+  buildings.forEach((building) => {
     addBlock(
       building.footprint.from.x,
       building.footprint.from.y,
@@ -196,7 +146,7 @@ const createCityArea = (): GeneratedArea => {
 
   const withWalls = addWalls(area, walls);
 
-  const coverSpotsOnWalkableTiles = CITY_COVER_SPOTS.filter((position) => {
+  const coverSpotsOnWalkableTiles = coverSpots.filter((position) => {
     const tile = withWalls.tiles[position.y]?.[position.x];
 
     if (!tile) {
@@ -229,7 +179,7 @@ const createCityArea = (): GeneratedArea => {
     return fallback ?? null;
   };
 
-  CITY_NPC_BLUEPRINTS.forEach((npcBlueprint) => {
+  npcBlueprints.forEach((npcBlueprint) => {
     const position = resolveOpenPosition(npcBlueprint.position);
 
     if (!position) {
@@ -243,14 +193,14 @@ const createCityArea = (): GeneratedArea => {
     });
   });
 
-  CITY_ITEM_BLUEPRINTS.forEach((itemBlueprint) => {
+  itemBlueprints.forEach((itemBlueprint) => {
     withCover.entities.items.push({ ...itemBlueprint, id: uuidv4() });
   });
 
   const { connections, interiors } = applyBuildingConnections(
     withCover,
-    'Downtown',
-    CITY_BUILDINGS
+    areaName,
+    buildings
   );
 
   interiors.forEach((interior) => {
@@ -265,35 +215,40 @@ const createCityArea = (): GeneratedArea => {
   };
 };
 
-const cityResult = createCityArea();
+export interface BuiltWorldResources {
+  slumsArea: MapArea;
+  mapAreas: Record<string, MapArea>;
+  connections: MapConnection[];
+}
 
-export const slumsArea = cityResult.area;
-export const downtownArea = cityResult.area;
+export const buildWorldResources = ({ locale }: BuildWorldParams): BuiltWorldResources => {
+  const content = getLevel0Content(locale);
 
-const interiorAreas = [...cityResult.interiorAreas];
-
-export const mapAreas: Record<string, MapArea> = interiorAreas.reduce(
-  (acc, interior) => {
-    acc[interior.id] = interior;
-    return acc;
-  },
-  {
-    [slumsArea.id]: slumsArea,
-  } as Record<string, MapArea>
-);
-
-export const SLUMS_COVER_POSITIONS = CITY_COVER_SPOTS;
-
-export const mapConnections: MapConnection[] = [...cityResult.connections];
-
-export const getConnectionForPosition = (
-  areaId: string,
-  position: Position
-): MapConnection | undefined => {
-  return mapConnections.find(
-    (c) =>
-      c.fromAreaId === areaId &&
-      c.fromPosition.x === position.x &&
-      c.fromPosition.y === position.y
+  const cityResult = createCityArea(
+    content.world.areaName,
+    content.world.objectives,
+    content.buildingDefinitions,
+    content.coverSpots.all,
+    content.npcBlueprints,
+    content.itemBlueprints
   );
+
+  const slumsArea = cityResult.area;
+  const interiorAreas = [...cityResult.interiorAreas];
+
+  const mapAreas: Record<string, MapArea> = interiorAreas.reduce(
+    (acc, interior) => {
+      acc[interior.id] = interior;
+      return acc;
+    },
+    {
+      [slumsArea.id]: slumsArea,
+    } as Record<string, MapArea>
+  );
+
+  return {
+    slumsArea,
+    mapAreas,
+    connections: [...cityResult.connections],
+  };
 };

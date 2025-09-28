@@ -1,8 +1,9 @@
 import { AnyAction, combineReducers, configureStore, createAction } from '@reduxjs/toolkit';
 import playerReducer from './playerSlice';
-import worldReducer from './worldSlice';
-import questsReducer from './questsSlice';
+import worldReducer, { applyLocaleToWorld } from './worldSlice';
+import questsReducer, { applyLocaleToQuests } from './questsSlice';
 import logReducer from './logSlice';
+import settingsReducer from './settingsSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -12,6 +13,7 @@ const reducers = {
   world: worldReducer,
   quests: questsReducer,
   log: logReducer,
+  settings: settingsReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -55,7 +57,19 @@ const saveState = (state: PersistedState) => {
 
 const rootReducer = (state: CombinedState | undefined, action: AnyAction) => {
   if (resetGame.match(action)) {
-    return combinedReducer(undefined, action);
+    const preservedSettings = state?.settings;
+    let baseState = combinedReducer(undefined, action);
+
+    if (preservedSettings) {
+      baseState = combinedReducer(baseState, applyLocaleToQuests(preservedSettings.locale));
+      baseState = combinedReducer(baseState, applyLocaleToWorld(preservedSettings.locale));
+      baseState = {
+        ...baseState,
+        settings: preservedSettings,
+      } as CombinedState;
+    }
+
+    return baseState;
   }
 
   return combinedReducer(state, action);
@@ -82,6 +96,7 @@ store.subscribe(() => {
     world: state.world,
     quests: state.quests,
     log: state.log,
+    settings: state.settings,
   };
   saveState(stateToPersist);
 });

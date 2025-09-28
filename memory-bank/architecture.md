@@ -59,6 +59,8 @@ Dedicated folder for reusable React UI components, separate from core game logic
 Authorial data that defines the playable world, separated from runtime systems so levels can be versioned and reviewed independently.
 
 - **`levels/level0`**: The foundation sandbox (Level 0) that aggregates quests, dialogues, NPC/item blueprints, building footprints, and cover positions. Each file exports immutable baselines that slices/scenes clone before mutating, giving us clean governance for future levels.
+- **`levels/level0/locales`**: Locale-specific payloads (`en.ts`, `uk.ts`) containing the fully translated dialogue, quest metadata, blueprint names, and world objectives. The locale loader deep-clones the requested locale every time so runtime mutations never touch the authoring source.
+- **`ui/index.ts`**: Centralised HUD copy (menu strings, quest log headings, etc.) with per-locale lookup tables consumed by React components.
 - **`levels/index.ts`** (future): Intended as the registry once additional districts come online, enabling per-level loading without touching game logic.
 
 ### `/the-getaway/src/game`
@@ -174,20 +176,21 @@ Redux state management:
   - Inventory management
   - Experience and leveling actions
   - Action point manipulation for combat
+- **`settingsSlice.ts`**: Stores user-configurable preferences (currently language locale) and exposes a `setLocale` reducer used by the menu UI.
 
 - **`worldSlice.ts`**: World state management:
   - Current map area and time tracking
   - Combat state handling
   - Entity management (enemies, NPCs, items)
   - Environmental state like day/night cycle
+  - Rebuilds map areas and door connections when the locale switches, keeping `mapConnections` in Redux so React components can resolve door transitions without touching the content layer directly.
 
 - **`questsSlice.ts`**: Quest and dialogue state:
   - Active and completed quests
   - Quest objectives and progress
-  - Dialogue tracking and history
   - Active dialogue state for UI rendering
   - Seeds Redux state by cloning Level 0 resources from `/content/levels/level0`, keeping authoring data immutable
-  - Reward definitions for each quest plus guards that lock dialogue options when quest state disallows progression
+  - Seeds Redux state by cloning Level 0 resources from `/content/levels/level0` and re-clones whenever the locale changes, keeping authoring data immutable
   - Persistent `lastBriefing` pointer kept for audit trails even though quest intel now lives in the HUD log
 
 - **`logSlice.ts`**: Manages a list of log messages for display in the UI. Provides an `addLogMessage` action to push new messages (e.g., combat events, warnings) onto the log stack.

@@ -133,7 +133,7 @@
   - Define a quest in `src/game/quests` that reflects the game's backstory (e.g., "Deliver a message to a resistance member").
   - Track progress in state and show it in a React-based quest log.
   - Reward XP and possibly an item upon completion.
-- **Status**: Completed — the Quest Log panel tracks active/closed quests, dialogue hooks award XP/credits/items, rewards surface directly in the HUD, and Level 0 quest/dialogue data now lives under `/src/content/levels/level0` for governance.
+- **Status**: Completed — the Quest Log panel tracks active/closed quests, dialogue hooks award XP/credits/items, rewards surface directly in the HUD, and Level 0 quest/dialogue data now lives under `/src/content/levels/level0/locales` with English/Ukrainian variants.
 - **Test**: Accept the quest, complete the objective, and turn it in. Verify the quest log updates and rewards are awarded correctly.
 
 ### Step 16: Seed Dialogue and Quest Threads

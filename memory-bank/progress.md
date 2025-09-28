@@ -419,7 +419,8 @@ Date: September 28, 2025
 2. Enhanced dialogue quest hooks so starting, updating, and completing quests gate the corresponding conversation options and dispatch in-world log messages.
 3. Distributed quest rewards directly through the overlay, granting experience, credits, and item drops into the player inventory upon completion.
 4. Renamed the HUD panel and copywriting to consistently reference "Quest Log"/"Quests" instead of Ops Briefings, aligning interface language with the new functionality.
-5. Broke Level 0 authoring data (quests, dialogues, NPC/item/building blueprints, cover points) into `/src/content/levels/level0` so future districts can slot in without touching runtime logic.
+5. Split Level 0 authoring data by locale (English and Ukrainian) under `/src/content/levels/level0/locales`, keeping the structural blueprints immutable while translating all narrative copy.
+6. Added UI string tables and a Settings panel so the menu, quest log, and runtime data can switch between English and Ukrainian without mutating source resources.
 ### Validation:
 - `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
 - `yarn test src/__tests__/opsBriefingsPanel.test.tsx --watch=false`

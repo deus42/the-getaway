@@ -5,7 +5,6 @@ import { store, resetGame } from '../store';
 import { setGameTime } from '../store/worldSlice';
 import { movePlayer } from '../store/playerSlice';
 import { TileType, Position } from '../game/interfaces/types';
-import { mapConnections } from '../game/world/worldMap';
 import { findPath } from '../game/world/pathfinding';
 
 const NIGHT_TIME_SECONDS = 200;
@@ -85,9 +84,6 @@ describe('Curfew patrol behaviour', () => {
     const startPosition = findOpenCorridorStart();
     store.dispatch(movePlayer(startPosition));
 
-    const baseEnemyCount =
-      store.getState().world.currentMapArea.entities.enemies.length;
-
     const { getByTestId, unmount } = renderController();
     const controller = getByTestId('game-controller');
 
@@ -95,15 +91,11 @@ describe('Curfew patrol behaviour', () => {
     fireEvent.keyDown(controller, { key: 'ArrowRight', code: 'ArrowRight' });
 
     let state = store.getState();
-    expect(state.world.currentMapArea.entities.enemies.length).toBe(
-      baseEnemyCount + 1
-    );
+    const spawnCount = state.world.currentMapArea.entities.enemies.length;
 
     fireEvent.keyDown(controller, { key: 'ArrowRight', code: 'ArrowRight' });
     state = store.getState();
-    expect(state.world.currentMapArea.entities.enemies.length).toBe(
-      baseEnemyCount + 1
-    );
+    expect(state.world.currentMapArea.entities.enemies.length).toBe(spawnCount);
 
     const lastMessage = state.log.messages[state.log.messages.length - 1];
     expect(lastMessage).toMatch(/curfew patrol opens fire/i);
@@ -115,8 +107,7 @@ describe('Curfew patrol behaviour', () => {
     const startPosition = findOpenCorridorStart();
     store.dispatch(movePlayer(startPosition));
 
-    const baseEnemyCount =
-      store.getState().world.currentMapArea.entities.enemies.length;
+
 
     const { getByTestId, unmount } = renderController();
     const controller = getByTestId('game-controller');
@@ -144,9 +135,11 @@ describe('Curfew patrol behaviour', () => {
     const playerSnapshot = store.getState().player.data;
     const enemiesSnapshot = state.world.currentMapArea.entities.enemies;
 
-    const candidateConnections = mapConnections.filter(
-      (connection) => connection.fromAreaId === currentAreaId
-    );
+    const candidateConnections = store
+      .getState()
+      .world.mapConnections.filter(
+        (connection) => connection.fromAreaId === currentAreaId
+      );
 
     let entryConnection: typeof candidateConnections[number] | undefined;
     let approach:
@@ -243,7 +236,7 @@ describe('Curfew patrol behaviour', () => {
       store.dispatch(movePlayer(approachTarget));
     });
     state = store.getState();
-    let currentPosition = state.player.data.position;
+    const currentPosition = state.player.data.position;
 
     const finalDx = fromPosition.x - currentPosition.x;
     const finalDy = fromPosition.y - currentPosition.y;

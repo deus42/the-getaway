@@ -1,6 +1,7 @@
 import { CSSProperties } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import { getUIStrings } from "../../content/ui";
 
 interface OpsBriefingsPanelProps {
   containerStyle: CSSProperties;
@@ -10,6 +11,8 @@ const mutedText = "rgba(148, 163, 184, 0.78)";
 
 const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle }) => {
   const quests = useSelector((state: RootState) => state.quests.quests);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
 
   const activeQuests = quests.filter((quest) => quest.isActive && !quest.isCompleted);
   const completedQuests = quests
@@ -17,8 +20,19 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
     .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 3);
 
+  const currencyLabel = locale === 'uk' ? 'кредити' : 'credits';
+  const supplyFallback = locale === 'uk' ? 'поставка' : 'Supply';
+
   const formatReward = (rewardCount: number, label: string) => {
-    return rewardCount > 0 ? `${rewardCount} ${label}${rewardCount > 1 ? 's' : ''}` : null;
+    if (rewardCount <= 0) {
+      return null;
+    }
+
+    if (locale === 'en') {
+      return rewardCount > 1 ? `${rewardCount} ${label}s` : `${rewardCount} ${label}`;
+    }
+
+    return `${rewardCount} ${label}`;
   };
 
   const renderRewards = (questId: string) => {
@@ -36,14 +50,18 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
     const itemRewards = quest.rewards.filter((reward) => reward.type === 'item');
 
     const rewardLabels = [
-      currency ? `${currency} credits` : null,
+      currency ? `${currency} ${currencyLabel}` : null,
       experience ? `${experience} XP` : null,
-      ...itemRewards.map((reward) => formatReward(Math.max(1, reward.amount || 1), reward.id ?? 'Supply')),
+      ...itemRewards.map((reward) =>
+        formatReward(Math.max(1, reward.amount || 1), reward.id ?? supplyFallback)
+      ),
     ].filter(Boolean);
 
     if (rewardLabels.length === 0) {
       return null;
     }
+
+    const rewardHeading = locale === 'uk' ? 'Нагорода' : 'Rewards';
 
     return (
       <div
@@ -54,7 +72,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
           color: '#34d399',
         }}
       >
-        Rewards: {rewardLabels.join(' • ')}
+        {rewardHeading}: {rewardLabels.join(' • ')}
       </div>
     );
   };
@@ -71,7 +89,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
           fontStyle: 'italic',
         }}
       >
-        No quests tracked. Connect with contacts to unlock new objectives.
+        {uiStrings.questLog.empty}
       </div>
     );
   }
@@ -96,7 +114,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
               color: '#60a5fa',
             }}
           >
-            Active Quests
+            {uiStrings.questLog.active}
           </div>
           {activeQuests.map((quest) => (
             <div
@@ -167,7 +185,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
               color: '#a78bfa',
             }}
           >
-            Completed Quests
+            {uiStrings.questLog.completed}
           </div>
           {completedQuests.map((quest) => (
             <div

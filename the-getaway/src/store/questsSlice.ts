@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Quest, Dialogue } from '../game/interfaces/types';
-import { level0Dialogues, level0Quests } from '../content/levels/level0';
+import { DEFAULT_LOCALE, Locale } from '../content/locales';
+import { getLevel0Content } from '../content/levels/level0';
 
 export interface QuestState {
   quests: Quest[];
@@ -15,44 +16,24 @@ export interface QuestState {
   };
 }
 
-const cloneDialogue = (dialogue: Dialogue): Dialogue => ({
-  ...dialogue,
-  nodes: dialogue.nodes.map((node) => ({
-    ...node,
-    options: node.options.map((option) => ({
-      ...option,
-      skillCheck: option.skillCheck ? { ...option.skillCheck } : undefined,
-      questEffect: option.questEffect ? { ...option.questEffect } : undefined,
-    })),
-  })),
-});
+const buildQuestState = (locale: Locale): QuestState => {
+  const content = getLevel0Content(locale);
 
-const cloneQuest = (quest: Quest): Quest => ({
-  ...quest,
-  objectives: quest.objectives.map((objective) => ({
-    ...objective,
-  })),
-  rewards: quest.rewards.map((reward) => ({
-    ...reward,
-  })),
-});
-
-const buildInitialDialogues = (): Dialogue[] => level0Dialogues.map(cloneDialogue);
-
-const buildInitialQuests = (): Quest[] => level0Quests.map(cloneQuest);
-
-const initialState: QuestState = {
-  quests: buildInitialQuests(),
-  dialogues: buildInitialDialogues(),
-  activeDialogue: {
-    dialogueId: null,
-    currentNodeId: null,
-  },
-  lastBriefing: {
-    dialogueId: null,
-    nodeId: null,
-  },
+  return {
+    quests: content.quests,
+    dialogues: content.dialogues,
+    activeDialogue: {
+      dialogueId: null,
+      currentNodeId: null,
+    },
+    lastBriefing: {
+      dialogueId: null,
+      nodeId: null,
+    },
+  };
 };
+
+const initialState: QuestState = buildQuestState(DEFAULT_LOCALE);
 
 export const questsSlice = createSlice({
   name: 'quests',
@@ -169,18 +150,13 @@ export const questsSlice = createSlice({
     },
     
     // Reset all quests (for new game)
-    resetQuests: (state) => {
-      state.quests = buildInitialQuests();
-      state.dialogues = buildInitialDialogues();
-      state.activeDialogue = {
-        dialogueId: null,
-        currentNodeId: null
-      };
-      state.lastBriefing = {
-        dialogueId: null,
-        nodeId: null,
-      };
-    }
+    resetQuests: (_state, action: PayloadAction<Locale | undefined>) => {
+      return buildQuestState(action.payload ?? DEFAULT_LOCALE);
+    },
+
+    applyLocaleToQuests: (_state, action: PayloadAction<Locale>) => {
+      return buildQuestState(action.payload);
+    },
   }
 });
 
@@ -195,7 +171,8 @@ export const {
   startDialogue,
   setDialogueNode,
   endDialogue,
-  resetQuests
+  resetQuests,
+  applyLocaleToQuests
 } = questsSlice.actions;
 
 export default questsSlice.reducer; 

@@ -24,7 +24,6 @@ import {
 } from "../game/combat/combatSystem";
 import { Enemy, Position, MapArea, TileType, NPC } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
-import { getConnectionForPosition } from "../game/world/worldMap";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
 import { findPath } from "../game/world/pathfinding";
@@ -52,6 +51,9 @@ const GameController: React.FC = () => {
   );
   const mapDirectory = useSelector(
     (state: RootState) => state.world.mapAreas
+  );
+  const mapConnections = useSelector(
+    (state: RootState) => state.world.mapConnections
   );
   const dialogues = useSelector((state: RootState) => state.quests.dialogues);
   const activeDialogueId = useSelector(
@@ -288,7 +290,7 @@ const GameController: React.FC = () => {
         handleTileClick as EventListener
       );
     };
-  }, [currentMapArea, player, enemies, inCombat, dispatch, beginDialogueWithNpc]);
+  }, [currentMapArea, player, enemies, inCombat, dispatch, beginDialogueWithNpc, mapConnections]);
 
   useEffect(() => {
     if (!currentMapArea) {
@@ -314,12 +316,16 @@ const GameController: React.FC = () => {
   }, [mapAreaId, mapAreaIsInterior]);
 
   useEffect(() => {
-    activeNpcMovements.current.clear();
-    npcMovementTimeouts.current.forEach((timeoutId) => {
+    const movements = activeNpcMovements.current;
+    const timeouts = npcMovementTimeouts.current;
+    const reserved = npcReservedDestinations.current;
+
+    movements.clear();
+    timeouts.forEach((timeoutId) => {
       window.clearTimeout(timeoutId);
     });
-    npcMovementTimeouts.current = [];
-    npcReservedDestinations.current.clear();
+    timeouts.length = 0;
+    reserved.clear();
   }, [currentMapArea?.id]);
 
   const scheduleNpcMovement = useCallback(
@@ -412,13 +418,17 @@ const GameController: React.FC = () => {
   }, [currentMapArea, timeOfDay, player, enemies, scheduleNpcMovement]);
 
   useEffect(() => {
+    const timeoutIds = npcMovementTimeouts.current;
+    const movements = activeNpcMovements.current;
+    const reserved = npcReservedDestinations.current;
+
     return () => {
-      npcMovementTimeouts.current.forEach((timeoutId) => {
+      timeoutIds.forEach((timeoutId) => {
         window.clearTimeout(timeoutId);
       });
-      npcMovementTimeouts.current = [];
-      activeNpcMovements.current.clear();
-      npcReservedDestinations.current.clear();
+      timeoutIds.length = 0;
+      movements.clear();
+      reserved.clear();
     };
   }, []);
 
@@ -453,9 +463,11 @@ const GameController: React.FC = () => {
     }
 
     const tile = currentMapArea.tiles[nextStep.y][nextStep.x];
-    const connection = getConnectionForPosition(
-      currentMapArea.id,
-      nextStep
+    const connection = mapConnections.find(
+      (candidate) =>
+        candidate.fromAreaId === currentMapArea.id &&
+        candidate.fromPosition.x === nextStep.x &&
+        candidate.fromPosition.y === nextStep.y
     );
 
     if (connection) {
@@ -489,14 +501,14 @@ const GameController: React.FC = () => {
     dispatch(movePlayer(nextStep));
   }, [
     queuedPath,
-    player.position.x,
-    player.position.y,
+    player,
     currentMapArea,
     enemies,
     inCombat,
     curfewActive,
     dispatch,
     mapDirectory,
+    mapConnections,
   ]);
 
   useEffect(() => {
@@ -543,12 +555,12 @@ const GameController: React.FC = () => {
   }, [
     pendingNpcInteractionId,
     currentMapArea,
-    player.position.x,
-    player.position.y,
+    player,
     inCombat,
     beginDialogueWithNpc,
     queuedPath.length,
     dispatch,
+    mapConnections,
   ]);
 
   useEffect(() => {
@@ -1089,9 +1101,11 @@ const GameController: React.FC = () => {
         })
       ) {
         const tile = currentMapArea.tiles[newPosition.y][newPosition.x];
-        const connection = getConnectionForPosition(
-          currentMapArea.id,
-          newPosition
+        const connection = mapConnections.find(
+          (candidate) =>
+            candidate.fromAreaId === currentMapArea.id &&
+            candidate.fromPosition.x === newPosition.x &&
+            candidate.fromPosition.y === newPosition.y
         );
 
         if (connection) {
@@ -1229,9 +1243,10 @@ const GameController: React.FC = () => {
       mapDirectory,
       queuedPath,
       setQueuedPath,
-      beginDialogueWithNpc,
       setPendingNpcInteractionId,
       activeDialogueId,
+      mapConnections,
+      dialogues,
     ]
   );
 

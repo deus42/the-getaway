@@ -1,7 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
-import { mapAreas, slumsArea } from '../game/world/worldMap';
+import { DEFAULT_LOCALE, Locale } from '../content/locales';
+import { getLevel0Content } from '../content/levels/level0';
+import { buildWorldResources, MapConnection } from '../game/world/worldMap';
 import {
   TimeOfDay,
   getCurrentTimeOfDay,
@@ -12,6 +14,7 @@ import {
 export interface WorldState {
   currentMapArea: MapArea;
   mapAreas: Record<string, MapArea>;
+  mapConnections: MapConnection[];
   currentTime: number;
   timeOfDay: TimeOfDay;
   curfewActive: boolean;
@@ -20,11 +23,9 @@ export interface WorldState {
   turnCount: number;
 }
 
-// Initial map areas are created in worldMap.ts
-const initialMap = slumsArea;
-const initialEnemy: Enemy = {
+const buildEnemy = (name: string): Enemy => ({
   id: uuidv4(),
-  name: "Guard",
+  name,
   position: { x: 34, y: 24 },
   maxHealth: 25,
   health: 25,
@@ -33,20 +34,31 @@ const initialEnemy: Enemy = {
   damage: 5,
   attackRange: 1,
   isHostile: true,
-};
-initialMap.entities.enemies.push(initialEnemy);
-console.log("[worldSlice] Initial map generated with enemy:", initialEnemy);
+});
 
-const initialState: WorldState = {
-  currentMapArea: initialMap,
-  mapAreas,
-  currentTime: 0,
-  timeOfDay: getCurrentTimeOfDay(0, DEFAULT_DAY_NIGHT_CONFIG),
-  curfewActive: isCurfewTime(0, DEFAULT_DAY_NIGHT_CONFIG),
-  inCombat: false,
-  isPlayerTurn: true,
-  turnCount: 1,
+const buildWorldState = (locale: Locale): WorldState => {
+  const resources = buildWorldResources({ locale });
+  const content = getLevel0Content(locale);
+
+  const currentMapArea = resources.slumsArea;
+  const initialEnemy = buildEnemy(content.world.initialEnemyName);
+  currentMapArea.entities.enemies.push(initialEnemy);
+  console.log('[worldSlice] Initial map generated with enemy:', initialEnemy);
+
+  return {
+    currentMapArea,
+    mapAreas: resources.mapAreas,
+    mapConnections: resources.connections,
+    currentTime: 0,
+    timeOfDay: getCurrentTimeOfDay(0, DEFAULT_DAY_NIGHT_CONFIG),
+    curfewActive: isCurfewTime(0, DEFAULT_DAY_NIGHT_CONFIG),
+    inCombat: false,
+    isPlayerTurn: true,
+    turnCount: 1,
+  };
 };
+
+const initialState: WorldState = buildWorldState(DEFAULT_LOCALE);
 
 export const worldSlice = createSlice({
   name: 'world',
@@ -58,7 +70,7 @@ export const worldSlice = createSlice({
       state.isPlayerTurn = true;
       state.turnCount = 1;
     },
-    
+
     updateGameTime: (state, action: PayloadAction<number>) => {
       state.currentTime += action.payload;
       state.timeOfDay = getCurrentTimeOfDay(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
@@ -70,48 +82,44 @@ export const worldSlice = createSlice({
       state.timeOfDay = getCurrentTimeOfDay(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
       state.curfewActive = isCurfewTime(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
     },
-    
+
     enterCombat: (state) => {
       if (!state.inCombat) {
-        console.log("[worldSlice] Entering Combat Mode");
+        console.log('[worldSlice] Entering Combat Mode');
         state.inCombat = true;
         state.isPlayerTurn = true;
         state.turnCount = 1;
       }
     },
-    
+
     exitCombat: (state) => {
       if (state.inCombat) {
-        console.log("[worldSlice] Exiting Combat Mode");
+        console.log('[worldSlice] Exiting Combat Mode');
         state.inCombat = false;
         state.isPlayerTurn = true;
         state.turnCount = 1;
       }
     },
-    
+
     switchTurn: (state) => {
       if (!state.inCombat) return;
 
       state.isPlayerTurn = !state.isPlayerTurn;
 
       if (state.isPlayerTurn) {
-        // Just switched TO player turn
-        state.turnCount++; // Increment turn count here
+        state.turnCount++;
         console.log(`[worldSlice] switchTurn: Starting Player Turn ${state.turnCount}`);
-        // Player AP reset is handled in GameController
       } else {
-        // Just switched TO enemy turn
-         console.log(`[worldSlice] switchTurn: Starting Enemy Turn (during Player Turn ${state.turnCount})`);
-        console.log("[worldSlice] switchTurn: Resetting AP for all living enemies");
+        console.log(`[worldSlice] switchTurn: Starting Enemy Turn (during Player Turn ${state.turnCount})`);
+        console.log('[worldSlice] switchTurn: Resetting AP for all living enemies');
         state.currentMapArea.entities.enemies.forEach((enemy, index) => {
           if (enemy.health > 0) {
-            // Modify draft directly
             state.currentMapArea.entities.enemies[index].actionPoints = enemy.maxActionPoints;
           }
         });
       }
     },
-    
+
     updateEnemy: (state, action: PayloadAction<Enemy>) => {
       const incoming = action.payload;
 
@@ -131,7 +139,7 @@ export const worldSlice = createSlice({
         }
       };
 
-      console.log("[worldSlice] updateEnemy reducer running", {
+      console.log('[worldSlice] updateEnemy reducer running', {
         enemyId: incoming.id,
         health: incoming.health,
       });
@@ -143,72 +151,72 @@ export const worldSlice = createSlice({
       });
 
       if (incoming.health <= 0) {
-        console.log(
-          `[worldSlice updateEnemy] Enemy ${incoming.id} removed from all areas.`
-        );
+        console.log(`[worldSlice updateEnemy] Enemy ${incoming.id} removed from all areas.`);
 
         const livingEnemies = state.currentMapArea.entities.enemies.filter(
           (enemy) => enemy.health > 0
         );
 
         if (livingEnemies.length === 0) {
-          console.log(
-            "[worldSlice updateEnemy] No living enemies remain. Clearing combat state."
-          );
+          console.log('[worldSlice updateEnemy] No living enemies remain. Clearing combat state.');
           state.inCombat = false;
           state.isPlayerTurn = true;
           state.turnCount = 1;
         }
       }
     },
-    
+
     addEnemy: (state, action: PayloadAction<Enemy>) => {
       state.currentMapArea.entities.enemies.push(action.payload);
     },
-    
+
     removeEnemy: (state, action: PayloadAction<string>) => {
       const enemyId = action.payload;
       state.currentMapArea.entities.enemies = state.currentMapArea.entities.enemies.filter(
-        enemy => enemy.id !== enemyId
+        (enemy) => enemy.id !== enemyId
       );
     },
-    
+
     updateNPC: (state, action: PayloadAction<NPC>) => {
       const npc = action.payload;
-      const index = state.currentMapArea.entities.npcs.findIndex(n => n.id === npc.id);
-      
+      const index = state.currentMapArea.entities.npcs.findIndex((n) => n.id === npc.id);
+
       if (index !== -1) {
         state.currentMapArea.entities.npcs[index] = npc;
       }
     },
-    
+
     addNPC: (state, action: PayloadAction<NPC>) => {
       state.currentMapArea.entities.npcs.push(action.payload);
     },
-    
+
     removeNPC: (state, action: PayloadAction<string>) => {
       const npcId = action.payload;
       state.currentMapArea.entities.npcs = state.currentMapArea.entities.npcs.filter(
-        npc => npc.id !== npcId
+        (npc) => npc.id !== npcId
       );
     },
-    
-    addItemToMap: (state, action: PayloadAction<{item: Item, position: Position}>) => {
+
+    addItemToMap: (state, action: PayloadAction<{ item: Item; position: Position }>) => {
       const { item, position } = action.payload;
       const itemWithPosition = {
         ...item,
-        position
-      };
-      state.currentMapArea.entities.items.push(itemWithPosition as Item & { position: Position });
+        position,
+      } as Item & { position: Position };
+      state.currentMapArea.entities.items.push(itemWithPosition);
     },
-    
+
     removeItemFromMap: (state, action: PayloadAction<string>) => {
       const itemId = action.payload;
       state.currentMapArea.entities.items = state.currentMapArea.entities.items.filter(
-        item => item.id !== itemId
+        (item) => item.id !== itemId
       );
-    }
-  }
+    },
+
+    applyLocaleToWorld: (_state, action: PayloadAction<Locale>) => {
+      return buildWorldState(action.payload);
+    },
+  },
 });
 
 export const {
@@ -225,7 +233,8 @@ export const {
   addNPC,
   removeNPC,
   addItemToMap,
-  removeItemFromMap
+  removeItemFromMap,
+  applyLocaleToWorld,
 } = worldSlice.actions;
 
-export default worldSlice.reducer; 
+export default worldSlice.reducer;

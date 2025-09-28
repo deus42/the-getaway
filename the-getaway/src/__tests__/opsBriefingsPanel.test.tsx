@@ -3,6 +3,10 @@ import { Provider } from 'react-redux';
 import OpsBriefingsPanel from '../components/ui/OpsBriefingsPanel';
 import { store, resetGame } from '../store';
 import { startQuest, completeQuest } from '../store/questsSlice';
+import { getUIStrings } from '../content/ui';
+import { DEFAULT_LOCALE } from '../content/locales';
+
+const { questLog: questLogStrings } = getUIStrings(DEFAULT_LOCALE);
 
 const renderPanel = () => {
   return render(
@@ -20,9 +24,7 @@ describe('OpsBriefingsPanel (Quest Log)', () => {
   it('shows placeholder when no quests are active or completed', () => {
     renderPanel();
 
-    expect(
-      screen.getByText(/No quests tracked. Connect with contacts to unlock new objectives./i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(questLogStrings.empty, { exact: false })).toBeInTheDocument();
   });
 
   it('shows active quest after acceptance', () => {
@@ -32,7 +34,7 @@ describe('OpsBriefingsPanel (Quest Log)', () => {
       store.dispatch(startQuest('quest_market_cache'));
     });
 
-    expect(screen.getByText(/Active Quests/i)).toBeInTheDocument();
+    expect(screen.getByText(questLogStrings.active, { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/Market Cache Recovery/i)).toBeInTheDocument();
   });
 
@@ -44,7 +46,7 @@ describe('OpsBriefingsPanel (Quest Log)', () => {
       store.dispatch(completeQuest('quest_market_cache'));
     });
 
-    expect(screen.getByText(/Completed Quests/i)).toBeInTheDocument();
+    expect(screen.getByText(questLogStrings.completed, { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/Market Cache Recovery/i)).toBeInTheDocument();
   });
 });
