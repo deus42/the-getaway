@@ -9,6 +9,7 @@ import MiniMap from "./components/ui/MiniMap";
 import LevelIndicator from "./components/ui/LevelIndicator";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import GameMenu from "./components/ui/GameMenu";
+import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
 import { PERSISTED_STATE_KEY, resetGame, store } from "./store";
 import { addLogMessage } from "./store/logSlice";
 import "./App.css";
@@ -218,18 +219,7 @@ function App() {
                 <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
                   <span style={panelLabelStyle("#f0abfc")}>Dialog</span>
                   <h2 style={panelTitleStyle}>Ops Briefings</h2>
-                  <div
-                    style={{
-                      ...scrollSectionStyle,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "rgba(148, 163, 184, 0.75)",
-                      fontStyle: "italic",
-                    }}
-                  >
-                    Available in future update
-                  </div>
+                  <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
                 </div>
                 <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
                   <span style={panelLabelStyle("#60a5fa")}>Telemetry</span>

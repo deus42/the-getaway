@@ -1,4 +1,4 @@
-import { MapArea, MapTile, Position, TileType, Player, Enemy } from '../interfaces/types';
+import { MapArea, MapTile, Position, TileType, Player, Enemy, NPC } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Constants for grid creation
@@ -123,11 +123,17 @@ export const isPositionInBounds = (position: Position, mapArea: MapArea): boolea
 };
 
 // Check if a position is walkable (considers bounds, tile type, and entities)
+interface WalkableOptions {
+  npcs?: NPC[];
+  ignoreNpcIds?: string[];
+}
+
 export const isPositionWalkable = (
   position: Position,
   mapArea: MapArea,
   player?: Player,
-  enemies: Enemy[] = []
+  enemies: Enemy[] = [],
+  options: WalkableOptions = {}
 ): boolean => {
   // 1. Check bounds
   if (!isPositionInBounds(position, mapArea)) {
@@ -138,6 +144,8 @@ export const isPositionWalkable = (
   if (!mapArea.tiles[position.y][position.x].isWalkable) {
     return false;
   }
+
+  const { npcs = [], ignoreNpcIds = [] } = options;
 
   // 3. Check if player is at the target position
   if (
@@ -152,6 +160,17 @@ export const isPositionWalkable = (
   if (
     enemies.some(
       (enemy) => enemy.position.x === position.x && enemy.position.y === position.y
+    )
+  ) {
+    return false;
+  }
+
+  if (
+    npcs.some(
+      (npc) =>
+        !ignoreNpcIds.includes(npc.id) &&
+        npc.position.x === position.x &&
+        npc.position.y === position.y
     )
   ) {
     return false;
