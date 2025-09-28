@@ -557,10 +557,10 @@ const GameController: React.FC = () => {
     currentMapArea,
     player,
     inCombat,
-    beginDialogueWithNpc,
     queuedPath.length,
     dispatch,
     mapConnections,
+    beginDialogueWithNpc,
   ]);
 
   useEffect(() => {

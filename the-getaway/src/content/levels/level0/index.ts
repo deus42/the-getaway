@@ -42,6 +42,8 @@ const cloneDialogue = (dialogue: Dialogue): Dialogue => ({
   })),
 });
 
+const clonePosition = (position: Position): Position => ({ ...position });
+
 const cloneQuest = (quest: Quest): Quest => ({
   ...quest,
   objectives: quest.objectives.map((objective) => ({
@@ -68,12 +70,54 @@ const cloneItemBlueprint = (item: Omit<Item, 'id'>): Omit<Item, 'id'> => ({
 const cloneBuildingDefinition = (building: LevelBuildingDefinition): LevelBuildingDefinition => ({
   ...building,
   footprint: {
-    from: clonePosition(building.footprint.from),
-    to: clonePosition(building.footprint.to),
+    from: { ...building.footprint.from },
+    to: { ...building.footprint.to },
   },
-  door: clonePosition(building.door),
+  door: { ...building.door },
   interior: { ...building.interior },
 });
+
+const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDefinition => {
+  const sanitized = cloneBuildingDefinition(building);
+  const { from, to } = sanitized.footprint;
+  const fallbackDoor = {
+    x: Math.floor((from.x + to.x) / 2),
+    y: to.y,
+  };
+
+  const originalDoor = sanitized.door ?? fallbackDoor;
+  const clampedDoor = {
+    x: Math.min(Math.max(originalDoor.x, from.x), to.x),
+    y: Math.min(Math.max(originalDoor.y, from.y), to.y),
+  };
+
+  const isInsideInterior =
+    clampedDoor.x > from.x && clampedDoor.x < to.x &&
+    clampedDoor.y > from.y && clampedDoor.y < to.y;
+
+  if (!isInsideInterior) {
+    sanitized.door = clampedDoor;
+    return sanitized;
+  }
+
+  const candidates = [
+    { x: clampedDoor.x, y: from.y },
+    { x: clampedDoor.x, y: to.y },
+    { x: from.x, y: clampedDoor.y },
+    { x: to.x, y: clampedDoor.y },
+  ];
+
+  const best = candidates.reduce((closest, candidate) => {
+    const distance = Math.abs(candidate.x - clampedDoor.x) + Math.abs(candidate.y - clampedDoor.y);
+    if (!closest || distance < closest.distance) {
+      return { candidate, distance };
+    }
+    return closest;
+  }, null as { candidate: Position; distance: number } | null);
+
+  sanitized.door = best?.candidate ?? fallbackDoor;
+  return sanitized;
+};
 
 const clonePositions = (positions: Position[]): Position[] =>
   positions.map((position) => clonePosition(position));
@@ -85,7 +129,9 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const quests = source.quests.map(cloneQuest);
   const npcBlueprints = source.npcBlueprints.map(cloneNPCBlueprint);
   const itemBlueprints = source.itemBlueprints.map(cloneItemBlueprint);
-  const buildingDefinitions = source.buildingDefinitions.map(cloneBuildingDefinition);
+  const buildingDefinitions = source.buildingDefinitions.map((definition) =>
+    moveDoorToPerimeter(definition)
+  );
 
   const slumsCover = clonePositions(source.coverSpots.slums);
   const downtownCover = clonePositions(source.coverSpots.downtown);
