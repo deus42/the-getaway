@@ -8,6 +8,10 @@ export interface QuestState {
     dialogueId: string | null;
     currentNodeId: string | null;
   };
+  lastBriefing: {
+    dialogueId: string | null;
+    nodeId: string | null;
+  };
 }
 
 const initialDialogues: Dialogue[] = [
@@ -230,6 +234,10 @@ const initialState: QuestState = {
     dialogueId: null,
     currentNodeId: null,
   },
+  lastBriefing: {
+    dialogueId: null,
+    nodeId: null,
+  },
 };
 
 export const questsSlice = createSlice({
@@ -321,11 +329,21 @@ export const questsSlice = createSlice({
         dialogueId,
         currentNodeId: nodeId
       };
+      state.lastBriefing = {
+        dialogueId,
+        nodeId,
+      };
     },
     
     // Update current dialogue node
     setDialogueNode: (state, action: PayloadAction<string | null>) => {
       state.activeDialogue.currentNodeId = action.payload;
+      if (action.payload) {
+        state.lastBriefing = {
+          dialogueId: state.activeDialogue.dialogueId,
+          nodeId: action.payload,
+        };
+      }
     },
     
     // End dialogue interaction
@@ -342,6 +360,10 @@ export const questsSlice = createSlice({
       state.activeDialogue = {
         dialogueId: null,
         currentNodeId: null
+      };
+      state.lastBriefing = {
+        dialogueId: null,
+        nodeId: null,
       };
     }
   }

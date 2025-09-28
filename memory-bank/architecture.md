@@ -40,7 +40,7 @@ Contains all static assets for the game including:
 
 React components that make up the game's user interface:
 - **`GameCanvas.tsx`**: The main component that integrates Phaser with React. It initializes the Phaser game instance and provides the canvas where the game is rendered.
-- **`GameController.tsx`**: Bridges Redux state with Phaser events, handling player input, combat flow, click-to-move execution, curfew enforcement, and NPC routine scheduling.
+- **`GameController.tsx`**: Bridges Redux state with Phaser events, handling player input, combat flow, click-to-move execution, curfew enforcement, NPC routine scheduling, and now prevents stepping onto NPC tiles while auto-pathing to conversation range when you click an NPC.
 
 ### `/the-getaway/src/components/ui`
 
@@ -52,6 +52,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
+- **`OpsBriefingsPanel.tsx`**: Shows the most recent briefing snippet from NPC conversations so players can revisit intel even after the dialogue overlay is dismissed.
 
 ### `/the-getaway/src/game`
 
@@ -178,6 +179,7 @@ Redux state management:
   - Quest objectives and progress
   - Dialogue tracking and history
   - Active dialogue state for UI rendering
+  - Persistent `lastBriefing` pointer that records the most recent dialogue node for Ops Briefings
 
 - **`logSlice.ts`**: Manages a list of log messages for display in the UI. Provides an `addLogMessage` action to push new messages (e.g., combat events, warnings) onto the log stack.
 
@@ -343,6 +345,7 @@ The GameController acts as the central hub for handling user input and orchestra
 - Calls enemy AI (`determineEnemyMove`) and dispatches resulting enemy actions.
 - Dispatches messages to the `logSlice` for display in the `LogPanel`.
 - Displays a minimal turn indicator UI.
+- Treats NPC coordinates as hard blockers, queues conversation approach paths on tile clicks, and records the most recent dialogue node for Ops Briefings.
 
 ### Game Engine
 

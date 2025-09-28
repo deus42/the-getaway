@@ -303,6 +303,12 @@ Date: March 26, 2024
 - Patched enemy AI to surrender its remaining action points when trapped so the turn cycle always returns to the player, halting a rare “not your turn” soft lock after consecutive patrol spawns.
 - Added a regression test to ensure stalled enemies no longer freeze the loop.
 
+### Maintenance Notes (September 28, 2025):
+
+- Hardened movement so player pathing and manual steps respect NPC occupancy, eliminating the ability to stand on top of characters.
+- Added click-to-approach dialogue that automatically walks the player adjacent to the selected NPC and opens their conversation once in range.
+- Introduced Ops Briefings sidebar summaries that persist the last visited dialogue node, keeping intel visible after closing the overlay.
+
 ## Step 6: Introduce Cover Mechanics & UI Overhaul (Completed)
 
 Date: March 27, 2024

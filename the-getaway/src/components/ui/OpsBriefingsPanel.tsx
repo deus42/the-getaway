@@ -11,6 +11,7 @@ const mutedText = "rgba(148, 163, 184, 0.78)";
 const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle }) => {
   const dialogues = useSelector((state: RootState) => state.quests.dialogues);
   const activeDialogue = useSelector((state: RootState) => state.quests.activeDialogue);
+  const lastBriefing = useSelector((state: RootState) => state.quests.lastBriefing);
 
   const currentDialogue = dialogues.find(
     (dialogue) => dialogue.id === activeDialogue.dialogueId
@@ -47,6 +48,31 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
             ))}
           </div>
         )}
+      </div>
+    );
+  }
+
+  const lastDialogue = dialogues.find(
+    (dialogue) => dialogue.id === lastBriefing.dialogueId
+  );
+  const lastNode = lastDialogue?.nodes.find(
+    (node) => node.id === lastBriefing.nodeId
+  );
+
+  if (lastDialogue && lastNode) {
+    return (
+      <div
+        style={{
+          ...containerStyle,
+          display: "flex",
+          flexDirection: "column",
+          gap: "0.75rem",
+        }}
+      >
+        <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#f0abfc" }}>
+          {lastDialogue.npcId}
+        </div>
+        <p style={{ fontSize: "0.95rem", lineHeight: 1.6 }}>{lastNode.text}</p>
       </div>
     );
   }

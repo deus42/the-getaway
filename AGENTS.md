@@ -55,3 +55,5 @@
 
 ## Agent-Specific Instructions
 - Follow this AGENTS.md across the repo. Keep changes minimal and focused. Prefer `yarn` for scripts. When adding files, mirror existing naming and structure.
+- At the start of any feature task, review `memory-bank/implementation plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
+- Whenever implementing changes that alter behavior or structure, update `memory-bank/architecture.md` and `memory-bank/progress.md` in the same session to reflect the new state.
