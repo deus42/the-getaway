@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import { getUIStrings } from "../../content/ui";
 import { MapArea, TileType } from "../../game/interfaces/types";
 
 const MAX_CANVAS_WIDTH = 180;
@@ -36,6 +37,8 @@ const MiniMap: React.FC = () => {
   const curfewActive = useSelector((state: RootState) => state.world.curfewActive);
   const enemies = useSelector((state: RootState) => state.world.currentMapArea.entities.enemies);
   const npcs = useSelector((state: RootState) => state.world.currentMapArea.entities.npcs);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 140, height: 110 });
@@ -199,7 +202,7 @@ const MiniMap: React.FC = () => {
             color: "rgba(148, 163, 184, 0.85)",
           }}
         >
-          Tactical Map
+          {uiStrings.miniMap.heading}
         </span>
         <span
           style={{

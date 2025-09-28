@@ -247,7 +247,7 @@ export class MainScene extends Phaser.Scene {
     });
 
     for (const npc of npcs) {
-    for (const npc of npcs) {
+      const existingSpriteData = this.npcSprites.get(npc.id);
       const pixelPos = this.calculatePixelPosition(npc.position.x, npc.position.y);
       const metrics = this.getIsoMetrics();
 
@@ -256,6 +256,7 @@ export class MainScene extends Phaser.Scene {
       const fillAlpha = isInteractive ? 0.92 : 0.6;
       const strokeColor = isInteractive ? 0xf0fdf4 : 0xc7d2fe;
       const strokeAlpha = isInteractive ? 0.7 : 0.55;
+
       if (!existingSpriteData) {
         const npcSprite = this.add.ellipse(
           pixelPos.x,
@@ -275,8 +276,8 @@ export class MainScene extends Phaser.Scene {
       } else {
         existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
         existingSpriteData.sprite.setDepth(pixelPos.y + 5);
-        sprite.setFillStyle(fillColor, fillAlpha);
-        sprite.setStrokeStyle(1.5, strokeColor, strokeAlpha);
+        existingSpriteData.sprite.setFillStyle(fillColor, fillAlpha);
+        existingSpriteData.sprite.setStrokeStyle(1.5, strokeColor, strokeAlpha);
         existingSpriteData.markedForRemoval = false;
       }
     }

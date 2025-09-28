@@ -42,8 +42,6 @@ const cloneDialogue = (dialogue: Dialogue): Dialogue => ({
   })),
 });
 
-const clonePosition = (position: Position): Position => ({ ...position });
-
 const cloneQuest = (quest: Quest): Quest => ({
   ...quest,
   objectives: quest.objectives.map((objective) => ({

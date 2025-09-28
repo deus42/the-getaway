@@ -3,17 +3,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import {
   DEFAULT_DAY_NIGHT_CONFIG,
-  TimeOfDay,
   getPhaseTimingInfo,
   getSecondsUntilCycleReset,
 } from "../../game/world/dayNightCycle";
-
-const timeOfDayLabels: Record<TimeOfDay, string> = {
-  morning: "Morning",
-  day: "Day",
-  evening: "Evening",
-  night: "Night",
-};
+import { getUIStrings } from "../../content/ui";
 
 const formatDuration = (seconds: number) => {
   const safeSeconds = Math.max(0, Math.round(seconds));
@@ -28,15 +21,18 @@ const DayNightIndicator: React.FC = () => {
   const { currentTime, timeOfDay, curfewActive } = useSelector(
     (state: RootState) => state.world
   );
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
+  const dayNightStrings = uiStrings.dayNight;
 
-  const label = timeOfDayLabels[timeOfDay];
+  const label = dayNightStrings.timeOfDay[timeOfDay];
   const phaseTiming = getPhaseTimingInfo(currentTime, DEFAULT_DAY_NIGHT_CONFIG);
   const cycleResetSeconds = getSecondsUntilCycleReset(
     currentTime,
     DEFAULT_DAY_NIGHT_CONFIG
   );
 
-  const nextPhaseLabel = timeOfDayLabels[phaseTiming.nextPhase];
+  const nextPhaseLabel = dayNightStrings.timeOfDay[phaseTiming.nextPhase];
   const phaseCountdown = formatDuration(phaseTiming.secondsUntilNextPhase);
   const cycleResetCountdown = formatDuration(cycleResetSeconds);
   const phaseProgressPercent = Math.round(phaseTiming.phaseProgress * 100);
@@ -72,7 +68,7 @@ const DayNightIndicator: React.FC = () => {
         }}
       >
         <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.9 }}>
-          PHASE
+          {dayNightStrings.phaseLabel}
         </span>
         <span style={{ fontSize: "0.92rem", fontWeight: 600 }}>{label}</span>
       </div>
@@ -84,7 +80,7 @@ const DayNightIndicator: React.FC = () => {
         }}
       >
         <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.85 }}>
-          NEXT
+          {dayNightStrings.nextLabel}
         </span>
         <div
           style={{
@@ -98,7 +94,7 @@ const DayNightIndicator: React.FC = () => {
             {nextPhaseLabel}
           </span>
           <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
-            in {phaseCountdown}
+            {dayNightStrings.nextIn(phaseCountdown)}
           </span>
         </div>
       </div>
@@ -111,7 +107,7 @@ const DayNightIndicator: React.FC = () => {
         }}
       >
         <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.85 }}>
-          RESET
+          {dayNightStrings.resetLabel}
         </span>
         <span style={{ fontSize: "0.84rem", fontWeight: 600 }}>
           {cycleResetCountdown}
@@ -127,7 +123,7 @@ const DayNightIndicator: React.FC = () => {
           opacity: 0.85,
         }}
       >
-        <span>PROGRESS</span>
+        <span>{dayNightStrings.progressLabel}</span>
         <span>{phaseProgressPercent}%</span>
       </div>
       <div
@@ -175,7 +171,9 @@ const DayNightIndicator: React.FC = () => {
             transform: "translateY(1px)",
           }}
         />
-        {curfewActive ? "CURFEW ENFORCED" : "SAFE TO TRAVEL"}
+        {curfewActive
+          ? dayNightStrings.curfewEnforced
+          : dayNightStrings.safeToTravel}
       </div>
     </div>
   );

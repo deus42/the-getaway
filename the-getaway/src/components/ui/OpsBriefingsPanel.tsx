@@ -20,9 +20,6 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
     .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 3);
 
-  const currencyLabel = locale === 'uk' ? 'кредити' : 'credits';
-  const supplyFallback = locale === 'uk' ? 'поставка' : 'Supply';
-
   const formatReward = (rewardCount: number, label: string) => {
     if (rewardCount <= 0) {
       return null;
@@ -50,18 +47,19 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
     const itemRewards = quest.rewards.filter((reward) => reward.type === 'item');
 
     const rewardLabels = [
-      currency ? `${currency} ${currencyLabel}` : null,
-      experience ? `${experience} XP` : null,
+      currency ? uiStrings.questLog.currencyLabel(currency) : null,
+      experience ? uiStrings.questLog.experienceLabel(experience) : null,
       ...itemRewards.map((reward) =>
-        formatReward(Math.max(1, reward.amount || 1), reward.id ?? supplyFallback)
+        formatReward(
+          Math.max(1, reward.amount || 1),
+          reward.id ?? uiStrings.questLog.supplyFallback
+        )
       ),
     ].filter(Boolean);
 
     if (rewardLabels.length === 0) {
       return null;
     }
-
-    const rewardHeading = locale === 'uk' ? 'Нагорода' : 'Rewards';
 
     return (
       <div
@@ -72,7 +70,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
           color: '#34d399',
         }}
       >
-        {rewardHeading}: {rewardLabels.join(' • ')}
+        {uiStrings.questLog.rewardsHeading}: {rewardLabels.join(' • ')}
       </div>
     );
   };

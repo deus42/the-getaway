@@ -29,6 +29,7 @@ import { v4 as uuidv4 } from "uuid";
 import { findPath } from "../game/world/pathfinding";
 import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT } from "../game/events";
 import { startDialogue, endDialogue } from "../store/questsSlice";
+import { getSystemStrings } from "../content/system";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -59,6 +60,8 @@ const GameController: React.FC = () => {
   const activeDialogueId = useSelector(
     (state: RootState) => state.quests.activeDialogue.dialogueId
   );
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const logStrings = getSystemStrings(locale).logs;
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
 
@@ -77,9 +80,7 @@ const GameController: React.FC = () => {
   const beginDialogueWithNpc = useCallback(
     (npc: NPC): boolean => {
       if (!npc.isInteractive || !npc.dialogueId) {
-        dispatch(
-          addLogMessage(`${npc.name} isn’t ready to talk right now.`)
-        );
+        dispatch(addLogMessage(logStrings.npcNotReady(npc.name)));
         return false;
       }
 
@@ -90,30 +91,22 @@ const GameController: React.FC = () => {
       const dialogue = dialogues.find((entry) => entry.id === npc.dialogueId);
 
       if (!dialogue || dialogue.nodes.length === 0) {
-        dispatch(
-          addLogMessage(
-            `${npc.name} has nothing new to share right now.`
-          )
-        );
+        dispatch(addLogMessage(logStrings.npcNoNewInfo(npc.name)));
         return false;
       }
 
       const initialNodeId = dialogue.nodes[0]?.id;
 
       if (!initialNodeId) {
-        dispatch(
-          addLogMessage(
-            `${npc.name} falls silent—the channel is empty.`
-          )
-        );
+        dispatch(addLogMessage(logStrings.npcChannelEmpty(npc.name)));
         return false;
       }
 
       dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId }));
-      dispatch(addLogMessage(`You open a quiet channel with ${npc.name}.`));
+      dispatch(addLogMessage(logStrings.npcChannelOpened(npc.name)));
       return true;
     },
-    [dispatch, dialogues, activeDialogueId]
+    [dispatch, dialogues, activeDialogueId, logStrings]
   );
 
   // Reference to the div element for focusing
@@ -174,11 +167,7 @@ const GameController: React.FC = () => {
 
       if (npcAtTarget) {
         if (inCombat) {
-          dispatch(
-            addLogMessage(
-              "Combat chatter overrides civilian channels—clear the area first."
-            )
-          );
+          dispatch(addLogMessage(logStrings.combatChatterOverrides));
           return;
         }
 
@@ -251,11 +240,7 @@ const GameController: React.FC = () => {
           setPendingNpcInteractionId(npcAtTarget.id);
           setQueuedPath(selectedPath);
         } else {
-          dispatch(
-            addLogMessage(
-              `${npcAtTarget.name} is boxed in—you can’t reach their position.`
-            )
-          );
+          dispatch(addLogMessage(logStrings.npcBoxedIn(npcAtTarget.name)));
         }
 
         return;
@@ -290,7 +275,7 @@ const GameController: React.FC = () => {
         handleTileClick as EventListener
       );
     };
-  }, [currentMapArea, player, enemies, inCombat, dispatch, beginDialogueWithNpc, mapConnections]);
+  }, [currentMapArea, player, enemies, inCombat, dispatch, beginDialogueWithNpc, mapConnections, logStrings]);
 
   useEffect(() => {
     if (!currentMapArea) {
@@ -472,11 +457,7 @@ const GameController: React.FC = () => {
 
     if (connection) {
       if (curfewActive && tile.type === TileType.DOOR) {
-        dispatch(
-          addLogMessage(
-            "Checkpoint sealed. The regime's curfew keeps the district locked down."
-          )
-        );
+      dispatch(addLogMessage(logStrings.checkpointSealed));
         setQueuedPath([]);
         setPendingNpcInteractionId(null);
         return;
@@ -509,6 +490,7 @@ const GameController: React.FC = () => {
     dispatch,
     mapDirectory,
     mapConnections,
+    logStrings,
   ]);
 
   useEffect(() => {
@@ -545,11 +527,7 @@ const GameController: React.FC = () => {
     }
 
     if (queuedPath.length === 0) {
-      dispatch(
-        addLogMessage(
-          `${npc.name} is out of reach—their channel fades into static.`
-        )
-      );
+      dispatch(addLogMessage(logStrings.npcOutOfReach(npc.name)));
       setPendingNpcInteractionId(null);
     }
   }, [
@@ -561,29 +539,22 @@ const GameController: React.FC = () => {
     dispatch,
     mapConnections,
     beginDialogueWithNpc,
+    logStrings,
   ]);
 
   useEffect(() => {
     if (previousTimeOfDay.current !== timeOfDay) {
       if (timeOfDay === "night") {
-        dispatch(
-          addLogMessage(
-            "Night falls over the Slums. Curfew squadrons sweep the streets."
-          )
-        );
+        dispatch(addLogMessage(logStrings.nightFalls));
         setCurfewAlertState("clear");
       } else if (previousTimeOfDay.current === "night") {
-        dispatch(
-          addLogMessage(
-            "Dawn breaks. The regime eases the curfew for a few precious hours."
-          )
-        );
+        dispatch(addLogMessage(logStrings.dawnBreaks));
         setCurfewAlertState("clear");
       }
 
       previousTimeOfDay.current = timeOfDay;
     }
-  }, [timeOfDay, dispatch]);
+  }, [timeOfDay, dispatch, logStrings]);
 
   // --- Enemy Turn Logic ---
   useEffect(() => {
@@ -757,7 +728,7 @@ const GameController: React.FC = () => {
   useEffect(() => {
     // Check if the value changed from true to false
     if (prevInCombat.current && !inCombat) {
-      dispatch(addLogMessage("Combat Over!"));
+      dispatch(addLogMessage(logStrings.combatOver));
       console.log(
         "[GameController] Combat ended (detected via useEffect watching inCombat)."
       );
@@ -766,20 +737,20 @@ const GameController: React.FC = () => {
     }
     // Update the ref *after* the check for the next render
     prevInCombat.current = inCombat;
-  }, [inCombat, dispatch]); // Run whenever inCombat changes (add dispatch if used inside)
+  }, [inCombat, dispatch, logStrings]); // Run whenever inCombat changes (add dispatch if used inside)
 
   // Handle attacking an enemy
   const attackEnemy = useCallback(
     (enemy: Enemy, mapArea: MapArea) => {
       // Check if player has enough AP
       if (player.actionPoints < DEFAULT_ATTACK_COST) {
-        dispatch(addLogMessage("Not enough AP to attack!"));
+        dispatch(addLogMessage(logStrings.notEnoughAp));
         return;
       }
 
       // Check if enemy is in range
       if (!isInAttackRange(player.position, enemy.position, 1)) {
-        dispatch(addLogMessage("Enemy out of range!"));
+        dispatch(addLogMessage(logStrings.enemyOutOfRange));
         return;
       }
 
@@ -807,11 +778,9 @@ const GameController: React.FC = () => {
       });
 
       if (result.success) {
-        dispatch(
-          addLogMessage(`You hit ${enemy.name} for ${result.damage} damage.`)
-        );
+        dispatch(addLogMessage(logStrings.hitEnemy(enemy.name, result.damage)));
       } else {
-        dispatch(addLogMessage(`You missed ${enemy.name}.`));
+        dispatch(addLogMessage(logStrings.missedEnemy(enemy.name)));
       }
 
       // Update enemy
@@ -831,7 +800,7 @@ const GameController: React.FC = () => {
       );
 
       if (!anyEnemiesAlive) {
-        dispatch(addLogMessage("All enemies defeated!"));
+        dispatch(addLogMessage(logStrings.allEnemiesDefeated));
       } else if (player.actionPoints <= DEFAULT_ATTACK_COST) {
         // If player has no more AP or exactly enough for this attack, switch turn
         console.log(
@@ -840,7 +809,7 @@ const GameController: React.FC = () => {
         dispatch(switchTurn());
       }
     },
-    [player, enemies, dispatch]
+    [player, enemies, dispatch, logStrings]
   );
 
   // Find the closest enemy to a position
@@ -927,11 +896,7 @@ const GameController: React.FC = () => {
 
         if (key === "Escape") {
           dispatch(endDialogue());
-          dispatch(
-            addLogMessage(
-              "You end the conversation and refocus on the street."
-            )
-          );
+          dispatch(addLogMessage(logStrings.conversationEnded));
         }
         return;
       }
@@ -956,11 +921,7 @@ const GameController: React.FC = () => {
         });
 
         if (!interactiveNpc) {
-          dispatch(
-            addLogMessage(
-              "No friendly contact within whisper range."
-            )
-          );
+          dispatch(addLogMessage(logStrings.noFriendlyContact));
           return;
         }
 
@@ -969,19 +930,13 @@ const GameController: React.FC = () => {
         );
 
         if (!dialogue || dialogue.nodes.length === 0) {
-          dispatch(
-            addLogMessage(
-              `${interactiveNpc.name} has nothing new to share right now.`
-            )
-          );
+          dispatch(addLogMessage(logStrings.npcNoNewInfo(interactiveNpc.name)));
           return;
         }
 
         const initialNodeId = dialogue.nodes[0].id;
         dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId }));
-        dispatch(
-          addLogMessage(`You open a quiet channel with ${interactiveNpc.name}.`)
-        );
+        dispatch(addLogMessage(logStrings.npcChannelOpened(interactiveNpc.name)));
         return;
       }
 
@@ -1001,7 +956,7 @@ const GameController: React.FC = () => {
             isInAttackRange(player.position, nearbyEnemy.position, 1)
           ) {
             dispatch(enterCombat());
-            dispatch(addLogMessage("Entered combat mode!"));
+            dispatch(addLogMessage(logStrings.enteredCombat));
             return;
           }
         }
@@ -1016,7 +971,7 @@ const GameController: React.FC = () => {
             attackEnemy(nearbyEnemy, currentMapArea);
             return;
           } else {
-            dispatch(addLogMessage("No enemies in range to attack!"));
+            dispatch(addLogMessage(logStrings.noEnemiesInRange));
             return;
           }
         }
@@ -1031,25 +986,17 @@ const GameController: React.FC = () => {
         if (livingEnemies.length === 0) {
           dispatch(exitCombat());
           dispatch(resetActionPoints());
-          dispatch(
-            addLogMessage(
-              "Zone secured. The street is yours again."
-            )
-          );
+          dispatch(addLogMessage(logStrings.zoneSecured));
           return;
         }
 
         if (!isPlayerTurn) {
-          dispatch(addLogMessage("It's not your turn!"));
+          dispatch(addLogMessage(logStrings.notYourTurn));
           return;
         }
 
         if (player.actionPoints <= 0) {
-          dispatch(
-            addLogMessage(
-              "You're out of action points. The opposition seizes the initiative."
-            )
-          );
+          dispatch(addLogMessage(logStrings.actionPointsDepleted));
 
           dispatch(switchTurn());
 
@@ -1112,11 +1059,7 @@ const GameController: React.FC = () => {
           const targetArea = mapDirectory[connection.toAreaId];
 
           if (curfewActive && tile.type === TileType.DOOR && targetArea && !targetArea.isInterior) {
-            dispatch(
-              addLogMessage(
-                "Checkpoint sealed. The regime's curfew keeps the district locked down."
-              )
-            );
+            dispatch(addLogMessage(logStrings.checkpointSealed));
             return;
           }
 
@@ -1125,11 +1068,7 @@ const GameController: React.FC = () => {
             dispatch(movePlayer(connection.toPosition));
 
             if (targetArea.isInterior) {
-              dispatch(
-                addLogMessage(
-                  "You slip inside the structure. Patrol scanners lose your trail."
-                )
-              );
+              dispatch(addLogMessage(logStrings.slipInsideStructure));
               setCurfewAlertState("clear");
             }
           } else {
@@ -1148,11 +1087,7 @@ const GameController: React.FC = () => {
 
         if (curfewActive && !areaIsInterior) {
           if (curfewAlertState === "clear") {
-            dispatch(
-              addLogMessage(
-                "Searchlights pin you in the open—duck inside before the patrols lock on."
-              )
-            );
+            dispatch(addLogMessage(logStrings.searchlightsWarning));
             setCurfewAlertState("warning");
           } else if (curfewAlertState === "warning") {
             const spawnPosition = findPatrolSpawnPosition(newPosition);
@@ -1160,7 +1095,7 @@ const GameController: React.FC = () => {
             if (spawnPosition) {
               const patrol: Enemy = {
                 id: uuidv4(),
-                name: "Curfew Patrol",
+              name: logStrings.curfewPatrolName,
                 position: spawnPosition,
                 maxHealth: 30,
                 health: 30,
@@ -1175,24 +1110,12 @@ const GameController: React.FC = () => {
 
               if (!inCombat) {
                 dispatch(enterCombat());
-                dispatch(
-                  addLogMessage(
-                    "Curfew patrol opens fire! Survive until the sirens fade."
-                  )
-                );
+                dispatch(addLogMessage(logStrings.curfewOpenFire));
               } else {
-                dispatch(
-                  addLogMessage(
-                    "Another patrol joins the skirmish, tightening the net."
-                  )
-                );
+                dispatch(addLogMessage(logStrings.curfewReinforcement));
               }
             } else {
-              dispatch(
-                addLogMessage(
-                  "You hear armored boots closing in, but they can't reach you yet."
-                )
-              );
+              dispatch(addLogMessage(logStrings.curfewFootsteps));
             }
 
             setCurfewAlertState("spawned");
@@ -1247,6 +1170,7 @@ const GameController: React.FC = () => {
       activeDialogueId,
       mapConnections,
       dialogues,
+      logStrings,
     ]
   );
 

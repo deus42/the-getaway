@@ -1,9 +1,12 @@
 import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
+import { getUIStrings } from "../../content/ui";
 
 const LevelIndicator: React.FC = () => {
   const mapArea = useSelector((state: RootState) => state.world.currentMapArea);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
 
   const levelNumber = mapArea?.level ?? 0;
   const objectives = mapArea?.objectives ?? [];
@@ -39,7 +42,7 @@ const LevelIndicator: React.FC = () => {
         }}
       >
         <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.9 }}>
-          LEVEL
+          {uiStrings.levelIndicator.levelLabel}
         </span>
         <span style={{ fontSize: "0.94rem", fontWeight: 600 }}>{levelNumber}</span>
       </div>
@@ -53,11 +56,11 @@ const LevelIndicator: React.FC = () => {
         }}
       >
         <span style={{ fontSize: "0.7rem", color: "#94a3b8", opacity: 0.85 }}>
-          OBJECTIVES
+          {uiStrings.levelIndicator.objectivesLabel}
         </span>
         {objectives.length === 0 ? (
           <span style={{ fontSize: "0.72rem", color: "#cbd5f5", opacity: 0.85 }}>
-            No active tasks in this sector.
+            {uiStrings.levelIndicator.emptyObjectives}
           </span>
         ) : (
           <ul
