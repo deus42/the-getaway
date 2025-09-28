@@ -9,70 +9,69 @@ interface OpsBriefingsPanelProps {
 const mutedText = "rgba(148, 163, 184, 0.78)";
 
 const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle }) => {
-  const dialogues = useSelector((state: RootState) => state.quests.dialogues);
-  const activeDialogue = useSelector((state: RootState) => state.quests.activeDialogue);
-  const lastBriefing = useSelector((state: RootState) => state.quests.lastBriefing);
+  const quests = useSelector((state: RootState) => state.quests.quests);
 
-  const currentDialogue = dialogues.find(
-    (dialogue) => dialogue.id === activeDialogue.dialogueId
-  );
-  const currentNode = currentDialogue?.nodes.find(
-    (node) => node.id === activeDialogue.currentNodeId
-  );
+  const activeQuests = quests.filter((quest) => quest.isActive && !quest.isCompleted);
+  const completedQuests = quests
+    .filter((quest) => quest.isCompleted)
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 3);
 
-  if (currentDialogue && currentNode) {
+  const formatReward = (rewardCount: number, label: string) => {
+    return rewardCount > 0 ? `${rewardCount} ${label}${rewardCount > 1 ? 's' : ''}` : null;
+  };
+
+  const renderRewards = (questId: string) => {
+    const quest = quests.find((entry) => entry.id === questId);
+    if (!quest) {
+      return null;
+    }
+
+    const currency = quest.rewards
+      .filter((reward) => reward.type === 'currency')
+      .reduce((total, reward) => total + reward.amount, 0);
+    const experience = quest.rewards
+      .filter((reward) => reward.type === 'experience')
+      .reduce((total, reward) => total + reward.amount, 0);
+    const itemRewards = quest.rewards.filter((reward) => reward.type === 'item');
+
+    const rewardLabels = [
+      currency ? `${currency} credits` : null,
+      experience ? `${experience} XP` : null,
+      ...itemRewards.map((reward) => formatReward(Math.max(1, reward.amount || 1), reward.id ?? 'Supply')),
+    ].filter(Boolean);
+
+    if (rewardLabels.length === 0) {
+      return null;
+    }
+
     return (
       <div
         style={{
-          ...containerStyle,
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
+          fontSize: '0.7rem',
+          letterSpacing: '0.18em',
+          textTransform: 'uppercase',
+          color: '#34d399',
         }}
       >
-        <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#f0abfc" }}>
-          {currentDialogue.npcId}
-        </div>
-        <p style={{ fontSize: "0.95rem", lineHeight: 1.6 }}>{currentNode.text}</p>
-        {currentNode.options && currentNode.options.length > 0 && (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-            {currentNode.options.map((option, index) => (
-              <div key={`${option.text}-${index}`} style={{ fontSize: "0.85rem", color: mutedText }}>
-                {option.text}
-                {option.skillCheck && (
-                  <span style={{ marginLeft: "0.4rem", color: "#facc15" }}>
-                    [Requires {option.skillCheck.skill} {option.skillCheck.threshold}+]
-                  </span>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        Rewards: {rewardLabels.join(' • ')}
       </div>
     );
-  }
+  };
 
-  const lastDialogue = dialogues.find(
-    (dialogue) => dialogue.id === lastBriefing.dialogueId
-  );
-  const lastNode = lastDialogue?.nodes.find(
-    (node) => node.id === lastBriefing.nodeId
-  );
-
-  if (lastDialogue && lastNode) {
+  if (activeQuests.length === 0 && completedQuests.length === 0) {
     return (
       <div
         style={{
           ...containerStyle,
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: mutedText,
+          fontStyle: 'italic',
         }}
       >
-        <div style={{ fontSize: "0.9rem", fontWeight: 600, color: "#f0abfc" }}>
-          {lastDialogue.npcId}
-        </div>
-        <p style={{ fontSize: "0.95rem", lineHeight: 1.6 }}>{lastNode.text}</p>
+        No quests tracked. Connect with contacts to unlock new objectives.
       </div>
     );
   }
@@ -81,14 +80,114 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
     <div
       style={{
         ...containerStyle,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: mutedText,
-        fontStyle: "italic",
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1.1rem',
+        overflowY: 'auto',
       }}
     >
-      No active briefings. Establish contact to gather intel.
+      {activeQuests.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div
+            style={{
+              fontSize: '0.75rem',
+              letterSpacing: '0.28em',
+              textTransform: 'uppercase',
+              color: '#60a5fa',
+            }}
+          >
+            Active Quests
+          </div>
+          {activeQuests.map((quest) => (
+            <div
+              key={quest.id}
+              style={{
+                border: '1px solid rgba(96, 165, 250, 0.25)',
+                borderRadius: '14px',
+                padding: '0.9rem',
+                background: 'linear-gradient(150deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.9))',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.55rem',
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '0.92rem',
+                  fontWeight: 600,
+                  color: '#f8fafc',
+                }}
+              >
+                {quest.name}
+              </div>
+              <div style={{ fontSize: '0.8rem', color: mutedText }}>{quest.description}</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                {quest.objectives.map((objective) => (
+                  <div
+                    key={objective.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.78rem',
+                      color: objective.isCompleted ? '#5eead4' : '#cbd5f5',
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '0.65rem',
+                        height: '0.65rem',
+                        borderRadius: '50%',
+                        border: '1px solid rgba(94, 234, 212, 0.45)',
+                        background: objective.isCompleted ? 'rgba(94, 234, 212, 0.35)' : 'transparent',
+                      }}
+                    />
+                    <span style={{ flex: 1 }}>{objective.description}</span>
+                    {objective.count && (
+                      <span style={{ fontSize: '0.7rem', color: '#facc15' }}>
+                        {(objective.currentCount ?? 0)}/{objective.count}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {renderRewards(quest.id)}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {completedQuests.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          <div
+            style={{
+              fontSize: '0.72rem',
+              letterSpacing: '0.26em',
+              textTransform: 'uppercase',
+              color: '#a78bfa',
+            }}
+          >
+            Completed Quests
+          </div>
+          {completedQuests.map((quest) => (
+            <div
+              key={quest.id}
+              style={{
+                border: '1px solid rgba(167, 139, 250, 0.25)',
+                borderRadius: '12px',
+                padding: '0.75rem',
+                background: 'linear-gradient(145deg, rgba(76, 29, 149, 0.22), rgba(30, 41, 59, 0.65))',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.4rem',
+              }}
+            >
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ede9fe' }}>{quest.name}</div>
+              <div style={{ fontSize: '0.75rem', color: mutedText }}>{quest.description}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

@@ -40,6 +40,14 @@ const initialDialogues: Dialogue[] = [
             },
           },
           {
+            text: 'Cache’s back in safe hands.',
+            nextNodeId: 'quest_complete',
+            questEffect: {
+              questId: 'quest_market_cache',
+              effect: 'complete',
+            },
+          },
+          {
             text: 'Keep your head low, Lira.',
             nextNodeId: null,
           },
@@ -65,6 +73,16 @@ const initialDialogues: Dialogue[] = [
           },
         ],
       },
+      {
+        id: 'quest_complete',
+        text: '"Didn’t doubt you. I’ll reroute stock through safer alleys."',
+        options: [
+          {
+            text: 'Stay sharp, Lira.',
+            nextNodeId: null,
+          },
+        ],
+      },
     ],
   },
   {
@@ -84,6 +102,14 @@ const initialDialogues: Dialogue[] = [
             },
           },
           {
+            text: 'The manifests are decoded.',
+            nextNodeId: 'mission_complete',
+            questEffect: {
+              questId: 'quest_datapad_truth',
+              effect: 'complete',
+            },
+          },
+          {
             text: 'Maybe later.',
             nextNodeId: null,
           },
@@ -95,6 +121,16 @@ const initialDialogues: Dialogue[] = [
         options: [
           {
             text: 'I’ll recover the datapad.',
+            nextNodeId: null,
+          },
+        ],
+      },
+      {
+        id: 'mission_complete',
+        text: '"With this, the patrol routes are ours. I’ll upload the safe windows to your ops board."',
+        options: [
+          {
+            text: 'Appreciate the intel, Naila.',
             nextNodeId: null,
           },
         ],
@@ -118,6 +154,14 @@ const initialDialogues: Dialogue[] = [
             },
           },
           {
+            text: 'Your couriers are accounted for.',
+            nextNodeId: 'task_complete',
+            questEffect: {
+              questId: 'quest_courier_network',
+              effect: 'complete',
+            },
+          },
+          {
             text: 'Not my priority right now.',
             nextNodeId: null,
           },
@@ -129,6 +173,16 @@ const initialDialogues: Dialogue[] = [
         options: [
           {
             text: 'Stay mobile, Brant.',
+            nextNodeId: null,
+          },
+        ],
+      },
+      {
+        id: 'task_complete',
+        text: '"You pulled them out of the fire. These routes will keep you ahead of patrol sweepers."',
+        options: [
+          {
+            text: 'Keep the network breathing.',
             nextNodeId: null,
           },
         ],

@@ -52,7 +52,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
-- **`OpsBriefingsPanel.tsx`**: Shows the most recent briefing snippet from NPC conversations so players can revisit intel even after the dialogue overlay is dismissed.
+- **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
 
 ### `/the-getaway/src/game`
 
@@ -179,7 +179,8 @@ Redux state management:
   - Quest objectives and progress
   - Dialogue tracking and history
   - Active dialogue state for UI rendering
-  - Persistent `lastBriefing` pointer that records the most recent dialogue node for Ops Briefings
+  - Reward definitions for each quest plus guards that lock dialogue options when quest state disallows progression
+  - Persistent `lastBriefing` pointer kept for audit trails even though quest intel now lives in the HUD log
 
 - **`logSlice.ts`**: Manages a list of log messages for display in the UI. Provides an `addLogMessage` action to push new messages (e.g., combat events, warnings) onto the log stack.
 

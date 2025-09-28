@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store";
 import {
@@ -8,7 +9,17 @@ import {
   completeQuest,
   updateObjectiveStatus,
 } from "../../store/questsSlice";
-import { DialogueNode, DialogueOption } from "../../game/interfaces/types";
+import {
+  addExperience,
+  addItem,
+  addCredits,
+} from "../../store/playerSlice";
+import { addLogMessage } from "../../store/logSlice";
+import {
+  DialogueNode,
+  DialogueOption,
+  Item,
+} from "../../game/interfaces/types";
 
 const formatSkillName = (skill: string) => {
   return skill.charAt(0).toUpperCase() + skill.slice(1);
@@ -16,6 +27,65 @@ const formatSkillName = (skill: string) => {
 
 const DialogueOverlay: React.FC = () => {
   const dispatch = useDispatch();
+  const quests = useSelector((state: RootState) => state.quests.quests);
+
+  const awardQuestRewards = useCallback(
+    (questId: string) => {
+      const quest = quests.find((entry) => entry.id === questId);
+
+      if (!quest) {
+        return;
+      }
+
+      quest.rewards.forEach((reward) => {
+        switch (reward.type) {
+          case "experience":
+            if (reward.amount > 0) {
+              dispatch(addExperience(reward.amount));
+              dispatch(
+                addLogMessage(
+                  `+${reward.amount} XP from ${quest.name}.`
+                )
+              );
+            }
+            break;
+          case "currency":
+            if (reward.amount > 0) {
+              dispatch(addCredits(reward.amount));
+              dispatch(
+                addLogMessage(
+                  `+${reward.amount} credits secured from ${quest.name}.`
+                )
+              );
+            }
+            break;
+          case "item":
+            if (reward.id) {
+              const quantity = Math.max(1, reward.amount || 1);
+              for (let index = 0; index < quantity; index += 1) {
+                const item: Item = {
+                  id: uuidv4(),
+                  name: reward.id,
+                  description: `Recovered during ${quest.name}.`,
+                  weight: 1,
+                  value: 0,
+                  isQuestItem: false,
+                };
+                dispatch(addItem(item));
+              }
+              dispatch(
+                addLogMessage(`Received ${reward.id} from ${quest.name}.`)
+              );
+            }
+            break;
+          default:
+            break;
+        }
+      });
+    },
+    [dispatch, quests]
+  );
+
   const handleQuestEffect = useCallback(
     (option: DialogueOption) => {
       if (!option.questEffect) {
@@ -25,10 +95,23 @@ const DialogueOverlay: React.FC = () => {
       const { questId, effect, objectiveId } = option.questEffect;
       switch (effect) {
         case "start":
-          dispatch(startQuest(questId));
+          {
+            const quest = quests.find((entry) => entry.id === questId);
+            if (quest && !quest.isActive && !quest.isCompleted) {
+              dispatch(startQuest(questId));
+              dispatch(addLogMessage(`Quest accepted: ${quest.name}.`));
+            }
+          }
           break;
         case "complete":
-          dispatch(completeQuest(questId));
+          {
+            const quest = quests.find((entry) => entry.id === questId);
+            if (quest && quest.isActive && !quest.isCompleted) {
+              dispatch(completeQuest(questId));
+              awardQuestRewards(questId);
+              dispatch(addLogMessage(`Quest completed: ${quest.name}.`));
+            }
+          }
           break;
         case "update":
           if (objectiveId) {
@@ -39,13 +122,22 @@ const DialogueOverlay: React.FC = () => {
                 isCompleted: true,
               })
             );
+            const quest = quests.find((entry) => entry.id === questId);
+            const objective = quest?.objectives.find((o) => o.id === objectiveId);
+            if (quest && objective) {
+              dispatch(
+                addLogMessage(
+                  `Objective updated: ${objective.description} (${quest.name}).`
+                )
+              );
+            }
           }
           break;
         default:
           break;
       }
     },
-    [dispatch]
+    [dispatch, awardQuestRewards, quests]
   );
 
   const {
@@ -66,7 +158,56 @@ const DialogueOverlay: React.FC = () => {
   const currentNode: DialogueNode | undefined =
     dialogue.nodes.find((node) => node.id === currentNodeId) ?? dialogue.nodes[0];
 
+  const getQuestLockReason = (option: DialogueOption): string | null => {
+    if (!option.questEffect) {
+      return null;
+    }
+
+    const quest = quests.find((entry) => entry.id === option.questEffect?.questId);
+    if (!quest) {
+      return null;
+    }
+
+    switch (option.questEffect.effect) {
+      case "start":
+        if (quest.isCompleted) {
+          return "Quest already completed";
+        }
+        if (quest.isActive) {
+          return "Quest already in progress";
+        }
+        break;
+      case "complete":
+        if (quest.isCompleted) {
+          return "Quest already completed";
+        }
+        if (!quest.isActive) {
+          return "Quest not active";
+        }
+        break;
+      case "update":
+        if (option.questEffect.objectiveId) {
+          const objective = quest.objectives.find(
+            (entry) => entry.id === option.questEffect?.objectiveId
+          );
+          if (objective?.isCompleted) {
+            return "Objective already complete";
+          }
+        }
+        break;
+      default:
+        break;
+    }
+
+    return null;
+  };
+
   const isOptionLocked = (option: DialogueOption) => {
+    const questLock = getQuestLockReason(option);
+    if (questLock) {
+      return true;
+    }
+
     if (!option.skillCheck) {
       return false;
     }
@@ -181,6 +322,14 @@ const DialogueOverlay: React.FC = () => {
             const requirementLabel = option.skillCheck
               ? `${formatSkillName(option.skillCheck.skill)} ${option.skillCheck.threshold}`
               : null;
+            const questReason = getQuestLockReason(option);
+            const statusLabel = questReason
+              ? questReason
+              : requirementLabel
+              ? locked
+                ? `Requires ${requirementLabel}`
+                : `Check ${requirementLabel}`
+              : null;
 
             return (
             <button
@@ -227,7 +376,7 @@ const DialogueOverlay: React.FC = () => {
                 {index + 1}
               </span>
               <span style={{ flex: 1 }}>{option.text}</span>
-              {requirementLabel && (
+              {statusLabel && (
                 <span
                   style={{
                     fontSize: "0.68rem",
@@ -236,7 +385,7 @@ const DialogueOverlay: React.FC = () => {
                     color: locked ? "#f87171" : "#5eead4",
                   }}
                 >
-                  {locked ? `Requires ${requirementLabel}` : `Check ${requirementLabel}`}
+                  {statusLabel}
                 </span>
               )}
             </button>

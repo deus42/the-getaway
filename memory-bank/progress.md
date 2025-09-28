@@ -412,6 +412,16 @@ Date: September 25, 2025
 
 ### Notes:
 
+## Step 15: Implement a Simple Quest (Completed)
+Date: September 28, 2025
+### Tasks Accomplished:
+1. Repurposed the Ops Briefings sidebar into a persistent quest log that lists active operations with objectives, progress counters, and recent completions.
+2. Enhanced dialogue quest hooks so starting, updating, and completing quests gate the corresponding conversation options and dispatch in-world log messages.
+3. Distributed quest rewards directly through the overlay, granting experience, credits, and item drops into the player inventory upon completion.
+4. Renamed the HUD panel and copywriting to consistently reference "Quest Log"/"Quests" instead of Ops Briefings, aligning interface language with the new functionality.
+### Validation:
+- `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
+- `yarn test src/__tests__/opsBriefingsPanel.test.tsx --watch=false`
 - The HUD now mirrors the fiction of a resistance command post and keeps critical stats (HP/AP, sector, threat level) within one glance.
 - Local storage acts as a lightweight save system until full slot management is built.
 

@@ -22,6 +22,7 @@ export interface Player extends Entity {
   skills: PlayerSkills;
   level: number;
   experience: number;
+  credits: number;
   inventory: {
     items: Item[];
     maxWeight: number;

@@ -217,8 +217,8 @@ function App() {
               </div>
               <div style={rightSidebarStyle}>
                 <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-                  <span style={panelLabelStyle("#f0abfc")}>Dialog</span>
-                  <h2 style={panelTitleStyle}>Ops Briefings</h2>
+                  <span style={panelLabelStyle("#f0abfc")}>Quests</span>
+                  <h2 style={panelTitleStyle}>Quest Log</h2>
                   <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
                 </div>
                 <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>

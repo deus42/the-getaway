@@ -24,6 +24,7 @@ export const DEFAULT_PLAYER: Player = {
   skills: DEFAULT_SKILLS,
   level: 1,
   experience: 0,
+  credits: 0,
   inventory: {
     items: [],
     maxWeight: 150,

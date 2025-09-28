@@ -43,6 +43,11 @@ export const playerSlice = createSlice({
     addExperience: (state, action: PayloadAction<number>) => {
       state.data.experience += action.payload;
     },
+
+    // Add credits (currency)
+    addCredits: (state, action: PayloadAction<number>) => {
+      state.data.credits = Math.max(0, state.data.credits + action.payload);
+    },
     
     // Level up the player
     levelUp: (state) => {
@@ -101,6 +106,7 @@ export const {
   updateActionPoints,
   resetActionPoints,
   addExperience,
+  addCredits,
   levelUp,
   updateSkill,
   addItem,
