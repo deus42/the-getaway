@@ -31,6 +31,7 @@ interface EnemySpriteData {
 
 interface NpcSpriteData {
   sprite: Phaser.GameObjects.Ellipse;
+  indicator?: Phaser.GameObjects.Graphics;
   markedForRemoval: boolean;
 }
 
@@ -54,6 +55,8 @@ export class MainScene extends Phaser.Scene {
   private isoOriginX = 0;
   private isoOriginY = 0;
   private isCameraFollowingPlayer = false;
+  private inCombat = false;
+  private playerVitalsIndicator?: Phaser.GameObjects.Graphics;
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
     if (document.visibilityState === 'visible') {
@@ -107,6 +110,7 @@ export class MainScene extends Phaser.Scene {
     const worldState = store.getState().world;
     this.currentGameTime = worldState.currentTime;
     this.timeDispatchAccumulator = 0;
+    this.inCombat = worldState.inCombat;
     this.initializeDayNightOverlay();
     this.updateDayNightOverlay();
     this.curfewActive = worldState.curfewActive;
@@ -169,6 +173,14 @@ export class MainScene extends Phaser.Scene {
       this.unsubscribe();
       this.unsubscribe = null;
     }
+
+    this.destroyPlayerVitalsIndicator();
+    this.npcSprites.forEach((data) => {
+      if (data.indicator) {
+        data.indicator.destroy();
+        data.indicator = undefined;
+      }
+    });
   }
 
   private handleStateChange(): void {
@@ -179,6 +191,19 @@ export class MainScene extends Phaser.Scene {
     const playerState = newState.player.data;
     const worldState = newState.world;
     const currentEnemies = worldState.currentMapArea.entities.enemies;
+
+    const previousCombatState = this.inCombat;
+    this.inCombat = worldState.inCombat;
+
+    if (!this.inCombat && previousCombatState) {
+      this.destroyPlayerVitalsIndicator();
+      this.npcSprites.forEach((data) => {
+        if (data.indicator) {
+          data.indicator.destroy();
+          data.indicator = undefined;
+        }
+      });
+    }
 
     // Sync local time cache with store updates (e.g., external adjustments)
     this.currentGameTime = worldState.currentTime;
@@ -195,6 +220,9 @@ export class MainScene extends Phaser.Scene {
       this.enemySprites.clear();
       this.npcSprites.forEach((data) => {
         data.sprite.destroy();
+        if (data.indicator) {
+          data.indicator.destroy();
+        }
       });
       this.npcSprites.clear();
       this.setupCameraAndMap();
@@ -208,6 +236,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.updatePlayerPosition(playerState.position);
+    this.updatePlayerVitalsIndicator(playerState.position, playerState.health, playerState.maxHealth);
     this.updateEnemies(currentEnemies);
     this.updateNpcs(worldState.currentMapArea.entities.npcs);
   }
@@ -220,6 +249,92 @@ export class MainScene extends Phaser.Scene {
     } else {
        console.warn("[MainScene] Player sprite not available for position update.");
     }
+  }
+
+  private updatePlayerVitalsIndicator(position: Position, health: number, maxHealth: number): void {
+    if (!this.inCombat) {
+      this.destroyPlayerVitalsIndicator();
+      return;
+    }
+
+    if (!this.playerSprite || !this.sys.isActive()) {
+      return;
+    }
+
+    const metrics = this.getIsoMetrics();
+    const pixelPos = this.calculatePixelPosition(position.x, position.y);
+    const barWidth = metrics.tileWidth * 0.38;
+    const barHeight = Math.max(4, metrics.tileHeight * 0.08);
+    const x = pixelPos.x - barWidth / 2;
+    const y = pixelPos.y - metrics.tileHeight * 0.7;
+    const percent = maxHealth > 0 ? Math.max(0, Math.min(1, health / maxHealth)) : 0;
+
+    if (!this.playerVitalsIndicator) {
+      this.playerVitalsIndicator = this.add.graphics();
+    }
+
+    const graphics = this.playerVitalsIndicator;
+    graphics.clear();
+    graphics.fillStyle(0x0f172a, 0.82);
+    graphics.fillRoundedRect(x, y, barWidth, barHeight, Math.min(4, barHeight));
+
+    if (percent > 0) {
+      graphics.fillStyle(0x38bdf8, 1);
+      graphics.fillRoundedRect(
+        x + 1,
+        y + 1,
+        (barWidth - 2) * percent,
+        Math.max(1, barHeight - 2),
+        Math.max(2, barHeight - 2)
+      );
+    }
+
+    graphics.setDepth(pixelPos.y + 9);
+  }
+
+  private destroyPlayerVitalsIndicator(): void {
+    if (this.playerVitalsIndicator) {
+      this.playerVitalsIndicator.destroy();
+      this.playerVitalsIndicator = undefined;
+    }
+  }
+
+  private updateNpcCombatIndicator(
+    data: NpcSpriteData,
+    pixelPos: { x: number; y: number },
+    metrics: { tileWidth: number; tileHeight: number },
+    npc: NPC
+  ): void {
+    if (!this.inCombat || !npc.isInteractive) {
+      if (data.indicator) {
+        data.indicator.destroy();
+        data.indicator = undefined;
+      }
+      return;
+    }
+
+    if (!data.indicator) {
+      data.indicator = this.add.graphics();
+    }
+
+    const graphics = data.indicator;
+    const barWidth = metrics.tileWidth * 0.26;
+    const barHeight = Math.max(3, metrics.tileHeight * 0.06);
+    const x = pixelPos.x - barWidth / 2;
+    const y = pixelPos.y - metrics.tileHeight * 0.68;
+
+    graphics.clear();
+    graphics.fillStyle(0x102a43, 0.82);
+    graphics.fillRoundedRect(x, y, barWidth, barHeight, Math.min(3, barHeight));
+    graphics.fillStyle(0x22c55e, 1);
+    graphics.fillRoundedRect(
+      x + 1,
+      y + 1,
+      barWidth - 2,
+      Math.max(1, barHeight - 2),
+      Math.max(2, barHeight - 2)
+    );
+    graphics.setDepth(pixelPos.y + 6);
   }
 
   private enablePlayerCameraFollow(): void {
@@ -273,18 +388,26 @@ export class MainScene extends Phaser.Scene {
           sprite: npcSprite,
           markedForRemoval: false,
         });
+        const createdData = this.npcSprites.get(npc.id);
+        if (createdData) {
+          this.updateNpcCombatIndicator(createdData, pixelPos, metrics, npc);
+        }
       } else {
         existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
         existingSpriteData.sprite.setDepth(pixelPos.y + 5);
         existingSpriteData.sprite.setFillStyle(fillColor, fillAlpha);
         existingSpriteData.sprite.setStrokeStyle(1.5, strokeColor, strokeAlpha);
         existingSpriteData.markedForRemoval = false;
+        this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
       }
     }
 
     this.npcSprites.forEach((spriteData, id) => {
       if (spriteData.markedForRemoval) {
         spriteData.sprite.destroy();
+        if (spriteData.indicator) {
+          spriteData.indicator.destroy();
+        }
         this.npcSprites.delete(id);
       }
     });
@@ -364,8 +487,12 @@ export class MainScene extends Phaser.Scene {
     }
     this.npcSprites.forEach((data) => {
       data.sprite.destroy();
+      if (data.indicator) {
+        data.indicator.destroy();
+      }
     });
     this.npcSprites.clear();
+    this.destroyPlayerVitalsIndicator();
     this.scale.off('resize', this.handleResize, this);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
@@ -521,6 +648,10 @@ export class MainScene extends Phaser.Scene {
       case TileType.TRAP: {
         const pulseColor = this.adjustColor(modulatedBase, 0.6);
         this.mapGraphics.fillStyle(pulseColor, 0.22);
+        if (initialState?.player?.data) {
+          const seedPlayer = initialState.player.data;
+          this.updatePlayerVitalsIndicator(seedPlayer.position, seedPlayer.health, seedPlayer.maxHealth);
+        }
         this.mapGraphics.fillPoints(
           this.getDiamondPoints(center.x, center.y, tileWidth * 0.58, tileHeight * 0.6),
           true
