@@ -4,608 +4,231 @@
 
 Date: March 26, 2024
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Created a new Vite project with TypeScript and React using the following technologies:
-   - TypeScript for type safety
-   - React for UI components
-   - Vite for build tooling and development server
-   - Phaser for game rendering
-   - Redux Toolkit for state management
-   - Tailwind CSS for styling
-   - Jest for testing
+1. Scaffolded a Vite + React + TypeScript workspace with Phaser, Redux Toolkit, Tailwind CSS, and Jest.
+2. Established the agreed `/memory-bank` + `/the-getaway` repository layout and seeded placeholder modules.
+3. Wired Tailwind/PostCSS, configured Jest, created a basic `GameCanvas`, and bootstrapped the Redux store.
 
-2. Set up project folder structure as specified in the implementation plan:
-   - Project is organized with `/memory-bank` for documentation and `/the-getaway` for the actual game
-   - Inside `/the-getaway/src`:
-     - `assets`: For images, sounds, and other media files
-     - `components`: For React UI components, including the `GameCanvas` component
-     - `game`: For game logic, with subfolders for different modules
-       - `combat`: Combat system code
-       - `world`: World, map, and environment code
-       - `quests`: Quest and dialogue systems
-       - `inventory`: Inventory management
-       - `interfaces`: Character attributes and interfaces
-     - `store`: Redux store configuration and state management
-     - `styles`: CSS stylesheets and UI design
-
-3. Created placeholder files in each directory to ensure imports work correctly.
-
-4. Configured Tailwind CSS and PostCSS for styling.
-
-5. Set up Jest for testing (configuration files created, but tests need refinement).
-
-6. Created basic `GameCanvas` component that integrates with Phaser to render a game canvas.
-
-7. Set up Redux store for state management.
-
-### Notes:
-
-- The development server is running and displays the Phaser canvas with text "The Getaway".
-- Basic scaffolding is in place for all major systems, ready for feature implementation.
-- Some test configuration issues need to be resolved in future steps.
-- Project now has the correct folder structure with the game in the `/the-getaway` directory.
+### Notes
+- Development server renders a placeholder Phaser canvas and the tooling baseline is ready for feature work.
 
 ## Step 2: Structure the Project Files (Completed)
 
 Date: March 26, 2024
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Defined comprehensive type system in `interfaces/types.ts`:
-   - Created Position, Entity, Player, Enemy, and NPC interfaces
-   - Defined Item, Weapon, Armor, and Consumable types
-   - Implemented Quest and Dialogue system interfaces
-   - Created MapTile and MapArea interfaces for world representation
+1. Authored type definitions and gameplay systems across `game/*` (player, combat, AI, world, inventory, quests, dialogue).
+2. Added Redux slices for player/world/quests and combined them into the store.
+3. Delivered foundational unit tests in `__tests__/types.test.ts`.
 
-2. Implemented player system in `interfaces/player.ts`:
-   - Defined default player configuration with skills and attributes
-   - Created functions for player movement, health modification, and leveling
-   - Implemented action point management for turn-based gameplay
-
-3. Developed robust combat system in `combat/combatSystem.ts`:
-   - Created attack mechanics with hit chance calculation
-   - Implemented cover system that affects damage and accuracy
-   - Built position-based targeting and range calculation
-   - Added turn management with action point costs
-
-4. Created enemy AI in `combat/enemyAI.ts`:
-   - Implemented decision-making for enemies during combat
-   - Added cover-seeking behavior for wounded enemies
-   - Created utility functions for enemy movement and targeting
-
-5. Built a grid-based world system in `world/grid.ts`:
-   - Implemented map generation with wall placement
-   - Created functions for checking walkable positions and obstacles
-   - Added cover placement for tactical gameplay
-   - Implemented utility functions for grid-to-pixel conversion
-
-6. Developed day-night cycle in `world/dayNightCycle.ts`:
-   - Created configurable time system with morning/day/evening/night transitions
-   - Implemented light level calculations for visual effects
-   - Added curfew detection for gameplay mechanics
-   - Built time update functions based on real-time progression
-
-7. Implemented inventory system in `inventory/inventorySystem.ts`:
-   - Created weight-based inventory management
-   - Built item creation functions for weapons, armor, and consumables
-   - Implemented item usage with various effects
-   - Added inventory sorting and organization functions
-
-8. Created quest system in `quests/questSystem.ts`:
-   - Implemented quest creation and tracking
-   - Built objective completion logic for different objective types
-   - Created reward distribution system
-   - Added helper functions for quest management
-
-9. Built dialogue system in `quests/dialogueSystem.ts`:
-   - Implemented dialogue tree structure
-   - Created skill check functionality for conditional dialogue options
-   - Added quest-dialogue integration for quest giving/completion
-   - Implemented dialogue navigation and option selection
-
-10. Implemented Redux state management:
-    - Created player state slice in `store/playerSlice.ts`
-    - Built world state management in `store/worldSlice.ts`
-    - Implemented quest and dialogue state in `store/questsSlice.ts`
-    - Updated store configuration to combine all reducers
-
-11. Created comprehensive tests in `__tests__/types.test.ts`:
-    - Tested player defaults and attributes
-    - Verified combat system mechanics
-    - Validated grid and world systems
-    - Confirmed inventory and quest functionality
-
-12. Fixed TypeScript configuration issues:
-    - Updated `tsconfig.json` for proper JSX support
-
-## Step 8: Add a Day-Night Cycle (Completed)
-
-Date: April 5, 2024
-
-### Tasks Accomplished:
-
-1. Connected Redux world state to the temporal system:
-   - Added `timeOfDay`, `curfewActive`, and `currentTime` synchronization in `worldSlice.ts`.
-   - Exposed the current cycle state to UI components and gameplay logic.
-
-2. Drove the cycle from Phaser:
-   - `MainScene` now advances game time every frame and dispatches updates to Redux.
-   - Implemented a fullscreen overlay that scales with camera zoom and recenters on resize to visualize light changes.
-   - Added visibility-change handling so the tint persists when switching tabs.
-
-3. Introduced nighttime gameplay pressure:
-   - `GameController` blocks door transitions during curfew, spawns patrol reinforcements when the player is caught in the open, and logs narrative cues for dawn/nightfall.
-
-4. Surfaced the world clock in the HUD:
-   - Created `DayNightIndicator` to show cycle time, phase, and curfew status above the canvas.
-
-5. Tuned aesthetics:
-   - Refined overlay colors to cooler dawn/dusk tones and deeper night blues to avoid muddy visuals.
-
-### Validation:
-
-- Ran `yarn lint` to confirm TypeScript/ESLint pass.
-- Manually verified that the overlay persists after tab switches and that curfew patrol triggers at night while daytime travel remains unrestricted.
-    - Added ESM interoperability for better module support
-    - Fixed configuration for proper Jest testing
-
-### Notes:
-
-- All core game mechanics are now defined with proper typing and functionality
-- Each module is built with immutability and functional programming patterns
-- Redux store is configured to manage all game state efficiently
-- Tests are passing and validate core functionality
-- The code is modular and follows clear separation of concerns
-- Linting issues have been identified and addressed
-
-### Next Steps:
-
-- Proceed to Step 3: Embed the Game Engine, which will focus on enhancing the Phaser integration and connecting the Redux state to the game renderer.
+### Notes
+- Gameplay subsystems are modular, pure, and fully typed—ready for engine integration.
 
 ## Step 3: Embed the Game Engine (Completed)
 
 Date: March 26, 2024
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Enhanced the GameCanvas component to integrate Phaser with React:
-   - Updated the component to use a dedicated Phaser scene for game rendering
-   - Connected to the Redux store to sync game state with UI
-   - Added responsive canvas that displays the current game world
+1. Extended `GameCanvas` to bootstrap Phaser scenes and sync with Redux.
+2. Built `MainScene` rendering and subscriptions; added `GameController` for keyboard input and AP-aware combat moves.
+3. Created unit tests to confirm Redux state updates driven by engine events.
 
-2. Created a dedicated MainScene class:
-   - Implemented a grid-based rendering system for the game world
-   - Added player representation on the grid
-   - Connected to Redux store for state management
-   - Set up automatic re-rendering on state changes
-
-3. Implemented GameController component for input handling:
-   - Added keyboard control for player movement (arrows/WASD)
-   - Connected to Redux to dispatch actions on user input
-   - Integrated collision detection with the game world
-   - Added action point management for movement during combat
-
-4. Established a bidirectional communication layer between Phaser and Redux:
-   - Set up Redux subscriptions in the Phaser scene
-   - Created rendering functions that update on state changes
-   - Implemented clean event handling with proper lifecycle management
-
-5. Developed comprehensive tests for the game engine integration:
-   - Created unit tests for the Redux store updates
-   - Verified player movement and game state updates
-   - Set up Phaser mocking for testing in Jest
-
-### Notes:
-
-- The game now renders a grid-based world with the player represented as a blue square
-- Player can be moved using arrow keys or WASD, and the position updates in real-time
-- The application correctly displays the player's position in the UI
-- Redux state changes are immediately reflected in the game display
-- Tests verify that the core game mechanics are working correctly
-- The architecture separates game logic from rendering, following good practices
-
-### Next Steps:
-
-- Proceed to Step 4: Add Grid-Based Player Movement, which will focus on enhancing movement with proper collision detection and obstacles.
+### Notes
+- Rendering is decoupled from logic, and the player sprite now moves live in Phaser.
 
 ## Step 4: Add Grid-Based Player Movement (Completed)
 
 Date: March 26, 2024
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Enhanced the grid system for player movement:
-   - Created a test map with internal walls and obstacles in `grid.ts`
-   - Implemented a maze-like pattern of obstacles for more interesting navigation
-   - Added cover elements that are visually distinct and provide tactical advantages
+1. Enhanced `grid.ts` with obstacles, cover tiles, and walkability guards.
+2. Improved tile visuals and added feedback for invalid moves.
+3. Added grid/pathfinding/bounds tests.
 
-2. Improved the visual representation of the grid:
-   - Added grid lines for better visual clarity
-   - Used distinct colors for different tile types (floor, wall, cover)
-   - Added visual markers (X for walls, circles for cover) for better readability
-   - Enhanced the contrast between walkable and non-walkable areas
-
-3. Refined player movement mechanics:
-   - Ensured player stops at obstacles and cannot pass through walls
-   - Implemented position validation before movement
-   - Added visual feedback when player attempts to move to a non-walkable tile
-   - Maintained action point system for movement during combat
-
-4. Created comprehensive tests for the grid system:
-   - Verified grid creation with the correct dimensions
-   - Tested wall and obstacle placement
-   - Confirmed pathfinding functionality with adjacent walkable positions
-   - Validated bounds checking and walkable position detection
-
-### Notes:
-
-- The game now features a more engaging environment with obstacles to navigate around
-- Player movement is restricted by walls and the map boundaries
-- Visual feedback appears when the player tries to move to a blocked position
-- The grid system is robust and ready for the combat system in the next step
-- Tests validate all core functionality of the grid-based movement system
-
-### Next Steps:
-
-- Proceed to Step 5: Build a Basic Combat System, which will focus on implementing turn-based combat with a player and enemy.
+### Notes
+- Movement respects map geometry, laying the groundwork for tactical play.
 
 ## Step 5: Build a Basic Combat System (Completed)
 
 Date: March 26, 2024
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Implemented turn-based combat system with player and enemies:
-   - Added 6 Action Points (AP) per turn for both player and enemies
-   - Configured movement to cost 1 AP per tile
-   - Set up attacks to cost 2 AP and deal 5 damage (configurable)
-   - Implemented turn-switching when entities run out of AP
+1. Implemented AP-driven turns (move = 1 AP, attack = 2 AP) with 5 damage baseline.
+2. Rendered enemies/health bars in `MainScene` and added combat messaging.
+3. Delivered AI behaviours and tests covering attacks, AP usage, and turn switching.
 
-2. Enhanced the MainScene to visualize combat:
-   - Added enemy rendering with red squares and health indicators
-   - Displayed player health and AP information
-   - Added combat status indicators to show whose turn it is
-   - Implemented visual feedback when entering combat mode
-
-3. Developed a combat controller in GameController.tsx:
-   - Used spacebar to attack the nearest enemy
-   - Automatically entered combat when moving adjacent to an enemy
-   - Added feedback messages for combat actions (hits, misses, etc.)
-   - Implemented turn management for player and enemies
-
-4. Improved enemy AI in combat:
-   - Added decision-making logic to attack when within range
-   - Implemented movement toward player when out of range
-   - Added cover-seeking behavior for wounded enemies
-   - Created utility functions for finding the best tactical position
-
-5. Created a comprehensive test suite for the combat system:
-   - Added tests for attack mechanics and hit calculation
-   - Verified movement functionality during combat
-   - Tested turn management and AP reset
-   - Validated enemy AI decision-making
-
-### Notes:
-
-- Combat is now fully functional with a clear turn-based structure
-- The player can engage enemies with spacebar when in range
-- Enemy AI makes tactical decisions based on health, position, and cover
-- Visual indicators make it clear when combat is active and whose turn it is
-- The foundation is now in place for adding cover mechanics in the next step
-
-### Next Steps:
-
-- Proceed to Step 6: Introduce Cover Mechanics, which will enhance the combat system with strategic elements.
-
-### Maintenance Notes (September 27, 2025):
-
-- Patched enemy AI to surrender its remaining action points when trapped so the turn cycle always returns to the player, halting a rare “not your turn” soft lock after consecutive patrol spawns.
-- Added a regression test to ensure stalled enemies no longer freeze the loop.
-
-### Maintenance Notes (September 28, 2025):
-
-- Hardened movement so player pathing and manual steps respect NPC occupancy, eliminating the ability to stand on top of characters.
-- Added click-to-approach dialogue that automatically walks the player adjacent to the selected NPC and opens their conversation once in range.
-- Introduced Ops Briefings sidebar summaries that persist the last visited dialogue node, keeping intel visible after closing the overlay.
+### Maintenance Notes (Sep 27–28, 2025)
+- Fixed trapped-enemy stalls, enforced NPC occupancy rules, added click-to-approach dialogue, and persisted briefing summaries.
 
 ## Step 6: Introduce Cover Mechanics & UI Overhaul (Completed)
 
 Date: March 27, 2024
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1.  **Combat System Refinements & Bug Fixes:**
-    *   Resolved issues with enemy turn processing getting stuck, ensuring turns cycle correctly between player and enemies.
-    *   Fixed initial enemy visibility bug where the enemy sprite would only appear after the first player action. Introduced a `setTimeout` workaround in `MainScene.create` to ensure initial rendering aligns with Phaser's lifecycle.
-    *   Addressed various scene initialization bugs, including `currentMapArea` being null and `this` context errors in Redux subscription callbacks.
-    *   Introduced a `BootScene` to handle fetching initial state from Redux and correctly passing data to `MainScene`'s `init` method.
-
-2.  **UI Overhaul & Integration:**
-    *   Implemented the planned three-column UI layout (Status | Game | Log) using CSS (initially Tailwind, then inline styles for robustness).
-    *   Resolved CSS conflicts (e.g., `display: flex` on `body`) that were preventing the intended layout.
-    *   Created and integrated `PlayerStatusPanel.tsx` to display player HP/AP bars, reading data from `playerSlice`.
-    *   Created and integrated `LogPanel.tsx` to display game messages, reading data from the new `logSlice`.
-    *   Removed old feedback message UI from `GameController.tsx`.
-    *   Removed redundant player info display from `MainScene.ts`.
-    *   Integrated `addLogMessage` dispatches into `GameController.tsx` for combat actions (attacks, hits, misses, combat start/end, enemy actions).
-    *   Refined UI formatting (e.g., whitespace in status panel values).
-    *   Filtered out player movement messages from the action log for better readability.
-
-3.  **Grid Rendering Enhancements:**
-    *   Improved the grid rendering system in `MainScene.ts` to ensure consistent cell borders.
-    *   Implemented pixel-perfect rendering by using `Math.floor()` to avoid sub-pixel rendering issues.
-    *   Created a precise rendering approach with explicit border drawing to ensure uniform 1px borders.
-    *   Added alternating floor colors for better visual differentiation of tiles.
-    *   Enhanced the contrast between different tile types with improved color selection.
-    *   Updated the camera and scaling system to handle window resizing more gracefully.
-    *   Modified Phaser scaling configuration in `GameCanvas.tsx` for smoother visual transitions.
-    *   Simplified resize handling to prevent flickering and visual artifacts during window resizing.
-
-### Notes:
-
-*   The core combat loop (player turn, enemy turns) is functioning reliably.
-*   The UI now reflects the target layout and displays relevant game state information (player status, action logs) correctly.
-*   Initial game state, including enemy presence, is rendered correctly when the game loads.
-*   The grid rendering is now visually consistent with uniform borders and improved aesthetics.
-*   While the specific cover *logic* (hit chance reduction) hasn't been explicitly added yet, the combat system structure, map rendering capable of showing cover, and AI foundations are in place, fulfilling the core goals of this step alongside the significant UI refactor.
-
-### Next Steps:
-
-*   Proceed to Step 7: Design a Small Explorable Map, focusing on expanding the game world.
+1. Stabilized combat edge cases with a new `BootScene` and lifecycle fixes.
+2. Delivered the three-column command hub (Status | Canvas | Log) with `PlayerStatusPanel` and `LogPanel`.
+3. Refined grid rendering for consistent borders and smooth resizes.
 
 ## Step 7: Design a Small Explorable Map (Completed)
 
 Date: June 7, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Created two distinct map areas using the grid utilities:
-   * **Slums** – a 20x20 zone with building obstacles and a door on the east side.
-   * **Downtown** – another 20x20 zone with its own arrangement of walls and a door on the west side.
-2. Implemented a simple world map module (`worldMap.ts`) that stores these areas and defines connections between them.
-3. Extended `worldSlice` to keep a dictionary of map areas and set the initial map to the Slums.
-4. Updated `GameController` to detect door tiles. Moving onto a door now triggers a map change and positions the player at the appropriate entry point in the destination area.
-5. Modified `MainScene` so it redraws the map and enemies whenever the current map area changes, enabling seamless transitions.
-
-### Notes:
-
-* Walking through a door moves the player between Slums and Downtown without restarting the scene.
-* Walls inside each area prevent movement through buildings as intended.
-
-### Next Steps:
-
-* Continue with Step 8: Add a Day-Night Cycle to affect visibility in the world.
+1. Authored Slums and Downtown areas with door connections stored in `worldMap.ts`.
+2. Extended `worldSlice` to manage multiple map areas and hot-swapped scenes via door traversal.
 
 ## Step 8: Add a Day-Night Cycle (Completed)
 
 Date: April 5, 2024
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Connected Redux world state to the temporal system:
-   * Added `timeOfDay`, `curfewActive`, and `currentTime` synchronization in `worldSlice.ts`.
-   * Exposed the cycle data to UI and combat logic so other systems can react to curfew.
-2. Drove the cycle inside Phaser:
-   * `MainScene` advances world time each frame, applies a fullscreen overlay that adapts to zoom/resize, and keeps the tint alive after tab switches.
-   * The overlay palette now transitions through cool dawn tones, neutral daylight, violet dusk, and deeper night blues.
-3. Increased nighttime pressure:
-   * `GameController` blocks door travel under curfew, spawns patrol reinforcements if the player is caught in the open at night, and logs dawn/nightfall events.
-4. Surfaced the world clock to players:
-   * Added `DayNightIndicator` overlay in the HUD to display cycle timer, current phase, and curfew status.
+1. Synced time-of-day and curfew state into Redux and advanced time in `MainScene`.
+2. Applied curfew rules in `GameController` and surfaced the cycle via `DayNightIndicator`.
 
-### Validation:
-
-* `yarn lint`
-* Manual playtest covering day/night transitions, tab focus changes, patrol spawning, and door restrictions under curfew.
+### Validation
+- `yarn lint`
+- Manual curfew/nightfall playtests.
 
 ## Step 9: Establish Command Hub and Persisted Sessions (Completed)
 
 Date: September 25, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Introduced a persistent `GameMenu` overlay (`components/ui/GameMenu.tsx`) with start/continue controls, wiring it into `App.tsx` so players can resume suspended runs or reset the campaign.
-2. Replaced the top-level shell in `App.tsx` with a three-column command layout that frames the minimap, recon status, game canvas, and action log in dedicated panels for clearer situational awareness.
-3. Consolidated squad telemetry inside `PlayerStatusPanel.tsx`, folding combat turn data, curfew status, hostile counts, and free-roam directives into a single recon feed while removing the redundant `TurnIndicator` component.
-4. Added Redux persistence in `store/index.ts` with a `resetGame` action and localStorage hydration so the menu’s continue option reflects real save data.
-
-### Notes:
-
-## Step 15: Implement a Simple Quest (Completed)
-Date: September 28, 2025
-### Tasks Accomplished:
-1. Repurposed the Ops Briefings sidebar into a persistent quest log that lists active operations with objectives, progress counters, and recent completions.
-2. Enhanced dialogue quest hooks so starting, updating, and completing quests gate the corresponding conversation options and dispatch in-world log messages.
-3. Distributed quest rewards directly through the overlay, granting experience, credits, and item drops into the player inventory upon completion.
-4. Renamed the HUD panel and copywriting to consistently reference "Quest Log"/"Quests" instead of Ops Briefings, aligning interface language with the new functionality.
-5. Split Level 0 authoring data by locale (English and Ukrainian) under `/src/content/levels/level0/locales`, keeping the structural blueprints immutable while translating all narrative copy.
-6. Added UI string tables and a Settings panel so the menu, quest log, and runtime data can switch between English and Ukrainian without mutating source resources.
-### Validation:
-- `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
-- `yarn test src/__tests__/opsBriefingsPanel.test.tsx --watch=false`
-- The HUD now mirrors the fiction of a resistance command post and keeps critical stats (HP/AP, sector, threat level) within one glance.
-- Local storage acts as a lightweight save system until full slot management is built.
-
-### Validation:
-
-- `yarn test src/__tests__/App.test.tsx`
+1. Added the `GameMenu` overlay with start/continue flows.
+2. Finalized the three-column HUD and collapsed telemetry into `PlayerStatusPanel`.
+3. Introduced Redux persistence (`resetGame`, localStorage hydration).
 
 ## Step 10: Harden Curfew Pressure and Cover Feedback (Completed)
 
 Date: September 25, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Extended `GameController.tsx` with a curfew alert state machine that issues a single warning, spawns one patrol if the player lingers in the open, and clears the alert once cover is reached.
-2. Added `src/__tests__/curfew.test.tsx` to exercise the warning → patrol → reset loop and ensure patrol counts do not stack.
-3. Marked additional safe cover exits in `world/worldMap.ts` (exported via `SLUMS_COVER_POSITIONS`) so tests and gameplay share the same shelter data.
-4. Highlighted cover tiles inside `MainScene.ts` with pulsing neon overlays during curfew, making evacuation points instantly readable in the isometric view.
-5. Capped the action log history in `store/logSlice.ts` and seeded a default curfew warning message when the patrol state initializes, keeping alerts visible even before the player moves.
+1. Built a curfew alert state machine with escalating patrol responses.
+2. Authored `curfew.test.tsx` and highlighted cover tiles during lockdowns.
+3. Trimmed log history while keeping warnings visible.
 
-### Notes:
-
-- Curfew now feels lethal but fair: players get a single audible warning and a clear visual path to safety.
-- Cover highlights integrate with the day–night overlay without introducing flicker.
-
-### Validation:
-
+### Validation
 - `yarn test src/__tests__/curfew.test.tsx`
 
 ## Step 11: Expand Downtown into Enterable Megablocks (Completed)
 
 Date: September 26, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Rebuilt `worldMap.ts` into a 144×108 mega-district that merges the Slums and Downtown, layers in neon canal strips, and distributes cover for tactical play across the full city grid.
-2. Generated building definitions with automatic interior maps, two-way `MapConnection`s, and door placement so every block can be entered without bespoke scene code.
-3. Seeded resident data: NPC blueprints with day/evening/night routines plus lootable item caches, all stamped with UUIDs at load for consistent state tracking.
-4. Updated `GameController.tsx` door handling to honor the new connection graph, repositioning the player when swapping areas while respecting curfew lockdowns.
-5. Synced `worldSlice.ts` with the expanded map directory and ensured spawned enemies persist across area transitions.
-
-### Notes:
-
-- The city now feels contiguous: interiors, patrol routes, and loot pools all live in the same coordinate space.
-- Future quests can target specific buildings or NPC schedules without extra scaffolding.
-
-### Validation:
-
-- Manual traversal through multiple doorways (Slums streets → interiors → return) to confirm state resets, enemy persistence, and camera bounds.
+1. Rebuilt `worldMap.ts` into a 144×108 district with interiors and validated doors.
+2. Seeded NPCs, loot caches, and persistent enemies; updated door handling to respect curfew.
 
 ## Step 12: Create an NPC with a Routine (Completed)
 
 Date: September 26, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Enabled scheduled NPC relocation inside `GameController.tsx`, advancing non-player characters toward their time-of-day targets whenever the world clock transitions.
-2. Extended the shared `findPath` helper to honor custom blocked positions so routine walkers steer around fellow NPCs while still respecting walls, doors, and enemies.
-3. Added resilient movement orchestration with timeout tracking, ensuring overlapping schedules do not double-trigger and timeouts clean up on area changes.
+1. Scheduled NPC movement between routine points and reserved destination tiles.
+2. Extended pathfinding to avoid NPC stacking and cleaned up timeouts on area change.
 
-### Notes:
-
-- NPCs now visibly migrate between routine points (e.g., market stalls by day, safehouses at night), matching the blueprint data seeded in the world map.
-- The routing system reuses existing pathfinding, making future routines or patrol logic easy to expand.
-
-### Validation:
-
+### Validation
 - `yarn test src/__tests__/curfew.test.tsx`
 
 ## Step 13: Set Up a Dialogue System (Completed)
 
 Date: February 14, 2026
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Enabled proximity-based interaction in `GameController.tsx`; pressing `E` near an interactive NPC now opens the appropriate dialogue while freezing movement.
-2. Added `DialogueOverlay.tsx` to render NPC monologues and branching response options, wiring quest effects into `questsSlice` actions.
-3. Implemented Escape-to-close behaviour and log feedback so players can disengage gracefully.
-4. Created `dialogueOverlay.test.tsx` to ensure dialogue text and option transitions render as expected, augmenting the test suite with UI coverage.
+1. Enabled proximity interaction (press `E`) to open dialogues.
+2. Built `DialogueOverlay` with branching options, quest hooks, and Esc-to-close.
+3. Added `dialogueOverlay.test.tsx` for UI coverage.
 
-### Notes:
-
-- Friendly contacts (Lira, Naila, Brant) now provide narrative exposition and quest hooks directly inside the command shell.
-- Dialogue data remains centralized in `questsSlice`, making future narrative additions a data-driven operation.
-
-### Validation:
-
+### Validation
 - `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
 
 ## Step 14: Add a Skill Check to Dialogue (Completed)
 
 Date: September 27, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Wired dialogue options to inspect the player skill sheet so responses with `skillCheck` requirements now lock when the threshold isn’t met and display the exact requirement in the UI.
-2. Prevented locked options from firing quest effects or node transitions, ensuring interaction flow can’t desync when the player fails a check.
-3. Smoothed quest data by marking Lira’s trade prompt as a Charisma gate and refreshed the overlay styling for locked vs. available choices.
-4. Extended the dialogue test suite to simulate skill upgrades mid-conversation, proving options unlock once the player meets the check.
+1. Locked dialogue options behind skill thresholds with clear messaging.
+2. Prevented locked options from firing quest effects or transitions.
+3. Updated tests to verify mid-conversation unlocks after skill upgrades.
 
-### Validation:
-
+### Validation
 - `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
+
+## Step 15: Implement a Simple Quest (Completed)
+
+Date: September 28, 2025
+
+### Tasks Accomplished
+
+1. Converted Ops Briefings into a persistent quest log with active/completed sections.
+2. Enforced quest gating within dialogue hooks and distributed XP/credit/item rewards.
+3. Externalized Level 0 content per locale and added UI string tables plus a settings panel.
+
+### Validation
+- `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
+- `yarn test src/__tests__/opsBriefingsPanel.test.tsx --watch=false`
+- `yarn test src/__tests__/App.test.tsx`
 
 ## Step 16: Seed Dialogue and Quest Threads (Completed)
 
 Date: September 26, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Bootstrapped `store/questsSlice.ts` with branching dialogue trees for Lira, Archivist Naila, and Courier Brant, including quest-start hooks per choice.
-2. Authored three quest lines (market cache, patrol manifests, courier rescue) complete with objective tracking, counters, and reward payloads for XP, currency, and items.
-3. Added Redux reducers for updating objectives, counting collectibles, and managing active dialogue state so UI layers can drive conversations without ad hoc state.
+1. Populated `questsSlice` with branching dialogue trees for Lira, Naila, and Brant.
+2. Authored three quest lines with objectives, counters, and rewards.
+3. Added reducers for objective progress, collectibles, and dialogue state.
 
-### Notes:
-
-- Dialogue content reflects the dystopian fiction and ties NPC routines to gameplay incentives.
-- Quest log UI is still pending; the data layer is ready for integration.
-
-### Validation:
-
+### Validation
 - `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
-- Pending UI integration; smoke-tested by dispatching quest reducer actions in the Redux devtools.
 
 ## Step 17: Pivot Rendering to Neon Isometric Grid (Completed)
 
 Date: September 26, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Converted `MainScene.ts` to an isometric projection, recalculating tile metrics, grid hit-testing, and camera bounds to keep the player centered while roaming the enlarged map.
-2. Painted layered neon ambiance—gradient backdrops, horizon glows, canal strips, and additive cover markers—to match the cyber-noir art direction.
-3. Tuned the day–night overlay to scale with zoom, avoid sub-pixel jitter, and keep tint values consistent after tab visibility changes.
-4. Simplified grid rendering by removing outline tiles and introducing alternating floor tones for depth without aliasing.
+1. Reprojected `MainScene` to an isometric layout with recalibrated metrics and camera bounds.
+2. Added layered neon ambiance and tuned the day-night overlay for stable zoom behaviour.
+3. Simplified grid rendering with alternating floor tones to remove aliasing.
 
-### Notes:
-
-- The visual rewrite establishes the long-term look of The Getaway and pairs cleanly with the new HUD.
-- Camera zooming and resizing now feel stable even on window resizes.
-
-### Validation:
-
-- Manual playtest validating zoom limits, pointer hit detection, and overlay transitions across day/night cycles.
+### Validation
+- Manual playtests covering zoom/pointer accuracy and overlay stability.
 
 ## Step 18: Click-to-Move Navigation and Path Preview (Completed)
 
 Date: September 26, 2025
 
-### Tasks Accomplished:
+### Tasks Accomplished
 
-1. Added a breadth-first `findPath` helper (`game/world/pathfinding.ts`) with enemy avoidance, respecting map bounds and door tiles.
-2. Instrumented `MainScene.ts` to emit `TILE_CLICK_EVENT`s on pointer input and render diamond path previews via `PATH_PREVIEW_EVENT`, giving immediate feedback on reachable routes.
-3. Enhanced `GameController.tsx` to queue path steps, walk the player automatically toward the selected tile, and seamlessly transition through door connections when the path reaches a linked area.
-4. Expanded camera and log handling (`MainScene.ts`, `store/logSlice.ts`) so the larger city stays framed and long patrol logs do not overwhelm the feed.
-5. Updated `tsconfig.node.json` to align tooling with the new event module structure.
+1. Implemented breadth-first pathfinding with enemy avoidance and door awareness.
+2. Emitted tile click events, rendered path previews, and queued path execution in `GameController`.
+3. Expanded camera/log handling for long routes and synced `tsconfig` with the new event modules.
 
-### Notes:
+### Validation
+- Manual roam tests covering long-distance travel, door traversal, and curfew restrictions.
 
-- Free-roam navigation now matches modern tactics games: one click previews the route, a second confirms movement, and curfew rules still apply.
-- Path preview clears automatically on map switches, preventing stale overlays.
+## Step 19: Implement Guard Perception & Alert States (Planned)
 
-### Validation:
+### Goals
 
-- Manual roam test covering long-distance click movement, door traversal, and curfew door blocks.
+- Add patrol vision cones with suspicion → investigation → alarm escalation.
+- Surface alert levels in the HUD/log for immediate stealth feedback.
+- Trigger reinforcements or combat when alarms peak.
+- Localize all new prompts in English and Ukrainian.
 
-## Step 25: Surface Level & Objective HUD (Completed)
-
-Date: February 14, 2026
-
-### Tasks Accomplished:
-
-1. Extended `MapArea` definitions (and factories in `grid.ts`) with `level` metadata and objective lists, tagging the Slums sector as **Level 0** with initial resistance tasks.
-2. Populated world generation (`worldMap.ts`) with Level 0 objectives and ensured interior maps inherit appropriate defaults without overlapping building geometry.
-3. Introduced `LevelIndicator.tsx`, mirroring the day/night widget on the upper-left HUD and presenting level data plus mission objectives without blocking play.
-4. Wired the new indicator into `App.tsx`, guaranteeing overlays float above the canvas yet stay clear of building sprites.
-5. Hardened NPC routine scheduling by reserving target tiles so civilians no longer stack on the same square when moving between buildings.
-
-### Notes:
-
-- The HUD now communicates both environmental (day/night) and mission context at a glance, keeping the command shell fiction consistent.
-- Level metadata lives with map definitions, simplifying future chapter unlocks or alternate mission sets.
-
-### Validation:
-
-- `yarn test src/__tests__/pathfinding.test.ts --watch=false`
-- `yarn test src/__tests__/npcRoutine.test.tsx --watch=false`
+### Status
+- Planned – awaiting design sign-off and task breakdown.
