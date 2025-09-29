@@ -37,6 +37,10 @@ interface LogStrings {
   rewardExperience: (amount: number, questName: string) => string;
   rewardCredits: (amount: number, questName: string) => string;
   rewardItem: (itemName: string, questName: string) => string;
+  alertSuspicious: string;
+  alertInvestigating: string;
+  alertAlarmed: string;
+  reinforcementsIncoming: string;
 }
 
 interface SystemStrings {
@@ -86,6 +90,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       rewardExperience: (amount, questName) => `+${amount} XP from ${questName}.`,
       rewardCredits: (amount, questName) => `+${amount} credits secured from ${questName}.`,
       rewardItem: (itemName, questName) => `Received ${itemName} from ${questName}.`,
+      alertSuspicious: 'Guard patrol notices something off—stay cautious.',
+      alertInvestigating: 'Patrol is actively searching the area. Get to cover!',
+      alertAlarmed: 'ALERT! Enemy has locked onto your position!',
+      reinforcementsIncoming: 'Reinforcements called in—more hostiles incoming!',
     },
   },
   uk: {
@@ -130,6 +138,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       rewardExperience: (amount, questName) => `+${amount} од. досвіду за ${questName}.`,
       rewardCredits: (amount, questName) => `+${amount} кредитів за ${questName}.`,
       rewardItem: (itemName, questName) => `Отримано ${itemName} від ${questName}.`,
+      alertSuspicious: 'Патруль помічає щось підозріле — будьте обережні.',
+      alertInvestigating: 'Патруль активно обшукує зону. Сховайтеся!',
+      alertAlarmed: 'ТРИВОГА! Ворог засік вашу позицію!',
+      reinforcementsIncoming: 'Викликано підкріплення — більше ворогів на підході!',
     },
   },
 };

@@ -30,6 +30,21 @@ export interface Player extends Entity {
   };
 }
 
+// Alert state for enemies with perception
+export enum AlertLevel {
+  IDLE = 'idle',
+  SUSPICIOUS = 'suspicious',
+  INVESTIGATING = 'investigating',
+  ALARMED = 'alarmed'
+}
+
+// Vision cone configuration
+export interface VisionCone {
+  range: number;        // How far the enemy can see (in tiles)
+  angle: number;        // Field of view in degrees (e.g., 90 for 90° cone)
+  direction: number;    // Direction enemy is facing in degrees (0 = right, 90 = down, etc.)
+}
+
 // Enemy specific attributes
 export interface Enemy extends Entity {
   actionPoints: number;
@@ -37,6 +52,10 @@ export interface Enemy extends Entity {
   damage: number;
   attackRange: number;
   isHostile: boolean;
+  visionCone?: VisionCone;
+  alertLevel?: AlertLevel;
+  alertProgress?: number;    // 0-100, increases when player is in sight
+  lastKnownPlayerPosition?: Position | null;
 }
 
 // NPC specific attributes

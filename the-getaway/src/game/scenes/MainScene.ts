@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
-import { MapArea, TileType, Position, Enemy, MapTile, NPC } from '../interfaces/types';
+import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel } from '../interfaces/types';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail } from '../events';
+import { getVisionConeTiles } from '../combat/perception';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
@@ -40,6 +41,7 @@ export class MainScene extends Phaser.Scene {
   private mapGraphics!: Phaser.GameObjects.Graphics;
   private backdropGraphics!: Phaser.GameObjects.Graphics;
   private pathGraphics!: Phaser.GameObjects.Graphics;
+  private visionConeGraphics!: Phaser.GameObjects.Graphics;
   private playerSprite!: Phaser.GameObjects.Ellipse;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private npcSprites: Map<string, NpcSpriteData> = new Map();
@@ -97,6 +99,9 @@ export class MainScene extends Phaser.Scene {
 
     this.mapGraphics = this.add.graphics();
     this.mapGraphics.setDepth(-5);
+
+    this.visionConeGraphics = this.add.graphics();
+    this.visionConeGraphics.setDepth(2);
 
     this.pathGraphics = this.add.graphics();
     this.pathGraphics.setDepth(4);
@@ -156,6 +161,7 @@ export class MainScene extends Phaser.Scene {
         if (initialState?.world?.currentMapArea?.entities?.npcs) {
            this.updateNpcs(initialState.world.currentMapArea.entities.npcs);
         }
+        this.renderVisionCones();
       }
     }, 0);
   }
@@ -219,7 +225,7 @@ export class MainScene extends Phaser.Scene {
       // clear existing enemy sprites
       this.enemySprites.forEach((data) => {
         data.sprite.destroy();
-        data.healthText.destroy();
+        data.healthBar.destroy();
       });
       this.enemySprites.clear();
       this.npcSprites.forEach((data) => {
@@ -243,6 +249,7 @@ export class MainScene extends Phaser.Scene {
     this.updatePlayerVitalsIndicator(playerState.position, playerState.health, playerState.maxHealth);
     this.updateEnemies(currentEnemies);
     this.updateNpcs(worldState.currentMapArea.entities.npcs);
+    this.renderVisionCones();
   }
   
   private updatePlayerPosition(position: Position): void {
@@ -523,7 +530,74 @@ export class MainScene extends Phaser.Scene {
 
     graphics.setDepth(pixelPos.y + 7);
   }
-  
+
+  private renderVisionCones(): void {
+    if (!this.currentMapArea || !this.visionConeGraphics) {
+      return;
+    }
+
+    this.visionConeGraphics.clear();
+
+    const enemies = this.currentMapArea.entities.enemies;
+    const metrics = this.getIsoMetrics();
+
+    enemies.forEach((enemy) => {
+      if (!enemy.visionCone || enemy.health <= 0) {
+        return;
+      }
+
+      // Get all tiles in vision cone
+      const visionTiles = getVisionConeTiles(
+        enemy.position,
+        enemy.visionCone,
+        this.currentMapArea!
+      );
+
+      if (visionTiles.length === 0) {
+        return;
+      }
+
+      // Determine color based on alert level
+      let coneColor = 0xffff00; // Yellow for idle/suspicious
+      let coneAlpha = 0.1;
+
+      switch (enemy.alertLevel) {
+        case AlertLevel.SUSPICIOUS:
+          coneColor = 0xffaa00;
+          coneAlpha = 0.15;
+          break;
+        case AlertLevel.INVESTIGATING:
+          coneColor = 0xff6600;
+          coneAlpha = 0.2;
+          break;
+        case AlertLevel.ALARMED:
+          coneColor = 0xff0000;
+          coneAlpha = 0.25;
+          break;
+        default:
+          coneColor = 0xffff00;
+          coneAlpha = 0.1;
+      }
+
+      // Draw vision cone tiles
+      this.visionConeGraphics.fillStyle(coneColor, coneAlpha);
+
+      visionTiles.forEach((tile) => {
+        const pixelPos = this.calculatePixelPosition(tile.x, tile.y);
+
+        // Draw isometric diamond for each tile
+        const points = [
+          pixelPos.x, pixelPos.y - metrics.tileHeight / 2,  // top
+          pixelPos.x + metrics.tileWidth / 2, pixelPos.y,    // right
+          pixelPos.x, pixelPos.y + metrics.tileHeight / 2,  // bottom
+          pixelPos.x - metrics.tileWidth / 2, pixelPos.y,    // left
+        ];
+
+        this.visionConeGraphics.fillPoints(points, true);
+      });
+    });
+  }
+
   public shutdown(): void {
     this.clearCoverHighlights();
     if (this.unsubscribe) {
@@ -693,10 +767,6 @@ export class MainScene extends Phaser.Scene {
       case TileType.TRAP: {
         const pulseColor = this.adjustColor(modulatedBase, 0.6);
         this.mapGraphics.fillStyle(pulseColor, 0.22);
-        if (initialState?.player?.data) {
-          const seedPlayer = initialState.player.data;
-          this.updatePlayerVitalsIndicator(seedPlayer.position, seedPlayer.health, seedPlayer.maxHealth);
-        }
         this.mapGraphics.fillPoints(
           this.getDiamondPoints(center.x, center.y, tileWidth * 0.58, tileHeight * 0.6),
           true

@@ -221,14 +221,24 @@ Date: September 26, 2025
 ### Validation
 - Manual roam tests covering long-distance travel, door traversal, and curfew restrictions.
 
-## Step 19: Implement Guard Perception & Alert States (Planned)
+## Step 19: Implement Guard Perception & Alert States (Completed)
 
-### Goals
+Date: September 29, 2025
 
-- Add patrol vision cones with suspicion → investigation → alarm escalation.
-- Surface alert levels in the HUD/log for immediate stealth feedback.
-- Trigger reinforcements or combat when alarms peak.
-- Localize all new prompts in English and Ukrainian.
+### Tasks Accomplished
 
-### Status
-- Planned – awaiting design sign-off and task breakdown.
+1. Extended `Enemy` type with `VisionCone`, `AlertLevel`, `alertProgress`, and `lastKnownPlayerPosition`.
+2. Created `perception.ts` module with vision cone calculations, line-of-sight checks, and alert state transitions.
+3. Built `perceptionManager.ts` to process perception updates for all enemies and determine global alert level.
+4. Added vision cone rendering to `MainScene` with color-coded overlays based on alert level.
+5. Integrated perception processing into `GameController` with automatic enemy alert updates.
+6. Implemented reinforcement spawning when enemies reach `ALARMED` state.
+7. Added localized alert messages in English and Ukrainian for suspicion, investigation, and alarm states.
+
+### Validation
+- `yarn build` – successful
+- `yarn lint` – no errors
+- Vision cones render in MainScene with isometric projection
+- Alert states escalate: IDLE → SUSPICIOUS → INVESTIGATING → ALARMED
+- Reinforcements spawn automatically when alarm threshold is reached
+- Alert messages appear in action log with proper localization

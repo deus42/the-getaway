@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { MapArea, Enemy, NPC, Position, Item } from '../game/interfaces/types';
+import { MapArea, Enemy, NPC, Position, Item, AlertLevel } from '../game/interfaces/types';
 import { DEFAULT_LOCALE, Locale } from '../content/locales';
 import { getLevel0Content } from '../content/levels/level0';
 import { buildWorldResources, MapConnection } from '../game/world/worldMap';
@@ -21,6 +21,8 @@ export interface WorldState {
   inCombat: boolean;
   isPlayerTurn: boolean;
   turnCount: number;
+  globalAlertLevel: AlertLevel;
+  reinforcementsScheduled: boolean;
 }
 
 const buildEnemy = (name: string): Enemy => ({
@@ -34,6 +36,14 @@ const buildEnemy = (name: string): Enemy => ({
   damage: 5,
   attackRange: 1,
   isHostile: true,
+  visionCone: {
+    range: 8,
+    angle: 90,
+    direction: 180, // facing left initially
+  },
+  alertLevel: AlertLevel.IDLE,
+  alertProgress: 0,
+  lastKnownPlayerPosition: null,
 });
 
 const buildWorldState = (locale: Locale): WorldState => {
@@ -55,6 +65,8 @@ const buildWorldState = (locale: Locale): WorldState => {
     inCombat: false,
     isPlayerTurn: true,
     turnCount: 1,
+    globalAlertLevel: AlertLevel.IDLE,
+    reinforcementsScheduled: false,
   };
 };
 
@@ -216,6 +228,18 @@ export const worldSlice = createSlice({
     applyLocaleToWorld: (_state, action: PayloadAction<Locale>) => {
       return buildWorldState(action.payload);
     },
+
+    setGlobalAlertLevel: (state, action: PayloadAction<AlertLevel>) => {
+      state.globalAlertLevel = action.payload;
+    },
+
+    scheduleReinforcements: (state) => {
+      state.reinforcementsScheduled = true;
+    },
+
+    clearReinforcementsSchedule: (state) => {
+      state.reinforcementsScheduled = false;
+    },
   },
 });
 
@@ -235,6 +259,9 @@ export const {
   addItemToMap,
   removeItemFromMap,
   applyLocaleToWorld,
+  setGlobalAlertLevel,
+  scheduleReinforcements,
+  clearReinforcementsSchedule,
 } = worldSlice.actions;
 
 export default worldSlice.reducer;

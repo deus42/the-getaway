@@ -13,6 +13,9 @@ import {
   exitCombat,
   addEnemy,
   updateNPC,
+  setGlobalAlertLevel,
+  scheduleReinforcements,
+  clearReinforcementsSchedule,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
 import { RootState } from "../store";
@@ -22,7 +25,7 @@ import {
   isInAttackRange,
   DEFAULT_ATTACK_COST,
 } from "../game/combat/combatSystem";
-import { Enemy, Position, MapArea, TileType, NPC } from "../game/interfaces/types";
+import { Enemy, Position, MapArea, TileType, NPC, AlertLevel } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -30,6 +33,7 @@ import { findPath } from "../game/world/pathfinding";
 import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT } from "../game/events";
 import { startDialogue, endDialogue } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
+import { processPerceptionUpdates, getAlertMessageKey, shouldSpawnReinforcements, getReinforcementDelay } from "../game/combat/perceptionManager";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -61,9 +65,12 @@ const GameController: React.FC = () => {
     (state: RootState) => state.quests.activeDialogue.dialogueId
   );
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const globalAlertLevel = useSelector((state: RootState) => state.world.globalAlertLevel);
+  const reinforcementsScheduled = useSelector((state: RootState) => state.world.reinforcementsScheduled);
   const logStrings = getSystemStrings(locale).logs;
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
+  const previousGlobalAlertLevel = useRef(globalAlertLevel);
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
@@ -694,6 +701,81 @@ const GameController: React.FC = () => {
     }
   }, [timeOfDay, dispatch, logStrings]);
 
+  // --- Perception Processing ---
+  useEffect(() => {
+    if (!player || enemies.length === 0 || !currentMapArea) {
+      return;
+    }
+
+    // Process perception updates for all enemies
+    const { updatedEnemies, maxAlertLevel } = processPerceptionUpdates(
+      enemies,
+      player,
+      currentMapArea
+    );
+
+    // Update enemies with new alert states
+    updatedEnemies.forEach((updatedEnemy, index) => {
+      const originalEnemy = enemies[index];
+      if (
+        originalEnemy &&
+        (updatedEnemy.alertLevel !== originalEnemy.alertLevel ||
+          updatedEnemy.alertProgress !== originalEnemy.alertProgress)
+      ) {
+        dispatch(updateEnemy(updatedEnemy));
+      }
+    });
+
+    // Update global alert level if changed
+    if (maxAlertLevel !== previousGlobalAlertLevel.current) {
+      const messageKey = getAlertMessageKey(previousGlobalAlertLevel.current, maxAlertLevel);
+      if (messageKey) {
+        dispatch(addLogMessage(logStrings[messageKey as keyof typeof logStrings] as string));
+      }
+      dispatch(setGlobalAlertLevel(maxAlertLevel));
+      previousGlobalAlertLevel.current = maxAlertLevel;
+
+      // Check if reinforcements should be spawned
+      if (shouldSpawnReinforcements(maxAlertLevel, reinforcementsScheduled)) {
+        dispatch(scheduleReinforcements());
+        dispatch(addLogMessage(logStrings.reinforcementsIncoming));
+
+        // Schedule reinforcement spawn
+        setTimeout(() => {
+          if (!inCombat) {
+            dispatch(enterCombat());
+          }
+
+          // If spawning during enemy turn, set AP to 0 so they don't act until next round
+          const spawnDuringEnemyTurn = inCombat && !isPlayerTurn;
+
+          const reinforcementEnemy: Enemy = {
+            id: uuidv4(),
+            name: logStrings.curfewPatrolName,
+            position: { x: player.position.x + 5, y: player.position.y + 2 },
+            health: 25,
+            maxHealth: 25,
+            actionPoints: spawnDuringEnemyTurn ? 0 : 6,
+            maxActionPoints: 6,
+            damage: 5,
+            attackRange: 1,
+            isHostile: true,
+            visionCone: {
+              range: 8,
+              angle: 90,
+              direction: 180,
+            },
+            alertLevel: AlertLevel.ALARMED,
+            alertProgress: 100,
+          };
+
+          dispatch(addEnemy(reinforcementEnemy));
+          dispatch(clearReinforcementsSchedule());
+        }, getReinforcementDelay());
+      }
+    }
+  }, [player, enemies, currentMapArea, dispatch, logStrings, inCombat, isPlayerTurn, reinforcementsScheduled]);
+
   // --- Enemy Turn Logic ---
   useEffect(() => {
     console.log(
@@ -725,6 +807,17 @@ const GameController: React.FC = () => {
       return;
     }
 
+    // Check if current index is out of bounds (can happen when enemies are added/removed)
+    if (currentEnemyTurnIndex >= enemies.length) {
+      console.log(
+        `[GameController] Enemy index ${currentEnemyTurnIndex} out of bounds (length: ${enemies.length}). Ending enemy turn.`
+      );
+      dispatch(switchTurn());
+      dispatch(resetActionPoints());
+      setCurrentEnemyTurnIndex(0);
+      return;
+    }
+
     const currentEnemy = enemies[currentEnemyTurnIndex];
 
     // --- Check if current enemy can act ---
@@ -738,8 +831,21 @@ const GameController: React.FC = () => {
           currentEnemy?.id ?? `at index ${currentEnemyTurnIndex}`
         } cannot act (Dead or 0 AP). Checking next.`
       );
-      const nextIndex = currentEnemyTurnIndex + 1;
-      if (nextIndex >= enemies.length) {
+
+      // Find next enemy with AP > 0
+      let nextIndex = currentEnemyTurnIndex + 1;
+      let foundValidEnemy = false;
+
+      while (nextIndex < enemies.length) {
+        const nextEnemy = enemies[nextIndex];
+        if (nextEnemy && nextEnemy.health > 0 && nextEnemy.actionPoints > 0) {
+          foundValidEnemy = true;
+          break;
+        }
+        nextIndex++;
+      }
+
+      if (!foundValidEnemy) {
         // All enemies processed for this turn cycle, end enemy phase
         console.log(
           "[GameController] All enemies processed, switching back to player."
@@ -748,7 +854,8 @@ const GameController: React.FC = () => {
         dispatch(resetActionPoints());
         setCurrentEnemyTurnIndex(0); // Reset index for next player turn
       } else {
-        // Move to the next enemy for the next effect run
+        // Move to the next valid enemy
+        console.log(`[GameController] Moving to next valid enemy at index ${nextIndex}`);
         setCurrentEnemyTurnIndex(nextIndex);
       }
       return; // Exit effect, it will re-run for the next index or end the turn
