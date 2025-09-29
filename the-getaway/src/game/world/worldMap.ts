@@ -71,6 +71,23 @@ const applyBuildingConnections = (
   const interiors: MapArea[] = [];
 
   buildings.forEach((building) => {
+    const { from, to } = building.footprint;
+
+    for (let y = from.y; y <= to.y; y++) {
+      for (let x = from.x; x <= to.x; x++) {
+        const tile = hostArea.tiles[y]?.[x];
+
+        if (!tile) {
+          continue;
+        }
+
+        if (tile.type === TileType.DOOR) {
+          tile.type = TileType.WALL;
+          tile.isWalkable = false;
+        }
+      }
+    }
+
     const doorTile = hostArea.tiles[building.door.y]?.[building.door.x];
 
     if (!doorTile) {
