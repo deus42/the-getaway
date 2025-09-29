@@ -238,7 +238,7 @@ const MiniMap: React.FC = () => {
       <div
         style={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "center",
           alignItems: "center",
           marginTop: "0.55rem",
           fontSize: "0.68rem",
@@ -246,9 +246,6 @@ const MiniMap: React.FC = () => {
         }}
       >
         <span>{mapArea.name}</span>
-        <span>
-          ({playerPosition.x}, {playerPosition.y})
-        </span>
       </div>
     </div>
   );
