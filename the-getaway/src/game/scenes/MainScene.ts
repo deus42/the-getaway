@@ -49,8 +49,6 @@ export class MainScene extends Phaser.Scene {
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   private dayNightOverlay!: Phaser.GameObjects.Rectangle;
-  private coverMarkers: Phaser.GameObjects.Polygon[] = [];
-  private coverMarkerTweens: Phaser.Tweens.Tween[] = [];
   private curfewActive = false;
   private currentGameTime = 0;
   private timeDispatchAccumulator = 0;
@@ -119,7 +117,6 @@ export class MainScene extends Phaser.Scene {
     this.initializeDayNightOverlay();
     this.updateDayNightOverlay();
     this.curfewActive = worldState.curfewActive;
-    this.refreshCoverHighlights(this.curfewActive);
 
     // Listen for resize events
     this.scale.on('resize', this.handleResize, this);
@@ -236,13 +233,12 @@ export class MainScene extends Phaser.Scene {
       });
       this.npcSprites.clear();
       this.setupCameraAndMap();
-      this.refreshCoverHighlights(this.curfewActive);
       this.clearPathPreview();
       this.enablePlayerCameraFollow();
     }
 
     if (this.curfewActive !== worldState.curfewActive) {
-      this.refreshCoverHighlights(worldState.curfewActive);
+      this.curfewActive = worldState.curfewActive;
     }
 
     this.updatePlayerPosition(playerState.position);
@@ -599,7 +595,6 @@ export class MainScene extends Phaser.Scene {
   }
 
   public shutdown(): void {
-    this.clearCoverHighlights();
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
@@ -1175,7 +1170,6 @@ export class MainScene extends Phaser.Scene {
 
     // Ensure overlay matches latest viewport size after camera adjustments
     this.resizeDayNightOverlay();
-    this.refreshCoverHighlights(this.curfewActive);
   }
 
   private initializeDayNightOverlay(): void {
@@ -1241,15 +1235,4 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  private refreshCoverHighlights(isCurfewActive: boolean): void {
-    this.curfewActive = isCurfewActive;
-    this.clearCoverHighlights();
-  }
-
-  private clearCoverHighlights(): void {
-    this.coverMarkerTweens.forEach((tween) => tween.remove());
-    this.coverMarkerTweens = [];
-    this.coverMarkers.forEach((marker) => marker.destroy());
-    this.coverMarkers = [];
-  }
 }
