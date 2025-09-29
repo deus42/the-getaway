@@ -719,14 +719,7 @@ export class MainScene extends Phaser.Scene {
 
     switch (tile.type) {
       case TileType.COVER: {
-        const coverAccent = this.adjustColor(modulatedBase, 0.25);
-        const coverCore = this.getDiamondPoints(center.x, center.y, tileWidth * 0.56, tileHeight * 0.58);
-        this.mapGraphics.fillStyle(coverAccent, 0.14);
-        this.mapGraphics.fillPoints(coverCore, true);
-
-        const coverFrame = this.getDiamondPoints(center.x, center.y, tileWidth * 0.74, tileHeight * 0.72);
-        this.mapGraphics.lineStyle(2, 0x8bead6, 0.65);
-        this.mapGraphics.strokePoints(coverFrame, true);
+        // Cover tiles render as regular floor tiles without special highlighting
         break;
       }
       case TileType.WALL: {
