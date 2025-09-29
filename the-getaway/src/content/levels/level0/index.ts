@@ -84,36 +84,18 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
   };
 
   const originalDoor = sanitized.door ?? fallbackDoor;
-  const clampedDoor = {
-    x: Math.min(Math.max(originalDoor.x, from.x), to.x),
-    y: Math.min(Math.max(originalDoor.y, from.y), to.y),
+  const interiorWidth = to.x - from.x;
+  const hasHorizontalBuffer = interiorWidth >= 2;
+  const minX = hasHorizontalBuffer ? from.x + 1 : from.x;
+  const maxX = hasHorizontalBuffer ? to.x - 1 : to.x;
+
+  const clampedX = Math.min(Math.max(originalDoor.x, minX), maxX);
+
+  sanitized.door = {
+    x: clampedX,
+    y: to.y,
   };
 
-  const isInsideInterior =
-    clampedDoor.x > from.x && clampedDoor.x < to.x &&
-    clampedDoor.y > from.y && clampedDoor.y < to.y;
-
-  if (!isInsideInterior) {
-    sanitized.door = clampedDoor;
-    return sanitized;
-  }
-
-  const candidates = [
-    { x: clampedDoor.x, y: from.y },
-    { x: clampedDoor.x, y: to.y },
-    { x: from.x, y: clampedDoor.y },
-    { x: to.x, y: clampedDoor.y },
-  ];
-
-  const best = candidates.reduce((closest, candidate) => {
-    const distance = Math.abs(candidate.x - clampedDoor.x) + Math.abs(candidate.y - clampedDoor.y);
-    if (!closest || distance < closest.distance) {
-      return { candidate, distance };
-    }
-    return closest;
-  }, null as { candidate: Position; distance: number } | null);
-
-  sanitized.door = best?.candidate ?? fallbackDoor;
   return sanitized;
 };
 

@@ -16,11 +16,11 @@ const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number
   DEFAULT: { even: 0x1e2432, odd: 0x232838 },
 };
 
-const DEFAULT_FIT_ZOOM_FACTOR = 1.35;
-const MIN_CAMERA_ZOOM = 0.45;
-const MAX_CAMERA_ZOOM = 2.4;
+const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
+const MIN_CAMERA_ZOOM = 0.6;
+const MAX_CAMERA_ZOOM = 2.3;
 const CAMERA_BOUND_PADDING_TILES = 6;
-const CAMERA_FOLLOW_LERP = 0.18;
+const CAMERA_FOLLOW_LERP = 0.22;
 
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
@@ -344,8 +344,20 @@ export class MainScene extends Phaser.Scene {
 
     const camera = this.cameras.main;
     camera.startFollow(this.playerSprite, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
+    this.recenterCameraOnPlayer();
     camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
     this.isCameraFollowingPlayer = true;
+  }
+
+  private recenterCameraOnPlayer(): void {
+    if (!this.playerSprite || !this.sys.isActive()) {
+      return;
+    }
+
+    const camera = this.cameras.main;
+    camera.followOffset.set(0, 0);
+    camera.centerOn(this.playerSprite.x, this.playerSprite.y);
+    this.clampCameraToBounds(camera);
   }
 
   private updateNpcs(npcs: NPC[]) {
@@ -819,7 +831,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     const camera = this.cameras.main;
-    const zoomMultiplier = deltaY > 0 ? 0.88 : 1.12;
+    const zoomMultiplier = deltaY > 0 ? 0.9 : 1.1;
     const currentZoom = camera.zoom;
     const targetZoom = Phaser.Math.Clamp(
       currentZoom * zoomMultiplier,
@@ -844,16 +856,36 @@ export class MainScene extends Phaser.Scene {
         Math.max(120, this.scale.width * 0.22),
         Math.max(160, this.scale.height * 0.28)
       );
-    }
-
-    if (!this.isCameraFollowingPlayer && worldPointBefore) {
+      this.recenterCameraOnPlayer();
+    } else {
       const worldPointAfter = camera.getWorldPoint(pointer.x, pointer.y);
-      camera.scrollX += worldPointBefore.x - worldPointAfter.x;
-      camera.scrollY += worldPointBefore.y - worldPointAfter.y;
+      const deltaWorldX = (worldPointBefore?.x ?? 0) - worldPointAfter.x;
+      const deltaWorldY = (worldPointBefore?.y ?? 0) - worldPointAfter.y;
+      camera.scrollX += deltaWorldX;
+      camera.scrollY += deltaWorldY;
+      this.clampCameraToBounds(camera);
     }
 
     this.applyOverlayZoom();
   };
+
+  private clampCameraToBounds(camera: Phaser.Cameras.Scene2D.Camera): void {
+    const bounds = camera.getBounds();
+
+    if (!bounds) {
+      return;
+    }
+
+    const viewWidth = camera.width / camera.zoom;
+    const viewHeight = camera.height / camera.zoom;
+    const minX = bounds.x;
+    const maxX = bounds.x + Math.max(0, bounds.width - viewWidth);
+    const minY = bounds.y;
+    const maxY = bounds.y + Math.max(0, bounds.height - viewHeight);
+
+    camera.scrollX = Phaser.Math.Clamp(camera.scrollX, minX, maxX);
+    camera.scrollY = Phaser.Math.Clamp(camera.scrollY, minY, maxY);
+  }
 
   private handlePathPreview = (event: Event): void => {
     if (!this.sys.isActive()) {
@@ -1030,6 +1062,8 @@ export class MainScene extends Phaser.Scene {
 
     if (!this.isCameraFollowingPlayer) {
       camera.centerOn(focusPoint.x, focusPoint.y + tileHeight * 0.25);
+    } else {
+      this.recenterCameraOnPlayer();
     }
 
     this.drawBackdrop();
