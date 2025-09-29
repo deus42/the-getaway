@@ -77,6 +77,7 @@ const GameController: React.FC = () => {
   const npcMovementTimeouts = useRef<number[]>([]);
   const npcReservedDestinations = useRef<Map<string, Position>>(new Map());
   const [pendingNpcInteractionId, setPendingNpcInteractionId] = useState<string | null>(null);
+  const [pendingEnemyEngagementId, setPendingEnemyEngagementId] = useState<string | null>(null);
   const beginDialogueWithNpc = useCallback(
     (npc: NPC): boolean => {
       if (!npc.isInteractive || !npc.dialogueId) {
@@ -152,12 +153,14 @@ const GameController: React.FC = () => {
       const target = detail.position;
 
       setPendingNpcInteractionId(null);
+      setPendingEnemyEngagementId(null);
 
       if (
         target.x === player.position.x &&
         target.y === player.position.y
       ) {
         setQueuedPath([]);
+        setPendingEnemyEngagementId(null);
         return;
       }
 
@@ -246,6 +249,92 @@ const GameController: React.FC = () => {
         return;
       }
 
+      const enemyAtTarget = currentMapArea.entities.enemies.find(
+        (enemy) =>
+          enemy.position.x === target.x &&
+          enemy.position.y === target.y &&
+          enemy.health > 0
+      );
+
+      if (enemyAtTarget) {
+        const distanceToEnemy =
+          Math.abs(enemyAtTarget.position.x - player.position.x) +
+          Math.abs(enemyAtTarget.position.y - player.position.y);
+
+        if (distanceToEnemy <= 1) {
+          if (!inCombat) {
+            dispatch(enterCombat());
+            dispatch(addLogMessage(logStrings.enteredCombat));
+          }
+          return;
+        }
+
+        const approachOffsets: Position[] = [
+          { x: 1, y: 0 },
+          { x: -1, y: 0 },
+          { x: 0, y: 1 },
+          { x: 0, y: -1 },
+        ];
+
+        let selectedPath: Position[] | null = null;
+
+        for (const offset of approachOffsets) {
+          const candidate = {
+            x: enemyAtTarget.position.x + offset.x,
+            y: enemyAtTarget.position.y + offset.y,
+          };
+
+          if (
+            candidate.x === player.position.x &&
+            candidate.y === player.position.y
+          ) {
+            continue;
+          }
+
+          if (
+            candidate.x < 0 ||
+            candidate.y < 0 ||
+            candidate.x >= currentMapArea.width ||
+            candidate.y >= currentMapArea.height
+          ) {
+            continue;
+          }
+
+          if (
+            !isPositionWalkable(candidate, currentMapArea, player, enemies, {
+              npcs: currentMapArea.entities.npcs,
+            })
+          ) {
+            continue;
+          }
+
+          const pathToCandidate = findPath(
+            player.position,
+            candidate,
+            currentMapArea,
+            {
+              player,
+              enemies,
+              npcs: currentMapArea.entities.npcs,
+            }
+          );
+
+          if (pathToCandidate.length > 0) {
+            selectedPath = pathToCandidate;
+            break;
+          }
+        }
+
+        if (selectedPath) {
+          setPendingEnemyEngagementId(enemyAtTarget.id);
+          setQueuedPath(selectedPath);
+        } else {
+          dispatch(addLogMessage(logStrings.enemyOutOfRange));
+        }
+
+        return;
+      }
+
       const path = findPath(player.position, target, currentMapArea, {
         player,
         enemies,
@@ -258,6 +347,7 @@ const GameController: React.FC = () => {
             detail: { areaId: currentMapArea.id, path: [] },
           })
         );
+        setPendingEnemyEngagementId(null);
         return;
       }
 
@@ -292,6 +382,7 @@ const GameController: React.FC = () => {
   useEffect(() => {
     setQueuedPath((previous) => (previous.length > 0 ? [] : previous));
     setPendingNpcInteractionId(null);
+    setPendingEnemyEngagementId(null);
   }, [currentMapArea?.id]);
 
   useEffect(() => {
@@ -444,6 +535,7 @@ const GameController: React.FC = () => {
     ) {
       setQueuedPath([]);
       setPendingNpcInteractionId(null);
+      setPendingEnemyEngagementId(null);
       return;
     }
 
@@ -460,6 +552,7 @@ const GameController: React.FC = () => {
       dispatch(addLogMessage(logStrings.checkpointSealed));
         setQueuedPath([]);
         setPendingNpcInteractionId(null);
+        setPendingEnemyEngagementId(null);
         return;
       }
 
@@ -476,6 +569,7 @@ const GameController: React.FC = () => {
 
       setQueuedPath([]);
       setPendingNpcInteractionId(null);
+      setPendingEnemyEngagementId(null);
       return;
     }
 
@@ -540,6 +634,50 @@ const GameController: React.FC = () => {
     mapConnections,
     beginDialogueWithNpc,
     logStrings,
+  ]);
+
+  useEffect(() => {
+    if (!pendingEnemyEngagementId || !currentMapArea) {
+      return;
+    }
+
+    const enemy = currentMapArea.entities.enemies.find(
+      (entry) => entry.id === pendingEnemyEngagementId
+    );
+
+    if (!enemy || enemy.health <= 0) {
+      setPendingEnemyEngagementId(null);
+      return;
+    }
+
+    const distance =
+      Math.abs(enemy.position.x - player.position.x) +
+      Math.abs(enemy.position.y - player.position.y);
+
+    if (distance <= 1) {
+      setPendingEnemyEngagementId(null);
+      setQueuedPath([]);
+
+      if (!inCombat) {
+        dispatch(enterCombat());
+        dispatch(addLogMessage(logStrings.enteredCombat));
+      }
+
+      return;
+    }
+
+    if (queuedPath.length === 0) {
+      setPendingEnemyEngagementId(null);
+    }
+  }, [
+    pendingEnemyEngagementId,
+    currentMapArea,
+    player,
+    inCombat,
+    queuedPath.length,
+    dispatch,
+    logStrings,
+    enemies,
   ]);
 
   useEffect(() => {
@@ -947,6 +1085,7 @@ const GameController: React.FC = () => {
         if (queuedPath.length > 0) {
           setQueuedPath([]);
           setPendingNpcInteractionId(null);
+          setPendingEnemyEngagementId(null);
         }
         // If not in combat and enemies nearby, enter combat
         if (!inCombat) {
@@ -1009,6 +1148,7 @@ const GameController: React.FC = () => {
       if (queuedPath.length > 0) {
         setQueuedPath([]);
         setPendingNpcInteractionId(null);
+        setPendingEnemyEngagementId(null);
       }
 
       const newPosition = { ...player.position };

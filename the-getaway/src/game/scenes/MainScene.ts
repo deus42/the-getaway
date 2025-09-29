@@ -25,7 +25,7 @@ const CAMERA_FOLLOW_LERP = 0.22;
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
   sprite: Phaser.GameObjects.Ellipse;
-  healthText: Phaser.GameObjects.Text;
+  healthBar: Phaser.GameObjects.Graphics;
   markedForRemoval: boolean;
 }
 
@@ -197,6 +197,10 @@ export class MainScene extends Phaser.Scene {
 
     if (!this.inCombat && previousCombatState) {
       this.destroyPlayerVitalsIndicator();
+      this.enemySprites.forEach((data) => {
+        data.healthBar.clear();
+        data.healthBar.setVisible(false);
+      });
       this.npcSprites.forEach((data) => {
         if (data.indicator) {
           data.indicator.destroy();
@@ -435,6 +439,8 @@ export class MainScene extends Phaser.Scene {
 
     this.enemySprites.forEach((spriteData) => { spriteData.markedForRemoval = true; });
 
+    const metrics = this.getIsoMetrics();
+
     for (const enemy of enemies) {
       const existingSpriteData = this.enemySprites.get(enemy.id);
       const pixelPos = this.calculatePixelPosition(enemy.position.x, enemy.position.y);
@@ -442,7 +448,6 @@ export class MainScene extends Phaser.Scene {
       if (!existingSpriteData) {
          if(enemy.health <= 0) continue;
 
-         const metrics = this.getIsoMetrics();
          const enemySprite = this.add.ellipse(
            pixelPos.x,
            pixelPos.y,
@@ -452,18 +457,13 @@ export class MainScene extends Phaser.Scene {
          );
          enemySprite.setDepth(pixelPos.y + 6);
 
-         const healthTextY = pixelPos.y + metrics.tileHeight * 0.6;
-         const healthText = this.add
-           .text(
-             pixelPos.x,
-             healthTextY,
-             `${enemy.health}/${enemy.maxHealth}`,
-             { fontSize: '12px', color: '#ffffff', align: 'center', resolution: 2 }
-           )
-           .setOrigin(0.5, 0)
-           .setDepth(pixelPos.y + 7);
-
-         this.enemySprites.set(enemy.id, { sprite: enemySprite, healthText: healthText, markedForRemoval: false });
+         const healthBar = this.add.graphics();
+         healthBar.setVisible(false);
+         this.enemySprites.set(enemy.id, { sprite: enemySprite, healthBar, markedForRemoval: false });
+         const createdData = this.enemySprites.get(enemy.id);
+         if (createdData) {
+           this.updateEnemyHealthBar(createdData, pixelPos, metrics, enemy);
+         }
          console.log(`[MainScene updateEnemies] Created sprite & health for ${enemy.id}`);
       } else {
          if(enemy.health <= 0) {
@@ -471,12 +471,7 @@ export class MainScene extends Phaser.Scene {
          } else {
              existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
              existingSpriteData.sprite.setDepth(pixelPos.y + 6);
-             const metrics = this.getIsoMetrics();
-             const healthTextY = pixelPos.y + metrics.tileHeight * 0.6;
-             existingSpriteData.healthText
-               .setPosition(pixelPos.x, healthTextY)
-               .setText(`${enemy.health}/${enemy.maxHealth}`)
-               .setDepth(pixelPos.y + 7);
+             this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
              existingSpriteData.markedForRemoval = false;
          }
       }
@@ -485,10 +480,48 @@ export class MainScene extends Phaser.Scene {
     this.enemySprites.forEach((spriteData, id) => {
       if (spriteData.markedForRemoval) {
         spriteData.sprite.destroy();
-        spriteData.healthText.destroy();
+        spriteData.healthBar.destroy();
         this.enemySprites.delete(id);
       }
     });
+  }
+
+  private updateEnemyHealthBar(
+    data: EnemySpriteData,
+    pixelPos: { x: number; y: number },
+    metrics: { tileWidth: number; tileHeight: number },
+    enemy: Enemy
+  ): void {
+    const graphics = data.healthBar;
+    if (!this.inCombat) {
+      graphics.clear();
+      graphics.setVisible(false);
+      return;
+    }
+
+    graphics.setVisible(true);
+    const barWidth = metrics.tileWidth * 0.38;
+    const barHeight = Math.max(4, metrics.tileHeight * 0.08);
+    const x = pixelPos.x - barWidth / 2;
+    const y = pixelPos.y - metrics.tileHeight * 0.75;
+    const percent = enemy.maxHealth > 0 ? Phaser.Math.Clamp(enemy.health / enemy.maxHealth, 0, 1) : 0;
+
+    graphics.clear();
+    graphics.fillStyle(0x3f1d1d, 0.88);
+    graphics.fillRoundedRect(x, y, barWidth, barHeight, Math.min(4, barHeight));
+
+    if (percent > 0) {
+      graphics.fillStyle(0xef4444, 1);
+      graphics.fillRoundedRect(
+        x + 1,
+        y + 1,
+        (barWidth - 2) * percent,
+        Math.max(1, barHeight - 2),
+        Math.max(2, barHeight - 2)
+      );
+    }
+
+    graphics.setDepth(pixelPos.y + 7);
   }
   
   public shutdown(): void {
