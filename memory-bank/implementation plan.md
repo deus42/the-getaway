@@ -162,16 +162,24 @@
   - Extend `GameController` to execute queued paths, bridge door transitions automatically, and abort paths when combat or curfew restrictions intervene.
 - **Test**: Click long-distance destinations across multiple doors, confirm the preview matches the executed path, and ensure curfew-locked doors cancel movement.
 
+### Step 19: Implement Guard Perception & Alert States
+- **Instructions**: Build stealth readability so patrols react believably to the player.
+- **Details**: 
+  - Add patrol vision cones with suspicion → investigation → alarm escalation and expose tuning hooks for designers.
+  - Surface alert levels in the HUD/log so players get instant feedback on stealth status.
+  - Trigger reinforcements or combat when alarms peak, and localize all new prompts in English and Ukrainian.
+- **Test**: Linger inside and outside patrol vision cones to trigger each alert phase, confirm HUD/log updates, and verify alarms escalate to reinforcements before resetting when line of sight is broken.
+
 ## Phase 7: Character Progression and Inventory
 
-### Step 19: Define Player Stats
+### Step 20: Define Player Stats
 - **Instructions**: Set up character attributes that suit the dystopian setting.
 - **Details**: 
   - Create a player profile in `src/game/interfaces` with appropriate stats (Strength, Perception, Endurance, etc. similar to Fallout's S.P.E.C.I.A.L. system).
   - Display stats in a React component with a UI that matches the game's aesthetic.
 - **Test**: Load the game and check the stats UI. Change a stat value and confirm the UI reflects the update.
 
-### Step 20: Add a Leveling System
+### Step 21: Add a Leveling System
 - **Instructions**: Implement XP-based leveling.
 - **Details**: 
   - Award XP for completing quests or defeating enemies.
@@ -179,7 +187,7 @@
   - Design the system to be expandable for higher levels and more complex progression.
 - **Test**: Earn 100 XP through quests or combat. Confirm the player levels up and receives skill points that can be allocated.
 
-### Step 21: Build an Inventory System
+### Step 22: Build an Inventory System
 - **Instructions**: Create a weight-based inventory system.
 - **Details**: 
   - Define an inventory in `src/game/inventory` with a realistic weight limit.
@@ -189,7 +197,7 @@
 
 ## Phase 8: Testing and Final Touches
 
-### Step 22: Test the Full Game
+### Step 23: Test the Full Game
 - **Instructions**: Playtest the base game to ensure all mechanics work together.
 - **Details**: 
   - Explore the map, engage in combat, complete quests, and level up.
@@ -197,7 +205,7 @@
   - Ensure the game runs smoothly in modern browsers.
 - **Test**: Confirm combat, exploration, dialogue, and progression function without crashes or major performance issues.
 
-### Step 23: Expand Save Functionality
+### Step 24: Expand Save Functionality
 - **Instructions**: Upgrade the single-slot persistence into a full multi-slot save manager.
 - **Details**: 
   - Provide a save/load interface that lists available slots, timestamps, and key metadata (location, time of day).
@@ -205,7 +213,7 @@
   - Ensure save operations capture player stats, inventory, quest progress, world state, and menu visibility.
 - **Test**: Create several saves at different progression points, reload each, and confirm the restored state matches the recorded metadata.
 
-### Step 24: Polish the UI
+### Step 25: Polish the UI
 - **Instructions**: Enhance the user interface for clarity and thematic consistency.
 - **Details**: 
   - Style all UI elements (dialogue box, quest log, inventory, status displays) with consistent visuals that fit the dystopian setting.
@@ -213,7 +221,7 @@
   - Ensure UI is responsive and performs well on modern browsers.
 - **Test**: Open each UI element. Ensure they look cohesive and tooltips appear when hovering over interactive elements.
 
-### Step 25: Surface Level & Objective HUD
+### Step 26: Surface Level & Objective HUD
 - **Instructions**: Display the current level metadata and mission objectives directly in the game overlay.
 - **Details**: 
   - Extend `MapArea` definitions with `level` numbers and objective lists (starting with Level 0 for the Slums sector).
@@ -224,10 +232,10 @@
 ---
 
 ## Summary
-This plan now outlines 25 implementable steps to build the base version of "The Getaway." It focuses on:
+This plan now outlines 26 implementable steps to build the base version of "The Getaway." It focuses on:
 - **Command & Atmosphere**: Establishing the resistance command hub UI, neon isometric presentation, and curfew pressure loops.
 - **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
-- **Combat & Navigation**: Turn-based encounters with cover awareness, click-to-move traversal, and readable path previews.
+- **Combat & Navigation**: Turn-based encounters with cover awareness, guard perception loops, click-to-move traversal, and readable path previews.
 - **Progression Systems**: Player stats, leveling, inventory, and loot structures.
 - **Stability & Polish**: Save/load expansion, holistic playtests, and UI refinement.
 
