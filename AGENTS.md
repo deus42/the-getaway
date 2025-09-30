@@ -58,3 +58,36 @@
 - At the start of any feature task, review `memory-bank/implementation plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
 - **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
 - After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
+
+## XML Tagging in Documentation
+The memory-bank documentation uses XML tags to improve LLM agent parsing and information retrieval. When reading or updating documentation:
+
+### progress.md Structure
+- `<step id="N" status="completed|pending">` - Wraps each completed implementation step
+- `<step_metadata>` - Contains step number, title, status, and completion date
+- `<tasks>` - Lists concrete tasks accomplished in the step
+- `<implementation>` - Technical implementation details (optional)
+- `<code_reference file="path">` - References specific files modified
+- `<validation>` - Test commands and validation procedures
+- `<notes>` or `<maintenance_notes date="...">` - Additional context
+
+### implementation plan.md Structure
+- `<phase id="N" name="...">` - Groups related steps by implementation phase
+- `<step id="N" status="completed|pending">` - Individual implementation steps
+- `<step_metadata>` - Step metadata including phase assignment
+- `<instructions>` - High-level task description
+- `<details>` - Detailed implementation requirements
+- `<test>` - Validation and testing procedures
+- `<status>` - Current implementation status (optional)
+
+### Benefits of XML Structure
+- **Quick Navigation**: Agents can extract specific steps by ID or status
+- **Structured Queries**: Easy to find all pending tasks or completed work
+- **Hierarchical Context**: Phase grouping provides implementation context
+- **Validation Tracking**: Test procedures are explicitly tagged for reference
+
+### When Updating Documentation
+- Maintain existing XML structure and tag hierarchy
+- Add new steps following the established schema
+- Update status attributes when steps are completed
+- Keep tags well-formed (properly opened and closed)

@@ -30,6 +30,7 @@ const CAMERA_FOLLOW_LERP = 0.22;
 interface EnemySpriteData {
   sprite: Phaser.GameObjects.Ellipse;
   healthBar: Phaser.GameObjects.Graphics;
+  base: Phaser.GameObjects.Graphics;
   markedForRemoval: boolean;
 }
 
@@ -46,6 +47,7 @@ export class MainScene extends Phaser.Scene {
   private pathGraphics!: Phaser.GameObjects.Graphics;
   private visionConeGraphics!: Phaser.GameObjects.Graphics;
   private playerSprite!: Phaser.GameObjects.Ellipse;
+  private playerBase?: Phaser.GameObjects.Graphics;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private npcSprites: Map<string, NpcSpriteData> = new Map();
   private currentMapArea: MapArea | null = null;
@@ -140,6 +142,14 @@ export class MainScene extends Phaser.Scene {
     if (this.playerInitialPosition) {
        const metrics = this.getIsoMetrics();
        const playerPixelPos = this.calculatePixelPosition(this.playerInitialPosition.x, this.playerInitialPosition.y);
+       this.playerBase = this.isoFactory?.createCharacterBase(this.playerInitialPosition.x, this.playerInitialPosition.y, {
+         baseColor: 0x111827,
+         outlineColor: 0x2563eb,
+         alpha: 0.9,
+         widthScale: 0.75,
+         heightScale: 0.5,
+         depthOffset: 1,
+       });
        this.playerSprite = this.add.ellipse(
          playerPixelPos.x,
          playerPixelPos.y,
@@ -277,15 +287,28 @@ export class MainScene extends Phaser.Scene {
     }
 
     const crate = this.isoFactory.createCrate(12, 20, { tint: 0x8d5524, height: 0.6, scale: 0.5 });
-    this.staticPropGroup.add(crate);
+    const props = [
+      this.isoFactory.createCrate(12, 20, { tint: 0x8d5524, height: 0.6, scale: 0.52 }),
+      this.isoFactory.createCrate(9, 18, { tint: 0x3f3f46, height: 0.55, scale: 0.48, alpha: 0.95 }),
+      this.isoFactory.createHighlightDiamond(12, 20, {
+        color: 0x38bdf8,
+        alpha: 0.22,
+        widthScale: 0.82,
+        heightScale: 0.82,
+      }),
+      this.isoFactory.createHighlightDiamond(9, 18, {
+        color: 0xf97316,
+        alpha: 0.18,
+        widthScale: 0.74,
+        heightScale: 0.74,
+      }),
+    ];
 
-    const highlight = this.isoFactory.createHighlightDiamond(12, 20, {
-      color: 0x38bdf8,
-      alpha: 0.22,
-      widthScale: 0.82,
-      heightScale: 0.82,
+    props.forEach((prop) => {
+      if (prop) {
+        this.staticPropGroup?.add(prop);
+      }
     });
-    this.staticPropGroup.add(highlight);
   }
   
   private updatePlayerPosition(position: Position): void {
@@ -293,6 +316,9 @@ export class MainScene extends Phaser.Scene {
        const pixelPos = this.calculatePixelPosition(position.x, position.y);
        this.playerSprite.setPosition(pixelPos.x, pixelPos.y);
        this.playerSprite.setDepth(pixelPos.y + 8);
+       if (this.playerBase && this.isoFactory) {
+         this.isoFactory.updateCharacterBase(this.playerBase, position.x, position.y);
+       }
     } else {
        console.warn("[MainScene] Player sprite not available for position update.");
     }
@@ -383,55 +409,61 @@ export class MainScene extends Phaser.Scene {
     );
     graphics.setDepth(pixelPos.y + 6);
   }
-
-  private enablePlayerCameraFollow(): void {
-    if (!this.playerSprite || !this.sys.isActive()) {
-      return;
-    }
-
-    const camera = this.cameras.main;
-    camera.startFollow(this.playerSprite, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
-    this.recenterCameraOnPlayer();
-    camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
-    this.isCameraFollowingPlayer = true;
-  }
-
-  private recenterCameraOnPlayer(): void {
-    if (!this.playerSprite || !this.sys.isActive()) {
-      return;
-    }
-
-    const camera = this.cameras.main;
-    camera.followOffset.set(0, 0);
-    camera.centerOn(this.playerSprite.x, this.playerSprite.y);
-    this.clampCameraToBounds(camera);
-  }
-
-  private updateNpcs(npcs: NPC[]) {
-    if (!this.mapGraphics || !this.sys.isActive()) {
-      return;
-    }
-
-    if (!this.npcSprites) {
-      this.npcSprites = new Map<string, NpcSpriteData>();
-    }
-
-    this.npcSprites.forEach((spriteData) => {
-      spriteData.markedForRemoval = true;
-    });
-
-    for (const npc of npcs) {
-      const existingSpriteData = this.npcSprites.get(npc.id);
-      const pixelPos = this.calculatePixelPosition(npc.position.x, npc.position.y);
-      const metrics = this.getIsoMetrics();
-
-      const isInteractive = npc.isInteractive;
-      const fillColor = isInteractive ? 0x22c55e : 0x94a3b8;
-      const fillAlpha = isInteractive ? 0.92 : 0.6;
-      const strokeColor = isInteractive ? 0xf0fdf4 : 0xc7d2fe;
-      const strokeAlpha = isInteractive ? 0.7 : 0.55;
-
       if (!existingSpriteData) {
+        if (enemy.health <= 0) continue;
+
+        const base = this.isoFactory?.createCharacterBase(enemy.position.x, enemy.position.y, {
+          baseColor: 0x1f2937,
+          outlineColor: 0xef4444,
+          alpha: 0.85,
+          widthScale: 0.72,
+          heightScale: 0.48,
+          depthOffset: 1,
+        });
+
+        const enemySprite = this.add.ellipse(
+          pixelPos.x,
+          pixelPos.y,
+          metrics.tileWidth * 0.45,
+          metrics.tileHeight * 0.9,
+          0xff5252
+        );
+        enemySprite.setDepth(pixelPos.y + 6);
+
+        const healthBar = this.add.graphics();
+        healthBar.setVisible(false);
+
+        this.enemySprites.set(enemy.id, {
+          sprite: enemySprite,
+          healthBar,
+          base: base ?? this.add.graphics(),
+          markedForRemoval: false,
+        });
+
+        const createdData = this.enemySprites.get(enemy.id);
+        if (createdData) {
+          this.updateEnemyHealthBar(createdData, pixelPos, metrics, enemy);
+        }
+        console.log(`[MainScene updateEnemies] Created sprite & health for ${enemy.id}`);
+    if (!this.npcSprites) {
+        if (enemy.health <= 0) {
+          existingSpriteData.markedForRemoval = true;
+        } else {
+          existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
+          existingSpriteData.sprite.setDepth(pixelPos.y + 6);
+          if (existingSpriteData.base && this.isoFactory) {
+            this.isoFactory.updateCharacterBase(existingSpriteData.base, enemy.position.x, enemy.position.y, {
+              baseColor: 0x1f2937,
+              outlineColor: 0xef4444,
+              alpha: 0.85,
+              widthScale: 0.72,
+              heightScale: 0.48,
+              depthOffset: 1,
+            });
+          }
+          this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
+          existingSpriteData.markedForRemoval = false;
+      const strokeAlpha = isInteractive ? 0.7 : 0.55;
         const npcSprite = this.add.ellipse(
           pixelPos.x,
           pixelPos.y,
@@ -493,6 +525,14 @@ export class MainScene extends Phaser.Scene {
 
          const enemySprite = this.add.ellipse(
            pixelPos.x,
+         const base = this.isoFactory?.createCharacterBase(enemy.position.x, enemy.position.y, {
+           baseColor: 0x1f2937,
+           outlineColor: 0xef4444,
+           alpha: 0.85,
+           widthScale: 0.72,
+           heightScale: 0.48,
+           depthOffset: 1,
+         }) ?? undefined;
            pixelPos.y,
            metrics.tileWidth * 0.45,
            metrics.tileHeight * 0.9,
@@ -503,7 +543,7 @@ export class MainScene extends Phaser.Scene {
          const healthBar = this.add.graphics();
          healthBar.setVisible(false);
          this.enemySprites.set(enemy.id, { sprite: enemySprite, healthBar, markedForRemoval: false });
-         const createdData = this.enemySprites.get(enemy.id);
+         this.enemySprites.set(enemy.id, { sprite: enemySprite, healthBar, base: base ?? this.add.graphics(), markedForRemoval: false });
          if (createdData) {
            this.updateEnemyHealthBar(createdData, pixelPos, metrics, enemy);
          }
@@ -515,6 +555,16 @@ export class MainScene extends Phaser.Scene {
              existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
              existingSpriteData.sprite.setDepth(pixelPos.y + 6);
              this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
+             if (existingSpriteData.base && this.isoFactory) {
+               this.isoFactory.updateCharacterBase(existingSpriteData.base, enemy.position.x, enemy.position.y, {
+                 baseColor: 0x1f2937,
+                 outlineColor: 0xef4444,
+                 alpha: 0.85,
+                 widthScale: 0.72,
+                 heightScale: 0.48,
+                 depthOffset: 1,
+               });
+             }
              existingSpriteData.markedForRemoval = false;
          }
       }
@@ -522,6 +572,9 @@ export class MainScene extends Phaser.Scene {
 
     this.enemySprites.forEach((spriteData, id) => {
       if (spriteData.markedForRemoval) {
+        if (spriteData.base) {
+          spriteData.base.destroy();
+        }
         spriteData.sprite.destroy();
         spriteData.healthBar.destroy();
         this.enemySprites.delete(id);

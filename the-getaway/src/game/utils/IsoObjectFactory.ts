@@ -16,6 +16,12 @@ export interface HighlightOptions {
   heightScale?: number;
 }
 
+export interface CharacterBaseOptions extends HighlightOptions {
+  baseColor?: number;
+  outlineColor?: number;
+  depthOffset?: number;
+}
+
 export class IsoObjectFactory {
   private originX = 0;
   private originY = 0;
@@ -87,5 +93,44 @@ export class IsoObjectFactory {
     graphics.setDepth(y + 4);
 
     return graphics;
+  }
+
+  public createCharacterBase(gridX: number, gridY: number, options: CharacterBaseOptions = {}): Phaser.GameObjects.Graphics {
+    const graphics = this.scene.add.graphics();
+    this.updateCharacterBase(graphics, gridX, gridY, options);
+    return graphics;
+  }
+
+  public updateCharacterBase(
+    graphics: Phaser.GameObjects.Graphics,
+    gridX: number,
+    gridY: number,
+    options?: CharacterBaseOptions
+  ): void {
+    const previous = (graphics.getData('isoOptions') as CharacterBaseOptions | undefined) ?? {};
+    const resolved: CharacterBaseOptions = {
+      baseColor: options?.baseColor ?? previous.baseColor ?? 0x111827,
+      outlineColor: options?.outlineColor ?? previous.outlineColor ?? adjustColor(0x111827, 0.25),
+      alpha: options?.alpha ?? previous.alpha ?? 0.85,
+      widthScale: options?.widthScale ?? previous.widthScale ?? 0.82,
+      heightScale: options?.heightScale ?? previous.heightScale ?? 0.6,
+      depthOffset: options?.depthOffset ?? previous.depthOffset ?? 2,
+    };
+
+    graphics.setData('isoOptions', resolved);
+
+    const { x, y } = toPixel(gridX, gridY, this.originX, this.originY, this.tileSize);
+    const metrics = getIsoMetrics(this.tileSize);
+
+    const width = metrics.tileWidth * (resolved.widthScale ?? 1);
+    const height = metrics.tileHeight * (resolved.heightScale ?? 1);
+    const diamond = getDiamondPoints(x, y, width, height);
+
+    graphics.clear();
+    graphics.fillStyle(resolved.baseColor ?? 0x111827, resolved.alpha ?? 0.85);
+    graphics.fillPoints(diamond, true);
+    graphics.lineStyle(1.4, resolved.outlineColor ?? adjustColor(resolved.baseColor ?? 0x111827, 0.25), (resolved.alpha ?? 0.85) + 0.1);
+    graphics.strokePoints(diamond, true);
+    graphics.setDepth(y + (resolved.depthOffset ?? 2));
   }
 }
