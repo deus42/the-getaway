@@ -1,25 +1,33 @@
 The Getaway - Game Design Document
 
+<game_overview>
 Game Overview
 
 The Getaway is a single-player, open-world tactical RPG set in a dystopian city. The game combines turn-based grid combat with exploration in a living, persistent world. Players navigate a city divided into distinct zones and biomes, each with unique challenges and factions. Through branching narrative and dynamic events, player choices shape the story and the game world. This design document outlines the core features, mechanics, and systems that define The Getaway.
+</game_overview>
 
+<game_system id="setting_worldbuilding" status="partial">
 Setting & Worldbuilding
 
+<world_setting name="dystopian_city">
 Dystopian City Setting
 
 The game takes place in a sprawling dystopian metropolis in the near-future. The city is in decline, characterized by crumbling infrastructure and high-tech enclaves existing side by side. Society has fractured into rival factions controlling different districts, from lawless slums to fortified corporate zones. The atmosphere is gritty and oppressive, with neon-lit streets, polluted air, and constant tension in the environment.
+</world_setting>
 
+<world_structure name="zones_biomes">
 Distinct Zones & Biomes
 
-The city is divided into several zones, each acting as a distinct “biome” with its own environment, hazards, and gameplay impacts:
+The city is divided into several zones, each acting as a distinct "biome" with its own environment, hazards, and gameplay impacts:
 	•	Industrial Wasteland: Abandoned factories and toxic refineries dominate this area. Visibility is low due to smog, and lingering pollution can harm characters over time. Players might need gas masks or special gear to explore safely.
 	•	Downtown Core: A corporate-controlled high-rise district filled with advanced technology and heavy security. Expect surveillance cameras, security drones, and automated turrets. Stealth or hacking skills are valuable here to bypass high-tech defenses.
 	•	Slums and Undercity: Dense shantytowns and underground tunnels controlled by gangs. The cramped, maze-like environment provides plenty of cover for ambushes. Resources are scarce but scavenging can yield useful items. Danger is high, but so are opportunities for those who know the back alleys.
 	•	Outskirts (Deadlands): The crumbling city edges that blend into a wasteland. Fewer people live here, but environmental dangers are greater (pockets of radiation, wild creatures, unstable ruins). The outskirts often serve as risky travel routes between city sectors and hide secret caches or wandering nomads.
 
 Each zone offers unique resources, enemies, and quests. Transitioning between zones may require planning and equipment adjustments, reinforcing the feeling of entering a different world or biome within the city.
+</world_structure>
 
+<mechanic name="living_world_ai">
 Living World & AI
 
 The game world is persistent and simulated, meaning changes endure and NPCs behave autonomously to create a living world:
@@ -30,15 +38,21 @@ The game world is persistent and simulated, meaning changes endure and NPCs beha
 	•	Day/Night Behavior: Tied to the day-night cycle, NPC behavior changes over time (e.g., at night, law-abiding citizens stay home while gangs and predators become more active). Shops open and close at certain hours. Some quests or events are only available at a particular time of day.
 
 These systems ensure the city feels alive and immersive. The player is one part of a larger ecosystem, and the world can surprise them with new developments during their journey.
+</mechanic>
+</game_system>
 
+<game_system id="combat_system" status="partial">
 Turn-Based Combat System
 
+<mechanic name="combat_overview">
 Combat Overview
 
 Combat in The Getaway is turn-based and takes place on a grid, offering tactical depth in each encounter. When combat is triggered (for example, an enemy spots the player or a hostile encounter is initiated via a quest), the game transitions from real-time exploration to a turn-based combat mode. The battlefield is divided into tiles (squares or hexes), much like classic games such as Fallout 2 or Heroes of Might & Magic 3. Each participant – player characters, allies, enemies, and even vehicles – takes turns according to an initiative order determined by their stats or situational factors.
 
 This turn-based approach allows players to carefully plan moves, use cover, and coordinate attacks. It slows the pace during combat so that positioning and strategy matter more than reflexes. Outside of combat, the game returns to real-time exploration seamlessly.
+</mechanic>
 
+<mechanic name="grid_movement">
 Grid and Movement
 
 Encounters are resolved on a grid map that corresponds to the environment (streets, building interiors, etc.), enabling spatial tactics:
@@ -47,7 +61,10 @@ Encounters are resolved on a grid map that corresponds to the environment (stree
 	•	Terrain affects movement: moving through difficult terrain like rubble, shallow water, or climbing through a window costs more movement points/AP. Open ground is easy to traverse, while obstacles block movement completely.
 	•	Movement is important not just for closing distance or escaping, but for tactical positioning (flanking enemies, reaching cover, etc.). Players will often need to balance using a turn to move versus using it to attack or use an ability.
 	•	If combat starts while the player is in a vehicle, the vehicle will appear on the grid and can move as a unit with its own movement rules (e.g., a car might move several tiles in a straight line but have a wide turning radius on the grid).
+</mechanic>
 
+<mechanic name="action_points">
+<balance_values system="action_points">
 Action Points & Turn Actions
 
 Each character in combat has a pool of Action Points (AP) to spend on actions during their turn. This AP system is inspired by games like Fallout:
@@ -55,10 +72,13 @@ Each character in combat has a pool of Action Points (AP) to spend on actions du
 	•	Attacks: Every weapon or attack type has an AP cost. For example, firing a pistol might cost 2 AP, while a shotgun blast costs 3 AP, and swinging a machete costs 2 AP. Heavy or unwieldy weapons use more AP; a sniper rifle shot might cost 4 or more AP due to the time needed to aim.
 	•	Reloading and Item Use: Reloading a weapon, switching weapons, or using an item (like a medkit or grenade) consumes AP. These costs introduce decisions—e.g., if you’re low on AP, do you fire one more shot or take cover and reload for the next turn?
 	•	Special Abilities: Using a character’s special ability or a skill (for instance, a burst fire that hits multiple targets, or a hacking attempt on an enemy robot) will have an AP cost, often higher than a standard attack. Some powerful abilities might even end the turn immediately once used.
-	•	Action Economy: If a character doesn’t use all their AP in a turn, they may have options for those leftover points. In The Getaway, a character can go into an Overwatch mode or defensive stance with unused AP. Overwatch means any remaining AP will be used to take reaction shots during the enemy’s turn if a target appears (see Cover & LoS below). Alternatively, we could allow a small carry-over of unused AP to the next turn (subject to a limit) to encourage strategic passing of actions.
+	•	Action Economy: If a character doesn't use all their AP in a turn, they may have options for those leftover points. In The Getaway, a character can go into an Overwatch mode or defensive stance with unused AP. Overwatch means any remaining AP will be used to take reaction shots during the enemy's turn if a target appears (see Cover & LoS below). Alternatively, we could allow a small carry-over of unused AP to the next turn (subject to a limit) to encourage strategic passing of actions.
 
 The AP system means characters with higher agility or certain perks get more done each turn, allowing for build variety. Players must budget AP each turn, creating a constant tactical puzzle of movement versus attacking versus using abilities.
+</balance_values>
+</mechanic>
 
+<mechanic name="cover_line_of_sight">
 Cover & Line-of-Sight
 
 The combat system emphasizes using cover and line-of-sight for tactical advantage, similar to modern tactical RPGs:
@@ -70,7 +90,9 @@ The combat system emphasizes using cover and line-of-sight for tactical advantag
 	•	Overwatch & Reactions: A character can choose to spend their turn going into Overwatch mode (using any remaining AP). In overwatch, if an enemy moves within a character’s line-of-sight during the enemy’s turn, the character will automatically use reserved AP to take a shot at that enemy. This mechanic allows defensive play and area denial, and it interacts with cover (e.g., running between two covered spots could trigger enemy overwatch fire if you cross an open gap). Enemies can use overwatch too, so the player must be cautious when advancing.
 
 Using cover effectively and managing sight-lines is crucial. Rushing in without cover will usually result in quick defeat, whereas clever use of the environment allows a smaller force to take on larger groups successfully.
+</mechanic>
 
+<mechanic name="special_abilities">
 Special Abilities & Tactical Options
 
 Characters and enemies have more than just basic attacks, adding depth and variety to combat:
@@ -81,8 +103,10 @@ Characters and enemies have more than just basic attacks, adding depth and varie
 	•	Buffs and Debuffs: Certain actions can temporarily enhance allies or weaken enemies. For instance, a “Battle Cry” ability might boost allies’ damage or AP for the next turn, while a “Marked Target” ability could make a chosen enemy easier for everyone to hit. Some of these effects might come from gadgets or leadership skills rather than inherent character abilities.
 	•	Consumables: During combat, the player can use consumable items for tactical gains. Examples include medkits or syringes to heal or grant temporary stat boosts (like an adrenaline shot to increase AP), combat drugs that enhance speed or strength at a cost, or gadgets like an EMP device that can disable robotic enemies and electronic defenses for a short time.
 
-These varied options ensure combat doesn’t feel repetitive. The player can approach encounters in different ways: one fight might involve sniping and traps, another could be resolved by hacking a security robot to turn on its masters, and another might see the player use brute force with heavy weapons. Tactical creativity is rewarded.
+These varied options ensure combat doesn't feel repetitive. The player can approach encounters in different ways: one fight might involve sniping and traps, another could be resolved by hacking a security robot to turn on its masters, and another might see the player use brute force with heavy weapons. Tactical creativity is rewarded.
+</mechanic>
 
+<mechanic name="vehicles_in_combat">
 Integration of Vehicles
 
 Vehicles add an extra dimension to both exploration and combat in The Getaway:
@@ -95,9 +119,13 @@ Vehicles add an extra dimension to both exploration and combat in The Getaway:
 	•	Balancing Vehicles: While vehicles provide advantages (speed, protection, firepower), the game will balance encounters so they’re not unbeatable tanks. Enemies may have anti-vehicle weapons (like EMP grenades to stall an engine, or heavy arms like rocket launchers). Some combat scenarios (tight indoor spaces, rooftops) simply won’t allow vehicles, forcing the player to proceed on foot. Also, fuel considerations (see Survival mechanics) might mean the player saves vehicle use for when it’s really needed.
 
 By integrating vehicles, combat scenarios become more diverse. One fight might be a tense on-foot shootout in a claustrophobic warehouse, and the next could be a running battle where the player drives their truck through barricades while exchanging fire with a gang. It gives the player more tactical choices and a sense of continuity between exploration and combat.
+</mechanic>
+</game_system>
 
+<game_system id="exploration_open_world" status="partial">
 Exploration & Open-World Elements
 
+<mechanic name="persistent_world">
 Persistent Open World
 
 Outside of combat, The Getaway is an open-world experience where the city can be freely explored in real-time. The world is persistent, meaning it remembers the state of things as you leave them:
@@ -107,8 +135,10 @@ Outside of combat, The Getaway is an open-world experience where the city can be
 	•	The open world is populated by many locations: city streets, markets, faction bases, secret hideouts, abandoned buildings, underground sewers, etc. Players can enter many structures or at least interact with them (hacking a door lock to enter a warehouse, climbing through a window of a skyscraper, etc.), making exploration rewarding and full of discovery.
 	•	The design supports backtracking and free travel. There is no fixed linear progression through areas; you can roam almost anywhere you dare. Some areas may be extremely dangerous for a low-level character, serving as soft barriers (you can go there, but expect a tough fight or environmental hazard). But if you’re clever or sneaky, you might still explore these areas early and get high-tier loot or information.
 
-Persistence means the world state evolves over the entire playthrough. Enemies don’t magically reset, and earlier actions can remove or alter content later. This makes the player feel genuine impact and also requires them to live with their decisions (no easy re-dos of quests unless they reload a save).
+Persistence means the world state evolves over the entire playthrough. Enemies don't magically reset, and earlier actions can remove or alter content later. This makes the player feel genuine impact and also requires them to live with their decisions (no easy re-dos of quests unless they reload a save).
+</mechanic>
 
+<mechanic name="exploration_travel">
 Exploration and Travel
 
 Traversing the city is a core part of gameplay, with an emphasis on player freedom and risk-reward during travel:
@@ -119,18 +149,22 @@ Traversing the city is a core part of gameplay, with an emphasis on player freed
 	•	Safe Zones and Resting: Scattered around the world are safer areas (like neutral zones or player-established safehouses) where combat is unlikely. Here the player can rest to heal and pass time, manage inventory, or converse with NPCs without immediate threats. These spots serve as hubs in the open world and checkpoints for the player’s progress. For example, a friendly bar might be a place to get rumors and hire help, and it remains off-limits for fighting by mutual agreement of factions.
 
 Exploration is about balancing curiosity with caution. Venturing into unknown territory can yield great rewards (resources, new quests, allies) but also risks dangerous encounters or overextending your supplies. The player must gauge when to travel, what to bring, and how to get there – on foot quietly or loudly in a vehicle.
+</mechanic>
 
+<mechanic name="dynamic_npc_factions">
 Dynamic NPC Behavior & Factions
 
-The world is inhabited by various NPCs with their own agendas, making the city feel alive beyond the player’s direct interactions:
+The world is inhabited by various NPCs with their own agendas, making the city feel alive beyond the player's direct interactions:
 	•	Factions and Territories: Key factions control specific neighborhoods or resources. For example, a paramilitary police force might enforce order in the Downtown Core, while a gang controls the slums’ black market, and an underground resistance operates in the industrial ruins. These territories are visibly marked by faction graffiti, flags, or patrolling NPCs. If the player trespasses in a hostile faction’s area, they might be confronted or attacked unless they have a disguise or a good reputation with that faction.
 	•	AI Schedules and Activities: NPCs have daily cycles and tasks. Shopkeepers open their stalls in the morning and go home at night. Gang members might collect “taxes” or harass locals in the afternoon, then retreat to hideouts later. Security forces could enforce a curfew after dark in wealthier districts. These patterns create predictable windows for the player (e.g., it might be easier to infiltrate a compound at night when some guards are off-duty, but harder to move through the streets due to curfew patrols).
 	•	Faction Conflicts: Factions will sometimes engage in conflicts with each other without player involvement. The player might come across a battle already in progress between two rival groups. These fights are driven by the simulation (for instance, if a gang tries to push into police territory). The outcome might be determined by the game’s AI if the player doesn’t intervene, potentially shifting control of that area. The player can choose to join a side or avoid the conflict; whatever they do (or don’t do) can influence which faction gains the upper hand.
 	•	Reaction to Player: NPCs react dynamically to the player’s status and behavior. If the player has a high reputation with a faction, members of that faction will greet them warmly, allow them into secure areas, or even assist in fights. If the player is infamous for violence (very low karma), civilians might flee at the sight of them or refuse to talk, and some may attempt to attack or report the player to authorities. On the other hand, being known as a hero (high karma) might cause desperate NPCs to approach the player for help or thank them for past deeds. Also, carrying weapons openly or driving a loud vehicle through a quiet zone can change NPC behavior (guards might go on alert, civilians hide).
 	•	Economy and Ecology: The city’s “ecosystem” responds to events. For example, if the player disrupts the supply of drugs in the slums (by completing a quest), drug prices might skyrocket on the black market and gang violence could spike as they fight over remaining stock. If a major gang is eliminated, the crime rate in their former territory might drop, making it safer for merchants and travelers. Wildlife or rogue robots in the outskirts might multiply if left unchecked, making journeys there more dangerous until the player or a faction deals with them.
 
-The combination of these behaviors means the city feels like a living system. The player can influence it heavily, but even if they try to lay low, things will still happen around them. This creates opportunities for the player to react to the world’s changes, not just the world reacting to the player.
+The combination of these behaviors means the city feels like a living system. The player can influence it heavily, but even if they try to lay low, things will still happen around them. This creates opportunities for the player to react to the world's changes, not just the world reacting to the player.
+</mechanic>
 
+<mechanic name="random_encounters">
 Random Encounters & Events
 
 As players roam the city or travel between areas, random encounters and dynamic events keep the experience engaging and unpredictable:
@@ -141,7 +175,9 @@ As players roam the city or travel between areas, random encounters and dynamic 
 	•	World State Changes: Certain random events, once they occur, can permanently affect something in the world. If a building burns down due to an event, it might remain a ruin for the rest of the game (perhaps accessible as a new area with its own loot or dangers). If a group of refugees appears looking for a home (as an event), they might settle in an area and create a new minor faction or trading post if the player helps them. Random events thus contribute to the evolving narrative of the city.
 
 Random encounters ensure no two playthroughs are exactly alike and encourage players to stay alert and adaptive. They make traveling more than just moving from point A to B – the journey itself can become its own story.
+</mechanic>
 
+<mechanic name="day_night_cycle">
 Day-Night Cycle Effects
 
 The 24-hour day-night cycle is not just cosmetic; it has significant gameplay implications:
@@ -152,8 +188,10 @@ The 24-hour day-night cycle is not just cosmetic; it has significant gameplay im
 	•	Rest and Recovery: Night is a logical time for the player to rest their character (recovering fatigue as per survival mechanics). If the player has a safe place to sleep, they might choose to spend the night there and venture out in daytime. However, there could be incentives to stay awake – certain missions or crimes are best done under cover of darkness.
 	•	Atmosphere and Visuals: The city’s look and feel changes with time. At night, neon signs flicker to life, streets are quieter in some districts and louder in others (club districts, gang territories). During early morning, fog or smog might hang over lower areas, and you might see people commuting or cleaning up after the previous night’s chaos. These touches make the world more immersive.
 
-The day-night cycle encourages players to think about when they do things, not just how. It adds a rhythm to gameplay – perhaps a cycle of planning in safe areas by day and executing risky moves at night, or vice versa depending on the player’s approach.
+The day-night cycle encourages players to think about when they do things, not just how. It adds a rhythm to gameplay – perhaps a cycle of planning in safe areas by day and executing risky moves at night, or vice versa depending on the player's approach.
+</mechanic>
 
+<mechanic name="vehicles_exploration">
 Vehicles in Exploration
 
 Vehicles are not just for combat; they are essential tools for open-world traversal and tie into multiple gameplay systems:
@@ -166,9 +204,13 @@ Vehicles are not just for combat; they are essential tools for open-world traver
 	•	Alternate Transportation: Besides personal vehicles, the city might have remnants of public transit or other travel means. For example, maybe an old subway system can be reactivated or used for fast travel between certain points (if the player clears it of monsters or repairs the generators). Or perhaps there’s a train that runs occasionally between districts that the player can hitch a ride on (safe but on a schedule and fixed route). These alternatives can add flavor and options but are not as flexible as having your own ride.
 
 By incorporating vehicles into exploration, the game offers players flexibility in how they experience the open world. You can cruise through danger zones quickly or go on foot to stealthily scavenge, and each choice has its own set of consequences and gameplay implications. Vehicles also serve as a form of player progression – acquiring a better vehicle feels like a significant milestone and opens up new possibilities (much like getting a ship in a space game or a horse in a medieval RPG).
+</mechanic>
+</game_system>
 
+<game_system id="storytelling_dialogue" status="partial">
 Storytelling & Dialogue
 
+<narrative_structure>
 Narrative Structure
 
 The Getaway features an open-ended, branching narrative in which the player’s choices and allegiances drive the story. Rather than a single linear plot, the game narrative is built from intertwined faction storylines and the player’s personal journey:
@@ -179,7 +221,9 @@ The Getaway features an open-ended, branching narrative in which the player’s 
 	•	Player Agency: Importantly, the game does not force the player into being a traditional hero. You can shape your role – be the savior of the downtrodden, a mercenary just looking out for yourself, a power-hungry opportunist, or even try to remain an outsider who avoids big conflicts. The narrative supports multiple roles by providing choices that align with different motivations. For example, when given the chance to help a faction, you might do it out of altruism, personal gain, or coercion, and the narrative will reflect those reasons in how NPCs treat you.
 
 Overall, the story structure is designed for branching and convergence: there are multiple branches (faction paths, moral choices) that can lead to a variety of mid-game scenarios and eventually converge into several distinct endgames. This structure offers replayability and a personalized story experience.
+</narrative_structure>
 
+<mechanic name="dialogue_system">
 Dialogue System
 
 Dialogue is a crucial tool for storytelling, delivered in a text-driven format reminiscent of classic RPGs:
@@ -190,8 +234,10 @@ Dialogue is a crucial tool for storytelling, delivered in a text-driven format r
 	•	Information Gathering: Dialogue is a primary way to gather intel about the world. NPCs will share lore, rumors, and hints. A player paying attention to dialogue might discover hidden side quests (“I hear noises from the old subway at night…”), learn passwords or codes, or glean background that helps solve puzzles. We encourage exploration through talking – not every answer is on the map, sometimes you have to chat with locals.
 	•	Dialogue Interface & Logs: The dialogue interface will likely show the name or portrait of the character speaking and the text of their dialogue. The player’s selected response is usually shown as well. We will include a dialogue history log that players can scroll if they need to review what was said (useful for remembering clues or instructions given mid-conversation). Dialogue sequences can be exited or returned to if appropriate (some NPCs allow you to come back and ask more questions later). Important decisions in dialogue will usually prompt the player with a confirmation if they lead to a big irreversible change (“Are you sure you want to insult the warlord? This will make his faction hostile.”).
 
-The dialogue system is essentially the narrative engine of the game, driving story progression, quest initiation/completion, and delivering the rich story we plan. It’s designed to handle complex branching while giving the player clarity and meaningful choices.
+The dialogue system is essentially the narrative engine of the game, driving story progression, quest initiation/completion, and delivering the rich story we plan. It's designed to handle complex branching while giving the player clarity and meaningful choices.
+</mechanic>
 
+<mechanic name="choices_consequences">
 Choices & Consequences
 
 Throughout the game, players will face decisions that have meaningful consequences on the story and world. We ensure that choices are not just cosmetic – they lead to different outcomes, some immediately visible and others that unfold later:
@@ -201,8 +247,10 @@ Throughout the game, players will face decisions that have meaningful consequenc
 	•	Dynamic Story Adaptation: Because the narrative is open, the game logic will adapt to what the player has done. There will rarely be a fail-state for the overall story due to a choice; instead, the story pivots. If you refuse to help a faction with an important task, maybe they fail without you and you experience the fallout (the city is worse off or another faction steps in). If you kill an important NPC, the game will route around that – perhaps their lieutenant takes over and the questline continues with a vengeful spin. The idea is to let the player truly shape the narrative but still ensure there’s a coherent story path forward.
 	•	Feedback on Choices: To make consequences clear, the game will often provide feedback. NPC dialogue or in-game news broadcasts might talk about what you did (“After the water supply was poisoned, citizens are falling ill…”). Faction reputation changes are shown immediately. Major branches will usually be telegraphed (“If you do this, there’s no going back”). And the quest log will update to reflect the outcomes (“You chose to arm the rebels; the Corporate faction will remember this.”). We want players to feel the weight of decisions without being blind-sided by outcomes that seem random.
 
-In essence, The Getaway treats player choices as a core mechanic, just as important as combat or exploration. The world’s story is the sum of what the player decides to do (or not do), providing a personalized narrative experience.
+In essence, The Getaway treats player choices as a core mechanic, just as important as combat or exploration. The world's story is the sum of what the player decides to do (or not do), providing a personalized narrative experience.
+</mechanic>
 
+<mechanic name="quest_drivers">
 Faction, Character, and Event-Driven Quests
 
 The storytelling is delivered via quests, which can be categorized by their narrative drivers:
@@ -212,11 +260,13 @@ The storytelling is delivered via quests, which can be categorized by their narr
 	•	Quest Webs: Often, quests interlink across these categories. A faction quest might introduce a character who later has their own personal quest. Or a personal quest might require choosing which faction’s help to enlist, thereby tying into faction reputation. Event-driven quests can segue into faction quests (e.g., a riot event might prompt the faction in charge of security to offer a quest to help quell the violence). The narrative design tries to web these together so that the overall plotlines weave into a cohesive experience rather than isolated tracks.
 	•	Optional vs Main Quests: Faction quests could be considered “main” quests in the sense that pursuing at least one faction’s storyline is necessary to reach an ending. Character-driven quests are mostly optional but enrich the story and can influence the final outcome (for example, having a certain ally on your side might change an ending scene). Event-driven quests are often missable if you’re not in the right place at the right time, but they ensure the world never feels static. The quest journal will mark which ones are critical and which are optional, but we expect players to naturally gravitate towards the faction stories they care about as their main narrative.
 
-By mixing these quest types, the game achieves a narrative that feels both expansive (many things happening in the city) and centered on the player’s journey (since you decide which quests to follow and which causes to support). It’s a balance of faction politics, personal stories, and emergent events that together tell the full story of The Getaway.
+By mixing these quest types, the game achieves a narrative that feels both expansive (many things happening in the city) and centered on the player's journey (since you decide which quests to follow and which causes to support). It's a balance of faction politics, personal stories, and emergent events that together tell the full story of The Getaway.
+</mechanic>
 
+<mechanic name="multiple_endings">
 Multiple Endings & Open-Ended Play
 
-The culmination of the narrative is represented by multiple possible endings, and the game acknowledges the player’s journey through a variety of outcomes:
+The culmination of the narrative is represented by multiple possible endings, and the game acknowledges the player's journey through a variety of outcomes:
 	•	Ending States: Based on key decisions, which factions you supported or destroyed, your karma, and certain quest outcomes, the game can conclude in different ways. Examples of distinct ending states:
 	•	Escape: The player manages to get out of the city (the original “getaway”). This could happen with different contexts – escaping alone leaving the city to its fate, escaping with a group of survivors, or escaping as part of a deal with a faction (maybe you hand control of the city to one group in exchange for your freedom).
 	•	City Liberation: The player leads or significantly aids in overthrowing the oppressive powers and making the city a better place. This ending might involve establishing a new government or alliance of factions that promises hope for the average citizen.
@@ -229,10 +279,14 @@ The culmination of the narrative is represented by multiple possible endings, an
 	•	Open-Ended Play (Post-Game): We have to decide whether the player can continue playing after reaching an ending (a “free roam” mode after the final battle/decision). If the ending involves the player leaving the city or major irreversible change, continuing might not make narrative sense. One approach is to create a save point before the final sequence, so players can finish the game and then reload to do remaining side content. Another approach is if the ending was positive and the city persists, let the player wander the changed city (e.g., if they became a ruler, they can walk around and see the citizens reacting to the new order). This is something we’ll clarify in development.
 	•	Replayability: The game is designed for high replay value due to the branching content. Players are encouraged to replay making different major choices: support a different faction, make opposite moral choices, play with a different character build which might open new dialogue options (like high tech vs high charisma). To facilitate this, we might allow skipping already seen dialogues or a New Game+ with some carried-over benefits (maybe retain character stats or a special item to make a second run faster). The multiple endings are a reward for replay, showing drastically different outcomes for the city.
 
-In summary, The Getaway doesn’t have one “true” ending – it has many, reflecting the complex interplay of the player’s decisions throughout the game. The ending serves as the ultimate feedback on the player’s impact on the world, and ideally, each ending feels like a natural result of the player’s journey, providing closure (or intentional lack thereof) to the story they crafted.
+In summary, The Getaway doesn't have one "true" ending – it has many, reflecting the complex interplay of the player's decisions throughout the game. The ending serves as the ultimate feedback on the player's impact on the world, and ideally, each ending feels like a natural result of the player's journey, providing closure (or intentional lack thereof) to the story they crafted.
+</mechanic>
+</game_system>
 
+<game_system id="quest_design" status="partial">
 Quest Design
 
+<mechanic name="quest_variety">
 Quest Variety
 
 To keep gameplay engaging, The Getaway uses a mix of handcrafted quests and procedural (dynamically generated) tasks:
@@ -248,7 +302,9 @@ To keep gameplay engaging, The Getaway uses a mix of handcrafted quests and proc
 	•	Balancing with Story: Handcrafted quests will generally yield bigger story developments and significant rewards (rare items, big rep changes). Procedural quests give modest rewards and help with grinding or world immersion. Players who just follow the main quests will get a complete story, but those who engage with procedural quests will find the world feels more alive and will be better prepared (via extra XP and gear) for tough challenges. The game design will avoid requiring grinding procedural quests; they are there for fun and depth, not as filler that must be done.
 
 By combining handcrafted and procedural content, The Getaway provides both a curated narrative experience and an endless stream of small-scale activities. This keeps the game world feeling busy and gives players flexibility to pursue their own priorities (be it story, character improvement, or just exploration for its own sake).
+</mechanic>
 
+<mechanic name="faction_quests">
 Faction-Based Quests & World Impact
 
 Faction quests are a major component of the game and directly influence the balance of power in the world:
@@ -259,11 +315,14 @@ Faction quests are a major component of the game and directly influence the bala
 	•	World Reactions: The rest of the world doesn’t sit idle while one faction rises. Other factions will react. If you help the cult-like faction gain power, the staunch realists or secular groups might start opposing you or prepare counter-moves (which could become quests on their side if you defect or if you later change course). The news (if there’s radio or rumor system) will spread word of faction victories or defeats. Neutral NPCs might change their behavior (merchants might raise prices if the faction controlling their area is unfriendly to you now, or vice versa).
 	•	Faction Quest Rewards: Aside from story outcomes, completing faction quests yields tangible rewards. This could be unique equipment (a special weapon or armor emblazoned with the faction’s insignia), access to services (like being able to call for backup from that faction in combat, or use their safehouses), and of course, high reputation with that faction. Eventually, if you go deep enough, the faction might essentially treat you as one of their own or even offer you leadership. In some endings, the player can effectively lead a faction to rule the city, which is an ultimate “reward” in narrative terms.
 
-Faction quests ensure that the game’s political landscape is an integral part of the gameplay. By choosing which faction quests to pursue, the player is actively choosing winners and losers in the city, and they get to see the results of those choices play out in real time. This gives a strategic layer to questing: it’s not just about experience points, but about sculpting the world’s power structure.
+Faction quests ensure that the game's political landscape is an integral part of the gameplay. By choosing which faction quests to pursue, the player is actively choosing winners and losers in the city, and they get to see the results of those choices play out in real time. This gives a strategic layer to questing: it's not just about experience points, but about sculpting the world's power structure.
+</mechanic>
 
+<mechanic name="karma_system">
+<rule type="morality">
 Karma System (Morality)
 
-Parallel to faction reputation, the game tracks the player’s overall karma or morality based on their actions. This Karma system influences the narrative tone and some game mechanics:
+Parallel to faction reputation, the game tracks the player's overall karma or morality based on their actions. This Karma system influences the narrative tone and some game mechanics:
 	•	What Affects Karma: Virtually any significant action that has moral weight will adjust karma. Examples: saving innocents, showing mercy, and helping without reward will increase karma (good). Acts like murder of non-hostiles, betrayal, extortion, and unnecessarily cruel decisions will decrease karma (evil). Minor actions typically won’t budge it (stealing a loaf of bread might be too minor, unless we have a lot of petty theft adding up). We ensure the player knows when an action is major enough to affect karma, usually through context or explicit feedback (“You feel a pang of guilt for what you’ve done…” or a UI icon).
 	•	Karma Scale: Karma can be represented on a scale from very bad to very good. We may give ranks or titles at certain thresholds (for flavor). For example, below -100 karma = “Wicked”, -50 to -99 = “Ruthless”, 0 = “Neutral”, +50 = “Kindhearted”, +100 and above = “Saintly”. These titles could appear on the character sheet and NPCs might refer to the player with nicknames or rumors based on this (“People say there’s a devil roaming these streets…” vs “Some say an angel of mercy is out there helping those in need.”).
 	•	Gameplay Effects of Karma:
@@ -275,11 +334,15 @@ Parallel to faction reputation, the game tracks the player’s overall karma or 
 	•	Karma and Endings: As mentioned earlier, the karma level can influence the tone or even nature of the ending. High karma might lead to endings where even if the player fails to save the city, they are remembered fondly or someone continues their good work. Low karma might result in betrayal or an ending where the player’s empire collapses because it was built on fear. The exact interplay will be written to suit each ending scenario, but karma ensures the ending feels congruent with the player’s approach (like an epilogue line “Citizens rejoiced at the fall of the tyrants, and hailed the stranger who had helped them” vs “Citizens traded one tyrant for another, as the stranger ruled with the same cruelty they had fought against”).
 	•	Player Agency with Karma: The game doesn’t label any path as the “wrong” way – karma is not a score to maximize unless the player chooses to role-play that way. We want both high and low (and neutral) karma playthroughs to be viable and interesting. The system’s goal is to provide feedback and consequences, not to punish the player for being “bad” or “good.” There will be pros and cons at both ends, encouraging the player to consider morality as part of their strategy and storytelling rather than just min-maxing for advantage.
 
-In short, Karma adds a layer of personal morality to the game’s feedback loop. While faction reputation deals with external alliances, karma reflects the kind of person the player character is in this world, and the game world responds in kind.
+In short, Karma adds a layer of personal morality to the game's feedback loop. While faction reputation deals with external alliances, karma reflects the kind of person the player character is in this world, and the game world responds in kind.
+</rule>
+</mechanic>
 
+<mechanic name="reputation_system">
+<rule type="faction_relations">
 Reputation System
 
-Reputation tracks the player’s standing with specific factions (and possibly notable sub-groups or communities) and is distinct from karma:
+Reputation tracks the player's standing with specific factions (and possibly notable sub-groups or communities) and is distinct from karma:
 	•	Faction Reputation Meters: Each major faction (and minor ones like guilds or towns) has a reputation value for the player. These can range from hostile to neutral to friendly to allied. The game UI will display these, often with a numeric value or a descriptive tier. For example: City Police: Hostile (25/100 toward Neutral), Warlords Gang: Allied (90/100 toward Maximum). This transparency helps players gauge their relations.
 	•	Gaining & Losing Reputation:
 	•	Completing quests for a faction increases rep with them (and often lowers with their enemies).
@@ -296,8 +359,11 @@ Reputation tracks the player’s standing with specific factions (and possibly n
 	•	Individual Reputation: Aside from factions, certain unique NPCs or merchants could track a personal reputation or relationship with the player. A lone weapons dealer might give better deals only after you complete a personal quest for him. A companion character might have loyalty which improves as you do their quests and make decisions they agree with. These are more like relationship values but work similarly to rep. We will include them on a limited basis for key characters.
 	•	Feedback: As with karma, the game will give feedback on rep changes. Finishing a quest might show “+15 reputation with The Resistance” and perhaps “-10 with Corporate Security”. If you cross a threshold (like going from Neutral to Friendly), an NPC might reach out (an emissary says “Our leader wishes to thank you for your help…”) or you get a new dialogue (“You’ve proven yourself a friend to us. We welcome you in our camp.”). Similarly, hitting Hostile triggers a warning or immediate change in world behavior. The quest journal or a faction menu can remind players what their current standing allows (“Allied: You can request equipment drops from this faction” or “Hostile: Do not enter their main base unless prepared for a fight”).
 
-The reputation system ensures that the player’s actions have clear and varied impacts on their relationships in the world. It adds a strategic component: you might decide not to do a tempting quest for Faction A because you don’t want to anger Faction B you’ve been working with. Or you might deliberately betray a faction at the end of their quest line for a big reward, knowing full well it’ll make them enemies. It’s all about choices and consequences, quantified in a way players can monitor and react to.
+The reputation system ensures that the player's actions have clear and varied impacts on their relationships in the world. It adds a strategic component: you might decide not to do a tempting quest for Faction A because you don't want to anger Faction B you've been working with. Or you might deliberately betray a faction at the end of their quest line for a big reward, knowing full well it'll make them enemies. It's all about choices and consequences, quantified in a way players can monitor and react to.
+</rule>
+</mechanic>
 
+<mechanic name="quest_structure">
 Quest Structure & Journal
 
 Managing the variety of quests requires clear structure and player tools to keep track of objectives and progression:
@@ -315,10 +381,14 @@ Managing the variety of quests requires clear structure and player tools to keep
 	•	Quest Completion & Rewards: When a quest is completed, a summary might pop up (“Quest Completed: [Name]. Rewards: XP, items, rep changes.”) and the journal entry moves to completed with a brief epilogue line if needed (“You chose to give the medicine to the clinic, saving many lives.”). This helps reinforce the consequence and gives closure in the log.
 	•	Dialogue Integration: The quest log often echoes information from dialogues (like if an NPC said “Meet me in two days at location X,” the log will have that note). This reduces the chance of players forgetting verbal instructions.
 
-The quest structure and journal are about player guidance and memory. With so much freedom and branching, it’s vital that players have a reliable way to recall what they’re supposed to do and what’s happening in the world. A well-maintained quest log ensures players can take a break from the game and come back without being lost, and it lets them juggle multiple quests at once in a manageable way.
+The quest structure and journal are about player guidance and memory. With so much freedom and branching, it's vital that players have a reliable way to recall what they're supposed to do and what's happening in the world. A well-maintained quest log ensures players can take a break from the game and come back without being lost, and it lets them juggle multiple quests at once in a manageable way.
+</mechanic>
+</game_system>
 
+<game_system id="progression_systems" status="partial">
 Game Systems & Progression
 
+<mechanic name="character_creation">
 Character Creation & Progression
 
 Character Creation: At the start of the game, the player creates their protagonist. They may be able to customize:
@@ -340,8 +410,11 @@ Progression System:
 	•	Companions’ Progression: If the game allows companion characters, they will also improve over time, either automatically or through a simpler leveling system. The player might not micromanage their every skill, but could choose a focus (tell a companion to get better at sniping vs melee, for example). Some companions might have their own mini skill trees or perk choices when they level up, often reflecting their personality or story (a companion who is an ex-medic could gain an upgraded healing ability after completing their personal quest, etc.).
 	•	Late Game Progression: As players approach the endgame, they should feel significantly more powerful than at start, but not invincible. Enemies scale in difficulty to some extent (later areas have tougher foes), though not necessarily level-scaling every foe – rather, the world has high-level dangers you learn to handle. The progression should allow players to specialize deeply or diversify, but there’s a trade-off: a specialist is superb in their field (like unbeatable in small arms combat) but weak in others (poor at hacking or speech), whereas a generalist can handle many situations but isn’t the absolute best at any, which is also viable.
 
-The goal is that character progression feels rewarding and lets the player define their approach to the game. Every level is a chance to refine your character concept, unlock new abilities that change how you play, and react to the challenges you’ve been facing (e.g., “I need more hacking to get past those security doors, better level that up next time”).
+The goal is that character progression feels rewarding and lets the player define their approach to the game. Every level is a chance to refine your character concept, unlock new abilities that change how you play, and react to the challenges you've been facing (e.g., "I need more hacking to get past those security doors, better level that up next time").
+</mechanic>
 
+<mechanic name="equipment_inventory">
+<balance_values system="equipment">
 Equipment & Inventory Management
 
 Loot and gear are central to progression and survival, so managing equipment is a key gameplay element:
@@ -386,7 +459,10 @@ Loot and gear are central to progression and survival, so managing equipment is 
 	•	Loot Generation: Enemies drop items appropriate to them (their weapons, a bit of ammo, maybe some random loot like dog tags or faction insignia). Stashes and containers have loot seeded by location (a med cabinet has meds, an armory has ammo, etc.). Rare unique items are placed in key locations or given as quest rewards rather than random chance, so completionists can aim for them.
 
 All these systems make inventory and equipment a game within the game – optimizing your loadout, seeking out better gear, and ensuring you have what you need when far from safety is crucial. It adds realism (scarcity of resources in a dystopia) and gives a constant sense of progression as you amass better tools to survive.
+</balance_values>
+</mechanic>
 
+<mechanic name="crafting_upgrades">
 Crafting & Upgrades
 
 Crafting allows players to create or improve items using resources gathered, adding a layer of strategy and self-sufficiency:
@@ -410,8 +486,11 @@ Crafting allows players to create or improve items using resources gathered, add
 	•	User Interface: A crafting menu lists known recipes, highlighting which ones you have materials for. Selecting a recipe shows required ingredients and outputs. The player confirms to craft, time passes (maybe a few in-game minutes to hours depending on complexity). Some items might be crafted near-instantly (bandage a wound), others could take in-game time (manufacturing ammo might take an hour). We decide if the time factor is needed or if it’s simplified.
 	•	Encouraging Crafting: To encourage engagement, we’ll integrate crafting into some quests (like NPC asks for a crafted item, or you need to craft a makeshift bomb to open a sealed door if you didn’t bring one). Additionally, crafted gear could have slight advantages (a crafted medkit might heal a bit more than a found one, because you tailored it to your needs, etc.). This makes the system rewarding rather than optional fluff.
 
-Crafting and upgrades serve players who enjoy planning and optimization. It fits the survival theme (make do with what you find) and adds another layer of progression (improving equipment, not just stats). It’s entirely possible to play with minimal crafting (buying what you need or using found items), but those who invest in it will find themselves better equipped and possibly saving resources by recycling and creating what they need.
+Crafting and upgrades serve players who enjoy planning and optimization. It fits the survival theme (make do with what you find) and adds another layer of progression (improving equipment, not just stats). It's entirely possible to play with minimal crafting (buying what you need or using found items), but those who invest in it will find themselves better equipped and possibly saving resources by recycling and creating what they need.
+</mechanic>
 
+<mechanic name="survival_mechanics">
+<balance_values system="survival">
 Survival Mechanics
 
 Survival elements ensure the player must manage more than just enemies – the environment and basic needs are challenges too, enhancing immersion and difficulty:
@@ -427,10 +506,15 @@ Survival elements ensure the player must manage more than just enemies – the e
 	•	Difficulty Tuning: We might allow players to adjust how demanding the survival elements are. On an easier setting, hunger/thirst could be very slow to matter, and fatigue less punishing. On hardcore mode, you might need to eat every few hours, and starvation can kill you quickly. This customization ensures players who want the full survival experience get it, and those who want to focus on story can tone it down.
 	•	Integration with Other Systems: The survival needs tie into the economy (need to buy or find food/water), exploration (seek safe places to rest, find water sources), and faction interactions (maybe only certain factions have access to clean water or safe camps, giving incentive to befriend them). It also adds weight to vehicle travel; in a car, you can carry more supplies and potentially have a place to rest (sleeping in the car might be possible, albeit less effective than a bed).
 
-Survival mechanics add realism and tension. They ensure that even without enemies around, the player is planning and managing resources. It turns the game partially into a survival RPG without overwhelming the core tactical/quest gameplay, as long as we balance it to be engaging rather than tedious. The constant need to eat, drink, and rest in a dangerous city can create memorable emergent moments (e.g., desperately searching for food while injured and only encountering threats). It makes the dystopian world more than a backdrop – it’s something to endure and overcome.
+Survival mechanics add realism and tension. They ensure that even without enemies around, the player is planning and managing resources. It turns the game partially into a survival RPG without overwhelming the core tactical/quest gameplay, as long as we balance it to be engaging rather than tedious. The constant need to eat, drink, and rest in a dangerous city can create memorable emergent moments (e.g., desperately searching for food while injured and only encountering threats). It makes the dystopian world more than a backdrop – it's something to endure and overcome.
+</balance_values>
+</mechanic>
+</game_system>
 
+<game_system id="technology_development" status="partial">
 Technology & Development Focus
 
+<development_approach name="single_player">
 Single-Player Focus
 
 The Getaway is designed as a deep single-player experience with no multiplayer or online components in the initial scope. This focus has several implications:
@@ -442,11 +526,14 @@ The Getaway is designed as a deep single-player experience with no multiplayer o
 	•	Player Community & Modding: Single-player games often thrive on modding and community-driven content post-release. While not a core focus now, using a browser platform means modding might be as simple as editing some data files or writing JavaScript plugins, which we can consider documenting if there’s interest. But there’s no official user-generated content system at launch.
 	•	Save System: Single-player focus allows robust save/load functionality. The player can have multiple save files, manual saves, quicksaves, etc., which in a multiplayer context would be restricted. We should implement an easy save system (maybe even an auto-save at key points) so players can experiment with different choices and have fallback points. This supports the branching narrative aspect, letting curious players explore alternate outcomes by reloading if they desire.
 
-In summary, committing to single-player lets us maximize depth and immersion without multiplayer compromises. The player will feel like the sole central force in the city’s story, which aligns perfectly with the narrative design.
+In summary, committing to single-player lets us maximize depth and immersion without multiplayer compromises. The player will feel like the sole central force in the city's story, which aligns perfectly with the narrative design.
+</development_approach>
 
+<technical_stack name="browser_platform">
+<implementation_status>⚠️ PARTIAL</implementation_status>
 Platform & Engine (Browser-Based Deployment)
 
-The game will be delivered via web browsers, leveraging modern web technology to reach players instantly without installation. Here’s our plan for the tech stack and engine considerations:
+The game will be delivered via web browsers, leveraging modern web technology to reach players instantly without installation. Here's our plan for the tech stack and engine considerations:
 	•	Language: We will develop primarily in TypeScript, which compiles to JavaScript. TypeScript offers static typing, which will help catch errors early and make the code more maintainable as it grows. This is especially useful with AI-assisted generation, as the types can guide the AI to use functions and data structures correctly. Since TypeScript is a superset of JavaScript, we can seamlessly integrate any libraries or frameworks needed.
 	•	Rendering Technology: The game will use HTML5 Canvas/WebGL for rendering. Given the likely 2D isometric perspective, a 2D engine with WebGL acceleration is ideal for performance. We are considering using an established game framework like:
 	•	Phaser 3: A popular 2D game framework that supports tilemaps, sprites, animations, input handling, and has an easy learning curve. It would let us get a head start on map rendering and physics (though a turn-based game won’t need heavy physics).
@@ -473,7 +560,9 @@ The game will be delivered via web browsers, leveraging modern web technology to
 	•	Testing in Browsers: We’ll set up a local dev environment (using something like webpack or parcel to bundle our TS code and serve it) to test the game in a browser as we build. We’ll use debug tools (like showing collision grids, AI state debug overlays) that we can toggle during development. Browser dev tools will be crucial for profiling memory and CPU usage.
 
 By using a browser-based stack, we tap into a wide accessibility (anyone with a browser can play, across OS platforms, possibly even tablets). We just have to carefully manage performance and asset size to fit the constraints of web games. The chosen technology (TypeScript + Phaser or similar) is conducive to iterative development and AI-assisted coding, because many patterns and boilerplate can be generated or filled in by AI given clear descriptions (like classes for inventory items, functions for turn calculations, etc., all of which are fairly standard to code once outlined in design).
+</technical_stack>
 
+<technical_approach name="performance">
 Performance Considerations
 
 Running an open-world, turn-based simulation in a browser means we must optimize for performance from the start:
@@ -497,7 +586,9 @@ Running an open-world, turn-based simulation in a browser means we must optimize
 	•	Continuous Optimization: As we add features, we will regularly test performance to catch issues early. For example, when adding the dynamic NPC schedules, test with dozens of NPCs active. When adding vehicles, test driving fast across sectors to see if loading keeps up.
 
 In summary, our strategy is to optimize smartly: update what needs updating, render what needs rendering, and no more. By controlling scope (single-player, 2D view) and using the power of WebGL and multi-threading (web workers), we anticipate being able to create a rich open world that runs smoothly in a browser environment.
+</technical_approach>
 
+<technical_approach name="development_tools">
 Technical Stack & Tools
 
 To manage development efficiently and integrate AI-assisted coding, we outline our tools and practices:
@@ -523,7 +614,9 @@ To manage development efficiently and integrate AI-assisted coding, we outline o
 	•	Deployment & Updates: For hosting, a simple static file server or itch.io upload might suffice. We just need to ensure versioning doesn’t break saves. We could embed a version number in save data and write upgrade logic if needed (e.g., if we add a new stat in a patch, handle older saves missing it). AI can assist by analyzing differences between versions and suggesting migration code.
 
 By planning our development tooling and workflow, we set ourselves up to efficiently build the game and maintain high code quality. The use of AI is a force-multiplier but not a replacement for thoughtful design and testing. This design document itself will guide the AI in generating code aligned with the intended features, essentially translating the high-level descriptions into actual game mechanics.
+</technical_approach>
 
+<technical_approach name="future_proofing">
 Future-Proofing & Scalability
 
 We aim to write code and design systems that are robust and extensible, so the project can grow or be adapted beyond the initial release:
@@ -537,12 +630,16 @@ We aim to write code and design systems that are robust and extensible, so the p
 	•	Codebase Management: We might eventually open source parts of the project (or at least share code with modders). Clean separation of proprietary assets (art, story) from code will be considered for that scenario. In any case, our internal code needs to be understandable by new team members or our future selves, which means writing clear code, with comments and docs. AI can help document code, but we must also manually ensure key algorithms are explained.
 	•	Testing for Edge Cases: As content grows, edge cases multiply (e.g., what if the player becomes hated by all factions before a certain main quest? Does the game still have a path forward?). We should use a combination of automated tests and scenario testing to cover unusual but possible states. This also ties into save system – ensure saves from any point can be loaded and the game can progress to an ending without getting stuck, even if some content was skipped or some NPCs died. Designing quests with multiple fail-safes or fallbacks (like if an NPC is dead, allow quest completion via a note or alternate NPC) is part of this robustness.
 
-By focusing on future-proofing, we hope The Getaway can be a platform for storytelling and gameplay that lasts beyond the initial content. Whether through official expansions or community mods or just the flexibility to patch and improve, the game’s design and code should accommodate growth and change without breaking down. In essence, we treat this not just as a one-off game but as a living project that can evolve.
+By focusing on future-proofing, we hope The Getaway can be a platform for storytelling and gameplay that lasts beyond the initial content. Whether through official expansions or community mods or just the flexibility to patch and improve, the game's design and code should accommodate growth and change without breaking down. In essence, we treat this not just as a one-off game but as a living project that can evolve.
+</technical_approach>
+</game_system>
 
+<conclusion>
 Conclusion
 
-This comprehensive game design document for The Getaway outlines a vision of a dystopian open-world tactical RPG with deep systems and a player-driven narrative. We have detailed the setting of a living, breathing city divided by factions and plagued by scarcity, the intricate turn-based combat mechanics that emphasize tactics and resource management, and the open-world exploration filled with dynamic events and survival challenges. Storytelling is central, with branching dialogues and quests ensuring that the player’s choices truly shape the fate of the city and its inhabitants.
+This comprehensive game design document for The Getaway outlines a vision of a dystopian open-world tactical RPG with deep systems and a player-driven narrative. We have detailed the setting of a living, breathing city divided by factions and plagued by scarcity, the intricate turn-based combat mechanics that emphasize tactics and resource management, and the open-world exploration filled with dynamic events and survival challenges. Storytelling is central, with branching dialogues and quests ensuring that the player's choices truly shape the fate of the city and its inhabitants.
 
-On the development side, we’ve committed to a robust single-player experience delivered via browser technology, leveraging TypeScript and WebGL for broad accessibility without compromising on depth. We have considered performance from the ground up to enable a fluid gameplay experience even in a complex simulated world, and we’ve planned our technical architecture to be modular and maintainable, easing the integration of AI-assisted code generation. Our approach balances the creative freedom of design with the practicality of implementation, using modern tools and methodologies to bring this ambitious game to life.
+On the development side, we've committed to a robust single-player experience delivered via browser technology, leveraging TypeScript and WebGL for broad accessibility without compromising on depth. We have considered performance from the ground up to enable a fluid gameplay experience even in a complex simulated world, and we've planned our technical architecture to be modular and maintainable, easing the integration of AI-assisted code generation. Our approach balances the creative freedom of design with the practicality of implementation, using modern tools and methodologies to bring this ambitious game to life.
 
 With this document as a foundation, the next steps are to iteratively build and test each system, frequently referring back to these design specifications. AI-assisted development will help accelerate coding, but careful human oversight will ensure the game meets the design goals and provides a compelling experience. The Getaway aims to immerse players in a challenging yet rewarding journey through a post-apocalyptic city where every decision matters, every ally or enemy is remembered, and survival is earned through strategy, wit, and sometimes sheer audacity. This design document will guide the team (and our AI helpers) in delivering a game that is both technically sound and richly imaginative, serving as a strong blueprint for development moving forward.
+</conclusion>
