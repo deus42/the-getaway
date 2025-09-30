@@ -1143,22 +1143,33 @@ export class MainScene extends Phaser.Scene {
 
     const camera = this.cameras.main;
 
-    // Calculate viewport bounds in grid coordinates
-    const topLeft = this.worldToGrid(camera.worldView.x, camera.worldView.y);
-    const bottomRight = this.worldToGrid(
-      camera.worldView.x + camera.worldView.width,
-      camera.worldView.y + camera.worldView.height
-    );
+    // Get the four corners of the viewport in world space
+    const viewLeft = camera.worldView.x;
+    const viewTop = camera.worldView.y;
+    const viewRight = camera.worldView.x + camera.worldView.width;
+    const viewBottom = camera.worldView.y + camera.worldView.height;
 
-    if (!topLeft || !bottomRight) {
+    // Convert corners to grid coordinates
+    const topLeft = this.worldToGrid(viewLeft, viewTop);
+    const topRight = this.worldToGrid(viewRight, viewTop);
+    const bottomLeft = this.worldToGrid(viewLeft, viewBottom);
+    const bottomRight = this.worldToGrid(viewRight, viewBottom);
+
+    if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
       return;
     }
 
+    // Find the bounding box in grid space (isometric means corners aren't aligned)
+    const minX = Math.floor(Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x));
+    const maxX = Math.ceil(Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x));
+    const minY = Math.floor(Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y));
+    const maxY = Math.ceil(Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y));
+
     // Clamp to map bounds
-    const x = Math.max(0, topLeft.x);
-    const y = Math.max(0, topLeft.y);
-    const width = Math.min(this.currentMapArea.width - x, bottomRight.x - topLeft.x);
-    const height = Math.min(this.currentMapArea.height - y, bottomRight.y - topLeft.y);
+    const x = Math.max(0, minX);
+    const y = Math.max(0, minY);
+    const width = Math.min(this.currentMapArea.width, maxX) - x;
+    const height = Math.min(this.currentMapArea.height, maxY) - y;
 
     const detail: ViewportUpdateDetail = { x, y, width, height };
 
@@ -1173,9 +1184,9 @@ export class MainScene extends Phaser.Scene {
     }
 
     const customEvent = event as CustomEvent<MinimapViewportClickDetail>;
-    const { gridX, gridY } = customEvent.detail;
+    const { gridX, gridY, isDragging } = customEvent.detail;
 
-    // Convert grid position to pixel position and center camera there
+    // Convert grid position to pixel position
     const pixelPos = this.calculatePixelPosition(gridX, gridY);
     const camera = this.cameras.main;
 
@@ -1183,12 +1194,18 @@ export class MainScene extends Phaser.Scene {
     this.isCameraFollowingPlayer = false;
     camera.stopFollow();
 
-    // Pan camera to the clicked position
-    camera.pan(pixelPos.x, pixelPos.y, 300, 'Sine.easeInOut', false, (_cam, progress) => {
-      if (progress === 1) {
-        this.emitViewportUpdate();
-      }
-    });
+    if (isDragging) {
+      // Instant camera movement during drag
+      camera.centerOn(pixelPos.x, pixelPos.y);
+      this.emitViewportUpdate();
+    } else {
+      // Smooth animation for clicks
+      camera.pan(pixelPos.x, pixelPos.y, 250, 'Sine.easeOut', false, (_cam, progress) => {
+        if (progress === 1) {
+          this.emitViewportUpdate();
+        }
+      });
+    }
   };
 
   private drawBackdrop(): void {
