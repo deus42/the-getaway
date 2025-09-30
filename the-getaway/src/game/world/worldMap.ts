@@ -225,7 +225,6 @@ const createCityArea = (
   itemBlueprints.forEach((itemBlueprint) => {
     withCover.entities.items.push({ ...itemBlueprint, id: uuidv4() });
   });
-
   const { connections, interiors } = applyBuildingConnections(
     withCover,
     areaName,

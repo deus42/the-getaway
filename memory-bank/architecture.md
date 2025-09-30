@@ -122,6 +122,7 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - **Street-Door Separation**: Doors must be positioned in street tiles adjacent to buildings, never on the building edge itself
 - **Unique Positioning**: No two buildings share the same door coordinate
 - **Visual Labeling**: Building names render once per parcel with word-wrapped, shadowed text for legibility on the outdoor map
+- **Spawn Sanitization**: Blueprint positions snap to the nearest walkable street tile during world generation so nothing spawns atop a roofline
 
 **Technical Flow:**
 1. `worldMap.ts` defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions
