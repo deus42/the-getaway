@@ -59,6 +59,30 @@
 - **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
 - After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
 
+## Separation of Concerns: Design vs Architecture
+
+**CRITICAL:** Understand the difference before making changes.
+
+- **game design.md = WHAT** (gameplay mechanics, rules, balance numbers, player experience)
+- **architecture.md = HOW** (code patterns, modules, file paths, technical implementation)
+
+### Decision Guide:
+- Player mechanics, AP costs, damage? → **game design.md**
+- Code organization, Redux slices, file paths? → **architecture.md**
+- Game rules and formulas? → **game design.md**
+- Design patterns, data flow? → **architecture.md**
+
+### Two-Way Sync:
+1. **Design → Implementation**: Update game design.md (WHAT) → Implement → Document in architecture.md (HOW) → Log in progress.md
+2. **Technical Constraint → Design**: Note in architecture.md → Adjust game design.md if needed → Document compromise
+
+### Common Mistakes:
+- ❌ Putting code paths in game design.md
+- ❌ Putting balance numbers in architecture.md
+- ✅ Keep WHAT and HOW separate
+
+---
+
 ## XML Tagging in Documentation
 The memory-bank documentation uses XML tags to improve LLM agent parsing and information retrieval. When reading or updating documentation:
 
@@ -93,9 +117,20 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 - `<technical_flow>` - Step-by-step technical implementation flows
 - `<code_location>` - File paths and module references
 
+### game design.md Structure (Optional Tags)
+- `<game_system id status>` - Major gameplay systems (status: implemented|partial|not_implemented)
+- `<mechanic name>` - Individual game mechanics
+- `<rule type>` - Game rules (type: formula|constraint|condition)
+- `<balance_values system>` - Numerical tuning values
+- `<implementation_status>` - Current state (✅ IMPLEMENTED | ⚠️ PARTIAL | ❌ NOT IMPLEMENTED)
+
 ### When Updating Documentation
 - Maintain existing XML structure and tag hierarchy
-- Add new steps following the established schema
 - Update status attributes when steps are completed
 - Keep tags well-formed (properly opened and closed)
-- Use appropriate category attributes (e.g., world_generation, state_management, graphics, code_standards)
+- Use appropriate category attributes
+
+### Validation Before/After Implementation
+- **Before:** Check game design.md for feature spec (WHAT), check architecture.md for patterns (HOW)
+- **After:** Update both documents with what changed, log completion in progress.md
+- Tag XML sections incrementally as they're referenced/updated (not required for all content immediately)
