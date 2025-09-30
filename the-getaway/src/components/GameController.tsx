@@ -770,6 +770,10 @@ const GameController: React.FC = () => {
           };
 
           dispatch(addEnemy(reinforcementEnemy));
+          if (spawnDuringEnemyTurn) {
+            dispatch(switchTurn());
+            dispatch(resetActionPoints());
+          }
           dispatch(clearReinforcementsSchedule());
         }, getReinforcementDelay());
       }

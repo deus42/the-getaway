@@ -10,7 +10,7 @@ import {
   isCurfewTime,
   DEFAULT_DAY_NIGHT_CONFIG,
 } from '../game/world/dayNightCycle';
-import { findNearestWalkablePosition } from '../game/world/grid';
+import { findNearestWalkablePosition, getAdjacentWalkablePositions } from '../game/world/grid';
 
 export interface WorldState {
   currentMapArea: MapArea;
@@ -185,11 +185,19 @@ export const worldSlice = createSlice({
 
     addEnemy: (state, action: PayloadAction<Enemy>) => {
       const enemy = { ...action.payload };
-      const openPosition = findNearestWalkablePosition(enemy.position, state.currentMapArea);
+      let spawnPosition = findNearestWalkablePosition(enemy.position, state.currentMapArea);
 
-      if (openPosition) {
-        enemy.position = openPosition;
+      if (!spawnPosition) {
+        const candidates = getAdjacentWalkablePositions(enemy.position, state.currentMapArea, undefined, []);
+        const openCandidate = candidates.find((candidate) =>
+          state.currentMapArea.entities.enemies.every(
+            (existing) => existing.position.x !== candidate.x || existing.position.y !== candidate.y
+          )
+        );
+        spawnPosition = openCandidate ?? enemy.position;
       }
+
+      enemy.position = spawnPosition;
 
       state.currentMapArea.entities.enemies.push(enemy);
     },
