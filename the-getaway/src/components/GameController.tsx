@@ -1214,16 +1214,13 @@ const GameController: React.FC = () => {
         // If in combat and it's player's turn, attack closest enemy in range
         if (inCombat && isPlayerTurn) {
           const nearbyEnemy = findClosestEnemy(player.position);
-          if (
-            nearbyEnemy &&
-            isInAttackRange(player.position, nearbyEnemy.position, 1)
-          ) {
+          if (nearbyEnemy && isInAttackRange(player.position, nearbyEnemy.position, 1)) {
             attackEnemy(nearbyEnemy, currentMapArea);
             return;
-          } else {
-            dispatch(addLogMessage(logStrings.noEnemiesInRange));
-            return;
           }
+
+          dispatch(addLogMessage(logStrings.noEnemiesInRange));
+          return;
         }
 
         return;
@@ -1247,13 +1244,8 @@ const GameController: React.FC = () => {
 
         if (player.actionPoints <= 0) {
           dispatch(addLogMessage(logStrings.actionPointsDepleted));
-
-          dispatch(switchTurn());
-
           return;
         }
-
-        return;
       }
 
       if (queuedPath.length > 0) {
