@@ -118,9 +118,10 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 
 **Key Design Principles:**
 - **Geometric Clarity**: All buildings are axis-aligned rectangles; no irregular shapes or overlapping footprints
+- **Single-Parcel Blocks**: Each of the 16 Downtown blocks maps to one named parcel to keep overlays and doorways uncluttered
 - **Street-Door Separation**: Doors must be positioned in street tiles adjacent to buildings, never on the building edge itself
 - **Unique Positioning**: No two buildings share the same door coordinate
-- **Visual Labeling**: Building names render as centered text overlays on the outdoor map for easy identification
+- **Visual Labeling**: Building names render once per parcel with word-wrapped, shadowed text for legibility on the outdoor map
 
 **Technical Flow:**
 1. `worldMap.ts` defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions

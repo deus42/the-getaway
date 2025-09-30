@@ -249,36 +249,22 @@ Date: September 29, 2025
 
 ### Tasks Accomplished
 
-1. Redesigned world map grid system from random shapes to NYC-inspired Manhattan grid:
-   - 4 vertical avenues (3 tiles wide each): x=24-26, x=60-62, x=96-98, x=132-134
-   - 4 horizontal streets (2 tiles wide each): y=20-21, y=44-45, y=68-69, y=92-93
-   - Created 16 city blocks (4×4 grid) separated by avenues and streets
-2. Replaced 22 irregular buildings with 48 rectangular buildings (3 per block):
-   - All buildings are perfect rectangles with clear footprints
-   - Buildings never overlap streets, avenues, or each other
-   - Thematic naming by district (Waterfront, Commercial, Government, etc.)
-3. Fixed door positioning system:
-   - Doors now positioned in street tiles, NOT on building footprints
-   - All door coordinates are unique (no overlapping doors)
-   - Doors centered horizontally on building footprints for visual symmetry
-4. Added building name text overlays:
-   - Text labels render at center of each building footprint
-   - 11px white text with black stroke for visibility
-   - Labels only appear on outdoor map, not in interiors
-   - Depth set to 5 to appear above terrain
-5. Updated both English and Ukrainian locale files with new building definitions
-6. Updated `/memory-bank/architecture.md` with comprehensive NYC grid layout documentation
+1. Locked Downtown to a Manhattan-inspired grid:
+   - Four avenues (x=24–26, 60–62, 96–98, 132–134) and four streets (y=20–21, 44–45, 68–69, 92–93) carve 16 rectangular blocks.
+   - Building generation respects boulevard tiles so navigation lanes always stay clear.
+2. Consolidated block content into 16 thematic parcels (one per block) with concise localized names.
+3. Moved every exterior door onto walkable street tiles, away from the building footprint, and guaranteed unique doorway coordinates.
+4. Refined building label rendering in `MainScene` with word wrapping, subtle shadows, and depth ordering tied to tile height.
+5. Updated both English and Ukrainian locale payloads to match the new block list and door coordinates.
+6. Recorded the grid and parcel rules in `/memory-bank/architecture.md`.
 
 ### Implementation Details
 
-- Modified `worldMap.ts`: Updated `isAvenue()` and `isStreet()` functions for new grid
-- Modified `MainScene.ts`: Added `buildingDefinitions` property, `buildingLabels` array, and `drawBuildingLabels()` method
-- Modified `BootScene.ts`: Now fetches and passes building definitions from level content
-- Updated `en.ts` and `uk.ts`: Replaced all building definitions with corrected door positions
+- `worldMap.ts`: Enforces street/avenue carving, clears legacy door tiles inside footprints, and keeps door tiles walkable.
+- `MainScene.ts`: Receives building metadata from `BootScene`, stores it for label rendering, and ensures labels clear when switching to interiors.
+- `BootScene.ts`: Loads building definitions from locale content before launching `MainScene` so the scene can render parcel labels immediately.
+- `levels/level0/locales/*`: Reauthored `buildingDefinitions` to the 16-parcel model with single street-facing doors per block.
 
 ### Validation
-- `yarn build` – successful
-- All 48 buildings have unique positions and door coordinates
-- Doors verified to be in street tiles (y=20, 21, 44, 45, 68, 69, 92)
-- Building footprints do not overlap with streets or each other
-- Text labels render correctly on outdoor map
+- `yarn build`
+- Manual review confirms each parcel occupies a single block, doors sit on street coordinates, and labels appear once per block.

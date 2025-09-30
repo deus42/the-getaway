@@ -651,7 +651,16 @@ export class MainScene extends Phaser.Scene {
     // Only render labels for the main outdoor area (not interiors)
     if (this.currentMapArea.isInterior) return;
 
+    const seenCenters = new Set<string>();
+    const metrics = this.getIsoMetrics();
+
     this.buildingDefinitions.forEach((building) => {
+      const key = `${building.footprint.from.x}:${building.footprint.from.y}:${building.footprint.to.x}:${building.footprint.to.y}`;
+      if (seenCenters.has(key)) {
+        return;
+      }
+      seenCenters.add(key);
+
       // Calculate center of building footprint
       const centerX = (building.footprint.from.x + building.footprint.to.x) / 2;
       const centerY = (building.footprint.from.y + building.footprint.to.y) / 2;
@@ -659,21 +668,23 @@ export class MainScene extends Phaser.Scene {
       // Convert grid position to isometric pixel coordinates
       const pixelPos = this.calculatePixelPosition(centerX, centerY);
 
-      // Create text label
       const label = this.add.text(pixelPos.x, pixelPos.y, building.name, {
-        fontSize: '11px',
-        fontFamily: 'Arial, sans-serif',
-        color: '#e8e8e8',
-        stroke: '#000000',
-        strokeThickness: 3,
+        fontSize: '14px',
+        fontFamily: 'Inter, Arial, sans-serif',
+        fontStyle: '600',
+        color: '#f8fafc',
+        stroke: '#0f172a',
+        strokeThickness: 4,
         align: 'center',
+        wordWrap: { width: metrics.tileWidth * 4.2 },
       });
 
-      // Center the text on the building
       label.setOrigin(0.5, 0.5);
-      label.setDepth(5);
-      label.setAlpha(0.85);
-
+      label.setDepth(pixelPos.y + 1);
+      label.setAlpha(0.95);
+      label.setPadding(10, 6, 10, 6);
+      label.setBackgroundColor('rgba(15, 23, 42, 0.6)');
+      label.setShadow(0, 3, '#000000', 4, false, true);
       this.buildingLabels.push(label);
     });
   }
