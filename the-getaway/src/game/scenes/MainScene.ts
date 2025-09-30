@@ -6,6 +6,7 @@ import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail } from '../events';
 import { getVisionConeTiles } from '../combat/perception';
+import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
@@ -46,6 +47,8 @@ export class MainScene extends Phaser.Scene {
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private npcSprites: Map<string, NpcSpriteData> = new Map();
   private currentMapArea: MapArea | null = null;
+  private buildingDefinitions: LevelBuildingDefinition[] = [];
+  private buildingLabels: Phaser.GameObjects.Text[] = [];
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   private dayNightOverlay!: Phaser.GameObjects.Rectangle;
@@ -72,9 +75,10 @@ export class MainScene extends Phaser.Scene {
     super({ key: 'MainScene' });
   }
 
-  public init(data: { mapArea: MapArea, playerPosition: Position }): void {
+  public init(data: { mapArea: MapArea, playerPosition: Position, buildings?: LevelBuildingDefinition[] }): void {
     this.currentMapArea = data.mapArea;
     this.playerInitialPosition = data.playerPosition;
+    this.buildingDefinitions = data.buildings || [];
     this.enemySprites = new Map<string, EnemySpriteData>(); // Reset map on init
     this.npcSprites = new Map<string, NpcSpriteData>();
     this.isCameraFollowingPlayer = false;
@@ -637,6 +641,43 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
+  private drawBuildingLabels(): void {
+    // Clear existing labels
+    this.buildingLabels.forEach(label => label.destroy());
+    this.buildingLabels = [];
+
+    if (!this.currentMapArea) return;
+
+    // Only render labels for the main outdoor area (not interiors)
+    if (this.currentMapArea.isInterior) return;
+
+    this.buildingDefinitions.forEach((building) => {
+      // Calculate center of building footprint
+      const centerX = (building.footprint.from.x + building.footprint.to.x) / 2;
+      const centerY = (building.footprint.from.y + building.footprint.to.y) / 2;
+
+      // Convert grid position to isometric pixel coordinates
+      const pixelPos = this.calculatePixelPosition(centerX, centerY);
+
+      // Create text label
+      const label = this.add.text(pixelPos.x, pixelPos.y, building.name, {
+        fontSize: '11px',
+        fontFamily: 'Arial, sans-serif',
+        color: '#e8e8e8',
+        stroke: '#000000',
+        strokeThickness: 3,
+        align: 'center',
+      });
+
+      // Center the text on the building
+      label.setOrigin(0.5, 0.5);
+      label.setDepth(5);
+      label.setAlpha(0.85);
+
+      this.buildingLabels.push(label);
+    });
+  }
+
   private drawDoorTile(centerX: number, centerY: number): void {
     if (!this.mapGraphics) {
       return;
@@ -1159,6 +1200,7 @@ export class MainScene extends Phaser.Scene {
 
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
+    this.drawBuildingLabels();
     this.clearPathPreview();
 
     // Ensure overlay matches latest viewport size after camera adjustments

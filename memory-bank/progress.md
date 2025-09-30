@@ -242,3 +242,43 @@ Date: September 29, 2025
 - Alert states escalate: IDLE → SUSPICIOUS → INVESTIGATING → ALARMED
 - Reinforcements spawn automatically when alarm threshold is reached
 - Alert messages appear in action log with proper localization
+
+## Step 20: Redesign World Map with NYC Grid Layout (Completed)
+
+Date: September 29, 2025
+
+### Tasks Accomplished
+
+1. Redesigned world map grid system from random shapes to NYC-inspired Manhattan grid:
+   - 4 vertical avenues (3 tiles wide each): x=24-26, x=60-62, x=96-98, x=132-134
+   - 4 horizontal streets (2 tiles wide each): y=20-21, y=44-45, y=68-69, y=92-93
+   - Created 16 city blocks (4×4 grid) separated by avenues and streets
+2. Replaced 22 irregular buildings with 48 rectangular buildings (3 per block):
+   - All buildings are perfect rectangles with clear footprints
+   - Buildings never overlap streets, avenues, or each other
+   - Thematic naming by district (Waterfront, Commercial, Government, etc.)
+3. Fixed door positioning system:
+   - Doors now positioned in street tiles, NOT on building footprints
+   - All door coordinates are unique (no overlapping doors)
+   - Doors centered horizontally on building footprints for visual symmetry
+4. Added building name text overlays:
+   - Text labels render at center of each building footprint
+   - 11px white text with black stroke for visibility
+   - Labels only appear on outdoor map, not in interiors
+   - Depth set to 5 to appear above terrain
+5. Updated both English and Ukrainian locale files with new building definitions
+6. Updated `/memory-bank/architecture.md` with comprehensive NYC grid layout documentation
+
+### Implementation Details
+
+- Modified `worldMap.ts`: Updated `isAvenue()` and `isStreet()` functions for new grid
+- Modified `MainScene.ts`: Added `buildingDefinitions` property, `buildingLabels` array, and `drawBuildingLabels()` method
+- Modified `BootScene.ts`: Now fetches and passes building definitions from level content
+- Updated `en.ts` and `uk.ts`: Replaced all building definitions with corrected door positions
+
+### Validation
+- `yarn build` – successful
+- All 48 buildings have unique positions and door coordinates
+- Doors verified to be in street tiles (y=20, 21, 44, 45, 68, 69, 92)
+- Building footprints do not overlap with streets or each other
+- Text labels render correctly on outdoor map

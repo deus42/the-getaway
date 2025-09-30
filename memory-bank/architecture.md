@@ -106,6 +106,29 @@ Manages the game world and environment:
 - **`pathfinding.ts`**: Breadth-first pathfinder supporting enemy avoidance and reserved tiles used by both player click-to-move and NPC routines.
 - **`worldMap.ts`**: Generates large districts, interior connections, and seeds NPCs, enemies, and items with routines and dialogue IDs.
 
+##### World Map Grid Pattern
+
+The world map uses a **Manhattan-style grid system** inspired by urban planning principles:
+
+**Core Pattern:**
+- Wide vertical avenues and horizontal streets create a regular city block grid
+- Buildings occupy rectangular footprints within blocks, separated by navigable streets
+- Door tiles exist in street space (outside building footprints) to create clear separation between structure and navigation
+- Each building connects bidirectionally to a procedurally generated interior space
+
+**Key Design Principles:**
+- **Geometric Clarity**: All buildings are axis-aligned rectangles; no irregular shapes or overlapping footprints
+- **Street-Door Separation**: Doors must be positioned in street tiles adjacent to buildings, never on the building edge itself
+- **Unique Positioning**: No two buildings share the same door coordinate
+- **Visual Labeling**: Building names render as centered text overlays on the outdoor map for easy identification
+
+**Technical Flow:**
+1. `worldMap.ts` defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions
+2. Building definitions in locale files specify footprint bounds, door position, and interior dimensions
+3. `applyBuildingConnections()` converts footprint tiles to walls, then explicitly marks door tiles as walkable
+4. `MainScene` renders building name labels using building definitions passed from `BootScene`
+5. Bidirectional connections enable seamless indoor/outdoor transitions
+
 #### `/the-getaway/src/game/quests`
 
 Quest and dialogue systems:

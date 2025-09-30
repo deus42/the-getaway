@@ -36,8 +36,20 @@ export interface MapConnection {
 const DOWNTOWN_WIDTH = 144;
 const DOWNTOWN_HEIGHT = 108;
 
-const isCityBoulevard = (x: number, y: number) =>
-  y === 26 || y === 56 || y === 86 || x === 36 || x === 72 || x === 108;
+// NYC-inspired grid: Avenues (vertical, 3 tiles wide) and Streets (horizontal, 2 tiles wide)
+const isAvenue = (x: number) => {
+  // Avenues at x=24-26, x=60-62, x=96-98, x=132-134 (3 tiles wide)
+  return (x >= 24 && x <= 26) || (x >= 60 && x <= 62) ||
+         (x >= 96 && x <= 98) || (x >= 132 && x <= 134);
+};
+
+const isStreet = (y: number) => {
+  // Streets at y=20-21, y=44-45, y=68-69, y=92-93 (2 tiles wide)
+  return (y >= 20 && y <= 21) || (y >= 44 && y <= 45) ||
+         (y >= 68 && y <= 69) || (y >= 92 && y <= 93);
+};
+
+const isCityBoulevard = (x: number, y: number) => isAvenue(x) || isStreet(y);
 
 
 const createInteriorArea = (name: string, width: number, height: number, level: number): InteriorSpec => {
