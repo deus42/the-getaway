@@ -128,6 +128,11 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - **Visual Labeling**: Building names render once per parcel with word-wrapped, shadowed text for legibility on the outdoor map
 - **Spawn Sanitization**: Blueprint positions snap to the nearest walkable street tile during world generation so nothing spawns atop a roofline
 </design_principles>
+<pattern name="Elevation Profiles & Facades">
+- `getTileElevation` and `getElevationProfile` convert tile metadata into height offsets so walls extrude into full prisms while cover uses half-height braces.
+- `renderElevationPrism` draws right/front faces with tuned shadows, then caps the roof plane; `renderWallDetails` layers neon bands and ledges, and `renderCoverDetails` adds lips plus bracing lines for tactical readability.
+- Door tiles stay flat at ground level but `drawDoorTile` projects a doorway panel onto the extruded facade using the same interpolation helpers, keeping entries visually aligned with building volumes.
+</pattern>
 
 <technical_flow>
 **Technical Flow:**

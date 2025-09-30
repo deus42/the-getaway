@@ -843,6 +843,9 @@ export class MainScene extends Phaser.Scene {
       case TileType.TRAP:
         this.renderTrapTile(center, tileWidth, tileHeight, modulatedBase);
         break;
+      case TileType.DOOR:
+        this.drawDoorTile(center.x, center.y);
+        break;
       default:
         break;
     }
@@ -1069,6 +1072,60 @@ export class MainScene extends Phaser.Scene {
     this.mapGraphics.lineStyle(1.2, this.adjustColor(pulseColor, 0.35), 0.75);
     this.mapGraphics.strokePoints(
       this.getDiamondPoints(center.x, center.y, tileWidth * 0.82, tileHeight * 0.32),
+      true
+    );
+  }
+
+  private drawDoorTile(centerX: number, centerY: number): void {
+    if (!this.mapGraphics) {
+      return;
+    }
+
+    const { tileWidth, tileHeight } = this.getIsoMetrics();
+    const basePoints = this.getDiamondPoints(centerX, centerY, tileWidth, tileHeight);
+
+    const wallElevation = this.getTileElevation(TileType.WALL);
+    const profile = this.getElevationProfile(wallElevation, tileWidth, tileHeight);
+    const capPoints = this.getDiamondPoints(
+      centerX,
+      centerY - profile.heightOffset,
+      profile.topWidth,
+      profile.topHeight
+    );
+
+    const frontTopLeft = capPoints[3];
+    const frontTopRight = capPoints[2];
+    const frontBottomLeft = basePoints[3];
+    const frontBottomRight = basePoints[2];
+
+    const frameTopLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.2);
+    const frameTopRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.2);
+    const frameBottomRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.85);
+    const frameBottomLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.85);
+
+    this.mapGraphics.fillStyle(0x191c26, 0.95);
+    this.mapGraphics.fillPoints([frameTopLeft, frameTopRight, frameBottomRight, frameBottomLeft], true);
+
+    this.mapGraphics.lineStyle(1.2, 0xf3c58c, 0.8);
+    this.mapGraphics.strokePoints([frameTopLeft, frameTopRight, frameBottomRight, frameBottomLeft], true);
+
+    const panelInset = 0.2;
+    const panelTopLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, panelInset);
+    const panelTopRight = this.lerpPoint(frameTopRight, frameBottomRight, panelInset);
+    const panelBottomRight = this.lerpPoint(frameTopRight, frameBottomRight, 1 - panelInset * 0.35);
+    const panelBottomLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, 1 - panelInset * 0.35);
+
+    this.mapGraphics.fillStyle(0x242c3a, 0.92);
+    this.mapGraphics.fillPoints([panelTopLeft, panelTopRight, panelBottomRight, panelBottomLeft], true);
+
+    const handleTopLeft = this.lerpPoint(panelTopLeft, panelTopRight, 0.72);
+    const handleTopRight = this.lerpPoint(panelTopLeft, panelTopRight, 0.82);
+    const handleBottomRight = this.lerpPoint(panelBottomLeft, panelBottomRight, 0.82);
+    const handleBottomLeft = this.lerpPoint(panelBottomLeft, panelBottomRight, 0.72);
+
+    this.mapGraphics.fillStyle(0xfacc15, 0.85);
+    this.mapGraphics.fillPoints(
+      [handleTopLeft, handleTopRight, handleBottomRight, handleBottomLeft],
       true
     );
   }
