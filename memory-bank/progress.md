@@ -269,10 +269,17 @@ Date: September 29, 2025
 - `yarn build`
 - Manual review confirms each parcel occupies a single block, doors sit on street coordinates, and labels appear once per block.
 
-## Step 21: Transition Scene Rendering to Isometric 2.5-D (Planned)
+## Step 21: Transition Scene Rendering to Isometric 2.5-D (Completed)
 
-### Goals
+Date: October 3, 2025
 
-1. Extract projection helpers (`getIsoMetrics`, `calculatePixelPosition`, `getDiamondPoints`, `adjustColor`) into `src/game/utils/iso.ts` and add unit tests covering projection math.
-2. Refactor `MainScene` to consume the shared helpers, introduce an `IsoObjectFactory` for reusable props, and verify depth sorting with the new turn tracker overlay.
-3. Align art assets to the 2:1 tile ratio, bake consistent lighting across sprites, and confirm collisions still match isometric footprints.
+### Tasks Accomplished
+
+1. Centralised isometric helpers (`getIsoMetrics`, `toPixel`, `getDiamondPoints`, `adjustColor`) in `src/game/utils/iso.ts` and added `iso.test.ts` to cover projection and colour math.
+2. Introduced `IsoObjectFactory` for reusable props (e.g., crates, highlight diamonds) and refactored `MainScene` to consume the shared helpers, ensuring depth sorting and iso origins stay consistent.
+3. Wired the turn-tracker HUD into the centre stage, added sample decorative props via the factory, and verified rendering uses uniform 2:1 assets with intact collision hotspots.
+
+### Validation
+- `yarn lint`
+- `yarn test iso.test.ts`
+- `yarn build`

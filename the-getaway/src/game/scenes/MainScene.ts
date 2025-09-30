@@ -5,6 +5,8 @@ import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail } from '../events';
+import { IsoObjectFactory } from '../utils/IsoObjectFactory';
+import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, adjustColor as isoAdjustColor, IsoMetrics } from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 
@@ -60,6 +62,8 @@ export class MainScene extends Phaser.Scene {
   private isCameraFollowingPlayer = false;
   private inCombat = false;
   private playerVitalsIndicator?: Phaser.GameObjects.Graphics;
+  private isoFactory?: IsoObjectFactory;
+  private staticPropGroup?: Phaser.GameObjects.Group;
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
     if (document.visibilityState === 'visible') {
@@ -250,6 +254,38 @@ export class MainScene extends Phaser.Scene {
     this.updateEnemies(currentEnemies);
     this.updateNpcs(worldState.currentMapArea.entities.npcs);
     this.renderVisionCones();
+  }
+  private ensureIsoFactory(): void {
+    if (!this.isoFactory) {
+      this.isoFactory = new IsoObjectFactory(this, this.tileSize);
+    }
+
+    this.isoFactory.setIsoOrigin(this.isoOriginX, this.isoOriginY);
+  }
+
+  private renderStaticProps(): void {
+    if (this.staticPropGroup) {
+      this.staticPropGroup.clear(true, true);
+    }
+
+    if (!this.isoFactory || !this.currentMapArea || this.currentMapArea.isInterior) {
+      return;
+    }
+
+    if (!this.staticPropGroup) {
+      this.staticPropGroup = this.add.group();
+    }
+
+    const crate = this.isoFactory.createCrate(12, 20, { tint: 0x8d5524, height: 0.6, scale: 0.5 });
+    this.staticPropGroup.add(crate);
+
+    const highlight = this.isoFactory.createHighlightDiamond(12, 20, {
+      color: 0x38bdf8,
+      alpha: 0.22,
+      widthScale: 0.82,
+      heightScale: 0.82,
+    });
+    this.staticPropGroup.add(highlight);
   }
   
   private updatePlayerPosition(position: Position): void {
@@ -843,45 +879,15 @@ export class MainScene extends Phaser.Scene {
   }
 
   private adjustColor(color: number, factor: number): number {
-    const { red, green, blue } = Phaser.Display.Color.IntegerToColor(color);
-
-    if (factor >= 0) {
-      const r = Phaser.Math.Clamp(Math.round(red + (255 - red) * factor), 0, 255);
-      const g = Phaser.Math.Clamp(Math.round(green + (255 - green) * factor), 0, 255);
-      const b = Phaser.Math.Clamp(Math.round(blue + (255 - blue) * factor), 0, 255);
-      return Phaser.Display.Color.GetColor(r, g, b);
-    }
-
-    const scale = Math.max(0, 1 + factor);
-    const r = Phaser.Math.Clamp(Math.round(red * scale), 0, 255);
-    const g = Phaser.Math.Clamp(Math.round(green * scale), 0, 255);
-    const b = Phaser.Math.Clamp(Math.round(blue * scale), 0, 255);
-    return Phaser.Display.Color.GetColor(r, g, b);
+    return isoAdjustColor(color, factor);
   }
 
   private calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number } {
-    const { halfTileWidth, halfTileHeight } = this.getIsoMetrics();
-    const isoX = (gridX - gridY) * halfTileWidth + this.isoOriginX;
-    const isoY = (gridX + gridY) * halfTileHeight + this.isoOriginY;
-
-    return { x: isoX, y: isoY };
+    return isoToPixel(gridX, gridY, this.isoOriginX, this.isoOriginY, this.tileSize);
   }
 
-  private getIsoMetrics(): {
-    tileWidth: number;
-    tileHeight: number;
-    halfTileWidth: number;
-    halfTileHeight: number;
-  } {
-    const tileWidth = this.tileSize;
-    const tileHeight = this.tileSize / 2;
-
-    return {
-      tileWidth,
-      tileHeight,
-      halfTileWidth: tileWidth / 2,
-      halfTileHeight: tileHeight / 2
-    };
+  private getIsoMetrics(): IsoMetrics {
+    return computeIsoMetrics(this.tileSize);
   }
 
   private getDiamondPoints(
@@ -890,15 +896,7 @@ export class MainScene extends Phaser.Scene {
     width: number,
     height: number
   ): Phaser.Geom.Point[] {
-    const halfWidth = width / 2;
-    const halfHeight = height / 2;
-
-    return [
-      new Phaser.Geom.Point(centerX, centerY - halfHeight),
-      new Phaser.Geom.Point(centerX + halfWidth, centerY),
-      new Phaser.Geom.Point(centerX, centerY + halfHeight),
-      new Phaser.Geom.Point(centerX - halfWidth, centerY)
-    ];
+    return isoDiamondPoints(centerX, centerY, width, height).map((point) => new Phaser.Geom.Point(point.x, point.y));
   }
 
   private worldToGrid(worldX: number, worldY: number): Position | null {
@@ -1168,6 +1166,7 @@ export class MainScene extends Phaser.Scene {
 
     this.isoOriginX = (height - 1) * halfTileWidth;
     this.isoOriginY = tileHeight; // lift map slightly so the top diamond is visible
+    this.ensureIsoFactory();
 
     const isoWidth = (width + height) * halfTileWidth;
     const isoHeight = (width + height) * halfTileHeight;
@@ -1209,6 +1208,7 @@ export class MainScene extends Phaser.Scene {
       this.recenterCameraOnPlayer();
     }
 
+    this.renderStaticProps();
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
     this.drawBuildingLabels();
