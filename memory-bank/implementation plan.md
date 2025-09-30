@@ -481,155 +481,372 @@ Render a representative block with floors, walls, props, and characters; confirm
 <step id="22" status="pending">
 <step_metadata>
   <number>22</number>
-  <title>Define Player Stats</title>
+  <title>Implement Character Creation System</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <instructions>
-Set up character attributes that suit the dystopian setting.
+Build a comprehensive character creation screen that allows players to customize their starting character with attributes, skills, and background.
 </instructions>
 
 <details>
-- Create a player profile in `src/game/interfaces` with appropriate stats (Strength, Perception, Endurance, etc. similar to Fallout's S.P.E.C.I.A.L. system).
-- Display stats in a React component with a UI that matches the game's aesthetic.
+- Create a character creation interface in `src/components/ui` that appears on new game start.
+- Implement attribute allocation system with a point pool: Strength (melee damage, carry weight), Agility (AP, stealth), Endurance (health, resistances), Intelligence (skill points, hacking), Perception (aim, critical chance, trap detection), and Charisma (influence, barter).
+- Add background selection system (Ex-Cop, Street Urchin, Corporate Tech) with each providing unique starting perks and reputation modifiers.
+- Include "tag skills" selection where players choose 2-3 skills to specialize in from the start (Small Guns, Energy Weapons, Lockpicking, Hacking, First Aid, Stealth, Persuasion, etc.).
+- Calculate derived stats from attributes (max HP from Endurance, base AP from Agility, carry capacity from Strength).
+- Store character creation choices in Redux state and apply them to the player entity.
 </details>
 
 <test>
-Load the game and check the stats UI. Change a stat value and confirm the UI reflects the update.
+Start a new game and verify the character creation screen appears. Allocate attribute points, select a background, and tag skills. Confirm the character spawns with correct stats, starting equipment, and faction reputations matching the selected background.
 </test>
 </step>
 
 <step id="23" status="pending">
 <step_metadata>
   <number>23</number>
-  <title>Add a Leveling System</title>
+  <title>Define Player Stats and Attributes System</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <instructions>
-Implement XP-based leveling.
+Set up the complete character attributes and derived stats system that integrates with combat, dialogue, and skill checks.
 </instructions>
 
 <details>
-- Award XP for completing quests or defeating enemies.
-- Level up at 100 XP, granting skill points to improve character abilities.
-- Design the system to be expandable for higher levels and more complex progression.
+- Create a player profile interface in `src/game/interfaces/playerStats.ts` with primary attributes (Strength, Agility, Endurance, Intelligence, Perception, Charisma) and derived stats (HP, AP, carry weight, critical chance, stealth modifier).
+- Implement stat calculation functions that compute derived values from base attributes and equipped gear modifiers.
+- Build a character sheet React component in `src/components/ui` displaying all stats with tooltips explaining what each attribute affects.
+- Add attribute increase system for level-ups (every few levels, player can increase one attribute by 1 point).
+- Integrate attributes with existing systems: Perception affects aim in combat, Charisma unlocks dialogue options, Intelligence provides bonus skill points per level, Agility determines base AP.
 </details>
 
 <test>
-Earn 100 XP through quests or combat. Confirm the player levels up and receives skill points that can be allocated.
+Load the game and open the character sheet. Verify all stats display correctly. Equip different armor or weapons and confirm derived stats update (carry weight changes with Strength-boosting gear, AP changes with heavy armor penalty). Level up and increase an attribute, then verify dependent stats recalculate.
 </test>
 </step>
 
 <step id="24" status="pending">
 <step_metadata>
   <number>24</number>
+  <title>Add a Leveling System with Skill Trees</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Implement XP-based leveling with skill trees and perk selection.
+</instructions>
+
+<details>
+- Award XP for completing quests, defeating enemies, successful skill checks, and discovering new locations.
+- Implement leveling thresholds with increasing XP requirements (100 XP for level 2, 200 for level 3, etc.).
+- Create skill tree system with branches: Combat (Guns, Melee, Explosives), Tech (Hacking, Engineering, Science), Survival (Medicine, Stealth, Scavenging), and Social (Persuasion, Intimidation, Barter).
+- Grant skill points on level-up that can be allocated to any skill (bonus points if high Intelligence).
+- Every few levels, allow player to choose a perk from available options based on their skill levels and prerequisites.
+- Design capstone perks for each tree that require deep specialization (e.g., "Gun Fu: first shot each turn costs 0 AP").
+- Store progression data in Redux and display level-up notifications in the HUD.
+</details>
+
+<test>
+Earn XP through various activities and confirm level-up occurs at the correct threshold. Allocate skill points and select a perk. Verify skills affect gameplay (higher Hacking skill lets you hack advanced terminals, higher Persuasion unlocks new dialogue options). Reach a high skill level and confirm capstone perks become available.
+</test>
+</step>
+
+<step id="25" status="pending">
+<step_metadata>
+  <number>25</number>
   <title>Build an Inventory System</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <instructions>
-Create a weight-based inventory system.
+Create a comprehensive weight-based inventory system with equipment slots and categorization.
 </instructions>
 
 <details>
-- Define an inventory in `src/game/inventory` with a realistic weight limit.
-- Add items appropriate to the setting (weapons, supplies, quest items).
-- Implement item categories and sorting options for scalability.
+- Define an inventory system in `src/game/inventory` with weight-based capacity determined by Strength attribute.
+- Implement equipment slots: primary weapon, secondary weapon, melee weapon, armor (body, helmet), and accessory slots.
+- Add item categories: Weapons (melee, pistols, rifles, shotguns, heavy weapons, energy weapons, thrown/explosives), Armor (light, heavy, special), Consumables (health items, food, water, drugs), Ammo (various calibers), Gadgets (lockpicks, hacking tools, binoculars), Crafting Materials (metal, electronics, chemicals, textiles), and Quest Items.
+- Create item data structures with properties: name, weight, value, category, stats/effects, durability, special properties.
+- Build inventory UI with grid/list view, sorting options (by type, weight, value), and quick-filter buttons.
+- Implement item stacking for ammo and consumables, and durability tracking for weapons and armor.
+- Add encumbrance penalties: moving above 80% capacity reduces AP by 1, above 100% prevents movement.
 </details>
 
 <test>
-Add items until reaching near the weight limit, then try adding a heavy item. Verify the addition fails due to the weight limit. Check the inventory UI updates correctly.
-</test>
-</step>
-</phase>
-
-<phase id="8" name="Testing and Final Touches">
-<step id="25" status="pending">
-<step_metadata>
-  <number>25</number>
-  <title>Test the Full Game</title>
-  <phase>Phase 8: Testing and Final Touches</phase>
-</step_metadata>
-
-<instructions>
-Playtest the base game to ensure all mechanics work together.
-</instructions>
-
-<details>
-- Explore the map, engage in combat, complete quests, and level up.
-- Focus on fixing gameplay issues and bugs as they appear rather than formal unit testing.
-- Ensure the game runs smoothly in modern browsers.
-</details>
-
-<test>
-Confirm combat, exploration, dialogue, and progression function without crashes or major performance issues.
+Add various items to inventory and confirm weight calculation updates. Equip weapons and armor, verify stat bonuses apply. Add items until exceeding capacity and confirm movement restrictions. Stack identical ammo types and verify they combine. Use a weapon until durability drops and confirm damage output decreases.
 </test>
 </step>
 
 <step id="26" status="pending">
 <step_metadata>
   <number>26</number>
-  <title>Expand Save Functionality</title>
-  <phase>Phase 8: Testing and Final Touches</phase>
+  <title>Implement Advanced Combat Mechanics</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <instructions>
-Upgrade the single-slot persistence into a full multi-slot save manager.
+Expand combat system with tactical depth: overwatch mode, targeted shots, flanking bonuses, area-of-effect attacks, and combat consumables.
 </instructions>
 
 <details>
-- Provide a save/load interface that lists available slots, timestamps, and key metadata (location, time of day).
-- Support creating, overwriting, and deleting slots while reusing the Redux serialization logic established earlier.
-- Ensure save operations capture player stats, inventory, quest progress, world state, and menu visibility.
+- Implement Overwatch Mode: Allow characters to reserve remaining AP to automatically shoot at enemies who move within line-of-sight during enemy turns. Add overwatch UI indicator and trigger system in `src/game/combat`.
+- Add Targeted Shots: Enable aiming at specific body parts (head, torso, arms, legs) with different effects - legs slow movement, arms reduce accuracy/disarm, head has high critical chance but lower hit chance. Costs extra AP and requires skill thresholds.
+- Implement Flanking System: Calculate whether attacker is outside defender's cover arc. Flanking negates cover bonuses and provides +20% hit chance. Update cover calculations to be directional.
+- Add Area-of-Effect Attacks: Create grenade/explosive system that damages all units within blast radius. Include friendly fire mechanics and cover providing damage reduction from AoE.
+- Integrate Combat Consumables: Allow using medkits (heal HP, costs 2 AP), stim packs (boost AP for 1 turn), combat drugs (temporary stat buffs with side effects), grenades (thrown weapons with blast radius), and smoke grenades (create obscuring cover).
+- Extend enemy AI to use these new mechanics: seek flanking positions, use overwatch when defending, throw grenades at clustered players.
 </details>
 
 <test>
-Create several saves at different progression points, reload each, and confirm the restored state matches the recorded metadata.
+Enter combat and activate overwatch mode with remaining AP. Move an enemy through line-of-sight and verify automatic reaction shot. Use targeted shot on enemy limbs and confirm status effects apply (slowed movement from leg shot). Flank an enemy behind cover and verify hit chance bonus. Throw a grenade at enemy cluster and confirm splash damage affects all units in radius. Use a stim pack and verify AP increases for that turn.
 </test>
 </step>
 
 <step id="27" status="pending">
 <step_metadata>
   <number>27</number>
-  <title>Polish the UI</title>
-  <phase>Phase 8: Testing and Final Touches</phase>
+  <title>Build Vehicle Systems for Exploration and Combat</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <instructions>
-Enhance the user interface for clarity and thematic consistency.
+Create a comprehensive vehicle system that integrates with both exploration and combat, supporting acquisition, upgrades, fuel management, and tactical usage.
 </instructions>
 
 <details>
-- Style all UI elements (dialogue box, quest log, inventory, status displays) with consistent visuals that fit the dystopian setting.
-- Add tooltips to explain game mechanics and interface elements.
-- Ensure UI is responsive and performs well on modern browsers.
+- Implement vehicle acquisition system in `src/game/vehicles`: players can obtain vehicles through quests, purchase, or theft. Create vehicle types: motorcycle (fast, low capacity), car (balanced), armored truck (slow, high durability, large storage).
+- Add vehicle properties: speed (affects travel time), durability (vehicle HP), storage capacity (trunk inventory), fuel consumption rate, and mounted weapons slots.
+- Create fuel management system: vehicles require gasoline/diesel stored as inventory items. Track fuel consumption during travel and combat. Running out of fuel immobilizes the vehicle until refueled.
+- Implement vehicle storage: Add trunk/storage compartment accessible from vehicle interface. Players can stash weapons, ammo, supplies separate from personal inventory.
+- Build vehicle upgrade system at garages: armor plating (increases durability), engine upgrades (faster travel, better acceleration), mounted weapons (machine gun turret operable in combat), reinforced bumpers (ramming damage), improved storage racks.
+- Integrate vehicles into combat: If combat triggers while in vehicle, spawn vehicle on combat grid as controllable unit. Vehicle can move multiple tiles per AP, ram enemies for damage, provide mobile cover, and use mounted weapons. Enemies can target and damage vehicles.
+- Add vehicle damage/repair mechanics: Vehicles can be damaged in combat or accidents. Requires repair kits or workshop visit. Heavily damaged vehicles have reduced speed and may break down.
+- Create fast-travel system using vehicles: Once a location is discovered, can fast-travel there if you have a functional vehicle with sufficient fuel.
 </details>
 
 <test>
-Open each UI element. Ensure they look cohesive and tooltips appear when hovering over interactive elements.
+Acquire a vehicle through quest or purchase. Drive it across the map and verify fuel consumption. Access vehicle trunk and store items, then retrieve them later. Visit a garage and install upgrades (armor, mounted weapon). Enter combat while in vehicle and confirm vehicle appears on grid. Use vehicle to ram an enemy and fire mounted weapon. Take damage to vehicle and verify speed reduction. Repair vehicle at workshop and confirm functionality restored. Fast-travel to a discovered location and confirm fuel is consumed.
 </test>
 </step>
 
 <step id="28" status="pending">
 <step_metadata>
   <number>28</number>
+  <title>Implement Survival Mechanics System</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Add survival mechanics including hunger, thirst, fatigue, radiation exposure, and medical treatment to enhance immersion and challenge.
+</instructions>
+
+<details>
+- Create survival meters in `src/game/interfaces`: Hunger (decreases over time, penalties at low levels), Thirst (faster depletion than hunger), Fatigue (increases from activity, combat, heavy loads), and Radiation (from exposure to contaminated zones).
+- Implement Hunger System: Character needs 2 meals per day. Low hunger reduces Strength and health regen. Starvation causes HP loss. Different foods provide varying satiation (canned food, fresh food, cooked meat).
+- Implement Thirst System: Need water 1-2 times per day. Contaminated water requires purification (boiling, tablets) or causes disease. Dehydration reduces max AP and causes damage.
+- Implement Fatigue System: Fills during activity, combat, and carrying heavy loads. High fatigue reduces max AP, aim accuracy, and movement speed. Rest/sleep required to recover. Can sleep at safehouses or use caffeine for temporary relief.
+- Add Radiation System: Certain zones (Industrial Wasteland outskirts, contaminated buildings) have radiation. Exposure increases radiation meter. High radiation reduces max HP and causes sickness. Requires anti-rad medicine or decontamination.
+- Create Injury System: Specific injuries beyond HP loss - bleeding (lose HP over time, requires bandaging), broken bones (movement penalty, needs splint/doctor), poison (stat debuffs, needs antidote). Different medical items treat different conditions.
+- Implement Disease Mechanics: Contaminated food/water or enemy attacks can cause disease with lasting stat penalties. Requires antibiotics or rest to cure.
+- Build survival UI elements: Small icons showing meter status with color coding (green/yellow/red). Status screen with detailed effects and remedies.
+- Integrate with difficulty settings: Allow players to adjust survival pressure (easy mode: slow depletion, hard mode: realistic needs).
+</details>
+
+<test>
+Play for extended in-game time without eating and verify hunger penalties apply (reduced Strength, damage over time if starving). Drink contaminated water and confirm disease occurs unless purified. Engage in prolonged activity without rest and verify fatigue effects (reduced AP, accuracy). Enter a radiation zone without protection and confirm radiation accumulates. Use anti-rad medicine and verify reduction. Get injured in combat causing bleeding, use bandage to stop it. Break a limb from fall damage, use splint to treat. Adjust difficulty settings and confirm survival meter depletion rates change.
+</test>
+</step>
+
+<step id="29" status="pending">
+<step_metadata>
+  <number>29</number>
+  <title>Implement Karma and Reputation Systems</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Create karma system tracking player morality and faction reputation system managing relationships with various groups in the city.
+</instructions>
+
+<details>
+- Build Karma System in `src/game/systems/karma.ts`: Track overall morality on scale from -100 (Wicked) to +100 (Saintly). Define karma tiers with titles (Wicked, Ruthless, Neutral, Kindhearted, Saintly).
+- Define karma-affecting actions: Positive karma from saving innocents, showing mercy, helping without reward, keeping promises. Negative karma from murdering non-hostiles, betrayal, extortion, cruel decisions, theft. Quest choices can have karma impacts.
+- Implement Reputation System: Each major faction tracks separate reputation value (Hostile, Unfriendly, Neutral, Friendly, Allied). Actions for/against factions modify their reputation.
+- Create reputation effects: Hostile factions attack on sight, send hit squads. Unfriendly have high prices, won't offer quests. Friendly give discounts, allow access to restricted areas, offer backup in combat. Allied may offer leadership roles and best equipment.
+- Integrate karma/reputation into gameplay: Some NPCs only interact with certain karma levels. Quests may unlock/lock based on karma. High karma players get approached by those needing help, low karma attracts criminal contacts. Dialogue options change based on reputation ("Friend of the Resistance", "Enemy of CorpSec").
+- Build UI elements: Karma meter on character sheet with current title. Faction reputation screen listing all factions with bars showing standing and threshold effects. Notifications when karma/reputation changes significantly.
+- Implement world reactions: NPCs greet/flee based on karma. Guards scrutinize low-karma players more. Some areas become accessible/restricted based on faction reputation.
+- Tie into ending system: Karma and faction allegiances determine available endings and epilogue slides.
+</details>
+
+<test>
+Perform good deeds (save civilians, complete altruistic quests) and verify karma increases with positive title changes. Commit negative acts (kill innocents, betray allies) and confirm karma decreases. Complete quests for a faction and verify reputation increases while rival faction rep decreases. Reach Hostile status with a faction and confirm they attack on sight and send assassins. Reach Allied status and confirm access to special areas, discounts, and backup assistance. Check that karma/reputation-locked dialogue options appear/disappear appropriately. Verify karma and reputation influence ending options.
+</test>
+</step>
+
+<step id="30" status="pending">
+<step_metadata>
+  <number>30</number>
+  <title>Implement Crafting and Upgrade Systems</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Build comprehensive crafting system allowing players to create items, ammunition, medical supplies, and upgrade equipment using gathered resources.
+</instructions>
+
+<details>
+- Create resource gathering system in `src/game/crafting`: Define resource types (Metal Parts, Electronic Components, Chemicals, Textiles, Biological Materials). Resources found while scavenging, looting containers, or harvesting defeated enemies/robots.
+- Implement crafting station system: Basic crafting available from inventory for simple items. Advanced recipes require workbenches (weapon mods), chemistry stations (drugs, medicine), or garages (vehicle upgrades). Safehouses have all stations.
+- Build recipe system: Recipes stored as data in `src/content/recipes`. Each recipe defines inputs (resources + quantities), required skill level, station requirement, crafting time, and outputs.
+- Create craftable item categories:
+  - Ammunition: craft bullets, energy cells, arrows from components
+  - Medical Supplies: bandages, medkits, antidotes, stim packs, anti-rad meds
+  - Food/Drink: cook raw meat, purify water, brew coffee for fatigue reduction
+  - Weapon Mods: scopes, suppressors, extended magazines, damage upgrades
+  - Explosives: grenades, molotovs, mines, EMP devices
+  - Armor Upgrades: reinforced plating, pocketed vests for carry capacity
+  - Tools: lockpicks, hacking modules, repair kits
+  - Vehicle Upgrades: armor plating, engine parts, mounted weapons
+- Implement recipe learning: Start with basic recipes. Learn advanced recipes from skill books (loot/purchase), NPC trainers, or by reaching skill thresholds (Hacking 50 unlocks advanced hacking tools recipe).
+- Add upgrade system: Allow improving existing weapons/armor quality through resource investment. Each upgrade increases damage/protection but requires increasingly rare materials. Limit maximum upgrade level per item.
+- Create crafting UI: Show known recipes, highlight craftable ones (have all materials). Display required materials, skill level, and station. Confirm button initiates crafting with time passage.
+- Integrate crafting skills: Engineering affects weapon/vehicle crafting, Chemistry affects medicine/explosives, Survival affects food/scavenging efficiency. Higher skills unlock recipes, reduce material costs, or provide bonus output.
+</details>
+
+<test>
+Gather crafting materials from scavenging and looting. Open crafting interface and verify recipes show with material requirements. Craft ammunition and confirm resources consumed and ammo added to inventory. Attempt advanced recipe without required station and verify it's blocked. Visit workbench and craft weapon mod, then apply it to weapon and confirm stat improvement. Learn new recipe from skill book and verify it appears in crafting menu. Craft medical supplies and use them to heal. Upgrade a weapon multiple times and confirm progressive stat increases. Craft vehicle parts at garage and install them.
+</test>
+</step>
+
+<step id="31" status="pending">
+<step_metadata>
+  <number>31</number>
+  <title>Build Industrial Wasteland Zone</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Create the Industrial Wasteland zone as an additional high-danger area with unique environmental hazards, enemies, and loot opportunities.
+</instructions>
+
+<details>
+- Design Industrial Wasteland map in `src/content/maps`: Large area with abandoned factories, toxic refineries, chemical spills, and crumbling industrial structures. Mix of outdoor yards and interior factory floors.
+- Implement environmental hazards: Toxic gas clouds (damage over time without gas mask), chemical spills (acid damage), unstable structures (collapse risk), low visibility from smog (reduced perception range), and radiation pockets.
+- Create zone-specific enemies: Industrial robots (high armor, weak to EMP), mutated workers (aggressive, poison attacks), automated turrets (stationary, high damage), hazmat-suited scavengers (hostile NPCs with gas protection), and toxic creatures.
+- Add unique loot opportunities: Advanced technology components, industrial-grade weapons, factory equipment for crafting, chemical resources, hazmat suits, and gas masks.
+- Implement smog visibility system: Reduce visual range in outdoor areas. Requires special lighting or equipment to see clearly. Enemies using thermal vision aren't affected.
+- Create Industrial Wasteland faction: Scattered survivors or scavenger gangs controlling key buildings. Potential quest givers for clearing areas or retrieving technology.
+- Build zone connection: Accessible from Downtown or Slums via specific map connections. Initially appears dangerous with warnings from NPCs, encouraging preparation before entry.
+- Design zone-specific quests: Investigate abandoned facility, secure safe passage through toxic areas, rescue trapped survivors, disable rogue industrial systems, recover valuable tech for factions.
+- Integrate with survival systems: Radiation and toxins more prevalent, requiring proper equipment and supplies. Gas mask essential for prolonged exploration.
+</details>
+
+<test>
+Travel to Industrial Wasteland from existing zones and confirm zone transition. Enter toxic gas area without gas mask and verify damage over time. Equip gas mask and confirm protection. Encounter zone-specific enemies (industrial robots, mutants) and verify their unique behaviors and resistances. Navigate low-visibility smog areas and confirm reduced perception. Find and loot advanced technology components. Accept and complete zone-specific quest. Take radiation damage in contaminated factory and use anti-rad medicine. Verify environmental hazards (collapsing structures) can trigger during exploration.
+</test>
+</step>
+</phase>
+
+<phase id="8" name="Testing and Final Touches">
+<step id="32" status="pending">
+<step_metadata>
+  <number>32</number>
+  <title>Test the Full Game</title>
+  <phase>Phase 8: Testing and Final Touches</phase>
+</step_metadata>
+
+<instructions>
+Playtest the complete game with all integrated systems to ensure cohesive gameplay.
+</instructions>
+
+<details>
+- Perform full playthroughs testing all major systems: character creation, combat (basic + advanced mechanics), exploration with vehicles, survival mechanics, crafting, karma/reputation, quests, and dialogue.
+- Test system integration: verify survival meters affect combat performance, karma influences dialogue options, vehicle systems work in both exploration and combat, crafting integrates with inventory and upgrades.
+- Focus on fixing gameplay issues and bugs as they appear rather than formal unit testing.
+- Test in multiple browsers (Chrome, Firefox, Edge, Safari) to ensure compatibility.
+- Verify performance remains smooth with all systems active, especially in the Industrial Wasteland with environmental hazards.
+- Test edge cases: what happens if player is hated by all factions, runs out of food in dangerous area, vehicle breaks down during combat, etc.
+</details>
+
+<test>
+Complete a full playthrough from character creation to an ending. Confirm combat (basic and advanced), exploration, dialogue, progression, vehicles, survival, crafting, and all zone transitions function without crashes or major performance issues. Verify integrated systems interact correctly (e.g., high fatigue reduces combat effectiveness, vehicle fuel management affects exploration range).
+</test>
+</step>
+
+<step id="33" status="pending">
+<step_metadata>
+  <number>33</number>
+  <title>Expand Save Functionality</title>
+  <phase>Phase 8: Testing and Final Touches</phase>
+</step_metadata>
+
+<instructions>
+Upgrade the single-slot persistence into a full multi-slot save manager with comprehensive state capture.
+</instructions>
+
+<details>
+- Provide a save/load interface that lists available slots, timestamps, and key metadata (location, time of day, character level, current quest).
+- Support creating, overwriting, and deleting slots while reusing the Redux serialization logic established earlier.
+- Ensure save operations capture all game state: player stats, inventory (including vehicle storage), quest progress, world state, faction reputations, karma, survival meters, NPC states, discovered locations, crafting recipes, and menu visibility.
+- Add auto-save functionality that triggers at key moments (level up, quest completion, zone transition) with configurable frequency.
+- Implement save data versioning to handle updates that add new features without breaking old saves.
+</details>
+
+<test>
+Create several saves at different progression points (early game, mid-game with vehicle, late game with multiple factions). Reload each save and confirm all state restores correctly: character stats, inventory contents, quest progress, faction standings, karma level, survival meters, and vehicle condition. Delete a save and verify it's removed. Test auto-save by completing a quest and confirming a new auto-save appears. Load an auto-save and verify full state restoration.
+</test>
+</step>
+
+<step id="34" status="pending">
+<step_metadata>
+  <number>34</number>
+  <title>Polish the UI</title>
+  <phase>Phase 8: Testing and Final Touches</phase>
+</step_metadata>
+
+<instructions>
+Enhance the user interface for clarity, thematic consistency, and usability across all new systems.
+</instructions>
+
+<details>
+- Style all UI elements (dialogue box, quest log, inventory, character sheet, crafting interface, vehicle management, survival meters, karma/reputation screens) with consistent visuals that fit the dystopian setting.
+- Add comprehensive tooltips to explain game mechanics, stats, status effects, crafting requirements, and interface elements.
+- Implement context-sensitive help for complex systems (crafting, vehicle upgrades, targeted shots).
+- Add visual feedback for all player actions: AP costs, hit chances, crafting progress, survival warnings, reputation changes.
+- Ensure UI is responsive and performs well on modern browsers at various resolutions.
+- Polish animations and transitions for smoother experience (menu opening, combat actions, zone transitions).
+- Implement keyboard shortcuts for common actions (inventory, character sheet, quick save, crafting menu).
+</details>
+
+<test>
+Open each UI element (character sheet, inventory, crafting, vehicle management, karma/reputation screen, quest log, dialogue system). Ensure they look cohesive with consistent styling. Hover over various elements and confirm tooltips appear with helpful information. Test keyboard shortcuts work correctly. Verify animations are smooth. Check UI responsiveness at different browser window sizes.
+</test>
+</step>
+
+<step id="35" status="pending">
+<step_metadata>
+  <number>35</number>
   <title>Surface Level & Objective HUD</title>
   <phase>Phase 8: Testing and Final Touches</phase>
 </step_metadata>
 
 <instructions>
-Display the current level metadata and mission objectives directly in the game overlay.
+Display the current level metadata and mission objectives directly in the game overlay with integration for all zones.
 </instructions>
 
 <details>
-- Extend `MapArea` definitions with `level` numbers and objective lists (starting with Level 0 for the Slums sector).
+- Extend `MapArea` definitions with `level` numbers and objective lists for all zones (Level 0 for Slums, Level 1 for Downtown, Level 2 for Industrial Wasteland).
 - Render a `LevelIndicator` panel in the HUD that mirrors the day/night widget placement, listing active tasks without blocking gameplay.
+- Show zone-specific information: current zone name, danger level, environmental hazards present, and active quests for that area.
 - Ensure all map entities respect their building boundaries so overlays and sprites do not intersect structures.
+- Add minimap or zone overview showing key locations, vehicle position if applicable, and discovered points of interest.
 </details>
 
 <test>
-Load Level 0 and verify the panel shows the level number and objectives, and that NPCs/items appear outside building footprints.
+Load each level (Slums, Downtown, Industrial Wasteland) and verify the panel shows the correct level number, zone name, and objectives. Confirm environmental hazard warnings appear in Industrial Wasteland. Verify NPCs/items appear outside building footprints. Test that zone transitions update the HUD information correctly. Check that quest objectives for the current zone are highlighted.
 </test>
 </step>
 </phase>
@@ -637,19 +854,36 @@ Load Level 0 and verify the panel shows the level number and objectives, and tha
 <summary>
 ## Summary
 
-This plan now outlines 28 implementable steps to build the base version of "The Getaway." It focuses on:
+This plan now outlines 35 implementable steps to build the base version of "The Getaway." It focuses on:
 
 <focus_areas>
 - **Command & Atmosphere**: Establishing the resistance command hub UI, neon isometric presentation, and curfew pressure loops.
 - **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
 - **Combat & Navigation**: Turn-based encounters with cover awareness, guard perception loops, click-to-move traversal, and readable path previews.
+- **Advanced Combat Systems**: Overwatch mode, targeted shots, flanking mechanics, area-of-effect attacks, and combat consumables for deeper tactical gameplay.
 - **City Layout & Access**: NYC-inspired district blocks with single-entry buildings, localized naming, and door placement aligned to streets for clarity.
 - **Rendering & Visuals**: Shared isometric utilities, reusable object factories, and a dedicated 2.5-D rendering pipeline.
-- **Progression Systems**: Player stats, leveling, inventory, and loot structures.
-- **Stability & Polish**: Save/load expansion, holistic playtests, and UI refinement.
+- **Character Creation & Progression**: Comprehensive character creation with backgrounds, full attribute/skill systems, leveling with skill trees, and perk selection.
+- **Inventory & Equipment**: Weight-based inventory with equipment slots, diverse weapon and armor categories, and durability tracking.
+- **Vehicle Systems**: Complete vehicle integration for exploration and combat including acquisition, upgrades, fuel management, storage, and tactical combat usage.
+- **Survival Mechanics**: Hunger, thirst, fatigue, radiation, injury, and disease systems that create meaningful resource management challenges.
+- **Karma & Reputation**: Morality tracking and faction reputation systems that influence NPC interactions, quest availability, and endings.
+- **Crafting & Upgrades**: Resource gathering, recipe learning, crafting stations, and equipment upgrade systems for ammunition, medicine, weapons, armor, and vehicles.
+- **Expanded World**: Industrial Wasteland zone with unique environmental hazards, enemies, loot, and zone-specific quests.
+- **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, and UI refinement across all systems.
 </focus_areas>
 
 Each step includes a concrete validation target to keep development measurable. The architecture prioritizes modularity and scalability, drawing inspiration from Fallout 2 while focusing on a maintainable modern web stack. Iterative playtesting complements automated checks to preserve feel and performance.
 
-The resulting foundation positions the project for future additions like advanced quest arcs, expanded districts, faction interplay, or even multiplayer while keeping the codebase approachable.
+The new steps (22-31) add critical gameplay depth identified in the gap analysis:
+- **Steps 22-23**: Character creation and stats systems establish player identity and progression foundation
+- **Steps 24-25**: Leveling with skill trees and comprehensive inventory provide RPG depth
+- **Step 26**: Advanced combat mechanics (overwatch, targeted shots, flanking, AoE) add tactical complexity
+- **Step 27**: Vehicle systems become a major gameplay pillar affecting exploration and combat
+- **Step 28**: Survival mechanics create tension and resource management challenges
+- **Step 29**: Karma and reputation systems drive narrative consequences and faction dynamics
+- **Step 30**: Crafting and upgrades enable player agency and equipment customization
+- **Step 31**: Industrial Wasteland expands the world with high-risk, high-reward content
+
+The resulting foundation positions the project for future additions like advanced quest arcs, additional zones (Outskirts/Deadlands), expanded faction conflicts, or even multiplayer while keeping the codebase approachable and maintainable.
 </summary>
