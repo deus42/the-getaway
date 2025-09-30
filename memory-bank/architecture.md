@@ -106,8 +106,10 @@ Manages the game world and environment:
 - **`pathfinding.ts`**: Breadth-first pathfinder supporting enemy avoidance and reserved tiles used by both player click-to-move and NPC routines.
 - **`worldMap.ts`**: Generates large districts, interior connections, and seeds NPCs, enemies, and items with routines and dialogue IDs.
 
+<architecture_section id="world_map_grid_pattern" category="world_generation">
 ##### World Map Grid Pattern
 
+<pattern name="Manhattan Grid System">
 The world map uses a **Manhattan-style grid system** inspired by urban planning principles:
 
 **Core Pattern:**
@@ -115,7 +117,9 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - Buildings occupy rectangular footprints within blocks, separated by navigable streets
 - Door tiles exist in street space (outside building footprints) to create clear separation between structure and navigation
 - Each building connects bidirectionally to a procedurally generated interior space
+</pattern>
 
+<design_principles>
 **Key Design Principles:**
 - **Geometric Clarity**: All buildings are axis-aligned rectangles; no irregular shapes or overlapping footprints
 - **Single-Parcel Blocks**: Each of the 16 Downtown blocks maps to one named parcel to keep overlays and doorways uncluttered
@@ -123,13 +127,17 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - **Unique Positioning**: No two buildings share the same door coordinate
 - **Visual Labeling**: Building names render once per parcel with word-wrapped, shadowed text for legibility on the outdoor map
 - **Spawn Sanitization**: Blueprint positions snap to the nearest walkable street tile during world generation so nothing spawns atop a roofline
+</design_principles>
 
+<technical_flow>
 **Technical Flow:**
-1. `worldMap.ts` defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions
-2. Building definitions in locale files specify footprint bounds, door position, and interior dimensions
+1. <code_location>worldMap.ts</code_location> defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions
+2. Building definitions in <code_location>locale files</code_location> specify footprint bounds, door position, and interior dimensions
 3. `applyBuildingConnections()` converts footprint tiles to walls, then explicitly marks door tiles as walkable
-4. `MainScene` renders building name labels using building definitions passed from `BootScene`
+4. <code_location>MainScene</code_location> renders building name labels using building definitions passed from <code_location>BootScene</code_location>
 5. Bidirectional connections enable seamless indoor/outdoor transitions
+</technical_flow>
+</architecture_section>
 
 #### `/the-getaway/src/game/quests`
 
@@ -247,18 +255,22 @@ The Redux store serves as the central state management system, with:
 - Local storage persistence (`store/index.ts`) so the command hub menu can resume prior sessions.
 - `worldSlice` coordinates map directories, time-of-day/curfew state, NPC/enemy collections, and exposes helpers (`updateNPC`, `updateEnemy`, `setMapArea`) used by controllers and scenes.
 
+<architecture_section id="data_flow" category="state_management">
 ## Data Flow
 
+<pattern name="Unidirectional Data Flow">
 1. User interactions (keyboard, mouse) are captured by React or directly by Phaser
-2. Game logic in the `/src/game` modules processes these inputs
+2. Game logic in the <code_location>/src/game</code_location> modules processes these inputs
 3. State changes are dispatched to the Redux store
 4. UI components react to state changes and update accordingly
-5. The game rendering is handled by Phaser through the GameCanvas component
+5. The game rendering is handled by Phaser through the <code_location>GameCanvas</code_location> component
+</pattern>
+</architecture_section>
 
+<architecture_section id="implementation_patterns" category="code_standards">
 ## Implementation Patterns
 
-The codebase follows several consistent patterns:
-
+<pattern name="Immutability">
 ### Immutability
 
 All state updates are performed immutably using object spreads and function returns rather than direct mutation. This enables:
@@ -266,7 +278,7 @@ All state updates are performed immutably using object spreads and function retu
 - Easy undo/redo functionality in the future
 - Better performance through reference equality checks
 
-Example from `combat/combatSystem.ts`:
+Example from <code_location>combat/combatSystem.ts</code_location>:
 ```typescript
 // Execute a move
 export const executeMove = (
@@ -281,14 +293,18 @@ export const executeMove = (
   };
 };
 ```
+</pattern>
 
+<pattern name="Type Safety">
 ### Type Safety
 
 Strong typing is used throughout the codebase to prevent runtime errors and provide better developer experience:
 - All function parameters and return types are explicitly typed
 - Unions and intersections are used to model complex relationships
 - Generic types are employed where appropriate for reusability
+</pattern>
 
+<pattern name="Pure Functions">
 ### Pure Functions
 
 Most game logic is implemented as pure functions that:
@@ -296,7 +312,9 @@ Most game logic is implemented as pure functions that:
 - Don't rely on external state outside their parameters
 - Are easy to test in isolation
 - Can be composed to create more complex behaviors
+</pattern>
 
+<pattern name="React Component Structure">
 ### React Component Structure
 
 React components follow a consistent pattern:
@@ -304,6 +322,8 @@ React components follow a consistent pattern:
 - Props are explicitly typed
 - Side effects are managed with useEffect
 - Component responsibilities are clearly defined and focused
+</pattern>
+</architecture_section>
 
 ## Testing Strategy
 
@@ -650,13 +670,17 @@ The grid system handles screen resizing through several mechanisms:
 
 This rendering approach ensures the game grid maintains consistent visual quality across different screen sizes and resizing operations, providing a solid foundation for the tactical grid-based gameplay.
 
+<architecture_section id="isometric_rendering" category="graphics">
 ## Isometric 2.5-D Graphics Guidelines
 
+<pattern name="2:1 Isometric Projection">
 ### Grid & Projection Fundamentals
-- Maintain a strict 2:1 isometric projection: every tile (e.g., 64×32 px) must be twice as wide as it is tall so that the diamond grid rendered by `MainScene.renderTile` stays aligned.
-- Pixel art diagonals should follow a “two-step” pattern (two pixels across, one pixel down). Perfect 30° lines often look jagged; the two-step approach gives smoother edges while respecting the projection.
+- Maintain a strict 2:1 isometric projection: every tile (e.g., 64×32 px) must be twice as wide as it is tall so that the diamond grid rendered by <code_location>MainScene.renderTile</code_location> stays aligned.
+- Pixel art diagonals should follow a "two-step" pattern (two pixels across, one pixel down). Perfect 30° lines often look jagged; the two-step approach gives smoother edges while respecting the projection.
 - All map tiles, props, UI overlays, and collision footprints should honour this ratio to keep depth sorting predictable across the entire scene.
+</pattern>
 
+<design_principles>
 ### Shading & Lighting
 - Shade objects with three tonal values: light on the top plane, mid-tone on the light-facing side, and dark on the shadow side. This sells the illusion of a single baked light source (we currently imply light from the upper-left).
 - When painting texture overlays (metal grain, fabric weave, decals), keep them on a separate layer and multiply blend them over the base shading so the underlying gradient remains visible.
@@ -664,7 +688,7 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 
 ### Layering & Depth Perception
 - Depth is driven by draw order. Continue setting each `GameObject` depth to its pixel y-coordinate (plus a small offset) so lower objects render on top of those higher up the screen.
-- Reinforce depth by slightly scaling down props placed “farther back” (higher y) and reducing their saturation/brightness while increasing contrast on foreground items.
+- Reinforce depth by slightly scaling down props placed "farther back" (higher y) and reducing their saturation/brightness while increasing contrast on foreground items.
 - Use subtle atmospheric effects—soft tints, fog sprites, or gradient overlays—to imply distance without adding real 3-D geometry.
 
 ### Variation & Texture Use
@@ -672,26 +696,30 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 - Introduce micro-details (cracks, chipped corners, moss streaks, grime passes) so repeated tiles still feel organic.
 
 ### Building Complex Objects from Primitives
-- Reuse the primitives already in `MainScene`: diamonds, prisms, ellipses, and accent polygons. Functions such as `renderTile` and `drawDoorTile` illustrate how to layer frames, panels, glows, and handles—treat them as blueprints for crates, consoles, or machinery.
+- Reuse the primitives already in <code_location>MainScene</code_location>: diamonds, prisms, ellipses, and accent polygons. Functions such as `renderTile` and `drawDoorTile` illustrate how to layer frames, panels, glows, and handles—treat them as blueprints for crates, consoles, or machinery.
 - Create helper functions (e.g., `drawCrate`, `drawBarrel`) that call a shared shading routine and use `adjustColor` to compute highlight/shadow variants automatically.
+</design_principles>
 
+<pattern name="Isometric Utilities & Factory">
 ## Reusable Isometric Utilities & Object Factory
 
 ### Coordinate & Metric Helpers
-- Extract `getIsoMetrics`, `calculatePixelPosition`, and `getDiamondPoints` from `MainScene.ts` into `src/game/utils/iso.ts`. Export them as `getIsoMetrics()`, `toPixel(gridX, gridY)`, and `getDiamondPoints(centerX, centerY, width, height)` so any scene or factory can place assets accurately on the diamond grid.
+- Extract `getIsoMetrics`, `calculatePixelPosition`, and `getDiamondPoints` from <code_location>MainScene.ts</code_location> into <code_location>src/game/utils/iso.ts</code_location>. Export them as `getIsoMetrics()`, `toPixel(gridX, gridY)`, and `getDiamondPoints(centerX, centerY, width, height)` so any scene or factory can place assets accurately on the diamond grid.
 - Import these helpers wherever you spawn props, draw UI outlines, or calculate interaction hotspots to guarantee alignment without duplicating math.
 
 ### Colour Manipulation
 - Move `adjustColor` into the same utility module. Document the convention: positive factors lighten towards white while negative factors darken towards black. Centralising the helper ensures shading stays consistent across tiles, props, and UI highlights.
 
 ### Object Factory Pattern
-- Implement an `IsoObjectFactory` (class or module) exposing methods like `createFloor(x, y, type)`, `createWall(x, y, palette)`, `createCrate(x, y)`, or `createTree(x, y)`.
+- Implement an <code_location>IsoObjectFactory</code_location> (class or module) exposing methods like `createFloor(x, y, type)`, `createWall(x, y, palette)`, `createCrate(x, y)`, or `createTree(x, y)`.
 - Each factory method should:
   - Convert grid coordinates to pixels with `toPixel`.
   - Generate base geometry via `getDiamondPoints` (or ellipses/polygons for round objects).
   - Apply shading by calling `adjustColor` and a shared drop-shadow/highlight routine.
   - Return a `Phaser.GameObjects.Graphics` or `Container` ready to add to a scene, leaving Redux state untouched.
 - Keep factory functions stateless and testable; they should only build visuals, not mutate gameplay state.
+</pattern>
+</architecture_section>
 
 ## Recommended Libraries & Tools
 - **phaser3-plugin-isometric** – Adds isometric projection helpers, isoSprites with x/y/z coordinates, and simple 3-D physics when you need vertical stacking or z-based collisions.

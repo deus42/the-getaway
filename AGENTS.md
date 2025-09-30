@@ -86,8 +86,16 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 - **Hierarchical Context**: Phase grouping provides implementation context
 - **Validation Tracking**: Test procedures are explicitly tagged for reference
 
+### architecture.md Structure
+- `<architecture_section id="..." category="...">` - Major architectural patterns and systems
+- `<pattern name="...">` - Named design patterns (e.g., "Manhattan Grid System", "Unidirectional Data Flow")
+- `<design_principles>` - Key design decisions and principles
+- `<technical_flow>` - Step-by-step technical implementation flows
+- `<code_location>` - File paths and module references
+
 ### When Updating Documentation
 - Maintain existing XML structure and tag hierarchy
 - Add new steps following the established schema
 - Update status attributes when steps are completed
 - Keep tags well-formed (properly opened and closed)
+- Use appropriate category attributes (e.g., world_generation, state_management, graphics, code_standards)
