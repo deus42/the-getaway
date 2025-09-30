@@ -178,16 +178,24 @@
   - Ensure door coordinates land on walkable street tiles, keep footprints free of door tiles, and standardize block-themed naming for localization.
 - **Test**: Inspect the generated map to verify doors sit on street tiles, no buildings overlap boulevards, and each block renders exactly one label/door pairing.
 
+### Step 21: Transition Scene Rendering to Isometric 2.5-D
+- **Instructions**: Convert the current orthographic render routines to a reusable 2.5-D isometric pipeline.
+- **Details**:
+  - Extract `getIsoMetrics`, `calculatePixelPosition`, `getDiamondPoints`, and `adjustColor` into `src/game/utils/iso.ts` so scenes and factories share identical projection math.
+  - Refactor `MainScene` tile/object drawing to use the shared helpers, add an `IsoObjectFactory` for crates/doors/props, and introduce a turn-tracker HUD for combat readability.
+  - Align art assets to a 2:1 tile ratio, bake a consistent light direction, and verify depth sorting uses `pixelY` offsets so lower objects appear in front.
+- **Test**: Render a representative block with floors, walls, props, and characters; confirm all assets align to the diamond grid, respect draw order, and retain correct collision hotspots.
+
 ## Phase 7: Character Progression and Inventory
 
-### Step 21: Define Player Stats
+### Step 22: Define Player Stats
 - **Instructions**: Set up character attributes that suit the dystopian setting.
 - **Details**: 
   - Create a player profile in `src/game/interfaces` with appropriate stats (Strength, Perception, Endurance, etc. similar to Fallout's S.P.E.C.I.A.L. system).
   - Display stats in a React component with a UI that matches the game's aesthetic.
 - **Test**: Load the game and check the stats UI. Change a stat value and confirm the UI reflects the update.
 
-### Step 22: Add a Leveling System
+### Step 23: Add a Leveling System
 - **Instructions**: Implement XP-based leveling.
 - **Details**: 
   - Award XP for completing quests or defeating enemies.
@@ -195,7 +203,7 @@
   - Design the system to be expandable for higher levels and more complex progression.
 - **Test**: Earn 100 XP through quests or combat. Confirm the player levels up and receives skill points that can be allocated.
 
-### Step 23: Build an Inventory System
+### Step 24: Build an Inventory System
 - **Instructions**: Create a weight-based inventory system.
 - **Details**: 
   - Define an inventory in `src/game/inventory` with a realistic weight limit.
@@ -205,7 +213,7 @@
 
 ## Phase 8: Testing and Final Touches
 
-### Step 24: Test the Full Game
+### Step 25: Test the Full Game
 - **Instructions**: Playtest the base game to ensure all mechanics work together.
 - **Details**: 
   - Explore the map, engage in combat, complete quests, and level up.
@@ -213,7 +221,7 @@
   - Ensure the game runs smoothly in modern browsers.
 - **Test**: Confirm combat, exploration, dialogue, and progression function without crashes or major performance issues.
 
-### Step 25: Expand Save Functionality
+### Step 26: Expand Save Functionality
 - **Instructions**: Upgrade the single-slot persistence into a full multi-slot save manager.
 - **Details**: 
   - Provide a save/load interface that lists available slots, timestamps, and key metadata (location, time of day).
@@ -221,7 +229,7 @@
   - Ensure save operations capture player stats, inventory, quest progress, world state, and menu visibility.
 - **Test**: Create several saves at different progression points, reload each, and confirm the restored state matches the recorded metadata.
 
-### Step 26: Polish the UI
+### Step 27: Polish the UI
 - **Instructions**: Enhance the user interface for clarity and thematic consistency.
 - **Details**: 
   - Style all UI elements (dialogue box, quest log, inventory, status displays) with consistent visuals that fit the dystopian setting.
@@ -229,7 +237,7 @@
   - Ensure UI is responsive and performs well on modern browsers.
 - **Test**: Open each UI element. Ensure they look cohesive and tooltips appear when hovering over interactive elements.
 
-### Step 27: Surface Level & Objective HUD
+### Step 28: Surface Level & Objective HUD
 - **Instructions**: Display the current level metadata and mission objectives directly in the game overlay.
 - **Details**: 
   - Extend `MapArea` definitions with `level` numbers and objective lists (starting with Level 0 for the Slums sector).
@@ -240,11 +248,12 @@
 ---
 
 ## Summary
-This plan now outlines 27 implementable steps to build the base version of "The Getaway." It focuses on:
+This plan now outlines 28 implementable steps to build the base version of "The Getaway." It focuses on:
 - **Command & Atmosphere**: Establishing the resistance command hub UI, neon isometric presentation, and curfew pressure loops.
 - **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
 - **Combat & Navigation**: Turn-based encounters with cover awareness, guard perception loops, click-to-move traversal, and readable path previews.
 - **City Layout & Access**: NYC-inspired district blocks with single-entry buildings, localized naming, and door placement aligned to streets for clarity.
+- **Rendering & Visuals**: Shared isometric utilities, reusable object factories, and a dedicated 2.5-D rendering pipeline.
 - **Progression Systems**: Player stats, leveling, inventory, and loot structures.
 - **Stability & Polish**: Save/load expansion, holistic playtests, and UI refinement.
 
