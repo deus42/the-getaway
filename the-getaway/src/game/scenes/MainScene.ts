@@ -728,10 +728,6 @@ export class MainScene extends Phaser.Scene {
         const center = this.calculatePixelPosition(x, y);
 
         this.renderTile(tile, center, tileWidth, tileHeight, x, y);
-
-        if (tile.type === TileType.DOOR) {
-          this.drawDoorTile(center.x, center.y);
-        }
       }
     }
   }
@@ -782,37 +778,6 @@ export class MainScene extends Phaser.Scene {
       label.setShadow(0, 3, '#000000', 4, false, true);
       this.buildingLabels.push(label);
     });
-  }
-
-  private drawDoorTile(centerX: number, centerY: number): void {
-    if (!this.mapGraphics) {
-      return;
-    }
-
-    const { tileWidth, tileHeight } = this.getIsoMetrics();
-    const frameColor = 0x4c3b2c;
-    const glowColor = 0xf3c58c;
-    const panelColor = 0x201a16;
-
-    const frame = this.getDiamondPoints(centerX, centerY, tileWidth * 0.8, tileHeight * 0.84);
-    this.mapGraphics.lineStyle(2, frameColor, 0.85);
-    this.mapGraphics.strokePoints(frame, true);
-
-    const panel = this.getDiamondPoints(centerX, centerY, tileWidth * 0.56, tileHeight * 0.62);
-    this.mapGraphics.fillStyle(panelColor, 0.96);
-    this.mapGraphics.fillPoints(panel, true);
-
-    const glow = this.getDiamondPoints(centerX, centerY - tileHeight * 0.1, tileWidth * 0.4, tileHeight * 0.34);
-    this.mapGraphics.fillStyle(glowColor, 0.4);
-    this.mapGraphics.fillPoints(glow, true);
-
-    const sill = this.getDiamondPoints(centerX, centerY + tileHeight * 0.18, tileWidth * 0.5, tileHeight * 0.18);
-    this.mapGraphics.fillStyle(this.adjustColor(panelColor, 0.18), 0.85);
-    this.mapGraphics.fillPoints(sill, true);
-
-    const handle = this.getDiamondPoints(centerX + tileWidth * 0.14, centerY, tileWidth * 0.08, tileHeight * 0.18);
-    this.mapGraphics.fillStyle(glowColor, 0.7);
-    this.mapGraphics.fillPoints(handle, true);
   }
 
   private renderTile(
