@@ -50,9 +50,6 @@ const MiniMap: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 140, height: 110 });
   const [viewport, setViewport] = useState<ViewportInfo | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
-
   const entitySignature = useMemo(
     () =>
       [
@@ -203,33 +200,30 @@ const MiniMap: React.FC = () => {
       const viewportHeight = viewport.height * scale;
 
       // Semi-transparent fill
-      context.fillStyle = "rgba(255, 255, 255, 0.05)";
+      context.fillStyle = "rgba(255, 255, 255, 0.08)";
       context.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
 
-      // Thin border
-      context.lineWidth = 1;
-      context.strokeStyle = "rgba(56, 189, 248, 0.75)";
+      // Bright border
+      context.lineWidth = Math.max(1.5, scale * 0.3);
+      context.strokeStyle = "rgba(56, 189, 248, 0.85)";
       context.strokeRect(viewportX, viewportY, viewportWidth, viewportHeight);
+
+      // Corner markers for better visibility
+      const cornerSize = Math.max(3, scale * 0.8);
+      context.fillStyle = "rgba(56, 189, 248, 0.95)";
+      // Top-left
+      context.fillRect(viewportX - 1, viewportY - 1, cornerSize, cornerSize);
+      // Top-right
+      context.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY - 1, cornerSize, cornerSize);
+      // Bottom-left
+      context.fillRect(viewportX - 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
+      // Bottom-right
+      context.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
     }
   }, [mapArea, playerPosition, curfewActive, entitySignature, enemies, npcs, viewport]);
 
-  const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!mapArea || !canvasRef.current) {
-      return;
-    }
-
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-
-    dragStartRef.current = {
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    };
-    setIsDragging(true);
-  };
-
-  const handleMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDragging || !mapArea || !canvasRef.current || !dragStartRef.current) {
       return;
     }
 
@@ -237,36 +231,24 @@ const MiniMap: React.FC = () => {
     const rect = canvas.getBoundingClientRect();
     const scale = clampScale(mapArea);
 
-    // Calculate current mouse position
-    const currentX = event.clientX - rect.left;
-    const currentY = event.clientY - rect.top;
+    // Calculate click position relative to canvas
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
 
-    // Use current position (not delta) to determine where to move
-    const gridX = Math.floor(currentX / scale);
-    const gridY = Math.floor(currentY / scale);
+    // Convert to grid coordinates
+    const gridX = Math.floor(x / scale);
+    const gridY = Math.floor(y / scale);
 
     // Clamp to map bounds
     const clampedX = Math.max(0, Math.min(mapArea.width - 1, gridX));
     const clampedY = Math.max(0, Math.min(mapArea.height - 1, gridY));
 
-    // Dispatch event to MainScene to move camera (with isDragging flag)
+    // Dispatch event to MainScene to move camera
     window.dispatchEvent(
       new CustomEvent('minimapViewportClick', {
-        detail: { gridX: clampedX, gridY: clampedY, isDragging: true },
+        detail: { gridX: clampedX, gridY: clampedY },
       })
     );
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-    dragStartRef.current = null;
-  };
-
-  const handleMouseLeave = () => {
-    if (isDragging) {
-      setIsDragging(false);
-      dragStartRef.current = null;
-    }
   };
 
   if (!mapArea) {
@@ -323,16 +305,13 @@ const MiniMap: React.FC = () => {
       >
         <canvas
           ref={canvasRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
+          onClick={handleCanvasClick}
           style={{
             display: "block",
             width: `${canvasSize.width}px`,
             height: `${canvasSize.height}px`,
             imageRendering: "pixelated",
-            cursor: isDragging ? "grabbing" : "grab",
+            cursor: "pointer",
           }}
         />
       </div>

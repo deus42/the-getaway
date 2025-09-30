@@ -25,5 +25,4 @@ export interface ViewportUpdateDetail {
 export interface MinimapViewportClickDetail {
   gridX: number;
   gridY: number;
-  isDragging?: boolean;
 }
