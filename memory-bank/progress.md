@@ -416,3 +416,23 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 - `yarn build`
 </validation>
 </step>
+
+<step id="22" status="completed">
+<step_metadata>
+  <number>22</number>
+  <title>Define Player Stats</title>
+  <status>Completed</status>
+  <date>October 3, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Established S.P.E.C.I.A.L stat definitions with shared ranges, abbreviations, and focus tags in `playerStats.ts` plus a profile builder helper.
+2. Localized stat labels, descriptions, and focus badges in the UI bundle for English and Ukrainian.
+3. Introduced `PlayerStatsPanel` to surface the profile in the left HUD column with progress bars and command-shell styling.
+</tasks>
+
+<validation>
+- `yarn lint`
+- `yarn test src/__tests__/playerStats.test.ts --watch=false`
+</validation>
+</step>

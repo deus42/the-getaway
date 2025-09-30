@@ -325,6 +325,28 @@ React components follow a consistent pattern:
 </pattern>
 </architecture_section>
 
+<architecture_section id="player_stats_profile" category="character_progression">
+<pattern name="S.P.E.C.I.A.L Attribute Profile">
+The player attribute system follows a Fallout-inspired S.P.E.C.I.A.L spread that flows from immutable definitions into UI rendering.
+
+<design_principles>
+- Keep stat metadata (abbreviations, min/max ranges, focus tags) centralised in <code_location>src/game/interfaces/playerStats.ts</code_location> so that gameplay systems and UI share a single source of truth.
+- Represent stat values inside Redux as plain numbers on the `skills` object (<code_location>playerSlice.ts</code_location>) to keep persistence lightweight while helper utilities compute presentation data on demand.
+- Treat locale-sensitive strings (labels, descriptions, focus badges) as content data in <code_location>src/content/ui/index.ts</code_location>; UI components never bake in raw text.
+</design_principles>
+
+<technical_flow>
+1. <code_location>buildPlayerStatProfile()</code_location> converts the Redux `skills` payload into range-clamped entries with normalised percentages.
+2. <code_location>PlayerStatsPanel.tsx</code_location> derives labels/descriptions from the locale bundle, renders stat cards with progress bars, and surfaces focus tags for quick readability.
+3. Card gradients are keyed off stat focus values, giving the HUD a consistent neon aesthetic while keeping styling data-driven.
+</technical_flow>
+
+<code_location>src/game/interfaces/playerStats.ts</code_location>
+<code_location>src/components/ui/PlayerStatsPanel.tsx</code_location>
+<code_location>src/content/ui/index.ts</code_location>
+</pattern>
+</architecture_section>
+
 ## Testing Strategy
 
 The testing approach includes:

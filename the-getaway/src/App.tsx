@@ -3,6 +3,7 @@ import { CSSProperties, useEffect, useState } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
+import PlayerStatsPanel from "./components/ui/PlayerStatsPanel";
 import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
@@ -154,8 +155,16 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, showMenu }) => 
           <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
             <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.squadLabel}</span>
             <h2 style={panelTitleStyle}>{uiStrings.shell.squadTitle}</h2>
-            <div style={scrollSectionStyle}>
+            <div
+              style={{
+                ...scrollSectionStyle,
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
               <PlayerStatusPanel />
+              <PlayerStatsPanel />
             </div>
           </div>
         </div>

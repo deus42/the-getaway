@@ -7,6 +7,13 @@ import { MapArea, TileType } from "../../game/interfaces/types";
 const MAX_CANVAS_WIDTH = 180;
 const MAX_CANVAS_HEIGHT = 160;
 
+interface ViewportInfo {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 const TILE_COLORS: Record<TileType | "default", string> = {
   [TileType.FLOOR]: "#1e293b",
   [TileType.WALL]: "#475569",
@@ -42,7 +49,7 @@ const MiniMap: React.FC = () => {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 140, height: 110 });
-
+  const [viewport, setViewport] = useState<ViewportInfo | null>(null);
   const entitySignature = useMemo(
     () =>
       [
@@ -53,6 +60,19 @@ const MiniMap: React.FC = () => {
       ].join("|"),
     [enemies, npcs]
   );
+
+  // Listen for viewport updates from MainScene
+  useEffect(() => {
+    const handleViewportUpdate = (event: Event) => {
+      const customEvent = event as CustomEvent<ViewportInfo>;
+      setViewport(customEvent.detail);
+    };
+
+    window.addEventListener('viewportUpdate', handleViewportUpdate);
+    return () => {
+      window.removeEventListener('viewportUpdate', handleViewportUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     if (!mapArea) {
@@ -171,7 +191,65 @@ const MiniMap: React.FC = () => {
       ? "rgba(126, 232, 201, 0.6)"
       : "rgba(59, 130, 246, 0.55)";
     context.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
-  }, [mapArea, playerPosition, curfewActive, entitySignature, enemies, npcs]);
+
+    // Viewport rectangle
+    if (viewport) {
+      const viewportX = viewport.x * scale;
+      const viewportY = viewport.y * scale;
+      const viewportWidth = viewport.width * scale;
+      const viewportHeight = viewport.height * scale;
+
+      // Semi-transparent fill
+      context.fillStyle = "rgba(255, 255, 255, 0.08)";
+      context.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
+
+      // Bright border
+      context.lineWidth = Math.max(1.5, scale * 0.3);
+      context.strokeStyle = "rgba(56, 189, 248, 0.85)";
+      context.strokeRect(viewportX, viewportY, viewportWidth, viewportHeight);
+
+      // Corner markers for better visibility
+      const cornerSize = Math.max(3, scale * 0.8);
+      context.fillStyle = "rgba(56, 189, 248, 0.95)";
+      // Top-left
+      context.fillRect(viewportX - 1, viewportY - 1, cornerSize, cornerSize);
+      // Top-right
+      context.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY - 1, cornerSize, cornerSize);
+      // Bottom-left
+      context.fillRect(viewportX - 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
+      // Bottom-right
+      context.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
+    }
+  }, [mapArea, playerPosition, curfewActive, entitySignature, enemies, npcs, viewport]);
+
+  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!mapArea || !canvasRef.current) {
+      return;
+    }
+
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const scale = clampScale(mapArea);
+
+    // Calculate click position relative to canvas
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // Convert to grid coordinates
+    const gridX = Math.floor(x / scale);
+    const gridY = Math.floor(y / scale);
+
+    // Clamp to map bounds
+    const clampedX = Math.max(0, Math.min(mapArea.width - 1, gridX));
+    const clampedY = Math.max(0, Math.min(mapArea.height - 1, gridY));
+
+    // Dispatch event to MainScene to move camera
+    window.dispatchEvent(
+      new CustomEvent('minimapViewportClick', {
+        detail: { gridX: clampedX, gridY: clampedY },
+      })
+    );
+  };
 
   if (!mapArea) {
     return null;
@@ -227,11 +305,13 @@ const MiniMap: React.FC = () => {
       >
         <canvas
           ref={canvasRef}
+          onClick={handleCanvasClick}
           style={{
             display: "block",
             width: `${canvasSize.width}px`,
             height: `${canvasSize.height}px`,
             imageRendering: "pixelated",
+            cursor: "pointer",
           }}
         />
       </div>

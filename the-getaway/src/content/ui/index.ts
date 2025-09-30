@@ -10,6 +10,15 @@ type SkillKey =
   | 'agility'
   | 'luck';
 
+type StatFocusKey =
+  | 'combat'
+  | 'perception'
+  | 'survival'
+  | 'social'
+  | 'intellect'
+  | 'mobility'
+  | 'fortuity';
+
 interface MenuStrings {
   tag: string;
   title: string;
@@ -64,6 +73,8 @@ interface PlayerStatusStrings {
   inventoryWeight: (current: number, max: number) => string;
   inventoryEmpty: string;
   inventoryOverflow: (count: number) => string;
+  attributesLabel: string;
+  attributesTitle: string;
 }
 
 interface MiniMapStrings {
@@ -111,6 +122,8 @@ interface UIStrings {
   levelIndicator: LevelIndicatorStrings;
   dialogueOverlay: DialogueOverlayStrings;
   skills: Record<SkillKey, string>;
+  skillDescriptions: Record<SkillKey, string>;
+  statFocus: Record<StatFocusKey, string>;
 }
 
 const STRINGS: Record<Locale, UIStrings> = {
@@ -174,6 +187,8 @@ const STRINGS: Record<Locale, UIStrings> = {
       },
       inventoryEmpty: 'Pack is empty — scavenge essentials.',
       inventoryOverflow: (count) => `+${count} more`,
+      attributesLabel: 'Core Attributes',
+      attributesTitle: 'S.P.E.C.I.A.L. Profile',
     },
     miniMap: {
       heading: 'Tactical Map',
@@ -219,6 +234,24 @@ const STRINGS: Record<Locale, UIStrings> = {
       intelligence: 'Intelligence',
       agility: 'Agility',
       luck: 'Luck',
+    },
+    skillDescriptions: {
+      strength: 'Close-quarters power and carry capacity.',
+      perception: 'Ranged accuracy, detection, and recon awareness.',
+      endurance: 'Health reserves, toxin resistance, and stamina.',
+      charisma: 'Dialogue sway, recruitment, and contact reliability.',
+      intelligence: 'Skill checks, hacking aptitude, and XP bonuses.',
+      agility: 'Initiative, evasion, and action point efficiency.',
+      luck: 'Critical chances, loot fortune, and event outcomes.',
+    },
+    statFocus: {
+      combat: 'Combat',
+      perception: 'Recon',
+      survival: 'Survival',
+      social: 'Social',
+      intellect: 'Tactical Intel',
+      mobility: 'Mobility',
+      fortuity: 'Fortune',
     },
   },
   uk: {
@@ -284,6 +317,8 @@ const STRINGS: Record<Locale, UIStrings> = {
       },
       inventoryEmpty: 'Наплічник порожній — час поповнити запаси.',
       inventoryOverflow: (count) => `+${count} ще`,
+      attributesLabel: 'Основні характеристики',
+      attributesTitle: 'Профіль S.P.E.C.I.A.L.',
     },
     miniMap: {
       heading: 'Тактична мапа',
@@ -329,6 +364,24 @@ const STRINGS: Record<Locale, UIStrings> = {
       intelligence: 'Інтелект',
       agility: 'Спритність',
       luck: 'Вдача',
+    },
+    skillDescriptions: {
+      strength: 'Сила ближнього бою та вантажопідйомність.',
+      perception: 'Точність на відстані, виявлення та розвідка.',
+      endurance: 'Запаси здоровʼя, опір токсинам і витривалість.',
+      charisma: 'Переконання в діалогах, набір союзників і довіра контактів.',
+      intelligence: 'Перевірки навичок, злам систем і бонуси досвіду.',
+      agility: 'Ініціатива, ухилення та ефективність очок дії.',
+      luck: 'Шанс критичних ударів, трофеї та перебіг подій.',
+    },
+    statFocus: {
+      combat: 'Бій',
+      perception: 'Розвідка',
+      survival: 'Виживання',
+      social: 'Соціум',
+      intellect: 'Тактичний інтелект',
+      mobility: 'Мобільність',
+      fortuity: 'Удача',
     },
   },
 };

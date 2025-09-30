@@ -4,7 +4,7 @@ import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
-import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail } from '../events';
+import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail, VIEWPORT_UPDATE_EVENT, ViewportUpdateDetail, MINIMAP_VIEWPORT_CLICK_EVENT, MinimapViewportClickDetail } from '../events';
 import { IsoObjectFactory } from '../utils/IsoObjectFactory';
 import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, adjustColor as isoAdjustColor, IsoMetrics } from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
@@ -24,7 +24,7 @@ const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
 const MIN_CAMERA_ZOOM = 0.6;
 const MAX_CAMERA_ZOOM = 2.3;
 const CAMERA_BOUND_PADDING_TILES = 6;
-const CAMERA_FOLLOW_LERP = 0.22;
+const CAMERA_FOLLOW_LERP = 0.08;
 
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
@@ -132,6 +132,7 @@ export class MainScene extends Phaser.Scene {
     this.scale.on('resize', this.handleResize, this);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
     window.addEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    window.addEventListener(MINIMAP_VIEWPORT_CLICK_EVENT, this.handleMinimapViewportClick as EventListener);
 
     if (this.input) {
       this.input.on('pointerdown', this.handlePointerDown, this);
@@ -188,6 +189,7 @@ export class MainScene extends Phaser.Scene {
     }
     this.scale.off('resize', this.handleResize, this);
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    window.removeEventListener(MINIMAP_VIEWPORT_CLICK_EVENT, this.handleMinimapViewportClick as EventListener);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
 
     if (this.unsubscribe) {
@@ -286,7 +288,6 @@ export class MainScene extends Phaser.Scene {
       this.staticPropGroup = this.add.group();
     }
 
-    const crate = this.isoFactory.createCrate(12, 20, { tint: 0x8d5524, height: 0.6, scale: 0.5 });
     const props = [
       this.isoFactory.createCrate(12, 20, { tint: 0x8d5524, height: 0.6, scale: 0.52 }),
       this.isoFactory.createCrate(9, 18, { tint: 0x3f3f46, height: 0.55, scale: 0.48, alpha: 0.95 }),
@@ -372,6 +373,80 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
+  private enablePlayerCameraFollow(): void {
+    if (!this.playerSprite || !this.sys.isActive()) {
+      return;
+    }
+
+    const camera = this.cameras.main;
+    camera.startFollow(this.playerSprite, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
+    camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
+    this.isCameraFollowingPlayer = true;
+  }
+
+  private recenterCameraOnPlayer(): void {
+    if (!this.playerSprite || !this.sys.isActive()) {
+      return;
+    }
+
+    const camera = this.cameras.main;
+    camera.centerOn(this.playerSprite.x, this.playerSprite.y);
+  }
+
+  private updateNpcs(npcs: NPC[]): void {
+    if (!this.sys.isActive()) {
+      return;
+    }
+
+    // Mark all existing NPC sprites for removal
+    this.npcSprites.forEach((spriteData) => {
+      spriteData.markedForRemoval = true;
+    });
+
+    const metrics = this.getIsoMetrics();
+
+    for (const npc of npcs) {
+      const existingSpriteData = this.npcSprites.get(npc.id);
+      const pixelPos = this.calculatePixelPosition(npc.position.x, npc.position.y);
+
+      if (!existingSpriteData) {
+        const npcSprite = this.add.ellipse(
+          pixelPos.x,
+          pixelPos.y,
+          metrics.tileWidth * 0.4,
+          metrics.tileHeight * 0.8,
+          0x22c55e
+        );
+        npcSprite.setDepth(pixelPos.y + 5);
+
+        this.npcSprites.set(npc.id, {
+          sprite: npcSprite,
+          markedForRemoval: false,
+        });
+
+        console.log(`[MainScene updateNpcs] Created sprite for NPC ${npc.id}`);
+        continue;
+      }
+
+      existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
+      existingSpriteData.sprite.setDepth(pixelPos.y + 5);
+      existingSpriteData.markedForRemoval = false;
+
+      this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
+    }
+
+    // Remove NPCs that are no longer present
+    this.npcSprites.forEach((spriteData, id) => {
+      if (spriteData.markedForRemoval) {
+        spriteData.sprite.destroy();
+        if (spriteData.indicator) {
+          spriteData.indicator.destroy();
+        }
+        this.npcSprites.delete(id);
+      }
+    });
+  }
+
   private updateNpcCombatIndicator(
     data: NpcSpriteData,
     pixelPos: { x: number; y: number },
@@ -409,17 +484,40 @@ export class MainScene extends Phaser.Scene {
     );
     graphics.setDepth(pixelPos.y + 6);
   }
-      if (!existingSpriteData) {
-        if (enemy.health <= 0) continue;
 
-        const base = this.isoFactory?.createCharacterBase(enemy.position.x, enemy.position.y, {
-          baseColor: 0x1f2937,
-          outlineColor: 0xef4444,
-          alpha: 0.85,
-          widthScale: 0.72,
-          heightScale: 0.48,
-          depthOffset: 1,
-        });
+  private updateEnemies(enemies: Enemy[]) {
+    if (!this.mapGraphics || !this.sys.isActive()) {
+      return;
+    }
+
+    if (!this.enemySprites) {
+      this.enemySprites = new Map<string, EnemySpriteData>();
+    }
+
+    this.enemySprites.forEach((spriteData) => {
+      spriteData.markedForRemoval = true;
+    });
+
+    const metrics = this.getIsoMetrics();
+
+    for (const enemy of enemies) {
+      const existingSpriteData = this.enemySprites.get(enemy.id);
+      const pixelPos = this.calculatePixelPosition(enemy.position.x, enemy.position.y);
+
+      if (!existingSpriteData) {
+        if (enemy.health <= 0) {
+          continue;
+        }
+
+        const base =
+          this.isoFactory?.createCharacterBase(enemy.position.x, enemy.position.y, {
+            baseColor: 0x1f2937,
+            outlineColor: 0xef4444,
+            alpha: 0.85,
+            widthScale: 0.72,
+            heightScale: 0.48,
+            depthOffset: 1,
+          }) ?? this.add.graphics();
 
         const enemySprite = this.add.ellipse(
           pixelPos.x,
@@ -436,7 +534,7 @@ export class MainScene extends Phaser.Scene {
         this.enemySprites.set(enemy.id, {
           sprite: enemySprite,
           healthBar,
-          base: base ?? this.add.graphics(),
+          base,
           markedForRemoval: false,
         });
 
@@ -444,130 +542,37 @@ export class MainScene extends Phaser.Scene {
         if (createdData) {
           this.updateEnemyHealthBar(createdData, pixelPos, metrics, enemy);
         }
+
         console.log(`[MainScene updateEnemies] Created sprite & health for ${enemy.id}`);
-    if (!this.npcSprites) {
-        if (enemy.health <= 0) {
-          existingSpriteData.markedForRemoval = true;
-        } else {
-          existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
-          existingSpriteData.sprite.setDepth(pixelPos.y + 6);
-          if (existingSpriteData.base && this.isoFactory) {
-            this.isoFactory.updateCharacterBase(existingSpriteData.base, enemy.position.x, enemy.position.y, {
-              baseColor: 0x1f2937,
-              outlineColor: 0xef4444,
-              alpha: 0.85,
-              widthScale: 0.72,
-              heightScale: 0.48,
-              depthOffset: 1,
-            });
+        continue;
+      }
+
+      if (enemy.health <= 0) {
+        existingSpriteData.markedForRemoval = true;
+        continue;
+      }
+
+      existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
+      existingSpriteData.sprite.setDepth(pixelPos.y + 6);
+      existingSpriteData.markedForRemoval = false;
+
+      if (existingSpriteData.base && this.isoFactory) {
+        this.isoFactory.updateCharacterBase(
+          existingSpriteData.base,
+          enemy.position.x,
+          enemy.position.y,
+          {
+            baseColor: 0x1f2937,
+            outlineColor: 0xef4444,
+            alpha: 0.85,
+            widthScale: 0.72,
+            heightScale: 0.48,
+            depthOffset: 1,
           }
-          this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
-          existingSpriteData.markedForRemoval = false;
-      const strokeAlpha = isInteractive ? 0.7 : 0.55;
-        const npcSprite = this.add.ellipse(
-          pixelPos.x,
-          pixelPos.y,
-          metrics.tileWidth * 0.32,
-          metrics.tileHeight * 0.7,
-          fillColor,
-          fillAlpha
         );
-        npcSprite.setDepth(pixelPos.y + 5);
-        npcSprite.setStrokeStyle(1.5, strokeColor, strokeAlpha);
-
-        this.npcSprites.set(npc.id, {
-          sprite: npcSprite,
-          markedForRemoval: false,
-        });
-        const createdData = this.npcSprites.get(npc.id);
-        if (createdData) {
-          this.updateNpcCombatIndicator(createdData, pixelPos, metrics, npc);
-        }
-      } else {
-        existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
-        existingSpriteData.sprite.setDepth(pixelPos.y + 5);
-        existingSpriteData.sprite.setFillStyle(fillColor, fillAlpha);
-        existingSpriteData.sprite.setStrokeStyle(1.5, strokeColor, strokeAlpha);
-        existingSpriteData.markedForRemoval = false;
-        this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
       }
-    }
 
-    this.npcSprites.forEach((spriteData, id) => {
-      if (spriteData.markedForRemoval) {
-        spriteData.sprite.destroy();
-        if (spriteData.indicator) {
-          spriteData.indicator.destroy();
-        }
-        this.npcSprites.delete(id);
-      }
-    });
-  }
-  
-  private updateEnemies(enemies: Enemy[]) {
-    if (!this.mapGraphics || !this.sys.isActive()) {
-      return;
-    }
-    if (!this.enemySprites) {
-      this.enemySprites = new Map<string, EnemySpriteData>();
-    }
-
-    this.enemySprites.forEach((spriteData) => { spriteData.markedForRemoval = true; });
-
-    const metrics = this.getIsoMetrics();
-
-    for (const enemy of enemies) {
-      const existingSpriteData = this.enemySprites.get(enemy.id);
-      const pixelPos = this.calculatePixelPosition(enemy.position.x, enemy.position.y);
-
-      if (!existingSpriteData) {
-         if(enemy.health <= 0) continue;
-
-         const enemySprite = this.add.ellipse(
-           pixelPos.x,
-         const base = this.isoFactory?.createCharacterBase(enemy.position.x, enemy.position.y, {
-           baseColor: 0x1f2937,
-           outlineColor: 0xef4444,
-           alpha: 0.85,
-           widthScale: 0.72,
-           heightScale: 0.48,
-           depthOffset: 1,
-         }) ?? undefined;
-           pixelPos.y,
-           metrics.tileWidth * 0.45,
-           metrics.tileHeight * 0.9,
-           0xff5252
-         );
-         enemySprite.setDepth(pixelPos.y + 6);
-
-         const healthBar = this.add.graphics();
-         healthBar.setVisible(false);
-         this.enemySprites.set(enemy.id, { sprite: enemySprite, healthBar, markedForRemoval: false });
-         this.enemySprites.set(enemy.id, { sprite: enemySprite, healthBar, base: base ?? this.add.graphics(), markedForRemoval: false });
-         if (createdData) {
-           this.updateEnemyHealthBar(createdData, pixelPos, metrics, enemy);
-         }
-         console.log(`[MainScene updateEnemies] Created sprite & health for ${enemy.id}`);
-      } else {
-         if(enemy.health <= 0) {
-             existingSpriteData.markedForRemoval = true;
-         } else {
-             existingSpriteData.sprite.setPosition(pixelPos.x, pixelPos.y);
-             existingSpriteData.sprite.setDepth(pixelPos.y + 6);
-             this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
-             if (existingSpriteData.base && this.isoFactory) {
-               this.isoFactory.updateCharacterBase(existingSpriteData.base, enemy.position.x, enemy.position.y, {
-                 baseColor: 0x1f2937,
-                 outlineColor: 0xef4444,
-                 alpha: 0.85,
-                 widthScale: 0.72,
-                 heightScale: 0.48,
-                 depthOffset: 1,
-               });
-             }
-             existingSpriteData.markedForRemoval = false;
-         }
-      }
+      this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
     }
 
     this.enemySprites.forEach((spriteData, id) => {
@@ -703,6 +708,7 @@ export class MainScene extends Phaser.Scene {
     this.scale.off('resize', this.handleResize, this);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    window.removeEventListener(MINIMAP_VIEWPORT_CLICK_EVENT, this.handleMinimapViewportClick as EventListener);
     if (this.input) {
       this.input.off('pointerdown', this.handlePointerDown, this);
     }
@@ -1061,6 +1067,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.applyOverlayZoom();
+    this.emitViewportUpdate();
   };
 
   private clampCameraToBounds(camera: Phaser.Cameras.Scene2D.Camera): void {
@@ -1128,6 +1135,61 @@ export class MainScene extends Phaser.Scene {
       this.pathGraphics.clear();
     }
   }
+
+  private emitViewportUpdate(): void {
+    if (!this.currentMapArea || !this.sys.isActive()) {
+      return;
+    }
+
+    const camera = this.cameras.main;
+
+    // Calculate viewport bounds in grid coordinates
+    const topLeft = this.worldToGrid(camera.worldView.x, camera.worldView.y);
+    const bottomRight = this.worldToGrid(
+      camera.worldView.x + camera.worldView.width,
+      camera.worldView.y + camera.worldView.height
+    );
+
+    if (!topLeft || !bottomRight) {
+      return;
+    }
+
+    // Clamp to map bounds
+    const x = Math.max(0, topLeft.x);
+    const y = Math.max(0, topLeft.y);
+    const width = Math.min(this.currentMapArea.width - x, bottomRight.x - topLeft.x);
+    const height = Math.min(this.currentMapArea.height - y, bottomRight.y - topLeft.y);
+
+    const detail: ViewportUpdateDetail = { x, y, width, height };
+
+    window.dispatchEvent(
+      new CustomEvent(VIEWPORT_UPDATE_EVENT, { detail })
+    );
+  }
+
+  private handleMinimapViewportClick = (event: Event): void => {
+    if (!this.sys.isActive() || !this.currentMapArea) {
+      return;
+    }
+
+    const customEvent = event as CustomEvent<MinimapViewportClickDetail>;
+    const { gridX, gridY } = customEvent.detail;
+
+    // Convert grid position to pixel position and center camera there
+    const pixelPos = this.calculatePixelPosition(gridX, gridY);
+    const camera = this.cameras.main;
+
+    // Disable player follow temporarily
+    this.isCameraFollowingPlayer = false;
+    camera.stopFollow();
+
+    // Pan camera to the clicked position
+    camera.pan(pixelPos.x, pixelPos.y, 300, 'Sine.easeInOut', false, (_cam, progress) => {
+      if (progress === 1) {
+        this.emitViewportUpdate();
+      }
+    });
+  };
 
   private drawBackdrop(): void {
     if (!this.backdropGraphics || !this.currentMapArea) {
@@ -1269,6 +1331,7 @@ export class MainScene extends Phaser.Scene {
 
     // Ensure overlay matches latest viewport size after camera adjustments
     this.resizeDayNightOverlay();
+    this.emitViewportUpdate();
   }
 
   private initializeDayNightOverlay(): void {
