@@ -770,10 +770,13 @@ const GameController: React.FC = () => {
           };
 
           dispatch(addEnemy(reinforcementEnemy));
-          if (spawnDuringEnemyTurn) {
+          dispatch(resetActionPoints());
+          if (spawnDuringEnemyTurn && !isPlayerTurn) {
             dispatch(switchTurn());
             dispatch(resetActionPoints());
           }
+          setIsProcessingEnemyAction(false);
+          setCurrentEnemyTurnIndex(0);
           dispatch(clearReinforcementsSchedule());
         }, getReinforcementDelay());
       }
@@ -1244,6 +1247,7 @@ const GameController: React.FC = () => {
 
         if (player.actionPoints <= 0) {
           dispatch(addLogMessage(logStrings.actionPointsDepleted));
+          dispatch(switchTurn());
           return;
         }
       }

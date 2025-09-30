@@ -10,6 +10,7 @@ import LevelIndicator from "./components/ui/LevelIndicator";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import GameMenu from "./components/ui/GameMenu";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
+import TurnTracker from "./components/ui/TurnTracker";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
 import { getUIStrings } from "./content/ui";
@@ -161,6 +162,7 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, showMenu }) => 
         <div style={centerStageStyle}>
           <GameCanvas />
           <GameController />
+          <TurnTracker />
           <LevelIndicator />
           <DayNightIndicator />
           <DialogueOverlay />

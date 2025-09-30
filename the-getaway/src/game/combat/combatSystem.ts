@@ -3,7 +3,7 @@ import { isPositionWalkable } from '../world/grid';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
-export const DEFAULT_ATTACK_COST = 2;
+export const DEFAULT_ATTACK_COST = 1;
 export const DEFAULT_MOVEMENT_COST = 1;
 export const COVER_DAMAGE_REDUCTION = 0.5;
 
