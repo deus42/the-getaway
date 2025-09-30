@@ -43,12 +43,13 @@ const mainStageStyle: CSSProperties = {
 const sidebarBaseStyle: CSSProperties = {
   width: "20%",
   height: "100%",
-  padding: "1.75rem 1.5rem",
+  padding: "1.2rem 1rem",
   display: "flex",
   flexDirection: "column",
-  gap: "1.5rem",
+  gap: "1rem",
   minHeight: 0,
   backdropFilter: "blur(6px)",
+  overflow: "hidden",
 };
 
 const leftSidebarStyle: CSSProperties = {
@@ -67,28 +68,29 @@ const rightSidebarStyle: CSSProperties = {
 const panelBaseStyle: CSSProperties = {
   background: "linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))",
   border: "1px solid rgba(148, 163, 184, 0.24)",
-  borderRadius: "18px",
-  padding: "1.35rem 1.2rem",
+  borderRadius: "14px",
+  padding: "1rem 0.9rem",
   boxShadow: "0 24px 42px rgba(15, 23, 42, 0.32)",
   display: "flex",
   flexDirection: "column",
   minHeight: 0,
+  overflow: "hidden",
 };
 
 const panelLabelStyle = (color: string): CSSProperties => ({
-  fontSize: "0.62rem",
-  letterSpacing: "0.38em",
+  fontSize: "0.58rem",
+  letterSpacing: "0.3em",
   textTransform: "uppercase",
   color,
   opacity: 0.85,
-  marginBottom: "0.5rem",
+  marginBottom: "0.35rem",
 });
 
 const panelTitleStyle: CSSProperties = {
-  fontSize: "1.25rem",
+  fontSize: "1rem",
   fontWeight: 700,
   color: "#f8fafc",
-  marginBottom: "1rem",
+  marginBottom: "0.65rem",
   letterSpacing: "0.05em",
 };
 

@@ -26,6 +26,12 @@ const MAX_CAMERA_ZOOM = 2.3;
 const CAMERA_BOUND_PADDING_TILES = 6;
 const CAMERA_FOLLOW_LERP = 0.08;
 
+interface ElevationProfile {
+  heightOffset: number;
+  topWidth: number;
+  topHeight: number;
+}
+
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
   sprite: Phaser.GameObjects.Ellipse;
@@ -788,8 +794,6 @@ export class MainScene extends Phaser.Scene {
     gridX: number,
     gridY: number
   ): void {
-    const halfWidth = tileWidth / 2;
-    const halfHeight = tileHeight / 2;
     const baseColor = this.getTileBaseColor(tile, gridX, gridY);
     const variationSeed = ((((gridX * 11) ^ (gridY * 7)) % 7) - 3) * 0.012;
     const modulatedBase = this.adjustColor(baseColor, variationSeed);
@@ -798,22 +802,96 @@ export class MainScene extends Phaser.Scene {
 
     const tilePoints = this.getDiamondPoints(center.x, center.y, tileWidth, tileHeight);
 
-    const dropFactor = tile.type === TileType.WALL ? -0.38 : -0.32;
-    const dropColor = this.adjustColor(modulatedBase, dropFactor);
-    const shadowWidth = tileWidth * (tile.type === TileType.WALL ? 1.08 : 1.03);
-    const shadowHeight = tileHeight * (tile.type === TileType.WALL ? 1.2 : 1.1);
-    const shadowOffsetY = halfHeight * (tile.type === TileType.WALL ? 1.0 : 0.78);
-    const shadowPoints = this.getDiamondPoints(
-      center.x + halfWidth * 0.12,
-      center.y + shadowOffsetY,
-      shadowWidth,
-      shadowHeight
-    );
-    this.mapGraphics.fillStyle(dropColor, tile.type === TileType.WALL ? 0.5 : 0.3);
-    this.mapGraphics.fillPoints(shadowPoints, true);
+    const elevation = this.getTileElevation(tile.type);
+    const profile = this.getElevationProfile(elevation, tileWidth, tileHeight);
+
+    this.renderTileShadow(center, tileWidth, tileHeight, modulatedBase, elevation);
 
     this.mapGraphics.fillStyle(modulatedBase, 1);
     this.mapGraphics.fillPoints(tilePoints, true);
+
+    let capPoints: Phaser.Geom.Point[] | null = null;
+
+    if (elevation > 0) {
+      capPoints = this.renderElevationPrism(
+        tilePoints,
+        center,
+        tileWidth,
+        tileHeight,
+        modulatedBase,
+        elevation,
+        profile
+      );
+    } else {
+      this.renderFlatTileHighlights(center, tilePoints, highlightColor, shadowColor, tileWidth, tileHeight);
+    }
+
+    switch (tile.type) {
+      case TileType.COVER:
+        if (capPoints) {
+          this.renderCoverDetails(capPoints, tilePoints, modulatedBase, profile);
+        }
+        break;
+      case TileType.WALL:
+        if (capPoints) {
+          this.renderWallDetails(capPoints, tilePoints, modulatedBase, profile);
+        }
+        break;
+      case TileType.WATER:
+        this.renderWaterTile(center, tileWidth, tileHeight, modulatedBase);
+        break;
+      case TileType.TRAP:
+        this.renderTrapTile(center, tileWidth, tileHeight, modulatedBase);
+        break;
+      default:
+        break;
+    }
+
+    const outlineColor = this.adjustColor(modulatedBase, elevation > 0 ? -0.22 : -0.3);
+    const outlineAlpha = elevation > 0 ? 0.55 : 0.35;
+    this.mapGraphics.lineStyle(1, outlineColor, outlineAlpha);
+    this.mapGraphics.strokePoints(tilePoints, true);
+
+    if (capPoints) {
+      const capOutline = this.adjustColor(modulatedBase, -0.12);
+      this.mapGraphics.lineStyle(1, capOutline, 0.6);
+      this.mapGraphics.strokePoints(capPoints, true);
+    }
+  }
+
+  private renderTileShadow(
+    center: { x: number; y: number },
+    tileWidth: number,
+    tileHeight: number,
+    baseColor: number,
+    elevation: number
+  ): void {
+    const widthScale = elevation > 0 ? 1.08 + Math.min(0.22, elevation * 0.2) : 1.03;
+    const heightScale = elevation > 0 ? 1.14 + Math.min(0.34, elevation * 0.24) : 1.1;
+    const offsetScale = elevation > 0 ? 0.82 + Math.min(0.28, elevation * 0.18) : 0.78;
+    const alpha = elevation > 0 ? 0.42 + Math.min(0.2, elevation * 0.18) : 0.28;
+
+    const shadowPoints = this.getDiamondPoints(
+      center.x + tileWidth * 0.08,
+      center.y + tileHeight * offsetScale,
+      tileWidth * widthScale,
+      tileHeight * heightScale
+    );
+
+    this.mapGraphics.fillStyle(this.adjustColor(baseColor, -0.42), alpha);
+    this.mapGraphics.fillPoints(shadowPoints, true);
+  }
+
+  private renderFlatTileHighlights(
+    center: { x: number; y: number },
+    _tilePoints: Phaser.Geom.Point[],
+    highlightColor: number,
+    shadowColor: number,
+    tileWidth: number,
+    tileHeight: number
+  ): void {
+    const halfWidth = tileWidth / 2;
+    const halfHeight = tileHeight / 2;
 
     const topPoint = new Phaser.Geom.Point(center.x, center.y - halfHeight);
     const rightPoint = new Phaser.Geom.Point(center.x + halfWidth, center.y);
@@ -828,72 +906,209 @@ export class MainScene extends Phaser.Scene {
     this.mapGraphics.fillStyle(shadowColor, 0.38);
     this.mapGraphics.fillPoints([bottomPoint, centerPoint, rightPoint], true);
     this.mapGraphics.fillPoints([bottomPoint, leftPoint, centerPoint], true);
+  }
 
-    switch (tile.type) {
-      case TileType.COVER: {
-        // Cover tiles render as regular floor tiles without special highlighting
-        break;
-      }
-      case TileType.WALL: {
-        const crest = this.getDiamondPoints(center.x, center.y - halfHeight * 0.58, tileWidth * 0.86, tileHeight * 0.78);
-        this.mapGraphics.fillStyle(this.adjustColor(modulatedBase, 0.14), 1);
-        this.mapGraphics.fillPoints(crest, true);
+  private renderElevationPrism(
+    basePoints: Phaser.Geom.Point[],
+    center: { x: number; y: number },
+    _tileWidth: number,
+    _tileHeight: number,
+    baseColor: number,
+    elevation: number,
+    profile: ElevationProfile
+  ): Phaser.Geom.Point[] {
+    const topPoints = this.getDiamondPoints(
+      center.x,
+      center.y - profile.heightOffset,
+      profile.topWidth,
+      profile.topHeight
+    );
 
-        const facade = [
-          new Phaser.Geom.Point(center.x + halfWidth, center.y),
-          new Phaser.Geom.Point(center.x + halfWidth * 0.32, center.y + tileHeight * 0.82),
-          new Phaser.Geom.Point(center.x - halfWidth * 0.32, center.y + tileHeight * 0.82),
-          new Phaser.Geom.Point(center.x - halfWidth, center.y)
-        ];
-        this.mapGraphics.fillStyle(this.adjustColor(modulatedBase, -0.22), 0.9);
-        this.mapGraphics.fillPoints(facade, true);
-        break;
-      }
-      case TileType.WATER: {
-        const sheenColor = this.adjustColor(modulatedBase, 0.3);
-        this.mapGraphics.fillStyle(sheenColor, 0.26);
-        this.mapGraphics.fillPoints(
-          this.getDiamondPoints(center.x, center.y - tileHeight * 0.06, tileWidth * 0.6, tileHeight * 0.5),
-          true
-        );
-        this.mapGraphics.lineStyle(1, this.adjustColor(sheenColor, 0.25), 0.45);
-        for (let ripple = 0; ripple < 2; ripple++) {
-          const scale = 0.82 - ripple * 0.22;
-          const ripplePoints = this.getDiamondPoints(center.x, center.y, tileWidth * scale, tileHeight * scale);
-          this.mapGraphics.strokePoints(ripplePoints, true);
-        }
-        break;
-      }
-      case TileType.TRAP: {
-        const pulseColor = this.adjustColor(modulatedBase, 0.6);
-        this.mapGraphics.fillStyle(pulseColor, 0.22);
-        this.mapGraphics.fillPoints(
-          this.getDiamondPoints(center.x, center.y, tileWidth * 0.58, tileHeight * 0.6),
-          true
-        );
-        this.mapGraphics.fillStyle(pulseColor, 0.14);
-        this.mapGraphics.fillPoints(
-          this.getDiamondPoints(center.x, center.y, tileWidth * 0.3, tileHeight * 0.96),
-          true
-        );
-        this.mapGraphics.fillPoints(
-          this.getDiamondPoints(center.x, center.y, tileWidth * 0.96, tileHeight * 0.3),
-          true
-        );
-        this.mapGraphics.lineStyle(1.2, this.adjustColor(pulseColor, 0.35), 0.75);
-        this.mapGraphics.strokePoints(
-          this.getDiamondPoints(center.x, center.y, tileWidth * 0.82, tileHeight * 0.32),
-          true
-        );
-        break;
-      }
+    const rightFace = [basePoints[1], basePoints[2], topPoints[2], topPoints[1]];
+    const frontFace = [basePoints[2], basePoints[3], topPoints[3], topPoints[2]];
+
+    const rightTint = this.adjustColor(baseColor, -0.12 - elevation * 0.08);
+    const frontTint = this.adjustColor(baseColor, -0.22 - elevation * 0.1);
+
+    this.mapGraphics.fillStyle(frontTint, 0.95);
+    this.mapGraphics.fillPoints(frontFace, true);
+
+    this.mapGraphics.fillStyle(rightTint, 0.98);
+    this.mapGraphics.fillPoints(rightFace, true);
+
+    const capColor = this.adjustColor(baseColor, 0.12 + elevation * 0.08);
+    this.mapGraphics.fillStyle(capColor, 1);
+    this.mapGraphics.fillPoints(topPoints, true);
+
+    return topPoints;
+  }
+
+  private renderWallDetails(
+    capPoints: Phaser.Geom.Point[],
+    basePoints: Phaser.Geom.Point[],
+    baseColor: number,
+    profile: ElevationProfile
+  ): void {
+    const bandTopLeft = this.lerpPoint(capPoints[3], basePoints[3], 0.28);
+    const bandTopRight = this.lerpPoint(capPoints[2], basePoints[2], 0.28);
+    const bandBottomRight = this.lerpPoint(capPoints[2], basePoints[2], 0.72);
+    const bandBottomLeft = this.lerpPoint(capPoints[3], basePoints[3], 0.72);
+
+    this.mapGraphics.fillStyle(0x38bdf8, 0.32);
+    this.mapGraphics.fillPoints(
+      [bandTopLeft, bandTopRight, bandBottomRight, bandBottomLeft],
+      true
+    );
+
+    const sillInset = 0.86;
+    const sillLeft = this.lerpPoint(capPoints[3], basePoints[3], sillInset);
+    const sillRight = this.lerpPoint(capPoints[2], basePoints[2], sillInset);
+    const sillThickness = profile.topHeight * 0.18;
+
+    const sillPoints = [
+      new Phaser.Geom.Point(sillLeft.x, sillLeft.y),
+      new Phaser.Geom.Point(sillRight.x, sillRight.y),
+      new Phaser.Geom.Point(sillRight.x, sillRight.y + sillThickness),
+      new Phaser.Geom.Point(sillLeft.x, sillLeft.y + sillThickness),
+    ];
+
+    this.mapGraphics.fillStyle(this.adjustColor(baseColor, -0.35), 0.85);
+    this.mapGraphics.fillPoints(sillPoints, true);
+
+    const glow = [
+      this.lerpPoint(capPoints[3], basePoints[3], 0.08),
+      this.lerpPoint(capPoints[2], basePoints[2], 0.08),
+      this.lerpPoint(capPoints[2], basePoints[2], 0.16),
+      this.lerpPoint(capPoints[3], basePoints[3], 0.16),
+    ];
+
+    this.mapGraphics.fillStyle(0x60a5fa, 0.22);
+    this.mapGraphics.fillPoints(glow, true);
+  }
+
+  private renderCoverDetails(
+    capPoints: Phaser.Geom.Point[],
+    basePoints: Phaser.Geom.Point[],
+    baseColor: number,
+    profile: ElevationProfile
+  ): void {
+    const topPlate = this.getDiamondPoints(
+      (capPoints[0].x + capPoints[2].x) / 2,
+      (capPoints[0].y + capPoints[2].y) / 2,
+      profile.topWidth * 0.7,
+      profile.topHeight * 0.55
+    );
+
+    this.mapGraphics.fillStyle(this.adjustColor(baseColor, 0.28), 0.85);
+    this.mapGraphics.fillPoints(topPlate, true);
+
+    const frontLip = [
+      this.lerpPoint(capPoints[3], basePoints[3], 0.35),
+      this.lerpPoint(capPoints[2], basePoints[2], 0.35),
+      this.lerpPoint(capPoints[2], basePoints[2], 0.58),
+      this.lerpPoint(capPoints[3], basePoints[3], 0.58),
+    ];
+
+    this.mapGraphics.fillStyle(this.adjustColor(baseColor, -0.08), 0.78);
+    this.mapGraphics.fillPoints(frontLip, true);
+
+    const braceLeftTop = this.lerpPoint(capPoints[3], basePoints[3], 0.45);
+    const braceLeftBottom = this.lerpPoint(capPoints[3], basePoints[3], 0.86);
+    const braceRightTop = this.lerpPoint(capPoints[2], basePoints[2], 0.45);
+    const braceRightBottom = this.lerpPoint(capPoints[2], basePoints[2], 0.86);
+
+    this.mapGraphics.lineStyle(1.4, this.adjustColor(baseColor, -0.2), 0.7);
+    this.mapGraphics.lineBetween(braceLeftTop.x, braceLeftTop.y, braceLeftBottom.x, braceLeftBottom.y);
+    this.mapGraphics.lineBetween(braceRightTop.x, braceRightTop.y, braceRightBottom.x, braceRightBottom.y);
+  }
+
+  private renderWaterTile(
+    center: { x: number; y: number },
+    tileWidth: number,
+    tileHeight: number,
+    baseColor: number
+  ): void {
+    const sheenColor = this.adjustColor(baseColor, 0.3);
+    this.mapGraphics.fillStyle(sheenColor, 0.26);
+    this.mapGraphics.fillPoints(
+      this.getDiamondPoints(center.x, center.y - tileHeight * 0.06, tileWidth * 0.6, tileHeight * 0.5),
+      true
+    );
+
+    this.mapGraphics.lineStyle(1, this.adjustColor(sheenColor, 0.25), 0.45);
+    for (let ripple = 0; ripple < 2; ripple++) {
+      const scale = 0.82 - ripple * 0.22;
+      const ripplePoints = this.getDiamondPoints(center.x, center.y, tileWidth * scale, tileHeight * scale);
+      this.mapGraphics.strokePoints(ripplePoints, true);
+    }
+  }
+
+  private renderTrapTile(
+    center: { x: number; y: number },
+    tileWidth: number,
+    tileHeight: number,
+    baseColor: number
+  ): void {
+    const pulseColor = this.adjustColor(baseColor, 0.6);
+    this.mapGraphics.fillStyle(pulseColor, 0.22);
+    this.mapGraphics.fillPoints(
+      this.getDiamondPoints(center.x, center.y, tileWidth * 0.58, tileHeight * 0.6),
+      true
+    );
+
+    this.mapGraphics.fillStyle(pulseColor, 0.14);
+    this.mapGraphics.fillPoints(
+      this.getDiamondPoints(center.x, center.y, tileWidth * 0.3, tileHeight * 0.96),
+      true
+    );
+    this.mapGraphics.fillPoints(
+      this.getDiamondPoints(center.x, center.y, tileWidth * 0.96, tileHeight * 0.3),
+      true
+    );
+
+    this.mapGraphics.lineStyle(1.2, this.adjustColor(pulseColor, 0.35), 0.75);
+    this.mapGraphics.strokePoints(
+      this.getDiamondPoints(center.x, center.y, tileWidth * 0.82, tileHeight * 0.32),
+      true
+    );
+  }
+
+  private getTileElevation(type: TileType): number {
+    switch (type) {
+      case TileType.WALL:
+        return 1;
+      case TileType.COVER:
+        return 0.45;
       default:
-        break;
+        return 0;
+    }
+  }
+
+  private getElevationProfile(elevation: number, tileWidth: number, tileHeight: number): ElevationProfile {
+    if (elevation <= 0) {
+      return {
+        heightOffset: tileHeight * 0.38,
+        topWidth: tileWidth,
+        topHeight: tileHeight,
+      };
     }
 
-    const outlineColor = this.adjustColor(modulatedBase, -0.3);
-    this.mapGraphics.lineStyle(1, outlineColor, 0.35);
-    this.mapGraphics.strokePoints(tilePoints, true);
+    const heightOffset = tileHeight * (0.48 + elevation * 0.78);
+    const widthScale = Math.max(0.7, 1 - elevation * 0.08);
+    const heightScale = Math.max(0.62, 1 - elevation * 0.1);
+
+    return {
+      heightOffset,
+      topWidth: tileWidth * widthScale,
+      topHeight: tileHeight * heightScale,
+    };
+  }
+
+  private lerpPoint(a: Phaser.Geom.Point, b: Phaser.Geom.Point, t: number): Phaser.Geom.Point {
+    return new Phaser.Geom.Point(
+      Phaser.Math.Linear(a.x, b.x, t),
+      Phaser.Math.Linear(a.y, b.y, t)
+    );
   }
 
   private getTileBaseColor(tile: MapTile, gridX: number, gridY: number): number {

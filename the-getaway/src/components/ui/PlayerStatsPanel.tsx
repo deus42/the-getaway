@@ -7,11 +7,11 @@ import { buildPlayerStatProfile, PlayerStatFocus } from '../../game/interfaces/p
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.75rem',
+  gap: '0.55rem',
   background: 'rgba(15, 23, 42, 0.6)',
   borderRadius: '12px',
   border: '1px solid rgba(148, 163, 184, 0.18)',
-  padding: '0.85rem 0.9rem',
+  padding: '0.65rem 0.75rem',
   boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.18)',
 };
 
