@@ -78,20 +78,11 @@ const GameCanvas: React.FC = () => {
       setRendererInfo(describeRenderer(current.renderer.type));
     };
 
-    const handleContextLost = () => {
-      setRendererInfo({
-        label: "Context lost",
-        detail: "Attempting to restore GPU access",
-      });
-    };
-
-
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
       width: parentWidth > 0 ? parentWidth : 800,
       height: parentHeight > 0 ? parentHeight : 600,
       backgroundColor: "#1a1a1a",
-      backgroundAlpha: 1,
       parent: gameContainerRef.current,
       scene: [BootScene, MainScene],
       scale: {
@@ -132,8 +123,7 @@ const GameCanvas: React.FC = () => {
           game.events.once(Phaser.Core.Events.READY, handleRendererUpdate);
         }
 
-        game.events.on(Phaser.Core.Events.CONTEXT_RESTORED, handleRendererUpdate);
-        game.events.on(Phaser.Core.Events.CONTEXT_LOST, handleContextLost);
+        // Context events not available in this Phaser version
         console.log("[GameCanvas] Phaser game initialized successfully");
       } catch (error) {
         console.error("[GameCanvas] Error initializing Phaser:", error);
@@ -160,14 +150,6 @@ const GameCanvas: React.FC = () => {
         gameInstanceRef.current.events.off(
           Phaser.Core.Events.READY,
           handleRendererUpdate
-        );
-        gameInstanceRef.current.events.off(
-          Phaser.Core.Events.CONTEXT_RESTORED,
-          handleRendererUpdate
-        );
-        gameInstanceRef.current.events.off(
-          Phaser.Core.Events.CONTEXT_LOST,
-          handleContextLost
         );
         gameInstanceRef.current.destroy(true);
         gameInstanceRef.current = null;

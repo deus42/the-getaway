@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { PlayerSkills } from '../../game/interfaces/types';
+import { calculateDerivedStats } from '../../game/systems/statCalculations';
 
 interface CharacterCreationScreenProps {
   onComplete: (data: CharacterCreationData) => void;
@@ -8,6 +10,7 @@ interface CharacterCreationScreenProps {
 export interface CharacterCreationData {
   name: string;
   visualPreset: string;
+  attributes?: PlayerSkills;
 }
 
 const VISUAL_PRESETS = [
@@ -20,6 +23,47 @@ const VISUAL_PRESETS = [
 const RANDOM_NAMES = [
   'Raven', 'Ghost', 'Cipher', 'Echo', 'Viper', 'Phoenix',
   'Shadow', 'Blade', 'Nova', 'Wraith', 'Spark', 'Drift'
+];
+
+const ATTRIBUTE_INFO: Record<keyof PlayerSkills, { label: string; description: string }> = {
+  strength: {
+    label: 'STR',
+    description: 'Melee damage, carry weight'
+  },
+  perception: {
+    label: 'PER',
+    description: 'Hit chance, critical chance, awareness'
+  },
+  endurance: {
+    label: 'END',
+    description: 'Max health points'
+  },
+  charisma: {
+    label: 'CHA',
+    description: 'Dialogue options, persuasion'
+  },
+  intelligence: {
+    label: 'INT',
+    description: 'Skill points per level, hacking'
+  },
+  agility: {
+    label: 'AGI',
+    description: 'Action points, dodge chance'
+  },
+  luck: {
+    label: 'LCK',
+    description: 'Critical chance, random events'
+  }
+};
+
+const ATTRIBUTE_ORDER: (keyof PlayerSkills)[] = [
+  'strength',
+  'perception',
+  'endurance',
+  'charisma',
+  'intelligence',
+  'agility',
+  'luck'
 ];
 
 const containerStyle: React.CSSProperties = {
@@ -40,14 +84,16 @@ const panelStyle: React.CSSProperties = {
   background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95))',
   border: '2px solid rgba(56, 189, 248, 0.3)',
   borderRadius: '16px',
-  padding: '2.5rem',
+  padding: '2rem',
   maxWidth: '600px',
   width: '90%',
+  maxHeight: '90vh',
   boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), 0 0 100px rgba(56, 189, 248, 0.1)',
+  overflowY: 'auto',
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: '2rem',
+  fontSize: '1.5rem',
   fontWeight: 700,
   color: '#38bdf8',
   marginBottom: '0.5rem',
@@ -57,16 +103,16 @@ const titleStyle: React.CSSProperties = {
 };
 
 const subtitleStyle: React.CSSProperties = {
-  fontSize: '0.9rem',
+  fontSize: '0.85rem',
   color: '#94a3b8',
-  marginBottom: '2rem',
+  marginBottom: '1.5rem',
   letterSpacing: '0.05em',
 };
 
 const stepIndicatorStyle: React.CSSProperties = {
   display: 'flex',
   gap: '0.5rem',
-  marginBottom: '2rem',
+  marginBottom: '1.5rem',
   justifyContent: 'center',
 };
 
@@ -134,8 +180,8 @@ const presetDescStyle: React.CSSProperties = {
 
 const buttonRowStyle: React.CSSProperties = {
   display: 'flex',
-  gap: '1rem',
-  marginTop: '2rem',
+  gap: '0.75rem',
+  marginTop: '1rem',
 };
 
 const buttonStyle = (variant: 'primary' | 'secondary' | 'ghost'): React.CSSProperties => {
@@ -186,11 +232,136 @@ const errorStyle: React.CSSProperties = {
   marginBottom: '1rem',
 };
 
+const attributeRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '0.5rem',
+  backgroundColor: 'rgba(30, 41, 59, 0.6)',
+  border: '1px solid rgba(148, 163, 184, 0.2)',
+  borderRadius: '8px',
+  marginBottom: '0.5rem',
+};
+
+const attributeLabelStyle: React.CSSProperties = {
+  flex: 1,
+};
+
+const attributeNameStyle: React.CSSProperties = {
+  fontSize: '0.85rem',
+  fontWeight: 600,
+  color: '#e2e8f0',
+  letterSpacing: '0.05em',
+};
+
+const attributeDescStyle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  color: '#94a3b8',
+  marginTop: '0.2rem',
+};
+
+const attributeControlsStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+};
+
+const attributeButtonStyle = (disabled: boolean): React.CSSProperties => ({
+  width: '32px',
+  height: '32px',
+  borderRadius: '6px',
+  backgroundColor: disabled ? 'rgba(148, 163, 184, 0.1)' : 'rgba(56, 189, 248, 0.2)',
+  border: `1px solid ${disabled ? 'rgba(148, 163, 184, 0.2)' : 'rgba(56, 189, 248, 0.4)'}`,
+  color: disabled ? '#64748b' : '#38bdf8',
+  fontSize: '1rem',
+  fontWeight: 700,
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  transition: 'all 0.2s ease',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  outline: 'none',
+});
+
+const attributeValueStyle: React.CSSProperties = {
+  fontSize: '1.25rem',
+  fontWeight: 700,
+  color: '#38bdf8',
+  minWidth: '30px',
+  textAlign: 'center',
+  fontFamily: "'DM Mono', monospace",
+};
+
+const pointsDisplayStyle: React.CSSProperties = {
+  textAlign: 'center',
+  padding: '0.75rem',
+  backgroundColor: 'rgba(56, 189, 248, 0.1)',
+  border: '1px solid rgba(56, 189, 248, 0.3)',
+  borderRadius: '8px',
+  marginBottom: '1rem',
+};
+
+const pointsValueStyle: React.CSSProperties = {
+  fontSize: '1.5rem',
+  fontWeight: 700,
+  color: '#38bdf8',
+  textShadow: '0 0 10px rgba(56, 189, 248, 0.5)',
+};
+
+const pointsLabelStyle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  color: '#94a3b8',
+  textTransform: 'uppercase',
+  letterSpacing: '0.1em',
+  marginTop: '0.25rem',
+};
+
+const derivedStatsStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: '0.5rem',
+  marginBottom: '1rem',
+};
+
+const derivedStatCardStyle: React.CSSProperties = {
+  padding: '0.5rem',
+  backgroundColor: 'rgba(30, 41, 59, 0.6)',
+  border: '1px solid rgba(148, 163, 184, 0.2)',
+  borderRadius: '8px',
+};
+
+const derivedStatLabelStyle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  color: '#94a3b8',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  marginBottom: '0.25rem',
+};
+
+const derivedStatValueStyle: React.CSSProperties = {
+  fontSize: '1.1rem',
+  fontWeight: 700,
+  color: '#38bdf8',
+  fontFamily: "'DM Mono', monospace",
+};
+
 const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onComplete, onCancel }) => {
-  const [step] = useState(1); // Will be used when Steps 2-3 are added in 22b/22c
+  const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [visualPreset, setVisualPreset] = useState('');
   const [nameError, setNameError] = useState('');
+
+  // Step 2: Attributes
+  const [attributes, setAttributes] = useState<PlayerSkills>({
+    strength: 5,
+    perception: 5,
+    endurance: 5,
+    charisma: 5,
+    intelligence: 5,
+    agility: 5,
+    luck: 5
+  });
+  const [pointsRemaining, setPointsRemaining] = useState(5);
 
   const validateName = (value: string): boolean => {
     if (value.length < 3) {
@@ -227,15 +398,44 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
     setNameError('');
   };
 
-  const handleNext = () => {
+  const handleAttributeChange = (attribute: keyof PlayerSkills, delta: number) => {
+    const currentValue = attributes[attribute];
+    const newValue = currentValue + delta;
+
+    // Validate range (1-10)
+    if (newValue < 1 || newValue > 10) {
+      return;
+    }
+
+    // Check point budget
+    if (delta > 0 && pointsRemaining <= 0) {
+      return;
+    }
+
+    setAttributes({ ...attributes, [attribute]: newValue });
+    setPointsRemaining(pointsRemaining - delta);
+  };
+
+  const handleStep1Next = () => {
     if (!validateName(name)) {
       return;
     }
     if (!visualPreset) {
       return;
     }
-    // For now, Step 1 is the only step, so complete immediately
-    onComplete({ name, visualPreset });
+    setStep(2);
+  };
+
+  const handleStep2Back = () => {
+    setStep(1);
+  };
+
+  const handleStep2Next = () => {
+    if (pointsRemaining > 0) {
+      return; // Cannot proceed with unspent points
+    }
+    // Step 3 placeholder - for now complete immediately
+    onComplete({ name, visualPreset, attributes });
   };
 
   const handleSkipCreation = () => {
@@ -243,16 +443,31 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
     onComplete({
       name: 'Operative',
       visualPreset: 'operative',
+      attributes: {
+        strength: 5,
+        perception: 5,
+        endurance: 5,
+        charisma: 5,
+        intelligence: 5,
+        agility: 5,
+        luck: 5
+      }
     });
   };
 
-  const canProceed = name.length >= 3 && visualPreset && !nameError;
+  const canProceedStep1 = name.length >= 3 && visualPreset && !nameError;
+  const canProceedStep2 = pointsRemaining === 0;
+
+  const derivedStats = calculateDerivedStats(attributes);
 
   return (
     <div style={containerStyle}>
       <div style={panelStyle}>
         <h1 style={titleStyle}>Character Creation</h1>
-        <p style={subtitleStyle}>Define your operative's identity</p>
+        <p style={subtitleStyle}>
+          {step === 1 && "Define your operative's identity"}
+          {step === 2 && "Allocate your attributes"}
+        </p>
 
         <div style={stepIndicatorStyle}>
           <div style={stepDotStyle(step === 1)} />
@@ -274,8 +489,8 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                 maxLength={20}
                 autoFocus
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && canProceed) {
-                    handleNext();
+                  if (e.key === 'Enter' && canProceedStep1) {
+                    handleStep1Next();
                   }
                 }}
               />
@@ -319,10 +534,10 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                 Randomize
               </button>
               <button
-                onClick={handleNext}
+                onClick={handleStep1Next}
                 style={buttonStyle('primary')}
-                disabled={!canProceed}
-                title={!canProceed ? 'Complete all fields to proceed' : 'Continue to next step'}
+                disabled={!canProceedStep1}
+                title={!canProceedStep1 ? 'Complete all fields to proceed' : 'Continue to next step'}
               >
                 Continue
               </button>
@@ -343,6 +558,86 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                 Skip Creation (Dev)
               </button>
             )}
+          </>
+        )}
+
+        {/* Step 2: Attributes */}
+        {step === 2 && (
+          <>
+            <div style={pointsDisplayStyle}>
+              <div style={pointsValueStyle}>{pointsRemaining}</div>
+              <div style={pointsLabelStyle}>Points Remaining</div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>SPECIAL Attributes</label>
+              {ATTRIBUTE_ORDER.map((attr) => (
+                <div key={attr} style={attributeRowStyle}>
+                  <div style={attributeLabelStyle}>
+                    <div style={attributeNameStyle}>{ATTRIBUTE_INFO[attr].label}</div>
+                    <div style={attributeDescStyle}>{ATTRIBUTE_INFO[attr].description}</div>
+                  </div>
+                  <div style={attributeControlsStyle}>
+                    <button
+                      onClick={() => handleAttributeChange(attr, -1)}
+                      disabled={attributes[attr] <= 1}
+                      style={attributeButtonStyle(attributes[attr] <= 1)}
+                      title="Decrease attribute"
+                    >
+                      −
+                    </button>
+                    <div style={attributeValueStyle}>{attributes[attr]}</div>
+                    <button
+                      onClick={() => handleAttributeChange(attr, 1)}
+                      disabled={attributes[attr] >= 10 || pointsRemaining <= 0}
+                      style={attributeButtonStyle(attributes[attr] >= 10 || pointsRemaining <= 0)}
+                      title="Increase attribute"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div>
+              <label style={labelStyle}>Derived Stats</label>
+              <div style={derivedStatsStyle}>
+                <div style={derivedStatCardStyle}>
+                  <div style={derivedStatLabelStyle}>Max HP</div>
+                  <div style={derivedStatValueStyle}>{derivedStats.maxHP}</div>
+                </div>
+                <div style={derivedStatCardStyle}>
+                  <div style={derivedStatLabelStyle}>Base AP</div>
+                  <div style={derivedStatValueStyle}>{derivedStats.baseAP}</div>
+                </div>
+                <div style={derivedStatCardStyle}>
+                  <div style={derivedStatLabelStyle}>Carry Weight</div>
+                  <div style={derivedStatValueStyle}>{derivedStats.carryWeight} kg</div>
+                </div>
+                <div style={derivedStatCardStyle}>
+                  <div style={derivedStatLabelStyle}>Crit Chance</div>
+                  <div style={derivedStatValueStyle}>{derivedStats.criticalChance}%</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={buttonRowStyle}>
+              <button
+                onClick={handleStep2Back}
+                style={buttonStyle('ghost')}
+              >
+                Back
+              </button>
+              <button
+                onClick={handleStep2Next}
+                style={buttonStyle('primary')}
+                disabled={!canProceedStep2}
+                title={!canProceedStep2 ? 'Spend all points to proceed' : 'Continue to next step'}
+              >
+                Continue
+              </button>
+            </div>
           </>
         )}
       </div>
