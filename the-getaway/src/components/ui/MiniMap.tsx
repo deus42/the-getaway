@@ -12,28 +12,44 @@ import {
 import { miniMapService } from '../../game/services/miniMapService';
 
 const TILE_COLORS: Record<string, string> = {
-  floor: '#1e293b',
-  wall: '#475569',
-  door: '#facc15',
-  cover: '#0f766e',
+  floor: '#0f172a',
+  wall: '#1f2937',
+  door: '#fbbf24',
+  cover: '#0d9488',
   water: '#0ea5e9',
   trap: '#7c3aed',
-  default: '#1f2937',
+  default: '#111827',
 };
 
-const ENTITY_STYLE: Record<MiniMapEntityDetail['kind'], { fill: string; stroke: string; radius: number }> = {
-  player: { fill: '#38bdf8', stroke: 'rgba(224, 242, 254, 0.85)', radius: 0.55 },
-  enemy: { fill: '#ef4444', stroke: 'rgba(248, 113, 113, 0.85)', radius: 0.4 },
-  npc: { fill: '#22c55e', stroke: 'rgba(187, 247, 208, 0.9)', radius: 0.35 },
-  objective: { fill: '#fbbf24', stroke: 'rgba(253, 230, 138, 0.85)', radius: 0.35 },
+const ENTITY_STYLE: Record<MiniMapEntityDetail['kind'], { fill: string; stroke: string; size: number }> = {
+  player: { fill: '#38bdf8', stroke: 'rgba(190, 242, 255, 0.85)', size: 0.8 },
+  enemy: { fill: '#ef4444', stroke: 'rgba(248, 113, 113, 0.85)', size: 0.65 },
+  npc: { fill: '#22c55e', stroke: 'rgba(187, 247, 208, 0.85)', size: 0.55 },
+  objective: { fill: '#fbbf24', stroke: 'rgba(253, 230, 138, 0.8)', size: 0.55 },
 };
 
 const CURFEW_BORDER = {
-  active: 'rgba(126, 232, 201, 0.65)',
+  active: 'rgba(126, 232, 201, 0.7)',
   inactive: 'rgba(59, 130, 246, 0.55)',
 };
 
-const GRID_LINE_COLOR = 'rgba(15, 23, 42, 0.35)';
+const GRID_LINE_COLOR = 'rgba(15, 23, 42, 0.3)';
+
+const PANEL_BACKGROUND = 'linear-gradient(155deg, rgba(14, 22, 40, 0.92), rgba(8, 12, 24, 0.88))';
+const CARD_BACKGROUND = 'linear-gradient(135deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.58))';
+
+type LegendItem = {
+  id: MiniMapEntityDetail['kind'];
+  label: string;
+  color: string;
+};
+
+const LEGEND_ITEMS: LegendItem[] = [
+  { id: 'player', label: 'Cell Lead', color: ENTITY_STYLE.player.fill },
+  { id: 'enemy', label: 'Hostile', color: ENTITY_STYLE.enemy.fill },
+  { id: 'npc', label: 'Neutral', color: ENTITY_STYLE.npc.fill },
+  { id: 'objective', label: 'Objective', color: ENTITY_STYLE.objective.fill },
+];
 
 type TileCache = {
   areaId: string;
@@ -73,25 +89,27 @@ const drawTilesToCanvas = (tiles: TileTypeGrid, tileScale: number): HTMLCanvasEl
     }
   }
 
-  ctx.strokeStyle = GRID_LINE_COLOR;
-  ctx.lineWidth = Math.max(1, tileScale * 0.1);
+  if (tileScale >= 2) {
+    ctx.strokeStyle = GRID_LINE_COLOR;
+    ctx.lineWidth = Math.max(1, tileScale * 0.08);
 
-  const gridStep = Math.max(4, Math.round(12 / tileScale));
+    const gridStep = Math.max(4, Math.round(16 / tileScale));
 
-  for (let gx = 0; gx <= width; gx += gridStep) {
-    const xPos = gx * tileScale;
-    ctx.beginPath();
-    ctx.moveTo(xPos, 0);
-    ctx.lineTo(xPos, offscreen.height);
-    ctx.stroke();
-  }
+    for (let gx = 0; gx <= width; gx += gridStep) {
+      const xPos = gx * tileScale;
+      ctx.beginPath();
+      ctx.moveTo(xPos + 0.5, 0);
+      ctx.lineTo(xPos + 0.5, offscreen.height);
+      ctx.stroke();
+    }
 
-  for (let gy = 0; gy <= height; gy += gridStep) {
-    const yPos = gy * tileScale;
-    ctx.beginPath();
-    ctx.moveTo(0, yPos);
-    ctx.lineTo(offscreen.width, yPos);
-    ctx.stroke();
+    for (let gy = 0; gy <= height; gy += gridStep) {
+      const yPos = gy * tileScale;
+      ctx.beginPath();
+      ctx.moveTo(0, yPos + 0.5);
+      ctx.lineTo(offscreen.width, yPos + 0.5);
+      ctx.stroke();
+    }
   }
 
   return offscreen;
@@ -104,29 +122,62 @@ const drawBorder = (
   state: MiniMapStateDetail,
 ) => {
   ctx.save();
-  ctx.lineWidth = Math.max(2, state.tileScale * 0.6);
-  ctx.strokeStyle = state.curfewActive ? CURFEW_BORDER.active : CURFEW_BORDER.inactive;
-  ctx.strokeRect(1, 1, cssWidth - 2, cssHeight - 2);
+  const borderColor = state.curfewActive ? CURFEW_BORDER.active : CURFEW_BORDER.inactive;
+  ctx.lineWidth = Math.max(2, state.tileScale * 0.55);
+  ctx.strokeStyle = borderColor;
+  ctx.strokeRect(1.5, 1.5, cssWidth - 3, cssHeight - 3);
+  ctx.lineWidth = Math.max(1, state.tileScale * 0.25);
+  ctx.strokeStyle = 'rgba(15, 23, 42, 0.4)';
+  ctx.strokeRect(3, 3, cssWidth - 6, cssHeight - 6);
   ctx.restore();
 };
 
 const drawEntities = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) => {
   ctx.save();
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
   state.entities.forEach((entity) => {
     const style = ENTITY_STYLE[entity.kind] ?? ENTITY_STYLE.npc;
     const centerX = (entity.x + 0.5) * state.tileScale;
     const centerY = (entity.y + 0.5) * state.tileScale;
-    const radius = Math.max(2, state.tileScale * style.radius);
+    const size = Math.max(3, state.tileScale * style.size);
 
-    ctx.beginPath();
+    ctx.globalAlpha = entity.status === 'inactive' ? 0.4 : 1;
     ctx.fillStyle = style.fill;
-    ctx.globalAlpha = entity.status === 'inactive' ? 0.35 : 1;
-    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.lineWidth = Math.max(1, radius * 0.45);
     ctx.strokeStyle = style.stroke;
-    ctx.stroke();
+    ctx.lineWidth = Math.max(1, size * 0.35);
+
+    if (entity.kind === 'player') {
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate((-45 * Math.PI) / 180);
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.lineTo(size, 0);
+      ctx.lineTo(0, size);
+      ctx.lineTo(-size, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else if (entity.kind === 'enemy') {
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.beginPath();
+      ctx.moveTo(0, -size);
+      ctx.lineTo(size * 0.9, size * 0.9);
+      ctx.lineTo(-size * 0.9, size * 0.9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    } else {
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, size * 0.75, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
   });
   ctx.restore();
 };
@@ -143,25 +194,31 @@ const drawViewport = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) 
   const viewportHeight = viewport.height * tileScale;
 
   ctx.save();
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
   ctx.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
 
-  ctx.lineWidth = Math.max(1.5, tileScale * 0.3);
-  ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
-  ctx.strokeRect(viewportX, viewportY, viewportWidth, viewportHeight);
+  ctx.lineWidth = Math.max(1.5, tileScale * 0.28);
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.95)';
+  ctx.setLineDash([tileScale * 1.5, tileScale * 1.5]);
+  ctx.strokeRect(viewportX + 0.5, viewportY + 0.5, viewportWidth - 1, viewportHeight - 1);
+  ctx.setLineDash([]);
 
-  const cornerSize = Math.max(3, tileScale * 0.8);
-  ctx.fillStyle = 'rgba(56, 189, 248, 0.95)';
+  const cornerSize = Math.max(4, tileScale * 0.7);
+  ctx.lineWidth = Math.max(1, tileScale * 0.25);
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
 
-  ctx.fillRect(viewportX - 1, viewportY - 1, cornerSize, cornerSize);
-  ctx.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY - 1, cornerSize, cornerSize);
-  ctx.fillRect(viewportX - 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
-  ctx.fillRect(
-    viewportX + viewportWidth - cornerSize + 1,
-    viewportY + viewportHeight - cornerSize + 1,
-    cornerSize,
-    cornerSize,
-  );
+  const drawCorner = (x: number, y: number, horizontal: number, vertical: number) => {
+    ctx.beginPath();
+    ctx.moveTo(x, y + vertical * cornerSize);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + horizontal * cornerSize, y);
+    ctx.stroke();
+  };
+
+  drawCorner(viewportX, viewportY, 1, 1);
+  drawCorner(viewportX + viewportWidth, viewportY, -1, 1);
+  drawCorner(viewportX, viewportY + viewportHeight, 1, -1);
+  drawCorner(viewportX + viewportWidth, viewportY + viewportHeight, -1, -1);
   ctx.restore();
 };
 
@@ -267,12 +324,16 @@ const MiniMap: React.FC = () => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    const scale = state.tileScale || 1;
+  const cssWidth = canvasSizeRef.current.width;
+  const cssHeight = canvasSizeRef.current.height;
 
-    const gridX = Math.floor(x / scale);
-    const gridY = Math.floor(y / scale);
-    const clampedX = Math.max(0, Math.min(state.mapWidth - 1, gridX));
-    const clampedY = Math.max(0, Math.min(state.mapHeight - 1, gridY));
+  const normalizedX = cssWidth > 0 ? x / cssWidth : 0;
+  const normalizedY = cssHeight > 0 ? y / cssHeight : 0;
+
+  const gridX = Math.floor(normalizedX * state.mapWidth);
+  const gridY = Math.floor(normalizedY * state.mapHeight);
+  const clampedX = Math.max(0, Math.min(state.mapWidth - 1, gridX));
+  const clampedY = Math.max(0, Math.min(state.mapHeight - 1, gridY));
 
     miniMapService.emitInteraction({
       type: MINIMAP_VIEWPORT_CLICK_EVENT,
@@ -296,12 +357,17 @@ const MiniMap: React.FC = () => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.55rem',
+        gap: '0.6rem',
         fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
         color: '#e2e8f0',
+        background: PANEL_BACKGROUND,
+        borderRadius: '14px',
+        border: '1px solid rgba(59, 130, 246, 0.25)',
+        padding: '0.75rem',
+        boxShadow: '0 18px 40px rgba(8, 12, 24, 0.35)',
       }}
     >
-      <div
+      <header
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -310,8 +376,8 @@ const MiniMap: React.FC = () => {
       >
         <span
           style={{
-            fontSize: '0.65rem',
-            letterSpacing: '0.26em',
+            fontSize: '0.62rem',
+            letterSpacing: '0.28em',
             textTransform: 'uppercase',
             color: 'rgba(148, 163, 184, 0.85)',
           }}
@@ -320,13 +386,19 @@ const MiniMap: React.FC = () => {
         </span>
         <span
           style={{
-            fontSize: '0.7rem',
-            color: 'rgba(148, 163, 184, 0.88)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontSize: '0.68rem',
+            color: 'rgba(148, 163, 184, 0.85)',
           }}
         >
-          {activeState.mapWidth}×{activeState.mapHeight}
+          <span>{activeState.mapWidth}×{activeState.mapHeight}</span>
+          <span>
+            {activeState.areaName}
+          </span>
         </span>
-      </div>
+      </header>
       <div
         style={{
           display: 'flex',
@@ -334,9 +406,9 @@ const MiniMap: React.FC = () => {
           alignItems: 'center',
           borderRadius: '12px',
           overflow: 'hidden',
-          background: 'rgba(10, 15, 25, 0.8)',
-          padding: '0.4rem',
-          boxShadow: 'inset 0 0 0 1px rgba(59, 130, 246, 0.18)',
+          background: CARD_BACKGROUND,
+          padding: '0.45rem',
+          boxShadow: 'inset 0 0 0 1px rgba(56, 189, 248, 0.14)',
         }}
       >
         <canvas
@@ -348,24 +420,61 @@ const MiniMap: React.FC = () => {
             height: `${canvasSize.height}px`,
             imageRendering: 'pixelated',
             cursor: 'pointer',
+            transition: 'transform 0.2s ease',
           }}
         />
       </div>
-      <div
+      <footer
         style={{
           display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '0.55rem',
-          fontSize: '0.68rem',
+          flexDirection: 'column',
+          gap: '0.45rem',
+          fontSize: '0.66rem',
           color: 'rgba(148, 163, 184, 0.85)',
         }}
       >
-        <span>{activeState.areaName}</span>
-        <span>
-          ({playerX}, {playerY})
-        </span>
-      </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          <span>Cell Coords</span>
+          <span>({playerX}, {playerY})</span>
+        </div>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: '0.4rem',
+          }}
+        >
+          {LEGEND_ITEMS.map((item) => (
+            <span
+              key={item.id}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  display: 'inline-block',
+                  width: '0.7rem',
+                  height: '0.7rem',
+                  borderRadius: '0.25rem',
+                  background: item.color,
+                  boxShadow: `0 0 8px ${item.color}`,
+                }}
+              />
+              <span>{item.label}</span>
+            </span>
+          ))}
+        </div>
+      </footer>
     </div>
   );
 };
