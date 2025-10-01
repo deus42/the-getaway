@@ -126,7 +126,8 @@ export const createWeapon = (
   damage: number,
   range: number,
   apCost: number,
-  weight: number
+  weight: number,
+  statModifiers?: import('../interfaces/types').StatModifiers
 ): Weapon => {
   return {
     id: uuidv4(),
@@ -137,7 +138,9 @@ export const createWeapon = (
     apCost,
     weight,
     value: damage * 10,
-    isQuestItem: false
+    isQuestItem: false,
+    slot: 'weapon',
+    statModifiers
   };
 };
 
@@ -145,7 +148,8 @@ export const createWeapon = (
 export const createArmor = (
   name: string,
   protection: number,
-  weight: number
+  weight: number,
+  statModifiers?: import('../interfaces/types').StatModifiers
 ): Armor => {
   return {
     id: uuidv4(),
@@ -154,7 +158,9 @@ export const createArmor = (
     protection,
     weight,
     value: protection * 15,
-    isQuestItem: false
+    isQuestItem: false,
+    slot: 'armor',
+    statModifiers
   };
 };
 
@@ -203,4 +209,90 @@ export const createStarterItems = (): Item[] => {
     createConsumable('Medkit', 'health', 30, undefined, 1),
     createConsumable('Stimpack', 'actionPoints', 3, undefined, 0.5)
   ];
+};
+
+// Equip a weapon
+export const equipWeapon = (player: Player, weaponId: string): Player => {
+  const weapon = player.inventory.items.find(i => i.id === weaponId) as Weapon | undefined;
+
+  if (!weapon || !('damage' in weapon)) {
+    return player; // Not a weapon
+  }
+
+  // Unequip current weapon if any
+  let updatedPlayer = player;
+  if (player.equipped.weapon) {
+    updatedPlayer = addItemToInventory(updatedPlayer, player.equipped.weapon);
+  }
+
+  // Remove weapon from inventory and equip it
+  updatedPlayer = removeItemFromInventory(updatedPlayer, weaponId);
+
+  return {
+    ...updatedPlayer,
+    equipped: {
+      ...updatedPlayer.equipped,
+      weapon
+    }
+  };
+};
+
+// Equip armor
+export const equipArmor = (player: Player, armorId: string): Player => {
+  const armor = player.inventory.items.find(i => i.id === armorId) as Armor | undefined;
+
+  if (!armor || !('protection' in armor)) {
+    return player; // Not armor
+  }
+
+  // Unequip current armor if any
+  let updatedPlayer = player;
+  if (player.equipped.armor) {
+    updatedPlayer = addItemToInventory(updatedPlayer, player.equipped.armor);
+  }
+
+  // Remove armor from inventory and equip it
+  updatedPlayer = removeItemFromInventory(updatedPlayer, armorId);
+
+  return {
+    ...updatedPlayer,
+    equipped: {
+      ...updatedPlayer.equipped,
+      armor
+    }
+  };
+};
+
+// Unequip weapon
+export const unequipWeapon = (player: Player): Player => {
+  if (!player.equipped.weapon) {
+    return player;
+  }
+
+  const updatedPlayer = addItemToInventory(player, player.equipped.weapon);
+
+  return {
+    ...updatedPlayer,
+    equipped: {
+      ...updatedPlayer.equipped,
+      weapon: undefined
+    }
+  };
+};
+
+// Unequip armor
+export const unequipArmor = (player: Player): Player => {
+  if (!player.equipped.armor) {
+    return player;
+  }
+
+  const updatedPlayer = addItemToInventory(player, player.equipped.armor);
+
+  return {
+    ...updatedPlayer,
+    equipped: {
+      ...updatedPlayer.equipped,
+      armor: undefined
+    }
+  };
 }; 

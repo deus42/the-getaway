@@ -28,6 +28,11 @@ export interface Player extends Entity {
     maxWeight: number;
     currentWeight: number;
   };
+  equipped: {
+    weapon?: Weapon;
+    armor?: Armor;
+    accessory?: Item;
+  };
 }
 
 // Alert state for enemies with perception
@@ -86,16 +91,37 @@ export interface Item {
   isQuestItem: boolean;
 }
 
+// Equipment stat modifiers
+export interface StatModifiers {
+  strengthBonus?: number;
+  perceptionBonus?: number;
+  enduranceBonus?: number;
+  charismaBonus?: number;
+  intelligenceBonus?: number;
+  agilityBonus?: number;
+  luckBonus?: number;
+  armorRating?: number;
+  apPenalty?: number;
+  damageBonus?: number;
+}
+
+// Equipment slots
+export type EquipmentSlot = 'weapon' | 'armor' | 'accessory';
+
 // Weapon extends item
 export interface Weapon extends Item {
   damage: number;
   range: number;
   apCost: number;
+  slot: 'weapon';
+  statModifiers?: StatModifiers;
 }
 
 // Armor extends item
 export interface Armor extends Item {
   protection: number;
+  slot: 'armor';
+  statModifiers?: StatModifiers;
 }
 
 // Consumable extends item

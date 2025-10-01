@@ -35,6 +35,11 @@ export const DEFAULT_PLAYER: Player = {
     items: [],
     maxWeight: defaultCarryWeight,
     currentWeight: 0
+  },
+  equipped: {
+    weapon: undefined,
+    armor: undefined,
+    accessory: undefined
   }
 };
 

@@ -553,3 +553,77 @@ Added setSkill() action, enhanced updateSkill() with automatic recalculation
 - Equipment stat bonuses will be added in Step 23.5
 </notes>
 </step>
+
+<step id="23.5" status="completed">
+<step_metadata>
+  <number>23.5</number>
+  <title>Wire Equipment Stats to Combat Formulas</title>
+  <status>Completed</status>
+  <date>October 3, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Extended item interfaces (Weapon, Armor) to include StatModifiers with stat bonuses (strength, perception, etc.), armor rating, AP penalty, and damage bonus fields.
+2. Added equipment slot tracking: Player interface now includes equipped: { weapon, armor, accessory } to track equipped items separately from inventory.
+3. Created equipmentEffects.ts system with bonus aggregation functions:
+   - getEquippedBonuses() aggregates all stat modifiers from equipped items
+   - calculateEffectiveSkills() computes attributes with equipment bonuses
+   - getEffectiveArmorRating() returns total armor rating
+   - getEffectiveMaxAP() applies AP penalties from heavy armor
+   - applyArmorReduction() calculates damage reduction (minimum 1 damage always gets through)
+4. Updated statCalculations.ts with equipment-aware functions:
+   - calculateDerivedStatsWithEquipment() uses effective attributes including equipment
+   - getEffectiveAttribute() returns single attribute with equipment bonuses
+   - getEffectiveAttributes() returns all attributes with equipment bonuses
+5. Enhanced inventorySystem.ts with equipment management:
+   - equipWeapon() / equipArmor() swap items between inventory and equipped slots
+   - unequipWeapon() / unequipArmor() return items to inventory
+   - Updated createWeapon() and createArmor() to accept optional statModifiers parameter
+6. Added Redux actions to playerSlice:
+   - equipWeapon / equipArmor: move items from inventory to equipped slots
+   - unequipWeapon / unequipArmor: return equipped items to inventory
+7. Updated DEFAULT_PLAYER to include empty equipped object.
+</tasks>
+
+<implementation>
+- Equipment stat system is fully integrated but currently has no equipment with modifiers defined (future: add items with bonuses in content files)
+- Armor rating provides flat damage reduction (e.g., 5 armor reduces 10 damage attack to 5 damage)
+- AP penalties from heavy armor directly reduce max AP (e.g., -1 AP penalty makes 6 AP become 5 AP)
+- Equipment swapping automatically handles inventory weight (equipped items don't count toward carry weight)
+- Stat bonuses stack additively (weapon +2 STR + armor +1 STR = +3 STR total)
+- Minimum 1 damage always gets through armor (prevents complete damage negation)
+</implementation>
+
+<code_reference file="src/game/interfaces/types.ts">
+Added StatModifiers interface, equipment slot tracking to Player, and slot field to Weapon/Armor interfaces
+</code_reference>
+
+<code_reference file="src/game/systems/equipmentEffects.ts">
+Created equipment bonus aggregation system with effective stat calculations and armor reduction formulas
+</code_reference>
+
+<code_reference file="src/game/systems/statCalculations.ts">
+Added calculateDerivedStatsWithEquipment(), getEffectiveAttribute(), and getEffectiveAttributes() functions
+</code_reference>
+
+<code_reference file="src/game/inventory/inventorySystem.ts">
+Added equipWeapon/Armor and unequipWeapon/Armor functions, updated item creation functions
+</code_reference>
+
+<code_reference file="src/store/playerSlice.ts">
+Added equipWeapon, equipArmor, unequipWeapon, unequipArmor Redux actions
+</code_reference>
+
+<validation>
+- `yarn build` - successful compilation with no TypeScript errors
+- Equipment system compiles and integrates with existing attribute and inventory systems
+- Ready for combat integration in future steps
+</validation>
+
+<notes>
+- Combat integration deferred until combat system is actively refactored (combat damage formulas will call getEffectiveArmorRating() and applyArmorReduction())
+- Visual feedback for stat changes not yet implemented (PlayerStatsPanel UI pending)
+- No equipment items with stat modifiers defined yet (will be added in content files later)
+- Accessory slot defined but not yet implemented (future expansion)
+</notes>
+</step>

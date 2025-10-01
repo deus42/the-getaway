@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Player, Position, Item, PlayerSkills } from '../game/interfaces/types';
+import { Player, Position, Item, PlayerSkills, Weapon, Armor } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
 
@@ -128,6 +128,82 @@ export const playerSlice = createSlice({
     // Set the entire player data object (useful after complex operations)
     setPlayerData: (state, action: PayloadAction<Player>) => {
       state.data = action.payload;
+    },
+
+    // Equip a weapon
+    equipWeapon: (state, action: PayloadAction<string>) => {
+      const weaponId = action.payload;
+      const weapon = state.data.inventory.items.find(i => i.id === weaponId) as Weapon | undefined;
+
+      if (!weapon || !('damage' in weapon)) {
+        return; // Not a weapon
+      }
+
+      // Unequip current weapon if any (add back to inventory)
+      if (state.data.equipped.weapon) {
+        state.data.inventory.items.push(state.data.equipped.weapon);
+        state.data.inventory.currentWeight += state.data.equipped.weapon.weight;
+      }
+
+      // Remove weapon from inventory
+      state.data.inventory.items = state.data.inventory.items.filter(i => i.id !== weaponId);
+      state.data.inventory.currentWeight -= weapon.weight;
+
+      // Equip weapon
+      state.data.equipped.weapon = weapon;
+    },
+
+    // Equip armor
+    equipArmor: (state, action: PayloadAction<string>) => {
+      const armorId = action.payload;
+      const armor = state.data.inventory.items.find(i => i.id === armorId) as Armor | undefined;
+
+      if (!armor || !('protection' in armor)) {
+        return; // Not armor
+      }
+
+      // Unequip current armor if any (add back to inventory)
+      if (state.data.equipped.armor) {
+        state.data.inventory.items.push(state.data.equipped.armor);
+        state.data.inventory.currentWeight += state.data.equipped.armor.weight;
+      }
+
+      // Remove armor from inventory
+      state.data.inventory.items = state.data.inventory.items.filter(i => i.id !== armorId);
+      state.data.inventory.currentWeight -= armor.weight;
+
+      // Equip armor
+      state.data.equipped.armor = armor;
+    },
+
+    // Unequip weapon
+    unequipWeapon: (state) => {
+      if (!state.data.equipped.weapon) {
+        return;
+      }
+
+      // Add weapon back to inventory
+      const weapon = state.data.equipped.weapon;
+      state.data.inventory.items.push(weapon);
+      state.data.inventory.currentWeight += weapon.weight;
+
+      // Unequip
+      state.data.equipped.weapon = undefined;
+    },
+
+    // Unequip armor
+    unequipArmor: (state) => {
+      if (!state.data.equipped.armor) {
+        return;
+      }
+
+      // Add armor back to inventory
+      const armor = state.data.equipped.armor;
+      state.data.inventory.items.push(armor);
+      state.data.inventory.currentWeight += armor.weight;
+
+      // Unequip
+      state.data.equipped.armor = undefined;
     }
   }
 });
@@ -146,7 +222,11 @@ export const {
   addItem,
   removeItem,
   resetPlayer,
-  setPlayerData
+  setPlayerData,
+  equipWeapon,
+  equipArmor,
+  unequipWeapon,
+  unequipArmor
 } = playerSlice.actions;
 
 export default playerSlice.reducer; 

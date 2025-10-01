@@ -1,4 +1,5 @@
-import { PlayerSkills } from '../interfaces/types';
+import { PlayerSkills, Player } from '../interfaces/types';
+import { getEquippedBonuses, calculateEffectiveSkills, getEffectiveMaxAP } from './equipmentEffects';
 
 /**
  * Derived Stats - calculated from primary attributes
@@ -165,4 +166,47 @@ export const formatStatWithModifier = (baseValue: number, modifiedValue: number)
   }
   const sign = modifier > 0 ? '+' : '';
   return `${modifiedValue} (${sign}${modifier})`;
+};
+
+/**
+ * Calculate derived stats from player including equipment bonuses
+ * @param player - Player with base attributes and equipped items
+ * @returns Object containing all derived stat values with equipment applied
+ */
+export const calculateDerivedStatsWithEquipment = (player: Player): DerivedStats => {
+  const equipmentBonuses = getEquippedBonuses(player);
+  const effectiveSkills = calculateEffectiveSkills(player.skills, equipmentBonuses);
+
+  // Calculate base stats using effective (equipment-modified) attributes
+  const baseStats = calculateDerivedStats(effectiveSkills);
+
+  // Apply equipment-specific modifiers (AP penalty from heavy armor)
+  const effectiveMaxAP = getEffectiveMaxAP(baseStats.baseAP, equipmentBonuses);
+
+  return {
+    ...baseStats,
+    baseAP: effectiveMaxAP
+  };
+};
+
+/**
+ * Get effective attribute value including equipment bonuses
+ * @param player - Player with base attributes and equipped items
+ * @param attribute - Attribute to get effective value for
+ * @returns Effective attribute value with equipment bonuses
+ */
+export const getEffectiveAttribute = (player: Player, attribute: keyof PlayerSkills): number => {
+  const equipmentBonuses = getEquippedBonuses(player);
+  const effectiveSkills = calculateEffectiveSkills(player.skills, equipmentBonuses);
+  return effectiveSkills[attribute];
+};
+
+/**
+ * Get all effective attributes with equipment bonuses
+ * @param player - Player with base attributes and equipped items
+ * @returns All attributes with equipment bonuses applied
+ */
+export const getEffectiveAttributes = (player: Player): PlayerSkills => {
+  const equipmentBonuses = getEquippedBonuses(player);
+  return calculateEffectiveSkills(player.skills, equipmentBonuses);
 };
