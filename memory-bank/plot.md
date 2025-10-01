@@ -111,6 +111,22 @@
       <rule>Mark code phrases with italics in scripts (_quiet tide_).</rule>
       <rule>Keep broadcast slogans in uppercase to contrast with human dialogue (“HAIL HARROW. HAIL ORDER.”).</rule>
     </formatting_cheatsheet>
+
+    <writing_guidelines>
+      <influence id="brautigan" focus="whimsical_surrealism">Lean on dream-like imagery and symbolic juxtapositions; treat pathos as eccentricity, letting wonder bloom even in ruins.</influence>
+      <influence id="vonnegut" focus="dry_humor_moral_core">Favor short, plain sentences with sardonic edge; use wit to expose absurd bureaucracy while keeping moral stakes clear.</influence>
+      <influence id="sample_voice" focus="bittersweet_contrast">Balance intimate banter with wartime horror, letting humor mask fear and deferred dreams reappear as motifs.</influence>
+
+      <guideline id="1">Blend bleakness with wit—humor should feel like survival instinct, not slapstick.</guideline>
+      <guideline id="2">Introduce surreal or absurd details (drones as coyotes, neon farms in flooded malls) to underline occupied America’s strangeness.</guideline>
+      <guideline id="3">Write in short, rhythmic sentences; keep the tone conversational and avoid unnecessary jargon.</guideline>
+      <guideline id="4">Satirize regime propaganda and corporate greed through dry irony; let laughter reclaim humanity.</guideline>
+      <guideline id="5">Reveal moral weight through player choices and dialogue consequences rather than overt preaching.</guideline>
+      <guideline id="6">Deploy pop-culture or meta-references sparingly; ensure each deepens character or stakes.</guideline>
+      <guideline id="7">Counter cynicism with flashes of innocence—cheap pizza, zoo trips under sirens, feeding llamas during raids.</guideline>
+      <guideline id="8">Experiment with interludes, radio monologues, and fragmented memories to convey the war’s chaos.</guideline>
+      <guideline id="9">Give every faction and character distinct idioms; weave in Ukrainian slang or mixed languages to ground authenticity.</guideline>
+    </writing_guidelines>
   </tone_and_dialogue>
 
   <themes_and_motifs>
