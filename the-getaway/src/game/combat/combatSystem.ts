@@ -4,6 +4,12 @@ import {
   calculateDerivedStatsWithEquipment,
   calculateDerivedStats,
 } from '../systems/statCalculations';
+import {
+  getEquippedBonuses,
+  getEffectiveDamage,
+  applyArmorReduction,
+  getEffectiveArmorRating,
+} from '../systems/equipmentEffects';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
@@ -116,51 +122,67 @@ export const calculateHitChance = (
 
 // Execute an attack
 export const executeAttack = (
-  attacker: Player | Enemy, 
-  target: Player | Enemy, 
+  attacker: Player | Enemy,
+  target: Player | Enemy,
   isBehindCover: boolean
 ): { success: boolean; damage: number; newAttacker: Player | Enemy; newTarget: Player | Enemy } => {
-  // Check if attacker has enough AP
-  if (attacker.actionPoints < DEFAULT_ATTACK_COST) {
-    return { 
-      success: false, 
-      damage: 0, 
-      newAttacker: attacker, 
-      newTarget: target 
+  const attackCost = 'skills' in attacker && attacker.equipped?.weapon?.apCost
+    ? Math.max(1, attacker.equipped.weapon.apCost)
+    : DEFAULT_ATTACK_COST;
+
+  if (attacker.actionPoints < attackCost) {
+    return {
+      success: false,
+      damage: 0,
+      newAttacker: attacker,
+      newTarget: target,
     };
   }
-  
-  // Calculate hit chance
+
   const hitChance = calculateHitChance(attacker, target, isBehindCover);
-  
-  // Roll to hit
   const roll = getRandomRoll();
   const hit = roll <= hitChance;
-  
-  // Calculate damage
-  let damageAmount = hit ? ('damage' in attacker ? attacker.damage : DEFAULT_ATTACK_DAMAGE) : 0;
 
-  if (hit && 'skills' in attacker) {
-    const attackerStats = getPlayerDerivedStats(attacker as Player);
-    damageAmount += attackerStats.meleeDamageBonus;
+  let damageAmount = 0;
+
+  if (hit) {
+    if ('skills' in attacker) {
+      const playerAttacker = attacker as Player;
+      const attackerDerived = getPlayerDerivedStats(playerAttacker);
+      const bonuses = getEquippedBonuses(playerAttacker);
+      const equippedWeapon = playerAttacker.equipped.weapon;
+      const baseWeaponDamage = equippedWeapon?.damage ?? DEFAULT_ATTACK_DAMAGE;
+      const isMeleeAttack = !equippedWeapon || equippedWeapon.range <= 1;
+      const strengthBonus = isMeleeAttack ? attackerDerived.meleeDamageBonus : 0;
+
+      damageAmount = getEffectiveDamage(baseWeaponDamage, bonuses, strengthBonus);
+    } else {
+      damageAmount = 'damage' in attacker ? attacker.damage : DEFAULT_ATTACK_DAMAGE;
+    }
+
+    if ('skills' in target) {
+      const armorRating = getEffectiveArmorRating(target as Player);
+      if (armorRating > 0) {
+        damageAmount = applyArmorReduction(damageAmount, armorRating);
+      }
+    }
   }
-    
-  // Apply damage to target and update AP
+
   const newTarget = {
     ...target,
-    health: Math.max(0, target.health - damageAmount)
+    health: Math.max(0, target.health - damageAmount),
   };
-  
+
   const newAttacker = {
     ...attacker,
-    actionPoints: attacker.actionPoints - DEFAULT_ATTACK_COST
+    actionPoints: Math.max(0, attacker.actionPoints - attackCost),
   };
-  
+
   return {
     success: hit,
     damage: damageAmount,
     newAttacker,
-    newTarget
+    newTarget,
   };
 };
 

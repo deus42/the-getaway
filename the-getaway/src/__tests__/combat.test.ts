@@ -16,6 +16,7 @@ import { MapArea } from '../game/interfaces/types';
 import { createBasicMapArea } from '../game/world/grid';
 import { v4 as uuidv4 } from 'uuid';
 import { determineEnemyMove } from '../game/combat/enemyAI';
+import { createWeapon, createArmor } from '../game/inventory/inventorySystem';
 
 function createEnemy(
   position: Position,
@@ -168,7 +169,61 @@ describe('Combat System Tests', () => {
       expect(result.actionPoints).toBe(player.actionPoints - DEFAULT_MOVEMENT_COST);
     });
   });
-  
+
+  describe('Equipment Integration', () => {
+    test('player weapon damage includes equipment bonuses and strength', () => {
+      setRandomGenerator(() => 0.1);
+
+      const weapon = createWeapon('Test Blade', 10, 1, 2, 2, { damageBonus: 3 });
+      const attackerWithWeapon: Player = {
+        ...DEFAULT_PLAYER,
+        position: { x: 0, y: 0 },
+        actionPoints: 5,
+        maxActionPoints: 5,
+        skills: {
+          ...DEFAULT_PLAYER.skills,
+          strength: 8,
+        },
+        equipped: {
+          ...DEFAULT_PLAYER.equipped,
+          weapon,
+        },
+      };
+
+      const targetEnemy = createEnemy({ x: 0, y: 1 }, 30, 30, 5);
+
+      const result = executeAttack(attackerWithWeapon, targetEnemy, false);
+
+      expect(result.success).toBe(true);
+      expect(result.damage).toBe(17); // 10 base + 3 weapon bonus + floor(8/2)=4 strength bonus
+      expect(result.newTarget.health).toBe(targetEnemy.health - 17);
+      expect(result.newAttacker.actionPoints).toBe(attackerWithWeapon.actionPoints - weapon.apCost);
+    });
+
+    test('player armor reduces incoming damage with minimum floor of one', () => {
+      setRandomGenerator(() => 0.1);
+
+      const armor = createArmor('Test Armor', 4, 5);
+      const defenderWithArmor: Player = {
+        ...DEFAULT_PLAYER,
+        position: { x: 0, y: 0 },
+        equipped: {
+          ...DEFAULT_PLAYER.equipped,
+          armor,
+        },
+      };
+
+      const attackingEnemy = createEnemy({ x: 0, y: 1 }, 25, 25, 5);
+      attackingEnemy.damage = 6;
+
+      const result = executeAttack(attackingEnemy, defenderWithArmor, false);
+
+      expect(result.success).toBe(true);
+      expect(result.damage).toBe(2); // 6 damage - 4 armor
+      expect(result.newTarget.health).toBe(defenderWithArmor.health - 2);
+    });
+  });
+
   // Test turn management
   describe('Turn Management', () => {
     test('initializeCombat should reset AP for player and enemies', () => {

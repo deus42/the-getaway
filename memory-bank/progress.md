@@ -620,9 +620,9 @@ Added setSkill() action, enhanced updateSkill() with automatic recalculation
 </validation>
 
 <notes>
-- Combat/dialogue integration deferred to when those systems are actively modified (Step 26 advanced combat, Step 16+ dialogue)
-- PlayerStatsPanel UI update deferred to Step 22.2 when attribute allocation needs derived stat preview
-- Equipment stat bonuses will be added in Step 23.5
+- Combat and dialogue systems now consume the shared derived stat helpers; future steps will expand formulas but the baseline integration is live
+- PlayerStatsPanel exposes attribute spending via Step 22.2/23 updates and will gain further polish alongside progression features
+- Equipment stat bonuses are extended in Step 23.5 for weapon/armor impact
 </notes>
 </step>
 
@@ -658,12 +658,10 @@ Added setSkill() action, enhanced updateSkill() with automatic recalculation
 </tasks>
 
 <implementation>
-- Equipment stat system is fully integrated but currently has no equipment with modifiers defined (future: add items with bonuses in content files)
-- Armor rating provides flat damage reduction (e.g., 5 armor reduces 10 damage attack to 5 damage)
+- Equipment stat system aggregates modifiers and now feeds combat: weapon bonuses increase outgoing damage and armor absorbs incoming hits with a 1-damage floor
 - AP penalties from heavy armor directly reduce max AP (e.g., -1 AP penalty makes 6 AP become 5 AP)
 - Equipment swapping automatically handles inventory weight (equipped items don't count toward carry weight)
 - Stat bonuses stack additively (weapon +2 STR + armor +1 STR = +3 STR total)
-- Minimum 1 damage always gets through armor (prevents complete damage negation)
 </implementation>
 
 <code_reference file="src/game/interfaces/types.ts">
@@ -686,16 +684,22 @@ Added equipWeapon/Armor and unequipWeapon/Armor functions, updated item creation
 Added equipWeapon, equipArmor, unequipWeapon, unequipArmor Redux actions
 </code_reference>
 
+<code_reference file="src/game/combat/combatSystem.ts">
+Hooked equipment bonuses into hit chance, damage, and armor mitigation
+</code_reference>
+
+<code_reference file="src/__tests__/combat.test.ts">
+Added regression coverage for weapon damage bonuses and armor reduction
+</code_reference>
+
 <validation>
-- `yarn build` - successful compilation with no TypeScript errors
-- Equipment system compiles and integrates with existing attribute and inventory systems
-- Ready for combat integration in future steps
+- `yarn build`
+- `yarn test combat.test.ts --watch=false`
 </validation>
 
 <notes>
-- Combat integration deferred until combat system is actively refactored (combat damage formulas will call getEffectiveArmorRating() and applyArmorReduction())
-- Visual feedback for stat changes not yet implemented (PlayerStatsPanel UI pending)
-- No equipment items with stat modifiers defined yet (will be added in content files later)
+- Visual feedback for stat changes remains a future enhancement (PlayerStatsPanel will receive styling cues)
+- No equipment items with stat modifiers defined yet (content files will expand the catalog)
 - Accessory slot defined but not yet implemented (future expansion)
 </notes>
 </step>
