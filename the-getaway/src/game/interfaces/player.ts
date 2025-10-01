@@ -1,5 +1,6 @@
 import { Player, PlayerSkills, Position } from './types';
 import { v4 as uuidv4 } from 'uuid';
+import { calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../systems/statCalculations';
 
 // Default skill values
 export const DEFAULT_SKILLS: PlayerSkills = {
@@ -12,22 +13,27 @@ export const DEFAULT_SKILLS: PlayerSkills = {
   luck: 5
 };
 
+// Calculate derived stats from DEFAULT_SKILLS
+const defaultMaxHP = calculateMaxHP(DEFAULT_SKILLS.endurance);
+const defaultBaseAP = calculateBaseAP(DEFAULT_SKILLS.agility);
+const defaultCarryWeight = calculateCarryWeight(DEFAULT_SKILLS.strength);
+
 // Default player configuration
 export const DEFAULT_PLAYER: Player = {
   id: uuidv4(),
   name: 'Player',
   position: { x: 3, y: 1 },
-  health: 100,
-  maxHealth: 100,
-  actionPoints: 6,
-  maxActionPoints: 6,
+  health: defaultMaxHP,
+  maxHealth: defaultMaxHP,
+  actionPoints: defaultBaseAP,
+  maxActionPoints: defaultBaseAP,
   skills: DEFAULT_SKILLS,
   level: 1,
   experience: 0,
   credits: 0,
   inventory: {
     items: [],
-    maxWeight: 150,
+    maxWeight: defaultCarryWeight,
     currentWeight: 0
   }
 };

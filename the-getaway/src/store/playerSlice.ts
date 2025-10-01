@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Player, Position, Item, PlayerSkills } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
+import { calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
 
 export interface PlayerState {
   data: Player;
@@ -61,7 +62,39 @@ export const playerSlice = createSlice({
     // Update a skill
     updateSkill: (state, action: PayloadAction<{ skill: keyof PlayerSkills; amount: number }>) => {
       const { skill, amount } = action.payload;
-      state.data.skills[skill] += amount;
+      state.data.skills[skill] = Math.max(1, Math.min(10, state.data.skills[skill] + amount));
+
+      // Recalculate derived stats when attributes change
+      const skills = state.data.skills;
+      const newMaxHP = calculateMaxHP(skills.endurance);
+      const newBaseAP = calculateBaseAP(skills.agility);
+      const newCarryWeight = calculateCarryWeight(skills.strength);
+
+      // Update max HP (preserve current HP ratio)
+      const hpRatio = state.data.maxHealth > 0 ? state.data.health / state.data.maxHealth : 1;
+      state.data.maxHealth = newMaxHP;
+      state.data.health = Math.min(state.data.health, Math.floor(newMaxHP * hpRatio));
+
+      // Update max AP (preserve current AP if possible)
+      state.data.maxActionPoints = newBaseAP;
+      state.data.actionPoints = Math.min(state.data.actionPoints, newBaseAP);
+
+      // Update carry weight
+      state.data.inventory.maxWeight = newCarryWeight;
+    },
+
+    // Set a skill directly (for character creation)
+    setSkill: (state, action: PayloadAction<{ skill: keyof PlayerSkills; value: number }>) => {
+      const { skill, value } = action.payload;
+      state.data.skills[skill] = Math.max(1, Math.min(10, value));
+
+      // Recalculate derived stats
+      const skills = state.data.skills;
+      state.data.maxHealth = calculateMaxHP(skills.endurance);
+      state.data.health = state.data.maxHealth;
+      state.data.maxActionPoints = calculateBaseAP(skills.agility);
+      state.data.actionPoints = state.data.maxActionPoints;
+      state.data.inventory.maxWeight = calculateCarryWeight(skills.strength);
     },
     
     // Add item to inventory
@@ -109,6 +142,7 @@ export const {
   addCredits,
   levelUp,
   updateSkill,
+  setSkill,
   addItem,
   removeItem,
   resetPlayer,
