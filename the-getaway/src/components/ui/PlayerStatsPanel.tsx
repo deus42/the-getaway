@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
 import { buildPlayerStatProfile, PlayerStatFocus } from '../../game/interfaces/playerStats';
+import { getEquippedBonuses, calculateEffectiveSkills } from '../../game/systems/equipmentEffects';
 
 const containerStyle: React.CSSProperties = {
   display: 'flex',
@@ -90,10 +91,14 @@ const focusColorMap: Record<PlayerStatFocus, string> = {
 };
 
 const PlayerStatsPanel: React.FC = () => {
-  const skills = useSelector((state: RootState) => state.player.data.skills);
+  const player = useSelector((state: RootState) => state.player.data);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
-  const profile = buildPlayerStatProfile(skills);
+
+  // Calculate effective skills including equipment bonuses
+  const equipmentBonuses = getEquippedBonuses(player);
+  const effectiveSkills = calculateEffectiveSkills(player.skills, equipmentBonuses);
+  const profile = buildPlayerStatProfile(effectiveSkills);
 
   return (
     <section style={containerStyle} aria-label="player-statistics">
@@ -106,6 +111,8 @@ const PlayerStatsPanel: React.FC = () => {
         {profile.map((entry) => {
           const label = uiStrings.skills[entry.key];
           const highlight = focusColorMap[entry.focus] ?? focusColorMap.combat;
+          const baseValue = player.skills[entry.key];
+          const hasBonus = baseValue !== entry.value;
 
           return (
             <div key={entry.key} style={statRowStyle}>
@@ -113,7 +120,13 @@ const PlayerStatsPanel: React.FC = () => {
                 <span style={abbreviationBadgeStyle(highlight)}>{entry.abbreviation}</span>
                 <span>{label}</span>
               </div>
-              <span style={statValueStyle}>{entry.value}</span>
+              <span style={{
+                ...statValueStyle,
+                color: hasBonus ? '#22c55e' : '#f8fafc'
+              }}>
+                {entry.value}
+                {hasBonus && <span style={{ fontSize: '0.7rem', marginLeft: '0.25rem', opacity: 0.7 }}>({baseValue})</span>}
+              </span>
             </div>
           );
         })}
