@@ -1,10 +1,11 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
 import { buildPlayerStatProfile, PlayerStatFocus } from '../../game/interfaces/playerStats';
 import { getEquippedBonuses, calculateEffectiveSkills } from '../../game/systems/equipmentEffects';
 import { calculateDerivedStatsWithEquipment, calculateDerivedStats } from '../../game/systems/statCalculations';
+import { spendAttributePoint } from '../../store/playerSlice';
 
 const containerStyle: React.CSSProperties = {
   display: 'flex',
@@ -81,6 +82,65 @@ const statValueStyle: React.CSSProperties = {
   color: '#f8fafc',
 };
 
+const valueWrapperStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.35rem',
+};
+
+const attributePointsBannerStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.3rem',
+  padding: '0.5rem 0.6rem',
+  borderRadius: '8px',
+  border: '1px solid rgba(94, 234, 212, 0.35)',
+  background: 'rgba(15, 118, 110, 0.15)',
+};
+
+const attributePointsHeaderStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+};
+
+const attributePointsTitleStyle: React.CSSProperties = {
+  fontSize: '0.68rem',
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+  color: 'rgba(94, 234, 212, 0.95)',
+};
+
+const attributePointsValueStyle: React.CSSProperties = {
+  fontFamily: "'DM Mono', monospace",
+  fontSize: '0.85rem',
+  fontWeight: 700,
+  color: '#5eead4',
+  textShadow: '0 0 6px rgba(94, 234, 212, 0.45)',
+};
+
+const attributePointsHintStyle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  color: 'rgba(203, 213, 225, 0.9)',
+  margin: 0,
+};
+
+const attributeButtonStyle = (disabled: boolean): React.CSSProperties => ({
+  padding: '0.25rem 0.4rem',
+  borderRadius: '6px',
+  border: '1px solid rgba(94, 234, 212, 0.6)',
+  background: disabled ? 'rgba(148, 163, 184, 0.18)' : 'rgba(94, 234, 212, 0.18)',
+  color: disabled ? 'rgba(148, 163, 184, 0.8)' : '#5eead4',
+  fontSize: '0.7rem',
+  fontWeight: 600,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  transition: 'all 0.2s ease',
+  minWidth: '3.75rem',
+  textAlign: 'center',
+});
+
 const focusColorMap: Record<PlayerStatFocus, string> = {
   combat: 'linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(248, 113, 113, 0.85))',
   perception: 'linear-gradient(135deg, rgba(56, 189, 248, 0.85), rgba(59, 130, 246, 0.85))',
@@ -92,6 +152,7 @@ const focusColorMap: Record<PlayerStatFocus, string> = {
 };
 
 const PlayerStatsPanel: React.FC = () => {
+  const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
@@ -108,6 +169,13 @@ const PlayerStatsPanel: React.FC = () => {
     console.warn('[PlayerStatsPanel] Unable to use equipment-aware stats, falling back to base attributes.', error);
     derived = calculateDerivedStats(player.skills);
   }
+
+  const attributePointsAvailable = player.attributePoints;
+  const showAttributeBoosters = attributePointsAvailable > 0;
+
+  const handleIncreaseAttribute = (attribute: keyof typeof player.skills) => {
+    dispatch(spendAttributePoint(attribute));
+  };
 
   const derivedStats = [
     {
@@ -143,12 +211,27 @@ const PlayerStatsPanel: React.FC = () => {
         <h3 style={headingTitleStyle}>{uiStrings.playerStatus.attributesTitle}</h3>
       </header>
 
+      {showAttributeBoosters && (
+        <div
+          style={attributePointsBannerStyle}
+          role="group"
+          aria-label={uiStrings.playerStatus.attributePointsLabel}
+        >
+          <div style={attributePointsHeaderStyle}>
+            <span style={attributePointsTitleStyle}>{uiStrings.playerStatus.attributePointsLabel}</span>
+            <span style={attributePointsValueStyle}>{attributePointsAvailable}</span>
+          </div>
+          <p style={attributePointsHintStyle}>{uiStrings.playerStatus.attributePointsHint}</p>
+        </div>
+      )}
+
       <div style={statGridStyle}>
         {profile.map((entry) => {
           const label = uiStrings.skills[entry.key];
           const highlight = focusColorMap[entry.focus] ?? focusColorMap.combat;
           const baseValue = player.skills[entry.key];
           const hasBonus = baseValue !== entry.value;
+          const increaseDisabled = baseValue >= 10 || attributePointsAvailable <= 0;
 
           return (
             <div
@@ -160,13 +243,37 @@ const PlayerStatsPanel: React.FC = () => {
                 <span style={abbreviationBadgeStyle(highlight)}>{entry.abbreviation}</span>
                 <span>{label}</span>
               </div>
-              <span style={{
-                ...statValueStyle,
-                color: hasBonus ? '#22c55e' : '#f8fafc'
-              }}>
-                {entry.value}
-                {hasBonus && <span style={{ fontSize: '0.65rem', marginLeft: '0.2rem', opacity: 0.6 }}>({baseValue})</span>}
-              </span>
+              <div style={valueWrapperStyle}>
+                <span
+                  style={{
+                    ...statValueStyle,
+                    color: hasBonus ? '#22c55e' : '#f8fafc',
+                  }}
+                >
+                  {entry.value}
+                  {hasBonus && (
+                    <span style={{ fontSize: '0.65rem', marginLeft: '0.2rem', opacity: 0.6 }}>
+                      ({baseValue})
+                    </span>
+                  )}
+                </span>
+                {showAttributeBoosters && (
+                  <button
+                    type="button"
+                    style={attributeButtonStyle(increaseDisabled)}
+                    disabled={increaseDisabled}
+                    onClick={() => handleIncreaseAttribute(entry.key)}
+                    aria-label={uiStrings.playerStatus.increaseAttribute(entry.abbreviation)}
+                    title={
+                      increaseDisabled && baseValue >= 10
+                        ? uiStrings.playerStatus.attributeMaxed
+                        : uiStrings.playerStatus.increaseAttribute(entry.abbreviation)
+                    }
+                  >
+                    +1
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}

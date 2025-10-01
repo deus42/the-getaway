@@ -201,6 +201,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       inventoryOverflow: (count) => `+${count} more`,
       attributesLabel: 'Core Attributes',
       attributesTitle: 'S.P.E.C.I.A.L. Profile',
+      attributePointsLabel: 'Attribute Points Available',
+      attributePointsHint: 'Spend these to raise your base SPECIAL stats before the next encounter.',
+      increaseAttribute: (abbr) => `Increase ${abbr}`,
+      attributeMaxed: 'Attribute already at maximum value.',
       derivedLabel: 'Derived Metrics',
       derivedTitle: 'Combat Readouts',
       derivedStats: {
@@ -341,6 +345,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       inventoryOverflow: (count) => `+${count} ще`,
       attributesLabel: 'Основні характеристики',
       attributesTitle: 'Профіль S.P.E.C.I.A.L.',
+      attributePointsLabel: 'Доступні очки атрибутів',
+      attributePointsHint: 'Витратьте їх, щоб підвищити базові характеристики SPECIAL перед наступною операцією.',
+      increaseAttribute: (abbr) => `Підвищити ${abbr}`,
+      attributeMaxed: 'Атрибут уже на максимальному рівні.',
       derivedLabel: 'Похідні показники',
       derivedTitle: 'Бойові параметри',
       derivedStats: {

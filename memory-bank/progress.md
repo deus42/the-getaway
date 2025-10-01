@@ -465,9 +465,9 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 <implementation>
 - Character creation state managed locally in React (not Redux) until completion to allow cancel/back without polluting game state
 - Name validation: 3-20 characters, alphanumeric + spaces + hyphens only
-- Visual presets stored as IDs ('operative', 'survivor', 'tech', 'scavenger') for future background integration in Step 22.3
+- Visual presets stored as IDs ('operative', 'survivor', 'tech', 'scavenger') and reused when the background catalog (Step 22.3) binds the final narrative payload
 - Enter key triggers Continue button when form valid
-- Cancel returns to main menu, Complete advances to game start (currently skips Steps 2-3 until 22.2/22.3 implemented)
+- Cancel returns to main menu; completing Step 1 now naturally routes into attribute allocation (22.2) and background selection (22.3) before dispatching initialization
 </implementation>
 
 <code_reference file="src/components/ui/CharacterCreationScreen.tsx">
@@ -488,9 +488,9 @@ Modified handleStartNewGame to show character creation instead of immediately st
 </validation>
 
 <notes>
-- Steps 2-3 (attribute allocation, background selection) will be added in Steps 22.2 and 22.3
-- Character data currently only used for log message; full integration pending Step 23 (stat system) and Step 22.2/22.3
-- Step indicators show 3 dots (for future Steps 1-3), currently only Step 1 active
+- Steps 22.2 and 22.3 hook onto this shell, completing attribute allocation and background selection before finalizing the player state
+- Character data seeds the operation log; follow-up steps now enrich it with finalized SPECIAL values and background metadata ahead of initialization
+- Step indicators track identity → attributes → background across the three-step wizard
 </notes>
 </step>
 
