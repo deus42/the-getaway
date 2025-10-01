@@ -713,7 +713,6 @@ export class MainScene extends Phaser.Scene {
     this.scale.off('resize', this.handleResize, this);
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
-    window.removeEventListener(MINIMAP_VIEWPORT_CLICK_EVENT, this.handleMinimapViewportClick as EventListener);
     if (this.input) {
       this.input.off('pointerdown', this.handlePointerDown, this);
     }

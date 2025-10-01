@@ -185,6 +185,7 @@ export interface DialogueNode {
   id: string;
   text: string;
   options: DialogueOption[];
+  speaker?: string;
 }
 
 // Dialogue option

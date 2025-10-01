@@ -20,7 +20,7 @@ import worldReducer, {
   clearReinforcementsSchedule,
   WorldState,
 } from '../store/worldSlice';
-import { MapArea, Enemy, NPC, Item, AlertLevel, TileType, Position } from '../game/interfaces/types';
+import { MapArea, Enemy, NPC, Item, AlertLevel, TileType, Position, MapTile } from '../game/interfaces/types';
 
 const createTestStore = (preloadedState?: { world: WorldState }) => {
   return configureStore({
@@ -31,20 +31,35 @@ const createTestStore = (preloadedState?: { world: WorldState }) => {
   });
 };
 
-const createTestMapArea = (): MapArea => ({
-  id: 'test-area',
-  name: 'Test Area',
-  width: 50,
-  height: 50,
-  tiles: Array.from({ length: 50 }, () =>
-    Array.from({ length: 50 }, () => TileType.FLOOR)
-  ),
-  entities: {
-    enemies: [],
-    npcs: [],
-    items: [],
-  },
+const createTile = (type: TileType = TileType.FLOOR, overrides: Partial<MapTile> = {}): MapTile => ({
+  type,
+  position: overrides.position ?? { x: 0, y: 0 },
+  isWalkable: overrides.isWalkable ?? type !== TileType.WALL,
+  provideCover: overrides.provideCover ?? type === TileType.COVER,
 });
+
+const createTestMapArea = (): MapArea => {
+  const width = 50;
+  const height = 50;
+  const tiles: MapTile[][] = Array.from({ length: height }, (_, y) =>
+    Array.from({ length: width }, (_, x) =>
+      createTile(TileType.FLOOR, { position: { x, y }, isWalkable: true, provideCover: false })
+    )
+  );
+
+  return {
+    id: 'test-area',
+    name: 'Test Area',
+    width,
+    height,
+    tiles,
+    entities: {
+      enemies: [],
+      npcs: [],
+      items: [],
+    },
+  };
+};
 
 const createTestEnemy = (name = 'Test Enemy'): Enemy => ({
   id: uuidv4(),
@@ -71,8 +86,11 @@ const createTestNPC = (name = 'Test NPC'): NPC => ({
   id: uuidv4(),
   name,
   position: { x: 15, y: 15 },
+  health: 10,
+  maxHealth: 10,
   dialogueId: 'test-dialogue',
-  faction: 'resistance',
+  routine: [],
+  isInteractive: true,
 });
 
 describe('worldSlice', () => {

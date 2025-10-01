@@ -1,6 +1,6 @@
 import { store } from '../../store';
 import type { RootState } from '../../store';
-import type { MapArea, Enemy, NPC } from '../interfaces/types';
+import type { MapArea, Enemy, NPC, MapTile } from '../interfaces/types';
 import type { ViewportUpdateDetail } from '../events';
 import {
   MINIMAP_VIEWPORT_CLICK_EVENT,
@@ -57,7 +57,7 @@ class MiniMapService extends EventTarget {
 
   private lastState: MiniMapStateDetail | null = null;
 
-  private tileSignature: { areaId: string; ref: TileType[][]; version: number } | null = null;
+  private tileSignature: { areaId: string; ref: MapTile[][]; version: number } | null = null;
 
   private viewport: MiniMapStateDetail['viewport'] | null = null;
 

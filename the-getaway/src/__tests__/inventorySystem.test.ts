@@ -330,11 +330,11 @@ describe('inventorySystem', () => {
 
     it('creates weapon with stat modifiers', () => {
       const weapon = createWeapon('Special Pistol', 15, 10, 3, 2, {
-        perception: 2,
-        agility: 1,
+        perceptionBonus: 2,
+        agilityBonus: 1,
       });
 
-      expect(weapon.statModifiers).toEqual({ perception: 2, agility: 1 });
+      expect(weapon.statModifiers).toEqual({ perceptionBonus: 2, agilityBonus: 1 });
     });
   });
 
@@ -351,11 +351,11 @@ describe('inventorySystem', () => {
 
     it('creates armor with stat modifiers', () => {
       const armor = createArmor('Heavy Armor', 20, 10, {
-        endurance: 2,
-        strength: -1,
+        enduranceBonus: 2,
+        strengthBonus: -1,
       });
 
-      expect(armor.statModifiers).toEqual({ endurance: 2, strength: -1 });
+      expect(armor.statModifiers).toEqual({ enduranceBonus: 2, strengthBonus: -1 });
     });
   });
 

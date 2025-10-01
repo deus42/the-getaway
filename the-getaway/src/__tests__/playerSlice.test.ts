@@ -529,6 +529,7 @@ describe('playerSlice', () => {
         range: 10,
         apCost: 3,
         isQuestItem: false,
+        slot: 'weapon',
       };
 
       store.dispatch(addItem(weapon));
@@ -561,6 +562,7 @@ describe('playerSlice', () => {
         range: 10,
         apCost: 3,
         isQuestItem: false,
+        slot: 'weapon',
       };
 
       const weapon2: Weapon = {
@@ -573,6 +575,7 @@ describe('playerSlice', () => {
         range: 12,
         apCost: 4,
         isQuestItem: false,
+        slot: 'weapon',
       };
 
       store.dispatch(addItem(weapon1));
@@ -607,6 +610,7 @@ describe('playerSlice', () => {
         range: 10,
         apCost: 3,
         isQuestItem: false,
+        slot: 'weapon',
       };
 
       store.dispatch(addItem(weapon));
@@ -638,6 +642,7 @@ describe('playerSlice', () => {
         value: 200,
         protection: 10,
         isQuestItem: false,
+        slot: 'armor',
       };
 
       store.dispatch(addItem(armor));
@@ -668,6 +673,7 @@ describe('playerSlice', () => {
         value: 200,
         protection: 10,
         isQuestItem: false,
+        slot: 'armor',
       };
 
       store.dispatch(addItem(armor));
