@@ -627,3 +627,106 @@ Added equipWeapon, equipArmor, unequipWeapon, unequipArmor Redux actions
 - Accessory slot defined but not yet implemented (future expansion)
 </notes>
 </step>
+
+<step id="24a" status="completed">
+<step_metadata>
+  <number>24a</number>
+  <title>XP and Leveling Foundation</title>
+  <status>Completed</status>
+  <date>October 1, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Created progression.ts system with complete XP and leveling mechanics:
+   - XP_REWARDS constants for all XP sources (quests, combat, skill checks, exploration)
+   - calculateXPForLevel() using formula: 100 * level * (1 + level * 0.15)
+   - calculateSkillPointsAwarded() using formula: 3 + floor(intelligence / 3)
+   - shouldAwardAttributePoint() - awards every 3 levels (3, 6, 9, etc.)
+   - shouldUnlockPerkSelection() - unlocks every 2 levels (2, 4, 6, etc.)
+   - processLevelUp() - handles sequential multiple level-ups automatically
+   - Helper functions: calculateXPProgress(), formatXPDisplay(), calculateTotalXPForLevel()
+2. Extended Player interface with progression tracking:
+   - Added skillPoints: number for unspent skill points (skill tree allocation)
+   - Added attributePoints: number for unspent attribute points (SPECIAL increases)
+3. Enhanced playerSlice.ts with XP and leveling actions:
+   - addExperience: automatically processes level-ups and awards skill/attribute points
+   - spendSkillPoints: reduces skillPoints counter (skill tree usage)
+   - spendAttributePoint: increases attribute by 1, recalculates derived stats (HP, AP, carry weight)
+4. Created level-up notification UI components:
+   - LevelUpModal.tsx: full-screen modal with animated "LEVEL UP" banner, shows new level, skill points earned, attribute points, perk unlocks
+   - XPNotification.tsx: toast notification system for XP gains with auto-dismiss
+   - XPNotificationManager: handles multiple stacked notifications
+5. Integrated progression UI into App.tsx:
+   - Added level-up modal state management
+   - Added XP notification queue with dismiss handlers
+   - Created progressionHelpers.ts for notification creation utilities
+6. Comprehensive test coverage in progression.test.ts:
+   - All 30 tests passing covering XP formulas, level-up mechanics, skill point awards, attribute point awards, perk unlocks
+   - Verified multiple level-up handling, HP/AP increases, intelligence-based skill point scaling
+</tasks>
+
+<implementation>
+- XP formula scales progressively: Level 2 = 260 XP, Level 3 = 435 XP, Level 5 = 875 XP, Level 10 = 2500 XP
+- Skill points scale with Intelligence: INT 1-2 = 3 points, INT 3-5 = 4 points, INT 6-8 = 5 points, INT 9-10 = 6 points
+- Attribute points awarded every 3 levels to allow gradual SPECIAL increases
+- Perk unlocks every 2 levels (UI components ready, perk system implementation in Step 24c)
+- Health increases by +5 per level, full heal on level-up
+- AP increases by +1 every 5 levels (levels 5, 10, 15, etc.)
+- Level-up modal shows all rewards earned (handles multiple level-ups correctly)
+- XP notifications stack vertically with auto-dismiss after 3 seconds
+- spendAttributePoint recalculates HP/AP/carry weight when attributes increase
+</implementation>
+
+<code_reference file="src/game/systems/progression.ts">
+Complete XP progression system with formulas, rewards, and level-up processing
+</code_reference>
+
+<code_reference file="src/game/interfaces/types.ts">
+Extended Player interface with skillPoints and attributePoints fields
+</code_reference>
+
+<code_reference file="src/game/interfaces/player.ts">
+Updated DEFAULT_PLAYER with skillPoints: 0 and attributePoints: 0
+</code_reference>
+
+<code_reference file="src/store/playerSlice.ts">
+Enhanced with addExperience (auto level-up), spendSkillPoints, spendAttributePoint actions
+</code_reference>
+
+<code_reference file="src/components/ui/LevelUpModal.tsx">
+Full-screen animated level-up notification with rewards summary
+</code_reference>
+
+<code_reference file="src/components/ui/XPNotification.tsx">
+Toast notification system for XP gains with stacking and auto-dismiss
+</code_reference>
+
+<code_reference file="src/utils/progressionHelpers.ts">
+Helper utilities for creating XP notifications and level-up events
+</code_reference>
+
+<code_reference file="src/App.tsx">
+Integrated level-up modal and XP notification manager into main app
+</code_reference>
+
+<validation>
+- `yarn build` - successful compilation
+- `yarn test progression.test.ts` - 30/30 tests passing
+- Verified XP formula matches specification across all levels
+- Confirmed multiple level-ups process correctly
+- Validated skill point scaling with different Intelligence values
+- Tested attribute point awards at correct levels (3, 6, 9)
+- Verified perk unlocks at even levels (2, 4, 6, 8)
+</validation>
+
+<notes>
+- Core XP and leveling system is complete and fully tested
+- UI components ready but not yet integrated with game events (will connect when combat awards XP)
+- Skill tree system (Step 24b) will use skillPoints counter
+- Perk system (Step 24c) will check perk unlock flags from level-up
+- Character creation Step 22c requires Steps 24a-c to be completed first
+- Future: wire addExperience action to combat victories, quest completions, skill checks
+- Future: wire XP notifications to game events using createXPNotification helper
+- Future: trigger level-up modal when processLevelUp returns levelsGained > 0
+</notes>
+</step>

@@ -23,6 +23,8 @@ export interface Player extends Entity {
   level: number;
   experience: number;
   credits: number;
+  skillPoints: number; // Unspent skill points for skill tree allocation
+  attributePoints: number; // Unspent attribute points for SPECIAL increases
   inventory: {
     items: Item[];
     maxWeight: number;

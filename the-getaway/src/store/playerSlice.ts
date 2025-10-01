@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Player, Position, Item, PlayerSkills, Weapon, Armor } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
+import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
 
 export interface PlayerState {
   data: Player;
@@ -40,9 +41,24 @@ export const playerSlice = createSlice({
       state.data.actionPoints = state.data.maxActionPoints;
     },
     
-    // Add experience
+    // Add experience and automatically process level-ups
     addExperience: (state, action: PayloadAction<number>) => {
-      state.data.experience += action.payload;
+      // Award XP
+      state.data = awardXPHelper(state.data, action.payload);
+
+      // Check for level-up and process
+      const result = processLevelUp(state.data);
+      state.data = result.player;
+
+      // Award skill points and attribute points
+      if (result.skillPointsAwarded > 0) {
+        state.data.skillPoints += result.skillPointsAwarded;
+      }
+      if (result.attributePointsAwarded > 0) {
+        state.data.attributePoints += result.attributePointsAwarded;
+      }
+
+      // Note: Perks are tracked separately and will be handled in Step 24c
     },
 
     // Add credits (currency)
@@ -204,6 +220,49 @@ export const playerSlice = createSlice({
 
       // Unequip
       state.data.equipped.armor = undefined;
+    },
+
+    // Spend skill points (for skill tree - Step 24b)
+    spendSkillPoints: (state, action: PayloadAction<number>) => {
+      const amount = action.payload;
+      if (state.data.skillPoints >= amount && amount > 0) {
+        state.data.skillPoints -= amount;
+      }
+    },
+
+    // Spend attribute point to increase attribute
+    spendAttributePoint: (state, action: PayloadAction<keyof PlayerSkills>) => {
+      const attribute = action.payload;
+
+      if (state.data.attributePoints <= 0) {
+        return; // No points available
+      }
+
+      if (state.data.skills[attribute] >= 10) {
+        return; // Max attribute value
+      }
+
+      // Spend point and increase attribute
+      state.data.attributePoints -= 1;
+      state.data.skills[attribute] += 1;
+
+      // Recalculate derived stats
+      const skills = state.data.skills;
+      const newMaxHP = calculateMaxHP(skills.endurance);
+      const newBaseAP = calculateBaseAP(skills.agility);
+      const newCarryWeight = calculateCarryWeight(skills.strength);
+
+      // Update max HP (preserve HP ratio)
+      const hpRatio = state.data.maxHealth > 0 ? state.data.health / state.data.maxHealth : 1;
+      state.data.maxHealth = newMaxHP;
+      state.data.health = Math.min(state.data.health, Math.floor(newMaxHP * hpRatio));
+
+      // Update max AP
+      state.data.maxActionPoints = newBaseAP;
+      state.data.actionPoints = Math.min(state.data.actionPoints, newBaseAP);
+
+      // Update carry weight
+      state.data.inventory.maxWeight = newCarryWeight;
     }
   }
 });
@@ -226,7 +285,9 @@ export const {
   equipWeapon,
   equipArmor,
   unequipWeapon,
-  unequipArmor
+  unequipArmor,
+  spendSkillPoints,
+  spendAttributePoint
 } = playerSlice.actions;
 
 export default playerSlice.reducer; 

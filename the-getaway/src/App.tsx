@@ -13,6 +13,8 @@ import GameMenu from "./components/ui/GameMenu";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
 import TurnTracker from "./components/ui/TurnTracker";
 import CharacterCreationScreen, { CharacterCreationData } from "./components/ui/CharacterCreationScreen";
+import { LevelUpModal } from "./components/ui/LevelUpModal";
+import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
 import { getUIStrings } from "./content/ui";
@@ -216,6 +218,13 @@ function App() {
   const [showMenu, setShowMenu] = useState(true);
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [hasSavedGame, setHasSavedGame] = useState(() => hasPersistedGame());
+  const [levelUpData, setLevelUpData] = useState<{
+    newLevel: number;
+    skillPointsEarned: number;
+    attributePointsEarned: number;
+    perksUnlocked: number;
+  } | null>(null);
+  const [xpNotifications, setXpNotifications] = useState<XPNotificationData[]>([]);
 
   useEffect(() => {
     console.log("[App] Component mounted");
@@ -265,6 +274,14 @@ function App() {
     setShowMenu(true);
   };
 
+  const handleLevelUpContinue = () => {
+    setLevelUpData(null);
+  };
+
+  const handleDismissXPNotification = (id: string) => {
+    setXpNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
   return (
     <Provider store={store}>
       <div style={layoutShellStyle}>
@@ -285,6 +302,19 @@ function App() {
           onCancel={handleCharacterCreationCancel}
         />
       )}
+      {levelUpData && (
+        <LevelUpModal
+          newLevel={levelUpData.newLevel}
+          skillPointsEarned={levelUpData.skillPointsEarned}
+          attributePointsEarned={levelUpData.attributePointsEarned}
+          perksUnlocked={levelUpData.perksUnlocked}
+          onContinue={handleLevelUpContinue}
+        />
+      )}
+      <XPNotificationManager
+        notifications={xpNotifications}
+        onDismiss={handleDismissXPNotification}
+      />
     </Provider>
   );
 }
