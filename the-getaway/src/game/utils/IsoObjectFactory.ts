@@ -20,6 +20,26 @@ export interface CharacterBaseOptions extends HighlightOptions {
   baseColor?: number;
   outlineColor?: number;
   depthOffset?: number;
+  widthScale?: number;
+  heightScale?: number;
+}
+
+export interface CharacterTokenOptions extends CharacterBaseOptions {
+  primaryColor?: number;
+  accentColor?: number;
+  glowColor?: number;
+  columnHeight?: number;
+  haloRadius?: number;
+}
+
+export interface CharacterToken {
+  container: Phaser.GameObjects.Container;
+  base: Phaser.GameObjects.Graphics;
+  column: Phaser.GameObjects.Graphics;
+  beacon: Phaser.GameObjects.Graphics;
+  halo: Phaser.GameObjects.Graphics;
+  depthOffset: number;
+  options: CharacterTokenOptions;
 }
 
 export class IsoObjectFactory {
@@ -132,5 +152,76 @@ export class IsoObjectFactory {
     graphics.lineStyle(1.4, resolved.outlineColor ?? adjustColor(resolved.baseColor ?? 0x111827, 0.25), (resolved.alpha ?? 0.85) + 0.1);
     graphics.strokePoints(diamond, true);
     graphics.setDepth(y + (resolved.depthOffset ?? 2));
+  }
+
+  public createCharacterToken(gridX: number, gridY: number, options: CharacterTokenOptions = {}): CharacterToken {
+    const container = this.scene.add.container(0, 0);
+    const metrics = getIsoMetrics(this.tileSize);
+    const baseWidth = metrics.tileWidth * (options.widthScale ?? 0.8);
+    const baseHeight = metrics.tileHeight * (options.heightScale ?? 0.5);
+    const columnHeight = metrics.tileHeight * (options.columnHeight ?? 1.4);
+    const topScale = Math.max(0.55, 1 - columnHeight / (metrics.tileHeight * 3));
+    const haloRadius = (options.haloRadius ?? metrics.tileWidth * 0.55);
+
+    const baseColor = options.baseColor ?? 0x111827;
+    const outlineColor = options.outlineColor ?? adjustColor(baseColor, 0.25);
+    const primaryColor = options.primaryColor ?? 0x38bdf8;
+    const accentColor = options.accentColor ?? adjustColor(primaryColor, 0.2);
+    const glowColor = options.glowColor ?? primaryColor;
+
+    const base = this.scene.add.graphics();
+    const baseDiamond = getDiamondPoints(0, 0, baseWidth, baseHeight).map((point) => new Phaser.Geom.Point(point.x, point.y));
+    base.fillStyle(baseColor, options.alpha ?? 0.92);
+    base.fillPoints(baseDiamond, true);
+    base.lineStyle(1.4, outlineColor, 0.9);
+    base.strokePoints(baseDiamond, true);
+
+    const column = this.scene.add.graphics();
+    const topPoints = getDiamondPoints(0, -columnHeight, baseWidth * topScale, baseHeight * topScale).map((point) => new Phaser.Geom.Point(point.x, point.y));
+    const bottomPoints = baseDiamond;
+
+    const rightFace = [bottomPoints[1], bottomPoints[2], topPoints[2], topPoints[1]];
+    const frontFace = [bottomPoints[2], bottomPoints[3], topPoints[3], topPoints[2]];
+
+    column.fillStyle(adjustColor(primaryColor, -0.4), 0.96);
+    column.fillPoints(frontFace, true);
+    column.fillStyle(adjustColor(primaryColor, -0.25), 0.98);
+    column.fillPoints(rightFace, true);
+    column.lineStyle(1.1, adjustColor(primaryColor, 0.1), 0.88);
+    column.strokePoints(frontFace, true);
+    column.strokePoints(rightFace, true);
+
+    const beacon = this.scene.add.graphics();
+    beacon.fillStyle(accentColor, 0.92);
+    beacon.fillPoints(topPoints, true);
+    beacon.lineStyle(1.2, adjustColor(accentColor, 0.3), 0.95);
+    beacon.strokePoints(topPoints, true);
+
+    const halo = this.scene.add.graphics();
+    halo.fillStyle(glowColor, 0.2);
+    halo.fillEllipse(0, metrics.tileHeight * 0.1, haloRadius, haloRadius * 0.45);
+    halo.setBlendMode(Phaser.BlendModes.ADD);
+
+    container.add([halo, base, column, beacon]);
+
+    const token: CharacterToken = {
+      container,
+      base,
+      column,
+      beacon,
+      halo,
+      depthOffset: options.depthOffset ?? 6,
+      options,
+    };
+
+    this.positionCharacterToken(token, gridX, gridY);
+
+    return token;
+  }
+
+  public positionCharacterToken(token: CharacterToken, gridX: number, gridY: number): void {
+    const { x, y } = toPixel(gridX, gridY, this.originX, this.originY, this.tileSize);
+    token.container.setPosition(x, y);
+    token.container.setDepth(y + token.depthOffset);
   }
 }

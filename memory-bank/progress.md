@@ -409,10 +409,13 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 2. Introduced `IsoObjectFactory` for reusable props (e.g., crates, highlight diamonds) and refactored `MainScene` to consume the shared helpers, ensuring depth sorting and iso origins stay consistent.
 3. Wired the turn-tracker HUD into the centre stage, added sample decorative props via the factory, and verified rendering uses uniform 2:1 assets with intact collision hotspots.
 4. Elevated wall and cover tiles into full 2.5-D prisms with dynamic shadows, neon facade bands, and door overlays that project onto the front face.
+5. Replaced building labels with neon isometric marquees that float above rooftops with additive glow and support braces.
+6. Converted player, NPC, and enemy markers into sculpted 3D character tokens with ambient halos and attached nameplates.
 </tasks>
 
 <maintenance_notes date="October 3, 2025">
 - Reworked `MainScene.renderTile` to apply elevation profiles, extruded faces, and updated door treatments for the isometric layout overhaul.
+- Added neon building signage renderer plus character token/nameplate systems to `MainScene` with shared helpers from `IsoObjectFactory`.
 </maintenance_notes>
 
 <validation>
