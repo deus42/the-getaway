@@ -1,121 +1,155 @@
-# The Getaway: Plot Bible
+<plot_bible title="The Getaway">
+  <setting_snapshot year="2036" region="United States">
+    <climate>Subtropical storms hammer the Atlantic coast; seawalls and pumps fail weekly.</climate>
+    <government>Chancellor Victor Harrow rules through the Emergent Security Directorate (ESD), a fusion of privatized police, militias, and corporate intelligence.</government>
+    <economy>Ration tokens, black-market scrip, and corporate credit chips circulate simultaneously while critical infrastructure is auctioned to loyal oligarchs.</economy>
+    <technology>Drones, predictive policing, and biometric checkpoints contain cities; resistance cells rely on repurposed industrial tech and analog dead drops.</technology>
+    <alliances>The North Atlantic Resistance Coalition (NARC)—Canada, EU remnants, and sympathetic Latin American states—funds covert cells but avoids overt intervention.</alliances>
+  </setting_snapshot>
 
-## Setting Snapshot — United States, 2036
-- **Climate**: Subtropical storms lash the Atlantic coast; sea walls and flood pumps fail weekly.
-- **Government**: Chancellor Victor Harrow rules through the **Emergent Security Directorate (ESD)**, a fusion of privatized police, militias, and corporate intelligence.
-- **Economy**: Ration tokens, black-market scrip, and corporate credit chips coexist. Critical infrastructure is auctioned to loyal oligarchs.
-- **Technology**: Drones, predictive policing, and biometric checkpoints keep cities contained; the resistance relies on repurposed industrial tech and analog dead drops.
-- **Alliances**: The **North Atlantic Resistance Coalition (NARC)**—Canada, EU remnants, and sympathetic Latin American states—fund covert cells but cannot intervene overtly.
+  <core_conflict code_name="Operation Cold Iron">
+    Harrow’s regime prepares a lightning strike into Canada to seize hydroelectric power and rare earth reserves. Player decisions determine whether the invasion collapses and whether Harrow’s war crimes become public.
+  </core_conflict>
 
-## Core Conflict
-Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into Canada to seize hydroelectric power and rare earth reserves. The player’s actions will decide whether the invasion succeeds or collapses, exposing Harrow’s war crimes to the world.
+  <narrative_pillars>
+    <pillar id="1" title="Occupation as Everyday Reality">Every mission should remind players that the regime polices food, information, and movement; small victories like lifting curfew in one district matter as much as grand strikes.</pillar>
+    <pillar id="2" title="Trust is Currency">Alliances remain fragile. Reputation systems, dialogue checks, and companion loyalty must reflect whom the player chooses to protect.</pillar>
+    <pillar id="3" title="Tech vs. Ingenuity">High-end regime technology collides with hacked-together resistance tools. Systems should reward traps, misdirection, and social engineering over brute force.</pillar>
+    <pillar id="4" title="Consequences Echo">Choices reverberate across acts (e.g., sparing a syndicate broker unlocks Act III smuggling assistance; leaking intel early hardens ESD patrols in Act IV).</pillar>
+  </narrative_pillars>
 
-## Narrative Pillars
-1. **Occupation as Everyday Reality**: Every mission should remind players that the regime polices food, information, and movement. Small victories (lifting curfew in one district) matter as much as grand strikes.
-2. **Trust is Currency**: Alliances are fragile. Mechanics around reputation, dialogue checks, and companion loyalty stem directly from who the player chooses to protect.
-3. **Tech vs. Ingenuity**: High-end regime technology collides with hacked-together resistance solutions. Gameplay systems should reflect asymmetry—smart traps, misdirection, and social engineering trump brute force.
-4. **Consequences Echo**: Decisions reverberate through later acts (e.g., sparing a syndicate broker unlocks Act III smuggling assistance; leaking intel early hardens ESD patrols in Act IV).
+  <power_factions>
+    <faction id="esd" name="Emergent Security Directorate (ESD)">
+      <description>Data-obsessed enforcers clad in graphite armor and mirrored visors.</description>
+      <internal_rift>Traditionalist commanders clash with profit-driven corporate officers, producing exploitable fractures.</internal_rift>
+    </faction>
+    <faction id="narc" name="North Atlantic Resistance Coalition (NARC)">
+      <description>Provides intel, tech smuggling routes, and extraction contacts.</description>
+      <strategy>Prefers long-term destabilization over open war.</strategy>
+    </faction>
+    <faction id="shelterline" name="Miami Cell “Shelterline”">
+      <description>Grassroots network led by Amara Velez, focused on disrupting port logistics and covert evacuations.</description>
+    </faction>
+    <faction id="scavengers" name="Scavenger Syndicates">
+      <description>Crews like the Dockside Brokers trade ration chips, weapon mods, and intel; loyalty shifts with respect earned.</description>
+    </faction>
+    <faction id="eisenclave" name="Eisenclave Conglomerate">
+      <description>Corporate collaborator profiting from surveillance contracts and privatized utilities while supplying Harrow with drone swarms and AI analysis.</description>
+    </faction>
+  </power_factions>
 
-## Key Power Factions
-- **Emergent Security Directorate (ESD)**: Brutal, data-obsessed enforcers wearing graphite armor and mirrored visors. Internal rivalry between traditionalist commanders and profit-driven corporate officers creates exploitable fractures.
-- **North Atlantic Resistance Coalition (NARC)**: Operatives supply intel, tech smuggling routes, and extraction contacts. They favor long-term destabilization over open war.
-- **Miami Cell "Shelterline"**: Grassroots network led by **Amara Velez**, a former Coast Guard officer. Specializes in disrupting port logistics and covert evacuations.
-- **Scavenger Syndicates**: Opportunistic crews such as the **Dockside Brokers** trade ration chips, weapon mods, and intel to anyone. They can swing toward or away from the player depending on respect earned.
-- **Corporate Collaborators**: The **Eisenclave Conglomerate** profits from surveillance contracts and privatized utilities, providing Harrow with drone swarms and AI analysis.
+  <protagonist>
+    <callsign default="Trace" customizable="true" />
+    <background_threads>
+      <thread id="courier" name="Former Courier">Knows smuggling tunnels and excels at stealth objectives.</thread>
+      <thread id="cadet" name="Disgraced Cadet">Retains knowledge of ESD protocols and gains unique dialogue with loyalists.</thread>
+      <thread id="medic" name="Street Medic">Unlocks pacifist options and leverage over refugee factions.</thread>
+    </background_threads>
+    <personal_stakes>Trace’s father vanished during the Battle of Miami; rumors suggest he survived as an ESD detainee transferred north with Operation Cold Iron.</personal_stakes>
+  </protagonist>
 
-## Protagonist Profile (Player-Created)
-- **Callsign**: Default "Trace", customizable during character creation.
-- **Background Threads** (unlocked later steps):
-  - *Former Courier*: Knows smuggling tunnels; excels at stealth objectives.
-  - *Disgraced Cadet*: Access to old ESD protocols; dialogues with loyalists differ.
-  - *Street Medic*: Unique pacifist options and leverage over refugee factions.
-- **Personal Stakes**: Trace’s father vanished during the Battle of Miami; rumors hint he survived as an ESD detainee moved north with Operation Cold Iron.
+  <narrative_structure>
+    <act id="1" title="Ashes of Miami">
+      <beat>Break curfew to retrieve contraband medkits.</beat>
+      <beat>Meet Shelterline at an abandoned metro hub and disable drone beacons to prove loyalty.</beat>
+      <beat>Uncover evidence that Harrow’s forces funnel munitions north via cargo rail.</beat>
+    </act>
+    <act id="2" title="Fault Lines">
+      <location>Mid-Atlantic Corridor</location>
+      <beat>Travel alongside refugee caravans and damaged highways; choices impact faction reputation.</beat>
+      <beat>Infiltrate Eisenclave data centers to expose Operation Cold Iron logistics.</beat>
+      <beat>Secure NARC extraction while witnessing ideological infighting.</beat>
+    </act>
+    <act id="3" title="Glass Capital">
+      <location>New Columbia (former Washington, D.C.)</location>
+      <beat>Penetrate a walled corporate arcology.</beat>
+      <beat>Collaborate with double agent Commander Sadiq Rahm to sow distrust inside ESD ranks.</beat>
+      <beat>Choose between leaking intel publicly or preserving leverage for NARC.</beat>
+    </act>
+    <act id="4" title="Northern Breakpoint">
+      <beat>Sabotage invasion staging yards hidden beneath Great Lakes freight tunnels.</beat>
+      <beat>Trigger a citywide blackout or hijack the drone swarm; branching outcome shifts finale tone.</beat>
+      <beat>Confront Harrow aboard an airborne command platform; expose crimes, topple the regime, or negotiate a ceasefire.</beat>
+    </act>
 
-## Narrative Structure
-### Act I — "Ashes of Miami"
-- Break curfew to retrieve contraband medkits.
-- Meet **Shelterline** at an abandoned metro hub; prove worth by disabling drone beacons.
-- Discover evidence that Harrow’s forces are funneling munitions north by cargo rail.
+    <interludes>
+      <interlude id="radio_monologues">Between acts, Theo “Circuit” broadcasts shortwave summaries that branch based on player reputation.</interlude>
+      <interlude id="refugee_ledger">Persistent menu tab tracks civilians saved, lost, or displaced; values influence NARC asset deployment in later acts.</interlude>
+      <interlude id="harrow_address">Mid-campaign propaganda speech adapts to player disruptions and unlocks custom finale dialogue hooks.</interlude>
+    </interludes>
 
-### Act II — "Fault Lines" (Mid-Atlantic Corridor)
-- Travel via refugee caravans and damaged highways; choices affect faction reputation.
-- Infiltrate Eisenclave data centers to expose Operation Cold Iron’s logistics.
-- Secure NARC extraction, but witness infighting between pragmatists and idealists.
+    <alternate_outcomes>
+      <outcome id="narc_trust">High NARC trust unlocks an Act IV airlift with reduced reinforcements; low trust forces a hazardous ground extraction.</outcome>
+      <outcome id="shelterline_morale">Shelterline morale reflects civilian-centric choices. If morale collapses, Amara considers abandoning Miami, altering companion availability.</outcome>
+      <outcome id="harrow_negotiation">Prioritizing intel over spectacle opens a ceasefire ending—buying time yet leaving the regime wounded rather than toppled.</outcome>
+    </alternate_outcomes>
+  </narrative_structure>
 
-### Act III — "Glass Capital"
-- Enter New Columbia (former Washington, D.C.), now a walled corporate arcology.
-- Work with double agent **Commander Sadiq Rahm** to sow distrust inside ESD ranks.
-- Decide whether to leak intel to the public (risking blowback) or keep leverage for NARC.
+  <supporting_cast>
+    <character id="amara_velez" role="Shelterline Leader">Direct and dry-humored; prioritizes civilian safety.</character>
+    <character id="theo_anders" callsign="Circuit">Teen hacker delivering pirate radio bulletins; balances levity and exposition.</character>
+    <character id="sadiq_rahm" role="ESD Commander">Decorated officer with family defected to Canada; speech oscillates between clipped jargon and restrained grief.</character>
+    <character id="mireille_duplessis" role="NARC Liaison">Coordinates aid drops with measured, urgent diplomacy.</character>
+  </supporting_cast>
 
-### Act IV — "Northern Breakpoint"
-- Sabotage the invasion’s staging yards hidden beneath Great Lakes freight tunnels.
-- Trigger a citywide blackout or hijack the drone swarm—player choice determines finale tone.
-- Final confrontation with Harrow on an airborne command platform; expose crimes, topple regime, or negotiate a fragile ceasefire.
+  <tone_and_dialogue>
+    <voice id="resistance">Grounded optimism under exhaustion; uses coded phrases such as “streetlight” for safe house and “quiet tide” for curfew lift.</voice>
+    <voice id="esd">Precise and ominous, referencing protocols and statistics. Intimidation stems from controlled calm.</voice>
+    <voice id="civilians">Survival-first with dark humor and wary glances; frequently address the player by nickname.</voice>
+    <voice id="broadcast">Propaganda layered with glitch interference, blending authoritarian slogans with upbeat corporate sound bites.</voice>
 
-### Act Interludes & Convergence Beats
-- **Radio Monologues**: Between acts, run shortwave broadcasts from Theo “Circuit” summarizing public sentiment; branch based on player reputation scores.
-- **Refugee Ledger**: Persistent menu tab tracking civilians saved, lost, or displaced. Numbers influence NARC’s willingness to deploy assets in Act III and IV.
-- **Harrow’s Address**: A mid-campaign propaganda speech adapts to player disruptions (lost trains, leaked intel) and unlocks bespoke dialogue hooks for the finale.
+    <dialogue_examples>
+      <example context="resistance">Streetlight’s back on. You’ve got seven minutes before the floodlights sweep—move like you still trust your knees.</example>
+      <example context="esd">Citizen Trace. Compliance Directive 19-B authorizes lethal countermeasures. Present for scan or be marked subversive.</example>
+      <example context="syndicate">You bring fuel? Then we talk. No fuel, no favors—curfew makes saints of none of us.</example>
+      <example context="broadcast">Harrow’s Dawn—Order, Prosperity, Destiny. Stay inside. Stay loyal. Stay alive.</example>
+    </dialogue_examples>
 
-### Arc Payoffs & Alternate Outcomes
-- **NARC Trust Meter**: High trust unlocks an airlift during Act IV, reducing enemy reinforcements; low trust forces a desperate ground extraction with heavier casualties.
-- **Shelterline Morale**: Track morale based on civilian-centric choices. If morale breaks, Amara contemplates abandoning Miami, altering companion availability.
-- **Harrow Negotiation Path**: If the player prioritizes intel over spectacle, Act IV offers a ceasefire ending—buying time but leaving the regime wounded rather than toppled.
+    <formatting_cheatsheet>
+      <rule>Use em dashes for interruptions during tense stealth moments (“Hold—drone!”).</rule>
+      <rule>Reserve ellipses for trauma or exhaustion, not casual hesitation.</rule>
+      <rule>Mark code phrases with italics in scripts (_quiet tide_).</rule>
+      <rule>Keep broadcast slogans in uppercase to contrast with human dialogue (“HAIL HARROW. HAIL ORDER.”).</rule>
+    </formatting_cheatsheet>
+  </tone_and_dialogue>
 
-## Supporting Cast
-- **Amara Velez**: Tactical lead of Shelterline. Direct, dry humor, prioritizes civilian safety.
-- **Theo "Circuit" Anders**: Teenage hacker broadcasting pirate radio bulletins; brings levity and exposition.
-- **Commander Sadiq Rahm**: Decorated ESD officer whose family defected to Canada. Dialogue oscillates between clipped military jargon and suppressed grief.
-- **Dr. Mireille Duplessis**: NARC liaison coordinating aid drops; speaks in measured, diplomatic tones underscored by urgency.
+  <themes_and_motifs>
+    <theme id="improvised_hope">Makeshift solar arrays, graffiti maps, and coded lullabies indicate culture surviving occupation.</theme>
+    <theme id="silenced_histories">Museums repurposed as bunkers; characters fight for memory alongside freedom.</theme>
+    <theme id="moral_weight">Missions force trade-offs between protecting civilians, gathering intel, or striking the regime; outcomes affect future support.</theme>
+  </themes_and_motifs>
 
-## Tone & Dialogue Guidelines
-- **Resistance Voices**: Grounded, hopeful under exhaustion. Use coded phrases ("streetlight" = safe house, "quiet tide" = curfew lift). Slang pulls from Spanish, Creole, and tech jargon.
-- **ESD Officers**: Precise, ominous. Reference protocols (“Compliance Directive 19-B”) and statistics. Avoid profanity; intimidation derives from chilling calm.
-- **Civilians & Syndicates**: Survival-first. Sentences trail off, punctuated by quick checks over the shoulder. They bargain, joke darkly, and call the player by nickname.
-- **Broadcast Media**: Propaganda layered with glitchy interference. Pair authoritarian slogans with cheery corporate sound bites.
+  <quest_hooks>
+    <quest id="echoes_of_the_bay">Rescue climate refugees stranded on a seized cruise liner; ration limited ferry space.</quest>
+    <quest id="stadium_vault">Recover art and archives hidden beneath Miami Stadium; choose between public release or black-market leverage.</quest>
+    <quest id="signal_choke">Disable a satellite uplink relay; success unlocks covert NARC drops, failure strengthens enemy patrol AI.</quest>
+    <quest id="ghost_ledger">Investigate ration fraud implicating a sympathetic ESD quartermaster and decide whether to expose or shield them.</quest>
+  </quest_hooks>
 
-### Dialogue Style Reference
-- **Resistance Example**: “Streetlight’s back on. You’ve got seven minutes before the floodlights sweep—move like you still trust your knees.”
-- **ESD Example**: “Citizen Trace. Compliance Directive 19-B authorizes lethal countermeasures. Present for scan or be marked subversive.”
-- **Syndicate Example**: “You bring fuel? Then we talk. No fuel, no favors—curfew makes saints of none of us.”
-- **Broadcast Tagline**: “Harrow’s Dawn—Order, Prosperity, Destiny. Stay inside. Stay loyal. Stay alive.”
+  <relationship_web>
+    <link source="trace" target="amara_velez">Mentor-protégé arc evolving from guarded professionalism to mutual reliance.</link>
+    <link source="trace" target="theo_anders">Younger-sibling energy enabling lighter banter and tech exposition.</link>
+    <link source="trace" target="sadiq_rahm">Fragile alliance emphasizing strategic debate and betrayal risk.</link>
+    <link source="amara_velez" target="mireille_duplessis">Philosophical tension between frontline urgency and geopolitical calculus.</link>
+  </relationship_web>
 
-## Themes & Motifs
-- **Improvised Hope**: Makeshift solar arrays, graffiti maps, and coded lullabies show culture persisting.
-- **Silenced Histories**: Museums turned into bunkers; characters fight for memory as much as freedom.
-- **Moral Weight**: Each major mission forces a choice—protect civilians, gather intel, or strike the regime. Consequences ripple through faction reputation and future support.
+  <visual_audio_motifs>
+    <motif id="lighting">Resistance zones glow with reclaimed neon; regime checkpoints drown in sodium floodlights.</motif>
+    <motif id="soundscape">Radio static signals nearby pirate broadcasts; sub-bass hum warns of patrol drones.</motif>
+    <motif id="environmental_storytelling">Flooded storefronts become hydroponic farms, murals memorialize the missing, ration lines stretch past corporate billboards.</motif>
+  </visual_audio_motifs>
 
-## Quest Hooks & Side Threads
-- **Echoes of the Bay**: Rescue climate refugees trapped in a seized cruise liner; decide who boards limited smugglers’ ferries.
-- **The Stadium Vault**: Looted arts and archives stored under Miami Stadium—choose between public broadcast or black-market leverage.
-- **Signal Choke**: Disable a satellite uplink relay; success unlocks covert NARC drops, failure boosts enemy patrol AI.
-- **Ghost Ledger**: Track ration fraud implicating a sympathetic ESD quartermaster; decide whether to expose or protect them.
+  <future_expansion_seeds>
+    <seed id="industrial_wasteland">Chemical weapon stockpiles leak in the Midwest after Harrow falls, aligning with roadmap Step 31.</seed>
+    <seed id="vehicle_underground">Motorcycle network connects Shelterline safe routes, supporting Step 27.1 content.</seed>
+    <seed id="survival_mode">Hunger and thirst mechanics mirror refugee supply chains, reinforcing Step 28.1 systems.</seed>
+  </future_expansion_seeds>
 
-## Character Relationship Web
-- **Trace ↔ Amara Velez**: Mentor-protégé dynamic. Dialogue beats should evolve from guarded professionalism to mutual reliance.
-- **Trace ↔ Theo "Circuit" Anders**: Younger sibling energy. Allows lighter banter and expository tech breakdowns.
-- **Trace ↔ Commander Sadiq Rahm**: Fragile alliance. Shared scenes emphasize strategic debate and the cost of betrayal.
-- **Amara ↔ Dr. Duplessis**: Philosophical tension—frontline urgency versus geopolitical calculus. Use for moral dilemmas about collateral damage.
+  <implementation_notes>
+    <note>Mirror each narrative beat with an in-game system hook so morale, reputation, and intel choices surface in UI.</note>
+    <note>When scripting dialogue, annotate each cue with faction, emotional intent, and gameplay impact.</note>
+    <note>Maintain a rolling changelog appended to this file whenever major plot revisions occur to keep the memory bank auditable.</note>
+  </implementation_notes>
 
-## Dialogue Formatting Cheatsheet
-- Use em dashes for interruptions during tense stealth sections (`"Hold—drone!"`).
-- Reserve ellipses for trauma or exhaustion, not general hesitation.
-- Tag code phrases with italics in scripts for clarity (`_quiet tide_`).
-- Keep broadcast slogans in ALL CAPS to contrast with human dialogue (`"HAIL HARROW. HAIL ORDER."`).
-
-## Recurring Visual & Audio Motifs
-- **Neon vs. Sodium Glow**: Resistance zones use reclaimed neon signage; regime checkpoints drown in amber floodlights.
-- **Soundscape Cues**: Faint radio static indicates nearby pirate broadcasts; low-frequency hum warns of patrol drones.
-- **Environmental Storytelling**: Flooded storefronts repurposed as hydroponic farms, painted murals of missing persons, ration lines stretching past corporate billboards.
-
-## Future Expansion Seeds
-- **Industrial Wasteland**: After Harrow falls, chemical weapon stockpiles leak in the Midwest—ties into game update Step 31.
-- **Vehicle Underground**: Motorcycle network intersects with Shelterline safe routes, bridging to Step 27.1 content.
-- **Survival Mode Tie-In**: Hunger/thirst mechanics reflect refugee supply chains, adding narrative weight to Step 28.1 systems.
-
-## Implementation Notes for Writers & Designers
-- Mirror each narrative beat with an in-game system hook (e.g., morale meter surfaces via HUD tooltip updates).
-- When scripting dialogue, note the speaker’s faction and emotional intent at the top of each cue sheet.
-- Maintain a rolling changelog at the end of this file whenever major plot revisions occur to keep the memory bank auditable.
-
-Use this plot bible to align missions, cinematics, and dialogue. Any new narrative beat should reinforce the core conflict (Operation Cold Iron), escalate faction stakes, or deepen the player’s personal connection to dismantling Harrow’s regime.
+  <usage>Use this plot bible to align missions, cinematics, and dialogue. New narrative beats must reinforce Operation Cold Iron, escalate faction stakes, or deepen the player’s connection to dismantling Harrow’s regime.</usage>
+</plot_bible>
