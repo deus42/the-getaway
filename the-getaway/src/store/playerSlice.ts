@@ -234,7 +234,7 @@ export const playerSlice = createSlice({
       // Update max HP (preserve current HP ratio)
       const hpRatio = state.data.maxHealth > 0 ? state.data.health / state.data.maxHealth : 1;
       state.data.maxHealth = newMaxHP;
-      state.data.health = Math.min(state.data.health, Math.floor(newMaxHP * hpRatio));
+      state.data.health = Math.max(0, Math.min(state.data.health, Math.floor(newMaxHP * hpRatio)));
 
       // Update max AP (preserve current AP if possible)
       state.data.maxActionPoints = newBaseAP;
@@ -400,7 +400,7 @@ export const playerSlice = createSlice({
       // Update max HP (preserve HP ratio)
       const hpRatio = state.data.maxHealth > 0 ? state.data.health / state.data.maxHealth : 1;
       state.data.maxHealth = newMaxHP;
-      state.data.health = Math.min(state.data.health, Math.floor(newMaxHP * hpRatio));
+      state.data.health = Math.max(0, Math.min(state.data.health, Math.floor(newMaxHP * hpRatio)));
 
       // Update max AP
       state.data.maxActionPoints = newBaseAP;
