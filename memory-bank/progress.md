@@ -444,3 +444,52 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 - `yarn test src/__tests__/playerStats.test.ts --watch=false`
 </validation>
 </step>
+
+<step id="22a" status="completed">
+<step_metadata>
+  <number>22a</number>
+  <title>Basic Character Creation Flow (UI Shell, Name, Visual Preset)</title>
+  <status>Completed</status>
+  <date>October 3, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Created `CharacterCreationScreen.tsx` with multi-step wizard interface featuring step indicators and navigation.
+2. Implemented Step 1 - Identity: character name input (3-20 characters, alphanumeric validation) and visual preset selection (4 presets: Operative, Survivor, Tech, Scavenger).
+3. Added Randomize button for quick character generation from predefined names and random preset selection.
+4. Added Skip Creation debug button (development only) that applies default values for rapid testing.
+5. Integrated character creation into App.tsx new game flow, replacing immediate spawn with character creation screen.
+6. Styled consistently with dystopian UI theme (neon cyan accents, dark backgrounds, terminal aesthetics).
+</tasks>
+
+<implementation>
+- Character creation state managed locally in React (not Redux) until completion to allow cancel/back without polluting game state
+- Name validation: 3-20 characters, alphanumeric + spaces + hyphens only
+- Visual presets stored as IDs ('operative', 'survivor', 'tech', 'scavenger') for future background integration in Step 22c
+- Enter key triggers Continue button when form valid
+- Cancel returns to main menu, Complete advances to game start (currently skips Steps 2-3 until 22b/22c implemented)
+</implementation>
+
+<code_reference file="src/components/ui/CharacterCreationScreen.tsx">
+Created full character creation UI component with identity step, validation, and styling
+</code_reference>
+
+<code_reference file="src/App.tsx">
+Added showCharacterCreation state and handlers: handleCharacterCreationComplete, handleCharacterCreationCancel
+Modified handleStartNewGame to show character creation instead of immediately starting game
+</code_reference>
+
+<validation>
+- `yarn build` - successful compilation with no TypeScript errors
+- Manual testing: Start new game → Character creation appears → Enter name and select preset → Click Continue → Game starts with character name in log
+- Randomize button generates random name and preset
+- Cancel returns to main menu
+- Name validation prevents invalid inputs (too short, too long, special characters)
+</validation>
+
+<notes>
+- Steps 2-3 (attribute allocation, background selection) will be added in Steps 22b and 22c
+- Character data currently only used for log message; full integration pending Step 23 (stat system) and Step 22b/22c
+- Step indicators show 3 dots (for future Steps 1-3), currently only Step 1 active
+</notes>
+</step>

@@ -12,6 +12,7 @@ import DialogueOverlay from "./components/ui/DialogueOverlay";
 import GameMenu from "./components/ui/GameMenu";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
 import TurnTracker from "./components/ui/TurnTracker";
+import CharacterCreationScreen, { CharacterCreationData } from "./components/ui/CharacterCreationScreen";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
 import { getUIStrings } from "./content/ui";
@@ -213,6 +214,7 @@ const hasPersistedGame = (): boolean => {
 function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [showMenu, setShowMenu] = useState(true);
+  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
   const [hasSavedGame, setHasSavedGame] = useState(() => hasPersistedGame());
 
   useEffect(() => {
@@ -234,12 +236,23 @@ function App() {
   }, [showMenu, gameStarted]);
 
   const handleStartNewGame = () => {
+    setShowMenu(false);
+    setShowCharacterCreation(true);
+  };
+
+  const handleCharacterCreationComplete = (data: CharacterCreationData) => {
     store.dispatch(resetGame());
     const { logs } = getSystemStrings(store.getState().settings.locale);
-    store.dispatch(addLogMessage(logs.operationStart));
+    store.dispatch(addLogMessage(`${logs.operationStart} - Call sign: ${data.name}`));
+    // TODO: Apply character creation data to player state when Step 22b/22c are implemented
+    setShowCharacterCreation(false);
     setGameStarted(true);
-    setShowMenu(false);
     setHasSavedGame(true);
+  };
+
+  const handleCharacterCreationCancel = () => {
+    setShowCharacterCreation(false);
+    setShowMenu(true);
   };
 
   const handleContinueGame = () => {
@@ -264,6 +277,12 @@ function App() {
           onStartNewGame={handleStartNewGame}
           onContinue={handleContinueGame}
           hasActiveGame={gameStarted || hasSavedGame}
+        />
+      )}
+      {showCharacterCreation && (
+        <CharacterCreationScreen
+          onComplete={handleCharacterCreationComplete}
+          onCancel={handleCharacterCreationCancel}
         />
       )}
     </Provider>
