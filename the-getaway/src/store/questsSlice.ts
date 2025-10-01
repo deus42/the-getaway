@@ -102,10 +102,13 @@ export const questsSlice = createSlice({
       if (quest) {
         const objective = quest.objectives.find(o => o.id === objectiveId);
         if (objective && (objective.type === 'collect' || objective.type === 'kill')) {
-          objective.currentCount = (objective.currentCount || 0) + count;
-          
+          // Clamp counter to target count to prevent overflow
+          const targetCount = objective.count || 1;
+          const newCount = (objective.currentCount || 0) + count;
+          objective.currentCount = Math.min(newCount, targetCount);
+
           // Check if objective should be completed
-          if (objective.currentCount >= (objective.count || 1)) {
+          if (objective.currentCount >= targetCount) {
             objective.isCompleted = true;
           }
         }
