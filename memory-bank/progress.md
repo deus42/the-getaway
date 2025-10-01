@@ -493,3 +493,63 @@ Modified handleStartNewGame to show character creation instead of immediately st
 - Step indicators show 3 dots (for future Steps 1-3), currently only Step 1 active
 </notes>
 </step>
+
+<step id="23" status="completed">
+<step_metadata>
+  <number>23</number>
+  <title>Integrate Player Stats with Combat and Dialogue Systems</title>
+  <status>Completed</status>
+  <date>October 3, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Created `statCalculations.ts` with comprehensive derived stat calculation system.
+2. Implemented 9 derived stat formulas: Max HP, Base AP, Carry Weight, Critical Chance, Hit Chance Modifier, Dodge Chance, Melee Damage Bonus, Dialogue Threshold Bonus, Skill Points per Level.
+3. Updated `player.ts` to calculate DEFAULT_PLAYER stats from DEFAULT_SKILLS using formulas.
+4. Enhanced `playerSlice.ts` with automatic derived stat recalculation when attributes change via updateSkill() and new setSkill() action.
+5. Added helper functions: skillCheckPasses() for dialogue checks, formatStatWithModifier() for UI display.
+</tasks>
+
+<implementation>
+**Formulas Implemented:**
+- Max HP = `50 + (endurance × 10)` (Endurance 5 = 100 HP)
+- Base AP = `6 + floor((agility - 5) × 0.5)` (Agility 5 = 6 AP, range 5-8)
+- Carry Weight = `25 + (strength × 5)` kg (Strength 5 = 50 kg)
+- Crit Chance = `5 + (perception × 2) + (luck × 2)`% (base 19% with 5/5)
+- Hit Chance Modifier = `(perception - 5) × 3`% (affects combat accuracy)
+- Dodge Chance = `(agility - 5) × 2`% (affects evasion)
+- Melee Damage Bonus = `floor(strength / 2)` (flat damage added to melee)
+- Dialogue Threshold Bonus = `floor(charisma / 2)` (persuasion boost)
+- Skill Points per Level = `3 + floor(intelligence / 3)` (3-6 points)
+
+**Stat Recalculation:**
+- updateSkill() preserves HP ratio and current AP when maxes change
+- Attributes clamped to 1-10 range
+- setSkill() for direct setting during character creation (full heal/AP restore)
+</implementation>
+
+<code_reference file="src/game/systems/statCalculations.ts">
+New module with all derived stat formulas and calculation functions
+</code_reference>
+
+<code_reference file="src/game/interfaces/player.ts">
+DEFAULT_PLAYER now calculates derived stats: maxHP (100), maxAP (6), carryWeight (50)
+</code_reference>
+
+<code_reference file="src/store/playerSlice.ts">
+Added setSkill() action, enhanced updateSkill() with automatic recalculation
+</code_reference>
+
+<validation>
+- `yarn build` - successful compilation
+- Default player with SPECIAL 5/5/5/5/5/5/5 correctly shows: 100 HP, 6 AP, 50 kg carry
+- Formulas match implementation plan specifications
+- Ready for Step 22b attribute allocation UI (needs these formulas for preview)
+</validation>
+
+<notes>
+- Combat/dialogue integration deferred to when those systems are actively modified (Step 26 advanced combat, Step 16+ dialogue)
+- PlayerStatsPanel UI update deferred to Step 22b when attribute allocation needs derived stat preview
+- Equipment stat bonuses will be added in Step 23.5
+</notes>
+</step>
