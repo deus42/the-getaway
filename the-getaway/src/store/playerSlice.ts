@@ -300,6 +300,14 @@ export const playerSlice = createSlice({
         return; // Not a weapon
       }
 
+      // Calculate final weight after swap to prevent overflow
+      const oldWeaponWeight = state.data.equipped.weapon?.weight ?? 0;
+      const newWeight = state.data.inventory.currentWeight - weapon.weight + oldWeaponWeight;
+
+      if (newWeight > state.data.inventory.maxWeight) {
+        return; // Can't swap due to weight limit
+      }
+
       // Unequip current weapon if any (add back to inventory)
       if (state.data.equipped.weapon) {
         state.data.inventory.items.push(state.data.equipped.weapon);
@@ -321,6 +329,14 @@ export const playerSlice = createSlice({
 
       if (!armor || !('protection' in armor)) {
         return; // Not armor
+      }
+
+      // Calculate final weight after swap to prevent overflow
+      const oldArmorWeight = state.data.equipped.armor?.weight ?? 0;
+      const newWeight = state.data.inventory.currentWeight - armor.weight + oldArmorWeight;
+
+      if (newWeight > state.data.inventory.maxWeight) {
+        return; // Can't swap due to weight limit
       }
 
       // Unequip current armor if any (add back to inventory)

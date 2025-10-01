@@ -1487,7 +1487,10 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
+    const metrics = this.getIsoMetrics();
     const pixelPos = this.calculatePixelPosition(gridX, gridY);
+    const targetX = pixelPos.x;
+    const targetY = pixelPos.y + metrics.halfTileHeight;
     const camera = this.cameras.main;
 
     this.isCameraFollowingPlayer = false;
@@ -1499,13 +1502,13 @@ export class MainScene extends Phaser.Scene {
     };
 
     if (animate) {
-      camera.pan(pixelPos.x, pixelPos.y, 300, 'Sine.easeInOut', false, (_cam, progress) => {
+      camera.pan(targetX, targetY, 300, 'Sine.easeInOut', false, (_cam, progress) => {
         if (progress === 1) {
           finalize();
         }
       });
     } else {
-      camera.centerOn(pixelPos.x, pixelPos.y);
+      camera.centerOn(targetX, targetY);
       finalize();
     }
   }
