@@ -1,5 +1,9 @@
 import { Enemy, Player, Position, MapArea } from '../interfaces/types';
 import { isPositionWalkable } from '../world/grid';
+import {
+  calculateDerivedStatsWithEquipment,
+  calculateDerivedStats,
+} from '../systems/statCalculations';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
@@ -63,35 +67,48 @@ export const calculateManhattanDistance = (pos1: Position, pos2: Position): numb
 };
 
 // Calculate if attack hits based on cover
+const getPlayerDerivedStats = (entity: Player) => {
+  try {
+    return calculateDerivedStatsWithEquipment(entity);
+  } catch (error) {
+    console.warn('[CombatSystem] Failed to calculate equipment-aware stats, falling back to base attributes.', error);
+    return calculateDerivedStats(entity.skills);
+  }
+};
+
 export const calculateHitChance = (
-  attacker: Position, 
-  target: Position, 
+  attacker: Player | Enemy,
+  target: Player | Enemy,
   isBehindCover: boolean
 ): number => {
-  // Base hit chance
-  let hitChance = 0.9; // 90% base chance to hit
-  
-  // Reduce hit chance based on distance
-  const distance = calculateDistance(attacker, target);
-  hitChance -= distance * 0.05; // 5% reduction per distance unit
-  
-  // Apply cover reduction
+  const distance = calculateDistance(attacker.position, target.position);
+
+  // Start from a conservative baseline; distance and cover apply first.
+  let hitChance = 0.65 - distance * 0.05;
+
   if (isBehindCover) {
-    hitChance *= (1 - COVER_DAMAGE_REDUCTION);
+    hitChance *= 1 - COVER_DAMAGE_REDUCTION;
   }
-  
-  // Ensure hit chance is between 0.1 and 0.95
+
+  // Player-based modifiers
+  if ('skills' in attacker) {
+    const attackerStats = getPlayerDerivedStats(attacker as Player);
+    hitChance += attackerStats.hitChanceModifier / 100;
+  }
+
+  if ('skills' in target) {
+    const targetStats = getPlayerDerivedStats(target as Player);
+    hitChance -= targetStats.dodgeChance / 100;
+  }
+
   const finalHitChance = Math.max(0.1, Math.min(0.95, hitChance));
 
   console.log('[CombatSystem] calculateHitChance:', {
-    attacker: attacker,
-    target: target,
-    distance: distance,
-    isBehindCover: isBehindCover,
-    initialChance: 0.9,
-    chanceAfterDistance: 0.9 - (distance * 0.05),
-    chanceAfterCover: isBehindCover ? (0.9 - (distance * 0.05)) * (1 - COVER_DAMAGE_REDUCTION) : (0.9 - (distance * 0.05)),
-    finalHitChance: finalHitChance
+    attacker: attacker.id,
+    target: target.id,
+    distance,
+    isBehindCover,
+    finalHitChance,
   });
 
   return finalHitChance;
@@ -114,16 +131,19 @@ export const executeAttack = (
   }
   
   // Calculate hit chance
-  const hitChance = calculateHitChance(attacker.position, target.position, isBehindCover);
+  const hitChance = calculateHitChance(attacker, target, isBehindCover);
   
   // Roll to hit
   const roll = getRandomRoll();
   const hit = roll <= hitChance;
   
   // Calculate damage
-  const damageAmount = hit ? 
-    ('damage' in attacker ? attacker.damage : DEFAULT_ATTACK_DAMAGE) : 
-    0;
+  let damageAmount = hit ? ('damage' in attacker ? attacker.damage : DEFAULT_ATTACK_DAMAGE) : 0;
+
+  if (hit && 'skills' in attacker) {
+    const attackerStats = getPlayerDerivedStats(attacker as Player);
+    damageAmount += attackerStats.meleeDamageBonus;
+  }
     
   // Apply damage to target and update AP
   const newTarget = {

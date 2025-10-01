@@ -1,6 +1,7 @@
 import { Dialogue, DialogueNode, DialogueOption, Player, Quest } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 import { startQuest, updateObjective, completeQuest } from './questSystem';
+import { calculateDerivedStatsWithEquipment, calculateDerivedStats, skillCheckPasses } from '../systems/statCalculations';
 
 // Create a dialogue
 export const createDialogue = (npcId: string, nodes: Omit<DialogueNode, 'id'>[]): Dialogue => {
@@ -24,14 +25,31 @@ export const getFirstDialogueNode = (dialogue: Dialogue): DialogueNode | undefin
   return dialogue.nodes[0];
 };
 
+const getPlayerDialogueBonus = (player: Player, skill: keyof Player['skills']): number => {
+  try {
+    const derived = calculateDerivedStatsWithEquipment(player);
+    if (skill === 'charisma') {
+      return derived.dialogueThresholdBonus;
+    }
+    return 0;
+  } catch (error) {
+    console.warn('[DialogueSystem] Falling back to base stats for dialogue bonus.', error);
+    const derived = calculateDerivedStats(player.skills);
+    return skill === 'charisma' ? derived.dialogueThresholdBonus : 0;
+  }
+};
+
 // Check if a skill check passes
 export const checkSkillRequirement = (player: Player, option: DialogueOption): boolean => {
   if (!option.skillCheck) {
     return true; // No skill check required
   }
-  
+
   const { skill, threshold } = option.skillCheck;
-  return player.skills[skill] >= threshold;
+  const attributeValue = player.skills[skill];
+  const bonus = getPlayerDialogueBonus(player, skill);
+
+  return skillCheckPasses(attributeValue, threshold, bonus);
 };
 
 // Filter dialogue options based on player skills

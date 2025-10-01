@@ -127,7 +127,7 @@ export const processLevelUp = (player: Player): {
   let attributePointsAwarded = 0;
   let perksUnlocked = 0;
 
-  let updatedPlayer = { ...player };
+  const updatedPlayer = { ...player };
 
   // Process sequential level-ups
   while (canLevelUp(updatedPlayer.experience, updatedPlayer.level)) {

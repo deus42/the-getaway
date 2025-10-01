@@ -21,19 +21,27 @@ describe('Game Types and Basic Functionality', () => {
       expect(DEFAULT_PLAYER.experience).toBe(0);
       expect(DEFAULT_PLAYER.skills.strength).toBe(5);
       expect(DEFAULT_PLAYER.inventory.items.length).toBe(0);
-      expect(DEFAULT_PLAYER.inventory.maxWeight).toBe(150);
+      expect(DEFAULT_PLAYER.inventory.maxWeight).toBe(50);
     });
   });
   
   // Combat system tests
   describe('Combat System', () => {
-    test('calculateHitChance should return lower value when behind cover', () => {
-      const attacker = { x: 0, y: 0 };
-      const target = { x: 1, y: 1 };
-      
+    test('calculateHitChance should return lower value when target has cover', () => {
+      const attacker = {
+        ...DEFAULT_PLAYER,
+        position: { x: 0, y: 0 },
+      };
+
+      const target = {
+        ...DEFAULT_PLAYER,
+        id: 'target-player',
+        position: { x: 1, y: 1 },
+      };
+
       const normalHitChance = calculateHitChance(attacker, target, false);
       const coverHitChance = calculateHitChance(attacker, target, true);
-      
+
       expect(coverHitChance).toBeLessThan(normalHitChance);
     });
     
@@ -111,8 +119,8 @@ describe('Game Types and Basic Functionality', () => {
         ...DEFAULT_PLAYER,
         inventory: {
           ...DEFAULT_PLAYER.inventory,
-          currentWeight: 140
-        }
+          currentWeight: 40,
+        },
       };
       
       const lightItem = createWeapon('Light Weapon', 5, 2, 2, 5);

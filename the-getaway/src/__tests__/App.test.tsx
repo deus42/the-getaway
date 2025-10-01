@@ -15,6 +15,23 @@ describe("App component", () => {
     window.localStorage.removeItem(PERSISTED_STATE_KEY);
   });
 
+  const completeCharacterCreation = () => {
+    const nameInput = screen.getByPlaceholderText("Enter your operative name...");
+    fireEvent.change(nameInput, { target: { value: "Test Operative" } });
+
+    const presetButtons = screen.getAllByRole("button", { name: /Operative/i });
+    fireEvent.click(presetButtons[0]);
+
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+
+    const incrementButtons = screen.getAllByTitle("Increase attribute");
+    for (let i = 0; i < 5; i += 1) {
+      fireEvent.click(incrementButtons[0]);
+    }
+
+    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+  };
+
   it("shows the menu first and enters the game when starting a new session", () => {
     render(<App />);
 
@@ -22,6 +39,8 @@ describe("App component", () => {
     expect(screen.getByTestId("continue-game")).toBeDisabled();
 
     fireEvent.click(screen.getByTestId("start-new-game"));
+
+    completeCharacterCreation();
 
     expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
     expect(screen.getByTestId("game-canvas")).toBeInTheDocument();
@@ -40,6 +59,7 @@ describe("App component", () => {
     const { unmount } = render(<App />);
 
     fireEvent.click(screen.getByTestId("start-new-game"));
+    completeCharacterCreation();
     fireEvent.click(screen.getByTestId("open-menu"));
 
     unmount();

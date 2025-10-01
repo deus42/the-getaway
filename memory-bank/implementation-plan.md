@@ -450,42 +450,59 @@ Implement surveillance cameras that activate during nighttime curfew, creating d
 </instructions>
 
 <details>
-- **Create camera sprite primitives** in `src/game/objects/CameraSprite.ts`:
-  - Build camera using Phaser primitives: Rectangle (body), Ellipse (lens), Circle (LED), Graphics (vision cone)
-  - Two visual states: Gray/powered-down (day) and Red LED blinking (night/curfew active)
-  - Rotation animation for static cameras (sweeps left-right in 3-second cycles)
-  - Vision cone overlay (90° arc, 8-tile range) rendered with Graphics API
-- **Define 3 camera types** in `src/game/systems/surveillance/cameraTypes.ts`:
-  - **Static Camera**: Wall-mounted, 90° rotating cone, 8-tile range, activates at curfew
-  - **Motion Sensor**: Small box, 4-tile radius circle, detects movement only (standing still = invisible), crouch-walk bypasses
-  - **Drone Camera**: Mobile patrol, 90° cone, 10-tile range, searchlight active at night only
-- **Implement curfew-based activation** in `src/game/systems/surveillance/cameraSystem.ts`:
-  - Subscribe to day-night cycle time-of-day changes
-  - Toggle `camera.isActive = true` when entering Evening/Night phases
-  - Display "CURFEW ACTIVE - SURVEILLANCE ENGAGED" notification at dusk
-  - Power down cameras at dawn (Gray state, no detection)
-- **Build detection and alert system**:
-  - Detection states: Idle (blue) → Suspicious (yellow, 3s grace) → Alarmed (red, reinforcements)
-  - Yellow Alert: Camera glimpses player, 3-second countdown to break LOS
-  - Red Alert: Full detection, spawns 2-4 ESD guards at nearest entry point in 10-15 seconds, locks doors for 30s
-  - Network Alert: If 3+ cameras detect within 60s, all patrols become hostile, doubled patrol density for 5 minutes
-- **Add countermeasures**:
-  - **Hacking** (Hacking skill 40+, 3 tiles range, 5 AP, 5s duration): Loop footage (60s invisibility), Disable (permanent), Redirect (guards investigate wrong area)
-  - **Destruction**: Shoot (1 bullet, 2 AP, triggers Yellow Alert), EMP grenade (5-tile radius, 30s disable), Melee (3 AP, makes noise)
-  - **Avoidance**: TAB key toggles camera vision overlay, crouch-walk (50% detection range), timing gaps in rotation, wait until dawn
-- **Create UI components**:
-  - `CameraDetectionHUD.tsx`: Top-right widget showing "Cameras Nearby: X" with detection bar (0-100%)
-  - `CurfewWarning.tsx`: Full-screen notification at dusk showing curfew activation
-  - Minimap indicators: Camera icons (triangles) showing facing direction, color-coded by alert state (gray when dormant)
-- **Integrate with world map**:
-  - Place cameras in ESD-controlled zones (checkpoints, government buildings, corporate areas)
-  - Higher density in Act III New Columbia (4-6 cameras per zone)
-  - Resistance zones have no cameras or all disabled/destroyed
-  - Cameras defined per-zone in `src/content/cameraConfigs.ts`
-- **Quest integration examples**:
-  - "Eyes Everywhere": Infiltrate ESD data center without triggering any cameras (stealth mission)
-  - "Signal Choke": Hack 5 cameras to create blind corridor for refugee convoy (10-minute time limit)
-  - "False Flag": Hack cameras to upload fabricated footage of ESD brutality to pirate broadcast
+**Camera Sprite (Phaser Primitives)**
+- Create `CameraSprite` class in `src/game/objects/CameraSprite.ts` extending `Phaser.GameObjects.Container`
+- Components: Rectangle body (16x12px, 0x333333), Ellipse lens (8x6px, 0x000000), Circle LED (3px, 0xff0000), Graphics vision cone
+- `setActive(active: boolean)` method: If active → LED alpha tween (1→0.3, 1s yoyo, infinite), draw 90° cone; If inactive → LED alpha 0, clear cone, angle 0
+- Vision cone drawing: Arc from -45° to +45°, range = 8 tiles * 32px, blue translucent fill (0x3b82f6, 0.15 alpha)
+
+**3 Camera Types** (`src/game/systems/surveillance/cameraTypes.ts`)
+- **Static Camera**: Wall-mounted, sweeps 90° cone between 2-4 preset angles in 3s cycles, 8-tile range, activates at curfew (Evening/Night)
+- **Motion Sensor**: Small box sprite, 4-tile radius circle, triggers only on movement (standing still = invisible), crouch-walk at 50% speed bypasses detection
+- **Drone Camera**: Circular body + cone searchlight, follows patrol path, 90° cone, 10-tile range, searchlight only on at night (day = passive patrol)
+
+**Curfew Activation System** (`src/game/systems/surveillance/cameraSystem.ts`)
+- Subscribe to `worldSlice` Redux selector for timeOfDay changes
+- On "evening" or "night": Set `camera.isActive = true`, call `camera.sprite.setActive(true)`, dispatch notification
+- On "morning" or "day": Set `camera.isActive = false`, call `camera.sprite.setActive(false)`
+- Display "CURFEW ACTIVE - SURVEILLANCE ENGAGED" banner at dusk (3s auto-dismiss)
+
+**Detection & Alert System** (integrates with Step 19)
+- **Detection calc**: Each frame, check player in cone (angle + distance < range) && LOS clear (raycast no walls)
+- **Stealth modifier**: `effectiveRange = baseRange * (1 - stealthSkill / 200)` (Stealth 50 = -25%, 100 = -50%)
+- **Crouch mode**: Press C to toggle, -50% detection range, -50% movement speed
+- **States**: Idle (blue cone) → Suspicious (yellow, detectionProgress 0→100 over 3s) → Alarmed (red, 100%)
+- **Yellow Alert**: Show "CAMERA DETECTING" timer, player can break LOS to reset
+- **Red Alert**: Spawn 2-4 ESD guards at nearest entry point, 10-15s countdown, lock doors 30s
+- **Network Alert**: 3+ cameras triggered within 60s → all patrols hostile, 2x patrol density for 5min
+
+**Countermeasures**
+- **Hacking** (Hacking ≥40, ≤3 tiles, 5 AP, 5s): Loop footage (60s invisible), Disable (permanent off), Redirect (guards go wrong way 30s)
+- **Destruction**: Shoot (1 bullet, 2 AP, triggers Yellow Alert), EMP grenade (5-tile radius, 30s disable, silent), Melee (1 tile, 3 AP, loud noise)
+- **Avoidance**: TAB toggles vision overlay, timing rotation gaps, use cover for LOS break, wait until dawn
+
+**UI Components**
+- `CameraDetectionHUD.tsx` (top-right): "Cameras Nearby: X", detection bar 0-100%, "TAB - Toggle Camera Vision"
+- `CurfewWarning.tsx` (full-screen): "CURFEW ACTIVE" banner, "SURVEILLANCE ENGAGED" subtitle, 3s auto-dismiss, alarm sound
+- Minimap: Triangle icons, color-coded (Gray=dormant, Blue=idle, Yellow=suspicious, Red=alarmed, Dark gray=disabled), pulse when rotating toward player
+
+**Map Integration** (`src/content/cameraConfigs.ts`)
+- Per-zone config: `{ zoneId, cameras: [{ type, position, sweepAngles }] }`
+- **ESD zones**: Downtown checkpoints (4 cams), Gov buildings (6 cams), Corporate plazas (3-5 cams)
+- **Neutral**: Commercial (1-2 cams), Industrial (2-3 cams)
+- **Resistance**: Slums/safe houses/tunnels (0 cams, destroyed/looted)
+- Act progression: I=1-2/zone, II=rusted/nonfunctional, III=4-6/zone high-tech
+
+**Quest Hooks**
+- **"Eyes Everywhere"**: Hack 3 terminals in ESD data center without triggering cameras → +100 XP, Stealth +10, "Ghost" perk
+- **"Signal Choke"**: Hack 5 cams in 10min to create blind corridor for refugee convoy → +150 XP, NARC rep +20
+- **"False Flag"**: Hack cams to upload fake ESD brutality footage (Hacking 60 + INT 7) → ESD paranoia up, internal investigations slow ops
+
+**Performance**
+- Object pool vision cone Graphics (reuse, clear() + redraw vs destroy/create)
+- Only detect for cameras in player's current zone
+- Batch rotation updates (max 20/frame, stagger if >20)
+- Cache LOS raycast 3 frames unless player moved
 </details>
 
 <accessibility>

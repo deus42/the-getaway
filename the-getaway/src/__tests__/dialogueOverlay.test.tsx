@@ -25,15 +25,15 @@ describe('DialogueOverlay', () => {
 
     expect(screen.getByText(/Lira the Smuggler/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/Need gear, intel, or a favour/i)
+      screen.getByText(/Need gear, gossip, or a miracle/i)
     ).toBeInTheDocument();
 
     const optionButton = screen.getByRole('button', {
-      name: /Any shipments gone missing recently\?/i,
+      name: /Any shipments vanish like the coyotes Harbour Control promised us\?/i,
     });
     fireEvent.click(optionButton);
 
-    expect(screen.getByText(/"Corporate patrol seized my street cache/i)).toBeInTheDocument();
+    expect(screen.getByText(/CorpSec bagged my street cache/i)).toBeInTheDocument();
   });
 
   it('locks options when skill requirements are unmet', () => {
@@ -48,7 +48,7 @@ describe('DialogueOverlay', () => {
     });
 
     const lockedOption = screen.getByRole('button', {
-      name: /Show me what’s moving on the street/i,
+      name: /What’s humming through the market tonight\?/i,
     });
 
     expect(lockedOption).toHaveStyle('pointer-events: none');
@@ -71,7 +71,7 @@ describe('DialogueOverlay', () => {
     });
 
     const optionButton = screen.getByRole('button', {
-      name: /Show me what’s moving on the street/i,
+      name: /What’s humming through the market tonight\?/i,
     });
 
     expect(optionButton).toHaveStyle('pointer-events: auto');
@@ -79,6 +79,6 @@ describe('DialogueOverlay', () => {
 
     fireEvent.click(optionButton);
 
-    expect(screen.getByText(/"Merch is scarce, but creds talk/i)).toBeInTheDocument();
+    expect(screen.getByText(/Inventory is thinner than curfew soup/i)).toBeInTheDocument();
   });
 });

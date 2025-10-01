@@ -4,6 +4,7 @@ import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
 import { buildPlayerStatProfile, PlayerStatFocus } from '../../game/interfaces/playerStats';
 import { getEquippedBonuses, calculateEffectiveSkills } from '../../game/systems/equipmentEffects';
+import { calculateDerivedStatsWithEquipment, calculateDerivedStats } from '../../game/systems/statCalculations';
 
 const containerStyle: React.CSSProperties = {
   display: 'flex',
@@ -100,6 +101,41 @@ const PlayerStatsPanel: React.FC = () => {
   const effectiveSkills = calculateEffectiveSkills(player.skills, equipmentBonuses);
   const profile = buildPlayerStatProfile(effectiveSkills);
 
+  let derived;
+  try {
+    derived = calculateDerivedStatsWithEquipment(player);
+  } catch (error) {
+    console.warn('[PlayerStatsPanel] Unable to use equipment-aware stats, falling back to base attributes.', error);
+    derived = calculateDerivedStats(player.skills);
+  }
+
+  const derivedStats = [
+    {
+      label: uiStrings.playerStatus.derivedStats.hp,
+      value: derived.maxHP,
+    },
+    {
+      label: uiStrings.playerStatus.derivedStats.ap,
+      value: derived.baseAP,
+    },
+    {
+      label: uiStrings.playerStatus.derivedStats.carryWeight,
+      value: `${derived.carryWeight} kg`,
+    },
+    {
+      label: uiStrings.playerStatus.derivedStats.crit,
+      value: `${derived.criticalChance}%`,
+    },
+    {
+      label: uiStrings.playerStatus.derivedStats.hit,
+      value: `+${derived.hitChanceModifier}%`,
+    },
+    {
+      label: uiStrings.playerStatus.derivedStats.dodge,
+      value: `+${derived.dodgeChance}%`,
+    },
+  ];
+
   return (
     <section style={containerStyle} aria-label="player-statistics">
       <header style={headerStyle}>
@@ -134,6 +170,20 @@ const PlayerStatsPanel: React.FC = () => {
             </div>
           );
         })}
+      </div>
+
+      <header style={{ ...headerStyle, marginTop: '0.4rem' }}>
+        <span style={headingLabelStyle}>{uiStrings.playerStatus.derivedLabel}</span>
+        <h3 style={headingTitleStyle}>{uiStrings.playerStatus.derivedTitle}</h3>
+      </header>
+
+      <div style={statGridStyle}>
+        {derivedStats.map((entry) => (
+          <div key={entry.label} style={statRowStyle}>
+            <span style={statLabelStyle}>{entry.label}</span>
+            <span style={statValueStyle}>{entry.value}</span>
+          </div>
+        ))}
       </div>
     </section>
   );

@@ -75,6 +75,18 @@ interface PlayerStatusStrings {
   inventoryOverflow: (count: number) => string;
   attributesLabel: string;
   attributesTitle: string;
+  derivedLabel: string;
+  derivedTitle: string;
+  derivedStats: DerivedStatsStrings;
+}
+
+interface DerivedStatsStrings {
+  hp: string;
+  ap: string;
+  carryWeight: string;
+  crit: string;
+  hit: string;
+  dodge: string;
 }
 
 interface MiniMapStrings {
@@ -189,6 +201,16 @@ const STRINGS: Record<Locale, UIStrings> = {
       inventoryOverflow: (count) => `+${count} more`,
       attributesLabel: 'Core Attributes',
       attributesTitle: 'S.P.E.C.I.A.L. Profile',
+      derivedLabel: 'Derived Metrics',
+      derivedTitle: 'Combat Readouts',
+      derivedStats: {
+        hp: 'Max HP',
+        ap: 'Action Points',
+        carryWeight: 'Carry Capacity',
+        crit: 'Critical Chance',
+        hit: 'Hit Bonus',
+        dodge: 'Dodge Bonus',
+      },
     },
     miniMap: {
       heading: 'Tactical Map',
@@ -319,6 +341,16 @@ const STRINGS: Record<Locale, UIStrings> = {
       inventoryOverflow: (count) => `+${count} ще`,
       attributesLabel: 'Основні характеристики',
       attributesTitle: 'Профіль S.P.E.C.I.A.L.',
+      derivedLabel: 'Похідні показники',
+      derivedTitle: 'Бойові параметри',
+      derivedStats: {
+        hp: 'Максимум здоровʼя',
+        ap: 'Очки дії',
+        carryWeight: 'Вага перенесення',
+        crit: 'Шанс критичного удару',
+        hit: 'Бонус влучності',
+        dodge: 'Бонус ухилення',
+      },
     },
     miniMap: {
       heading: 'Тактична мапа',

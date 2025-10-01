@@ -74,9 +74,9 @@ describe('Combat System Tests', () => {
       const player = {
         ...DEFAULT_PLAYER,
         position: { x: 0, y: 0 },
-        actionPoints: 1 // Less than DEFAULT_ATTACK_COST (2)
+        actionPoints: 0,
       };
-      
+
       const enemy = createEnemy({ x: 1, y: 0 });
       
       // Execute attack
@@ -89,13 +89,20 @@ describe('Combat System Tests', () => {
       expect(result.newAttacker.actionPoints).toBe(player.actionPoints);
     });
     
-    test('calculateHitChance should return lower value when behind cover', () => {
-      const attackerPos = { x: 0, y: 0 };
-      const targetPos = { x: 1, y: 1 };
-      
-      const normalHitChance = calculateHitChance(attackerPos, targetPos, false);
-      const coverHitChance = calculateHitChance(attackerPos, targetPos, true);
-      
+    test('calculateHitChance should return lower value when target has cover', () => {
+      const attackerEntity = {
+        ...player,
+        position: { x: 0, y: 0 },
+      };
+
+      const targetEntity = {
+        ...enemy,
+        position: { x: 1, y: 1 },
+      };
+
+      const normalHitChance = calculateHitChance(attackerEntity, targetEntity, false);
+      const coverHitChance = calculateHitChance(attackerEntity, targetEntity, true);
+
       expect(coverHitChance).toBeLessThan(normalHitChance);
     });
   });
@@ -296,4 +303,103 @@ describe('Combat System Tests', () => {
       expect(result.enemy.actionPoints).toBe(0);
     });
   });
-}); 
+});
+
+describe('Combat derived stat influence', () => {
+  test('calculateHitChance should increase with higher perception', () => {
+    const baselinePlayer: Player = {
+      ...DEFAULT_PLAYER,
+      id: 'baseline-attacker',
+      position: { x: 0, y: 0 },
+      skills: {
+        ...DEFAULT_PLAYER.skills,
+        perception: 5,
+      },
+    };
+
+    const focusedPlayer: Player = {
+      ...baselinePlayer,
+      id: 'focused-attacker',
+      skills: {
+        ...baselinePlayer.skills,
+        perception: 9,
+      },
+    };
+
+    const targetEnemy = createEnemy({ x: 1, y: 0 });
+
+    const baseChance = calculateHitChance(baselinePlayer, targetEnemy, false);
+    const boostedChance = calculateHitChance(focusedPlayer, targetEnemy, false);
+
+    expect(boostedChance).toBeGreaterThan(baseChance);
+  });
+
+  test('calculateHitChance should decrease against agile targets', () => {
+    const attacker: Player = {
+      ...DEFAULT_PLAYER,
+      id: 'attacker',
+      position: { x: 0, y: 0 },
+      skills: {
+        ...DEFAULT_PLAYER.skills,
+        perception: 7,
+      },
+    };
+
+    const baselineTarget: Player = {
+      ...DEFAULT_PLAYER,
+      id: 'baseline-target',
+      position: { x: 1, y: 0 },
+      skills: {
+        ...DEFAULT_PLAYER.skills,
+        agility: 5,
+      },
+    };
+
+    const agileTarget: Player = {
+      ...baselineTarget,
+      id: 'agile-target',
+      skills: {
+        ...baselineTarget.skills,
+        agility: 9,
+      },
+    };
+
+    const againstBaseline = calculateHitChance(attacker, baselineTarget, false);
+    const againstAgile = calculateHitChance(attacker, agileTarget, false);
+
+    expect(againstAgile).toBeLessThan(againstBaseline);
+  });
+
+  test('executeAttack should apply melee bonus from strength', () => {
+    const lowStrengthAttacker: Player = {
+      ...DEFAULT_PLAYER,
+      id: 'low-strength',
+      position: { x: 0, y: 0 },
+      actionPoints: 6,
+      skills: {
+        ...DEFAULT_PLAYER.skills,
+        strength: 4,
+      },
+    };
+
+    const highStrengthAttacker: Player = {
+      ...lowStrengthAttacker,
+      id: 'high-strength',
+      skills: {
+        ...lowStrengthAttacker.skills,
+        strength: 9,
+      },
+    };
+
+    const targetA = createEnemy({ x: 1, y: 0 }, 30, 30, 5);
+    const targetB = createEnemy({ x: 1, y: 0 }, 30, 30, 5);
+
+    setRandomGenerator(() => 0.05);
+    const lowResult = executeAttack(lowStrengthAttacker, targetA, false);
+
+    setRandomGenerator(() => 0.05);
+    const highResult = executeAttack(highStrengthAttacker, targetB, false);
+
+    expect(highResult.damage).toBeGreaterThan(lowResult.damage);
+  });
+});
