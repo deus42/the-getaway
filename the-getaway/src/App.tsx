@@ -17,6 +17,8 @@ import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
+import { setSkill } from "./store/playerSlice";
+import { PlayerSkills } from "./game/interfaces/types";
 import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
 import "./App.css";
@@ -251,9 +253,20 @@ function App() {
 
   const handleCharacterCreationComplete = (data: CharacterCreationData) => {
     store.dispatch(resetGame());
+
+    // Apply character attributes if provided
+    if (data.attributes) {
+      Object.entries(data.attributes).forEach(([skill, value]) => {
+        store.dispatch(setSkill({
+          skill: skill as keyof PlayerSkills,
+          value: value as number
+        }));
+      });
+    }
+
     const { logs } = getSystemStrings(store.getState().settings.locale);
     store.dispatch(addLogMessage(`${logs.operationStart} - Call sign: ${data.name}`));
-    // TODO: Apply character creation data to player state when Step 22b/22c are implemented
+
     setShowCharacterCreation(false);
     setGameStarted(true);
     setHasSavedGame(true);

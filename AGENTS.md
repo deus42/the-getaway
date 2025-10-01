@@ -38,7 +38,7 @@
 - Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
 
 ## Reference Memory Bank
-- `memory-bank/backstory.md` now folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
+- `memory-bank/plot.md` now folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
 - `memory-bank/game-design.md` documents the agreed toolchain and gameplay pillars; align new systems with it or log deviations.
 - `memory-bank/architecture.md` must reflect current code structure. Update it alongside architectural changes so docs never drift.
 

@@ -37,27 +37,35 @@ const headingTitleStyle: React.CSSProperties = {
 };
 
 const statGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: '0.5rem',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.4rem',
 };
 
 const statRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '0.5rem 0.65rem',
+  padding: '0.6rem 0.75rem',
   borderRadius: '8px',
-  background: 'rgba(30, 41, 59, 0.4)',
-  border: '1px solid rgba(148, 163, 184, 0.12)',
+  background: 'rgba(30, 41, 59, 0.5)',
+  border: '1px solid rgba(148, 163, 184, 0.15)',
+  transition: 'all 0.2s ease',
 };
 
 const statLabelStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.5rem',
-  fontSize: '0.75rem',
+  gap: '0.6rem',
+  fontSize: '0.8rem',
   color: '#cbd5e1',
+  flex: 1,
+};
+
+const statDescriptionStyle: React.CSSProperties = {
+  fontSize: '0.65rem',
+  color: 'rgba(203, 213, 225, 0.6)',
+  marginTop: '0.15rem',
 };
 
 const abbreviationBadgeStyle = (highlightColor: string): React.CSSProperties => ({
@@ -110,6 +118,7 @@ const PlayerStatsPanel: React.FC = () => {
       <div style={statGridStyle}>
         {profile.map((entry) => {
           const label = uiStrings.skills[entry.key];
+          const description = uiStrings.skillDescriptions[entry.key];
           const highlight = focusColorMap[entry.focus] ?? focusColorMap.combat;
           const baseValue = player.skills[entry.key];
           const hasBonus = baseValue !== entry.value;
@@ -118,7 +127,10 @@ const PlayerStatsPanel: React.FC = () => {
             <div key={entry.key} style={statRowStyle}>
               <div style={statLabelStyle}>
                 <span style={abbreviationBadgeStyle(highlight)}>{entry.abbreviation}</span>
-                <span>{label}</span>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span>{label}</span>
+                  <span style={statDescriptionStyle}>{description}</span>
+                </div>
               </div>
               <span style={{
                 ...statValueStyle,
