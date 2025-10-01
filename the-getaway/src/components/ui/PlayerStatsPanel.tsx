@@ -37,53 +37,45 @@ const headingTitleStyle: React.CSSProperties = {
 };
 
 const statGridStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.4rem',
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: '0.35rem',
 };
 
 const statRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '0.6rem 0.75rem',
-  borderRadius: '8px',
-  background: 'rgba(30, 41, 59, 0.5)',
-  border: '1px solid rgba(148, 163, 184, 0.15)',
-  transition: 'all 0.2s ease',
+  padding: '0.4rem 0.5rem',
+  borderRadius: '6px',
+  background: 'rgba(30, 41, 59, 0.4)',
+  border: '1px solid rgba(148, 163, 184, 0.12)',
 };
 
 const statLabelStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.6rem',
-  fontSize: '0.8rem',
+  gap: '0.4rem',
+  fontSize: '0.7rem',
   color: '#cbd5e1',
-  flex: 1,
-};
-
-const statDescriptionStyle: React.CSSProperties = {
-  fontSize: '0.65rem',
-  color: 'rgba(203, 213, 225, 0.6)',
-  marginTop: '0.15rem',
 };
 
 const abbreviationBadgeStyle = (highlightColor: string): React.CSSProperties => ({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '0.15rem 0.35rem',
-  borderRadius: '4px',
-  fontSize: '0.6rem',
+  padding: '0.1rem 0.3rem',
+  borderRadius: '3px',
+  fontSize: '0.55rem',
   fontWeight: 600,
-  letterSpacing: '0.1em',
+  letterSpacing: '0.08em',
   textTransform: 'uppercase',
   color: '#f8fafc',
   background: highlightColor,
 });
 
 const statValueStyle: React.CSSProperties = {
-  fontSize: '1.1rem',
+  fontSize: '0.9rem',
   fontWeight: 600,
   color: '#f8fafc',
 };
@@ -118,26 +110,26 @@ const PlayerStatsPanel: React.FC = () => {
       <div style={statGridStyle}>
         {profile.map((entry) => {
           const label = uiStrings.skills[entry.key];
-          const description = uiStrings.skillDescriptions[entry.key];
           const highlight = focusColorMap[entry.focus] ?? focusColorMap.combat;
           const baseValue = player.skills[entry.key];
           const hasBonus = baseValue !== entry.value;
 
           return (
-            <div key={entry.key} style={statRowStyle}>
+            <div
+              key={entry.key}
+              style={statRowStyle}
+              title={uiStrings.skillDescriptions[entry.key]}
+            >
               <div style={statLabelStyle}>
                 <span style={abbreviationBadgeStyle(highlight)}>{entry.abbreviation}</span>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span>{label}</span>
-                  <span style={statDescriptionStyle}>{description}</span>
-                </div>
+                <span>{label}</span>
               </div>
               <span style={{
                 ...statValueStyle,
                 color: hasBonus ? '#22c55e' : '#f8fafc'
               }}>
                 {entry.value}
-                {hasBonus && <span style={{ fontSize: '0.7rem', marginLeft: '0.25rem', opacity: 0.7 }}>({baseValue})</span>}
+                {hasBonus && <span style={{ fontSize: '0.65rem', marginLeft: '0.2rem', opacity: 0.6 }}>({baseValue})</span>}
               </span>
             </div>
           );

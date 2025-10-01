@@ -10,6 +10,12 @@
 ## Core Conflict
 Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into Canada to seize hydroelectric power and rare earth reserves. The player’s actions will decide whether the invasion succeeds or collapses, exposing Harrow’s war crimes to the world.
 
+## Narrative Pillars
+1. **Occupation as Everyday Reality**: Every mission should remind players that the regime polices food, information, and movement. Small victories (lifting curfew in one district) matter as much as grand strikes.
+2. **Trust is Currency**: Alliances are fragile. Mechanics around reputation, dialogue checks, and companion loyalty stem directly from who the player chooses to protect.
+3. **Tech vs. Ingenuity**: High-end regime technology collides with hacked-together resistance solutions. Gameplay systems should reflect asymmetry—smart traps, misdirection, and social engineering trump brute force.
+4. **Consequences Echo**: Decisions reverberate through later acts (e.g., sparing a syndicate broker unlocks Act III smuggling assistance; leaking intel early hardens ESD patrols in Act IV).
+
 ## Key Power Factions
 - **Emergent Security Directorate (ESD)**: Brutal, data-obsessed enforcers wearing graphite armor and mirrored visors. Internal rivalry between traditionalist commanders and profit-driven corporate officers creates exploitable fractures.
 - **North Atlantic Resistance Coalition (NARC)**: Operatives supply intel, tech smuggling routes, and extraction contacts. They favor long-term destabilization over open war.
@@ -46,6 +52,11 @@ Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into C
 - Trigger a citywide blackout or hijack the drone swarm—player choice determines finale tone.
 - Final confrontation with Harrow on an airborne command platform; expose crimes, topple regime, or negotiate a fragile ceasefire.
 
+### Act Interludes & Convergence Beats
+- **Radio Monologues**: Between acts, run shortwave broadcasts from Theo “Circuit” summarizing public sentiment; branch based on player reputation scores.
+- **Refugee Ledger**: Persistent menu tab tracking civilians saved, lost, or displaced. Numbers influence NARC’s willingness to deploy assets in Act III and IV.
+- **Harrow’s Address**: A mid-campaign propaganda speech adapts to player disruptions (lost trains, leaked intel) and unlocks bespoke dialogue hooks for the finale.
+
 ## Supporting Cast
 - **Amara Velez**: Tactical lead of Shelterline. Direct, dry humor, prioritizes civilian safety.
 - **Theo "Circuit" Anders**: Teenage hacker broadcasting pirate radio bulletins; brings levity and exposition.
@@ -58,6 +69,12 @@ Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into C
 - **Civilians & Syndicates**: Survival-first. Sentences trail off, punctuated by quick checks over the shoulder. They bargain, joke darkly, and call the player by nickname.
 - **Broadcast Media**: Propaganda layered with glitchy interference. Pair authoritarian slogans with cheery corporate sound bites.
 
+### Dialogue Style Reference
+- **Resistance Example**: “Streetlight’s back on. You’ve got seven minutes before the floodlights sweep—move like you still trust your knees.”
+- **ESD Example**: “Citizen Trace. Compliance Directive 19-B authorizes lethal countermeasures. Present for scan or be marked subversive.”
+- **Syndicate Example**: “You bring fuel? Then we talk. No fuel, no favors—curfew makes saints of none of us.”
+- **Broadcast Tagline**: “Harrow’s Dawn—Order, Prosperity, Destiny. Stay inside. Stay loyal. Stay alive.”
+
 ## Themes & Motifs
 - **Improvised Hope**: Makeshift solar arrays, graffiti maps, and coded lullabies show culture persisting.
 - **Silenced Histories**: Museums turned into bunkers; characters fight for memory as much as freedom.
@@ -68,6 +85,11 @@ Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into C
 - **The Stadium Vault**: Looted arts and archives stored under Miami Stadium—choose between public broadcast or black-market leverage.
 - **Signal Choke**: Disable a satellite uplink relay; success unlocks covert NARC drops, failure boosts enemy patrol AI.
 - **Ghost Ledger**: Track ration fraud implicating a sympathetic ESD quartermaster; decide whether to expose or protect them.
+
+## Recurring Visual & Audio Motifs
+- **Neon vs. Sodium Glow**: Resistance zones use reclaimed neon signage; regime checkpoints drown in amber floodlights.
+- **Soundscape Cues**: Faint radio static indicates nearby pirate broadcasts; low-frequency hum warns of patrol drones.
+- **Environmental Storytelling**: Flooded storefronts repurposed as hydroponic farms, painted murals of missing persons, ration lines stretching past corporate billboards.
 
 ## Future Expansion Seeds
 - **Industrial Wasteland**: After Harrow falls, chemical weapon stockpiles leak in the Midwest—ties into game update Step 31.
