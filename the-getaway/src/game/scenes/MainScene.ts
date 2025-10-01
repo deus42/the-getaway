@@ -4,11 +4,12 @@ import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
-import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail, VIEWPORT_UPDATE_EVENT, ViewportUpdateDetail, MINIMAP_VIEWPORT_CLICK_EVENT, MinimapViewportClickDetail } from '../events';
+import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail, ViewportUpdateDetail } from '../events';
 import { IsoObjectFactory, CharacterToken } from '../utils/IsoObjectFactory';
 import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, adjustColor as isoAdjustColor, IsoMetrics } from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
+import { miniMapService } from '../services/miniMapService';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
@@ -138,7 +139,7 @@ export class MainScene extends Phaser.Scene {
     this.scale.on('resize', this.handleResize, this);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
     window.addEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
-    window.addEventListener(MINIMAP_VIEWPORT_CLICK_EVENT, this.handleMinimapViewportClick as EventListener);
+    miniMapService.initialize(this);
 
     if (this.input) {
       this.input.on('pointerdown', this.handlePointerDown, this);
@@ -195,7 +196,7 @@ export class MainScene extends Phaser.Scene {
     }
     this.scale.off('resize', this.handleResize, this);
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
-    window.removeEventListener(MINIMAP_VIEWPORT_CLICK_EVENT, this.handleMinimapViewportClick as EventListener);
+    miniMapService.shutdown();
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
 
     if (this.unsubscribe) {
@@ -1475,37 +1476,39 @@ export class MainScene extends Phaser.Scene {
 
     const detail: ViewportUpdateDetail = { x, y, width, height };
 
-    window.dispatchEvent(
-      new CustomEvent(VIEWPORT_UPDATE_EVENT, { detail })
-    );
+    miniMapService.updateViewport({
+      ...detail,
+      zoom: camera.zoom,
+    });
   }
 
-  private handleMinimapViewportClick = (event: Event): void => {
+  public focusCameraOnGridPosition(gridX: number, gridY: number, animate = true): void {
     if (!this.sys.isActive() || !this.currentMapArea) {
       return;
     }
 
-    const customEvent = event as CustomEvent<MinimapViewportClickDetail>;
-    const { gridX, gridY } = customEvent.detail;
-
-    // Convert grid position to pixel position and center camera there
     const pixelPos = this.calculatePixelPosition(gridX, gridY);
     const camera = this.cameras.main;
 
-    // Disable player follow temporarily
     this.isCameraFollowingPlayer = false;
     camera.stopFollow();
 
-    // Pan camera to the clicked position
-    camera.pan(pixelPos.x, pixelPos.y, 300, 'Sine.easeInOut', false, (_cam, progress) => {
+    const finalize = () => {
+      this.clampCameraToBounds(camera);
       this.emitViewportUpdate();
+    };
 
-      if (progress === 1) {
-        this.clampCameraToBounds(camera);
-        this.emitViewportUpdate();
-      }
-    });
-  };
+    if (animate) {
+      camera.pan(pixelPos.x, pixelPos.y, 300, 'Sine.easeInOut', false, (_cam, progress) => {
+        if (progress === 1) {
+          finalize();
+        }
+      });
+    } else {
+      camera.centerOn(pixelPos.x, pixelPos.y);
+      finalize();
+    }
+  }
 
   private drawBackdrop(): void {
     if (!this.backdropGraphics || !this.currentMapArea) {

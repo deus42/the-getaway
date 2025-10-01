@@ -1,101 +1,200 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
-import { getUIStrings } from "../../content/ui";
-import { MapArea, TileType } from "../../game/interfaces/types";
+import React, { useEffect, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { getUIStrings } from '../../content/ui';
 import {
+  MINIMAP_STATE_EVENT,
   MINIMAP_VIEWPORT_CLICK_EVENT,
-  VIEWPORT_UPDATE_EVENT,
-} from "../../game/events";
+  MiniMapStateDetail,
+  MiniMapEntityDetail,
+  TileTypeGrid,
+} from '../../game/events';
+import { miniMapService } from '../../game/services/miniMapService';
 
-const MAX_CANVAS_WIDTH = 180;
-const MAX_CANVAS_HEIGHT = 160;
-
-interface ViewportInfo {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-const TILE_COLORS: Record<TileType | "default", string> = {
-  [TileType.FLOOR]: "#1e293b",
-  [TileType.WALL]: "#475569",
-  [TileType.DOOR]: "#facc15",
-  [TileType.COVER]: "#0f766e",
-  [TileType.WATER]: "#0ea5e9",
-  [TileType.TRAP]: "#7c3aed",
-  default: "#1f2937",
+const TILE_COLORS: Record<string, string> = {
+  floor: '#1e293b',
+  wall: '#475569',
+  door: '#facc15',
+  cover: '#0f766e',
+  water: '#0ea5e9',
+  trap: '#7c3aed',
+  default: '#1f2937',
 };
 
-const clampScale = (area: MapArea | null): number => {
-  if (!area) {
-    return 1;
+const ENTITY_STYLE: Record<MiniMapEntityDetail['kind'], { fill: string; stroke: string; radius: number }> = {
+  player: { fill: '#38bdf8', stroke: 'rgba(224, 242, 254, 0.85)', radius: 0.55 },
+  enemy: { fill: '#ef4444', stroke: 'rgba(248, 113, 113, 0.85)', radius: 0.4 },
+  npc: { fill: '#22c55e', stroke: 'rgba(187, 247, 208, 0.9)', radius: 0.35 },
+  objective: { fill: '#fbbf24', stroke: 'rgba(253, 230, 138, 0.85)', radius: 0.35 },
+};
+
+const CURFEW_BORDER = {
+  active: 'rgba(126, 232, 201, 0.65)',
+  inactive: 'rgba(59, 130, 246, 0.55)',
+};
+
+const GRID_LINE_COLOR = 'rgba(15, 23, 42, 0.35)';
+
+type TileCache = {
+  areaId: string;
+  tileVersion: number;
+  canvas: HTMLCanvasElement | null;
+};
+
+const createTileCache = (): TileCache => ({ areaId: '', tileVersion: -1, canvas: null });
+
+const getTileColor = (type: string): string => TILE_COLORS[type.toLowerCase()] ?? TILE_COLORS.default;
+
+const drawTilesToCanvas = (tiles: TileTypeGrid, tileScale: number): HTMLCanvasElement => {
+  const width = tiles[0]?.length ?? 0;
+  const height = tiles.length;
+  const offscreen = document.createElement('canvas');
+  offscreen.width = Math.max(1, Math.ceil(width * tileScale));
+  offscreen.height = Math.max(1, Math.ceil(height * tileScale));
+  const ctx = offscreen.getContext('2d');
+
+  if (!ctx) {
+    return offscreen;
   }
 
-  const widthScale = MAX_CANVAS_WIDTH / area.width;
-  const heightScale = MAX_CANVAS_HEIGHT / area.height;
-  const rawScale = Math.min(widthScale, heightScale);
+  ctx.imageSmoothingEnabled = false;
 
-  // Keep increments at a tenth to reduce jitter while staying crisp
-  const scaled = Math.max(0.6, Math.min(4, Math.floor(rawScale * 10) / 10 || 1));
-  return scaled;
+  for (let y = 0; y < height; y += 1) {
+    for (let x = 0; x < width; x += 1) {
+      const tile = tiles[y][x];
+      const fill = getTileColor(tile.type);
+      ctx.fillStyle = fill;
+      ctx.fillRect(x * tileScale, y * tileScale, tileScale, tileScale);
+
+      if (tile.provideCover) {
+        ctx.fillStyle = 'rgba(14, 116, 144, 0.45)';
+        ctx.fillRect(x * tileScale, y * tileScale, tileScale, tileScale);
+      }
+    }
+  }
+
+  ctx.strokeStyle = GRID_LINE_COLOR;
+  ctx.lineWidth = Math.max(1, tileScale * 0.1);
+
+  const gridStep = Math.max(4, Math.round(12 / tileScale));
+
+  for (let gx = 0; gx <= width; gx += gridStep) {
+    const xPos = gx * tileScale;
+    ctx.beginPath();
+    ctx.moveTo(xPos, 0);
+    ctx.lineTo(xPos, offscreen.height);
+    ctx.stroke();
+  }
+
+  for (let gy = 0; gy <= height; gy += gridStep) {
+    const yPos = gy * tileScale;
+    ctx.beginPath();
+    ctx.moveTo(0, yPos);
+    ctx.lineTo(offscreen.width, yPos);
+    ctx.stroke();
+  }
+
+  return offscreen;
+};
+
+const drawBorder = (
+  ctx: CanvasRenderingContext2D,
+  cssWidth: number,
+  cssHeight: number,
+  state: MiniMapStateDetail,
+) => {
+  ctx.save();
+  ctx.lineWidth = Math.max(2, state.tileScale * 0.6);
+  ctx.strokeStyle = state.curfewActive ? CURFEW_BORDER.active : CURFEW_BORDER.inactive;
+  ctx.strokeRect(1, 1, cssWidth - 2, cssHeight - 2);
+  ctx.restore();
+};
+
+const drawEntities = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) => {
+  ctx.save();
+  state.entities.forEach((entity) => {
+    const style = ENTITY_STYLE[entity.kind] ?? ENTITY_STYLE.npc;
+    const centerX = (entity.x + 0.5) * state.tileScale;
+    const centerY = (entity.y + 0.5) * state.tileScale;
+    const radius = Math.max(2, state.tileScale * style.radius);
+
+    ctx.beginPath();
+    ctx.fillStyle = style.fill;
+    ctx.globalAlpha = entity.status === 'inactive' ? 0.35 : 1;
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.lineWidth = Math.max(1, radius * 0.45);
+    ctx.strokeStyle = style.stroke;
+    ctx.stroke();
+  });
+  ctx.restore();
+};
+
+const drawViewport = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) => {
+  const { viewport, tileScale } = state;
+  if (!viewport || viewport.width <= 0 || viewport.height <= 0) {
+    return;
+  }
+
+  const viewportX = viewport.x * tileScale;
+  const viewportY = viewport.y * tileScale;
+  const viewportWidth = viewport.width * tileScale;
+  const viewportHeight = viewport.height * tileScale;
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
+
+  ctx.lineWidth = Math.max(1.5, tileScale * 0.3);
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+  ctx.strokeRect(viewportX, viewportY, viewportWidth, viewportHeight);
+
+  const cornerSize = Math.max(3, tileScale * 0.8);
+  ctx.fillStyle = 'rgba(56, 189, 248, 0.95)';
+
+  ctx.fillRect(viewportX - 1, viewportY - 1, cornerSize, cornerSize);
+  ctx.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY - 1, cornerSize, cornerSize);
+  ctx.fillRect(viewportX - 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
+  ctx.fillRect(
+    viewportX + viewportWidth - cornerSize + 1,
+    viewportY + viewportHeight - cornerSize + 1,
+    cornerSize,
+    cornerSize,
+  );
+  ctx.restore();
 };
 
 const MiniMap: React.FC = () => {
-  const mapArea = useSelector((state: RootState) => state.world.currentMapArea);
-  const playerPosition = useSelector((state: RootState) => state.player.data.position);
-  const curfewActive = useSelector((state: RootState) => state.world.curfewActive);
-  const enemies = useSelector((state: RootState) => state.world.currentMapArea.entities.enemies);
-  const npcs = useSelector((state: RootState) => state.world.currentMapArea.entities.npcs);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [canvasSize, setCanvasSize] = useState({ width: 140, height: 110 });
-  const [viewport, setViewport] = useState<ViewportInfo | null>(null);
-  const renderScaleRef = useRef<{ scale: number; dpr: number }>({ scale: 1, dpr: 1 });
-  const enemyBlips = useMemo(
-    () =>
-      enemies.map((enemy) => ({
-        id: enemy.id,
-        x: enemy.position.x,
-        y: enemy.position.y,
-        health: enemy.health,
-      })),
-    [enemies]
-  );
+  const tileCacheRef = useRef<TileCache>(createTileCache());
+  const canvasSizeRef = useRef<{ width: number; height: number }>({ width: 140, height: 110 });
+  const latestStateRef = useRef<MiniMapStateDetail | null>(miniMapService.getState());
 
-  const npcBlips = useMemo(
-    () =>
-      npcs.map((npc) => ({
-        id: npc.id,
-        x: npc.position.x,
-        y: npc.position.y,
-      })),
-    [npcs]
-  );
+  const [renderTick, setRenderTick] = useState(0);
+  const [canvasSize, setCanvasSize] = useState(canvasSizeRef.current);
 
-
-  // Listen for viewport updates from MainScene
   useEffect(() => {
-    const handleViewportUpdate = (event: Event) => {
-      const customEvent = event as CustomEvent<ViewportInfo>;
-      setViewport(customEvent.detail);
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<MiniMapStateDetail>).detail;
+      latestStateRef.current = detail;
+      setRenderTick(detail.version);
     };
 
-    window.addEventListener(VIEWPORT_UPDATE_EVENT, handleViewportUpdate);
+    miniMapService.addEventListener(MINIMAP_STATE_EVENT, handler as EventListener);
+    miniMapService.requestImmediateState();
+
     return () => {
-      window.removeEventListener(VIEWPORT_UPDATE_EVENT, handleViewportUpdate);
+      miniMapService.removeEventListener(MINIMAP_STATE_EVENT, handler as EventListener);
     };
   }, []);
 
   useEffect(() => {
-    if (!mapArea) {
-      return;
-    }
-
-    if (typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent)) {
+    const activeState = latestStateRef.current;
+    if (!activeState) {
       return;
     }
 
@@ -104,258 +203,167 @@ const MiniMap: React.FC = () => {
       return;
     }
 
-    let context: CanvasRenderingContext2D | null = null;
-    try {
-      context = canvas.getContext("2d");
-    } catch (error) {
-      console.warn("[MiniMap] Canvas rendering unavailable", error);
+    const cssWidth = Math.max(1, Math.round(activeState.logicalWidth));
+    const cssHeight = Math.max(1, Math.round(activeState.logicalHeight));
+    const dpr = activeState.devicePixelRatio || 1;
+
+    if (
+      canvasSizeRef.current.width !== cssWidth ||
+      canvasSizeRef.current.height !== cssHeight
+    ) {
+      canvasSizeRef.current = { width: cssWidth, height: cssHeight };
+      setCanvasSize(canvasSizeRef.current);
+    }
+
+    const targetWidth = Math.max(1, Math.round(cssWidth * dpr));
+    const targetHeight = Math.max(1, Math.round(cssHeight * dpr));
+
+    if (canvas.width !== targetWidth) {
+      canvas.width = targetWidth;
+    }
+    if (canvas.height !== targetHeight) {
+      canvas.height = targetHeight;
+    }
+
+    canvas.style.width = `${cssWidth}px`;
+    canvas.style.height = `${cssHeight}px`;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
       return;
     }
 
-    if (!context) {
-      return;
+    ctx.imageSmoothingEnabled = false;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+    const cache = tileCacheRef.current;
+    if (
+      !cache.canvas ||
+      cache.areaId !== activeState.areaId ||
+      cache.tileVersion !== activeState.tileVersion
+    ) {
+      cache.canvas = drawTilesToCanvas(activeState.tiles, activeState.tileScale);
+      cache.areaId = activeState.areaId;
+      cache.tileVersion = activeState.tileVersion;
     }
 
-    const scale = clampScale(mapArea);
-    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
-    renderScaleRef.current = { scale, dpr };
-
-    const logicalWidth = Math.ceil(mapArea.width * scale);
-    const logicalHeight = Math.ceil(mapArea.height * scale);
-    const canvasWidth = Math.ceil(logicalWidth * dpr);
-    const canvasHeight = Math.ceil(logicalHeight * dpr);
-
-    if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      canvas.style.width = `${logicalWidth}px`;
-      canvas.style.height = `${logicalHeight}px`;
-      setCanvasSize({ width: logicalWidth, height: logicalHeight });
+    if (cache.canvas) {
+      ctx.drawImage(cache.canvas, 0, 0, cssWidth, cssHeight);
     }
 
-    context.imageSmoothingEnabled = false;
-    context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, canvasWidth, canvasHeight);
-    context.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-    const drawRect = (x: number, y: number, width: number, height: number) => {
-      context.fillRect(x, y, width, height);
-    };
-
-    // Background wash
-    context.fillStyle = "#0b1220";
-    drawRect(0, 0, logicalWidth, logicalHeight);
-
-    for (let y = 0; y < mapArea.height; y += 1) {
-      for (let x = 0; x < mapArea.width; x += 1) {
-        const tile = mapArea.tiles[y][x];
-        const color = TILE_COLORS[tile.type] ?? TILE_COLORS.default;
-        context.fillStyle = color;
-        drawRect(x * scale, y * scale, scale, scale);
-
-        if (tile.provideCover) {
-          context.fillStyle = "rgba(14, 116, 144, 0.45)";
-          drawRect(x * scale, y * scale, scale, scale);
-        }
-      }
-    }
-
-    // Holo grid overlay for readability
-    context.strokeStyle = "rgba(15, 23, 42, 0.35)";
-    context.lineWidth = Math.max(1, scale * 0.1);
-    for (let x = 0; x <= mapArea.width; x += Math.max(4, Math.round(12 / scale))) {
-      const xPos = x * scale;
-      context.beginPath();
-      context.moveTo(xPos, 0);
-      context.lineTo(xPos, logicalHeight);
-      context.stroke();
-    }
-    for (let y = 0; y <= mapArea.height; y += Math.max(4, Math.round(12 / scale))) {
-      const yPos = y * scale;
-      context.beginPath();
-      context.moveTo(0, yPos);
-      context.lineTo(logicalWidth, yPos);
-      context.stroke();
-    }
-
-    const drawBlip = (
-      position: { x: number; y: number },
-      fill: string,
-      stroke: string,
-      radiusMultiplier = 0.45
-    ) => {
-      const centerX = (position.x + 0.5) * scale;
-      const centerY = (position.y + 0.5) * scale;
-      const radius = Math.max(2, scale * radiusMultiplier);
-
-      context.beginPath();
-      context.fillStyle = fill;
-      context.arc(centerX, centerY, radius, 0, Math.PI * 2);
-      context.fill();
-
-      context.lineWidth = Math.max(1, radius * 0.45);
-      context.strokeStyle = stroke;
-      context.stroke();
-    };
-
-    // Player marker
-    drawBlip(playerPosition, "#38bdf8", "rgba(224, 242, 254, 0.85)", 0.55);
-
-    // Enemy markers
-    enemyBlips
-      .filter((enemy) => enemy.health > 0)
-      .forEach((enemy) => {
-        drawBlip({ x: enemy.x, y: enemy.y }, "#ef4444", "rgba(248, 113, 113, 0.85)", 0.4);
-      });
-
-    npcBlips.forEach((npc) => {
-      drawBlip({ x: npc.x, y: npc.y }, "#22c55e", "rgba(187, 247, 208, 0.9)", 0.35);
-    });
-
-    // District perimeter glow
-    context.lineWidth = Math.max(2, scale * 0.6);
-    context.strokeStyle = curfewActive
-      ? "rgba(126, 232, 201, 0.6)"
-      : "rgba(59, 130, 246, 0.55)";
-    context.strokeRect(1, 1, logicalWidth - 2, logicalHeight - 2);
-
-    // Viewport rectangle
-    if (viewport) {
-      const viewportX = viewport.x * scale;
-      const viewportY = viewport.y * scale;
-      const viewportWidth = viewport.width * scale;
-      const viewportHeight = viewport.height * scale;
-
-      // Semi-transparent fill
-      context.fillStyle = "rgba(255, 255, 255, 0.08)";
-      context.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
-
-      // Bright border
-      context.lineWidth = Math.max(1.5, scale * 0.3);
-      context.strokeStyle = "rgba(56, 189, 248, 0.85)";
-      context.strokeRect(viewportX, viewportY, viewportWidth, viewportHeight);
-
-      // Corner markers for better visibility
-      const cornerSize = Math.max(3, scale * 0.8);
-      context.fillStyle = "rgba(56, 189, 248, 0.95)";
-      // Top-left
-      context.fillRect(viewportX - 1, viewportY - 1, cornerSize, cornerSize);
-      // Top-right
-      context.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY - 1, cornerSize, cornerSize);
-      // Bottom-left
-      context.fillRect(viewportX - 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
-      // Bottom-right
-      context.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
-    }
-  }, [mapArea, playerPosition, curfewActive, enemyBlips, npcBlips, viewport]);
+    drawBorder(ctx, cssWidth, cssHeight, activeState);
+    drawEntities(ctx, activeState);
+    drawViewport(ctx, activeState);
+  }, [renderTick, locale]);
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!mapArea || !canvasRef.current) {
+    const state = latestStateRef.current;
+    const canvas = canvasRef.current;
+    if (!state || !canvas) {
       return;
     }
 
-    const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const { scale } = renderScaleRef.current;
-    const effectiveScale = scale || clampScale(mapArea);
-
-    // Calculate click position relative to canvas
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
+    const scale = state.tileScale || 1;
 
-    // Convert to grid coordinates
-    const gridX = Math.floor(x / effectiveScale);
-    const gridY = Math.floor(y / effectiveScale);
+    const gridX = Math.floor(x / scale);
+    const gridY = Math.floor(y / scale);
+    const clampedX = Math.max(0, Math.min(state.mapWidth - 1, gridX));
+    const clampedY = Math.max(0, Math.min(state.mapHeight - 1, gridY));
 
-    // Clamp to map bounds
-    const clampedX = Math.max(0, Math.min(mapArea.width - 1, gridX));
-    const clampedY = Math.max(0, Math.min(mapArea.height - 1, gridY));
-
-    // Dispatch event to MainScene to move camera
-    window.dispatchEvent(
-      new CustomEvent(MINIMAP_VIEWPORT_CLICK_EVENT, {
-        detail: { gridX: clampedX, gridY: clampedY },
-      })
-    );
+    miniMapService.emitInteraction({
+      type: MINIMAP_VIEWPORT_CLICK_EVENT,
+      gridX: clampedX,
+      gridY: clampedY,
+    });
   };
 
-  if (!mapArea) {
+  const activeState = latestStateRef.current;
+
+  if (!activeState) {
     return null;
   }
+
+  const playerEntity = activeState.entities.find((entity) => entity.kind === 'player');
+  const playerX = playerEntity ? Math.round(playerEntity.x) : 0;
+  const playerY = playerEntity ? Math.round(playerEntity.y) : 0;
 
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: "0.55rem",
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.55rem',
         fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-        color: "#e2e8f0",
+        color: '#e2e8f0',
       }}
     >
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
         }}
       >
         <span
           style={{
-            fontSize: "0.65rem",
-            letterSpacing: "0.26em",
-            textTransform: "uppercase",
-            color: "rgba(148, 163, 184, 0.85)",
+            fontSize: '0.65rem',
+            letterSpacing: '0.26em',
+            textTransform: 'uppercase',
+            color: 'rgba(148, 163, 184, 0.85)',
           }}
         >
           {uiStrings.miniMap.heading}
         </span>
         <span
           style={{
-            fontSize: "0.7rem",
-            color: "rgba(148, 163, 184, 0.88)",
+            fontSize: '0.7rem',
+            color: 'rgba(148, 163, 184, 0.88)',
           }}
         >
-          {mapArea.width}×{mapArea.height}
+          {activeState.mapWidth}×{activeState.mapHeight}
         </span>
       </div>
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          borderRadius: "12px",
-          overflow: "hidden",
-          background: "rgba(10, 15, 25, 0.8)",
-          padding: "0.4rem",
-          boxShadow: "inset 0 0 0 1px rgba(59, 130, 246, 0.18)",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          background: 'rgba(10, 15, 25, 0.8)',
+          padding: '0.4rem',
+          boxShadow: 'inset 0 0 0 1px rgba(59, 130, 246, 0.18)',
         }}
       >
         <canvas
           ref={canvasRef}
           onClick={handleCanvasClick}
           style={{
-            display: "block",
+            display: 'block',
             width: `${canvasSize.width}px`,
             height: `${canvasSize.height}px`,
-            imageRendering: "pixelated",
-            cursor: "pointer",
+            imageRendering: 'pixelated',
+            cursor: 'pointer',
           }}
         />
       </div>
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginTop: "0.55rem",
-          fontSize: "0.68rem",
-          color: "rgba(148, 163, 184, 0.85)",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: '0.55rem',
+          fontSize: '0.68rem',
+          color: 'rgba(148, 163, 184, 0.85)',
         }}
       >
-        <span>{mapArea.name}</span>
+        <span>{activeState.areaName}</span>
         <span>
-          ({playerPosition.x}, {playerPosition.y})
+          ({playerX}, {playerY})
         </span>
       </div>
     </div>
