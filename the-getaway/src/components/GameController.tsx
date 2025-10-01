@@ -873,9 +873,10 @@ const GameController: React.FC = () => {
       `[GameController] Scheduling action for enemy index ${currentEnemyTurnIndex}: ${currentEnemy.id} (AP: ${currentEnemy.actionPoints})`
     );
 
+    // SET FLAG HERE, BEFORE scheduling setTimeout to prevent race condition
+    setIsProcessingEnemyAction(true);
+
     const enemyActionTimer = setTimeout(() => {
-      // SET FLAG HERE, right before processing starts
-      setIsProcessingEnemyAction(true);
       console.log(
         `[GameController] >>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
       );
@@ -949,8 +950,10 @@ const GameController: React.FC = () => {
         // Optionally add more error handling here if needed
       } finally {
         console.log(
-          `[GameController] Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Setting processing=false`
+          `[GameController] Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Advancing to next enemy.`
         );
+        // Advance to next enemy index BEFORE resetting processing flag
+        setCurrentEnemyTurnIndex(prev => prev + 1);
         // Reset flag HERE. This state change should trigger useEffect re-run.
         setIsProcessingEnemyAction(false);
       }
