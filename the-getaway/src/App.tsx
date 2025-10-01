@@ -17,7 +17,7 @@ import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
-import { setSkill } from "./store/playerSlice";
+import { setSkill, setPlayerData } from "./store/playerSlice";
 import { PlayerSkills } from "./game/interfaces/types";
 import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
@@ -253,6 +253,13 @@ function App() {
 
   const handleCharacterCreationComplete = (data: CharacterCreationData) => {
     store.dispatch(resetGame());
+
+    // Set player name
+    const currentPlayer = store.getState().player.data;
+    store.dispatch(setPlayerData({
+      ...currentPlayer,
+      name: data.name
+    }));
 
     // Apply character attributes if provided
     if (data.attributes) {

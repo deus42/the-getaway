@@ -42,6 +42,17 @@ const PlayerStatusPanel: React.FC = () => {
         fontSize: "0.7rem",
       }}
     >
+      {/* Player Name */}
+      <div style={{
+        fontSize: "0.85rem",
+        fontWeight: 600,
+        color: "#38bdf8",
+        letterSpacing: "0.05em",
+        marginBottom: "-0.2rem"
+      }}>
+        {player.name}
+      </div>
+
       {/* Health Bar */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
         <span style={{ fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(148, 163, 184, 0.8)", minWidth: "32px" }}>HP</span>
