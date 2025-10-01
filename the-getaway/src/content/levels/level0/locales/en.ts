@@ -8,10 +8,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       nodes: [
         {
           id: 'intro',
-          text: 'Lira flicks ash from a smuggled cigarette. "Need gear, intel, or a favour? Silver buys silence, but favours buy survival."',
+          text: 'Lira taps ash into a ration tin shaped like a coyote. "Need gear, gossip, or a miracle? Silver buys silence. Favours keep you breathing past curfew."',
           options: [
             {
-              text: 'Show me what’s moving on the street.',
+              text: 'What’s humming through the market tonight?',
               nextNodeId: 'trade',
               skillCheck: {
                 skill: 'charisma',
@@ -19,7 +19,7 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Any shipments gone missing recently?',
+              text: 'Any shipments vanish like the coyotes Harbour Control promised us?',
               nextNodeId: 'quest',
               questEffect: {
                 questId: 'quest_market_cache',
@@ -27,7 +27,7 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Cache’s back in safe hands.',
+              text: 'Cache is back in rebel hands.',
               nextNodeId: 'quest_complete',
               questEffect: {
                 questId: 'quest_market_cache',
@@ -35,37 +35,37 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Keep your head low, Lira.',
+              text: 'Keep that halo crooked, Lira.',
               nextNodeId: null,
             },
           ],
         },
         {
           id: 'trade',
-          text: '"Merch is scarce, but creds talk. Bring me transit tokens and I’ll open the reserve locker."',
+          text: '"Inventory is thinner than curfew soup. Bring transit tokens and I’ll pop the reserve locker before the drones finish their hymn."',
           options: [
             {
-              text: 'I’ll see what I can find.',
+              text: 'I’ll rattle a few turnstiles.',
               nextNodeId: null,
             },
           ],
         },
         {
           id: 'quest',
-          text: '"Corporate patrol seized my street cache. Slip into Downtown and liberate what’s mine—we both profit."',
+          text: '"CorpSec bagged my street cache and called it evidence. Slip into Downtown, liberate the crates, and we’ll toast with reclaimed rainwater."',
           options: [
             {
-              text: 'Consider it done.',
+              text: 'Consider their evidence misplaced.',
               nextNodeId: null,
             },
           ],
         },
         {
           id: 'quest_complete',
-          text: '"Didn’t doubt you. I’ll reroute stock through safer alleys."',
+          text: '"Knew you’d outrun their choirboys. I’m rerouting stock through alleys where the neon farms still glow."',
           options: [
             {
-              text: 'Stay sharp, Lira.',
+              text: 'Stay unscannable, Lira.',
               nextNodeId: null,
             },
           ],
@@ -78,10 +78,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       nodes: [
         {
           id: 'intro',
-          text: 'Naila adjusts her cracked lenses. "Knowledge is leverage. Help me expose the patrol manifests and I’ll clear your path."',
+          text: 'Naila polishes cracked lenses that reflect three different skies. "Knowledge is leverage. Help me unmask their manifests and I’ll carve you breathing space."',
           options: [
             {
-              text: 'What do you need recovered?',
+              text: 'What relic are we lifting today?',
               nextNodeId: 'mission',
               questEffect: {
                 questId: 'quest_datapad_truth',
@@ -89,7 +89,7 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'The manifests are decoded.',
+              text: 'The manifests are singing on my rig.',
               nextNodeId: 'mission_complete',
               questEffect: {
                 questId: 'quest_datapad_truth',
@@ -97,27 +97,27 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Maybe later.',
+              text: 'Rain check, Archivist.',
               nextNodeId: null,
             },
           ],
         },
         {
           id: 'mission',
-          text: '"Rumours say Lira handles a datapad with the manifests I need. Retrieve it and I’ll map patrol rotations for you."',
+          text: '"Lira’s guarding a datapad fat with patrol math. Bring it home and I’ll paint their rotations like constellations."',
           options: [
             {
-              text: 'I’ll recover the datapad.',
+              text: 'I’ll fetch the glowing brick.',
               nextNodeId: null,
             },
           ],
         },
         {
           id: 'mission_complete',
-          text: '"With this, the patrol routes are ours. I’ll upload the safe windows to your ops board."',
+          text: '"This cracks them wide open. Uploading safe windows to your ops board before Harrow’s speechwriters invent new lies."',
           options: [
             {
-              text: 'Appreciate the intel, Naila.',
+              text: 'Appreciate the starlight, Naila.',
               nextNodeId: null,
             },
           ],
@@ -130,10 +130,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       nodes: [
         {
           id: 'intro',
-          text: 'Brant adjusts a battered messenger bag. "My runners vanished after curfew. Help me find them and I’ll share my routes."',
+          text: 'Brant pats a battered messenger bag like it might bark. "My runners vanished after curfew. Help me find them and I’ll open my routes like a choose-your-own-adventure."',
           options: [
             {
-              text: 'Point me towards their last drop.',
+              text: 'Point me toward their last breadcrumb.',
               nextNodeId: 'task',
               questEffect: {
                 questId: 'quest_courier_network',
@@ -141,7 +141,7 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Your couriers are accounted for.',
+              text: 'Your couriers beat the curfew this time.',
               nextNodeId: 'task_complete',
               questEffect: {
                 questId: 'quest_courier_network',
@@ -149,27 +149,27 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Not my priority right now.',
+              text: 'Different fire to put out tonight.',
               nextNodeId: null,
             },
           ],
         },
         {
           id: 'task',
-          text: '"They were logging tram tokens near the transit hub. Check the plazas and bring back whatever they cached."',
+          text: '"They were logging tram tokens near the hub, humming old Metro jingles. Sweep the plazas, grab whatever they stashed."',
           options: [
             {
-              text: 'Stay mobile, Brant.',
+              text: 'Stay restless, Brant.',
               nextNodeId: null,
             },
           ],
         },
         {
           id: 'task_complete',
-          text: '"You pulled them out of the fire. These routes will keep you ahead of patrol sweepers."',
+          text: '"You dragged them out of the drone choir. These routes will keep you two minutes ahead of the sweepers."',
           options: [
             {
-              text: 'Keep the network breathing.',
+              text: 'Keep the network breathing raggedly.',
               nextNodeId: null,
             },
           ],
