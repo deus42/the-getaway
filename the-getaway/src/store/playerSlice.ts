@@ -1,21 +1,166 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { v4 as uuidv4 } from 'uuid';
 import { Player, Position, Item, PlayerSkills, Weapon, Armor } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
-import { calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
+import { calculateDerivedStats, calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
+import { createArmor, createConsumable, createWeapon } from '../game/inventory/inventorySystem';
+import { BACKGROUND_MAP, StartingItemDefinition } from '../content/backgrounds';
 
 export interface PlayerState {
   data: Player;
 }
 
+const createFreshPlayer = (): Player => ({
+  ...DEFAULT_PLAYER,
+  id: uuidv4(),
+  position: { ...DEFAULT_PLAYER.position },
+  skills: { ...DEFAULT_PLAYER.skills },
+  inventory: {
+    items: [],
+    maxWeight: DEFAULT_PLAYER.inventory.maxWeight,
+    currentWeight: 0,
+  },
+  equipped: {
+    weapon: undefined,
+    armor: undefined,
+    accessory: undefined,
+  },
+  factionReputation: { ...DEFAULT_PLAYER.factionReputation },
+  perks: [...DEFAULT_PLAYER.perks],
+  backgroundId: undefined,
+  appearancePreset: DEFAULT_PLAYER.appearancePreset,
+});
+
 const initialState: PlayerState = {
-  data: DEFAULT_PLAYER
+  data: createFreshPlayer(),
+};
+
+type InitializeCharacterPayload = {
+  name: string;
+  visualPreset: string;
+  skills: PlayerSkills;
+  backgroundId: string;
+};
+
+const clampSkillValue = (value: number): number => Math.max(1, Math.min(10, Math.round(value)));
+
+const applyStartingItem = (player: Player, item: StartingItemDefinition): void => {
+  switch (item.type) {
+    case 'weapon': {
+      const weapon = createWeapon(
+        item.name,
+        item.damage,
+        item.range,
+        item.apCost,
+        item.weight,
+        item.statModifiers
+      );
+      if (item.equip) {
+        player.equipped.weapon = weapon;
+      } else {
+        player.inventory.items.push(weapon);
+        player.inventory.currentWeight += weapon.weight;
+      }
+      break;
+    }
+    case 'armor': {
+      const armor = createArmor(item.name, item.protection, item.weight, item.statModifiers);
+      if (item.equip) {
+        player.equipped.armor = armor;
+      } else {
+        player.inventory.items.push(armor);
+        player.inventory.currentWeight += armor.weight;
+      }
+      break;
+    }
+    case 'consumable': {
+      const consumable = createConsumable(
+        item.name,
+        item.effectType,
+        item.value,
+        item.statAffected,
+        item.weight
+      );
+      player.inventory.items.push(consumable);
+      player.inventory.currentWeight += consumable.weight;
+      break;
+    }
+    case 'item': {
+      const plainItem: Item = {
+        id: uuidv4(),
+        name: item.name,
+        description: item.description,
+        weight: item.weight,
+        value: Math.max(10, Math.round(item.weight * 15)),
+        isQuestItem: Boolean(item.isQuestItem),
+      };
+      player.inventory.items.push(plainItem);
+      player.inventory.currentWeight += plainItem.weight;
+      break;
+    }
+    default:
+      break;
+  }
 };
 
 export const playerSlice = createSlice({
   name: 'player',
   initialState,
   reducers: {
+    initializeCharacter: (state, action: PayloadAction<InitializeCharacterPayload>) => {
+      const { name, skills, backgroundId, visualPreset } = action.payload;
+
+      const sanitizedSkills: PlayerSkills = {
+        strength: clampSkillValue(skills.strength),
+        perception: clampSkillValue(skills.perception),
+        endurance: clampSkillValue(skills.endurance),
+        charisma: clampSkillValue(skills.charisma),
+        intelligence: clampSkillValue(skills.intelligence),
+        agility: clampSkillValue(skills.agility),
+        luck: clampSkillValue(skills.luck),
+      };
+
+      const derived = calculateDerivedStats(sanitizedSkills);
+      const background = BACKGROUND_MAP[backgroundId];
+
+      const freshPlayer = createFreshPlayer();
+      freshPlayer.name = name;
+      freshPlayer.appearancePreset = visualPreset;
+      freshPlayer.skills = sanitizedSkills;
+      freshPlayer.maxHealth = derived.maxHP;
+      freshPlayer.health = derived.maxHP;
+      freshPlayer.maxActionPoints = derived.baseAP;
+      freshPlayer.actionPoints = derived.baseAP;
+      freshPlayer.inventory.maxWeight = derived.carryWeight;
+      freshPlayer.inventory.currentWeight = 0;
+      freshPlayer.inventory.items = [];
+      freshPlayer.equipped = {
+        weapon: undefined,
+        armor: undefined,
+        accessory: undefined,
+      };
+      freshPlayer.perks = [];
+      freshPlayer.backgroundId = backgroundId;
+      freshPlayer.factionReputation = {
+        resistance: 0,
+        corpsec: 0,
+        scavengers: 0,
+      };
+
+      if (background) {
+        freshPlayer.perks.push(background.perk.id);
+        Object.entries(background.factionAdjustments).forEach(([faction, value]) => {
+          const key = faction as keyof Player['factionReputation'];
+          freshPlayer.factionReputation[key] += value ?? 0;
+        });
+
+        background.startingEquipment.forEach((item) => applyStartingItem(freshPlayer, item));
+      }
+
+      state.data = freshPlayer;
+    },
+
     // Move player to a new position
     movePlayer: (state, action: PayloadAction<Position>) => {
       state.data.position = action.payload;
@@ -138,7 +283,7 @@ export const playerSlice = createSlice({
     
     // Reset player to default
     resetPlayer: (state) => {
-      state.data = DEFAULT_PLAYER;
+      state.data = createFreshPlayer();
     },
 
     // Set the entire player data object (useful after complex operations)
@@ -268,6 +413,7 @@ export const playerSlice = createSlice({
 });
 
 export const {
+  initializeCharacter,
   movePlayer,
   updateHealth,
   setHealth,

@@ -494,6 +494,78 @@ Modified handleStartNewGame to show character creation instead of immediately st
 </notes>
 </step>
 
+<step id="22.2" status="completed">
+<step_metadata>
+  <number>22.2</number>
+  <title>Attribute Allocation System</title>
+  <status>Completed</status>
+  <date>October 4, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Finished the character creation allocation step with ± controls, point budget enforcement, and SPECIAL tooltips that mirror the stat design brief.
+2. Surfaced live derived stat preview (HP, AP, carry weight, crit, hit, dodge) using the roadmap formulas while flagging critically low Agility/Endurance spreads.
+3. Hardened navigation flow so Step 2 now gates Step 3 instead of prematurely finalizing characters without background data.
+</tasks>
+
+<code_reference file="src/components/ui/CharacterCreationScreen.tsx">
+Reworked Step 2 interactions, tooltips, derived stat panel, and navigation guards for the attribute budget flow.
+</code_reference>
+
+<validation>
+- `yarn test App.test.tsx --watch=false`
+</validation>
+
+<notes>
+- Attribute data still lives in local component state until confirmation, keeping Redux clean during backtracking.
+</notes>
+</step>
+
+<step id="22.3" status="completed">
+<step_metadata>
+  <number>22.3</number>
+  <title>Background Selection with Starting Perks</title>
+  <status>Completed</status>
+  <date>October 4, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Authored the background catalog (`corpsec_defector`, `street_urchin`, `underground_hacker`, `wasteland_scavenger`) with faction deltas, perks, and starting loadouts.
+2. Added Step 3 UI cards with deterministic test IDs, accessibility labels, and confirmation gating tied to selection state.
+3. Extended `initializeCharacter` to apply background perks, faction reputation shifts, and spawn equipment, plus a debug-safe fallback for missing IDs.
+4. Introduced unit coverage to prove background initialization equips the correct gear and handles unknown IDs gracefully.
+</tasks>
+
+<code_reference file="src/content/backgrounds.ts">
+Defined canonical background data set with perks, faction adjustments, and starting inventory payloads.
+</code_reference>
+
+<code_reference file="src/components/ui/CharacterCreationScreen.tsx">
+Implemented Step 3 background selection flow with validation and onComplete payload updates.
+</code_reference>
+
+<code_reference file="src/store/playerSlice.ts">
+Applied background perks, faction reputation deltas, and loadout seeding during character initialization.
+</code_reference>
+
+<code_reference file="src/__tests__/backgroundInitialization.test.ts">
+Added regression coverage for perk/equipment/faction initialization and missing background safety.
+</code_reference>
+
+<code_reference file="src/App.tsx">
+Defaulted character creation to a safe background fallback when debug shortcuts skip explicit selection.
+</code_reference>
+
+<validation>
+- `yarn test App.test.tsx --watch=false`
+- `yarn test backgroundInitialization.test.ts --watch=false`
+</validation>
+
+<notes>
+- Background selection now blocks confirmation until a card is chosen, preventing half-configured player states from entering the campaign.
+</notes>
+</step>
+
 <step id="23" status="completed">
 <step_metadata>
   <number>23</number>

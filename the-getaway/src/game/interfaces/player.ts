@@ -33,6 +33,14 @@ export const DEFAULT_PLAYER: Player = {
   credits: 0,
   skillPoints: 0,
   attributePoints: 0,
+  backgroundId: undefined,
+  perks: [],
+  factionReputation: {
+    resistance: 0,
+    corpsec: 0,
+    scavengers: 0,
+  },
+  appearancePreset: undefined,
   inventory: {
     items: [],
     maxWeight: defaultCarryWeight,

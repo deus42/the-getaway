@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import App from "../App";
 import { PERSISTED_STATE_KEY, resetGame, store } from "../store";
 
@@ -15,24 +15,37 @@ describe("App component", () => {
     window.localStorage.removeItem(PERSISTED_STATE_KEY);
   });
 
-  const completeCharacterCreation = () => {
+  const completeCharacterCreation = async () => {
     const nameInput = screen.getByPlaceholderText("Enter your operative name...");
     fireEvent.change(nameInput, { target: { value: "Test Operative" } });
 
     const presetButtons = screen.getAllByRole("button", { name: /Operative/i });
     fireEvent.click(presetButtons[0]);
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    });
 
     const incrementButtons = screen.getAllByTitle("Increase attribute");
     for (let i = 0; i < 5; i += 1) {
-      fireEvent.click(incrementButtons[0]);
+      await act(async () => {
+        fireEvent.click(incrementButtons[0]);
+      });
     }
 
-    fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
+    });
+
+    const backgroundCard = await screen.findByTestId('background-card-corpsec_defector');
+    fireEvent.click(backgroundCard);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Confirm & Start/i }));
+    });
   };
 
-  it("shows the menu first and enters the game when starting a new session", () => {
+  it("shows the menu first and enters the game when starting a new session", async () => {
     render(<App />);
 
     expect(screen.getByTestId("game-menu")).toBeInTheDocument();
@@ -40,7 +53,7 @@ describe("App component", () => {
 
     fireEvent.click(screen.getByTestId("start-new-game"));
 
-    completeCharacterCreation();
+    await completeCharacterCreation();
 
     expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
     expect(screen.getByTestId("game-canvas")).toBeInTheDocument();
@@ -55,11 +68,11 @@ describe("App component", () => {
     expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
   });
 
-  it("enables continue when a saved game is found", () => {
+  it("enables continue when a saved game is found", async () => {
     const { unmount } = render(<App />);
 
     fireEvent.click(screen.getByTestId("start-new-game"));
-    completeCharacterCreation();
+    await completeCharacterCreation();
     fireEvent.click(screen.getByTestId("open-menu"));
 
     unmount();

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { PlayerSkills } from '../../game/interfaces/types';
 import { calculateDerivedStats } from '../../game/systems/statCalculations';
+import { BACKGROUNDS } from '../../content/backgrounds';
 
 interface CharacterCreationScreenProps {
   onComplete: (data: CharacterCreationData) => void;
@@ -11,6 +12,7 @@ export interface CharacterCreationData {
   name: string;
   visualPreset: string;
   attributes?: PlayerSkills;
+  backgroundId?: string;
 }
 
 const VISUAL_PRESETS = [
@@ -362,6 +364,9 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
     luck: 5
   });
   const [pointsRemaining, setPointsRemaining] = useState(5);
+  const [allocationError, setAllocationError] = useState('');
+  const [selectedBackgroundId, setSelectedBackgroundId] = useState('');
+  const [backgroundError, setBackgroundError] = useState('');
 
   const validateName = (value: string): boolean => {
     if (value.length < 3) {
@@ -413,7 +418,10 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
     }
 
     setAttributes({ ...attributes, [attribute]: newValue });
-    setPointsRemaining(pointsRemaining - delta);
+    setPointsRemaining((prev) => prev - delta);
+    if (allocationError) {
+      setAllocationError('');
+    }
   };
 
   const handleStep1Next = () => {
@@ -432,10 +440,11 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
 
   const handleStep2Next = () => {
     if (pointsRemaining > 0) {
-      return; // Cannot proceed with unspent points
+      setAllocationError('Spend all remaining attribute points before proceeding.');
+      return;
     }
-    // Step 3 placeholder - for now complete immediately
-    onComplete({ name, visualPreset, attributes });
+    setBackgroundError('');
+    setStep(3);
   };
 
   const handleSkipCreation = () => {
@@ -451,7 +460,8 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
         intelligence: 5,
         agility: 5,
         luck: 5
-      }
+      },
+      backgroundId: 'corpsec_defector',
     });
   };
 
@@ -460,6 +470,36 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
 
   const derivedStats = calculateDerivedStats(attributes);
 
+  const buildAttributeTooltip = (attribute: keyof PlayerSkills, value: number): string => {
+    switch (attribute) {
+      case 'strength':
+        return `Carry ${25 + value * 5}kg, melee bonus +${Math.floor(value / 2)}`;
+      case 'perception':
+        return `Hit bonus ${(value - 5) * 3}%`; 
+      case 'endurance':
+        return `Max HP ${50 + value * 10}`;
+      case 'charisma':
+        return `Dialogue bonus +${Math.floor(value / 2)}`;
+      case 'intelligence':
+        return `Skill points per level ${3 + Math.floor(value / 3)}`;
+      case 'agility':
+        return `Base AP ${6 + Math.floor((value - 5) * 0.5)}, dodge ${(value - 5) * 2}%`;
+      case 'luck':
+        return `Luck boosts crits (+${value * 2}%) and random events`;
+      default:
+        return '';
+    }
+  };
+
+  const lowAttrWarnings: string[] = [];
+  if (attributes.endurance <= 2) {
+    lowAttrWarnings.push('Endurance below 3 – expect severely reduced health.');
+  }
+  if (attributes.agility <= 2) {
+    lowAttrWarnings.push('Agility below 3 limits action points and evasion.');
+  }
+
+
   return (
     <div style={containerStyle}>
       <div style={panelStyle}>
@@ -467,6 +507,7 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
         <p style={subtitleStyle}>
           {step === 1 && "Define your operative's identity"}
           {step === 2 && "Allocate your attributes"}
+          {step === 3 && "Choose your background"}
         </p>
 
         <div style={stepIndicatorStyle}>
@@ -505,8 +546,9 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                     key={preset.id}
                     style={presetCardStyle(visualPreset === preset.id)}
                     onClick={() => setVisualPreset(preset.id)}
-                    onKeyPress={(e) => {
+                    onKeyDown={(e) => {
                       if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
                         setVisualPreset(preset.id);
                       }
                     }}
@@ -572,7 +614,7 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
             <div>
               <label style={labelStyle}>SPECIAL Attributes</label>
               {ATTRIBUTE_ORDER.map((attr) => (
-                <div key={attr} style={attributeRowStyle}>
+                <div key={attr} style={attributeRowStyle} title={buildAttributeTooltip(attr, attributes[attr])}>
                   <div style={attributeLabelStyle}>
                     <div style={attributeNameStyle}>{ATTRIBUTE_INFO[attr].label}</div>
                     <div style={attributeDescStyle}>{ATTRIBUTE_INFO[attr].description}</div>
@@ -600,6 +642,23 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
               ))}
             </div>
 
+            {allocationError && <div style={{ ...errorStyle, marginTop: '0.5rem' }}>{allocationError}</div>}
+            {lowAttrWarnings.length > 0 && (
+              <div style={{
+                backgroundColor: 'rgba(248, 113, 113, 0.1)',
+                border: '1px solid rgba(248, 113, 113, 0.4)',
+                borderRadius: '8px',
+                padding: '0.65rem',
+                color: '#f87171',
+                fontSize: '0.75rem',
+                marginBottom: '1rem'
+              }}>
+                {lowAttrWarnings.map((msg) => (
+                  <div key={msg}>{msg}</div>
+                ))}
+              </div>
+            )}
+
             <div>
               <label style={labelStyle}>Derived Stats</label>
               <div style={derivedStatsStyle}>
@@ -619,6 +678,14 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                   <div style={derivedStatLabelStyle}>Crit Chance</div>
                   <div style={derivedStatValueStyle}>{derivedStats.criticalChance}%</div>
                 </div>
+                <div style={derivedStatCardStyle}>
+                  <div style={derivedStatLabelStyle}>Hit Bonus</div>
+                  <div style={derivedStatValueStyle}>{derivedStats.hitChanceModifier}%</div>
+                </div>
+                <div style={derivedStatCardStyle}>
+                  <div style={derivedStatLabelStyle}>Dodge Bonus</div>
+                  <div style={derivedStatValueStyle}>{derivedStats.dodgeChance}%</div>
+                </div>
               </div>
             </div>
 
@@ -636,6 +703,112 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                 title={!canProceedStep2 ? 'Spend all points to proceed' : 'Continue to next step'}
               >
                 Continue
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+              {BACKGROUNDS.map((background) => {
+                const selected = selectedBackgroundId === background.id;
+                return (
+                  <div
+                    key={background.id}
+                    style={{
+                      padding: '1rem',
+                      borderRadius: '12px',
+                      border: selected ? '2px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.25)',
+                      background: selected ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15, 23, 42, 0.6)',
+                      boxShadow: selected ? '0 0 25px rgba(56, 189, 248, 0.25)' : 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.65rem',
+                    }}
+                    onClick={() => {
+                      setSelectedBackgroundId(background.id);
+                      setBackgroundError('');
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    data-testid={`background-card-${background.id}`}
+                    aria-label={`${background.name} background`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedBackgroundId(background.id);
+                        setBackgroundError('');
+                      }
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#94a3b8', letterSpacing: '0.14em', textTransform: 'uppercase' }}>{background.tagline}</span>
+                      <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#e2e8f0' }}>{background.name}</h3>
+                      {background.description.map((line) => (
+                        <p key={line} style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>{line}</p>
+                      ))}
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.65rem', color: '#22d3ee', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Perk</span>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8' }}>{background.perk.name}</div>
+                      <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: '0.25rem 0 0' }}>{background.perk.description}</p>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.65rem', color: '#f472b6', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Faction Standing</span>
+                      <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.7rem' }}>
+                        {['resistance', 'corpsec', 'scavengers'].map((faction) => {
+                          const delta = background.factionAdjustments[faction as 'resistance' | 'corpsec' | 'scavengers'] ?? 0;
+                          const label = faction === 'corpsec' ? 'CorpSec' : faction === 'scavengers' ? 'Scavengers' : 'Resistance';
+                          return (
+                            <li key={`${background.id}-${faction}`}>{label}: {delta >= 0 ? '+' : ''}{delta}</li>
+                          );
+                        })}
+                      </ul>
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.65rem', color: '#a855f7', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Gear</span>
+                      <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.7rem' }}>
+                        {background.startingEquipment.map((equip) => (
+                          <li key={`${background.id}-${equip.name}`}>{equip.name}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {backgroundError && (
+              <div style={{ ...errorStyle, marginTop: 0 }}>{backgroundError}</div>
+            )}
+
+            <div style={buttonRowStyle}>
+              <button
+                onClick={() => setStep(2)}
+                style={buttonStyle('ghost')}
+              >
+                Back
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedBackgroundId) {
+                    setBackgroundError('Select a background to proceed.');
+                    return;
+                  }
+                  onComplete({ name, visualPreset, attributes, backgroundId: selectedBackgroundId });
+                }}
+                style={buttonStyle('primary')}
+                disabled={!selectedBackgroundId}
+                title={!selectedBackgroundId ? 'Select a background to confirm' : 'Begin mission'}
+              >
+                Confirm & Start
               </button>
             </div>
           </>

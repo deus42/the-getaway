@@ -358,6 +358,31 @@ The player attribute system follows a Fallout-inspired S.P.E.C.I.A.L spread that
 </pattern>
 </architecture_section>
 
+<architecture_section id="character_creation_flow" category="character_progression">
+<pattern name="Three-Step Character Creation Wizard">
+The onboarding flow lives entirely in <code_location>src/components/ui/CharacterCreationScreen.tsx</code_location> and stages player setup before any Redux mutations occur.
+
+<design_principles>
+- Keep identity, attribute, and background selections in local React state until the user confirms, preventing half-built payloads from leaking into persistence.
+- Drive mechanical previews (derived stats, tooltips, warnings) off shared helpers like <code_location>src/game/systems/statCalculations.ts</code_location> so UI mirrors combat/dialogue math.
+- Source authorial metadata from <code_location>src/content/backgrounds.ts</code_location> to keep narrative blurbs, perks, and loadouts editable without touching component logic.
+</design_principles>
+
+<technical_flow>
+1. Step 1 captures `name` + `visualPreset`; the wizard exposes randomize/cancel affordances and validates length + allowed glyphs.
+2. Step 2 manages SPECIAL values in local state, enforces the point-buy budget, and streams live derived stats via `calculateDerivedStats`.
+3. Step 3 renders background cards generated from `BACKGROUNDS`, tagging each with `data-testid` for deterministic tests and ARIA labels for accessibility.
+4. On confirmation the component emits `CharacterCreationData` with name, preset, attributes, and `backgroundId` to <code_location>src/App.tsx</code_location>.
+5. `App` dispatches `initializeCharacter` in <code_location>src/store/playerSlice.ts</code_location>, which clamps attributes, applies derived stats, seeds faction reputation, grants perks, and equips loadout items using inventory factories.
+</technical_flow>
+
+<code_location>src/components/ui/CharacterCreationScreen.tsx</code_location>
+<code_location>src/content/backgrounds.ts</code_location>
+<code_location>src/store/playerSlice.ts</code_location>
+<code_location>src/__tests__/backgroundInitialization.test.ts</code_location>
+</pattern>
+</architecture_section>
+
 ## Testing Strategy
 
 The testing approach includes:

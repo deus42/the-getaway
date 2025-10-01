@@ -25,6 +25,14 @@ export interface Player extends Entity {
   credits: number;
   skillPoints: number; // Unspent skill points for skill tree allocation
   attributePoints: number; // Unspent attribute points for SPECIAL increases
+  backgroundId?: string;
+  perks: string[];
+  factionReputation: {
+    resistance: number;
+    corpsec: number;
+    scavengers: number;
+  };
+  appearancePreset?: string;
   inventory: {
     items: Item[];
     maxWeight: number;

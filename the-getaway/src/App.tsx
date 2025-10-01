@@ -17,8 +17,9 @@ import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
-import { setSkill, setPlayerData } from "./store/playerSlice";
+import { initializeCharacter } from "./store/playerSlice";
 import { PlayerSkills } from "./game/interfaces/types";
+import { DEFAULT_SKILLS } from "./game/interfaces/player";
 import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
 import "./App.css";
@@ -254,22 +255,17 @@ function App() {
   const handleCharacterCreationComplete = (data: CharacterCreationData) => {
     store.dispatch(resetGame());
 
-    // Set player name
-    const currentPlayer = store.getState().player.data;
-    store.dispatch(setPlayerData({
-      ...currentPlayer,
-      name: data.name
-    }));
+    const attributes: PlayerSkills = data.attributes ?? DEFAULT_SKILLS;
+    const backgroundId = data.backgroundId ?? 'corpsec_defector';
 
-    // Apply character attributes if provided
-    if (data.attributes) {
-      Object.entries(data.attributes).forEach(([skill, value]) => {
-        store.dispatch(setSkill({
-          skill: skill as keyof PlayerSkills,
-          value: value as number
-        }));
-      });
-    }
+    store.dispatch(
+      initializeCharacter({
+        name: data.name,
+        skills: attributes,
+        backgroundId,
+        visualPreset: data.visualPreset,
+      })
+    );
 
     const { logs } = getSystemStrings(store.getState().settings.locale);
     store.dispatch(addLogMessage(`${logs.operationStart} - Call sign: ${data.name}`));
