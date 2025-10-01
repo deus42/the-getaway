@@ -1,31 +1,65 @@
-import React from "react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
-import { calculateExperienceForNextLevel } from "../../game/interfaces/player";
+import React from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import {
+  calculateXPForLevel,
+  calculateXPProgress,
+  formatXPDisplay,
+} from '../../game/systems/progression';
+import { BACKGROUND_MAP } from '../../content/backgrounds';
 
 const PlayerStatusPanel: React.FC = () => {
   const player = useSelector((state: RootState) => state.player.data);
-  const inCombat = useSelector((state: RootState) => state.world.inCombat);
-  const turnCount = useSelector((state: RootState) => state.world.turnCount);
-  const isPlayerTurn = useSelector((state: RootState) => state.world.isPlayerTurn);
-  const hostileCount = useSelector((state: RootState) => {
-    const enemies = state.world.currentMapArea?.entities?.enemies ?? [];
-    return enemies.reduce((count, enemy) => (enemy.health > 0 ? count + 1 : count), 0);
-  });
   const healthRatio = player.maxHealth > 0 ? player.health / player.maxHealth : 0;
   const healthPercent = Math.max(0, Math.min(1, healthRatio)) * 100;
 
-  const apRatio = player.maxActionPoints
-    ? Math.max(0, Math.min(1, player.actionPoints / player.maxActionPoints))
-    : 0;
-  const apPercent = apRatio * 100;
-
-  const experienceTarget = calculateExperienceForNextLevel(player.level);
+  const xpTarget = calculateXPForLevel(player.level + 1);
+  const xpProgress = calculateXPProgress(player.experience, player.level);
+  const xpDisplay = formatXPDisplay(player.experience, player.level);
 
   const healthColor = healthPercent > 60 ? '#22c55e' : healthPercent > 30 ? '#f59e0b' : '#ef4444';
 
   const { inventory } = player;
   const itemCount = inventory.items.length;
+
+  const attributeColor = player.attributePoints > 0 ? '#5eead4' : '#cbd5e1';
+  const skillColor = player.skillPoints > 0 ? '#fbbf24' : '#cbd5e1';
+
+  const background = player.backgroundId ? BACKGROUND_MAP[player.backgroundId] : undefined;
+  const backgroundLabel = background ? background.name : 'Unaffiliated';
+
+  const infoItems = [
+    {
+      label: 'Attribute Points',
+      value: player.attributePoints,
+      color: attributeColor,
+    },
+    {
+      label: 'Skill Points',
+      value: player.skillPoints,
+      color: skillColor,
+    },
+    {
+      label: 'Credits',
+      value: player.credits,
+      color: '#f8fafc',
+    },
+    {
+      label: 'Inventory Load',
+      value: `${inventory.currentWeight}/${inventory.maxWeight} kg`,
+      color: '#cbd5e1',
+    },
+    {
+      label: 'Items',
+      value: itemCount,
+      color: '#cbd5e1',
+    },
+    {
+      label: 'Perks',
+      value: player.perks.length,
+      color: '#a855f7',
+    },
+  ];
 
   return (
     <div
@@ -62,48 +96,77 @@ const PlayerStatusPanel: React.FC = () => {
         <span style={{ fontSize: "0.7rem", fontWeight: 600, color: "#f8fafc", minWidth: "48px", textAlign: "right" }}>{player.health}/{player.maxHealth}</span>
       </div>
 
-      {/* Compact Stats Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.4rem 0.6rem" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: "rgba(148, 163, 184, 0.85)" }}>Level</span>
-          <span style={{ fontWeight: 600, color: "#fbbf24" }}>{player.level}</span>
+      {/* Level & XP */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.35rem',
+        padding: '0.55rem 0.6rem',
+        borderRadius: '8px',
+        border: '1px solid rgba(148, 163, 184, 0.18)',
+        background: 'rgba(30, 41, 59, 0.4)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ color: 'rgba(148, 163, 184, 0.85)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Level</span>
+          <span style={{ fontWeight: 700, color: '#fbbf24', fontSize: '0.85rem' }}>{player.level}</span>
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: "rgba(148, 163, 184, 0.85)" }}>AP</span>
-          <span style={{ fontWeight: 600, color: "#38bdf8" }}>{player.actionPoints}/{player.maxActionPoints}</span>
+        <div style={{ position: 'relative', height: '0.4rem', borderRadius: '999px', background: 'rgba(71, 85, 105, 0.35)' }}>
+          <div
+            style={{
+              width: `${Math.min(100, xpProgress)}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #fbbf24, #f97316)',
+              borderRadius: '999px',
+              transition: 'width 0.3s ease',
+            }}
+          />
         </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: "rgba(148, 163, 184, 0.85)" }}>XP</span>
-          <span style={{ fontSize: "0.65rem", color: "#cbd5e1" }}>{player.experience}/{experienceTarget}</span>
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ color: "rgba(148, 163, 184, 0.85)" }}>₵</span>
-          <span style={{ fontSize: "0.65rem", color: "#cbd5e1" }}>{player.credits}</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: '#cbd5e1' }}>
+          <span>{xpDisplay}</span>
+          <span>Next: {xpTarget} XP</span>
         </div>
       </div>
 
-      {/* AP Progress Bar */}
-      <div style={{ position: "relative", height: "0.35rem", borderRadius: "999px", background: "rgba(148, 163, 184, 0.25)" }}>
-        <div style={{ width: `${apPercent}%`, height: "100%", background: "linear-gradient(90deg, #38bdf8, #3b82f6)", borderRadius: "999px", transition: "width 0.3s ease" }} />
+      {/* Key Metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.45rem 0.6rem' }}>
+        {infoItems.map((item) => (
+          <div
+            key={item.label}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.15rem',
+              background: 'rgba(15, 23, 42, 0.45)',
+              border: '1px solid rgba(148, 163, 184, 0.12)',
+              borderRadius: '8px',
+              padding: '0.45rem 0.55rem',
+            }}
+          >
+            <span style={{ color: 'rgba(148, 163, 184, 0.75)', fontSize: '0.62rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{item.label}</span>
+            <span style={{ fontWeight: 600, color: item.color }}>{item.value}</span>
+          </div>
+        ))}
       </div>
-
-      {/* Combat Status */}
-      {inCombat && (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.4rem 0.5rem", borderRadius: "6px", background: "rgba(79, 70, 229, 0.16)", border: "1px solid rgba(129, 140, 248, 0.18)", fontSize: "0.65rem" }}>
-          <span style={{ color: "#a5b4fc" }}>T{turnCount}</span>
-          <span style={{ color: "#ef4444" }}>⚠ {hostileCount}</span>
-          <span style={{ color: isPlayerTurn ? "#22c55e" : "#f59e0b" }}>{isPlayerTurn ? "YOUR" : "WAIT"}</span>
-        </div>
-      )}
 
       {/* Inventory */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.3rem", borderTop: "1px solid rgba(148, 163, 184, 0.15)" }}>
-        <span style={{ fontSize: "0.65rem", color: "rgba(148, 163, 184, 0.85)" }}>Items: {itemCount}</span>
-        <span style={{ fontSize: "0.65rem", color: "rgba(148, 163, 184, 0.85)" }}>{inventory.currentWeight}/{inventory.maxWeight} kg</span>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          paddingTop: '0.35rem',
+          borderTop: '1px solid rgba(148, 163, 184, 0.15)',
+          fontSize: '0.65rem',
+          color: 'rgba(148, 163, 184, 0.8)',
+        }}
+      >
+        <span>Background: {backgroundLabel}</span>
+        <span>
+          Reps R {player.factionReputation.resistance} / C {player.factionReputation.corpsec} / S {player.factionReputation.scavengers}
+        </span>
       </div>
     </div>
   );
 };
 
 export default PlayerStatusPanel;
-

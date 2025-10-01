@@ -199,10 +199,6 @@ const PlayerStatsPanel: React.FC = () => {
       value: derived.maxHP,
     },
     {
-      label: uiStrings.playerStatus.derivedStats.ap,
-      value: derived.baseAP,
-    },
-    {
       label: uiStrings.playerStatus.derivedStats.carryWeight,
       value: `${derived.carryWeight} kg`,
     },
