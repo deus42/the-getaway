@@ -75,6 +75,10 @@ interface PlayerStatusStrings {
   inventoryOverflow: (count: number) => string;
   attributesLabel: string;
   attributesTitle: string;
+  attributePointsLabel: string;
+  attributePointsHint: string;
+  increaseAttribute?: ((abbr: string) => string) | string;
+  attributeMaxed: string;
   derivedLabel: string;
   derivedTitle: string;
   derivedStats: DerivedStatsStrings;

@@ -146,7 +146,7 @@ export const worldSlice = createSlice({
         );
 
         if (enemyIndex === -1) {
-          return;
+          return false;
         }
 
         if (incoming.health <= 0) {
@@ -154,6 +154,9 @@ export const worldSlice = createSlice({
         } else {
           area.entities.enemies[enemyIndex] = incoming;
         }
+
+        area.entities.enemies = [...area.entities.enemies];
+        return true;
       };
 
       console.log('[worldSlice] updateEnemy reducer running', {
@@ -161,10 +164,13 @@ export const worldSlice = createSlice({
         health: incoming.health,
       });
 
-      syncEnemyInArea(state.currentMapArea);
+      const updatedCurrentArea = syncEnemyInArea(state.currentMapArea);
 
       Object.values(state.mapAreas).forEach((area) => {
-        syncEnemyInArea(area);
+        const updated = syncEnemyInArea(area);
+        if (!updatedCurrentArea && updated && area.id === state.currentMapArea.id) {
+          state.currentMapArea.entities.enemies = [...state.currentMapArea.entities.enemies];
+        }
       });
 
       if (incoming.health <= 0) {
@@ -200,6 +206,7 @@ export const worldSlice = createSlice({
       enemy.position = spawnPosition;
 
       state.currentMapArea.entities.enemies.push(enemy);
+      state.currentMapArea.entities.enemies = [...state.currentMapArea.entities.enemies];
     },
 
     removeEnemy: (state, action: PayloadAction<string>) => {
@@ -207,6 +214,7 @@ export const worldSlice = createSlice({
       state.currentMapArea.entities.enemies = state.currentMapArea.entities.enemies.filter(
         (enemy) => enemy.id !== enemyId
       );
+      state.currentMapArea.entities.enemies = [...state.currentMapArea.entities.enemies];
     },
 
     updateNPC: (state, action: PayloadAction<NPC>) => {
@@ -215,11 +223,13 @@ export const worldSlice = createSlice({
 
       if (index !== -1) {
         state.currentMapArea.entities.npcs[index] = npc;
+        state.currentMapArea.entities.npcs = [...state.currentMapArea.entities.npcs];
       }
     },
 
     addNPC: (state, action: PayloadAction<NPC>) => {
       state.currentMapArea.entities.npcs.push(action.payload);
+      state.currentMapArea.entities.npcs = [...state.currentMapArea.entities.npcs];
     },
 
     removeNPC: (state, action: PayloadAction<string>) => {
@@ -227,6 +237,7 @@ export const worldSlice = createSlice({
       state.currentMapArea.entities.npcs = state.currentMapArea.entities.npcs.filter(
         (npc) => npc.id !== npcId
       );
+      state.currentMapArea.entities.npcs = [...state.currentMapArea.entities.npcs];
     },
 
     addItemToMap: (state, action: PayloadAction<{ item: Item; position: Position }>) => {

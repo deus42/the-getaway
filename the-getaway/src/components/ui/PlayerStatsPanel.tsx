@@ -177,6 +177,22 @@ const PlayerStatsPanel: React.FC = () => {
     dispatch(spendAttributePoint(attribute));
   };
 
+  const getIncreaseAttributeLabel = (abbreviation: string) => {
+    const { increaseAttribute } = uiStrings.playerStatus as {
+      increaseAttribute?: ((abbr: string) => string) | string;
+    };
+
+    if (typeof increaseAttribute === 'function') {
+      return increaseAttribute(abbreviation);
+    }
+
+    if (typeof increaseAttribute === 'string') {
+      return increaseAttribute;
+    }
+
+    return `Increase ${abbreviation}`;
+  };
+
   const derivedStats = [
     {
       label: uiStrings.playerStatus.derivedStats.hp,
@@ -232,6 +248,7 @@ const PlayerStatsPanel: React.FC = () => {
           const baseValue = player.skills[entry.key];
           const hasBonus = baseValue !== entry.value;
           const increaseDisabled = baseValue >= 10 || attributePointsAvailable <= 0;
+          const increaseAttributeLabel = getIncreaseAttributeLabel(entry.abbreviation);
 
           return (
             <div
@@ -263,11 +280,11 @@ const PlayerStatsPanel: React.FC = () => {
                     style={attributeButtonStyle(increaseDisabled)}
                     disabled={increaseDisabled}
                     onClick={() => handleIncreaseAttribute(entry.key)}
-                    aria-label={uiStrings.playerStatus.increaseAttribute(entry.abbreviation)}
+                    aria-label={increaseAttributeLabel}
                     title={
                       increaseDisabled && baseValue >= 10
                         ? uiStrings.playerStatus.attributeMaxed
-                        : uiStrings.playerStatus.increaseAttribute(entry.abbreviation)
+                        : increaseAttributeLabel
                     }
                   >
                     +1
