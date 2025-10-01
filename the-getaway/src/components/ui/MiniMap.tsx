@@ -324,16 +324,12 @@ const MiniMap: React.FC = () => {
     const rect = canvas.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-  const cssWidth = canvasSizeRef.current.width;
-  const cssHeight = canvasSizeRef.current.height;
+    const scale = state.tileScale || 1;
 
-  const normalizedX = cssWidth > 0 ? x / cssWidth : 0;
-  const normalizedY = cssHeight > 0 ? y / cssHeight : 0;
-
-  const gridX = Math.floor(normalizedX * state.mapWidth);
-  const gridY = Math.floor(normalizedY * state.mapHeight);
-  const clampedX = Math.max(0, Math.min(state.mapWidth - 1, gridX));
-  const clampedY = Math.max(0, Math.min(state.mapHeight - 1, gridY));
+    const gridX = Math.floor(x / scale);
+    const gridY = Math.floor(y / scale);
+    const clampedX = Math.max(0, Math.min(state.mapWidth - 1, gridX));
+    const clampedY = Math.max(0, Math.min(state.mapHeight - 1, gridY));
 
     miniMapService.emitInteraction({
       type: MINIMAP_VIEWPORT_CLICK_EVENT,
