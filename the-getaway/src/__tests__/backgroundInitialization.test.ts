@@ -1,11 +1,8 @@
 import { playerSlice } from '../store/playerSlice';
-import { BACKGROUNDS } from '../content/backgrounds';
 import { DEFAULT_SKILLS } from '../game/interfaces/player';
 
 const playerReducer = playerSlice.reducer;
 const { initializeCharacter } = playerSlice.actions;
-
-const corpsecBackground = BACKGROUNDS.find((bg) => bg.id === 'corpsec_defector');
 
 describe('Player initialization with backgrounds', () => {
   it('applies background perks, equipment, and reputations', () => {

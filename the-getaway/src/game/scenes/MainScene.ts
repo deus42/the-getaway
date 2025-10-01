@@ -1268,6 +1268,22 @@ export class MainScene extends Phaser.Scene {
     return { x: roundedX, y: roundedY };
   }
 
+  private worldToGridContinuous(worldX: number, worldY: number): { x: number; y: number } | null {
+    const { halfTileWidth, halfTileHeight } = this.getIsoMetrics();
+
+    const relativeX = worldX - this.isoOriginX;
+    const relativeY = worldY - this.isoOriginY;
+
+    const gridX = (relativeY / halfTileHeight + relativeX / halfTileWidth) * 0.5;
+    const gridY = (relativeY / halfTileHeight - relativeX / halfTileWidth) * 0.5;
+
+    if (!Number.isFinite(gridX) || !Number.isFinite(gridY)) {
+      return null;
+    }
+
+    return { x: gridX, y: gridY };
+  }
+
   private handlePointerDown(pointer: Phaser.Input.Pointer): void {
     if (!this.currentMapArea || !this.sys.isActive()) {
       return;
@@ -1436,8 +1452,8 @@ export class MainScene extends Phaser.Scene {
     const camera = this.cameras.main;
 
     // Calculate viewport bounds in grid coordinates
-    const topLeft = this.worldToGrid(camera.worldView.x, camera.worldView.y);
-    const bottomRight = this.worldToGrid(
+    const topLeft = this.worldToGridContinuous(camera.worldView.x, camera.worldView.y);
+    const bottomRight = this.worldToGridContinuous(
       camera.worldView.x + camera.worldView.width,
       camera.worldView.y + camera.worldView.height
     );
@@ -1446,11 +1462,16 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
-    // Clamp to map bounds
-    const x = Math.max(0, topLeft.x);
-    const y = Math.max(0, topLeft.y);
-    const width = Math.min(this.currentMapArea.width - x, bottomRight.x - topLeft.x);
-    const height = Math.min(this.currentMapArea.height - y, bottomRight.y - topLeft.y);
+    const minX = Phaser.Math.Clamp(Math.floor(Math.min(topLeft.x, bottomRight.x)), 0, this.currentMapArea.width - 1);
+    const minY = Phaser.Math.Clamp(Math.floor(Math.min(topLeft.y, bottomRight.y)), 0, this.currentMapArea.height - 1);
+    const maxX = Phaser.Math.Clamp(Math.ceil(Math.max(topLeft.x, bottomRight.x)), minX + 1, this.currentMapArea.width);
+    const maxY = Phaser.Math.Clamp(Math.ceil(Math.max(topLeft.y, bottomRight.y)), minY + 1, this.currentMapArea.height);
+
+    const width = Math.max(1, maxX - minX);
+    const height = Math.max(1, maxY - minY);
+
+    const x = minX;
+    const y = minY;
 
     const detail: ViewportUpdateDetail = { x, y, width, height };
 
@@ -1477,7 +1498,10 @@ export class MainScene extends Phaser.Scene {
 
     // Pan camera to the clicked position
     camera.pan(pixelPos.x, pixelPos.y, 300, 'Sine.easeInOut', false, (_cam, progress) => {
+      this.emitViewportUpdate();
+
       if (progress === 1) {
+        this.clampCameraToBounds(camera);
         this.emitViewportUpdate();
       }
     });

@@ -3,6 +3,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { getUIStrings } from "../../content/ui";
 import { MapArea, TileType } from "../../game/interfaces/types";
+import {
+  MINIMAP_VIEWPORT_CLICK_EVENT,
+  VIEWPORT_UPDATE_EVENT,
+} from "../../game/events";
 
 const MAX_CANVAS_WIDTH = 180;
 const MAX_CANVAS_HEIGHT = 160;
@@ -50,16 +54,28 @@ const MiniMap: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 140, height: 110 });
   const [viewport, setViewport] = useState<ViewportInfo | null>(null);
-  const entitySignature = useMemo(
+  const renderScaleRef = useRef<{ scale: number; dpr: number }>({ scale: 1, dpr: 1 });
+  const enemyBlips = useMemo(
     () =>
-      [
-        ...enemies
-          .filter((enemy) => enemy.health > 0)
-          .map((enemy) => `enemy:${enemy.id}:${enemy.position.x}:${enemy.position.y}:${enemy.health}`),
-        ...npcs.map((npc) => `npc:${npc.id}:${npc.position.x}:${npc.position.y}`),
-      ].join("|"),
-    [enemies, npcs]
+      enemies.map((enemy) => ({
+        id: enemy.id,
+        x: enemy.position.x,
+        y: enemy.position.y,
+        health: enemy.health,
+      })),
+    [enemies]
   );
+
+  const npcBlips = useMemo(
+    () =>
+      npcs.map((npc) => ({
+        id: npc.id,
+        x: npc.position.x,
+        y: npc.position.y,
+      })),
+    [npcs]
+  );
+
 
   // Listen for viewport updates from MainScene
   useEffect(() => {
@@ -68,9 +84,9 @@ const MiniMap: React.FC = () => {
       setViewport(customEvent.detail);
     };
 
-    window.addEventListener('viewportUpdate', handleViewportUpdate);
+    window.addEventListener(VIEWPORT_UPDATE_EVENT, handleViewportUpdate);
     return () => {
-      window.removeEventListener('viewportUpdate', handleViewportUpdate);
+      window.removeEventListener(VIEWPORT_UPDATE_EVENT, handleViewportUpdate);
     };
   }, []);
 
@@ -101,34 +117,45 @@ const MiniMap: React.FC = () => {
     }
 
     const scale = clampScale(mapArea);
-    const canvasWidth = Math.ceil(mapArea.width * scale);
-    const canvasHeight = Math.ceil(mapArea.height * scale);
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    renderScaleRef.current = { scale, dpr };
+
+    const logicalWidth = Math.ceil(mapArea.width * scale);
+    const logicalHeight = Math.ceil(mapArea.height * scale);
+    const canvasWidth = Math.ceil(logicalWidth * dpr);
+    const canvasHeight = Math.ceil(logicalHeight * dpr);
 
     if (canvas.width !== canvasWidth || canvas.height !== canvasHeight) {
       canvas.width = canvasWidth;
       canvas.height = canvasHeight;
-      canvas.style.width = `${canvasWidth}px`;
-      canvas.style.height = `${canvasHeight}px`;
-      setCanvasSize({ width: canvasWidth, height: canvasHeight });
+      canvas.style.width = `${logicalWidth}px`;
+      canvas.style.height = `${logicalHeight}px`;
+      setCanvasSize({ width: logicalWidth, height: logicalHeight });
     }
 
     context.imageSmoothingEnabled = false;
+    context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, canvasWidth, canvasHeight);
+    context.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    const drawRect = (x: number, y: number, width: number, height: number) => {
+      context.fillRect(x, y, width, height);
+    };
 
     // Background wash
     context.fillStyle = "#0b1220";
-    context.fillRect(0, 0, canvasWidth, canvasHeight);
+    drawRect(0, 0, logicalWidth, logicalHeight);
 
     for (let y = 0; y < mapArea.height; y += 1) {
       for (let x = 0; x < mapArea.width; x += 1) {
         const tile = mapArea.tiles[y][x];
         const color = TILE_COLORS[tile.type] ?? TILE_COLORS.default;
         context.fillStyle = color;
-        context.fillRect(x * scale, y * scale, scale, scale);
+        drawRect(x * scale, y * scale, scale, scale);
 
         if (tile.provideCover) {
           context.fillStyle = "rgba(14, 116, 144, 0.45)";
-          context.fillRect(x * scale, y * scale, scale, scale);
+          drawRect(x * scale, y * scale, scale, scale);
         }
       }
     }
@@ -140,14 +167,14 @@ const MiniMap: React.FC = () => {
       const xPos = x * scale;
       context.beginPath();
       context.moveTo(xPos, 0);
-      context.lineTo(xPos, canvasHeight);
+      context.lineTo(xPos, logicalHeight);
       context.stroke();
     }
     for (let y = 0; y <= mapArea.height; y += Math.max(4, Math.round(12 / scale))) {
       const yPos = y * scale;
       context.beginPath();
       context.moveTo(0, yPos);
-      context.lineTo(canvasWidth, yPos);
+      context.lineTo(logicalWidth, yPos);
       context.stroke();
     }
 
@@ -175,14 +202,14 @@ const MiniMap: React.FC = () => {
     drawBlip(playerPosition, "#38bdf8", "rgba(224, 242, 254, 0.85)", 0.55);
 
     // Enemy markers
-    enemies
+    enemyBlips
       .filter((enemy) => enemy.health > 0)
       .forEach((enemy) => {
-        drawBlip(enemy.position, "#ef4444", "rgba(248, 113, 113, 0.85)", 0.4);
+        drawBlip({ x: enemy.x, y: enemy.y }, "#ef4444", "rgba(248, 113, 113, 0.85)", 0.4);
       });
 
-    npcs.forEach((npc) => {
-      drawBlip(npc.position, "#22c55e", "rgba(187, 247, 208, 0.9)", 0.35);
+    npcBlips.forEach((npc) => {
+      drawBlip({ x: npc.x, y: npc.y }, "#22c55e", "rgba(187, 247, 208, 0.9)", 0.35);
     });
 
     // District perimeter glow
@@ -190,7 +217,7 @@ const MiniMap: React.FC = () => {
     context.strokeStyle = curfewActive
       ? "rgba(126, 232, 201, 0.6)"
       : "rgba(59, 130, 246, 0.55)";
-    context.strokeRect(1, 1, canvasWidth - 2, canvasHeight - 2);
+    context.strokeRect(1, 1, logicalWidth - 2, logicalHeight - 2);
 
     // Viewport rectangle
     if (viewport) {
@@ -220,7 +247,7 @@ const MiniMap: React.FC = () => {
       // Bottom-right
       context.fillRect(viewportX + viewportWidth - cornerSize + 1, viewportY + viewportHeight - cornerSize + 1, cornerSize, cornerSize);
     }
-  }, [mapArea, playerPosition, curfewActive, entitySignature, enemies, npcs, viewport]);
+  }, [mapArea, playerPosition, curfewActive, enemyBlips, npcBlips, viewport]);
 
   const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!mapArea || !canvasRef.current) {
@@ -229,15 +256,16 @@ const MiniMap: React.FC = () => {
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const scale = clampScale(mapArea);
+    const { scale } = renderScaleRef.current;
+    const effectiveScale = scale || clampScale(mapArea);
 
     // Calculate click position relative to canvas
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
     // Convert to grid coordinates
-    const gridX = Math.floor(x / scale);
-    const gridY = Math.floor(y / scale);
+    const gridX = Math.floor(x / effectiveScale);
+    const gridY = Math.floor(y / effectiveScale);
 
     // Clamp to map bounds
     const clampedX = Math.max(0, Math.min(mapArea.width - 1, gridX));
@@ -245,7 +273,7 @@ const MiniMap: React.FC = () => {
 
     // Dispatch event to MainScene to move camera
     window.dispatchEvent(
-      new CustomEvent('minimapViewportClick', {
+      new CustomEvent(MINIMAP_VIEWPORT_CLICK_EVENT, {
         detail: { gridX: clampedX, gridY: clampedY },
       })
     );
