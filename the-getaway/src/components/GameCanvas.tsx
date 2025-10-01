@@ -41,6 +41,7 @@ const GameCanvas: React.FC = () => {
       width: parentWidth > 0 ? parentWidth : 800,
       height: parentHeight > 0 ? parentHeight : 600,
       backgroundColor: "#1a1a1a",
+      backgroundAlpha: 1,
       parent: gameContainerRef.current,
       scene: [BootScene, MainScene],
       scale: {
@@ -48,6 +49,13 @@ const GameCanvas: React.FC = () => {
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: parentWidth > 0 ? parentWidth : 800,
         height: parentHeight > 0 ? parentHeight : 600,
+      },
+      render: {
+        antialias: false,
+        pixelArt: true,
+        roundPixels: true,
+        transparent: false,
+        powerPreference: "high-performance",
       },
       physics: {
         default: "arcade",
@@ -58,6 +66,7 @@ const GameCanvas: React.FC = () => {
       },
       pixelArt: true,
       roundPixels: true,
+      transparent: false,
     };
 
     console.log("[GameCanvas] Phaser config:", config);

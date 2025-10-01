@@ -776,3 +776,34 @@ Record licence and attribution requirements for every imported pack in `/src/ass
 - **Localization** – Any user-facing asset name or description must be added to the locale files (e.g., `/src/content/levels/level0/locales/en.ts`, `/uk.ts`).
 - **Testing** – Add unit tests for the shared utilities (`iso.ts`) and `IsoObjectFactory`. Create integration tests (Jest + Phaser headless) to verify depth ordering and hitbox accuracy when new factories are introduced.
 - **Documentation** – Update this architecture guide and inline JSDoc whenever new primitives or factories land so future contributors understand expected shading, depth, and alignment conventions.
+
+## Phaser Setup & Performance Considerations
+
+Phaser configuration lives alongside our scenes; keep these settings scoped to `BootScene`, `MainScene`, or any future scene entry points so React/Redux layers stay renderer-agnostic.
+
+### Renderer Selection
+- Set `type: Phaser.AUTO` in the game configuration so Phaser prefers WebGL when available and falls back to Canvas on devices without GPU support.
+- Favor WebGL for large sprite counts, shader-driven effects, and high-resolution scenes because it leverages GPU parallelism; Canvas uses CPU rasterization and can feel snappier on low-end or older hardware.
+
+### Core Optimization Practices
+- Pool frequently spawned objects (bullets, enemies, particles) instead of creating/destroying them each frame.
+- Cache references to textures, animations, and lookup results so tight loops avoid repeated scene or registry queries.
+- Update and render only visible entities—deactivate off-screen sprites and remove dormant objects from update loops.
+- Texture-pack and compress art, then lazy-load bundles as scenes demand them to conserve memory.
+- When targeting low-resolution art, render to a smaller internal canvas and scale via CSS, and batch draw calls (especially under WebGL) to reduce state changes.
+
+### Canvas-Specific Guidance
+- Use offscreen canvases for expensive blits, round draw coordinates to whole numbers to dodge sub-pixel blurring, and layer static/ dynamic content across multiple canvases when Canvas is active.
+- Disable transparency with `{ alpha: false }` when compositing over an opaque background so browsers can optimize canvas buffers.
+
+### GPU Usage & Future APIs
+- WebGL remains the portable standard for GPU acceleration, enabling shader pipelines and large sprite batches today.
+- WebGPU offers deeper GPU access but lacks universal browser support; continue shipping WebGL defaults with graceful Canvas fallbacks.
+
+### Renderer Flexibility
+- Expose a settings toggle or automated hardware probe that can swap between WebGL and Canvas at runtime.
+- Abstract drawing helpers so gameplay logic never depends on the active renderer, keeping Redux reducers and React components oblivious to rendering details.
+
+### Architectural Integration
+- Confine renderer configuration and performance tricks to Phaser scenes and their supporting utilities—never bleed these concerns into Redux slices, thunks, or React components.
+- Add inline documentation within Phaser config files to explain chosen settings, helping future contributors maintain consistent performance practices.
