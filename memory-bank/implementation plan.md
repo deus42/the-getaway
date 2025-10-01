@@ -1,7 +1,7 @@
 # Implementation Plan for "The Getaway" (Base Game)
 
 <phase id="1" name="Project Setup and Core Infrastructure">
-<step id="1" status="completed">
+<step id="1">
 <step_metadata>
   <number>1</number>
   <title>Initialize the Project</title>
@@ -22,7 +22,7 @@ Run the project locally. Verify that a basic webpage loads in the browser withou
 </test>
 </step>
 
-<step id="2" status="completed">
+<step id="2">
 <step_metadata>
   <number>2</number>
   <title>Structure the Project Files</title>
@@ -44,7 +44,7 @@ Create a dummy file in each folder (e.g., `test.ts`) and import it into the main
 </test>
 </step>
 
-<step id="3" status="completed">
+<step id="3">
 <step_metadata>
   <number>3</number>
   <title>Embed the Game Engine</title>
@@ -68,7 +68,7 @@ Add the `GameCanvas` component to the main app. Verify that a blank game canvas 
 </phase>
 
 <phase id="2" name="Core Game Mechanics">
-<step id="4" status="completed">
+<step id="4">
 <step_metadata>
   <number>4</number>
   <title>Add Grid-Based Player Movement</title>
@@ -90,7 +90,7 @@ Use arrow keys to move the player across the grid. Ensure the player stops at ob
 </test>
 </step>
 
-<step id="5" status="completed">
+<step id="5">
 <step_metadata>
   <number>5</number>
   <title>Build a Basic Combat System</title>
@@ -113,7 +113,7 @@ Trigger combat. Move the player (spending 1 AP per tile) and attack (spending 2 
 </test>
 </step>
 
-<step id="6" status="completed">
+<step id="6">
 <step_metadata>
   <number>6</number>
   <title>Introduce Cover Mechanics</title>
@@ -137,7 +137,7 @@ Position the player and enemy with a cover tile between them. Attack the enemy a
 </phase>
 
 <phase id="3" name="Exploration and World Interaction">
-<step id="7" status="completed">
+<step id="7">
 <step_metadata>
   <number>7</number>
   <title>Design a Small Explorable Map</title>
@@ -159,7 +159,7 @@ Walk the player from one zone to another. Ensure collision tiles stop movement a
 </test>
 </step>
 
-<step id="8" status="completed">
+<step id="8">
 <step_metadata>
   <number>8</number>
   <title>Add a Day-Night Cycle</title>
@@ -183,7 +183,7 @@ Start the game and wait 5 minutes. Confirm the screen brightens at the start, di
 </phase>
 
 <phase id="4" name="Command & City Systems">
-<step id="9" status="completed">
+<step id="9">
 <step_metadata>
   <number>9</number>
   <title>Establish Command Hub and Persisted Sessions</title>
@@ -205,7 +205,7 @@ Launch the app, start a game, reopen the menu, refresh the page, and confirm the
 </test>
 </step>
 
-<step id="10" status="completed">
+<step id="10">
 <step_metadata>
   <number>10</number>
   <title>Harden Curfew Pressure and Cover Feedback</title>
@@ -227,7 +227,7 @@ With world time set to night, move the player in the open, verify a warning then
 </test>
 </step>
 
-<step id="11" status="completed">
+<step id="11">
 <step_metadata>
   <number>11</number>
   <title>Expand Downtown into Enterable Megablocks</title>
@@ -251,7 +251,7 @@ Walk from the Slums into multiple interiors and back, verifying map redraws, pla
 </phase>
 
 <phase id="5" name="Narrative and Quest Layer">
-<step id="12" status="completed">
+<step id="12">
 <step_metadata>
   <number>12</number>
   <title>Create an NPC with a Routine</title>
@@ -273,7 +273,7 @@ Watch the NPC during the day phase. Verify it moves smoothly from start to end p
 </test>
 </step>
 
-<step id="13" status="completed">
+<step id="13">
 <step_metadata>
   <number>13</number>
   <title>Set Up a Dialogue System</title>
@@ -295,7 +295,7 @@ Interact with an NPC. Confirm the dialogue appears, choices are selectable, and 
 </test>
 </step>
 
-<step id="14" status="completed">
+<step id="14">
 <step_metadata>
   <number>14</number>
   <title>Add a Skill Check to Dialogue</title>
@@ -316,7 +316,7 @@ Set the required skill to a level below the threshold; the option should be lock
 </test>
 </step>
 
-<step id="15" status="completed">
+<step id="15">
 <step_metadata>
   <number>15</number>
   <title>Implement a Simple Quest</title>
@@ -342,7 +342,7 @@ Accept the quest, complete the objective, and turn it in. Verify the quest log u
 </test>
 </step>
 
-<step id="16" status="completed">
+<step id="16">
 <step_metadata>
   <number>16</number>
   <title>Seed Dialogue and Quest Threads</title>
@@ -366,7 +366,7 @@ Dispatch dialogue and quest reducer actions (e.g., `startDialogue`, `startQuest`
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
-<step id="17" status="completed">
+<step id="17">
 <step_metadata>
   <number>17</number>
   <title>Pivot Rendering to a Neon Isometric Grid</title>
@@ -388,7 +388,7 @@ Playtest with aggressive zooming/resizing, verifying player movement, tile selec
 </test>
 </step>
 
-<step id="18" status="completed">
+<step id="18">
 <step_metadata>
   <number>18</number>
   <title>Click-to-Move Navigation and Path Preview</title>
@@ -410,7 +410,7 @@ Click long-distance destinations across multiple doors, confirm the preview matc
 </test>
 </step>
 
-<step id="19" status="completed">
+<step id="19">
 <step_metadata>
   <number>19</number>
   <title>Implement Guard Perception & Alert States</title>
@@ -432,7 +432,7 @@ Linger inside and outside patrol vision cones to trigger each alert phase, confi
 </test>
 </step>
 
-<step id="20" status="completed">
+<step id="20">
 <step_metadata>
   <number>20</number>
   <title>Redesign Downtown Grid & Building Layout</title>
@@ -454,7 +454,7 @@ Inspect the generated map to verify doors sit on street tiles, no buildings over
 </test>
 </step>
 
-<step id="21" status="completed">
+<step id="21">
 <step_metadata>
   <number>21</number>
   <title>Transition Scene Rendering to Isometric 2.5-D</title>
@@ -478,9 +478,9 @@ Render a representative block with floors, walls, props, and characters; confirm
 </phase>
 
 <phase id="7" name="Character Progression and Inventory">
-<step id="22a" status="pending">
+<step id="22.1">
 <step_metadata>
-  <number>22a</number>
+  <number>22.1</number>
   <title>Basic Character Creation Flow (UI Shell, Name, Visual Preset)</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
@@ -504,9 +504,9 @@ Start new game and verify character creation screen appears instead of spawning 
 </test>
 </step>
 
-<step id="22b" status="pending">
+<step id="22.2">
 <step_metadata>
-  <number>22b</number>
+  <number>22.2</number>
   <title>Attribute Allocation System</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
@@ -538,15 +538,15 @@ Reach Step 2 of character creation. Verify all attributes start at 5 with 5 poin
 </test>
 </step>
 
-<step id="22c" status="pending">
+<step id="22.3">
 <step_metadata>
-  <number>22c</number>
+  <number>22.3</number>
   <title>Background Selection with Starting Perks</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <prerequisites>
-- Step 24c must be completed (perk system establishes perk mechanics and data structures)
+- Step 24.3 must be completed (perk system establishes perk mechanics and data structures)
 - Faction reputation system defined (for background-based reputation modifiers)
 </prerequisites>
 
@@ -571,7 +571,7 @@ Reach Step 3 of character creation. View all backgrounds with full descriptions 
 </test>
 </step>
 
-<step id="23" status="pending">
+<step id="23">
 <step_metadata>
   <number>23</number>
   <title>Integrate Player Stats with Combat and Dialogue Systems</title>
@@ -616,7 +616,7 @@ Open the character sheet (PlayerStatsPanel) and verify all attributes and derive
 </test>
 </step>
 
-<step id="23.5" status="pending">
+<step id="23.5">
 <step_metadata>
   <number>23.5</number>
   <title>Wire Equipment Stats to Combat Formulas</title>
@@ -659,9 +659,9 @@ Equip armor with +2 Strength bonus and verify carry weight increases by 10kg in 
 </test>
 </step>
 
-<step id="24a" status="pending">
+<step id="24.1">
 <step_metadata>
-  <number>24a</number>
+  <number>24.1</number>
   <title>XP and Leveling Foundation</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
@@ -688,7 +688,7 @@ Implement core XP earning and level-up system with concrete progression formula.
   - When XP >= threshold, trigger level-up automatically
   - Award skill points: `3 + floor(intelligence / 3)` (Intelligence 6 = 5 points, Intelligence 9 = 6 points)
   - Every 3 levels (3, 6, 9...), grant 1 attribute point (player chooses which attribute to increase)
-  - Every 2 levels (2, 4, 6...), unlock perk selection (implemented in Step 24c)
+  - Every 2 levels (2, 4, 6...), unlock perk selection (implemented in Step 24.3)
 - **Build level-up notification UI**:
   - Full-screen modal with "LEVEL UP" banner
   - Display new level, skill points earned, attribute point availability
@@ -708,15 +708,15 @@ Award XP through various sources (complete quest, defeat enemy, discover locatio
 </test>
 </step>
 
-<step id="24b" status="pending">
+<step id="24.2">
 <step_metadata>
-  <number>24b</number>
+  <number>24.2</number>
   <title>Skill Tree System with Combat Branch</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <prerequisites>
-- Step 24a completed (skill points awarded on level-up)
+- Step 24.1 completed (skill points awarded on level-up)
 </prerequisites>
 
 <instructions>
@@ -761,15 +761,15 @@ Level up and receive skill points. Open SkillTreePanel and verify all branches a
 </test>
 </step>
 
-<step id="24c" status="pending">
+<step id="24.3">
 <step_metadata>
-  <number>24c</number>
+  <number>24.3</number>
   <title>Perk Selection System with Capstone Perks</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <prerequisites>
-- Step 24b completed (skill tree system defines skill values for prerequisites)
+- Step 24.2 completed (skill tree system defines skill values for prerequisites)
 </prerequisites>
 
 <instructions>
@@ -820,7 +820,7 @@ Reach level 2 and verify perk selection modal appears automatically. View availa
 </test>
 </step>
 
-<step id="25" status="pending">
+<step id="25">
 <step_metadata>
   <number>25</number>
   <title>Expand Inventory System with Equipment and Durability</title>
@@ -883,7 +883,7 @@ Open inventory and verify equipment slots display with drag-and-drop functionali
 </test>
 </step>
 
-<step id="25.5" status="pending">
+<step id="25.5">
 <step_metadata>
   <number>25.5</number>
   <title>Integrate Equipment Effects with Combat and Movement</title>
@@ -940,9 +940,9 @@ Equip weapon at 100% durability and note damage output. Use weapon until durabil
 </test>
 </step>
 
-<step id="26a" status="pending">
+<step id="26.1">
 <step_metadata>
-  <number>26a</number>
+  <number>26.1</number>
   <title>Directional Cover and Flanking Mechanics</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
@@ -986,9 +986,9 @@ Enter combat and position player behind directional cover (e.g., low wall facing
 </test>
 </step>
 
-<step id="26b" status="pending">
+<step id="26.2">
 <step_metadata>
-  <number>26b</number>
+  <number>26.2</number>
   <title>Overwatch Mode and Targeted Shots</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
@@ -1041,9 +1041,9 @@ Enter combat with 6 AP. Activate overwatch mode and verify 6 AP reserved, charac
 </test>
 </step>
 
-<step id="26c" status="pending">
+<step id="26.3">
 <step_metadata>
-  <number>26c</number>
+  <number>26.3</number>
   <title>Area-of-Effect Attacks and Combat Consumables</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
@@ -1099,9 +1099,9 @@ Equip frag grenade and throw at clustered enemies (2+ units within 3 tiles). Ver
 </test>
 </step>
 
-<step id="27a" status="pending">
+<step id="27.1">
 <step_metadata>
-  <number>27a</number>
+  <number>27.1</number>
   <title>Vehicle Acquisition and Storage (Motorcycle Only, Basic Trunk)</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
 </step_metadata>
@@ -1169,9 +1169,9 @@ Complete "Scavenger's Prize" quest by collecting 3 Electronic Parts and 1 Fuel T
 </test>
 </step>
 
-<step id="27b" status="pending">
+<step id="27.2">
 <step_metadata>
-  <number>27b</number>
+  <number>27.2</number>
   <title>Vehicle Travel Movement (Fuel Consumption, 3x Movement Speed)</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
 </step_metadata>
@@ -1238,7 +1238,7 @@ Implement the movement mechanics for the motorcycle system, focusing on speed en
 </details>
 
 <prerequisites>
-- Step 27a (Vehicle Acquisition and Storage) must be completed first
+- Step 27.1 (Vehicle Acquisition and Storage) must be completed first
 - Step 4 (Grid-Based Player Movement) provides foundation for movement system extension
 - Step 12 (Day/Night Cycle) provides HUD integration reference for fuel gauge
 </prerequisites>
@@ -1248,9 +1248,9 @@ Mount motorcycle and travel across Downtown on main roads, measure tile-to-tile 
 </test>
 </step>
 
-<step id="28a" status="pending">
+<step id="28.1">
 <step_metadata>
-  <number>28a</number>
+  <number>28.1</number>
   <title>Hunger and Thirst Meters (Optional Survival Mode Toggle)</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
 </step_metadata>
@@ -1358,7 +1358,7 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 </test>
 </step>
 
-<step id="29" status="pending">
+<step id="29">
 <step_metadata>
   <number>29</number>
   <title>Implement Faction Reputation System with Three Core Factions</title>
@@ -1414,9 +1414,9 @@ Complete Resistance quest and verify +20 Resistance reputation, -10 CorpSec repu
 </test>
 </step>
 
-<step id="30a" status="pending">
+<step id="30.1">
 <step_metadata>
-  <number>30a</number>
+  <number>30.1</number>
   <title>Basic Crafting System (Ammo and Medical Supplies)</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
@@ -1473,15 +1473,15 @@ Loot containers and defeat enemies to gather resources (Metal Scrap, Electronic 
 </test>
 </step>
 
-<step id="30b" status="pending">
+<step id="30.2">
 <step_metadata>
-  <number>30b</number>
+  <number>30.2</number>
   <title>Weapon Modification System</title>
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
 <prerequisites>
-- Step 30a completed (crafting system and resources exist)
+- Step 30.1 completed (crafting system and resources exist)
 - Equipment system from Step 25 exists (weapons have modification slots)
 </prerequisites>
 
@@ -1541,7 +1541,7 @@ Gather resources and reach Engineering 15 skill. Travel to Resistance safe house
 </phase>
 
 <phase id="8" name="World Expansion">
-<step id="31" status="pending">
+<step id="31">
 <step_metadata>
   <number>31</number>
   <title>Build Industrial Wasteland Zone with Concrete Specifications</title>
@@ -1609,13 +1609,13 @@ Travel to Industrial Wasteland via Downtown eastern gate and verify entry warnin
 </phase>
 
 <phase id="9" name="Optional Expansions (POST-MVP)">
-<!-- NOTE: Steps 27a, 27b, and 28a are located earlier in the document (after Step 26c) but belong to Phase 9 conceptually. They are marked POST-MVP and should be deferred to v1.1+ after core game is stable. -->
+<!-- NOTE: Steps 27.1, 27.2, and 28.1 are located earlier in the document (after Step 26.3) but belong to Phase 9 conceptually. They are marked POST-MVP and should be deferred to v1.1+ after core game is stable. -->
 </phase>
 
 <phase id="10" name="Testing, Polish, and Release">
-<step id="32a" status="pending">
+<step id="32.1">
 <step_metadata>
-  <number>32a</number>
+  <number>32.1</number>
   <title>Implement Unit Test Suite (70%+ Code Coverage)</title>
   <phase>Phase 10: Testing, Polish, and Release</phase>
 </step_metadata>
@@ -1730,9 +1730,9 @@ Run `yarn test --coverage` and verify all 6 test files execute successfully. Che
 </test>
 </step>
 
-<step id="32b" status="pending">
+<step id="32.2">
 <step_metadata>
-  <number>32b</number>
+  <number>32.2</number>
   <title>Create Integration Test Scenarios (E2E Testing)</title>
   <phase>Phase 10: Testing, Polish, and Release</phase>
 </step_metadata>
@@ -1829,7 +1829,7 @@ Implement end-to-end (E2E) integration tests using Playwright or Cypress to veri
 </details>
 
 <prerequisites>
-- Step 32a (Unit Test Suite) should be completed first for foundation
+- Step 32.1 (Unit Test Suite) should be completed first for foundation
 - All game systems implemented and functional in local dev environment
 - Playwright or Cypress installed and configured
 </prerequisites>
@@ -1846,9 +1846,9 @@ Run `yarn test:e2e` and verify all 20-30 tests execute successfully. Verify char
 </test>
 </step>
 
-<step id="32c" status="pending">
+<step id="32.3">
 <step_metadata>
-  <number>32c</number>
+  <number>32.3</number>
   <title>Manual QA Playtest Checklist (Multi-Browser Testing)</title>
   <phase>Phase 10: Testing, Polish, and Release</phase>
 </step_metadata>
@@ -2012,7 +2012,7 @@ Conduct comprehensive manual quality assurance playtests using a structured chec
 </details>
 
 <prerequisites>
-- Steps 32a and 32b (Unit and E2E tests) should be completed first
+- Steps 32.1 and 32.2 (Unit and E2E tests) should be completed first
 - Game fully implemented and deployed to staging environment
 - Multiple human testers available (ideally 2-3 for comprehensive coverage)
 </prerequisites>
@@ -2022,7 +2022,7 @@ Assign 2-3 testers to complete full playtest checklist independently. Verify eac
 </test>
 </step>
 
-<step id="33" status="pending">
+<step id="33">
 <step_metadata>
   <number>33</number>
   <title>Expand Save Functionality</title>
@@ -2046,7 +2046,7 @@ Create several saves at different progression points (early game, mid-game with 
 </test>
 </step>
 
-<step id="34" status="pending">
+<step id="34">
 <step_metadata>
   <number>34</number>
   <title>Polish the UI</title>
@@ -2072,7 +2072,7 @@ Open each UI element (character sheet, inventory, crafting, vehicle management, 
 </test>
 </step>
 
-<step id="34.5" status="pending">
+<step id="34.5">
 <step_metadata>
   <number>34.5</number>
   <title>Accessibility Audit and Fixes (WCAG 2.1 AA Compliance)</title>
@@ -2244,7 +2244,7 @@ Run axe DevTools scan on game homepage, character creation, main game screen, an
 </test>
 </step>
 
-<step id="34.7" status="pending">
+<step id="34.7">
 <step_metadata>
   <number>34.7</number>
   <title>Create In-Game Help System and External Documentation</title>
@@ -2417,7 +2417,7 @@ Press F1 and verify HelpPanel modal opens with 8 tabs. Click through each tab (C
 </test>
 </step>
 
-<step id="35" status="pending">
+<step id="35">
 <step_metadata>
   <number>35</number>
   <title>Surface Level & Objective HUD</title>
@@ -2449,12 +2449,12 @@ This plan now outlines **49 implementable steps** organized into **10 phases** t
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22a-30b)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (18 steps: 22a/22b/22c, 23/23.5, 24a/24b/24c, 25/25.5, 26a/26b/26c, 29, 30a/30b)
-  - NOTE: Steps 27a, 27b, 28a are physically located after Step 26c but are marked as Phase 9 (POST-MVP)
+- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (18 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26.1/26.2/26.3, 29, 30.1/30.2)
+  - NOTE: Steps 27.1, 27.2, 28.1 are physically located after Step 26.3 but are marked as Phase 9 (POST-MVP)
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
-- **Phase 9 (Steps 27a, 27b, 28a)**: Optional expansions (vehicle and survival mechanics) - POST-MVP, deferred to v1.1+ (3 steps)
-  - Steps physically located after Step 26c in document but conceptually belong to Phase 9
-- **Phase 10 (Steps 32a-35)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (11 steps: 32a/32b/32c, 33, 34, 34.5, 34.7, 35)
+- **Phase 9 (Steps 27.1, 27.2, 28.1)**: Optional expansions (vehicle and survival mechanics) - POST-MVP, deferred to v1.1+ (3 steps)
+  - Steps physically located after Step 26.3 in document but conceptually belong to Phase 9
+- **Phase 10 (Steps 32.1-35)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35)
 </phase_structure>
 
 <focus_areas>
@@ -2477,11 +2477,11 @@ This plan now outlines **49 implementable steps** organized into **10 phases** t
 This revised plan addresses critical quality issues identified in the analysis:
 
 **Step Granularity**: Complex steps split into focused substeps:
-- Step 22 → 22a (UI shell), 22b (attributes - after 23), 22c (backgrounds - after 24c)
-- Step 24 → 24a (XP/leveling), 24b (skill trees), 24c (perk selection)
-- Step 26 → 26a (flanking), 26b (overwatch/targeted shots), 26c (AoE/consumables)
-- Step 30 → 30a (basic crafting), 30b (weapon mods)
-- Step 32 → 32a (unit tests), 32b (integration tests), 32c (manual QA)
+- Step 22 → 22.1 (UI shell), 22.2 (attributes - after 23), 22.3 (backgrounds - after 24.3)
+- Step 24 → 24.1 (XP/leveling), 24.2 (skill trees), 24.3 (perk selection)
+- Step 26 → 26.1 (flanking), 26.2 (overwatch/targeted shots), 26.3 (AoE/consumables)
+- Step 30 → 30.1 (basic crafting), 30.2 (weapon mods)
+- Step 32 → 32.1 (unit tests), 32.2 (integration tests), 32.3 (manual QA)
 
 **Bridge Steps Added**:
 - Step 23.5: Wire equipment stats to combat formulas
@@ -2490,8 +2490,8 @@ This revised plan addresses critical quality issues identified in the analysis:
 **Prerequisite Dependencies**: Steps now acknowledge existing implementations and specify integration points with proper ordering.
 
 **Scope Management**: Ambitious features deferred to Phase 9 (POST-MVP):
-- Step 39 (formerly 27): Vehicle systems simplified to motorcycle-only
-- Step 40 (formerly 28): Survival mechanics reduced to hunger/thirst only
+- Step 27.1: Vehicle systems simplified to motorcycle-only
+- Step 28.1: Survival mechanics reduced to hunger/thirst only
 - Clear warnings: "⚠️ POST-MVP - Defer to v1.1+"
 
 **Concrete Specifications**: Vague descriptions replaced with formulas, thresholds, and examples:

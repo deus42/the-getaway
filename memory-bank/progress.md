@@ -445,9 +445,9 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 </validation>
 </step>
 
-<step id="22a" status="completed">
+<step id="22.1" status="completed">
 <step_metadata>
-  <number>22a</number>
+  <number>22.1</number>
   <title>Basic Character Creation Flow (UI Shell, Name, Visual Preset)</title>
   <status>Completed</status>
   <date>October 3, 2025</date>
@@ -465,9 +465,9 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 <implementation>
 - Character creation state managed locally in React (not Redux) until completion to allow cancel/back without polluting game state
 - Name validation: 3-20 characters, alphanumeric + spaces + hyphens only
-- Visual presets stored as IDs ('operative', 'survivor', 'tech', 'scavenger') for future background integration in Step 22c
+- Visual presets stored as IDs ('operative', 'survivor', 'tech', 'scavenger') for future background integration in Step 22.3
 - Enter key triggers Continue button when form valid
-- Cancel returns to main menu, Complete advances to game start (currently skips Steps 2-3 until 22b/22c implemented)
+- Cancel returns to main menu, Complete advances to game start (currently skips Steps 2-3 until 22.2/22.3 implemented)
 </implementation>
 
 <code_reference file="src/components/ui/CharacterCreationScreen.tsx">
@@ -488,8 +488,8 @@ Modified handleStartNewGame to show character creation instead of immediately st
 </validation>
 
 <notes>
-- Steps 2-3 (attribute allocation, background selection) will be added in Steps 22b and 22c
-- Character data currently only used for log message; full integration pending Step 23 (stat system) and Step 22b/22c
+- Steps 2-3 (attribute allocation, background selection) will be added in Steps 22.2 and 22.3
+- Character data currently only used for log message; full integration pending Step 23 (stat system) and Step 22.2/22.3
 - Step indicators show 3 dots (for future Steps 1-3), currently only Step 1 active
 </notes>
 </step>
@@ -544,12 +544,12 @@ Added setSkill() action, enhanced updateSkill() with automatic recalculation
 - `yarn build` - successful compilation
 - Default player with SPECIAL 5/5/5/5/5/5/5 correctly shows: 100 HP, 6 AP, 50 kg carry
 - Formulas match implementation plan specifications
-- Ready for Step 22b attribute allocation UI (needs these formulas for preview)
+- Ready for Step 22.2 attribute allocation UI (needs these formulas for preview)
 </validation>
 
 <notes>
 - Combat/dialogue integration deferred to when those systems are actively modified (Step 26 advanced combat, Step 16+ dialogue)
-- PlayerStatsPanel UI update deferred to Step 22b when attribute allocation needs derived stat preview
+- PlayerStatsPanel UI update deferred to Step 22.2 when attribute allocation needs derived stat preview
 - Equipment stat bonuses will be added in Step 23.5
 </notes>
 </step>
@@ -628,9 +628,9 @@ Added equipWeapon, equipArmor, unequipWeapon, unequipArmor Redux actions
 </notes>
 </step>
 
-<step id="24a" status="completed">
+<step id="24.1" status="completed">
 <step_metadata>
-  <number>24a</number>
+  <number>24.1</number>
   <title>XP and Leveling Foundation</title>
   <status>Completed</status>
   <date>October 1, 2025</date>
@@ -669,7 +669,7 @@ Added equipWeapon, equipArmor, unequipWeapon, unequipArmor Redux actions
 - XP formula scales progressively: Level 2 = 260 XP, Level 3 = 435 XP, Level 5 = 875 XP, Level 10 = 2500 XP
 - Skill points scale with Intelligence: INT 1-2 = 3 points, INT 3-5 = 4 points, INT 6-8 = 5 points, INT 9-10 = 6 points
 - Attribute points awarded every 3 levels to allow gradual SPECIAL increases
-- Perk unlocks every 2 levels (UI components ready, perk system implementation in Step 24c)
+- Perk unlocks every 2 levels (UI components ready, perk system implementation in Step 24.3)
 - Health increases by +5 per level, full heal on level-up
 - AP increases by +1 every 5 levels (levels 5, 10, 15, etc.)
 - Level-up modal shows all rewards earned (handles multiple level-ups correctly)
@@ -722,9 +722,9 @@ Integrated level-up modal and XP notification manager into main app
 <notes>
 - Core XP and leveling system is complete and fully tested
 - UI components ready but not yet integrated with game events (will connect when combat awards XP)
-- Skill tree system (Step 24b) will use skillPoints counter
-- Perk system (Step 24c) will check perk unlock flags from level-up
-- Character creation Step 22c requires Steps 24a-c to be completed first
+- Skill tree system (Step 24.2) will use skillPoints counter
+- Perk system (Step 24.3) will check perk unlock flags from level-up
+- Character creation Step 22.3 requires Steps 24.1-24.3 to be completed first
 - Future: wire addExperience action to combat victories, quest completions, skill checks
 - Future: wire XP notifications to game events using createXPNotification helper
 - Future: trigger level-up modal when processLevelUp returns levelsGained > 0

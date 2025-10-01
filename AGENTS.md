@@ -33,6 +33,7 @@
 
 ## Roadmap Tracking
 - The 24-step implementation roadmap lives in `memory-bank/implementation plan.md` (Phases 1–8). Keep numbering intact and update the plan whenever scope changes.
+- Treat `memory-bank/implementation plan.md` as the authoritative scope document only—do not record completion status there.
 - Mirror completed work in `memory-bank/progress.md`; each new milestone should reference the matching step number and live in chronological order.
 - Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
 
@@ -97,12 +98,11 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 
 ### implementation plan.md Structure
 - `<phase id="N" name="...">` - Groups related steps by implementation phase
-- `<step id="N" status="completed|pending">` - Individual implementation steps
+- `<step id="N">` - Individual implementation steps (no status attribute; track status only in progress.md)
 - `<step_metadata>` - Step metadata including phase assignment
 - `<instructions>` - High-level task description
 - `<details>` - Detailed implementation requirements
 - `<test>` - Validation and testing procedures
-- `<status>` - Current implementation status (optional)
 
 ### Benefits of XML Structure
 - **Quick Navigation**: Agents can extract specific steps by ID or status
@@ -126,7 +126,7 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 
 ### When Updating Documentation
 - Maintain existing XML structure and tag hierarchy
-- Update status attributes when steps are completed
+- Record completion status exclusively in `memory-bank/progress.md`; update the plan only when scope or requirements change
 - Keep tags well-formed (properly opened and closed)
 - Use appropriate category attributes
 
