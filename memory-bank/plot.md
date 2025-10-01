@@ -57,6 +57,11 @@ Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into C
 - **Refugee Ledger**: Persistent menu tab tracking civilians saved, lost, or displaced. Numbers influence NARC’s willingness to deploy assets in Act III and IV.
 - **Harrow’s Address**: A mid-campaign propaganda speech adapts to player disruptions (lost trains, leaked intel) and unlocks bespoke dialogue hooks for the finale.
 
+### Arc Payoffs & Alternate Outcomes
+- **NARC Trust Meter**: High trust unlocks an airlift during Act IV, reducing enemy reinforcements; low trust forces a desperate ground extraction with heavier casualties.
+- **Shelterline Morale**: Track morale based on civilian-centric choices. If morale breaks, Amara contemplates abandoning Miami, altering companion availability.
+- **Harrow Negotiation Path**: If the player prioritizes intel over spectacle, Act IV offers a ceasefire ending—buying time but leaving the regime wounded rather than toppled.
+
 ## Supporting Cast
 - **Amara Velez**: Tactical lead of Shelterline. Direct, dry humor, prioritizes civilian safety.
 - **Theo "Circuit" Anders**: Teenage hacker broadcasting pirate radio bulletins; brings levity and exposition.
@@ -86,6 +91,18 @@ Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into C
 - **Signal Choke**: Disable a satellite uplink relay; success unlocks covert NARC drops, failure boosts enemy patrol AI.
 - **Ghost Ledger**: Track ration fraud implicating a sympathetic ESD quartermaster; decide whether to expose or protect them.
 
+## Character Relationship Web
+- **Trace ↔ Amara Velez**: Mentor-protégé dynamic. Dialogue beats should evolve from guarded professionalism to mutual reliance.
+- **Trace ↔ Theo "Circuit" Anders**: Younger sibling energy. Allows lighter banter and expository tech breakdowns.
+- **Trace ↔ Commander Sadiq Rahm**: Fragile alliance. Shared scenes emphasize strategic debate and the cost of betrayal.
+- **Amara ↔ Dr. Duplessis**: Philosophical tension—frontline urgency versus geopolitical calculus. Use for moral dilemmas about collateral damage.
+
+## Dialogue Formatting Cheatsheet
+- Use em dashes for interruptions during tense stealth sections (`"Hold—drone!"`).
+- Reserve ellipses for trauma or exhaustion, not general hesitation.
+- Tag code phrases with italics in scripts for clarity (`_quiet tide_`).
+- Keep broadcast slogans in ALL CAPS to contrast with human dialogue (`"HAIL HARROW. HAIL ORDER."`).
+
 ## Recurring Visual & Audio Motifs
 - **Neon vs. Sodium Glow**: Resistance zones use reclaimed neon signage; regime checkpoints drown in amber floodlights.
 - **Soundscape Cues**: Faint radio static indicates nearby pirate broadcasts; low-frequency hum warns of patrol drones.
@@ -95,5 +112,10 @@ Harrow’s regime is staging **Operation Cold Iron**—a lightning strike into C
 - **Industrial Wasteland**: After Harrow falls, chemical weapon stockpiles leak in the Midwest—ties into game update Step 31.
 - **Vehicle Underground**: Motorcycle network intersects with Shelterline safe routes, bridging to Step 27.1 content.
 - **Survival Mode Tie-In**: Hunger/thirst mechanics reflect refugee supply chains, adding narrative weight to Step 28.1 systems.
+
+## Implementation Notes for Writers & Designers
+- Mirror each narrative beat with an in-game system hook (e.g., morale meter surfaces via HUD tooltip updates).
+- When scripting dialogue, note the speaker’s faction and emotional intent at the top of each cue sheet.
+- Maintain a rolling changelog at the end of this file whenever major plot revisions occur to keep the memory bank auditable.
 
 Use this plot bible to align missions, cinematics, and dialogue. Any new narrative beat should reinforce the core conflict (Operation Cold Iron), escalate faction stakes, or deepen the player’s personal connection to dismantling Harrow’s regime.
