@@ -432,6 +432,80 @@ Linger inside and outside patrol vision cones to trigger each alert phase, confi
 </test>
 </step>
 
+<step id="19.5">
+<step_metadata>
+  <number>19.5</number>
+  <title>Surveillance Camera System (Curfew Enforcement)</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19 completed (Guard perception with vision cones and alert states)
+- Step 5 completed (Combat system with enemy spawning)
+- Step 8 completed (Day-night cycle system functional)
+</prerequisites>
+
+<instructions>
+Implement surveillance cameras that activate during nighttime curfew, creating detection zones that trigger ESD alerts and reinforcements. Cameras are dormant during daytime, making curfew violations meaningful and dangerous.
+</instructions>
+
+<details>
+- **Create camera sprite primitives** in `src/game/objects/CameraSprite.ts`:
+  - Build camera using Phaser primitives: Rectangle (body), Ellipse (lens), Circle (LED), Graphics (vision cone)
+  - Two visual states: Gray/powered-down (day) and Red LED blinking (night/curfew active)
+  - Rotation animation for static cameras (sweeps left-right in 3-second cycles)
+  - Vision cone overlay (90° arc, 8-tile range) rendered with Graphics API
+- **Define 3 camera types** in `src/game/systems/surveillance/cameraTypes.ts`:
+  - **Static Camera**: Wall-mounted, 90° rotating cone, 8-tile range, activates at curfew
+  - **Motion Sensor**: Small box, 4-tile radius circle, detects movement only (standing still = invisible), crouch-walk bypasses
+  - **Drone Camera**: Mobile patrol, 90° cone, 10-tile range, searchlight active at night only
+- **Implement curfew-based activation** in `src/game/systems/surveillance/cameraSystem.ts`:
+  - Subscribe to day-night cycle time-of-day changes
+  - Toggle `camera.isActive = true` when entering Evening/Night phases
+  - Display "CURFEW ACTIVE - SURVEILLANCE ENGAGED" notification at dusk
+  - Power down cameras at dawn (Gray state, no detection)
+- **Build detection and alert system**:
+  - Detection states: Idle (blue) → Suspicious (yellow, 3s grace) → Alarmed (red, reinforcements)
+  - Yellow Alert: Camera glimpses player, 3-second countdown to break LOS
+  - Red Alert: Full detection, spawns 2-4 ESD guards at nearest entry point in 10-15 seconds, locks doors for 30s
+  - Network Alert: If 3+ cameras detect within 60s, all patrols become hostile, doubled patrol density for 5 minutes
+- **Add countermeasures**:
+  - **Hacking** (Hacking skill 40+, 3 tiles range, 5 AP, 5s duration): Loop footage (60s invisibility), Disable (permanent), Redirect (guards investigate wrong area)
+  - **Destruction**: Shoot (1 bullet, 2 AP, triggers Yellow Alert), EMP grenade (5-tile radius, 30s disable), Melee (3 AP, makes noise)
+  - **Avoidance**: TAB key toggles camera vision overlay, crouch-walk (50% detection range), timing gaps in rotation, wait until dawn
+- **Create UI components**:
+  - `CameraDetectionHUD.tsx`: Top-right widget showing "Cameras Nearby: X" with detection bar (0-100%)
+  - `CurfewWarning.tsx`: Full-screen notification at dusk showing curfew activation
+  - Minimap indicators: Camera icons (triangles) showing facing direction, color-coded by alert state (gray when dormant)
+- **Integrate with world map**:
+  - Place cameras in ESD-controlled zones (checkpoints, government buildings, corporate areas)
+  - Higher density in Act III New Columbia (4-6 cameras per zone)
+  - Resistance zones have no cameras or all disabled/destroyed
+  - Cameras defined per-zone in `src/content/cameraConfigs.ts`
+- **Quest integration examples**:
+  - "Eyes Everywhere": Infiltrate ESD data center without triggering any cameras (stealth mission)
+  - "Signal Choke": Hack 5 cameras to create blind corridor for refugee convoy (10-minute time limit)
+  - "False Flag": Hack cameras to upload fabricated footage of ESD brutality to pirate broadcast
+</details>
+
+<accessibility>
+- TAB key toggles camera vision overlay (keyboard accessible)
+- Color-coded patterns for colorblind mode (diagonal lines, dots, solid)
+- Audio cues: Soft beep (camera range), louder beep + alarm (Yellow Alert), klaxon siren (Red Alert)
+- Screen reader announces: "Camera facing east, detection range 8 tiles, status idle/active/alarmed"
+</accessibility>
+
+<performance>
+- Use object pooling for vision cone Graphics (reuse, don't recreate each frame)
+- Calculate detection only for cameras in player's current zone
+- Batch camera updates per frame (max 20 cameras active simultaneously)
+</performance>
+
+<test>
+Wait until nighttime and verify "CURFEW ACTIVE" notification appears with all cameras powering on (red LEDs). Walk past dormant camera during day and confirm no detection. During curfew, walk through checkpoint with 4 cameras, time movement to rotation gaps, verify no detection. Let camera detect player at night, verify Yellow Alert → 3-second timer → Red Alert → reinforcements arrive in 10-15s. Hack camera with Hacking 50, verify loop footage lasts 60 seconds. Shoot camera at night, verify Yellow Alert triggers. Trigger 3 cameras within 60 seconds, verify Network Alert activates all patrols. Crouch-walk past motion sensor, verify bypass when moving slowly. Throw EMP grenade, verify all cameras in radius go offline for 30s. Stand near camera at dawn transition, verify camera powers down mid-rotation. Press TAB and verify camera vision overlay toggles on/off. Complete "Eyes Everywhere" mission without triggering cameras during curfew, verify XP reward. Verify camera sprites render correctly using Phaser primitives (no external assets).
+</test>
+</step>
+
 <step id="20">
 <step_metadata>
   <number>20</number>
