@@ -3,30 +3,23 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 
 const trackerContainerStyle: CSSProperties = {
-  position: 'absolute',
-  top: '1.25rem',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  zIndex: 3,
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.75rem',
-  minWidth: '320px',
-  padding: '1rem 1.25rem',
-  borderRadius: '18px',
-  border: '1px solid rgba(59, 130, 246, 0.45)',
-  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.86), rgba(15, 23, 42, 0.7))',
-  boxShadow: '0 18px 36px rgba(15, 23, 42, 0.38)',
+  gap: '0.6rem',
+  padding: '0.7rem 0.8rem',
+  borderRadius: '10px',
+  border: '1px solid rgba(148, 163, 184, 0.18)',
+  background: 'linear-gradient(185deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95))',
+  boxShadow: '0 18px 28px rgba(15, 23, 42, 0.4)',
   color: '#e2e8f0',
-  backdropFilter: 'blur(10px)',
 };
 
 const headerStyle: CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  fontSize: '0.75rem',
-  letterSpacing: '0.3em',
+  fontSize: '0.6rem',
+  letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: 'rgba(148, 163, 184, 0.85)',
 };
@@ -34,12 +27,12 @@ const headerStyle: CSSProperties = {
 const turnBadgeBase: CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '0.5rem',
-  padding: '0.45rem 0.85rem',
+  gap: '0.4rem',
+  padding: '0.4rem 0.7rem',
   borderRadius: '999px',
-  fontSize: '0.75rem',
+  fontSize: '0.68rem',
   fontWeight: 600,
-  letterSpacing: '0.12em',
+  letterSpacing: '0.1em',
 };
 
 const playerBadgeStyle: CSSProperties = {
@@ -76,14 +69,14 @@ const apBarFillBase: CSSProperties = {
 
 const enemyListStyle: CSSProperties = {
   display: 'grid',
-  gap: '0.55rem',
+  gap: '0.45rem',
 };
 
 const enemyRowStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.75rem',
-  fontSize: '0.82rem',
+  gap: '0.6rem',
+  fontSize: '0.72rem',
   color: '#cbd5f5',
 };
 
@@ -115,11 +108,11 @@ const TurnTracker: React.FC = () => {
         <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <div style={currentBadgeStyle}>{turnLabel}</div>
 
         <div>
-          <div style={{ fontSize: '0.78rem', color: 'rgba(148, 163, 184, 0.7)', marginBottom: '0.4rem' }}>
+          <div style={{ fontSize: '0.62rem', color: 'rgba(148, 163, 184, 0.7)', marginBottom: '0.3rem' }}>
             Player Action Points
           </div>
           <div style={apBarContainer}>
@@ -132,7 +125,7 @@ const TurnTracker: React.FC = () => {
                 }}
               />
             </div>
-            <span style={{ fontSize: '0.82rem', minWidth: '54px', textAlign: 'right' }}>
+            <span style={{ fontSize: '0.7rem', minWidth: '54px', textAlign: 'right' }}>
               {player.actionPoints}/{player.maxActionPoints}
             </span>
           </div>
@@ -140,7 +133,7 @@ const TurnTracker: React.FC = () => {
 
         {inCombat && enemySnapshots.length > 0 && (
           <div>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(248, 113, 113, 0.7)', marginBottom: '0.4rem' }}>
+            <div style={{ fontSize: '0.62rem', color: 'rgba(248, 113, 113, 0.7)', marginBottom: '0.3rem' }}>
               Hostile Readout
             </div>
             <div style={enemyListStyle}>
@@ -151,8 +144,8 @@ const TurnTracker: React.FC = () => {
 
                 return (
                   <div key={enemy.id} style={enemyRowStyle}>
-                    <span style={{ flex: '0 0 auto', fontWeight: 600 }}>{enemy.name}</span>
-                    <div style={{ ...apBarTrack, width: '120px' }}>
+                    <span style={{ flex: '0 0 auto', fontWeight: 600, fontSize: '0.72rem' }}>{enemy.name}</span>
+                    <div style={{ ...apBarTrack, width: '100px' }}>
                       <div
                         style={{
                           ...apBarFillBase,
@@ -161,7 +154,7 @@ const TurnTracker: React.FC = () => {
                         }}
                       />
                     </div>
-                    <span style={{ fontSize: '0.78rem', minWidth: '42px', textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.68rem', minWidth: '42px', textAlign: 'right' }}>
                       {enemy.ap}/{enemy.maxAp}
                     </span>
                   </div>

@@ -176,17 +176,17 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharact
                 ...scrollSectionStyle,
                 display: "flex",
                 flexDirection: "column",
-                gap: "1rem",
+                gap: "0.8rem",
               }}
             >
               <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
+              <TurnTracker />
             </div>
           </div>
         </div>
         <div style={centerStageStyle}>
           <GameCanvas />
           <GameController />
-          <TurnTracker />
           <LevelIndicator />
           <DayNightIndicator />
           <DialogueOverlay />

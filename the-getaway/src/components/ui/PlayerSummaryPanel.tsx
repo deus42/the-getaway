@@ -185,13 +185,6 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
     [player.health, player.maxHealth]
   );
 
-  const apPercent = useMemo(() =>
-    player.maxActionPoints > 0
-      ? Math.max(0, Math.min(1, player.actionPoints / player.maxActionPoints)) * 100
-      : 0,
-    [player.actionPoints, player.maxActionPoints]
-  );
-
   return (
     <div style={containerStyle} data-testid="player-summary-panel">
       <div style={headerStyle}>
@@ -213,16 +206,6 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         </div>
         <div style={barShellStyle}>
           <div style={barFillStyle('#22c55e', `${healthPercent}%`)} />
-        </div>
-      </div>
-
-      <div>
-        <div style={labelRowStyle}>
-          <span>Action Points</span>
-          <span>{player.actionPoints}/{player.maxActionPoints}</span>
-        </div>
-        <div style={barShellStyle}>
-          <div style={barFillStyle('#38bdf8', `${apPercent}%`)} />
         </div>
       </div>
 
