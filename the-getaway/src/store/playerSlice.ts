@@ -232,9 +232,14 @@ export const playerSlice = createSlice({
       const newCarryWeight = calculateCarryWeight(skills.strength);
 
       // Update max HP (preserve current HP ratio)
-      const hpRatio = state.data.maxHealth > 0 ? state.data.health / state.data.maxHealth : 1;
+      const currentHP = Number.isFinite(state.data.health) ? state.data.health : 0;
+      const currentMaxHP = Number.isFinite(state.data.maxHealth) && state.data.maxHealth > 0
+        ? state.data.maxHealth
+        : 1;
+      const hpRatio = currentHP / currentMaxHP;
       state.data.maxHealth = newMaxHP;
-      state.data.health = Math.max(0, Math.min(state.data.health, Math.floor(newMaxHP * hpRatio)));
+      const calculatedHP = Math.floor(newMaxHP * hpRatio);
+      state.data.health = Math.max(0, Math.min(Number.isFinite(calculatedHP) ? calculatedHP : newMaxHP, newMaxHP));
 
       // Update max AP (preserve current AP if possible)
       state.data.maxActionPoints = newBaseAP;
@@ -414,9 +419,14 @@ export const playerSlice = createSlice({
       const newCarryWeight = calculateCarryWeight(skills.strength);
 
       // Update max HP (preserve HP ratio)
-      const hpRatio = state.data.maxHealth > 0 ? state.data.health / state.data.maxHealth : 1;
+      const currentHP = Number.isFinite(state.data.health) ? state.data.health : 0;
+      const currentMaxHP = Number.isFinite(state.data.maxHealth) && state.data.maxHealth > 0
+        ? state.data.maxHealth
+        : 1;
+      const hpRatio = currentHP / currentMaxHP;
       state.data.maxHealth = newMaxHP;
-      state.data.health = Math.max(0, Math.min(state.data.health, Math.floor(newMaxHP * hpRatio)));
+      const calculatedHP = Math.floor(newMaxHP * hpRatio);
+      state.data.health = Math.max(0, Math.min(Number.isFinite(calculatedHP) ? calculatedHP : newMaxHP, newMaxHP));
 
       // Update max AP
       state.data.maxActionPoints = newBaseAP;
