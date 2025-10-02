@@ -7,14 +7,16 @@ import { SkillBranchId, SkillId } from '../../game/interfaces/types';
 import { describeSkillEffect, getPlayerSkillValue, getSkillPointIncrement, isSkillTagged } from '../../game/systems/skillTree';
 
 const panelStyle: React.CSSProperties = {
-  background: 'linear-gradient(190deg, rgba(15, 23, 42, 0.92), rgba(21, 30, 50, 0.85))',
-  border: '1px solid rgba(56, 189, 248, 0.18)',
-  borderRadius: '12px',
-  padding: '1rem',
+  background: 'transparent',
+  border: 'none',
+  borderRadius: '14px',
+  padding: '0.6rem',
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.75rem',
+  gap: '0.45rem',
   minHeight: 0,
+  height: '100%',
+  overflow: 'hidden',
 };
 
 const headerStyle: React.CSSProperties = {
@@ -22,57 +24,72 @@ const headerStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   gap: '1rem',
+  flexShrink: 0,
 };
 
 const titleStyle: React.CSSProperties = {
   margin: 0,
-  fontSize: '0.95rem',
+  fontSize: '0.75rem',
   fontWeight: 600,
   textTransform: 'uppercase',
-  letterSpacing: '0.12em',
+  letterSpacing: '0.08em',
   color: '#38bdf8',
 };
 
 const tabListStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-  gap: '0.4rem',
+  gap: '0.3rem',
+  flexShrink: 0,
+  isolation: 'isolate',
 };
 
 const tabStyle = (active: boolean): React.CSSProperties => ({
-  padding: '0.45rem 0.3rem',
-  borderRadius: '8px',
+  padding: '0.4rem 0.3rem',
+  borderRadius: '6px',
   border: `1px solid ${active ? '#38bdf8' : 'rgba(148, 163, 184, 0.25)'}`,
-  background: active ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15, 23, 42, 0.6)',
+  background: active ? 'rgba(56, 189, 248, 0.25)' : 'rgba(15, 23, 42, 0.6)',
   color: active ? '#f8fafc' : '#94a3b8',
-  fontSize: '0.68rem',
+  fontSize: '0.62rem',
   fontWeight: 600,
-  letterSpacing: '0.08em',
+  letterSpacing: '0.06em',
   textTransform: 'uppercase',
   cursor: 'pointer',
   transition: 'all 0.15s ease',
+  outline: 'none',
+  userSelect: 'none',
+  WebkitTapHighlightColor: 'transparent',
+  minHeight: '32px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  position: 'relative',
+  zIndex: 1000,
 });
 
 const branchContentStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.65rem',
+  gap: '0.35rem',
   minHeight: 0,
-  overflowY: 'auto',
-  paddingRight: '0.25rem',
+  flex: 1,
+  overflowY: 'hidden',
+  paddingRight: '0.3rem',
+  position: 'relative',
+  zIndex: 0,
 };
 
 const skillRowStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'auto 54px',
-  gap: '0.45rem',
+  gridTemplateColumns: '1fr auto',
+  gap: '0.4rem',
   alignItems: 'center',
 };
 
 const skillInfoStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.3rem',
+  gap: '0.1rem',
 };
 
 const skillNameRowStyle: React.CSSProperties = {
@@ -82,10 +99,10 @@ const skillNameRowStyle: React.CSSProperties = {
 };
 
 const tagBadgeStyle: React.CSSProperties = {
-  padding: '0.15rem 0.35rem',
+  padding: '0.1rem 0.3rem',
   borderRadius: '999px',
-  fontSize: '0.55rem',
-  letterSpacing: '0.08em',
+  fontSize: '0.5rem',
+  letterSpacing: '0.06em',
   textTransform: 'uppercase',
   background: 'rgba(245, 158, 11, 0.18)',
   border: '1px solid rgba(245, 158, 11, 0.45)',
@@ -94,10 +111,10 @@ const tagBadgeStyle: React.CSSProperties = {
 };
 
 const stubBadgeStyle: React.CSSProperties = {
-  padding: '0.15rem 0.35rem',
+  padding: '0.1rem 0.3rem',
   borderRadius: '999px',
-  fontSize: '0.55rem',
-  letterSpacing: '0.08em',
+  fontSize: '0.5rem',
+  letterSpacing: '0.06em',
   textTransform: 'uppercase',
   background: 'rgba(148, 163, 184, 0.2)',
   border: '1px solid rgba(148, 163, 184, 0.35)',
@@ -108,59 +125,61 @@ const stubBadgeStyle: React.CSSProperties = {
 const skillControlsStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '0.35rem',
+  justifyContent: 'center',
+  gap: '0.4rem',
 };
 
 const controlButtonStyle = (active: boolean): React.CSSProperties => ({
   width: '24px',
   height: '24px',
-  borderRadius: '6px',
-  border: `1px solid ${active ? '#38bdf8' : 'rgba(148, 163, 184, 0.25)'}`,
-  background: active ? 'rgba(56, 189, 248, 0.15)' : 'rgba(15, 23, 42, 0.6)',
-  color: active ? '#38bdf8' : '#64748b',
-  fontSize: '0.85rem',
+  borderRadius: '5px',
+  border: `1px solid ${active ? '#38bdf8' : 'rgba(148, 163, 184, 0.3)'}`,
+  background: active ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.6)',
+  color: active ? '#bae6fd' : '#64748b',
+  fontSize: '0.9rem',
   fontWeight: 700,
   cursor: active ? 'pointer' : 'not-allowed',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   transition: 'all 0.15s ease',
+  boxShadow: active ? '0 2px 8px rgba(56, 189, 248, 0.3)' : 'none',
 });
 
 const skillValueStyle: React.CSSProperties = {
-  minWidth: '40px',
+  minWidth: '38px',
   textAlign: 'center',
-  fontWeight: 600,
+  fontWeight: 700,
   color: '#f8fafc',
   fontSize: '0.8rem',
 };
 
 const effectStyle: React.CSSProperties = {
-  fontSize: '0.65rem',
+  fontSize: '0.55rem',
   color: '#94a3b8',
-  lineHeight: 1.35,
+  lineHeight: 1.25,
 };
 
 const descriptionStyle: React.CSSProperties = {
-  fontSize: '0.62rem',
+  fontSize: '0.53rem',
   color: 'rgba(148, 163, 184, 0.75)',
+  lineHeight: 1.25,
 };
 
 const pointsBadgeStyle: React.CSSProperties = {
-  padding: '0.2rem 0.45rem',
-  borderRadius: '6px',
-  fontSize: '0.65rem',
+  padding: '0.15rem 0.35rem',
+  borderRadius: '5px',
+  fontSize: '0.55rem',
   background: 'rgba(56, 189, 248, 0.12)',
   border: '1px solid rgba(56, 189, 248, 0.35)',
   color: '#bae6fd',
-  letterSpacing: '0.08em',
+  letterSpacing: '0.06em',
   textTransform: 'uppercase',
   fontWeight: 600,
 };
 
 const helpTextStyle: React.CSSProperties = {
-  fontSize: '0.6rem',
+  fontSize: '0.53rem',
   color: 'rgba(148, 163, 184, 0.7)',
 };
 
@@ -186,11 +205,13 @@ const SkillTreePanel: React.FC = () => {
   const availablePoints = player.skillPoints;
 
   const defaultBranch: SkillBranchId = useMemo(() => {
-    if (availablePoints > 0) {
-      return 'combat';
-    }
-    return 'combat';
-  }, [availablePoints]);
+    const branchTotals = SKILL_BRANCHES.map((branch) => {
+      const total = branch.skills.reduce((acc, skill) => acc + (player.skillTraining[skill.id] ?? 0), 0);
+      return { id: branch.id, total };
+    });
+    branchTotals.sort((a, b) => b.total - a.total);
+    return branchTotals[0]?.id ?? 'combat';
+  }, [player.skillTraining]);
 
   const [activeBranch, setActiveBranch] = useState<SkillBranchId>(defaultBranch);
   const [announcement, setAnnouncement] = useState('');
@@ -232,13 +253,8 @@ const SkillTreePanel: React.FC = () => {
     previousValuesRef.current = current;
   }, [player.skillTraining]);
 
-  useEffect(() => {
-    if (availablePoints <= 0 && activeBranch !== defaultBranch) {
-      setActiveBranch(defaultBranch);
-    }
-  }, [availablePoints, activeBranch, defaultBranch]);
-
   const switchBranch = useCallback((branchId: SkillBranchId) => {
+    console.log('[SkillTreePanel] Switching to branch:', branchId);
     setActiveBranch(branchId);
     const target = tabRefs.current[branchId];
     if (target) {
@@ -295,8 +311,8 @@ const SkillTreePanel: React.FC = () => {
       <div key={skill.id} style={skillRowStyle}>
         <div style={skillInfoStyle}>
           <div style={skillNameRowStyle}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#f8fafc' }}>{skill.name}</span>
-            {tagged && <span style={tagBadgeStyle}>Tag Skill</span>}
+            <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#f8fafc' }}>{skill.name}</span>
+            {tagged && <span style={tagBadgeStyle}>Tag</span>}
             {skill.stub && <span style={stubBadgeStyle}>Stub</span>}
           </div>
           <p style={descriptionStyle}>{skill.description}</p>
@@ -330,15 +346,17 @@ const SkillTreePanel: React.FC = () => {
 
   const activeBranchDefinition = getBranchById(activeBranch);
 
+  console.log('[SkillTreePanel] Render - Active branch:', activeBranch, 'Branch:', activeBranchDefinition.label);
+
   return (
     <section style={panelStyle} aria-labelledby="skill-tree-title">
       <div style={headerStyle}>
         <h2 id="skill-tree-title" style={titleStyle}>Skill Trees</h2>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.25rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={helpTextStyle}>+5 base • +10 tagged</span>
           <span style={pointsBadgeStyle} aria-live="polite">
-            {availablePoints} Skill Points
+            {availablePoints} pts
           </span>
-          <span style={helpTextStyle}>Base increment +5 • Tagged increment +10</span>
         </div>
       </div>
 
@@ -350,14 +368,20 @@ const SkillTreePanel: React.FC = () => {
               key={branch.id}
               type="button"
               role="tab"
+              data-branch-id={branch.id}
+              data-testid={`skill-tab-${branch.id}`}
               ref={(node) => {
                 tabRefs.current[branch.id] = node;
               }}
               aria-selected={selected}
               aria-controls={`skill-branch-${branch.id}`}
               id={`skill-tab-${branch.id}`}
+              tabIndex={0}
               onKeyDown={(event) => handleTabKeyDown(event, branch.id)}
-              onClick={() => switchBranch(branch.id)}
+              onClick={() => {
+                console.log('[SkillTreePanel] Tab clicked:', branch.id, branch.label);
+                switchBranch(branch.id);
+              }}
               style={tabStyle(selected)}
             >
               {branch.label}
@@ -372,13 +396,10 @@ const SkillTreePanel: React.FC = () => {
         aria-labelledby={`skill-tab-${activeBranchDefinition.id}`}
         style={branchContentStyle}
       >
-        <p style={helpTextStyle}>{activeBranchDefinition.blurb}</p>
+        <p style={{ ...helpTextStyle, marginBottom: '0.2rem' }}>{activeBranchDefinition.blurb}</p>
         {activeBranchDefinition.skills.map(renderSkillRow)}
       </div>
 
-      <div style={helpTextStyle}>
-        Spend points with Enter or Space. Arrow keys switch branches. Tagged skills cost one point for +10 instead of +5.
-      </div>
       <div aria-live="polite" style={announcementStyle}>{announcement}</div>
     </section>
   );

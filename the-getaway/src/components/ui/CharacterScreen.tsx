@@ -1,6 +1,5 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import PlayerSummaryPanel from './PlayerSummaryPanel';
-import PlayerStatusPanel from './PlayerStatusPanel';
 import PlayerStatsPanel from './PlayerStatsPanel';
 import SkillTreePanel from './SkillTreePanel';
 import PlayerLoadoutPanel from './PlayerLoadoutPanel';
@@ -22,12 +21,12 @@ const overlayStyle: React.CSSProperties = {
   justifyContent: 'center',
   alignItems: 'center',
   zIndex: 10000,
-  padding: '3vh 4vw',
+  padding: '2vh 3vw',
 };
 
 const shellStyle: React.CSSProperties = {
-  width: 'min(1200px, 100%)',
-  maxHeight: '90vh',
+  width: 'min(1400px, 95%)',
+  maxHeight: '92vh',
   background: 'linear-gradient(160deg, rgba(15, 23, 42, 0.98), rgba(8, 14, 30, 0.92))',
   borderRadius: '18px',
   border: '1px solid rgba(56, 189, 248, 0.25)',
@@ -81,29 +80,32 @@ const closeButtonStyle: React.CSSProperties = {
 const bodyStyle: React.CSSProperties = {
   flex: 1,
   display: 'grid',
-  gridTemplateColumns: '320px 1fr',
-  gap: '1.5rem',
-  padding: '1.5rem',
+  gridTemplateRows: 'auto 1fr',
+  gap: '0.8rem',
+  padding: '1.2rem',
   minHeight: 0,
 };
 
-const leftColumnStyle: React.CSSProperties = {
+const topRowStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateRows: 'auto auto 1fr',
-  gap: '1rem',
+  gridTemplateColumns: 'minmax(320px, 420px) 1fr',
+  gap: '1.2rem',
+  minHeight: 0,
+  flexShrink: 0,
 };
 
-const rightColumnStyle: React.CSSProperties = {
+
+const bottomRowStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateRows: 'auto 1fr',
-  gap: '1rem',
+  gridTemplateColumns: 'minmax(320px, 420px) 1fr',
+  gap: '1.2rem',
   minHeight: 0,
 };
 
 const loadoutRowStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '1rem',
+  gap: '0.8rem',
 };
 
 const skillTreeWrapperStyle: React.CSSProperties = {
@@ -111,13 +113,19 @@ const skillTreeWrapperStyle: React.CSSProperties = {
   border: '1px solid rgba(148, 163, 184, 0.24)',
   background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))',
   boxShadow: '0 18px 30px rgba(15, 23, 42, 0.35)',
-  padding: '1rem',
-  overflow: 'hidden',
+  padding: '0',
+  overflow: 'visible',
+  display: 'flex',
+  flexDirection: 'column',
+  minHeight: 0,
+  position: 'relative',
+  zIndex: 0,
 };
 
 const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape') {
@@ -128,6 +136,11 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   useEffect(() => {
     if (!open) {
       return undefined;
+    }
+
+    // Focus the close button when modal opens
+    if (closeButtonRef.current) {
+      closeButtonRef.current.focus();
     }
 
     document.addEventListener('keydown', handleKeyDown);
@@ -161,21 +174,26 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             </span>
             <span style={subtitleStyle}>{uiStrings.shell.characterSubtitle}</span>
           </div>
-          <button type="button" onClick={onClose} style={closeButtonStyle} data-testid="close-character">
+          <button
+            type="button"
+            onClick={onClose}
+            style={closeButtonStyle}
+            data-testid="close-character"
+            ref={closeButtonRef}
+          >
             Close
           </button>
         </header>
         <div style={bodyStyle}>
-          <div style={leftColumnStyle}>
+          <div style={topRowStyle}>
             <PlayerSummaryPanel showActionButton={false} />
-            <PlayerStatusPanel />
-            <PlayerStatsPanel />
-          </div>
-          <div style={rightColumnStyle}>
             <div style={loadoutRowStyle}>
               <PlayerLoadoutPanel />
               <PlayerInventoryPanel />
             </div>
+          </div>
+          <div style={bottomRowStyle}>
+            <PlayerStatsPanel />
             <div style={skillTreeWrapperStyle}>
               <SkillTreePanel />
             </div>

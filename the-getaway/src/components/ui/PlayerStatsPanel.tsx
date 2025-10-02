@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
@@ -10,46 +10,46 @@ import { spendAttributePoint } from '../../store/playerSlice';
 const containerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.55rem',
+  gap: '0.4rem',
   background: 'rgba(15, 23, 42, 0.6)',
   borderRadius: '12px',
   border: '1px solid rgba(148, 163, 184, 0.18)',
-  padding: '0.65rem 0.75rem',
+  padding: '0.5rem 0.6rem',
   boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.18)',
 };
 
 const headerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.35rem',
+  gap: '0.1rem',
 };
 
 const headingLabelStyle: React.CSSProperties = {
-  fontSize: '0.62rem',
-  letterSpacing: '0.28em',
+  fontSize: '0.5rem',
+  letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: 'rgba(148, 163, 184, 0.72)',
 };
 
 const headingTitleStyle: React.CSSProperties = {
-  fontSize: '0.94rem',
+  fontSize: '0.7rem',
   fontWeight: 600,
-  letterSpacing: '0.05em',
+  letterSpacing: '0.04em',
   color: '#f8fafc',
 };
 
 const statGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: '0.35rem',
+  gap: '0.25rem',
 };
 
 const statRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '0.4rem 0.5rem',
-  borderRadius: '6px',
+  padding: '0.3rem 0.4rem',
+  borderRadius: '5px',
   background: 'rgba(30, 41, 59, 0.4)',
   border: '1px solid rgba(148, 163, 184, 0.12)',
 };
@@ -57,8 +57,8 @@ const statRowStyle: React.CSSProperties = {
 const statLabelStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.4rem',
-  fontSize: '0.7rem',
+  gap: '0.3rem',
+  fontSize: '0.62rem',
   color: '#cbd5e1',
 };
 
@@ -66,18 +66,18 @@ const abbreviationBadgeStyle = (highlightColor: string): React.CSSProperties => 
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '0.1rem 0.3rem',
+  padding: '0.08rem 0.25rem',
   borderRadius: '3px',
-  fontSize: '0.55rem',
+  fontSize: '0.5rem',
   fontWeight: 600,
-  letterSpacing: '0.08em',
+  letterSpacing: '0.06em',
   textTransform: 'uppercase',
   color: '#f8fafc',
   background: highlightColor,
 });
 
 const statValueStyle: React.CSSProperties = {
-  fontSize: '0.9rem',
+  fontSize: '0.75rem',
   fontWeight: 600,
   color: '#f8fafc',
 };
@@ -85,15 +85,15 @@ const statValueStyle: React.CSSProperties = {
 const valueWrapperStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.35rem',
+  gap: '0.25rem',
 };
 
 const attributePointsBannerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.3rem',
-  padding: '0.5rem 0.6rem',
-  borderRadius: '8px',
+  gap: '0.2rem',
+  padding: '0.35rem 0.45rem',
+  borderRadius: '6px',
   border: '1px solid rgba(94, 234, 212, 0.35)',
   background: 'rgba(15, 118, 110, 0.15)',
 };
@@ -105,41 +105,53 @@ const attributePointsHeaderStyle: React.CSSProperties = {
 };
 
 const attributePointsTitleStyle: React.CSSProperties = {
-  fontSize: '0.68rem',
-  letterSpacing: '0.18em',
+  fontSize: '0.58rem',
+  letterSpacing: '0.14em',
   textTransform: 'uppercase',
   color: 'rgba(94, 234, 212, 0.95)',
 };
 
 const attributePointsValueStyle: React.CSSProperties = {
   fontFamily: "'DM Mono', monospace",
-  fontSize: '0.85rem',
+  fontSize: '0.7rem',
   fontWeight: 700,
   color: '#5eead4',
   textShadow: '0 0 6px rgba(94, 234, 212, 0.45)',
 };
 
 const attributePointsHintStyle: React.CSSProperties = {
-  fontSize: '0.7rem',
+  fontSize: '0.58rem',
   color: 'rgba(203, 213, 225, 0.9)',
   margin: 0,
 };
 
 const attributeButtonStyle = (disabled: boolean): React.CSSProperties => ({
-  padding: '0.25rem 0.4rem',
-  borderRadius: '6px',
+  padding: '0.2rem 0.35rem',
+  borderRadius: '5px',
   border: '1px solid rgba(94, 234, 212, 0.6)',
   background: disabled ? 'rgba(148, 163, 184, 0.18)' : 'rgba(94, 234, 212, 0.18)',
   color: disabled ? 'rgba(148, 163, 184, 0.8)' : '#5eead4',
-  fontSize: '0.7rem',
+  fontSize: '0.6rem',
   fontWeight: 600,
-  letterSpacing: '0.08em',
+  letterSpacing: '0.07em',
   textTransform: 'uppercase',
   cursor: disabled ? 'not-allowed' : 'pointer',
   transition: 'all 0.2s ease',
   minWidth: '3.75rem',
   textAlign: 'center',
 });
+
+const warningBannerStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
+  padding: '0.5rem 0.6rem',
+  borderRadius: '8px',
+  border: '1px solid rgba(251, 191, 36, 0.35)',
+  background: 'rgba(217, 119, 6, 0.15)',
+  fontSize: '0.68rem',
+  color: 'rgba(254, 243, 199, 0.95)',
+};
 
 const focusColorMap: Record<PlayerStatFocus, string> = {
   combat: 'linear-gradient(135deg, rgba(239, 68, 68, 0.85), rgba(248, 113, 113, 0.85))',
@@ -158,17 +170,21 @@ const PlayerStatsPanel: React.FC = () => {
   const uiStrings = getUIStrings(locale);
 
   // Calculate effective skills including equipment bonuses
-  const equipmentBonuses = getEquippedBonuses(player);
-  const effectiveSkills = calculateEffectiveSkills(player.skills, equipmentBonuses);
-  const profile = buildPlayerStatProfile(effectiveSkills);
+  const effectiveSkills = useMemo(() => {
+    const equipmentBonuses = getEquippedBonuses(player);
+    return calculateEffectiveSkills(player.skills, equipmentBonuses);
+  }, [player]);
 
-  let derived;
-  try {
-    derived = calculateDerivedStatsWithEquipment(player);
-  } catch (error) {
-    console.warn('[PlayerStatsPanel] Unable to use equipment-aware stats, falling back to base attributes.', error);
-    derived = calculateDerivedStats(player.skills);
-  }
+  const profile = useMemo(() => buildPlayerStatProfile(effectiveSkills), [effectiveSkills]);
+
+  const { derived, equipmentError } = useMemo(() => {
+    try {
+      return { derived: calculateDerivedStatsWithEquipment(player), equipmentError: false };
+    } catch (error) {
+      console.warn('[PlayerStatsPanel] Unable to use equipment-aware stats, falling back to base attributes.', error);
+      return { derived: calculateDerivedStats(player.skills), equipmentError: true };
+    }
+  }, [player]);
 
   const attributePointsAvailable = player.attributePoints;
   const showAttributeBoosters = attributePointsAvailable > 0;
@@ -222,6 +238,13 @@ const PlayerStatsPanel: React.FC = () => {
         <span style={headingLabelStyle}>{uiStrings.playerStatus.attributesLabel}</span>
         <h3 style={headingTitleStyle}>{uiStrings.playerStatus.attributesTitle}</h3>
       </header>
+
+      {equipmentError && (
+        <div style={warningBannerStyle} role="alert">
+          <span>⚠️</span>
+          <span>Equipment stats unavailable. Showing base attributes only.</span>
+        </div>
+      )}
 
       {showAttributeBoosters && (
         <div
@@ -309,4 +332,4 @@ const PlayerStatsPanel: React.FC = () => {
   );
 };
 
-export default PlayerStatsPanel;
+export default React.memo(PlayerStatsPanel);

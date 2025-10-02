@@ -85,6 +85,12 @@ interface PlayerStatusStrings {
   derivedLabel: string;
   derivedTitle: string;
   derivedStats: DerivedStatsStrings;
+  factionReputationLabel: string;
+  factions: {
+    resistance: string;
+    corpsec: string;
+    scavengers: string;
+  };
 }
 
 interface DerivedStatsStrings {
@@ -224,6 +230,12 @@ const STRINGS: Record<Locale, UIStrings> = {
         crit: 'Critical Chance',
         hit: 'Hit Bonus',
         dodge: 'Dodge Bonus',
+      },
+      factionReputationLabel: 'Faction Standing',
+      factions: {
+        resistance: 'Resistance',
+        corpsec: 'CorpSec',
+        scavengers: 'Scavengers',
       },
     },
     miniMap: {
@@ -371,6 +383,12 @@ const STRINGS: Record<Locale, UIStrings> = {
         crit: 'Шанс критичного удару',
         hit: 'Бонус влучності',
         dodge: 'Бонус ухилення',
+      },
+      factionReputationLabel: 'Репутація у фракціях',
+      factions: {
+        resistance: 'Опір',
+        corpsec: 'КорпСек',
+        scavengers: 'Мародери',
       },
     },
     miniMap: {

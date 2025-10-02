@@ -6,8 +6,8 @@ import { getSkillDefinition } from '../../content/skills';
 const panelStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.8rem',
-  padding: '1rem',
+  gap: '0.5rem',
+  padding: '0.6rem 0.7rem',
   borderRadius: '14px',
   border: '1px solid rgba(148, 163, 184, 0.24)',
   background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))',
@@ -17,11 +17,11 @@ const panelStyle: React.CSSProperties = {
 const sectionStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr)',
-  gap: '0.6rem',
+  gap: '0.4rem',
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: '0.78rem',
+  fontSize: '0.65rem',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: '#93c5fd',
@@ -30,28 +30,28 @@ const titleStyle: React.CSSProperties = {
 const cardStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.35rem',
-  padding: '0.75rem 0.85rem',
+  gap: '0.25rem',
+  padding: '0.5rem 0.6rem',
   borderRadius: '10px',
   border: '1px solid rgba(56, 189, 248, 0.25)',
   background: 'rgba(15, 23, 42, 0.6)',
   color: '#e2e8f0',
-  fontSize: '0.75rem',
+  fontSize: '0.65rem',
 };
 
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: '0.82rem',
+  fontSize: '0.7rem',
   fontWeight: 600,
   color: '#f8fafc',
 };
 
 const badgeStyle = (accent: string): React.CSSProperties => ({
   alignSelf: 'flex-start',
-  padding: '0.2rem 0.45rem',
+  padding: '0.15rem 0.35rem',
   borderRadius: '999px',
   border: `1px solid ${accent}`,
   color: accent,
-  fontSize: '0.62rem',
+  fontSize: '0.55rem',
   letterSpacing: '0.08em',
   textTransform: 'uppercase',
 });
@@ -60,24 +60,24 @@ const statRowStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  fontSize: '0.7rem',
+  fontSize: '0.6rem',
   color: 'rgba(226, 232, 240, 0.85)',
 };
 
 const perksListStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '0.35rem',
-  paddingTop: '0.4rem',
+  gap: '0.25rem',
+  paddingTop: '0.3rem',
 };
 
 const perkBadgeStyle: React.CSSProperties = {
-  padding: '0.25rem 0.55rem',
+  padding: '0.2rem 0.4rem',
   borderRadius: '999px',
   border: '1px solid rgba(192, 132, 252, 0.45)',
   background: 'rgba(192, 132, 252, 0.15)',
   color: '#f5f3ff',
-  fontSize: '0.65rem',
+  fontSize: '0.55rem',
   letterSpacing: '0.06em',
 };
 
@@ -106,7 +106,7 @@ const PlayerLoadoutPanel: React.FC = () => {
           </div>
           <div style={statRowStyle}>
             <span>Skill</span>
-            <span>{weapon.skillType ? getSkillDefinition(weapon.skillType).name : '—'}</span>
+            <span>{weapon.skillType ? (getSkillDefinition(weapon.skillType)?.name ?? '—') : '—'}</span>
           </div>
         </>
       ) : (
@@ -152,7 +152,7 @@ const PlayerLoadoutPanel: React.FC = () => {
   );
 
   return (
-    <div style={panelStyle} data-testid="player-loadout-panel">
+    <div style={panelStyle} data-testid="player-loadout-panel" role="region" aria-label="Player Loadout">
       <span style={titleStyle}>Loadout</span>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.9rem' }}>
         {renderWeapon()}
@@ -163,4 +163,4 @@ const PlayerLoadoutPanel: React.FC = () => {
   );
 };
 
-export default PlayerLoadoutPanel;
+export default React.memo(PlayerLoadoutPanel);
