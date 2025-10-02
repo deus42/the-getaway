@@ -15,11 +15,29 @@ export interface Entity {
   maxHealth: number;
 }
 
-// Player specific attributes
+// Skill tree identifiers
+export type SkillBranchId = 'combat' | 'tech' | 'survival' | 'social';
+
+export type CombatSkillId = 'smallGuns' | 'energyWeapons' | 'meleeCombat' | 'explosives';
+export type TechSkillId = 'hacking' | 'engineering' | 'science';
+export type SurvivalSkillId = 'medicine' | 'stealth' | 'scavenging';
+export type SocialSkillId = 'persuasion' | 'intimidation' | 'barter';
+
+export type SkillId =
+  | CombatSkillId
+  | TechSkillId
+  | SurvivalSkillId
+  | SocialSkillId;
+
+export type PlayerSkillValues = Record<SkillId, number>;
+
+// Player entity with core stats, skill tree progress, and equipment
 export interface Player extends Entity {
   actionPoints: number;
   maxActionPoints: number;
   skills: PlayerSkills;
+  skillTraining: PlayerSkillValues;
+  taggedSkillIds: SkillId[];
   level: number;
   experience: number;
   credits: number;

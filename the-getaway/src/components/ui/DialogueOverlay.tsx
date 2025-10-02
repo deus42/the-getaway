@@ -276,54 +276,29 @@ const DialogueOverlay: React.FC = () => {
           gap: "1.2rem",
         }}
       >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <div>
-            <span
-              style={{
-                display: "block",
-                fontSize: "0.72rem",
-                letterSpacing: "0.28em",
-                textTransform: "uppercase",
-                color: "rgba(148, 163, 184, 0.85)",
-                marginBottom: "0.35rem",
-              }}
-            >
-              {dialogue.npcId}
-            </span>
-            <h2
-              style={{
-                fontSize: "1.28rem",
-                fontWeight: 700,
-                margin: 0,
-                color: "#f8fafc",
-              }}
-            >
-              {currentNode?.text ?? "..."}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => dispatch(endDialogue())}
+        <div>
+          <span
             style={{
-              border: "1px solid rgba(94, 234, 212, 0.3)",
-              borderRadius: "999px",
-              padding: "0.45rem 0.85rem",
-              background: "rgba(14, 116, 144, 0.15)",
-              color: "#5eead4",
+              display: "block",
               fontSize: "0.72rem",
-              letterSpacing: "0.18em",
+              letterSpacing: "0.28em",
               textTransform: "uppercase",
-              cursor: "pointer",
+              color: "rgba(148, 163, 184, 0.85)",
+              marginBottom: "0.35rem",
             }}
           >
-            {uiStrings.dialogueOverlay.closeButton}
-          </button>
+            {dialogue.npcId}
+          </span>
+          <h2
+            style={{
+              fontSize: "1.28rem",
+              fontWeight: 700,
+              margin: 0,
+              color: "#f8fafc",
+            }}
+          >
+            {currentNode?.text ?? "..."}
+          </h2>
         </div>
 
         <div

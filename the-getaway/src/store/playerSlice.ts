@@ -16,6 +16,8 @@ const createFreshPlayer = (): Player => ({
   id: uuidv4(),
   position: { ...DEFAULT_PLAYER.position },
   skills: { ...DEFAULT_PLAYER.skills },
+  skillTraining: { ...DEFAULT_PLAYER.skillTraining },
+  taggedSkillIds: [...DEFAULT_PLAYER.taggedSkillIds],
   inventory: {
     items: [],
     maxWeight: DEFAULT_PLAYER.inventory.maxWeight,
