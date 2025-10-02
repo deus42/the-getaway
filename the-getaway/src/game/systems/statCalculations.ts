@@ -150,7 +150,14 @@ export const skillCheckPasses = (
   threshold: number,
   bonus: number = 0
 ): boolean => {
-  return attributeValue + bonus >= threshold;
+  // Validate inputs are finite numbers
+  if (!Number.isFinite(attributeValue) || !Number.isFinite(threshold) || !Number.isFinite(bonus)) {
+    console.warn('[StatCalculations] Invalid skill check parameters:', { attributeValue, threshold, bonus });
+    return false;
+  }
+
+  const total = attributeValue + bonus;
+  return total >= threshold;
 };
 
 /**
