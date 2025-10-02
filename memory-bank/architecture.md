@@ -48,6 +48,10 @@ Dedicated folder for reusable React UI components, separate from core game logic
 
 - **`PlayerStatusPanel.tsx`**: Displays player vitals, action points, hostile counts, and curfew state using Redux data.
 - **`LogPanel.tsx`**: Displays a scrolling list of game events and messages, reading data from the Redux `logSlice`.
+- **`PlayerSummaryPanel.tsx`**: Compact HUD card showing the operative's vitals, currency, and point pools with a CTA that opens the full character screen.
+- **`CharacterScreen.tsx`**: Pip-boy style modal that presents the detailed profile (status panel, detailed stats, skill tree). Toggled via the HUD button or the `C` key and reuses existing components inside a scrollable shell.
+- **`PlayerLoadoutPanel.tsx`**: Summarises equipped weapon/armor alongside perk badges; used inside the character screen.
+- **`PlayerInventoryPanel.tsx`**: Displays carried items, weight totals, and overflow count within the character screen without introducing additional scroll containers.
 - **`MiniMap.tsx`**: Renders a tactical overview of the current map with player/enemy markers, cover overlays, and curfew perimeter glow.
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
@@ -170,6 +174,7 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 <pattern name="Allocation Flow">
 - <code_location>src/store/playerSlice.ts</code_location> exposes `allocateSkillPointToSkill` / `refundSkillPointFromSkill`, using `getSkillDefinition` to determine increments and max caps; tagged skills simply swap to the +10 increment.
 - <code_location>src/components/ui/SkillTreePanel.tsx</code_location> renders the tabbed UI, dispatches those actions, and pulls effect previews from <code_location>src/game/systems/skillTree.ts</code_location> while announcing updates via `aria-live` for screen readers.
+- <code_location>src/components/ui/CharacterScreen.tsx</code_location> wraps the panel in a modal overlay (���� toggled by the HUD button or `C`) so detailed allocation lives off the main HUD while reusing `PlayerStatusPanel` and `PlayerStatsPanel` within the same layout.
 - Regression tests in <code_location>src/__tests__/playerSlice.test.ts</code_location> and <code_location>src/__tests__/SkillTreePanel.test.tsx</code_location> lock down spend/refund behaviour and UI wiring.
 </pattern>
 

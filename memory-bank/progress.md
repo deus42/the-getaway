@@ -117,6 +117,10 @@ UI lock/unlock behaviour for skill-based dialogue options
 - Perk unlock handling remains deferred to Step 24.3.
 - Future work: expose allocated skill totals inside PlayerStatsPanel and thread skill training into future world interactions (lockpicks, hacking consoles).
 </notes>
+<maintenance_notes date="October 3, 2025">
+- Simplified the left HUD column to a recon map plus a compact player summary card; moved detailed stats/skill allocation into the new Character Screen overlay (launchable via HUD button or `C`).
+- Reused existing status panels inside the modal, layered in loadout/inventory summaries, surfaced branch skill totals back in the HUD, and added tests covering the new toggle flow.
+</maintenance_notes>
 </step>
 
 <step id="2" status="completed">

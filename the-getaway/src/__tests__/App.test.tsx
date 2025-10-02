@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import App from "../App";
 import { PERSISTED_STATE_KEY, resetGame, store } from "../store";
 
@@ -88,5 +88,34 @@ describe("App component", () => {
     fireEvent.click(continueButton);
     expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
     expect(screen.getByTestId("game-canvas")).toBeInTheDocument();
+  });
+
+  it('opens and closes the character screen', async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByTestId('start-new-game'));
+    await completeCharacterCreation();
+
+    const characterButton = screen.getByTestId('summary-open-character');
+    fireEvent.click(characterButton);
+
+    const characterScreen = await screen.findByTestId('character-screen');
+    expect(characterScreen).toBeInTheDocument();
+
+    const closeButton = screen.getByTestId('close-character');
+    fireEvent.click(closeButton);
+    expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument();
+
+    fireEvent.click(characterButton);
+    expect(await screen.findByTestId('character-screen')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument());
+
+    fireEvent.click(characterButton);
+    expect(await screen.findByTestId('character-screen')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'c' });
+    await waitFor(() => expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument());
   });
 });

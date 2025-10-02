@@ -2,9 +2,7 @@ import { Provider, useSelector } from "react-redux";
 import { CSSProperties, useEffect, useState } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
-import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
-import PlayerStatsPanel from "./components/ui/PlayerStatsPanel";
-import SkillTreePanel from "./components/ui/SkillTreePanel";
+import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
 import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
@@ -16,6 +14,7 @@ import TurnTracker from "./components/ui/TurnTracker";
 import CharacterCreationScreen, { CharacterCreationData } from "./components/ui/CharacterCreationScreen";
 import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
+import CharacterScreen from "./components/ui/CharacterScreen";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
 import { initializeCharacter } from "./store/playerSlice";
@@ -110,10 +109,6 @@ const scrollSectionStyle: CSSProperties = {
 };
 
 const menuButtonStyle: CSSProperties = {
-  position: "absolute",
-  top: "1.5rem",
-  right: "1.5rem",
-  zIndex: 2,
   padding: "0.65rem 1.35rem",
   borderRadius: "9999px",
   border: "1px solid rgba(56, 189, 248, 0.55)",
@@ -127,6 +122,13 @@ const menuButtonStyle: CSSProperties = {
   boxShadow: "0 18px 32px rgba(37, 99, 235, 0.3)",
 };
 
+const menuButtonWrapperStyle: CSSProperties = {
+  position: "absolute",
+  top: "1.5rem",
+  right: "1.5rem",
+  zIndex: 2,
+};
+
 const centerStageStyle: CSSProperties = {
   width: "60%",
   height: "100%",
@@ -136,24 +138,28 @@ const centerStageStyle: CSSProperties = {
 
 interface CommandShellProps {
   onOpenMenu: () => void;
+  onToggleCharacter: () => void;
   showMenu: boolean;
+  characterOpen: boolean;
 }
 
-const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, showMenu }) => {
+const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharacter, showMenu, characterOpen }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
 
   return (
     <>
       {!showMenu && (
-        <button
-          type="button"
-          onClick={onOpenMenu}
-          data-testid="open-menu"
-          style={menuButtonStyle}
-        >
-          {uiStrings.shell.menuButton}
-        </button>
+        <div style={menuButtonWrapperStyle}>
+          <button
+            type="button"
+            onClick={onOpenMenu}
+            data-testid="open-menu"
+            style={menuButtonStyle}
+          >
+            {uiStrings.shell.menuButton}
+          </button>
+        </div>
       )}
       <div style={mainStageStyle}>
         <div style={leftSidebarStyle}>
@@ -173,24 +179,7 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, showMenu }) => 
                 gap: "1rem",
               }}
             >
-              <PlayerStatusPanel />
-              <PlayerStatsPanel />
-            </div>
-          </div>
-          <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-            <span style={panelLabelStyle("#f97316")}>{uiStrings.shell.skillsLabel}</span>
-            <h2 style={panelTitleStyle}>{uiStrings.shell.skillsTitle}</h2>
-            <div
-              style={{
-                ...scrollSectionStyle,
-                display: "flex",
-                flexDirection: "column",
-                gap: "1rem",
-              }}
-            >
-              <div style={{ flex: '1 1 auto', minHeight: 0 }}>
-                <SkillTreePanel />
-              </div>
+              <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
             </div>
           </div>
         </div>
@@ -246,6 +235,7 @@ function App() {
     perksUnlocked: number;
   } | null>(null);
   const [xpNotifications, setXpNotifications] = useState<XPNotificationData[]>([]);
+  const [showCharacterScreen, setShowCharacterScreen] = useState(false);
 
   useEffect(() => {
     console.log("[App] Component mounted");
@@ -264,6 +254,23 @@ function App() {
 
     setHasSavedGame(hasPersistedGame());
   }, [showMenu, gameStarted]);
+
+  useEffect(() => {
+    if (showMenu || showCharacterCreation) {
+      setShowCharacterScreen(false);
+    }
+  }, [showMenu, showCharacterCreation]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() === 'c' && gameStarted && !showMenu && !showCharacterCreation) {
+        setShowCharacterScreen((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameStarted, showMenu, showCharacterCreation]);
 
   const handleStartNewGame = () => {
     setShowMenu(false);
@@ -308,6 +315,17 @@ function App() {
     setShowMenu(true);
   };
 
+  const handleToggleCharacterScreen = () => {
+    if (!gameStarted || showMenu || showCharacterCreation) {
+      return;
+    }
+    setShowCharacterScreen((prev) => !prev);
+  };
+
+  const handleCloseCharacterScreen = () => {
+    setShowCharacterScreen(false);
+  };
+
   const handleLevelUpContinue = () => {
     setLevelUpData(null);
   };
@@ -320,7 +338,12 @@ function App() {
     <Provider store={store}>
       <div style={layoutShellStyle}>
         {gameStarted && (
-          <CommandShell onOpenMenu={handleOpenMenu} showMenu={showMenu} />
+          <CommandShell
+            onOpenMenu={handleOpenMenu}
+            onToggleCharacter={handleToggleCharacterScreen}
+            showMenu={showMenu}
+            characterOpen={showCharacterScreen}
+          />
         )}
       </div>
       {showMenu && (
@@ -345,6 +368,7 @@ function App() {
           onContinue={handleLevelUpContinue}
         />
       )}
+      <CharacterScreen open={showCharacterScreen} onClose={handleCloseCharacterScreen} />
       <XPNotificationManager
         notifications={xpNotifications}
         onDismiss={handleDismissXPNotification}

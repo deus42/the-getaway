@@ -48,11 +48,12 @@ interface ShellStrings {
   reconTitle: string;
   squadLabel: string;
   squadTitle: string;
-  skillsLabel: string;
-  skillsTitle: string;
   telemetryLabel: string;
   telemetryTitle: string;
   menuButton: string;
+  characterButton: string;
+  characterTitle: string;
+  characterSubtitle: string;
 }
 
 interface PlayerStatusStrings {
@@ -177,11 +178,12 @@ const STRINGS: Record<Locale, UIStrings> = {
       reconTitle: 'Tactical Feed',
       squadLabel: 'Squad',
       squadTitle: 'Recon Status',
-      skillsLabel: 'Training',
-      skillsTitle: 'Skill Allocation',
       telemetryLabel: 'Telemetry',
       telemetryTitle: 'Action Log',
       menuButton: 'Menu',
+      characterButton: 'Character',
+      characterTitle: 'Operative Profile',
+      characterSubtitle: 'Stats • Skills • Loadout',
     },
     playerStatus: {
       vitalsLabel: 'Vital Status',
@@ -323,11 +325,12 @@ const STRINGS: Record<Locale, UIStrings> = {
       reconTitle: 'Тактичний канал',
       squadLabel: 'Загін',
       squadTitle: 'Зведення розвідки',
-      skillsLabel: 'Тренування',
-      skillsTitle: 'Розподіл навичок',
       telemetryLabel: 'Телеметрія',
       telemetryTitle: 'Журнал дій',
       menuButton: 'Меню',
+      characterButton: 'Профіль',
+      characterTitle: 'Профіль оперативника',
+      characterSubtitle: 'Стати • Навички • Спорядження',
     },
     playerStatus: {
       vitalsLabel: 'Стан бійця',
