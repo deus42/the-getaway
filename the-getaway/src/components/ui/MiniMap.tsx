@@ -274,6 +274,9 @@ const MiniMap: React.FC = () => {
   const tileCacheRef = useRef<TileCache>(createTileCache());
   const canvasSizeRef = useRef<{ width: number; height: number }>({ width: 140, height: 110 });
   const latestStateRef = useRef<MiniMapStateDetail | null>(miniMapService.getState());
+  const draggingRef = useRef(false);
+  const dragMovedRef = useRef(false);
+  const lastDragUpdateRef = useRef(0);
 
   const [renderTick, setRenderTick] = useState(0);
   const [canvasSize, setCanvasSize] = useState(canvasSizeRef.current);
@@ -358,11 +361,11 @@ const MiniMap: React.FC = () => {
     drawViewport(ctx, activeState);
   }, [renderTick, locale]);
 
-  const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+  const resolveGridFromEvent = (event: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
     const state = latestStateRef.current;
     const canvas = canvasRef.current;
     if (!state || !canvas) {
-      return;
+      return null;
     }
 
     const rect = canvas.getBoundingClientRect();
@@ -374,12 +377,58 @@ const MiniMap: React.FC = () => {
     const gridY = Math.floor(y / scale);
     const clampedX = Math.max(0, Math.min(state.mapWidth - 1, gridX));
     const clampedY = Math.max(0, Math.min(state.mapHeight - 1, gridY));
+    return { gridX: clampedX, gridY: clampedY };
+  };
 
+  const focusCamera = (coords: { gridX: number; gridY: number } | null, animate: boolean) => {
+    if (!coords) {
+      return;
+    }
     miniMapService.emitInteraction({
       type: MINIMAP_VIEWPORT_CLICK_EVENT,
-      gridX: clampedX,
-      gridY: clampedY,
+      gridX: coords.gridX,
+      gridY: coords.gridY,
+      animate,
     });
+  };
+
+  const handleCanvasMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (event.button !== 0) {
+      return;
+    }
+    draggingRef.current = true;
+    dragMovedRef.current = false;
+    lastDragUpdateRef.current = performance.now();
+    focusCamera(resolveGridFromEvent(event), false);
+  };
+
+  const handleCanvasMouseMove = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggingRef.current) {
+      return;
+    }
+    const now = performance.now();
+    if (now - lastDragUpdateRef.current < 40) {
+      return;
+    }
+    lastDragUpdateRef.current = now;
+    dragMovedRef.current = true;
+    focusCamera(resolveGridFromEvent(event), false);
+  };
+
+  const handleCanvasMouseUp = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggingRef.current) {
+      return;
+    }
+    const coords = resolveGridFromEvent(event);
+    const shouldAnimate = !dragMovedRef.current;
+    draggingRef.current = false;
+    dragMovedRef.current = false;
+    focusCamera(coords, shouldAnimate);
+  };
+
+  const handleCanvasMouseLeave = () => {
+    draggingRef.current = false;
+    dragMovedRef.current = false;
   };
 
   const activeState = latestStateRef.current;
@@ -453,7 +502,11 @@ const MiniMap: React.FC = () => {
       >
         <canvas
           ref={canvasRef}
-          onClick={handleCanvasClick}
+          onMouseDown={handleCanvasMouseDown}
+          onMouseMove={handleCanvasMouseMove}
+          onMouseUp={handleCanvasMouseUp}
+          onMouseLeave={handleCanvasMouseLeave}
+          onContextMenu={(event) => event.preventDefault()}
           style={{
             display: 'block',
             width: `${canvasSize.width}px`,

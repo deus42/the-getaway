@@ -26,6 +26,7 @@ export interface ViewportUpdateDetail {
 export interface MinimapViewportClickDetail {
   gridX: number;
   gridY: number;
+  animate?: boolean;
 }
 
 export type MiniMapInteractionDetail =

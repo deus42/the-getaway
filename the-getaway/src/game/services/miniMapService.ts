@@ -186,7 +186,8 @@ class MiniMapService extends EventTarget {
     }
 
     if (detail.type === MINIMAP_VIEWPORT_CLICK_EVENT) {
-      this.scene.focusCameraOnGridPosition(detail.gridX, detail.gridY, true);
+      const animate = detail.animate ?? true;
+      this.scene.focusCameraOnGridPosition(detail.gridX, detail.gridY, animate);
     }
   }
 
