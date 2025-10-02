@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel } from '../interfaces/types';
+import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel, Item } from '../interfaces/types';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
@@ -8,7 +8,7 @@ import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail, ViewportUpdate
 import { IsoObjectFactory, CharacterToken } from '../utils/IsoObjectFactory';
 import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, adjustColor as isoAdjustColor, IsoMetrics } from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
-import { LevelBuildingDefinition } from '../../content/levels/level0/types';
+import { LevelBuildingDefinition, BuildingSignageStyle } from '../../content/levels/level0/types';
 import { miniMapService } from '../services/miniMapService';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
@@ -19,6 +19,50 @@ const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number
   [TileType.DOOR]: { even: 0x2a2622, odd: 0x221e1b },
   [TileType.FLOOR]: { even: 0x1e2432, odd: 0x232838 },
   DEFAULT: { even: 0x1e2432, odd: 0x232838 },
+};
+
+const SIGNAGE_STYLE_CONFIG: Record<BuildingSignageStyle | 'default', {
+  base: number;
+  glow: number;
+  text: number;
+  support: number;
+  stroke: number;
+}> = {
+  default: {
+    base: 0x101828,
+    glow: 0x38bdf8,
+    text: 0xf8fafc,
+    support: 0x1f2937,
+    stroke: 0x7dd3fc,
+  },
+  slums_scrap: {
+    base: 0x1f1b16,
+    glow: 0xfb923c,
+    text: 0xfff3c4,
+    support: 0x31261d,
+    stroke: 0xfdba74,
+  },
+  slums_neon: {
+    base: 0x111c33,
+    glow: 0x22d3ee,
+    text: 0xe0f2fe,
+    support: 0x1f2a3f,
+    stroke: 0x38bdf8,
+  },
+  corp_holo: {
+    base: 0x101a2c,
+    glow: 0x60a5fa,
+    text: 0xf8fafc,
+    support: 0x1c2438,
+    stroke: 0xa5b4fc,
+  },
+  corp_brass: {
+    base: 0x2d1f16,
+    glow: 0xfbbf24,
+    text: 0xfff7ed,
+    support: 0x3a2414,
+    stroke: 0xfde68a,
+  },
 };
 
 const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
@@ -295,28 +339,127 @@ export class MainScene extends Phaser.Scene {
     if (!this.staticPropGroup) {
       this.staticPropGroup = this.add.group();
     }
-
-    const props = [
-      this.isoFactory.createCrate(12, 20, { tint: 0x8d5524, height: 0.6, scale: 0.52 }),
-      this.isoFactory.createCrate(9, 18, { tint: 0x3f3f46, height: 0.55, scale: 0.48, alpha: 0.95 }),
-      this.isoFactory.createHighlightDiamond(12, 20, {
-        color: 0x38bdf8,
-        alpha: 0.22,
-        widthScale: 0.82,
-        heightScale: 0.82,
-      }),
-      this.isoFactory.createHighlightDiamond(9, 18, {
-        color: 0xf97316,
-        alpha: 0.18,
-        widthScale: 0.74,
-        heightScale: 0.74,
-      }),
-    ];
-
-    props.forEach((prop) => {
-      if (prop) {
-        this.staticPropGroup?.add(prop);
+    const addProp = (prop?: Phaser.GameObjects.GameObject | null) => {
+      if (!prop) {
+        return;
       }
+      this.staticPropGroup?.add(prop);
+    };
+
+    const districtFallback = (building: LevelBuildingDefinition): 'slums' | 'downtown' => {
+      const threshold = Math.floor(this.currentMapArea!.height / 2);
+      const anchor = building.footprint.from.y;
+      return anchor >= threshold ? 'slums' : 'downtown';
+    };
+
+    this.buildingDefinitions.forEach((building) => {
+      const door = building.door;
+      if (!door) {
+        return;
+      }
+
+      const district = building.district ?? districtFallback(building);
+      const density = building.propDensity ?? 'medium';
+      const forward = { x: door.x, y: door.y + 1 };
+
+      if (district === 'slums') {
+        addProp(
+          this.isoFactory!.createHighlightDiamond(forward.x, forward.y, {
+            color: 0xf97316,
+            alpha: 0.2,
+            widthScale: 0.88,
+            heightScale: 0.88,
+          })
+        );
+        addProp(this.isoFactory!.createBarricade(forward.x, forward.y, { tint: 0x4b5563 }));
+
+        if (density !== 'low') {
+          addProp(
+            this.isoFactory!.createCrate(forward.x - 1, forward.y, {
+              tint: 0x8d5524,
+              height: 0.5,
+              scale: 0.48,
+            })
+          );
+        }
+
+        if (density === 'high') {
+          addProp(
+            this.isoFactory!.createCrate(forward.x + 1, forward.y + 1, {
+              tint: 0x3f3f46,
+              height: 0.55,
+              scale: 0.46,
+              alpha: 0.92,
+            })
+          );
+        }
+      } else {
+        addProp(
+          this.isoFactory!.createHighlightDiamond(forward.x, forward.y, {
+            color: 0x38bdf8,
+            alpha: 0.18,
+            widthScale: 0.95,
+            heightScale: 0.95,
+          })
+        );
+        addProp(
+          this.isoFactory!.createStreetLight(forward.x, forward.y, {
+            poleColor: 0x1e293b,
+            glowColor: 0x60a5fa,
+            glowAlpha: 0.26,
+          })
+        );
+
+        if (density !== 'low') {
+          addProp(
+            this.isoFactory!.createBillboard(forward.x + 1, forward.y, {
+              baseColor: 0x111827,
+              glowColor: 0x38bdf8,
+              panelColor: 0x1d4ed8,
+              accentColor: 0x60a5fa,
+            })
+          );
+        }
+
+        if (density === 'high') {
+          addProp(
+            this.isoFactory!.createHighlightDiamond(forward.x - 1, forward.y + 1, {
+              color: 0x93c5fd,
+              alpha: 0.14,
+              widthScale: 0.8,
+              heightScale: 0.8,
+            })
+          );
+        }
+      }
+    });
+
+    const interactiveNpcs = (this.currentMapArea.entities.npcs ?? []).filter((npc) => npc.isInteractive);
+    interactiveNpcs.forEach((npc) => {
+      addProp(
+        this.isoFactory!.createHighlightDiamond(npc.position.x, npc.position.y, {
+          color: 0x22d3ee,
+          alpha: 0.16,
+          widthScale: 0.62,
+          heightScale: 0.62,
+        })
+      );
+    });
+
+    const itemMarkers = (this.currentMapArea.entities.items ?? []).filter(
+      (item): item is Item & { position: Position } => Boolean(item.position)
+    );
+
+    itemMarkers.forEach((item) => {
+      const color = item.isQuestItem ? 0xfacc15 : 0x10b981;
+      addProp(
+        this.isoFactory!.createHighlightDiamond(item.position.x, item.position.y, {
+          color,
+          alpha: 0.24,
+          widthScale: 0.7,
+          heightScale: 0.7,
+        })
+      );
     });
   }
   
@@ -766,14 +909,16 @@ export class MainScene extends Phaser.Scene {
 
       const container = this.add.container(pixelPos.x, pixelPos.y - signHeight);
 
+      const signageStyle = SIGNAGE_STYLE_CONFIG[building.signageStyle ?? 'default'];
+
       const support = this.add.graphics();
-      support.lineStyle(2, 0x0f172a, 0.8);
+      support.lineStyle(2, signageStyle.support, 0.82);
       support.lineBetween(-panelWidth * 0.08, panelHeight * 0.95, -panelWidth * 0.18, panelHeight * 1.55);
       support.lineBetween(panelWidth * 0.08, panelHeight * 0.95, panelWidth * 0.18, panelHeight * 1.55);
 
       const panel = this.add.graphics();
-      const baseColor = 0x0f172a;
-      const glowColor = 0x38bdf8;
+      const baseColor = signageStyle.base;
+      const glowColor = signageStyle.glow;
       const panelPoints = [
         new Phaser.Geom.Point(-panelWidth / 2, 0),
         new Phaser.Geom.Point(panelWidth / 2, -panelHeight * 0.18),
@@ -794,12 +939,12 @@ export class MainScene extends Phaser.Scene {
         fontSize: '14px',
         fontFamily: 'Orbitron, "DM Sans", sans-serif',
         fontStyle: '700',
-        color: this.colorToHex(0xe0f2fe),
+        color: this.colorToHex(signageStyle.text),
         align: 'center',
         fixedWidth: panelWidth * 0.82,
       });
       label.setOrigin(0.5, 0.5);
-      label.setStroke(this.colorToHex(glowColor), 1.4);
+      label.setStroke(this.colorToHex(signageStyle.stroke), 1.4);
       label.setShadow(0, 0, this.colorToHex(glowColor), 10, true, true);
       label.setBlendMode(Phaser.BlendModes.ADD);
 

@@ -1,11 +1,25 @@
 import { Dialogue, Quest, NPC, Item, Position } from '../../../game/interfaces/types';
 
+export type BuildingSignageStyle =
+  | 'slums_scrap'
+  | 'slums_neon'
+  | 'corp_holo'
+  | 'corp_brass';
+
+export type BuildingDistrict = 'slums' | 'downtown';
+
+export type PropDensityTier = 'low' | 'medium' | 'high';
+
 export interface LevelBuildingDefinition {
   id: string;
   name: string;
   footprint: { from: Position; to: Position };
   door: Position;
   interior: { width: number; height: number };
+  district?: BuildingDistrict;
+  signageStyle?: BuildingSignageStyle;
+  propDensity?: PropDensityTier;
+  encounterProfile?: string;
 }
 
 export interface Level0LocaleContent {

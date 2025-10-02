@@ -533,6 +533,7 @@ describe('playerSlice', () => {
         apCost: 3,
         isQuestItem: false,
         slot: 'weapon',
+        skillType: 'smallGuns',
       };
 
       store.dispatch(addItem(weapon));
@@ -566,6 +567,7 @@ describe('playerSlice', () => {
         apCost: 3,
         isQuestItem: false,
         slot: 'weapon',
+        skillType: 'smallGuns',
       };
 
       const weapon2: Weapon = {
@@ -579,6 +581,7 @@ describe('playerSlice', () => {
         apCost: 4,
         isQuestItem: false,
         slot: 'weapon',
+        skillType: 'smallGuns',
       };
 
       store.dispatch(addItem(weapon1));
@@ -614,6 +617,7 @@ describe('playerSlice', () => {
         apCost: 3,
         isQuestItem: false,
         slot: 'weapon',
+        skillType: 'smallGuns',
       };
 
       store.dispatch(addItem(weapon));

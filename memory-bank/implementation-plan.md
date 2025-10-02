@@ -248,6 +248,33 @@ Scale the city into a contiguous grid with explorable interiors and richer popul
 Walk from the Slums into multiple interiors and back, verifying map redraws, player repositioning, and enemy persistence without scene restarts.
 </test>
 </step>
+
+<step id="11.5">
+<step_metadata>
+  <number>11.5</number>
+  <title>Implement Downtown/Slums Overhaul</title>
+  <phase>Phase 4: Command & City Systems</phase>
+</step_metadata>
+
+<instructions>
+Implement the Downtown/Slums world-area overhaul so the city plays and reads differently per district.
+</instructions>
+
+<details>
+- **District differentiation**
+  - Extend `LevelBuildingDefinition` metadata with district, signage style, prop density, and encounter profile hints; regenerate the map to drop reclaimed cover clusters around slum doors and planter-style cover on downtown boulevards.
+- **Environmental dressing**
+  - Expand `IsoObjectFactory` with barricades, streetlights, and billboard props, then spawn them per building density while adding neon sidewalk overlays and signage palettes driven by style tags.
+- **Population & loot**
+  - Seed new interactive NPCs (Firebrand Juno, Seraph Warden, Drone Handler Kesh) with routines and dialogue, and place new lootables with explicit street coordinates so players see physical pickups.
+- **Traversal & readability tuning**
+  - Refresh cover spot data, highlight interactive NPCs/items in `MainScene`, and ensure new environmental dressing keeps pathfinding intact while strengthening combat sightlines.
+</details>
+
+<test>
+Walk both districts and confirm signage palettes change per building, new props occupy streets without blocking traversal, additional NPCs spawn with dialogue, and seeded items display ground highlights while remaining reachable.
+</test>
+</step>
 </phase>
 
 <phase id="5" name="Narrative and Quest Layer">

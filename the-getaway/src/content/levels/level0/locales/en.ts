@@ -176,6 +176,146 @@ export const level0EnglishContent: Level0LocaleContent = {
         },
       ],
     },
+    {
+      id: 'npc_firebrand_juno',
+      npcId: 'Firebrand Juno',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Juno coaxes sparks from an oil drum brazier, goggles fogged with humidity. "Whole district’s a pressure cooker. Either we vent it or we blow with it."',
+          options: [
+            {
+              text: 'Show me how you’re holding the barricades.',
+              nextNodeId: 'defense',
+            },
+            {
+              text: 'I can spare supplies if you aim them right.',
+              nextNodeId: 'supplies',
+              skillCheck: {
+                skill: 'charisma',
+                threshold: 7,
+              },
+            },
+            {
+              text: 'Keep the coals hot, Juno.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'defense',
+          text: '"Slums grids funnel patrols into three kill boxes." She sketches alley routes in ash. "You jam drones on the Transit Node roof, and I’ll spring the ambushers."',
+          options: [
+            {
+              text: 'Mark the jammer sweet spots for me.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'supplies',
+          text: '"A brave tongue. I’ll trade your goodwill for explosive gel and field dressings." Her grin flashes neon. "We keep the gel; the medics get the rest."',
+          options: [
+            {
+              text: 'Deal. Keep the rebels mended.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_seraph_warden',
+      npcId: 'Seraph Warden',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Seraph’s chrome mask reflects the holo-billboards overhead. "Downtown is a cathedral of compliance. You breathe here because I allow it."',
+          options: [
+            {
+              text: 'Cathedrals fall when the choir walks.',
+              nextNodeId: 'warning',
+            },
+            {
+              text: 'Your drones are glitching near the Aerostat Docks.',
+              nextNodeId: 'maintenance',
+              skillCheck: {
+                skill: 'intelligence',
+                threshold: 8,
+              },
+            },
+            {
+              text: 'Just passing through.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'warning',
+          text: '"Rebellion is an unpaid invoice." The warden’s hand drifts toward a stun baton. "Settle it before audit night or the balance compounds."',
+          options: [
+            {
+              text: 'Invoice accepted. Collection denied.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'maintenance',
+          text: '"That anomaly is classified." The warden’s visor flickers. "Still, containment trumps ego. Mark the fault and I’ll schedule a recalibration."',
+          options: [
+            {
+              text: 'Send fewer drones and they might last longer.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_drone_handler_kesh',
+      npcId: 'Drone Handler Kesh',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Kesh kneels beside a gutted recon drone, soldering iron in hand. "Corp code sings in one key. Change the chorus, change the march."',
+          options: [
+            {
+              text: 'Could you spoof a patrol to guard my people instead?',
+              nextNodeId: 'spoof',
+            },
+            {
+              text: 'Sell me a jammer that won’t fry my rig.',
+              nextNodeId: 'jammer',
+            },
+            {
+              text: 'Carry on, maestro.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'spoof',
+          text: '"Feed me their route ledger and I’ll flip a drone’s friend-or-foe." Kesh snaps a cartridge into the chassis. "One night only before they patch."',
+          options: [
+            {
+              text: 'I’ll bring you patrol telemetry.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'jammer',
+          text: '"You want finesse, you pay finesse." She slides a wafer-thin disk across the workbench. "Stick it under a skybridge strut for maximum bleed."',
+          options: [
+            {
+              text: 'Consider it purchased.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
   ],
   quests: [
     {
@@ -318,6 +458,45 @@ export const level0EnglishContent: Level0LocaleContent = {
       dialogueId: 'npc_courier_brant',
       isInteractive: true,
     },
+    {
+      name: 'Firebrand Juno',
+      position: { x: 32, y: 74 },
+      health: 18,
+      maxHealth: 18,
+      routine: [
+        { position: { x: 32, y: 74 }, timeOfDay: 'day', duration: 200 },
+        { position: { x: 28, y: 80 }, timeOfDay: 'evening', duration: 200 },
+        { position: { x: 36, y: 72 }, timeOfDay: 'night', duration: 200 },
+      ],
+      dialogueId: 'npc_firebrand_juno',
+      isInteractive: true,
+    },
+    {
+      name: 'Seraph Warden',
+      position: { x: 84, y: 28 },
+      health: 24,
+      maxHealth: 24,
+      routine: [
+        { position: { x: 84, y: 28 }, timeOfDay: 'day', duration: 220 },
+        { position: { x: 90, y: 22 }, timeOfDay: 'evening', duration: 220 },
+        { position: { x: 76, y: 30 }, timeOfDay: 'night', duration: 220 },
+      ],
+      dialogueId: 'npc_seraph_warden',
+      isInteractive: true,
+    },
+    {
+      name: 'Drone Handler Kesh',
+      position: { x: 54, y: 64 },
+      health: 14,
+      maxHealth: 14,
+      routine: [
+        { position: { x: 54, y: 64 }, timeOfDay: 'day', duration: 210 },
+        { position: { x: 50, y: 58 }, timeOfDay: 'evening', duration: 210 },
+        { position: { x: 60, y: 66 }, timeOfDay: 'night', duration: 210 },
+      ],
+      dialogueId: 'npc_drone_handler_kesh',
+      isInteractive: true,
+    },
   ],
   itemBlueprints: [
     {
@@ -348,6 +527,20 @@ export const level0EnglishContent: Level0LocaleContent = {
       value: 30,
       isQuestItem: false,
     },
+    {
+      name: 'Saboteur Charge Kit',
+      description: 'Compact gel charges bundled with timed igniters. Favored for collapsing curfew barricades.',
+      weight: 1.5,
+      value: 180,
+      isQuestItem: false,
+    },
+    {
+      name: 'Holo Projector Lens',
+      description: 'A prismatic lens ripped from a corporate holo-billboard. Can spoof patrol IDs when paired with the right codec.',
+      weight: 0.3,
+      value: 220,
+      isQuestItem: false,
+    },
   ],
   buildingDefinitions: [
     {
@@ -356,6 +549,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 4 }, to: { x: 23, y: 19 } },
       door: { x: 13, y: 20 },
       interior: { width: 20, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_waterfront',
     },
     {
       id: 'block_1_2',
@@ -363,6 +560,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 4 }, to: { x: 59, y: 19 } },
       door: { x: 43, y: 20 },
       interior: { width: 26, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'high',
+      encounterProfile: 'downtown_market_patrol',
     },
     {
       id: 'block_1_3',
@@ -370,6 +571,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 4 }, to: { x: 95, y: 19 } },
       door: { x: 79, y: 20 },
       interior: { width: 26, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_public_forum',
     },
     {
       id: 'block_1_4',
@@ -377,6 +582,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 4 }, to: { x: 131, y: 19 } },
       door: { x: 115, y: 20 },
       interior: { width: 28, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_civic_square',
     },
     {
       id: 'block_2_1',
@@ -384,6 +593,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 22 }, to: { x: 23, y: 43 } },
       door: { x: 13, y: 44 },
       interior: { width: 18, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_residential',
     },
     {
       id: 'block_2_2',
@@ -391,6 +604,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 22 }, to: { x: 59, y: 43 } },
       door: { x: 43, y: 44 },
       interior: { width: 26, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'high',
+      encounterProfile: 'downtown_market_inner',
     },
     {
       id: 'block_2_3',
@@ -398,6 +615,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 22 }, to: { x: 95, y: 43 } },
       door: { x: 79, y: 44 },
       interior: { width: 26, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'high',
+      encounterProfile: 'downtown_exec_patrol',
     },
     {
       id: 'block_2_4',
@@ -405,6 +626,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 22 }, to: { x: 131, y: 43 } },
       door: { x: 115, y: 44 },
       interior: { width: 28, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_registry',
     },
     {
       id: 'block_3_1',
@@ -412,6 +637,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 46 }, to: { x: 23, y: 67 } },
       door: { x: 13, y: 68 },
       interior: { width: 18, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_scrap',
+      propDensity: 'medium',
+      encounterProfile: 'slums_industrial_watch',
     },
     {
       id: 'block_3_2',
@@ -419,6 +648,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 46 }, to: { x: 59, y: 67 } },
       door: { x: 43, y: 68 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'high',
+      encounterProfile: 'slums_transit_crossroads',
     },
     {
       id: 'block_3_3',
@@ -426,6 +659,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 46 }, to: { x: 95, y: 67 } },
       door: { x: 79, y: 68 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'medium',
+      encounterProfile: 'slums_research_ruin',
     },
     {
       id: 'block_3_4',
@@ -433,6 +670,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 46 }, to: { x: 131, y: 67 } },
       door: { x: 115, y: 68 },
       interior: { width: 28, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'medium',
+      encounterProfile: 'slums_promenade',
     },
     {
       id: 'block_4_1',
@@ -440,6 +681,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 70 }, to: { x: 23, y: 91 } },
       door: { x: 13, y: 92 },
       interior: { width: 18, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_scrap',
+      propDensity: 'medium',
+      encounterProfile: 'slums_logistics',
     },
     {
       id: 'block_4_2',
@@ -447,6 +692,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 70 }, to: { x: 59, y: 91 } },
       door: { x: 43, y: 92 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'high',
+      encounterProfile: 'slums_entertainment',
     },
     {
       id: 'block_4_3',
@@ -454,6 +703,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 70 }, to: { x: 95, y: 91 } },
       door: { x: 79, y: 92 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_scrap',
+      propDensity: 'low',
+      encounterProfile: 'slums_solar_yard',
     },
     {
       id: 'block_4_4',
@@ -461,6 +714,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 70 }, to: { x: 131, y: 91 } },
       door: { x: 115, y: 92 },
       interior: { width: 28, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'medium',
+      encounterProfile: 'slums_aerostat',
     },
   ],
   coverSpots: {
@@ -481,6 +738,9 @@ export const level0EnglishContent: Level0LocaleContent = {
       { x: 50, y: 18 },
       { x: 18, y: 34 },
       { x: 10, y: 12 },
+      { x: 32, y: 74 },
+      { x: 28, y: 80 },
+      { x: 36, y: 72 },
     ],
     downtown: [
       { x: 12, y: 18 },
@@ -515,6 +775,9 @@ export const level0EnglishContent: Level0LocaleContent = {
       { x: 100, y: 92 },
       { x: 116, y: 96 },
       { x: 132, y: 94 },
+      { x: 84, y: 28 },
+      { x: 90, y: 22 },
+      { x: 76, y: 30 },
     ],
   },
   world: {

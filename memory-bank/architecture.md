@@ -145,13 +145,22 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - Character overlays (health bars, combat indicators, name labels) update alongside tokens, preserving 2.5-D depth sorting while surfacing combat data.
 </pattern>
 
+<pattern name="District Dressing & Signage">
+- Building definitions carry `district`, `signageStyle`, `propDensity`, and `encounterProfile` hints (see `level0/locales/*`).
+- `worldMap.applyDistrictDecorations` clones street tiles and promotes slum doors into scrap cover clusters while downtown doors gain planter-style cover to shape chokepoints.
+- `IsoObjectFactory` now exposes `createBarricade`, `createStreetLight`, and `createBillboard` so scene code can spawn bespoke dressing without duplicating geometry math.
+- `MainScene.renderStaticProps` reads district metadata to place props/highlights, while `drawBuildingLabels` references `signageStyle` palettes for diegetic signage.
+- Item blueprints receive explicit street coordinates; `MainScene` highlights both loot and interactive NPC tiles for readability.
+</pattern>
+
 <technical_flow>
 **Technical Flow:**
 1. <code_location>worldMap.ts</code_location> defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions
 2. Building definitions in <code_location>locale files</code_location> specify footprint bounds, door position, and interior dimensions
-3. `applyBuildingConnections()` converts footprint tiles to walls, then explicitly marks door tiles as walkable
-4. <code_location>MainScene</code_location> renders building name labels using building definitions passed from <code_location>BootScene</code_location>
-5. Bidirectional connections enable seamless indoor/outdoor transitions
+3. `applyDistrictDecorations()` promotes door-adjacent tiles into district-specific cover and queues item spawn seeds before interiors are linked
+4. `applyBuildingConnections()` converts footprint tiles to walls, then explicitly marks door tiles as walkable
+5. <code_location>MainScene</code_location> renders building name labels using building definitions passed from <code_location>BootScene</code_location>
+6. Bidirectional connections enable seamless indoor/outdoor transitions
 </technical_flow>
 </architecture_section>
 

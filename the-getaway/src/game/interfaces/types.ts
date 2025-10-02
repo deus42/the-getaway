@@ -117,6 +117,7 @@ export interface Item {
   weight: number;
   value: number;
   isQuestItem: boolean;
+  position?: Position;
 }
 
 // Equipment stat modifiers

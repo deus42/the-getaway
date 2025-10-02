@@ -67,6 +67,10 @@ const cloneItemBlueprint = (item: Omit<Item, 'id'>): Omit<Item, 'id'> => ({
 
 const cloneBuildingDefinition = (building: LevelBuildingDefinition): LevelBuildingDefinition => ({
   ...building,
+  district: building.district,
+  signageStyle: building.signageStyle,
+  propDensity: building.propDensity,
+  encounterProfile: building.encounterProfile,
   footprint: {
     from: { ...building.footprint.from },
     to: { ...building.footprint.to },

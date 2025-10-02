@@ -136,6 +136,62 @@ const applyBuildingConnections = (
   return { connections, interiors };
 };
 
+const applyDistrictDecorations = (
+  mapArea: MapArea,
+  buildings: LevelBuildingDefinition[]
+): MapArea => {
+  const clonedTiles = mapArea.tiles.map((row) =>
+    row.map((tile) => ({
+      ...tile,
+      position: { ...tile.position },
+      skillRequirement: tile.skillRequirement
+        ? { ...tile.skillRequirement }
+        : undefined,
+    }))
+  );
+
+  const promoteCover = (x: number, y: number) => {
+    if (y < 0 || y >= clonedTiles.length) return;
+    if (x < 0 || x >= clonedTiles[0]?.length) return;
+    const tile = clonedTiles[y][x];
+    if (!tile || tile.type === TileType.WALL || tile.type === TileType.DOOR) {
+      return;
+    }
+
+    tile.type = TileType.COVER;
+    tile.provideCover = true;
+    tile.isWalkable = true;
+  };
+
+  buildings.forEach((building) => {
+    const door = building.door;
+    if (!door) {
+      return;
+    }
+
+    if (building.district === 'slums') {
+      const offsets = [
+        { x: 0, y: 1 },
+        { x: -1, y: 1 },
+        { x: 1, y: 1 },
+        { x: 0, y: 2 },
+      ];
+      offsets.forEach((offset) => promoteCover(door.x + offset.x, door.y + offset.y));
+    } else if (building.district === 'downtown') {
+      const offsets = [
+        { x: -1, y: 1 },
+        { x: 1, y: 1 },
+      ];
+      offsets.forEach((offset) => promoteCover(door.x + offset.x, door.y + offset.y));
+    }
+  });
+
+  return {
+    ...mapArea,
+    tiles: clonedTiles,
+  };
+};
+
 interface BuildWorldParams {
   locale: Locale;
 }
@@ -187,8 +243,10 @@ const createCityArea = (
 
   const withCover = addCover(withWalls, coverSpotsOnWalkableTiles);
 
+  const withDistrictDecor = applyDistrictDecorations(withCover, buildings);
+
   const isTileOpen = (position: Position): boolean => {
-    const tile = withCover.tiles[position.y]?.[position.x];
+    const tile = withDistrictDecor.tiles[position.y]?.[position.x];
     if (!tile) {
       return false;
     }
@@ -197,13 +255,13 @@ const createCityArea = (
   };
 
   const resolveOpenPosition = (seed: Position): Position | null => {
-    const nearest = findNearestWalkablePosition(seed, withCover) ?? seed;
+    const nearest = findNearestWalkablePosition(seed, withDistrictDecor) ?? seed;
 
     if (isTileOpen(nearest)) {
       return nearest;
     }
 
-    const adjacent = getAdjacentWalkablePositions(nearest, withCover);
+    const adjacent = getAdjacentWalkablePositions(nearest, withDistrictDecor);
     const fallback = adjacent.find((candidate) => isTileOpen(candidate));
     return fallback ?? null;
   };
@@ -215,18 +273,24 @@ const createCityArea = (
       return;
     }
 
-    withCover.entities.npcs.push({
+    withDistrictDecor.entities.npcs.push({
       ...npcBlueprint,
       id: uuidv4(),
       position,
     });
   });
 
-  itemBlueprints.forEach((itemBlueprint) => {
-    withCover.entities.items.push({ ...itemBlueprint, id: uuidv4() });
+  const itemSpawnSeeds = coverSpotsOnWalkableTiles.length
+    ? coverSpotsOnWalkableTiles
+    : [{ x: 32, y: 74 }, { x: 84, y: 28 }, { x: 54, y: 64 }];
+
+  itemBlueprints.forEach((itemBlueprint, index) => {
+    const seed = itemSpawnSeeds[index % itemSpawnSeeds.length];
+    const position = resolveOpenPosition(seed) ?? seed;
+    withDistrictDecor.entities.items.push({ ...itemBlueprint, id: uuidv4(), position });
   });
   const { connections, interiors } = applyBuildingConnections(
-    withCover,
+    withDistrictDecor,
     areaName,
     buildings
   );
@@ -237,7 +301,7 @@ const createCityArea = (
   });
 
   return {
-    area: withCover,
+    area: withDistrictDecor,
     connections,
     interiorAreas: interiors,
   };

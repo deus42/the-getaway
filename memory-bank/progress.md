@@ -214,6 +214,41 @@ UI lock/unlock behaviour for skill-based dialogue options
 </tasks>
 </step>
 
+<step id="11.5" status="completed">
+<step_metadata>
+  <number>11.5</number>
+  <title>Implement Downtown/Slums Overhaul</title>
+  <status>Completed</status>
+  <date>October 02, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Differentiated building metadata and world generation to add district-aware cover clusters, prop density, and signage styling across Slums and Downtown.
+2. Expanded Iso rendering toolkit with barricades, streetlights, and billboards, wiring `MainScene` to spawn district-specific dressing and highlight interactive NPCs/items.
+3. Authored new dialogues, NPC routines, and loot placements so both districts feel populated and reward exploration.
+</tasks>
+
+<code_reference file="the-getaway/src/game/world/worldMap.ts">
+District-aware tile decoration, item spawn positioning, and seeded NPC placement.
+</code_reference>
+
+<code_reference file="the-getaway/src/game/scenes/MainScene.ts">
+Static prop generation, signage palette updates, and ground highlights for NPCs/items.
+</code_reference>
+
+<code_reference file="the-getaway/src/game/utils/IsoObjectFactory.ts">
+New barricade, streetlight, and billboard render helpers for world dressing.
+</code_reference>
+
+<code_reference file="the-getaway/src/content/levels/level0/locales/en.ts">
+Extended building metadata, additional NPC dialogues, cover spots, and loot definitions (mirrored in uk.ts).
+</code_reference>
+
+<notes>
+- District overhauls now live in code; future tickets should build on these systems rather than re-deriving styling or prop logic.
+</notes>
+</step>
+
 <step id="7" status="completed">
 <step_metadata>
   <number>7</number>

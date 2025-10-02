@@ -12,6 +12,7 @@ import {
   XP_REWARDS
 } from '../game/systems/progression';
 import { Player, PlayerSkills } from '../game/interfaces/types';
+import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { v4 as uuidv4 } from 'uuid';
 
 const createMockPlayer = (overrides?: Partial<Player>): Player => {
@@ -34,6 +35,8 @@ const createMockPlayer = (overrides?: Partial<Player>): Player => {
     actionPoints: 10,
     maxActionPoints: 10,
     skills: defaultSkills,
+    skillTraining: { ...DEFAULT_PLAYER.skillTraining },
+    taggedSkillIds: [...DEFAULT_PLAYER.taggedSkillIds],
     level: 1,
     experience: 0,
     credits: 0,

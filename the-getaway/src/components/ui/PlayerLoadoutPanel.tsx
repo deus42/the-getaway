@@ -2,83 +2,101 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getSkillDefinition } from '../../content/skills';
+import {
+  neonPalette,
+  panelSurface,
+  cardSurface,
+  badgeSurface,
+  headingStyle,
+  subtleText,
+  statValueStyle,
+} from './theme';
 
 const panelStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.5rem',
-  padding: '0.6rem 0.7rem',
-  borderRadius: '14px',
-  border: '1px solid rgba(148, 163, 184, 0.24)',
-  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))',
-  boxShadow: '0 18px 30px rgba(15, 23, 42, 0.35)',
-};
-
-const sectionStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr)',
-  gap: '0.4rem',
+  gap: '0.75rem',
+  padding: '0.9rem 1rem',
+  borderRadius: '18px',
+  background: panelSurface.background,
+  border: panelSurface.border,
+  boxShadow: panelSurface.boxShadow,
+  backdropFilter: panelSurface.backdropFilter,
+  color: neonPalette.textPrimary,
+  fontFamily: '"DM Sans", "Inter", sans-serif',
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: '0.65rem',
-  letterSpacing: '0.2em',
-  textTransform: 'uppercase',
-  color: '#93c5fd',
+  ...headingStyle,
+  fontSize: '0.72rem',
+  letterSpacing: '0.22em',
 };
 
 const cardStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.25rem',
-  padding: '0.5rem 0.6rem',
-  borderRadius: '10px',
-  border: '1px solid rgba(56, 189, 248, 0.25)',
-  background: 'rgba(15, 23, 42, 0.6)',
-  color: '#e2e8f0',
-  fontSize: '0.65rem',
+  gap: '0.35rem',
+  padding: '0.65rem 0.75rem',
+  borderRadius: '14px',
+  background: cardSurface.background,
+  border: cardSurface.border,
+  boxShadow: cardSurface.boxShadow,
+  color: neonPalette.textPrimary,
+  fontSize: '0.68rem',
 };
 
 const cardTitleStyle: React.CSSProperties = {
-  fontSize: '0.7rem',
-  fontWeight: 600,
-  color: '#f8fafc',
+  fontSize: '0.78rem',
+  fontWeight: 700,
+  letterSpacing: '0.05em',
 };
 
 const badgeStyle = (accent: string): React.CSSProperties => ({
+  ...badgeSurface(accent),
   alignSelf: 'flex-start',
-  padding: '0.15rem 0.35rem',
+  padding: '0.25rem 0.45rem',
   borderRadius: '999px',
-  border: `1px solid ${accent}`,
-  color: accent,
-  fontSize: '0.55rem',
-  letterSpacing: '0.08em',
+  fontSize: '0.56rem',
+  letterSpacing: '0.14em',
   textTransform: 'uppercase',
+  background: `${accent}26`,
 });
 
 const statRowStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  fontSize: '0.6rem',
-  color: 'rgba(226, 232, 240, 0.85)',
+  fontSize: '0.64rem',
+  color: neonPalette.textSecondary,
+};
+
+const statLabelStyle: React.CSSProperties = {
+  ...subtleText,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+};
+
+const statValueEmphasis: React.CSSProperties = {
+  ...statValueStyle,
+  fontSize: '0.8rem',
 };
 
 const perksListStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '0.25rem',
-  paddingTop: '0.3rem',
+  gap: '0.35rem',
+  paddingTop: '0.35rem',
 };
 
 const perkBadgeStyle: React.CSSProperties = {
-  padding: '0.2rem 0.4rem',
+  padding: '0.25rem 0.5rem',
   borderRadius: '999px',
-  border: '1px solid rgba(192, 132, 252, 0.45)',
-  background: 'rgba(192, 132, 252, 0.15)',
-  color: '#f5f3ff',
-  fontSize: '0.55rem',
-  letterSpacing: '0.06em',
+  border: '1px solid rgba(192, 132, 252, 0.42)',
+  background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.22), rgba(76, 29, 149, 0.18))',
+  color: '#f3e8ff',
+  fontSize: '0.58rem',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
 };
 
 const PlayerLoadoutPanel: React.FC = () => {
@@ -93,24 +111,26 @@ const PlayerLoadoutPanel: React.FC = () => {
       {weapon ? (
         <>
           <div style={statRowStyle}>
-            <span>Damage</span>
-            <span>{weapon.damage}</span>
+            <span style={statLabelStyle}>Damage</span>
+            <span style={statValueEmphasis}>{weapon.damage}</span>
           </div>
           <div style={statRowStyle}>
-            <span>Range</span>
-            <span>{weapon.range}</span>
+            <span style={statLabelStyle}>Range</span>
+            <span style={statValueEmphasis}>{weapon.range}</span>
           </div>
           <div style={statRowStyle}>
-            <span>AP Cost</span>
-            <span>{weapon.apCost}</span>
+            <span style={statLabelStyle}>AP Cost</span>
+            <span style={statValueEmphasis}>{weapon.apCost}</span>
           </div>
           <div style={statRowStyle}>
-            <span>Skill</span>
-            <span>{weapon.skillType ? (getSkillDefinition(weapon.skillType)?.name ?? '—') : '—'}</span>
+            <span style={statLabelStyle}>Skill</span>
+            <span style={statValueEmphasis}>
+              {weapon.skillType ? (getSkillDefinition(weapon.skillType)?.name ?? '—') : '—'}
+            </span>
           </div>
         </>
       ) : (
-        <span style={{ color: 'rgba(148, 163, 184, 0.75)' }}>No weapon equipped</span>
+        <span style={subtleText}>No weapon equipped</span>
       )}
     </div>
   );
@@ -122,16 +142,16 @@ const PlayerLoadoutPanel: React.FC = () => {
       {armor ? (
         <>
           <div style={statRowStyle}>
-            <span>Protection</span>
-            <span>{armor.protection}</span>
+            <span style={statLabelStyle}>Protection</span>
+            <span style={statValueEmphasis}>{armor.protection}</span>
           </div>
           <div style={statRowStyle}>
-            <span>Weight</span>
-            <span>{armor.weight.toFixed(1)} kg</span>
+            <span style={statLabelStyle}>Weight</span>
+            <span style={statValueEmphasis}>{armor.weight.toFixed(1)} kg</span>
           </div>
         </>
       ) : (
-        <span style={{ color: 'rgba(148, 163, 184, 0.75)' }}>No armor equipped</span>
+        <span style={subtleText}>No armor equipped</span>
       )}
     </div>
   );
@@ -140,7 +160,7 @@ const PlayerLoadoutPanel: React.FC = () => {
     <div style={cardStyle}>
       <div style={badgeStyle('rgba(236, 72, 153, 0.65)')}>Perks</div>
       {player.perks.length === 0 ? (
-        <span style={{ color: 'rgba(148, 163, 184, 0.75)' }}>No perks acquired</span>
+        <span style={subtleText}>No perks acquired</span>
       ) : (
         <div style={perksListStyle}>
           {player.perks.map((perkId) => (

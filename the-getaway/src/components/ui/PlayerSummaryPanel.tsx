@@ -4,6 +4,15 @@ import { RootState } from '../../store';
 import { BACKGROUND_MAP } from '../../content/backgrounds';
 import { getUIStrings } from '../../content/ui';
 import { SKILL_BRANCHES } from '../../content/skills';
+import {
+  neonPalette,
+  panelSurface,
+  cardSurface,
+  badgeSurface,
+  headingStyle,
+  statValueStyle as themedStatValue,
+  subtleText,
+} from './theme';
 
 interface PlayerSummaryPanelProps {
   onOpenCharacter?: () => void;
@@ -11,145 +20,157 @@ interface PlayerSummaryPanelProps {
   showActionButton?: boolean;
 }
 
-const containerStyle: React.CSSProperties = {
+const summaryContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.35rem',
-  padding: '0.45rem 0.55rem',
-  background: 'linear-gradient(185deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95))',
-  borderRadius: '10px',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
-  boxShadow: '0 18px 28px rgba(15, 23, 42, 0.4)',
-  minHeight: 0,
+  gap: '0.8rem',
+  padding: '0.95rem 1rem',
+  borderRadius: '18px',
+  background: panelSurface.background,
+  border: panelSurface.border,
+  boxShadow: panelSurface.boxShadow,
+  backdropFilter: panelSurface.backdropFilter,
+  color: neonPalette.textPrimary,
+  fontFamily: '"DM Sans", "Inter", sans-serif',
 };
 
 const headerStyle: React.CSSProperties = {
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'space-between',
-  gap: '0.5rem',
+  gap: '0.75rem',
 };
 
 const nameStyle: React.CSSProperties = {
-  fontSize: '0.85rem',
-  fontWeight: 700,
-  color: '#f8fafc',
-  letterSpacing: '0.04em',
+  ...headingStyle,
+  fontSize: '0.9rem',
+  letterSpacing: '0.26em',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem',
 };
 
 const levelBadgeStyle: React.CSSProperties = {
+  ...badgeSurface(neonPalette.cyan),
   fontSize: '0.6rem',
   textTransform: 'uppercase',
-  padding: '0.2rem 0.4rem',
+  padding: '0.22rem 0.55rem',
   borderRadius: '999px',
-  border: '1px solid rgba(56, 189, 248, 0.4)',
-  background: 'rgba(14, 165, 233, 0.15)',
-  color: '#bae6fd',
-  letterSpacing: '0.08em',
-  whiteSpace: 'nowrap',
-  flexShrink: 0,
+  letterSpacing: '0.14em',
+  background: 'rgba(56, 189, 248, 0.18)',
+  boxShadow: '0 10px 20px -10px rgba(56, 189, 248, 0.55)',
+};
+
+const backgroundLabelStyle: React.CSSProperties = {
+  ...subtleText,
+  fontSize: '0.6rem',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  marginTop: '0.2rem',
 };
 
 const barShellStyle: React.CSSProperties = {
   width: '100%',
-  height: '0.4rem',
+  height: '0.44rem',
   borderRadius: '999px',
-  background: 'rgba(71, 85, 105, 0.3)',
+  background: 'rgba(30, 64, 175, 0.28)',
   overflow: 'hidden',
+  border: '1px solid rgba(56, 189, 248, 0.24)',
 };
 
 const barFillStyle = (color: string, width: string): React.CSSProperties => ({
   width,
   height: '100%',
   borderRadius: '999px',
-  background: color,
-  transition: 'width 0.25s ease',
+  background: `linear-gradient(135deg, ${color}, rgba(255, 255, 255, 0.45))`,
+  boxShadow: '0 0 12px rgba(56, 189, 248, 0.45)',
+  transition: 'width 0.3s ease',
 });
 
 const labelRowStyle: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  fontSize: '0.6rem',
-  color: 'rgba(226, 232, 240, 0.9)',
-  marginBottom: '0.15rem',
+  ...subtleText,
+  fontSize: '0.64rem',
+  letterSpacing: '0.12em',
+  marginBottom: '0.18rem',
 };
 
 const statGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '0.3rem',
+  gap: '0.32rem',
 };
 
 const statCardStyle: React.CSSProperties = {
-  background: 'rgba(15, 23, 42, 0.55)',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
-  borderRadius: '6px',
-  padding: '0.3rem 0.4rem',
+  background: cardSurface.background,
+  border: cardSurface.border,
+  boxShadow: cardSurface.boxShadow,
+  borderRadius: '12px',
+  padding: '0.45rem 0.5rem',
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.05rem',
+  gap: '0.12rem',
+  minWidth: 0,
 };
 
 const statLabelStyle: React.CSSProperties = {
-  fontSize: '0.55rem',
+  ...subtleText,
+  fontSize: '0.5rem',
+  letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  color: 'rgba(148, 163, 184, 0.75)',
 };
 
 const statValueStyle: React.CSSProperties = {
-  fontSize: '0.8rem',
-  fontWeight: 600,
-  color: '#f8fafc',
+  ...themedStatValue,
+  fontSize: '0.74rem',
 };
 
 const skillSummaryContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '0.3rem',
-  marginTop: '0rem',
+  gap: '0.4rem',
+  marginTop: '0.1rem',
 };
 
 const skillChipStyle = (accent: string): React.CSSProperties => ({
-  padding: '0.2rem 0.45rem',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.35rem',
+  padding: '0.28rem 0.6rem',
   borderRadius: '999px',
   border: `1px solid ${accent}`,
-  background: 'rgba(15, 23, 42, 0.6)',
-  color: accent,
-  fontSize: '0.55rem',
-  letterSpacing: '0.08em',
+  background: `linear-gradient(140deg, ${accent}26, rgba(15, 23, 42, 0.9))`,
+  color: neonPalette.textPrimary,
+  fontSize: '0.6rem',
+  letterSpacing: '0.12em',
   textTransform: 'uppercase',
+  boxShadow: `0 10px 18px -12px ${accent}99`,
 });
 
 const actionButtonStyle = (active: boolean): React.CSSProperties => ({
-  alignSelf: 'stretch',
-  marginTop: '0.15rem',
-  padding: '0.5rem 0.8rem',
-  borderRadius: '8px',
-  border: active ? '1px solid rgba(249, 115, 22, 0.75)' : '1px solid rgba(56, 189, 248, 0.55)',
+  alignSelf: 'flex-start',
+  marginTop: '0.2rem',
+  padding: active ? '0.42rem 0.75rem' : '0.38rem 0.72rem',
+  borderRadius: '999px',
+  border: `1px solid ${active ? neonPalette.amber : neonPalette.cyan}`,
   background: active
-    ? 'linear-gradient(135deg, rgba(249, 115, 22, 0.5), rgba(251, 191, 36, 0.5))'
-    : 'linear-gradient(135deg, rgba(14, 165, 233, 0.45), rgba(56, 189, 248, 0.35))',
-  color: active ? '#fff7ed' : '#e0f2fe',
-  fontSize: '0.68rem',
-  fontWeight: 700,
-  letterSpacing: '0.12em',
+    ? 'linear-gradient(130deg, rgba(251, 191, 36, 0.6), rgba(249, 115, 22, 0.55))'
+    : 'linear-gradient(130deg, rgba(56, 189, 248, 0.48), rgba(14, 165, 233, 0.45))',
+  color: active ? '#fff7e1' : '#e0f2fe',
+  fontSize: '0.58rem',
+  fontWeight: 600,
+  letterSpacing: '0.18em',
   textTransform: 'uppercase',
   cursor: 'pointer',
-  transition: 'all 0.2s ease',
+  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
   textAlign: 'center',
+  transform: 'translateY(0)',
   boxShadow: active
-    ? '0 8px 16px rgba(249, 115, 22, 0.25)'
-    : '0 8px 16px rgba(56, 189, 248, 0.25)',
+    ? '0 12px 20px -16px rgba(251, 191, 36, 0.48)'
+    : '0 12px 20px -18px rgba(56, 189, 248, 0.45)',
 });
-
-const taglineStyle: React.CSSProperties = {
-  fontSize: '0.55rem',
-  color: 'rgba(148, 163, 184, 0.8)',
-  letterSpacing: '0.03em',
-  lineHeight: '1.3',
-};
 
 const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   onOpenCharacter,
@@ -186,16 +207,14 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   );
 
   return (
-    <div style={containerStyle} data-testid="player-summary-panel">
+    <div style={summaryContainerStyle} data-testid="player-summary-panel">
       <div style={headerStyle}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ ...nameStyle, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <div style={nameStyle}>
             <span>{player.name}</span>
             <span style={levelBadgeStyle}>Level {player.level}</span>
           </div>
-          <div style={{ fontSize: '0.58rem', color: 'rgba(148, 163, 184, 0.75)', letterSpacing: '0.06em', marginTop: '0.1rem' }}>
-            {background?.name ?? 'Unaffiliated'}
-          </div>
+          <div style={backgroundLabelStyle}>{background?.name ?? 'Unaffiliated'}</div>
         </div>
       </div>
 
@@ -205,7 +224,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
           <span>{player.health}/{player.maxHealth}</span>
         </div>
         <div style={barShellStyle}>
-          <div style={barFillStyle('#22c55e', `${healthPercent}%`)} />
+          <div style={barFillStyle(neonPalette.emerald, `${healthPercent}%`)} />
         </div>
       </div>
 
@@ -234,7 +253,10 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
               key={summary.id}
               style={skillChipStyle(branchAccent[summary.id] ?? '#38bdf8')}
             >
-              {summary.label}: {summary.total}
+              <span>{summary.label}</span>
+              <span style={{ fontWeight: 700, color: branchAccent[summary.id] ?? neonPalette.cyan }}>
+                {summary.total}
+              </span>
             </span>
           ))}
         </div>
@@ -246,6 +268,12 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
           style={actionButtonStyle(characterOpen)}
           data-testid="summary-open-character"
           aria-pressed={characterOpen}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.transform = 'translateY(0) scale(1)';
+          }}
         >
           {uiStrings.shell.characterButton}
         </button>

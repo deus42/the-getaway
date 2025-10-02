@@ -73,6 +73,146 @@ export const level0UkrainianContent: Level0LocaleContent = {
       ],
     },
     {
+      id: 'npc_firebrand_juno',
+      npcId: 'Юно Вогнеборець',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Юно роздмухує жар у бочці з пальним, окуляри запітніли від вологи. "Увесь район — це паровий котел. Або ми випустимо пару, або розірве нас разом із корпусами."',
+          options: [
+            {
+              text: 'Покажи, як тримаєш барикади.',
+              nextNodeId: 'defense',
+            },
+            {
+              text: 'Я підкину припаси, якщо підеш у влучні руки.',
+              nextNodeId: 'supplies',
+              skillCheck: {
+                skill: 'charisma',
+                threshold: 7,
+              },
+            },
+            {
+              text: 'Тримай жар гарячим, Юно.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'defense',
+          text: '"Нетри розрізають патрулі на три кишені." Вона креслить маршрути в попелі. "Заглуши дронів на даху Транзитного вузла, а я дам команду засідці."',
+          options: [
+            {
+              text: 'Познач мені точки для глушаків.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'supplies',
+          text: '"Сміливий язик." Усмішка Юно спалахує неоном. "Обміняю твою милість на вибухівку й перев’язки. Гель наш, медикаменти — лікарям."',
+          options: [
+            {
+              text: 'Домовились. Підлатаємо повстанців.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_seraph_warden',
+      npcId: 'Сераф-Вартовий',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Хромована маска Серафа відбиває голографічні борди. "Центр — це собор покори. Ви дихаєте тут, бо я це дозволяю."',
+          options: [
+            {
+              text: 'Собори падають, коли хор іде геть.',
+              nextNodeId: 'warning',
+            },
+            {
+              text: 'Твої дрони збиваються біля Доків аеростатів.',
+              nextNodeId: 'maintenance',
+              skillCheck: {
+                skill: 'intelligence',
+                threshold: 8,
+              },
+            },
+            {
+              text: 'Просто проходжу.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'warning',
+          text: '"Повстання — це неоплачений рахунок." Рука вартового лягає на шокову дубинку. "Сплатіть до контрольної ночі, інакше відсотки з’їдять вас."',
+          options: [
+            {
+              text: 'Рахунок отримано. Інкасація скасовується.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'maintenance',
+          text: '"Це аномалія під грифом." Візор мерехтить. "Та стримування важливіше марнославства. Познач несправність — і я призначу переналаштування."',
+          options: [
+            {
+              text: 'Менше дронів — довше живуть.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_drone_handler_kesh',
+      npcId: 'Кеш — дрон-технік',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Кеш схилилася над розібраним дроном-розвідником, тримаючи паяльник. "Корп-код співає в одній тональності. Зміни хор — зміниш марш."',
+          options: [
+            {
+              text: 'Зможеш підманити патруль, аби він стеріг наших?',
+              nextNodeId: 'spoof',
+            },
+            {
+              text: 'Продай глушак, який не спалить мою систему.',
+              nextNodeId: 'jammer',
+            },
+            {
+              text: 'Продовжуй, маестро.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'spoof',
+          text: '"Дай їхній маршрутний реєстр — і я переверну дрону друзів і ворогів." Кеш заштовхує картридж у корпус. "Одна ніч, поки вони не залатають дірку."',
+          options: [
+            {
+              text: 'Принесу телеметрію патруля.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'jammer',
+          text: '"Тобі потрібна точність — плати за точність." Вона підсуває тонкий диск. "Прикріпи під опорою небомосту — і отримаєш максимальний ефект."',
+          options: [
+            {
+              text: 'Домовилися.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
       id: 'npc_archivist_naila',
       npcId: 'Архіварка Найла',
       nodes: [
@@ -318,6 +458,45 @@ export const level0UkrainianContent: Level0LocaleContent = {
       dialogueId: 'npc_courier_brant',
       isInteractive: true,
     },
+    {
+      name: 'Юно Вогнеборець',
+      position: { x: 32, y: 74 },
+      health: 18,
+      maxHealth: 18,
+      routine: [
+        { position: { x: 32, y: 74 }, timeOfDay: 'day', duration: 200 },
+        { position: { x: 28, y: 80 }, timeOfDay: 'evening', duration: 200 },
+        { position: { x: 36, y: 72 }, timeOfDay: 'night', duration: 200 },
+      ],
+      dialogueId: 'npc_firebrand_juno',
+      isInteractive: true,
+    },
+    {
+      name: 'Сераф-Вартовий',
+      position: { x: 84, y: 28 },
+      health: 24,
+      maxHealth: 24,
+      routine: [
+        { position: { x: 84, y: 28 }, timeOfDay: 'day', duration: 220 },
+        { position: { x: 90, y: 22 }, timeOfDay: 'evening', duration: 220 },
+        { position: { x: 76, y: 30 }, timeOfDay: 'night', duration: 220 },
+      ],
+      dialogueId: 'npc_seraph_warden',
+      isInteractive: true,
+    },
+    {
+      name: 'Кеш — дрон-технік',
+      position: { x: 54, y: 64 },
+      health: 14,
+      maxHealth: 14,
+      routine: [
+        { position: { x: 54, y: 64 }, timeOfDay: 'day', duration: 210 },
+        { position: { x: 50, y: 58 }, timeOfDay: 'evening', duration: 210 },
+        { position: { x: 60, y: 66 }, timeOfDay: 'night', duration: 210 },
+      ],
+      dialogueId: 'npc_drone_handler_kesh',
+      isInteractive: true,
+    },
   ],
   itemBlueprints: [
     {
@@ -348,6 +527,20 @@ export const level0UkrainianContent: Level0LocaleContent = {
       value: 30,
       isQuestItem: false,
     },
+    {
+      name: 'Набір підривника',
+      description: 'Компактні гелеві заряди з таймерами. Ідеальні, щоб валити комендантські барикади.',
+      weight: 1.5,
+      value: 180,
+      isQuestItem: false,
+    },
+    {
+      name: 'Призма голографа',
+      description: 'Лінза з корпоративного голографічного борда. Дозволяє підмінювати ідентифікатори патрулів.',
+      weight: 0.3,
+      value: 220,
+      isQuestItem: false,
+    },
   ],
   buildingDefinitions: [
     {
@@ -356,6 +549,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 4 }, to: { x: 23, y: 19 } },
       door: { x: 13, y: 20 },
       interior: { width: 20, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_waterfront',
     },
     {
       id: 'block_1_2',
@@ -363,6 +560,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 4 }, to: { x: 59, y: 19 } },
       door: { x: 43, y: 20 },
       interior: { width: 26, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'high',
+      encounterProfile: 'downtown_market_patrol',
     },
     {
       id: 'block_1_3',
@@ -370,6 +571,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 4 }, to: { x: 95, y: 19 } },
       door: { x: 79, y: 20 },
       interior: { width: 26, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_public_forum',
     },
     {
       id: 'block_1_4',
@@ -377,6 +582,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 4 }, to: { x: 131, y: 19 } },
       door: { x: 115, y: 20 },
       interior: { width: 28, height: 12 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_civic_square',
     },
     {
       id: 'block_2_1',
@@ -384,6 +593,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 22 }, to: { x: 23, y: 43 } },
       door: { x: 13, y: 44 },
       interior: { width: 18, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_residential',
     },
     {
       id: 'block_2_2',
@@ -391,6 +604,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 22 }, to: { x: 59, y: 43 } },
       door: { x: 43, y: 44 },
       interior: { width: 26, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'high',
+      encounterProfile: 'downtown_market_inner',
     },
     {
       id: 'block_2_3',
@@ -398,6 +615,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 22 }, to: { x: 95, y: 43 } },
       door: { x: 79, y: 44 },
       interior: { width: 26, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_holo',
+      propDensity: 'high',
+      encounterProfile: 'downtown_exec_patrol',
     },
     {
       id: 'block_2_4',
@@ -405,6 +626,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 22 }, to: { x: 131, y: 43 } },
       door: { x: 115, y: 44 },
       interior: { width: 28, height: 14 },
+      district: 'downtown',
+      signageStyle: 'corp_brass',
+      propDensity: 'medium',
+      encounterProfile: 'downtown_registry',
     },
     {
       id: 'block_3_1',
@@ -412,6 +637,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 46 }, to: { x: 23, y: 67 } },
       door: { x: 13, y: 68 },
       interior: { width: 18, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_scrap',
+      propDensity: 'medium',
+      encounterProfile: 'slums_industrial_watch',
     },
     {
       id: 'block_3_2',
@@ -419,6 +648,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 46 }, to: { x: 59, y: 67 } },
       door: { x: 43, y: 68 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'high',
+      encounterProfile: 'slums_transit_crossroads',
     },
     {
       id: 'block_3_3',
@@ -426,6 +659,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 46 }, to: { x: 95, y: 67 } },
       door: { x: 79, y: 68 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'medium',
+      encounterProfile: 'slums_research_ruin',
     },
     {
       id: 'block_3_4',
@@ -433,6 +670,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 46 }, to: { x: 131, y: 67 } },
       door: { x: 115, y: 68 },
       interior: { width: 28, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'medium',
+      encounterProfile: 'slums_promenade',
     },
     {
       id: 'block_4_1',
@@ -440,6 +681,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 4, y: 70 }, to: { x: 23, y: 91 } },
       door: { x: 13, y: 92 },
       interior: { width: 18, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_scrap',
+      propDensity: 'medium',
+      encounterProfile: 'slums_logistics',
     },
     {
       id: 'block_4_2',
@@ -447,6 +692,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 27, y: 70 }, to: { x: 59, y: 91 } },
       door: { x: 43, y: 92 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'high',
+      encounterProfile: 'slums_entertainment',
     },
     {
       id: 'block_4_3',
@@ -454,6 +703,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 63, y: 70 }, to: { x: 95, y: 91 } },
       door: { x: 79, y: 92 },
       interior: { width: 26, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_scrap',
+      propDensity: 'low',
+      encounterProfile: 'slums_solar_yard',
     },
     {
       id: 'block_4_4',
@@ -461,6 +714,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
       footprint: { from: { x: 99, y: 70 }, to: { x: 131, y: 91 } },
       door: { x: 115, y: 92 },
       interior: { width: 28, height: 14 },
+      district: 'slums',
+      signageStyle: 'slums_neon',
+      propDensity: 'medium',
+      encounterProfile: 'slums_aerostat',
     },
   ],
   coverSpots: {
@@ -481,6 +738,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       { x: 50, y: 18 },
       { x: 18, y: 34 },
       { x: 10, y: 12 },
+      { x: 32, y: 74 },
+      { x: 28, y: 80 },
+      { x: 36, y: 72 },
     ],
     downtown: [
       { x: 12, y: 18 },
@@ -515,6 +775,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       { x: 100, y: 92 },
       { x: 116, y: 96 },
       { x: 132, y: 94 },
+      { x: 84, y: 28 },
+      { x: 90, y: 22 },
+      { x: 76, y: 30 },
     ],
   },
   world: {
