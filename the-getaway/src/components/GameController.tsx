@@ -74,8 +74,8 @@ const GameController: React.FC = () => {
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
-  const [isProcessingEnemyAction, setIsProcessingEnemyAction] =
-    useState<boolean>(false);
+  const enemyActionTimeoutRef = useRef<number | null>(null);
+  const processingEnemyIdRef = useRef<string | null>(null);
   type CurfewAlertState = "clear" | "warning" | "spawned";
   const [curfewAlertState, setCurfewAlertState] =
     useState<CurfewAlertState>("clear");
@@ -116,6 +116,14 @@ const GameController: React.FC = () => {
     },
     [dispatch, dialogues, activeDialogueId, logStrings]
   );
+
+  const cancelPendingEnemyAction = useCallback((shouldClearTimer: boolean = true) => {
+    if (shouldClearTimer && enemyActionTimeoutRef.current !== null) {
+      window.clearTimeout(enemyActionTimeoutRef.current);
+    }
+    enemyActionTimeoutRef.current = null;
+    processingEnemyIdRef.current = null;
+  }, []);
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
@@ -782,7 +790,7 @@ const GameController: React.FC = () => {
             dispatch(switchTurn());
             dispatch(resetActionPoints());
           }
-          setIsProcessingEnemyAction(false);
+          cancelPendingEnemyAction();
           setCurrentEnemyTurnIndex(0);
           dispatch(clearReinforcementsSchedule());
         }, getReinforcementDelay());
@@ -795,37 +803,31 @@ const GameController: React.FC = () => {
     console.log(
       `[GameController] === useEffect RUNNING === Turn: ${
         isPlayerTurn ? "Player" : "Enemy"
-      }, Combat: ${inCombat}, Processing: ${isProcessingEnemyAction}, EnemyIdx: ${currentEnemyTurnIndex}`
+      }, Combat: ${inCombat}, Processing: ${processingEnemyIdRef.current ? "true" : "false"}, EnemyIdx: ${currentEnemyTurnIndex}`
     );
 
-    // Exit conditions
-    if (
-      !inCombat ||
-      isPlayerTurn ||
-      enemies.length === 0 ||
-      isProcessingEnemyAction
-    ) {
+    if (!inCombat || isPlayerTurn || enemies.length === 0) {
+      cancelPendingEnemyAction();
       if (!inCombat || isPlayerTurn) {
-        setCurrentEnemyTurnIndex(0); // Reset index if combat ends or player turn starts
+        setCurrentEnemyTurnIndex(0);
       }
       return;
     }
 
-    const livingEnemies = enemies.filter((e) => e.health > 0);
+    const livingEnemies = enemies.filter((enemy) => enemy.health > 0);
     if (livingEnemies.length === 0) {
-      // Should be handled by exitCombat in reducer, but as safety check:
+      cancelPendingEnemyAction();
       console.warn(
         "[GameController] Enemy turn effect running but no living enemies found."
       );
-      // dispatch(exitCombat()); // Let reducer handle this via updateEnemy
       return;
     }
 
-    // Check if current index is out of bounds (can happen when enemies are added/removed)
     if (currentEnemyTurnIndex >= enemies.length) {
       console.log(
         `[GameController] Enemy index ${currentEnemyTurnIndex} out of bounds (length: ${enemies.length}). Ending enemy turn.`
       );
+      cancelPendingEnemyAction();
       dispatch(switchTurn());
       dispatch(resetActionPoints());
       setCurrentEnemyTurnIndex(0);
@@ -834,19 +836,15 @@ const GameController: React.FC = () => {
 
     const currentEnemy = enemies[currentEnemyTurnIndex];
 
-    // --- Check if current enemy can act ---
-    if (
-      !currentEnemy ||
-      currentEnemy.health <= 0 ||
-      currentEnemy.actionPoints <= 0
-    ) {
+    if (!currentEnemy || currentEnemy.health <= 0 || currentEnemy.actionPoints <= 0) {
       console.log(
         `[GameController] Enemy ${
           currentEnemy?.id ?? `at index ${currentEnemyTurnIndex}`
         } cannot act (Dead or 0 AP). Checking next.`
       );
 
-      // Find next enemy with AP > 0
+      cancelPendingEnemyAction();
+
       let nextIndex = currentEnemyTurnIndex + 1;
       let foundValidEnemy = false;
 
@@ -856,42 +854,38 @@ const GameController: React.FC = () => {
           foundValidEnemy = true;
           break;
         }
-        nextIndex++;
+        nextIndex += 1;
       }
 
       if (!foundValidEnemy) {
-        // All enemies processed for this turn cycle, end enemy phase
-        console.log(
-          "[GameController] All enemies processed, switching back to player."
-        );
+        console.log("[GameController] All enemies processed, switching back to player.");
         dispatch(switchTurn());
         dispatch(resetActionPoints());
-        setCurrentEnemyTurnIndex(0); // Reset index for next player turn
+        setCurrentEnemyTurnIndex(0);
       } else {
-        // Move to the next valid enemy
         console.log(`[GameController] Moving to next valid enemy at index ${nextIndex}`);
         setCurrentEnemyTurnIndex(nextIndex);
       }
-      return; // Exit effect, it will re-run for the next index or end the turn
+      return;
     }
 
-    // --- Process Current Enemy Action ---
+    if (processingEnemyIdRef.current) {
+      return;
+    }
+
     console.log(
       `[GameController] Scheduling action for enemy index ${currentEnemyTurnIndex}: ${currentEnemy.id} (AP: ${currentEnemy.actionPoints})`
     );
 
-    // SET FLAG HERE, BEFORE scheduling setTimeout to prevent race condition
-    setIsProcessingEnemyAction(true);
-
-    const enemyActionTimer = setTimeout(() => {
+    processingEnemyIdRef.current = currentEnemy.id;
+    enemyActionTimeoutRef.current = window.setTimeout(() => {
       console.log(
         `[GameController] >>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
       );
 
-      // Bail if combat has ended since this timeout was scheduled
       if (!inCombat) {
         console.log('[GameController] Combat ended, skipping enemy action');
-        setIsProcessingEnemyAction(false);
+        cancelPendingEnemyAction(false);
         return;
       }
 
@@ -900,10 +894,9 @@ const GameController: React.FC = () => {
           `[GameController] Enemy Turn AI: START for ${currentEnemy.id}`
         );
 
-        // Get cover positions
         const coverPositions: Position[] = [];
-        for (let y = 0; y < currentMapArea.height; y++) {
-          for (let x = 0; x < currentMapArea.width; x++) {
+        for (let y = 0; y < currentMapArea.height; y += 1) {
+          for (let x = 0; x < currentMapArea.width; x += 1) {
             if (currentMapArea.tiles[y][x].provideCover) {
               coverPositions.push({ x, y });
             }
@@ -913,16 +906,13 @@ const GameController: React.FC = () => {
           `[GameController] Enemy Turn AI: Got cover positions for ${currentEnemy.id}`
         );
 
-        // Determine and execute action
-        console.log(
-          `[GameController] Enemy Turn AI: BEFORE determineEnemyMove for ${currentEnemy.id}`
-        );
         const result = determineEnemyMove(
           currentEnemy,
           player,
           currentMapArea,
           enemies,
-          coverPositions
+          coverPositions,
+          currentMapArea.entities.npcs
         );
         console.log(
           `[GameController] Enemy ${currentEnemy.id} action: ${result.action}, AP left: ${result.enemy.actionPoints}`
@@ -931,19 +921,11 @@ const GameController: React.FC = () => {
         console.log(
           `[GameController] Enemy Turn AI: BEFORE dispatching updates for ${currentEnemy.id}`
         );
-
-        // Dispatch updates based on the result
-        console.log(
-          `[GameController] Enemy Turn AI: BEFORE dispatch(updateEnemy) for ${currentEnemy.id}`
-        );
         dispatch(updateEnemy(result.enemy));
         console.log(
           `[GameController] Enemy Turn AI: AFTER dispatch(updateEnemy) for ${currentEnemy.id}`
         );
 
-        console.log(
-          `[GameController] Enemy Turn AI: BEFORE player update check for ${currentEnemy.id}`
-        );
         if (result.player.id === player.id) {
           console.log(
             `[GameController] Enemy Turn AI: BEFORE dispatch(setPlayerData) for ${currentEnemy.id}`
@@ -960,37 +942,32 @@ const GameController: React.FC = () => {
       } catch (error) {
         console.error("[GameController] Error during enemy turn AI:", {
           enemyId: currentEnemy?.id,
-          error: error,
+          error,
         });
-        // Optionally add more error handling here if needed
       } finally {
         console.log(
           `[GameController] Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Advancing to next enemy.`
         );
-        // Advance to next enemy index BEFORE resetting processing flag
-        setCurrentEnemyTurnIndex(prev => prev + 1);
-        // Reset flag HERE. This state change should trigger useEffect re-run.
-        setIsProcessingEnemyAction(false);
+        setCurrentEnemyTurnIndex((prev) => prev + 1);
+        cancelPendingEnemyAction(false);
       }
-    }, 500); // Delay for visibility
-
-    // Cleanup timeout if effect re-runs before timeout finishes
-    return () => {
-      console.log(
-        `[GameController] <<< useEffect CLEANUP running. Clearing timeout for index ${currentEnemyTurnIndex}.`
-      );
-      clearTimeout(enemyActionTimer);
-    };
+    }, 500);
   }, [
     inCombat,
     isPlayerTurn,
     currentEnemyTurnIndex,
     enemies,
-    isProcessingEnemyAction,
     dispatch,
     player,
     currentMapArea,
+    cancelPendingEnemyAction,
   ]);
+
+  useEffect(() => {
+    return () => {
+      cancelPendingEnemyAction();
+    };
+  }, [cancelPendingEnemyAction]);
 
   // --- End Enemy Turn Logic ---
 

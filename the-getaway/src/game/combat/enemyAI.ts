@@ -1,4 +1,4 @@
-import { Enemy, Player, Position, MapArea } from '../interfaces/types';
+import { Enemy, Player, Position, MapArea, NPC } from '../interfaces/types';
 import { 
   calculateManhattanDistance, 
   isInAttackRange,
@@ -6,6 +6,8 @@ import {
   executeMove,
   executeAttack
 } from './combatSystem';
+import { findPath } from '../world/pathfinding';
+import { isPositionInBounds, isPositionWalkable } from '../world/grid';
 
 // Constants
 export const HEALTH_THRESHOLD_SEEK_COVER = 0.3; // 30% health
@@ -16,7 +18,8 @@ export const determineEnemyMove = (
   player: Player,
   mapArea: MapArea,
   enemies: Enemy[],
-  coverPositions: Position[]
+  coverPositions: Position[],
+  npcs: NPC[] = []
 ): { enemy: Enemy, player: Player, action: string } => {
   let updatedEnemy = { ...enemy };
   let updatedPlayer = { ...player };
@@ -34,7 +37,7 @@ export const determineEnemyMove = (
   
   // If health is low, try to seek cover
   if (enemy.health <= enemy.maxHealth * HEALTH_THRESHOLD_SEEK_COVER) {
-    const coverMove = seekCover(enemy, player, mapArea, enemies, coverPositions);
+    const coverMove = seekCover(enemy, player, mapArea, enemies, coverPositions, npcs);
     if (coverMove) {
       updatedEnemy = executeMove(enemy, coverMove) as Enemy;
       return { enemy: updatedEnemy, player: updatedPlayer, action: 'seek_cover' };
@@ -76,7 +79,7 @@ export const determineEnemyMove = (
   }
   
   // Otherwise, try to move toward player
-  const nextMove = moveTowardPlayer(enemy, player, mapArea, enemies);
+  const nextMove = moveTowardPlayer(enemy, player, mapArea, enemies, npcs);
   if (nextMove) {
     updatedEnemy = executeMove(enemy, nextMove) as Enemy;
     return { enemy: updatedEnemy, player: updatedPlayer, action: 'move' };
@@ -95,25 +98,87 @@ export const moveTowardPlayer = (
   enemy: Enemy,
   player: Player,
   mapArea: MapArea,
-  enemies: Enemy[]
+  enemies: Enemy[],
+  npcs: NPC[] = []
 ): Position | null => {
-  // Get all possible adjacent positions
+  const otherEnemies = enemies.filter((candidate) => candidate.id !== enemy.id);
+
+  const attackRange = Math.max(1, Math.ceil(enemy.attackRange));
+  const candidateTargets: Position[] = [];
+
+  for (let dx = -attackRange; dx <= attackRange; dx += 1) {
+    for (let dy = -attackRange; dy <= attackRange; dy += 1) {
+      if (dx === 0 && dy === 0) {
+        continue;
+      }
+
+      const candidate: Position = {
+        x: player.position.x + dx,
+        y: player.position.y + dy,
+      };
+
+      if (!isPositionInBounds(candidate, mapArea)) {
+        continue;
+      }
+
+      if (!isInAttackRange(candidate, player.position, enemy.attackRange)) {
+        continue;
+      }
+
+      candidateTargets.push(candidate);
+    }
+  }
+
+  const sortedTargets = candidateTargets.sort((a, b) => {
+    const distanceA = calculateManhattanDistance(enemy.position, a);
+    const distanceB = calculateManhattanDistance(enemy.position, b);
+    return distanceA - distanceB;
+  });
+
+  let bestPath: Position[] | null = null;
+
+  for (const target of sortedTargets) {
+    if (!isPositionWalkable(target, mapArea, player, otherEnemies, { npcs })) {
+      continue;
+    }
+
+    const path = findPath(enemy.position, target, mapArea, {
+      player,
+      enemies: otherEnemies,
+      npcs,
+    });
+
+    if (path.length === 0) {
+      continue;
+    }
+
+    if (!bestPath || path.length < bestPath.length) {
+      bestPath = path;
+
+      if (path.length === 1) {
+        break;
+      }
+    }
+  }
+
+  if (bestPath && bestPath.length > 0) {
+    return bestPath[0];
+  }
+
+  // Fallback to adjacent heuristic if no path found
   const adjacentPositions = getAdjacentPositions(enemy.position);
-  
-  // Filter to positions that are valid moves
-  const validMoves = adjacentPositions.filter(
-    pos => canMoveToPosition(enemy, pos, mapArea, player, enemies)
+  const validMoves = adjacentPositions.filter((pos) =>
+    canMoveToPosition(enemy, pos, mapArea, player, otherEnemies)
   );
-  
+
   if (validMoves.length === 0) {
     return null;
   }
-  
-  // Find the position that gets closest to the player
+
   return validMoves.reduce((best, current) => {
     const currentDistance = calculateManhattanDistance(current, player.position);
     const bestDistance = calculateManhattanDistance(best, player.position);
-    
+
     return currentDistance < bestDistance ? current : best;
   }, validMoves[0]);
 };
@@ -124,11 +189,52 @@ export const seekCover = (
   player: Player,
   mapArea: MapArea,
   enemies: Enemy[],
-  coverPositions: Position[]
+  coverPositions: Position[],
+  npcs: NPC[] = []
 ): Position | null => {
   // If no cover positions, can't seek cover
   if (coverPositions.length === 0) {
     return null;
+  }
+
+  if (mapArea.tiles[enemy.position.y]?.[enemy.position.x]?.provideCover) {
+    return null;
+  }
+
+  const otherEnemies = enemies.filter((candidate) => candidate.id !== enemy.id);
+
+  let bestCoverPath: Position[] | null = null;
+
+  for (const cover of coverPositions) {
+    if (!isPositionInBounds(cover, mapArea)) {
+      continue;
+    }
+
+    if (!isPositionWalkable(cover, mapArea, player, otherEnemies, { npcs })) {
+      continue;
+    }
+
+    const path = findPath(enemy.position, cover, mapArea, {
+      player,
+      enemies: otherEnemies,
+      npcs,
+    });
+
+    if (path.length === 0) {
+      continue;
+    }
+
+    if (!bestCoverPath || path.length < bestCoverPath.length) {
+      bestCoverPath = path;
+
+      if (path.length === 1) {
+        break;
+      }
+    }
+  }
+
+  if (bestCoverPath && bestCoverPath.length > 0) {
+    return bestCoverPath[0];
   }
   
   // Get all possible adjacent positions
@@ -136,7 +242,7 @@ export const seekCover = (
   
   // Filter to positions that are valid moves
   const validMoves = adjacentPositions.filter(
-    pos => canMoveToPosition(enemy, pos, mapArea, player, enemies)
+    pos => canMoveToPosition(enemy, pos, mapArea, player, otherEnemies)
   );
   
   if (validMoves.length === 0) {

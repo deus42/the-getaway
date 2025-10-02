@@ -300,6 +300,39 @@ describe('Combat System Tests', () => {
       expect(result.enemy.position).not.toEqual(enemyFar.position);
     });
 
+    test('determineEnemyMove navigates around obstacles to approach player', () => {
+      const obstacleMap = createBasicMapArea('Obstacle Map', 8, 8);
+
+      const blockerCoords: Position[] = [
+        { x: 3, y: 3 },
+        { x: 3, y: 4 },
+        { x: 4, y: 4 },
+        { x: 4, y: 5 },
+      ];
+
+      blockerCoords.forEach(({ x, y }) => {
+        obstacleMap.tiles[y][x].isWalkable = false;
+      });
+
+      const routedEnemy = createEnemy({ x: 3, y: 5 });
+      const routedPlayer: Player = {
+        ...player,
+        position: { x: 3, y: 2 },
+      };
+
+      const result = determineEnemyMove(
+        routedEnemy,
+        routedPlayer,
+        obstacleMap,
+        [routedEnemy],
+        []
+      );
+
+      expect(result.action).toBe('move');
+      expect(result.enemy.position).toEqual({ x: 2, y: 5 });
+      expect(result.enemy.actionPoints).toBe(routedEnemy.actionPoints - 1);
+    });
+
     test('determineEnemyMove should seek cover when wounded', () => {
       const woundedEnemy = createEnemy({ x: 5, y: 5 }, 5, 20); // Low health
       const coverPosition = { x: 3, y: 3 };
