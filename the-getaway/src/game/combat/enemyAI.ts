@@ -21,7 +21,12 @@ export const determineEnemyMove = (
   let updatedEnemy = { ...enemy };
   let updatedPlayer = { ...player };
   let actionTaken = 'none';
-  
+
+  // If enemy is dead, do nothing
+  if (enemy.health <= 0) {
+    return { enemy: updatedEnemy, player: updatedPlayer, action: 'dead' };
+  }
+
   // If no AP left, do nothing
   if (enemy.actionPoints <= 0) {
     return { enemy: updatedEnemy, player: updatedPlayer, action: 'no_ap' };
