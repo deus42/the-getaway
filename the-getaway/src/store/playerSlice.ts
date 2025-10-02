@@ -45,6 +45,12 @@ type InitializeCharacterPayload = {
 
 const clampSkillValue = (value: number): number => Math.max(1, Math.min(10, Math.round(value)));
 
+/**
+ * Round weight to 2 decimal places to prevent floating-point precision errors.
+ * This prevents issues like 0.1 + 0.2 = 0.30000000000000004
+ */
+const roundWeight = (weight: number): number => Math.round(weight * 100) / 100;
+
 const applyStartingItem = (player: Player, item: StartingItemDefinition): void => {
   switch (item.type) {
     case 'weapon': {
@@ -266,8 +272,8 @@ export const playerSlice = createSlice({
     // Add item to inventory
     addItem: (state, action: PayloadAction<Item>) => {
       const item = action.payload;
-      const newWeight = state.data.inventory.currentWeight + item.weight;
-      
+      const newWeight = roundWeight(state.data.inventory.currentWeight + item.weight);
+
       // Check if player can carry the item
       if (newWeight <= state.data.inventory.maxWeight) {
         state.data.inventory.items.push(item);
@@ -279,10 +285,10 @@ export const playerSlice = createSlice({
     removeItem: (state, action: PayloadAction<string>) => {
       const itemId = action.payload;
       const item = state.data.inventory.items.find(item => item.id === itemId);
-      
+
       if (item) {
         state.data.inventory.items = state.data.inventory.items.filter(item => item.id !== itemId);
-        state.data.inventory.currentWeight -= item.weight;
+        state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight - item.weight);
       }
     },
     
@@ -307,7 +313,7 @@ export const playerSlice = createSlice({
 
       // Calculate final weight after swap to prevent overflow
       const oldWeaponWeight = state.data.equipped.weapon?.weight ?? 0;
-      const newWeight = state.data.inventory.currentWeight - weapon.weight + oldWeaponWeight;
+      const newWeight = roundWeight(state.data.inventory.currentWeight - weapon.weight + oldWeaponWeight);
 
       if (newWeight > state.data.inventory.maxWeight) {
         return; // Can't swap due to weight limit
@@ -316,12 +322,12 @@ export const playerSlice = createSlice({
       // Unequip current weapon if any (add back to inventory)
       if (state.data.equipped.weapon) {
         state.data.inventory.items.push(state.data.equipped.weapon);
-        state.data.inventory.currentWeight += state.data.equipped.weapon.weight;
+        state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + state.data.equipped.weapon.weight);
       }
 
       // Remove weapon from inventory
       state.data.inventory.items = state.data.inventory.items.filter(i => i.id !== weaponId);
-      state.data.inventory.currentWeight -= weapon.weight;
+      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight - weapon.weight);
 
       // Equip weapon
       state.data.equipped.weapon = weapon;
@@ -338,7 +344,7 @@ export const playerSlice = createSlice({
 
       // Calculate final weight after swap to prevent overflow
       const oldArmorWeight = state.data.equipped.armor?.weight ?? 0;
-      const newWeight = state.data.inventory.currentWeight - armor.weight + oldArmorWeight;
+      const newWeight = roundWeight(state.data.inventory.currentWeight - armor.weight + oldArmorWeight);
 
       if (newWeight > state.data.inventory.maxWeight) {
         return; // Can't swap due to weight limit
@@ -347,12 +353,12 @@ export const playerSlice = createSlice({
       // Unequip current armor if any (add back to inventory)
       if (state.data.equipped.armor) {
         state.data.inventory.items.push(state.data.equipped.armor);
-        state.data.inventory.currentWeight += state.data.equipped.armor.weight;
+        state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + state.data.equipped.armor.weight);
       }
 
       // Remove armor from inventory
       state.data.inventory.items = state.data.inventory.items.filter(i => i.id !== armorId);
-      state.data.inventory.currentWeight -= armor.weight;
+      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight - armor.weight);
 
       // Equip armor
       state.data.equipped.armor = armor;
@@ -367,7 +373,7 @@ export const playerSlice = createSlice({
       // Add weapon back to inventory
       const weapon = state.data.equipped.weapon;
       state.data.inventory.items.push(weapon);
-      state.data.inventory.currentWeight += weapon.weight;
+      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + weapon.weight);
 
       // Unequip
       state.data.equipped.weapon = undefined;
@@ -382,7 +388,7 @@ export const playerSlice = createSlice({
       // Add armor back to inventory
       const armor = state.data.equipped.armor;
       state.data.inventory.items.push(armor);
-      state.data.inventory.currentWeight += armor.weight;
+      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + armor.weight);
 
       // Unequip
       state.data.equipped.armor = undefined;
