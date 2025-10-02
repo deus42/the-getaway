@@ -7,6 +7,7 @@ import {
   MINIMAP_STATE_EVENT,
   MiniMapInteractionDetail,
   MiniMapStateDetail,
+  MiniMapViewportDetail,
 } from '../events';
 import type { MainScene } from '../scenes/MainScene';
 
@@ -16,6 +17,75 @@ const caf = typeof window !== 'undefined' ? window.cancelAnimationFrame.bind(win
 const DEFAULT_TILE_SCALE = 2;
 const MAX_CANVAS_WIDTH = 180;
 const MAX_CANVAS_HEIGHT = 160;
+
+const clampValue = (value: number, min: number, max: number): number => {
+  if (max < min) {
+    return min;
+  }
+  return Math.min(Math.max(value, min), max);
+};
+
+const roundTo = (value: number, precision: number = 4): number => {
+  const factor = 10 ** precision;
+  return Math.round(value * factor) / factor;
+};
+
+export const normalizeMiniMapViewport = (
+  viewport: MiniMapViewportDetail,
+  area: Pick<MapArea, 'width' | 'height'>,
+): MiniMapViewportDetail => {
+  const areaWidth = Math.max(1, area.width);
+  const areaHeight = Math.max(1, area.height);
+
+  const rawWidth = Math.max(0.0001, viewport.width);
+  const rawHeight = Math.max(0.0001, viewport.height);
+  const centerX = viewport.x + rawWidth / 2;
+  const centerY = viewport.y + rawHeight / 2;
+
+  const MIN_DIMENSION = 0.001;
+
+  const sanitizedWidth = Math.max(MIN_DIMENSION, rawWidth);
+  const sanitizedHeight = Math.max(MIN_DIMENSION, rawHeight);
+
+  const boundedWidth = Math.min(areaWidth, sanitizedWidth);
+  const boundedHeight = Math.min(areaHeight, sanitizedHeight);
+
+  const halfWidth = boundedWidth / 2;
+  const halfHeight = boundedHeight / 2;
+
+  const minCenterX = halfWidth;
+  const maxCenterX = Math.max(halfWidth, areaWidth - halfWidth);
+  const minCenterY = halfHeight;
+  const maxCenterY = Math.max(halfHeight, areaHeight - halfHeight);
+
+  const clampedCenterX = clampValue(centerX, minCenterX, maxCenterX);
+  const clampedCenterY = clampValue(centerY, minCenterY, maxCenterY);
+
+  const finalWidth = roundTo(boundedWidth);
+  const finalHeight = roundTo(boundedHeight);
+
+  const adjustedCenterX = clampValue(
+    clampedCenterX,
+    finalWidth / 2,
+    Math.max(finalWidth / 2, areaWidth - finalWidth / 2),
+  );
+  const adjustedCenterY = clampValue(
+    clampedCenterY,
+    finalHeight / 2,
+    Math.max(finalHeight / 2, areaHeight - finalHeight / 2),
+  );
+
+  const finalX = clampValue(roundTo(adjustedCenterX - finalWidth / 2), 0, Math.max(0, areaWidth - finalWidth));
+  const finalY = clampValue(roundTo(adjustedCenterY - finalHeight / 2), 0, Math.max(0, areaHeight - finalHeight));
+
+  return {
+    x: finalX,
+    y: finalY,
+    width: finalWidth,
+    height: finalHeight,
+    zoom: viewport.zoom,
+  };
+};
 
 const clampScale = (area: Pick<MapArea, 'width' | 'height'>): number => {
   const widthScale = MAX_CANVAS_WIDTH / area.width;
@@ -59,7 +129,7 @@ class MiniMapService extends EventTarget {
 
   private tileSignature: { areaId: string; ref: MapTile[][]; version: number } | null = null;
 
-  private viewport: MiniMapStateDetail['viewport'] | null = null;
+  private viewport: MiniMapViewportDetail | null = null;
 
   private readonly raf = raf;
 
@@ -194,13 +264,16 @@ class MiniMapService extends EventTarget {
       };
     }
 
-    const viewport = this.viewport ?? {
+    const baseViewport = this.viewport ?? {
       x: 0,
       y: 0,
       width: Math.min(area.width, Math.ceil(area.width * 0.4)),
       height: Math.min(area.height, Math.ceil(area.height * 0.4)),
       zoom: this.scene ? this.scene.cameras.main.zoom : 1,
     };
+
+    const normalizedViewport = normalizeMiniMapViewport(baseViewport, area);
+    this.viewport = normalizedViewport;
 
     return {
       version: (this.lastState?.version ?? 0) + 1,
@@ -216,7 +289,7 @@ class MiniMapService extends EventTarget {
       tiles: tilesRef,
       entities: this.buildEntities(player.id ?? 'player', player.position.x, player.position.y, enemies, npcs),
       entitiesSignature: entitySig,
-      viewport,
+      viewport: normalizedViewport,
       curfewActive: current.world.curfewActive,
       timestamp: Date.now(),
     };

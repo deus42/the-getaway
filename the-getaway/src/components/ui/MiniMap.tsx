@@ -61,6 +61,13 @@ const createTileCache = (): TileCache => ({ areaId: '', tileVersion: -1, canvas:
 
 const getTileColor = (type: string): string => TILE_COLORS[type.toLowerCase()] ?? TILE_COLORS.default;
 
+const clamp = (value: number, min: number, max: number): number => {
+  if (max < min) {
+    return min;
+  }
+  return Math.min(Math.max(value, min), max);
+};
+
 const drawTilesToCanvas = (tiles: TileTypeGrid, tileScale: number): HTMLCanvasElement => {
   const width = tiles[0]?.length ?? 0;
   const height = tiles.length;
@@ -183,7 +190,7 @@ const drawEntities = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) 
 };
 
 const drawViewport = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) => {
-  const { viewport, tileScale } = state;
+  const { viewport, tileScale, logicalWidth, logicalHeight } = state;
   if (!viewport || viewport.width <= 0 || viewport.height <= 0) {
     return;
   }
@@ -193,14 +200,40 @@ const drawViewport = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) 
   const viewportWidth = viewport.width * tileScale;
   const viewportHeight = viewport.height * tileScale;
 
+  const safeWidth = Math.max(viewportWidth, 0.0001);
+  const safeHeight = Math.max(viewportHeight, 0.0001);
+
+  const minWidthPx = Math.max(8, tileScale * 3);
+  const minHeightPx = Math.max(6, tileScale * 2);
+
+  const widthScale = safeWidth < minWidthPx ? minWidthPx / safeWidth : 1;
+  const heightScale = safeHeight < minHeightPx ? minHeightPx / safeHeight : 1;
+  const scaleFactor = Math.max(widthScale, heightScale);
+
+  const renderWidth = safeWidth * scaleFactor;
+  const renderHeight = safeHeight * scaleFactor;
+
+  const centerX = viewportX + safeWidth / 2;
+  const centerY = viewportY + safeHeight / 2;
+
+  const availableWidth = logicalWidth - renderWidth;
+  const availableHeight = logicalHeight - renderHeight;
+
+  const renderX = availableWidth <= 0
+    ? (logicalWidth - renderWidth) / 2
+    : clamp(centerX - renderWidth / 2, 0, availableWidth);
+  const renderY = availableHeight <= 0
+    ? (logicalHeight - renderHeight) / 2
+    : clamp(centerY - renderHeight / 2, 0, availableHeight);
+
   ctx.save();
   ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
-  ctx.fillRect(viewportX, viewportY, viewportWidth, viewportHeight);
+  ctx.fillRect(renderX, renderY, renderWidth, renderHeight);
 
   ctx.lineWidth = Math.max(1.5, tileScale * 0.28);
   ctx.strokeStyle = 'rgba(56, 189, 248, 0.95)';
   ctx.setLineDash([tileScale * 1.5, tileScale * 1.5]);
-  ctx.strokeRect(viewportX + 0.5, viewportY + 0.5, viewportWidth - 1, viewportHeight - 1);
+  ctx.strokeRect(renderX, renderY, renderWidth, renderHeight);
   ctx.setLineDash([]);
 
   const cornerSize = Math.max(4, tileScale * 0.7);
@@ -215,10 +248,21 @@ const drawViewport = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) 
     ctx.stroke();
   };
 
-  drawCorner(viewportX, viewportY, 1, 1);
-  drawCorner(viewportX + viewportWidth, viewportY, -1, 1);
-  drawCorner(viewportX, viewportY + viewportHeight, 1, -1);
-  drawCorner(viewportX + viewportWidth, viewportY + viewportHeight, -1, -1);
+  drawCorner(renderX, renderY, 1, 1);
+  drawCorner(renderX + renderWidth, renderY, -1, 1);
+  drawCorner(renderX, renderY + renderHeight, 1, -1);
+  drawCorner(renderX + renderWidth, renderY + renderHeight, -1, -1);
+
+  const reticleSize = Math.max(3, tileScale * 0.8);
+  ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+  ctx.lineWidth = Math.max(1, tileScale * 0.22);
+  ctx.beginPath();
+  ctx.moveTo(centerX - reticleSize, centerY);
+  ctx.lineTo(centerX + reticleSize, centerY);
+  ctx.moveTo(centerX, centerY - reticleSize);
+  ctx.lineTo(centerX, centerY + reticleSize);
+  ctx.stroke();
+
   ctx.restore();
 };
 
