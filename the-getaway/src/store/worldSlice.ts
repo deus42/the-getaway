@@ -102,6 +102,16 @@ export const worldSlice = createSlice({
 
     enterCombat: (state) => {
       if (!state.inCombat) {
+        // Validate that there are living enemies before entering combat
+        const livingEnemies = state.currentMapArea.entities.enemies.filter(
+          (enemy) => enemy.health > 0
+        );
+
+        if (livingEnemies.length === 0) {
+          console.log('[worldSlice] Cannot enter combat: no living enemies');
+          return;
+        }
+
         console.log('[worldSlice] Entering Combat Mode');
         state.inCombat = true;
         state.isPlayerTurn = true;
