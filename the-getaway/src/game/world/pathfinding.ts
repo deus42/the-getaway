@@ -106,7 +106,11 @@ export const findPath = (
           continue;
         }
       } else {
-        // For the target tile we still want to prevent landing on enemies
+        // For the target tile we still want to prevent landing on enemies, NPCs, or player
+        const occupiedByPlayer = player
+          ? player.position.x === next.x && player.position.y === next.y
+          : false;
+
         const occupiedByEnemy = enemies.some(
           (enemy) => enemy.position.x === next.x && enemy.position.y === next.y
         );
@@ -118,7 +122,7 @@ export const findPath = (
             npc.position.y === next.y
         );
 
-        if (occupiedByEnemy || occupiedByNpc) {
+        if (occupiedByPlayer || occupiedByEnemy || occupiedByNpc) {
           continue;
         }
       }
