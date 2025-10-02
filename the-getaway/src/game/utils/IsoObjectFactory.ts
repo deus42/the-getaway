@@ -68,6 +68,14 @@ export interface CharacterToken {
   options: CharacterTokenOptions;
 }
 
+export interface PulsingHighlightOptions extends HighlightOptions {
+  pulseColor?: number;
+  pulseAlpha?: { from?: number; to?: number };
+  pulseScale?: number;
+  duration?: number;
+  depthOffset?: number;
+}
+
 export class IsoObjectFactory {
   private originX = 0;
   private originY = 0;
@@ -278,6 +286,67 @@ export class IsoObjectFactory {
 
     container.add([panelGlow, base, support, panel]);
     container.setDepth(y + 12);
+
+    return container;
+  }
+
+  public createPulsingHighlight(
+    gridX: number,
+    gridY: number,
+    options: PulsingHighlightOptions = {}
+  ): Phaser.GameObjects.Container {
+    const metrics = getIsoMetrics(this.tileSize);
+    const { x, y } = toPixel(gridX, gridY, this.originX, this.originY, this.tileSize);
+    const width = metrics.tileWidth * (options.widthScale ?? 0.8);
+    const height = metrics.tileHeight * (options.heightScale ?? 0.8);
+    const baseColor = options.color ?? 0x38bdf8;
+    const baseAlpha = options.alpha ?? 0.2;
+    const pulseColor = options.pulseColor ?? adjustColor(baseColor, 0.1);
+    const pulseScale = options.pulseScale ?? 1.18;
+    const pulseAlphaFrom = options.pulseAlpha?.from ?? baseAlpha;
+    const pulseAlphaTo = options.pulseAlpha?.to ?? 0.05;
+    const duration = options.duration ?? 1350;
+    const depthOffset = options.depthOffset ?? 5;
+
+    const container = this.scene.add.container(x, y);
+
+    const drawDiamond = (graphics: Phaser.GameObjects.Graphics, color: number, alpha: number) => {
+      const points = getDiamondPoints(0, 0, width, height).map(
+        (point) => new Phaser.Geom.Point(point.x, point.y)
+      );
+      graphics.clear();
+      graphics.fillStyle(color, alpha);
+      graphics.fillPoints(points, true);
+      graphics.lineStyle(1.3, adjustColor(color, 0.2), Math.min(1, alpha + 0.1));
+      graphics.strokePoints(points, true);
+    };
+
+    const base = this.scene.add.graphics();
+    drawDiamond(base, baseColor, baseAlpha);
+
+    const pulse = this.scene.add.graphics();
+    drawDiamond(pulse, pulseColor, pulseAlphaFrom);
+
+    container.add([pulse, base]);
+    container.setDepth(y + depthOffset);
+
+    const tween = this.scene.tweens.add({
+      targets: pulse,
+      alpha: { from: pulseAlphaFrom, to: pulseAlphaTo },
+      scaleX: { from: 1, to: pulseScale },
+      scaleY: { from: 1, to: pulseScale },
+      duration,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1,
+    });
+
+    container.setData('pulseTween', tween);
+    container.once(Phaser.GameObjects.Events.DESTROY, () => {
+      if (tween && tween.isPlaying()) {
+        tween.stop();
+      }
+    });
 
     return container;
   }

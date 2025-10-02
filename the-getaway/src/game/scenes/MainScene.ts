@@ -437,11 +437,16 @@ export class MainScene extends Phaser.Scene {
     const interactiveNpcs = (this.currentMapArea.entities.npcs ?? []).filter((npc) => npc.isInteractive);
     interactiveNpcs.forEach((npc) => {
       addProp(
-        this.isoFactory!.createHighlightDiamond(npc.position.x, npc.position.y, {
+        this.isoFactory!.createPulsingHighlight(npc.position.x, npc.position.y, {
           color: 0x22d3ee,
-          alpha: 0.16,
-          widthScale: 0.62,
-          heightScale: 0.62,
+          alpha: 0.14,
+          pulseColor: 0x7dd3fc,
+          pulseAlpha: { from: 0.26, to: 0.05 },
+          pulseScale: 1.22,
+          widthScale: 0.58,
+          heightScale: 0.58,
+          depthOffset: 9,
+          duration: 1400,
         })
       );
     });
@@ -452,12 +457,18 @@ export class MainScene extends Phaser.Scene {
 
     itemMarkers.forEach((item) => {
       const color = item.isQuestItem ? 0xfacc15 : 0x10b981;
+      const pulseColor = item.isQuestItem ? 0xfff3bf : 0x6ee7b7;
       addProp(
-        this.isoFactory!.createHighlightDiamond(item.position.x, item.position.y, {
+        this.isoFactory!.createPulsingHighlight(item.position.x, item.position.y, {
           color,
-          alpha: 0.24,
-          widthScale: 0.7,
-          heightScale: 0.7,
+          alpha: 0.18,
+          pulseColor,
+          pulseAlpha: { from: 0.28, to: 0.06 },
+          pulseScale: item.isQuestItem ? 1.25 : 1.18,
+          widthScale: 0.62,
+          heightScale: 0.62,
+          depthOffset: 8,
+          duration: item.isQuestItem ? 1250 : 1450,
         })
       );
     });
