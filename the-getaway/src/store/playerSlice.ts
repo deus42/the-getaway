@@ -370,10 +370,18 @@ export const playerSlice = createSlice({
         return;
       }
 
-      // Add weapon back to inventory
       const weapon = state.data.equipped.weapon;
+      const newWeight = roundWeight(state.data.inventory.currentWeight + weapon.weight);
+
+      // Check if unequipping would exceed weight limit
+      if (newWeight > state.data.inventory.maxWeight) {
+        console.warn('[PlayerSlice] Cannot unequip weapon: would exceed weight limit');
+        return;
+      }
+
+      // Add weapon back to inventory
       state.data.inventory.items.push(weapon);
-      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + weapon.weight);
+      state.data.inventory.currentWeight = newWeight;
 
       // Unequip
       state.data.equipped.weapon = undefined;
@@ -385,10 +393,18 @@ export const playerSlice = createSlice({
         return;
       }
 
-      // Add armor back to inventory
       const armor = state.data.equipped.armor;
+      const newWeight = roundWeight(state.data.inventory.currentWeight + armor.weight);
+
+      // Check if unequipping would exceed weight limit
+      if (newWeight > state.data.inventory.maxWeight) {
+        console.warn('[PlayerSlice] Cannot unequip armor: would exceed weight limit');
+        return;
+      }
+
+      // Add armor back to inventory
       state.data.inventory.items.push(armor);
-      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + armor.weight);
+      state.data.inventory.currentWeight = newWeight;
 
       // Unequip
       state.data.equipped.armor = undefined;
