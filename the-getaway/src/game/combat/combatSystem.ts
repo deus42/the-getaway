@@ -53,6 +53,12 @@ export const areEntitiesAdjacent = (pos1: Position, pos2: Position): boolean => 
 
 // Check if position is in attack range
 export const isInAttackRange = (attacker: Position, target: Position, range: number): boolean => {
+  // Validate range is a positive finite number
+  if (!Number.isFinite(range) || range <= 0) {
+    console.warn('[CombatSystem] Invalid attack range:', range);
+    return false;
+  }
+
   const distance = Math.sqrt(
     Math.pow(target.x - attacker.x, 2) + Math.pow(target.y - attacker.y, 2)
   );
