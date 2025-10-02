@@ -74,12 +74,16 @@ export const selectDialogueOption = (
   };
 } => {
   const currentNode = getDialogueNode(dialogue, currentNodeId);
-  
-  if (!currentNode || optionIndex >= currentNode.options.length) {
+
+  if (!currentNode || optionIndex < 0 || optionIndex >= currentNode.options.length) {
     return { nextNode: null, player, quests };
   }
-  
+
   const selectedOption = currentNode.options[optionIndex];
+
+  if (!selectedOption) {
+    return { nextNode: null, player, quests };
+  }
   
   // Check if skill requirement is met
   if (!checkSkillRequirement(player, selectedOption)) {
