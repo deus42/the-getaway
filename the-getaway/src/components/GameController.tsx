@@ -886,6 +886,14 @@ const GameController: React.FC = () => {
       console.log(
         `[GameController] >>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
       );
+
+      // Bail if combat has ended since this timeout was scheduled
+      if (!inCombat) {
+        console.log('[GameController] Combat ended, skipping enemy action');
+        setIsProcessingEnemyAction(false);
+        return;
+      }
+
       try {
         console.log(
           `[GameController] Enemy Turn AI: START for ${currentEnemy.id}`
