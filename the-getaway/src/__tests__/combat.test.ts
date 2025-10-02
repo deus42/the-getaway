@@ -56,7 +56,13 @@ describe('Combat System Tests', () => {
   // Test the basic attack functionality
   describe('Basic Attack Functionality', () => {
     test('executeAttack should reduce target health on hit', () => {
-      setRandomGenerator(() => 0.1);
+      const attackRolls = [0.1, 0.9];
+      let rollIndex = 0;
+      setRandomGenerator(() => {
+        const roll = attackRolls[Math.min(rollIndex, attackRolls.length - 1)];
+        rollIndex += 1;
+        return roll;
+      });
       
       // Execute attack
       const result = executeAttack(player, enemy, false);
@@ -183,6 +189,8 @@ describe('Combat System Tests', () => {
         skills: {
           ...DEFAULT_PLAYER.skills,
           strength: 8,
+          perception: 1,
+          luck: 1,
         },
         equipped: {
           ...DEFAULT_PLAYER.equipped,
@@ -489,5 +497,124 @@ describe('Combat derived stat influence', () => {
     const highResult = executeAttack(highStrengthAttacker, targetB, false);
 
     expect(highResult.damage).toBeGreaterThan(lowResult.damage);
+  });
+});
+
+describe('Skill tree integration', () => {
+  test('small guns training increases ranged hit chance', () => {
+    const attacker: Player = {
+      ...DEFAULT_PLAYER,
+      position: { x: 0, y: 0 },
+      equipped: {
+        ...DEFAULT_PLAYER.equipped,
+        weapon: createWeapon('Test Pistol', 10, 6, 2, 2, undefined, 'smallGuns'),
+      },
+    };
+
+    const target = createEnemy({ x: 2, y: 0 });
+
+    const baseChance = calculateHitChance(attacker, target, false);
+
+    const trainedAttacker: Player = {
+      ...attacker,
+      skillTraining: {
+        ...attacker.skillTraining,
+        smallGuns: 50,
+      },
+    };
+
+    const trainedChance = calculateHitChance(trainedAttacker, target, false);
+
+    expect(trainedChance).toBeGreaterThan(baseChance);
+    expect(trainedChance - baseChance).toBeCloseTo(0.25, 1); // +25% from 50 points
+  });
+
+  test('melee combat training adds bonus damage', () => {
+    const weapon = createWeapon('Combat Knife', 8, 1, 2, 1, undefined, 'meleeCombat');
+
+    const baselineAttacker: Player = {
+      ...DEFAULT_PLAYER,
+      equipped: {
+        ...DEFAULT_PLAYER.equipped,
+        weapon,
+      },
+    };
+
+    const trainedAttacker: Player = {
+      ...baselineAttacker,
+      skillTraining: {
+        ...baselineAttacker.skillTraining,
+        meleeCombat: 35,
+      },
+    };
+
+    const expectedBonus = Math.floor(35 / 10); // +3 damage from skill training
+
+    let rollIndex = 0;
+    const baseRolls = [0.1, 0.9];
+    setRandomGenerator(() => {
+      const roll = baseRolls[Math.min(rollIndex, baseRolls.length - 1)];
+      rollIndex += 1;
+      return roll;
+    });
+    const baselineResult = executeAttack(
+      baselineAttacker,
+      createEnemy({ x: 0, y: 1 }, 40, 40, 5),
+      false
+    );
+
+    rollIndex = 0;
+    const trainedRolls = [0.1, 0.9];
+    setRandomGenerator(() => {
+      const roll = trainedRolls[Math.min(rollIndex, trainedRolls.length - 1)];
+      rollIndex += 1;
+      return roll;
+    });
+    const trainedResult = executeAttack(
+      trainedAttacker,
+      createEnemy({ x: 0, y: 1 }, 40, 40, 5),
+      false
+    );
+
+    expect(trainedResult.success).toBe(true);
+    expect(trainedResult.damage - baselineResult.damage).toBe(expectedBonus);
+  });
+
+  test('energy weapon training boosts critical chance', () => {
+    const laserRifle = createWeapon('Laser Rifle', 14, 8, 3, 4, undefined, 'energyWeapons');
+    const attacker: Player = {
+      ...DEFAULT_PLAYER,
+      skills: {
+        ...DEFAULT_PLAYER.skills,
+        perception: 7,
+        luck: 7,
+      },
+      skillTraining: {
+        ...DEFAULT_PLAYER.skillTraining,
+        energyWeapons: 100,
+      },
+      equipped: {
+        ...DEFAULT_PLAYER.equipped,
+        weapon: laserRifle,
+      },
+      actionPoints: 10,
+      maxActionPoints: 10,
+    };
+
+    const target = createEnemy({ x: 0, y: 1 }, 60, 60, 5);
+
+    const rolls = [0.1, 0.05];
+    let rollIndex = 0;
+    setRandomGenerator(() => {
+      const roll = rolls[Math.min(rollIndex, rolls.length - 1)];
+      rollIndex += 1;
+      return roll;
+    });
+
+    const result = executeAttack(attacker, target, false);
+
+    expect(result.success).toBe(true);
+    expect(result.damage).toBeGreaterThan(laserRifle.damage);
+    expect(result.damage).toBe(Math.round(laserRifle.damage * 1.5));
   });
 });

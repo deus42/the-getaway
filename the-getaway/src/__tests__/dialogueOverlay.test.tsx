@@ -44,6 +44,10 @@ describe('DialogueOverlay', () => {
     );
 
     act(() => {
+      store.dispatch(updateSkill({ skill: 'charisma', amount: -4 }));
+    });
+
+    act(() => {
       store.dispatch(startDialogue({ dialogueId: 'npc_lira_vendor', nodeId: 'intro' }));
     });
 

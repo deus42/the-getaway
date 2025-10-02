@@ -19,9 +19,12 @@ import {
   DialogueNode,
   DialogueOption,
   Item,
+  SkillId,
 } from "../../game/interfaces/types";
 import { getSystemStrings } from "../../content/system";
 import { getUIStrings } from "../../content/ui";
+import { getSkillDefinition } from "../../content/skills";
+import { checkSkillRequirement } from "../../game/quests/dialogueSystem";
 
 const fallbackSkillName = (skill: string) =>
   skill.charAt(0).toUpperCase() + skill.slice(1);
@@ -39,9 +42,22 @@ const DialogueOverlay: React.FC = () => {
   const systemStrings = getSystemStrings(locale);
   const uiStrings = getUIStrings(locale);
   const { logs: logStrings } = systemStrings;
+  const player = useSelector((state: RootState) => state.player.data);
 
-  const resolveSkillName = (skill: string) =>
-    uiStrings.skills[skill as keyof typeof uiStrings.skills] ?? fallbackSkillName(skill);
+  const resolveSkillName = (skill: string, domain: 'attribute' | 'skill' = 'attribute') => {
+    if (domain === 'skill') {
+      try {
+        return getSkillDefinition(skill as SkillId).name;
+      } catch (error) {
+        console.warn('[DialogueOverlay] Missing skill definition for', skill, error);
+        return fallbackSkillName(skill);
+      }
+    }
+
+    return (
+      uiStrings.skills[skill as keyof typeof uiStrings.skills] ?? fallbackSkillName(skill)
+    );
+  };
 
   const awardQuestRewards = useCallback(
     (questId: string) => {
@@ -160,7 +176,6 @@ const DialogueOverlay: React.FC = () => {
     activeDialogue: { dialogueId, currentNodeId },
     dialogues,
   } = useSelector((state: RootState) => state.quests);
-  const playerSkills = useSelector((state: RootState) => state.player.data.skills);
 
   if (!dialogueId) {
     return null;
@@ -228,9 +243,7 @@ const DialogueOverlay: React.FC = () => {
       return false;
     }
 
-    const { skill, threshold } = option.skillCheck;
-    const playerValue = playerSkills[skill] ?? 0;
-    return playerValue < threshold;
+    return !checkSkillRequirement(player, option);
   };
 
   const handleOptionSelect = (option: DialogueOption) => {
@@ -311,7 +324,10 @@ const DialogueOverlay: React.FC = () => {
           {currentNode?.options.map((option, index) => {
             const locked = isOptionLocked(option);
             const requirementLabel = option.skillCheck
-              ? `${resolveSkillName(option.skillCheck.skill)} ${option.skillCheck.threshold}`
+              ? `${resolveSkillName(
+                  option.skillCheck.skill,
+                  option.skillCheck.domain ?? 'attribute'
+                )} ${option.skillCheck.threshold}`
               : null;
             const questReason = getQuestLockReason(option);
             const statusLabel = questReason

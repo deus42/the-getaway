@@ -326,6 +326,7 @@ describe('inventorySystem', () => {
       expect(weapon.weight).toBe(2);
       expect(weapon.value).toBe(150); // damage * 10
       expect(weapon.slot).toBe('weapon');
+      expect(weapon.skillType).toBe('smallGuns');
     });
 
     it('creates weapon with stat modifiers', () => {
@@ -335,6 +336,11 @@ describe('inventorySystem', () => {
       });
 
       expect(weapon.statModifiers).toEqual({ perceptionBonus: 2, agilityBonus: 1 });
+    });
+
+    it('respects explicit skill type overrides', () => {
+      const weapon = createWeapon('Laser Rifle', 20, 9, 4, 4, undefined, 'energyWeapons');
+      expect(weapon.skillType).toBe('energyWeapons');
     });
   });
 

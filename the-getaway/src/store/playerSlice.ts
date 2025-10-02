@@ -1,11 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { Player, Position, Item, PlayerSkills, Weapon, Armor } from '../game/interfaces/types';
+import { Player, Position, Item, PlayerSkills, Weapon, Armor, SkillId } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { calculateDerivedStats, calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
 import { createArmor, createConsumable, createWeapon } from '../game/inventory/inventorySystem';
 import { BACKGROUND_MAP, StartingItemDefinition } from '../content/backgrounds';
+import { getSkillDefinition } from '../content/skills';
 
 export interface PlayerState {
   data: Player;
@@ -62,7 +63,8 @@ const applyStartingItem = (player: Player, item: StartingItemDefinition): void =
         item.range,
         item.apCost,
         item.weight,
-        item.statModifiers
+        item.statModifiers,
+        item.skillType
       );
       if (item.equip) {
         player.equipped.weapon = weapon;
@@ -420,6 +422,50 @@ export const playerSlice = createSlice({
       }
     },
 
+    allocateSkillPointToSkill: (state, action: PayloadAction<SkillId>) => {
+      const skillId = action.payload;
+      if (state.data.skillPoints <= 0) {
+        return;
+      }
+
+      const definition = getSkillDefinition(skillId);
+      const currentValue = state.data.skillTraining[skillId] ?? 0;
+      const isTagged = state.data.taggedSkillIds.includes(skillId);
+      const increment = isTagged ? definition.taggedIncrement : definition.increment;
+
+      if (currentValue >= definition.maxValue) {
+        return;
+      }
+
+      if (currentValue + increment > definition.maxValue) {
+        return;
+      }
+
+      state.data.skillTraining[skillId] = currentValue + increment;
+      state.data.skillPoints -= 1;
+    },
+
+    refundSkillPointFromSkill: (state, action: PayloadAction<SkillId>) => {
+      const skillId = action.payload;
+      const definition = getSkillDefinition(skillId);
+      const currentValue = state.data.skillTraining[skillId] ?? 0;
+
+      if (currentValue <= 0) {
+        return;
+      }
+
+      const isTagged = state.data.taggedSkillIds.includes(skillId);
+      const decrement = isTagged ? definition.taggedIncrement : definition.increment;
+      const newValue = currentValue - decrement;
+
+      if (newValue < 0) {
+        return;
+      }
+
+      state.data.skillTraining[skillId] = newValue;
+      state.data.skillPoints += 1;
+    },
+
     // Spend attribute point to increase attribute
     spendAttributePoint: (state, action: PayloadAction<keyof PlayerSkills>) => {
       const attribute = action.payload;
@@ -483,7 +529,9 @@ export const {
   unequipWeapon,
   unequipArmor,
   spendSkillPoints,
-  spendAttributePoint
+  spendAttributePoint,
+  allocateSkillPointToSkill,
+  refundSkillPointFromSkill
 } = playerSlice.actions;
 
 export default playerSlice.reducer; 

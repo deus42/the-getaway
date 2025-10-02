@@ -10,6 +10,14 @@ import {
   applyArmorReduction,
   getEffectiveArmorRating,
 } from '../systems/equipmentEffects';
+import {
+  calculateEnergyWeaponsBonuses,
+  calculateExplosivesBonuses,
+  calculateMeleeCombatBonuses,
+  calculateSmallGunsHitBonus,
+  getPlayerSkillValue,
+  resolveWeaponSkillType,
+} from '../systems/skillTree';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
@@ -104,8 +112,36 @@ export const calculateHitChance = (
 
   // Player-based modifiers
   if ('skills' in attacker) {
-    const attackerStats = getPlayerDerivedStats(attacker as Player);
+    const playerAttacker = attacker as Player;
+    const attackerStats = getPlayerDerivedStats(playerAttacker);
     hitChance += attackerStats.hitChanceModifier / 100;
+
+    const weaponSkill = resolveWeaponSkillType(playerAttacker.equipped.weapon);
+    const skillValue = getPlayerSkillValue(playerAttacker, weaponSkill);
+
+    switch (weaponSkill) {
+      case 'smallGuns': {
+        hitChance += calculateSmallGunsHitBonus(skillValue) / 100;
+        break;
+      }
+      case 'energyWeapons': {
+        const bonuses = calculateEnergyWeaponsBonuses(skillValue);
+        hitChance += bonuses.hit / 100;
+        break;
+      }
+      case 'meleeCombat': {
+        const bonuses = calculateMeleeCombatBonuses(skillValue);
+        hitChance += bonuses.hit / 100;
+        break;
+      }
+      case 'explosives': {
+        const bonuses = calculateExplosivesBonuses(skillValue);
+        hitChance += bonuses.accuracy / 100;
+        break;
+      }
+      default:
+        break;
+    }
   }
 
   if ('skills' in target) {
@@ -152,6 +188,8 @@ export const executeAttack = (
   let damageAmount = 0;
 
   if (hit) {
+    let critChanceBonus = 0;
+
     if ('skills' in attacker) {
       const playerAttacker = attacker as Player;
       const attackerDerived = getPlayerDerivedStats(playerAttacker);
@@ -161,7 +199,35 @@ export const executeAttack = (
       const isMeleeAttack = !equippedWeapon || equippedWeapon.range <= 1;
       const strengthBonus = isMeleeAttack ? attackerDerived.meleeDamageBonus : 0;
 
+      const weaponSkill = resolveWeaponSkillType(equippedWeapon);
+      const skillValue = getPlayerSkillValue(playerAttacker, weaponSkill);
+
       damageAmount = getEffectiveDamage(baseWeaponDamage, bonuses, strengthBonus);
+
+      switch (weaponSkill) {
+        case 'energyWeapons': {
+          const bonusesBySkill = calculateEnergyWeaponsBonuses(skillValue);
+          critChanceBonus = bonusesBySkill.crit;
+          break;
+        }
+        case 'meleeCombat': {
+          const bonusesBySkill = calculateMeleeCombatBonuses(skillValue);
+          damageAmount += bonusesBySkill.damage;
+          break;
+        }
+        case 'explosives':
+        case 'smallGuns':
+        default:
+          break;
+      }
+
+      const totalCriticalChance = Math.max(0, Math.min(95, attackerDerived.criticalChance + critChanceBonus));
+      if (totalCriticalChance > 0) {
+        const critRoll = getRandomRoll();
+        if (critRoll <= totalCriticalChance / 100) {
+          damageAmount = Math.round(damageAmount * 1.5);
+        }
+      }
     } else {
       damageAmount = 'damage' in attacker ? attacker.damage : DEFAULT_ATTACK_DAMAGE;
     }

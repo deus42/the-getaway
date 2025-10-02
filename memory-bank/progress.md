@@ -19,6 +19,106 @@
 </notes>
 </step>
 
+<step id="24.2" status="completed">
+<step_metadata>
+  <number>24.2</number>
+  <title>Skill Tree System with Combat Branch</title>
+  <status>Completed</status>
+  <date>October 2, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Introduced branch/skill definitions in `content/skills.ts` and extended core types (`SkillId`, `Player.skillTraining`, `Weapon.skillType`) so progression data is fully typed.
+2. Added Redux actions `allocateSkillPointToSkill` / `refundSkillPointFromSkill`, tag-aware increments, and tests covering spend/refund symmetry and cap enforcement.
+3. Built `SkillTreePanel.tsx` with tab navigation, live announcements, effect previews sourced from `skillTree.ts`, and integrated it into the left HUD column.
+4. Wired combat to apply skill bonuses (hit chance, melee damage, energy crit chance) and prevented tile traversal when `MapTile.skillRequirement` is unmet.
+5. Enabled dialogue/world systems to consume `domain="skill"` checks while keeping UI labels in sync via `getSkillDefinition` lookups.
+6. Expanded automated coverage (player slice, combat, dialogue, grid, SkillTreePanel) and ran the full Jest suite to lock in behaviour.
+</tasks>
+
+<implementation>
+- `src/game/systems/skillTree.ts` centralises hit/crit/damage/radius maths so UI previews and runtime combat stay aligned, and exposes helpers for tagged increments.
+- `playerSlice` now stores skill training, clones defaults during `createFreshPlayer`, and gates allocation against branch caps defined in content.
+- `SkillTreePanel` surface includes tablist keyboard support, tag badges, and effect summaries that mirror combat formulas; announcements fire through `aria-live` for accessibility.
+- Combat resolves a weapon's `skillType`, folds skill bonuses into hit chance and melee damage, and layers energy weapon crit bonuses on top of existing attribute-based critical chance.
+- `DialogueOverlay` and `dialogueSystem` share `checkSkillRequirement`, honouring both attribute and skill domains, while `grid.ts` enforces optional tile skill requirements.
+</implementation>
+
+<code_reference file="src/content/skills.ts">
+Branch definitions, increments, effect blurbs, and stub markers for Tech/Survival/Social trees
+</code_reference>
+
+<code_reference file="src/game/interfaces/types.ts">
+Added skill tree types, weapon skillType, MapTile skill requirements, and extended Player state
+</code_reference>
+
+<code_reference file="src/game/interfaces/player.ts">
+Seeded default skillTraining map and ensured fresh player clones remain isolated
+</code_reference>
+
+<code_reference file="src/store/playerSlice.ts">
+Skill allocation/refund reducers, tagged increments, and deep copies during character initialisation
+</code_reference>
+
+<code_reference file="src/game/systems/skillTree.ts">
+Shared helpers for hit bonuses, crit bonuses, melee damage boosts, explosive radius, and tag increments
+</code_reference>
+
+<code_reference file="src/components/ui/SkillTreePanel.tsx">
+Tabbed allocation panel with accessible controls, effect summaries, and live announcements
+</code_reference>
+
+<code_reference file="src/game/combat/combatSystem.ts">
+Applied weapon skill bonuses to hit/damage/crit calculations and respected skill-informed weapon metadata
+</code_reference>
+
+<code_reference file="src/components/ui/DialogueOverlay.tsx">
+Delegated gating to shared helper and resolved skill names from content definitions
+</code_reference>
+
+<code_reference file="src/game/quests/dialogueSystem.ts">
+Added skill-domain checks backed by `player.skillTraining`
+</code_reference>
+
+<code_reference file="src/game/world/grid.ts">
+Honoured tile skill requirements when evaluating walkable positions
+</code_reference>
+
+<code_reference file="src/__tests__/playerSlice.test.ts">
+Coverage for allocation/refund/tag handling
+</code_reference>
+
+<code_reference file="src/__tests__/SkillTreePanel.test.tsx">
+UI regression ensuring spend interaction updates the HUD
+</code_reference>
+
+<code_reference file="src/__tests__/combat.test.ts">
+Skill-driven hit/damage/crit expectations with deterministic random rolls
+</code_reference>
+
+<code_reference file="src/__tests__/dialogueSystem.test.ts">
+Skill domain gating for dialogue checks
+</code_reference>
+
+<code_reference file="src/__tests__/grid.test.ts">
+Walkability tests covering tile skill requirements
+</code_reference>
+
+<code_reference file="src/__tests__/dialogueOverlay.test.tsx">
+UI lock/unlock behaviour for skill-based dialogue options
+</code_reference>
+
+<validation>
+- `yarn test --watch=false`
+</validation>
+
+<notes>
+- Tech/Survival/Social branches are stubbed intentionally; effect hooks will land in later roadmap steps.
+- Perk unlock handling remains deferred to Step 24.3.
+- Future work: expose allocated skill totals inside PlayerStatsPanel and thread skill training into future world interactions (lockpicks, hacking consoles).
+</notes>
+</step>
+
 <step id="2" status="completed">
 <step_metadata>
   <number>2</number>

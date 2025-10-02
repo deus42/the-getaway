@@ -141,6 +141,7 @@ export interface Weapon extends Item {
   damage: number;
   range: number;
   apCost: number;
+  skillType: CombatSkillId;
   slot: 'weapon';
   statModifiers?: StatModifiers;
 }
@@ -211,8 +212,9 @@ export interface DialogueOption {
   text: string;
   nextNodeId: string | null;
   skillCheck?: {
-    skill: keyof PlayerSkills;
+    skill: keyof PlayerSkills | SkillId;
     threshold: number;
+    domain?: 'attribute' | 'skill';
   };
   questEffect?: {
     questId: string;
@@ -260,6 +262,10 @@ export interface MapTile {
   position: Position;
   isWalkable: boolean;
   provideCover: boolean;
+  skillRequirement?: {
+    skill: SkillId;
+    threshold: number;
+  };
 }
 
 // Map area/zone

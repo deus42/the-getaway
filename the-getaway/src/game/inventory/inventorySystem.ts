@@ -1,4 +1,4 @@
-import { Item, Player, Weapon, Armor, Consumable } from '../interfaces/types';
+import { Item, Player, Weapon, Armor, Consumable, CombatSkillId } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Check if player can add an item to inventory (based on weight)
@@ -127,7 +127,8 @@ export const createWeapon = (
   range: number,
   apCost: number,
   weight: number,
-  statModifiers?: import('../interfaces/types').StatModifiers
+  statModifiers?: import('../interfaces/types').StatModifiers,
+  skillType: CombatSkillId = range <= 1 ? 'meleeCombat' : 'smallGuns'
 ): Weapon => {
   return {
     id: uuidv4(),
@@ -139,6 +140,7 @@ export const createWeapon = (
     weight,
     value: damage * 10,
     isQuestItem: false,
+    skillType,
     slot: 'weapon',
     statModifiers
   };

@@ -1,4 +1,4 @@
-import { Dialogue, DialogueNode, DialogueOption, Player, Quest } from '../interfaces/types';
+import { Dialogue, DialogueNode, DialogueOption, Player, PlayerSkills, Quest, SkillId } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 import { startQuest, updateObjective, completeQuest } from './questSystem';
 import { calculateDerivedStatsWithEquipment, calculateDerivedStats, skillCheckPasses } from '../systems/statCalculations';
@@ -25,7 +25,7 @@ export const getFirstDialogueNode = (dialogue: Dialogue): DialogueNode | undefin
   return dialogue.nodes[0];
 };
 
-const getPlayerDialogueBonus = (player: Player, skill: keyof Player['skills']): number => {
+const getPlayerDialogueBonus = (player: Player, skill: keyof PlayerSkills): number => {
   try {
     const derived = calculateDerivedStatsWithEquipment(player);
     if (skill === 'charisma') {
@@ -45,9 +45,18 @@ export const checkSkillRequirement = (player: Player, option: DialogueOption): b
     return true; // No skill check required
   }
 
-  const { skill, threshold } = option.skillCheck;
-  const attributeValue = player.skills[skill];
-  const bonus = getPlayerDialogueBonus(player, skill);
+  const { skill, threshold, domain } = option.skillCheck;
+  const checkDomain = domain ?? 'attribute';
+
+  if (checkDomain === 'skill') {
+    const skillId = skill as SkillId;
+    const currentValue = player.skillTraining[skillId] ?? 0;
+    return currentValue >= threshold;
+  }
+
+  const attributeKey = skill as keyof PlayerSkills;
+  const attributeValue = player.skills[attributeKey];
+  const bonus = getPlayerDialogueBonus(player, attributeKey);
 
   return skillCheckPasses(attributeValue, threshold, bonus);
 };

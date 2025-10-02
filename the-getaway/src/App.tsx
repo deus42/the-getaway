@@ -4,6 +4,7 @@ import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerStatusPanel from "./components/ui/PlayerStatusPanel";
 import PlayerStatsPanel from "./components/ui/PlayerStatsPanel";
+import SkillTreePanel from "./components/ui/SkillTreePanel";
 import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
@@ -55,7 +56,8 @@ const sidebarBaseStyle: CSSProperties = {
   gap: "1rem",
   minHeight: 0,
   backdropFilter: "blur(6px)",
-  overflow: "hidden",
+  overflowX: "hidden",
+  overflowY: "auto",
 };
 
 const leftSidebarStyle: CSSProperties = {
@@ -173,6 +175,22 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, showMenu }) => 
             >
               <PlayerStatusPanel />
               <PlayerStatsPanel />
+            </div>
+          </div>
+          <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+            <span style={panelLabelStyle("#f97316")}>{uiStrings.shell.skillsLabel}</span>
+            <h2 style={panelTitleStyle}>{uiStrings.shell.skillsTitle}</h2>
+            <div
+              style={{
+                ...scrollSectionStyle,
+                display: "flex",
+                flexDirection: "column",
+                gap: "1rem",
+              }}
+            >
+              <div style={{ flex: '1 1 auto', minHeight: 0 }}>
+                <SkillTreePanel />
+              </div>
             </div>
           </div>
         </div>

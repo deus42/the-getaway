@@ -138,6 +138,31 @@ describe('Grid System', () => {
       isPositionWalkable({ x: -1, y: 5 }, testMap, dummyPlayer, dummyEnemies)
     ).toBe(false);
   });
+
+  test('walkable checking enforces tile skill requirements for the player', () => {
+    const gatedTile = testMap.tiles[4][4];
+    gatedTile.isWalkable = true;
+    gatedTile.skillRequirement = {
+      skill: 'hacking',
+      threshold: 40,
+    };
+
+    expect(
+      isPositionWalkable({ x: 4, y: 4 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(false);
+
+    dummyPlayer = {
+      ...dummyPlayer,
+      skillTraining: {
+        ...dummyPlayer.skillTraining,
+        hacking: 50,
+      },
+    };
+
+    expect(
+      isPositionWalkable({ x: 4, y: 4 }, testMap, dummyPlayer, dummyEnemies)
+    ).toBe(true);
+  });
   
   test('getAdjacentWalkablePositions returns valid positions', () => {
     const position: Position = { x: 2, y: 5 };
@@ -183,4 +208,3 @@ describe('findNearestWalkablePosition', () => {
     expect(nearest).toEqual({ x: 3, y: 2 });
   });
 });
-

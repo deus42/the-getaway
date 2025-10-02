@@ -61,6 +61,7 @@ Authorial data that defines the playable world, separated from runtime systems s
 - **`levels/level0`**: The foundation sandbox (Level 0) that aggregates quests, dialogues, NPC/item blueprints, building footprints, and cover positions. Each file exports immutable baselines that slices/scenes clone before mutating, giving us clean governance for future levels.
 - **`levels/level0/locales`**: Locale-specific payloads (`en.ts`, `uk.ts`) containing the fully translated dialogue, quest metadata, blueprint names, and world objectives. The locale loader deep-clones the requested locale every time so runtime mutations never touch the authoring source.
 - **`ui/index.ts`**: Centralised HUD copy (menu strings, quest log headings, etc.) with per-locale lookup tables consumed by React components.
+- **`skills.ts`**: Declares branch/skill metadata (increments, effect blurbs, stub flags) used by the skill tree UI and runtime systems to keep XP progression data-driven.
 - **`levels/index.ts`** (future): Intended as the registry once additional districts come online, enabling per-level loading without touching game logic.
 
 ### `/the-getaway/src/game`
@@ -148,6 +149,38 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 4. <code_location>MainScene</code_location> renders building name labels using building definitions passed from <code_location>BootScene</code_location>
 5. Bidirectional connections enable seamless indoor/outdoor transitions
 </technical_flow>
+</architecture_section>
+
+<architecture_section id="skill-tree-system" category="progression">
+## Skill Tree System
+
+<design_principles>
+- Keep branch metadata declarative so designers can extend trees without touching reducers or combat formulas.
+- Share the same math helpers between UI previews and runtime logic to avoid divergence.
+- Preserve tag behaviour (+10 increments, symmetric refunds) wherever skill points are spent.
+- Route dialogue/world gating through a single helper so XP investments have visible payoffs beyond combat.
+</design_principles>
+
+<pattern name="Skill Data Definitions">
+- <code_location>src/content/skills.ts</code_location> defines Combat/Tech/Survival/Social branches with increments, descriptions, and stub markers for future specialisations.
+- <code_location>src/game/interfaces/types.ts</code_location> introduces `SkillId`, `SkillBranchId`, `Player.skillTraining`, and `Weapon.skillType`, wiring the skill tree into player state and equipment definitions.
+- <code_location>src/game/interfaces/player.ts</code_location> seeds zeroed training values while `playerSlice.createFreshPlayer` deep clones them so per-run changes never mutate defaults.
+</pattern>
+
+<pattern name="Allocation Flow">
+- <code_location>src/store/playerSlice.ts</code_location> exposes `allocateSkillPointToSkill` / `refundSkillPointFromSkill`, using `getSkillDefinition` to determine increments and max caps; tagged skills simply swap to the +10 increment.
+- <code_location>src/components/ui/SkillTreePanel.tsx</code_location> renders the tabbed UI, dispatches those actions, and pulls effect previews from <code_location>src/game/systems/skillTree.ts</code_location> while announcing updates via `aria-live` for screen readers.
+- Regression tests in <code_location>src/__tests__/playerSlice.test.ts</code_location> and <code_location>src/__tests__/SkillTreePanel.test.tsx</code_location> lock down spend/refund behaviour and UI wiring.
+</pattern>
+
+<pattern name="Runtime Integrations">
+- <code_location>src/game/combat/combatSystem.ts</code_location> now resolves a weapon's `skillType`, folds skill bonuses into hit chance, melee damage, and energy crit chance, and recognises `Weapon.skillType` on starting gear.
+- <code_location>src/game/systems/skillTree.ts</code_location> centralises hit/damage/crit/radius math so combat and UI stay synchronised.
+- <code_location>src/game/quests/dialogueSystem.ts</code_location> honours `skillCheck.domain === 'skill'`, checking `player.skillTraining` for thresholds like `[Hacking 50]` while still applying charisma dialogue bonuses for attribute checks.
+- <code_location>src/components/ui/DialogueOverlay.tsx</code_location> delegates locking to `checkSkillRequirement` and resolves skill names through `getSkillDefinition` so the HUD mirrors backend gating.
+- <code_location>src/game/world/grid.ts</code_location> enforces optional `MapTile.skillRequirement`, preventing players from entering locked tiles until their training crosses the defined threshold.
+</pattern>
+
 </architecture_section>
 
 #### `/the-getaway/src/game/quests`
@@ -256,6 +289,15 @@ CSS and styling resources:
 3. Configures Phaser with appropriate settings
 4. Handles cleanup on component unmount
 5. Provides an interface for React components to interact with the Phaser game
+
+### SkillTreePanel Component
+
+`SkillTreePanel.tsx` exposes the progression UI for character skills:
+1. Renders Combat, Tech, Survival, and Social branches with an accessible tablist (arrow keys rotate branches, tab cycles controls).
+2. Surfaces available skill points, tag indicators, and branch blurbs sourced from <code_location>src/content/skills.ts</code_location>.
+3. Provides increment/decrement controls that dispatch `allocateSkillPointToSkill` and `refundSkillPointFromSkill`, honoring tag bonuses (+10 per spend) vs. standard (+5) increments.
+4. Announces value changes via an `aria-live` region so screen readers receive updates like “Small Guns increased to 45, hit chance bonus now +22.5%”.
+5. Mirrors combat formulas by calling <code_location>src/game/systems/skillTree.ts</code_location> to show real-time effect summaries (hit chance, crit bonus, melee damage, explosive radius).
 
 ### Redux Store
 

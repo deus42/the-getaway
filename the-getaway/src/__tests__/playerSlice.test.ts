@@ -20,6 +20,9 @@ import playerReducer, {
   unequipWeapon,
   unequipArmor,
   spendSkillPoints,
+  allocateSkillPointToSkill,
+  refundSkillPointFromSkill,
+  setPlayerData,
   spendAttributePoint,
   PlayerState,
 } from '../store/playerSlice';
@@ -726,6 +729,70 @@ describe('playerSlice', () => {
 
       const afterPoints = store.getState().player.data.skillPoints;
       expect(afterPoints).toBe(beforePoints);
+    });
+
+    it('allocates combat skill points with standard increment', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      store.dispatch(addExperience(500));
+
+      const before = store.getState().player.data;
+      expect(before.skillPoints).toBeGreaterThan(0);
+      expect(before.skillTraining.smallGuns).toBe(0);
+
+      store.dispatch(allocateSkillPointToSkill('smallGuns'));
+
+      const updated = store.getState().player.data;
+      expect(updated.skillTraining.smallGuns).toBe(5);
+      expect(updated.skillPoints).toBe(before.skillPoints - 1);
+    });
+
+    it('allocates and refunds tagged skill points using +10 increments', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const basePlayer = store.getState().player.data;
+
+      store.dispatch(
+        setPlayerData({
+          ...basePlayer,
+          skillPoints: 3,
+          taggedSkillIds: ['smallGuns'],
+          skillTraining: {
+            ...basePlayer.skillTraining,
+            smallGuns: 20,
+          },
+        })
+      );
+
+      store.dispatch(allocateSkillPointToSkill('smallGuns'));
+
+      let updated = store.getState().player.data;
+      expect(updated.skillTraining.smallGuns).toBe(30);
+      expect(updated.skillPoints).toBe(2);
+
+      store.dispatch(refundSkillPointFromSkill('smallGuns'));
+
+      updated = store.getState().player.data;
+      expect(updated.skillTraining.smallGuns).toBe(20);
+      expect(updated.skillPoints).toBe(3);
     });
   });
 

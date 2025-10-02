@@ -12,6 +12,7 @@ export type StartingItemDefinition =
       weight: number;
       statModifiers?: StatModifiers;
       equip?: boolean;
+      skillType?: import('../game/interfaces/types').CombatSkillId;
     }
   | {
       type: 'armor';
@@ -77,6 +78,7 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
         range: 6,
         apCost: 3,
         weight: 3,
+        skillType: 'smallGuns',
         equip: true,
       },
       {
@@ -119,6 +121,7 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
         range: 1,
         apCost: 2,
         weight: 1,
+        skillType: 'meleeCombat',
         equip: true,
       },
       {
@@ -200,6 +203,7 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
         range: 1,
         apCost: 3,
         weight: 5,
+        skillType: 'meleeCombat',
         equip: true,
       },
       {

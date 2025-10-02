@@ -1,5 +1,6 @@
 import { MapArea, MapTile, Position, TileType, Player, Enemy, NPC } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
+import { getPlayerSkillValue } from '../systems/skillTree';
 
 // Constants for grid creation
 export const DEFAULT_GRID_SIZE = 10;
@@ -141,8 +142,17 @@ export const isPositionWalkable = (
   }
   
   // 2. Check tile walkability
-  if (!mapArea.tiles[position.y][position.x].isWalkable) {
+  const tile = mapArea.tiles[position.y][position.x];
+
+  if (!tile.isWalkable) {
     return false;
+  }
+
+  if (player && tile.skillRequirement) {
+    const skillValue = getPlayerSkillValue(player, tile.skillRequirement.skill);
+    if (skillValue < tile.skillRequirement.threshold) {
+      return false;
+    }
   }
 
   const { npcs = [], ignoreNpcIds = [] } = options;

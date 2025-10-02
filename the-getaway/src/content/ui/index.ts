@@ -48,6 +48,8 @@ interface ShellStrings {
   reconTitle: string;
   squadLabel: string;
   squadTitle: string;
+  skillsLabel: string;
+  skillsTitle: string;
   telemetryLabel: string;
   telemetryTitle: string;
   menuButton: string;
@@ -175,6 +177,8 @@ const STRINGS: Record<Locale, UIStrings> = {
       reconTitle: 'Tactical Feed',
       squadLabel: 'Squad',
       squadTitle: 'Recon Status',
+      skillsLabel: 'Training',
+      skillsTitle: 'Skill Allocation',
       telemetryLabel: 'Telemetry',
       telemetryTitle: 'Action Log',
       menuButton: 'Menu',
@@ -319,6 +323,8 @@ const STRINGS: Record<Locale, UIStrings> = {
       reconTitle: 'Тактичний канал',
       squadLabel: 'Загін',
       squadTitle: 'Зведення розвідки',
+      skillsLabel: 'Тренування',
+      skillsTitle: 'Розподіл навичок',
       telemetryLabel: 'Телеметрія',
       telemetryTitle: 'Журнал дій',
       menuButton: 'Меню',

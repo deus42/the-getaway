@@ -187,6 +187,48 @@ describe('dialogueSystem', () => {
 
       expect(checkSkillRequirement(player, option)).toBe(false);
     });
+
+    it('passes when trained skill meets threshold', () => {
+      const player = createTestPlayer({
+        skillTraining: {
+          ...DEFAULT_PLAYER.skillTraining,
+          hacking: 60,
+        },
+      });
+
+      const option: DialogueOption = {
+        text: 'Hack access panel',
+        nextNodeId: null,
+        skillCheck: {
+          skill: 'hacking',
+          threshold: 50,
+          domain: 'skill',
+        },
+      };
+
+      expect(checkSkillRequirement(player, option)).toBe(true);
+    });
+
+    it('fails when trained skill is below threshold', () => {
+      const player = createTestPlayer({
+        skillTraining: {
+          ...DEFAULT_PLAYER.skillTraining,
+          hacking: 10,
+        },
+      });
+
+      const option: DialogueOption = {
+        text: 'Hack access panel',
+        nextNodeId: null,
+        skillCheck: {
+          skill: 'hacking',
+          threshold: 40,
+          domain: 'skill',
+        },
+      };
+
+      expect(checkSkillRequirement(player, option)).toBe(false);
+    });
   });
 
   describe('getAvailableOptions', () => {
