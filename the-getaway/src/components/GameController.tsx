@@ -19,7 +19,6 @@ import {
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
 import { RootState } from "../store";
-import { switchToPlayerTurn } from "../store/thunks";
 import { isPositionWalkable } from "../game/world/grid";
 import {
   executeAttack,
@@ -780,7 +779,8 @@ const GameController: React.FC = () => {
           dispatch(addEnemy(reinforcementEnemy));
           dispatch(resetActionPoints());
           if (spawnDuringEnemyTurn && !isPlayerTurn) {
-            dispatch(switchToPlayerTurn());
+            dispatch(switchTurn());
+            dispatch(resetActionPoints());
           }
           setIsProcessingEnemyAction(false);
           setCurrentEnemyTurnIndex(0);
@@ -864,7 +864,8 @@ const GameController: React.FC = () => {
         console.log(
           "[GameController] All enemies processed, switching back to player."
         );
-        dispatch(switchToPlayerTurn());
+        dispatch(switchTurn());
+        dispatch(resetActionPoints());
         setCurrentEnemyTurnIndex(0); // Reset index for next player turn
       } else {
         // Move to the next valid enemy
