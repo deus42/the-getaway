@@ -445,7 +445,14 @@ const GameController: React.FC = () => {
         dispatch(updateNPC(currentNpcState));
 
         if (stepIndex < path.length) {
-          const timeoutId = window.setTimeout(step, stepDelayMs);
+          const timeoutId = window.setTimeout(() => {
+            // Remove this timeout from the tracking array after it fires
+            const index = npcMovementTimeouts.current.indexOf(timeoutId);
+            if (index > -1) {
+              npcMovementTimeouts.current.splice(index, 1);
+            }
+            step();
+          }, stepDelayMs);
           npcMovementTimeouts.current.push(timeoutId);
         } else {
           activeNpcMovements.current.delete(npc.id);
