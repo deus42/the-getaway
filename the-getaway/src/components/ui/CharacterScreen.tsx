@@ -4,6 +4,8 @@ import PlayerStatsPanel from './PlayerStatsPanel';
 import SkillTreePanel from './SkillTreePanel';
 import PlayerLoadoutPanel from './PlayerLoadoutPanel';
 import PlayerInventoryPanel from './PlayerInventoryPanel';
+import CornerAccents from './CornerAccents';
+import ScanlineOverlay from './ScanlineOverlay';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
@@ -25,6 +27,7 @@ const overlayStyle: React.CSSProperties = {
 };
 
 const shellStyle: React.CSSProperties = {
+  position: 'relative',
   width: 'min(1400px, 95%)',
   maxHeight: '92vh',
   background: 'linear-gradient(160deg, rgba(15, 23, 42, 0.98), rgba(8, 14, 30, 0.92))',
@@ -167,6 +170,8 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
       onClick={handleOverlayClick}
     >
       <div style={shellStyle}>
+        <CornerAccents color="#38bdf8" size={24} thickness={2} />
+        <ScanlineOverlay opacity={0.05} />
         <header style={headerStyle}>
           <div style={titleGroupStyle}>
             <span style={titleStyle} id="character-screen-title">
@@ -195,6 +200,8 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
           <div style={bottomRowStyle}>
             <PlayerStatsPanel />
             <div style={skillTreeWrapperStyle}>
+              <CornerAccents color="#38bdf8" size={16} thickness={2} />
+              <ScanlineOverlay opacity={0.04} />
               <SkillTreePanel />
             </div>
           </div>
