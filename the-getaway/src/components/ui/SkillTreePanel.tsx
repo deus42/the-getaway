@@ -5,6 +5,8 @@ import { RootState, AppDispatch } from '../../store';
 import { allocateSkillPointToSkill, refundSkillPointFromSkill } from '../../store/playerSlice';
 import { SkillBranchId, SkillId } from '../../game/interfaces/types';
 import { describeSkillEffect, getPlayerSkillValue, getSkillPointIncrement, isSkillTagged } from '../../game/systems/skillTree';
+import NotificationBadge from './NotificationBadge';
+import { gradientTextStyle } from './theme';
 
 const panelStyle: React.CSSProperties = {
   background: 'transparent',
@@ -33,7 +35,8 @@ const titleStyle: React.CSSProperties = {
   fontWeight: 600,
   textTransform: 'uppercase',
   letterSpacing: '0.08em',
-  color: '#38bdf8',
+  ...gradientTextStyle('#bfdbfe', '#38bdf8'),
+  filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))',
 };
 
 const tabListStyle: React.CSSProperties = {
@@ -203,6 +206,7 @@ const SkillTreePanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
   const availablePoints = player.skillPoints;
+  const [hoveredButton, setHoveredButton] = React.useState<string | null>(null);
 
   const defaultBranch: SkillBranchId = useMemo(() => {
     const branchTotals = SKILL_BRANCHES.map((branch) => {
@@ -306,6 +310,33 @@ const SkillTreePanel: React.FC = () => {
     const canDecrease = currentValue - increment >= 0;
     const effectMessage = describeSkillEffect(skill.id, currentValue);
     const incrementLabel = tagged ? `1 pt → +${increment} (tag)` : `1 pt → +${increment}`;
+    const decreaseKey = `${skill.id}-decrease`;
+    const increaseKey = `${skill.id}-increase`;
+
+    const getButtonStyle = (active: boolean, buttonKey: string): React.CSSProperties => {
+      const isHovered = hoveredButton === buttonKey;
+      return {
+        width: '24px',
+        height: '24px',
+        borderRadius: '5px',
+        border: `1px solid ${active ? (isHovered ? '#60a5fa' : '#38bdf8') : 'rgba(148, 163, 184, 0.3)'}`,
+        background: active
+          ? (isHovered ? 'rgba(56, 189, 248, 0.3)' : 'rgba(56, 189, 248, 0.2)')
+          : 'rgba(15, 23, 42, 0.6)',
+        color: active ? '#bae6fd' : '#64748b',
+        fontSize: '0.9rem',
+        fontWeight: 700,
+        cursor: active ? 'pointer' : 'not-allowed',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transition: 'all 0.15s ease',
+        boxShadow: active
+          ? (isHovered ? '0 0 16px rgba(56, 189, 248, 0.5)' : '0 2px 8px rgba(56, 189, 248, 0.3)')
+          : 'none',
+        transform: active && isHovered ? 'scale(1.1)' : 'scale(1)',
+      };
+    };
 
     return (
       <div key={skill.id} style={skillRowStyle}>
@@ -324,8 +355,10 @@ const SkillTreePanel: React.FC = () => {
             type="button"
             aria-label={`Decrease ${skill.name}`}
             onClick={() => handleRefund(skill.id)}
+            onMouseEnter={() => canDecrease && setHoveredButton(decreaseKey)}
+            onMouseLeave={() => setHoveredButton(null)}
             disabled={!canDecrease}
-            style={controlButtonStyle(canDecrease)}
+            style={getButtonStyle(canDecrease, decreaseKey)}
           >
             −
           </button>
@@ -334,8 +367,10 @@ const SkillTreePanel: React.FC = () => {
             type="button"
             aria-label={`Increase ${skill.name}`}
             onClick={() => handleAllocate(skill.id)}
+            onMouseEnter={() => canIncrease && setHoveredButton(increaseKey)}
+            onMouseLeave={() => setHoveredButton(null)}
             disabled={!canIncrease}
-            style={controlButtonStyle(canIncrease)}
+            style={getButtonStyle(canIncrease, increaseKey)}
           >
             +
           </button>
@@ -354,9 +389,12 @@ const SkillTreePanel: React.FC = () => {
         <h2 id="skill-tree-title" style={titleStyle}>Skill Trees</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={helpTextStyle}>+5 base • +10 tagged</span>
-          <span style={pointsBadgeStyle} aria-live="polite">
-            {availablePoints} Skill Points
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <NotificationBadge count={availablePoints} color="#38bdf8" size={22} pulse={availablePoints > 0} />
+            <span style={{ ...helpTextStyle, fontSize: '0.6rem' }} aria-live="polite">
+              Skill Points
+            </span>
+          </div>
         </div>
       </div>
 

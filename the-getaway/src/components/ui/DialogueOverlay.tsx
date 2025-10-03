@@ -25,6 +25,7 @@ import { getSystemStrings } from "../../content/system";
 import { getUIStrings } from "../../content/ui";
 import { getSkillDefinition } from "../../content/skills";
 import { checkSkillRequirement } from "../../game/quests/dialogueSystem";
+import { gradientTextStyle, glowTextStyle } from "./theme";
 
 const fallbackSkillName = (skill: string) =>
   skill.charAt(0).toUpperCase() + skill.slice(1);
@@ -43,6 +44,7 @@ const DialogueOverlay: React.FC = () => {
   const uiStrings = getUIStrings(locale);
   const { logs: logStrings } = systemStrings;
   const player = useSelector((state: RootState) => state.player.data);
+  const [hoveredOption, setHoveredOption] = React.useState<number | null>(null);
 
   const resolveSkillName = (skill: string, domain: 'attribute' | 'skill' = 'attribute') => {
     if (domain === 'skill') {
@@ -308,6 +310,7 @@ const DialogueOverlay: React.FC = () => {
               fontWeight: 700,
               margin: 0,
               color: "#f8fafc",
+              ...glowTextStyle("#f8fafc", 4),
             }}
           >
             {currentNode?.text ?? "..."}
@@ -343,25 +346,38 @@ const DialogueOverlay: React.FC = () => {
               key={`${option.text}-${index}`}
               type="button"
               onClick={() => handleOptionSelect(option)}
+              onMouseEnter={() => !locked && setHoveredOption(index)}
+              onMouseLeave={() => setHoveredOption(null)}
               style={{
                 border: locked
                   ? "1px solid rgba(148, 163, 184, 0.3)"
-                  : "1px solid rgba(96, 165, 250, 0.4)",
+                  : hoveredOption === index
+                    ? "1px solid rgba(96, 165, 250, 0.7)"
+                    : "1px solid rgba(96, 165, 250, 0.4)",
                 borderRadius: "12px",
                 padding: "0.85rem 1rem",
                 background:
                   locked
                     ? "linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(30, 41, 59, 0.75))"
-                    : "linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(56, 189, 248, 0.18))",
+                    : hoveredOption === index
+                      ? "linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(56, 189, 248, 0.3))"
+                      : "linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(56, 189, 248, 0.18))",
                 color: locked ? "rgba(148, 163, 184, 0.8)" : "#e2e8f0",
                 fontSize: "0.9rem",
                 textAlign: "left",
-                cursor: "pointer",
+                cursor: locked ? "not-allowed" : "pointer",
                 display: "flex",
                 gap: "0.6rem",
                 alignItems: "center",
                 opacity: locked ? 0.75 : 1,
                 pointerEvents: locked ? "none" : "auto",
+                boxShadow: locked
+                  ? "none"
+                  : hoveredOption === index
+                    ? "0 0 20px rgba(56, 189, 248, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)"
+                    : "0 0 8px rgba(56, 189, 248, 0.15)",
+                transform: hoveredOption === index && !locked ? "translateY(-2px)" : "translateY(0)",
+                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
               }}
             >
               <span

@@ -1,4 +1,6 @@
 import React from 'react';
+import EnhancedButton from './EnhancedButton';
+import { gradientTextStyle } from './theme';
 
 interface LevelUpModalProps {
   newLevel: number;
@@ -44,12 +46,12 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
   const bannerStyle: React.CSSProperties = {
     fontSize: '3rem',
     fontWeight: 900,
-    color: '#38bdf8',
     textTransform: 'uppercase',
     letterSpacing: '0.2rem',
     marginBottom: '1rem',
-    textShadow: '0 0 30px rgba(56, 189, 248, 0.8), 0 0 60px rgba(56, 189, 248, 0.4)',
-    animation: 'pulse 1.5s ease-in-out infinite'
+    animation: 'pulse 1.5s ease-in-out infinite',
+    ...gradientTextStyle('#bfdbfe', '#38bdf8'),
+    filter: 'drop-shadow(0 0 30px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 60px rgba(56, 189, 248, 0.4))',
   };
 
   const levelStyle: React.CSSProperties = {
@@ -84,22 +86,6 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
     fontWeight: 700
   };
 
-  const buttonStyle: React.CSSProperties = {
-    padding: '1rem 3rem',
-    fontSize: '1.2rem',
-    fontWeight: 700,
-    color: '#0f172a',
-    background: 'linear-gradient(135deg, #38bdf8, #0ea5e9)',
-    border: 'none',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    textTransform: 'uppercase',
-    letterSpacing: '0.1rem',
-    boxShadow: '0 4px 15px rgba(56, 189, 248, 0.4)',
-    transition: 'all 0.2s ease',
-    marginTop: '1rem'
-  };
-
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
@@ -132,20 +118,15 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
           </div>
         </div>
 
-        <button
-          style={buttonStyle}
-          onClick={onContinue}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 6px 25px rgba(56, 189, 248, 0.6)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 15px rgba(56, 189, 248, 0.4)';
-          }}
-        >
-          Continue
-        </button>
+        <div style={{ marginTop: '1rem' }}>
+          <EnhancedButton
+            onClick={onContinue}
+            variant="primary"
+            size="large"
+          >
+            Continue
+          </EnhancedButton>
+        </div>
       </div>
 
       <style>{`

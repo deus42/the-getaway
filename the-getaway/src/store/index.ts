@@ -4,6 +4,7 @@ import worldReducer, { applyLocaleToWorld } from './worldSlice';
 import questsReducer, { applyLocaleToQuests } from './questsSlice';
 import logReducer from './logSlice';
 import settingsReducer from './settingsSlice';
+import combatFeedbackReducer from './combatFeedbackSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -14,6 +15,7 @@ const reducers = {
   quests: questsReducer,
   log: logReducer,
   settings: settingsReducer,
+  combatFeedback: combatFeedbackReducer,
 };
 
 const combinedReducer = combineReducers(reducers);

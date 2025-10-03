@@ -19,6 +19,7 @@ import CornerAccents from "./components/ui/CornerAccents";
 import ScanlineOverlay from "./components/ui/ScanlineOverlay";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
 import DataStreamParticles from "./components/ui/DataStreamParticles";
+import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
 import { initializeCharacter } from "./store/playerSlice";
@@ -202,6 +203,7 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharact
           <LevelIndicator />
           <DayNightIndicator />
           <DialogueOverlay />
+          <CombatFeedbackManager />
         </div>
         <div style={rightSidebarStyle}>
           <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>

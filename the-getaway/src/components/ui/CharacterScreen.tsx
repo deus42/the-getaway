@@ -4,6 +4,7 @@ import PlayerStatsPanel from './PlayerStatsPanel';
 import SkillTreePanel from './SkillTreePanel';
 import PlayerLoadoutPanel from './PlayerLoadoutPanel';
 import PlayerInventoryPanel from './PlayerInventoryPanel';
+import StatusEffectsPanel from './StatusEffectsPanel';
 import CornerAccents from './CornerAccents';
 import ScanlineOverlay from './ScanlineOverlay';
 import { useSelector } from 'react-redux';
@@ -109,6 +110,12 @@ const bottomRowStyle: React.CSSProperties = {
   minHeight: 0,
 };
 
+const statsColumnStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.8rem',
+};
+
 const loadoutRowStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
@@ -202,7 +209,10 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             </div>
           </div>
           <div style={bottomRowStyle}>
-            <PlayerStatsPanel />
+            <div style={statsColumnStyle}>
+              <PlayerStatsPanel />
+              <StatusEffectsPanel />
+            </div>
             <div style={skillTreeWrapperStyle}>
               <CornerAccents color="#38bdf8" size={16} thickness={2} />
               <ScanlineOverlay opacity={0.04} />

@@ -6,6 +6,8 @@ import { setLocale } from "../../store/settingsSlice";
 import { applyLocaleToQuests } from "../../store/questsSlice";
 import { applyLocaleToWorld } from "../../store/worldSlice";
 import { RootState, AppDispatch } from "../../store";
+import EnhancedButton from "./EnhancedButton";
+import { gradientTextStyle } from "./theme";
 
 interface GameMenuProps {
   onStartNewGame: () => void;
@@ -107,6 +109,8 @@ const GameMenu: React.FC<GameMenuProps> = ({
               fontWeight: 700,
               marginBottom: "0.75rem",
               textAlign: "center",
+              ...gradientTextStyle("#bfdbfe", "#38bdf8"),
+              filter: "drop-shadow(0 0 20px rgba(56, 189, 248, 0.5))",
             }}
           >
             {strings.menu.title}
@@ -125,49 +129,29 @@ const GameMenu: React.FC<GameMenuProps> = ({
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <button
-            type="button"
-            data-testid="start-new-game"
-            onClick={onStartNewGame}
-            style={{
-              width: "100%",
-              padding: "1rem",
-              borderRadius: "12px",
-              border: "1px solid #4ade80",
-              background:
-                "linear-gradient(135deg, rgba(74,222,128,0.75), rgba(34,197,94,0.65))",
-              color: "#0f172a",
-              fontSize: "1rem",
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "transform 120ms ease, box-shadow 120ms ease",
-            }}
-          >
-            {strings.menu.start}
-          </button>
+          <div data-testid="start-new-game">
+            <EnhancedButton
+              onClick={onStartNewGame}
+              variant="success"
+              size="large"
+              fullWidth
+              icon="▶"
+            >
+              {strings.menu.start}
+            </EnhancedButton>
+          </div>
 
-          <button
-            type="button"
-            data-testid="continue-game"
-            onClick={onContinue}
-            disabled={!hasActiveGame}
-            style={{
-              width: "100%",
-              padding: "1rem",
-              borderRadius: "12px",
-              border: "1px solid rgba(148,163,184,0.25)",
-              backgroundColor: hasActiveGame
-                ? "rgba(15,23,42,0.75)"
-                : "rgba(15,23,42,0.45)",
-              color: hasActiveGame ? "#e2e8f0" : "#64748b",
-              fontSize: "1rem",
-              fontWeight: 500,
-              cursor: hasActiveGame ? "pointer" : "not-allowed",
-              transition: "transform 120ms ease, box-shadow 120ms ease",
-            }}
-          >
-            {strings.menu.resume}
-          </button>
+          <div data-testid="continue-game">
+            <EnhancedButton
+              onClick={onContinue}
+              variant="secondary"
+              size="large"
+              fullWidth
+              disabled={!hasActiveGame}
+            >
+              {strings.menu.resume}
+            </EnhancedButton>
+          </div>
         </div>
 
         <div
