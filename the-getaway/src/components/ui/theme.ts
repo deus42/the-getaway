@@ -63,3 +63,36 @@ export const subtleText: React.CSSProperties = {
   fontSize: '0.62rem',
   color: neonPalette.textMuted,
 };
+
+// Enhanced Typography Styles
+export const gradientTextStyle = (color1: string, color2: string): React.CSSProperties => ({
+  background: `linear-gradient(135deg, ${color1}, ${color2})`,
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+});
+
+export const glowTextStyle = (color: string, intensity: number = 8): React.CSSProperties => ({
+  textShadow: `0 0 ${intensity}px ${color}, 0 0 ${intensity * 2}px ${color}40`,
+});
+
+export const readableTextStyle: React.CSSProperties = {
+  textShadow: '0 2px 4px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.8)',
+};
+
+export const importantValueStyle = (color: string): React.CSSProperties => ({
+  ...statValueStyle,
+  color,
+  textShadow: `0 0 12px ${color}80, 0 0 6px ${color}40`,
+  fontWeight: 800,
+});
+
+export const headingGradientStyle: React.CSSProperties = {
+  ...headingStyle,
+  background: 'linear-gradient(135deg, #bfdbfe, #38bdf8)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  textShadow: 'none',
+  filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))',
+};

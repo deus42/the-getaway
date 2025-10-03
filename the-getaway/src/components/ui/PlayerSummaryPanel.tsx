@@ -13,6 +13,9 @@ import {
   headingStyle,
   statValueStyle as themedStatValue,
   subtleText,
+  gradientTextStyle,
+  glowTextStyle,
+  importantValueStyle,
 } from './theme';
 
 interface PlayerSummaryPanelProps {
@@ -44,11 +47,13 @@ const headerStyle: React.CSSProperties = {
 
 const nameStyle: React.CSSProperties = {
   ...headingStyle,
+  ...gradientTextStyle('#bfdbfe', '#38bdf8'),
   fontSize: '0.9rem',
   letterSpacing: '0.26em',
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
+  filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))',
 };
 
 const levelBadgeStyle: React.CSSProperties = {
@@ -60,6 +65,7 @@ const levelBadgeStyle: React.CSSProperties = {
   letterSpacing: '0.14em',
   background: 'rgba(56, 189, 248, 0.18)',
   boxShadow: '0 10px 20px -10px rgba(56, 189, 248, 0.55)',
+  ...glowTextStyle(neonPalette.cyan, 6),
 };
 
 const backgroundLabelStyle: React.CSSProperties = {
@@ -197,19 +203,19 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
       <div style={statGridStyle}>
         <div style={statCardStyle}>
           <span style={statLabelStyle}>Skill Points</span>
-          <span style={statValueStyle}>{player.skillPoints}</span>
+          <span style={{ ...statValueStyle, ...glowTextStyle('#34d399', 6) }}>{player.skillPoints}</span>
         </div>
         <div style={statCardStyle}>
           <span style={statLabelStyle}>Attribute Points</span>
-          <span style={statValueStyle}>{player.attributePoints}</span>
+          <span style={{ ...statValueStyle, ...glowTextStyle('#c084fc', 6) }}>{player.attributePoints}</span>
         </div>
         <div style={statCardStyle}>
           <span style={statLabelStyle}>Credits</span>
-          <span style={statValueStyle}>{player.credits}</span>
+          <span style={{ ...importantValueStyle('#fbbf24') }}>{player.credits}</span>
         </div>
         <div style={statCardStyle}>
           <span style={statLabelStyle}>XP</span>
-          <span style={statValueStyle}>{player.experience}</span>
+          <span style={{ ...importantValueStyle('#38bdf8') }}>{player.experience}</span>
         </div>
       </div>
       {branchTotals.length > 0 && (
@@ -220,7 +226,11 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
               style={skillChipStyle(branchAccent[summary.id] ?? '#38bdf8')}
             >
               <span>{summary.label}</span>
-              <span style={{ fontWeight: 700, color: branchAccent[summary.id] ?? neonPalette.cyan }}>
+              <span style={{
+                fontWeight: 700,
+                color: branchAccent[summary.id] ?? neonPalette.cyan,
+                ...glowTextStyle(branchAccent[summary.id] ?? neonPalette.cyan, 4)
+              }}>
                 {summary.total}
               </span>
             </span>

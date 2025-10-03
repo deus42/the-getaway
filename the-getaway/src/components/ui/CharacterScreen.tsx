@@ -59,7 +59,11 @@ const titleStyle: React.CSSProperties = {
   fontWeight: 700,
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
-  color: '#bfdbfe',
+  background: 'linear-gradient(135deg, #bfdbfe, #38bdf8)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  filter: 'drop-shadow(0 0 12px rgba(56, 189, 248, 0.5))',
 };
 
 const subtitleStyle: React.CSSProperties = {

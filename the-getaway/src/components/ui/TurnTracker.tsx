@@ -23,6 +23,7 @@ const headerStyle: CSSProperties = {
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
   color: 'rgba(148, 163, 184, 0.85)',
+  textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
 };
 
 const turnBadgeBase: CSSProperties = {
@@ -40,12 +41,16 @@ const playerBadgeStyle: CSSProperties = {
   ...turnBadgeBase,
   color: '#0b1120',
   background: 'linear-gradient(135deg, #38bdf8, #60a5fa)',
+  textShadow: '0 1px 3px rgba(0, 0, 0, 0.4)',
+  boxShadow: '0 0 12px rgba(56, 189, 248, 0.6), 0 10px 20px -10px rgba(56, 189, 248, 0.55)',
 };
 
 const enemyBadgeStyle: CSSProperties = {
   ...turnBadgeBase,
   color: '#f1f5f9',
   background: 'linear-gradient(135deg, rgba(248, 113, 113, 0.8), rgba(239, 68, 68, 0.9))',
+  textShadow: '0 1px 3px rgba(0, 0, 0, 0.6)',
+  boxShadow: '0 0 12px rgba(239, 68, 68, 0.6), 0 10px 20px -10px rgba(239, 68, 68, 0.55)',
 };
 
 const apBarTrack: CSSProperties = {
