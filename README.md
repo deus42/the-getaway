@@ -1,42 +1,94 @@
-# The Getaway · Level 0 Foundation
+# The Getaway · Neon Resistance Sandbox
 
-## Overview
-The Getaway is an AI-authored tactical stealth RPG unfolding across an occupied futurist city. Level 0 lays the groundwork for a living world: every system is data-driven, every district carries a distinct vibe, and the HUD keeps critical intel front-and-center.
+> Tactical stealth RPG authored by AI agents. Level 0 is our living lab: one occupied megacity, two distinct districts, and a HUD that never sleeps.
 
-- **Perspective**: Grid-based command shell rendered through Phaser.
-- **Core Loop**: Explore, infiltrate, converse, and survive curfew sweeps while quests, dialogue, combat, and world state stay in sync.
-- **Latest Drop (Oct 2025)**: Downtown and Slums now broadcast unique ambience—building metadata powers street props, signage palettes, NPC highlights, and loot placement. The HUD sports a neon facelift with a compact recon panel and holo-style character dossier.
+## Table of Contents
+- [Snapshot](#snapshot)
+- [Latest Transmission](#latest-transmission)
+- [Gameplay Pillars](#gameplay-pillars)
+- [Systems Online](#systems-online)
+- [Tech Stack & Architecture](#tech-stack--architecture)
+- [Working With The Game](#working-with-the-game)
+- [Content Authoring Pipeline](#content-authoring-pipeline)
+- [Testing & QA](#testing--qa)
+- [Roadmap Signal](#roadmap-signal)
+- [License – Vibe MIT](#license--vibe-mit)
 
-## What’s Inside
-- **React + Vite Shell**: Hosts the HUD, overlays, and Mini-map services.
-- **Phaser District Renderer**: Draws isometric tiles, encounter props, path previews, and entity tokens.
-- **Redux Toolkit State**: Tracks player stats, quests, encounters, world transitions, and curfew timers with persistence to `localStorage`.
-- **Content-First Pipeline**: All narrative, quests, NPC routines, item drops, cover spots, and building definitions live under `src/content/levels/<id>/locales`. Runtime code clones this data so authoring files stay immutable.
-- **Bilingual Delivery**: English and Ukrainian locales ship in sync—HUD copy, dialogue trees, quests, and world metadata swap instantly at runtime.
+## Snapshot
+- **Perspective**: Isometric Phaser rendering with neon 2.5-D dressing and tactical overlays.
+- **Loop**: Brief in Slums safehouses, navigate Downtown megablocks, battle curfew patrols, and thread dialogue/quest outcomes into the resistance story.
+- **State of Level 0**: District-aware props, bilingual content parity, click-to-move traversal, stealth perception, and a fully AI-generated narrative pipeline.
 
-## Current Gameplay Loop (Level 0 Sandbox)
-1. Brief with faction contacts in the Slums, accept procedurally-authored quests.
-2. Traverse interior megablocks, using district-specific cover (scrap barricades vs. corporate planters) while staying ahead of curfew patrols.
-3. Complete objectives, resolve combat, and monitor the neon three-column HUD (Status, Canvas, Log) for live intel and rewards.
+## Latest Transmission
+| Date | Drop | Highlights |
+| --- | --- | --- |
+| Oct 2025 | Cyberpunk HUD Revamp | Tactical HUD with holo dossier, minimap navigation boosts, reactive curfew alerts. |
+| Oct 2025 | District Atmospherics | Slums vs. Downtown prop palettes, neon signage, seeded NPC routines, loot glows, isometric object factory upgrades. |
+| Oct 2025 | Skill Tree & Progression | SkillTreePanel with combat bonuses, XP/level-up flow, character creation wizard (identity → attributes → background). |
+| Sep 2025 | Surveillance & Perception | Guard cones, alert escalations, patrol reinforcements, curfew state machine, click-to-move with path previews. |
 
-## Development Workflow
-1. Author or tweak data in `src/content/levels/<level-id>` (dialogues, quests, NPCs, loot, signage, cover).
-2. If systems evolve, update slices (`playerSlice`, `worldSlice`, etc.) or services to consume the cloned data—never mutate source exports directly.
-3. Document scope changes or completions in `memory-bank/implementation-plan.md` and `memory-bank/progress.md`.
-4. Run `yarn test` (or targeted files) and `yarn build` before committing.
+## Gameplay Pillars
+- **Infiltration Under Curfew**: Nightfall flips the city into lockdown; curfew alerts, patrol reinforcements, and cover callouts keep players hustling between safe zones.
+- **Choice-Driven Narrative**: Dialogue trees, faction alignments, and quest hooks respond to skill checks, backgrounds, and bilingual localization.
+- **Tactical Combat**: AP economy, cover mechanics, and equipment bonuses blend with skill-driven hit/dodge/crit maths for crunchy encounters.
+- **Living Districts**: District metadata drives props, signage, loot, and NPC routines so Slums feel reclaimed while Downtown stays corporate sterile.
+- **AI-Led Production**: Content, code, and roadmap execution flow from AI agents—human edits must explicitly document deviations per the license.
 
-## FAQ
-**What is Level 0?**  
-It’s the proving ground—every mechanic, UI experiment, and content pattern ships here before new districts are added.
+## Systems Online
+### City & Atmosphere
+- **District Overhaul (Step 11.5)**: Procedurally dressed Slums/Downtown blocks with barricades, streetlights, billboards, and neon overlays sourced from `IsoObjectFactory`.
+- **NYC Grid Layout (Step 20)**: Four avenues × four streets carve 16 parcels; each door sits on a walkable tile for seamless interior transitions.
+- **Day/Night & Curfew (Steps 8, 10)**: Five-minute cycle triggers curfew enforcement, animated cover highlights, and patrol spawns.
 
-**How do I add new quests or NPCs?**  
-Expand the relevant locale file, hook it through the level index, and ensure slices or systems reference the new IDs. Runtime cloning keeps authoring files pristine.
+### Tactical Layer
+- **Movement**: Grid-based keyboard controls plus breadth-first click-to-move with door traversal and path previews (Step 18).
+- **Combat Core**: Turn-based AP system, cover penalties, skill-informed accuracy, equipment bonuses, and reinforcement hooks (Steps 5, 6, 19, 23.5).
+- **Stealth Readability**: Vision cones, suspicion escalation, and network alerts telegraph when stealth is compromised (Step 19).
 
-**Can I push manual code edits?**  
-The project embraces AI-led development. If you introduce manual changes, keep them consistent with the existing architecture, document them, and ensure tests/builds pass.
+### Narrative & Progression
+- **Dialogue & Quests (Steps 13–16)**: Branching conversations with skill gates, quest log integration, bilingual strings, and localized HUD feedback.
+- **Character Creation (Steps 22.1–22.3)**: Three-step wizard for identity, SPECIAL allocation, and background perks/equipment.
+- **Skills & Progression (Steps 23–24.2)**: Derived stat formulas, XP/level-up modal, skill tree branches with combat bonuses, and future perk hooks.
 
-**Does the game support saves?**  
-Yes. Redux state persists to `localStorage`, so reloading resumes in-place.
+### UX & Accessibility
+- Neon HUD arranged in a recon tri-column with minimap, status readouts, and action log.
+- Character sheets, skill trees, and overlays support keyboard navigation, ARIA live regions, and bilingual toggles.
+- Toast notifications and modal flows surface XP, curfew warnings, and skill gate feedback.
+
+## Tech Stack & Architecture
+- **React + Vite** host the HUD, overlays, character creation flow, and modal systems.
+- **Phaser** renders isometric districts, token sprites, vision cones, and path previews.
+- **Redux Toolkit** persists player/world/quest slices (with `localStorage` hydration and reset hooks).
+- **Content Pipeline** keeps authoring data immutable under `src/content/levels/<level-id>/locales/{en,uk}.ts`, cloned into runtime stores.
+- **Memory Bank** (implementation-plan, progress, architecture, plot) records roadmap scope, shipping milestones, and narrative canon.
+
+## Working With The Game
+```bash
+cd the-getaway
+yarn install      # first-time setup
+yarn dev          # Vite dev server + Phaser canvas
+yarn build        # type-check + production bundle
+yarn lint         # ESLint across the mono-neon codebase
+yarn test         # Jest + Testing Library suites
+```
+
+## Content Authoring Pipeline
+1. Draft quests, dialogue branches, NPC routines, loot tables, and signage metadata inside `src/content/levels/<level-id>/locales`.
+2. Register new IDs through slice loaders—never mutate source exports directly; runtime clones keep authoring files pristine.
+3. Update relevant Redux selectors/services (`playerSlice`, `worldSlice`, `questsSlice`, etc.) if systems evolve.
+4. Mirror roadmap updates in `memory-bank/implementation-plan.md` and log completions in `memory-bank/progress.md`.
+
+## Testing & QA
+- Jest suites cover combat maths, dialogue gating, skill allocation, curfew flows, and UI regression (`src/__tests__`).
+- `yarn test` for full coverage; target files (e.g., `dialogueOverlay.test.tsx`, `combat.test.ts`) when iterating fast.
+- `yarn build` validates TypeScript + bundler health before every commit.
+- Manual smoke: roam both districts, trigger curfew, engage patrols, and validate bilingual toggles.
+
+## Roadmap Signal
+- **Perk System (Step 24.3)**: Capstone perks and perk-aware combat hooks on deck.
+- **Equipment Durability & Encumbrance (Step 25+)**: Extend stat aggregation into movement penalties and maintenance loops.
+- **Directional Cover & Overwatch (Step 26+)**: Deepen tactical positioning with flanking, overwatch cones, and targeted shots.
+- Track the full 24-step roadmap inside `memory-bank/implementation-plan.md`—Level 0 continues to expand toward full campaign readiness.
 
 ## License – Vibe MIT
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:
@@ -45,36 +97,6 @@ Permission is hereby granted, free of charge, to any person obtaining a copy of 
 - **Vibe Clause**: Contributions should respect the established all-AI workflow. If you introduce human-authored code, clearly document the deviation and ensure downstream users know how it diverges.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-## Architecture Snapshot
-- **React + Vite** host the HUD and game shell.
-- **Phaser** renders grid scenes, path previews, and entity sprites.
-- **Redux Toolkit** manages player/world/quest slices with persistence.
-- **Content Pipeline**: `src/content/levels/level0/locales` exports quests, dialogues, NPC & item blueprints, building footprints, and cover placements per locale. Future levels drop into sibling folders and plug in via slice registries.
-
-## Gameplay Loop (Level 0)
-1. Scout the Slums hub, meet faction contacts, and accept AI-authored quests.
-2. Navigate interior megablocks, respecting curfew patrols, scrap barricades, and corporate streetlights spawned per district.
-3. Resolve encounters, turn in objectives, and review the Quest Log sidebar for status + rewards while the neon HUD keeps stats, loadouts, and recon intel always-on.
-
-## Development Workflow
-1. Spawn new content under `src/content/levels/<level-id>`.
-2. Update slices or loaders to consume the cloned data (never mutate source exports).
-3. Keep documentation synced under `memory-bank/` to track roadmap progress.
-4. Run `yarn test` subsets (`dialogueOverlay`, `opsBriefingsPanel`, etc.) after each feature pass.
-
-## FAQ
-**Q: Why “Level 0”?**  
-It is the sandbox where every mechanic is proven before new districts arrive.
-
-**Q: Can I add human-written code?**  
-Only if you are prepared to violate the license. Vibe coding means 100% AI-generated contributions.
-
-**Q: How do I extend the quest roster?**  
-Add quest definitions to the relevant level content file, expose them through the registry, and ensure slices clone them on load.
-
-**Q: Does the game support saves?**  
-Yes. Redux state persists to `localStorage` for quick resumes.
 
 ## License – Vibe MIT
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:
