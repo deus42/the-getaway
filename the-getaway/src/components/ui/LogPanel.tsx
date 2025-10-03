@@ -53,7 +53,7 @@ const LogPanel: React.FC = () => {
   // Track new messages for animation
   useEffect(() => {
     if (messages.length > prevMessageCountRef.current) {
-      const newIndices = new Set(animatingIndices);
+      const newIndices = new Set<number>();
       for (let i = prevMessageCountRef.current; i < messages.length; i++) {
         newIndices.add(i);
       }
@@ -67,7 +67,8 @@ const LogPanel: React.FC = () => {
       prevMessageCountRef.current = messages.length;
       return () => clearTimeout(timer);
     }
-  }, [messages, animatingIndices]);
+    return undefined;
+  }, [messages]);
 
   return (
     <>
