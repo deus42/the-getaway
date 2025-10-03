@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 
-interface EnhancedButtonProps {
+interface EnhancedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'danger' | 'success';
   size?: 'small' | 'medium' | 'large';
-  disabled?: boolean;
   fullWidth?: boolean;
   icon?: string;
 }
@@ -18,6 +16,8 @@ const EnhancedButton: React.FC<EnhancedButtonProps> = ({
   disabled = false,
   fullWidth = false,
   icon,
+  type = 'button',
+  ...rest
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
@@ -115,7 +115,7 @@ const EnhancedButton: React.FC<EnhancedButtonProps> = ({
         }
       `}</style>
       <button
-        type="button"
+        type={type}
         onClick={disabled ? undefined : onClick}
         onMouseEnter={() => !disabled && setIsHovered(true)}
         onMouseLeave={() => {
@@ -126,6 +126,7 @@ const EnhancedButton: React.FC<EnhancedButtonProps> = ({
         onMouseUp={() => setIsPressed(false)}
         style={baseStyle}
         disabled={disabled}
+        {...rest}
       >
         {icon && <span style={iconStyle}>{icon}</span>}
         {children}

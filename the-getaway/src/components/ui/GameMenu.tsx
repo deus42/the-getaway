@@ -129,29 +129,27 @@ const GameMenu: React.FC<GameMenuProps> = ({
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-          <div data-testid="start-new-game">
-            <EnhancedButton
-              onClick={onStartNewGame}
-              variant="success"
-              size="large"
-              fullWidth
-              icon="▶"
-            >
-              {strings.menu.start}
-            </EnhancedButton>
-          </div>
+          <EnhancedButton
+            data-testid="start-new-game"
+            onClick={onStartNewGame}
+            variant="success"
+            size="large"
+            fullWidth
+            icon="▶"
+          >
+            {strings.menu.start}
+          </EnhancedButton>
 
-          <div data-testid="continue-game">
-            <EnhancedButton
-              onClick={onContinue}
-              variant="secondary"
-              size="large"
-              fullWidth
-              disabled={!hasActiveGame}
-            >
-              {strings.menu.resume}
-            </EnhancedButton>
-          </div>
+          <EnhancedButton
+            data-testid="continue-game"
+            onClick={onContinue}
+            variant="secondary"
+            size="large"
+            fullWidth
+            disabled={!hasActiveGame}
+          >
+            {strings.menu.resume}
+          </EnhancedButton>
         </div>
 
         <div

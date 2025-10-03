@@ -194,10 +194,10 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         label="Health"
         current={player.health}
         max={player.maxHealth}
-        icon="❤️"
-        baseColor={neonPalette.emerald}
+        baseColor="#ef4444"
         lowThreshold={50}
         criticalThreshold={25}
+        emphasisColor="#ef4444"
       />
 
       <div style={statGridStyle}>

@@ -8,6 +8,7 @@ interface AnimatedStatBarProps {
   baseColor: string;
   lowThreshold?: number;
   criticalThreshold?: number;
+  emphasisColor?: string;
 }
 
 const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
@@ -18,6 +19,7 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
   baseColor,
   lowThreshold = 50,
   criticalThreshold = 25,
+  emphasisColor,
 }) => {
   const prevValueRef = useRef(current);
 
@@ -45,7 +47,7 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
     fontSize: '0.64rem',
     letterSpacing: '0.12em',
     marginBottom: '0.18rem',
-    color: 'rgba(148, 163, 184, 0.85)',
+    color: emphasisColor ?? 'rgba(148, 163, 184, 0.85)',
   };
 
   const labelWithIconStyle: React.CSSProperties = {
@@ -95,8 +97,12 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
   const valueStyle: React.CSSProperties = {
     fontFamily: '"DM Mono", monospace',
     fontWeight: 600,
-    color: percent <= lowThreshold ? barColor : '#e2e8f0',
-    textShadow: percent <= criticalThreshold ? `0 0 4px ${barColor}` : 'none',
+    color: emphasisColor ?? (percent <= lowThreshold ? barColor : '#e2e8f0'),
+    textShadow: emphasisColor
+      ? `0 0 6px ${emphasisColor}80`
+      : percent <= criticalThreshold
+        ? `0 0 4px ${barColor}`
+        : 'none',
     transition: 'color 0.3s ease',
   };
 

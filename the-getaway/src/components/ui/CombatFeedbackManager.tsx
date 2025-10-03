@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import FloatingNumber from './FloatingNumber';
 import HitFlash from './HitFlash';
-import { removeFloatingNumber, clearHitFlash } from '../../store/combatFeedbackSlice';
+import { removeFloatingNumber } from '../../store/combatFeedbackSlice';
 
 const CombatFeedbackManager: React.FC = () => {
   const dispatch = useDispatch();

@@ -25,7 +25,7 @@ import { getSystemStrings } from "../../content/system";
 import { getUIStrings } from "../../content/ui";
 import { getSkillDefinition } from "../../content/skills";
 import { checkSkillRequirement } from "../../game/quests/dialogueSystem";
-import { gradientTextStyle, glowTextStyle } from "./theme";
+import { glowTextStyle } from "./theme";
 
 const fallbackSkillName = (skill: string) =>
   skill.charAt(0).toUpperCase() + skill.slice(1);

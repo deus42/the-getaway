@@ -132,23 +132,6 @@ const skillControlsStyle: React.CSSProperties = {
   gap: '0.4rem',
 };
 
-const controlButtonStyle = (active: boolean): React.CSSProperties => ({
-  width: '24px',
-  height: '24px',
-  borderRadius: '5px',
-  border: `1px solid ${active ? '#38bdf8' : 'rgba(148, 163, 184, 0.3)'}`,
-  background: active ? 'rgba(56, 189, 248, 0.2)' : 'rgba(15, 23, 42, 0.6)',
-  color: active ? '#bae6fd' : '#64748b',
-  fontSize: '0.9rem',
-  fontWeight: 700,
-  cursor: active ? 'pointer' : 'not-allowed',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  transition: 'all 0.15s ease',
-  boxShadow: active ? '0 2px 8px rgba(56, 189, 248, 0.3)' : 'none',
-});
-
 const skillValueStyle: React.CSSProperties = {
   minWidth: '38px',
   textAlign: 'center',
@@ -167,18 +150,6 @@ const descriptionStyle: React.CSSProperties = {
   fontSize: '0.53rem',
   color: 'rgba(148, 163, 184, 0.75)',
   lineHeight: 1.25,
-};
-
-const pointsBadgeStyle: React.CSSProperties = {
-  padding: '0.15rem 0.35rem',
-  borderRadius: '5px',
-  fontSize: '0.55rem',
-  background: 'rgba(56, 189, 248, 0.12)',
-  border: '1px solid rgba(56, 189, 248, 0.35)',
-  color: '#bae6fd',
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  fontWeight: 600,
 };
 
 const helpTextStyle: React.CSSProperties = {
@@ -389,10 +360,10 @@ const SkillTreePanel: React.FC = () => {
         <h2 id="skill-tree-title" style={titleStyle}>Skill Trees</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={helpTextStyle}>+5 base • +10 tagged</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          <div style={skillControlsStyle}>
             <NotificationBadge count={availablePoints} color="#38bdf8" size={22} pulse={availablePoints > 0} />
             <span style={{ ...helpTextStyle, fontSize: '0.6rem' }} aria-live="polite">
-              Skill Points
+              {`${availablePoints} Skill Points`}
             </span>
           </div>
         </div>
