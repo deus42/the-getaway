@@ -1,13 +1,18 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
+import type { Position } from '../../game/interfaces/types';
 import {
   MINIMAP_STATE_EVENT,
   MINIMAP_VIEWPORT_CLICK_EVENT,
+  MINIMAP_ZOOM_EVENT,
+  PATH_PREVIEW_EVENT,
   MiniMapStateDetail,
   MiniMapEntityDetail,
+  MiniMapZoomDetail,
   TileTypeGrid,
+  PathPreviewDetail,
 } from '../../game/events';
 import { miniMapService } from '../../game/services/miniMapService';
 
@@ -33,7 +38,8 @@ const CURFEW_BORDER = {
   inactive: 'rgba(59, 130, 246, 0.55)',
 };
 
-const GRID_LINE_COLOR = 'rgba(15, 23, 42, 0.3)';
+const GRID_LINE_COLOR = 'rgba(56, 189, 248, 0.12)';
+const GRID_MAJOR_COLOR = 'rgba(56, 189, 248, 0.28)';
 
 const PANEL_BACKGROUND = 'linear-gradient(155deg, rgba(14, 22, 40, 0.92), rgba(8, 12, 24, 0.88))';
 const CARD_BACKGROUND = 'linear-gradient(135deg, rgba(15, 23, 42, 0.78), rgba(15, 23, 42, 0.58))';
@@ -97,12 +103,38 @@ const drawTilesToCanvas = (tiles: TileTypeGrid, tileScale: number): HTMLCanvasEl
   }
 
   if (tileScale >= 2) {
-    ctx.strokeStyle = GRID_LINE_COLOR;
-    ctx.lineWidth = Math.max(1, tileScale * 0.08);
-
     const gridStep = Math.max(4, Math.round(16 / tileScale));
+    const majorGridStep = gridStep * 2;
+
+    // Draw minor grid lines
+    ctx.strokeStyle = GRID_LINE_COLOR;
+    ctx.lineWidth = Math.max(1, tileScale * 0.06);
 
     for (let gx = 0; gx <= width; gx += gridStep) {
+      if (gx % majorGridStep !== 0) {
+        const xPos = gx * tileScale;
+        ctx.beginPath();
+        ctx.moveTo(xPos + 0.5, 0);
+        ctx.lineTo(xPos + 0.5, offscreen.height);
+        ctx.stroke();
+      }
+    }
+
+    for (let gy = 0; gy <= height; gy += gridStep) {
+      if (gy % majorGridStep !== 0) {
+        const yPos = gy * tileScale;
+        ctx.beginPath();
+        ctx.moveTo(0, yPos + 0.5);
+        ctx.lineTo(offscreen.width, yPos + 0.5);
+        ctx.stroke();
+      }
+    }
+
+    // Draw major grid lines
+    ctx.strokeStyle = GRID_MAJOR_COLOR;
+    ctx.lineWidth = Math.max(1.2, tileScale * 0.1);
+
+    for (let gx = 0; gx <= width; gx += majorGridStep) {
       const xPos = gx * tileScale;
       ctx.beginPath();
       ctx.moveTo(xPos + 0.5, 0);
@@ -110,7 +142,7 @@ const drawTilesToCanvas = (tiles: TileTypeGrid, tileScale: number): HTMLCanvasEl
       ctx.stroke();
     }
 
-    for (let gy = 0; gy <= height; gy += gridStep) {
+    for (let gy = 0; gy <= height; gy += majorGridStep) {
       const yPos = gy * tileScale;
       ctx.beginPath();
       ctx.moveTo(0, yPos + 0.5);
@@ -143,6 +175,43 @@ const drawEntities = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) 
   ctx.save();
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
+
+  // First pass: Draw threat cones for active enemies
+  state.entities.forEach((entity) => {
+    if (entity.kind === 'enemy' && entity.status !== 'inactive') {
+      const centerX = (entity.x + 0.5) * state.tileScale;
+      const centerY = (entity.y + 0.5) * state.tileScale;
+      const coneLength = Math.max(12, state.tileScale * 4);
+      const coneAngle = Math.PI / 3; // 60 degrees
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+
+      // Draw threat cone
+      ctx.globalAlpha = 0.15;
+      ctx.fillStyle = ENTITY_STYLE.enemy.fill;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, coneLength, -coneAngle / 2, coneAngle / 2);
+      ctx.closePath();
+      ctx.fill();
+
+      // Draw cone outline
+      ctx.globalAlpha = 0.3;
+      ctx.strokeStyle = ENTITY_STYLE.enemy.fill;
+      ctx.lineWidth = Math.max(1, state.tileScale * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(coneLength * Math.cos(-coneAngle / 2), coneLength * Math.sin(-coneAngle / 2));
+      ctx.moveTo(0, 0);
+      ctx.lineTo(coneLength * Math.cos(coneAngle / 2), coneLength * Math.sin(coneAngle / 2));
+      ctx.stroke();
+
+      ctx.restore();
+    }
+  });
+
+  // Second pass: Draw entity markers with glows
   state.entities.forEach((entity) => {
     const style = ENTITY_STYLE[entity.kind] ?? ENTITY_STYLE.npc;
     const centerX = (entity.x + 0.5) * state.tileScale;
@@ -150,42 +219,134 @@ const drawEntities = (ctx: CanvasRenderingContext2D, state: MiniMapStateDetail) 
     const size = Math.max(3, state.tileScale * style.size);
 
     ctx.globalAlpha = entity.status === 'inactive' ? 0.4 : 1;
-    ctx.fillStyle = style.fill;
-    ctx.strokeStyle = style.stroke;
-    ctx.lineWidth = Math.max(1, size * 0.35);
 
-    if (entity.kind === 'player') {
+    // Draw glow shadow for active entities
+    if (entity.status !== 'inactive') {
       ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate((-45 * Math.PI) / 180);
-      ctx.beginPath();
-      ctx.moveTo(0, -size);
-      ctx.lineTo(size, 0);
-      ctx.lineTo(0, size);
-      ctx.lineTo(-size, 0);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    } else if (entity.kind === 'enemy') {
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.beginPath();
-      ctx.moveTo(0, -size);
-      ctx.lineTo(size * 0.9, size * 0.9);
-      ctx.lineTo(-size * 0.9, size * 0.9);
-      ctx.closePath();
-      ctx.fill();
-      ctx.stroke();
+      ctx.shadowColor = style.fill;
+      ctx.shadowBlur = Math.max(4, size * 1.2);
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+
+      ctx.fillStyle = style.fill;
+      ctx.strokeStyle = style.stroke;
+      ctx.lineWidth = Math.max(1, size * 0.35);
+
+      if (entity.kind === 'player') {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate((-45 * Math.PI) / 180);
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size, 0);
+        ctx.lineTo(0, size);
+        ctx.lineTo(-size, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      } else if (entity.kind === 'enemy') {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size * 0.9, size * 0.9);
+        ctx.lineTo(-size * 0.9, size * 0.9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, size * 0.75, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
       ctx.restore();
     } else {
-      ctx.beginPath();
-      ctx.arc(centerX, centerY, size * 0.75, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
+      // No glow for inactive entities
+      ctx.fillStyle = style.fill;
+      ctx.strokeStyle = style.stroke;
+      ctx.lineWidth = Math.max(1, size * 0.35);
+
+      if (entity.kind === 'player') {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate((-45 * Math.PI) / 180);
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size, 0);
+        ctx.lineTo(0, size);
+        ctx.lineTo(-size, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      } else if (entity.kind === 'enemy') {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size * 0.9, size * 0.9);
+        ctx.lineTo(-size * 0.9, size * 0.9);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, size * 0.75, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
     }
+
     ctx.globalAlpha = 1;
   });
+  ctx.restore();
+};
+
+const drawPath = (
+  ctx: CanvasRenderingContext2D,
+  state: MiniMapStateDetail,
+  path: Position[] | null
+) => {
+  if (!path || path.length < 2) {
+    return;
+  }
+
+  ctx.save();
+  ctx.lineWidth = Math.max(1.2, state.tileScale * 0.22);
+  ctx.strokeStyle = 'rgba(59, 130, 246, 0.85)';
+  ctx.setLineDash([state.tileScale * 1.2, state.tileScale * 0.7]);
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  ctx.beginPath();
+  path.forEach((node, index) => {
+    const x = (node.x + 0.5) * state.tileScale;
+    const y = (node.y + 0.5) * state.tileScale;
+    if (index === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  const goal = path[path.length - 1];
+  const gx = (goal.x + 0.5) * state.tileScale;
+  const gy = (goal.y + 0.5) * state.tileScale;
+  const markerRadius = Math.max(3, state.tileScale * 0.6);
+  ctx.fillStyle = 'rgba(59, 130, 246, 0.35)';
+  ctx.beginPath();
+  ctx.arc(gx, gy, markerRadius, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.lineWidth = Math.max(1, state.tileScale * 0.18);
+  ctx.strokeStyle = 'rgba(59, 130, 246, 0.95)';
+  ctx.stroke();
+
   ctx.restore();
 };
 
@@ -274,17 +435,21 @@ const MiniMap: React.FC = () => {
   const tileCacheRef = useRef<TileCache>(createTileCache());
   const canvasSizeRef = useRef<{ width: number; height: number }>({ width: 140, height: 110 });
   const latestStateRef = useRef<MiniMapStateDetail | null>(miniMapService.getState());
+  const pathRef = useRef<PathPreviewDetail['path'] | null>(null);
   const draggingRef = useRef(false);
   const dragMovedRef = useRef(false);
   const lastDragUpdateRef = useRef(0);
 
   const [renderTick, setRenderTick] = useState(0);
   const [canvasSize, setCanvasSize] = useState(canvasSizeRef.current);
+  const [userZoom, setUserZoom] = useState(() => miniMapService.getZoom());
 
   useEffect(() => {
     const handler = (event: Event) => {
       const detail = (event as CustomEvent<MiniMapStateDetail>).detail;
       latestStateRef.current = detail;
+      pathRef.current = detail.path ?? null;
+      setUserZoom(detail.userZoom ?? miniMapService.getZoom());
       setRenderTick(detail.version);
     };
 
@@ -293,6 +458,33 @@ const MiniMap: React.FC = () => {
 
     return () => {
       miniMapService.removeEventListener(MINIMAP_STATE_EVENT, handler as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const zoomHandler = (event: Event) => {
+      const detail = (event as CustomEvent<MiniMapZoomDetail>).detail;
+      setUserZoom(detail.zoom);
+    };
+    miniMapService.addEventListener(MINIMAP_ZOOM_EVENT, zoomHandler as EventListener);
+    return () => {
+      miniMapService.removeEventListener(MINIMAP_ZOOM_EVENT, zoomHandler as EventListener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<PathPreviewDetail>).detail;
+      const activeState = latestStateRef.current;
+      if (!activeState || detail.areaId !== activeState.areaId) {
+        return;
+      }
+      pathRef.current = detail.path ?? null;
+      setRenderTick((tick) => tick + 1);
+    };
+    window.addEventListener(PATH_PREVIEW_EVENT, handler as EventListener);
+    return () => {
+      window.removeEventListener(PATH_PREVIEW_EVENT, handler as EventListener);
     };
   }, []);
 
@@ -358,6 +550,7 @@ const MiniMap: React.FC = () => {
 
     drawBorder(ctx, cssWidth, cssHeight, activeState);
     drawEntities(ctx, activeState);
+    drawPath(ctx, activeState, pathRef.current);
     drawViewport(ctx, activeState);
   }, [renderTick, locale]);
 
@@ -431,6 +624,13 @@ const MiniMap: React.FC = () => {
     dragMovedRef.current = false;
   };
 
+  const handleCanvasWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
+    event.preventDefault();
+    const delta = clamp(event.deltaY, -120, 120);
+    const adjustment = delta < 0 ? 0.15 : -0.15;
+    miniMapService.adjustZoom(adjustment);
+  };
+
   const activeState = latestStateRef.current;
 
   if (!activeState) {
@@ -440,6 +640,21 @@ const MiniMap: React.FC = () => {
   const playerEntity = activeState.entities.find((entity) => entity.kind === 'player');
   const playerX = playerEntity ? Math.round(playerEntity.x) : 0;
   const playerY = playerEntity ? Math.round(playerEntity.y) : 0;
+
+  const zoomPercent = useMemo(() => Math.round(userZoom * 100), [userZoom]);
+
+  const handleZoomInput = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(event.target.value) / 100;
+    miniMapService.setZoom(value);
+  };
+
+  const handleZoomButton = (direction: 'in' | 'out') => {
+    miniMapService.adjustZoom(direction === 'in' ? 0.15 : -0.15);
+  };
+
+  const handleCenterClick = () => {
+    miniMapService.centerOnPlayer(true);
+  };
 
   return (
     <div
@@ -506,6 +721,7 @@ const MiniMap: React.FC = () => {
           onMouseMove={handleCanvasMouseMove}
           onMouseUp={handleCanvasMouseUp}
           onMouseLeave={handleCanvasMouseLeave}
+          onWheel={handleCanvasWheel}
           onContextMenu={(event) => event.preventDefault()}
           style={{
             display: 'block',
@@ -514,8 +730,79 @@ const MiniMap: React.FC = () => {
             imageRendering: 'pixelated',
             cursor: 'pointer',
             transition: 'transform 0.2s ease',
+            userSelect: 'none',
           }}
         />
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.6rem',
+          fontSize: '0.6rem',
+          color: 'rgba(148, 163, 184, 0.85)',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+          <button
+            type="button"
+            onClick={() => handleZoomButton('out')}
+            style={{
+              background: 'rgba(15, 23, 42, 0.65)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              borderRadius: '999px',
+              color: '#bfdbfe',
+              width: '1.6rem',
+              height: '1.6rem',
+              cursor: 'pointer',
+            }}
+            aria-label="Zoom out minimap"
+          >
+            −
+          </button>
+          <input
+            type="range"
+            min={Math.round(60)}
+            max={Math.round(300)}
+            value={Math.round(clamp(userZoom, 0.6, 3) * 100)}
+            onChange={handleZoomInput}
+            style={{ flex: 1 }}
+            aria-label="Mini-map zoom"
+          />
+          <button
+            type="button"
+            onClick={() => handleZoomButton('in')}
+            style={{
+              background: 'rgba(15, 23, 42, 0.65)',
+              border: '1px solid rgba(56, 189, 248, 0.35)',
+              borderRadius: '999px',
+              color: '#bfdbfe',
+              width: '1.6rem',
+              height: '1.6rem',
+              cursor: 'pointer',
+            }}
+            aria-label="Zoom in minimap"
+          >
+            +
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={handleCenterClick}
+          style={{
+            background: 'rgba(15, 23, 42, 0.65)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            borderRadius: '999px',
+            color: '#e0f2fe',
+            padding: '0.28rem 0.8rem',
+            cursor: 'pointer',
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Center
+        </button>
       </div>
       <footer
         style={{
@@ -531,10 +818,22 @@ const MiniMap: React.FC = () => {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            gap: '0.45rem',
           }}
         >
           <span>Cell Coords</span>
           <span>({playerX}, {playerY})</span>
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: '0.45rem',
+          }}
+        >
+          <span>Zoom</span>
+          <span>{zoomPercent}%</span>
         </div>
         <div
           style={{
