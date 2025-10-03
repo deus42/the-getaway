@@ -15,6 +15,10 @@ import CharacterCreationScreen, { CharacterCreationData } from "./components/ui/
 import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import CharacterScreen from "./components/ui/CharacterScreen";
+import CornerAccents from "./components/ui/CornerAccents";
+import ScanlineOverlay from "./components/ui/ScanlineOverlay";
+import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
+import DataStreamParticles from "./components/ui/DataStreamParticles";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
 import { initializeCharacter } from "./store/playerSlice";
@@ -73,6 +77,7 @@ const rightSidebarStyle: CSSProperties = {
 };
 
 const panelBaseStyle: CSSProperties = {
+  position: "relative",
   background: "linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))",
   border: "1px solid rgba(148, 163, 184, 0.24)",
   borderRadius: "14px",
@@ -164,11 +169,17 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharact
       <div style={mainStageStyle}>
         <div style={leftSidebarStyle}>
           <div style={{ ...panelBaseStyle }}>
+            <CornerAccents color="#38bdf8" size={14} />
+            <ScanlineOverlay opacity={0.04} />
+            <DataStreamParticles color="#38bdf8" count={2} side="left" />
             <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.reconLabel}</span>
             <h2 style={panelTitleStyle}>{uiStrings.shell.reconTitle}</h2>
             <MiniMap />
           </div>
           <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+            <CornerAccents color="#38bdf8" size={14} />
+            <ScanlineOverlay opacity={0.04} />
+            <DataStreamParticles color="#38bdf8" count={2} side="left" />
             <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.squadLabel}</span>
             <h2 style={panelTitleStyle}>{uiStrings.shell.squadTitle}</h2>
             <div
@@ -185,6 +196,7 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharact
           </div>
         </div>
         <div style={centerStageStyle}>
+          <TacticalHUDFrame />
           <GameCanvas />
           <GameController />
           <LevelIndicator />
@@ -193,11 +205,17 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharact
         </div>
         <div style={rightSidebarStyle}>
           <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+            <CornerAccents color="#f0abfc" size={14} />
+            <ScanlineOverlay opacity={0.04} />
+            <DataStreamParticles color="#f0abfc" count={2} side="right" />
             <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
             <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
             <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
           </div>
           <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+            <CornerAccents color="#60a5fa" size={14} />
+            <ScanlineOverlay opacity={0.04} />
+            <DataStreamParticles color="#60a5fa" count={2} side="right" />
             <span style={panelLabelStyle("#60a5fa")}>{uiStrings.shell.telemetryLabel}</span>
             <h2 style={panelTitleStyle}>{uiStrings.shell.telemetryTitle}</h2>
             <div style={scrollSectionStyle}>
