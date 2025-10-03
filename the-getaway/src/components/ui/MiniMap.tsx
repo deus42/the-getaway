@@ -1072,10 +1072,14 @@ const MiniMap: React.FC = () => {
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '0.6rem',
+            gap: '0.55rem',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            width: '100%',
+            rowGap: '0.5rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flex: 1, minWidth: 0 }}>
             <button
               type="button"
               onClick={() => handleZoomButton('out')}
@@ -1118,7 +1122,7 @@ const MiniMap: React.FC = () => {
               +
             </button>
           </div>
-          <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: '0.3rem', flex: '0 0 auto' }}>
             <button
               type="button"
               onClick={handleCenterClick}
@@ -1127,7 +1131,7 @@ const MiniMap: React.FC = () => {
                 border: '1px solid rgba(56, 189, 248, 0.35)',
                 borderRadius: '999px',
                 color: '#e0f2fe',
-                padding: '0.26rem 0.62rem',
+                padding: '0.26rem 0.58rem',
                 cursor: 'pointer',
                 letterSpacing: '0.08em',
                 fontSize: '0.62rem',
@@ -1144,7 +1148,7 @@ const MiniMap: React.FC = () => {
                 border: '1px solid rgba(56, 189, 248, 0.35)',
                 borderRadius: '999px',
                 color: '#e0f2fe',
-                padding: '0.26rem 0.62rem',
+                padding: '0.26rem 0.58rem',
                 cursor: 'pointer',
                 letterSpacing: '0.08em',
                 fontSize: '0.62rem',
