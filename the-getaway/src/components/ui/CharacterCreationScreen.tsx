@@ -89,18 +89,20 @@ const panelStyle: React.CSSProperties = {
   background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95))',
   border: '2px solid rgba(56, 189, 248, 0.3)',
   borderRadius: '16px',
-  padding: '2rem',
+  padding: '1.5rem',
   maxWidth: '600px',
   width: '90%',
-  maxHeight: '90vh',
+  maxHeight: '95vh',
   boxShadow: '0 25px 50px rgba(0, 0, 0, 0.5), 0 0 100px rgba(56, 189, 248, 0.1)',
   overflowY: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
 };
 
 const titleStyle: React.CSSProperties = {
-  fontSize: '1.5rem',
+  fontSize: '1.3rem',
   fontWeight: 700,
-  marginBottom: '0.5rem',
+  marginBottom: '0.3rem',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
   ...gradientTextStyle('#bfdbfe', '#38bdf8'),
@@ -108,16 +110,16 @@ const titleStyle: React.CSSProperties = {
 };
 
 const subtitleStyle: React.CSSProperties = {
-  fontSize: '0.85rem',
+  fontSize: '0.8rem',
   color: '#94a3b8',
-  marginBottom: '1.5rem',
+  marginBottom: '1rem',
   letterSpacing: '0.05em',
 };
 
 const stepIndicatorStyle: React.CSSProperties = {
   display: 'flex',
   gap: '0.5rem',
-  marginBottom: '1.5rem',
+  marginBottom: '1rem',
   justifyContent: 'center',
 };
 
@@ -135,20 +137,20 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
   color: '#94a3b8',
-  marginBottom: '0.5rem',
+  marginBottom: '0.4rem',
   fontWeight: 600,
 };
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  padding: '0.75rem 1rem',
+  padding: '0.65rem 1rem',
   backgroundColor: 'rgba(15, 23, 42, 0.8)',
   border: '1px solid rgba(148, 163, 184, 0.3)',
   borderRadius: '8px',
   color: '#e2e8f0',
-  fontSize: '1rem',
+  fontSize: '0.95rem',
   fontFamily: "'DM Mono', monospace",
-  marginBottom: '1.5rem',
+  marginBottom: '1rem',
   outline: 'none',
   transition: 'border-color 0.2s ease',
 };
@@ -156,12 +158,12 @@ const inputStyle: React.CSSProperties = {
 const presetGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: '1rem',
-  marginBottom: '1.5rem',
+  gap: '0.8rem',
+  marginBottom: '1rem',
 };
 
 const presetCardStyle = (selected: boolean): React.CSSProperties => ({
-  padding: '1rem',
+  padding: '0.75rem',
   backgroundColor: selected ? 'rgba(56, 189, 248, 0.15)' : 'rgba(30, 41, 59, 0.6)',
   border: `2px solid ${selected ? '#38bdf8' : 'rgba(148, 163, 184, 0.2)'}`,
   borderRadius: '8px',
@@ -172,21 +174,21 @@ const presetCardStyle = (selected: boolean): React.CSSProperties => ({
 });
 
 const presetLabelStyle: React.CSSProperties = {
-  fontSize: '1rem',
+  fontSize: '0.9rem',
   fontWeight: 600,
   color: '#e2e8f0',
-  marginBottom: '0.25rem',
+  marginBottom: '0.2rem',
 };
 
 const presetDescStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
+  fontSize: '0.7rem',
   color: '#94a3b8',
 };
 
 const buttonRowStyle: React.CSSProperties = {
   display: 'flex',
   gap: '0.75rem',
-  marginTop: '1rem',
+  marginTop: '0.75rem',
 };
 
 const buttonStyle = (variant: 'primary' | 'secondary' | 'ghost'): React.CSSProperties => {
@@ -241,11 +243,11 @@ const attributeRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '0.5rem',
+  padding: '0.4rem 0.6rem',
   backgroundColor: 'rgba(30, 41, 59, 0.6)',
   border: '1px solid rgba(148, 163, 184, 0.2)',
-  borderRadius: '8px',
-  marginBottom: '0.5rem',
+  borderRadius: '6px',
+  marginBottom: '0.4rem',
 };
 
 const attributeLabelStyle: React.CSSProperties = {
@@ -253,27 +255,27 @@ const attributeLabelStyle: React.CSSProperties = {
 };
 
 const attributeNameStyle: React.CSSProperties = {
-  fontSize: '0.85rem',
+  fontSize: '0.8rem',
   fontWeight: 600,
   color: '#e2e8f0',
   letterSpacing: '0.05em',
 };
 
 const attributeDescStyle: React.CSSProperties = {
-  fontSize: '0.7rem',
+  fontSize: '0.65rem',
   color: '#94a3b8',
-  marginTop: '0.2rem',
+  marginTop: '0.15rem',
 };
 
 const attributeControlsStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  gap: '0.75rem',
+  gap: '0.6rem',
 };
 
 const attributeButtonStyle = (disabled: boolean): React.CSSProperties => ({
-  width: '32px',
-  height: '32px',
+  width: '28px',
+  height: '28px',
   borderRadius: '6px',
   backgroundColor: disabled ? 'rgba(148, 163, 184, 0.1)' : 'rgba(56, 189, 248, 0.2)',
   border: `1px solid ${disabled ? 'rgba(148, 163, 184, 0.2)' : 'rgba(56, 189, 248, 0.4)'}`,
@@ -299,40 +301,40 @@ const attributeValueStyle: React.CSSProperties = {
 
 const pointsDisplayStyle: React.CSSProperties = {
   textAlign: 'center',
-  padding: '0.75rem',
+  padding: '0.6rem',
   backgroundColor: 'rgba(56, 189, 248, 0.1)',
   border: '1px solid rgba(56, 189, 248, 0.3)',
-  borderRadius: '8px',
-  marginBottom: '1rem',
+  borderRadius: '6px',
+  marginBottom: '0.8rem',
 };
 
 const pointsValueStyle: React.CSSProperties = {
-  fontSize: '1.5rem',
+  fontSize: '1.3rem',
   fontWeight: 700,
   color: '#38bdf8',
   textShadow: '0 0 10px rgba(56, 189, 248, 0.5)',
 };
 
 const pointsLabelStyle: React.CSSProperties = {
-  fontSize: '0.7rem',
+  fontSize: '0.65rem',
   color: '#94a3b8',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
-  marginTop: '0.25rem',
+  marginTop: '0.2rem',
 };
 
 const derivedStatsStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: '0.5rem',
-  marginBottom: '1rem',
+  gap: '0.4rem',
+  marginBottom: '0.8rem',
 };
 
 const derivedStatCardStyle: React.CSSProperties = {
-  padding: '0.5rem',
+  padding: '0.4rem 0.5rem',
   backgroundColor: 'rgba(30, 41, 59, 0.6)',
   border: '1px solid rgba(148, 163, 184, 0.2)',
-  borderRadius: '8px',
+  borderRadius: '6px',
 };
 
 const derivedStatLabelStyle: React.CSSProperties = {
@@ -719,9 +721,11 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
           <>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: '1rem',
-              marginBottom: '1.5rem'
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: '0.75rem',
+              marginBottom: '1rem',
+              maxHeight: '60vh',
+              overflowY: 'auto',
             }}>
               {BACKGROUNDS.map((background) => {
                 const selected = selectedBackgroundId === background.id;
@@ -729,15 +733,15 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                   <div
                     key={background.id}
                     style={{
-                      padding: '1rem',
-                      borderRadius: '12px',
+                      padding: '0.75rem',
+                      borderRadius: '8px',
                       border: selected ? '2px solid #38bdf8' : '1px solid rgba(148, 163, 184, 0.25)',
                       background: selected ? 'rgba(56, 189, 248, 0.12)' : 'rgba(15, 23, 42, 0.6)',
                       boxShadow: selected ? '0 0 25px rgba(56, 189, 248, 0.25)' : 'none',
                       cursor: 'pointer',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '0.65rem',
+                      gap: '0.5rem',
                     }}
                     onClick={() => {
                       setSelectedBackgroundId(background.id);
@@ -755,21 +759,21 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                       }
                     }}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                      <span style={{ fontSize: '0.7rem', color: '#94a3b8', letterSpacing: '0.14em', textTransform: 'uppercase' }}>{background.tagline}</span>
-                      <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: '#e2e8f0' }}>{background.name}</h3>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                      <span style={{ fontSize: '0.6rem', color: '#94a3b8', letterSpacing: '0.14em', textTransform: 'uppercase' }}>{background.tagline}</span>
+                      <h3 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#e2e8f0', margin: 0 }}>{background.name}</h3>
                       {background.description.map((line) => (
-                        <p key={line} style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0 }}>{line}</p>
+                        <p key={line} style={{ fontSize: '0.68rem', color: '#94a3b8', margin: 0, lineHeight: 1.3 }}>{line}</p>
                       ))}
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.65rem', color: '#22d3ee', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Perk</span>
-                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#38bdf8' }}>{background.perk.name}</div>
-                      <p style={{ fontSize: '0.7rem', color: '#94a3b8', margin: '0.25rem 0 0' }}>{background.perk.description}</p>
+                      <span style={{ fontSize: '0.6rem', color: '#22d3ee', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Perk</span>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#38bdf8' }}>{background.perk.name}</div>
+                      <p style={{ fontSize: '0.65rem', color: '#94a3b8', margin: '0.15rem 0 0', lineHeight: 1.3 }}>{background.perk.description}</p>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.65rem', color: '#f472b6', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Faction Standing</span>
-                      <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.7rem' }}>
+                      <span style={{ fontSize: '0.6rem', color: '#f472b6', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Faction Standing</span>
+                      <ul style={{ margin: '0.2rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.65rem', lineHeight: 1.4 }}>
                         {['resistance', 'corpsec', 'scavengers'].map((faction) => {
                           const delta = background.factionAdjustments[faction as 'resistance' | 'corpsec' | 'scavengers'] ?? 0;
                           const label = faction === 'corpsec' ? 'CorpSec' : faction === 'scavengers' ? 'Scavengers' : 'Resistance';
@@ -780,8 +784,8 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                       </ul>
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.65rem', color: '#a855f7', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Gear</span>
-                      <ul style={{ margin: '0.25rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.7rem' }}>
+                      <span style={{ fontSize: '0.6rem', color: '#a855f7', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Gear</span>
+                      <ul style={{ margin: '0.2rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.65rem', lineHeight: 1.4 }}>
                         {background.startingEquipment.map((equip) => (
                           <li key={`${background.id}-${equip.name}`}>{equip.name}</li>
                         ))}
