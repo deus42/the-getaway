@@ -18,8 +18,9 @@ import {
   clearReinforcementsSchedule,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
+import { addFloatingNumber, triggerHitFlash } from "../store/combatFeedbackSlice";
 import { RootState } from "../store";
-import { isPositionWalkable } from "../game/world/grid";
+import { isPositionWalkable, DEFAULT_TILE_SIZE } from "../game/world/grid";
 import {
   executeAttack,
   isInAttackRange,
@@ -116,6 +117,24 @@ const GameController: React.FC = () => {
     },
     [dispatch, dialogues, activeDialogueId, logStrings]
   );
+
+  // Helper function to calculate approximate screen position for combat feedback
+  const getScreenPosition = useCallback((gridPosition: Position): { x: number, y: number } => {
+    // Approximate screen position calculation
+    // This uses a simplified isometric projection
+    const tileWidth = DEFAULT_TILE_SIZE;
+    const tileHeight = DEFAULT_TILE_SIZE / 2;
+
+    // Approximate center of game canvas
+    const centerX = 400; // Approximate horizontal center
+    const centerY = 300; // Approximate vertical center
+
+    // Isometric projection
+    const screenX = centerX + (gridPosition.x - gridPosition.y) * (tileWidth / 2);
+    const screenY = centerY + (gridPosition.x + gridPosition.y) * (tileHeight / 2);
+
+    return { x: screenX, y: screenY };
+  }, []);
 
   const cancelPendingEnemyAction = useCallback((shouldClearTimer: boolean = true) => {
     if (shouldClearTimer && enemyActionTimeoutRef.current !== null) {
@@ -947,6 +966,40 @@ const GameController: React.FC = () => {
           `[GameController] Enemy ${currentEnemy.id} action: ${result.action}, AP left: ${result.enemy.actionPoints}`
         );
 
+        // Combat feedback for enemy attacks
+        if (result.action === 'attack' || result.action === 'attack_missed') {
+          const damageTaken = player.health - result.player.health;
+          const playerScreenPos = getScreenPosition(player.position);
+
+          if (damageTaken > 0) {
+            // Player took damage
+            dispatch(addFloatingNumber({
+              id: uuidv4(),
+              value: damageTaken,
+              x: playerScreenPos.x,
+              y: playerScreenPos.y,
+              type: 'damage',
+            }));
+
+            // Trigger hit flash
+            dispatch(triggerHitFlash({
+              id: uuidv4(),
+              type: 'damage',
+              intensity: 0.6,
+              duration: 300,
+            }));
+          } else if (result.action === 'attack_missed') {
+            // Attack missed
+            dispatch(addFloatingNumber({
+              id: uuidv4(),
+              value: 0,
+              x: playerScreenPos.x,
+              y: playerScreenPos.y,
+              type: 'miss',
+            }));
+          }
+        }
+
         console.log(
           `[GameController] Enemy Turn AI: BEFORE dispatching updates for ${currentEnemy.id}`
         );
@@ -990,6 +1043,7 @@ const GameController: React.FC = () => {
     player,
     currentMapArea,
     cancelPendingEnemyAction,
+    getScreenPosition,
   ]);
 
   useEffect(() => {
@@ -1055,8 +1109,28 @@ const GameController: React.FC = () => {
 
       if (result.success) {
         dispatch(addLogMessage(logStrings.hitEnemy(enemy.name, result.damage)));
+
+        // Combat feedback: floating damage number on enemy
+        const enemyScreenPos = getScreenPosition(enemy.position);
+        dispatch(addFloatingNumber({
+          id: uuidv4(),
+          value: result.damage,
+          x: enemyScreenPos.x,
+          y: enemyScreenPos.y,
+          type: 'damage',
+        }));
       } else {
         dispatch(addLogMessage(logStrings.missedEnemy(enemy.name)));
+
+        // Combat feedback: show miss
+        const enemyScreenPos = getScreenPosition(enemy.position);
+        dispatch(addFloatingNumber({
+          id: uuidv4(),
+          value: 0,
+          x: enemyScreenPos.x,
+          y: enemyScreenPos.y,
+          type: 'miss',
+        }));
       }
 
       // Update enemy
@@ -1085,7 +1159,7 @@ const GameController: React.FC = () => {
         dispatch(switchTurn());
       }
     },
-    [player, enemies, dispatch, logStrings]
+    [player, enemies, dispatch, logStrings, getScreenPosition]
   );
 
   // Find the closest enemy to a position
