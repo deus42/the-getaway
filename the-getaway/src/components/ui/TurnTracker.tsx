@@ -1,6 +1,7 @@
 import React, { CSSProperties, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import AnimatedStatBar from './AnimatedStatBar';
 
 const trackerContainerStyle: CSSProperties = {
   display: 'flex',
@@ -47,12 +48,6 @@ const enemyBadgeStyle: CSSProperties = {
   background: 'linear-gradient(135deg, rgba(248, 113, 113, 0.8), rgba(239, 68, 68, 0.9))',
 };
 
-const apBarContainer: CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.8rem',
-};
-
 const apBarTrack: CSSProperties = {
   flex: 1,
   height: '6px',
@@ -95,10 +90,6 @@ const TurnTracker: React.FC = () => {
 
   const turnLabel = inCombat ? (isPlayerTurn ? 'Player Turn' : 'Enemy Turn') : 'Exploration';
 
-  const playerApRatio = player.maxActionPoints > 0
-    ? Math.max(0, Math.min(1, player.actionPoints / player.maxActionPoints))
-    : 0;
-
   const currentBadgeStyle = isPlayerTurn ? playerBadgeStyle : enemyBadgeStyle;
 
   return (
@@ -111,25 +102,15 @@ const TurnTracker: React.FC = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <div style={currentBadgeStyle}>{turnLabel}</div>
 
-        <div>
-          <div style={{ fontSize: '0.62rem', color: 'rgba(148, 163, 184, 0.7)', marginBottom: '0.3rem' }}>
-            Player Action Points
-          </div>
-          <div style={apBarContainer}>
-            <div style={apBarTrack}>
-              <div
-                style={{
-                  ...apBarFillBase,
-                  width: `${playerApRatio * 100}%`,
-                  background: 'linear-gradient(90deg, #38bdf8, #60a5fa)',
-                }}
-              />
-            </div>
-            <span style={{ fontSize: '0.7rem', minWidth: '54px', textAlign: 'right' }}>
-              {player.actionPoints}/{player.maxActionPoints}
-            </span>
-          </div>
-        </div>
+        <AnimatedStatBar
+          label="Action Points"
+          current={player.actionPoints}
+          max={player.maxActionPoints}
+          icon="⚡"
+          baseColor="#38bdf8"
+          lowThreshold={40}
+          criticalThreshold={20}
+        />
 
         {inCombat && enemySnapshots.length > 0 && (
           <div>

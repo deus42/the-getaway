@@ -4,6 +4,7 @@ import { RootState } from '../../store';
 import { BACKGROUND_MAP } from '../../content/backgrounds';
 import { getUIStrings } from '../../content/ui';
 import { SKILL_BRANCHES } from '../../content/skills';
+import AnimatedStatBar from './AnimatedStatBar';
 import {
   neonPalette,
   panelSurface,
@@ -199,13 +200,6 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
     social: '#c084fc',
   };
 
-  const healthPercent = useMemo(() =>
-    player.maxHealth > 0
-      ? Math.max(0, Math.min(1, player.health / player.maxHealth)) * 100
-      : 0,
-    [player.health, player.maxHealth]
-  );
-
   return (
     <div style={summaryContainerStyle} data-testid="player-summary-panel">
       <div style={headerStyle}>
@@ -218,15 +212,15 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         </div>
       </div>
 
-      <div>
-        <div style={labelRowStyle}>
-          <span>Health</span>
-          <span>{player.health}/{player.maxHealth}</span>
-        </div>
-        <div style={barShellStyle}>
-          <div style={barFillStyle(neonPalette.emerald, `${healthPercent}%`)} />
-        </div>
-      </div>
+      <AnimatedStatBar
+        label="Health"
+        current={player.health}
+        max={player.maxHealth}
+        icon="❤️"
+        baseColor={neonPalette.emerald}
+        lowThreshold={50}
+        criticalThreshold={25}
+      />
 
       <div style={statGridStyle}>
         <div style={statCardStyle}>
