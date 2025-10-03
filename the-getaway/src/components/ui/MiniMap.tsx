@@ -29,16 +29,6 @@ const BASE_TILE_COLORS: Record<string, string> = {
   default: '#111827',
 };
 
-const HIGH_CONTRAST_TILE_COLORS: Record<string, string> = {
-  floor: '#111827',
-  wall: '#f97316',
-  door: '#fde047',
-  cover: '#22c55e',
-  water: '#38bdf8',
-  trap: '#f472b6',
-  default: '#0f172a',
-};
-
 const ENTITY_STYLE: Record<MiniMapEntityDetail['kind'], { fill: string; stroke: string; size: number }> = {
   player: { fill: '#38bdf8', stroke: 'rgba(190, 242, 255, 0.85)', size: 0.8 },
   enemy: { fill: '#ef4444', stroke: 'rgba(248, 113, 113, 0.85)', size: 0.65 },
@@ -457,13 +447,8 @@ const MiniMap: React.FC = () => {
   const [canvasSize, setCanvasSize] = useState(() => ({ width: 140, height: 110 }));
   const [userZoom, setUserZoom] = useState(() => miniMapService.getZoom());
   const [legendOpen, setLegendOpen] = useState(true);
-  const [highContrastMode, setHighContrastMode] = useState(false);
-  const [autoRotate, setAutoRotate] = useState(false);
-  const [debugOpen, setDebugOpen] = useState(false);
   const [hoverInfo, setHoverInfo] = useState<{ label: string; x: number; y: number } | null>(null);
-
-  const tilePalette = highContrastMode ? HIGH_CONTRAST_TILE_COLORS : BASE_TILE_COLORS;
-
+  const tilePalette = BASE_TILE_COLORS;
   const legendItems = [
     { id: 'player', label: uiStrings.miniMap.playerLabel ?? 'Cell Lead', color: ENTITY_STYLE.player.fill },
     { id: 'enemy', label: uiStrings.miniMap.enemyLabel ?? 'Hostile', color: ENTITY_STYLE.enemy.fill },
@@ -493,14 +478,8 @@ const MiniMap: React.FC = () => {
     }
 
     previousPlayerPositionRef.current = currentPosition;
-    rotationDegRef.current = autoRotate ? playerHeadingRef.current - 90 : 0;
-  }, [autoRotate]);
-
-  useEffect(() => {
-    if (!autoRotate && containerRef.current) {
-      containerRef.current.style.transform = 'rotate(0deg)';
-    }
-  }, [autoRotate]);
+    rotationDegRef.current = 0;
+  }, []);
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -606,7 +585,7 @@ const MiniMap: React.FC = () => {
     }
 
     if (containerRef.current) {
-      containerRef.current.style.transform = `rotate(${rotationDegRef.current}deg)`;
+      containerRef.current.style.transform = 'rotate(0deg)';
     }
   }, [renderTick, tilePalette, canvasSize.width, canvasSize.height]);
 
@@ -1198,48 +1177,8 @@ const MiniMap: React.FC = () => {
             fontSize: '0.58rem',
           }}
         >
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.28rem', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={highContrastMode}
-              onChange={(event) => setHighContrastMode(event.target.checked)}
-            />
-            High contrast
-          </label>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.28rem', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={autoRotate}
-              onChange={(event) => setAutoRotate(event.target.checked)}
-            />
-            Auto-rotate
-          </label>
-          <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.28rem', cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={debugOpen}
-              onChange={(event) => setDebugOpen(event.target.checked)}
-            />
-            QA overlay
-          </label>
+          <span style={{ opacity: 0.55 }}>Use zoom + shift for waypoint targeting</span>
         </div>
-        {debugOpen && (
-          <div
-            style={{
-              padding: '0.4rem',
-              borderRadius: '8px',
-              background: 'rgba(15, 23, 42, 0.6)',
-              border: '1px solid rgba(94, 234, 212, 0.35)',
-              fontSize: '0.58rem',
-              lineHeight: 1.4,
-            }}
-          >
-            <div>tileScale: {activeState.tileScale.toFixed(2)}</div>
-            <div>baseScale: {activeState.baseTileScale.toFixed(2)}</div>
-            <div>devicePixelRatio: {activeState.devicePixelRatio.toFixed(2)}</div>
-            <div>viewport: {activeState.viewport.x.toFixed(1)}, {activeState.viewport.y.toFixed(1)} × {activeState.viewport.width.toFixed(1)} / {activeState.viewport.height.toFixed(1)}</div>
-          </div>
-        )}
       </div>
       {legendOpen && (
         <footer
