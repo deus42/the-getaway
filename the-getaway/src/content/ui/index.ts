@@ -104,6 +104,12 @@ interface DerivedStatsStrings {
 
 interface MiniMapStrings {
   heading: string;
+  playerLabel?: string;
+  enemyLabel?: string;
+  npcLabel?: string;
+  objectiveLabel?: string;
+  objectivesHeading?: string;
+  noObjectives?: string;
 }
 
 interface DayNightStrings {
@@ -240,6 +246,12 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     miniMap: {
       heading: 'Tactical Map',
+      playerLabel: 'Cell Lead',
+      enemyLabel: 'Hostile',
+      npcLabel: 'Neutral',
+      objectiveLabel: 'Objective',
+      objectivesHeading: 'Tracked Objectives',
+      noObjectives: 'No objectives visible.',
     },
     dayNight: {
       timeOfDay: {
@@ -393,6 +405,12 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     miniMap: {
       heading: 'Тактична мапа',
+      playerLabel: 'Оперативник',
+      enemyLabel: 'Ворог',
+      npcLabel: 'Нейтральний',
+      objectiveLabel: 'Ціль',
+      objectivesHeading: 'Відстежувані цілі',
+      noObjectives: 'Цілей не виявлено.',
     },
     dayNight: {
       timeOfDay: {

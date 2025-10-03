@@ -1,5 +1,50 @@
 import { miniMapService, normalizeMiniMapViewport } from '../game/services/miniMapService';
+import { MiniMapController } from '../game/controllers/MiniMapController';
 import { MINIMAP_VIEWPORT_CLICK_EVENT } from '../game/events';
+import { store } from '../store';
+
+const cloneRootState = () => {
+  const snapshot = store.getState();
+  if (typeof structuredClone === 'function') {
+    return structuredClone(snapshot);
+  }
+  return JSON.parse(JSON.stringify(snapshot));
+};
+
+describe('MiniMapController', () => {
+  it('marks all layers dirty on the first compose call and clears thereafter', () => {
+    const controller = new MiniMapController({ maxCanvasWidth: 200, maxCanvasHeight: 160 });
+    const initial = controller.compose(store.getState(), 1, null);
+    expect(initial).not.toBeNull();
+    expect(initial?.dirtyLayers.tiles).toBe(true);
+    expect(initial?.dirtyLayers.entities).toBe(true);
+    expect(initial?.dirtyLayers.overlays).toBe(true);
+    expect(initial?.dirtyLayers.viewport).toBe(true);
+
+    const second = controller.compose(store.getState(), 1, null);
+    expect(second?.dirtyLayers.tiles).toBe(false);
+    expect(second?.dirtyLayers.entities).toBe(false);
+    expect(second?.dirtyLayers.overlays).toBe(false);
+    expect(second?.dirtyLayers.viewport).toBe(false);
+  });
+
+  it('flags entity and path layers when player position or path changes', () => {
+    const controller = new MiniMapController();
+    controller.compose(store.getState(), 1, null);
+
+    const mutated = cloneRootState();
+    mutated.player.data.position.x = Math.max(0, mutated.player.data.position.x - 1);
+
+    const next = controller.compose(mutated, 1, null);
+    expect(next?.dirtyLayers.entities).toBe(true);
+
+    const withPath = controller.compose(store.getState(), 1, [
+      { x: mutated.player.data.position.x, y: mutated.player.data.position.y },
+      { x: mutated.player.data.position.x + 1, y: mutated.player.data.position.y },
+    ]);
+    expect(withPath?.dirtyLayers.path).toBe(true);
+  });
+});
 
 describe('miniMapService', () => {
   afterEach(() => {
@@ -21,6 +66,7 @@ describe('miniMapService', () => {
     expect(state?.mapWidth).toBeGreaterThan(0);
     expect(state?.mapHeight).toBeGreaterThan(0);
     expect(state?.entities.length).toBeGreaterThan(0);
+    expect(state?.dirtyLayers.tiles).toBeDefined();
   });
 
   it('routes minimap interactions to the active scene', () => {

@@ -67,7 +67,7 @@ const LogPanel: React.FC = () => {
       prevMessageCountRef.current = messages.length;
       return () => clearTimeout(timer);
     }
-  }, [messages]);
+  }, [messages, animatingIndices]);
 
   return (
     <>

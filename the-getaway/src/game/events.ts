@@ -5,6 +5,10 @@ export const PATH_PREVIEW_EVENT = 'isoPathPreview';
 export const VIEWPORT_UPDATE_EVENT = 'viewportUpdate';
 export const MINIMAP_VIEWPORT_CLICK_EVENT = 'minimapViewportClick';
 export const MINIMAP_STATE_EVENT = 'minimapStateUpdate';
+export const MINIMAP_ZOOM_EVENT = 'minimapZoomUpdate';
+export const MINIMAP_PATH_PREVIEW_EVENT = 'minimapPathPreview';
+export const MINIMAP_OBJECTIVE_FOCUS_EVENT = 'minimapObjectiveFocus';
+
 
 export interface TileClickDetail {
   areaId: string;
@@ -29,8 +33,26 @@ export interface MinimapViewportClickDetail {
   animate?: boolean;
 }
 
+export interface MiniMapPathPreviewDetail {
+  areaId: string;
+  target: Position;
+  source?: Position;
+  requestId?: string;
+}
+
+export interface MiniMapObjectiveFocusDetail {
+  target: Position;
+  areaId: string;
+  animate?: boolean;
+}
+
 export type MiniMapInteractionDetail =
-  | ({ type: typeof MINIMAP_VIEWPORT_CLICK_EVENT } & MinimapViewportClickDetail);
+  | ({ type: typeof MINIMAP_VIEWPORT_CLICK_EVENT } & MinimapViewportClickDetail)
+  | ({ type: typeof MINIMAP_OBJECTIVE_FOCUS_EVENT } & MiniMapObjectiveFocusDetail);
+
+export interface MiniMapZoomDetail {
+  zoom: number;
+}
 
 export type MiniMapEntityKind = 'player' | 'enemy' | 'npc' | 'objective';
 
@@ -46,7 +68,24 @@ export interface MiniMapViewportDetail extends ViewportUpdateDetail {
   zoom: number;
 }
 
-export interface MiniMapStateDetail {
+export interface MiniMapDirtyLayers {
+  tiles: boolean;
+  overlays: boolean;
+  entities: boolean;
+  viewport: boolean;
+  path: boolean;
+}
+
+export interface MiniMapObjectiveDetail {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  status: 'active' | 'completed';
+  distance?: number;
+}
+
+export interface MiniMapRenderState {
   version: number;
   areaId: string;
   areaName: string;
@@ -56,6 +95,8 @@ export interface MiniMapStateDetail {
   logicalHeight: number;
   tileScale: number;
   devicePixelRatio: number;
+  baseTileScale: number;
+  userZoom: number;
   tileVersion: number;
   tiles: TileTypeGrid;
   entities: MiniMapEntityDetail[];
@@ -63,6 +104,11 @@ export interface MiniMapStateDetail {
   viewport: MiniMapViewportDetail;
   curfewActive: boolean;
   timestamp: number;
+  path?: Position[];
+  pathSignature: string;
+  objectiveMarkers: MiniMapObjectiveDetail[];
+  objectivesSignature: string;
+  dirtyLayers: MiniMapDirtyLayers;
 }
 
 export type TileTypeGrid = MapTile[][];

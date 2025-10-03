@@ -1,22 +1,22 @@
 import { store } from '../../store';
-import type { RootState } from '../../store';
-import type { MapArea, Enemy, NPC, MapTile } from '../interfaces/types';
-import type { ViewportUpdateDetail } from '../events';
+import type { ViewportUpdateDetail, PathPreviewDetail } from '../events';
+import { PATH_PREVIEW_EVENT } from '../events';
 import {
   MINIMAP_VIEWPORT_CLICK_EVENT,
+  MINIMAP_OBJECTIVE_FOCUS_EVENT,
   MINIMAP_STATE_EVENT,
+  MINIMAP_ZOOM_EVENT,
   MiniMapInteractionDetail,
-  MiniMapStateDetail,
-  MiniMapViewportDetail,
+  MiniMapRenderState,
+  MiniMapZoomDetail,
+  MINIMAP_PATH_PREVIEW_EVENT,
+  MiniMapPathPreviewDetail,
 } from '../events';
 import type { MainScene } from '../scenes/MainScene';
+import { MiniMapController, normalizeMiniMapViewport } from '../controllers/MiniMapController';
 
 const raf = typeof window !== 'undefined' ? window.requestAnimationFrame.bind(window) : undefined;
 const caf = typeof window !== 'undefined' ? window.cancelAnimationFrame.bind(window) : undefined;
-
-const DEFAULT_TILE_SCALE = 2;
-const MAX_CANVAS_WIDTH = 180;
-const MAX_CANVAS_HEIGHT = 160;
 
 const clampValue = (value: number, min: number, max: number): number => {
   if (max < min) {
@@ -25,94 +25,7 @@ const clampValue = (value: number, min: number, max: number): number => {
   return Math.min(Math.max(value, min), max);
 };
 
-const roundTo = (value: number, precision: number = 4): number => {
-  const factor = 10 ** precision;
-  return Math.round(value * factor) / factor;
-};
-
-export const normalizeMiniMapViewport = (
-  viewport: MiniMapViewportDetail,
-  area: Pick<MapArea, 'width' | 'height'>,
-): MiniMapViewportDetail => {
-  const areaWidth = Math.max(1, area.width);
-  const areaHeight = Math.max(1, area.height);
-
-  const rawWidth = Math.max(0.0001, viewport.width);
-  const rawHeight = Math.max(0.0001, viewport.height);
-  const centerX = viewport.x + rawWidth / 2;
-  const centerY = viewport.y + rawHeight / 2;
-
-  const MIN_DIMENSION = 0.001;
-
-  const sanitizedWidth = Math.max(MIN_DIMENSION, rawWidth);
-  const sanitizedHeight = Math.max(MIN_DIMENSION, rawHeight);
-
-  const boundedWidth = Math.min(areaWidth, sanitizedWidth);
-  const boundedHeight = Math.min(areaHeight, sanitizedHeight);
-
-  const halfWidth = boundedWidth / 2;
-  const halfHeight = boundedHeight / 2;
-
-  const minCenterX = halfWidth;
-  const maxCenterX = Math.max(halfWidth, areaWidth - halfWidth);
-  const minCenterY = halfHeight;
-  const maxCenterY = Math.max(halfHeight, areaHeight - halfHeight);
-
-  const clampedCenterX = clampValue(centerX, minCenterX, maxCenterX);
-  const clampedCenterY = clampValue(centerY, minCenterY, maxCenterY);
-
-  const finalWidth = roundTo(boundedWidth);
-  const finalHeight = roundTo(boundedHeight);
-
-  const adjustedCenterX = clampValue(
-    clampedCenterX,
-    finalWidth / 2,
-    Math.max(finalWidth / 2, areaWidth - finalWidth / 2),
-  );
-  const adjustedCenterY = clampValue(
-    clampedCenterY,
-    finalHeight / 2,
-    Math.max(finalHeight / 2, areaHeight - finalHeight / 2),
-  );
-
-  const finalX = clampValue(roundTo(adjustedCenterX - finalWidth / 2), 0, Math.max(0, areaWidth - finalWidth));
-  const finalY = clampValue(roundTo(adjustedCenterY - finalHeight / 2), 0, Math.max(0, areaHeight - finalHeight));
-
-  return {
-    x: finalX,
-    y: finalY,
-    width: finalWidth,
-    height: finalHeight,
-    zoom: viewport.zoom,
-  };
-};
-
-const clampScale = (area: Pick<MapArea, 'width' | 'height'>): number => {
-  const widthScale = MAX_CANVAS_WIDTH / area.width;
-  const heightScale = MAX_CANVAS_HEIGHT / area.height;
-  const rawScale = Math.min(widthScale, heightScale);
-  const clamped = Math.max(0.6, Math.min(4, Math.floor(rawScale * 10) / 10 || DEFAULT_TILE_SCALE));
-  return Number.isFinite(clamped) && clamped > 0 ? clamped : DEFAULT_TILE_SCALE;
-};
-
-const createEntitySignature = (enemies: Enemy[], npcs: NPC[], playerId: string | undefined, playerX: number, playerY: number): string => {
-  const enemySig = enemies
-    .map((enemy) => `${enemy.id}:${enemy.position.x}:${enemy.position.y}:${enemy.health}`)
-    .join('|');
-  const npcSig = npcs
-    .map((npc) => `${npc.id}:${npc.position.x}:${npc.position.y}`)
-    .join('|');
-  return `${playerId ?? 'player'}:${playerX}:${playerY}::${enemySig}::${npcSig}`;
-};
-
-const getDevicePixelRatio = (): number => {
-  if (typeof window === 'undefined') {
-    return 1;
-  }
-  return window.devicePixelRatio || 1;
-};
-
-export type MiniMapEventListener = (event: CustomEvent<MiniMapStateDetail>) => void;
+export type MiniMapEventListener = (event: CustomEvent<MiniMapRenderState>) => void;
 
 class MiniMapService extends EventTarget {
   private scene: MainScene | null = null;
@@ -125,11 +38,17 @@ class MiniMapService extends EventTarget {
 
   private pendingViewportUpdate = false;
 
-  private lastState: MiniMapStateDetail | null = null;
+  private readonly controller = new MiniMapController();
 
-  private tileSignature: { areaId: string; ref: MapTile[][]; version: number } | null = null;
+  private lastState: MiniMapRenderState | null = null;
 
-  private viewport: MiniMapViewportDetail | null = null;
+  private userZoom = 1;
+
+  private readonly minZoom = 0.6;
+
+  private readonly maxZoom = 3;
+
+  private lastPath: PathPreviewDetail['path'] | null = null;
 
   private readonly raf = raf;
 
@@ -140,10 +59,15 @@ class MiniMapService extends EventTarget {
 
     this.shutdown();
     this.scene = scene;
+    this.controller.bindScene(scene);
     this.storeUnsubscribe = store.subscribe(() => {
       this.pendingStoreUpdate = true;
       this.scheduleBroadcast();
     });
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    }
 
     this.pendingStoreUpdate = true;
     this.scheduleBroadcast(true);
@@ -160,21 +84,26 @@ class MiniMapService extends EventTarget {
     }
 
     this.pendingFrame = null;
+    this.controller.bindScene(null);
     this.scene = null;
+
+    if (typeof window !== 'undefined') {
+      window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    }
   }
 
-  getState(): MiniMapStateDetail | null {
+  getState(): MiniMapRenderState | null {
     return this.lastState;
   }
 
   updateViewport(detail: ViewportUpdateDetail & { zoom: number }) {
-    this.viewport = {
+    this.controller.setViewport({
       x: detail.x,
       y: detail.y,
       width: detail.width,
       height: detail.height,
       zoom: detail.zoom,
-    };
+    });
 
     this.pendingViewportUpdate = true;
     this.scheduleBroadcast();
@@ -185,16 +114,67 @@ class MiniMapService extends EventTarget {
       return;
     }
 
-    if (detail.type === MINIMAP_VIEWPORT_CLICK_EVENT) {
-      const animate = detail.animate ?? true;
-      this.scene.focusCameraOnGridPosition(detail.gridX, detail.gridY, animate);
+    switch (detail.type) {
+      case MINIMAP_VIEWPORT_CLICK_EVENT: {
+        const animate = detail.animate ?? true;
+        this.scene.focusCameraOnGridPosition(detail.gridX, detail.gridY, animate);
+        break;
+      }
+      case MINIMAP_OBJECTIVE_FOCUS_EVENT: {
+        const animate = detail.animate ?? true;
+        this.scene.focusCameraOnGridPosition(detail.target.x, detail.target.y, animate);
+        break;
+      }
+      default:
+        break;
     }
+  }
+
+  setZoom(zoom: number) {
+    const clamped = clampValue(zoom, this.minZoom, this.maxZoom);
+    if (Math.abs(clamped - this.userZoom) < 0.0001) {
+      return;
+    }
+    this.userZoom = clamped;
+    this.pendingStoreUpdate = true;
+    this.dispatchEvent(new CustomEvent<MiniMapZoomDetail>(MINIMAP_ZOOM_EVENT, { detail: { zoom: this.userZoom } }));
+    this.scheduleBroadcast();
+  }
+
+  adjustZoom(delta: number) {
+    this.setZoom(this.userZoom + delta);
+  }
+
+  getZoom(): number {
+    return this.userZoom;
+  }
+
+  centerOnPlayer(animate = true) {
+    if (!this.scene) {
+      return;
+    }
+    const current = store.getState();
+    const position = current.player.data.position;
+    this.scene.focusCameraOnGridPosition(position.x, position.y, animate);
   }
 
   requestImmediateState() {
     this.pendingStoreUpdate = true;
     this.scheduleBroadcast(true);
   }
+
+  private handlePathPreview = (event: Event) => {
+    const detail = (event as CustomEvent<PathPreviewDetail>).detail;
+    const state = store.getState();
+    const area = state.world.currentMapArea;
+    if (!area || detail.areaId !== area.id) {
+      return;
+    }
+    const path = detail.path ?? [];
+    this.lastPath = path.length ? path : null;
+    this.pendingStoreUpdate = true;
+    this.scheduleBroadcast();
+  };
 
   private scheduleBroadcast(forceImmediate = false) {
     if (forceImmediate || !this.raf) {
@@ -212,6 +192,10 @@ class MiniMapService extends EventTarget {
     });
   }
 
+  private composeState(): MiniMapRenderState | null {
+    return this.controller.compose(store.getState(), this.userZoom, this.lastPath);
+  }
+
   private broadcast() {
     if (!this.pendingStoreUpdate && !this.pendingViewportUpdate) {
       return;
@@ -225,7 +209,7 @@ class MiniMapService extends EventTarget {
       return;
     }
 
-    const shouldEmit = !this.lastState || this.hasStateChanged(state, this.lastState);
+    const shouldEmit = this.shouldEmit(state);
     this.lastState = state;
 
     if (!shouldEmit) {
@@ -235,128 +219,19 @@ class MiniMapService extends EventTarget {
     this.dispatchEvent(new CustomEvent(MINIMAP_STATE_EVENT, { detail: state }));
   }
 
-  private composeState(): MiniMapStateDetail | null {
-    const current: RootState = store.getState();
-    const area = current.world.currentMapArea;
-
-    if (!area) {
-      return null;
-    }
-
-    const tileScale = clampScale(area);
-    const logicalWidth = Math.ceil(area.width * tileScale);
-    const logicalHeight = Math.ceil(area.height * tileScale);
-    const dpr = getDevicePixelRatio();
-
-    const player = current.player.data;
-    const enemies = current.world.currentMapArea.entities.enemies;
-    const npcs = current.world.currentMapArea.entities.npcs;
-
-    const entitySig = createEntitySignature(enemies, npcs, player.id, player.position.x, player.position.y);
-    const tilesRef = area.tiles;
-    let tileVersion = this.tileSignature?.version ?? 0;
-
-    if (!this.tileSignature || this.tileSignature.areaId !== area.id || this.tileSignature.ref !== tilesRef) {
-      tileVersion += 1;
-      this.tileSignature = {
-        areaId: area.id,
-        ref: tilesRef,
-        version: tileVersion,
-      };
-    }
-
-    const baseViewport = this.viewport ?? {
-      x: 0,
-      y: 0,
-      width: Math.min(area.width, Math.ceil(area.width * 0.4)),
-      height: Math.min(area.height, Math.ceil(area.height * 0.4)),
-      zoom: this.scene ? this.scene.cameras.main.zoom : 1,
-    };
-
-    const normalizedViewport = normalizeMiniMapViewport(baseViewport, area);
-    this.viewport = normalizedViewport;
-
-    return {
-      version: (this.lastState?.version ?? 0) + 1,
-      areaId: area.id,
-      areaName: area.name,
-      mapWidth: area.width,
-      mapHeight: area.height,
-      logicalWidth,
-      logicalHeight,
-      tileScale,
-      devicePixelRatio: dpr,
-      tileVersion,
-      tiles: tilesRef,
-      entities: this.buildEntities(player.id ?? 'player', player.position.x, player.position.y, enemies, npcs),
-      entitiesSignature: entitySig,
-      viewport: normalizedViewport,
-      curfewActive: current.world.curfewActive,
-      timestamp: Date.now(),
-    };
-  }
-
-  private buildEntities(
-    playerId: string,
-    playerX: number,
-    playerY: number,
-    enemies: Enemy[],
-    npcs: NPC[],
-  ): MiniMapStateDetail['entities'] {
-    const entities: MiniMapStateDetail['entities'] = [
-      {
-        id: playerId,
-        kind: 'player',
-        x: playerX,
-        y: playerY,
-        status: 'active',
-      },
-    ];
-
-    enemies.forEach((enemy) => {
-      entities.push({
-        id: enemy.id,
-        kind: 'enemy',
-        x: enemy.position.x,
-        y: enemy.position.y,
-        status: enemy.health > 0 ? 'active' : 'inactive',
-      });
-    });
-
-    npcs.forEach((npc) => {
-      entities.push({
-        id: npc.id,
-        kind: 'npc',
-        x: npc.position.x,
-        y: npc.position.y,
-        status: 'active',
-      });
-    });
-
-    return entities;
-  }
-
-  private hasStateChanged(next: MiniMapStateDetail, prev: MiniMapStateDetail) {
-    if (!prev) {
+  private shouldEmit(next: MiniMapRenderState): boolean {
+    if (!this.lastState) {
       return true;
     }
 
-    return (
-      next.areaId !== prev.areaId ||
-      next.areaName !== prev.areaName ||
-      next.tileVersion !== prev.tileVersion ||
-      next.logicalWidth !== prev.logicalWidth ||
-      next.logicalHeight !== prev.logicalHeight ||
-      next.tileScale !== prev.tileScale ||
-      next.devicePixelRatio !== prev.devicePixelRatio ||
-      next.curfewActive !== prev.curfewActive ||
-      next.viewport.x !== prev.viewport.x ||
-      next.viewport.y !== prev.viewport.y ||
-      next.viewport.width !== prev.viewport.width ||
-      next.viewport.height !== prev.viewport.height ||
-      next.viewport.zoom !== prev.viewport.zoom ||
-      next.entitiesSignature !== prev.entitiesSignature
-    );
+    const prev = this.lastState;
+
+    if (next.areaId !== prev.areaId) {
+      return true;
+    }
+
+    const dirty = next.dirtyLayers;
+    return dirty.tiles || dirty.entities || dirty.overlays || dirty.viewport || dirty.path;
   }
 }
 
@@ -364,6 +239,10 @@ export const miniMapService = new MiniMapService();
 
 declare global {
   interface GlobalEventHandlersEventMap {
-    [MINIMAP_STATE_EVENT]: CustomEvent<MiniMapStateDetail>;
+    [MINIMAP_STATE_EVENT]: CustomEvent<MiniMapRenderState>;
+    [MINIMAP_ZOOM_EVENT]: CustomEvent<MiniMapZoomDetail>;
+    [MINIMAP_PATH_PREVIEW_EVENT]: CustomEvent<MiniMapPathPreviewDetail>;
   }
 }
+
+export { normalizeMiniMapViewport };

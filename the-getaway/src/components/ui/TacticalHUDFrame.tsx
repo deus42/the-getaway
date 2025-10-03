@@ -4,7 +4,6 @@ import { RootState } from '../../store';
 
 const TacticalHUDFrame: React.FC = () => {
   const { currentMapArea, inCombat } = useSelector((state: RootState) => state.world);
-  const player = useSelector((state: RootState) => state.player.data);
   const [time, setTime] = useState(new Date());
 
   useEffect(() => {

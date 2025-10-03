@@ -70,34 +70,6 @@ const backgroundLabelStyle: React.CSSProperties = {
   marginTop: '0.2rem',
 };
 
-const barShellStyle: React.CSSProperties = {
-  width: '100%',
-  height: '0.44rem',
-  borderRadius: '999px',
-  background: 'rgba(30, 64, 175, 0.28)',
-  overflow: 'hidden',
-  border: '1px solid rgba(56, 189, 248, 0.24)',
-};
-
-const barFillStyle = (color: string, width: string): React.CSSProperties => ({
-  width,
-  height: '100%',
-  borderRadius: '999px',
-  background: `linear-gradient(135deg, ${color}, rgba(255, 255, 255, 0.45))`,
-  boxShadow: '0 0 12px rgba(56, 189, 248, 0.45)',
-  transition: 'width 0.3s ease',
-});
-
-const labelRowStyle: React.CSSProperties = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  ...subtleText,
-  fontSize: '0.64rem',
-  letterSpacing: '0.12em',
-  marginBottom: '0.18rem',
-};
-
 const statGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',

@@ -22,6 +22,7 @@
 ## Latest Transmission
 | Date | Drop | Highlights |
 | --- | --- | --- |
+| Oct 2025 | Mini-Map Overhaul | Layered controller with drag/zoom, waypoint previews, objective focus, and performance throttling. |
 | Oct 2025 | Cyberpunk HUD Revamp | Tactical HUD with holo dossier, minimap navigation boosts, reactive curfew alerts. |
 | Oct 2025 | District Atmospherics | Slums vs. Downtown prop palettes, neon signage, seeded NPC routines, loot glows, isometric object factory upgrades. |
 | Oct 2025 | Skill Tree & Progression | SkillTreePanel with combat bonuses, XP/level-up flow, character creation wizard (identity → attributes → background). |
@@ -54,6 +55,7 @@
 - Neon HUD arranged in a recon tri-column with minimap, status readouts, and action log.
 - Character sheets, skill trees, and overlays support keyboard navigation, ARIA live regions, and bilingual toggles.
 - Toast notifications and modal flows surface XP, curfew warnings, and skill gate feedback.
+- Layered minimap controller delivers cached tiles, enemy/objective markers, Shift-drag waypoint previews, keyboard panning, and high-contrast/auto-rotate options.
 
 ## Tech Stack & Architecture
 - **React + Vite** host the HUD, overlays, character creation flow, and modal systems.

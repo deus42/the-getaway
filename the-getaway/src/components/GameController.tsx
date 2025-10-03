@@ -30,7 +30,7 @@ import { determineEnemyMove } from "../game/combat/enemyAI";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
 import { findPath } from "../game/world/pathfinding";
-import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT } from "../game/events";
+import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT, MINIMAP_PATH_PREVIEW_EVENT, MiniMapPathPreviewDetail } from "../game/events";
 import { startDialogue, endDialogue } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
 import { processPerceptionUpdates, getAlertMessageKey, shouldSpawnReinforcements, getReinforcementDelay } from "../game/combat/perceptionManager";
@@ -393,6 +393,35 @@ const GameController: React.FC = () => {
       })
     );
   }, [queuedPath, currentMapArea]);
+
+  useEffect(() => {
+    if (!currentMapArea) {
+      return undefined;
+    }
+
+    const handleMinimapPreview = (event: Event) => {
+      const detail = (event as CustomEvent<MiniMapPathPreviewDetail>).detail;
+      if (!detail || detail.areaId !== currentMapArea.id) {
+        return;
+      }
+
+      const path = findPath(player.position, detail.target, currentMapArea, {
+        player,
+        enemies,
+        npcs: currentMapArea.entities.npcs,
+      });
+
+      setQueuedPath(path);
+      window.dispatchEvent(new CustomEvent(PATH_PREVIEW_EVENT, {
+        detail: { areaId: currentMapArea.id, path },
+      }));
+    };
+
+    window.addEventListener(MINIMAP_PATH_PREVIEW_EVENT, handleMinimapPreview as EventListener);
+    return () => {
+      window.removeEventListener(MINIMAP_PATH_PREVIEW_EVENT, handleMinimapPreview as EventListener);
+    };
+  }, [currentMapArea, player, enemies]);
 
   useEffect(() => {
     setQueuedPath((previous) => (previous.length > 0 ? [] : previous));
@@ -796,7 +825,7 @@ const GameController: React.FC = () => {
         }, getReinforcementDelay());
       }
     }
-  }, [player, enemies, currentMapArea, dispatch, logStrings, inCombat, isPlayerTurn, reinforcementsScheduled]);
+  }, [player, enemies, currentMapArea, dispatch, logStrings, inCombat, isPlayerTurn, reinforcementsScheduled, cancelPendingEnemyAction]);
 
   // --- Enemy Turn Logic ---
   useEffect(() => {

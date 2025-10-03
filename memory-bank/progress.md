@@ -462,6 +462,12 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 <validation>
 - Manual roam tests covering long-distance travel, door traversal, and curfew restrictions.
 </validation>
+
+<maintenance_notes date="October 4, 2025">
+- Replaced the legacy minimap snapshotper with `MiniMapController`, layering cached tiles/overlays/entities and exposing dirty flags so React only redraws touched layers.
+- Added Shift+drag waypoint previews (`MINIMAP_PATH_PREVIEW_EVENT`), legend objective focus hooks, keyboard panning, and high-contrast/auto-rotate toggles to the minimap HUD.
+- Updated miniMapService tests to cover controller dirty states and ensured GameController consumes the new waypoint event for consistent pathing.
+</maintenance_notes>
 </step>
 
 <step id="19" status="completed">

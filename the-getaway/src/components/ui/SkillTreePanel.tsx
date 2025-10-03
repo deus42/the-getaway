@@ -225,7 +225,7 @@ const SkillTreePanel: React.FC = () => {
 
   useEffect(() => {
     previousValuesRef.current = player.skillTraining;
-  }, []);
+  }, [player.skillTraining]);
 
   useEffect(() => {
     const prev = previousValuesRef.current;
@@ -355,7 +355,7 @@ const SkillTreePanel: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span style={helpTextStyle}>+5 base • +10 tagged</span>
           <span style={pointsBadgeStyle} aria-live="polite">
-            {availablePoints} pts
+            {availablePoints} Skill Points
           </span>
         </div>
       </div>

@@ -52,11 +52,42 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`CharacterScreen.tsx`**: Pip-boy style modal that presents the detailed profile (status panel, detailed stats, skill tree). Toggled via the HUD button or the `C` key and reuses existing components inside a scrollable shell.
 - **`PlayerLoadoutPanel.tsx`**: Summarises equipped weapon/armor alongside perk badges; used inside the character screen.
 - **`PlayerInventoryPanel.tsx`**: Displays carried items, weight totals, and overflow count within the character screen without introducing additional scroll containers.
-- **`MiniMap.tsx`**: Renders a tactical overview of the current map with player/enemy markers, cover overlays, and curfew perimeter glow.
+- **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, viewport reticle, and supports drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles.
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 - **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
+
+<architecture_section id="minimap_controller" category="ui_systems">
+### Mini-Map Controller & Rendering Stack
+
+<design_principles>
+- Derive all minimap state once per frame from Redux selectors and camera viewport, then fan out through a pure render pipeline.
+- Cache tiles/overlays/entities separately so zooming, panning, or entity updates only redraw the necessary layers.
+- Keep UI presentation declarative: React renders canvases from `MiniMapRenderState`, while `MiniMapController` owns transforms and dirty-flag logic.
+</design_principles>
+
+<technical_flow>
+1. <code_location>src/game/controllers/MiniMapController.ts</code_location> ingests the active `MapArea`, viewport, and path preview to produce a `MiniMapRenderState` with tile/entity/objective signatures and `dirtyLayers` flags.
+2. <code_location>src/game/services/miniMapService.ts</code_location> subscribes to Redux, throttles broadcasts with `requestAnimationFrame`, and dispatches `MINIMAP_STATE_EVENT` snapshots plus zoom updates.
+3. <code_location>src/components/ui/MiniMap.tsx</code_location> stacks five canvases (tiles, overlays, entities, path, viewport). Each canvas only redraws when its matching dirty flag flips, keeping zoom/drag interactions responsive.
+4. Shift-drag emits `MINIMAP_PATH_PREVIEW_EVENT`; <code_location>GameController.tsx</code_location> resolves the path via `findPath`, dispatching `PATH_PREVIEW_EVENT` so both Phaser and the minimap display the queued route.
+5. Legend clicks post `MINIMAP_OBJECTIVE_FOCUS_EVENT`, which `miniMapService` proxies to `MainScene.focusCameraOnGridPosition`, keeping map navigation consistent with core camera controls.
+</technical_flow>
+
+<pattern name="Layered Rendering">
+- Tiles render into a dedicated canvas using cached gradients; overlays add curfew tint + neon border; entities/objectives draw glowing shapes; paths animate via a dashed canvas; viewport reticle sits topmost.
+- High-contrast mode swaps tile palette, while auto-rotate rotates the canvas stack around the center and the pointer math in `MiniMap.tsx` compensates so drag targets remain accurate.
+- Keyboard arrow keys nudge the camera by emitting viewport focus events, matching accessibility expectations and enabling keyboard-only navigation.
+</pattern>
+
+<pattern name="Event Contract">
+- `MINIMAP_STATE_EVENT` → React HUD updates (tiles/entities/path/viewport).
+- `MINIMAP_ZOOM_EVENT` → syncs slider + button states on the HUD.
+- `MINIMAP_PATH_PREVIEW_EVENT` → GameController pathfinding for Shift-drag waypoints.
+- `MINIMAP_OBJECTIVE_FOCUS_EVENT` → camera snap-to-objective for legend shortcuts.
+</pattern>
+</architecture_section>
 
 ### `/the-getaway/src/content`
 
