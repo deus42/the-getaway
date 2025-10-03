@@ -5,6 +5,7 @@ import SkillTreePanel from './SkillTreePanel';
 import PlayerLoadoutPanel from './PlayerLoadoutPanel';
 import PlayerInventoryPanel from './PlayerInventoryPanel';
 import StatusEffectsPanel from './StatusEffectsPanel';
+import PerkListPanel from './PerkListPanel';
 import CornerAccents from './CornerAccents';
 import ScanlineOverlay from './ScanlineOverlay';
 import { useSelector } from 'react-redux';
@@ -211,6 +212,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
           <div style={bottomRowStyle}>
             <div style={statsColumnStyle}>
               <PlayerStatsPanel />
+              <PerkListPanel />
               <StatusEffectsPanel />
             </div>
             <div style={skillTreeWrapperStyle}>

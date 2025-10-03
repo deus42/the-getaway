@@ -43,7 +43,7 @@ export interface BackgroundDefinition {
   name: string;
   tagline: string;
   description: string[];
-  perk: {
+  perk?: {
     id: string;
     name: string;
     description: string;
@@ -61,11 +61,12 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
       'Former security officer who leaked patrol routes until the alarms sounded on you.',
       'You know their formations by heart and still dream in evac sirens.',
     ],
-    perk: {
-      id: 'tactical_training',
-      name: 'Tactical Training',
-      description: 'Ranged weapons deal +10% damage and start with +1 accuracy tier.',
-    },
+    // Background perks not yet implemented - reserved for future expansion
+    // perk: {
+    //   id: 'tactical_training',
+    //   name: 'Tactical Training',
+    //   description: 'Ranged weapons deal +10% damage and start with +1 accuracy tier.',
+    // },
     factionAdjustments: {
       resistance: 10,
       corpsec: -20,
@@ -105,11 +106,12 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
       'You hustled the markets since curfew was a bedtime story.',
       'Lockpicks, fast feet, and favor debts keep you breathing.',
     ],
-    perk: {
-      id: 'street_smarts',
-      name: 'Street Smarts',
-      description: 'Stealth +15% and barter prices improved by 10%.',
-    },
+    // Background perks not yet implemented - reserved for future expansion
+    // perk: {
+    //   id: 'street_smarts',
+    //   name: 'Street Smarts',
+    //   description: 'Stealth +15% and barter prices improved by 10%.',
+    // },
     factionAdjustments: {
       scavengers: 10,
     },
@@ -147,11 +149,12 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
       'Your code toppled curfew drones before dawn.',
       'Signal ghosts and failsafe exploits follow in your wake.',
     ],
-    perk: {
-      id: 'code_breaker',
-      name: 'Code Breaker',
-      description: 'Hacking challenges gain +20% success chance and unlock unique bypass options.',
-    },
+    // Background perks not yet implemented - reserved for future expansion
+    // perk: {
+    //   id: 'code_breaker',
+    //   name: 'Code Breaker',
+    //   description: 'Hacking challenges gain +20% success chance and unlock unique bypass options.',
+    // },
     factionAdjustments: {
       resistance: 15,
       corpsec: -10,
@@ -186,11 +189,12 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
       'You crossed toxic badlands with nothing but a crowbar and spite.',
       'Trade routes and buried caches live in your head like lullabies.',
     ],
-    perk: {
-      id: 'survivalist',
-      name: 'Survivalist',
-      description: 'Crafting costs reduced by 25% and environmental damage reduced by 2.',
-    },
+    // Background perks not yet implemented - reserved for future expansion
+    // perk: {
+    //   id: 'survivalist',
+    //   name: 'Survivalist',
+    //   description: 'Crafting costs reduced by 25% and environmental damage reduced by 2.',
+    // },
     factionAdjustments: {
       scavengers: 10,
       resistance: 5,

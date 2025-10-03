@@ -15,6 +15,7 @@ import CharacterCreationScreen, { CharacterCreationData } from "./components/ui/
 import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import CharacterScreen from "./components/ui/CharacterScreen";
+import PerkSelectionPanel from "./components/ui/PerkSelectionPanel";
 import CornerAccents from "./components/ui/CornerAccents";
 import ScanlineOverlay from "./components/ui/ScanlineOverlay";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
@@ -22,7 +23,7 @@ import DataStreamParticles from "./components/ui/DataStreamParticles";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
-import { initializeCharacter } from "./store/playerSlice";
+import { initializeCharacter, consumeLevelUpEvent } from "./store/playerSlice";
 import { PlayerSkills } from "./game/interfaces/types";
 import { DEFAULT_SKILLS } from "./game/interfaces/player";
 import { getUIStrings } from "./content/ui";
@@ -256,10 +257,32 @@ function App() {
   } | null>(null);
   const [xpNotifications, setXpNotifications] = useState<XPNotificationData[]>([]);
   const [showCharacterScreen, setShowCharacterScreen] = useState(false);
+  const [pendingPerkSelections, setPendingPerkSelections] = useState(0);
+  const [showPerkSelection, setShowPerkSelection] = useState(false);
 
   useEffect(() => {
     console.log("[App] Component mounted");
     console.log("[App] Store state:", store.getState());
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = store.subscribe(() => {
+      const state = store.getState();
+      const events = state.player.pendingLevelUpEvents;
+
+      setLevelUpData((current) => {
+        if (current) {
+          return current;
+        }
+        return events.length > 0 ? events[0] : null;
+      });
+
+      const selections = state.player.data.pendingPerkSelections;
+      setPendingPerkSelections(selections);
+      setShowPerkSelection(selections > 0);
+    });
+
+    return unsubscribe;
   }, []);
 
   useEffect(() => {
@@ -347,6 +370,7 @@ function App() {
   };
 
   const handleLevelUpContinue = () => {
+    store.dispatch(consumeLevelUpEvent());
     setLevelUpData(null);
   };
 
@@ -388,6 +412,11 @@ function App() {
           onContinue={handleLevelUpContinue}
         />
       )}
+      <PerkSelectionPanel
+        open={showPerkSelection}
+        pendingSelections={pendingPerkSelections}
+        onClose={() => setShowPerkSelection(false)}
+      />
       <CharacterScreen open={showCharacterScreen} onClose={handleCloseCharacterScreen} />
       <XPNotificationManager
         notifications={xpNotifications}

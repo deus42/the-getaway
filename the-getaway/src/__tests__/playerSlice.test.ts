@@ -24,6 +24,9 @@ import playerReducer, {
   refundSkillPointFromSkill,
   setPlayerData,
   spendAttributePoint,
+  selectPerk,
+  consumeLevelUpEvent,
+  beginPlayerTurn,
   PlayerState,
 } from '../store/playerSlice';
 import { Item, Weapon, Armor } from '../game/interfaces/types';
@@ -108,7 +111,10 @@ describe('playerSlice', () => {
       );
 
       const player = store.getState().player.data;
-      expect(player.perks.length).toBeGreaterThan(0);
+      // Background perks not yet implemented (reserved for future expansion)
+      // expect(player.perks.length).toBeGreaterThan(0);
+      expect(player.backgroundId).toBe('corpsec_defector');
+      expect(player.equipped.weapon?.name).toBe('CorpSec Service Pistol');
     });
   });
 
@@ -306,6 +312,119 @@ describe('playerSlice', () => {
       expect(player.level).toBe(beforeLevel + 1);
       expect(player.maxHealth).toBe(beforeMaxHP + 10);
       expect(player.health).toBe(player.maxHealth);
+    });
+
+    it('queues perk selections when reaching perk unlock levels', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      store.dispatch(addExperience(500));
+
+      const state = store.getState();
+      expect(state.player.data.pendingPerkSelections).toBeGreaterThanOrEqual(1);
+      expect(state.player.pendingLevelUpEvents.length).toBeGreaterThan(0);
+      expect(state.player.pendingLevelUpEvents[0].perksUnlocked).toBeGreaterThanOrEqual(1);
+    });
+
+    it('allows selecting available perks and reduces pending selections', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      store.dispatch(addExperience(300));
+
+      store.dispatch(selectPerk('steadyHands'));
+
+      const player = store.getState().player.data;
+      expect(player.perks).toContain('steadyHands');
+      expect(player.pendingPerkSelections).toBe(0);
+    });
+
+    it('prevents selecting perks without meeting requirements', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      store.dispatch(addExperience(300));
+
+      store.dispatch(selectPerk('gunFu'));
+
+      const player = store.getState().player.data;
+      expect(player.perks).not.toContain('gunFu');
+      expect(player.pendingPerkSelections).toBeGreaterThanOrEqual(0);
+    });
+
+    it('consumes queued level up events', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      store.dispatch(addExperience(300));
+      expect(store.getState().player.pendingLevelUpEvents.length).toBeGreaterThan(0);
+
+      store.dispatch(consumeLevelUpEvent());
+      expect(store.getState().player.pendingLevelUpEvents.length).toBe(0);
+    });
+  });
+
+  describe('perk runtime management', () => {
+    it('resets Gun Fu shot counter at the start of player turn', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const player = store.getState().player.data;
+      const modifiedPlayer = {
+        ...player,
+        level: 12,
+        perks: [...player.perks, 'gunFu'],
+        perkRuntime: {
+          ...player.perkRuntime,
+          gunFuShotsThisTurn: 3,
+        },
+      };
+
+      store.dispatch(setPlayerData(modifiedPlayer));
+
+      store.dispatch(beginPlayerTurn());
+
+      expect(store.getState().player.data.perkRuntime.gunFuShotsThisTurn).toBe(0);
     });
   });
 

@@ -60,6 +60,13 @@ const createMockPlayer = (overrides?: Partial<Player>): Player => {
       armor: undefined,
       accessory: undefined
     },
+    pendingPerkSelections: 0,
+    perkRuntime: {
+      gunFuShotsThisTurn: 0,
+      adrenalineRushTurnsRemaining: 0,
+      ghostInvisibilityTurns: 0,
+      ghostConsumed: false,
+    },
     ...overrides
   };
 };

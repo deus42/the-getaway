@@ -143,6 +143,20 @@ interface DialogueOverlayStrings {
   itemRecoveredDescription: (questName: string) => string;
 }
 
+interface PerkStrings {
+  panelTitle: string;
+  remainingLabel: (count: number) => string;
+  categoryLabels: Record<'combat' | 'utility' | 'dialogue' | 'capstone', string>;
+  selectLabel: string;
+  lockedLabel: string;
+  closeLabel: string;
+  requirementsLabel: string;
+  effectsLabel: string;
+  alreadyOwnedLabel: string;
+  capstoneTag: string;
+  emptyLabel: string;
+}
+
 interface UIStrings {
   menu: MenuStrings;
   questLog: QuestLogStrings;
@@ -152,6 +166,7 @@ interface UIStrings {
   dayNight: DayNightStrings;
   levelIndicator: LevelIndicatorStrings;
   dialogueOverlay: DialogueOverlayStrings;
+  perks: PerkStrings;
   skills: Record<SkillKey, string>;
   skillDescriptions: Record<SkillKey, string>;
   statFocus: Record<StatFocusKey, string>;
@@ -285,6 +300,27 @@ const STRINGS: Record<Locale, UIStrings> = {
       checkSkill: (requirement) => `Check ${requirement}`,
       escHint: 'Press Esc to disengage',
       itemRecoveredDescription: (questName) => `Recovered during ${questName}.`,
+    },
+    perks: {
+      panelTitle: 'Perk Selection',
+      remainingLabel: (count) =>
+        count === 1
+          ? '1 perk choice remaining'
+          : `${count} perk choices remaining`,
+      categoryLabels: {
+        combat: 'Combat',
+        utility: 'Utility',
+        dialogue: 'Dialogue',
+        capstone: 'Capstone',
+      },
+      selectLabel: 'Select Perk',
+      lockedLabel: 'Locked',
+      closeLabel: 'Close',
+      requirementsLabel: 'Requirements',
+      effectsLabel: 'Effects',
+      alreadyOwnedLabel: 'Already owned',
+      capstoneTag: 'Capstone',
+      emptyLabel: 'No perks acquired yet.',
     },
     skills: {
       strength: 'Strength',
@@ -444,6 +480,30 @@ const STRINGS: Record<Locale, UIStrings> = {
       checkSkill: (requirement) => `Перевірка: ${requirement}`,
       escHint: 'Натисніть Esc, щоб завершити',
       itemRecoveredDescription: (questName) => `Здобуто під час «${questName}».`,
+    },
+    perks: {
+      panelTitle: 'Вибір таланту',
+      remainingLabel: (count) => {
+        if (count === 1) {
+          return 'Залишився 1 вибір таланту';
+        }
+        const plural = count >= 2 && count <= 4 ? 'вибори' : 'виборів';
+        return `Залишилось ${count} ${plural} таланту`;
+      },
+      categoryLabels: {
+        combat: 'Бойові',
+        utility: 'Прикладні',
+        dialogue: 'Діалогові',
+        capstone: 'Капстони',
+      },
+      selectLabel: 'Обрати талант',
+      lockedLabel: 'Заблоковано',
+      closeLabel: 'Закрити',
+      requirementsLabel: 'Вимоги',
+      effectsLabel: 'Ефекти',
+      alreadyOwnedLabel: 'Уже отримано',
+      capstoneTag: 'Капстон',
+      emptyLabel: 'Таланти ще не відкриті.',
     },
     skills: {
       strength: 'Сила',

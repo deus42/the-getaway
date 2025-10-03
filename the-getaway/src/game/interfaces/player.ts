@@ -53,6 +53,7 @@ export const DEFAULT_PLAYER: Player = {
   attributePoints: 0,
   backgroundId: undefined,
   perks: [],
+  pendingPerkSelections: 0,
   factionReputation: {
     resistance: 0,
     corpsec: 0,
@@ -68,6 +69,12 @@ export const DEFAULT_PLAYER: Player = {
     weapon: undefined,
     armor: undefined,
     accessory: undefined
+  },
+  perkRuntime: {
+    gunFuShotsThisTurn: 0,
+    adrenalineRushTurnsRemaining: 0,
+    ghostInvisibilityTurns: 0,
+    ghostConsumed: false,
   }
 };
 

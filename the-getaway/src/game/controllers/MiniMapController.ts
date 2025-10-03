@@ -132,11 +132,13 @@ export class MiniMapController {
 
   private readonly config: MiniMapControllerConfig;
 
-  private readonly defaultTileScale: number = DEFAULT_TILE_SCALE;
+  // Unused field - kept for future use
+  // private readonly defaultTileScale: number = DEFAULT_TILE_SCALE;
 
   private lastRenderState: MiniMapRenderState | null = null;
 
-  private lastPathSignature: string = '';
+  // Unused field - path signature tracking not yet implemented
+  // private lastPathSignature: string = '';
 
   constructor(config?: Partial<MiniMapControllerConfig>) {
     this.config = {
@@ -161,9 +163,10 @@ export class MiniMapController {
       return null;
     }
 
-    if (this.lastRenderState && this.lastRenderState.areaId !== area.id) {
-      this.lastPathSignature = '';
-    }
+    // Path signature tracking not yet implemented
+    // if (this.lastRenderState && this.lastRenderState.areaId !== area.id) {
+    //   this.lastPathSignature = '';
+    // }
 
     const baseScale = clampBaseScale(area, this.config.maxCanvasWidth, this.config.maxCanvasHeight);
     const tileScale = roundTo(baseScale * clampValue(userZoom, this.config.minZoom, this.config.maxZoom));
@@ -244,7 +247,8 @@ export class MiniMapController {
     };
 
     this.lastRenderState = renderState;
-    this.lastPathSignature = pathSignature;
+    // Path signature tracking not yet implemented
+    // this.lastPathSignature = pathSignature;
     return renderState;
   }
 

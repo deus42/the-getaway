@@ -191,46 +191,47 @@ const buttonRowStyle: React.CSSProperties = {
   marginTop: '0.75rem',
 };
 
-const buttonStyle = (variant: 'primary' | 'secondary' | 'ghost'): React.CSSProperties => {
-  const baseStyle: React.CSSProperties = {
-    padding: '0.75rem 1.5rem',
-    borderRadius: '8px',
-    fontSize: '0.9rem',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    border: 'none',
-    outline: 'none',
-  };
-
-  if (variant === 'primary') {
-    return {
-      ...baseStyle,
-      backgroundColor: '#38bdf8',
-      color: '#0f172a',
-      flex: 1,
-      boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)',
-    };
-  }
-
-  if (variant === 'secondary') {
-    return {
-      ...baseStyle,
-      backgroundColor: 'rgba(148, 163, 184, 0.2)',
-      color: '#e2e8f0',
-      border: '1px solid rgba(148, 163, 184, 0.3)',
-    };
-  }
-
-  return {
-    ...baseStyle,
-    backgroundColor: 'transparent',
-    color: '#94a3b8',
-    border: '1px solid rgba(148, 163, 184, 0.2)',
-  };
-};
+// Unused style helper - kept for future use
+// const buttonStyle = (variant: 'primary' | 'secondary' | 'ghost'): React.CSSProperties => {
+//   const baseStyle: React.CSSProperties = {
+//     padding: '0.75rem 1.5rem',
+//     borderRadius: '8px',
+//     fontSize: '0.9rem',
+//     fontWeight: 600,
+//     textTransform: 'uppercase',
+//     letterSpacing: '0.05em',
+//     cursor: 'pointer',
+//     transition: 'all 0.2s ease',
+//     border: 'none',
+//     outline: 'none',
+//   };
+//
+//   if (variant === 'primary') {
+//     return {
+//       ...baseStyle,
+//       backgroundColor: '#38bdf8',
+//       color: '#0f172a',
+//       flex: 1,
+//       boxShadow: '0 4px 12px rgba(56, 189, 248, 0.3)',
+//     };
+//   }
+//
+//   if (variant === 'secondary') {
+//     return {
+//       ...baseStyle,
+//       backgroundColor: 'rgba(148, 163, 184, 0.2)',
+//       color: '#e2e8f0',
+//       border: '1px solid rgba(148, 163, 184, 0.3)',
+//     };
+//   }
+//
+//   return {
+//     ...baseStyle,
+//     backgroundColor: 'transparent',
+//     color: '#94a3b8',
+//     border: '1px solid rgba(148, 163, 184, 0.2)',
+//   };
+// };
 
 const errorStyle: React.CSSProperties = {
   color: '#ef4444',
@@ -308,12 +309,13 @@ const pointsDisplayStyle: React.CSSProperties = {
   marginBottom: '0.8rem',
 };
 
-const pointsValueStyle: React.CSSProperties = {
-  fontSize: '1.3rem',
-  fontWeight: 700,
-  color: '#38bdf8',
-  textShadow: '0 0 10px rgba(56, 189, 248, 0.5)',
-};
+// Unused style - kept for future use
+// const pointsValueStyle: React.CSSProperties = {
+//   fontSize: '1.3rem',
+//   fontWeight: 700,
+//   color: '#38bdf8',
+//   textShadow: '0 0 10px rgba(56, 189, 248, 0.5)',
+// };
 
 const pointsLabelStyle: React.CSSProperties = {
   fontSize: '0.65rem',
@@ -766,11 +768,13 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                         <p key={line} style={{ fontSize: '0.68rem', color: '#94a3b8', margin: 0, lineHeight: 1.3 }}>{line}</p>
                       ))}
                     </div>
-                    <div>
-                      <span style={{ fontSize: '0.6rem', color: '#22d3ee', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Perk</span>
-                      <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#38bdf8' }}>{background.perk.name}</div>
-                      <p style={{ fontSize: '0.65rem', color: '#94a3b8', margin: '0.15rem 0 0', lineHeight: 1.3 }}>{background.perk.description}</p>
-                    </div>
+                    {background.perk && (
+                      <div>
+                        <span style={{ fontSize: '0.6rem', color: '#22d3ee', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Perk</span>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#38bdf8' }}>{background.perk.name}</div>
+                        <p style={{ fontSize: '0.65rem', color: '#94a3b8', margin: '0.15rem 0 0', lineHeight: 1.3 }}>{background.perk.description}</p>
+                      </div>
+                    )}
                     <div>
                       <span style={{ fontSize: '0.6rem', color: '#f472b6', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Faction Standing</span>
                       <ul style={{ margin: '0.2rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.65rem', lineHeight: 1.4 }}>

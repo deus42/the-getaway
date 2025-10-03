@@ -1,4 +1,5 @@
 import { Player, StatModifiers, PlayerSkills } from '../interfaces/types';
+import { getArmorBonusFromPerks } from './perks';
 
 /**
  * Aggregate bonuses from all equipped items
@@ -94,7 +95,7 @@ export const calculateEffectiveSkills = (
  */
 export const getEffectiveArmorRating = (player: Player): number => {
   const bonuses = getEquippedBonuses(player);
-  return bonuses.totalArmorRating;
+  return bonuses.totalArmorRating + getArmorBonusFromPerks(player);
 };
 
 /**

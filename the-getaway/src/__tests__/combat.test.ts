@@ -278,6 +278,94 @@ describe('Combat System Tests', () => {
       expect(enemyTurnResult.enemies[0].actionPoints).toBe(0); // Unchanged
     });
   });
+
+  describe('Perk Effects', () => {
+    test('Steady Hands increases hit chance with ranged weapons', () => {
+      const rifle = createWeapon('Test Rifle', 8, 6, 2, 3);
+
+      const basePlayer: Player = {
+        ...DEFAULT_PLAYER,
+        position: { x: 0, y: 0 },
+        equipped: {
+          ...DEFAULT_PLAYER.equipped,
+          weapon: rifle,
+        },
+      };
+
+      const perkedPlayer: Player = {
+        ...basePlayer,
+        perks: [...basePlayer.perks, 'steadyHands'],
+      };
+
+      const targetEnemy = createEnemy({ x: 3, y: 0 });
+
+      const baseChance = calculateHitChance(basePlayer, targetEnemy, false);
+      const perkChance = calculateHitChance(perkedPlayer, targetEnemy, false);
+
+      expect(perkChance).toBeGreaterThan(baseChance);
+    });
+
+    test('Gun Fu makes the first shot each turn cost 0 AP', () => {
+      setRandomGenerator(() => 0.1);
+
+      const pistol = createWeapon('Test Pistol', 6, 4, 2, 1.5);
+      const gunFuPlayer: Player = {
+        ...DEFAULT_PLAYER,
+        position: { x: 0, y: 0 },
+        actionPoints: 4,
+        maxActionPoints: 4,
+        perks: [...DEFAULT_PLAYER.perks, 'gunFu'],
+        perkRuntime: {
+          ...DEFAULT_PLAYER.perkRuntime,
+          gunFuShotsThisTurn: 0,
+        },
+        equipped: {
+          ...DEFAULT_PLAYER.equipped,
+          weapon: pistol,
+        },
+      };
+
+      const targetEnemy = createEnemy({ x: 1, y: 0 });
+
+      const firstAttack = executeAttack(gunFuPlayer, targetEnemy, false);
+      expect(firstAttack.success).toBe(true);
+      expect((firstAttack.newAttacker as Player).actionPoints).toBe(gunFuPlayer.actionPoints);
+
+      const secondAttack = executeAttack(firstAttack.newAttacker as Player, targetEnemy, false);
+      expect((secondAttack.newAttacker as Player).actionPoints).toBe(
+        (firstAttack.newAttacker as Player).actionPoints - pistol.apCost
+      );
+    });
+
+    test('Executioner forces critical hits against weakened enemies', () => {
+      const attackRolls = [0.1, 0.9];
+      let rollIndex = 0;
+      setRandomGenerator(() => {
+        const roll = attackRolls[Math.min(rollIndex, attackRolls.length - 1)];
+        rollIndex += 1;
+        return roll;
+      });
+
+      const rifle = createWeapon('Test Rifle', 10, 5, 3, 2.5);
+      const executioner: Player = {
+        ...DEFAULT_PLAYER,
+        position: { x: 0, y: 0 },
+        perks: [...DEFAULT_PLAYER.perks, 'executioner'],
+        equipped: {
+          ...DEFAULT_PLAYER.equipped,
+          weapon: rifle,
+        },
+      };
+
+      const woundedEnemy = createEnemy({ x: 1, y: 0 }, 4, 20);
+
+      const result = executeAttack(executioner, woundedEnemy, false);
+
+      expect(result.success).toBe(true);
+      expect(result.damage).toBeGreaterThan(rifle.damage);
+      expect(result.damage).toBe(Math.round(rifle.damage * 1.5));
+    });
+  });
   
   // Test enemy AI
   describe('Enemy AI', () => {

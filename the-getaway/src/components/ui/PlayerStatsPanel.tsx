@@ -112,13 +112,14 @@ const attributePointsTitleStyle: React.CSSProperties = {
   color: 'rgba(94, 234, 212, 0.95)',
 };
 
-const attributePointsValueStyle: React.CSSProperties = {
-  fontFamily: "'DM Mono', monospace",
-  fontSize: '0.7rem',
-  fontWeight: 700,
-  color: '#5eead4',
-  textShadow: '0 0 6px rgba(94, 234, 212, 0.45)',
-};
+// Unused style - kept for future use
+// const attributePointsValueStyle: React.CSSProperties = {
+//   fontFamily: "'DM Mono', monospace",
+//   fontSize: '0.7rem',
+//   fontWeight: 700,
+//   color: '#5eead4',
+//   textShadow: '0 0 6px rgba(94, 234, 212, 0.45)',
+// };
 
 const attributePointsHintStyle: React.CSSProperties = {
   fontSize: '0.58rem',

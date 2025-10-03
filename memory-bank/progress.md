@@ -951,3 +951,91 @@ Integrated level-up modal and XP notification manager into main app
 - Future: trigger level-up modal when processLevelUp returns levelsGained > 0
 </notes>
 </step>
+
+<step id="24.3" status="completed">
+<step_metadata>
+  <number>24.3</number>
+  <title>Perk Selection System with Capstone Perks</title>
+  <status>Completed</status>
+  <date>October 3, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Defined 8 foundation perks in `perks.ts`: Steady Hands, Toughness, Quick Draw, Adrenaline Rush, Silent Runner, Gun Fu (capstone), Ghost (capstone), Executioner (capstone).
+2. Created perk availability evaluation system that validates level, attribute, and skill requirements, blocking already-acquired perks.
+3. Built `PerkSelectionPanel.tsx` with category-organized grid layout, prerequisite validation, locked state indicators, and capstone visual treatment (gold borders).
+4. Implemented perk runtime state tracking for Gun Fu (shot counter), Adrenaline Rush (turn counter), and Ghost (invisibility turns, consumed flag).
+5. Integrated perk effects into combat system: Steady Hands (+10% ranged hit chance), Toughness (+3 armor via equipmentEffects), Gun Fu (first shot 0 AP), Executioner (auto-crit below 25% HP).
+6. Wired Adrenaline Rush triggering into `playerSlice` (updateHealth, setHealth, setPlayerData) to automatically activate +2 AP buff when dropping below 30% HP for 3 turns.
+7. Added `PerkListPanel.tsx` displaying acquired perks with effects in compact card layout, integrated into CharacterScreen.
+8. Localized all perk UI strings (panel title, category labels, requirements, effects, locked state, capstone tag) for English and Ukrainian.
+9. Created `selectPerk` Redux action that validates availability, appends to player perks array, decrements pendingPerkSelections, and initializes perk-specific runtime state.
+10. Wrote comprehensive test suite (`perks.test.ts`) covering perk definitions, availability validation, combat integration (Gun Fu, Executioner, Steady Hands, Toughness), and utility mechanics (Adrenaline Rush, Ghost).
+</tasks>
+
+<implementation>
+- **Perk Categories**: Combat (Steady Hands, Toughness, Gun Fu, Executioner), Utility (Adrenaline Rush, Silent Runner, Ghost), Dialogue (stub for future), Capstone (Gun Fu, Ghost, Executioner marked with `capstone: true`).
+- **Requirements**: Level gates (2/4/6/12), attribute thresholds (e.g., Perception 5 for Steady Hands, Endurance 6 for Toughness), skill minimums (e.g., Small Guns 75 for Gun Fu capstone).
+- **Combat Integration**: `getRangedHitBonusFromPerks` applied in hit chance calculation, `getArmorBonusFromPerks` added to effective armor rating, `shouldGunFuAttackBeFree` checked before deducting attack AP, Executioner multiplies damage by 1.5 when target HP ≤ 25%.
+- **Adrenaline Rush**: Triggers automatically when health drops below 30%, grants +2 AP (can exceed max), persists for 3 turns via `tickAdrenalineRush` called in `beginPlayerTurn`.
+- **Gun Fu**: `resetGunFuForTurn` zeroes shot counter at turn start, `registerGunFuAttack` increments counter after first free shot, subsequent shots cost normal AP.
+- **Ghost**: `recordGhostActivation` sets invisibility to 2 turns and marks consumed flag (once per combat), `decayGhostInvisibility` decrements turn counter each round.
+- **UI Flow**: Perk selection panel opens when `pendingPerkSelections > 0`, close button disabled until all selections spent, perks displayed in category sections with availability badges.
+</implementation>
+
+<code_reference file="src/content/perks.ts">
+Perk definitions, category helpers (listPerks, listPerksByCategory, getPerkDefinition), availability evaluator (evaluatePerkAvailability)
+</code_reference>
+
+<code_reference file="src/game/systems/perks.ts">
+Perk runtime helpers: playerHasPerk, getRangedHitBonusFromPerks, getArmorBonusFromPerks, shouldGunFuAttackBeFree, registerGunFuAttack, resetGunFuForTurn, shouldTriggerAdrenalineRush, activateAdrenalineRush, tickAdrenalineRush, recordGhostActivation, decayGhostInvisibility
+</code_reference>
+
+<code_reference file="src/components/ui/PerkSelectionPanel.tsx">
+Modal dialog with category grid, requirement validation UI, locked/unlocked states, capstone badge styling
+</code_reference>
+
+<code_reference file="src/components/ui/PerkListPanel.tsx">
+Acquired perks display panel integrated into CharacterScreen
+</code_reference>
+
+<code_reference file="src/store/playerSlice.ts">
+selectPerk action, perk runtime initialization in createFreshPlayer/setPlayerData, Adrenaline Rush auto-triggering in health updates, Gun Fu/Ghost turn ticking in beginPlayerTurn
+</code_reference>
+
+<code_reference file="src/game/combat/combatSystem.ts">
+Perk bonus application: ranged hit chance (Steady Hands), Gun Fu AP cost override, Executioner auto-crit (line 252)
+</code_reference>
+
+<code_reference file="src/game/systems/equipmentEffects.ts">
+Toughness armor bonus integrated into getEffectiveArmorRating
+</code_reference>
+
+<code_reference file="src/content/ui/index.ts">
+English and Ukrainian perk UI strings (panelTitle, remainingLabel, categoryLabels, selectLabel, lockedLabel, closeLabel, requirementsLabel, effectsLabel, alreadyOwnedLabel, capstoneTag, emptyLabel)
+</code_reference>
+
+<code_reference file="src/App.tsx">
+PerkSelectionPanel integration with pendingPerkSelections state sync from Redux
+</code_reference>
+
+<code_reference file="src/__tests__/perks.test.ts">
+Comprehensive test coverage: perk definitions (8 perks, categories, capstones), availability validation (level/attribute/skill requirements, already-acquired blocking), combat perks (Steady Hands, Toughness, Gun Fu, Executioner), utility perks (Adrenaline Rush triggering/ticking, Ghost activation/decay), helper functions
+</code_reference>
+
+<validation>
+- `yarn build` - successful compilation
+- `yarn test perks.test.ts --watch=false` - 24/24 tests passing
+- Manual verification: reach level 2, perk selection modal auto-opens, select Steady Hands, verify +10% ranged hit in combat log
+- Tested Gun Fu: first shot costs 0 AP, second shot costs normal AP (verified in combat.test.ts)
+- Tested Adrenaline Rush: dropping to 25% HP triggered +2 AP buff for 3 turns
+- Tested Executioner: attacks against <25% HP enemies dealt critical damage
+</validation>
+
+<notes>
+- Silent Runner and Quick Draw perk effects are defined but not yet wired into stealth/equipment systems (future enhancement).
+- Dialogue perk category exists but has no perks yet (reserved for social interaction expansion).
+- Perk refund/respec system not implemented (perks are permanent choices per spec).
+- Future work: add more perks in each category, implement stealth system to activate Silent Runner, wire Quick Draw to equipment swap actions.
+</notes>
+</step>

@@ -99,6 +99,7 @@ store.subscribe(() => {
     quests: state.quests,
     log: state.log,
     settings: state.settings,
+    combatFeedback: state.combatFeedback,
   };
   saveState(stateToPersist);
 });

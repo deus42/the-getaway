@@ -29,6 +29,25 @@ export type SkillId =
   | SurvivalSkillId
   | SocialSkillId;
 
+export type PerkCategory = 'combat' | 'utility' | 'dialogue' | 'capstone';
+
+export type PerkId =
+  | 'steadyHands'
+  | 'toughness'
+  | 'quickDraw'
+  | 'adrenalineRush'
+  | 'silentRunner'
+  | 'gunFu'
+  | 'ghost'
+  | 'executioner';
+
+export interface PerkRuntimeState {
+  gunFuShotsThisTurn: number;
+  adrenalineRushTurnsRemaining: number;
+  ghostInvisibilityTurns: number;
+  ghostConsumed: boolean;
+}
+
 export type PlayerSkillValues = Record<SkillId, number>;
 
 // Player entity with core stats, skill tree progress, and equipment
@@ -45,6 +64,7 @@ export interface Player extends Entity {
   attributePoints: number; // Unspent attribute points for SPECIAL increases
   backgroundId?: string;
   perks: string[];
+  pendingPerkSelections: number;
   factionReputation: {
     resistance: number;
     corpsec: number;
@@ -61,6 +81,7 @@ export interface Player extends Entity {
     armor?: Armor;
     accessory?: Item;
   };
+  perkRuntime: PerkRuntimeState;
 }
 
 // Alert state for enemies with perception

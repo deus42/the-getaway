@@ -1,15 +1,25 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { Player, Position, Item, PlayerSkills, Weapon, Armor, SkillId } from '../game/interfaces/types';
+import { Player, Position, Item, PlayerSkills, Weapon, Armor, SkillId, PerkId } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { calculateDerivedStats, calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
 import { createArmor, createConsumable, createWeapon } from '../game/inventory/inventorySystem';
 import { BACKGROUND_MAP, StartingItemDefinition } from '../content/backgrounds';
 import { getSkillDefinition } from '../content/skills';
+import { getPerkDefinition, evaluatePerkAvailability } from '../content/perks';
+import { createLevelUpEvent, LevelUpEvent } from '../utils/progressionHelpers';
+import {
+  activateAdrenalineRush,
+  resetGunFuForTurn,
+  shouldTriggerAdrenalineRush,
+  tickAdrenalineRush,
+  decayGhostInvisibility,
+} from '../game/systems/perks';
 
 export interface PlayerState {
   data: Player;
+  pendingLevelUpEvents: LevelUpEvent[];
 }
 
 const createFreshPlayer = (): Player => ({
@@ -31,12 +41,15 @@ const createFreshPlayer = (): Player => ({
   },
   factionReputation: { ...DEFAULT_PLAYER.factionReputation },
   perks: [...DEFAULT_PLAYER.perks],
+  pendingPerkSelections: DEFAULT_PLAYER.pendingPerkSelections,
   backgroundId: undefined,
   appearancePreset: DEFAULT_PLAYER.appearancePreset,
+  perkRuntime: { ...DEFAULT_PLAYER.perkRuntime },
 });
 
 const initialState: PlayerState = {
   data: createFreshPlayer(),
+  pendingLevelUpEvents: [],
 };
 
 type InitializeCharacterPayload = {
@@ -151,15 +164,26 @@ export const playerSlice = createSlice({
         accessory: undefined,
       };
       freshPlayer.perks = [];
+      freshPlayer.pendingPerkSelections = 0;
       freshPlayer.backgroundId = backgroundId;
       freshPlayer.factionReputation = {
         resistance: 0,
         corpsec: 0,
         scavengers: 0,
       };
+      freshPlayer.perkRuntime = {
+        gunFuShotsThisTurn: 0,
+        adrenalineRushTurnsRemaining: 0,
+        ghostInvisibilityTurns: 0,
+        ghostConsumed: false,
+      };
 
       if (background) {
-        freshPlayer.perks.push(background.perk.id);
+        // Background perks are optional (not yet implemented for all backgrounds)
+        if (background.perk) {
+          freshPlayer.perks.push(background.perk.id);
+        }
+
         Object.entries(background.factionAdjustments).forEach(([faction, value]) => {
           const key = faction as keyof Player['factionReputation'];
           freshPlayer.factionReputation[key] += value ?? 0;
@@ -179,11 +203,19 @@ export const playerSlice = createSlice({
     // Update player health
     updateHealth: (state, action: PayloadAction<number>) => {
       state.data.health = Math.max(0, Math.min(state.data.maxHealth, state.data.health + action.payload));
+
+      if (shouldTriggerAdrenalineRush(state.data)) {
+        state.data = activateAdrenalineRush(state.data);
+      }
     },
     
     // Set player health directly
     setHealth: (state, action: PayloadAction<number>) => {
       state.data.health = Math.max(0, Math.min(state.data.maxHealth, action.payload));
+
+      if (shouldTriggerAdrenalineRush(state.data)) {
+        state.data = activateAdrenalineRush(state.data);
+      }
     },
     
     // Update player action points
@@ -213,7 +245,22 @@ export const playerSlice = createSlice({
         state.data.attributePoints += result.attributePointsAwarded;
       }
 
-      // Note: Perks are tracked separately and will be handled in Step 24c
+      if (result.perksUnlocked > 0) {
+        state.data.pendingPerkSelections += result.perksUnlocked;
+      }
+
+      if (result.levelsGained > 0) {
+        state.pendingLevelUpEvents.push(
+          createLevelUpEvent(
+            state.data.level,
+            result.skillPointsAwarded,
+            result.attributePointsAwarded,
+            result.perksUnlocked
+          )
+        );
+      }
+
+      // Perk choices are queued via pendingPerkSelections and resolved through UI flow
     },
 
     // Add credits (currency)
@@ -299,11 +346,25 @@ export const playerSlice = createSlice({
     // Reset player to default
     resetPlayer: (state) => {
       state.data = createFreshPlayer();
+      state.pendingLevelUpEvents = [];
     },
 
     // Set the entire player data object (useful after complex operations)
     setPlayerData: (state, action: PayloadAction<Player>) => {
       state.data = action.payload;
+
+      if (!state.data.perkRuntime) {
+        state.data.perkRuntime = {
+          gunFuShotsThisTurn: 0,
+          adrenalineRushTurnsRemaining: 0,
+          ghostInvisibilityTurns: 0,
+          ghostConsumed: false,
+        };
+      }
+
+      if (shouldTriggerAdrenalineRush(state.data)) {
+        state.data = activateAdrenalineRush(state.data);
+      }
     },
 
     // Equip a weapon
@@ -412,6 +473,59 @@ export const playerSlice = createSlice({
 
       // Unequip
       state.data.equipped.armor = undefined;
+    },
+
+    consumeLevelUpEvent: (state) => {
+      state.pendingLevelUpEvents.shift();
+    },
+
+    selectPerk: (state, action: PayloadAction<PerkId>) => {
+      const perkId = action.payload;
+
+      if (state.data.pendingPerkSelections <= 0) {
+        return;
+      }
+
+      if (state.data.perks.includes(perkId)) {
+        return;
+      }
+
+      const definition = getPerkDefinition(perkId);
+      const availability = evaluatePerkAvailability(state.data, definition);
+
+      if (!availability.canSelect) {
+        return;
+      }
+
+      state.data.perks.push(perkId);
+      state.data.pendingPerkSelections = Math.max(0, state.data.pendingPerkSelections - 1);
+
+      switch (perkId) {
+        case 'gunFu':
+          state.data.perkRuntime.gunFuShotsThisTurn = 0;
+          break;
+        case 'adrenalineRush':
+          state.data.perkRuntime.adrenalineRushTurnsRemaining = 0;
+          break;
+        case 'ghost':
+          state.data.perkRuntime.ghostConsumed = false;
+          state.data.perkRuntime.ghostInvisibilityTurns = 0;
+          break;
+        default:
+          break;
+      }
+    },
+
+    beginPlayerTurn: (state) => {
+      state.data = resetGunFuForTurn(state.data);
+
+      if (state.data.perkRuntime.adrenalineRushTurnsRemaining > 0) {
+        state.data = tickAdrenalineRush(state.data);
+      }
+
+      if (state.data.perkRuntime.ghostInvisibilityTurns > 0) {
+        state.data = decayGhostInvisibility(state.data);
+      }
     },
 
     // Spend skill points (for skill tree - Step 24b)
@@ -528,6 +642,9 @@ export const {
   equipArmor,
   unequipWeapon,
   unequipArmor,
+  consumeLevelUpEvent,
+  selectPerk,
+  beginPlayerTurn,
   spendSkillPoints,
   spendAttributePoint,
   allocateSkillPointToSkill,

@@ -5,6 +5,7 @@ import {
   updateActionPoints,
   setPlayerData,
   resetActionPoints,
+  beginPlayerTurn,
 } from "../store/playerSlice";
 import {
   updateEnemy,
@@ -26,7 +27,7 @@ import {
   isInAttackRange,
   DEFAULT_ATTACK_COST,
 } from "../game/combat/combatSystem";
-import { Enemy, Position, MapArea, TileType, NPC, AlertLevel } from "../game/interfaces/types";
+import { Enemy, Player, Position, MapArea, TileType, NPC, AlertLevel } from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -35,6 +36,7 @@ import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT, MINIMAP_PATH_PRE
 import { startDialogue, endDialogue } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
 import { processPerceptionUpdates, getAlertMessageKey, shouldSpawnReinforcements, getReinforcementDelay } from "../game/combat/perceptionManager";
+import { shouldGunFuAttackBeFree } from "../game/systems/perks";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -1052,6 +1054,16 @@ const GameController: React.FC = () => {
     };
   }, [cancelPendingEnemyAction]);
 
+  useEffect(() => {
+    if (!inCombat) {
+      return;
+    }
+
+    if (isPlayerTurn) {
+      dispatch(beginPlayerTurn());
+    }
+  }, [dispatch, inCombat, isPlayerTurn]);
+
   // --- End Enemy Turn Logic ---
 
   // Effect to show feedback when combat ends
@@ -1072,8 +1084,13 @@ const GameController: React.FC = () => {
   // Handle attacking an enemy
   const attackEnemy = useCallback(
     (enemy: Enemy, mapArea: MapArea) => {
+      const weaponApCost = player.equipped.weapon?.apCost ?? DEFAULT_ATTACK_COST;
+      const attackCost = shouldGunFuAttackBeFree(player)
+        ? 0
+        : Math.max(0, weaponApCost);
+
       // Check if player has enough AP
-      if (player.actionPoints < DEFAULT_ATTACK_COST) {
+      if (player.actionPoints < attackCost) {
         dispatch(addLogMessage(logStrings.notEnoughAp));
         return;
       }
@@ -1094,17 +1111,18 @@ const GameController: React.FC = () => {
         enemyPosition: enemy.position,
         isBehindCover: isBehindCover,
         playerAP_before: player.actionPoints,
+        attackCost,
       });
 
       // Execute attack
       const result = executeAttack(player, enemy, isBehindCover);
 
-      // Update player AP
-      dispatch(updateActionPoints(-DEFAULT_ATTACK_COST));
+      const updatedPlayer = result.newAttacker as Player;
+      dispatch(setPlayerData(updatedPlayer));
 
-      console.log("[GameController] attackEnemy: POST-ATTACK AP DEDUCTION", {
-        apCost: DEFAULT_ATTACK_COST,
-        playerAP_after: player.actionPoints - DEFAULT_ATTACK_COST, // Simulate state update for logging
+      console.log("[GameController] attackEnemy: POST-ATTACK", {
+        apCost: attackCost,
+        playerAP_after: updatedPlayer.actionPoints,
       });
 
       if (result.success) {
@@ -1151,7 +1169,7 @@ const GameController: React.FC = () => {
 
       if (!anyEnemiesAlive) {
         dispatch(addLogMessage(logStrings.allEnemiesDefeated));
-      } else if (player.actionPoints <= DEFAULT_ATTACK_COST) {
+      } else if (updatedPlayer.actionPoints <= 0) {
         // If player has no more AP or exactly enough for this attack, switch turn
         console.log(
           "[GameController] attackEnemy: Player out of AP after attack, switching turn."

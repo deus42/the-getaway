@@ -31,7 +31,9 @@ describe('Player initialization with backgrounds', () => {
 
     expect(player.name).toBe('Test Runner');
     expect(player.backgroundId).toBe('corpsec_defector');
-    expect(player.perks).toContain('tactical_training');
+    // Background perks not yet implemented (reserved for future expansion)
+    // expect(player.perks).toContain('tactical_training');
+    expect(player.perks).toHaveLength(0); // No background perks yet
     expect(player.factionReputation.resistance).toBe(10);
     expect(player.factionReputation.corpsec).toBe(-20);
     expect(player.factionReputation.scavengers).toBe(0);

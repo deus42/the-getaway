@@ -18,6 +18,13 @@ import {
   getPlayerSkillValue,
   resolveWeaponSkillType,
 } from '../systems/skillTree';
+import {
+  playerHasPerk,
+  getRangedHitBonusFromPerks,
+  shouldGunFuAttackBeFree,
+  registerGunFuAttack,
+  isRangedWeapon,
+} from '../systems/perks';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
@@ -45,6 +52,22 @@ const getRandomRoll = (): number => {
   }
 
   return roll;
+};
+
+const resolveAttackCost = (attacker: Player | Enemy): number => {
+  if ('skills' in attacker) {
+    const playerAttacker = attacker as Player;
+    const baseCost = playerAttacker.equipped.weapon?.apCost ?? DEFAULT_ATTACK_COST;
+    const clampedBase = Math.max(0, baseCost);
+
+    if (shouldGunFuAttackBeFree(playerAttacker)) {
+      return 0;
+    }
+
+    return clampedBase;
+  }
+
+  return DEFAULT_ATTACK_COST;
 };
 
 // Types for combat actions
@@ -142,6 +165,10 @@ export const calculateHitChance = (
       default:
         break;
     }
+
+    if (isRangedWeapon(playerAttacker.equipped.weapon)) {
+      hitChance += getRangedHitBonusFromPerks(playerAttacker);
+    }
   }
 
   if ('skills' in target) {
@@ -168,9 +195,7 @@ export const executeAttack = (
   target: Player | Enemy,
   isBehindCover: boolean
 ): { success: boolean; damage: number; newAttacker: Player | Enemy; newTarget: Player | Enemy } => {
-  const attackCost = 'skills' in attacker && attacker.equipped?.weapon?.apCost
-    ? Math.max(1, attacker.equipped.weapon.apCost)
-    : DEFAULT_ATTACK_COST;
+  const attackCost = resolveAttackCost(attacker);
 
   if (attacker.actionPoints < attackCost) {
     return {
@@ -222,7 +247,17 @@ export const executeAttack = (
       }
 
       const totalCriticalChance = Math.max(0, Math.min(95, attackerDerived.criticalChance + critChanceBonus));
-      if (totalCriticalChance > 0) {
+      let criticalApplied = false;
+
+      if (!('skills' in target) && playerHasPerk(playerAttacker, 'executioner')) {
+        const enemyTarget = target as Enemy;
+        if (enemyTarget.maxHealth > 0 && enemyTarget.health <= enemyTarget.maxHealth * 0.25) {
+          damageAmount = Math.round(damageAmount * 1.5);
+          criticalApplied = true;
+        }
+      }
+
+      if (!criticalApplied && totalCriticalChance > 0) {
         const critRoll = getRandomRoll();
         if (critRoll <= totalCriticalChance / 100) {
           damageAmount = Math.round(damageAmount * 1.5);
@@ -240,15 +275,37 @@ export const executeAttack = (
     }
   }
 
-  const newTarget = {
-    ...target,
-    health: Math.max(0, target.health - damageAmount),
-  };
+  const newTarget = 'skills' in target
+    ? {
+        ...(target as Player),
+        health: Math.max(0, target.health - damageAmount),
+        perkRuntime: {
+          ...(target as Player).perkRuntime,
+        },
+      }
+    : {
+        ...target,
+        health: Math.max(0, target.health - damageAmount),
+      };
 
-  const newAttacker = {
-    ...attacker,
-    actionPoints: Math.max(0, attacker.actionPoints - attackCost),
-  };
+  let newAttacker: Player | Enemy;
+
+  if ('skills' in attacker) {
+    const playerAttacker = attacker as Player;
+    const attackerAfterCost: Player = {
+      ...playerAttacker,
+      actionPoints: Math.max(0, playerAttacker.actionPoints - attackCost),
+      perkRuntime: {
+        ...playerAttacker.perkRuntime,
+      },
+    };
+    newAttacker = registerGunFuAttack(attackerAfterCost);
+  } else {
+    newAttacker = {
+      ...attacker,
+      actionPoints: Math.max(0, attacker.actionPoints - attackCost),
+    };
+  }
 
   return {
     success: hit,
