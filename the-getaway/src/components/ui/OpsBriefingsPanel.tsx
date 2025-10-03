@@ -2,6 +2,8 @@ import { CSSProperties } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { getUIStrings } from "../../content/ui";
+import NotificationBadge from "./NotificationBadge";
+import { gradientTextStyle, glowTextStyle } from "./theme";
 
 interface OpsBriefingsPanelProps {
   containerStyle: CSSProperties;
@@ -109,10 +111,15 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
               fontSize: '0.75rem',
               letterSpacing: '0.28em',
               textTransform: 'uppercase',
-              color: '#60a5fa',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              ...gradientTextStyle('#93c5fd', '#60a5fa'),
+              filter: 'drop-shadow(0 0 6px rgba(96, 165, 250, 0.4))',
             }}
           >
             {uiStrings.questLog.active}
+            <NotificationBadge count={activeQuests.length} color="#60a5fa" size={18} pulse={activeQuests.length > 0} />
           </div>
           {activeQuests.map((quest) => (
             <div
@@ -132,6 +139,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
                   fontSize: '0.92rem',
                   fontWeight: 600,
                   color: '#f8fafc',
+                  ...glowTextStyle('#f8fafc', 4),
                 }}
               >
                 {quest.name}
@@ -180,10 +188,15 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
               fontSize: '0.72rem',
               letterSpacing: '0.26em',
               textTransform: 'uppercase',
-              color: '#a78bfa',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              ...gradientTextStyle('#c4b5fd', '#a78bfa'),
+              filter: 'drop-shadow(0 0 6px rgba(167, 139, 250, 0.4))',
             }}
           >
             {uiStrings.questLog.completed}
+            <NotificationBadge count={completedQuests.length} color="#a78bfa" size={18} pulse={false} />
           </div>
           {completedQuests.map((quest) => (
             <div

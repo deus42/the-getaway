@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { gradientTextStyle } from './theme';
 
 export interface XPNotificationData {
   id: string;
@@ -47,9 +48,9 @@ export const XPNotification: React.FC<XPNotificationProps> = ({ notification, on
   const amountStyle: React.CSSProperties = {
     fontSize: '1.5rem',
     fontWeight: 900,
-    color: '#f0fdf4',
-    textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
-    marginBottom: '0.25rem'
+    marginBottom: '0.25rem',
+    ...gradientTextStyle('#f0fdf4', '#d1fae5'),
+    filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))',
   };
 
   const reasonStyle: React.CSSProperties = {

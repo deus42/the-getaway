@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { PlayerSkills } from '../../game/interfaces/types';
 import { calculateDerivedStats } from '../../game/systems/statCalculations';
 import { BACKGROUNDS } from '../../content/backgrounds';
+import EnhancedButton from './EnhancedButton';
+import NotificationBadge from './NotificationBadge';
+import { gradientTextStyle } from './theme';
 
 interface CharacterCreationScreenProps {
   onComplete: (data: CharacterCreationData) => void;
@@ -97,11 +100,11 @@ const panelStyle: React.CSSProperties = {
 const titleStyle: React.CSSProperties = {
   fontSize: '1.5rem',
   fontWeight: 700,
-  color: '#38bdf8',
   marginBottom: '0.5rem',
   textTransform: 'uppercase',
   letterSpacing: '0.1em',
-  textShadow: '0 0 20px rgba(56, 189, 248, 0.5)',
+  ...gradientTextStyle('#bfdbfe', '#38bdf8'),
+  filter: 'drop-shadow(0 0 20px rgba(56, 189, 248, 0.5))',
 };
 
 const subtitleStyle: React.CSSProperties = {
@@ -563,42 +566,44 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
             </div>
 
             <div style={buttonRowStyle}>
-              <button
+              <EnhancedButton
                 onClick={onCancel}
-                style={buttonStyle('ghost')}
+                variant="secondary"
+                size="medium"
               >
                 Cancel
-              </button>
-              <button
+              </EnhancedButton>
+              <EnhancedButton
                 onClick={handleRandomize}
-                style={buttonStyle('secondary')}
+                variant="secondary"
+                size="medium"
+                icon="🎲"
               >
                 Randomize
-              </button>
-              <button
+              </EnhancedButton>
+              <EnhancedButton
                 onClick={handleStep1Next}
-                style={buttonStyle('primary')}
+                variant="primary"
+                size="medium"
                 disabled={!canProceedStep1}
                 title={!canProceedStep1 ? 'Complete all fields to proceed' : 'Continue to next step'}
               >
                 Continue
-              </button>
+              </EnhancedButton>
             </div>
 
             {/* Debug shortcut - only in development */}
             {process.env.NODE_ENV === 'development' && (
-              <button
-                onClick={handleSkipCreation}
-                style={{
-                  ...buttonStyle('ghost'),
-                  marginTop: '1rem',
-                  width: '100%',
-                  fontSize: '0.7rem',
-                  opacity: 0.5,
-                }}
-              >
-                Skip Creation (Dev)
-              </button>
+              <div style={{ marginTop: '1rem', opacity: 0.5 }}>
+                <EnhancedButton
+                  onClick={handleSkipCreation}
+                  variant="secondary"
+                  size="small"
+                  fullWidth
+                >
+                  Skip Creation (Dev)
+                </EnhancedButton>
+              </div>
             )}
           </>
         )}
@@ -606,8 +611,8 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
         {/* Step 2: Attributes */}
         {step === 2 && (
           <>
-            <div style={pointsDisplayStyle}>
-              <div style={pointsValueStyle}>{pointsRemaining}</div>
+            <div style={{ ...pointsDisplayStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.6rem' }}>
+              <NotificationBadge count={pointsRemaining} color="#38bdf8" size={28} pulse={pointsRemaining > 0} />
               <div style={pointsLabelStyle}>Points Remaining</div>
             </div>
 
@@ -690,20 +695,22 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
             </div>
 
             <div style={buttonRowStyle}>
-              <button
+              <EnhancedButton
                 onClick={handleStep2Back}
-                style={buttonStyle('ghost')}
+                variant="secondary"
+                size="medium"
               >
                 Back
-              </button>
-              <button
+              </EnhancedButton>
+              <EnhancedButton
                 onClick={handleStep2Next}
-                style={buttonStyle('primary')}
+                variant="primary"
+                size="medium"
                 disabled={!canProceedStep2}
                 title={!canProceedStep2 ? 'Spend all points to proceed' : 'Continue to next step'}
               >
                 Continue
-              </button>
+              </EnhancedButton>
             </div>
           </>
         )}
@@ -790,13 +797,14 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
             )}
 
             <div style={buttonRowStyle}>
-              <button
+              <EnhancedButton
                 onClick={() => setStep(2)}
-                style={buttonStyle('ghost')}
+                variant="secondary"
+                size="medium"
               >
                 Back
-              </button>
-              <button
+              </EnhancedButton>
+              <EnhancedButton
                 onClick={() => {
                   if (!selectedBackgroundId) {
                     setBackgroundError('Select a background to proceed.');
@@ -804,12 +812,14 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                   }
                   onComplete({ name, visualPreset, attributes, backgroundId: selectedBackgroundId });
                 }}
-                style={buttonStyle('primary')}
+                variant="success"
+                size="medium"
                 disabled={!selectedBackgroundId}
                 title={!selectedBackgroundId ? 'Select a background to confirm' : 'Begin mission'}
+                icon="▶"
               >
                 Confirm & Start
-              </button>
+              </EnhancedButton>
             </div>
           </>
         )}

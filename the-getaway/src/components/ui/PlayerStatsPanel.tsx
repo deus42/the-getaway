@@ -6,6 +6,7 @@ import { buildPlayerStatProfile, PlayerStatFocus } from '../../game/interfaces/p
 import { getEquippedBonuses, calculateEffectiveSkills } from '../../game/systems/equipmentEffects';
 import { calculateDerivedStatsWithEquipment, calculateDerivedStats } from '../../game/systems/statCalculations';
 import { spendAttributePoint } from '../../store/playerSlice';
+import NotificationBadge from './NotificationBadge';
 
 const containerStyle: React.CSSProperties = {
   display: 'flex',
@@ -254,7 +255,7 @@ const PlayerStatsPanel: React.FC = () => {
         >
           <div style={attributePointsHeaderStyle}>
             <span style={attributePointsTitleStyle}>{uiStrings.playerStatus.attributePointsLabel}</span>
-            <span style={attributePointsValueStyle}>{attributePointsAvailable}</span>
+            <NotificationBadge count={attributePointsAvailable} color="#5eead4" size={22} pulse={attributePointsAvailable > 0} />
           </div>
           <p style={attributePointsHintStyle}>{uiStrings.playerStatus.attributePointsHint}</p>
         </div>

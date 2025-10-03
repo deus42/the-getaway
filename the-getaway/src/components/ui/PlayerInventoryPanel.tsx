@@ -1,6 +1,8 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import NotificationBadge from './NotificationBadge';
+import { gradientTextStyle } from './theme';
 
 const panelStyle: React.CSSProperties = {
   display: 'flex',
@@ -25,7 +27,8 @@ const titleStyle: React.CSSProperties = {
   fontSize: '0.65rem',
   letterSpacing: '0.2em',
   textTransform: 'uppercase',
-  color: '#34d399',
+  ...gradientTextStyle('#6ee7b7', '#34d399'),
+  filter: 'drop-shadow(0 0 6px rgba(52, 211, 153, 0.4))',
 };
 
 const gridStyle: React.CSSProperties = {
@@ -94,7 +97,10 @@ const PlayerInventoryPanel: React.FC = () => {
         </div>
       )}
       {remaining > 0 && (
-        <span style={footerStyle} aria-live="polite">{`+${remaining} more stashed`}</span>
+        <div style={{ ...footerStyle, display: 'flex', alignItems: 'center', gap: '0.4rem' }} aria-live="polite">
+          <NotificationBadge count={remaining} color="#34d399" size={18} pulse={false} />
+          <span>more stashed</span>
+        </div>
       )}
     </div>
   );
