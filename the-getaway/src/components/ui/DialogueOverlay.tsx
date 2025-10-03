@@ -25,7 +25,6 @@ import { getSystemStrings } from "../../content/system";
 import { getUIStrings } from "../../content/ui";
 import { getSkillDefinition } from "../../content/skills";
 import { checkSkillRequirement } from "../../game/quests/dialogueSystem";
-import { glowTextStyle } from "./theme";
 
 const fallbackSkillName = (skill: string) =>
   skill.charAt(0).toUpperCase() + skill.slice(1);
@@ -310,7 +309,6 @@ const DialogueOverlay: React.FC = () => {
               fontWeight: 700,
               margin: 0,
               color: "#f8fafc",
-              ...glowTextStyle("#f8fafc", 4),
             }}
           >
             {currentNode?.text ?? "..."}

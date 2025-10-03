@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { getUIStrings } from "../../content/ui";
 import NotificationBadge from "./NotificationBadge";
-import { gradientTextStyle, glowTextStyle } from "./theme";
+import { gradientTextStyle } from "./theme";
 
 interface OpsBriefingsPanelProps {
   containerStyle: CSSProperties;
@@ -139,7 +139,6 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
                   fontSize: '0.92rem',
                   fontWeight: 600,
                   color: '#f8fafc',
-                  ...glowTextStyle('#f8fafc', 4),
                 }}
               >
                 {quest.name}
