@@ -41,13 +41,15 @@ const getMessageType = (msg: string): MessageType => {
 
 const LogPanel: React.FC = () => {
   const messages = useSelector((state: RootState) => state.log.messages);
-  const logEndRef = useRef<HTMLDivElement>(null);
+  const logContainerRef = useRef<HTMLDivElement>(null);
   const [animatingIndices, setAnimatingIndices] = useState<Set<number>>(new Set());
   const prevMessageCountRef = useRef(messages.length);
 
   // Scroll to bottom when messages update
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   // Track new messages for animation
@@ -97,6 +99,7 @@ const LogPanel: React.FC = () => {
         }
       `}</style>
       <div
+        ref={logContainerRef}
         style={{
           flexGrow: 1,
           background: 'transparent',
@@ -156,8 +159,6 @@ const LogPanel: React.FC = () => {
             </div>
           );
         })}
-        {/* Empty div to target for scrolling */}
-        <div ref={logEndRef} />
       </div>
     </>
   );
