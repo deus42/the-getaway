@@ -449,6 +449,7 @@ const MiniMap: React.FC = () => {
   const [legendOpen, setLegendOpen] = useState(true);
   const [hoverInfo, setHoverInfo] = useState<{ label: string; x: number; y: number } | null>(null);
   const tilePalette = BASE_TILE_COLORS;
+  const controlsShouldStack = canvasSize.width < 220;
   const legendItems = [
     { id: 'player', label: uiStrings.miniMap.playerLabel ?? 'Cell Lead', color: ENTITY_STYLE.player.fill },
     { id: 'enemy', label: uiStrings.miniMap.enemyLabel ?? 'Hostile', color: ENTITY_STYLE.enemy.fill },
@@ -1071,15 +1072,25 @@ const MiniMap: React.FC = () => {
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: '0.55rem',
-            flexWrap: 'wrap',
-            justifyContent: 'space-between',
+            alignItems: controlsShouldStack ? 'stretch' : 'center',
+            gap: controlsShouldStack ? '0.5rem' : '0.55rem',
+            flexWrap: controlsShouldStack ? 'nowrap' : 'wrap',
+            justifyContent: controlsShouldStack ? 'flex-start' : 'space-between',
+            flexDirection: controlsShouldStack ? 'column' : 'row',
             width: '100%',
-            rowGap: '0.5rem',
+            rowGap: controlsShouldStack ? undefined : '0.5rem',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.3rem',
+              flex: controlsShouldStack ? '0 0 auto' : '1 1 auto',
+              minWidth: 0,
+              width: controlsShouldStack ? '100%' : 'auto',
+            }}
+          >
             <button
               type="button"
               onClick={() => handleZoomButton('out')}
@@ -1102,7 +1113,11 @@ const MiniMap: React.FC = () => {
               max={Math.round(300)}
               value={Math.round(clamp(userZoom, 0.6, 3) * 100)}
               onChange={handleZoomInput}
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                minWidth: controlsShouldStack ? undefined : '5.5rem',
+                width: controlsShouldStack ? '100%' : undefined,
+              }}
               aria-label="Mini-map zoom"
             />
             <button
@@ -1122,7 +1137,15 @@ const MiniMap: React.FC = () => {
               +
             </button>
           </div>
-          <div style={{ display: 'flex', gap: '0.3rem', flex: '0 0 auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: '0.3rem',
+              flex: controlsShouldStack ? '0 0 auto' : undefined,
+              justifyContent: controlsShouldStack ? 'space-between' : 'flex-end',
+              width: controlsShouldStack ? '100%' : 'auto',
+            }}
+          >
             <button
               type="button"
               onClick={handleCenterClick}
@@ -1136,6 +1159,9 @@ const MiniMap: React.FC = () => {
                 letterSpacing: '0.08em',
                 fontSize: '0.62rem',
                 textTransform: 'uppercase',
+                flex: controlsShouldStack ? '1 1 0' : '0 0 auto',
+                minWidth: controlsShouldStack ? 0 : undefined,
+                whiteSpace: 'nowrap',
               }}
             >
               Center
@@ -1153,6 +1179,9 @@ const MiniMap: React.FC = () => {
                 letterSpacing: '0.08em',
                 fontSize: '0.62rem',
                 textTransform: 'uppercase',
+                flex: controlsShouldStack ? '1 1 0' : '0 0 auto',
+                minWidth: controlsShouldStack ? 0 : undefined,
+                whiteSpace: 'nowrap',
               }}
             >
               {legendOpen ? 'Hide Legend' : 'Show Legend'}
