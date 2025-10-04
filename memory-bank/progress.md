@@ -862,7 +862,7 @@ Added regression coverage for weapon damage bonuses and armor reduction
    - XP_REWARDS constants for all XP sources (quests, combat, skill checks, exploration)
    - calculateXPForLevel() using formula: 100 * level * (1 + level * 0.15)
    - calculateSkillPointsAwarded() using formula: 3 + floor(intelligence / 3)
-   - shouldAwardAttributePoint() - awards every 3 levels (3, 6, 9, etc.)
+   - shouldAwardAttributePoint() - awards on every level up (1, 2, 3, ...)
    - shouldUnlockPerkSelection() - unlocks every 2 levels (2, 4, 6, etc.)
    - processLevelUp() - handles sequential multiple level-ups automatically
    - Helper functions: calculateXPProgress(), formatXPDisplay(), calculateTotalXPForLevel()
@@ -889,7 +889,7 @@ Added regression coverage for weapon damage bonuses and armor reduction
 <implementation>
 - XP formula scales progressively: Level 2 = 260 XP, Level 3 = 435 XP, Level 5 = 875 XP, Level 10 = 2500 XP
 - Skill points scale with Intelligence: INT 1-2 = 3 points, INT 3-5 = 4 points, INT 6-8 = 5 points, INT 9-10 = 6 points
-- Attribute points awarded every 3 levels to allow gradual SPECIAL increases
+- Attribute points awarded on every level up to allow constant SPECIAL growth opportunities
 - Perk unlocks every 2 levels (UI components ready, perk system implementation in Step 24.3)
 - Health increases by +5 per level, full heal on level-up
 - AP increases by +1 every 5 levels (levels 5, 10, 15, etc.)

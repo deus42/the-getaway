@@ -72,7 +72,7 @@ const DialogueOverlay: React.FC = () => {
         switch (reward.type) {
           case "experience":
             if (reward.amount > 0) {
-              dispatch(addExperience(reward.amount));
+              dispatch(addExperience({ amount: reward.amount, reason: `Quest complete: ${quest.name}` }));
               dispatch(
                 addLogMessage(
                   logStrings.rewardExperience(reward.amount, quest.name)

@@ -168,7 +168,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
     const xpForNextLevel = calculateXPForLevel(currentLevel + 1);
     const currentXP = player.experience;
     const xpNeeded = xpForNextLevel - currentXP;
-    dispatch(addExperience(Math.max(1, xpNeeded)));
+    dispatch(addExperience({ amount: Math.max(1, xpNeeded), reason: 'Test mode XP boost' }));
   };
 
   const branchTotals = useMemo(() => {

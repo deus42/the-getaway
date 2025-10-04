@@ -8,7 +8,8 @@ import { createArmor, createConsumable, createWeapon } from '../game/inventory/i
 import { BACKGROUND_MAP, StartingItemDefinition } from '../content/backgrounds';
 import { getSkillDefinition } from '../content/skills';
 import { getPerkDefinition, evaluatePerkAvailability } from '../content/perks';
-import { createLevelUpEvent, LevelUpEvent } from '../utils/progressionHelpers';
+import { createLevelUpEvent, createXPNotification, LevelUpEvent } from '../utils/progressionHelpers';
+import { XPNotificationData } from '../components/ui/XPNotification';
 import {
   activateAdrenalineRush,
   resetGunFuForTurn,
@@ -20,7 +21,10 @@ import {
 export interface PlayerState {
   data: Player;
   pendingLevelUpEvents: LevelUpEvent[];
+  xpNotifications: XPNotificationData[];
 }
+
+type AddExperiencePayload = number | { amount: number; reason?: string };
 
 const createFreshPlayer = (): Player => ({
   ...DEFAULT_PLAYER,
@@ -50,6 +54,7 @@ const createFreshPlayer = (): Player => ({
 const initialState: PlayerState = {
   data: createFreshPlayer(),
   pendingLevelUpEvents: [],
+  xpNotifications: [],
 };
 
 type InitializeCharacterPayload = {
@@ -229,9 +234,18 @@ export const playerSlice = createSlice({
     },
     
     // Add experience and automatically process level-ups
-    addExperience: (state, action: PayloadAction<number>) => {
+    addExperience: (state, action: PayloadAction<AddExperiencePayload>) => {
+      const payload = typeof action.payload === 'number'
+        ? { amount: action.payload }
+        : action.payload;
+
+      const amount = payload.amount;
+      if (!Number.isFinite(amount) || amount === 0) {
+        return;
+      }
+
       // Award XP
-      state.data = awardXPHelper(state.data, action.payload);
+      state.data = awardXPHelper(state.data, amount);
 
       // Check for level-up and process
       const result = processLevelUp(state.data);
@@ -260,12 +274,28 @@ export const playerSlice = createSlice({
         );
       }
 
+      if (amount > 0) {
+        const reason = payload.reason ?? 'Experience gained';
+        const currentNotifications = state.xpNotifications ?? [];
+        state.xpNotifications = [
+          ...currentNotifications,
+          createXPNotification(amount, reason),
+        ];
+      }
+
       // Perk choices are queued via pendingPerkSelections and resolved through UI flow
     },
 
     // Add credits (currency)
     addCredits: (state, action: PayloadAction<number>) => {
       state.data.credits = Math.max(0, state.data.credits + action.payload);
+    },
+
+    removeXPNotification: (state, action: PayloadAction<string>) => {
+      const currentNotifications = state.xpNotifications ?? [];
+      state.xpNotifications = currentNotifications.filter(
+        (notification) => notification.id !== action.payload
+      );
     },
     
     // Level up the player
@@ -347,6 +377,7 @@ export const playerSlice = createSlice({
     resetPlayer: (state) => {
       state.data = createFreshPlayer();
       state.pendingLevelUpEvents = [];
+      state.xpNotifications = [];
     },
 
     // Set the entire player data object (useful after complex operations)
@@ -671,6 +702,7 @@ export const {
   resetActionPoints,
   addExperience,
   addCredits,
+  removeXPNotification,
   levelUp,
   updateSkill,
   setSkill,

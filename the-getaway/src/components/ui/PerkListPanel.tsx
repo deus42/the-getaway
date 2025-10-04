@@ -23,13 +23,9 @@ const headerStyle: React.CSSProperties = {
   ...characterPanelHeaderStyle,
 };
 
-const headingLabelStyle: React.CSSProperties = {
-  ...characterPanelLabelStyle,
-};
+const headingLabelStyle: React.CSSProperties = characterPanelLabelStyle;
 
-const headingTitleStyle: React.CSSProperties = {
-  ...characterPanelTitleStyle,
-};
+const headingTitleStyle: React.CSSProperties = characterPanelTitleStyle;
 
 const hintStyle: React.CSSProperties = {
   fontSize: '0.68rem',
@@ -58,13 +54,6 @@ const perkBadgeStyle: React.CSSProperties = {
   fontWeight: 700,
   textTransform: 'uppercase',
   boxShadow: '0 0 12px rgba(56, 189, 248, 0.25), inset 0 0 8px rgba(56, 189, 248, 0.2)',
-};
-
-const perkCategoryLabelMap: Record<'combat' | 'utility' | 'dialogue' | 'capstone', string> = {
-  combat: 'Combat',
-  utility: 'Utility',
-  dialogue: 'Dialogue',
-  capstone: 'Capstone',
 };
 
 const emptyStyle: React.CSSProperties = {

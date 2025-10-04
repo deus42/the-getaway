@@ -1,8 +1,8 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import SkillTreePanel from '../components/ui/SkillTreePanel';
 import { store, resetGame } from '../store';
-import { addExperience, allocateSkillPointToSkill } from '../store/playerSlice';
+import { addExperience } from '../store/playerSlice';
 
 describe('SkillTreePanel', () => {
   beforeEach(() => {
@@ -24,8 +24,10 @@ describe('SkillTreePanel', () => {
 
     expect(await screen.findByText(/4 Skill Points/i)).toBeInTheDocument();
 
+    const increaseButton = screen.getByRole('button', { name: /Increase Small Guns/i });
+
     act(() => {
-      store.dispatch(allocateSkillPointToSkill('smallGuns'));
+      fireEvent.click(increaseButton);
     });
 
     expect(screen.getByTestId('skill-value-smallGuns')).toHaveTextContent('5');

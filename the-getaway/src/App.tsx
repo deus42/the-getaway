@@ -24,7 +24,7 @@ import DataStreamParticles from "./components/ui/DataStreamParticles";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
-import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections } from "./store/playerSlice";
+import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections, removeXPNotification } from "./store/playerSlice";
 import { clearAllFeedback } from "./store/combatFeedbackSlice";
 import { PlayerSkills, Player } from "./game/interfaces/types";
 import { DEFAULT_SKILLS } from "./game/interfaces/player";
@@ -292,6 +292,9 @@ function App() {
 
       const selections = state.player.data.pendingPerkSelections;
       setPendingPerkSelections(selections);
+
+      const notifications = state.player.xpNotifications ?? [];
+      setXpNotifications(notifications);
       // Don't auto-open perk selection - let the guided flow handle it
     });
 
@@ -471,7 +474,7 @@ function App() {
   };
 
   const handleDismissXPNotification = (id: string) => {
-    setXpNotifications((prev) => prev.filter((n) => n.id !== id));
+    store.dispatch(removeXPNotification(id));
   };
 
   return (

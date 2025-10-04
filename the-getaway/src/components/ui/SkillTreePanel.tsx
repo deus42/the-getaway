@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { SKILL_BRANCHES, SkillBranchDefinition, SkillDefinition } from '../../content/skills';
-import { RootState } from '../../store';
+import { AppDispatch, RootState } from '../../store';
 import { SkillBranchId } from '../../game/interfaces/types';
 import { describeSkillEffect, getPlayerSkillValue, getSkillPointIncrement, isSkillTagged } from '../../game/systems/skillTree';
 import NotificationBadge from './NotificationBadge';
 import { gradientTextStyle } from './theme';
+import { allocateSkillPointToSkill, refundSkillPointFromSkill } from '../../store/playerSlice';
 
 const panelStyle: React.CSSProperties = {
   background: 'transparent',
@@ -128,6 +129,23 @@ const skillValueStyle: React.CSSProperties = {
   fontSize: '0.8rem',
 };
 
+const skillButtonStyle = (disabled: boolean): React.CSSProperties => ({
+  width: '26px',
+  height: '26px',
+  borderRadius: '6px',
+  border: `1px solid ${disabled ? 'rgba(148, 163, 184, 0.3)' : 'rgba(56, 189, 248, 0.5)'}`,
+  background: disabled ? 'rgba(15, 23, 42, 0.45)' : 'rgba(56, 189, 248, 0.2)',
+  color: disabled ? '#64748b' : '#e0f2fe',
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  fontSize: '0.85rem',
+  fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'all 0.15s ease',
+  lineHeight: 1,
+});
+
 const effectStyle: React.CSSProperties = {
   fontSize: '0.55rem',
   color: '#94a3b8',
@@ -162,6 +180,7 @@ const getBranchById = (branchId: SkillBranchId): SkillBranchDefinition => {
 };
 
 const SkillTreePanel: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
   const availablePoints = player.skillPoints;
 
@@ -252,6 +271,8 @@ const SkillTreePanel: React.FC = () => {
     const increment = getSkillPointIncrement(player, skill.id);
     const effectMessage = describeSkillEffect(skill.id, currentValue);
     const incrementLabel = tagged ? `1 pt → +${increment} (tag)` : `1 pt → +${increment}`;
+    const canIncrease = availablePoints > 0 && currentValue + increment <= skill.maxValue;
+    const canDecrease = currentValue - increment >= 0 && currentValue > 0;
 
     return (
       <div key={skill.id} style={skillRowStyle}>
@@ -265,9 +286,27 @@ const SkillTreePanel: React.FC = () => {
           <p style={{ ...effectStyle, color: 'rgba(148, 163, 184, 0.6)' }}>{incrementLabel}</p>
         </div>
         <div style={skillControlsStyle}>
+          <button
+            type="button"
+            style={skillButtonStyle(!canDecrease)}
+            disabled={!canDecrease}
+            aria-label={`Decrease ${skill.name}`}
+            onClick={() => dispatch(refundSkillPointFromSkill(skill.id))}
+          >
+            −
+          </button>
           <span style={skillValueStyle} data-testid={`skill-value-${skill.id}`}>
             {currentValue}
           </span>
+          <button
+            type="button"
+            style={skillButtonStyle(!canIncrease)}
+            disabled={!canIncrease}
+            aria-label={`Increase ${skill.name}`}
+            onClick={() => dispatch(allocateSkillPointToSkill(skill.id))}
+          >
+            +
+          </button>
         </div>
       </div>
     );
