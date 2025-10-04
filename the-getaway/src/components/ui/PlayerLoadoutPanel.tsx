@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getSkillDefinition } from '../../content/skills';
+import { getPerkDefinition, PerkDefinition } from '../../content/perks';
+import { PerkId } from '../../game/interfaces/types';
+import Tooltip, { TooltipContent } from './Tooltip';
 import {
   neonPalette,
   panelSurface,
@@ -82,27 +85,47 @@ const statValueEmphasis: React.CSSProperties = {
 };
 
 const perksListStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.35rem',
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
+  gap: '0.5rem',
   paddingTop: '0.35rem',
 };
 
 const perkBadgeStyle: React.CSSProperties = {
-  padding: '0.25rem 0.5rem',
-  borderRadius: '999px',
-  border: '1px solid rgba(192, 132, 252, 0.42)',
-  background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.22), rgba(76, 29, 149, 0.18))',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '44px',
+  height: '44px',
+  borderRadius: '10px',
+  background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.18), rgba(76, 29, 149, 0.16))',
+  border: '1px solid rgba(192, 132, 252, 0.4)',
   color: '#f3e8ff',
-  fontSize: '0.58rem',
-  letterSpacing: '0.1em',
+  fontSize: '1.1rem',
   textTransform: 'uppercase',
+  boxShadow: '0 0 12px rgba(192, 132, 252, 0.25), inset 0 0 8px rgba(192, 132, 252, 0.25)',
 };
 
 const PlayerLoadoutPanel: React.FC = () => {
   const player = useSelector((state: RootState) => state.player.data);
   const weapon = player.equipped.weapon;
   const armor = player.equipped.armor;
+
+  const { knownPerks, unknownPerkIds } = useMemo(() => {
+    const known: PerkDefinition[] = [];
+    const unknown: string[] = [];
+
+    player.perks.forEach((perkId) => {
+      try {
+        known.push(getPerkDefinition(perkId as PerkId));
+      } catch (error) {
+        console.warn('[PlayerLoadoutPanel] Unknown perk id encountered:', perkId, error);
+        unknown.push(perkId);
+      }
+    });
+
+    return { knownPerks: known, unknownPerkIds: unknown };
+  }, [player.perks]);
 
   const renderWeapon = () => (
     <div style={cardStyle}>
@@ -157,18 +180,43 @@ const PlayerLoadoutPanel: React.FC = () => {
   );
 
   const renderPerks = () => (
-    <div style={cardStyle}>
-      <div style={badgeStyle('rgba(236, 72, 153, 0.65)')}>Perks</div>
-      {player.perks.length === 0 ? (
-        <span style={subtleText}>No perks acquired</span>
-      ) : (
-        <div style={perksListStyle}>
-          {player.perks.map((perkId) => (
-            <span key={perkId} style={perkBadgeStyle}>{perkId}</span>
-          ))}
-        </div>
+    <Tooltip
+      content={(
+        <TooltipContent
+          title="Perk Library"
+          description="Permanent abilities earned at even levels. Hover each badge to review its exact benefits."
+        />
       )}
-    </div>
+      wrapperStyle={{ display: 'block' }}
+    >
+      <div style={cardStyle}>
+        <div style={badgeStyle('rgba(236, 72, 153, 0.65)')}>Perks</div>
+        {knownPerks.length === 0 && unknownPerkIds.length === 0 ? (
+          <span style={subtleText}>No perks acquired</span>
+        ) : (
+          <div style={perksListStyle}>
+            {knownPerks.map((perk) => (
+              <Tooltip
+                key={perk.id}
+                content={(
+                  <TooltipContent
+                    title={perk.name}
+                    description={perk.description}
+                    lines={perk.effects}
+                  />
+                )}
+                wrapperStyle={{ display: 'inline-flex' }}
+              >
+                <span style={perkBadgeStyle}>{perk.name.charAt(0)}</span>
+              </Tooltip>
+            ))}
+            {unknownPerkIds.map((perkId) => (
+              <span key={perkId} style={perkBadgeStyle}>{perkId.charAt(0)}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </Tooltip>
   );
 
   return (
