@@ -1039,3 +1039,22 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Future work: add more perks in each category, implement stealth system to activate Silent Runner, wire Quick Draw to equipment swap actions.
 </notes>
 </step>
+
+<step id="25.1" status="pending">
+<step_metadata>
+  <number>25.1</number>
+  <title>Inventory Data & Slot Framework</title>
+  <status>Pending</status>
+  <date>—</date>
+</step_metadata>
+
+<tasks>
+- Reshape item interfaces and player inventory/equipment structures to support durability, stacking, and expanded slot coverage.
+- Add encumbrance fields (`level`, `percentage`) and helper utilities that derive them from total carry weight.
+- Normalize default player/background gear to the new schema and ensure persistence tolerates missing fields in legacy saves.
+</tasks>
+
+<notes>
+- Will update architecture/progress docs after implementation to capture the inventory data model changes.
+</notes>
+</step>

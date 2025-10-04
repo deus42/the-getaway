@@ -1075,60 +1075,72 @@ yarn build && yarn test
   <phase>Phase 7: Character Progression and Inventory</phase>
 </step_metadata>
 
-<prerequisites>
-- Basic inventory interface already exists (check `src/content/ui/index.ts` for current implementation)
-- Step 23.5 completed (equipment effects integration)
-</prerequisites>
+<substeps>
+  <step id="25.1">
+    <title>Inventory Data & Slot Framework</title>
+    <summary>
+      Reshape item definitions and player state to support durability, stacking, hotbar assignments, and expanded equipment slots. Lay the groundwork for encumbrance tracking.
+    </summary>
+    <details>
+      - Extend `Item`/`Weapon`/`Armor` interfaces with durability metadata, stackable fields, and explicit `equipSlot` values.
+      - Update `Player` inventory/equipment structures to cover primary/secondary/melee weapons, body armor, helmets, accessories, and a 5-slot hotbar.
+      - Add encumbrance tracking fields (`level`, `percentage`) and helper utilities to compute them from weight totals.
+      - Normalize existing content (starter items/background equipment) to the new schema and ensure persistence handles missing fields from older saves.
+    </details>
+    <test>
+      Verify TypeScript compiles with no structural errors and that a new game session boots with the expanded default state (inventory hotbar present, encumbrance defaults to normal).
+    </test>
+  </step>
 
-<instructions>
-Expand the existing inventory system with equipment slots, durability mechanics, weight-based encumbrance, and comprehensive item categorization.
-</instructions>
+  <step id="25.2">
+    <title>Durability & Encumbrance Mechanics</title>
+    <summary>
+      Wire gameplay logic for durability degradation, repairs, stacking, and encumbrance penalties across reducers, combat, and movement systems.
+    </summary>
+    <details>
+      - Implement reducer helpers (`equipItem`, `unequipItem`, `repairItem`, `splitStack`, `assignHotbarSlot`) with validation.
+      - Apply durability decay on attacks/hits and adjust effectiveness at 50%/25% thresholds; gate unusable items at 0 durability.
+      - Apply encumbrance penalties (AP cost multipliers, movement restrictions) based on weight ratios and integrate warnings into state.
+      - Ensure XP/combat logging reflects durability changes and over-capacity prevention.
+    </details>
+    <test>
+      Unit tests cover reducer flows (stacking, repairs, encumbrance updates) and combat/movement integration for durability penalties and encumbrance lockout.
+    </test>
+  </step>
 
-<details>
-- **Audit existing inventory implementation**: Review current inventory interface in `src/content/ui/index.ts` and Redux state. Identify what's already implemented vs what needs to be added.
-- **Add equipment slot system** to `inventorySlice`:
-  - Define equipment slots: `primaryWeapon`, `secondaryWeapon`, `meleeWeapon`, `bodyArmor`, `helmet`, `accessory1`, `accessory2`
-  - Implement `equipItem(itemId, slotType)` and `unequipItem(slotType)` actions
-  - Add validation: weapons only in weapon slots, armor only in armor slots, one-handed/two-handed weapon restrictions
-- **Expand item data structures** in `src/content/items/`:
-  - Add properties: `weight` (kg), `value` (credits), `durability` (current/max), `equipSlot`, `statModifiers`, `stackable`, `stackSize`
-  - Categorize items: Weapons (melee, ballistic, energy, thrown), Armor (light/medium/heavy), Consumables (medical, food, drugs), Ammo (by caliber), Tools (lockpicks, hacking devices), Crafting Materials, Quest Items
-- **Implement durability system**:
-  - Weapons/armor degrade with use: -1 durability per attack/hit taken
-  - At 50% durability: -10% effectiveness (damage/protection)
-  - At 25% durability: -25% effectiveness
-  - At 0% durability: item breaks and becomes unusable until repaired
-  - Add repair mechanics: use repair kits (consumable) or visit workshop (costs credits + materials)
-- **Add weight-based encumbrance** using Strength-derived carry weight:
-  - Calculate `totalWeight` = sum of all inventory item weights
-  - Max carry weight from Step 23: `25 + (strength * 5)` kg
-  - **Encumbrance penalties**:
-    - 80-100% capacity: -1 AP (yellow warning in UI)
-    - 100-120% capacity: -2 AP, movement speed halved (orange warning)
-    - >120% capacity: cannot move, must drop items (red error)
-  - Display weight fraction in inventory UI: "45/55 kg (82%)"
-- **Build enhanced InventoryPanel.tsx**:
-  - Left panel: Equipment slots (drag/drop items to equip, click to unequip)
-  - Center panel: Item list with filters (All/Weapons/Armor/Consumables/Materials)
-  - Right panel: Selected item details (stats, durability bar, weight, value, description)
-  - Sorting options: by name, type, weight, value, durability
-  - Color-code durability: green (75-100%), yellow (50-75%), orange (25-50%), red (0-25%)
-- **Implement item stacking**:
-  - Stackable items (ammo, consumables) combine into single inventory slot with quantity counter
-  - Max stack size varies by item (ammo: 999, grenades: 10, medkits: 5)
-  - Split stack functionality for distributing items
-- **Add quick-use hotkeys**: Number keys 1-5 for hotbar slots (assign consumables for quick access in combat).
-</details>
+  <step id="25.3">
+    <title>Inventory & Loadout UI Overhaul</title>
+    <summary>
+      Rebuild the inventory experience around slot grids, filters, durability indicators, and hotbar controls.
+    </summary>
+    <details>
+      - Update `PlayerInventoryPanel` with filter tabs, sorting, durability color bars, and encumbrance readouts.
+      - Create equipment slot grid (drag/click to equip/unequip) covering all slot types; surface stacking counts and durability warnings.
+      - Add hotbar assignment UI and quick repair/use actions; show repair cost prompts.
+      - Ensure accessibility (keyboard navigation, screen reader labels for durability/encumbrance warnings).
+    </details>
+    <test>
+      Cypress/Jest integration tests simulate equipping, stacking, and hotbar assignment; visual regression to confirm durability bars and encumbrance banner updates.
+    </test>
+  </step>
 
-<accessibility>
-- Equipment slots keyboard navigable (Tab to cycle, Enter to equip/unequip)
-- Screen reader announces weight capacity changes: "Inventory weight 45 of 55 kilograms, 82% capacity"
-- Durability warnings accessible: "Weapon durability low, 15 of 60 remaining"
-</accessibility>
+  <step id="25.4">
+    <title>Content & Systems Validation</title>
+    <summary>
+      Populate the item catalog with durability/stack metadata, update combat balancing, and validate the full flow end-to-end.
+    </summary>
+    <details>
+      - Update content files (`items`, background gear) with slot/durability/stacking data and introduce a baseline repair kit.
+      - Adjust combat math to respect durability effectiveness multipliers and hotbar quick use.
+      - Produce migration script for existing save data to backfill durability and encumbrance fields.
+      - Expand documentation (architecture, progress) to capture the new inventory architecture and usage.
+    </details>
+    <test>
+      Manual QA scenario covering equip → degrade → repair, over-encumbrance → drop items, and hotbar usage during combat; automated regression for persistence migration.
+    </test>
+  </step>
+</substeps>
 
-<test>
-Open inventory and verify equipment slots display with drag-and-drop functionality. Equip weapon in primary slot and verify stat bonuses apply (check Step 23.5 integration). Equip armor and confirm weight increases, encumbrance percentage updates. Add items until reaching 80% capacity and verify AP penalty applies. Exceed 100% capacity and confirm movement is prevented with error message. Use equipped weapon repeatedly until durability drops below 50% and verify damage reduction. Break weapon (0 durability) and confirm it becomes unusable. Use repair kit to restore durability. Stack ammo types and verify quantities combine. Filter inventory by category (Weapons only) and verify only weapons display. Sort by weight and verify ordering. Assign consumable to hotbar and use hotkey in combat to consume instantly.
-</test>
 </step>
 
 <step id="25.5">
