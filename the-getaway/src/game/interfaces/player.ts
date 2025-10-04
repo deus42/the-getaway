@@ -63,18 +63,31 @@ export const DEFAULT_PLAYER: Player = {
   inventory: {
     items: [],
     maxWeight: defaultCarryWeight,
-    currentWeight: 0
+    currentWeight: 0,
+    hotbar: [],
   },
   equipped: {
     weapon: undefined,
     armor: undefined,
-    accessory: undefined
+    accessory: undefined,
+    secondaryWeapon: undefined,
+    meleeWeapon: undefined,
+    bodyArmor: undefined,
+    helmet: undefined,
+    accessory1: undefined,
+    accessory2: undefined,
   },
+  equippedSlots: {},
+  activeWeaponSlot: 'primaryWeapon',
   perkRuntime: {
     gunFuShotsThisTurn: 0,
     adrenalineRushTurnsRemaining: 0,
     ghostInvisibilityTurns: 0,
     ghostConsumed: false,
+  },
+  encumbrance: {
+    level: 'normal',
+    percentage: 0,
   }
 };
 

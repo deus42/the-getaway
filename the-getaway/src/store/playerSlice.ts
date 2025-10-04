@@ -37,18 +37,31 @@ const createFreshPlayer = (): Player => ({
     items: [],
     maxWeight: DEFAULT_PLAYER.inventory.maxWeight,
     currentWeight: 0,
+    hotbar: [],
   },
   equipped: {
     weapon: undefined,
     armor: undefined,
     accessory: undefined,
+    secondaryWeapon: undefined,
+    meleeWeapon: undefined,
+    bodyArmor: undefined,
+    helmet: undefined,
+    accessory1: undefined,
+    accessory2: undefined,
   },
+  equippedSlots: {},
+  activeWeaponSlot: 'primaryWeapon',
   factionReputation: { ...DEFAULT_PLAYER.factionReputation },
   perks: [...DEFAULT_PLAYER.perks],
   pendingPerkSelections: DEFAULT_PLAYER.pendingPerkSelections,
   backgroundId: undefined,
   appearancePreset: DEFAULT_PLAYER.appearancePreset,
   perkRuntime: { ...DEFAULT_PLAYER.perkRuntime },
+  encumbrance: {
+    level: 'normal',
+    percentage: 0,
+  },
 });
 
 const initialState: PlayerState = {
@@ -160,14 +173,25 @@ export const playerSlice = createSlice({
       freshPlayer.health = derived.maxHP;
       freshPlayer.maxActionPoints = derived.baseAP;
       freshPlayer.actionPoints = derived.baseAP;
-      freshPlayer.inventory.maxWeight = derived.carryWeight;
-      freshPlayer.inventory.currentWeight = 0;
-      freshPlayer.inventory.items = [];
+      freshPlayer.inventory = {
+        items: [],
+        maxWeight: derived.carryWeight,
+        currentWeight: 0,
+        hotbar: [],
+      };
       freshPlayer.equipped = {
         weapon: undefined,
         armor: undefined,
         accessory: undefined,
+        secondaryWeapon: undefined,
+        meleeWeapon: undefined,
+        bodyArmor: undefined,
+        helmet: undefined,
+        accessory1: undefined,
+        accessory2: undefined,
       };
+      freshPlayer.equippedSlots = {};
+      freshPlayer.activeWeaponSlot = 'primaryWeapon';
       freshPlayer.perks = [];
       freshPlayer.pendingPerkSelections = 0;
       freshPlayer.backgroundId = backgroundId;
@@ -198,6 +222,10 @@ export const playerSlice = createSlice({
       }
 
       state.data = freshPlayer;
+      state.data.encumbrance = {
+        level: 'normal',
+        percentage: 0,
+      };
     },
 
     // Move player to a new position
@@ -390,6 +418,31 @@ export const playerSlice = createSlice({
           adrenalineRushTurnsRemaining: 0,
           ghostInvisibilityTurns: 0,
           ghostConsumed: false,
+        };
+      }
+
+      if (!state.data.inventory.hotbar) {
+        state.data.inventory.hotbar = [];
+      }
+
+      if (!state.data.equipped) {
+        state.data.equipped = {} as Player['equipped'];
+      } else {
+        state.data.equipped = { ...state.data.equipped } as Player['equipped'];
+      }
+
+      if (!state.data.equippedSlots) {
+        state.data.equippedSlots = {};
+      }
+
+      if (!state.data.activeWeaponSlot) {
+        state.data.activeWeaponSlot = 'primaryWeapon';
+      }
+
+      if (!state.data.encumbrance) {
+        state.data.encumbrance = {
+          level: 'normal',
+          percentage: 0,
         };
       }
 

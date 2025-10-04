@@ -32,11 +32,18 @@ const createTestPlayer = (): Player => ({
     items: [],
     maxWeight: 50,
     currentWeight: 0,
+    hotbar: [],
   },
   equipped: {
     weapon: undefined,
     armor: undefined,
     accessory: undefined,
+    secondaryWeapon: undefined,
+    meleeWeapon: undefined,
+    bodyArmor: undefined,
+    helmet: undefined,
+    accessory1: undefined,
+    accessory2: undefined,
   },
   perks: [],
   factionReputation: {
@@ -46,6 +53,12 @@ const createTestPlayer = (): Player => ({
   },
   backgroundId: undefined,
   appearancePreset: undefined,
+  encumbrance: {
+    level: 'normal',
+    percentage: 0,
+  },
+  equippedSlots: {},
+  activeWeaponSlot: 'primaryWeapon',
 });
 
 describe('questSystem', () => {

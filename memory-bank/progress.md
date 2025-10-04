@@ -1040,21 +1040,33 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 </notes>
 </step>
 
-<step id="25.1" status="pending">
+<step id="25.1" status="completed">
 <step_metadata>
   <number>25.1</number>
   <title>Inventory Data & Slot Framework</title>
-  <status>Pending</status>
-  <date>—</date>
+  <status>Completed</status>
+  <date>October 5, 2025</date>
 </step_metadata>
 
 <tasks>
-- Reshape item interfaces and player inventory/equipment structures to support durability, stacking, and expanded slot coverage.
-- Add encumbrance fields (`level`, `percentage`) and helper utilities that derive them from total carry weight.
-- Normalize default player/background gear to the new schema and ensure persistence tolerates missing fields in legacy saves.
+1. Extended item and equipment interfaces with durability, stacking, and slot metadata (`equipSlot`, `quantity`, `Durability`) so downstream systems can reason about wear, stacking, and placement.
+2. Expanded player inventory/equipment state to include hotbar slots, secondary/melee/body/helmet/accessory positions, equipped slot map, active weapon slot, and encumbrance tracking fields.
+3. Updated default player creation (`DEFAULT_PLAYER`, `createFreshPlayer`, character creation) and `setPlayerData` hydration to seed the new structures while remaining backward compatible with existing saves and tests.
 </tasks>
 
+<implementation>
+- Added `EquipmentSlot` union and `Durability` interface; item definitions now optionally carry `quantity`, `stackable`, `maxStack`, and `statModifiers` metadata.
+- Player state now tracks `inventory.hotbar`, `equippedSlots`, `activeWeaponSlot`, and `encumbrance { level, percentage }`, with defaults injected for legacy saves.
+- Test helpers across quest, perk, dialogue, inventory, and progression suites updated to reflect the expanded schema.
+</implementation>
+
+<validation>
+- `yarn test --watch=false`
+- `yarn build`
+</validation>
+
 <notes>
-- Will update architecture/progress docs after implementation to capture the inventory data model changes.
+- Gameplay logic (durability decay, encumbrance penalties, hotbar interactions) will be implemented in Step 25.2.
+- Architecture doc update for the inventory data model is queued alongside the remaining Step 25 work.
 </notes>
 </step>

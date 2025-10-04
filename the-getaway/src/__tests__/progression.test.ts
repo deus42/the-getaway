@@ -50,25 +50,38 @@ const createMockPlayer = (overrides?: Partial<Player>): Player => {
       scavengers: 0,
     },
     appearancePreset: undefined,
-    inventory: {
-      items: [],
-      maxWeight: 50,
-      currentWeight: 0
-    },
-    equipped: {
-      weapon: undefined,
-      armor: undefined,
-      accessory: undefined
-    },
-    pendingPerkSelections: 0,
-    perkRuntime: {
-      gunFuShotsThisTurn: 0,
-      adrenalineRushTurnsRemaining: 0,
-      ghostInvisibilityTurns: 0,
-      ghostConsumed: false,
-    },
-    ...overrides
-  };
+  inventory: {
+    items: [],
+    maxWeight: 50,
+    currentWeight: 0,
+    hotbar: [],
+  },
+  equipped: {
+    weapon: undefined,
+    armor: undefined,
+    accessory: undefined,
+    secondaryWeapon: undefined,
+    meleeWeapon: undefined,
+    bodyArmor: undefined,
+    helmet: undefined,
+    accessory1: undefined,
+    accessory2: undefined,
+  },
+  equippedSlots: {},
+  activeWeaponSlot: 'primaryWeapon',
+  pendingPerkSelections: 0,
+  perkRuntime: {
+    gunFuShotsThisTurn: 0,
+    adrenalineRushTurnsRemaining: 0,
+    ghostInvisibilityTurns: 0,
+    ghostConsumed: false,
+  },
+  encumbrance: {
+    level: 'normal',
+    percentage: 0,
+  },
+  ...overrides
+};
 };
 
 describe('XP Progression System', () => {

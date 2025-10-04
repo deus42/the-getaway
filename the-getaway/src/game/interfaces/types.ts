@@ -75,13 +75,26 @@ export interface Player extends Entity {
     items: Item[];
     maxWeight: number;
     currentWeight: number;
+    hotbar: string[];
   };
   equipped: {
     weapon?: Weapon;
     armor?: Armor;
     accessory?: Item;
+    secondaryWeapon?: Weapon;
+    meleeWeapon?: Weapon;
+    bodyArmor?: Armor;
+    helmet?: Armor;
+    accessory1?: Item;
+    accessory2?: Item;
   };
+  equippedSlots?: Partial<Record<EquipmentSlot, Item>>;
+  activeWeaponSlot?: 'primaryWeapon' | 'secondaryWeapon' | 'meleeWeapon';
   perkRuntime: PerkRuntimeState;
+  encumbrance: {
+    level: 'normal' | 'heavy' | 'overloaded' | 'immobile';
+    percentage: number;
+  };
 }
 
 // Alert state for enemies with perception
@@ -130,6 +143,20 @@ export interface PlayerSkills {
   luck: number;
 }
 
+export type EquipmentSlot =
+  | 'primaryWeapon'
+  | 'secondaryWeapon'
+  | 'meleeWeapon'
+  | 'bodyArmor'
+  | 'helmet'
+  | 'accessory1'
+  | 'accessory2';
+
+export interface Durability {
+  current: number;
+  max: number;
+}
+
 // Item interface
 export interface Item {
   id: string;
@@ -139,6 +166,13 @@ export interface Item {
   value: number;
   isQuestItem: boolean;
   position?: Position;
+  stackable?: boolean;
+  maxStack?: number;
+  quantity?: number;
+  durability?: Durability;
+  equipSlot?: EquipmentSlot;
+  statModifiers?: StatModifiers;
+  tags?: string[];
 }
 
 // Equipment stat modifiers
@@ -154,9 +188,6 @@ export interface StatModifiers {
   apPenalty?: number;
   damageBonus?: number;
 }
-
-// Equipment slots
-export type EquipmentSlot = 'weapon' | 'armor' | 'accessory';
 
 // Weapon extends item
 export interface Weapon extends Item {
