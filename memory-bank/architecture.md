@@ -58,6 +58,25 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 - **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
 
+<architecture_section id="level_up_flow" category="progression_ui">
+##### Level-Up Flow Orchestration
+
+<design_principles>
+- Surface level advancement as a guided, multi-step funnel so players can review rewards, select perks, and allocate points without leaving the flow.
+- Avoid dead-ends: if no perks remain or none are currently eligible, allow the player to continue while preserving outstanding selections for later.
+- Keep Redux as the single source of truth for pending perk selections, attribute/skill points, and level-up events while the UI orchestrates presentation.
+</design_principles>
+
+<technical_flow>
+1. <code_location>src/App.tsx</code_location> listens for `pendingLevelUpEvents`. When a `LevelUpModal` is dismissed it inspects `player.data` to decide whether to open the perk selector or point allocation panel first, skipping the character screen entirely during the guided sequence.
+2. <code_location>src/components/ui/LevelUpModal.tsx</code_location> presents the promotion banner with reward cards (skill points, attribute points, perk picks, and recovery) plus next-step guidance before the flow begins.
+3. <code_location>src/components/ui/PerkSelectionPanel.tsx</code_location> now distinguishes between “have pending picks” and “have eligible picks”, allowing players to continue if every perk is already owned or temporarily locked while still showing requirement callouts.
+4. <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location> handles attribute and skill point spending with enforced completion before returning control. When the panel closes, `App` re-checks Redux; if perk picks remain and new perks are now eligible, the selection panel reopens.
+5. A new reducer, <code_location>src/store/playerSlice.ts</code_location> → `clearPendingPerkSelections`, zeroes out pending perk tokens only when no unowned perks remain, preventing players from getting stuck at high levels.
+6. Each level grants one manual SPECIAL point (tracked in `player.attributePoints`), surfaced through <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location> so players choose their own boosts without automatic allocation.
+</technical_flow>
+</architecture_section>
+
 <architecture_section id="minimap_controller" category="ui_systems">
 ### Mini-Map Controller & Rendering Stack
 

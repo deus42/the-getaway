@@ -31,6 +31,7 @@ import playerReducer, {
 } from '../store/playerSlice';
 import { Item, Weapon, Armor } from '../game/interfaces/types';
 import { DEFAULT_SKILLS } from '../game/interfaces/player';
+import { calculateXPForLevel } from '../game/systems/progression';
 
 const createTestStore = (preloadedState?: { player: PlayerState }) => {
   return configureStore({
@@ -394,6 +395,36 @@ describe('playerSlice', () => {
       store.dispatch(consumeLevelUpEvent());
       expect(store.getState().player.pendingLevelUpEvents.length).toBe(0);
     });
+
+    it('awards one attribute point every level for manual allocation', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const initialAttributePoints = store.getState().player.data.attributePoints;
+
+      const xpToLevelTwo = calculateXPForLevel(2);
+      store.dispatch(addExperience(xpToLevelTwo));
+
+      const playerAfterLevelTwo = store.getState().player.data;
+      expect(playerAfterLevelTwo.level).toBe(2);
+      expect(playerAfterLevelTwo.attributePoints).toBe(initialAttributePoints + 1);
+
+      const xpToLevelThree = calculateXPForLevel(3);
+      store.dispatch(addExperience(xpToLevelThree));
+
+      const playerAfterLevelThree = store.getState().player.data;
+      expect(playerAfterLevelThree.level).toBe(3);
+      expect(playerAfterLevelThree.attributePoints).toBe(initialAttributePoints + 2);
+    });
+
   });
 
   describe('perk runtime management', () => {

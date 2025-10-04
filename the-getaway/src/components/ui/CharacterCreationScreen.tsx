@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 import { PlayerSkills } from '../../game/interfaces/types';
 import { calculateDerivedStats } from '../../game/systems/statCalculations';
 import { BACKGROUNDS } from '../../content/backgrounds';
 import EnhancedButton from './EnhancedButton';
 import NotificationBadge from './NotificationBadge';
 import { gradientTextStyle } from './theme';
+import Tooltip, { TooltipContent } from './Tooltip';
 
 interface CharacterCreationScreenProps {
   onComplete: (data: CharacterCreationData) => void;
@@ -359,6 +360,7 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
   const [name, setName] = useState('');
   const [visualPreset, setVisualPreset] = useState('');
   const [nameError, setNameError] = useState('');
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   // Step 2: Attributes
   const [attributes, setAttributes] = useState<PlayerSkills>({
@@ -374,6 +376,12 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
   const [allocationError, setAllocationError] = useState('');
   const [selectedBackgroundId, setSelectedBackgroundId] = useState('');
   const [backgroundError, setBackgroundError] = useState('');
+
+  useLayoutEffect(() => {
+    if (step === 1) {
+      nameInputRef.current?.focus();
+    }
+  }, [step]);
 
   const validateName = (value: string): boolean => {
     if (value.length < 3) {
@@ -477,24 +485,30 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
 
   const derivedStats = calculateDerivedStats(attributes);
 
-  const buildAttributeTooltip = (attribute: keyof PlayerSkills, value: number): string => {
+  const buildAttributeTooltip = (attribute: keyof PlayerSkills, value: number): string[] => {
     switch (attribute) {
       case 'strength':
-        return `Carry ${25 + value * 5}kg, melee bonus +${Math.floor(value / 2)}`;
+        return [
+          `Carry capacity ${25 + value * 5} kg`,
+          `Melee bonus +${Math.floor(value / 2)}`,
+        ];
       case 'perception':
-        return `Hit bonus ${(value - 5) * 3}%`; 
+        return [`Hit bonus ${(value - 5) * 3}%`];
       case 'endurance':
-        return `Max HP ${50 + value * 10}`;
+        return [`Max HP ${50 + value * 10}`];
       case 'charisma':
-        return `Dialogue bonus +${Math.floor(value / 2)}`;
+        return [`Dialogue bonus +${Math.floor(value / 2)}`];
       case 'intelligence':
-        return `Skill points per level ${3 + Math.floor(value / 3)}`;
+        return [`Skill points per level ${3 + Math.floor(value / 3)}`];
       case 'agility':
-        return `Base AP ${6 + Math.floor((value - 5) * 0.5)}, dodge ${(value - 5) * 2}%`;
+        return [
+          `Base AP ${6 + Math.floor((value - 5) * 0.5)}`,
+          `Dodge bonus ${(value - 5) * 2}%`,
+        ];
       case 'luck':
-        return `Luck boosts crits (+${value * 2}%) and random events`;
+        return [`Luck boosts crits (+${value * 2}%) and random events`];
       default:
-        return '';
+        return [];
     }
   };
 
@@ -529,6 +543,7 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
             <div>
               <label style={labelStyle}>Call Sign</label>
               <input
+                ref={nameInputRef}
                 type="text"
                 value={name}
                 onChange={handleNameChange}
@@ -536,9 +551,20 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                 style={inputStyle}
                 maxLength={20}
                 autoFocus
-                onKeyPress={(e) => {
+                onMouseDown={(e) => {
+                  if (nameInputRef.current) {
+                    nameInputRef.current.focus();
+                  }
+                  e.stopPropagation();
+                }}
+                onKeyDown={(e) => {
                   if (e.key === 'Enter' && canProceedStep1) {
                     handleStep1Next();
+                  }
+                }}
+                onBlur={() => {
+                  if (step === 1) {
+                    requestAnimationFrame(() => nameInputRef.current?.focus());
                   }
                 }}
               />
@@ -622,33 +648,52 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
 
             <div>
               <label style={labelStyle}>SPECIAL Attributes</label>
-              {ATTRIBUTE_ORDER.map((attr) => (
-                <div key={attr} style={attributeRowStyle} title={buildAttributeTooltip(attr, attributes[attr])}>
-                  <div style={attributeLabelStyle}>
-                    <div style={attributeNameStyle}>{ATTRIBUTE_INFO[attr].label}</div>
-                    <div style={attributeDescStyle}>{ATTRIBUTE_INFO[attr].description}</div>
-                  </div>
-                  <div style={attributeControlsStyle}>
-                    <button
-                      onClick={() => handleAttributeChange(attr, -1)}
-                      disabled={attributes[attr] <= 1}
-                      style={attributeButtonStyle(attributes[attr] <= 1)}
-                      title="Decrease attribute"
-                    >
-                      −
-                    </button>
-                    <div style={attributeValueStyle}>{attributes[attr]}</div>
-                    <button
-                      onClick={() => handleAttributeChange(attr, 1)}
-                      disabled={attributes[attr] >= 10 || pointsRemaining <= 0}
-                      style={attributeButtonStyle(attributes[attr] >= 10 || pointsRemaining <= 0)}
-                      title="Increase attribute"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-              ))}
+              {ATTRIBUTE_ORDER.map((attr) => {
+                const value = attributes[attr];
+                const lines = buildAttributeTooltip(attr, value);
+                const metaDetails = [`Rank ${value}`, 'SPECIAL attribute'];
+
+                return (
+                  <Tooltip
+                    key={attr}
+                    content={(
+                      <TooltipContent
+                        title={ATTRIBUTE_INFO[attr].label}
+                        description={ATTRIBUTE_INFO[attr].description}
+                        lines={lines}
+                        meta={metaDetails}
+                      />
+                    )}
+                    wrapperStyle={{ display: 'block' }}
+                  >
+                    <div style={attributeRowStyle}>
+                      <div style={attributeLabelStyle}>
+                        <div style={attributeNameStyle}>{ATTRIBUTE_INFO[attr].label}</div>
+                        <div style={attributeDescStyle}>{ATTRIBUTE_INFO[attr].description}</div>
+                      </div>
+                      <div style={attributeControlsStyle}>
+                        <button
+                          onClick={() => handleAttributeChange(attr, -1)}
+                          disabled={attributes[attr] <= 1}
+                          style={attributeButtonStyle(attributes[attr] <= 1)}
+                          title="Decrease attribute"
+                        >
+                          −
+                        </button>
+                        <div style={attributeValueStyle}>{attributes[attr]}</div>
+                        <button
+                          onClick={() => handleAttributeChange(attr, 1)}
+                          disabled={attributes[attr] >= 10 || pointsRemaining <= 0}
+                          style={attributeButtonStyle(attributes[attr] >= 10 || pointsRemaining <= 0)}
+                          title="Increase attribute"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  </Tooltip>
+                );
+              })}
             </div>
 
             {allocationError && <div style={{ ...errorStyle, marginTop: '0.5rem' }}>{allocationError}</div>}
@@ -726,8 +771,6 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: '0.75rem',
               marginBottom: '1rem',
-              maxHeight: '60vh',
-              overflowY: 'auto',
             }}>
               {BACKGROUNDS.map((background) => {
                 const selected = selectedBackgroundId === background.id;

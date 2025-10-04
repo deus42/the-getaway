@@ -479,6 +479,10 @@ export const playerSlice = createSlice({
       state.pendingLevelUpEvents.shift();
     },
 
+    clearPendingPerkSelections: (state) => {
+      state.data.pendingPerkSelections = 0;
+    },
+
     selectPerk: (state, action: PayloadAction<PerkId>) => {
       const perkId = action.payload;
 
@@ -618,6 +622,42 @@ export const playerSlice = createSlice({
 
       // Update carry weight
       state.data.inventory.maxWeight = newCarryWeight;
+    },
+
+    refundAttributePoint: (state, action: PayloadAction<keyof PlayerSkills>) => {
+      const attribute = action.payload;
+      const currentValue = state.data.skills[attribute];
+
+      if (currentValue <= 1) {
+        return; // Cannot reduce below 1
+      }
+
+      // Refund point and decrease attribute
+      state.data.attributePoints += 1;
+      state.data.skills[attribute] -= 1;
+
+      // Recalculate derived stats
+      const skills = state.data.skills;
+      const newMaxHP = calculateMaxHP(skills.endurance);
+      const newBaseAP = calculateBaseAP(skills.agility);
+      const newCarryWeight = calculateCarryWeight(skills.strength);
+
+      // Update max HP (preserve HP ratio)
+      const currentHP = Number.isFinite(state.data.health) ? state.data.health : 0;
+      const currentMaxHP = Number.isFinite(state.data.maxHealth) && state.data.maxHealth > 0
+        ? state.data.maxHealth
+        : 1;
+      const hpRatio = currentHP / currentMaxHP;
+      state.data.maxHealth = newMaxHP;
+      const calculatedHP = Math.floor(newMaxHP * hpRatio);
+      state.data.health = Math.max(0, Math.min(Number.isFinite(calculatedHP) ? calculatedHP : newMaxHP, newMaxHP));
+
+      // Update max AP
+      state.data.maxActionPoints = newBaseAP;
+      state.data.actionPoints = Math.min(state.data.actionPoints, newBaseAP);
+
+      // Update carry weight
+      state.data.inventory.maxWeight = newCarryWeight;
     }
   }
 });
@@ -643,10 +683,12 @@ export const {
   unequipWeapon,
   unequipArmor,
   consumeLevelUpEvent,
+  clearPendingPerkSelections,
   selectPerk,
   beginPlayerTurn,
   spendSkillPoints,
   spendAttributePoint,
+  refundAttributePoint,
   allocateSkillPointToSkill,
   refundSkillPointFromSkill
 } = playerSlice.actions;
