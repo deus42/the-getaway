@@ -137,17 +137,16 @@ describe('XP Progression System', () => {
   });
 
   describe('shouldAwardAttributePoint', () => {
-    it('should award at levels 3, 6, 9', () => {
+    it('should award at every positive level', () => {
+      expect(shouldAwardAttributePoint(1)).toBe(true);
+      expect(shouldAwardAttributePoint(2)).toBe(true);
       expect(shouldAwardAttributePoint(3)).toBe(true);
-      expect(shouldAwardAttributePoint(6)).toBe(true);
-      expect(shouldAwardAttributePoint(9)).toBe(true);
+      expect(shouldAwardAttributePoint(10)).toBe(true);
     });
 
-    it('should not award at other levels', () => {
-      expect(shouldAwardAttributePoint(1)).toBe(false);
-      expect(shouldAwardAttributePoint(2)).toBe(false);
-      expect(shouldAwardAttributePoint(4)).toBe(false);
-      expect(shouldAwardAttributePoint(5)).toBe(false);
+    it('should not award at non-positive levels', () => {
+      expect(shouldAwardAttributePoint(0)).toBe(false);
+      expect(shouldAwardAttributePoint(-2)).toBe(false);
     });
   });
 
@@ -199,7 +198,7 @@ describe('XP Progression System', () => {
       expect(result.player.level).toBe(2);
       expect(result.player.experience).toBe(0);
       expect(result.skillPointsAwarded).toBe(4); // INT 5 = 4 points
-      expect(result.attributePointsAwarded).toBe(0); // Level 2 doesn't award attribute point
+      expect(result.attributePointsAwarded).toBe(1); // Attribute point every level
       expect(result.perksUnlocked).toBe(1); // Level 2 unlocks perk
     });
 
@@ -213,7 +212,7 @@ describe('XP Progression System', () => {
       expect(result.player.level).toBe(3);
       expect(result.skillPointsAwarded).toBe(8); // 4 points * 2 levels
       expect(result.perksUnlocked).toBe(1); // Level 2 only
-      expect(result.attributePointsAwarded).toBe(1); // Level 3 awards attribute point
+      expect(result.attributePointsAwarded).toBe(2); // Attribute point each level
     });
 
     it('should increase max health on level up', () => {

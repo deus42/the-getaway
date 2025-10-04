@@ -805,7 +805,7 @@ Implement core XP earning and level-up system with concrete progression formula.
 - **Implement level-up mechanics**:
   - When XP >= threshold, trigger level-up automatically
   - Award skill points: `3 + floor(intelligence / 3)` (Intelligence 6 = 5 points, Intelligence 9 = 6 points)
-  - Every 3 levels (3, 6, 9...), grant 1 attribute point (player chooses which attribute to increase)
+  - Every level up grants 1 attribute point (player chooses which attribute to increase)
   - Every 2 levels (2, 4, 6...), unlock perk selection (implemented in Step 24.3)
 - **Build level-up notification UI**:
   - Full-screen modal with "LEVEL UP" banner
@@ -822,7 +822,7 @@ Implement core XP earning and level-up system with concrete progression formula.
 </error_handling>
 
 <test>
-Award XP through various sources (complete quest, defeat enemy, discover location) and verify XP counter increases with toast notifications. Verify XP formula matches specification: reach 115 XP and confirm level-up to 2, reach 345 total XP and confirm level 3. Trigger level-up and verify modal appears with correct skill points awarded (test with different Intelligence values). Verify attribute points granted every 3 levels. Award 500 XP at once and confirm multiple sequential level-ups process correctly. Check XP progress bar updates in real-time.
+Award XP through various sources (complete quest, defeat enemy, discover location) and verify XP counter increases with toast notifications. Verify XP formula matches specification: reach 115 XP and confirm level-up to 2, reach 345 total XP and confirm level 3. Trigger level-up and verify modal appears with correct skill points awarded (test with different Intelligence values). Verify attribute points granted every level. Award 500 XP at once and confirm multiple sequential level-ups process correctly. Check XP progress bar updates in real-time.
 </test>
 </step>
 
