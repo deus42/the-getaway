@@ -316,6 +316,214 @@ export const level0UkrainianContent: Level0LocaleContent = {
         },
       ],
     },
+    {
+      id: 'npc_firebrand_juno',
+      npcId: 'Вогняна Джуно',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Джуно розпалює іскри з бочки для олії, окуляри затуманені вологою. "Весь район — це скороварка. Або випустимо пару, або вибухнемо разом із нею."',
+          options: [
+            {
+              text: 'Потрібна допомога в саботажі обладнання КорпБез?',
+              nextNodeId: 'sabotage_quest',
+              questEffect: {
+                questId: 'quest_equipment_sabotage',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Їхні камери спостереження тепер металобрухт.',
+              nextNodeId: 'sabotage_complete',
+              questEffect: {
+                questId: 'quest_equipment_sabotage',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Тримай вогонь, Джуно.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'sabotage_quest',
+          text: '"Камери в Центрі душать наші рухи. Знищ три з них — і я покажу, де ховаються сліпі зони патрулів."',
+          options: [
+            {
+              text: 'Вважай, вони вимкнені.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'sabotage_complete',
+          text: '"Три камери темні, а Вартові спішно відправляють ремонтні дрони. Це вікно не триватиме довго, тож використай його різко."',
+          options: [
+            {
+              text: 'Хаос — сама собі нагорода, Джуно.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_drone_handler_kesh',
+      npcId: 'Оператор дронів Кеш',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Кеш стоїть на колінах біля потрошеного розвідувального дрона, паяльник у руці. "Корпоративний код співає в одній тональності. Зміни хор — зміниш марш."',
+          options: [
+            {
+              text: 'Мені потрібна розвідка про слабкості патрульних дронів.',
+              nextNodeId: 'intel_quest',
+              questEffect: {
+                questId: 'quest_drone_recon',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Я відсканував маршрути патруля. Ось дані.',
+              nextNodeId: 'intel_complete',
+              questEffect: {
+                questId: 'quest_drone_recon',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Продовжуй, маестро.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'intel_quest',
+          text: '"Патрульні дрони слідують маршрутами, як гімнами. Простеж три кола без спрацювання тривог — і я навчу тебе їхніх сліпих зон."',
+          options: [
+            {
+              text: 'Я пройду їхню проповідь.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'intel_complete',
+          text: '"Ідеальна розвідка. Тепер ми знаємо, коли вони моргають і як довго моляться." Кеш передає зім\'яту схему. "Використай до того, як знову перемішають."',
+          options: [
+            {
+              text: 'Точність понад віру, Кеш.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_medic_yara',
+      npcId: 'Медик Яра',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Яра витирає кров із рук ганчіркою, заплямованою поза порятунком. "Клініка працює на парах і надії. Принеси медичні набори, якщо натрапиш."',
+          options: [
+            {
+              text: 'Я відшукаю припаси.',
+              nextNodeId: 'medkit_quest',
+              questEffect: {
+                questId: 'quest_medkit_supplies',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Знайшов аптечки для клініки.',
+              nextNodeId: 'medkit_complete',
+              questEffect: {
+                questId: 'quest_medkit_supplies',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Будь пильною, медику.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'medkit_quest',
+          text: '"Вони розкидають припаси біля патрульних маршрутів, сподіваючись, що ми спрацюємо тривоги, забираючи їх. Доведи, що помиляються."',
+          options: [
+            {
+              text: 'Вважай, це зроблено.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'medkit_complete',
+          text: '"Це підтримає дихання ще трьох бігунів упродовж тижня. Це перемога в цій конкретній арифметиці."',
+          options: [
+            {
+              text: 'Кожен подих на рахунку, Яро.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_captain_reyna',
+      npcId: 'Капітан Рейна',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Рейна підтягує ремінь гвинтівки та сканує обрій. "Транспортний вузол кишить важкими бійцями КорпБез. Очисти їх — і ми зможемо знову переміщувати припаси."',
+          options: [
+            {
+              text: 'Я візьмусь за патруль.',
+              nextNodeId: 'combat_quest',
+              questEffect: {
+                questId: 'quest_combat_patrol',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Транспортний вузол очищено.',
+              nextNodeId: 'combat_complete',
+              questEffect: {
+                questId: 'quest_combat_patrol',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Трим позицію, капітане.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'combat_quest',
+          text: '"Бий їх сильно і швидко. Вони викликають підкріплення, якщо дозволиш співати гімни в комунікатори."',
+          options: [
+            {
+              text: 'Мовчки та хірургічно.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'combat_complete',
+          text: '"Троє охоронців знищено, жодної тривоги не підняли. Це та арифметика, яка перемагає райони." Вона кидає тобі кредитний жетон. "Напої за мій рахунок, якщо доживемо до святкування."',
+          options: [
+            {
+              text: 'Залиш на переможний раунд, капітане.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
   ],
   quests: [
     {
@@ -403,6 +611,108 @@ export const level0UkrainianContent: Level0LocaleContent = {
       rewards: [
         { type: 'experience', amount: 90 },
         { type: 'currency', amount: 60 },
+      ],
+    },
+    {
+      id: 'quest_equipment_sabotage',
+      name: 'Камерне затемнення',
+      description: 'Вогняна Джуно хоче вимкнути камери спостереження в Центрі, щоб створити коридори руху.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'sabotage-cameras',
+          description: 'Знищте 3 камери спостереження в Центрі.',
+          isCompleted: false,
+          type: 'kill',
+          target: 'Камера спостереження',
+          count: 3,
+          currentCount: 0,
+        },
+        {
+          id: 'report-juno',
+          description: 'Повернутіся до Вогняної Джуно.',
+          isCompleted: false,
+          type: 'talk',
+          target: 'Вогняна Джуно',
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 150 },
+        { type: 'item', id: 'Набір саботажних зарядів', amount: 1 },
+      ],
+    },
+    {
+      id: 'quest_drone_recon',
+      name: 'Спостереження за дронами',
+      description: 'Кеш потрібні дані про маршрути патрульних дронів, щоб знайти прогалини в безпеці.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'observe-patrols',
+          description: 'Спостерігайте за 3 циклами дронового патруля в Центрі без виявлення.',
+          isCompleted: false,
+          type: 'explore',
+          target: 'Дроновий патруль',
+          count: 3,
+          currentCount: 0,
+        },
+        {
+          id: 'deliver-intel',
+          description: 'Доставте дані про маршрути Кеш, оператору дронів.',
+          isCompleted: false,
+          type: 'talk',
+          target: 'Оператор дронів Кеш',
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 120 },
+        { type: 'item', id: 'Голо-проектор лінза', amount: 1 },
+      ],
+    },
+    {
+      id: 'quest_medkit_supplies',
+      name: 'Постачання медикаментів',
+      description: 'Зберіть медичні припаси, розкидані по району, щоб поповнити запаси повстанської клініки.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'collect-medkits',
+          description: 'Зберіть 2 покинуті аптечки з району.',
+          isCompleted: false,
+          type: 'collect',
+          target: 'Покинута аптечка',
+          count: 2,
+          currentCount: 0,
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 80 },
+        { type: 'currency', amount: 50 },
+      ],
+    },
+    {
+      id: 'quest_combat_patrol',
+      name: 'Очистити транспортний вузол',
+      description: 'Знищте патрулі КорпБез, що блокують доступ до транспортного вузла.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'defeat-corpsec',
+          description: 'Знищте 3 охоронців КорпБез біля транспортного вузла.',
+          isCompleted: false,
+          type: 'kill',
+          target: 'Охоронець КорпБез',
+          count: 3,
+          currentCount: 0,
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 200 },
+        { type: 'currency', amount: 100 },
       ],
     },
   ],

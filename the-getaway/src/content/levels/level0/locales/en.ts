@@ -185,7 +185,7 @@ export const level0EnglishContent: Level0LocaleContent = {
           text: 'Juno coaxes sparks from an oil drum brazier, goggles fogged with humidity. "Whole district’s a pressure cooker. Either we vent it or we blow with it."',
           options: [
             {
-              text: 'Show me how you’re holding the barricades.',
+              text: 'Show me how you are holding the barricades.',
               nextNodeId: 'defense',
             },
             {
@@ -194,6 +194,22 @@ export const level0EnglishContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'charisma',
                 threshold: 7,
+              },
+            },
+            {
+              text: 'Need help sabotaging CorpSec equipment?',
+              nextNodeId: 'sabotage_quest',
+              questEffect: {
+                questId: 'quest_equipment_sabotage',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Their surveillance cameras are scrap metal now.',
+              nextNodeId: 'sabotage_complete',
+              questEffect: {
+                questId: 'quest_equipment_sabotage',
+                effect: 'complete',
               },
             },
             {
@@ -214,10 +230,30 @@ export const level0EnglishContent: Level0LocaleContent = {
         },
         {
           id: 'supplies',
-          text: '"A brave tongue. I’ll trade your goodwill for explosive gel and field dressings." Her grin flashes neon. "We keep the gel; the medics get the rest."',
+          text: '"A brave tongue. I will trade your goodwill for explosive gel and field dressings." Her grin flashes neon. "We keep the gel; the medics get the rest."',
           options: [
             {
               text: 'Deal. Keep the rebels mended.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'sabotage_quest',
+          text: '"Downtown cameras are choking our movements. Blast three of them and I will show you where the patrol blind spots hide."',
+          options: [
+            {
+              text: 'Consider them disabled.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'sabotage_complete',
+          text: '"Three cameras dark, and the Wardens are scrambling their repair drones. This window will not last, so use it sharp."',
+          options: [
+            {
+              text: 'Chaos is its own reward, Juno.',
               nextNodeId: null,
             },
           ],
@@ -285,8 +321,24 @@ export const level0EnglishContent: Level0LocaleContent = {
               nextNodeId: 'spoof',
             },
             {
-              text: 'Sell me a jammer that won’t fry my rig.',
+              text: 'Sell me a jammer that will not fry my rig.',
               nextNodeId: 'jammer',
+            },
+            {
+              text: 'I need intel on patrol drone weaknesses.',
+              nextNodeId: 'intel_quest',
+              questEffect: {
+                questId: 'quest_drone_recon',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'I scanned the patrol routes. Here is the data.',
+              nextNodeId: 'intel_complete',
+              questEffect: {
+                questId: 'quest_drone_recon',
+                effect: 'complete',
+              },
             },
             {
               text: 'Carry on, maestro.',
@@ -310,6 +362,130 @@ export const level0EnglishContent: Level0LocaleContent = {
           options: [
             {
               text: 'Consider it purchased.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'intel_quest',
+          text: '"Patrol drones follow routes like hymns. Shadow three circuits without tripping alarms, and I will teach you their blind spots."',
+          options: [
+            {
+              text: 'I will walk their sermon.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'intel_complete',
+          text: '"Perfect reconnaissance. Now we know when they blink and how long they pray." Kesh hands you a crumpled schematic. "Use it before they re-randomize."',
+          options: [
+            {
+              text: 'Precision over faith, Kesh.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_medic_yara',
+      npcId: 'Medic Yara',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Yara wipes blood from her hands with a rag stained beyond salvage. "Clinic is running on fumes and hope. Bring me medkits if you stumble across any."',
+          options: [
+            {
+              text: 'I will scout for supplies.',
+              nextNodeId: 'medkit_quest',
+              questEffect: {
+                questId: 'quest_medkit_supplies',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'Found medkits for the clinic.',
+              nextNodeId: 'medkit_complete',
+              questEffect: {
+                questId: 'quest_medkit_supplies',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Stay sharp, Medic.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'medkit_quest',
+          text: '"They scatter supplies near patrol routes hoping we will trip alarms retrieving them. Prove them wrong."',
+          options: [
+            {
+              text: 'Consider it done.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'medkit_complete',
+          text: '"These will keep three more runners breathing through the week. That is a victory in this particular arithmetic."',
+          options: [
+            {
+              text: 'Every breath counts, Yara.',
+              nextNodeId: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'npc_captain_reyna',
+      npcId: 'Captain Reyna',
+      nodes: [
+        {
+          id: 'intro',
+          text: 'Reyna adjusts her rifle strap and scans the skyline. "Transit hub is crawling with CorpSec heavies. Clear them out and we can move supplies again."',
+          options: [
+            {
+              text: 'I will handle the patrol.',
+              nextNodeId: 'combat_quest',
+              questEffect: {
+                questId: 'quest_combat_patrol',
+                effect: 'start',
+              },
+            },
+            {
+              text: 'The transit hub is clear.',
+              nextNodeId: 'combat_complete',
+              questEffect: {
+                questId: 'quest_combat_patrol',
+                effect: 'complete',
+              },
+            },
+            {
+              text: 'Hold position, Captain.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'combat_quest',
+          text: '"Hit them hard and fast. They call reinforcements if you let them sing their hymns into comms."',
+          options: [
+            {
+              text: 'Silent and surgical.',
+              nextNodeId: null,
+            },
+          ],
+        },
+        {
+          id: 'combat_complete',
+          text: '"Three guards down, zero alarms raised. That is the kind of arithmetic that wins districts." She tosses you a credit chit. "Drinks are on me if we live to celebrate."',
+          options: [
+            {
+              text: 'Save it for the victory round, Captain.',
               nextNodeId: null,
             },
           ],
@@ -405,6 +581,108 @@ export const level0EnglishContent: Level0LocaleContent = {
         { type: 'currency', amount: 60 },
       ],
     },
+    {
+      id: 'quest_equipment_sabotage',
+      name: 'Camera Blackout',
+      description: 'Firebrand Juno wants Downtown surveillance cameras disabled to create movement corridors.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'sabotage-cameras',
+          description: 'Destroy 3 surveillance cameras in Downtown.',
+          isCompleted: false,
+          type: 'kill',
+          target: 'Surveillance Camera',
+          count: 3,
+          currentCount: 0,
+        },
+        {
+          id: 'report-juno',
+          description: 'Report back to Firebrand Juno.',
+          isCompleted: false,
+          type: 'talk',
+          target: 'Firebrand Juno',
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 150 },
+        { type: 'item', id: 'Saboteur Charge Kit', amount: 1 },
+      ],
+    },
+    {
+      id: 'quest_drone_recon',
+      name: 'Drone Route Surveillance',
+      description: 'Kesh needs patrol drone route data to identify security gaps.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'observe-patrols',
+          description: 'Observe 3 drone patrol circuits in Downtown without being detected.',
+          isCompleted: false,
+          type: 'explore',
+          target: 'Drone Patrol',
+          count: 3,
+          currentCount: 0,
+        },
+        {
+          id: 'deliver-intel',
+          description: 'Deliver the route data to Drone Handler Kesh.',
+          isCompleted: false,
+          type: 'talk',
+          target: 'Drone Handler Kesh',
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 120 },
+        { type: 'item', id: 'Holo Projector Lens', amount: 1 },
+      ],
+    },
+    {
+      id: 'quest_medkit_supplies',
+      name: 'Medical Supply Run',
+      description: 'Collect medical supplies scattered around the district to stock the rebel clinic.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'collect-medkits',
+          description: 'Collect 2 Abandoned Medkits from the district.',
+          isCompleted: false,
+          type: 'collect',
+          target: 'Abandoned Medkit',
+          count: 2,
+          currentCount: 0,
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 80 },
+        { type: 'currency', amount: 50 },
+      ],
+    },
+    {
+      id: 'quest_combat_patrol',
+      name: 'Clear the Transit Hub',
+      description: 'Eliminate CorpSec patrols blocking access to the transit hub.',
+      isActive: false,
+      isCompleted: false,
+      objectives: [
+        {
+          id: 'defeat-corpsec',
+          description: 'Defeat 3 CorpSec guards near the transit hub.',
+          isCompleted: false,
+          type: 'kill',
+          target: 'CorpSec Guard',
+          count: 3,
+          currentCount: 0,
+        },
+      ],
+      rewards: [
+        { type: 'experience', amount: 200 },
+        { type: 'currency', amount: 100 },
+      ],
+    },
   ],
   npcBlueprints: [
     {
@@ -495,6 +773,32 @@ export const level0EnglishContent: Level0LocaleContent = {
         { position: { x: 60, y: 66 }, timeOfDay: 'night', duration: 210 },
       ],
       dialogueId: 'npc_drone_handler_kesh',
+      isInteractive: true,
+    },
+    {
+      name: 'Medic Yara',
+      position: { x: 18, y: 32 },
+      health: 15,
+      maxHealth: 15,
+      routine: [
+        { position: { x: 18, y: 32 }, timeOfDay: 'day', duration: 240 },
+        { position: { x: 16, y: 28 }, timeOfDay: 'evening', duration: 240 },
+        { position: { x: 20, y: 34 }, timeOfDay: 'night', duration: 240 },
+      ],
+      dialogueId: 'npc_medic_yara',
+      isInteractive: true,
+    },
+    {
+      name: 'Captain Reyna',
+      position: { x: 42, y: 52 },
+      health: 22,
+      maxHealth: 22,
+      routine: [
+        { position: { x: 42, y: 52 }, timeOfDay: 'day', duration: 220 },
+        { position: { x: 38, y: 48 }, timeOfDay: 'evening', duration: 220 },
+        { position: { x: 46, y: 56 }, timeOfDay: 'night', duration: 220 },
+      ],
+      dialogueId: 'npc_captain_reyna',
       isInteractive: true,
     },
   ],

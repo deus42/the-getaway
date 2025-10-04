@@ -265,7 +265,9 @@ const SkillTreePanel: React.FC = () => {
           <p style={{ ...effectStyle, color: 'rgba(148, 163, 184, 0.6)' }}>{incrementLabel}</p>
         </div>
         <div style={skillControlsStyle}>
-          <span style={skillValueStyle}>{currentValue}</span>
+          <span style={skillValueStyle} data-testid={`skill-value-${skill.id}`}>
+            {currentValue}
+          </span>
         </div>
       </div>
     );

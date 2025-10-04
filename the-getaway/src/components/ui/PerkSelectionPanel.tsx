@@ -41,6 +41,9 @@ const panelStyle: React.CSSProperties = {
 const headerStyle: React.CSSProperties = {
   padding: '1.4rem 1.6rem 1rem',
   borderBottom: '1px solid rgba(56, 189, 248, 0.18)',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'flex-start',
 };
 
 const titleStyle: React.CSSProperties = {
@@ -157,16 +160,32 @@ const footerStyle: React.CSSProperties = {
   justifyContent: 'flex-end',
 };
 
-const closeButtonStyle = (disabled: boolean): React.CSSProperties => ({
-  padding: '0.55rem 1.2rem',
-  borderRadius: '999px',
+const headerCloseButtonStyle = (disabled: boolean): React.CSSProperties => ({
+  padding: '0.5rem 0.7rem',
+  borderRadius: '8px',
   border: '1px solid rgba(148, 163, 184, 0.4)',
   background: disabled ? 'rgba(15, 23, 42, 0.6)' : 'rgba(15, 23, 42, 0.85)',
   color: disabled ? 'rgba(148, 163, 184, 0.6)' : '#e2e8f0',
+  fontSize: '1rem',
+  cursor: disabled ? 'not-allowed' : 'pointer',
+  transition: 'all 0.2s ease',
+  opacity: disabled ? 0.6 : 1,
+});
+
+const continueButtonStyle = (disabled: boolean): React.CSSProperties => ({
+  padding: '0.6rem 1.4rem',
+  borderRadius: '999px',
+  border: `1px solid ${disabled ? 'rgba(148, 163, 184, 0.3)' : 'rgba(56, 189, 248, 0.5)'}`,
+  background: disabled
+    ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.75), rgba(15, 23, 42, 0.78))'
+    : 'linear-gradient(135deg, rgba(37, 99, 235, 0.65), rgba(56, 189, 248, 0.7))',
+  color: disabled ? 'rgba(148, 163, 184, 0.6)' : '#e0f2fe',
   letterSpacing: '0.16em',
-  fontSize: '0.65rem',
+  fontSize: '0.7rem',
   textTransform: 'uppercase',
   cursor: disabled ? 'not-allowed' : 'pointer',
+  fontWeight: 600,
+  transition: 'all 0.2s ease',
 });
 
 const buildRequirementList = (lines: string[]): React.ReactElement | null => {
@@ -207,6 +226,13 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
     }).filter((entry) => entry.perks.length > 0);
   }, [categories, player, uiStrings.perks.categoryLabels]);
 
+  const hasSelectablePerks = useMemo(
+    () => byCategory.some((entry) => entry.perks.some(({ availability }) => availability.canSelect)),
+    [byCategory]
+  );
+
+  const closeDisabled = pendingSelections > 0 && hasSelectablePerks;
+
   if (!open) {
     return null;
   }
@@ -222,10 +248,38 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
     <div style={overlayStyle} role="dialog" aria-modal="true" aria-label={uiStrings.perks.panelTitle}>
       <div style={panelStyle}>
         <header style={headerStyle}>
-          <h2 style={titleStyle}>{uiStrings.perks.panelTitle}</h2>
-          <div style={remainingStyle}>{uiStrings.perks.remainingLabel(pendingSelections)}</div>
+          <div>
+            <h2 style={titleStyle}>{uiStrings.perks.panelTitle}</h2>
+            <div style={remainingStyle}>{uiStrings.perks.remainingLabel(pendingSelections)}</div>
+          </div>
+          <button
+            type="button"
+            style={headerCloseButtonStyle(closeDisabled)}
+            onClick={closeDisabled ? undefined : onClose}
+            disabled={closeDisabled}
+            title={closeDisabled ? 'Spend all perk selections before closing' : 'Close'}
+            aria-disabled={closeDisabled}
+          >
+            ✕
+          </button>
         </header>
         <div style={bodyStyle}>
+          {pendingSelections > 0 && !hasSelectablePerks && (
+            <div
+              style={{
+                background: 'rgba(56, 189, 248, 0.12)',
+                border: '1px solid rgba(56, 189, 248, 0.3)',
+                borderRadius: '10px',
+                padding: '0.9rem',
+                marginBottom: '0.8rem',
+                color: 'rgba(226, 232, 240, 0.9)',
+                fontSize: '0.75rem',
+                lineHeight: 1.45,
+              }}
+            >
+              All current perks are either already owned or locked. Spend your new attribute or skill points to unlock additional choices, or continue to return later.
+            </div>
+          )}
           {byCategory.map(({ category, label, perks }) => (
             <section key={category}>
               <h3 style={categoryHeaderStyle}>{label}</h3>
@@ -266,9 +320,9 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
                       )}
                       <button
                         type="button"
-                        style={buttonStyle(!availability.canSelect)}
+                        style={buttonStyle(!availability.canSelect || pendingSelections <= 0 || player.perks.includes(definition.id))}
                         onClick={() => handleSelect(definition.id, availability.canSelect)}
-                        disabled={!availability.canSelect}
+                        disabled={!availability.canSelect || pendingSelections <= 0 || player.perks.includes(definition.id)}
                       >
                         {uiStrings.perks.selectLabel}
                       </button>
@@ -282,11 +336,16 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
         <footer style={footerStyle}>
           <button
             type="button"
-            style={closeButtonStyle(pendingSelections > 0)}
+            style={continueButtonStyle(pendingSelections > 0 && hasSelectablePerks)}
             onClick={onClose}
-            disabled={pendingSelections > 0}
+            disabled={pendingSelections > 0 && hasSelectablePerks}
+            title={
+              pendingSelections > 0 && hasSelectablePerks
+                ? 'Select all available perks before continuing'
+                : 'Continue'
+            }
           >
-            {uiStrings.perks.closeLabel}
+            Continue
           </button>
         </footer>
       </div>

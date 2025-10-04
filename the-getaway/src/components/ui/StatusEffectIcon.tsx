@@ -8,6 +8,7 @@ export interface StatusEffect {
   duration?: number;
   stacks?: number;
   type: 'buff' | 'debuff' | 'neutral';
+  description?: string;
 }
 
 interface StatusEffectIconProps {
@@ -85,6 +86,10 @@ const StatusEffectIcon: React.FC<StatusEffectIconProps> = ({ effect, size = 32, 
     boxShadow: `0 0 6px ${borderColor}`,
   };
 
+  const tooltipLabel = effect.description
+    ? `${effect.name}: ${effect.description}`
+    : effect.name;
+
   return (
     <>
       <style>{`
@@ -99,7 +104,7 @@ const StatusEffectIcon: React.FC<StatusEffectIconProps> = ({ effect, size = 32, 
           }
         }
       `}</style>
-      <div style={iconContainerStyle} title={effect.name}>
+      <div style={iconContainerStyle} title={tooltipLabel}>
         <span style={iconStyle}>{effect.icon}</span>
         {effect.stacks && effect.stacks > 1 && (
           <span style={stacksBadgeStyle}>{effect.stacks}</span>

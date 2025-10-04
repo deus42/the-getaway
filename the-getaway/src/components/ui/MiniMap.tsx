@@ -446,7 +446,7 @@ const MiniMap: React.FC = () => {
   const [renderTick, setRenderTick] = useState(0);
   const [canvasSize, setCanvasSize] = useState(() => ({ width: 140, height: 110 }));
   const [userZoom, setUserZoom] = useState(() => miniMapService.getZoom());
-  const [legendOpen, setLegendOpen] = useState(true);
+  const [legendOpen, setLegendOpen] = useState(false);
   const [hoverInfo, setHoverInfo] = useState<{ label: string; x: number; y: number } | null>(null);
   const tilePalette = BASE_TILE_COLORS;
   const controlsShouldStack = canvasSize.width < 220;

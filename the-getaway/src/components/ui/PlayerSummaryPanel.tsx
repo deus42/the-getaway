@@ -1,9 +1,11 @@
 import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { BACKGROUND_MAP } from '../../content/backgrounds';
 import { getUIStrings } from '../../content/ui';
 import { SKILL_BRANCHES } from '../../content/skills';
+import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progression';
+import { addExperience } from '../../store/playerSlice';
 import AnimatedStatBar from './AnimatedStatBar';
 import {
   neonPalette,
@@ -11,7 +13,6 @@ import {
   cardSurface,
   badgeSurface,
   headingStyle,
-  statValueStyle as themedStatValue,
   subtleText,
   gradientTextStyle,
   glowTextStyle,
@@ -101,31 +102,30 @@ const statLabelStyle: React.CSSProperties = {
   textTransform: 'uppercase',
 };
 
-const statValueStyle: React.CSSProperties = {
-  ...themedStatValue,
-  fontSize: '0.74rem',
-};
 
 const skillSummaryContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '0.4rem',
-  marginTop: '0.1rem',
+  gap: '0.5rem',
+  marginTop: '0.25rem',
 };
 
 const skillChipStyle = (accent: string): React.CSSProperties => ({
   display: 'inline-flex',
   alignItems: 'center',
-  gap: '0.35rem',
-  padding: '0.28rem 0.6rem',
+  justifyContent: 'space-between',
+  gap: '0.65rem',
+  padding: '0.38rem 0.85rem',
   borderRadius: '999px',
   border: `1px solid ${accent}`,
-  background: `linear-gradient(140deg, ${accent}26, rgba(15, 23, 42, 0.9))`,
+  background: `linear-gradient(140deg, ${accent}1F, rgba(15, 23, 42, 0.92))`,
   color: neonPalette.textPrimary,
   fontSize: '0.6rem',
-  letterSpacing: '0.12em',
+  letterSpacing: '0.1em',
   textTransform: 'uppercase',
   boxShadow: `0 10px 18px -12px ${accent}99`,
+  flex: '1 1 calc(50% - 0.5rem)',
+  minWidth: '140px',
 });
 
 const actionButtonStyle = (active: boolean): React.CSSProperties => ({
@@ -156,10 +156,20 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   characterOpen = false,
   showActionButton = true,
 }) => {
+  const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const testMode = useSelector((state: RootState) => state.settings.testMode);
   const uiStrings = getUIStrings(locale);
   const background = player.backgroundId ? BACKGROUND_MAP[player.backgroundId] : undefined;
+
+  const handleLevelUp = () => {
+    const currentLevel = player.level;
+    const xpForNextLevel = calculateXPForLevel(currentLevel + 1);
+    const currentXP = player.experience;
+    const xpNeeded = xpForNextLevel - currentXP;
+    dispatch(addExperience(Math.max(1, xpNeeded)));
+  };
 
   const branchTotals = useMemo(() => {
     const totals = SKILL_BRANCHES.map((branch) => {
@@ -202,20 +212,12 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
 
       <div style={statGridStyle}>
         <div style={statCardStyle}>
-          <span style={statLabelStyle}>Skill Points</span>
-          <span style={{ ...statValueStyle, ...glowTextStyle('#34d399', 6) }}>{player.skillPoints}</span>
-        </div>
-        <div style={statCardStyle}>
-          <span style={statLabelStyle}>Attribute Points</span>
-          <span style={{ ...statValueStyle, ...glowTextStyle('#c084fc', 6) }}>{player.attributePoints}</span>
-        </div>
-        <div style={statCardStyle}>
           <span style={statLabelStyle}>Credits</span>
           <span style={{ ...importantValueStyle('#fbbf24') }}>{player.credits}</span>
         </div>
         <div style={statCardStyle}>
-          <span style={statLabelStyle}>XP</span>
-          <span style={{ ...importantValueStyle('#38bdf8') }}>{player.experience}</span>
+          <span style={statLabelStyle}>Experience</span>
+          <span style={{ ...importantValueStyle('#38bdf8') }}>{formatXPDisplay(player.experience, player.level)}</span>
         </div>
       </div>
       {branchTotals.length > 0 && (
@@ -238,21 +240,45 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         </div>
       )}
       {onOpenCharacter && showActionButton && (
-        <button
-          type="button"
-          onClick={onOpenCharacter}
-          style={actionButtonStyle(characterOpen)}
-          data-testid="summary-open-character"
-          aria-pressed={characterOpen}
-          onMouseEnter={(event) => {
-            event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
-          }}
-          onMouseLeave={(event) => {
-            event.currentTarget.style.transform = 'translateY(0) scale(1)';
-          }}
-        >
-          {uiStrings.shell.characterButton}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+          <button
+            type="button"
+            onClick={onOpenCharacter}
+            style={{ ...actionButtonStyle(characterOpen), flex: 1 }}
+            data-testid="summary-open-character"
+            aria-pressed={characterOpen}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.transform = 'translateY(0) scale(1)';
+            }}
+          >
+            {uiStrings.shell.characterButton}
+          </button>
+          {testMode && (
+            <button
+              type="button"
+              onClick={handleLevelUp}
+              style={{
+                ...actionButtonStyle(false),
+                flex: 1,
+                background: 'linear-gradient(130deg, rgba(251, 191, 36, 0.48), rgba(249, 115, 22, 0.45))',
+                border: `1px solid ${neonPalette.amber}`,
+                boxShadow: '0 12px 20px -16px rgba(251, 191, 36, 0.48)',
+              }}
+              title="Test Mode: Gain XP to level up"
+              onMouseEnter={(event) => {
+                event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.transform = 'translateY(0) scale(1)';
+              }}
+            >
+              ⬆ Level Up
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

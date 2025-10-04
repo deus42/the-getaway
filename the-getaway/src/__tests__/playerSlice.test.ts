@@ -396,7 +396,7 @@ describe('playerSlice', () => {
       expect(store.getState().player.pendingLevelUpEvents.length).toBe(0);
     });
 
-    it('awards one attribute point every level for manual allocation', () => {
+    it('awards attribute points every third level', () => {
       const store = createTestStore();
 
       store.dispatch(
@@ -410,19 +410,31 @@ describe('playerSlice', () => {
 
       const initialAttributePoints = store.getState().player.data.attributePoints;
 
-      const xpToLevelTwo = calculateXPForLevel(2);
-      store.dispatch(addExperience(xpToLevelTwo));
+      const addXPForNextLevel = () => {
+        const current = store.getState().player.data;
+        const xpNeeded = calculateXPForLevel(current.level + 1);
+        store.dispatch(addExperience(xpNeeded));
+      };
+
+      addXPForNextLevel();
 
       const playerAfterLevelTwo = store.getState().player.data;
       expect(playerAfterLevelTwo.level).toBe(2);
-      expect(playerAfterLevelTwo.attributePoints).toBe(initialAttributePoints + 1);
+      expect(playerAfterLevelTwo.attributePoints).toBe(initialAttributePoints);
 
-      const xpToLevelThree = calculateXPForLevel(3);
-      store.dispatch(addExperience(xpToLevelThree));
+      addXPForNextLevel();
 
       const playerAfterLevelThree = store.getState().player.data;
       expect(playerAfterLevelThree.level).toBe(3);
-      expect(playerAfterLevelThree.attributePoints).toBe(initialAttributePoints + 2);
+      expect(playerAfterLevelThree.attributePoints).toBe(initialAttributePoints + 1);
+
+      addXPForNextLevel(); // Level 4
+      addXPForNextLevel(); // Level 5
+      addXPForNextLevel(); // Level 6
+
+      const playerAfterLevelSix = store.getState().player.data;
+      expect(playerAfterLevelSix.level).toBe(6);
+      expect(playerAfterLevelSix.attributePoints).toBe(initialAttributePoints + 2);
     });
 
   });

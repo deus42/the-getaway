@@ -16,6 +16,7 @@ import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import CharacterScreen from "./components/ui/CharacterScreen";
 import PerkSelectionPanel from "./components/ui/PerkSelectionPanel";
+import LevelUpPointAllocationPanel from "./components/ui/LevelUpPointAllocationPanel";
 import CornerAccents from "./components/ui/CornerAccents";
 import ScanlineOverlay from "./components/ui/ScanlineOverlay";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
@@ -23,11 +24,13 @@ import DataStreamParticles from "./components/ui/DataStreamParticles";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import { addLogMessage } from "./store/logSlice";
-import { initializeCharacter, consumeLevelUpEvent } from "./store/playerSlice";
-import { PlayerSkills } from "./game/interfaces/types";
+import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections } from "./store/playerSlice";
+import { clearAllFeedback } from "./store/combatFeedbackSlice";
+import { PlayerSkills, Player } from "./game/interfaces/types";
 import { DEFAULT_SKILLS } from "./game/interfaces/player";
 import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
+import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import "./App.css";
 
 const layoutShellStyle: CSSProperties = {
@@ -244,6 +247,14 @@ const hasPersistedGame = (): boolean => {
   }
 };
 
+const getRemainingPerks = (player: Player) => listPerks().filter((definition) => !player.perks.includes(definition.id));
+
+const getSelectablePerks = (player: Player) => {
+  return getRemainingPerks(player)
+    .map((definition) => evaluatePerkAvailability(player, definition))
+    .filter((availability) => availability.canSelect);
+};
+
 function App() {
   const [gameStarted, setGameStarted] = useState(false);
   const [showMenu, setShowMenu] = useState(true);
@@ -259,6 +270,8 @@ function App() {
   const [showCharacterScreen, setShowCharacterScreen] = useState(false);
   const [pendingPerkSelections, setPendingPerkSelections] = useState(0);
   const [showPerkSelection, setShowPerkSelection] = useState(false);
+  const [levelUpFlowActive, setLevelUpFlowActive] = useState(false);
+  const [showPointAllocation, setShowPointAllocation] = useState(false);
 
   useEffect(() => {
     console.log("[App] Component mounted");
@@ -279,7 +292,7 @@ function App() {
 
       const selections = state.player.data.pendingPerkSelections;
       setPendingPerkSelections(selections);
-      setShowPerkSelection(selections > 0);
+      // Don't auto-open perk selection - let the guided flow handle it
     });
 
     return unsubscribe;
@@ -349,6 +362,9 @@ function App() {
   };
 
   const handleContinueGame = () => {
+    // Clear any lingering combat feedback before resuming
+    store.dispatch(clearAllFeedback());
+
     setGameStarted(true);
     setShowMenu(false);
     setHasSavedGame(true);
@@ -365,13 +381,93 @@ function App() {
     setShowCharacterScreen((prev) => !prev);
   };
 
-  const handleCloseCharacterScreen = () => {
-    setShowCharacterScreen(false);
-  };
-
   const handleLevelUpContinue = () => {
+    if (!levelUpData) return;
+
+    const state = store.getState();
+    const playerState = state.player.data;
+    const pendingSelections = playerState.pendingPerkSelections;
+    const remainingPerks = getRemainingPerks(playerState);
+    const selectablePerks = getSelectablePerks(playerState);
+    const hasPerksToReview = pendingSelections > 0;
+    const hasSelectablePerks = selectablePerks.length > 0;
+    const hasPoints = playerState.skillPoints > 0 || playerState.attributePoints > 0;
+
+    setLevelUpFlowActive(hasPerksToReview || hasPoints);
+
     store.dispatch(consumeLevelUpEvent());
     setLevelUpData(null);
+
+    if (hasPerksToReview && remainingPerks.length > 0) {
+      if (!hasSelectablePerks) {
+        console.info('[LevelUp] Perk selections available but current requirements are unmet. Player may need to allocate points first.');
+      }
+      setShowPerkSelection(true);
+    } else if (hasPerksToReview && remainingPerks.length === 0) {
+      store.dispatch(clearPendingPerkSelections());
+      if (hasPoints) {
+        setShowPointAllocation(true);
+      } else {
+        setLevelUpFlowActive(false);
+      }
+    } else if (hasPoints) {
+      setShowPointAllocation(true);
+    } else {
+      setLevelUpFlowActive(false);
+    }
+  };
+
+  const handlePerkSelectionClose = () => {
+    setShowPerkSelection(false);
+
+    if (!levelUpFlowActive) {
+      return;
+    }
+
+    const playerState = store.getState().player.data;
+    const pendingSelections = playerState.pendingPerkSelections;
+    const hasPointsRemaining = playerState.skillPoints > 0 || playerState.attributePoints > 0;
+    const remainingPerks = getRemainingPerks(playerState);
+    const selectablePerks = getSelectablePerks(playerState);
+
+    if (pendingSelections > 0 && selectablePerks.length === 0 && remainingPerks.length === 0) {
+      store.dispatch(clearPendingPerkSelections());
+    }
+
+    if (hasPointsRemaining) {
+      setShowPointAllocation(true);
+      return;
+    }
+
+    setLevelUpFlowActive(false);
+  };
+
+  const handleCharacterScreenClose = () => {
+    setShowCharacterScreen(false);
+
+    if (levelUpFlowActive) {
+      setLevelUpFlowActive(false);
+    }
+  };
+
+  const handlePointAllocationComplete = () => {
+    setShowPointAllocation(false);
+
+    const playerState = store.getState().player.data;
+    const pendingSelections = playerState.pendingPerkSelections;
+    const remainingPerks = getRemainingPerks(playerState);
+    const selectablePerks = getSelectablePerks(playerState);
+
+    if (pendingSelections > 0 && selectablePerks.length > 0) {
+      setShowPerkSelection(true);
+      return;
+    }
+
+    if (pendingSelections > 0 && selectablePerks.length === 0 && remainingPerks.length === 0) {
+      store.dispatch(clearPendingPerkSelections());
+    }
+
+    setLevelUpFlowActive(false);
   };
 
   const handleDismissXPNotification = (id: string) => {
@@ -415,9 +511,14 @@ function App() {
       <PerkSelectionPanel
         open={showPerkSelection}
         pendingSelections={pendingPerkSelections}
-        onClose={() => setShowPerkSelection(false)}
+        onClose={handlePerkSelectionClose}
       />
-      <CharacterScreen open={showCharacterScreen} onClose={handleCloseCharacterScreen} />
+      {showPointAllocation && (
+        <LevelUpPointAllocationPanel
+          onComplete={handlePointAllocationComplete}
+        />
+      )}
+      <CharacterScreen open={showCharacterScreen} onClose={handleCharacterScreenClose} />
       <XPNotificationManager
         notifications={xpNotifications}
         onDismiss={handleDismissXPNotification}

@@ -10,153 +10,249 @@ interface LevelUpModalProps {
   onContinue: () => void;
 }
 
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed',
+  inset: 0,
+  backgroundColor: 'rgba(3, 7, 18, 0.85)',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  zIndex: 9999,
+  padding: '2rem',
+};
+
+const modalStyle: React.CSSProperties = {
+  width: 'min(640px, 100%)',
+  borderRadius: '24px',
+  border: '1px solid rgba(56, 189, 248, 0.4)',
+  background: 'linear-gradient(165deg, rgba(15, 23, 42, 0.96), rgba(8, 18, 35, 0.96))',
+  boxShadow: '0 40px 100px rgba(2, 6, 23, 0.85)',
+  padding: '2.6rem 2.4rem 2.2rem',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2rem',
+  position: 'relative',
+};
+
+const accentGlowStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: '-25%',
+  background: 'radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%)',
+  pointerEvents: 'none',
+  filter: 'blur(12px)',
+};
+
+const headerStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.6rem',
+  alignItems: 'flex-start',
+};
+
+const badgeStyle: React.CSSProperties = {
+  fontSize: '0.7rem',
+  letterSpacing: '0.32em',
+  textTransform: 'uppercase',
+  color: '#bae6fd',
+  background: 'rgba(56, 189, 248, 0.12)',
+  border: '1px solid rgba(56, 189, 248, 0.35)',
+  borderRadius: '999px',
+  padding: '0.35rem 0.9rem',
+  boxShadow: '0 0 24px rgba(56, 189, 248, 0.35)',
+};
+
+const levelRowStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'baseline',
+  gap: '0.75rem',
+};
+
+const levelLabelStyle: React.CSSProperties = {
+  fontSize: '1.8rem',
+  fontWeight: 600,
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  color: 'rgba(148, 163, 184, 0.85)',
+};
+
+const levelNumberStyle: React.CSSProperties = {
+  fontSize: '3.4rem',
+  fontWeight: 800,
+  lineHeight: 1,
+  ...gradientTextStyle('#bfdbfe', '#38bdf8'),
+  filter: 'drop-shadow(0 0 25px rgba(56, 189, 248, 0.55))',
+};
+
+const subheadingStyle: React.CSSProperties = {
+  fontSize: '0.95rem',
+  color: 'rgba(226, 232, 240, 0.82)',
+  lineHeight: 1.5,
+  maxWidth: '520px',
+};
+
+const rewardsGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+  gap: '0.9rem',
+};
+
+const rewardCardStyle: React.CSSProperties = {
+  borderRadius: '16px',
+  border: '1px solid rgba(148, 163, 184, 0.18)',
+  background: 'linear-gradient(160deg, rgba(21, 31, 53, 0.88), rgba(11, 18, 34, 0.92))',
+  padding: '1rem 1.1rem',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.4rem',
+  position: 'relative',
+  overflow: 'hidden',
+};
+
+const rewardIconStyle: React.CSSProperties = {
+  fontSize: '1.4rem',
+};
+
+const rewardLabelStyle: React.CSSProperties = {
+  fontSize: '0.72rem',
+  letterSpacing: '0.18em',
+  textTransform: 'uppercase',
+  color: 'rgba(148, 163, 184, 0.9)',
+};
+
+const rewardValueStyle: React.CSSProperties = {
+  fontSize: '1.6rem',
+  fontWeight: 700,
+  color: '#e2e8f0',
+};
+
+const rewardHintStyle: React.CSSProperties = {
+  fontSize: '0.72rem',
+  color: 'rgba(148, 163, 184, 0.7)',
+};
+
+const nextStepsStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.5rem',
+};
+
+const stepHeadingStyle: React.CSSProperties = {
+  fontSize: '0.8rem',
+  letterSpacing: '0.22em',
+  textTransform: 'uppercase',
+  color: '#38bdf8',
+};
+
+const stepListStyle: React.CSSProperties = {
+  margin: 0,
+  paddingLeft: '1.1rem',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.4rem',
+  fontSize: '0.82rem',
+  color: 'rgba(226, 232, 240, 0.85)',
+};
+
+const footerStyle: React.CSSProperties = {
+  display: 'flex',
+  justifyContent: 'flex-end',
+};
+
 export const LevelUpModal: React.FC<LevelUpModalProps> = ({
   newLevel,
   skillPointsEarned,
   attributePointsEarned,
   perksUnlocked,
-  onContinue
+  onContinue,
 }) => {
-  const overlayStyle: React.CSSProperties = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 9999,
-    animation: 'fadeIn 0.3s ease-in'
-  };
+  const rewardCards = [
+    {
+      key: 'skill',
+      visible: skillPointsEarned > 0,
+      icon: '🧠',
+      label: 'Skill points',
+      value: `+${skillPointsEarned}`,
+      hint: 'Invest to specialise combat, tech, or survival disciplines.',
+    },
+    {
+      key: 'attribute',
+      visible: attributePointsEarned > 0,
+      icon: '⚙️',
+      label: 'Attribute points',
+      value: `+${attributePointsEarned}`,
+      hint: 'Raise core stats to unlock new gear, dialogue, and perks.',
+    },
+    {
+      key: 'perk',
+      visible: perksUnlocked > 0,
+      icon: '⭐',
+      label: 'Perk unlock',
+      value: perksUnlocked === 1 ? '1 pick' : `${perksUnlocked} picks`,
+      hint: 'Select a permanent upgrade once requirements are met.',
+    },
+    {
+      key: 'recovery',
+      visible: true,
+      icon: '❤️',
+      label: 'Vitality',
+      value: 'Restored',
+      hint: 'Health and AP refilled for the next encounter.',
+    },
+  ].filter((reward) => reward.visible);
 
-  const modalStyle: React.CSSProperties = {
-    background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98))',
-    border: '3px solid rgba(56, 189, 248, 0.6)',
-    borderRadius: '20px',
-    padding: '3rem',
-    maxWidth: '600px',
-    width: '90%',
-    textAlign: 'center',
-    boxShadow: '0 25px 50px rgba(0, 0, 0, 0.7), 0 0 100px rgba(56, 189, 248, 0.2)',
-    animation: 'slideUp 0.4s ease-out'
-  };
-
-  const bannerStyle: React.CSSProperties = {
-    fontSize: '3rem',
-    fontWeight: 900,
-    textTransform: 'uppercase',
-    letterSpacing: '0.2rem',
-    marginBottom: '1rem',
-    animation: 'pulse 1.5s ease-in-out infinite',
-    ...gradientTextStyle('#bfdbfe', '#38bdf8'),
-    filter: 'drop-shadow(0 0 30px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 60px rgba(56, 189, 248, 0.4))',
-  };
-
-  const levelStyle: React.CSSProperties = {
-    fontSize: '2rem',
-    fontWeight: 700,
-    color: '#94a3b8',
-    marginBottom: '2rem'
-  };
-
-  const rewardsContainerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '1rem',
-    marginBottom: '2rem'
-  };
-
-  const rewardItemStyle: React.CSSProperties = {
-    background: 'rgba(56, 189, 248, 0.1)',
-    border: '1px solid rgba(56, 189, 248, 0.3)',
-    borderRadius: '12px',
-    padding: '1rem',
-    fontSize: '1.1rem',
-    color: '#e2e8f0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '0.5rem'
-  };
-
-  const highlightStyle: React.CSSProperties = {
-    color: '#38bdf8',
-    fontWeight: 700
-  };
+  const nextSteps = [
+    attributePointsEarned > 0 || skillPointsEarned > 0
+      ? 'Spend your new attribute and skill points to boost key stats.'
+      : null,
+    perksUnlocked > 0
+      ? 'Review newly unlocked perks—requirements may change after allocating points.'
+      : null,
+    'Save progress at a safe terminal before diving back into the operation.',
+  ].filter((step): step is string => Boolean(step));
 
   return (
     <div style={overlayStyle}>
       <div style={modalStyle}>
-        <div style={bannerStyle}>Level Up!</div>
-        <div style={levelStyle}>Level {newLevel}</div>
-
-        <div style={rewardsContainerStyle}>
-          {skillPointsEarned > 0 && (
-            <div style={rewardItemStyle}>
-              <span>Skill Points Earned:</span>
-              <span style={highlightStyle}>+{skillPointsEarned}</span>
-            </div>
-          )}
-
-          {attributePointsEarned > 0 && (
-            <div style={rewardItemStyle}>
-              <span>Attribute Points Earned:</span>
-              <span style={highlightStyle}>+{attributePointsEarned}</span>
-            </div>
-          )}
-
-          {perksUnlocked > 0 && (
-            <div style={rewardItemStyle}>
-              <span style={highlightStyle}>New Perks Available!</span>
-            </div>
-          )}
-
-          <div style={rewardItemStyle}>
-            <span>Health fully restored</span>
+        <div style={accentGlowStyle} />
+        <header style={headerStyle}>
+          <span style={badgeStyle}>Promotion Achieved</span>
+          <div style={levelRowStyle}>
+            <span style={levelLabelStyle}>Operator Level</span>
+            <span style={levelNumberStyle}>{newLevel}</span>
           </div>
-        </div>
+          <p style={subheadingStyle}>
+            You have advanced your capabilities. Allocate your new resources to stay ahead of CorpSec escalation.
+          </p>
+        </header>
 
-        <div style={{ marginTop: '1rem' }}>
-          <EnhancedButton
-            onClick={onContinue}
-            variant="primary"
-            size="large"
-          >
+        <section aria-label="level-up rewards" style={rewardsGridStyle}>
+          {rewardCards.map((reward) => (
+            <article key={reward.key} style={rewardCardStyle}>
+              <span style={rewardIconStyle} aria-hidden="true">{reward.icon}</span>
+              <span style={rewardLabelStyle}>{reward.label}</span>
+              <span style={rewardValueStyle}>{reward.value}</span>
+              <span style={rewardHintStyle}>{reward.hint}</span>
+            </article>
+          ))}
+        </section>
+
+        {nextSteps.length > 0 && (
+          <section style={nextStepsStyle} aria-label="Next actions">
+            <span style={stepHeadingStyle}>Next Steps</span>
+            <ol style={stepListStyle}>
+              {nextSteps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </section>
+        )}
+
+        <footer style={footerStyle}>
+          <EnhancedButton onClick={onContinue} variant="primary" size="large">
             Continue
           </EnhancedButton>
-        </div>
+        </footer>
       </div>
-
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(50px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          50% {
-            transform: scale(1.05);
-            opacity: 0.9;
-          }
-        }
-      `}</style>
     </div>
   );
 };

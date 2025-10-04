@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { SUPPORTED_LOCALES, Locale } from "../../content/locales";
 import { getUIStrings } from "../../content/ui";
-import { setLocale } from "../../store/settingsSlice";
+import { setLocale, setTestMode } from "../../store/settingsSlice";
 import { applyLocaleToQuests } from "../../store/questsSlice";
 import { applyLocaleToWorld } from "../../store/worldSlice";
 import { RootState, AppDispatch } from "../../store";
@@ -22,6 +22,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const testMode = useSelector((state: RootState) => state.settings.testMode);
   const strings = getUIStrings(locale);
 
   const handleLocaleSelect = (nextLocale: Locale) => {
@@ -32,6 +33,10 @@ const GameMenu: React.FC<GameMenuProps> = ({
     dispatch(setLocale(nextLocale));
     dispatch(applyLocaleToQuests(nextLocale));
     dispatch(applyLocaleToWorld(nextLocale));
+  };
+
+  const handleTestModeToggle = () => {
+    dispatch(setTestMode(!testMode));
   };
 
   return (
@@ -52,7 +57,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
     >
       <div
         style={{
-          width: "min(420px, 90%)",
+          width: "min(580px, 90%)",
           padding: "2.5rem",
           borderRadius: "18px",
           backgroundColor: "rgba(15,23,42,0.92)",
@@ -155,64 +160,136 @@ const GameMenu: React.FC<GameMenuProps> = ({
         <div
           style={{
             marginTop: "2rem",
-            padding: "1.25rem",
+            padding: "1.5rem",
             borderRadius: "14px",
             border: "1px solid rgba(148,163,184,0.25)",
             backgroundColor: "rgba(15,23,42,0.6)",
             display: "flex",
             flexDirection: "column",
-            gap: "1rem",
+            gap: "1.5rem",
           }}
         >
-          <div>
+          {/* Settings Header */}
+          <div style={{ borderBottom: "1px solid rgba(148,163,184,0.15)", paddingBottom: "0.75rem" }}>
             <h2
               style={{
-                fontSize: "1.15rem",
+                fontSize: "1.1rem",
                 fontWeight: 600,
                 margin: 0,
-                marginBottom: "0.35rem",
+                color: "#e2e8f0",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
               }}
             >
               {strings.menu.settingsHeading}
             </h2>
-            <p
+          </div>
+
+          {/* Language Section */}
+          <div>
+            <label
               style={{
-                fontSize: "0.85rem",
-                color: "#cbd5f5",
-                margin: 0,
+                display: "block",
+                fontSize: "0.8rem",
+                color: "#94a3b8",
+                marginBottom: "0.65rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                fontWeight: 600,
               }}
             >
               {strings.menu.languageLabel}
-            </p>
+            </label>
+            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+              {SUPPORTED_LOCALES.map((localeOption) => {
+                const isActive = localeOption === locale;
+                return (
+                  <button
+                    type="button"
+                    key={localeOption}
+                    onClick={() => handleLocaleSelect(localeOption)}
+                    style={{
+                      padding: "0.6rem 1.1rem",
+                      borderRadius: "8px",
+                      border: isActive
+                        ? "2px solid rgba(56,189,248,0.6)"
+                        : "1px solid rgba(148,163,184,0.25)",
+                      backgroundColor: isActive
+                        ? "rgba(56,189,248,0.15)"
+                        : "rgba(30,41,59,0.5)",
+                      color: isActive ? "#e2e8f0" : "#94a3b8",
+                      fontSize: "0.9rem",
+                      fontWeight: isActive ? 600 : 400,
+                      letterSpacing: "0.03em",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      boxShadow: isActive ? "0 0 15px rgba(56,189,248,0.2)" : "none",
+                    }}
+                  >
+                    {strings.menu.languageNames[localeOption]}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-            {SUPPORTED_LOCALES.map((localeOption) => {
-              const isActive = localeOption === locale;
-              return (
-                <button
-                  type="button"
-                  key={localeOption}
-                  onClick={() => handleLocaleSelect(localeOption)}
+
+          {/* Test Mode Section (Dev Only) */}
+          {process.env.NODE_ENV === 'development' && (
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.8rem",
+                  color: "#94a3b8",
+                  marginBottom: "0.65rem",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  fontWeight: 600,
+                }}
+              >
+                Developer Options
+              </label>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(30,41,59,0.5)",
+                  border: "1px solid rgba(148,163,184,0.25)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.7)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.5)";
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={testMode}
+                  onChange={handleTestModeToggle}
                   style={{
-                    padding: "0.5rem 0.9rem",
-                    borderRadius: "999px",
-                    border: isActive
-                      ? "1px solid rgba(96,165,250,0.75)"
-                      : "1px solid rgba(148,163,184,0.3)",
-                    backgroundColor: isActive
-                      ? "rgba(37,99,235,0.35)"
-                      : "rgba(15,23,42,0.6)",
-                    color: isActive ? "#e2e8f0" : "#94a3b8",
-                    fontSize: "0.85rem",
-                    letterSpacing: "0.05em",
+                    width: "20px",
+                    height: "20px",
                     cursor: "pointer",
+                    accentColor: "#38bdf8",
                   }}
-                >
-                  {strings.menu.languageNames[localeOption]}
-                </button>
-              );
-            })}
-          </div>
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.95rem", color: "#e2e8f0", fontWeight: 500 }}>
+                    Test Mode
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.15rem" }}>
+                    Enable testing tools and shortcuts
+                  </div>
+                </div>
+              </label>
+            </div>
+          )}
         </div>
 
         <div

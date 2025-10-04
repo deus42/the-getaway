@@ -83,7 +83,11 @@ export const calculateSkillPointsAwarded = (intelligence: number): number => {
  * @returns True if attribute point should be awarded
  */
 export const shouldAwardAttributePoint = (level: number): boolean => {
-  return level > 0;
+  if (level <= 0) {
+    return false;
+  }
+
+  return level % 3 === 0;
 };
 
 /**
