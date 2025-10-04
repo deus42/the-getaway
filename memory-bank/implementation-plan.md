@@ -938,6 +938,136 @@ Reach level 2 and verify perk selection modal appears automatically. View availa
 </test>
 </step>
 
+<step id="24.5">
+<step_metadata>
+  <number>24.5</number>
+  <title>Stamina System - Core Resource Pool (MVP)</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 24.2 completed (skill tree system with derived stats)
+- Step 23 completed (S.P.E.C.I.A.L attributes defined)
+</prerequisites>
+
+<instructions>
+Add stamina as a third core resource (alongside Health and AP) that governs physical exertion, with basic costs, regeneration, and exhaustion penalties.
+</instructions>
+
+<details>
+**Core Stamina Mechanics:**
+- Add `stamina`, `maxStamina`, `isExhausted` to Player interface in `src/game/interfaces/types.ts`
+- Base calculation: `maxStamina = 50 + (player.skills.endurance × 5)`
+- Passive regeneration: +5 stamina per turn (in `endTurn` reducer)
+- Exhaustion threshold: stamina < 30% triggers `isExhausted = true`
+
+**Stamina Costs:**
+- Movement: 2 stamina per tile
+- Melee attack: 4 stamina
+- Ranged attack (pistol/rifle): 3 stamina
+- Heavy attack (explosives/heavy weapons): 5 stamina
+- Actions fail if stamina < cost (show warning tooltip)
+
+**Exhaustion Penalties (when isExhausted = true):**
+- Hit chance: -10%
+- Damage dealt: -10%
+- Cannot perform actions requiring > 5 stamina (too exhausting)
+
+**Level-Up Integration:**
+- Full stamina restore when player levels up (add to `addExperience` reducer on level threshold)
+- Show stamina preview in `LevelUpPointAllocationPanel` when allocating Endurance (+5 max stamina per point)
+
+**Combat System Integration:**
+- Extend `executeMove` in `combatSystem.ts` to consume 2 stamina
+- Extend `executeAttack` to consume stamina based on weapon type
+- Apply exhaustion penalties to hit/damage calculations when `player.isExhausted`
+- Check stamina availability before allowing actions
+
+**UI Components:**
+- Add `AnimatedStatBar` for stamina in `PlayerSummaryPanel` (green palette: #22c55e)
+- Show exhaustion indicator when stamina < 30% (reuse `StatusEffectIcon` pattern)
+- Display stamina costs in combat action tooltips
+- Update `LevelUpPointAllocationPanel` to show stamina preview when hovering Endurance
+
+**Redux State (`playerSlice.ts`):**
+- New fields: `stamina: number`, `maxStamina: number`, `isExhausted: boolean`
+- New reducers:
+  - `consumeStamina(state, action: PayloadAction<number>)`
+  - `regenerateStamina(state)` - called in `endTurn`
+  - `updateMaxStamina(state)` - called when Endurance changes
+- Modified reducer: `addExperience` - restore stamina to max on level-up
+
+**Content Files:**
+- Create `src/game/combat/staminaCosts.ts`:
+  ```typescript
+  export const STAMINA_COSTS = {
+    movement: 2,
+    meleeAttack: 4,
+    rangedAttack: 3,
+    heavyAttack: 5,
+  };
+
+  export const STAMINA_REGEN = 5;
+  export const EXHAUSTION_THRESHOLD = 0.3; // 30%
+  ```
+
+**Derived Stats Update:**
+- Modify `calculateDerivedStats` in `src/game/systems/statCalculations.ts`:
+  ```typescript
+  maxStamina: 50 + (attributes.endurance * 5),
+  ```
+
+**Locale Strings:**
+- Add to `content/ui/index.ts` (en/uk):
+  - "Stamina"
+  - "Exhausted"
+  - Tooltip: "Not enough stamina"
+  - Combat log: "Too exhausted to act effectively"
+</details>
+
+<test>
+**Unit Tests:**
+- `playerSlice.test.ts`:
+  - Player with Endurance 5 has maxStamina 75 (50 + 25)
+  - `consumeStamina(10)` reduces stamina by 10
+  - `regenerateStamina()` increases stamina by 5 (capped at max)
+  - `isExhausted` = true when stamina < 30%, false otherwise
+  - Level-up restores stamina to max
+
+- `combat.test.ts`:
+  - Movement consumes 2 stamina
+  - Melee attack consumes 4 stamina
+  - Ranged attack consumes 3 stamina
+  - Exhausted player has -10% hit chance and damage
+  - Action fails gracefully if stamina insufficient
+
+- `statCalculations.test.ts`:
+  - Derived stats include correct maxStamina calculation
+
+**Integration Tests:**
+- Create player with Endurance 8 → maxStamina = 90
+- Move 10 times → stamina drops by 20 → verify 70 remaining
+- Perform 15 melee attacks → stamina depletes to <30% → exhaustion triggers
+- Exhausted player attacks enemy → verify -10% hit and damage applied
+- Player levels up mid-combat → stamina restores to max
+- Allocate +1 Endurance in level-up panel → preview shows "+5 max stamina"
+
+**Visual Tests:**
+- Load game → green stamina bar appears below red health bar
+- Deplete stamina to <30% → bar turns yellow/orange, exhaustion icon appears
+- Attempt action with insufficient stamina → red warning tooltip shows "Not enough stamina (need 4, have 2)"
+- Level up → stamina bar animates from current value to max with smooth fill
+
+**Gameplay Balance:**
+- Average combat (5 turns): Player can move + attack 3-4 times before exhaustion
+- High Endurance build (Endurance 10): 100 max stamina, sustains 6+ turns
+- Low Endurance build (Endurance 3): 65 max stamina, exhausts after 4 turns
+- Stamina regen (5/turn) allows recovery during defensive play
+
+yarn build && yarn test
+</test>
+</step>
+
 <step id="25">
 <step_metadata>
   <number>25</number>
@@ -1728,6 +1858,122 @@ Travel to Industrial Wasteland via Downtown eastern gate and verify entry warnin
 
 <phase id="9" name="Optional Expansions (POST-MVP)">
 <!-- NOTE: Steps 27.1, 27.2, and 28.1 are located earlier in the document (after Step 26.3) but belong to Phase 9 conceptually. They are marked POST-MVP and should be deferred to v1.1+ after core game is stable. -->
+
+<step id="26.1">
+<step_metadata>
+  <number>26.1</number>
+  <title>Advanced Stamina - Day/Night, Fatigue & Environmental Systems</title>
+  <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 24.5 completed (core stamina system MVP)
+- Step 8 completed (day/night cycle functional)
+</prerequisites>
+
+<instructions>
+Expand the core stamina system with day/night modifiers, circadian fatigue, environmental effects, advanced perks, and rest mechanics.
+</instructions>
+
+<details>
+**Day/Night Stamina Modifiers:**
+- Day (6AM-10PM): Normal stamina costs, normal regen
+- Night (10PM-6AM): +25% stamina costs, -2 regen (exhaustion, stress, poor visibility)
+- Curfew zones at night: Additional -3 stamina per turn (paranoia drain)
+- Display time-of-day modifier in `DayNightIndicator` component
+
+**Circadian Fatigue System:**
+- Track `hoursAwake` in player state (increments with in-game time)
+- After 8 hours awake: Max stamina -10% per additional hour
+- Sleep at safehouse: Reset fatigue, restore full stamina
+- Consumables (Coffee, Stims): Delay fatigue 2 hours, then accelerate accumulation
+- All-nighter penalty: After 16 hours awake, permanent exhaustion state until rest
+
+**Environmental Effects:**
+- Industrial zones: -2 stamina per turn (pollution exposure)
+- Heat/weather events: +20% stamina costs during active weather
+- Rough terrain tiles: Double movement stamina cost (4 instead of 2)
+- Toxic areas: -1 stamina regen while exposed
+
+**Advanced Perks & Abilities:**
+- **Conditioning** skill (Survival tree, 0-100): Reduce stamina costs by 0.5% per point (max 50% at 100)
+- **Second Wind** perk (Survival, Medicine 40): Auto-restore 40 stamina when dropping below 10 (once per combat)
+- **Battle Trance** ability (Level 15+, Combat tree): Ignore stamina costs for 3 turns, then crash to 10 stamina with -3 regen for 2 turns
+- **Iron Lungs** perk (Survival, Endurance 7): +25% stamina regeneration rate
+
+**Rest & Recovery System:**
+- Create `src/game/world/rest.ts` for sleep mechanics
+- Safehouse sleep options:
+  - **Quick Rest** (1 hour in-game): Restore 50% stamina, remove minor fatigue
+  - **Full Sleep** (6 hours): Restore 100% stamina, reset circadian fatigue, advance time to morning
+  - **Catnap** (30 min): Restore 25% stamina, slight fatigue reduction
+- **Sleeping Bag** item (craftable): Rest anywhere with 25% random encounter risk per hour
+- Build `RestMenuPanel.tsx` showing rest options with time/stamina trade-offs
+
+**Food/Water Integration:**
+- Well-fed status (ate within 2 hours): +2 stamina regen
+- Hungry (6+ hours no food): -1 regen
+- Dehydrated (4+ hours no water): -2 regen, all costs +10%
+- Meal quality tiers: Rations (basic), Cooked (+5 instant, well-fed), Gourmet (+10 instant, +3 regen for 1 hour)
+
+**Redux State Extensions (`playerSlice.ts`):**
+- New fields: `hoursAwake: number`, `fatigueLevel: number`, `lastMealTime: number`, `lastDrinkTime: number`
+- New reducers:
+  - `applyTimeOfDayStaminaModifier(state)`
+  - `incrementFatigue(state, hoursElapsed)`
+  - `resetFatigue(state)`
+  - `updateHungerThirst(state)`
+- Hook into world time updates to track hours awake and hunger/thirst
+
+**UI Enhancements:**
+- Add `CircadianFatigueTracker` widget showing hours awake with warning at 8+ hours
+- Update `DayNightIndicator` to show current stamina cost modifier ("+25% costs" at night)
+- Create `RestMenuPanel` with visual time/stamina previews
+- Show environmental stamina effects in status panel (pollution icon, terrain icon)
+
+**Implementation Files:**
+- `src/game/world/rest.ts`: Sleep/rest mechanics and encounter checks
+- `src/content/consumables.ts`: Coffee, stims, meals with stamina effects
+- `src/content/perks.ts`: Conditioning, Second Wind, Iron Lungs, Battle Trance
+- `src/components/ui/CircadianFatigueTracker.tsx`: Hours awake display
+- `src/components/ui/RestMenuPanel.tsx`: Sleep options interface
+</details>
+
+<test>
+**Day/Night Integration:**
+- Fight same enemy at day vs night → verify night costs 25% more stamina per action
+- Enter curfew zone at night → stamina drains 3/turn passively
+- Sunrise transition → verify stamina costs return to normal and regen increases by 2
+
+**Fatigue System:**
+- Play for 8 in-game hours without rest → verify max stamina reduced by 10%
+- Continue to 12 hours awake → verify max stamina reduced by 40%
+- Sleep at safehouse (Full Sleep) → fatigue resets, stamina fully restored
+- Drink Coffee → fatigue delayed 2 hours, then accelerates
+
+**Environmental Effects:**
+- Enter Industrial Wasteland → -2 stamina drain per turn from pollution
+- Move through rough terrain → movement costs 4 stamina instead of 2
+- Heat wave event triggers → all actions cost +20% stamina
+
+**Advanced Abilities:**
+- Allocate 50 Conditioning skill points → verify 25% stamina cost reduction
+- Drop below 10 stamina with Second Wind perk → auto-restore 40 stamina (once per combat)
+- Activate Battle Trance at 15 stamina → spend 60 stamina over 3 turns (costs ignored) → crash to 10 stamina with -3 regen penalty
+
+**Rest System:**
+- Open Rest Menu at safehouse → see Quick Rest, Full Sleep, Catnap options
+- Choose Full Sleep → 6 hours pass, stamina restored, fatigue reset, time advances to morning
+- Use Sleeping Bag in wilderness → 25% chance encounter interrupts sleep with partial restore
+
+**Food/Water:**
+- Eat cooked meal → gain Well-Fed buff (+2 regen for 2 hours)
+- Go 6 hours without food → Hungry debuff (-1 regen)
+- Go 4 hours without water → Dehydrated (-2 regen, +10% costs)
+
+yarn build && yarn test
+</test>
+</step>
 </phase>
 
 <phase id="10" name="Testing, Polish, and Release">

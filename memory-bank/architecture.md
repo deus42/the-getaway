@@ -781,6 +781,148 @@ The combat system is thoroughly tested with:
 
 This combat architecture provides a foundation for tactical gameplay and can be extended with additional features like different weapon types, special abilities, and more complex enemy behaviors.
 
+<architecture_section id="stamina_system" category="resource_management">
+## Stamina System
+
+<design_principles>
+- Separate stamina from AP to create dual-resource combat economy: AP governs turn actions, stamina governs sustained effort
+- Integrate stamina with Endurance attribute for natural stat scaling
+- Layer MVP (core mechanics) and advanced features (environmental/time-based) for incremental complexity
+- Keep stamina regeneration passive to avoid micromanagement while rewarding defensive play
+</design_principles>
+
+<pattern name="Core Stamina Resource (MVP - Step 24.5)">
+### State Management
+- Extend `Player` interface in <code_location>src/game/interfaces/types.ts</code_location>:
+  ```typescript
+  interface Player extends Entity {
+    // ... existing fields
+    stamina: number;
+    maxStamina: number;
+    isExhausted: boolean;
+  }
+  ```
+- Redux state in <code_location>src/store/playerSlice.ts</code_location>:
+  - New reducers: `consumeStamina(amount)`, `regenerateStamina()`, `updateMaxStamina()`
+  - `endTurn` calls `regenerateStamina()` to add +5 stamina per turn (capped at max)
+  - `addExperience` restores stamina to max on level-up threshold
+
+### Combat Integration
+- <code_location>src/game/combat/combatSystem.ts</code_location>:
+  - `executeMove` consumes 2 stamina per tile before moving
+  - `executeAttack` consumes 3-5 stamina based on weapon type (defined in `staminaCosts.ts`)
+  - Check `player.stamina >= cost` before allowing actions
+  - Apply exhaustion penalties when `player.isExhausted === true`:
+    - Hit chance: `baseHitChance * 0.9` (-10%)
+    - Damage: `baseDamage * 0.9` (-10%)
+
+### Derived Stats
+- <code_location>src/game/systems/statCalculations.ts</code_location>:
+  ```typescript
+  export function calculateDerivedStats(attributes: PlayerSkills): DerivedStats {
+    return {
+      // ... existing stats
+      maxStamina: 50 + (attributes.endurance * 5),
+    };
+  }
+  ```
+- Called when Endurance changes during level-up or character creation
+
+### UI Components
+- <code_location>src/components/ui/PlayerSummaryPanel.tsx</code_location>:
+  - Add second `AnimatedStatBar` component below health bar
+  - Green palette: `#22c55e` (healthy), transitions to yellow/orange when < 30%
+  - Props: `label="Stamina"`, `current={player.stamina}`, `max={player.maxStamina}`
+- <code_location>src/components/ui/StatusEffectIcon.tsx</code_location>:
+  - Reuse existing pattern to show exhaustion indicator when `isExhausted === true`
+  - Icon appears with tooltip: "Exhausted: -10% hit chance, -10% damage"
+- <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location>:
+  - Show stamina preview when hovering Endurance: "+5 max stamina per point"
+</pattern>
+
+<pattern name="Advanced Stamina Features (POST-MVP - Step 26.1)">
+### Time-of-Day Integration
+- <code_location>src/store/worldSlice.ts</code_location>:
+  - Subscribe to `timeOfDay` changes (morning/day/evening/night)
+  - Dispatch `applyTimeOfDayStaminaModifier()` on time transitions
+  - Night (10PM-6AM): Multiply stamina costs by 1.25, reduce regen by 2
+  - Curfew zones: Additional -3 stamina drain per turn
+
+### Circadian Fatigue
+- Extend `Player` state:
+  ```typescript
+  interface Player {
+    // ... existing fields
+    hoursAwake: number;
+    fatigueLevel: number; // 0-100, calculated from hoursAwake
+  }
+  ```
+- <code_location>src/store/playerSlice.ts</code_location>:
+  - `incrementFatigue(hoursElapsed)`: Increase `hoursAwake`, recalculate `fatigueLevel`
+  - After 8 hours: `maxStamina *= (1 - (hoursAwake - 8) * 0.1)`
+  - `resetFatigue()`: Set `hoursAwake = 0`, restore `maxStamina` to base
+
+### Environmental Effects
+- <code_location>src/game/world/grid.ts</code_location>:
+  - Extend `MapTile` interface with `staminaDrain?: number` and `staminaCostMultiplier?: number`
+  - Industrial tiles: `staminaDrain: 2` (passive drain per turn)
+  - Rough terrain tiles: `staminaCostMultiplier: 2` (double movement cost)
+- <code_location>src/store/worldSlice.ts</code_location>:
+  - Track active weather events (heat wave, toxic fog) with stamina modifiers
+  - Apply global stamina cost multipliers during active events
+
+### Rest & Recovery
+- <code_location>src/game/world/rest.ts</code_location>:
+  ```typescript
+  export interface RestOption {
+    id: 'quickRest' | 'fullSleep' | 'catnap';
+    duration: number; // in-game hours
+    staminaRestore: number; // percentage or absolute
+    resetsFatigue: boolean;
+    encounterRisk?: number; // 0-100, for sleeping bag
+  }
+
+  export function executeRest(option: RestOption, location: 'safehouse' | 'wilderness'): RestResult;
+  ```
+- <code_location>src/components/ui/RestMenuPanel.tsx</code_location>:
+  - Display rest options with time cost and stamina preview
+  - Show warning if using Sleeping Bag (encounter risk)
+  - Update world time and trigger fatigue reset on completion
+
+### Advanced Perks
+- <code_location>src/content/perks.ts</code_location>:
+  - Conditioning (reduces all stamina costs by skill level * 0.5%)
+  - Second Wind (auto-restore 40 stamina when < 10, once per combat)
+  - Battle Trance (ignore costs for 3 turns, then crash)
+  - Iron Lungs (+25% stamina regen)
+- Runtime checks in combat system and perk activation handlers
+</pattern>
+
+<technical_flow>
+**MVP Flow (Step 24.5):**
+1. Player selects action (move/attack) → UI shows stamina cost in tooltip
+2. `GameController` dispatches action → Redux reducer checks `player.stamina >= cost`
+3. If sufficient: Consume stamina, execute action, check if `stamina < maxStamina * 0.3` → set `isExhausted`
+4. If insufficient: Show warning toast, prevent action
+5. End of turn: `endTurn` reducer adds +5 stamina (capped at max)
+6. Level-up: `addExperience` detects level threshold → restore stamina to max
+
+**Advanced Flow (Step 26.1):**
+1. World time advances → `incrementFatigue` → recalculate max stamina based on hours awake
+2. Player enters Industrial tile → apply `-2 stamina drain` per turn passively
+3. Night transition → apply `+25% cost modifier` to all actions
+4. Player opens rest menu → select Full Sleep → execute rest, reset fatigue, advance time 6 hours
+5. Conditioning perk active → reduce all costs by `(skillLevel * 0.005)`
+</technical_flow>
+
+<code_location>src/game/combat/staminaCosts.ts</code_location>
+<code_location>src/store/playerSlice.ts</code_location>
+<code_location>src/game/systems/statCalculations.ts</code_location>
+<code_location>src/components/ui/PlayerSummaryPanel.tsx</code_location>
+<code_location>src/components/ui/CircadianFatigueTracker.tsx</code_location>
+<code_location>src/game/world/rest.ts</code_location>
+</architecture_section>
+
 ## Grid Rendering System
 
 The grid rendering system is a core visual component that displays the game map, which serves as the foundation for player movement, enemy positioning, and tactical gameplay.

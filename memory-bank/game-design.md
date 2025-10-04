@@ -90,6 +90,80 @@ The AP system means characters with higher agility or certain perks get more don
 </balance_values>
 </mechanic>
 
+<mechanic name="stamina_system">
+<balance_values system="stamina">
+<implementation_status>⚠️ PARTIAL - MVP in Step 24.5, Advanced features in Step 26.1</implementation_status>
+
+Stamina - Sustained Effort Resource
+
+Stamina is a third core resource (alongside Health and AP) that represents physical exertion and fatigue. Unlike AP which refreshes each turn, stamina depletes over multiple turns and regenerates slowly, creating strategic resource management across prolonged engagements.
+
+**Core Stamina Pool (MVP - Step 24.5):**
+	•	Base Stamina: 50 + (Endurance × 5)
+		○	Low Endurance (3): 65 stamina
+		○	Medium Endurance (5): 75 stamina
+		○	High Endurance (8): 90 stamina
+		○	Maximum Endurance (10): 100 stamina
+	•	Regeneration: +5 stamina per turn (passive, automatic)
+	•	Full Restore: Stamina refills to max on level-up (like health)
+
+**Stamina Costs (MVP):**
+	•	Movement: 2 stamina per tile (in addition to 1 AP)
+	•	Melee Attack: 4 stamina (physical exertion)
+	•	Ranged Attack: 3 stamina (aiming, recoil management)
+	•	Heavy Attack: 5 stamina (explosives, heavy weapons)
+	•	Actions fail if stamina < required cost
+
+**Exhaustion Penalties (MVP):**
+When stamina drops below 30%, the character becomes exhausted:
+	•	Hit Chance: -10%
+	•	Damage Dealt: -10%
+	•	Cannot perform actions requiring > 5 stamina
+	•	Visual indicator: Green stamina bar turns yellow/orange, breathing animation, exhaustion icon
+
+**Tactical Implications:**
+	•	AP limits what you can do this turn; stamina limits what you can sustain across multiple turns
+	•	Aggressive play (constant attacking/movement) causes exhaustion
+	•	Defensive play allows stamina recovery
+	•	High Endurance builds can sustain 6+ turn engagements; low Endurance exhausts after 3-4 turns
+	•	Level-up timing becomes tactical: full stamina restore can turn the tide of difficult fights
+
+**Advanced Stamina Features (POST-MVP - Step 26.1):**
+These features expand stamina into environmental and survival systems:
+
+	•	Day/Night Modifiers:
+		○	Day (6AM-10PM): Normal costs, normal regen
+		○	Night (10PM-6AM): +25% costs, -2 regen (exhaustion from stress, poor visibility)
+		○	Curfew zones: Additional -3 stamina/turn (paranoia drain)
+
+	•	Circadian Fatigue:
+		○	Track hours awake; after 8 hours, max stamina -10% per additional hour
+		○	Sleep at safehouse resets fatigue and restores stamina
+		○	Consumables (Coffee, Stims) delay fatigue but accelerate later
+		○	All-nighter (16+ hours): Permanent exhaustion until rest
+
+	•	Environmental Effects:
+		○	Industrial zones: -2 stamina/turn (pollution)
+		○	Rough terrain: Double movement cost (4 stamina)
+		○	Heat waves: +20% all costs
+		○	Toxic areas: -1 regen while exposed
+
+	•	Advanced Perks & Skills:
+		○	Conditioning (Survival skill, 0-100): Reduce costs by 0.5%/point (max 50% at 100)
+		○	Second Wind (Perk): Auto-restore 40 stamina when < 10 (once per combat)
+		○	Battle Trance (Level 15+ ability): Ignore costs for 3 turns, then crash
+		○	Iron Lungs (Perk): +25% stamina regen
+
+	•	Rest & Recovery:
+		○	Safehouse options: Quick Rest (50% restore), Full Sleep (100% + reset fatigue)
+		○	Sleeping Bag: Rest anywhere with encounter risk
+		○	Food/Water: Well-fed +2 regen, Hungry/Dehydrated penalties
+
+**Design Philosophy:**
+Stamina adds depth without overwhelming complexity. The MVP provides immediate tactical decisions (when to push vs recover), while advanced features integrate stamina into the living world (time, environment, survival). Both systems reward strategic planning: players who manage resources across day/night cycles, plan rest stops, and invest in Endurance/Survival builds gain significant advantages in prolonged conflicts and dangerous zones.
+</balance_values>
+</mechanic>
+
 <mechanic name="cover_line_of_sight">
 Cover & Line-of-Sight
 
