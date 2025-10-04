@@ -6,33 +6,19 @@ import { getPerkDefinition, PerkDefinition } from '../../content/perks';
 import { PerkId } from '../../game/interfaces/types';
 import Tooltip, { TooltipContent } from './Tooltip';
 import {
-  neonPalette,
-  panelSurface,
-  cardSurface,
-  badgeSurface,
-  headingStyle,
+  characterPanelSurface,
+  characterPanelHeaderStyle,
+  characterPanelLabelStyle,
+  characterPanelTitleStyle,
   subtleText,
   statValueStyle,
 } from './theme';
 
 const panelStyle: React.CSSProperties = {
+  ...characterPanelSurface,
   display: 'flex',
   flexDirection: 'column',
   gap: '0.75rem',
-  padding: '0.9rem 1rem',
-  borderRadius: '18px',
-  background: panelSurface.background,
-  border: panelSurface.border,
-  boxShadow: panelSurface.boxShadow,
-  backdropFilter: panelSurface.backdropFilter,
-  color: neonPalette.textPrimary,
-  fontFamily: '"DM Sans", "Inter", sans-serif',
-};
-
-const titleStyle: React.CSSProperties = {
-  ...headingStyle,
-  fontSize: '0.72rem',
-  letterSpacing: '0.22em',
 };
 
 const cardStyle: React.CSSProperties = {
@@ -40,11 +26,10 @@ const cardStyle: React.CSSProperties = {
   flexDirection: 'column',
   gap: '0.35rem',
   padding: '0.65rem 0.75rem',
-  borderRadius: '14px',
-  background: cardSurface.background,
-  border: cardSurface.border,
-  boxShadow: cardSurface.boxShadow,
-  color: neonPalette.textPrimary,
+  borderRadius: '10px',
+  background: 'rgba(30, 41, 59, 0.55)',
+  border: '1px solid rgba(148, 163, 184, 0.22)',
+  color: '#e2e8f0',
   fontSize: '0.68rem',
 };
 
@@ -55,14 +40,15 @@ const cardTitleStyle: React.CSSProperties = {
 };
 
 const badgeStyle = (accent: string): React.CSSProperties => ({
-  ...badgeSurface(accent),
   alignSelf: 'flex-start',
-  padding: '0.25rem 0.45rem',
+  padding: '0.22rem 0.45rem',
   borderRadius: '999px',
   fontSize: '0.56rem',
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
-  background: `${accent}26`,
+  border: `1px solid ${accent}`,
+  color: accent,
+  background: 'rgba(15, 23, 42, 0.7)',
 });
 
 const statRowStyle: React.CSSProperties = {
@@ -70,7 +56,7 @@ const statRowStyle: React.CSSProperties = {
   justifyContent: 'space-between',
   alignItems: 'center',
   fontSize: '0.64rem',
-  color: neonPalette.textSecondary,
+  color: 'rgba(226, 232, 240, 0.86)',
 };
 
 const statLabelStyle: React.CSSProperties = {
@@ -85,9 +71,9 @@ const statValueEmphasis: React.CSSProperties = {
 };
 
 const perksListStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(48px, 1fr))',
-  gap: '0.5rem',
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '0.45rem',
   paddingTop: '0.35rem',
 };
 
@@ -95,15 +81,27 @@ const perkBadgeStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: '44px',
-  height: '44px',
-  borderRadius: '10px',
-  background: 'linear-gradient(135deg, rgba(192, 132, 252, 0.18), rgba(76, 29, 149, 0.16))',
-  border: '1px solid rgba(192, 132, 252, 0.4)',
+  padding: '0.32rem 0.6rem',
+  borderRadius: '999px',
+  background: 'rgba(76, 29, 149, 0.16)',
+  border: '1px solid rgba(192, 132, 252, 0.45)',
   color: '#f3e8ff',
-  fontSize: '1.1rem',
+  fontSize: '0.6rem',
+  letterSpacing: '0.14em',
   textTransform: 'uppercase',
-  boxShadow: '0 0 12px rgba(192, 132, 252, 0.25), inset 0 0 8px rgba(192, 132, 252, 0.25)',
+  minHeight: '34px',
+};
+
+const headerStyle: React.CSSProperties = {
+  ...characterPanelHeaderStyle,
+};
+
+const headingLabelStyle: React.CSSProperties = {
+  ...characterPanelLabelStyle,
+};
+
+const headingTitleStyle: React.CSSProperties = {
+  ...characterPanelTitleStyle,
 };
 
 const PlayerLoadoutPanel: React.FC = () => {
@@ -180,48 +178,41 @@ const PlayerLoadoutPanel: React.FC = () => {
   );
 
   const renderPerks = () => (
-    <Tooltip
-      content={(
-        <TooltipContent
-          title="Perk Library"
-          description="Permanent abilities earned at even levels. Hover each badge to review its exact benefits."
-        />
+    <div style={cardStyle}>
+      <div style={badgeStyle('rgba(236, 72, 153, 0.65)')}>Perks</div>
+      {knownPerks.length === 0 && unknownPerkIds.length === 0 ? (
+        <span style={subtleText}>No perks acquired</span>
+      ) : (
+        <div style={perksListStyle}>
+          {knownPerks.map((perk) => (
+            <Tooltip
+              key={perk.id}
+              content={(
+                <TooltipContent
+                  title={perk.name}
+                  description={perk.description}
+                  lines={perk.effects}
+                />
+              )}
+              wrapperStyle={{ display: 'inline-flex' }}
+            >
+              <span style={perkBadgeStyle}>{perk.name}</span>
+            </Tooltip>
+          ))}
+          {unknownPerkIds.map((perkId) => (
+            <span key={perkId} style={perkBadgeStyle}>{perkId}</span>
+          ))}
+        </div>
       )}
-      wrapperStyle={{ display: 'block' }}
-    >
-      <div style={cardStyle}>
-        <div style={badgeStyle('rgba(236, 72, 153, 0.65)')}>Perks</div>
-        {knownPerks.length === 0 && unknownPerkIds.length === 0 ? (
-          <span style={subtleText}>No perks acquired</span>
-        ) : (
-          <div style={perksListStyle}>
-            {knownPerks.map((perk) => (
-              <Tooltip
-                key={perk.id}
-                content={(
-                  <TooltipContent
-                    title={perk.name}
-                    description={perk.description}
-                    lines={perk.effects}
-                  />
-                )}
-                wrapperStyle={{ display: 'inline-flex' }}
-              >
-                <span style={perkBadgeStyle}>{perk.name.charAt(0)}</span>
-              </Tooltip>
-            ))}
-            {unknownPerkIds.map((perkId) => (
-              <span key={perkId} style={perkBadgeStyle}>{perkId.charAt(0)}</span>
-            ))}
-          </div>
-        )}
-      </div>
-    </Tooltip>
+    </div>
   );
 
   return (
     <div style={panelStyle} data-testid="player-loadout-panel" role="region" aria-label="Player Loadout">
-      <span style={titleStyle}>Loadout</span>
+      <header style={headerStyle}>
+        <span style={headingLabelStyle}>Operative</span>
+        <h3 style={headingTitleStyle}>Loadout</h3>
+      </header>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.9rem' }}>
         {renderWeapon()}
         {renderArmor()}

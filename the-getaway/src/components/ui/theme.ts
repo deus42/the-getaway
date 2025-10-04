@@ -23,6 +23,34 @@ export const panelSurface = {
   backdropFilter: 'blur(14px)',
 };
 
+export const characterPanelSurface: React.CSSProperties = {
+  background: 'rgba(15, 23, 42, 0.6)',
+  borderRadius: '12px',
+  border: '1px solid rgba(148, 163, 184, 0.18)',
+  padding: '0.8rem',
+  boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.18)',
+};
+
+export const characterPanelHeaderStyle: React.CSSProperties = {
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.14rem',
+};
+
+export const characterPanelLabelStyle: React.CSSProperties = {
+  fontSize: '0.52rem',
+  letterSpacing: '0.19em',
+  textTransform: 'uppercase',
+  color: 'rgba(148, 163, 184, 0.72)',
+};
+
+export const characterPanelTitleStyle: React.CSSProperties = {
+  fontSize: '0.72rem',
+  fontWeight: 600,
+  letterSpacing: '0.05em',
+  color: '#f8fafc',
+};
+
 export const cardSurface = {
   background: 'linear-gradient(160deg, rgba(14, 26, 52, 0.88), rgba(10, 18, 34, 0.88))',
   border: '1px solid rgba(248, 250, 252, 0.08)',

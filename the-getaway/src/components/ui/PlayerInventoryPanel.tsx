@@ -2,33 +2,38 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import NotificationBadge from './NotificationBadge';
-import { gradientTextStyle } from './theme';
+import {
+  characterPanelSurface,
+  characterPanelHeaderStyle,
+  characterPanelLabelStyle,
+  characterPanelTitleStyle,
+} from './theme';
 
 const panelStyle: React.CSSProperties = {
+  ...characterPanelSurface,
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.5rem',
-  padding: '0.6rem 0.7rem',
-  borderRadius: '14px',
-  border: '1px solid rgba(148, 163, 184, 0.24)',
-  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))',
-  boxShadow: '0 18px 30px rgba(15, 23, 42, 0.35)',
+  gap: '0.6rem',
 };
 
-const headerStyle: React.CSSProperties = {
+const headerRowStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  fontSize: '0.65rem',
+  gap: '0.6rem',
   color: 'rgba(226, 232, 240, 0.85)',
 };
 
-const titleStyle: React.CSSProperties = {
-  fontSize: '0.65rem',
-  letterSpacing: '0.2em',
-  textTransform: 'uppercase',
-  ...gradientTextStyle('#6ee7b7', '#34d399'),
-  filter: 'drop-shadow(0 0 6px rgba(52, 211, 153, 0.4))',
+const headingGroupStyle: React.CSSProperties = {
+  ...characterPanelHeaderStyle,
+};
+
+const headingLabelStyle: React.CSSProperties = {
+  ...characterPanelLabelStyle,
+};
+
+const headingTitleStyle: React.CSSProperties = {
+  ...characterPanelTitleStyle,
 };
 
 const gridStyle: React.CSSProperties = {
@@ -81,12 +86,15 @@ const PlayerInventoryPanel: React.FC = () => {
 
   return (
     <div style={panelStyle} data-testid="player-inventory-panel" role="region" aria-label="Player Inventory">
-      <div style={headerStyle}>
-        <span style={titleStyle}>Inventory</span>
+      <header style={headerRowStyle}>
+        <div style={headingGroupStyle}>
+          <span style={headingLabelStyle}>Operative</span>
+          <h3 style={headingTitleStyle}>Inventory</h3>
+        </div>
         <span aria-label={`Inventory weight: ${player.inventory.currentWeight.toFixed(1)} of ${player.inventory.maxWeight} kilograms`}>
           {`${player.inventory.currentWeight.toFixed(1)} / ${player.inventory.maxWeight} kg`}
         </span>
-      </div>
+      </header>
       {displayItems.length === 0 ? (
         <span style={mutedStyle}>Pack is empty — time to scavenge.</span>
       ) : (

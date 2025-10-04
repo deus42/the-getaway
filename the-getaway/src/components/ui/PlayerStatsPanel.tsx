@@ -7,36 +7,31 @@ import { getEquippedBonuses, calculateEffectiveSkills } from '../../game/systems
 import { calculateDerivedStatsWithEquipment, calculateDerivedStats } from '../../game/systems/statCalculations';
 import { spendAttributePoint } from '../../store/playerSlice';
 import NotificationBadge from './NotificationBadge';
+import Tooltip, { TooltipContent } from './Tooltip';
+import {
+  characterPanelSurface,
+  characterPanelHeaderStyle,
+  characterPanelLabelStyle,
+  characterPanelTitleStyle,
+} from './theme';
 
 const containerStyle: React.CSSProperties = {
+  ...characterPanelSurface,
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.4rem',
-  background: 'rgba(15, 23, 42, 0.6)',
-  borderRadius: '12px',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
-  padding: '0.5rem 0.6rem',
-  boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.18)',
-};
+  gap: '0.5rem',
+}; 
 
 const headerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.1rem',
-};
+  ...characterPanelHeaderStyle,
+}; 
 
 const headingLabelStyle: React.CSSProperties = {
-  fontSize: '0.5rem',
-  letterSpacing: '0.2em',
-  textTransform: 'uppercase',
-  color: 'rgba(148, 163, 184, 0.72)',
-};
+  ...characterPanelLabelStyle,
+}; 
 
 const headingTitleStyle: React.CSSProperties = {
-  fontSize: '0.7rem',
-  fontWeight: 600,
-  letterSpacing: '0.04em',
-  color: '#f8fafc',
+  ...characterPanelTitleStyle,
 };
 
 const statGridStyle: React.CSSProperties = {
@@ -165,6 +160,16 @@ const focusColorMap: Record<PlayerStatFocus, string> = {
   fortuity: 'linear-gradient(135deg, rgba(250, 204, 21, 0.85), rgba(245, 158, 11, 0.85))',
 };
 
+const focusLabelMap: Record<PlayerStatFocus, string> = {
+  combat: 'Combat Focus',
+  perception: 'Perception Focus',
+  survival: 'Survival Focus',
+  social: 'Social Focus',
+  intellect: 'Intellect Focus',
+  mobility: 'Mobility Focus',
+  fortuity: 'Fortuity Focus',
+};
+
 const PlayerStatsPanel: React.FC = () => {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
@@ -271,48 +276,65 @@ const PlayerStatsPanel: React.FC = () => {
           const increaseDisabled = baseValue >= 10 || attributePointsAvailable <= 0;
           const increaseAttributeLabel = getIncreaseAttributeLabel(entry.abbreviation);
 
+          const tooltipMeta: string[] = [
+            `Rank ${entry.value}`,
+          ];
+
+          if (hasBonus) {
+            tooltipMeta.push(`Base ${baseValue}`);
+          }
+
+          tooltipMeta.push(focusLabelMap[entry.focus]);
+
           return (
-            <div
+            <Tooltip
               key={entry.key}
-              style={statRowStyle}
-              title={uiStrings.skillDescriptions[entry.key]}
+              content={(
+                <TooltipContent
+                  title={label}
+                  description={uiStrings.skillDescriptions[entry.key]}
+                  meta={tooltipMeta}
+                />
+              )}
             >
-              <div style={statLabelStyle}>
-                <span style={abbreviationBadgeStyle(highlight)}>{entry.abbreviation}</span>
-                <span>{label}</span>
-              </div>
-              <div style={valueWrapperStyle}>
-                <span
-                  style={{
-                    ...statValueStyle,
-                    color: hasBonus ? '#22c55e' : '#f8fafc',
-                  }}
-                >
-                  {entry.value}
-                  {hasBonus && (
-                    <span style={{ fontSize: '0.65rem', marginLeft: '0.2rem', opacity: 0.6 }}>
-                      ({baseValue})
-                    </span>
-                  )}
-                </span>
-                {showAttributeBoosters && (
-                  <button
-                    type="button"
-                    style={attributeButtonStyle(increaseDisabled)}
-                    disabled={increaseDisabled}
-                    onClick={() => handleIncreaseAttribute(entry.key)}
-                    aria-label={increaseAttributeLabel}
-                    title={
-                      increaseDisabled && baseValue >= 10
-                        ? uiStrings.playerStatus.attributeMaxed
-                        : increaseAttributeLabel
-                    }
+              <div style={statRowStyle}>
+                <div style={statLabelStyle}>
+                  <span style={abbreviationBadgeStyle(highlight)}>{entry.abbreviation}</span>
+                  <span>{label}</span>
+                </div>
+                <div style={valueWrapperStyle}>
+                  <span
+                    style={{
+                      ...statValueStyle,
+                      color: hasBonus ? '#22c55e' : '#f8fafc',
+                    }}
                   >
-                    +1
-                  </button>
-                )}
+                    {entry.value}
+                    {hasBonus && (
+                      <span style={{ fontSize: '0.65rem', marginLeft: '0.2rem', opacity: 0.6 }}>
+                        ({baseValue})
+                      </span>
+                    )}
+                  </span>
+                  {showAttributeBoosters && (
+                    <button
+                      type="button"
+                      style={attributeButtonStyle(increaseDisabled)}
+                      disabled={increaseDisabled}
+                      onClick={() => handleIncreaseAttribute(entry.key)}
+                      aria-label={increaseAttributeLabel}
+                      title={
+                        increaseDisabled && baseValue >= 10
+                          ? uiStrings.playerStatus.attributeMaxed
+                          : increaseAttributeLabel
+                      }
+                    >
+                      +1
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
+            </Tooltip>
           );
         })}
       </div>

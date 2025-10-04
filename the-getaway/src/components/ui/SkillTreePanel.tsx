@@ -1,9 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { SKILL_BRANCHES, SkillBranchDefinition, SkillDefinition } from '../../content/skills';
-import { RootState, AppDispatch } from '../../store';
-import { allocateSkillPointToSkill, refundSkillPointFromSkill } from '../../store/playerSlice';
-import { SkillBranchId, SkillId } from '../../game/interfaces/types';
+import { RootState } from '../../store';
+import { SkillBranchId } from '../../game/interfaces/types';
 import { describeSkillEffect, getPlayerSkillValue, getSkillPointIncrement, isSkillTagged } from '../../game/systems/skillTree';
 import NotificationBadge from './NotificationBadge';
 import { gradientTextStyle } from './theme';
@@ -113,17 +112,6 @@ const tagBadgeStyle: React.CSSProperties = {
   fontWeight: 600,
 };
 
-const stubBadgeStyle: React.CSSProperties = {
-  padding: '0.1rem 0.3rem',
-  borderRadius: '999px',
-  fontSize: '0.5rem',
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase',
-  background: 'rgba(148, 163, 184, 0.2)',
-  border: '1px solid rgba(148, 163, 184, 0.35)',
-  color: '#cbd5e1',
-  fontWeight: 600,
-};
 
 const skillControlsStyle: React.CSSProperties = {
   display: 'flex',
@@ -174,10 +162,8 @@ const getBranchById = (branchId: SkillBranchId): SkillBranchDefinition => {
 };
 
 const SkillTreePanel: React.FC = () => {
-  const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
   const availablePoints = player.skillPoints;
-  const [hoveredButton, setHoveredButton] = React.useState<string | null>(null);
 
   const defaultBranch: SkillBranchId = useMemo(() => {
     const branchTotals = SKILL_BRANCHES.map((branch) => {
@@ -259,55 +245,13 @@ const SkillTreePanel: React.FC = () => {
     [switchBranch]
   );
 
-  const handleAllocate = useCallback(
-    (skillId: SkillId) => {
-      dispatch(allocateSkillPointToSkill(skillId));
-    },
-    [dispatch]
-  );
-
-  const handleRefund = useCallback(
-    (skillId: SkillId) => {
-      dispatch(refundSkillPointFromSkill(skillId));
-    },
-    [dispatch]
-  );
 
   const renderSkillRow = (skill: SkillDefinition) => {
     const currentValue = getPlayerSkillValue(player, skill.id);
     const tagged = isSkillTagged(player, skill.id);
     const increment = getSkillPointIncrement(player, skill.id);
-    const canIncrease = availablePoints > 0 && currentValue + increment <= skill.maxValue;
-    const canDecrease = currentValue - increment >= 0;
     const effectMessage = describeSkillEffect(skill.id, currentValue);
     const incrementLabel = tagged ? `1 pt → +${increment} (tag)` : `1 pt → +${increment}`;
-    const decreaseKey = `${skill.id}-decrease`;
-    const increaseKey = `${skill.id}-increase`;
-
-    const getButtonStyle = (active: boolean, buttonKey: string): React.CSSProperties => {
-      const isHovered = hoveredButton === buttonKey;
-      return {
-        width: '24px',
-        height: '24px',
-        borderRadius: '5px',
-        border: `1px solid ${active ? (isHovered ? '#60a5fa' : '#38bdf8') : 'rgba(148, 163, 184, 0.3)'}`,
-        background: active
-          ? (isHovered ? 'rgba(56, 189, 248, 0.3)' : 'rgba(56, 189, 248, 0.2)')
-          : 'rgba(15, 23, 42, 0.6)',
-        color: active ? '#bae6fd' : '#64748b',
-        fontSize: '0.9rem',
-        fontWeight: 700,
-        cursor: active ? 'pointer' : 'not-allowed',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.15s ease',
-        boxShadow: active
-          ? (isHovered ? '0 0 16px rgba(56, 189, 248, 0.5)' : '0 2px 8px rgba(56, 189, 248, 0.3)')
-          : 'none',
-        transform: active && isHovered ? 'scale(1.1)' : 'scale(1)',
-      };
-    };
 
     return (
       <div key={skill.id} style={skillRowStyle}>
@@ -315,36 +259,13 @@ const SkillTreePanel: React.FC = () => {
           <div style={skillNameRowStyle}>
             <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#f8fafc' }}>{skill.name}</span>
             {tagged && <span style={tagBadgeStyle}>Tag</span>}
-            {skill.stub && <span style={stubBadgeStyle}>Stub</span>}
           </div>
           <p style={descriptionStyle}>{skill.description}</p>
           <p style={effectStyle}>{effectMessage}</p>
           <p style={{ ...effectStyle, color: 'rgba(148, 163, 184, 0.6)' }}>{incrementLabel}</p>
         </div>
         <div style={skillControlsStyle}>
-          <button
-            type="button"
-            aria-label={`Decrease ${skill.name}`}
-            onClick={() => handleRefund(skill.id)}
-            onMouseEnter={() => canDecrease && setHoveredButton(decreaseKey)}
-            onMouseLeave={() => setHoveredButton(null)}
-            disabled={!canDecrease}
-            style={getButtonStyle(canDecrease, decreaseKey)}
-          >
-            −
-          </button>
           <span style={skillValueStyle}>{currentValue}</span>
-          <button
-            type="button"
-            aria-label={`Increase ${skill.name}`}
-            onClick={() => handleAllocate(skill.id)}
-            onMouseEnter={() => canIncrease && setHoveredButton(increaseKey)}
-            onMouseLeave={() => setHoveredButton(null)}
-            disabled={!canIncrease}
-            style={getButtonStyle(canIncrease, increaseKey)}
-          >
-            +
-          </button>
         </div>
       </div>
     );

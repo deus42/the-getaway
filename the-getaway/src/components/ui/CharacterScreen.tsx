@@ -5,9 +5,9 @@ import SkillTreePanel from './SkillTreePanel';
 import PlayerLoadoutPanel from './PlayerLoadoutPanel';
 import PlayerInventoryPanel from './PlayerInventoryPanel';
 import StatusEffectsPanel from './StatusEffectsPanel';
-import PerkListPanel from './PerkListPanel';
 import CornerAccents from './CornerAccents';
 import ScanlineOverlay from './ScanlineOverlay';
+import { characterPanelSurface } from './theme';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
@@ -124,14 +124,10 @@ const loadoutRowStyle: React.CSSProperties = {
 };
 
 const skillTreeWrapperStyle: React.CSSProperties = {
-  borderRadius: '14px',
-  border: '1px solid rgba(148, 163, 184, 0.24)',
-  background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))',
-  boxShadow: '0 18px 30px rgba(15, 23, 42, 0.35)',
-  padding: '0',
-  overflow: 'visible',
+  ...characterPanelSurface,
   display: 'flex',
   flexDirection: 'column',
+  padding: '0.6rem',
   minHeight: 0,
   position: 'relative',
   zIndex: 0,
@@ -212,11 +208,9 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
           <div style={bottomRowStyle}>
             <div style={statsColumnStyle}>
               <PlayerStatsPanel />
-              <PerkListPanel />
               <StatusEffectsPanel />
             </div>
             <div style={skillTreeWrapperStyle}>
-              <CornerAccents color="#38bdf8" size={16} thickness={2} />
               <ScanlineOverlay opacity={0.04} />
               <SkillTreePanel />
             </div>

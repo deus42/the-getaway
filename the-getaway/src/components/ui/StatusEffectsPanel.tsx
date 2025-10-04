@@ -1,26 +1,34 @@
 import React from 'react';
 import StatusEffectIcon, { StatusEffect } from './StatusEffectIcon';
+import Tooltip, { TooltipContent } from './Tooltip';
+import {
+  characterPanelSurface,
+  characterPanelHeaderStyle,
+  characterPanelLabelStyle,
+  characterPanelTitleStyle,
+} from './theme';
 
 interface StatusEffectsPanelProps {
   effects?: StatusEffect[];
 }
 
 const containerStyle: React.CSSProperties = {
+  ...characterPanelSurface,
   display: 'flex',
   flexDirection: 'column',
   gap: '0.6rem',
-  background: 'rgba(15, 23, 42, 0.6)',
-  borderRadius: '12px',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
-  padding: '0.8rem',
-  boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.18)',
 };
 
-const headingStyle: React.CSSProperties = {
-  fontSize: '0.7rem',
-  fontWeight: 600,
-  letterSpacing: '0.08em',
-  textTransform: 'uppercase',
+const headerStyle: React.CSSProperties = {
+  ...characterPanelHeaderStyle,
+};
+
+const headingLabelStyle: React.CSSProperties = {
+  ...characterPanelLabelStyle,
+};
+
+const headingTitleStyle: React.CSSProperties = {
+  ...characterPanelTitleStyle,
   color: '#38bdf8',
 };
 
@@ -46,6 +54,7 @@ const DEMO_EFFECTS: StatusEffect[] = [
     color: '#8b5cf6',
     type: 'buff',
     duration: 5,
+    description: 'Visibility reduced; enemies require higher perception to detect you.',
   },
   {
     id: 'tactical-advantage',
@@ -54,18 +63,49 @@ const DEMO_EFFECTS: StatusEffect[] = [
     color: '#10b981',
     type: 'buff',
     duration: 3,
+    description: 'Gain +15% hit chance while flanking enemies.',
   },
 ];
 
 const StatusEffectsPanel: React.FC<StatusEffectsPanelProps> = ({ effects = DEMO_EFFECTS }) => {
   return (
     <div style={containerStyle}>
-      <h3 style={headingStyle}>Active Effects</h3>
+      <header style={headerStyle}>
+        <span style={headingLabelStyle}>Status</span>
+        <h3 style={headingTitleStyle}>Active Effects</h3>
+      </header>
       {effects && effects.length > 0 ? (
         <div style={effectsGridStyle}>
-          {effects.map((effect) => (
-            <StatusEffectIcon key={effect.id} effect={effect} size={40} showDuration={true} />
-          ))}
+          {effects.map((effect) => {
+            const durationLabel = effect.duration !== undefined
+              ? `${effect.duration} turn${effect.duration === 1 ? '' : 's'} remaining`
+              : 'Persistent';
+            const stacksLabel = effect.stacks && effect.stacks > 1 ? `${effect.stacks} stacks` : null;
+            const typeLabel = effect.type === 'buff'
+              ? 'Buff'
+              : effect.type === 'debuff'
+                ? 'Debuff'
+                : 'Status';
+            const metaDetails = stacksLabel
+              ? [typeLabel, durationLabel, stacksLabel]
+              : [typeLabel, durationLabel];
+
+            return (
+              <Tooltip
+                key={effect.id}
+                content={(
+                  <TooltipContent
+                    title={effect.name}
+                    description={effect.description}
+                    meta={metaDetails}
+                  />
+                )}
+                wrapperStyle={{ display: 'inline-flex' }}
+              >
+                <StatusEffectIcon effect={effect} size={40} showDuration={true} />
+              </Tooltip>
+            );
+          })}
         </div>
       ) : (
         <div style={emptyStateStyle}>No active effects</div>

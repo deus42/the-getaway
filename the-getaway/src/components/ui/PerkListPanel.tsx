@@ -2,26 +2,33 @@ import React, { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getPerkDefinition } from '../../content/perks';
-import { getSkillDefinition } from '../../content/skills';
 import { getUIStrings } from '../../content/ui';
 import { PerkId } from '../../game/interfaces/types';
 import Tooltip, { TooltipContent } from './Tooltip';
+import {
+  characterPanelSurface,
+  characterPanelHeaderStyle,
+  characterPanelLabelStyle,
+  characterPanelTitleStyle,
+} from './theme';
 
 const containerStyle: React.CSSProperties = {
-  background: 'rgba(15, 23, 42, 0.72)',
-  borderRadius: '12px',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
-  padding: '0.9rem',
+  ...characterPanelSurface,
   display: 'flex',
   flexDirection: 'column',
   gap: '0.7rem',
 };
 
-const headingStyle: React.CSSProperties = {
-  fontSize: '0.75rem',
-  letterSpacing: '0.12em',
-  textTransform: 'uppercase',
-  color: '#38bdf8',
+const headerStyle: React.CSSProperties = {
+  ...characterPanelHeaderStyle,
+};
+
+const headingLabelStyle: React.CSSProperties = {
+  ...characterPanelLabelStyle,
+};
+
+const headingTitleStyle: React.CSSProperties = {
+  ...characterPanelTitleStyle,
 };
 
 const hintStyle: React.CSSProperties = {
@@ -85,32 +92,35 @@ const PerkListPanel: React.FC = () => {
 
   return (
     <div style={containerStyle}>
-      <h3 style={headingStyle}>{uiStrings.perks.panelTitle}</h3>
+      <header style={headerStyle}>
+        <span style={headingLabelStyle}>Operative</span>
+        <h3 style={headingTitleStyle}>Perk Roster</h3>
+      </header>
       <div style={hintStyle}>
         Permanent abilities earned at even levels that enhance your character's capabilities
       </div>
-        {acquiredPerks.length === 0 ? (
-          <div style={emptyStyle}>{uiStrings.perks.emptyLabel}</div>
-        ) : (
-          <div style={gridStyle}>
-            {acquiredPerks.map((perk) => (
-              <Tooltip
-                key={perk.id}
-                content={(
-                  <TooltipContent
-                    title={perk.name}
-                    description={perk.description}
-                    lines={perk.effects}
-                    footer={perk.flavor ? <em>{perk.flavor}</em> : undefined}
-                  />
-                )}
-                wrapperStyle={{ display: 'inline-flex' }}
-              >
-                <div style={perkBadgeStyle}>{perk.name.charAt(0)}</div>
-              </Tooltip>
-            ))}
-          </div>
-        )}
+      {acquiredPerks.length === 0 ? (
+        <div style={emptyStyle}>{uiStrings.perks.emptyLabel}</div>
+      ) : (
+        <div style={gridStyle}>
+          {acquiredPerks.map((perk) => (
+            <Tooltip
+              key={perk.id}
+              content={(
+                <TooltipContent
+                  title={perk.name}
+                  description={perk.description}
+                  lines={perk.effects}
+                  footer={perk.flavor ? <em>{perk.flavor}</em> : undefined}
+                />
+              )}
+              wrapperStyle={{ display: 'inline-flex' }}
+            >
+              <div style={perkBadgeStyle}>{perk.name.charAt(0)}</div>
+            </Tooltip>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
