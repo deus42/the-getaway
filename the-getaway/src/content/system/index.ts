@@ -41,6 +41,7 @@ interface LogStrings {
   alertInvestigating: string;
   alertAlarmed: string;
   reinforcementsIncoming: string;
+  endingTurn: string;
 }
 
 interface SystemStrings {
@@ -94,6 +95,7 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       alertInvestigating: 'Patrol is actively searching the area. Get to cover!',
       alertAlarmed: 'ALERT! Enemy has locked onto your position!',
       reinforcementsIncoming: 'Reinforcements called in—more hostiles incoming!',
+      endingTurn: 'Ending your turn...',
     },
   },
   uk: {
@@ -142,6 +144,7 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       alertInvestigating: 'Патруль активно обшукує зону. Сховайтеся!',
       alertAlarmed: 'ТРИВОГА! Ворог засік вашу позицію!',
       reinforcementsIncoming: 'Викликано підкріплення — більше ворогів на підході!',
+      endingTurn: 'Завершення ходу...',
     },
   },
 };

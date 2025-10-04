@@ -1096,7 +1096,8 @@ const GameController: React.FC = () => {
       }
 
       // Check if enemy is in range
-      if (!isInAttackRange(player.position, enemy.position, 1)) {
+      const weaponRange = player.equipped.weapon?.range ?? 1;
+      if (!isInAttackRange(player.position, enemy.position, weaponRange)) {
         dispatch(addLogMessage(logStrings.enemyOutOfRange));
         return;
       }
@@ -1308,6 +1309,15 @@ const GameController: React.FC = () => {
         return;
       }
 
+      // Tab key: End turn in combat
+      if (key === "Tab" && inCombat && isPlayerTurn) {
+        event.preventDefault();
+        event.stopPropagation();
+        dispatch(addLogMessage(logStrings.endingTurn ?? "Ending turn..."));
+        dispatch(switchTurn());
+        return;
+      }
+
       if (key === " ") {
         event.preventDefault();
         event.stopPropagation();
@@ -1320,9 +1330,10 @@ const GameController: React.FC = () => {
         // If not in combat and enemies nearby, enter combat
         if (!inCombat) {
           const nearbyEnemy = findClosestEnemy(player.position);
+          const weaponRange = player.equipped.weapon?.range ?? 1;
           if (
             nearbyEnemy &&
-            isInAttackRange(player.position, nearbyEnemy.position, 1)
+            isInAttackRange(player.position, nearbyEnemy.position, weaponRange)
           ) {
             dispatch(enterCombat());
             dispatch(addLogMessage(logStrings.enteredCombat));
@@ -1333,7 +1344,8 @@ const GameController: React.FC = () => {
         // If in combat and it's player's turn, attack closest enemy in range
         if (inCombat && isPlayerTurn) {
           const nearbyEnemy = findClosestEnemy(player.position);
-          if (nearbyEnemy && isInAttackRange(player.position, nearbyEnemy.position, 1)) {
+          const weaponRange = player.equipped.weapon?.range ?? 1;
+          if (nearbyEnemy && isInAttackRange(player.position, nearbyEnemy.position, weaponRange)) {
             attackEnemy(nearbyEnemy, currentMapArea);
             return;
           }
