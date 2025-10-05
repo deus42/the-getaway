@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import PlayerSummaryPanel from './PlayerSummaryPanel';
 import PlayerStatsPanel from './PlayerStatsPanel';
 import SkillTreePanel from './SkillTreePanel';
@@ -48,6 +48,12 @@ const headerStyle: React.CSSProperties = {
   alignItems: 'center',
   justifyContent: 'space-between',
   color: '#e2e8f0',
+};
+
+const headerActionsStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.6rem',
 };
 
 const titleGroupStyle: React.CSSProperties = {
@@ -180,11 +186,46 @@ const skillTreeWrapperStyle: React.CSSProperties = {
   overflow: 'hidden',
 };
 
+const toggleButtonStyle: React.CSSProperties = {
+  borderRadius: '999px',
+  border: '1px solid rgba(148, 163, 184, 0.35)',
+  background: 'rgba(15, 23, 42, 0.6)',
+  color: '#e2e8f0',
+  fontSize: '0.6rem',
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  padding: '0.3rem 0.75rem',
+  cursor: 'pointer',
+  transition: 'background 0.2s ease, border-color 0.2s ease',
+};
+
+const activeToggleStyle: React.CSSProperties = {
+  borderColor: 'rgba(56, 189, 248, 0.6)',
+  background: 'rgba(37, 99, 235, 0.2)',
+  color: '#e0f2fe',
+};
+
+const hiddenToggleStyle: React.CSSProperties = {
+  borderColor: 'rgba(248, 113, 113, 0.55)',
+  color: '#fecaca',
+};
+
+const hiddenStateStyle: React.CSSProperties = {
+  ...characterPanelSurface,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: '0.72rem',
+  color: 'rgba(148, 163, 184, 0.8)',
+};
+
 const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [activeTab, setActiveTab] = useState<'inventory' | 'loadout' | 'skills'>('inventory');
+  const [showProfile, setShowProfile] = useState(true);
+  const [showSystems, setShowSystems] = useState(true);
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape') {
@@ -209,6 +250,17 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   if (!open) {
     return null;
   }
+
+  const layoutStyle = useMemo<React.CSSProperties>(() => {
+    const columns = showProfile && showSystems
+      ? 'minmax(320px, 0.85fr) minmax(0, 1.35fr)'
+      : '1fr';
+    return {
+      ...bodyStyle,
+      gridTemplateColumns: columns,
+      display: showProfile || showSystems ? 'grid' : 'flex',
+    };
+  }, [showProfile, showSystems]);
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
@@ -235,28 +287,55 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             </span>
             <span style={subtitleStyle}>{uiStrings.shell.characterSubtitle}</span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={closeButtonStyle}
-            data-testid="close-character"
-            ref={closeButtonRef}
-          >
-            Close
-          </button>
-        </header>
-        <div style={bodyStyle}>
-          <div style={profileColumnStyle}>
-            <PlayerSummaryPanel showActionButton={false} />
-            <PlayerStatsPanel />
+          <div style={headerActionsStyle}>
+            <button
+              type="button"
+              style={{
+                ...toggleButtonStyle,
+                ...(showProfile ? activeToggleStyle : hiddenToggleStyle),
+              }}
+              aria-pressed={showProfile}
+              onClick={() => setShowProfile((current) => !current)}
+            >
+              Profile
+            </button>
+            <button
+              type="button"
+              style={{
+                ...toggleButtonStyle,
+                ...(showSystems ? activeToggleStyle : hiddenToggleStyle),
+              }}
+              aria-pressed={showSystems}
+              onClick={() => setShowSystems((current) => !current)}
+            >
+              Systems
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              style={closeButtonStyle}
+              data-testid="close-character"
+              ref={closeButtonRef}
+            >
+              Close
+            </button>
           </div>
-          <div style={systemsColumnStyle}>
-            <div style={tabShellStyle}>
-              <div style={tabListStyle} role="tablist" aria-label="Character systems">
-                {(
-                  [
-                    { id: 'inventory', label: 'Inventory' },
-                    { id: 'loadout', label: 'Loadout' },
+        </header>
+        <div style={layoutStyle}>
+          {showProfile && (
+            <div style={profileColumnStyle}>
+              <PlayerSummaryPanel showActionButton={false} />
+              <PlayerStatsPanel />
+            </div>
+          )}
+          {showSystems && (
+            <div style={systemsColumnStyle}>
+              <div style={tabShellStyle}>
+                <div style={tabListStyle} role="tablist" aria-label="Character systems">
+                  {(
+                    [
+                      { id: 'inventory', label: 'Inventory' },
+                      { id: 'loadout', label: 'Loadout' },
                     { id: 'skills', label: 'Skill Tree' },
                   ] as const
                 ).map((tab) => {
@@ -315,8 +394,12 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
                   </div>
                 )}
               </div>
+              </div>
             </div>
-          </div>
+          )}
+          {!showProfile && !showSystems && (
+            <div style={hiddenStateStyle}>Toggle a panel to view character data.</div>
+          )}
         </div>
       </div>
     </div>

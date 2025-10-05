@@ -1048,14 +1048,23 @@ export class MainScene extends Phaser.Scene {
     tileHeight: number,
     baseColor: number
   ): void {
+    // Animated pulsing effect - breathes to indicate danger
+    const time = this.time.now;
+    const pulseCycle = 1500; // 1.5 second cycle
+    const pulsePhase = (time % pulseCycle) / pulseCycle;
+    const pulseIntensity = 0.5 + 0.5 * Math.sin(pulsePhase * Math.PI * 2);
+
     const pulseColor = this.adjustColor(baseColor, 0.6);
-    this.mapGraphics.fillStyle(pulseColor, 0.22);
+    const baseAlpha = 0.15 + 0.12 * pulseIntensity;
+
+    this.mapGraphics.fillStyle(pulseColor, baseAlpha);
     this.mapGraphics.fillPoints(
       this.getDiamondPoints(center.x, center.y, tileWidth * 0.58, tileHeight * 0.6),
       true
     );
 
-    this.mapGraphics.fillStyle(pulseColor, 0.14);
+    const crossAlpha = 0.1 + 0.08 * pulseIntensity;
+    this.mapGraphics.fillStyle(pulseColor, crossAlpha);
     this.mapGraphics.fillPoints(
       this.getDiamondPoints(center.x, center.y, tileWidth * 0.3, tileHeight * 0.96),
       true
@@ -1065,7 +1074,8 @@ export class MainScene extends Phaser.Scene {
       true
     );
 
-    this.mapGraphics.lineStyle(1.2, this.adjustColor(pulseColor, 0.35), 0.75);
+    const outlineAlpha = 0.65 + 0.2 * pulseIntensity;
+    this.mapGraphics.lineStyle(1.2, this.adjustColor(pulseColor, 0.35), outlineAlpha);
     this.mapGraphics.strokePoints(
       this.getDiamondPoints(center.x, center.y, tileWidth * 0.82, tileHeight * 0.32),
       true
