@@ -849,100 +849,139 @@ export class MainScene extends Phaser.Scene {
 
       const palette = SIGNAGE_STYLE_CONFIG[building.signageStyle ?? 'default'];
 
-      const panelWidth = metrics.tileWidth * (1.6 + footprintWidth * 0.32);
-      const panelHeight = Math.max(metrics.tileHeight * 0.9, 54);
-      const bracketHeight = metrics.tileHeight * (1.1 + footprintHeight * 0.18);
+      const panelWidth = Math.max(180, metrics.tileWidth * (1.9 + footprintWidth * 0.35));
+      const panelHeight = Math.max(72, metrics.tileHeight * 1.05);
+      const mastHeight = Math.max(panelHeight * 1.2, metrics.tileHeight * (1.4 + footprintHeight * 0.45));
+      const mastWidth = Math.max(10, panelWidth * 0.1);
+      const elevation = metrics.tileHeight * (footprintHeight * 0.5 + 2.8);
 
-      const container = this.add.container(pixelPos.x, pixelPos.y - bracketHeight);
+      const signContainer = this.add.container(pixelPos.x, pixelPos.y - elevation);
 
-      const support = this.add.graphics();
-      support.lineStyle(3, palette.accent, 0.9);
-      const supportDrop = panelHeight * 0.95;
-      support.lineBetween(-panelWidth * 0.28, supportDrop, -panelWidth * 0.36, supportDrop + panelHeight * 0.65);
-      support.lineBetween(panelWidth * 0.28, supportDrop, panelWidth * 0.36, supportDrop + panelHeight * 0.65);
-      support.setAlpha(0.9);
+      const mast = this.add.graphics();
+      mast.fillStyle(palette.accent, 0.92);
+      mast.fillRoundedRect(-mastWidth / 2, panelHeight * 0.5, mastWidth, mastHeight, mastWidth * 0.4);
+      mast.lineStyle(2, palette.frame, 0.55);
+      mast.strokeRoundedRect(-mastWidth / 2, panelHeight * 0.5, mastWidth, mastHeight, mastWidth * 0.4);
 
-      const panel = this.add.graphics();
+      const mastStruts = this.add.graphics();
+      mastStruts.lineStyle(1.5, palette.frame, 0.55);
+      const strutSpacing = mastHeight / 5;
+      for (let i = 1; i < 5; i += 1) {
+        const y = panelHeight * 0.5 + i * strutSpacing;
+        mastStruts.lineBetween(-mastWidth * 0.45, y - strutSpacing * 0.4, mastWidth * 0.45, y);
+      }
+
+      const panelGraphic = this.add.graphics();
       const halfW = panelWidth / 2;
       const halfH = panelHeight / 2;
-      const topOffset = halfH * 0.35;
-      const points = [
-        new Phaser.Geom.Point(-halfW, -halfH + topOffset),
-        new Phaser.Geom.Point(halfW, -halfH),
-        new Phaser.Geom.Point(halfW, halfH),
-        new Phaser.Geom.Point(-halfW, halfH - topOffset * 0.6),
+      const bevel = Math.min(panelWidth * 0.22, 38);
+      const panelPoints = [
+        new Phaser.Geom.Point(-halfW - bevel, 0),
+        new Phaser.Geom.Point(-halfW, -halfH),
+        new Phaser.Geom.Point(halfW, -halfH * 0.82),
+        new Phaser.Geom.Point(halfW + bevel, 0),
+        new Phaser.Geom.Point(halfW, halfH * 0.9),
+        new Phaser.Geom.Point(-halfW, halfH),
       ];
-      panel.fillStyle(palette.surface, 0.88);
-      panel.fillPoints(points, true);
-      panel.lineStyle(4, palette.frame, 1);
-      panel.strokePoints(points, true);
-      panel.setScale(1, 0.86);
+      panelGraphic.fillStyle(palette.surface, 0.95);
+      panelGraphic.fillPoints(panelPoints, true);
+      panelGraphic.lineStyle(4, palette.frame, 0.95);
+      panelGraphic.strokePoints(panelPoints, true);
 
-      const tube = this.add.graphics();
-      tube.lineStyle(6, palette.primary, 0.85);
-      tube.strokePoints(points, true);
-      tube.setScale(1.08, 0.88);
-      tube.setAlpha(0.75);
-      tube.setBlendMode(Phaser.BlendModes.ADD);
+      const innerPanel = this.add.graphics();
+      innerPanel.fillStyle(palette.accent, 0.12);
+      innerPanel.fillPoints(panelPoints.map((p) => new Phaser.Geom.Point(p.x * 0.92, p.y * 0.85)), true);
+      innerPanel.setBlendMode(Phaser.BlendModes.ADD);
 
       const glow = this.add.graphics();
-      glow.fillStyle(palette.primary, 0.22);
-      glow.fillEllipse(0, 0, panelWidth * 1.5, panelHeight * 1.2);
+      glow.fillStyle(palette.primary, 0.25);
+      glow.fillEllipse(0, 0, panelWidth * 1.6, panelHeight * 1.4);
       glow.setBlendMode(Phaser.BlendModes.ADD);
-      glow.setScale(1, 0.65);
+      glow.setScale(1, 0.72);
 
-      const label = this.add.text(0, -panelHeight * 0.04, building.name.toUpperCase(), {
+      const frameTube = this.add.graphics();
+      frameTube.lineStyle(7, palette.primary, 0.88);
+      frameTube.strokePoints(panelPoints, true);
+      frameTube.setBlendMode(Phaser.BlendModes.ADD);
+
+      const panelMask = panelGraphic.createGeometryMask();
+      frameTube.setMask(panelMask);
+
+      const scan = this.add.rectangle(0, 0, panelWidth * 0.82, panelHeight * 0.32, palette.primary, 0.16);
+      scan.setBlendMode(Phaser.BlendModes.ADD);
+      scan.setMask(panelMask);
+
+      const label = this.add.text(0, -panelHeight * 0.08, building.name.toUpperCase(), {
         fontFamily: '"Orbitron", "Montserrat", "DM Sans", sans-serif',
-        fontSize: `${Math.max(28, Math.min(44, panelWidth * 0.32))}px`,
+        fontSize: `${Math.max(30, Math.min(46, panelWidth * 0.33))}px`,
         fontStyle: '900',
         color: palette.text,
         align: 'center',
-        fixedWidth: panelWidth * 0.8,
-        resolution: 2,
+        fixedWidth: panelWidth * 0.82,
+        resolution: 3,
       });
       label.setOrigin(0.5, 0.5);
-      label.setStroke(palette.stroke, 2.5);
-      label.setShadow(0, 0, palette.stroke, 8, true, true);
-      label.setScale(1, 0.92);
+      label.setStroke(palette.stroke, 2.8);
+      label.setShadow(0, 0, palette.stroke, 10, true, true);
 
       const taglineSource = (building as any).tagline ?? (building as any).district ?? building.signageStyle ?? 'Neon Sector';
       const subtitleText = String(taglineSource).replace(/_/g, ' ').toUpperCase();
-
-      const subtitle = this.add.text(0, panelHeight * 0.3, subtitleText, {
+      const subtitle = this.add.text(0, panelHeight * 0.32, subtitleText, {
         fontFamily: '"DM Sans", sans-serif',
         fontSize: `${Math.max(14, Math.min(18, panelWidth * 0.18))}px`,
         fontStyle: '600',
         color: 'rgba(203, 213, 225, 0.85)',
         align: 'center',
-        fixedWidth: panelWidth * 0.72,
-        resolution: 2,
+        fixedWidth: panelWidth * 0.7,
+        resolution: 3,
       });
       subtitle.setOrigin(0.5, 0.5);
-      subtitle.setScale(1, 0.9);
 
-      const accentLine = this.add.graphics();
-      accentLine.lineStyle(2, palette.primary, 0.65);
-      accentLine.beginPath();
-      accentLine.moveTo(-panelWidth * 0.35, panelHeight * 0.52);
-      accentLine.lineTo(panelWidth * 0.35, panelHeight * 0.45);
-      accentLine.closePath();
-      accentLine.strokePath();
-      accentLine.setBlendMode(Phaser.BlendModes.ADD);
+      const accent = this.add.graphics();
+      accent.lineStyle(3, palette.primary, 0.55);
+      const accentOffset = panelHeight * 0.48;
+      accent.beginPath();
+      accent.moveTo(-panelWidth * 0.36, accentOffset);
+      accent.lineTo(panelWidth * 0.36, accentOffset - panelHeight * 0.05);
+      accent.closePath();
+      accent.strokePath();
+      accent.setBlendMode(Phaser.BlendModes.ADD);
 
-      container.add([glow, support, panel, tube, accentLine, label, subtitle]);
-      container.setDepth(pixelPos.y + 140);
-      container.setScale(1, 0.88);
+      const spark = this.add.ellipse(panelWidth * 0.38, -panelHeight * 0.32, 12, 12, palette.primary, 0.6);
+      spark.setBlendMode(Phaser.BlendModes.ADD);
+
+      signContainer.add([glow, mast, mastStruts, panelGraphic, innerPanel, frameTube, accent, scan, label, subtitle, spark]);
+      signContainer.setDepth(pixelPos.y + 160);
 
       this.tweens.add({
-        targets: [tube, glow],
-        alpha: { from: 0.3, to: 0.7 },
+        targets: frameTube,
+        alpha: { from: 0.45, to: 0.85 },
+        duration: 1600,
+        repeat: -1,
+        yoyo: true,
+        delay: Math.random() * 400,
+      });
+
+      this.tweens.add({
+        targets: scan,
+        y: { from: -panelHeight * 0.45, to: panelHeight * 0.45 },
         duration: 1800,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+
+      this.tweens.add({
+        targets: spark,
+        scale: { from: 0.8, to: 1.2 },
+        alpha: { from: 0.4, to: 0.9 },
+        duration: 1400,
         yoyo: true,
         repeat: -1,
+        ease: 'Sine.easeInOut',
         delay: Math.random() * 600,
       });
 
-      this.buildingLabels.push(container);
+      this.buildingLabels.push(signContainer);
     });
   }
 
