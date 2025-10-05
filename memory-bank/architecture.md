@@ -181,14 +181,14 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - **Single-Parcel Blocks**: Each of the 16 Downtown blocks maps to one named parcel to keep overlays and doorways uncluttered
 - **Street-Door Separation**: Doors must be positioned in street tiles adjacent to buildings, never on the building edge itself
 - **Unique Positioning**: No two buildings share the same door coordinate
-- **Visual Labeling**: Building names render once per parcel with word-wrapped, shadowed text for legibility on the outdoor map
+- **Parcel Signage**: Rooftop marquees were removed to keep skylines readable; exterior labeling now relies on environmental cues and quest UI copy
 - **Spawn Sanitization**: Blueprint positions snap to the nearest walkable street tile during world generation so nothing spawns atop a roofline
 </design_principles>
 <pattern name="Elevation Profiles & Facades">
 - `getTileElevation` and `getElevationProfile` convert tile metadata into height offsets so walls extrude into full prisms while cover uses half-height braces.
 - `renderElevationPrism` draws right/front faces with tuned shadows, then caps the roof plane; `renderWallDetails` layers neon bands and ledges, and `renderCoverDetails` adds lips plus bracing lines for tactical readability.
 - Door tiles stay flat at ground level but `drawDoorTile` projects a doorway panel onto the extruded facade using the same interpolation helpers, keeping entries visually aligned with building volumes.
-- `drawBuildingLabels` renders parcel names as floating neon marquees with additive glow and bracket supports so signage feels anchored to rooftops.
+- `drawBuildingLabels` now only clears previously spawned containers; marquee-style signage was retired to declutter the outdoor view.
 </pattern>
 <pattern name="Character Tokens & Labels">
 - `IsoObjectFactory.createCharacterToken` builds reusable player/NPC/enemy markers composed of a halo, base diamond, extruded column, and beacon cap with configurable palettes.
@@ -196,11 +196,11 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - Character overlays (health bars, combat indicators, name labels) update alongside tokens, preserving 2.5-D depth sorting while surfacing combat data.
 </pattern>
 
-<pattern name="District Dressing & Signage">
+<pattern name="District Dressing">
 - Building definitions carry `district`, `signageStyle`, `propDensity`, and `encounterProfile` hints (see `level0/locales/*`).
 - `worldMap.applyDistrictDecorations` clones street tiles and promotes slum doors into scrap cover clusters while downtown doors gain planter-style cover to shape chokepoints.
 - `IsoObjectFactory` now exposes `createBarricade`, `createStreetLight`, and `createBillboard` so scene code can spawn bespoke dressing without duplicating geometry math.
-- `MainScene.renderStaticProps` reads district metadata to place props/highlights, while `drawBuildingLabels` references `signageStyle` palettes for diegetic signage.
+- `MainScene.renderStaticProps` reads district metadata to place props/highlights; `signageStyle` remains in content for future styling hooks but no longer drives neon marquees.
 - Item blueprints receive explicit street coordinates; `MainScene` highlights both loot and interactive NPC tiles for readability.
 </pattern>
 
