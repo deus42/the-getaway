@@ -299,15 +299,15 @@ const EQUIPMENT_SLOT_METADATA: { id: EquipmentSlot; label: string; description: 
 const REPAIR_COST_PER_POINT = 2;
 
 const isWeapon = (item: Item): boolean => {
-  return (item as Record<string, unknown>).damage !== undefined;
+  return (item as unknown as Record<string, unknown>).damage !== undefined;
 };
 
 const isArmor = (item: Item): boolean => {
-  return (item as Record<string, unknown>).protection !== undefined;
+  return (item as unknown as Record<string, unknown>).protection !== undefined;
 };
 
 const isConsumable = (item: Item): boolean => {
-  return (item as Record<string, unknown>).effect !== undefined;
+  return (item as unknown as Record<string, unknown>).effect !== undefined;
 };
 
 const categorizeItem = (item: Item): FilterId => {
@@ -331,8 +331,8 @@ const resolvePreferredSlot = (item: Item): EquipmentSlot | null => {
     return item.equipSlot;
   }
   if (isWeapon(item)) {
-    const weaponRange = (item as Record<string, unknown>).range;
-    const skillType = (item as Record<string, unknown>).skillType;
+    const weaponRange = (item as unknown as Record<string, unknown>).range;
+    const skillType = (item as unknown as Record<string, unknown>).skillType;
     if (
       (typeof weaponRange === 'number' && weaponRange <= 1) ||
       skillType === 'meleeCombat'
@@ -611,7 +611,7 @@ const PlayerInventoryPanel: React.FC = () => {
                   type="button"
                   style={{
                     ...filterButtonBase,
-                    borderColor: isActive ? 'rgba(56, 189, 248, 0.65)' : filterButtonBase.border,
+                    border: isActive ? '1px solid rgba(56, 189, 248, 0.65)' : filterButtonBase.border,
                     background: isActive ? 'rgba(37, 99, 235, 0.2)' : filterButtonBase.background,
                     color: isActive ? '#e0f2fe' : filterButtonBase.color,
                   }}
@@ -641,7 +641,7 @@ const PlayerInventoryPanel: React.FC = () => {
             const canEquip = Boolean(resolvePreferredSlot(item));
             const canUse = isConsumable(item);
             const needsRepair = item.durability && item.durability.current < item.durability.max;
-            const missingDurability = needsRepair
+            const missingDurability = needsRepair && item.durability
               ? item.durability.max - item.durability.current
               : 0;
             const estimatedRepairCost = missingDurability * REPAIR_COST_PER_POINT;

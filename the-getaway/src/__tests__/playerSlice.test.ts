@@ -11,7 +11,6 @@ import playerReducer, {
   addCredits,
   consumeStamina,
   regenerateStamina,
-  updateMaxStamina,
   levelUp,
   updateSkill,
   setSkill,

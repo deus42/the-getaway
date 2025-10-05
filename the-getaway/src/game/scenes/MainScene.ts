@@ -835,6 +835,13 @@ export class MainScene extends Phaser.Scene {
       case TileType.DOOR:
         this.drawDoorTile(center.x, center.y);
         break;
+      case TileType.FLOOR:
+        // Cyberpunk scan line grid - subtle data grid aesthetic
+        if (gridX % 4 === 0 || gridY % 4 === 0) {
+          this.mapGraphics.lineStyle(0.8, 0x1e40af, 0.08);
+          this.mapGraphics.strokePoints(tilePoints, true);
+        }
+        break;
       default:
         break;
     }
