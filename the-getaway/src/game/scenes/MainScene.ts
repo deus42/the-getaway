@@ -28,47 +28,55 @@ const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number
   DEFAULT: { even: 0x1e2432, odd: 0x232838 },
 };
 
-const SIGNAGE_STYLE_CONFIG: Record<BuildingSignageStyle | 'default', {
-  base: number;
-  glow: number;
-  text: number;
-  support: number;
-  stroke: number;
-}> = {
+interface NeonSignPalette {
+  surface: number;
+  frame: number;
+  primary: number;
+  accent: number;
+  text: string;
+  stroke: string;
+}
+
+const SIGNAGE_STYLE_CONFIG: Record<BuildingSignageStyle | 'default', NeonSignPalette> = {
   default: {
-    base: 0x101828,
-    glow: 0x38bdf8,
-    text: 0xf8fafc,
-    support: 0x1f2937,
-    stroke: 0x7dd3fc,
+    surface: 0x061122,
+    frame: 0x38bdf8,
+    primary: 0x7df9ff,
+    accent: 0x0f172a,
+    text: '#f8fafc',
+    stroke: '#38bdf8',
   },
   slums_scrap: {
-    base: 0x1f1b16,
-    glow: 0xfb923c,
-    text: 0xfff3c4,
-    support: 0x31261d,
-    stroke: 0xfdba74,
+    surface: 0x1a1109,
+    frame: 0xf97316,
+    primary: 0xffb357,
+    accent: 0x200f07,
+    text: '#fff7ed',
+    stroke: '#fb923c',
   },
   slums_neon: {
-    base: 0x111c33,
-    glow: 0x22d3ee,
-    text: 0xe0f2fe,
-    support: 0x1f2a3f,
-    stroke: 0x38bdf8,
+    surface: 0x0a1124,
+    frame: 0x22d3ee,
+    primary: 0x66f7ff,
+    accent: 0x08101f,
+    text: '#e0f2fe',
+    stroke: '#38bdf8',
   },
   corp_holo: {
-    base: 0x101a2c,
-    glow: 0x60a5fa,
-    text: 0xf8fafc,
-    support: 0x1c2438,
-    stroke: 0xa5b4fc,
+    surface: 0x0b1021,
+    frame: 0x60a5fa,
+    primary: 0xbde0ff,
+    accent: 0x050b1a,
+    text: '#f8fafc',
+    stroke: '#93c5fd',
   },
   corp_brass: {
-    base: 0x2d1f16,
-    glow: 0xfbbf24,
-    text: 0xfff7ed,
-    support: 0x3a2414,
-    stroke: 0xfde68a,
+    surface: 0x1f1308,
+    frame: 0xf59e0b,
+    primary: 0xffd770,
+    accent: 0x120a05,
+    text: '#fff7ed',
+    stroke: '#fbbf24',
   },
 };
 
@@ -926,53 +934,101 @@ export class MainScene extends Phaser.Scene {
       const footprintHeight = building.footprint.to.y - building.footprint.from.y + 1;
       const footprintWidth = building.footprint.to.x - building.footprint.from.x + 1;
 
-      const signHeight = metrics.tileHeight * (0.8 + footprintHeight * 0.12);
-      const panelWidth = metrics.tileWidth * (1.05 + footprintWidth * 0.28);
-      const panelHeight = metrics.tileHeight * 0.72;
+      const palette = SIGNAGE_STYLE_CONFIG[building.signageStyle ?? 'default'];
 
-      const container = this.add.container(pixelPos.x, pixelPos.y - signHeight);
+      const panelWidth = metrics.tileWidth * (1.6 + footprintWidth * 0.32);
+      const panelHeight = Math.max(metrics.tileHeight * 0.9, 54);
+      const bracketHeight = metrics.tileHeight * (1.1 + footprintHeight * 0.18);
 
-      const signageStyle = SIGNAGE_STYLE_CONFIG[building.signageStyle ?? 'default'];
+      const container = this.add.container(pixelPos.x, pixelPos.y - bracketHeight);
 
       const support = this.add.graphics();
-      support.lineStyle(2, signageStyle.support, 0.82);
-      support.lineBetween(-panelWidth * 0.08, panelHeight * 0.95, -panelWidth * 0.18, panelHeight * 1.55);
-      support.lineBetween(panelWidth * 0.08, panelHeight * 0.95, panelWidth * 0.18, panelHeight * 1.55);
+      support.lineStyle(3, palette.accent, 0.9);
+      const supportDrop = panelHeight * 0.95;
+      support.lineBetween(-panelWidth * 0.28, supportDrop, -panelWidth * 0.36, supportDrop + panelHeight * 0.65);
+      support.lineBetween(panelWidth * 0.28, supportDrop, panelWidth * 0.36, supportDrop + panelHeight * 0.65);
+      support.setAlpha(0.9);
 
       const panel = this.add.graphics();
-      const baseColor = signageStyle.base;
-      const glowColor = signageStyle.glow;
-      const panelPoints = [
-        new Phaser.Geom.Point(-panelWidth / 2, 0),
-        new Phaser.Geom.Point(panelWidth / 2, -panelHeight * 0.18),
-        new Phaser.Geom.Point(panelWidth / 2, panelHeight * 0.82),
-        new Phaser.Geom.Point(-panelWidth / 2, panelHeight)
+      const halfW = panelWidth / 2;
+      const halfH = panelHeight / 2;
+      const topOffset = halfH * 0.35;
+      const points = [
+        new Phaser.Geom.Point(-halfW, -halfH + topOffset),
+        new Phaser.Geom.Point(halfW, -halfH),
+        new Phaser.Geom.Point(halfW, halfH),
+        new Phaser.Geom.Point(-halfW, halfH - topOffset * 0.6),
       ];
-      panel.fillStyle(baseColor, 0.78);
-      panel.fillPoints(panelPoints, true);
-      panel.lineStyle(2.4, glowColor, 0.9);
-      panel.strokePoints(panelPoints, true);
+      panel.fillStyle(palette.surface, 0.88);
+      panel.fillPoints(points, true);
+      panel.lineStyle(4, palette.frame, 1);
+      panel.strokePoints(points, true);
+      panel.setScale(1, 0.86);
+
+      const tube = this.add.graphics();
+      tube.lineStyle(6, palette.primary, 0.85);
+      tube.strokePoints(points, true);
+      tube.setScale(1.08, 0.88);
+      tube.setAlpha(0.75);
+      tube.setBlendMode(Phaser.BlendModes.ADD);
 
       const glow = this.add.graphics();
-      glow.fillStyle(glowColor, 0.22);
-      glow.fillEllipse(0, panelHeight * 0.45, panelWidth * 1.05, panelHeight * 1.55);
+      glow.fillStyle(palette.primary, 0.22);
+      glow.fillEllipse(0, 0, panelWidth * 1.5, panelHeight * 1.2);
       glow.setBlendMode(Phaser.BlendModes.ADD);
+      glow.setScale(1, 0.65);
 
-      const label = this.add.text(0, panelHeight * 0.38, building.name.toUpperCase(), {
-        fontSize: '14px',
-        fontFamily: 'Orbitron, "DM Sans", sans-serif',
-        fontStyle: '700',
-        color: this.colorToHex(signageStyle.text),
+      const label = this.add.text(0, -panelHeight * 0.04, building.name.toUpperCase(), {
+        fontFamily: '"Orbitron", "Montserrat", "DM Sans", sans-serif',
+        fontSize: `${Math.max(28, Math.min(44, panelWidth * 0.32))}px`,
+        fontStyle: '900',
+        color: palette.text,
         align: 'center',
-        fixedWidth: panelWidth * 0.82,
+        fixedWidth: panelWidth * 0.8,
+        resolution: 2,
       });
       label.setOrigin(0.5, 0.5);
-      label.setStroke(this.colorToHex(signageStyle.stroke), 1.4);
-      label.setShadow(0, 0, this.colorToHex(glowColor), 10, true, true);
-      label.setBlendMode(Phaser.BlendModes.ADD);
+      label.setStroke(palette.stroke, 2.5);
+      label.setShadow(0, 0, palette.stroke, 8, true, true);
+      label.setScale(1, 0.92);
 
-      container.add([support, glow, panel, label]);
-      container.setDepth(pixelPos.y + 40);
+      const taglineSource = (building as any).tagline ?? (building as any).district ?? building.signageStyle ?? 'Neon Sector';
+      const subtitleText = String(taglineSource).replace(/_/g, ' ').toUpperCase();
+
+      const subtitle = this.add.text(0, panelHeight * 0.3, subtitleText, {
+        fontFamily: '"DM Sans", sans-serif',
+        fontSize: `${Math.max(14, Math.min(18, panelWidth * 0.18))}px`,
+        fontStyle: '600',
+        color: 'rgba(203, 213, 225, 0.85)',
+        align: 'center',
+        fixedWidth: panelWidth * 0.72,
+        resolution: 2,
+      });
+      subtitle.setOrigin(0.5, 0.5);
+      subtitle.setScale(1, 0.9);
+
+      const accentLine = this.add.graphics();
+      accentLine.lineStyle(2, palette.primary, 0.65);
+      accentLine.beginPath();
+      accentLine.moveTo(-panelWidth * 0.35, panelHeight * 0.52);
+      accentLine.lineTo(panelWidth * 0.35, panelHeight * 0.45);
+      accentLine.closePath();
+      accentLine.strokePath();
+      accentLine.setBlendMode(Phaser.BlendModes.ADD);
+
+      container.add([glow, support, panel, tube, accentLine, label, subtitle]);
+      container.setDepth(pixelPos.y + 140);
+      container.setScale(1, 0.88);
+
+      this.tweens.add({
+        targets: [tube, glow],
+        alpha: { from: 0.3, to: 0.7 },
+        duration: 1800,
+        yoyo: true,
+        repeat: -1,
+        delay: Math.random() * 600,
+      });
+
       this.buildingLabels.push(container);
     });
   }
