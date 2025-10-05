@@ -68,6 +68,8 @@ const DialogueOverlay: React.FC = () => {
         return;
       }
 
+      let experienceGranted = false;
+
       quest.rewards.forEach((reward) => {
         switch (reward.type) {
           case "experience":
@@ -78,6 +80,7 @@ const DialogueOverlay: React.FC = () => {
                   logStrings.rewardExperience(reward.amount, quest.name)
                 )
               );
+              experienceGranted = true;
             }
             break;
           case "currency":
@@ -115,6 +118,12 @@ const DialogueOverlay: React.FC = () => {
             break;
         }
       });
+
+      if (!experienceGranted) {
+        const baseXp = Math.max(40, (quest.objectives.length || 1) * 30);
+        dispatch(addExperience({ amount: baseXp, reason: `Quest complete: ${quest.name}` }));
+        dispatch(addLogMessage(logStrings.rewardExperience(baseXp, quest.name)));
+      }
     },
     [dispatch, quests, logStrings, uiStrings]
   );
