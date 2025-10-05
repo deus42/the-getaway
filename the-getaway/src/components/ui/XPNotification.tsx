@@ -13,7 +13,7 @@ interface XPNotificationProps {
   onComplete: (id: string) => void;
 }
 
-const STACK_SPACING = 40;
+const STACK_SPACING = 24;
 
 const computeAnchor = (detail: PlayerScreenPositionDetail | null): { x: number; y: number } | null => {
   if (typeof window === 'undefined' || !detail) {
@@ -26,14 +26,12 @@ const computeAnchor = (detail: PlayerScreenPositionDetail | null): { x: number; 
   }
 
   const rect = canvas.getBoundingClientRect();
-  const baseWidth = detail.canvasWidth || rect.width || 1;
-  const baseHeight = detail.canvasHeight || rect.height || 1;
-  const ratioX = detail.screenX / baseWidth;
-  const ratioY = detail.screenY / baseHeight;
+  const width = detail.canvasWidth || rect.width || 1;
+  const height = detail.canvasHeight || rect.height || 1;
 
   return {
-    x: rect.left + ratioX * rect.width,
-    y: rect.top + ratioY * rect.height,
+    x: rect.left + (detail.screenX / width) * rect.width,
+    y: rect.top + (detail.screenY / height) * rect.height,
   };
 };
 
@@ -48,6 +46,15 @@ const usePlayerAnchor = (): { x: number; y: number } | null => {
       setAnchor(next);
     }
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const initial = (window as any).__getawayPlayerScreenPosition as PlayerScreenPositionDetail | undefined;
+      if (initial) {
+        updateAnchor(initial);
+      }
+    }
+  }, [updateAnchor]);
 
   useEffect(() => {
     const handle = (event: Event) => {
@@ -77,12 +84,11 @@ export const XPNotification: React.FC<XPNotificationProps> = ({ notification, on
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    const showTimer = setTimeout(() => setIsVisible(true), 12);
-
+    const showTimer = setTimeout(() => setIsVisible(true), 10);
     const hideTimer = setTimeout(() => {
       setIsVisible(false);
-      setTimeout(() => onComplete(notification.id), 240);
-    }, 2600);
+      setTimeout(() => onComplete(notification.id), 200);
+    }, 2200);
 
     return () => {
       clearTimeout(showTimer);
@@ -91,58 +97,42 @@ export const XPNotification: React.FC<XPNotificationProps> = ({ notification, on
   }, [notification.id, onComplete]);
 
   const containerStyle: React.CSSProperties = {
-    display: 'flex',
-    flexDirection: 'column',
+    display: 'inline-flex',
     alignItems: 'center',
-    gap: '0.3rem',
-    padding: '0.45rem 0.65rem 0.55rem',
+    gap: '0.28rem',
+    padding: '0.28rem 0.45rem',
     minWidth: 'fit-content',
-    background:
-      'linear-gradient(160deg, rgba(10, 19, 36, 0.92) 0%, rgba(14, 116, 144, 0.68) 100%)',
-    border: '1px solid rgba(56, 189, 248, 0.42)',
-    borderRadius: '12px',
-    boxShadow: '0 14px 22px -16px rgba(13, 148, 136, 0.55)',
+    background: 'linear-gradient(150deg, rgba(7, 13, 26, 0.92) 0%, rgba(12, 148, 136, 0.58) 100%)',
+    border: '1px solid rgba(56, 189, 248, 0.45)',
+    borderRadius: '999px',
+    boxShadow: '0 10px 18px -16px rgba(13, 148, 136, 0.55)',
     opacity: isVisible ? 1 : 0,
-    transform: isVisible ? 'translateY(0)' : 'translateY(12px)',
-    transition: 'opacity 0.22s ease-out, transform 0.22s ease-out',
+    transform: isVisible ? 'translateY(0)' : 'translateY(10px)',
+    transition: 'opacity 0.18s ease-out, transform 0.18s ease-out',
     pointerEvents: 'none',
   };
 
   const amountStyle: React.CSSProperties = {
-    fontSize: '1rem',
-    fontWeight: 700,
-    letterSpacing: '0.14em',
+    fontSize: '0.9rem',
+    fontWeight: 800,
+    letterSpacing: '0.16em',
     textTransform: 'uppercase',
     color: neonPalette.textPrimary,
     ...glowTextStyle(neonPalette.cyan, 6),
   };
 
-  const reasonStyle: React.CSSProperties = {
-    fontSize: '0.58rem',
-    letterSpacing: '0.18em',
+  const badgeStyle: React.CSSProperties = {
+    fontSize: '0.55rem',
+    fontWeight: 700,
+    letterSpacing: '0.24em',
     textTransform: 'uppercase',
-    color: 'rgba(226, 232, 240, 0.78)',
-    textAlign: 'center' as const,
-  };
-
-  const pointerStyle: React.CSSProperties = {
-    width: 0,
-    height: 0,
-    borderLeft: '5px solid transparent',
-    borderRight: '5px solid transparent',
-    borderTop: '6px solid rgba(56, 189, 248, 0.55)',
-    opacity: isVisible ? 1 : 0,
-    transition: 'opacity 0.2s ease-out',
-    margin: '0 auto',
+    color: 'rgba(148, 233, 255, 0.92)',
   };
 
   return (
-    <div>
-      <div style={containerStyle}>
-        <span style={amountStyle}>+{notification.amount} xp</span>
-        <span style={reasonStyle}>{notification.reason}</span>
-      </div>
-      <div style={pointerStyle} />
+    <div style={containerStyle}>
+      <span style={amountStyle}>+{notification.amount}</span>
+      <span style={badgeStyle}>XP</span>
     </div>
   );
 };
@@ -157,26 +147,28 @@ export const XPNotificationManager: React.FC<XPNotificationManagerProps> = ({
   onDismiss,
 }) => {
   const anchor = usePlayerAnchor();
-
-  const fallbackPosition = useMemo(() => {
-    if (typeof window === 'undefined') {
-      return { right: 32, top: 72 } as const;
-    }
-    return { right: 32, top: 72 } as const;
-  }, []);
+  const fallbackPosition = useMemo(() => ({ right: 28, top: 72 } as const), []);
 
   return (
     <>
       {notifications.map((notification, index) => {
-        const wrapperStyle: React.CSSProperties = anchor
-          ? {
-              position: 'fixed',
-              left: anchor.x,
-              top: anchor.y,
-              transform: `translate(-50%, -120%) translateY(${-index * STACK_SPACING}px)`,
-              zIndex: 9998,
-              pointerEvents: 'none',
-            }
+        const wrapperStyle: React.CSSProperties = anchor && typeof window !== 'undefined'
+          ? (() => {
+              const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+              const viewportWidth = window.innerWidth || fallbackPosition.right * 2;
+              const viewportHeight = window.innerHeight || fallbackPosition.top * 2;
+              const safeX = clamp(anchor.x, 24, viewportWidth - 24);
+              const safeY = clamp(anchor.y, 24, viewportHeight - 24);
+              const anchoredTop = clamp(safeY - 56 - index * STACK_SPACING, 16, viewportHeight - 16);
+              return {
+                position: 'fixed',
+                left: safeX,
+                top: anchoredTop,
+                transform: 'translateX(-50%)',
+                zIndex: 9998,
+                pointerEvents: 'none',
+              } as React.CSSProperties;
+            })()
           : {
               position: 'fixed',
               right: `${fallbackPosition.right}px`,

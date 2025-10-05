@@ -124,3 +124,11 @@ export interface PlayerScreenPositionDetail {
 }
 
 export type TileTypeGrid = MapTile[][];
+
+declare global {
+  interface Window {
+    __getawayPlayerScreenPosition?: PlayerScreenPositionDetail;
+  }
+}
+
+export {};

@@ -1441,7 +1441,10 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.lastPlayerScreenDetail = detail;
-    window.dispatchEvent(new CustomEvent(PLAYER_SCREEN_POSITION_EVENT, { detail }));
+    if (typeof window !== 'undefined') {
+      window.__getawayPlayerScreenPosition = detail;
+      window.dispatchEvent(new CustomEvent(PLAYER_SCREEN_POSITION_EVENT, { detail }));
+    }
   }
 
   private getIsoMetrics(): IsoMetrics {
