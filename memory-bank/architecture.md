@@ -49,9 +49,9 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`PlayerStatusPanel.tsx`**: Displays player vitals, action points, hostile counts, and curfew state using Redux data.
 - **`LogPanel.tsx`**: Displays a scrolling list of game events and messages, reading data from the Redux `logSlice`.
 - **`PlayerSummaryPanel.tsx`**: Compact HUD card showing the operative's vitals, currency, and point pools with a CTA that opens the full character screen.
-- **`CharacterScreen.tsx`**: Pip-boy style modal that presents the detailed profile (status panel, detailed stats, skill tree). Toggled via the HUD button or the `C` key and reuses existing components inside a scrollable shell.
-- **`PlayerLoadoutPanel.tsx`**: Summarises equipped weapon/armor alongside perk badges; used inside the character screen.
-- **`PlayerInventoryPanel.tsx`**: Displays carried items, weight totals, and overflow count within the character screen without introducing additional scroll containers.
+- **`CharacterScreen.tsx`**: Pip-boy style modal that presents the detailed profile (status panel, detailed stats, skill tree). Toggled via the HUD button or the `C` key and reuses existing components inside a scrollable shell; the layout now stacks the profile column (summary + core stats) alongside a systems column where inventory and loadout share the top row and the skill tree stretches beneath them.
+- **`PlayerLoadoutPanel.tsx`**: Summarises equipped weapon/armor alongside perk badges inside the character screen.
+- **`PlayerInventoryPanel.tsx`**: Full inventory console with filter tabs, encumbrance telemetry, equipment slot grid, hotbar management, and inline equip/repair/use actions that dispatch Redux inventory reducers.
 - **Inventory data model**: `Player.inventory` now tracks `hotbar` slots alongside `items`, and `Player.equippedSlots`/`activeWeaponSlot` mirror the expanded slot framework (primary/secondary/melee weapons, body armor, helmet, accessories). `Player.encumbrance` persists the derived weight ratio so reducers and UI can apply penalties without recomputing totals each frame.
 - **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, viewport reticle, and supports drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles.
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
@@ -1036,12 +1036,14 @@ Record licence and attribution requirements for every imported pack in `/src/ass
 2. `refreshInventoryMetrics` recalculates carried weight, normalises the five-slot hotbar, and feeds those numbers to <code_location>src/game/inventory/encumbrance.ts</code_location>, which maps weight ratios to encumbrance levels, AP multipliers, and optional warning copy.
 3. <code_location>src/game/combat/combatSystem.ts</code_location> now multiplies weapon/armor effectiveness by durability modifiers, decays durability after every attack, and emits structured combat events (`weaponDamaged`, `armorBroken`, etc.).
 4. <code_location>src/components/GameController.tsx</code_location> watches encumbrance warnings and combat events, logging them through `logSlice` and halting queued movement when the player is immobile.
+5. <code_location>src/store/playerSlice.ts</code_location> also exposes `useInventoryItem`, consuming stackable consumables, updating health/AP/stat effects, normalising hotbar slots when items vanish, and rerunning `refreshInventoryMetrics` so UI panels stay in sync.
 </technical_flow>
 
 <code_location>src/store/playerSlice.ts</code_location>
 <code_location>src/game/inventory/encumbrance.ts</code_location>
 <code_location>src/game/combat/combatSystem.ts</code_location>
 <code_location>src/components/GameController.tsx</code_location>
+<code_location>src/components/ui/PlayerInventoryPanel.tsx</code_location>
 </architecture_section>
 
 ## Integration with Current Architecture

@@ -4,7 +4,6 @@ import PlayerStatsPanel from './PlayerStatsPanel';
 import SkillTreePanel from './SkillTreePanel';
 import PlayerLoadoutPanel from './PlayerLoadoutPanel';
 import PlayerInventoryPanel from './PlayerInventoryPanel';
-import StatusEffectsPanel from './StatusEffectsPanel';
 import CornerAccents from './CornerAccents';
 import ScanlineOverlay from './ScanlineOverlay';
 import { characterPanelSurface } from './theme';
@@ -89,38 +88,26 @@ const closeButtonStyle: React.CSSProperties = {
 const bodyStyle: React.CSSProperties = {
   flex: 1,
   display: 'grid',
-  gridTemplateRows: 'auto 1fr',
-  gap: '0.8rem',
+  gridTemplateColumns: 'minmax(320px, 0.85fr) minmax(0, 1.35fr)',
+  gap: '1rem',
   padding: '1.2rem',
   minHeight: 0,
+  overflow: 'hidden',
 };
 
-const topRowStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(320px, 420px) 1fr',
-  gap: '1.2rem',
-  minHeight: 0,
-  flexShrink: 0,
-};
-
-
-const bottomRowStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(320px, 420px) 1fr',
-  gap: '1.2rem',
-  minHeight: 0,
-};
-
-const statsColumnStyle: React.CSSProperties = {
+const profileColumnStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   gap: '0.8rem',
+  minHeight: 0,
+  overflow: 'hidden',
 };
 
-const loadoutRowStyle: React.CSSProperties = {
+const systemsColumnStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '0.8rem',
+  gridTemplateRows: 'minmax(0, 0.55fr) minmax(0, 1fr)',
+  gap: '1rem',
+  minHeight: 0,
 };
 
 const skillTreeWrapperStyle: React.CSSProperties = {
@@ -131,6 +118,7 @@ const skillTreeWrapperStyle: React.CSSProperties = {
   minHeight: 0,
   position: 'relative',
   zIndex: 0,
+  overflow: 'hidden',
 };
 
 const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
@@ -198,17 +186,21 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
           </button>
         </header>
         <div style={bodyStyle}>
-          <div style={topRowStyle}>
+          <div style={profileColumnStyle}>
             <PlayerSummaryPanel showActionButton={false} />
-            <div style={loadoutRowStyle}>
-              <PlayerLoadoutPanel />
-              <PlayerInventoryPanel />
-            </div>
+            <PlayerStatsPanel />
           </div>
-          <div style={bottomRowStyle}>
-            <div style={statsColumnStyle}>
-              <PlayerStatsPanel />
-              <StatusEffectsPanel />
+          <div style={systemsColumnStyle}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+                gap: '0.85rem',
+                minHeight: 0,
+              }}
+            >
+              <PlayerInventoryPanel />
+              <PlayerLoadoutPanel />
             </div>
             <div style={skillTreeWrapperStyle}>
               <ScanlineOverlay opacity={0.04} />

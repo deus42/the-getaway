@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import React, { useMemo, useCallback } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from '../../store';
 import { getSkillDefinition } from '../../content/skills';
 import { getPerkDefinition, PerkDefinition } from '../../content/perks';
-import { Durability, PerkId } from '../../game/interfaces/types';
+import { Durability, PerkId, EquipmentSlot, Item, Weapon, Armor } from '../../game/interfaces/types';
+import { equipItem, unequipItem } from '../../store/playerSlice';
 import Tooltip, { TooltipContent } from './Tooltip';
 import {
   characterPanelSurface,
@@ -18,14 +19,27 @@ const panelStyle: React.CSSProperties = {
   ...characterPanelSurface,
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.75rem',
+  gap: '0.65rem',
+  minHeight: 0,
+  height: '100%',
+  overflow: 'hidden',
+};
+
+const cardsWrapperStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.85rem',
+  overflowY: 'auto',
+  paddingRight: '0.2rem',
 };
 
 const cardStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.35rem',
-  padding: '0.65rem 0.75rem',
+  gap: '0.32rem',
+  padding: '0.6rem 0.7rem',
   borderRadius: '10px',
   background: 'rgba(30, 41, 59, 0.55)',
   border: '1px solid rgba(148, 163, 184, 0.22)',
@@ -109,70 +123,119 @@ const headingTitleStyle: React.CSSProperties = {
   ...characterPanelTitleStyle,
 };
 
+const baseButtonStyle: React.CSSProperties = {
+  alignSelf: 'flex-start',
+  padding: '0.3rem 0.55rem',
+  borderRadius: '999px',
+  border: '1px solid rgba(148, 163, 184, 0.35)',
+  background: 'rgba(30, 41, 59, 0.65)',
+  color: '#e2e8f0',
+  fontSize: '0.56rem',
+  letterSpacing: '0.1em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
+  transition: 'background 0.15s ease, border-color 0.15s ease',
+};
+
+const unequipButtonStyle: React.CSSProperties = {
+  ...baseButtonStyle,
+  borderColor: 'rgba(248, 113, 113, 0.55)',
+  background: 'rgba(248, 113, 113, 0.18)',
+};
+
+const equipWeaponButtonStyle: React.CSSProperties = {
+  ...baseButtonStyle,
+  borderColor: 'rgba(56, 189, 248, 0.55)',
+  background: 'rgba(56, 189, 248, 0.18)',
+};
+
+const equipArmorButtonStyle: React.CSSProperties = {
+  ...baseButtonStyle,
+  borderColor: 'rgba(96, 165, 250, 0.55)',
+  background: 'rgba(96, 165, 250, 0.18)',
+};
+
+const resolvePreferredSlot = (item: Item): EquipmentSlot | null => {
+  if (item.equipSlot) {
+    return item.equipSlot;
+  }
+  if ('damage' in item) {
+    return 'primaryWeapon';
+  }
+  if ('protection' in item) {
+    return 'bodyArmor';
+  }
+  return null;
+};
+
+const describeDurability = (durability?: Durability) => {
+  if (!durability || durability.max <= 0) {
+    return null;
+  }
+
+  const ratio = Math.max(0, Math.min(1, durability.current / durability.max));
+  const percentage = Math.round(ratio * 100);
+
+  if (ratio === 1) {
+    return {
+      copy: `Condition ${percentage}%`,
+      style: statRowStyle,
+      color: 'rgba(226, 232, 240, 0.86)',
+    };
+  }
+
+  if (ratio <= 0) {
+    return {
+      copy: 'Condition 0% – Broken',
+      style: warningRowStyle,
+      color: '#f87171',
+    };
+  }
+
+  if (ratio <= 0.25) {
+    return {
+      copy: `Condition ${percentage}% – Critical`,
+      style: warningRowStyle,
+      color: '#fbbf24',
+    };
+  }
+
+  if (ratio <= 0.5) {
+    return {
+      copy: `Condition ${percentage}% – Worn`,
+      style: warningRowStyle,
+      color: '#f59e0b',
+    };
+  }
+
+  return {
+    copy: `Condition ${percentage}%`,
+    style: statRowStyle,
+    color: 'rgba(250, 204, 21, 0.95)',
+  };
+};
+
 const PlayerLoadoutPanel: React.FC = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
   const weapon = player.equipped.weapon;
   const armor = player.equipped.armor;
 
-  const renderDurabilityRow = (meta: { copy: string; style: React.CSSProperties; color: string } | null) => {
-    if (!meta) {
-      return null;
-    }
+  const stowedWeapons = useMemo(
+    () =>
+      player.inventory.items.filter(
+        (item): item is Weapon => resolvePreferredSlot(item) === 'primaryWeapon'
+      ),
+    [player.inventory.items]
+  );
 
-    return (
-      <div style={{ ...meta.style, color: meta.color }}>
-        <span style={statLabelStyle}>Durability</span>
-        <span style={{ ...statValueEmphasis, color: meta.color }}>{meta.copy}</span>
-      </div>
-    );
-  };
-
-  const describeDurability = (durability?: Durability) => {
-    if (!durability || durability.max <= 0) {
-      return null;
-    }
-
-    const ratio = Math.max(0, Math.min(1, durability.current / durability.max));
-    const percentage = Math.round(ratio * 100);
-
-    if (ratio === 1) {
-      return {
-        copy: `Condition ${percentage}%`,
-        style: statRowStyle,
-        color: 'rgba(226, 232, 240, 0.86)',
-      };
-    }
-
-    if (ratio <= 0) {
-      return {
-        copy: 'Condition 0% – Broken',
-        style: warningRowStyle,
-        color: '#f87171',
-      };
-    }
-
-    if (ratio <= 0.25) {
-      return {
-        copy: `Condition ${percentage}% – Critical`,
-        style: warningRowStyle,
-        color: '#fbbf24',
-      };
-    }
-
-    if (ratio <= 0.5) {
-      return {
-        copy: `Condition ${percentage}% – Worn`,
-        style: warningRowStyle,
-        color: '#f59e0b',
-      };
-    }
-
-    return {
-      copy: `Condition ${percentage}%`,
-      style: statRowStyle,
-      color: 'rgba(250, 204, 21, 0.95)',
-    };
-  };
+  const stowedArmor = useMemo(
+    () =>
+      player.inventory.items.filter(
+        (item): item is Armor => resolvePreferredSlot(item) === 'bodyArmor'
+      ),
+    [player.inventory.items]
+  );
 
   const { knownPerks, unknownPerkIds } = useMemo(() => {
     const known: PerkDefinition[] = [];
@@ -190,7 +253,24 @@ const PlayerLoadoutPanel: React.FC = () => {
     return { knownPerks: known, unknownPerkIds: unknown };
   }, [player.perks]);
 
-  const renderWeapon = () => (
+  const handleEquipItem = useCallback(
+    (itemId: string, slot: EquipmentSlot) => {
+      dispatch(equipItem({ itemId, slot }));
+    },
+    [dispatch]
+  );
+
+  const handleUnequip = useCallback(
+    (slot: EquipmentSlot) => {
+      dispatch(unequipItem({ slot }));
+    },
+    [dispatch]
+  );
+
+  const renderWeapon = () => {
+    const durability = describeDurability(weapon?.durability);
+
+    return (
     <div style={cardStyle}>
       <div style={badgeStyle('rgba(56, 189, 248, 0.75)')}>Weapon</div>
       <div style={cardTitleStyle}>{weapon?.name ?? 'Unarmed'}</div>
@@ -214,15 +294,45 @@ const PlayerLoadoutPanel: React.FC = () => {
               {weapon.skillType ? (getSkillDefinition(weapon.skillType)?.name ?? '—') : '—'}
             </span>
           </div>
-          {renderDurabilityRow(describeDurability(weapon.durability))}
+          {durability && (
+            <div style={statRowStyle}>
+              <span style={statLabelStyle}>Durability</span>
+              <span style={statValueEmphasis}>{durability.copy}</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {weapon && (
+              <button
+                type="button"
+                style={unequipButtonStyle}
+                onClick={() => handleUnequip('primaryWeapon')}
+              >
+                Unequip
+              </button>
+            )}
+            {stowedWeapons.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                style={equipWeaponButtonStyle}
+                onClick={() => handleEquipItem(item.id, 'primaryWeapon')}
+              >
+                Equip {item.name}
+              </button>
+            ))}
+          </div>
         </>
       ) : (
         <span style={subtleText}>No weapon equipped</span>
       )}
     </div>
   );
+  };
 
-  const renderArmor = () => (
+  const renderArmor = () => {
+    const durability = describeDurability(armor?.durability);
+
+    return (
     <div style={cardStyle}>
       <div style={badgeStyle('rgba(96, 165, 250, 0.75)')}>Armor</div>
       <div style={cardTitleStyle}>{armor?.name ?? 'Unarmored'}</div>
@@ -236,13 +346,40 @@ const PlayerLoadoutPanel: React.FC = () => {
             <span style={statLabelStyle}>Weight</span>
             <span style={statValueEmphasis}>{armor.weight.toFixed(1)} kg</span>
           </div>
-          {renderDurabilityRow(describeDurability(armor.durability))}
+          {durability && (
+            <div style={statRowStyle}>
+              <span style={statLabelStyle}>Durability</span>
+              <span style={statValueEmphasis}>{durability.copy}</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {armor && (
+              <button
+                type="button"
+                style={unequipButtonStyle}
+                onClick={() => handleUnequip('bodyArmor')}
+              >
+                Unequip
+              </button>
+            )}
+            {stowedArmor.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                style={equipArmorButtonStyle}
+                onClick={() => handleEquipItem(item.id, 'bodyArmor')}
+              >
+                Equip {item.name}
+              </button>
+            ))}
+          </div>
         </>
       ) : (
         <span style={subtleText}>No armor equipped</span>
       )}
     </div>
   );
+  };
 
   const renderPerks = () => (
     <div style={cardStyle}>
@@ -280,11 +417,13 @@ const PlayerLoadoutPanel: React.FC = () => {
         <span style={headingLabelStyle}>Operative</span>
         <h3 style={headingTitleStyle}>Loadout</h3>
       </header>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.9rem' }}>
-        {renderWeapon()}
-        {renderArmor()}
+      <div style={cardsWrapperStyle}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.9rem' }}>
+          {renderWeapon()}
+          {renderArmor()}
+        </div>
+        {renderPerks()}
       </div>
-      {renderPerks()}
     </div>
   );
 };

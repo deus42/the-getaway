@@ -1145,3 +1145,38 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Architecture doc update for the inventory data model is queued alongside the remaining Step 25 work.
 </notes>
 </step>
+
+<step id="25.3" status="completed">
+<step_metadata>
+  <number>25.3</number>
+  <title>Inventory & Loadout UI Overhaul</title>
+  <status>Completed</status>
+  <date>October 6, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Rebuilt `PlayerInventoryPanel` with filter tabs, sort controls, encumbrance readouts, equipment slot grid, and hotbar management inside the character screen shell.
+2. Added inline equip/repair/use actions with durability bars, repair cost prompts, and stack-aware hotbar selectors that keep the panel keyboard accessible.
+3. Surfaced the same loadout state in the equipment column, including durability indicators and clear controls, so the UI mirrors Redux inventory changes in real time.
+</tasks>
+
+<implementation>
+- Introduced a richer inventory view that computes item categories, durability colours, and encumbrance summaries client-side while delegating state changes to Redux actions.
+- Extended `playerSlice` with `useInventoryItem`, ensuring consumables decrement stacks, clamp health/AP/stat gains, and clear hotbar slots when items are spent.
+- Added dedicated RTL coverage to exercise filters, equip/repair flows, hotbar assignment, and consumable usage through the new UI.
+- Relocated active effects to the left-hand status column so buffs/debuffs surface alongside the operative summary while perks remain in the loadout card.
+- Reorganized the character screen into a profile column (summary + attributes) beside a systems column (inventory + loadout row above a full-height skill tree) so every panel remains visible while inventory retains a dedicated vertical scroller; removed the unused Active Effects display until the system is designed.
+</implementation>
+
+<code_reference file="the-getaway/src/components/ui/PlayerInventoryPanel.tsx" />
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="the-getaway/src/__tests__/PlayerInventoryPanel.test.tsx" />
+
+<validation>
+- `yarn test PlayerInventoryPanel.test.tsx --watch=false`
+</validation>
+
+<notes>
+- Jest run emits `SerializableStateInvariantMiddleware` warnings while resetting the store in tests; no functional issues observed but worth monitoring if suite time increases.
+</notes>
+</step>

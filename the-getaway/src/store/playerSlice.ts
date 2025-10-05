@@ -10,6 +10,7 @@ import {
   SkillId,
   PerkId,
   EquipmentSlot,
+  Consumable,
 } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import {
@@ -548,6 +549,78 @@ const assignHotbarSlotInternal = (player: Player, payload: AssignHotbarPayload):
   return true;
 };
 
+const consumeInventoryItemInternal = (player: Player, itemId: string): boolean => {
+  player.inventory.hotbar = ensureHotbar(player.inventory.hotbar);
+
+  const itemIndex = player.inventory.items.findIndex((entry) => entry.id === itemId);
+  if (itemIndex === -1) {
+    return false;
+  }
+
+  const candidate = player.inventory.items[itemIndex] as Item;
+  if (!candidate || !('effect' in candidate)) {
+    return false;
+  }
+
+  const consumable = candidate as Consumable;
+
+  let removed = false;
+
+  if (candidate.stackable) {
+    const available = getStackQuantity(candidate);
+    if (available <= 1) {
+      player.inventory.items.splice(itemIndex, 1);
+      removed = true;
+    } else {
+      const nextQuantity = available - 1;
+      if (nextQuantity <= 1) {
+        delete consumable.quantity;
+      } else {
+        consumable.quantity = nextQuantity;
+      }
+    }
+  } else {
+    player.inventory.items.splice(itemIndex, 1);
+    removed = true;
+  }
+
+  if (removed) {
+    player.inventory.hotbar = player.inventory.hotbar.map((entry) => (entry === itemId ? null : entry));
+  }
+
+  const effect = consumable.effect;
+
+  switch (effect.type) {
+    case 'health': {
+      const nextHealth = Number.isFinite(effect.value) ? effect.value : 0;
+      player.health = Math.min(player.maxHealth, Math.max(0, player.health + nextHealth));
+      break;
+    }
+    case 'actionPoints': {
+      const nextAp = Number.isFinite(effect.value) ? effect.value : 0;
+      player.actionPoints = Math.min(
+        player.maxActionPoints,
+        Math.max(0, player.actionPoints + nextAp)
+      );
+      break;
+    }
+    case 'stat': {
+      if (effect.statAffected) {
+        const current = player.skills[effect.statAffected] ?? 0;
+        const delta = Number.isFinite(effect.value) ? effect.value : 0;
+        player.skills[effect.statAffected] = current + delta;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  refreshInventoryMetrics(player);
+
+  return true;
+};
+
 const applyStartingItem = (player: Player, item: StartingItemDefinition): void => {
   switch (item.type) {
     case 'weapon': {
@@ -983,6 +1056,10 @@ export const playerSlice = createSlice({
       refreshInventoryMetrics(state.data);
     },
 
+    useInventoryItem: (state, action: PayloadAction<string>) => {
+      consumeInventoryItemInternal(state.data, action.payload);
+    },
+
     // Equip a weapon
     equipWeapon: (state, action: PayloadAction<string>) => {
       equipItemInternal(state.data, { itemId: action.payload, slot: 'primaryWeapon' });
@@ -1219,6 +1296,7 @@ export const {
   repairItem,
   splitStack,
   assignHotbarSlot,
+  useInventoryItem,
   resetPlayer,
   setPlayerData,
   equipWeapon,
