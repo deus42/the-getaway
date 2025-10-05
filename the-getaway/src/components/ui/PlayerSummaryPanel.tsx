@@ -213,7 +213,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
       <div style={statGridStyle}>
         <div style={statCardStyle}>
           <span style={statLabelStyle}>Credits</span>
-          <span style={{ ...importantValueStyle('#fbbf24') }}>{player.credits}</span>
+          <span style={{ ...importantValueStyle('#fbbf24') }}>₿{player.credits}</span>
         </div>
         <div style={statCardStyle}>
           <span style={statLabelStyle}>Experience</span>

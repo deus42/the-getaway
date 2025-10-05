@@ -78,8 +78,8 @@ const PlayerInventoryPanel: React.FC = () => {
     <div key={itemId} style={itemCardStyle} role="listitem" aria-label={`${name}: ${description}`}>
       <div style={itemNameStyle}>{name}</div>
       <div style={mutedStyle}>{description}</div>
-      <div style={footerStyle} aria-label={`Weight: ${weight.toFixed(1)} kilograms, Value: ${value} credits`}>
-        {weight.toFixed(1)} kg • {value} cr
+      <div style={footerStyle} aria-label={`Weight: ${weight.toFixed(1)} kilograms, Value: ₿${value} credits`}>
+        {weight.toFixed(1)} kg • ₿{value}
       </div>
     </div>
   );

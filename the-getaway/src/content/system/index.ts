@@ -89,7 +89,7 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       objectiveUpdated: (objectiveDescription, questName) =>
         `Objective updated: ${objectiveDescription} (${questName}).`,
       rewardExperience: (amount, questName) => `+${amount} XP from ${questName}.`,
-      rewardCredits: (amount, questName) => `+${amount} credits secured from ${questName}.`,
+      rewardCredits: (amount, questName) => `+₿${amount} credits secured from ${questName}.`,
       rewardItem: (itemName, questName) => `Received ${itemName} from ${questName}.`,
       alertSuspicious: 'Guard patrol notices something off—stay cautious.',
       alertInvestigating: 'Patrol is actively searching the area. Get to cover!',
@@ -138,7 +138,7 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       objectiveUpdated: (objectiveDescription, questName) =>
         `Ціль оновлено: ${objectiveDescription} (${questName}).`,
       rewardExperience: (amount, questName) => `+${amount} од. досвіду за ${questName}.`,
-      rewardCredits: (amount, questName) => `+${amount} кредитів за ${questName}.`,
+      rewardCredits: (amount, questName) => `+₿${amount} кредитів за ${questName}.`,
       rewardItem: (itemName, questName) => `Отримано ${itemName} від ${questName}.`,
       alertSuspicious: 'Патруль помічає щось підозріле — будьте обережні.',
       alertInvestigating: 'Патруль активно обшукує зону. Сховайтеся!',

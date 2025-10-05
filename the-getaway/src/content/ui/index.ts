@@ -196,7 +196,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       completed: 'Completed Quests',
       empty: 'No quests tracked. Connect with contacts to unlock new objectives.',
       rewardsHeading: 'Rewards',
-      currencyLabel: (amount) => `${amount} ${amount === 1 ? 'credit' : 'credits'}`,
+      currencyLabel: (amount) => `₿${amount} ${amount === 1 ? 'credit' : 'credits'}`,
       experienceLabel: (amount) => `${amount} XP`,
       supplyFallback: 'Supply',
     },
@@ -375,7 +375,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       rewardsHeading: 'Нагорода',
       currencyLabel: (amount) => {
         const label = amount === 1 ? 'кредит' : amount >= 2 && amount <= 4 ? 'кредити' : 'кредитів';
-        return `${amount} ${label}`;
+        return `₿${amount} ${label}`;
       },
       experienceLabel: (amount) => `${amount} ОД досвіду`,
       supplyFallback: 'поставка',
