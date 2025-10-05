@@ -138,58 +138,10 @@ const applyBuildingConnections = (
 
 const applyDistrictDecorations = (
   mapArea: MapArea,
-  buildings: LevelBuildingDefinition[]
+  _buildings: LevelBuildingDefinition[]
 ): MapArea => {
-  const clonedTiles = mapArea.tiles.map((row) =>
-    row.map((tile) => ({
-      ...tile,
-      position: { ...tile.position },
-      skillRequirement: tile.skillRequirement
-        ? { ...tile.skillRequirement }
-        : undefined,
-    }))
-  );
-
-  const promoteCover = (x: number, y: number) => {
-    if (y < 0 || y >= clonedTiles.length) return;
-    if (x < 0 || x >= clonedTiles[0]?.length) return;
-    const tile = clonedTiles[y][x];
-    if (!tile || tile.type === TileType.WALL || tile.type === TileType.DOOR) {
-      return;
-    }
-
-    tile.type = TileType.COVER;
-    tile.provideCover = true;
-    tile.isWalkable = true;
-  };
-
-  buildings.forEach((building) => {
-    const door = building.door;
-    if (!door) {
-      return;
-    }
-
-    if (building.district === 'slums') {
-      const offsets = [
-        { x: 0, y: 1 },
-        { x: -1, y: 1 },
-        { x: 1, y: 1 },
-        { x: 0, y: 2 },
-      ];
-      offsets.forEach((offset) => promoteCover(door.x + offset.x, door.y + offset.y));
-    } else if (building.district === 'downtown') {
-      const offsets = [
-        { x: -1, y: 1 },
-        { x: 1, y: 1 },
-      ];
-      offsets.forEach((offset) => promoteCover(door.x + offset.x, door.y + offset.y));
-    }
-  });
-
-  return {
-    ...mapArea,
-    tiles: clonedTiles,
-  };
+  // All decorative cover objects disabled - clean map with only buildings, NPCs, and doors
+  return mapArea;
 };
 
 interface BuildWorldParams {
