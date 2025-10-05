@@ -96,7 +96,7 @@ The AP system means characters with higher agility or certain perks get more don
 
 Stamina - Sustained Effort Resource
 
-Stamina is a third core resource (alongside Health and AP) that represents physical exertion and fatigue. Unlike AP which refreshes each turn, stamina depletes over multiple turns and regenerates slowly, creating strategic resource management across prolonged engagements.
+Stamina is a third core resource (alongside Health and AP) that represents physical exertion outside of moment-to-moment combat. Where AP governs tactical turns, stamina measures how long the crew can sprint, climb, and hustle through hostile zones before needing a break.
 
 **Core Stamina Pool (MVP - Step 24.5):**
 	•	Base Stamina: 50 + (Endurance × 5)
@@ -104,63 +104,64 @@ Stamina is a third core resource (alongside Health and AP) that represents physi
 		○	Medium Endurance (5): 75 stamina
 		○	High Endurance (8): 90 stamina
 		○	Maximum Endurance (10): 100 stamina
-	•	Regeneration: +5 stamina per turn (passive, automatic)
-	•	Full Restore: Stamina refills to max on level-up (like health)
+	•	Passive Regeneration: +3 stamina each overworld tick while walking or idle
+	•	Rest Actions: Safehouse sleep, campsite rest, or stamina consumables restore larger chunks instantly (rest = full restore)
+	•	Full Restore: Level-ups refill stamina to max alongside the health bonus
+	•	Combat Freeze: Stamina does not change while combat is active; AP handles all turn-by-turn costs
 
 **Stamina Costs (MVP):**
-	•	Movement: 2 stamina per tile (in addition to 1 AP)
-	•	Melee Attack: 4 stamina (physical exertion)
-	•	Ranged Attack: 3 stamina (aiming, recoil management)
-	•	Heavy Attack: 5 stamina (explosives, heavy weapons)
-	•	Actions fail if stamina < required cost
+	•	Sprint/Dash: 2 stamina per tile on the overworld grid
+	•	Climb/Vault/Force Door: 6 stamina per attempt
+	•	Encumbrance Drift: Moving while above 80% carry weight drains 1 extra stamina per tile until the load lightens
+	•	Sustained Tasks: Lockpicking, hacking, or crafting attempts beyond the first cost 1 stamina apiece (representing prolonged focus)
+	•	Stealth Burst: Optional silent takedown or quick reposition maneuver (future Step 26.x) can consume stamina for tactical variety without touching core combat loops
 
 **Exhaustion Penalties (MVP):**
 When stamina drops below 30%, the character becomes exhausted:
-	•	Hit Chance: -10%
-	•	Damage Dealt: -10%
-	•	Cannot perform actions requiring > 5 stamina
-	•	Visual indicator: Green stamina bar turns yellow/orange, breathing animation, exhaustion icon
+	•	Overworld Movement: -25% travel speed; sprinting/climbing disabled until stamina > 40%
+	•	Skill Pressure: Dialogue, stealth, and interaction checks take a -10% success penalty
+	•	Strenuous Actions: Additional 1 stamina surcharge; actions abort if stamina would fall below 0
+	•	Visual Feedback: Stamina bar shifts from green to amber, "Fatigued" icon pulses on the HUD
 
 **Tactical Implications:**
-	•	AP limits what you can do this turn; stamina limits what you can sustain across multiple turns
-	•	Aggressive play (constant attacking/movement) causes exhaustion
-	•	Defensive play allows stamina recovery
-	•	High Endurance builds can sustain 6+ turn engagements; low Endurance exhausts after 3-4 turns
-	•	Level-up timing becomes tactical: full stamina restore can turn the tide of difficult fights
+	•	AP defines tactical turns; stamina shapes mission pacing and route planning
+	•	Extended sprints or forced entries push the squad toward exhaustion before firefights begin
+	•	Rest stops become strategic choices—risks of ambush vs benefits of restored stamina
+	•	High Endurance builds excel at long infiltration runs; low Endurance teams must plan shorter bursts and lean on equipment
+	•	Consumables and perks that mitigate fatigue are valuable for marathon operations or curfew runs
 
 **Advanced Stamina Features (POST-MVP - Step 26.1):**
-These features expand stamina into environmental and survival systems:
+These extend stamina into survival and environmental storytelling without reintroducing combat bookkeeping:
 
 	•	Day/Night Modifiers:
-		○	Day (6AM-10PM): Normal costs, normal regen
-		○	Night (10PM-6AM): +25% costs, -2 regen (exhaustion from stress, poor visibility)
-		○	Curfew zones: Additional -3 stamina/turn (paranoia drain)
+		○	Day (6AM-10PM): Baseline costs and regen
+		○	Night (10PM-6AM): +25% stamina costs, -1 passive regen (stress, low visibility)
+		○	Curfew Patrols: Entering high-threat zones applies an additional -3 stamina per overworld tick from adrenaline dump
 
 	•	Circadian Fatigue:
-		○	Track hours awake; after 8 hours, max stamina -10% per additional hour
-		○	Sleep at safehouse resets fatigue and restores stamina
-		○	Consumables (Coffee, Stims) delay fatigue but accelerate later
-		○	All-nighter (16+ hours): Permanent exhaustion until rest
+		○	Track hours awake; after 8 hours, max stamina drops 10% per additional hour
+		○	Safehouse sleep resets fatigue; stimulants delay penalties but cause a heavier crash later
+		○	Pulling an all-nighter (16+ hours) locks the squad into Exhausted state until a full rest
 
 	•	Environmental Effects:
-		○	Industrial zones: -2 stamina/turn (pollution)
-		○	Rough terrain: Double movement cost (4 stamina)
-		○	Heat waves: +20% all costs
-		○	Toxic areas: -1 regen while exposed
+		○	Industrial smog: -2 stamina per tick while exposed
+		○	Rough terrain: Double sprint costs (4 stamina per tile)
+		○	Heat waves: +20% stamina costs, reduced regen
+		○	Toxic zones: Regen suppressed until protective gear is equipped
 
 	•	Advanced Perks & Skills:
-		○	Conditioning (Survival skill, 0-100): Reduce costs by 0.5%/point (max 50% at 100)
-		○	Second Wind (Perk): Auto-restore 40 stamina when < 10 (once per combat)
-		○	Battle Trance (Level 15+ ability): Ignore costs for 3 turns, then crash
-		○	Iron Lungs (Perk): +25% stamina regen
+		○	Conditioning (Survival skill): Reduce stamina costs by 0.5% per point (max 50% at 100)
+		○	Second Wind (Perk): Once per mission, restore 40 stamina when the bar drops below 10
+		○	Steady Hands (Perk synergy): Negate stamina penalties on interaction checks while Fatigued
+		○	Iron Lungs (Perk): +25% passive regen and resistance to environmental drains
 
 	•	Rest & Recovery:
-		○	Safehouse options: Quick Rest (50% restore), Full Sleep (100% + reset fatigue)
-		○	Sleeping Bag: Rest anywhere with encounter risk
-		○	Food/Water: Well-fed +2 regen, Hungry/Dehydrated penalties
+		○	Safehouse options: Quick Rest (restore 50%), Full Sleep (restore 100% and clear fatigue debuffs)
+		○	Sleeping Bag: Rest anywhere with encounter risk and partial restore
+		○	Food/Water: Being well-fed grants +1 regen; hunger/thirst impose additional stamina penalties
 
 **Design Philosophy:**
-Stamina adds depth without overwhelming complexity. The MVP provides immediate tactical decisions (when to push vs recover), while advanced features integrate stamina into the living world (time, environment, survival). Both systems reward strategic planning: players who manage resources across day/night cycles, plan rest stops, and invest in Endurance/Survival builds gain significant advantages in prolonged conflicts and dangerous zones.
+Stamina reinforces the campaign’s push-and-pull between daring infiltration and safehouse reprieves. By keeping combat purely AP-driven, we avoid double bookkeeping during firefights while still rewarding players who plan routes, manage encumbrance, and schedule rest. Advanced hooks let designers layer time pressure, environmental hazards, and survival challenges without overwhelming the core tactical experience.
 </balance_values>
 </mechanic>
 

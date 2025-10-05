@@ -956,63 +956,65 @@ Add stamina as a third core resource (alongside Health and AP) that governs phys
 
 <details>
 **Core Stamina Mechanics:**
-- Add `stamina`, `maxStamina`, `isExhausted` to Player interface in `src/game/interfaces/types.ts`
-- Base calculation: `maxStamina = 50 + (player.skills.endurance × 5)`
-- Passive regeneration: +5 stamina per turn (in `endTurn` reducer)
-- Exhaustion threshold: stamina < 30% triggers `isExhausted = true`
+- Add `stamina`, `maxStamina`, `isExhausted` to `Player` in `src/game/interfaces/types.ts` alongside helpers for updating them.
+- Base calculation: `maxStamina = 50 + (attributes.endurance * 5)`.
+- Passive regeneration: +3 stamina per overworld tick when the player is idle or walking; no automatic regen during combat turns.
+- Recovery actions: using a rest interaction, sleeping in a safehouse bed, or consuming stamina-restoring items immediately restores a configured amount (rest restores to full).
+- Exhaustion threshold: stamina < 30% of max triggers `isExhausted = true`; clear the flag automatically once stamina climbs back above 40%.
 
-**Stamina Costs:**
-- Movement: 2 stamina per tile
-- Melee attack: 4 stamina
-- Ranged attack (pistol/rifle): 3 stamina
-- Heavy attack (explosives/heavy weapons): 5 stamina
-- Actions fail if stamina < cost (show warning tooltip)
+**Stamina Usage (Out of Combat):**
+- Sprinting or dashing on the overworld grid consumes 2 stamina per tile; normal walking is free.
+- Climbing, vaulting, or forcing locked doors consumes 6 stamina.
+- Carrying weight above 80% of capacity drains 1 stamina per tile while moving until weight returns to safe limits.
+- Lockpicking, hacking, or crafting multiple attempts in a row costs 1 stamina after the first attempt to model sustained effort.
+- Stamina remains fixed while combat is active; all combat actions are AP-only and do not consume or restore stamina.
 
-**Exhaustion Penalties (when isExhausted = true):**
-- Hit chance: -10%
-- Damage dealt: -10%
-- Cannot perform actions requiring > 5 stamina (too exhausting)
+**Exhaustion Penalties (when `isExhausted = true`):**
+- Reduce overworld movement speed by 25% and disable sprinting/climbing interactions.
+- Dialogue and exploration skill checks suffer a -10% success penalty until stamina recovers above the threshold.
+- Strenuous interactions (lockpick, hack, craft) cost an additional 1 stamina while fatigued and can fail outright if stamina drops to 0.
 
 **Level-Up Integration:**
-- Full stamina restore when player levels up (add to `addExperience` reducer on level threshold)
-- Show stamina preview in `LevelUpPointAllocationPanel` when allocating Endurance (+5 max stamina per point)
+- Restore stamina to full when the player levels up (extend `addExperience` reducer).
+- Update `LevelUpPointAllocationPanel` to show the projected stamina increase when hovering or assigning Endurance points (+5 max stamina per point).
 
-**Combat System Integration:**
-- Extend `executeMove` in `combatSystem.ts` to consume 2 stamina
-- Extend `executeAttack` to consume stamina based on weapon type
-- Apply exhaustion penalties to hit/damage calculations when `player.isExhausted`
-- Check stamina availability before allowing actions
+**Systems Integration:**
+- Extend overworld movement handlers (e.g., `src/game/world/worldMovementSystem.ts`) to call `consumeStamina` when sprinting or moving while encumbered.
+- Update interaction reducers (`attemptLockpick`, `attemptHack`, `performClimb`) to spend stamina and block the action when not enough remains.
+- Provide an `endOfTurnOutOfCombat` hook that triggers passive regeneration when the player is idle.
+- When combat starts, freeze stamina consumption/regeneration until the encounter ends to keep the resource strictly tied to exploration pacing.
 
 **UI Components:**
-- Add `AnimatedStatBar` for stamina in `PlayerSummaryPanel` (green palette: #22c55e)
-- Show exhaustion indicator when stamina < 30% (reuse `StatusEffectIcon` pattern)
-- Display stamina costs in combat action tooltips
-- Update `LevelUpPointAllocationPanel` to show stamina preview when hovering Endurance
+- Add a stamina bar to `PlayerSummaryPanel` using the green palette (#22c55e) and display a "Fatigued" icon when exhausted.
+- Surface stamina costs in exploration tooltips (sprint, climb, lockpick) and in any contextual action modals.
+- Show rest prompts (camp, safehouse bed) with the stamina amount they restore.
+- Update `LevelUpPointAllocationPanel` previews to reflect stamina changes from Endurance investments.
 
 **Redux State (`playerSlice.ts`):**
-- New fields: `stamina: number`, `maxStamina: number`, `isExhausted: boolean`
+- New fields: `stamina: number`, `maxStamina: number`, `isExhausted: boolean`.
 - New reducers:
-  - `consumeStamina(state, action: PayloadAction<number>)`
-  - `regenerateStamina(state)` - called in `endTurn`
-  - `updateMaxStamina(state)` - called when Endurance changes
-- Modified reducer: `addExperience` - restore stamina to max on level-up
+  - `consumeStamina(state, action: PayloadAction<number>)` guarded to prevent negative values.
+  - `regenerateStamina(state, action: PayloadAction<number | undefined>)` with a default of `STAMINA_REGEN_OUT_OF_COMBAT` and a cap at `maxStamina`.
+  - `updateMaxStamina(state)` invoked whenever Endurance changes or derived stats recompute.
+- Modified reducers: `addExperience` (full restore on level-up) and exploration interactions (`attemptLockpick`, `sprint`, etc.) to call the new helpers.
 
 **Content Files:**
-- Create `src/game/combat/staminaCosts.ts`:
+- Create `src/game/systems/stamina.ts` with shared constants and helpers:
   ```typescript
   export const STAMINA_COSTS = {
-    movement: 2,
-    meleeAttack: 4,
-    rangedAttack: 3,
-    heavyAttack: 5,
+    sprintTile: 2,
+    climbObstacle: 6,
+    strenuousInteraction: 1, // lockpick/hack attempts after the first
   };
 
-  export const STAMINA_REGEN = 5;
-  export const EXHAUSTION_THRESHOLD = 0.3; // 30%
+  export const STAMINA_REGEN_OUT_OF_COMBAT = 3;
+  export const EXHAUSTION_THRESHOLD = 0.3;
+  export const EXHAUSTION_RECOVERY = 0.4;
   ```
+- Reference the module from reducers, movement systems, and UI components to avoid duplicated literals.
 
 **Derived Stats Update:**
-- Modify `calculateDerivedStats` in `src/game/systems/statCalculations.ts`:
+- Adjust `calculateDerivedStats` in `src/game/systems/statCalculations.ts`:
   ```typescript
   maxStamina: 50 + (attributes.endurance * 5),
   ```
@@ -1020,49 +1022,52 @@ Add stamina as a third core resource (alongside Health and AP) that governs phys
 **Locale Strings:**
 - Add to `content/ui/index.ts` (en/uk):
   - "Stamina"
-  - "Exhausted"
+  - "Fatigued"
   - Tooltip: "Not enough stamina"
-  - Combat log: "Too exhausted to act effectively"
+  - Exploration prompt: "You are too tired to sprint"
+  - Interaction warning: "Fatigue makes this harder"
 </details>
 
 <test>
 **Unit Tests:**
 - `playerSlice.test.ts`:
-  - Player with Endurance 5 has maxStamina 75 (50 + 25)
-  - `consumeStamina(10)` reduces stamina by 10
-  - `regenerateStamina()` increases stamina by 5 (capped at max)
-  - `isExhausted` = true when stamina < 30%, false otherwise
-  - Level-up restores stamina to max
+  - Endurance 5 produces `maxStamina` 75 (50 + 25).
+  - `consumeStamina(10)` lowers stamina by 10 and never below 0.
+  - `regenerateStamina()` raises stamina by default 3 and caps at `maxStamina`.
+  - Exhaustion toggles to true below 30% and clears once stamina exceeds 40%.
+  - Level-up path fully restores stamina.
 
-- `combat.test.ts`:
-  - Movement consumes 2 stamina
-  - Melee attack consumes 4 stamina
-  - Ranged attack consumes 3 stamina
-  - Exhausted player has -10% hit chance and damage
-  - Action fails gracefully if stamina insufficient
+- `worldMovementSystem.test.ts`:
+  - Sprinting consumes 2 stamina per tile; walking leaves stamina unchanged.
+  - Moving while encumbered drains an extra point per tile until load is reduced.
+  - Attempting to sprint without enough stamina surfaces a blocking error and keeps position unchanged.
+
+- `interactionReducers.test.ts`:
+  - Lockpick attempts beyond the first spend stamina; lack of stamina blocks the attempt with a tooltip message.
+  - Climb interaction enforces the 6 stamina cost and fails gracefully when fatigued.
 
 - `statCalculations.test.ts`:
-  - Derived stats include correct maxStamina calculation
+  - Derived stats include the correct stamina formula and respond to Endurance changes.
 
 **Integration Tests:**
-- Create player with Endurance 8 → maxStamina = 90
-- Move 10 times → stamina drops by 20 → verify 70 remaining
-- Perform 15 melee attacks → stamina depletes to <30% → exhaustion triggers
-- Exhausted player attacks enemy → verify -10% hit and damage applied
-- Player levels up mid-combat → stamina restores to max
-- Allocate +1 Endurance in level-up panel → preview shows "+5 max stamina"
+- Create player with Endurance 8 → `maxStamina = 90`.
+- Sprint 10 tiles → stamina drops by 20 → confirm 70 remaining.
+- Carry weight above 80% capacity and move 5 tiles → verify additional 5 stamina drain.
+- Trigger exhaustion (<30%), start a combat encounter, and confirm stamina neither regenerates nor decreases while the fight is active.
+- Rest at a safehouse → stamina returns to full and exhaustion clears.
+- Allocate +1 Endurance during level-up → preview displays `+5 max stamina` and state updates accordingly.
 
 **Visual Tests:**
-- Load game → green stamina bar appears below red health bar
-- Deplete stamina to <30% → bar turns yellow/orange, exhaustion icon appears
-- Attempt action with insufficient stamina → red warning tooltip shows "Not enough stamina (need 4, have 2)"
-- Level up → stamina bar animates from current value to max with smooth fill
+- Overworld HUD shows the green stamina bar beneath health and AP bars.
+- Stamina bar shifts to yellow and displays the "Fatigued" icon when below 30%.
+- Sprint button tooltip updates to "Not enough stamina" when attempting to sprint while fatigued.
+- Rest interaction panel communicates the stamina restored and animates the bar back to max.
 
 **Gameplay Balance:**
-- Average combat (5 turns): Player can move + attack 3-4 times before exhaustion
-- High Endurance build (Endurance 10): 100 max stamina, sustains 6+ turns
-- Low Endurance build (Endurance 3): 65 max stamina, exhausts after 4 turns
-- Stamina regen (5/turn) allows recovery during defensive play
+- Typical patrol loop (travel → stealth infiltration → post-combat regroup) spends ~40 stamina from movement and interactions, nudging rest stops every 2-3 missions while combat itself leaves stamina untouched.
+- High Endurance build (Endurance 10) reaches `maxStamina 100`, enabling longer sprint chains and easier encumbrance management.
+- Low Endurance build (Endurance 3) caps at 65 stamina, making rest and inventory discipline essential.
+- Passive regen while idle keeps walking routes comfortable without forcing constant rest micromanagement.
 
 yarn build && yarn test
 </test>
