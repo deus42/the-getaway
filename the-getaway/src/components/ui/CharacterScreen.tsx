@@ -92,10 +92,12 @@ const closeButtonStyle: React.CSSProperties = {
   transition: 'all 0.2s ease',
 };
 
+const DEFAULT_COLUMNS = 'minmax(320px, 0.85fr) minmax(0, 1.35fr)';
+
 const bodyStyle: React.CSSProperties = {
   flex: 1,
   display: 'grid',
-  gridTemplateColumns: 'minmax(320px, 0.85fr) minmax(0, 1.35fr)',
+  gridTemplateColumns: DEFAULT_COLUMNS,
   gap: '1rem',
   padding: '1.2rem',
   minHeight: 0,
@@ -227,6 +229,11 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   const [showProfile, setShowProfile] = useState(true);
   const [showSystems, setShowSystems] = useState(true);
 
+  const layoutStyle = useMemo<React.CSSProperties>(() => ({
+    ...bodyStyle,
+    gridTemplateColumns: showProfile && showSystems ? DEFAULT_COLUMNS : '1fr',
+  }), [showProfile, showSystems]);
+
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       onClose();
@@ -247,20 +254,16 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [open, handleKeyDown]);
 
+  useEffect(() => {
+    if (open) {
+      setShowProfile(true);
+      setShowSystems(true);
+    }
+  }, [open]);
+
   if (!open) {
     return null;
   }
-
-  const layoutStyle = useMemo<React.CSSProperties>(() => {
-    const columns = showProfile && showSystems
-      ? 'minmax(320px, 0.85fr) minmax(0, 1.35fr)'
-      : '1fr';
-    return {
-      ...bodyStyle,
-      gridTemplateColumns: columns,
-      display: showProfile || showSystems ? 'grid' : 'flex',
-    };
-  }, [showProfile, showSystems]);
 
   const handleOverlayClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
@@ -398,7 +401,9 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             </div>
           )}
           {!showProfile && !showSystems && (
-            <div style={hiddenStateStyle}>Toggle a panel to view character data.</div>
+            <div style={{ ...hiddenStateStyle, gridColumn: '1 / -1' }}>
+              Toggle a panel to view character data.
+            </div>
           )}
         </div>
       </div>
