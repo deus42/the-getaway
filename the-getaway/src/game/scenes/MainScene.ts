@@ -66,7 +66,6 @@ export class MainScene extends Phaser.Scene {
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private npcSprites: Map<string, NpcSpriteData> = new Map();
   private currentMapArea: MapArea | null = null;
-  private buildingDefinitions: LevelBuildingDefinition[] = [];
   private buildingLabels: Phaser.GameObjects.Container[] = [];
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
@@ -100,7 +99,6 @@ export class MainScene extends Phaser.Scene {
   public init(data: { mapArea: MapArea, playerPosition: Position, buildings?: LevelBuildingDefinition[] }): void {
     this.currentMapArea = data.mapArea;
     this.playerInitialPosition = data.playerPosition;
-    this.buildingDefinitions = data.buildings || [];
     this.enemySprites = new Map<string, EnemySpriteData>(); // Reset map on init
     this.npcSprites = new Map<string, NpcSpriteData>();
     this.isCameraFollowingPlayer = false;
@@ -1089,36 +1087,62 @@ export class MainScene extends Phaser.Scene {
     const frontBottomLeft = basePoints[3];
     const frontBottomRight = basePoints[2];
 
-    const frameTopLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.2);
-    const frameTopRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.2);
-    const frameBottomRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.85);
-    const frameBottomLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.85);
+    const frameTopLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.15);
+    const frameTopRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.15);
+    const frameBottomRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.88);
+    const frameBottomLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.88);
 
-    this.mapGraphics.fillStyle(0x191c26, 0.95);
+    // Outer frame - dark metallic
+    this.mapGraphics.fillStyle(0x1a1f2e, 0.98);
     this.mapGraphics.fillPoints([frameTopLeft, frameTopRight, frameBottomRight, frameBottomLeft], true);
 
-    this.mapGraphics.lineStyle(1.2, 0xf3c58c, 0.8);
-    this.mapGraphics.strokePoints([frameTopLeft, frameTopRight, frameBottomRight, frameBottomLeft], true);
+    // Frame highlights - cyberpunk edge lighting
+    this.mapGraphics.lineStyle(1.8, 0x38bdf8, 0.65);
+    this.mapGraphics.strokePoints([frameTopLeft, frameTopRight], false);
+    this.mapGraphics.lineStyle(1.2, 0x1e40af, 0.45);
+    this.mapGraphics.strokePoints([frameBottomLeft, frameBottomRight], false);
 
-    const panelInset = 0.2;
+    // Door panel with gradient effect
+    const panelInset = 0.18;
     const panelTopLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, panelInset);
     const panelTopRight = this.lerpPoint(frameTopRight, frameBottomRight, panelInset);
-    const panelBottomRight = this.lerpPoint(frameTopRight, frameBottomRight, 1 - panelInset * 0.35);
-    const panelBottomLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, 1 - panelInset * 0.35);
+    const panelBottomRight = this.lerpPoint(frameTopRight, frameBottomRight, 1 - panelInset * 0.4);
+    const panelBottomLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, 1 - panelInset * 0.4);
 
-    this.mapGraphics.fillStyle(0x242c3a, 0.92);
+    // Main panel - dark with slight transparency for depth
+    this.mapGraphics.fillStyle(0x0f172a, 0.85);
     this.mapGraphics.fillPoints([panelTopLeft, panelTopRight, panelBottomRight, panelBottomLeft], true);
 
-    const handleTopLeft = this.lerpPoint(panelTopLeft, panelTopRight, 0.72);
-    const handleTopRight = this.lerpPoint(panelTopLeft, panelTopRight, 0.82);
-    const handleBottomRight = this.lerpPoint(panelBottomLeft, panelBottomRight, 0.82);
-    const handleBottomLeft = this.lerpPoint(panelBottomLeft, panelBottomRight, 0.72);
+    // Panel highlight overlay - creates glass/holographic effect
+    const highlightTopLeft = this.lerpPoint(panelTopLeft, panelBottomLeft, 0.05);
+    const highlightTopRight = this.lerpPoint(panelTopRight, panelBottomRight, 0.05);
+    const highlightBottomRight = this.lerpPoint(panelTopRight, panelBottomRight, 0.35);
+    const highlightBottomLeft = this.lerpPoint(panelTopLeft, panelBottomLeft, 0.35);
 
-    this.mapGraphics.fillStyle(0xfacc15, 0.85);
-    this.mapGraphics.fillPoints(
-      [handleTopLeft, handleTopRight, handleBottomRight, handleBottomLeft],
-      true
+    this.mapGraphics.fillStyle(0x38bdf8, 0.12);
+    this.mapGraphics.fillPoints([highlightTopLeft, highlightTopRight, highlightBottomRight, highlightBottomLeft], true);
+
+    // Access panel indicator - small cyan accent
+    const indicatorTop = this.lerpPoint(panelTopLeft, panelTopRight, 0.78);
+    const indicatorBottom = this.lerpPoint(
+      this.lerpPoint(panelTopLeft, panelBottomLeft, 0.28),
+      this.lerpPoint(panelTopRight, panelBottomRight, 0.28),
+      0.78
     );
+    const indicatorHeight = Math.abs(indicatorBottom.y - indicatorTop.y);
+    const indicatorWidth = indicatorHeight * 0.4;
+
+    this.mapGraphics.fillStyle(0x06b6d4, 0.9);
+    this.mapGraphics.fillRect(
+      indicatorTop.x - indicatorWidth / 2,
+      indicatorTop.y,
+      indicatorWidth,
+      indicatorHeight
+    );
+
+    // Glowing accent line
+    this.mapGraphics.lineStyle(0.8, 0x22d3ee, 0.7);
+    this.mapGraphics.strokePoints([panelTopLeft, panelTopRight], false);
   }
 
   private getTileElevation(type: TileType): number {

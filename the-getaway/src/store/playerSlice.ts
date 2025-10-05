@@ -12,7 +12,12 @@ import {
   EquipmentSlot,
 } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
-import { calculateDerivedStats, calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
+import {
+  calculateDerivedStats,
+  calculateMaxHP,
+  calculateBaseAP,
+  calculateCarryWeight,
+} from '../game/systems/statCalculations';
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
 import { createArmor, createConsumable, createWeapon } from '../game/inventory/inventorySystem';
 import { BACKGROUND_MAP, StartingItemDefinition } from '../content/backgrounds';
@@ -547,6 +552,9 @@ export const playerSlice = createSlice({
       freshPlayer.health = derived.maxHP;
       freshPlayer.maxActionPoints = derived.baseAP;
       freshPlayer.actionPoints = derived.baseAP;
+      freshPlayer.maxStamina = derived.maxStamina;
+      freshPlayer.stamina = derived.maxStamina;
+      freshPlayer.isExhausted = false;
       freshPlayer.inventory = {
         items: [],
         maxWeight: derived.carryWeight,
