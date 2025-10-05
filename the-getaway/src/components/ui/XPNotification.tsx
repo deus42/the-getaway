@@ -16,22 +16,13 @@ interface XPNotificationProps {
 const STACK_SPACING = 24;
 
 const computeAnchor = (detail: PlayerScreenPositionDetail | null): { x: number; y: number } | null => {
-  if (typeof window === 'undefined' || !detail) {
+  if (!detail) {
     return null;
   }
-
-  const canvas = document.querySelector<HTMLCanvasElement>('canvas');
-  if (!canvas) {
-    return null;
-  }
-
-  const rect = canvas.getBoundingClientRect();
-  const width = detail.canvasWidth || rect.width || 1;
-  const height = detail.canvasHeight || rect.height || 1;
 
   return {
-    x: rect.left + (detail.screenX / width) * rect.width,
-    y: rect.top + (detail.screenY / height) * rect.height,
+    x: detail.canvasLeft + detail.screenX,
+    y: detail.canvasTop + detail.screenY,
   };
 };
 

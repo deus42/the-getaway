@@ -119,6 +119,8 @@ export interface PlayerScreenPositionDetail {
   screenY: number;
   canvasWidth: number;
   canvasHeight: number;
+  canvasLeft: number;
+  canvasTop: number;
   zoom: number;
   timestamp: number;
 }

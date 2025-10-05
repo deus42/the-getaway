@@ -1417,6 +1417,8 @@ export class MainScene extends Phaser.Scene {
     const screenX = (worldX - camera.worldView.x) * camera.zoom;
     const screenY = (worldY - camera.worldView.y) * camera.zoom;
 
+    const rect = this.game.canvas?.getBoundingClientRect();
+
     const detail: PlayerScreenPositionDetail = {
       worldX,
       worldY,
@@ -1424,6 +1426,8 @@ export class MainScene extends Phaser.Scene {
       screenY,
       canvasWidth: this.scale.width,
       canvasHeight: this.scale.height,
+      canvasLeft: rect?.left ?? 0,
+      canvasTop: rect?.top ?? 0,
       zoom: camera.zoom,
       timestamp: typeof performance !== 'undefined' ? performance.now() : Date.now(),
     };
