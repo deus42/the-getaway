@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import PlayerSummaryPanel from './PlayerSummaryPanel';
 import PlayerStatsPanel from './PlayerStatsPanel';
 import SkillTreePanel from './SkillTreePanel';
@@ -30,6 +30,7 @@ const overlayStyle: React.CSSProperties = {
 const shellStyle: React.CSSProperties = {
   position: 'relative',
   width: 'min(1400px, 95%)',
+  height: 'min(900px, 92vh)',
   maxHeight: '92vh',
   background: 'linear-gradient(160deg, rgba(15, 23, 42, 0.98), rgba(8, 14, 30, 0.92))',
   borderRadius: '18px',
@@ -92,6 +93,7 @@ const bodyStyle: React.CSSProperties = {
   gap: '1rem',
   padding: '1.2rem',
   minHeight: 0,
+  height: '100%',
   overflow: 'hidden',
 };
 
@@ -100,14 +102,70 @@ const profileColumnStyle: React.CSSProperties = {
   flexDirection: 'column',
   gap: '0.8rem',
   minHeight: 0,
+  height: '100%',
   overflow: 'hidden',
 };
 
 const systemsColumnStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateRows: 'minmax(0, 0.55fr) minmax(0, 1fr)',
-  gap: '1rem',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.8rem',
   minHeight: 0,
+  height: '100%',
+  flex: 1,
+};
+
+const tabShellStyle: React.CSSProperties = {
+  ...characterPanelSurface,
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '0.6rem',
+  gap: '0.8rem',
+  minHeight: 0,
+  height: '100%',
+  flex: 1,
+};
+
+const tabListStyle: React.CSSProperties = {
+  display: 'flex',
+  gap: '0.5rem',
+  alignItems: 'center',
+  flexWrap: 'wrap',
+};
+
+const tabButtonStyle: React.CSSProperties = {
+  borderRadius: '999px',
+  border: '1px solid rgba(148, 163, 184, 0.35)',
+  background: 'rgba(15, 23, 42, 0.6)',
+  color: '#e2e8f0',
+  fontSize: '0.62rem',
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+  padding: '0.32rem 0.9rem',
+  cursor: 'pointer',
+  transition: 'background 0.2s ease, border-color 0.2s ease',
+};
+
+const activeTabButtonStyle: React.CSSProperties = {
+  borderColor: 'rgba(56, 189, 248, 0.6)',
+  background: 'rgba(37, 99, 235, 0.18)',
+  color: '#e0f2fe',
+  filter: 'drop-shadow(0 0 10px rgba(56, 189, 248, 0.4))',
+};
+
+const tabContentStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  height: '100%',
+};
+
+const tabContentInnerStyle: React.CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
 };
 
 const skillTreeWrapperStyle: React.CSSProperties = {
@@ -116,6 +174,7 @@ const skillTreeWrapperStyle: React.CSSProperties = {
   flexDirection: 'column',
   padding: '0.6rem',
   minHeight: 0,
+  flex: 1,
   position: 'relative',
   zIndex: 0,
   overflow: 'hidden',
@@ -125,6 +184,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const [activeTab, setActiveTab] = useState<'inventory' | 'loadout' | 'skills'>('inventory');
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape') {
@@ -191,20 +251,70 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             <PlayerStatsPanel />
           </div>
           <div style={systemsColumnStyle}>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
-                gap: '0.85rem',
-                minHeight: 0,
-              }}
-            >
-              <PlayerInventoryPanel />
-              <PlayerLoadoutPanel />
-            </div>
-            <div style={skillTreeWrapperStyle}>
-              <ScanlineOverlay opacity={0.04} />
-              <SkillTreePanel />
+            <div style={tabShellStyle}>
+              <div style={tabListStyle} role="tablist" aria-label="Character systems">
+                {(
+                  [
+                    { id: 'inventory', label: 'Inventory' },
+                    { id: 'loadout', label: 'Loadout' },
+                    { id: 'skills', label: 'Skill Tree' },
+                  ] as const
+                ).map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={isActive}
+                      aria-controls={`character-tab-${tab.id}`}
+                      id={`character-tab-trigger-${tab.id}`}
+                      onClick={() => setActiveTab(tab.id)}
+                      style={{
+                        ...tabButtonStyle,
+                        ...(isActive ? activeTabButtonStyle : {}),
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={tabContentStyle}>
+                {activeTab === 'inventory' && (
+                  <div
+                    id="character-tab-inventory"
+                    role="tabpanel"
+                    aria-labelledby="character-tab-trigger-inventory"
+                    style={tabContentInnerStyle}
+                  >
+                    <PlayerInventoryPanel />
+                  </div>
+                )}
+                {activeTab === 'loadout' && (
+                  <div
+                    id="character-tab-loadout"
+                    role="tabpanel"
+                    aria-labelledby="character-tab-trigger-loadout"
+                    style={tabContentInnerStyle}
+                  >
+                    <PlayerLoadoutPanel />
+                  </div>
+                )}
+                {activeTab === 'skills' && (
+                  <div
+                    id="character-tab-skills"
+                    role="tabpanel"
+                    aria-labelledby="character-tab-trigger-skills"
+                    style={tabContentInnerStyle}
+                  >
+                    <div style={skillTreeWrapperStyle}>
+                      <ScanlineOverlay opacity={0.04} />
+                      <SkillTreePanel />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

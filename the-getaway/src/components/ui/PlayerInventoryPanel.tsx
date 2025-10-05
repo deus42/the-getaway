@@ -26,12 +26,11 @@ import {
 
 const panelStyle: React.CSSProperties = {
   ...characterPanelSurface,
-  display: 'flex',
-  flexDirection: 'column',
+  display: 'grid',
+  gridTemplateRows: 'auto auto minmax(0, 1fr)',
   gap: '0.75rem',
   minHeight: 0,
   height: '100%',
-  overflow: 'hidden',
 };
 
 const headerRowStyle: React.CSSProperties = {
@@ -74,6 +73,18 @@ const encumbranceRowStyle: React.CSSProperties = {
   gap: '0.18rem',
 };
 
+const filterBarContainerStyle: React.CSSProperties = {
+  position: 'sticky',
+  top: 0,
+  zIndex: 2,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '0.45rem',
+  padding: '0.3rem 0',
+  background: 'rgba(15, 23, 42, 0.92)',
+  borderBottom: '1px solid rgba(56, 189, 248, 0.14)',
+};
+
 const filterBarStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
@@ -95,8 +106,8 @@ const filterButtonBase: React.CSSProperties = {
 
 const itemGridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-  gap: '0.5rem',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+  gap: '0.45rem',
 };
 
 const itemCardStyle: React.CSSProperties = {
@@ -105,8 +116,8 @@ const itemCardStyle: React.CSSProperties = {
   background: 'rgba(15, 23, 42, 0.7)',
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.4rem',
-  padding: '0.6rem 0.65rem',
+  gap: '0.34rem',
+  padding: '0.52rem 0.55rem',
   color: '#e2e8f0',
 };
 
@@ -114,12 +125,16 @@ const itemHeaderStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  gap: '0.35rem',
+  gap: '0.3rem',
 };
 
 const itemTitleStyle: React.CSSProperties = {
   fontSize: '0.74rem',
   fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.35rem',
+  flexWrap: 'wrap',
 };
 
 const badgeStyle = (accent: string): React.CSSProperties => ({
@@ -151,8 +166,8 @@ const durabilityTrackStyle: React.CSSProperties = {
 const actionRowStyle: React.CSSProperties = {
   display: 'flex',
   flexWrap: 'wrap',
-  gap: '0.35rem',
-  marginTop: '0.2rem',
+  gap: '0.3rem',
+  marginTop: '0.15rem',
 };
 
 const actionButtonStyle: React.CSSProperties = {
@@ -167,13 +182,18 @@ const actionButtonStyle: React.CSSProperties = {
   cursor: 'pointer',
 };
 
-const hotbarSelectStyle: React.CSSProperties = {
-  background: 'rgba(30, 41, 59, 0.7)',
-  color: neonPalette.textPrimary,
-  border: '1px solid rgba(148, 163, 184, 0.24)',
-  borderRadius: '8px',
-  padding: '0.22rem 0.45rem',
-  fontSize: '0.6rem',
+const hotbarPillStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0.18rem 0.4rem',
+  borderRadius: '999px',
+  fontSize: '0.55rem',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  border: '1px solid rgba(56, 189, 248, 0.5)',
+  color: '#e0f2fe',
+  background: 'rgba(37, 99, 235, 0.2)',
 };
 
 const equipmentGridStyle: React.CSSProperties = {
@@ -235,13 +255,14 @@ const emptyStateStyle: React.CSSProperties = {
 };
 
 const scrollContainerStyle: React.CSSProperties = {
-  flex: 1,
   minHeight: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.6rem',
+  gap: '0.7rem',
   overflowY: 'auto',
   paddingRight: '0.4rem',
+  paddingBottom: '0.6rem',
+  position: 'relative',
 };
 
 const listMetaStyle: React.CSSProperties = {
@@ -310,6 +331,14 @@ const resolvePreferredSlot = (item: Item): EquipmentSlot | null => {
     return item.equipSlot;
   }
   if (isWeapon(item)) {
+    const weaponRange = (item as Record<string, unknown>).range;
+    const skillType = (item as Record<string, unknown>).skillType;
+    if (
+      (typeof weaponRange === 'number' && weaponRange <= 1) ||
+      skillType === 'meleeCombat'
+    ) {
+      return 'meleeWeapon';
+    }
     return 'primaryWeapon';
   }
   if (isArmor(item)) {
@@ -432,6 +461,10 @@ const PlayerInventoryPanel: React.FC = () => {
   }, [player.inventory.hotbar]);
   const assignedHotbarCount = hotbarAssignments.filter(Boolean).length;
 
+  const hotbarIsFull = useMemo(() => hotbarAssignments.every((entry) => entry !== null), [
+    hotbarAssignments,
+  ]);
+
   const handleEquip = useCallback(
     (item: Item) => {
       const slot = resolvePreferredSlot(item);
@@ -464,22 +497,20 @@ const PlayerInventoryPanel: React.FC = () => {
     [dispatch]
   );
 
-  const handleHotbarChange = useCallback(
-    (itemId: string, event: React.ChangeEvent<HTMLSelectElement>) => {
-      const value = event.target.value;
-      if (value === 'none') {
-        hotbarAssignments.forEach((entry, index) => {
-          if (entry === itemId) {
-            dispatch(assignHotbarSlot({ slotIndex: index, itemId: null }));
-          }
-        });
+  const handleHotbarToggle = useCallback(
+    (item: Item) => {
+      const currentIndex = hotbarAssignments.findIndex((entry) => entry === item.id);
+      if (currentIndex !== -1) {
+        dispatch(assignHotbarSlot({ slotIndex: currentIndex, itemId: null }));
         return;
       }
 
-      const slotIndex = parseInt(value, 10);
-      if (Number.isInteger(slotIndex)) {
-        dispatch(assignHotbarSlot({ slotIndex, itemId }));
+      const emptyIndex = hotbarAssignments.findIndex((entry) => entry === null);
+      if (emptyIndex === -1) {
+        return;
       }
+
+      dispatch(assignHotbarSlot({ slotIndex: emptyIndex, itemId: item.id }));
     },
     [dispatch, hotbarAssignments]
   );
@@ -570,34 +601,36 @@ const PlayerInventoryPanel: React.FC = () => {
       </div>
 
       <div style={scrollContainerStyle}>
-        <div style={filterBarStyle} role="group" aria-label="Inventory filters">
-          {FILTERS.map((filter) => {
-            const isActive = activeFilter === filter.id;
-            return (
-              <button
-                key={filter.id}
-                type="button"
-                style={{
-                  ...filterButtonBase,
-                  borderColor: isActive ? 'rgba(56, 189, 248, 0.65)' : filterButtonBase.border,
-                  background: isActive ? 'rgba(37, 99, 235, 0.2)' : filterButtonBase.background,
-                  color: isActive ? '#e0f2fe' : filterButtonBase.color,
-                }}
-                aria-pressed={isActive}
-                onClick={() => setActiveFilter(filter.id)}
-              >
-                {filter.label}
-                <span style={{ marginLeft: '0.35rem', color: 'rgba(148, 163, 184, 0.75)' }}>
-                  {filterCounts[filter.id] ?? 0}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+        <div style={filterBarContainerStyle}>
+          <div style={filterBarStyle} role="group" aria-label="Inventory filters">
+            {FILTERS.map((filter) => {
+              const isActive = activeFilter === filter.id;
+              return (
+                <button
+                  key={filter.id}
+                  type="button"
+                  style={{
+                    ...filterButtonBase,
+                    borderColor: isActive ? 'rgba(56, 189, 248, 0.65)' : filterButtonBase.border,
+                    background: isActive ? 'rgba(37, 99, 235, 0.2)' : filterButtonBase.background,
+                    color: isActive ? '#e0f2fe' : filterButtonBase.color,
+                  }}
+                  aria-pressed={isActive}
+                  onClick={() => setActiveFilter(filter.id)}
+                >
+                  {filter.label}
+                  <span style={{ marginLeft: '0.35rem', color: 'rgba(148, 163, 184, 0.75)' }}>
+                    {filterCounts[filter.id] ?? 0}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
 
-        <span style={listMetaStyle}>
-          Showing {sortedItems.length} of {inventoryEntries.length} items
-        </span>
+          <span style={listMetaStyle}>
+            Showing {sortedItems.length} of {inventoryEntries.length} items
+          </span>
+        </div>
 
         {sortedItems.length === 0 ? (
           <span style={emptyStateStyle}>Pack is empty — time to scavenge.</span>
@@ -613,13 +646,23 @@ const PlayerInventoryPanel: React.FC = () => {
               : 0;
             const estimatedRepairCost = missingDurability * REPAIR_COST_PER_POINT;
             const hotbarIndex = hotbarAssignments.findIndex((entry) => entry === item.id);
+            const isHotbarAssigned = hotbarIndex !== -1;
+            const hotbarButtonDisabled = !isHotbarAssigned && hotbarIsFull;
+            const hotbarButtonLabel = isHotbarAssigned
+              ? 'Remove from Hotbar'
+              : hotbarButtonDisabled
+              ? 'Hotbar Full'
+              : 'Add to Hotbar';
 
             return (
               <div key={item.id} style={itemCardStyle} role="listitem" aria-label={item.name}>
                 <div style={itemHeaderStyle}>
                   <div style={itemTitleStyle}>
-                    {item.name}
-                    {quantity > 1 && <span style={{ marginLeft: '0.3rem', fontSize: '0.62rem' }}>×{quantity}</span>}
+                    <span>{item.name}</span>
+                    {quantity > 1 && <span style={{ fontSize: '0.62rem', color: neonPalette.textMuted }}>×{quantity}</span>}
+                    {isHotbarAssigned && (
+                      <span style={hotbarPillStyle}>Hotbar {hotbarIndex + 1}</span>
+                    )}
                   </div>
                   <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                     {item.isQuestItem && <span style={badgeStyle('#fbbf24')}>Quest</span>}
@@ -678,23 +721,20 @@ const PlayerInventoryPanel: React.FC = () => {
                       Use
                     </button>
                   )}
-
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '0.28rem' }}>
-                    <span style={{ fontSize: '0.58rem', color: neonPalette.textMuted }}>Hotbar</span>
-                    <select
-                      value={hotbarIndex === -1 ? 'none' : String(hotbarIndex)}
-                      onChange={(event) => handleHotbarChange(item.id, event)}
-                      style={hotbarSelectStyle}
-                      aria-label={`Assign ${item.name} to hotbar slot`}
-                    >
-                      <option value="none">None</option>
-                      {hotbarAssignments.map((_, index) => (
-                        <option key={index} value={index}>
-                          Slot {index + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  <button
+                    type="button"
+                    style={{
+                      ...actionButtonStyle,
+                      borderColor: isHotbarAssigned ? 'rgba(248, 113, 113, 0.55)' : '#34d399',
+                      color: isHotbarAssigned ? '#fecaca' : '#bbf7d0',
+                      opacity: hotbarButtonDisabled ? 0.6 : 1,
+                      cursor: hotbarButtonDisabled ? 'not-allowed' : 'pointer',
+                    }}
+                    onClick={() => handleHotbarToggle(item)}
+                    disabled={hotbarButtonDisabled}
+                  >
+                    {hotbarButtonLabel}
+                  </button>
                 </div>
               </div>
             );
@@ -702,75 +742,74 @@ const PlayerInventoryPanel: React.FC = () => {
         </div>
       )}
 
-      </div>
+        <section style={hotbarSectionStyle} aria-label="Equipped items">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={equipmentLabelStyle}>Equipped Loadout</span>
+          </div>
+          <div style={equipmentGridStyle}>
+            {EQUIPMENT_SLOT_METADATA.map((slot) => {
+              const equippedItem = getEquippedItem(slot.id);
+              const condition = equippedItem ? getConditionPercentage(equippedItem) : null;
+              const hasDurability = equippedItem?.durability && condition !== null;
 
-      <section style={hotbarSectionStyle} aria-label="Equipped items">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span style={equipmentLabelStyle}>Equipped Loadout</span>
-        </div>
-        <div style={equipmentGridStyle}>
-          {EQUIPMENT_SLOT_METADATA.map((slot) => {
-            const equippedItem = getEquippedItem(slot.id);
-            const condition = equippedItem ? getConditionPercentage(equippedItem) : null;
-            const hasDurability = equippedItem?.durability && condition !== null;
+              return (
+                <div key={slot.id} style={equipmentCardStyle}>
+                  <span style={equipmentLabelStyle}>{slot.label}</span>
+                  <div style={equipmentValueStyle}>{equippedItem?.name ?? 'Empty'}</div>
+                  <span style={{ ...subtleText, fontSize: '0.58rem' }}>{slot.description}</span>
+                  {hasDurability && (
+                    <div>
+                      <div style={{ ...subtleText, fontSize: '0.56rem', marginBottom: '0.2rem' }}>
+                        Condition {condition}%
+                      </div>
+                      <div style={durabilityTrackStyle} aria-hidden="true">
+                        <div style={getDurabilityFillStyle(condition ?? 0)} />
+                      </div>
+                    </div>
+                  )}
+                  {equippedItem && (
+                    <button
+                      type="button"
+                      style={{ ...actionButtonStyle, alignSelf: 'flex-start' }}
+                      onClick={() => handleUnequip(slot.id)}
+                    >
+                      Unequip
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
 
-            return (
-              <div key={slot.id} style={equipmentCardStyle}>
-                <span style={equipmentLabelStyle}>{slot.label}</span>
-                <div style={equipmentValueStyle}>{equippedItem?.name ?? 'Empty'}</div>
-                <span style={{ ...subtleText, fontSize: '0.58rem' }}>{slot.description}</span>
-                {hasDurability && (
-                  <div>
-                    <div style={{ ...subtleText, fontSize: '0.56rem', marginBottom: '0.2rem' }}>
-                      Condition {condition}%
-                    </div>
-                    <div style={durabilityTrackStyle} aria-hidden="true">
-                      <div style={getDurabilityFillStyle(condition ?? 0)} />
-                    </div>
-                  </div>
-                )}
-                {equippedItem && (
+        <section style={hotbarSectionStyle} aria-label="Hotbar assignments">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <span style={equipmentLabelStyle}>Hotbar</span>
+            <NotificationBadge count={assignedHotbarCount} color="#34d399" size={18} pulse={false} />
+          </div>
+          <div style={hotbarGridStyle}>
+            {hotbarAssignments.map((itemId, index) => {
+              const assignedItem = player.inventory.items.find((entry) => entry.id === itemId);
+              return (
+                <div key={index} style={hotbarSlotStyle}>
+                  <span style={{ fontSize: '0.58rem', color: neonPalette.textMuted }}>Slot {index + 1}</span>
+                  <span style={{ fontSize: '0.64rem', color: neonPalette.textPrimary }}>
+                    {assignedItem?.name ?? 'Unassigned'}
+                  </span>
                   <button
                     type="button"
-                    style={{ ...actionButtonStyle, alignSelf: 'flex-start' }}
-                    onClick={() => handleUnequip(slot.id)}
+                    style={{ ...actionButtonStyle, alignSelf: 'flex-start', padding: '0.18rem 0.4rem' }}
+                    onClick={() => dispatch(assignHotbarSlot({ slotIndex: index, itemId: null }))}
+                    disabled={!itemId}
                   >
-                    Unequip
+                    Clear
                   </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section style={hotbarSectionStyle} aria-label="Hotbar assignments">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          <span style={equipmentLabelStyle}>Hotbar</span>
-          <NotificationBadge count={assignedHotbarCount} color="#34d399" size={18} pulse={false} />
-        </div>
-        <div style={hotbarGridStyle}>
-          {hotbarAssignments.map((itemId, index) => {
-            const assignedItem = player.inventory.items.find((entry) => entry.id === itemId);
-            return (
-              <div key={index} style={hotbarSlotStyle}>
-                <span style={{ fontSize: '0.58rem', color: neonPalette.textMuted }}>Slot {index + 1}</span>
-                <span style={{ fontSize: '0.64rem', color: neonPalette.textPrimary }}>
-                  {assignedItem?.name ?? 'Unassigned'}
-                </span>
-                <button
-                  type="button"
-                  style={{ ...actionButtonStyle, alignSelf: 'flex-start', padding: '0.18rem 0.4rem' }}
-                  onClick={() => dispatch(assignHotbarSlot({ slotIndex: index, itemId: null }))}
-                  disabled={!itemId}
-                >
-                  Clear
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

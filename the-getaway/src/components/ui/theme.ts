@@ -49,6 +49,7 @@ export const characterPanelTitleStyle: React.CSSProperties = {
   fontWeight: 600,
   letterSpacing: '0.05em',
   color: '#f8fafc',
+  margin: 0,
 };
 
 export const cardSurface = {

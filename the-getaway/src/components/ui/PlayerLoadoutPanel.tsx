@@ -35,6 +35,13 @@ const cardsWrapperStyle: React.CSSProperties = {
   paddingRight: '0.2rem',
 };
 
+const equipmentGridStyle: React.CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+  gap: '0.9rem',
+  alignContent: 'start',
+};
+
 const cardStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -76,6 +83,13 @@ const statRowStyle: React.CSSProperties = {
 const warningRowStyle: React.CSSProperties = {
   ...statRowStyle,
   fontWeight: 600,
+};
+
+const cardActionsStyle: React.CSSProperties = {
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '0.4rem',
+  marginTop: '0.25rem',
 };
 
 const statLabelStyle: React.CSSProperties = {
@@ -155,11 +169,25 @@ const equipArmorButtonStyle: React.CSSProperties = {
   background: 'rgba(96, 165, 250, 0.18)',
 };
 
+const equipAccessoryButtonStyle: React.CSSProperties = {
+  ...baseButtonStyle,
+  borderColor: 'rgba(236, 72, 153, 0.55)',
+  background: 'rgba(236, 72, 153, 0.18)',
+};
+
 const resolvePreferredSlot = (item: Item): EquipmentSlot | null => {
   if (item.equipSlot) {
     return item.equipSlot;
   }
   if ('damage' in item) {
+    const weaponRange = (item as Record<string, unknown>).range;
+    const skillType = (item as Record<string, unknown>).skillType;
+    if (
+      (typeof weaponRange === 'number' && weaponRange <= 1) ||
+      skillType === 'meleeCombat'
+    ) {
+      return 'meleeWeapon';
+    }
     return 'primaryWeapon';
   }
   if ('protection' in item) {
@@ -167,6 +195,10 @@ const resolvePreferredSlot = (item: Item): EquipmentSlot | null => {
   }
   return null;
 };
+
+const isWeapon = (item?: Item): item is Weapon => Boolean(item && 'damage' in item);
+
+const isArmor = (item?: Item): item is Armor => Boolean(item && 'protection' in item);
 
 const describeDurability = (durability?: Durability) => {
   if (!durability || durability.max <= 0) {
@@ -215,28 +247,26 @@ const describeDurability = (durability?: Durability) => {
   };
 };
 
+const SLOT_DEFINITIONS: Array<{
+  id: EquipmentSlot;
+  badgeColor: string;
+  label: string;
+  emptyCopy: string;
+}> = [
+  { id: 'primaryWeapon', badgeColor: 'rgba(56, 189, 248, 0.75)', label: 'Primary Weapon', emptyCopy: 'No weapon equipped' },
+  { id: 'secondaryWeapon', badgeColor: 'rgba(59, 130, 246, 0.65)', label: 'Secondary Weapon', emptyCopy: 'No sidearm equipped' },
+  { id: 'meleeWeapon', badgeColor: 'rgba(251, 191, 36, 0.75)', label: 'Melee Weapon', emptyCopy: 'No melee weapon equipped' },
+  { id: 'bodyArmor', badgeColor: 'rgba(96, 165, 250, 0.75)', label: 'Body Armor', emptyCopy: 'No armor equipped' },
+  { id: 'helmet', badgeColor: 'rgba(147, 197, 253, 0.75)', label: 'Headgear', emptyCopy: 'No headgear equipped' },
+  { id: 'accessory1', badgeColor: 'rgba(236, 72, 153, 0.65)', label: 'Accessory I', emptyCopy: 'No accessory slotted' },
+  { id: 'accessory2', badgeColor: 'rgba(236, 72, 153, 0.65)', label: 'Accessory II', emptyCopy: 'No accessory slotted' },
+];
+
+const formatWeight = (value: number): string => value.toFixed(1);
+
 const PlayerLoadoutPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
-  const weapon = player.equipped.weapon;
-  const armor = player.equipped.armor;
-
-  const stowedWeapons = useMemo(
-    () =>
-      player.inventory.items.filter(
-        (item): item is Weapon => resolvePreferredSlot(item) === 'primaryWeapon'
-      ),
-    [player.inventory.items]
-  );
-
-  const stowedArmor = useMemo(
-    () =>
-      player.inventory.items.filter(
-        (item): item is Armor => resolvePreferredSlot(item) === 'bodyArmor'
-      ),
-    [player.inventory.items]
-  );
-
   const { knownPerks, unknownPerkIds } = useMemo(() => {
     const known: PerkDefinition[] = [];
     const unknown: string[] = [];
@@ -253,6 +283,55 @@ const PlayerLoadoutPanel: React.FC = () => {
     return { knownPerks: known, unknownPerkIds: unknown };
   }, [player.perks]);
 
+  const slotInventory = useMemo(() => {
+    const initial: Record<EquipmentSlot, Item[]> = {
+      primaryWeapon: [],
+      secondaryWeapon: [],
+      meleeWeapon: [],
+      bodyArmor: [],
+      helmet: [],
+      accessory1: [],
+      accessory2: [],
+    };
+
+    player.inventory.items.forEach((item) => {
+      const slot = resolvePreferredSlot(item);
+      if (slot && initial[slot]) {
+        initial[slot].push(item);
+      }
+    });
+
+    return initial;
+  }, [player.inventory.items]);
+
+  const getEquippedItem = useCallback(
+    (slot: EquipmentSlot): Item | undefined => {
+      if (player.equippedSlots?.[slot]) {
+        return player.equippedSlots[slot];
+      }
+
+      switch (slot) {
+        case 'primaryWeapon':
+          return player.equipped.weapon;
+        case 'secondaryWeapon':
+          return player.equipped.secondaryWeapon;
+        case 'meleeWeapon':
+          return player.equipped.meleeWeapon;
+        case 'bodyArmor':
+          return player.equipped.bodyArmor ?? player.equipped.armor;
+        case 'helmet':
+          return player.equipped.helmet;
+        case 'accessory1':
+          return player.equipped.accessory1;
+        case 'accessory2':
+          return player.equipped.accessory2;
+        default:
+          return undefined;
+      }
+    },
+    [player.equipped, player.equippedSlots]
+  );
+
   const handleEquipItem = useCallback(
     (itemId: string, slot: EquipmentSlot) => {
       dispatch(equipItem({ itemId, slot }));
@@ -266,120 +345,6 @@ const PlayerLoadoutPanel: React.FC = () => {
     },
     [dispatch]
   );
-
-  const renderWeapon = () => {
-    const durability = describeDurability(weapon?.durability);
-
-    return (
-    <div style={cardStyle}>
-      <div style={badgeStyle('rgba(56, 189, 248, 0.75)')}>Weapon</div>
-      <div style={cardTitleStyle}>{weapon?.name ?? 'Unarmed'}</div>
-      {weapon ? (
-        <>
-          <div style={statRowStyle}>
-            <span style={statLabelStyle}>Damage</span>
-            <span style={statValueEmphasis}>{weapon.damage}</span>
-          </div>
-          <div style={statRowStyle}>
-            <span style={statLabelStyle}>Range</span>
-            <span style={statValueEmphasis}>{weapon.range}</span>
-          </div>
-          <div style={statRowStyle}>
-            <span style={statLabelStyle}>AP Cost</span>
-            <span style={statValueEmphasis}>{weapon.apCost}</span>
-          </div>
-          <div style={statRowStyle}>
-            <span style={statLabelStyle}>Skill</span>
-            <span style={statValueEmphasis}>
-              {weapon.skillType ? (getSkillDefinition(weapon.skillType)?.name ?? '—') : '—'}
-            </span>
-          </div>
-          {durability && (
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>Durability</span>
-              <span style={statValueEmphasis}>{durability.copy}</span>
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            {weapon && (
-              <button
-                type="button"
-                style={unequipButtonStyle}
-                onClick={() => handleUnequip('primaryWeapon')}
-              >
-                Unequip
-              </button>
-            )}
-            {stowedWeapons.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                style={equipWeaponButtonStyle}
-                onClick={() => handleEquipItem(item.id, 'primaryWeapon')}
-              >
-                Equip {item.name}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : (
-        <span style={subtleText}>No weapon equipped</span>
-      )}
-    </div>
-  );
-  };
-
-  const renderArmor = () => {
-    const durability = describeDurability(armor?.durability);
-
-    return (
-    <div style={cardStyle}>
-      <div style={badgeStyle('rgba(96, 165, 250, 0.75)')}>Armor</div>
-      <div style={cardTitleStyle}>{armor?.name ?? 'Unarmored'}</div>
-      {armor ? (
-        <>
-          <div style={statRowStyle}>
-            <span style={statLabelStyle}>Protection</span>
-            <span style={statValueEmphasis}>{armor.protection}</span>
-          </div>
-          <div style={statRowStyle}>
-            <span style={statLabelStyle}>Weight</span>
-            <span style={statValueEmphasis}>{armor.weight.toFixed(1)} kg</span>
-          </div>
-          {durability && (
-            <div style={statRowStyle}>
-              <span style={statLabelStyle}>Durability</span>
-              <span style={statValueEmphasis}>{durability.copy}</span>
-            </div>
-          )}
-          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-            {armor && (
-              <button
-                type="button"
-                style={unequipButtonStyle}
-                onClick={() => handleUnequip('bodyArmor')}
-              >
-                Unequip
-              </button>
-            )}
-            {stowedArmor.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                style={equipArmorButtonStyle}
-                onClick={() => handleEquipItem(item.id, 'bodyArmor')}
-              >
-                Equip {item.name}
-              </button>
-            ))}
-          </div>
-        </>
-      ) : (
-        <span style={subtleText}>No armor equipped</span>
-      )}
-    </div>
-  );
-  };
 
   const renderPerks = () => (
     <div style={cardStyle}>
@@ -411,6 +376,136 @@ const PlayerLoadoutPanel: React.FC = () => {
     </div>
   );
 
+  const statLinesForItem = useCallback(
+    (slot: EquipmentSlot, item?: Item): { label: string; value: string }[] => {
+      if (!item) {
+        return [];
+      }
+
+      if (isWeapon(item)) {
+        const lines = [
+          { label: 'Damage', value: `${item.damage}` },
+          { label: 'Range', value: `${item.range}` },
+          { label: 'AP Cost', value: `${item.apCost}` },
+        ];
+
+        if (item.skillType) {
+          lines.push({
+            label: 'Skill',
+            value: getSkillDefinition(item.skillType)?.name ?? '—',
+          });
+        }
+
+        return lines;
+      }
+
+      if (isArmor(item)) {
+        const protection = typeof item.protection === 'number' ? `${item.protection}` : '—';
+        return [
+          { label: 'Protection', value: protection },
+          { label: 'Weight', value: `${formatWeight(item.weight)} kg` },
+        ];
+      }
+
+      const genericLines = [
+        { label: 'Weight', value: `${formatWeight(item.weight)} kg` },
+        { label: 'Value', value: `₿${item.value}` },
+      ];
+
+      if (slot === 'accessory1' || slot === 'accessory2') {
+        return genericLines;
+      }
+
+      return genericLines;
+    },
+    []
+  );
+
+  const renderSlotCard = (slotDefinition: (typeof SLOT_DEFINITIONS)[number]) => {
+    const { id, label, badgeColor, emptyCopy } = slotDefinition;
+    const equippedItem = getEquippedItem(id);
+    const durability = describeDurability(equippedItem?.durability);
+    const statLines = statLinesForItem(id, equippedItem);
+    const reserveItems = slotInventory[id];
+    const equipButtonStyle =
+      id === 'bodyArmor' || id === 'helmet'
+        ? equipArmorButtonStyle
+        : id === 'accessory1' || id === 'accessory2'
+        ? equipAccessoryButtonStyle
+        : equipWeaponButtonStyle;
+
+    return (
+      <div key={id} style={cardStyle}>
+        <div style={badgeStyle(badgeColor)}>{label}</div>
+        <div style={cardTitleStyle}>{equippedItem?.name ?? emptyCopy}</div>
+
+        {equippedItem ? (
+          <>
+            {statLines.map((line) => (
+              <div key={`${id}-${line.label}`} style={statRowStyle}>
+                <span style={statLabelStyle}>{line.label}</span>
+                <span style={statValueEmphasis}>{line.value}</span>
+              </div>
+            ))}
+
+            {durability && (
+              <div style={durability.style}>
+                <span style={statLabelStyle}>Durability</span>
+                <span style={{ ...statValueEmphasis, color: durability.color }}>{durability.copy}</span>
+              </div>
+            )}
+
+            {equippedItem.description && (
+              <span style={subtleText}>{equippedItem.description}</span>
+            )}
+
+            <div style={cardActionsStyle}>
+              <button
+                type="button"
+                style={unequipButtonStyle}
+                onClick={() => handleUnequip(id)}
+              >
+                Unequip
+              </button>
+              {reserveItems
+                .filter((item) => item.id !== equippedItem.id)
+                .map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    style={equipButtonStyle}
+                    onClick={() => handleEquipItem(item.id, id)}
+                  >
+                    Equip {item.name}
+                  </button>
+                ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <span style={subtleText}>{emptyCopy}</span>
+            {reserveItems.length > 0 ? (
+              <div style={cardActionsStyle}>
+                {reserveItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    style={equipButtonStyle}
+                    onClick={() => handleEquipItem(item.id, id)}
+                  >
+                    Equip {item.name}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span style={{ ...subtleText, fontSize: '0.58rem' }}>No compatible items in pack</span>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div style={panelStyle} data-testid="player-loadout-panel" role="region" aria-label="Player Loadout">
       <header style={headerStyle}>
@@ -418,9 +513,8 @@ const PlayerLoadoutPanel: React.FC = () => {
         <h3 style={headingTitleStyle}>Loadout</h3>
       </header>
       <div style={cardsWrapperStyle}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '0.9rem' }}>
-          {renderWeapon()}
-          {renderArmor()}
+        <div style={equipmentGridStyle}>
+          {SLOT_DEFINITIONS.map(renderSlotCard)}
         </div>
         {renderPerks()}
       </div>

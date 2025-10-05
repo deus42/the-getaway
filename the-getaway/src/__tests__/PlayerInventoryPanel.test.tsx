@@ -93,8 +93,8 @@ describe('PlayerInventoryPanel', () => {
   it('assigns a consumable to a hotbar slot', () => {
     setup();
 
-    const medkitSelect = screen.getByLabelText('Assign Medkit to hotbar slot') as HTMLSelectElement;
-    fireEvent.change(medkitSelect, { target: { value: '0' } });
+    const medkitCard = screen.getByRole('listitem', { name: 'Medkit' });
+    fireEvent.click(within(medkitCard).getByRole('button', { name: 'Add to Hotbar' }));
 
     const hotbarRegion = screen.getByRole('region', { name: 'Hotbar assignments' });
     const slotCard = within(hotbarRegion).getByText('Slot 1').closest('div');
@@ -102,6 +102,8 @@ describe('PlayerInventoryPanel', () => {
     if (slotCard) {
       expect(within(slotCard).getByText('Medkit')).toBeInTheDocument();
     }
+
+    expect(within(medkitCard).getByText('Remove from Hotbar')).toBeInTheDocument();
   });
 
   it('repairs an item and updates durability', async () => {
