@@ -1506,6 +1506,9 @@ export class MainScene extends Phaser.Scene {
 
     const { tileWidth, tileHeight } = this.getIsoMetrics();
 
+    // Color-code path by length/cost - green (cheap) to red (expensive)
+    const pathLength = detail.path.length;
+
     detail.path.forEach((position, index) => {
       const center = this.calculatePixelPosition(position.x, position.y);
       const scale = index === detail.path.length - 1 ? 0.8 : 0.55;
@@ -1515,8 +1518,32 @@ export class MainScene extends Phaser.Scene {
         tileWidth * scale,
         tileHeight * scale
       );
-      const color = index === detail.path.length - 1 ? 0xffc857 : 0x38d9ff;
-      const alpha = index === detail.path.length - 1 ? 0.45 : 0.3;
+
+      let color: number;
+      let alpha: number;
+
+      if (index === detail.path.length - 1) {
+        // Destination marker - bright yellow
+        color = 0xffc857;
+        alpha = 0.5;
+      } else {
+        // Path steps - color by total cost
+        // Green (1-3 steps), Yellow (4-6), Orange (7-9), Red (10+)
+        if (pathLength <= 3) {
+          color = 0x34d399; // Green - low cost
+          alpha = 0.32;
+        } else if (pathLength <= 6) {
+          color = 0xfbbf24; // Yellow - medium cost
+          alpha = 0.35;
+        } else if (pathLength <= 9) {
+          color = 0xfb923c; // Orange - high cost
+          alpha = 0.38;
+        } else {
+          color = 0xf87171; // Red - very high cost
+          alpha = 0.4;
+        }
+      }
+
       this.pathGraphics.fillStyle(color, alpha);
       this.pathGraphics.fillPoints(points, true);
     });
