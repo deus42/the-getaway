@@ -983,6 +983,15 @@ export class MainScene extends Phaser.Scene {
 
     this.mapGraphics.fillStyle(0x60a5fa, 0.22);
     this.mapGraphics.fillPoints(glow, true);
+
+    // Corner accent lights - small cyan dots at top corners
+    const cornerSize = 2.5;
+    const topCornerLeft = this.lerpPoint(capPoints[3], basePoints[3], 0.08);
+    const topCornerRight = this.lerpPoint(capPoints[2], basePoints[2], 0.08);
+
+    this.mapGraphics.fillStyle(0x22d3ee, 0.85);
+    this.mapGraphics.fillCircle(topCornerLeft.x - cornerSize * 0.5, topCornerLeft.y, cornerSize);
+    this.mapGraphics.fillCircle(topCornerRight.x + cornerSize * 0.5, topCornerRight.y, cornerSize);
   }
 
   private renderCoverDetails(
@@ -1011,6 +1020,21 @@ export class MainScene extends Phaser.Scene {
     this.mapGraphics.fillStyle(this.adjustColor(baseColor, -0.08), 0.78);
     this.mapGraphics.fillPoints(frontLip, true);
 
+    // Hazard stripes - diagonal yellow/black pattern on front face
+    const stripeCount = 3;
+    const stripeSpacing = (frontLip[1].x - frontLip[0].x) / (stripeCount * 2);
+
+    this.mapGraphics.lineStyle(1.8, 0xfbbf24, 0.45);
+    for (let i = 0; i < stripeCount; i++) {
+      const offset = i * stripeSpacing * 2;
+      const x1 = frontLip[0].x + offset;
+      const x2 = frontLip[0].x + offset + stripeSpacing * 0.7;
+      const y1 = frontLip[0].y + (frontLip[2].y - frontLip[0].y) * 0.15;
+      const y2 = frontLip[2].y - (frontLip[2].y - frontLip[0].y) * 0.15;
+
+      this.mapGraphics.lineBetween(x1, y1, x2, y2);
+    }
+
     const braceLeftTop = this.lerpPoint(capPoints[3], basePoints[3], 0.45);
     const braceLeftBottom = this.lerpPoint(capPoints[3], basePoints[3], 0.86);
     const braceRightTop = this.lerpPoint(capPoints[2], basePoints[2], 0.45);
@@ -1027,14 +1051,30 @@ export class MainScene extends Phaser.Scene {
     tileHeight: number,
     baseColor: number
   ): void {
+    // Animated shimmer effect
+    const time = this.time.now;
+    const shimmerCycle = 2000; // 2 second cycle
+    const shimmerPhase = (time % shimmerCycle) / shimmerCycle;
+    const shimmerIntensity = 0.5 + 0.5 * Math.sin(shimmerPhase * Math.PI * 2);
+
     const sheenColor = this.adjustColor(baseColor, 0.3);
-    this.mapGraphics.fillStyle(sheenColor, 0.26);
+    const sheenAlpha = 0.2 + 0.12 * shimmerIntensity;
+
+    this.mapGraphics.fillStyle(sheenColor, sheenAlpha);
     this.mapGraphics.fillPoints(
       this.getDiamondPoints(center.x, center.y - tileHeight * 0.06, tileWidth * 0.6, tileHeight * 0.5),
       true
     );
 
-    this.mapGraphics.lineStyle(1, this.adjustColor(sheenColor, 0.25), 0.45);
+    // Subtle cyan glow underneath - cyberpunk contaminated water
+    this.mapGraphics.fillStyle(0x06b6d4, 0.08 + 0.06 * shimmerIntensity);
+    this.mapGraphics.fillPoints(
+      this.getDiamondPoints(center.x, center.y, tileWidth * 0.45, tileHeight * 0.4),
+      true
+    );
+
+    const rippleAlpha = 0.35 + 0.15 * shimmerIntensity;
+    this.mapGraphics.lineStyle(1, this.adjustColor(sheenColor, 0.25), rippleAlpha);
     for (let ripple = 0; ripple < 2; ripple++) {
       const scale = 0.82 - ripple * 0.22;
       const ripplePoints = this.getDiamondPoints(center.x, center.y, tileWidth * scale, tileHeight * scale);
