@@ -62,6 +62,9 @@ export interface EncumbranceState {
 export interface Player extends Entity {
   actionPoints: number;
   maxActionPoints: number;
+  stamina: number;
+  maxStamina: number;
+  isExhausted: boolean;
   skills: PlayerSkills;
   skillTraining: PlayerSkillValues;
   taggedSkillIds: SkillId[];

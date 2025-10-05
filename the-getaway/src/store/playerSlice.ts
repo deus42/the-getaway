@@ -17,6 +17,7 @@ import {
   calculateMaxHP,
   calculateBaseAP,
   calculateCarryWeight,
+  calculateMaxStamina,
 } from '../game/systems/statCalculations';
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
 import { createArmor, createConsumable, createWeapon } from '../game/inventory/inventorySystem';
@@ -33,6 +34,12 @@ import {
   decayGhostInvisibility,
 } from '../game/systems/perks';
 import { computeEncumbranceState } from '../game/inventory/encumbrance';
+import {
+  STAMINA_REGEN_OUT_OF_COMBAT,
+  clampStamina,
+  shouldEnterExhaustion,
+  shouldLeaveExhaustion,
+} from '../game/systems/stamina';
 
 export interface PlayerState {
   data: Player;
@@ -42,45 +49,50 @@ export interface PlayerState {
 
 type AddExperiencePayload = number | { amount: number; reason?: string };
 
-const createFreshPlayer = (): Player => ({
-  ...DEFAULT_PLAYER,
-  id: uuidv4(),
-  position: { ...DEFAULT_PLAYER.position },
-  skills: { ...DEFAULT_PLAYER.skills },
-  skillTraining: { ...DEFAULT_PLAYER.skillTraining },
-  taggedSkillIds: [...DEFAULT_PLAYER.taggedSkillIds],
-  inventory: {
-    items: [],
-    maxWeight: DEFAULT_PLAYER.inventory.maxWeight,
-    currentWeight: 0,
-    hotbar: [null, null, null, null, null],
-  },
-  equipped: {
-    weapon: undefined,
-    armor: undefined,
-    accessory: undefined,
-    secondaryWeapon: undefined,
-    meleeWeapon: undefined,
-    bodyArmor: undefined,
-    helmet: undefined,
-    accessory1: undefined,
-    accessory2: undefined,
-  },
-  equippedSlots: {},
-  activeWeaponSlot: 'primaryWeapon',
-  factionReputation: { ...DEFAULT_PLAYER.factionReputation },
-  perks: [...DEFAULT_PLAYER.perks],
-  pendingPerkSelections: DEFAULT_PLAYER.pendingPerkSelections,
-  backgroundId: undefined,
-  appearancePreset: DEFAULT_PLAYER.appearancePreset,
-  perkRuntime: { ...DEFAULT_PLAYER.perkRuntime },
-  encumbrance: {
-    level: 'normal',
-    percentage: 0,
-    movementApMultiplier: 1,
-    attackApMultiplier: 1,
-  },
-});
+const createFreshPlayer = (): Player => {
+  const base: Player = {
+    ...DEFAULT_PLAYER,
+    id: uuidv4(),
+    position: { ...DEFAULT_PLAYER.position },
+    skills: { ...DEFAULT_PLAYER.skills },
+    skillTraining: { ...DEFAULT_PLAYER.skillTraining },
+    taggedSkillIds: [...DEFAULT_PLAYER.taggedSkillIds],
+    inventory: {
+      items: [],
+      maxWeight: DEFAULT_PLAYER.inventory.maxWeight,
+      currentWeight: 0,
+      hotbar: [null, null, null, null, null],
+    },
+    equipped: {
+      weapon: undefined,
+      armor: undefined,
+      accessory: undefined,
+      secondaryWeapon: undefined,
+      meleeWeapon: undefined,
+      bodyArmor: undefined,
+      helmet: undefined,
+      accessory1: undefined,
+      accessory2: undefined,
+    },
+    equippedSlots: {},
+    activeWeaponSlot: 'primaryWeapon',
+    factionReputation: { ...DEFAULT_PLAYER.factionReputation },
+    perks: [...DEFAULT_PLAYER.perks],
+    pendingPerkSelections: DEFAULT_PLAYER.pendingPerkSelections,
+    backgroundId: undefined,
+    appearancePreset: DEFAULT_PLAYER.appearancePreset,
+    perkRuntime: { ...DEFAULT_PLAYER.perkRuntime },
+    encumbrance: {
+      level: 'normal',
+      percentage: 0,
+      movementApMultiplier: 1,
+      attackApMultiplier: 1,
+    },
+  };
+
+  ensureStaminaFields(base);
+  return base;
+};
 
 const initialState: PlayerState = {
   data: createFreshPlayer(),
@@ -137,6 +149,76 @@ const EQUIPMENT_SLOTS: EquipmentSlot[] = [
   'accessory1',
   'accessory2',
 ];
+
+function updateExhaustionState(player: Player): void {
+  if (!Number.isFinite(player.maxStamina) || player.maxStamina <= 0) {
+    player.maxStamina = 0;
+    player.stamina = 0;
+    player.isExhausted = false;
+    return;
+  }
+
+  player.stamina = clampStamina(player.stamina, player.maxStamina);
+
+  if (shouldEnterExhaustion(player.stamina, player.maxStamina)) {
+    player.isExhausted = true;
+    return;
+  }
+
+  if (player.isExhausted && shouldLeaveExhaustion(player.stamina, player.maxStamina)) {
+    player.isExhausted = false;
+    return;
+  }
+
+  if (!player.isExhausted && player.stamina >= player.maxStamina) {
+    player.isExhausted = false;
+  }
+}
+
+function updateStaminaCapacity(
+  player: Player,
+  newMaxStamina: number,
+  options: { preserveRatio?: boolean } = {}
+): void {
+  const preserveRatio = options.preserveRatio ?? true;
+  const sanitizedMax = Number.isFinite(newMaxStamina) && newMaxStamina > 0
+    ? Math.floor(newMaxStamina)
+    : 0;
+  const previousMax = Number.isFinite(player.maxStamina) && player.maxStamina > 0
+    ? player.maxStamina
+    : 0;
+
+  let nextStamina: number;
+
+  if (!preserveRatio || previousMax === 0 || sanitizedMax === 0) {
+    nextStamina = sanitizedMax;
+  } else {
+    const ratio = Math.max(0, Math.min(1, clampStamina(player.stamina, previousMax) / previousMax));
+    nextStamina = Math.floor(sanitizedMax * ratio);
+  }
+
+  player.maxStamina = sanitizedMax;
+  player.stamina = sanitizedMax === 0 ? 0 : clampStamina(nextStamina, sanitizedMax);
+  updateExhaustionState(player);
+}
+
+function ensureStaminaFields(player: Player): void {
+  if (!Number.isFinite(player.maxStamina) || player.maxStamina < 0) {
+    player.maxStamina = calculateMaxStamina(player.skills.endurance);
+  }
+
+  if (!Number.isFinite(player.stamina)) {
+    player.stamina = player.maxStamina;
+  } else {
+    player.stamina = clampStamina(player.stamina, player.maxStamina);
+  }
+
+  if (typeof player.isExhausted !== 'boolean') {
+    player.isExhausted = false;
+  }
+
+  updateExhaustionState(player);
+}
 
 const ensureHotbar = (hotbar: (string | null)[] | undefined): (string | null)[] => {
   const base = hotbar ? [...hotbar] : [];
@@ -555,6 +637,7 @@ export const playerSlice = createSlice({
       freshPlayer.maxStamina = derived.maxStamina;
       freshPlayer.stamina = derived.maxStamina;
       freshPlayer.isExhausted = false;
+      updateExhaustionState(freshPlayer);
       freshPlayer.inventory = {
         items: [],
         maxWeight: derived.carryWeight,
@@ -647,7 +730,40 @@ export const playerSlice = createSlice({
     resetActionPoints: (state) => {
       state.data.actionPoints = state.data.maxActionPoints;
     },
-    
+
+    consumeStamina: (state, action: PayloadAction<number>) => {
+      ensureStaminaFields(state.data);
+
+      const rawCost = action.payload;
+      if (!Number.isFinite(rawCost) || rawCost <= 0) {
+        return;
+      }
+
+      const cost = Math.max(0, Math.floor(rawCost));
+      state.data.stamina = clampStamina(state.data.stamina - cost, state.data.maxStamina);
+      updateExhaustionState(state.data);
+    },
+
+    regenerateStamina: (state, action: PayloadAction<number | undefined>) => {
+      ensureStaminaFields(state.data);
+
+      const rawAmount = action.payload ?? STAMINA_REGEN_OUT_OF_COMBAT;
+      if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
+        updateExhaustionState(state.data);
+        return;
+      }
+
+      const amount = Math.max(0, Math.floor(rawAmount));
+      state.data.stamina = clampStamina(state.data.stamina + amount, state.data.maxStamina);
+      updateExhaustionState(state.data);
+    },
+
+    updateMaxStamina: (state) => {
+      ensureStaminaFields(state.data);
+      const recalculated = calculateMaxStamina(state.data.skills.endurance);
+      updateStaminaCapacity(state.data, recalculated, { preserveRatio: true });
+    },
+
     // Add experience and automatically process level-ups
     addExperience: (state, action: PayloadAction<AddExperiencePayload>) => {
       const payload = typeof action.payload === 'number'
@@ -665,6 +781,7 @@ export const playerSlice = createSlice({
       // Check for level-up and process
       const result = processLevelUp(state.data);
       state.data = result.player;
+      ensureStaminaFields(state.data);
 
       // Award skill points and attribute points
       if (result.skillPointsAwarded > 0) {
@@ -687,6 +804,9 @@ export const playerSlice = createSlice({
             result.perksUnlocked
           )
         );
+        updateStaminaCapacity(state.data, calculateMaxStamina(state.data.skills.endurance), {
+          preserveRatio: false,
+        });
       }
 
       if (amount > 0) {
@@ -720,6 +840,8 @@ export const playerSlice = createSlice({
       state.data.health = state.data.maxHealth; // Full health on level up
       state.data.maxActionPoints += 1;
       state.data.actionPoints = state.data.maxActionPoints; // Full AP on level up
+      const recalculated = calculateMaxStamina(state.data.skills.endurance);
+      updateStaminaCapacity(state.data, recalculated, { preserveRatio: false });
     },
     
     // Update a skill
@@ -732,6 +854,7 @@ export const playerSlice = createSlice({
       const newMaxHP = calculateMaxHP(skills.endurance);
       const newBaseAP = calculateBaseAP(skills.agility);
       const newCarryWeight = calculateCarryWeight(skills.strength);
+      const newMaxStamina = calculateMaxStamina(skills.endurance);
 
       // Update max HP (preserve current HP ratio)
       const currentHP = Number.isFinite(state.data.health) ? state.data.health : 0;
@@ -749,6 +872,9 @@ export const playerSlice = createSlice({
 
       // Update carry weight
       state.data.inventory.maxWeight = newCarryWeight;
+
+      // Update stamina capacity (preserve ratio)
+      updateStaminaCapacity(state.data, newMaxStamina, { preserveRatio: true });
     },
 
     // Set a skill directly (for character creation)
@@ -763,6 +889,7 @@ export const playerSlice = createSlice({
       state.data.maxActionPoints = calculateBaseAP(skills.agility);
       state.data.actionPoints = state.data.maxActionPoints;
       state.data.inventory.maxWeight = calculateCarryWeight(skills.strength);
+      updateStaminaCapacity(state.data, calculateMaxStamina(skills.endurance), { preserveRatio: false });
     },
     
     // Add item to inventory
@@ -827,6 +954,7 @@ export const playerSlice = createSlice({
         };
       }
 
+      ensureStaminaFields(state.data);
       refreshInventoryMetrics(state.data);
 
       if (shouldTriggerAdrenalineRush(state.data)) {
@@ -1005,6 +1133,7 @@ export const playerSlice = createSlice({
       const newMaxHP = calculateMaxHP(skills.endurance);
       const newBaseAP = calculateBaseAP(skills.agility);
       const newCarryWeight = calculateCarryWeight(skills.strength);
+      const newMaxStamina = calculateMaxStamina(skills.endurance);
 
       // Update max HP (preserve HP ratio)
       const currentHP = Number.isFinite(state.data.health) ? state.data.health : 0;
@@ -1022,6 +1151,8 @@ export const playerSlice = createSlice({
 
       // Update carry weight
       state.data.inventory.maxWeight = newCarryWeight;
+
+      updateStaminaCapacity(state.data, newMaxStamina, { preserveRatio: true });
     },
 
     refundAttributePoint: (state, action: PayloadAction<keyof PlayerSkills>) => {
@@ -1041,6 +1172,7 @@ export const playerSlice = createSlice({
       const newMaxHP = calculateMaxHP(skills.endurance);
       const newBaseAP = calculateBaseAP(skills.agility);
       const newCarryWeight = calculateCarryWeight(skills.strength);
+      const newMaxStamina = calculateMaxStamina(skills.endurance);
 
       // Update max HP (preserve HP ratio)
       const currentHP = Number.isFinite(state.data.health) ? state.data.health : 0;
@@ -1058,6 +1190,8 @@ export const playerSlice = createSlice({
 
       // Update carry weight
       state.data.inventory.maxWeight = newCarryWeight;
+
+      updateStaminaCapacity(state.data, newMaxStamina, { preserveRatio: true });
     }
   }
 });
@@ -1069,6 +1203,9 @@ export const {
   setHealth,
   updateActionPoints,
   resetActionPoints,
+  consumeStamina,
+  regenerateStamina,
+  updateMaxStamina,
   addExperience,
   addCredits,
   removeXPNotification,

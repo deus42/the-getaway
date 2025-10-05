@@ -83,6 +83,34 @@ const statGridStyle: React.CSSProperties = {
   gap: '0.32rem',
 };
 
+const staminaContainerStyle: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.75rem',
+  width: '100%',
+};
+
+const staminaBarWrapperStyle: React.CSSProperties = {
+  flex: 1,
+  minWidth: 0,
+};
+
+const fatigueBadgeStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.25rem',
+  padding: '0.22rem 0.55rem',
+  borderRadius: '999px',
+  border: '1px solid rgba(250, 204, 21, 0.65)',
+  background: 'rgba(250, 204, 21, 0.08)',
+  color: '#facc15',
+  fontSize: '0.55rem',
+  fontWeight: 600,
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  boxShadow: '0 8px 18px -12px rgba(250, 204, 21, 0.6)',
+};
+
 const statCardStyle: React.CSSProperties = {
   background: cardSurface.background,
   border: cardSurface.border,
@@ -209,6 +237,28 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         criticalThreshold={25}
         emphasisColor="#ef4444"
       />
+
+      <div
+        style={staminaContainerStyle}
+        aria-label={uiStrings.playerStatus.staminaLabel}
+      >
+        <div style={staminaBarWrapperStyle}>
+          <AnimatedStatBar
+            label={uiStrings.playerStatus.staminaLabel}
+            current={player.stamina}
+            max={player.maxStamina}
+            baseColor="#10b981"
+            lowThreshold={35}
+            criticalThreshold={25}
+            emphasisColor="#10b981"
+          />
+        </div>
+        {player.isExhausted && (
+          <span style={fatigueBadgeStyle} title={uiStrings.playerStatus.fatigueHint}>
+            ⚠️ {uiStrings.playerStatus.fatigueStatus}
+          </span>
+        )}
+      </div>
 
       <div style={statGridStyle}>
         <div style={statCardStyle}>

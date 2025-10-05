@@ -1,4 +1,5 @@
 import { Player } from '../interfaces/types';
+import { calculateMaxStamina } from './statCalculations';
 
 /**
  * XP Sources with concrete values
@@ -155,6 +156,9 @@ export const processLevelUp = (player: Player): {
     // Health and AP increase on level-up (small bonus)
     updatedPlayer.maxHealth += 5;
     updatedPlayer.health = updatedPlayer.maxHealth; // Full heal on level-up
+    updatedPlayer.maxStamina = calculateMaxStamina(updatedPlayer.skills.endurance);
+    updatedPlayer.stamina = updatedPlayer.maxStamina;
+    updatedPlayer.isExhausted = false;
 
     // Small AP increase every few levels
     if (updatedPlayer.level % 5 === 0) {

@@ -7,6 +7,7 @@ import { getEquippedBonuses, calculateEffectiveSkills, getEffectiveMaxAP } from 
 export interface DerivedStats {
   maxHP: number;
   baseAP: number;
+  maxStamina: number;
   carryWeight: number;
   criticalChance: number;
   dialogueThresholdBonus: number;
@@ -40,6 +41,10 @@ export const calculateDerivedStats = (skills: PlayerSkills): DerivedStats => {
     // Base AP = 6 + floor((agility - 5) * 0.5)
     // Example: Agility 8 = 7 AP, Agility 4 = 5 AP
     baseAP: 6 + Math.floor((agility - 5) * 0.5),
+
+    // Max Stamina = 50 + (endurance * 5)
+    // Example: Endurance 7 = 85 stamina
+    maxStamina: 50 + endurance * 5,
 
     // Carry Weight = 25 + (strength * 5) kg
     // Example: Strength 6 = 55 kg capacity
@@ -83,6 +88,13 @@ export const calculateMaxHP = (endurance: number): number => {
  */
 export const calculateBaseAP = (agility: number): number => {
   return 6 + Math.floor((agility - 5) * 0.5);
+};
+
+/**
+ * Calculate max stamina based on endurance
+ */
+export const calculateMaxStamina = (endurance: number): number => {
+  return 50 + endurance * 5;
 };
 
 /**
@@ -192,7 +204,7 @@ export const calculateDerivedStatsWithEquipment = (player: Player): DerivedStats
 
   return {
     ...baseStats,
-    baseAP: effectiveMaxAP
+    baseAP: effectiveMaxAP,
   };
 };
 

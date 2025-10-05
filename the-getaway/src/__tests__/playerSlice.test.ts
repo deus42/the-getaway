@@ -9,6 +9,9 @@ import playerReducer, {
   resetActionPoints,
   addExperience,
   addCredits,
+  consumeStamina,
+  regenerateStamina,
+  updateMaxStamina,
   levelUp,
   updateSkill,
   setSkill,
@@ -66,6 +69,8 @@ describe('playerSlice', () => {
       expect(player.skills.intelligence).toBe(8);
       expect(player.backgroundId).toBe('corpsec_defector');
       expect(player.appearancePreset).toBe('preset_1');
+      expect(player.maxStamina).toBe(50 + player.skills.endurance * 5);
+      expect(player.stamina).toBe(player.maxStamina);
     });
 
     it('clamps skill values between 1 and 10', () => {
@@ -142,6 +147,49 @@ describe('playerSlice', () => {
       const player = store.getState().player.data;
       expect(player.position.x).toBe(10);
       expect(player.position.y).toBe(15);
+    });
+  });
+
+  describe('stamina management', () => {
+    it('consumes stamina and marks exhaustion below threshold', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const initialMax = store.getState().player.data.maxStamina;
+      store.dispatch(consumeStamina(initialMax - 10));
+
+      const player = store.getState().player.data;
+      expect(player.stamina).toBe(10);
+      expect(player.isExhausted).toBe(true);
+    });
+
+    it('regenerates stamina and clears exhaustion above recovery threshold', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const maxStamina = store.getState().player.data.maxStamina;
+      store.dispatch(consumeStamina(maxStamina - 10));
+      store.dispatch(regenerateStamina(25));
+
+      const player = store.getState().player.data;
+      expect(player.stamina).toBeGreaterThanOrEqual(Math.floor(maxStamina * 0.4));
+      expect(player.isExhausted).toBe(false);
     });
   });
 
@@ -1218,6 +1266,36 @@ describe('playerSlice', () => {
       const afterPoints = store.getState().player.data.attributePoints;
       expect(afterPoints).toBe(beforePoints); // Point not spent
       expect(store.getState().player.data.skills.strength).toBe(10);
+    });
+
+    it('increases max stamina and preserves ratio when endurance rises', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      store.dispatch(addExperience(500));
+
+      store.dispatch(consumeStamina(20));
+
+      const beforeState = store.getState().player.data;
+      const beforeMax = beforeState.maxStamina;
+      const beforeStamina = beforeState.stamina;
+
+      store.dispatch(spendAttributePoint('endurance'));
+
+      const afterState = store.getState().player.data;
+      expect(afterState.maxStamina).toBe(beforeMax + 5);
+
+      const expected = Math.floor((beforeStamina / beforeMax) * (beforeMax + 5));
+      expect(afterState.stamina).toBe(expected);
+      expect(afterState.isExhausted).toBe(false);
     });
   });
 

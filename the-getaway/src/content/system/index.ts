@@ -42,6 +42,8 @@ interface LogStrings {
   alertAlarmed: string;
   reinforcementsIncoming: string;
   endingTurn: string;
+  notEnoughStamina: (required: number, available: number) => string;
+  tooTiredToSprint: string;
 }
 
 interface SystemStrings {
@@ -96,6 +98,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       alertAlarmed: 'ALERT! Enemy has locked onto your position!',
       reinforcementsIncoming: 'Reinforcements called in—more hostiles incoming!',
       endingTurn: 'Ending your turn...',
+      notEnoughStamina: (required, available) =>
+        `Not enough stamina (need ${required}, have ${available}).`,
+      tooTiredToSprint: 'You are too tired to sprint.',
     },
   },
   uk: {
@@ -145,6 +150,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       alertAlarmed: 'ТРИВОГА! Ворог засік вашу позицію!',
       reinforcementsIncoming: 'Викликано підкріплення — більше ворогів на підході!',
       endingTurn: 'Завершення ходу...',
+      notEnoughStamina: (required, available) =>
+        `Недостатньо витривалості (потрібно ${required}, маєте ${available}).`,
+      tooTiredToSprint: 'Ви надто виснажені, щоб бігти.',
     },
   },
 };

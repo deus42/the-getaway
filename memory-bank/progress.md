@@ -1073,6 +1073,48 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 </notes>
 </step>
 
+<step id="24.5" status="completed">
+<step_metadata>
+  <number>24.5</number>
+  <title>Stamina System - Core Resource Pool (MVP)</title>
+  <status>Completed</status>
+  <date>October 5, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added stamina fields to the player model and Redux slice, including helper utilities for clamping values and preserving stamina ratios when Endurance changes.
+2. Introduced `consumeStamina`, `regenerateStamina`, and `updateMaxStamina` reducers plus a shared constants module to centralize costs, regen rates, and exhaustion thresholds.
+3. Wired `GameController` to charge stamina for sprinting and encumbrance-heavy movement while regenerating stamina during standard travel and surfacing localized fatigue warnings.
+4. Updated summary, stats, level-up, and character-creation UIs to display stamina bars, fatigue badges, and max stamina summaries, completing locale coverage.
+5. Extended unit tests to cover stamina consumption/regeneration flows, endurance upgrades, and default player invariants.
+</tasks>
+
+<implementation>
+- Player stamina now scales with Endurance (50 + 5 per point) and persists through attribute reallocations via the new `updateStaminaCapacity` helper.
+- `src/game/systems/stamina.ts` provides reusable constants (`STAMINA_COSTS`, regen values, thresholds) consumed by reducers and controllers.
+- Sprinting (Shift + move) and movement while ≥80% encumbered consume stamina before dispatching `movePlayer`; exhausted players trigger localized log feedback and are prevented from sprinting.
+- UI refresh includes a green stamina bar with fatigue badge in `PlayerSummaryPanel`, derived stat rows in `PlayerStatsPanel`, and an Endurance card callout in `LevelUpPointAllocationPanel`.
+- Localization strings now cover stamina labels, fatigue hints, and insufficient stamina warnings across English and Ukrainian copies.
+</implementation>
+
+<code_reference file="src/store/playerSlice.ts" />
+<code_reference file="src/game/systems/stamina.ts" />
+<code_reference file="src/components/GameController.tsx" />
+<code_reference file="src/components/ui/PlayerSummaryPanel.tsx" />
+<code_reference file="src/components/ui/PlayerStatsPanel.tsx" />
+<code_reference file="src/components/ui/LevelUpPointAllocationPanel.tsx" />
+<code_reference file="src/components/ui/CharacterCreationScreen.tsx" />
+<code_reference file="src/content/ui/index.ts" />
+<code_reference file="src/content/system/index.ts" />
+<code_reference file="src/game/systems/statCalculations.ts" />
+<code_reference file="src/__tests__/playerSlice.test.ts" />
+<code_reference file="src/__tests__/types.test.ts" />
+
+<validation>
+- `yarn test playerSlice.test.ts types.test.ts`
+</validation>
+</step>
+
 <step id="25.1" status="completed">
 <step_metadata>
   <number>25.1</number>

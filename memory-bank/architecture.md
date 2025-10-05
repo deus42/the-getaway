@@ -786,59 +786,40 @@ This combat architecture provides a foundation for tactical gameplay and can be 
 ## Stamina System
 
 <design_principles>
-- Separate stamina from AP to create dual-resource combat economy: AP governs turn actions, stamina governs sustained effort
-- Integrate stamina with Endurance attribute for natural stat scaling
-- Layer MVP (core mechanics) and advanced features (environmental/time-based) for incremental complexity
-- Keep stamina regeneration passive to avoid micromanagement while rewarding defensive play
+- Keep action points focused on tactical turns; use stamina strictly for exploration pressure
+- Derive stamina capacity from Endurance so the attribute has visible moment-to-moment impact
+- Surface fatigue state prominently in UI so players know when to rest or change pace
+- Centralize stamina constants/helpers in a shared module to avoid magic numbers across slices and components
 </design_principles>
 
 <pattern name="Core Stamina Resource (MVP - Step 24.5)">
 ### State Management
-- Extend `Player` interface in <code_location>src/game/interfaces/types.ts</code_location>:
-  ```typescript
-  interface Player extends Entity {
-    // ... existing fields
-    stamina: number;
-    maxStamina: number;
-    isExhausted: boolean;
-  }
-  ```
-- Redux state in <code_location>src/store/playerSlice.ts</code_location>:
-  - New reducers: `consumeStamina(amount)`, `regenerateStamina()`, `updateMaxStamina()`
-  - `endTurn` calls `regenerateStamina()` to add +5 stamina per turn (capped at max)
-  - `addExperience` restores stamina to max on level-up threshold
+- Extend `Player` interface in <code_location>src/game/interfaces/types.ts</code_location> with `stamina`, `maxStamina`, and `isExhausted` fields.
+- Redux logic in <code_location>src/store/playerSlice.ts</code_location>:
+  - Helper utilities `ensureStaminaFields()` and `updateStaminaCapacity()` keep values clamped and ratios preserved.
+  - Reducers `consumeStamina(amount)`, `regenerateStamina(amount?)`, and `updateMaxStamina()` manage the resource without tying it to combat turns.
+  - `addExperience` and `levelUp` now restore stamina to full when a level is gained.
+  - `spendAttributePoint('endurance')` and other attribute mutations recalculate stamina capacity alongside HP/AP.
+- Shared constants live in <code_location>src/game/systems/stamina.ts</code_location> (`STAMINA_COSTS`, `STAMINA_REGEN_OUT_OF_COMBAT`, thresholds, helpers).
 
-### Combat Integration
-- <code_location>src/game/combat/combatSystem.ts</code_location>:
-  - `executeMove` consumes 2 stamina per tile before moving
-  - `executeAttack` consumes 3-5 stamina based on weapon type (defined in `staminaCosts.ts`)
-  - Check `player.stamina >= cost` before allowing actions
-  - Apply exhaustion penalties when `player.isExhausted === true`:
-    - Hit chance: `baseHitChance * 0.9` (-10%)
-    - Damage: `baseDamage * 0.9` (-10%)
+### Overworld Integration
+- <code_location>src/components/GameController.tsx</code_location> introduces `attemptMovementStamina()`:
+  - Shift+movement triggers a sprint cost (`STAMINA_COSTS.sprintTile`).
+  - Encumbrance at ≥80% capacity adds a 1-point drain per tile.
+  - Combat ignores stamina entirely—movement and attacks remain AP-driven.
+  - When costs are zero (walking, light load) the controller calls `regenerateStamina()` for passive recovery.
+  - If the player lacks stamina or is exhausted, the controller logs localized warnings and blocks the sprint.
+- Additional interactions (lockpicking, climbing) will hook into the same reducers in future steps.
 
 ### Derived Stats
-- <code_location>src/game/systems/statCalculations.ts</code_location>:
-  ```typescript
-  export function calculateDerivedStats(attributes: PlayerSkills): DerivedStats {
-    return {
-      // ... existing stats
-      maxStamina: 50 + (attributes.endurance * 5),
-    };
-  }
-  ```
-- Called when Endurance changes during level-up or character creation
+- <code_location>src/game/systems/statCalculations.ts</code_location> exports `maxStamina` as part of `DerivedStats`, computed as `50 + endurance * 5`.
+- All attribute updates reuse this calculation so stamina capacity stays in sync with Endurance changes.
 
 ### UI Components
-- <code_location>src/components/ui/PlayerSummaryPanel.tsx</code_location>:
-  - Add second `AnimatedStatBar` component below health bar
-  - Green palette: `#22c55e` (healthy), transitions to yellow/orange when < 30%
-  - Props: `label="Stamina"`, `current={player.stamina}`, `max={player.maxStamina}`
-- <code_location>src/components/ui/StatusEffectIcon.tsx</code_location>:
-  - Reuse existing pattern to show exhaustion indicator when `isExhausted === true`
-  - Icon appears with tooltip: "Exhausted: -10% hit chance, -10% damage"
-- <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location>:
-  - Show stamina preview when hovering Endurance: "+5 max stamina per point"
+- <code_location>src/components/ui/PlayerSummaryPanel.tsx</code_location> shows a green stamina bar with a "Fatigued" badge when `isExhausted` is true.
+- <code_location>src/components/ui/PlayerStatsPanel.tsx</code_location> lists "Max Stamina" alongside other derived metrics.
+- <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location> highlights stamina gains when boosting Endurance (`Max Stamina: {player.maxStamina} (+5 per point)`).
+</pattern>
 </pattern>
 
 <pattern name="Advanced Stamina Features (POST-MVP - Step 26.1)">
@@ -901,22 +882,19 @@ This combat architecture provides a foundation for tactical gameplay and can be 
 
 <technical_flow>
 **MVP Flow (Step 24.5):**
-1. Player selects action (move/attack) → UI shows stamina cost in tooltip
-2. `GameController` dispatches action → Redux reducer checks `player.stamina >= cost`
-3. If sufficient: Consume stamina, execute action, check if `stamina < maxStamina * 0.3` → set `isExhausted`
-4. If insufficient: Show warning toast, prevent action
-5. End of turn: `endTurn` reducer adds +5 stamina (capped at max)
-6. Level-up: `addExperience` detects level threshold → restore stamina to max
+1. Player presses movement key or clicks a path.
+2. `GameController` determines sprint state (Shift) and encumbrance drain, then calls `consumeStamina` when costs exist.
+3. If stamina is insufficient or the player is exhausted, the move is cancelled and a warning is logged.
+4. Successful moves dispatch `movePlayer` and, when costs are zero, `regenerateStamina` to model passive recovery.
+5. Level ups recalc stamina capacity and restore the bar to full.
 
-**Advanced Flow (Step 26.1):**
-1. World time advances → `incrementFatigue` → recalculate max stamina based on hours awake
-2. Player enters Industrial tile → apply `-2 stamina drain` per turn passively
-3. Night transition → apply `+25% cost modifier` to all actions
-4. Player opens rest menu → select Full Sleep → execute rest, reset fatigue, advance time 6 hours
-5. Conditioning perk active → reduce all costs by `(skillLevel * 0.005)`
+**Advanced Flow (Step 26.1):** *(planned)*
+1. Time-of-day or environmental events adjust cost multipliers before movement.
+2. Rest menu interactions call `regenerateStamina` with large values and reset exhaustion flags.
+3. Perks (Conditioning, Second Wind, Iron Lungs) modify costs or regen rates via shared helpers.
 </technical_flow>
 
-<code_location>src/game/combat/staminaCosts.ts</code_location>
+<code_location>src/game/systems/stamina.ts</code_location>
 <code_location>src/store/playerSlice.ts</code_location>
 <code_location>src/game/systems/statCalculations.ts</code_location>
 <code_location>src/components/ui/PlayerSummaryPanel.tsx</code_location>

@@ -715,15 +715,19 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
 
             <div>
               <label style={labelStyle}>Derived Stats</label>
-              <div style={derivedStatsStyle}>
-                <div style={derivedStatCardStyle}>
-                  <div style={derivedStatLabelStyle}>Max HP</div>
-                  <div style={derivedStatValueStyle}>{derivedStats.maxHP}</div>
-                </div>
-                <div style={derivedStatCardStyle}>
-                  <div style={derivedStatLabelStyle}>Base AP</div>
-                  <div style={derivedStatValueStyle}>{derivedStats.baseAP}</div>
-                </div>
+                <div style={derivedStatsStyle}>
+                  <div style={derivedStatCardStyle}>
+                    <div style={derivedStatLabelStyle}>Max HP</div>
+                    <div style={derivedStatValueStyle}>{derivedStats.maxHP}</div>
+                  </div>
+                  <div style={derivedStatCardStyle}>
+                    <div style={derivedStatLabelStyle}>Max Stamina</div>
+                    <div style={derivedStatValueStyle}>{derivedStats.maxStamina}</div>
+                  </div>
+                  <div style={derivedStatCardStyle}>
+                    <div style={derivedStatLabelStyle}>Base AP</div>
+                    <div style={derivedStatValueStyle}>{derivedStats.baseAP}</div>
+                  </div>
                 <div style={derivedStatCardStyle}>
                   <div style={derivedStatLabelStyle}>Carry Weight</div>
                   <div style={derivedStatValueStyle}>{derivedStats.carryWeight} kg</div>

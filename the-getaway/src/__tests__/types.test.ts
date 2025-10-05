@@ -17,6 +17,8 @@ describe('Game Types and Basic Functionality', () => {
       expect(DEFAULT_PLAYER.maxHealth).toBe(100);
       expect(DEFAULT_PLAYER.actionPoints).toBe(6);
       expect(DEFAULT_PLAYER.maxActionPoints).toBe(6);
+      expect(DEFAULT_PLAYER.maxStamina).toBe(75);
+      expect(DEFAULT_PLAYER.stamina).toBe(DEFAULT_PLAYER.maxStamina);
       expect(DEFAULT_PLAYER.level).toBe(1);
       expect(DEFAULT_PLAYER.experience).toBe(0);
       expect(DEFAULT_PLAYER.skills.strength).toBe(5);

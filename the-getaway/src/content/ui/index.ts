@@ -65,6 +65,9 @@ interface PlayerStatusStrings {
   experienceLabel: string;
   creditsLabel: string;
   actionPointsLabel: string;
+  staminaLabel: string;
+  fatigueStatus: string;
+  fatigueHint: string;
   roundLabel: (round: number) => string;
   yourMove: string;
   enemyAdvance: string;
@@ -96,6 +99,7 @@ interface PlayerStatusStrings {
 interface DerivedStatsStrings {
   hp: string;
   ap: string;
+  stamina: string;
   carryWeight: string;
   crit: string;
   hit: string;
@@ -221,6 +225,9 @@ const STRINGS: Record<Locale, UIStrings> = {
       experienceLabel: 'Experience',
       creditsLabel: 'Credits',
       actionPointsLabel: 'Action Points',
+      staminaLabel: 'Stamina',
+      fatigueStatus: 'Fatigued',
+      fatigueHint: 'Fatigue makes this harder—rest or recover stamina to shake it off.',
       roundLabel: (round) => `Round ${round}`,
       yourMove: 'Your move',
       enemyAdvance: 'Enemy advance',
@@ -247,6 +254,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       derivedStats: {
         hp: 'Max HP',
         ap: 'Action Points',
+        stamina: 'Max Stamina',
         carryWeight: 'Carry Capacity',
         crit: 'Critical Chance',
         hit: 'Hit Bonus',
@@ -401,6 +409,9 @@ const STRINGS: Record<Locale, UIStrings> = {
       experienceLabel: 'Досвід',
       creditsLabel: 'Кредити',
       actionPointsLabel: 'Очки дії',
+      staminaLabel: 'Витривалість',
+      fatigueStatus: 'Виснажено',
+      fatigueHint: 'Виснаження ускладнює кожну дію — відпочиньте або відновіть витривалість.',
       roundLabel: (round) => `Раунд ${round}`,
       yourMove: 'Ваш хід',
       enemyAdvance: 'Хід противника',
@@ -427,6 +438,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       derivedStats: {
         hp: 'Максимум здоровʼя',
         ap: 'Очки дії',
+        stamina: 'Максимум витривалості',
         carryWeight: 'Вага перенесення',
         crit: 'Шанс критичного удару',
         hit: 'Бонус влучності',

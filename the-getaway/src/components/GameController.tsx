@@ -6,6 +6,8 @@ import {
   setPlayerData,
   resetActionPoints,
   beginPlayerTurn,
+  consumeStamina,
+  regenerateStamina,
 } from "../store/playerSlice";
 import {
   updateEnemy,
@@ -37,12 +39,14 @@ import { startDialogue, endDialogue } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
 import { processPerceptionUpdates, getAlertMessageKey, shouldSpawnReinforcements, getReinforcementDelay } from "../game/combat/perceptionManager";
 import { shouldGunFuAttackBeFree } from "../game/systems/perks";
+import { STAMINA_COSTS } from "../game/systems/stamina";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
   const encumbranceLevel = player.encumbrance.level;
   const encumbranceWarning = player.encumbrance.warning;
+  const encumbrancePercentage = player.encumbrance.percentage;
   const currentMapArea = useSelector(
     (state: RootState) => state.world.currentMapArea
   );
@@ -140,6 +144,55 @@ const GameController: React.FC = () => {
 
     return { x: screenX, y: screenY };
   }, []);
+
+  const attemptMovementStamina = useCallback(
+    (options: { sprint?: boolean } = {}) => {
+      const { sprint = false } = options;
+
+      if (inCombat) {
+        return true;
+      }
+
+      if (sprint && player.isExhausted) {
+        dispatch(addLogMessage(logStrings.tooTiredToSprint));
+        return false;
+      }
+
+      const encumbranceDrain = encumbrancePercentage >= 80
+        ? STAMINA_COSTS.strenuousInteraction
+        : 0;
+
+      let staminaCost = encumbranceDrain;
+
+      if (sprint) {
+        staminaCost += STAMINA_COSTS.sprintTile;
+      }
+
+      if (staminaCost <= 0) {
+        if (player.stamina < player.maxStamina) {
+          dispatch(regenerateStamina(undefined));
+        }
+        return true;
+      }
+
+      if (player.stamina < staminaCost) {
+        dispatch(addLogMessage(logStrings.notEnoughStamina(staminaCost, player.stamina)));
+        return false;
+      }
+
+      dispatch(consumeStamina(staminaCost));
+      return true;
+    },
+    [
+      encumbrancePercentage,
+      dispatch,
+      inCombat,
+      logStrings,
+      player.isExhausted,
+      player.stamina,
+      player.maxStamina,
+    ]
+  );
 
   const cancelPendingEnemyAction = useCallback((shouldClearTimer: boolean = true) => {
     if (shouldClearTimer && enemyActionTimeoutRef.current !== null) {
@@ -644,6 +697,12 @@ const GameController: React.FC = () => {
       const targetArea = mapDirectory[connection.toAreaId];
 
       if (targetArea) {
+        if (!attemptMovementStamina()) {
+          setQueuedPath([]);
+          setPendingNpcInteractionId(null);
+          setPendingEnemyEngagementId(null);
+          return;
+        }
         dispatch(setMapArea(targetArea));
         dispatch(movePlayer(connection.toPosition));
       } else {
@@ -652,6 +711,13 @@ const GameController: React.FC = () => {
         );
       }
 
+      setQueuedPath([]);
+      setPendingNpcInteractionId(null);
+      setPendingEnemyEngagementId(null);
+      return;
+    }
+
+    if (!attemptMovementStamina()) {
       setQueuedPath([]);
       setPendingNpcInteractionId(null);
       setPendingEnemyEngagementId(null);
@@ -670,6 +736,7 @@ const GameController: React.FC = () => {
     mapDirectory,
     mapConnections,
     logStrings,
+    attemptMovementStamina,
   ]);
 
   useEffect(() => {
@@ -1464,6 +1531,7 @@ const GameController: React.FC = () => {
             candidate.fromPosition.x === newPosition.x &&
             candidate.fromPosition.y === newPosition.y
         );
+        const isSprinting = !inCombat && event.shiftKey;
 
         if (connection) {
           const targetArea = mapDirectory[connection.toAreaId];
@@ -1474,6 +1542,9 @@ const GameController: React.FC = () => {
           }
 
           if (targetArea) {
+            if (!attemptMovementStamina({ sprint: isSprinting })) {
+              return;
+            }
             dispatch(setMapArea(targetArea));
             dispatch(movePlayer(connection.toPosition));
 
@@ -1490,6 +1561,10 @@ const GameController: React.FC = () => {
           setQueuedPath([]);
           setPendingNpcInteractionId(null);
 
+          return;
+        }
+
+        if (!attemptMovementStamina({ sprint: isSprinting })) {
           return;
         }
 
@@ -1581,6 +1656,7 @@ const GameController: React.FC = () => {
       mapConnections,
       dialogues,
       logStrings,
+      attemptMovementStamina,
     ]
   );
 

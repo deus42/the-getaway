@@ -129,6 +129,14 @@ const attributeDescStyle: React.CSSProperties = {
   lineHeight: 1.3,
 };
 
+const attributeMetaStyle: React.CSSProperties = {
+  fontSize: '0.6rem',
+  color: '#34d399',
+  marginTop: '0.25rem',
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+};
+
 const attributeControlsStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
@@ -217,7 +225,7 @@ const footerStyle: React.CSSProperties = {
 const ATTRIBUTE_INFO: Record<keyof PlayerSkills, { label: string; description: string }> = {
   strength: { label: 'Strength', description: 'Melee damage, carry weight' },
   perception: { label: 'Perception', description: 'Hit chance, awareness' },
-  endurance: { label: 'Endurance', description: 'Max health points' },
+  endurance: { label: 'Endurance', description: 'Max health & stamina capacity' },
   charisma: { label: 'Charisma', description: 'Dialogue, persuasion' },
   intelligence: { label: 'Intelligence', description: 'Skill points, hacking' },
   agility: { label: 'Agility', description: 'Action points, dodge' },
@@ -305,6 +313,11 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
                     <div style={attributeInfoStyle}>
                       <div style={attributeNameStyle}>{ATTRIBUTE_INFO[attr].label}</div>
                       <div style={attributeDescStyle}>{ATTRIBUTE_INFO[attr].description}</div>
+                      {attr === 'endurance' && (
+                        <div style={attributeMetaStyle}>
+                          Max Stamina: {player.maxStamina} (+5 per point)
+                        </div>
+                      )}
                     </div>
                     <div style={attributeControlsStyle}>
                       <button
