@@ -64,7 +64,7 @@ const createTestPlayer = (overrides?: Partial<Player>): Player => {
     items: [],
     maxWeight: 50,
     currentWeight: 0,
-    hotbar: [],
+    hotbar: [null, null, null, null, null],
   },
   equipped: {
     weapon: undefined,
@@ -88,6 +88,8 @@ const createTestPlayer = (overrides?: Partial<Player>): Player => {
   encumbrance: {
     level: 'normal',
     percentage: 0,
+    movementApMultiplier: 1,
+    attackApMultiplier: 1,
   },
   ...overrides,
   };

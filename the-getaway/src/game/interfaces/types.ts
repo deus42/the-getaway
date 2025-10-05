@@ -51,6 +51,14 @@ export interface PerkRuntimeState {
 export type PlayerSkillValues = Record<SkillId, number>;
 
 // Player entity with core stats, skill tree progress, and equipment
+export interface EncumbranceState {
+  level: 'normal' | 'heavy' | 'overloaded' | 'immobile';
+  percentage: number;
+  movementApMultiplier: number;
+  attackApMultiplier: number;
+  warning?: string;
+}
+
 export interface Player extends Entity {
   actionPoints: number;
   maxActionPoints: number;
@@ -75,7 +83,7 @@ export interface Player extends Entity {
     items: Item[];
     maxWeight: number;
     currentWeight: number;
-    hotbar: string[];
+    hotbar: (string | null)[];
   };
   equipped: {
     weapon?: Weapon;
@@ -91,10 +99,7 @@ export interface Player extends Entity {
   equippedSlots?: Partial<Record<EquipmentSlot, Item>>;
   activeWeaponSlot?: 'primaryWeapon' | 'secondaryWeapon' | 'meleeWeapon';
   perkRuntime: PerkRuntimeState;
-  encumbrance: {
-    level: 'normal' | 'heavy' | 'overloaded' | 'immobile';
-    percentage: number;
-  };
+  encumbrance: EncumbranceState;
 }
 
 // Alert state for enemies with perception

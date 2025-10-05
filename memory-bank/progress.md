@@ -123,6 +123,39 @@ UI lock/unlock behaviour for skill-based dialogue options
 </maintenance_notes>
 </step>
 
+<step id="25.2" status="completed">
+<step_metadata>
+  <number>25.2</number>
+  <title>Durability & Encumbrance Mechanics</title>
+  <status>Completed</status>
+  <date>October 4, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added inventory reducer helpers covering equipment swaps, stack splitting, repairs, and hotbar assignment while centralising weight recalculation and encumbrance updates.
+2. Implemented durability-aware combat flow: weapon/armor effectiveness scales with condition, durability decays on use, and encumbrance multipliers now gate movement and attack AP costs.
+3. Updated GameController logging to broadcast encumbrance warnings/durability events and extended Jest coverage for reducers, combat edges, and endurance failure cases.
+</tasks>
+
+<implementation>
+- `refreshInventoryMetrics` now recomputes carried weight, normalises the five-slot hotbar, and delegates encumbrance scoring to the new `inventory/encumbrance` utility.
+- Combat attacks multiply damage/mitigation by durability modifiers, decay condition per strike, and emit structured `CombatEvent`s consumed by the HUD.
+- Movement and attack pipelines honour encumbrance-derived AP multipliers; queued path traversal aborts when the player is immobile and logs the localized warning.
+</implementation>
+
+<code_reference file="src/store/playerSlice.ts">Reducer helpers for equip/unequip, repairs, stack management, and encumbrance refresh.</code_reference>
+<code_reference file="src/game/inventory/encumbrance.ts">Encumbrance thresholds, penalty multipliers, and helper APIs.</code_reference>
+<code_reference file="src/game/combat/combatSystem.ts">Durability-aware damage flow, combat events, and encumbrance-aware AP costs.</code_reference>
+<code_reference file="src/components/GameController.tsx">Movement gating, logging hooks for encumbrance/durability, and event handling.</code_reference>
+<code_reference file="src/__tests__/playerSlice.test.ts">Reducer regression coverage for new helpers and encumbrance scenarios.</code_reference>
+<code_reference file="src/__tests__/combat.test.ts">Durability and encumbrance combat tests.</code_reference>
+
+<validation>
+- `yarn test --watch=false`
+</validation>
+
+</step>
+
 <step id="2" status="completed">
 <step_metadata>
   <number>2</number>

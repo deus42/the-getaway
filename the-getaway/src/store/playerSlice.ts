@@ -1,6 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { Player, Position, Item, PlayerSkills, Weapon, Armor, SkillId, PerkId } from '../game/interfaces/types';
+import {
+  Player,
+  Position,
+  Item,
+  PlayerSkills,
+  Weapon,
+  Armor,
+  SkillId,
+  PerkId,
+  EquipmentSlot,
+} from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { calculateDerivedStats, calculateMaxHP, calculateBaseAP, calculateCarryWeight } from '../game/systems/statCalculations';
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
@@ -17,6 +27,7 @@ import {
   tickAdrenalineRush,
   decayGhostInvisibility,
 } from '../game/systems/perks';
+import { computeEncumbranceState } from '../game/inventory/encumbrance';
 
 export interface PlayerState {
   data: Player;
@@ -37,7 +48,7 @@ const createFreshPlayer = (): Player => ({
     items: [],
     maxWeight: DEFAULT_PLAYER.inventory.maxWeight,
     currentWeight: 0,
-    hotbar: [],
+    hotbar: [null, null, null, null, null],
   },
   equipped: {
     weapon: undefined,
@@ -61,6 +72,8 @@ const createFreshPlayer = (): Player => ({
   encumbrance: {
     level: 'normal',
     percentage: 0,
+    movementApMultiplier: 1,
+    attackApMultiplier: 1,
   },
 });
 
@@ -77,6 +90,30 @@ type InitializeCharacterPayload = {
   backgroundId: string;
 };
 
+interface EquipItemPayload {
+  itemId: string;
+  slot?: EquipmentSlot;
+}
+
+interface UnequipItemPayload {
+  slot: EquipmentSlot;
+}
+
+interface RepairItemPayload {
+  itemId: string;
+  amount: number;
+}
+
+interface SplitStackPayload {
+  itemId: string;
+  quantity: number;
+}
+
+interface AssignHotbarPayload {
+  slotIndex: number;
+  itemId: string | null;
+}
+
 const clampSkillValue = (value: number): number => Math.max(1, Math.min(10, Math.round(value)));
 
 /**
@@ -84,6 +121,345 @@ const clampSkillValue = (value: number): number => Math.max(1, Math.min(10, Math
  * This prevents issues like 0.1 + 0.2 = 0.30000000000000004
  */
 const roundWeight = (weight: number): number => Math.round(weight * 100) / 100;
+
+const HOTBAR_CAPACITY = 5;
+const EQUIPMENT_SLOTS: EquipmentSlot[] = [
+  'primaryWeapon',
+  'secondaryWeapon',
+  'meleeWeapon',
+  'bodyArmor',
+  'helmet',
+  'accessory1',
+  'accessory2',
+];
+
+const ensureHotbar = (hotbar: (string | null)[] | undefined): (string | null)[] => {
+  const base = hotbar ? [...hotbar] : [];
+  while (base.length < HOTBAR_CAPACITY) {
+    base.push(null);
+  }
+  return base.slice(0, HOTBAR_CAPACITY);
+};
+
+const getStackQuantity = (item: Item): number => {
+  if (!item) {
+    return 0;
+  }
+
+  if (!item.stackable) {
+    return 1;
+  }
+
+  const rawQuantity = item.quantity ?? 1;
+  if (!Number.isFinite(rawQuantity) || rawQuantity <= 0) {
+    return 1;
+  }
+
+  return Math.floor(rawQuantity);
+};
+
+const calculateInventoryWeight = (items: Item[]): number => {
+  const total = items.reduce((sum, entry) => {
+    const unitWeight = Number.isFinite(entry.weight) ? entry.weight : 0;
+    return sum + unitWeight * getStackQuantity(entry);
+  }, 0);
+
+  return roundWeight(total);
+};
+
+const refreshInventoryMetrics = (player: Player): void => {
+  const nextWeight = calculateInventoryWeight(player.inventory.items);
+  const normalizedHotbar = ensureHotbar(player.inventory.hotbar);
+  player.inventory = {
+    ...player.inventory,
+    currentWeight: nextWeight,
+    hotbar: normalizedHotbar,
+  };
+  player.encumbrance = computeEncumbranceState(
+    player.inventory.currentWeight,
+    player.inventory.maxWeight,
+    player.encumbrance
+  );
+};
+
+const detachItemFromInventory = (player: Player, itemId: string): Item | undefined => {
+  const index = player.inventory.items.findIndex((entry) => entry.id === itemId);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const [item] = player.inventory.items.splice(index, 1);
+  return item;
+};
+
+const resolveEquipSlot = (item: Item, explicit?: EquipmentSlot): EquipmentSlot | null => {
+  if (explicit) {
+    return explicit;
+  }
+
+  if (item.equipSlot) {
+    return item.equipSlot;
+  }
+
+  if ('damage' in item) {
+    return 'primaryWeapon';
+  }
+
+  if ('protection' in item) {
+    return 'bodyArmor';
+  }
+
+  return null;
+};
+
+const placeEquippedItem = (player: Player, slot: EquipmentSlot, item?: Item): void => {
+  switch (slot) {
+    case 'primaryWeapon':
+      player.equipped.weapon = item as Weapon | undefined;
+      break;
+    case 'secondaryWeapon':
+      player.equipped.secondaryWeapon = item as Weapon | undefined;
+      break;
+    case 'meleeWeapon':
+      player.equipped.meleeWeapon = item as Weapon | undefined;
+      break;
+    case 'bodyArmor':
+      player.equipped.bodyArmor = item as Armor | undefined;
+      player.equipped.armor = item as Armor | undefined;
+      break;
+    case 'helmet':
+      player.equipped.helmet = item as Armor | undefined;
+      break;
+    case 'accessory1':
+      player.equipped.accessory1 = item;
+      break;
+    case 'accessory2':
+      player.equipped.accessory2 = item;
+      break;
+    default:
+      break;
+  }
+
+  if (!player.equippedSlots) {
+    player.equippedSlots = {};
+  }
+
+  if (item) {
+    player.equippedSlots[slot] = item;
+  } else if (player.equippedSlots) {
+    delete player.equippedSlots[slot];
+  }
+};
+
+const getEquippedItemBySlot = (player: Player, slot: EquipmentSlot): Item | undefined => {
+  if (player.equippedSlots && player.equippedSlots[slot]) {
+    return player.equippedSlots[slot];
+  }
+
+  switch (slot) {
+    case 'primaryWeapon':
+      return player.equipped.weapon;
+    case 'secondaryWeapon':
+      return player.equipped.secondaryWeapon;
+    case 'meleeWeapon':
+      return player.equipped.meleeWeapon;
+    case 'bodyArmor':
+      return player.equipped.bodyArmor ?? player.equipped.armor;
+    case 'helmet':
+      return player.equipped.helmet;
+    case 'accessory1':
+      return player.equipped.accessory1;
+    case 'accessory2':
+      return player.equipped.accessory2;
+    default:
+      return undefined;
+  }
+};
+
+const cloneItem = <TItem extends Item>(item: TItem): TItem => ({ ...item });
+
+type LocatedItem =
+  | { location: 'inventory'; item: Item; index: number }
+  | { location: 'equipped'; item: Item; slot: EquipmentSlot };
+
+const findItemAcrossPlayer = (player: Player, itemId: string): LocatedItem | undefined => {
+  const inventoryIndex = player.inventory.items.findIndex((entry) => entry.id === itemId);
+  if (inventoryIndex !== -1) {
+    return {
+      location: 'inventory',
+      item: player.inventory.items[inventoryIndex],
+      index: inventoryIndex,
+    };
+  }
+
+  for (const slot of EQUIPMENT_SLOTS) {
+    const equippedItem = getEquippedItemBySlot(player, slot);
+    if (equippedItem && equippedItem.id === itemId) {
+      return {
+        location: 'equipped',
+        item: equippedItem,
+        slot,
+      };
+    }
+  }
+
+  return undefined;
+};
+
+const equipItemInternal = (player: Player, payload: EquipItemPayload): boolean => {
+  const { itemId, slot: explicitSlot } = payload;
+  const inventoryItem = player.inventory.items.find((entry) => entry.id === itemId);
+
+  if (!inventoryItem) {
+    return false;
+  }
+
+  if (inventoryItem.isQuestItem) {
+    return false;
+  }
+
+  if (inventoryItem.stackable) {
+    return false;
+  }
+
+  if (inventoryItem.durability && inventoryItem.durability.current <= 0) {
+    return false;
+  }
+
+  const slot = resolveEquipSlot(inventoryItem, explicitSlot);
+  if (!slot) {
+    return false;
+  }
+
+  const removedItem = detachItemFromInventory(player, itemId);
+  if (!removedItem) {
+    return false;
+  }
+
+  const previouslyEquipped = getEquippedItemBySlot(player, slot);
+  if (previouslyEquipped) {
+    player.inventory.items.push(cloneItem(previouslyEquipped));
+  }
+
+  placeEquippedItem(player, slot, removedItem);
+
+  if (slot === 'primaryWeapon' || slot === 'secondaryWeapon' || slot === 'meleeWeapon') {
+    player.activeWeaponSlot = slot;
+  }
+
+  refreshInventoryMetrics(player);
+  return true;
+};
+
+const unequipItemInternal = (player: Player, payload: UnequipItemPayload): boolean => {
+  const { slot } = payload;
+  const equippedItem = getEquippedItemBySlot(player, slot);
+
+  if (!equippedItem) {
+    return false;
+  }
+
+  player.inventory.items.push(cloneItem(equippedItem));
+  placeEquippedItem(player, slot, undefined);
+
+  if (slot === player.activeWeaponSlot) {
+    player.activeWeaponSlot = 'primaryWeapon';
+  }
+
+  refreshInventoryMetrics(player);
+  return true;
+};
+
+const repairItemInternal = (player: Player, payload: RepairItemPayload): boolean => {
+  const { itemId, amount } = payload;
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return false;
+  }
+
+  const located = findItemAcrossPlayer(player, itemId);
+  if (!located) {
+    return false;
+  }
+
+  if (!located.item.durability) {
+    return false;
+  }
+
+  const repairAmount = Math.floor(amount);
+  const durability = located.item.durability;
+  durability.current = Math.min(durability.max, durability.current + repairAmount);
+
+  return true;
+};
+
+const splitStackInternal = (player: Player, payload: SplitStackPayload): Item | undefined => {
+  const { itemId, quantity } = payload;
+
+  if (!Number.isFinite(quantity) || quantity <= 0) {
+    return undefined;
+  }
+
+  const located = findItemAcrossPlayer(player, itemId);
+  if (!located || located.location !== 'inventory') {
+    return undefined;
+  }
+
+  const sourceItem = located.item;
+
+  if (!sourceItem.stackable) {
+    return undefined;
+  }
+
+  const available = getStackQuantity(sourceItem);
+  const splitAmount = Math.floor(quantity);
+
+  if (splitAmount >= available) {
+    return undefined;
+  }
+
+  const newItem = cloneItem(sourceItem);
+  newItem.id = uuidv4();
+  newItem.quantity = splitAmount;
+
+  const remaining = available - splitAmount;
+  sourceItem.quantity = remaining <= 1 ? undefined : remaining;
+  if (sourceItem.quantity === undefined) {
+    delete sourceItem.quantity;
+  }
+
+  player.inventory.items.push(newItem);
+  refreshInventoryMetrics(player);
+
+  return newItem;
+};
+
+const assignHotbarSlotInternal = (player: Player, payload: AssignHotbarPayload): boolean => {
+  const { slotIndex, itemId } = payload;
+
+  if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= HOTBAR_CAPACITY) {
+    return false;
+  }
+
+  player.inventory.hotbar = ensureHotbar(player.inventory.hotbar);
+
+  if (itemId !== null) {
+    const located = findItemAcrossPlayer(player, itemId);
+    if (!located || located.location !== 'inventory') {
+      return false;
+    }
+
+    player.inventory.hotbar = player.inventory.hotbar.map((entry, index) =>
+      entry === itemId && index !== slotIndex ? null : entry
+    );
+
+    player.inventory.hotbar[slotIndex] = itemId;
+  } else {
+    player.inventory.hotbar[slotIndex] = null;
+  }
+
+  return true;
+};
 
 const applyStartingItem = (player: Player, item: StartingItemDefinition): void => {
   switch (item.type) {
@@ -98,20 +474,18 @@ const applyStartingItem = (player: Player, item: StartingItemDefinition): void =
         item.skillType
       );
       if (item.equip) {
-        player.equipped.weapon = weapon;
+        placeEquippedItem(player, 'primaryWeapon', weapon);
       } else {
         player.inventory.items.push(weapon);
-        player.inventory.currentWeight += weapon.weight;
       }
       break;
     }
     case 'armor': {
       const armor = createArmor(item.name, item.protection, item.weight, item.statModifiers);
       if (item.equip) {
-        player.equipped.armor = armor;
+        placeEquippedItem(player, 'bodyArmor', armor);
       } else {
         player.inventory.items.push(armor);
-        player.inventory.currentWeight += armor.weight;
       }
       break;
     }
@@ -124,7 +498,6 @@ const applyStartingItem = (player: Player, item: StartingItemDefinition): void =
         item.weight
       );
       player.inventory.items.push(consumable);
-      player.inventory.currentWeight += consumable.weight;
       break;
     }
     case 'item': {
@@ -137,12 +510,13 @@ const applyStartingItem = (player: Player, item: StartingItemDefinition): void =
         isQuestItem: Boolean(item.isQuestItem),
       };
       player.inventory.items.push(plainItem);
-      player.inventory.currentWeight += plainItem.weight;
       break;
     }
     default:
       break;
   }
+
+  refreshInventoryMetrics(player);
 };
 
 export const playerSlice = createSlice({
@@ -177,7 +551,7 @@ export const playerSlice = createSlice({
         items: [],
         maxWeight: derived.carryWeight,
         currentWeight: 0,
-        hotbar: [],
+        hotbar: [null, null, null, null, null],
       };
       freshPlayer.equipped = {
         weapon: undefined,
@@ -225,11 +599,16 @@ export const playerSlice = createSlice({
       state.data.encumbrance = {
         level: 'normal',
         percentage: 0,
+        movementApMultiplier: 1,
+        attackApMultiplier: 1,
       };
     },
 
     // Move player to a new position
     movePlayer: (state, action: PayloadAction<Position>) => {
+      if (state.data.encumbrance.level === 'immobile') {
+        return;
+      }
       state.data.position = action.payload;
     },
     
@@ -380,24 +759,16 @@ export const playerSlice = createSlice({
     
     // Add item to inventory
     addItem: (state, action: PayloadAction<Item>) => {
-      const item = action.payload;
-      const newWeight = roundWeight(state.data.inventory.currentWeight + item.weight);
-
-      // Check if player can carry the item
-      if (newWeight <= state.data.inventory.maxWeight) {
-        state.data.inventory.items.push(item);
-        state.data.inventory.currentWeight = newWeight;
-      }
+      state.data.inventory.items.push(action.payload);
+      refreshInventoryMetrics(state.data);
     },
     
     // Remove item from inventory
     removeItem: (state, action: PayloadAction<string>) => {
       const itemId = action.payload;
-      const item = state.data.inventory.items.find(item => item.id === itemId);
-
-      if (item) {
-        state.data.inventory.items = state.data.inventory.items.filter(item => item.id !== itemId);
-        state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight - item.weight);
+      const removed = detachItemFromInventory(state.data, itemId);
+      if (removed) {
+        refreshInventoryMetrics(state.data);
       }
     },
     
@@ -422,7 +793,7 @@ export const playerSlice = createSlice({
       }
 
       if (!state.data.inventory.hotbar) {
-        state.data.inventory.hotbar = [];
+        state.data.inventory.hotbar = [null, null, null, null, null];
       }
 
       if (!state.data.equipped) {
@@ -443,120 +814,57 @@ export const playerSlice = createSlice({
         state.data.encumbrance = {
           level: 'normal',
           percentage: 0,
+          movementApMultiplier: 1,
+          attackApMultiplier: 1,
         };
       }
+
+      refreshInventoryMetrics(state.data);
 
       if (shouldTriggerAdrenalineRush(state.data)) {
         state.data = activateAdrenalineRush(state.data);
       }
     },
 
+    equipItem: (state, action: PayloadAction<EquipItemPayload>) => {
+      equipItemInternal(state.data, action.payload);
+    },
+
+    unequipItem: (state, action: PayloadAction<UnequipItemPayload>) => {
+      unequipItemInternal(state.data, action.payload);
+    },
+
+    repairItem: (state, action: PayloadAction<RepairItemPayload>) => {
+      repairItemInternal(state.data, action.payload);
+    },
+
+    splitStack: (state, action: PayloadAction<SplitStackPayload>) => {
+      splitStackInternal(state.data, action.payload);
+    },
+
+    assignHotbarSlot: (state, action: PayloadAction<AssignHotbarPayload>) => {
+      assignHotbarSlotInternal(state.data, action.payload);
+      refreshInventoryMetrics(state.data);
+    },
+
     // Equip a weapon
     equipWeapon: (state, action: PayloadAction<string>) => {
-      const weaponId = action.payload;
-      const weapon = state.data.inventory.items.find(i => i.id === weaponId) as Weapon | undefined;
-
-      if (!weapon || !('damage' in weapon)) {
-        return; // Not a weapon
-      }
-
-      // Calculate final weight after swap to prevent overflow
-      const oldWeaponWeight = state.data.equipped.weapon?.weight ?? 0;
-      const newWeight = roundWeight(state.data.inventory.currentWeight - weapon.weight + oldWeaponWeight);
-
-      if (newWeight > state.data.inventory.maxWeight) {
-        return; // Can't swap due to weight limit
-      }
-
-      // Unequip current weapon if any (add back to inventory)
-      if (state.data.equipped.weapon) {
-        state.data.inventory.items.push(state.data.equipped.weapon);
-        state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + state.data.equipped.weapon.weight);
-      }
-
-      // Remove weapon from inventory
-      state.data.inventory.items = state.data.inventory.items.filter(i => i.id !== weaponId);
-      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight - weapon.weight);
-
-      // Equip weapon
-      state.data.equipped.weapon = weapon;
+      equipItemInternal(state.data, { itemId: action.payload, slot: 'primaryWeapon' });
     },
 
     // Equip armor
     equipArmor: (state, action: PayloadAction<string>) => {
-      const armorId = action.payload;
-      const armor = state.data.inventory.items.find(i => i.id === armorId) as Armor | undefined;
-
-      if (!armor || !('protection' in armor)) {
-        return; // Not armor
-      }
-
-      // Calculate final weight after swap to prevent overflow
-      const oldArmorWeight = state.data.equipped.armor?.weight ?? 0;
-      const newWeight = roundWeight(state.data.inventory.currentWeight - armor.weight + oldArmorWeight);
-
-      if (newWeight > state.data.inventory.maxWeight) {
-        return; // Can't swap due to weight limit
-      }
-
-      // Unequip current armor if any (add back to inventory)
-      if (state.data.equipped.armor) {
-        state.data.inventory.items.push(state.data.equipped.armor);
-        state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight + state.data.equipped.armor.weight);
-      }
-
-      // Remove armor from inventory
-      state.data.inventory.items = state.data.inventory.items.filter(i => i.id !== armorId);
-      state.data.inventory.currentWeight = roundWeight(state.data.inventory.currentWeight - armor.weight);
-
-      // Equip armor
-      state.data.equipped.armor = armor;
+      equipItemInternal(state.data, { itemId: action.payload, slot: 'bodyArmor' });
     },
 
     // Unequip weapon
     unequipWeapon: (state) => {
-      if (!state.data.equipped.weapon) {
-        return;
-      }
-
-      const weapon = state.data.equipped.weapon;
-      const newWeight = roundWeight(state.data.inventory.currentWeight + weapon.weight);
-
-      // Check if unequipping would exceed weight limit
-      if (newWeight > state.data.inventory.maxWeight) {
-        console.warn('[PlayerSlice] Cannot unequip weapon: would exceed weight limit');
-        return;
-      }
-
-      // Add weapon back to inventory
-      state.data.inventory.items.push(weapon);
-      state.data.inventory.currentWeight = newWeight;
-
-      // Unequip
-      state.data.equipped.weapon = undefined;
+      unequipItemInternal(state.data, { slot: 'primaryWeapon' });
     },
 
     // Unequip armor
     unequipArmor: (state) => {
-      if (!state.data.equipped.armor) {
-        return;
-      }
-
-      const armor = state.data.equipped.armor;
-      const newWeight = roundWeight(state.data.inventory.currentWeight + armor.weight);
-
-      // Check if unequipping would exceed weight limit
-      if (newWeight > state.data.inventory.maxWeight) {
-        console.warn('[PlayerSlice] Cannot unequip armor: would exceed weight limit');
-        return;
-      }
-
-      // Add armor back to inventory
-      state.data.inventory.items.push(armor);
-      state.data.inventory.currentWeight = newWeight;
-
-      // Unequip
-      state.data.equipped.armor = undefined;
+      unequipItemInternal(state.data, { slot: 'bodyArmor' });
     },
 
     consumeLevelUpEvent: (state) => {
@@ -761,6 +1069,11 @@ export const {
   setSkill,
   addItem,
   removeItem,
+  equipItem,
+  unequipItem,
+  repairItem,
+  splitStack,
+  assignHotbarSlot,
   resetPlayer,
   setPlayerData,
   equipWeapon,

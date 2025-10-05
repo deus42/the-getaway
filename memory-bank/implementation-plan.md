@@ -1101,6 +1101,7 @@ yarn build && yarn test
       - Implement reducer helpers (`equipItem`, `unequipItem`, `repairItem`, `splitStack`, `assignHotbarSlot`) with validation.
       - Apply durability decay on attacks/hits and adjust effectiveness at 50%/25% thresholds; gate unusable items at 0 durability.
       - Apply encumbrance penalties (AP cost multipliers, movement restrictions) based on weight ratios and integrate warnings into state.
+      - Surface durability warnings in the HUD/loadout panels so players see critical condition states without opening logs.
       - Ensure XP/combat logging reflects durability changes and over-capacity prevention.
     </details>
     <test>

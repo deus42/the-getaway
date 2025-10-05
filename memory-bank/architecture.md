@@ -1044,6 +1044,28 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 
 Record licence and attribution requirements for every imported pack in `/src/assets/README.md` (or a dedicated manifesto) before distribution.
 
+<architecture_section id="inventory_durability_system" category="inventory">
+##### Inventory Durability & Encumbrance System
+
+<design_principles>
+- Centralise mutating logic inside Redux reducers so React components stay declarative.
+- Keep encumbrance as a derived signal: recompute from inventory weight rather than persisting redundant values.
+- Surface durability changes through combat events so HUD logging and reducers react without tight coupling.
+</design_principles>
+
+<technical_flow>
+1. <code_location>src/store/playerSlice.ts</code_location> adds `equipItem`, `unequipItem`, `repairItem`, `splitStack`, and `assignHotbarSlot` reducers. Each validates payloads, clones nested structures, and finishes by calling `refreshInventoryMetrics`.
+2. `refreshInventoryMetrics` recalculates carried weight, normalises the five-slot hotbar, and feeds those numbers to <code_location>src/game/inventory/encumbrance.ts</code_location>, which maps weight ratios to encumbrance levels, AP multipliers, and optional warning copy.
+3. <code_location>src/game/combat/combatSystem.ts</code_location> now multiplies weapon/armor effectiveness by durability modifiers, decays durability after every attack, and emits structured combat events (`weaponDamaged`, `armorBroken`, etc.).
+4. <code_location>src/components/GameController.tsx</code_location> watches encumbrance warnings and combat events, logging them through `logSlice` and halting queued movement when the player is immobile.
+</technical_flow>
+
+<code_location>src/store/playerSlice.ts</code_location>
+<code_location>src/game/inventory/encumbrance.ts</code_location>
+<code_location>src/game/combat/combatSystem.ts</code_location>
+<code_location>src/components/GameController.tsx</code_location>
+</architecture_section>
+
 ## Integration with Current Architecture
 - **State & Rendering Separation** – Keep isometric drawing confined to Phaser scenes (`MainScene` and any descendant scenes). Game logic, AI, and progress live in Redux slices; scenes should only read from selectors and render the resulting state.
 - **Extensibility** – Organise new asset categories under `/src/assets` (e.g., `iso_tiles`, `iso_props`, `iso_characters`). Version-control derivatives separately and document licence obligations alongside the assets.

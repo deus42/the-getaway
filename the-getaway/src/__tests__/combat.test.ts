@@ -113,7 +113,140 @@ describe('Combat System Tests', () => {
       expect(coverHitChance).toBeLessThan(normalHitChance);
     });
   });
-  
+
+  describe('Durability interactions', () => {
+    test('weapon durability reduces outgoing damage', () => {
+      const weapon = createWeapon('Aged Rifle', 20, 5, 2, 5);
+      weapon.durability = { current: 30, max: 100 };
+      player.equipped.weapon = weapon;
+      player.equippedSlots = { primaryWeapon: weapon };
+
+      const attackRolls = [0.1, 0.9];
+      let rollIndex = 0;
+      setRandomGenerator(() => {
+        const roll = attackRolls[Math.min(rollIndex, attackRolls.length - 1)];
+        rollIndex += 1;
+        return roll;
+      });
+
+      const targetEnemy = createEnemy({ x: 1, y: 2 });
+      const result = executeAttack(player, targetEnemy, false);
+
+      expect(result.success).toBe(true);
+      expect(result.damage).toBe(18);
+      const updatedWeapon = (result.newAttacker as Player).equipped.weapon;
+      expect(updatedWeapon?.durability?.current).toBe(29);
+    });
+
+    test('weapon durability warnings trigger events when condition critical', () => {
+      const weapon = createWeapon('Stressed Pistol', 10, 5, 1, 2);
+      weapon.durability = { current: 26, max: 100 };
+      player.equipped.weapon = weapon;
+      player.equippedSlots = { primaryWeapon: weapon };
+
+      setRandomGenerator(() => 0.1);
+
+      const result = executeAttack(player, enemy, false);
+
+      expect(result.events?.some((event) => event.type === 'weaponDamaged')).toBe(true);
+      const updatedWeapon = (result.newAttacker as Player).equipped.weapon;
+      expect(updatedWeapon?.durability?.current).toBe(25);
+    });
+
+    test('armor durability reduces mitigation and decays on hit', () => {
+      const weapon = createWeapon('Heavy Hammer', 20, 1, 2, 8);
+      player.equipped.weapon = weapon;
+      player.equippedSlots = { primaryWeapon: weapon };
+
+      const armor = createArmor('Guard Vest', 12, 5);
+      armor.durability = { current: 26, max: 100 };
+
+      const defendingPlayer: Player = {
+        ...DEFAULT_PLAYER,
+        position: { x: 1, y: 2 },
+        equipped: {
+          ...DEFAULT_PLAYER.equipped,
+          bodyArmor: armor,
+          armor,
+        },
+        equippedSlots: { bodyArmor: armor },
+      };
+
+      const attackRolls = [0.1, 0.9];
+      let rollIndex = 0;
+      setRandomGenerator(() => {
+        const roll = attackRolls[Math.min(rollIndex, attackRolls.length - 1)];
+        rollIndex += 1;
+        return roll;
+      });
+
+      const result = executeAttack(player, defendingPlayer, false);
+
+      expect(result.success).toBe(true);
+      const updatedDefender = result.newTarget as Player;
+      expect(updatedDefender.health).toBe(defendingPlayer.health - 11);
+      expect(updatedDefender.equipped.bodyArmor?.durability?.current).toBe(25);
+      expect(result.events?.some((event) => event.type === 'armorDamaged')).toBe(true);
+    });
+
+    test('attacks with broken weapons emit blocking event', () => {
+      const brokenWeapon = createWeapon('Snapped Baton', 6, 1, 1, 3);
+      brokenWeapon.durability = { current: 0, max: 40 };
+      player.equipped.weapon = brokenWeapon;
+      player.equippedSlots = { primaryWeapon: brokenWeapon };
+
+      const result = executeAttack(player, enemy, false);
+
+      expect(result.success).toBe(false);
+      expect(result.damage).toBe(0);
+      expect(result.events?.some((event) => event.type === 'weaponBroken')).toBe(true);
+    });
+  });
+
+  describe('Encumbrance integration', () => {
+    test('movement blocked when encumbrance level is immobile', () => {
+      const encumberedPlayer: Player = {
+        ...DEFAULT_PLAYER,
+        position: { x: 2, y: 2 },
+        encumbrance: {
+          level: 'immobile',
+          percentage: 140,
+          movementApMultiplier: Number.POSITIVE_INFINITY,
+          attackApMultiplier: Number.POSITIVE_INFINITY,
+        },
+      };
+
+      const area = createBasicMapArea('Encumbrance Test', 6, 6);
+
+      expect(
+        canMoveToPosition(encumberedPlayer, { x: 3, y: 2 }, area, encumberedPlayer, [])
+      ).toBe(false);
+
+      const moveResult = executeMove(encumberedPlayer, { x: 3, y: 2 });
+      expect(moveResult).toBe(encumberedPlayer);
+    });
+
+    test('attack costs scale with encumbrance multipliers', () => {
+      const weapon = createWeapon('Standard Pistol', 8, 5, 2, 2);
+      player.equipped.weapon = weapon;
+      player.equippedSlots = { primaryWeapon: weapon };
+      player.actionPoints = 10;
+      player.encumbrance = {
+        level: 'heavy',
+        percentage: 90,
+        movementApMultiplier: 1.25,
+        attackApMultiplier: 2,
+      };
+
+      setRandomGenerator(() => 0.1);
+
+      const result = executeAttack(player, enemy, false);
+
+      expect(result.success).toBe(true);
+      expect((result.newAttacker as Player).actionPoints).toBe(6);
+    });
+  });
+
   // Test movement functionality
   describe('Movement Functionality', () => {
     test('canMoveToPosition should return true for adjacent, unobstructed positions', () => {
@@ -577,6 +710,13 @@ describe('Combat derived stat influence', () => {
 
     const targetA = createEnemy({ x: 1, y: 0 }, 30, 30, 5);
     const targetB = createEnemy({ x: 1, y: 0 }, 30, 30, 5);
+
+    const meleeWeaponLow = createWeapon('Training Blade', 6, 1, 2, 1, undefined, 'meleeCombat');
+    const meleeWeaponHigh = { ...meleeWeaponLow, id: uuidv4() };
+    lowStrengthAttacker.equipped.weapon = meleeWeaponLow;
+    lowStrengthAttacker.equippedSlots = { primaryWeapon: meleeWeaponLow };
+    highStrengthAttacker.equipped.weapon = meleeWeaponHigh;
+    highStrengthAttacker.equippedSlots = { primaryWeapon: meleeWeaponHigh };
 
     setRandomGenerator(() => 0.05);
     const lowResult = executeAttack(lowStrengthAttacker, targetA, false);

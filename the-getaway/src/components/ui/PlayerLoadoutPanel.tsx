@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getSkillDefinition } from '../../content/skills';
 import { getPerkDefinition, PerkDefinition } from '../../content/perks';
-import { PerkId } from '../../game/interfaces/types';
+import { Durability, PerkId } from '../../game/interfaces/types';
 import Tooltip, { TooltipContent } from './Tooltip';
 import {
   characterPanelSurface,
@@ -59,6 +59,11 @@ const statRowStyle: React.CSSProperties = {
   color: 'rgba(226, 232, 240, 0.86)',
 };
 
+const warningRowStyle: React.CSSProperties = {
+  ...statRowStyle,
+  fontWeight: 600,
+};
+
 const statLabelStyle: React.CSSProperties = {
   ...subtleText,
   letterSpacing: '0.12em',
@@ -109,6 +114,66 @@ const PlayerLoadoutPanel: React.FC = () => {
   const weapon = player.equipped.weapon;
   const armor = player.equipped.armor;
 
+  const renderDurabilityRow = (meta: { copy: string; style: React.CSSProperties; color: string } | null) => {
+    if (!meta) {
+      return null;
+    }
+
+    return (
+      <div style={{ ...meta.style, color: meta.color }}>
+        <span style={statLabelStyle}>Durability</span>
+        <span style={{ ...statValueEmphasis, color: meta.color }}>{meta.copy}</span>
+      </div>
+    );
+  };
+
+  const describeDurability = (durability?: Durability) => {
+    if (!durability || durability.max <= 0) {
+      return null;
+    }
+
+    const ratio = Math.max(0, Math.min(1, durability.current / durability.max));
+    const percentage = Math.round(ratio * 100);
+
+    if (ratio === 1) {
+      return {
+        copy: `Condition ${percentage}%`,
+        style: statRowStyle,
+        color: 'rgba(226, 232, 240, 0.86)',
+      };
+    }
+
+    if (ratio <= 0) {
+      return {
+        copy: 'Condition 0% – Broken',
+        style: warningRowStyle,
+        color: '#f87171',
+      };
+    }
+
+    if (ratio <= 0.25) {
+      return {
+        copy: `Condition ${percentage}% – Critical`,
+        style: warningRowStyle,
+        color: '#fbbf24',
+      };
+    }
+
+    if (ratio <= 0.5) {
+      return {
+        copy: `Condition ${percentage}% – Worn`,
+        style: warningRowStyle,
+        color: '#f59e0b',
+      };
+    }
+
+    return {
+      copy: `Condition ${percentage}%`,
+      style: statRowStyle,
+      color: 'rgba(250, 204, 21, 0.95)',
+    };
+  };
+
   const { knownPerks, unknownPerkIds } = useMemo(() => {
     const known: PerkDefinition[] = [];
     const unknown: string[] = [];
@@ -149,6 +214,7 @@ const PlayerLoadoutPanel: React.FC = () => {
               {weapon.skillType ? (getSkillDefinition(weapon.skillType)?.name ?? '—') : '—'}
             </span>
           </div>
+          {renderDurabilityRow(describeDurability(weapon.durability))}
         </>
       ) : (
         <span style={subtleText}>No weapon equipped</span>
@@ -170,6 +236,7 @@ const PlayerLoadoutPanel: React.FC = () => {
             <span style={statLabelStyle}>Weight</span>
             <span style={statValueEmphasis}>{armor.weight.toFixed(1)} kg</span>
           </div>
+          {renderDurabilityRow(describeDurability(armor.durability))}
         </>
       ) : (
         <span style={subtleText}>No armor equipped</span>

@@ -32,7 +32,7 @@ const createTestPlayer = (): Player => ({
     items: [],
     maxWeight: 50,
     currentWeight: 0,
-    hotbar: [],
+    hotbar: [null, null, null, null, null],
   },
   equipped: {
     weapon: undefined,
@@ -56,6 +56,8 @@ const createTestPlayer = (): Player => ({
   encumbrance: {
     level: 'normal',
     percentage: 0,
+    movementApMultiplier: 1,
+    attackApMultiplier: 1,
   },
   equippedSlots: {},
   activeWeaponSlot: 'primaryWeapon',

@@ -14,6 +14,11 @@ import playerReducer, {
   setSkill,
   addItem,
   removeItem,
+  equipItem,
+  unequipItem,
+  repairItem,
+  splitStack,
+  assignHotbarSlot,
   resetPlayer,
   equipWeapon,
   equipArmor,
@@ -606,10 +611,10 @@ describe('playerSlice', () => {
 
       const player = store.getState().player.data;
       expect(player.inventory.items).toContainEqual(item);
-      expect(player.inventory.currentWeight).toBe(beforeWeight + 2);
+      expect(player.inventory.currentWeight).toBeCloseTo(beforeWeight + 2, 5);
     });
 
-    it('prevents adding items that exceed max weight', () => {
+    it('allows overweight items but flags encumbrance state', () => {
       const store = createTestStore();
 
       store.dispatch(
@@ -630,11 +635,12 @@ describe('playerSlice', () => {
         isQuestItem: false,
       };
 
-      const beforeCount = store.getState().player.data.inventory.items.length;
       store.dispatch(addItem(heavyItem));
 
-      const afterCount = store.getState().player.data.inventory.items.length;
-      expect(afterCount).toBe(beforeCount);
+      const player = store.getState().player.data;
+      expect(player.inventory.items).toContainEqual(heavyItem);
+      expect(player.encumbrance.level).toBe('immobile');
+      expect(player.encumbrance.percentage).toBeGreaterThan(120);
     });
 
     it('removes item from inventory', () => {
@@ -665,7 +671,189 @@ describe('playerSlice', () => {
 
       const player = store.getState().player.data;
       expect(player.inventory.items).not.toContainEqual(item);
-      expect(player.inventory.currentWeight).toBe(beforeWeight - 2);
+      expect(player.inventory.currentWeight).toBeCloseTo(beforeWeight - 2, 5);
+    });
+  });
+
+  describe('advanced inventory reducers', () => {
+    it('equipItem respects durability gating', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const brokenWeapon: Weapon = {
+        id: uuidv4(),
+        name: 'Broken Pistol',
+        description: 'Needs repairs',
+        weight: 3,
+        value: 20,
+        damage: 5,
+        range: 5,
+        apCost: 3,
+        isQuestItem: false,
+        slot: 'weapon',
+        skillType: 'smallGuns',
+        durability: { current: 0, max: 100 },
+      };
+
+      const startingWeapon = store.getState().player.data.equipped.weapon;
+
+      store.dispatch(addItem(brokenWeapon));
+      store.dispatch(equipItem({ itemId: brokenWeapon.id, slot: 'primaryWeapon' }));
+
+      const player = store.getState().player.data;
+      expect(player.equipped.weapon).toEqual(startingWeapon);
+      expect(player.inventory.items).toContainEqual(brokenWeapon);
+    });
+
+    it('repairItem restores durability without exceeding max', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const damagedArmor: Armor = {
+        id: uuidv4(),
+        name: 'Scuffed Vest',
+        description: 'Has seen better days',
+        weight: 6,
+        value: 40,
+        protection: 8,
+        isQuestItem: false,
+        slot: 'armor',
+        durability: { current: 20, max: 60 },
+      };
+
+      store.dispatch(addItem(damagedArmor));
+      store.dispatch(repairItem({ itemId: damagedArmor.id, amount: 50 }));
+
+      const inventoryItem = store
+        .getState()
+        .player.data.inventory.items.find((entry) => entry.id === damagedArmor.id);
+
+      expect(inventoryItem?.durability?.current).toBe(60);
+    });
+
+    it('splitStack divides stackable items and preserves weight totals', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const ammo: Item = {
+        id: uuidv4(),
+        name: 'Ammo Box',
+        description: 'Assorted rounds',
+        weight: 0.2,
+        value: 10,
+        isQuestItem: false,
+        stackable: true,
+        quantity: 5,
+      };
+
+      store.dispatch(addItem(ammo));
+      const weightBefore = store.getState().player.data.inventory.currentWeight;
+
+      store.dispatch(splitStack({ itemId: ammo.id, quantity: 2 }));
+
+      const player = store.getState().player.data;
+      const original = player.inventory.items.find((entry) => entry.id === ammo.id);
+      const split = player.inventory.items.find(
+        (entry) => entry.id !== ammo.id && entry.name === ammo.name
+      );
+
+      expect(original?.quantity).toBe(3);
+      expect(split?.quantity).toBe(2);
+      expect(player.inventory.currentWeight).toBeCloseTo(weightBefore, 5);
+    });
+
+    it('assignHotbarSlot enforces unique slots and preserves capacity', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const medkit: Item = {
+        id: uuidv4(),
+        name: 'Medkit',
+        description: 'Restores health',
+        weight: 0.5,
+        value: 30,
+        isQuestItem: false,
+      };
+
+      store.dispatch(addItem(medkit));
+      store.dispatch(assignHotbarSlot({ slotIndex: 0, itemId: medkit.id }));
+      store.dispatch(assignHotbarSlot({ slotIndex: 2, itemId: medkit.id }));
+
+      const hotbar = store.getState().player.data.inventory.hotbar;
+      expect(hotbar).toHaveLength(5);
+      expect(hotbar[0]).toBeNull();
+      expect(hotbar[2]).toBe(medkit.id);
+    });
+
+    it('supports alternate equip slots via equipItem/unequipItem', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const stiletto: Weapon = {
+        id: uuidv4(),
+        name: 'Stiletto',
+        description: 'Close quarters weapon',
+        weight: 2,
+        value: 75,
+        damage: 6,
+        range: 1,
+        apCost: 2,
+        isQuestItem: false,
+        slot: 'weapon',
+        skillType: 'meleeCombat',
+      };
+
+      store.dispatch(addItem(stiletto));
+      store.dispatch(equipItem({ itemId: stiletto.id, slot: 'secondaryWeapon' }));
+
+      let player = store.getState().player.data;
+      expect(player.equipped.secondaryWeapon?.id).toBe(stiletto.id);
+      expect(player.activeWeaponSlot).toBe('secondaryWeapon');
+
+      store.dispatch(unequipItem({ slot: 'secondaryWeapon' }));
+      player = store.getState().player.data;
+      expect(player.equipped.secondaryWeapon).toBeUndefined();
+      expect(player.inventory.items.some((entry) => entry.id === stiletto.id)).toBe(true);
     });
   });
 

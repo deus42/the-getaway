@@ -64,7 +64,7 @@ export const DEFAULT_PLAYER: Player = {
     items: [],
     maxWeight: defaultCarryWeight,
     currentWeight: 0,
-    hotbar: [],
+    hotbar: [null, null, null, null, null],
   },
   equipped: {
     weapon: undefined,
@@ -88,6 +88,8 @@ export const DEFAULT_PLAYER: Player = {
   encumbrance: {
     level: 'normal',
     percentage: 0,
+    movementApMultiplier: 1,
+    attackApMultiplier: 1,
   }
 };
 

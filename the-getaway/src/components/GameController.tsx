@@ -41,6 +41,8 @@ import { shouldGunFuAttackBeFree } from "../game/systems/perks";
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
+  const encumbranceLevel = player.encumbrance.level;
+  const encumbranceWarning = player.encumbrance.warning;
   const currentMapArea = useSelector(
     (state: RootState) => state.world.currentMapArea
   );
@@ -86,6 +88,7 @@ const GameController: React.FC = () => {
   const activeNpcMovements = useRef<Set<string>>(new Set());
   const npcMovementTimeouts = useRef<number[]>([]);
   const npcReservedDestinations = useRef<Map<string, Position>>(new Map());
+  const previousEncumbranceWarning = useRef<string | null>(null);
   const [pendingNpcInteractionId, setPendingNpcInteractionId] = useState<string | null>(null);
   const [pendingEnemyEngagementId, setPendingEnemyEngagementId] = useState<string | null>(null);
   const beginDialogueWithNpc = useCallback(
@@ -591,6 +594,16 @@ const GameController: React.FC = () => {
       return;
     }
 
+    if (player.encumbrance.level === 'immobile') {
+      if (player.encumbrance.warning) {
+        dispatch(addLogMessage(player.encumbrance.warning));
+      }
+      setQueuedPath([]);
+      setPendingNpcInteractionId(null);
+      setPendingEnemyEngagementId(null);
+      return;
+    }
+
     const nextStep = queuedPath[0];
     const playerX = player.position.x;
     const playerY = player.position.y;
@@ -658,6 +671,21 @@ const GameController: React.FC = () => {
     mapConnections,
     logStrings,
   ]);
+
+  useEffect(() => {
+    const warning = encumbranceWarning ?? null;
+
+    if (warning && warning !== previousEncumbranceWarning.current) {
+      dispatch(addLogMessage(warning));
+    }
+
+    if (!warning && previousEncumbranceWarning.current && encumbranceLevel === 'normal') {
+      previousEncumbranceWarning.current = null;
+      return;
+    }
+
+    previousEncumbranceWarning.current = warning;
+  }, [encumbranceLevel, encumbranceWarning, dispatch]);
 
   useEffect(() => {
     if (!pendingNpcInteractionId || !currentMapArea) {
@@ -1084,13 +1112,16 @@ const GameController: React.FC = () => {
   // Handle attacking an enemy
   const attackEnemy = useCallback(
     (enemy: Enemy, mapArea: MapArea) => {
-      const weaponApCost = player.equipped.weapon?.apCost ?? DEFAULT_ATTACK_COST;
+      const baseAttackCost = player.equipped.weapon?.apCost ?? DEFAULT_ATTACK_COST;
+      const encumbranceAttackMultiplier = Number.isFinite(player.encumbrance.attackApMultiplier)
+        ? Math.max(player.encumbrance.attackApMultiplier, 0)
+        : Number.POSITIVE_INFINITY;
       const attackCost = shouldGunFuAttackBeFree(player)
         ? 0
-        : Math.max(0, weaponApCost);
+        : Math.ceil(Math.max(0, baseAttackCost) * encumbranceAttackMultiplier);
 
       // Check if player has enough AP
-      if (player.actionPoints < attackCost) {
+      if (!Number.isFinite(attackCost) || player.actionPoints < attackCost) {
         dispatch(addLogMessage(logStrings.notEnoughAp));
         return;
       }
@@ -1120,6 +1151,10 @@ const GameController: React.FC = () => {
 
       const updatedPlayer = result.newAttacker as Player;
       dispatch(setPlayerData(updatedPlayer));
+
+      if (result.events) {
+        result.events.forEach((event) => dispatch(addLogMessage(event.message)));
+      }
 
       console.log("[GameController] attackEnemy: POST-ATTACK", {
         apCost: attackCost,
