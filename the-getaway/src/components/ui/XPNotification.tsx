@@ -20,9 +20,12 @@ const computeAnchor = (detail: PlayerScreenPositionDetail | null): { x: number; 
     return null;
   }
 
+  const scaleX = detail.canvasDisplayWidth / (detail.canvasWidth || 1);
+  const scaleY = detail.canvasDisplayHeight / (detail.canvasHeight || 1);
+
   return {
-    x: detail.canvasLeft + detail.screenX,
-    y: detail.canvasTop + detail.screenY,
+    x: detail.canvasLeft + detail.screenX * scaleX,
+    y: detail.canvasTop + detail.screenY * scaleY,
   };
 };
 
