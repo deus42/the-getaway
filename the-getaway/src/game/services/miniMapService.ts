@@ -11,6 +11,8 @@ import {
   MiniMapZoomDetail,
   MINIMAP_PATH_PREVIEW_EVENT,
   MiniMapPathPreviewDetail,
+  PLAYER_SCREEN_POSITION_EVENT,
+  PlayerScreenPositionDetail,
 } from '../events';
 import type { MainScene } from '../scenes/MainScene';
 import { MiniMapController, normalizeMiniMapViewport } from '../controllers/MiniMapController';
@@ -242,6 +244,7 @@ declare global {
     [MINIMAP_STATE_EVENT]: CustomEvent<MiniMapRenderState>;
     [MINIMAP_ZOOM_EVENT]: CustomEvent<MiniMapZoomDetail>;
     [MINIMAP_PATH_PREVIEW_EVENT]: CustomEvent<MiniMapPathPreviewDetail>;
+    [PLAYER_SCREEN_POSITION_EVENT]: CustomEvent<PlayerScreenPositionDetail>;
   }
 }
 

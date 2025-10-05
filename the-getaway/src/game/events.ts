@@ -8,6 +8,7 @@ export const MINIMAP_STATE_EVENT = 'minimapStateUpdate';
 export const MINIMAP_ZOOM_EVENT = 'minimapZoomUpdate';
 export const MINIMAP_PATH_PREVIEW_EVENT = 'minimapPathPreview';
 export const MINIMAP_OBJECTIVE_FOCUS_EVENT = 'minimapObjectiveFocus';
+export const PLAYER_SCREEN_POSITION_EVENT = 'playerScreenPositionUpdate';
 
 
 export interface TileClickDetail {
@@ -109,6 +110,17 @@ export interface MiniMapRenderState {
   objectiveMarkers: MiniMapObjectiveDetail[];
   objectivesSignature: string;
   dirtyLayers: MiniMapDirtyLayers;
+}
+
+export interface PlayerScreenPositionDetail {
+  worldX: number;
+  worldY: number;
+  screenX: number;
+  screenY: number;
+  canvasWidth: number;
+  canvasHeight: number;
+  zoom: number;
+  timestamp: number;
 }
 
 export type TileTypeGrid = MapTile[][];

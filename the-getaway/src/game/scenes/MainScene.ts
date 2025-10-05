@@ -4,7 +4,14 @@ import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
-import { TILE_CLICK_EVENT, PATH_PREVIEW_EVENT, PathPreviewDetail, ViewportUpdateDetail } from '../events';
+import {
+  TILE_CLICK_EVENT,
+  PATH_PREVIEW_EVENT,
+  PLAYER_SCREEN_POSITION_EVENT,
+  PathPreviewDetail,
+  ViewportUpdateDetail,
+  PlayerScreenPositionDetail,
+} from '../events';
 import { IsoObjectFactory, CharacterToken } from '../utils/IsoObjectFactory';
 import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, adjustColor as isoAdjustColor, IsoMetrics } from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
@@ -118,6 +125,7 @@ export class MainScene extends Phaser.Scene {
   private playerVitalsIndicator?: Phaser.GameObjects.Graphics;
   private isoFactory?: IsoObjectFactory;
   private staticPropGroup?: Phaser.GameObjects.Group;
+  private lastPlayerScreenDetail?: PlayerScreenPositionDetail;
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
     if (document.visibilityState === 'visible') {
@@ -484,6 +492,7 @@ export class MainScene extends Phaser.Scene {
     this.isoFactory!.positionCharacterToken(this.playerToken, position.x, position.y);
 
     const pixelPos = this.calculatePixelPosition(position.x, position.y);
+    this.dispatchPlayerScreenPosition();
     if (this.playerNameLabel) {
       const metrics = this.getIsoMetrics();
       this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6, 18);
@@ -547,6 +556,7 @@ export class MainScene extends Phaser.Scene {
     camera.startFollow(this.playerToken.container, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
     this.isCameraFollowingPlayer = true;
+    this.dispatchPlayerScreenPosition();
   }
 
   private recenterCameraOnPlayer(): void {
@@ -556,6 +566,7 @@ export class MainScene extends Phaser.Scene {
 
     const camera = this.cameras.main;
     camera.centerOn(this.playerToken.container.x, this.playerToken.container.y);
+    this.dispatchPlayerScreenPosition();
   }
 
   private updateEnemies(enemies: Enemy[]) {
@@ -858,6 +869,7 @@ export class MainScene extends Phaser.Scene {
     if (this.playerToken) {
       this.playerToken.container.destroy(true);
       this.playerToken = undefined;
+      this.lastPlayerScreenDetail = undefined;
     }
     if (this.playerNameLabel) {
       this.playerNameLabel.destroy();
@@ -1392,6 +1404,46 @@ export class MainScene extends Phaser.Scene {
     return isoToPixel(gridX, gridY, this.isoOriginX, this.isoOriginY, this.tileSize);
   }
 
+  private dispatchPlayerScreenPosition(): void {
+    if (!this.playerToken || !this.sys.isActive()) {
+      return;
+    }
+
+    const camera = this.cameras.main;
+    const container = this.playerToken.container;
+
+    const worldX = container.x;
+    const worldY = container.y;
+    const screenX = (worldX - camera.worldView.x) * camera.zoom;
+    const screenY = (worldY - camera.worldView.y) * camera.zoom;
+
+    const detail: PlayerScreenPositionDetail = {
+      worldX,
+      worldY,
+      screenX,
+      screenY,
+      canvasWidth: this.scale.width,
+      canvasHeight: this.scale.height,
+      zoom: camera.zoom,
+      timestamp: typeof performance !== 'undefined' ? performance.now() : Date.now(),
+    };
+
+    const last = this.lastPlayerScreenDetail;
+    if (
+      last &&
+      Math.abs(last.screenX - detail.screenX) < 0.5 &&
+      Math.abs(last.screenY - detail.screenY) < 0.5 &&
+      Math.abs(last.zoom - detail.zoom) < 0.0001 &&
+      last.canvasWidth === detail.canvasWidth &&
+      last.canvasHeight === detail.canvasHeight
+    ) {
+      return;
+    }
+
+    this.lastPlayerScreenDetail = detail;
+    window.dispatchEvent(new CustomEvent(PLAYER_SCREEN_POSITION_EVENT, { detail }));
+  }
+
   private getIsoMetrics(): IsoMetrics {
     return computeIsoMetrics(this.tileSize);
   }
@@ -1899,6 +1951,8 @@ export class MainScene extends Phaser.Scene {
       store.dispatch(updateGameTimeAction(this.timeDispatchAccumulator));
       this.timeDispatchAccumulator = 0;
     }
+
+    this.dispatchPlayerScreenPosition();
   }
 
 }
