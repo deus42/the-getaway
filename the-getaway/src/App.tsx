@@ -63,18 +63,41 @@ const mainStageStyle: CSSProperties = {
   background: "radial-gradient(circle at top, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.95))",
 };
 
+type StageStyle = CSSProperties & {
+  '--left-sidebar-width'?: string;
+  '--left-sidebar-last-width'?: string;
+  '--right-sidebar-width'?: string;
+  '--right-sidebar-last-width'?: string;
+};
+
+type SidebarRailStyle = CSSProperties & {
+  '--sidebar-width'?: string;
+  '--sidebar-visible-width'?: string;
+  '--sidebar-last-width'?: string;
+};
+
+const sidebarRailBaseStyle: CSSProperties = {
+  position: "relative",
+  display: "flex",
+  alignItems: "stretch",
+  minHeight: 0,
+  overflow: "visible",
+  transition: "flex-basis 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+};
+
 const sidebarBaseStyle: CSSProperties = {
-  flex: `0 0 ${SIDEBAR_BASIS}`,
+  flex: "1 1 auto",
   height: "100%",
   padding: "1.2rem 1rem",
   display: "flex",
   flexDirection: "column",
   gap: "1rem",
   minHeight: 0,
+  width: "100%",
   backdropFilter: "blur(6px)",
   overflowX: "hidden",
   overflowY: "auto",
-  transition: "flex-basis 0.25s ease, opacity 0.25s ease, padding 0.25s ease",
+  transition: "opacity 0.25s ease, padding 0.25s ease",
 };
 
 const leftSidebarStyle: CSSProperties = {
@@ -149,7 +172,7 @@ const menuButtonWrapperStyle: CSSProperties = {
 };
 
 const centerStageStyle: CSSProperties = {
-  flex: "1 1 0%",
+  flex: "1 1 auto",
   minWidth: 0,
   height: "100%",
   position: "relative",
@@ -174,6 +197,8 @@ const sidebarToggleBaseStyle: CSSProperties = {
   boxShadow: "0 14px 28px rgba(15, 23, 42, 0.45)",
   transition: "all 0.25s ease",
 };
+
+const toggleVerticalPosition = "clamp(6rem, 50%, calc(100% - 6rem))";
 
 interface CommandShellProps {
   onOpenMenu: () => void;
@@ -248,65 +273,86 @@ const CommandShell: React.FC<CommandShellProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  const leftStyle: CSSProperties = leftCollapsed
-    ? {
-        ...leftSidebarStyle,
-        flex: '0 0 0px',
-        width: 0,
-        padding: 0,
-        opacity: 0,
-        pointerEvents: 'none',
-        visibility: 'hidden',
-        borderRight: 'none',
-        minWidth: 0,
-      }
-    : leftSidebarStyle;
-
-  const rightStyle: CSSProperties = rightCollapsed
-    ? {
-        ...rightSidebarStyle,
-        flex: '0 0 0px',
-        width: 0,
-        padding: 0,
-        opacity: 0,
-        pointerEvents: 'none',
-        visibility: 'hidden',
-        borderLeft: 'none',
-        minWidth: 0,
-      }
-    : rightSidebarStyle;
-
-  const centerStyle: CSSProperties = { ...centerStageStyle };
-
   const measuredLeftWidth = leftWidth > 0 ? leftWidth : (lastLeftWidth.current || SIDEBAR_FALLBACK_PX);
   const measuredRightWidth = rightWidth > 0 ? rightWidth : (lastRightWidth.current || SIDEBAR_FALLBACK_PX);
 
   const effectiveLeftWidth = leftCollapsed ? 0 : measuredLeftWidth;
   const effectiveRightWidth = rightCollapsed ? 0 : measuredRightWidth;
 
-  const leftToggleStyle: CSSProperties = leftCollapsed
-    ? {
-        ...sidebarToggleBaseStyle,
-        left: '1.75rem',
-        transform: 'translate(-50%, -50%)',
-      }
-    : {
-        ...sidebarToggleBaseStyle,
-        left: `${Math.max(effectiveLeftWidth, 0) + 12}px`,
-        transform: 'translate(-50%, -50%)',
-      };
+  const stageStyle: StageStyle = {
+    ...mainStageStyle,
+    '--left-sidebar-width': `${Math.max(effectiveLeftWidth, 0)}px`,
+    '--left-sidebar-last-width': `${Math.max(lastLeftWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
+    '--right-sidebar-width': `${Math.max(effectiveRightWidth, 0)}px`,
+    '--right-sidebar-last-width': `${Math.max(lastRightWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
+  };
 
-  const rightToggleStyle: CSSProperties = rightCollapsed
+  const leftRailStyle: SidebarRailStyle = {
+    ...sidebarRailBaseStyle,
+    flexBasis: leftCollapsed ? '0px' : SIDEBAR_BASIS,
+    flexGrow: 0,
+    flexShrink: leftCollapsed ? 1 : 0,
+    minWidth: 0,
+    willChange: 'flex-basis',
+    '--sidebar-width': `${Math.max(measuredLeftWidth, 0)}px`,
+    '--sidebar-visible-width': `${Math.max(effectiveLeftWidth, 0)}px`,
+    '--sidebar-last-width': `${Math.max(lastLeftWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
+  };
+
+  const rightRailStyle: SidebarRailStyle = {
+    ...sidebarRailBaseStyle,
+    flexBasis: rightCollapsed ? '0px' : SIDEBAR_BASIS,
+    flexGrow: 0,
+    flexShrink: rightCollapsed ? 1 : 0,
+    minWidth: 0,
+    willChange: 'flex-basis',
+    '--sidebar-width': `${Math.max(measuredRightWidth, 0)}px`,
+    '--sidebar-visible-width': `${Math.max(effectiveRightWidth, 0)}px`,
+    '--sidebar-last-width': `${Math.max(lastRightWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
+  };
+
+  const centerStyle: CSSProperties = { ...centerStageStyle };
+
+  const leftPanelStyle: CSSProperties = leftCollapsed
     ? {
-        ...sidebarToggleBaseStyle,
-        right: '1.75rem',
-        transform: 'translate(50%, -50%)',
+        ...leftSidebarStyle,
+        padding: 0,
+        opacity: 0,
+        pointerEvents: 'none',
+        visibility: 'hidden',
+        borderRight: 'none',
+        maxWidth: "0px",
       }
-    : {
-        ...sidebarToggleBaseStyle,
-        right: `${Math.max(effectiveRightWidth, 0) + 12}px`,
-        transform: 'translate(50%, -50%)',
-      };
+    : leftSidebarStyle;
+
+  const rightPanelStyle: CSSProperties = rightCollapsed
+    ? {
+        ...rightSidebarStyle,
+        padding: 0,
+        opacity: 0,
+        pointerEvents: 'none',
+        visibility: 'hidden',
+        borderLeft: 'none',
+        maxWidth: "0px",
+      }
+    : rightSidebarStyle;
+
+  const leftToggleStyle: CSSProperties = {
+    ...sidebarToggleBaseStyle,
+    top: toggleVerticalPosition,
+    left: 'calc(100% - 1.1rem)',
+    transform: 'translateY(-50%)',
+  };
+
+  const rightToggleStyle: CSSProperties = {
+    ...sidebarToggleBaseStyle,
+    top: toggleVerticalPosition,
+    left: '-1.1rem',
+    transform: 'translateY(-50%)',
+  };
+
+  const leftSidebarId = 'command-shell-left-sidebar';
+  const rightSidebarId = 'command-shell-right-sidebar';
 
   return (
     <>
@@ -322,33 +368,29 @@ const CommandShell: React.FC<CommandShellProps> = ({
           </button>
         </div>
       )}
-      <div style={mainStageStyle}>
-        {!showMenu && (
-          <>
+      <div style={stageStyle}>
+        <div style={leftRailStyle}>
+          {!showMenu && (
             <button
               type="button"
               onClick={onToggleLeftSidebar}
               style={leftToggleStyle}
               aria-pressed={!leftCollapsed}
+              aria-controls={leftSidebarId}
               aria-label={leftCollapsed ? uiStrings.shell.expandLeft : uiStrings.shell.collapseLeft}
               title={leftCollapsed ? uiStrings.shell.expandLeft : uiStrings.shell.collapseLeft}
             >
               {leftCollapsed ? '›' : '‹'}
             </button>
-            <button
-              type="button"
-              onClick={onToggleRightSidebar}
-              style={rightToggleStyle}
-              aria-pressed={!rightCollapsed}
-              aria-label={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
-              title={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
-            >
-              {rightCollapsed ? '‹' : '›'}
-            </button>
-          </>
-        )}
-        <div style={leftStyle} ref={leftSidebarRef}>
-          {!leftCollapsed && (
+          )}
+          <div
+            id={leftSidebarId}
+            style={leftPanelStyle}
+            ref={leftSidebarRef}
+            aria-hidden={leftCollapsed}
+            data-collapsed={leftCollapsed || undefined}
+          >
+            {!leftCollapsed && (
             <>
               <div style={{ ...panelBaseStyle }}>
                 <CornerAccents color="#38bdf8" size={14} />
@@ -377,7 +419,8 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 </div>
               </div>
             </>
-          )}
+            )}
+          </div>
         </div>
         <div style={centerStyle}>
           <TacticalHUDFrame />
@@ -388,8 +431,28 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <DialogueOverlay />
           <CombatFeedbackManager />
         </div>
-        <div style={rightStyle} ref={rightSidebarRef}>
-          {!rightCollapsed && (
+        <div style={rightRailStyle}>
+          {!showMenu && (
+            <button
+              type="button"
+              onClick={onToggleRightSidebar}
+              style={rightToggleStyle}
+              aria-pressed={!rightCollapsed}
+              aria-controls={rightSidebarId}
+              aria-label={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
+              title={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
+            >
+              {rightCollapsed ? '‹' : '›'}
+            </button>
+          )}
+          <div
+            id={rightSidebarId}
+            style={rightPanelStyle}
+            ref={rightSidebarRef}
+            aria-hidden={rightCollapsed}
+            data-collapsed={rightCollapsed || undefined}
+          >
+            {!rightCollapsed && (
             <>
               <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
                 <CornerAccents color="#f0abfc" size={14} />
@@ -410,7 +473,8 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 </div>
               </div>
             </>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </>

@@ -359,6 +359,13 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 2. Finalized the three-column HUD and collapsed telemetry into `PlayerStatusPanel`.
 3. Introduced Redux persistence (`resetGame`, localStorage hydration).
 </tasks>
+
+<maintenance_notes date="October 7, 2025">
+- Retained both sidebars in the DOM with a zero `flex-basis` collapse so the central canvas and HUD expand immediately instead of leaving grey gutters.
+- Anchored the left/right toggle buttons to their sidebar rails with CSS-based offsets and a clamped vertical position, preventing overlap with the menu button, day/night indicator, or level badge.
+- Published `--left-sidebar-width` / `--right-sidebar-width` (and last-width variants) on the stage container to support future HUD positioning helpers during collapsed states.
+- Hooked GameCanvas up to a `ResizeObserver` so Phaser resizes with the flex column and no longer leaves grey gutters when rails collapse, with cached size guards plus a ~40 ms debounce to avoid black-frame flicker; rails now ease between their full width and `0px` to keep the transition smooth (still worth a quick dev-server smoke test for visual QA).
+</maintenance_notes>
 </step>
 
 <step id="10" status="completed">

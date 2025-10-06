@@ -19,6 +19,8 @@ const GameCanvas: React.FC = () => {
   //   (state: RootState) => state.player.data.position
   // );
 
+  const lastResize = useRef<{ width: number; height: number }>({ width: 0, height: 0 });
+
   useEffect(() => {
     console.log("[GameCanvas] useEffect running");
     console.log(
@@ -131,21 +133,81 @@ const GameCanvas: React.FC = () => {
     }
 
     // Simple resize handler - fewer options to avoid blinking
-    const handleResize = () => {
-      if (gameInstanceRef.current && gameContainerRef.current) {
-        const newWidth = gameContainerRef.current.offsetWidth;
-        const newHeight = gameContainerRef.current.offsetHeight;
-
-        // Simple resize without too many options
-        gameInstanceRef.current.scale.resize(newWidth, newHeight);
-      }
+    let containerObserver: ResizeObserver | undefined;
+    let resizeTimeout: number | null = null;
+    const pendingResize = {
+      width: parentWidth,
+      height: parentHeight,
     };
+
+    const resizeToContainer = (width: number, height: number) => {
+      if (!gameInstanceRef.current) {
+        return;
+      }
+
+      const clampedWidth = Math.max(0, Math.floor(width));
+      const clampedHeight = Math.max(0, Math.floor(height));
+      if (clampedWidth === 0 || clampedHeight === 0) {
+        return;
+      }
+
+      const { width: previousWidth, height: previousHeight } = lastResize.current;
+      if (previousWidth === clampedWidth && previousHeight === clampedHeight) {
+        return;
+      }
+
+      lastResize.current = { width: clampedWidth, height: clampedHeight };
+
+      const game = gameInstanceRef.current;
+      game.scale.resize(clampedWidth, clampedHeight);
+    };
+
+    const scheduleResize = (width?: number, height?: number) => {
+      if (typeof width === "number" && typeof height === "number") {
+        pendingResize.width = width;
+        pendingResize.height = height;
+      } else if (gameContainerRef.current) {
+        pendingResize.width = gameContainerRef.current.offsetWidth;
+        pendingResize.height = gameContainerRef.current.offsetHeight;
+      }
+
+      if (resizeTimeout !== null) {
+        window.clearTimeout(resizeTimeout);
+      }
+
+      resizeTimeout = window.setTimeout(() => {
+        resizeTimeout = null;
+        resizeToContainer(pendingResize.width, pendingResize.height);
+      }, 40);
+    };
+
+    const handleResize = () => {
+      scheduleResize();
+    };
+
+    if (typeof ResizeObserver !== "undefined" && gameContainerRef.current) {
+      containerObserver = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (!entry) {
+          return;
+        }
+
+        scheduleResize(entry.contentRect.width, entry.contentRect.height);
+      });
+      containerObserver.observe(gameContainerRef.current);
+    }
 
     window.addEventListener("resize", handleResize);
 
     return () => {
       console.log("[GameCanvas] Cleanup running");
       window.removeEventListener("resize", handleResize);
+      if (resizeTimeout !== null) {
+        window.clearTimeout(resizeTimeout);
+      }
+      if (containerObserver) {
+        containerObserver.disconnect();
+      }
       if (gameInstanceRef.current) {
         gameInstanceRef.current.events.off(
           Phaser.Core.Events.READY,
