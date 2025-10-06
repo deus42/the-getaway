@@ -16,17 +16,17 @@ describe("App component", () => {
   });
 
   const completeCharacterCreation = async () => {
-    const nameInput = screen.getByPlaceholderText("Enter your operative name...");
+    const nameInput = await screen.findByPlaceholderText("Enter your operative name...");
     fireEvent.change(nameInput, { target: { value: "Test Operative" } });
 
-    const presetButtons = screen.getAllByRole("button", { name: /Operative/i });
+    const presetButtons = await screen.findAllByRole("button", { name: /Operative/i });
     fireEvent.click(presetButtons[0]);
 
     await act(async () => {
       fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
     });
 
-    const incrementButtons = screen.getAllByTitle("Increase attribute");
+    const incrementButtons = await screen.findAllByTitle("Increase attribute");
     for (let i = 0; i < 5; i += 1) {
       await act(async () => {
         fireEvent.click(incrementButtons[0]);
@@ -48,10 +48,11 @@ describe("App component", () => {
   it("shows the menu first and enters the game when starting a new session", async () => {
     render(<App />);
 
-    expect(screen.getByTestId("game-menu")).toBeInTheDocument();
-    expect(screen.getByTestId("continue-game")).toBeDisabled();
+    expect(await screen.findByTestId("game-menu")).toBeInTheDocument();
+    const continueButtonInitial = await screen.findByTestId("continue-game");
+    expect(continueButtonInitial).toBeDisabled();
 
-    fireEvent.click(screen.getByTestId("start-new-game"));
+    fireEvent.click(await screen.findByTestId("start-new-game"));
 
     await completeCharacterCreation();
 
@@ -71,9 +72,9 @@ describe("App component", () => {
   it("enables continue when a saved game is found", async () => {
     const { unmount } = render(<App />);
 
-    fireEvent.click(screen.getByTestId("start-new-game"));
+    fireEvent.click(await screen.findByTestId("start-new-game"));
     await completeCharacterCreation();
-    fireEvent.click(screen.getByTestId("open-menu"));
+    fireEvent.click(await screen.findByTestId("open-menu"));
 
     unmount();
 
@@ -82,7 +83,7 @@ describe("App component", () => {
 
     render(<App />);
 
-    const continueButton = screen.getByTestId("continue-game");
+    const continueButton = await screen.findByTestId("continue-game");
     expect(continueButton).toBeEnabled();
 
     fireEvent.click(continueButton);
@@ -93,7 +94,7 @@ describe("App component", () => {
   it('opens and closes the character screen', async () => {
     render(<App />);
 
-    fireEvent.click(screen.getByTestId('start-new-game'));
+    fireEvent.click(await screen.findByTestId('start-new-game'));
     await completeCharacterCreation();
 
     const characterButton = screen.getByTestId('summary-open-character');

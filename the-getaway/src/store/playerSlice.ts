@@ -354,56 +354,58 @@ const sanitizeItemForPlayer = (item: Item | undefined, fallbackSlot?: EquipmentS
     return item;
   }
 
-  if (isWeaponItem(item)) {
-    const baseDurability = item.durability;
+  const sanitized: Item = { ...item };
+
+  if (isWeaponItem(sanitized)) {
+    const baseDurability = sanitized.durability;
     const max = Number.isFinite(baseDurability?.max) && (baseDurability?.max ?? 0) > 0
       ? Math.round(baseDurability!.max)
       : 100;
     const current = Number.isFinite(baseDurability?.current)
       ? Math.max(0, Math.round(baseDurability!.current))
       : max;
-    item.durability = {
+    sanitized.durability = {
       max,
       current: Math.min(max, current),
     };
-    item.equipSlot = fallbackSlot ?? resolveDefaultWeaponSlot(item);
-  } else if (isArmorItem(item)) {
-    const baseDurability = item.durability;
+    sanitized.equipSlot = fallbackSlot ?? resolveDefaultWeaponSlot(sanitized);
+  } else if (isArmorItem(sanitized)) {
+    const baseDurability = sanitized.durability;
     const max = Number.isFinite(baseDurability?.max) && (baseDurability?.max ?? 0) > 0
       ? Math.round(baseDurability!.max)
       : 120;
     const current = Number.isFinite(baseDurability?.current)
       ? Math.max(0, Math.round(baseDurability!.current))
       : max;
-    item.durability = {
+    sanitized.durability = {
       max,
       current: Math.min(max, current),
     };
-    item.equipSlot = fallbackSlot ?? 'bodyArmor';
+    sanitized.equipSlot = fallbackSlot ?? 'bodyArmor';
   } else if (fallbackSlot) {
-    item.equipSlot = fallbackSlot;
+    sanitized.equipSlot = fallbackSlot;
   }
 
-  if (item.stackable) {
-    const quantity = getStackQuantity(item) || 1;
-    item.quantity = quantity;
-    if (!Number.isFinite(item.maxStack) || item.maxStack === undefined || item.maxStack <= 0) {
-      item.maxStack = Math.max(5, quantity);
+  if (sanitized.stackable) {
+    const quantity = getStackQuantity(sanitized) || 1;
+    sanitized.quantity = quantity;
+    if (!Number.isFinite(sanitized.maxStack) || sanitized.maxStack === undefined || sanitized.maxStack <= 0) {
+      sanitized.maxStack = Math.max(5, quantity);
     }
   } else {
-    delete item.quantity;
-    delete item.maxStack;
+    delete sanitized.quantity;
+    delete sanitized.maxStack;
   }
 
-  if (!Number.isFinite(item.weight)) {
-    item.weight = 0;
+  if (!Number.isFinite(sanitized.weight)) {
+    sanitized.weight = 0;
   }
 
-  if (!Number.isFinite(item.value)) {
-    item.value = 0;
+  if (!Number.isFinite(sanitized.value)) {
+    sanitized.value = 0;
   }
 
-  return item;
+  return sanitized;
 };
 
 const calculateInventoryWeight = (items: Item[]): number => {
