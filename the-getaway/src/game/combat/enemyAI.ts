@@ -20,7 +20,7 @@ export const determineEnemyMove = (
   enemies: Enemy[],
   coverPositions: Position[],
   npcs: NPC[] = []
-): { enemy: Enemy, player: Player, action: string } => {
+): { enemy: Enemy, player: Player, action: string, isCritical?: boolean } => {
   let updatedEnemy = { ...enemy };
   let updatedPlayer = { ...player };
   let actionTaken = 'none';
@@ -53,7 +53,7 @@ export const determineEnemyMove = (
     
     // Execute attack
     const attackResult = executeAttack(enemy, player, playerBehindCover);
-    
+
     if (attackResult.success) {
       // Safely cast attacker back to Enemy and target back to Player
       if (attackResult.newAttacker.id === enemy.id) {
@@ -70,11 +70,12 @@ export const determineEnemyMove = (
       }
       actionTaken = 'attack_missed';
     }
-    
-    return { 
-      enemy: updatedEnemy, 
-      player: updatedPlayer, 
-      action: actionTaken 
+
+    return {
+      enemy: updatedEnemy,
+      player: updatedPlayer,
+      action: actionTaken,
+      isCritical: attackResult.isCritical
     };
   }
   

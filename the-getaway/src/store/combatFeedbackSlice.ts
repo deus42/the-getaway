@@ -3,8 +3,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 export interface FloatingNumberData {
   id: string;
   value: number;
-  x: number;
-  y: number;
+  gridX: number;
+  gridY: number;
   type: 'damage' | 'heal' | 'crit' | 'miss' | 'block';
 }
 

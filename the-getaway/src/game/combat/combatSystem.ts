@@ -330,6 +330,7 @@ export const executeAttack = (
 ): {
   success: boolean;
   damage: number;
+  isCritical: boolean;
   newAttacker: Player | Enemy;
   newTarget: Player | Enemy;
   events?: CombatEvent[];
@@ -340,6 +341,7 @@ export const executeAttack = (
     return {
       success: false,
       damage: 0,
+      isCritical: false,
       newAttacker: attacker,
       newTarget: target,
       events: undefined,
@@ -354,6 +356,7 @@ export const executeAttack = (
       return {
         success: false,
         damage: 0,
+        isCritical: false,
         newAttacker: attacker,
         newTarget: target,
         events: [
@@ -373,6 +376,7 @@ export const executeAttack = (
   const hit = roll <= hitChance;
 
   let damageAmount = 0;
+  let isCritical = false;
 
   let attackerClone: Player | Enemy = attacker;
   let targetClone: Player | Enemy;
@@ -438,6 +442,7 @@ export const executeAttack = (
         if (enemyTarget.maxHealth > 0 && enemyTarget.health <= enemyTarget.maxHealth * 0.25) {
           damageAmount = Math.round(damageAmount * 1.5);
           criticalApplied = true;
+          isCritical = true;
         }
       }
 
@@ -445,6 +450,7 @@ export const executeAttack = (
         const critRoll = getRandomRoll();
         if (critRoll <= totalCriticalChance / 100) {
           damageAmount = Math.round(damageAmount * 1.5);
+          isCritical = true;
         }
       }
     } else {
@@ -523,6 +529,7 @@ export const executeAttack = (
   return {
     success: hit,
     damage: damageAmount,
+    isCritical,
     newAttacker: attackerClone,
     newTarget: targetClone,
     events: events.length > 0 ? events : undefined,

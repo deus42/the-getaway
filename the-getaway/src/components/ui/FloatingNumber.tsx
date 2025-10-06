@@ -1,15 +1,81 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
+import { PLAYER_SCREEN_POSITION_EVENT, PlayerScreenPositionDetail } from '../../game/events';
 
 export interface FloatingNumberProps {
   value: number;
-  x: number;
-  y: number;
+  gridX: number;
+  gridY: number;
   type: 'damage' | 'heal' | 'crit' | 'miss' | 'block';
   onComplete?: () => void;
 }
 
-const FloatingNumber: React.FC<FloatingNumberProps> = ({ value, x, y, type, onComplete }) => {
+const FloatingNumber: React.FC<FloatingNumberProps> = ({ value, gridX, gridY, type, onComplete }) => {
   const [visible, setVisible] = useState(true);
+  const [screenPos, setScreenPos] = useState<{ x: number; y: number } | null>(null);
+  const lastDetailRef = useRef<PlayerScreenPositionDetail | null>(null);
+  const playerPosition = useSelector((state: RootState) => state.player.data.position);
+
+  const updatePosition = useCallback((detail: PlayerScreenPositionDetail | null) => {
+    if (!detail) return;
+
+    lastDetailRef.current = detail;
+
+    // Calculate grid offset from player position
+    const gridOffsetX = gridX - playerPosition.x;
+    const gridOffsetY = gridY - playerPosition.y;
+
+    // Use tile size of 64 (MainScene default)
+    const tileSize = 64;
+    const tileWidth = tileSize;
+    const tileHeight = tileSize / 2;
+
+    // Convert grid offset to world offset using isometric projection
+    const worldOffsetX = (gridOffsetX - gridOffsetY) * (tileWidth / 2);
+    const worldOffsetY = (gridOffsetX + gridOffsetY) * (tileHeight / 2);
+
+    // Apply offset to player's world position
+    const entityWorldX = detail.worldX + worldOffsetX;
+    const entityWorldY = detail.worldY + worldOffsetY;
+
+    // Get camera position
+    const cameraWorldX = detail.worldX - detail.screenX / detail.zoom;
+    const cameraWorldY = detail.worldY - detail.screenY / detail.zoom;
+
+    // Convert world to screen coordinates
+    const screenX = (entityWorldX - cameraWorldX) * detail.zoom;
+    const screenY = (entityWorldY - cameraWorldY) * detail.zoom;
+
+    // Convert screen to DOM coordinates
+    const scaleX = detail.canvasDisplayWidth / detail.canvasWidth;
+    const scaleY = detail.canvasDisplayHeight / detail.canvasHeight;
+
+    const domX = detail.canvasLeft + screenX * scaleX;
+    const domY = detail.canvasTop + screenY * scaleY;
+
+    setScreenPos({ x: domX, y: domY });
+  }, [gridX, gridY, playerPosition.x, playerPosition.y]);
+
+  useEffect(() => {
+    // Get initial position
+    if (typeof window !== 'undefined') {
+      const initial = (window as any).__getawayPlayerScreenPosition as PlayerScreenPositionDetail | undefined;
+      if (initial) {
+        updatePosition(initial);
+      }
+    }
+  }, [updatePosition]);
+
+  useEffect(() => {
+    const handle = (event: Event) => {
+      const custom = event as CustomEvent<PlayerScreenPositionDetail>;
+      updatePosition(custom.detail);
+    };
+
+    window.addEventListener(PLAYER_SCREEN_POSITION_EVENT, handle as EventListener);
+    return () => window.removeEventListener(PLAYER_SCREEN_POSITION_EVENT, handle as EventListener);
+  }, [updatePosition]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -19,7 +85,7 @@ const FloatingNumber: React.FC<FloatingNumberProps> = ({ value, x, y, type, onCo
     return () => clearTimeout(timer);
   }, [onComplete]);
 
-  if (!visible) {
+  if (!visible || !screenPos) {
     return null;
   }
 
@@ -74,9 +140,10 @@ const FloatingNumber: React.FC<FloatingNumberProps> = ({ value, x, y, type, onCo
   const displayText = type === 'miss' ? 'MISS' : type === 'block' ? 'BLOCK' : `${styles.prefix}${value}`;
 
   const containerStyle: React.CSSProperties = {
-    position: 'absolute',
-    left: `${x}px`,
-    top: `${y}px`,
+    position: 'fixed',
+    left: `${screenPos.x}px`,
+    top: `${screenPos.y}px`,
+    transform: 'translate(-50%, -100%)',
     pointerEvents: 'none',
     userSelect: 'none',
     zIndex: 10000,

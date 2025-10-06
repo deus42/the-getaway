@@ -9,6 +9,7 @@ export const MINIMAP_ZOOM_EVENT = 'minimapZoomUpdate';
 export const MINIMAP_PATH_PREVIEW_EVENT = 'minimapPathPreview';
 export const MINIMAP_OBJECTIVE_FOCUS_EVENT = 'minimapObjectiveFocus';
 export const PLAYER_SCREEN_POSITION_EVENT = 'playerScreenPositionUpdate';
+export const DAMAGE_NUMBER_EVENT = 'damageNumber';
 
 
 export interface TileClickDetail {
@@ -125,6 +126,13 @@ export interface PlayerScreenPositionDetail {
   canvasTop: number;
   zoom: number;
   timestamp: number;
+}
+
+export interface DamageNumberDetail {
+  damage: number;
+  position: Position;
+  isCritical: boolean;
+  targetId: string;
 }
 
 export type TileTypeGrid = MapTile[][];

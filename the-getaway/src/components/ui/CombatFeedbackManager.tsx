@@ -30,8 +30,8 @@ const CombatFeedbackManager: React.FC = () => {
         <FloatingNumber
           key={number.id}
           value={number.value}
-          x={number.x}
-          y={number.y}
+          gridX={number.gridX}
+          gridY={number.gridY}
           type={number.type}
           onComplete={() => dispatch(removeFloatingNumber(number.id))}
         />
