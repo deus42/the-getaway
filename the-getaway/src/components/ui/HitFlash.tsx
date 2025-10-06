@@ -30,30 +30,51 @@ const HitFlash: React.FC<HitFlashProps> = ({
     return null;
   }
 
-  const getFlashColor = () => {
-    switch (type) {
-      case 'damage':
-        return `rgba(239, 68, 68, ${intensity})`;
-      case 'heal':
-        return `rgba(52, 211, 153, ${intensity})`;
-      case 'crit':
-        return `rgba(251, 191, 36, ${intensity * 0.8})`;
-      case 'block':
-        return `rgba(56, 189, 248, ${intensity * 0.7})`;
-      default:
-        return `rgba(255, 255, 255, ${intensity})`;
-    }
-  };
-
   const flashStyle: React.CSSProperties = {
     position: 'absolute',
     inset: 0,
-    background: getFlashColor(),
     pointerEvents: 'none',
     zIndex: 9999,
-    mixBlendMode: type === 'heal' ? 'lighten' : 'screen',
     animation: `hitFlash ${duration}ms ease-out forwards`,
   };
+
+  const flashVisualStyle = () => {
+    switch (type) {
+      case 'damage':
+        return {
+          background: `radial-gradient(circle at center, rgba(239, 68, 68, ${Math.max(
+            0,
+            intensity * 0.22,
+          )}) 0%, rgba(239, 68, 68, 0) 65%)`,
+          mixBlendMode: 'screen' as const,
+        };
+      case 'heal':
+        return {
+          background: `rgba(52, 211, 153, ${intensity})`,
+          mixBlendMode: 'lighten' as const,
+        };
+      case 'crit':
+        return {
+          background: `rgba(251, 191, 36, ${intensity * 0.8})`,
+          mixBlendMode: 'screen' as const,
+        };
+      case 'block':
+        return {
+          background: `rgba(56, 189, 248, ${intensity * 0.7})`,
+          mixBlendMode: 'screen' as const,
+        };
+      default:
+        return {
+          background: `rgba(255, 255, 255, ${intensity})`,
+          mixBlendMode: 'screen' as const,
+        };
+    }
+  };
+
+  const mergedStyle = {
+    ...flashStyle,
+    ...flashVisualStyle(),
+  } satisfies React.CSSProperties;
 
   return (
     <>
@@ -67,7 +88,7 @@ const HitFlash: React.FC<HitFlashProps> = ({
           }
         }
       `}</style>
-      <div style={flashStyle} />
+      <div style={mergedStyle} />
     </>
   );
 };
