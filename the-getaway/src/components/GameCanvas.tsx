@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 // Remove useSelector and RootState if no longer needed here
 // import { useSelector } from "react-redux";
 // import { RootState } from "../store";
@@ -222,6 +224,8 @@ const GameCanvas: React.FC = () => {
 
   console.log("[GameCanvas] Rendering component");
 
+  const testMode = useSelector((state: RootState) => state.settings.testMode);
+
   return (
     <div
       style={{
@@ -255,29 +259,31 @@ const GameCanvas: React.FC = () => {
       />
       {/* Remove position display overlay */}
       {/* <div ... > ... </div> */}
-      <div
-        data-testid="renderer-debug"
-        style={{
-          position: "absolute",
-          bottom: 16,
-          right: 16,
-          backgroundColor: "rgba(15, 23, 42, 0.85)",
-          color: "#e2e8f0",
-          borderRadius: 8,
-          padding: "8px 12px",
-          fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-          fontSize: 12,
-          lineHeight: 1.4,
-          letterSpacing: 0.4,
-          backdropFilter: "blur(4px)",
-          border: "1px solid rgba(148, 163, 184, 0.35)",
-          pointerEvents: "none",
-        }}
-      >
-        <div style={{ fontWeight: 600 }}>Renderer: {rendererInfo.label}</div>
-        <div>{rendererInfo.detail}</div>
-        <div style={{ marginTop: 4 }}>Phaser {Phaser.VERSION}</div>
-      </div>
+      {testMode && (
+        <div
+          data-testid="renderer-debug"
+          style={{
+            position: "absolute",
+            bottom: 16,
+            right: 16,
+            backgroundColor: "rgba(15, 23, 42, 0.85)",
+            color: "#e2e8f0",
+            borderRadius: 8,
+            padding: "8px 12px",
+            fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+            fontSize: 12,
+            lineHeight: 1.4,
+            letterSpacing: 0.4,
+            backdropFilter: "blur(4px)",
+            border: "1px solid rgba(148, 163, 184, 0.35)",
+            pointerEvents: "none",
+          }}
+        >
+          <div style={{ fontWeight: 600 }}>Renderer: {rendererInfo.label}</div>
+          <div>{rendererInfo.detail}</div>
+          <div style={{ marginTop: 4 }}>Phaser {Phaser.VERSION}</div>
+        </div>
+      )}
     </div>
   );
 };
