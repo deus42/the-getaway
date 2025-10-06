@@ -76,6 +76,7 @@ export class MainScene extends Phaser.Scene {
   private isoOriginX = 0;
   private isoOriginY = 0;
   private isCameraFollowingPlayer = false;
+  private lastPlayerGridPosition: Position | null = null;
   private inCombat = false;
   private playerVitalsIndicator?: Phaser.GameObjects.Graphics;
   private isoFactory?: IsoObjectFactory;
@@ -355,6 +356,11 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
+    const hasPlayerMoved =
+      !this.lastPlayerGridPosition ||
+      this.lastPlayerGridPosition.x !== position.x ||
+      this.lastPlayerGridPosition.y !== position.y;
+
     this.ensureIsoFactory();
     this.isoFactory!.positionCharacterToken(this.playerToken, position.x, position.y);
 
@@ -363,6 +369,13 @@ export class MainScene extends Phaser.Scene {
     if (this.playerNameLabel) {
       const metrics = this.getIsoMetrics();
       this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6, 18);
+    }
+
+    if (hasPlayerMoved) {
+      this.lastPlayerGridPosition = { ...position };
+      if (!this.isCameraFollowingPlayer) {
+        this.enablePlayerCameraFollow();
+      }
     }
   }
 
@@ -420,9 +433,12 @@ export class MainScene extends Phaser.Scene {
     }
 
     const camera = this.cameras.main;
-    camera.startFollow(this.playerToken.container, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
+    if (!this.isCameraFollowingPlayer) {
+      camera.startFollow(this.playerToken.container, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
+    }
     camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
     this.isCameraFollowingPlayer = true;
+    this.recenterCameraOnPlayer();
     this.dispatchPlayerScreenPosition();
   }
 

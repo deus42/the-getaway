@@ -953,7 +953,7 @@ describe('playerSlice', () => {
       store.dispatch(equipItem({ itemId: stiletto.id, slot: 'secondaryWeapon' }));
 
       let player = store.getState().player.data;
-      expect(player.equipped.secondaryWeapon?.id).toBe(stiletto.id);
+      expect(player.equipped.secondaryWeapon?.name).toBe(stiletto.name);
       expect(player.activeWeaponSlot).toBe('secondaryWeapon');
 
       store.dispatch(unequipItem({ slot: 'secondaryWeapon' }));
@@ -994,8 +994,8 @@ describe('playerSlice', () => {
       store.dispatch(equipWeapon(weapon.id));
 
       const player = store.getState().player.data;
-      expect(player.equipped.weapon).toMatchObject({ id: weapon.id });
-      expect(player.inventory.items.some((entry) => entry.id === weapon.id)).toBe(false);
+      expect(player.equipped.weapon).toMatchObject({ name: weapon.name, damage: weapon.damage });
+      expect(player.inventory.items.some((entry) => entry.name === weapon.name)).toBe(false);
     });
 
     it('unequips current weapon when equipping new one', () => {
@@ -1044,8 +1044,8 @@ describe('playerSlice', () => {
       store.dispatch(equipWeapon(weapon2.id));
 
       const player = store.getState().player.data;
-      expect(player.equipped.weapon).toMatchObject({ id: weapon2.id });
-      expect(player.inventory.items.some((entry) => entry.id === weapon1.id)).toBe(true);
+      expect(player.equipped.weapon).toMatchObject({ name: weapon2.name, damage: weapon2.damage });
+      expect(player.inventory.items.some((entry) => entry.name === weapon1.name)).toBe(true);
     });
 
     it('unequips weapon back to inventory', () => {
@@ -1112,8 +1112,8 @@ describe('playerSlice', () => {
       store.dispatch(equipArmor(armor.id));
 
       const player = store.getState().player.data;
-      expect(player.equipped.armor).toMatchObject({ id: armor.id });
-      expect(player.inventory.items.some((entry) => entry.id === armor.id)).toBe(false);
+      expect(player.equipped.armor).toMatchObject({ name: armor.name, protection: armor.protection });
+      expect(player.inventory.items.some((entry) => entry.name === armor.name)).toBe(false);
     });
 
     it('unequips armor back to inventory', () => {

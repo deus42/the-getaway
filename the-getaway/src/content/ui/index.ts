@@ -54,6 +54,10 @@ interface ShellStrings {
   characterButton: string;
   characterTitle: string;
   characterSubtitle: string;
+  collapseLeft: string;
+  expandLeft: string;
+  collapseRight: string;
+  expandRight: string;
 }
 
 interface PlayerStatusStrings {
@@ -215,6 +219,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       characterButton: 'Character',
       characterTitle: 'Operative Profile',
       characterSubtitle: 'Stats • Skills • Loadout',
+      collapseLeft: 'Hide Recon Panel',
+      expandLeft: 'Show Recon Panel',
+      collapseRight: 'Hide Ops Panel',
+      expandRight: 'Show Ops Panel',
     },
     playerStatus: {
       vitalsLabel: 'Vital Status',
@@ -399,6 +407,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       characterButton: 'Профіль',
       characterTitle: 'Профіль оперативника',
       characterSubtitle: 'Стати • Навички • Спорядження',
+      collapseLeft: 'Приховати панель розвідки',
+      expandLeft: 'Показати панель розвідки',
+      collapseRight: 'Приховати панель операцій',
+      expandRight: 'Показати панель операцій',
     },
     playerStatus: {
       vitalsLabel: 'Стан бійця',

@@ -354,62 +354,56 @@ const sanitizeItemForPlayer = (item: Item | undefined, fallbackSlot?: EquipmentS
     return item;
   }
 
-  const clone: Item = { ...item };
-
-  if (clone.durability) {
-    clone.durability = { ...clone.durability };
-  }
-
-  if (isWeaponItem(clone)) {
-    const baseDurability = clone.durability ?? { max: 0, current: 0 };
-    const max = Number.isFinite(baseDurability.max) && baseDurability.max > 0
-      ? Math.round(baseDurability.max)
+  if (isWeaponItem(item)) {
+    const baseDurability = item.durability;
+    const max = Number.isFinite(baseDurability?.max) && (baseDurability?.max ?? 0) > 0
+      ? Math.round(baseDurability!.max)
       : 100;
-    const current = Number.isFinite(baseDurability.current)
-      ? Math.max(0, Math.round(baseDurability.current))
+    const current = Number.isFinite(baseDurability?.current)
+      ? Math.max(0, Math.round(baseDurability!.current))
       : max;
-    clone.durability = {
+    item.durability = {
       max,
       current: Math.min(max, current),
     };
-    clone.equipSlot = fallbackSlot ?? resolveDefaultWeaponSlot(clone);
-  } else if (isArmorItem(clone)) {
-    const baseDurability = clone.durability ?? { max: 0, current: 0 };
-    const max = Number.isFinite(baseDurability.max) && baseDurability.max > 0
-      ? Math.round(baseDurability.max)
+    item.equipSlot = fallbackSlot ?? resolveDefaultWeaponSlot(item);
+  } else if (isArmorItem(item)) {
+    const baseDurability = item.durability;
+    const max = Number.isFinite(baseDurability?.max) && (baseDurability?.max ?? 0) > 0
+      ? Math.round(baseDurability!.max)
       : 120;
-    const current = Number.isFinite(baseDurability.current)
-      ? Math.max(0, Math.round(baseDurability.current))
+    const current = Number.isFinite(baseDurability?.current)
+      ? Math.max(0, Math.round(baseDurability!.current))
       : max;
-    clone.durability = {
+    item.durability = {
       max,
       current: Math.min(max, current),
     };
-    clone.equipSlot = fallbackSlot ?? 'bodyArmor';
+    item.equipSlot = fallbackSlot ?? 'bodyArmor';
   } else if (fallbackSlot) {
-    clone.equipSlot = fallbackSlot;
+    item.equipSlot = fallbackSlot;
   }
 
-  if (clone.stackable) {
-    const quantity = getStackQuantity(clone) || 1;
-    clone.quantity = quantity;
-    if (!Number.isFinite(clone.maxStack) || clone.maxStack === undefined || clone.maxStack <= 0) {
-      clone.maxStack = Math.max(5, quantity);
+  if (item.stackable) {
+    const quantity = getStackQuantity(item) || 1;
+    item.quantity = quantity;
+    if (!Number.isFinite(item.maxStack) || item.maxStack === undefined || item.maxStack <= 0) {
+      item.maxStack = Math.max(5, quantity);
     }
   } else {
-    delete clone.quantity;
-    delete clone.maxStack;
+    delete item.quantity;
+    delete item.maxStack;
   }
 
-  if (!Number.isFinite(clone.weight)) {
-    clone.weight = 0;
+  if (!Number.isFinite(item.weight)) {
+    item.weight = 0;
   }
 
-  if (!Number.isFinite(clone.value)) {
-    clone.value = 0;
+  if (!Number.isFinite(item.value)) {
+    item.value = 0;
   }
 
-  return clone;
+  return item;
 };
 
 const calculateInventoryWeight = (items: Item[]): number => {

@@ -50,6 +50,8 @@ const layoutShellStyle: CSSProperties = {
   fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
 };
 
+const SIDEBAR_BASIS = 'min(26rem, 24vw)';
+
 const mainStageStyle: CSSProperties = {
   position: "absolute",
   top: 0,
@@ -61,7 +63,7 @@ const mainStageStyle: CSSProperties = {
 };
 
 const sidebarBaseStyle: CSSProperties = {
-  width: "20%",
+  flex: `0 0 ${SIDEBAR_BASIS}`,
   height: "100%",
   padding: "1.2rem 1rem",
   display: "flex",
@@ -71,6 +73,7 @@ const sidebarBaseStyle: CSSProperties = {
   backdropFilter: "blur(6px)",
   overflowX: "hidden",
   overflowY: "auto",
+  transition: "flex-basis 0.25s ease, opacity 0.25s ease, padding 0.25s ease",
 };
 
 const leftSidebarStyle: CSSProperties = {
@@ -145,10 +148,30 @@ const menuButtonWrapperStyle: CSSProperties = {
 };
 
 const centerStageStyle: CSSProperties = {
-  width: "60%",
+  flex: "1 1 0%",
+  minWidth: 0,
   height: "100%",
   position: "relative",
   overflow: "hidden",
+};
+
+const sidebarToggleBaseStyle: CSSProperties = {
+  position: "absolute",
+  top: "50%",
+  width: "2.2rem",
+  height: "2.2rem",
+  borderRadius: "999px",
+  border: "1px solid rgba(148, 163, 184, 0.45)",
+  background: "linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.88))",
+  color: "#e2e8f0",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontSize: "0.85rem",
+  cursor: "pointer",
+  zIndex: 5,
+  boxShadow: "0 14px 28px rgba(15, 23, 42, 0.45)",
+  transition: "all 0.25s ease",
 };
 
 interface CommandShellProps {
@@ -156,11 +179,58 @@ interface CommandShellProps {
   onToggleCharacter: () => void;
   showMenu: boolean;
   characterOpen: boolean;
+  leftCollapsed: boolean;
+  rightCollapsed: boolean;
+  onToggleLeftSidebar: () => void;
+  onToggleRightSidebar: () => void;
 }
 
-const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharacter, showMenu, characterOpen }) => {
+const CommandShell: React.FC<CommandShellProps> = ({
+  onOpenMenu,
+  onToggleCharacter,
+  showMenu,
+  characterOpen,
+  leftCollapsed,
+  rightCollapsed,
+  onToggleLeftSidebar,
+  onToggleRightSidebar,
+}) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
+
+  const leftStyle: CSSProperties = leftCollapsed
+    ? { display: 'none' }
+    : leftSidebarStyle;
+
+  const rightStyle: CSSProperties = rightCollapsed
+    ? { display: 'none' }
+    : rightSidebarStyle;
+
+  const centerStyle: CSSProperties = { ...centerStageStyle };
+
+  const leftToggleStyle: CSSProperties = leftCollapsed
+    ? {
+        ...sidebarToggleBaseStyle,
+        left: '1.5rem',
+        transform: 'translate(-50%, -50%)',
+      }
+    : {
+        ...sidebarToggleBaseStyle,
+        left: `calc(${SIDEBAR_BASIS} + 0.5rem)`,
+        transform: 'translate(-50%, -50%)',
+      };
+
+  const rightToggleStyle: CSSProperties = rightCollapsed
+    ? {
+        ...sidebarToggleBaseStyle,
+        right: '1.5rem',
+        transform: 'translate(50%, -50%)',
+      }
+    : {
+        ...sidebarToggleBaseStyle,
+        right: `calc(${SIDEBAR_BASIS} + 0.5rem)`,
+        transform: 'translate(50%, -50%)',
+      };
 
   return (
     <>
@@ -177,35 +247,63 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharact
         </div>
       )}
       <div style={mainStageStyle}>
-        <div style={leftSidebarStyle}>
-          <div style={{ ...panelBaseStyle }}>
-            <CornerAccents color="#38bdf8" size={14} />
-            <ScanlineOverlay opacity={0.04} />
-            <DataStreamParticles color="#38bdf8" count={2} side="left" />
-            <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.reconLabel}</span>
-            <h2 style={panelTitleStyle}>{uiStrings.shell.reconTitle}</h2>
-            <MiniMap />
-          </div>
-          <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-            <CornerAccents color="#38bdf8" size={14} />
-            <ScanlineOverlay opacity={0.04} />
-            <DataStreamParticles color="#38bdf8" count={2} side="left" />
-            <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.squadLabel}</span>
-            <h2 style={panelTitleStyle}>{uiStrings.shell.squadTitle}</h2>
-            <div
-              style={{
-                ...scrollSectionStyle,
-                display: "flex",
-                flexDirection: "column",
-                gap: "0.8rem",
-              }}
+        {!showMenu && (
+          <>
+            <button
+              type="button"
+              onClick={onToggleLeftSidebar}
+              style={leftToggleStyle}
+              aria-pressed={!leftCollapsed}
+              aria-label={leftCollapsed ? uiStrings.shell.expandLeft : uiStrings.shell.collapseLeft}
+              title={leftCollapsed ? uiStrings.shell.expandLeft : uiStrings.shell.collapseLeft}
             >
-              <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
-              <TurnTracker />
-            </div>
-          </div>
+              {leftCollapsed ? '›' : '‹'}
+            </button>
+            <button
+              type="button"
+              onClick={onToggleRightSidebar}
+              style={rightToggleStyle}
+              aria-pressed={!rightCollapsed}
+              aria-label={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
+              title={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
+            >
+              {rightCollapsed ? '‹' : '›'}
+            </button>
+          </>
+        )}
+        <div style={leftStyle}>
+          {!leftCollapsed && (
+            <>
+              <div style={{ ...panelBaseStyle }}>
+                <CornerAccents color="#38bdf8" size={14} />
+                <ScanlineOverlay opacity={0.04} />
+                <DataStreamParticles color="#38bdf8" count={2} side="left" />
+                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.reconLabel}</span>
+                <h2 style={panelTitleStyle}>{uiStrings.shell.reconTitle}</h2>
+                <MiniMap />
+              </div>
+              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+                <CornerAccents color="#38bdf8" size={14} />
+                <ScanlineOverlay opacity={0.04} />
+                <DataStreamParticles color="#38bdf8" count={2} side="left" />
+                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.squadLabel}</span>
+                <h2 style={panelTitleStyle}>{uiStrings.shell.squadTitle}</h2>
+                <div
+                  style={{
+                    ...scrollSectionStyle,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "0.8rem",
+                  }}
+                >
+                  <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
+                  <TurnTracker />
+                </div>
+              </div>
+            </>
+          )}
         </div>
-        <div style={centerStageStyle}>
+        <div style={centerStyle}>
           <TacticalHUDFrame />
           <GameCanvas />
           <GameController />
@@ -214,25 +312,29 @@ const CommandShell: React.FC<CommandShellProps> = ({ onOpenMenu, onToggleCharact
           <DialogueOverlay />
           <CombatFeedbackManager />
         </div>
-        <div style={rightSidebarStyle}>
-          <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-            <CornerAccents color="#f0abfc" size={14} />
-            <ScanlineOverlay opacity={0.04} />
-            <DataStreamParticles color="#f0abfc" count={2} side="right" />
-            <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
-            <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
-            <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
-          </div>
-          <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-            <CornerAccents color="#60a5fa" size={14} />
-            <ScanlineOverlay opacity={0.04} />
-            <DataStreamParticles color="#60a5fa" count={2} side="right" />
-            <span style={panelLabelStyle("#60a5fa")}>{uiStrings.shell.telemetryLabel}</span>
-            <h2 style={panelTitleStyle}>{uiStrings.shell.telemetryTitle}</h2>
-            <div style={scrollSectionStyle}>
-              <LogPanel />
-            </div>
-          </div>
+        <div style={rightStyle}>
+          {!rightCollapsed && (
+            <>
+              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+                <CornerAccents color="#f0abfc" size={14} />
+                <ScanlineOverlay opacity={0.04} />
+                <DataStreamParticles color="#f0abfc" count={2} side="right" />
+                <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
+                <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
+                <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
+              </div>
+              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+                <CornerAccents color="#60a5fa" size={14} />
+                <ScanlineOverlay opacity={0.04} />
+                <DataStreamParticles color="#60a5fa" count={2} side="right" />
+                <span style={panelLabelStyle("#60a5fa")}>{uiStrings.shell.telemetryLabel}</span>
+                <h2 style={panelTitleStyle}>{uiStrings.shell.telemetryTitle}</h2>
+                <div style={scrollSectionStyle}>
+                  <LogPanel />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -277,6 +379,8 @@ function App() {
   const [showPerkSelection, setShowPerkSelection] = useState(false);
   const [levelUpFlowActive, setLevelUpFlowActive] = useState(false);
   const [showPointAllocation, setShowPointAllocation] = useState(false);
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     console.log("[App] Component mounted");
@@ -491,6 +595,10 @@ function App() {
             onToggleCharacter={handleToggleCharacterScreen}
             showMenu={showMenu}
             characterOpen={showCharacterScreen}
+            leftCollapsed={leftSidebarCollapsed}
+            rightCollapsed={rightSidebarCollapsed}
+            onToggleLeftSidebar={() => setLeftSidebarCollapsed((prev) => !prev)}
+            onToggleRightSidebar={() => setRightSidebarCollapsed((prev) => !prev)}
           />
         )}
       </div>
