@@ -983,15 +983,6 @@ export class MainScene extends Phaser.Scene {
 
     this.mapGraphics.fillStyle(0x60a5fa, 0.22);
     this.mapGraphics.fillPoints(glow, true);
-
-    // Corner accent lights - small cyan dots at top corners
-    const cornerSize = 2.5;
-    const topCornerLeft = this.lerpPoint(capPoints[3], basePoints[3], 0.08);
-    const topCornerRight = this.lerpPoint(capPoints[2], basePoints[2], 0.08);
-
-    this.mapGraphics.fillStyle(0x22d3ee, 0.85);
-    this.mapGraphics.fillCircle(topCornerLeft.x - cornerSize * 0.5, topCornerLeft.y, cornerSize);
-    this.mapGraphics.fillCircle(topCornerRight.x + cornerSize * 0.5, topCornerRight.y, cornerSize);
   }
 
   private renderCoverDetails(
