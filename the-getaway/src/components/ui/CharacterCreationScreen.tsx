@@ -1,7 +1,8 @@
 import React, { useState, useRef, useLayoutEffect } from 'react';
 import { PlayerSkills } from '../../game/interfaces/types';
 import { calculateDerivedStats } from '../../game/systems/statCalculations';
-import { BACKGROUNDS } from '../../content/backgrounds';
+import { BACKGROUNDS, StartingItemDefinition } from '../../content/backgrounds';
+import { getItemPrototype } from '../../content/items';
 import EnhancedButton from './EnhancedButton';
 import NotificationBadge from './NotificationBadge';
 import { gradientTextStyle } from './theme';
@@ -30,6 +31,13 @@ const RANDOM_NAMES = [
   'Raven', 'Ghost', 'Cipher', 'Echo', 'Viper', 'Phoenix',
   'Shadow', 'Blade', 'Nova', 'Wraith', 'Spark', 'Drift'
 ];
+
+const resolveStartingItemName = (item: StartingItemDefinition): string => {
+  if (item.type === 'catalog') {
+    return getItemPrototype(item.definitionId).name;
+  }
+  return item.name;
+};
 
 const ATTRIBUTE_INFO: Record<keyof PlayerSkills, { label: string; description: string }> = {
   strength: {
@@ -837,9 +845,10 @@ const CharacterCreationScreen: React.FC<CharacterCreationScreenProps> = ({ onCom
                     <div>
                       <span style={{ fontSize: '0.6rem', color: '#a855f7', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Starting Gear</span>
                       <ul style={{ margin: '0.2rem 0 0', paddingLeft: '1rem', color: '#cbd5e1', fontSize: '0.65rem', lineHeight: 1.4 }}>
-                        {background.startingEquipment.map((equip) => (
-                          <li key={`${background.id}-${equip.name}`}>{equip.name}</li>
-                        ))}
+                        {background.startingEquipment.map((equip) => {
+                          const label = resolveStartingItemName(equip);
+                          return <li key={`${background.id}-${label}`}>{label}</li>;
+                        })}
                       </ul>
                     </div>
                   </div>

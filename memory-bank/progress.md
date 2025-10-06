@@ -19,6 +19,37 @@
 </notes>
 </step>
 
+<step id="25.4" status="completed">
+<step_metadata>
+  <number>25.4</number>
+  <title>Content & Systems Validation</title>
+  <status>Completed</status>
+  <date>October 6, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added a catalog module in `src/content/items/index.ts` plus background references so starting loadouts and repair kits share consistent definitions.
+2. Normalised hydrated state via `deepClone`/`sanitizeItemForPlayer`, ensuring equip slots, durability, and stack metadata survive legacy saves.
+3. Extended repair flows: `consumeInventoryItemInternal` now resolves `repair` effects, and `repairItemInternal` keeps `equipped`/`equippedSlots` synchronised.
+4. Authored `scripts/migrate-save-durability.mjs` to patch persisted JSON with durability, hotbar, and encumbrance data when migrating save snapshots.
+</tasks>
+
+<implementation>
+- Catalog prototypes produce runtime clones with optional overrides (durability, quantity) while backgrounds and world content instantiate them on demand.
+- Repair consumables integrate with the existing reducer pipeline, syncing repaired items back into both equipment maps to avoid divergent references.
+- Hydration sanitation prevents stale payloads from reintroducing missing equip slots or corrupt stack metadata, keeping encumbrance calculations accurate.
+</implementation>
+
+<code_reference file="the-getaway/src/content/items/index.ts" />
+<code_reference file="the-getaway/src/content/backgrounds.ts" />
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="scripts/migrate-save-durability.mjs" />
+
+<validation>
+- `yarn test playerSlice.test.ts inventorySystem.test.ts --watch=false`
+</validation>
+</step>
+
 <step id="24.2" status="completed">
 <step_metadata>
   <number>24.2</number>

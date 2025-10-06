@@ -258,7 +258,9 @@ describe('inventorySystem', () => {
       const player = createTestPlayer();
       const initialStrength = player.skills.strength;
 
-      const strengthBoost = createConsumable('Strength Serum', 'stat', 2, 'strength');
+      const strengthBoost = createConsumable('Strength Serum', 'stat', 2, {
+        statAffected: 'strength',
+      });
       let updatedPlayer = addItemToInventory(player, strengthBoost);
       updatedPlayer = useConsumableItem(updatedPlayer, strengthBoost.id);
 
@@ -400,7 +402,9 @@ describe('inventorySystem', () => {
     });
 
     it('creates stat consumable with duration', () => {
-      const booster = createConsumable('Strength Boost', 'stat', 2, 'strength');
+      const booster = createConsumable('Strength Boost', 'stat', 2, {
+        statAffected: 'strength',
+      });
 
       expect(booster.name).toBe('Strength Boost');
       expect(booster.effect.type).toBe('stat');

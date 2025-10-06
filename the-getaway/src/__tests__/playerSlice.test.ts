@@ -21,6 +21,7 @@ import playerReducer, {
   repairItem,
   splitStack,
   assignHotbarSlot,
+  useInventoryItem,
   resetPlayer,
   equipWeapon,
   equipArmor,
@@ -39,6 +40,7 @@ import playerReducer, {
 import { Item, Weapon, Armor } from '../game/interfaces/types';
 import { DEFAULT_SKILLS } from '../game/interfaces/player';
 import { calculateXPForLevel } from '../game/systems/progression';
+import { instantiateItem } from '../content/items';
 
 const createTestStore = (preloadedState?: { player: PlayerState }) => {
   return configureStore({
@@ -757,7 +759,9 @@ describe('playerSlice', () => {
 
       const player = store.getState().player.data;
       expect(player.equipped.weapon).toEqual(startingWeapon);
-      expect(player.inventory.items).toContainEqual(brokenWeapon);
+      expect(player.inventory.items).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: brokenWeapon.id })])
+      );
     });
 
     it('repairItem restores durability without exceeding max', () => {
@@ -792,6 +796,61 @@ describe('playerSlice', () => {
         .player.data.inventory.items.find((entry) => entry.id === damagedArmor.id);
 
       expect(inventoryItem?.durability?.current).toBe(60);
+    });
+
+    it('repair consumable restores durability to the most damaged gear', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Tech',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const batteredPistol = instantiateItem('weapon_corpsec_service_pistol', {
+        durability: { current: 40, max: 120 },
+      });
+
+      store.dispatch(addItem(batteredPistol));
+      store.dispatch(equipItem({ itemId: batteredPistol.id, slot: 'primaryWeapon' }));
+
+      const repairKit = instantiateItem('consumable_basic_repair_kit');
+      store.dispatch(addItem(repairKit));
+
+      store.dispatch(useInventoryItem(repairKit.id));
+
+      const updatedWeapon = store.getState().player.data.equipped.weapon;
+      expect(updatedWeapon?.durability?.current).toBe(65);
+      const kitStillInInventory = store
+        .getState()
+        .player.data.inventory.items.find((entry) => entry.id === repairKit.id);
+      expect(kitStillInInventory).toBeUndefined();
+    });
+
+    it('repair consumable is not consumed if nothing needs fixing', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'NoWear',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const repairKit = instantiateItem('consumable_basic_repair_kit');
+      store.dispatch(addItem(repairKit));
+
+      store.dispatch(useInventoryItem(repairKit.id));
+
+      const inventoryItem = store
+        .getState()
+        .player.data.inventory.items.find((entry) => entry.id === repairKit.id);
+      expect(inventoryItem).toBeDefined();
     });
 
     it('splitStack divides stackable items and preserves weight totals', () => {
@@ -935,8 +994,8 @@ describe('playerSlice', () => {
       store.dispatch(equipWeapon(weapon.id));
 
       const player = store.getState().player.data;
-      expect(player.equipped.weapon).toEqual(weapon);
-      expect(player.inventory.items).not.toContainEqual(weapon);
+      expect(player.equipped.weapon).toMatchObject({ id: weapon.id });
+      expect(player.inventory.items.some((entry) => entry.id === weapon.id)).toBe(false);
     });
 
     it('unequips current weapon when equipping new one', () => {
@@ -985,8 +1044,8 @@ describe('playerSlice', () => {
       store.dispatch(equipWeapon(weapon2.id));
 
       const player = store.getState().player.data;
-      expect(player.equipped.weapon).toEqual(weapon2);
-      expect(player.inventory.items).toContainEqual(weapon1);
+      expect(player.equipped.weapon).toMatchObject({ id: weapon2.id });
+      expect(player.inventory.items.some((entry) => entry.id === weapon1.id)).toBe(true);
     });
 
     it('unequips weapon back to inventory', () => {
@@ -1021,7 +1080,9 @@ describe('playerSlice', () => {
 
       const player = store.getState().player.data;
       expect(player.equipped.weapon).toBeUndefined();
-      expect(player.inventory.items).toContainEqual(weapon);
+      expect(player.inventory.items).toEqual(
+        expect.arrayContaining([expect.objectContaining({ id: weapon.id })])
+      );
     });
 
     it('equips armor from inventory', () => {
@@ -1051,8 +1112,8 @@ describe('playerSlice', () => {
       store.dispatch(equipArmor(armor.id));
 
       const player = store.getState().player.data;
-      expect(player.equipped.armor).toEqual(armor);
-      expect(player.inventory.items).not.toContainEqual(armor);
+      expect(player.equipped.armor).toMatchObject({ id: armor.id });
+      expect(player.inventory.items.some((entry) => entry.id === armor.id)).toBe(false);
     });
 
     it('unequips armor back to inventory', () => {
@@ -1084,7 +1145,7 @@ describe('playerSlice', () => {
 
       const player = store.getState().player.data;
       expect(player.equipped.armor).toBeUndefined();
-      expect(player.inventory.items).toContainEqual(armor);
+      expect(player.inventory.items.some((entry) => entry.id === armor.id)).toBe(true);
     });
   });
 

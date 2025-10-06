@@ -1,8 +1,19 @@
 import { StatModifiers } from '../game/interfaces/types';
+import { ItemDefinitionId } from './items';
 
 export type BackgroundFaction = 'resistance' | 'corpsec' | 'scavengers';
 
 export type StartingItemDefinition =
+  | {
+      type: 'catalog';
+      definitionId: ItemDefinitionId;
+      equip?: boolean;
+      quantity?: number;
+      durability?: {
+        max?: number;
+        current?: number;
+      };
+    }
   | {
       type: 'weapon';
       name: string;
@@ -25,10 +36,14 @@ export type StartingItemDefinition =
   | {
       type: 'consumable';
       name: string;
-      effectType: 'health' | 'actionPoints' | 'stat';
+      effectType: 'health' | 'actionPoints' | 'stat' | 'repair';
       value: number;
       statAffected?: keyof import('../game/interfaces/types').PlayerSkills;
       weight?: number;
+      target?: 'weapon' | 'armor' | 'any';
+      stackable?: boolean;
+      maxStack?: number;
+      quantity?: number;
     }
   | {
       type: 'item';
@@ -73,28 +88,23 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
     },
     startingEquipment: [
       {
-        type: 'weapon',
-        name: 'CorpSec Service Pistol',
-        damage: 12,
-        range: 6,
-        apCost: 3,
-        weight: 3,
-        skillType: 'smallGuns',
+        type: 'catalog',
+        definitionId: 'weapon_corpsec_service_pistol',
         equip: true,
       },
       {
-        type: 'armor',
-        name: 'Kevlar Vest',
-        protection: 4,
-        weight: 6,
+        type: 'catalog',
+        definitionId: 'armor_kevlar_vest',
         equip: true,
       },
       {
-        type: 'item',
-        name: 'CorpSec Credentials',
-        description: 'Forged badge and access card from your old unit. May open a door—or raise a gun.',
-        weight: 0.5,
-        isQuestItem: true,
+        type: 'catalog',
+        definitionId: 'misc_corpsec_credentials',
+      },
+      {
+        type: 'catalog',
+        definitionId: 'consumable_basic_repair_kit',
+        quantity: 1,
       },
     ],
   },
@@ -117,27 +127,23 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
     },
     startingEquipment: [
       {
-        type: 'weapon',
-        name: 'Shiv Knife',
-        damage: 8,
-        range: 1,
-        apCost: 2,
-        weight: 1,
-        skillType: 'meleeCombat',
+        type: 'catalog',
+        definitionId: 'weapon_shiv_knife',
         equip: true,
       },
       {
-        type: 'armor',
-        name: 'Layered Leather Jacket',
-        protection: 2,
-        weight: 3,
+        type: 'catalog',
+        definitionId: 'armor_layered_leather_jacket',
         equip: true,
       },
       {
-        type: 'item',
-        name: 'Lockpick Set',
-        description: 'Handmade picks tucked in wrap bandages. Essential for doors and dead drops.',
-        weight: 0.3,
+        type: 'catalog',
+        definitionId: 'misc_lockpick_set',
+      },
+      {
+        type: 'catalog',
+        definitionId: 'consumable_basic_repair_kit',
+        quantity: 1,
       },
     ],
   },
@@ -161,23 +167,22 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
     },
     startingEquipment: [
       {
-        type: 'item',
-        name: 'Custom Deck',
-        description: 'Portable intrusion rig with cracked firmware and glowing keycaps.',
-        weight: 2,
+        type: 'catalog',
+        definitionId: 'misc_custom_deck',
       },
       {
-        type: 'item',
-        name: 'EMP Charge',
-        description: 'One-shot pulse device that fries cameras and briefly blinds drones.',
-        weight: 1,
+        type: 'catalog',
+        definitionId: 'misc_emp_charge',
       },
       {
-        type: 'armor',
-        name: 'Utility Hoodie',
-        protection: 1,
-        weight: 2,
+        type: 'catalog',
+        definitionId: 'armor_utility_hoodie',
         equip: true,
+      },
+      {
+        type: 'catalog',
+        definitionId: 'consumable_basic_repair_kit',
+        quantity: 1,
       },
     ],
   },
@@ -201,27 +206,23 @@ export const BACKGROUNDS: BackgroundDefinition[] = [
     },
     startingEquipment: [
       {
-        type: 'weapon',
-        name: 'Industrial Crowbar',
-        damage: 14,
-        range: 1,
-        apCost: 3,
-        weight: 5,
-        skillType: 'meleeCombat',
+        type: 'catalog',
+        definitionId: 'weapon_industrial_crowbar',
         equip: true,
       },
       {
-        type: 'item',
-        name: 'Gas Mask',
-        description: 'Filters patched with scavenged cloth. Keeps the toxic smog out—for a while.',
-        weight: 2,
+        type: 'catalog',
+        definitionId: 'misc_gas_mask',
       },
       {
-        type: 'consumable',
-        name: 'Field Medkit',
-        effectType: 'health',
-        value: 25,
-        weight: 1.5,
+        type: 'catalog',
+        definitionId: 'consumable_field_medkit',
+        quantity: 1,
+      },
+      {
+        type: 'catalog',
+        definitionId: 'consumable_basic_repair_kit',
+        quantity: 1,
       },
     ],
   },

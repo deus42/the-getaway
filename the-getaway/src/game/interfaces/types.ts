@@ -215,13 +215,18 @@ export interface Armor extends Item {
 }
 
 // Consumable extends item
+export type ConsumableEffectType = 'health' | 'actionPoints' | 'stat' | 'repair';
+
+export interface ConsumableEffect {
+  type: ConsumableEffectType;
+  value: number;
+  duration?: number;
+  statAffected?: keyof PlayerSkills;
+  target?: 'weapon' | 'armor' | 'any';
+}
+
 export interface Consumable extends Item {
-  effect: {
-    type: 'health' | 'actionPoints' | 'stat';
-    statAffected?: keyof PlayerSkills;
-    value: number;
-    duration?: number;
-  };
+  effect: ConsumableEffect;
 }
 
 // Quest interface

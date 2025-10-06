@@ -1046,6 +1046,29 @@ Record licence and attribution requirements for every imported pack in `/src/ass
 <code_location>src/components/ui/PlayerInventoryPanel.tsx</code_location>
 </architecture_section>
 
+<architecture_section id="inventory_item_catalog" category="inventory">
+##### Item Catalog & Save Sanitization
+
+<design_principles>
+- Centralise item blueprints so UI/content stay in sync with mechanics.
+- Instantiate fresh item instances for runtime state; never pass catalog prototypes directly into reducers.
+- Normalise legacy save payloads on load so durability, equip slots, and stack metadata conform to the latest expectations.
+</design_principles>
+
+<technical_flow>
+1. <code_location>src/content/items/index.ts</code_location> defines weapon/armor/consumable prototypes and exports `instantiateItem` to clone them with fresh UUIDs, overriding durability or stack counts when needed.
+2. Background loadouts now rely on catalog identifiers; <code_location>src/content/backgrounds.ts</code_location> stores `type="catalog"` entries so starting gear benefits from shared definitions (including the baseline repair kit consumable).
+3. <code_location>src/store/playerSlice.ts</code_location> introduces `sanitizeItemForPlayer` + `deepClone` utilities invoked from `setPlayerData` and `refreshInventoryMetrics` to backfill equip slots, clamp durability, and enforce stack metadata when hydrating persisted state.
+4. `repairItemInternal` synchronises `equipped` and `equippedSlots` after durability updates so perk/stack consumers read the same instance; repair consumables now resolve targets via `selectRepairTarget` and fold into the existing reducer pipeline.
+5. For localStorage migrations, <code_location>scripts/migrate-save-durability.mjs</code_location> rewrites JSON blobs, ensuring hotbars reach capacity, equip slots populate correctly, and weight/encumbrance fields recompute before deserialisation.
+</technical_flow>
+
+<code_location>src/content/items/index.ts</code_location>
+<code_location>src/content/backgrounds.ts</code_location>
+<code_location>src/store/playerSlice.ts</code_location>
+<code_location>scripts/migrate-save-durability.mjs</code_location>
+</architecture_section>
+
 ## Integration with Current Architecture
 - **State & Rendering Separation** – Keep isometric drawing confined to Phaser scenes (`MainScene` and any descendant scenes). Game logic, AI, and progress live in Redux slices; scenes should only read from selectors and render the resulting state.
 - **Extensibility** – Organise new asset categories under `/src/assets` (e.g., `iso_tiles`, `iso_props`, `iso_characters`). Version-control derivatives separately and document licence obligations alongside the assets.

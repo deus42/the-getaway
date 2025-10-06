@@ -23,6 +23,7 @@ import {
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
 import { createArmor, createConsumable, createWeapon } from '../game/inventory/inventorySystem';
 import { BACKGROUND_MAP, StartingItemDefinition } from '../content/backgrounds';
+import { instantiateItem } from '../content/items';
 import { getSkillDefinition } from '../content/skills';
 import { getPerkDefinition, evaluatePerkAvailability } from '../content/perks';
 import { createLevelUpEvent, createXPNotification, LevelUpEvent } from '../utils/progressionHelpers';
@@ -246,6 +247,171 @@ const getStackQuantity = (item: Item): number => {
   return Math.floor(rawQuantity);
 };
 
+const deepClone = <T>(value: T): T => {
+  if (typeof globalThis.structuredClone === 'function') {
+    return globalThis.structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value)) as T;
+};
+
+const isWeaponItem = (item: Item): item is Weapon => {
+  return (item as unknown as Record<string, unknown>).damage !== undefined;
+};
+
+const isArmorItem = (item: Item): item is Armor => {
+  return (item as unknown as Record<string, unknown>).protection !== undefined;
+};
+
+type RepairScope = 'weapon' | 'armor' | 'any';
+
+interface RepairCandidate {
+  item: Item;
+  ratio: number;
+  equipped: boolean;
+}
+
+const collectRepairCandidates = (player: Player, scope: RepairScope): RepairCandidate[] => {
+  const seen = new Set<string>();
+  const candidates: RepairCandidate[] = [];
+
+  const accept = (item: Item | undefined, equipped: boolean) => {
+    if (!item || seen.has(item.id) || !item.durability) {
+      return;
+    }
+
+    const max = item.durability.max;
+    if (!Number.isFinite(max) || max <= 0) {
+      return;
+    }
+
+    const current = item.durability.current;
+    if (current >= max) {
+      return;
+    }
+
+    if (scope === 'weapon' && !isWeaponItem(item)) {
+      return;
+    }
+
+    if (scope === 'armor' && !isArmorItem(item)) {
+      return;
+    }
+
+    const ratio = current <= 0 ? 0 : Math.max(0, Math.min(1, current / max));
+    seen.add(item.id);
+    candidates.push({ item, ratio, equipped });
+  };
+
+  accept(player.equipped.weapon, true);
+  accept(player.equipped.secondaryWeapon, true);
+  accept(player.equipped.meleeWeapon, true);
+  accept(player.equipped.bodyArmor, true);
+  accept(player.equipped.helmet, true);
+  if (player.equippedSlots) {
+    Object.values(player.equippedSlots).forEach((item) => accept(item, true));
+  }
+
+  player.inventory.items.forEach((entry) => accept(entry, false));
+
+  return candidates;
+};
+
+const selectRepairTarget = (player: Player, scope: RepairScope): string | null => {
+  const candidates = collectRepairCandidates(player, scope);
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  candidates.sort((a, b) => {
+    if (a.ratio !== b.ratio) {
+      return a.ratio - b.ratio;
+    }
+    if (a.equipped !== b.equipped) {
+      return a.equipped ? -1 : 1;
+    }
+    return 0;
+  });
+
+  return candidates[0]?.item.id ?? null;
+};
+
+const resolveDefaultWeaponSlot = (item: Item): EquipmentSlot => {
+  if (item.equipSlot) {
+    return item.equipSlot;
+  }
+
+  const weapon = item as Weapon;
+  const range = Number.isFinite(weapon.range) ? weapon.range : 0;
+  if (range <= 1 || weapon.skillType === 'meleeCombat') {
+    return 'meleeWeapon';
+  }
+
+  return 'primaryWeapon';
+};
+
+const sanitizeItemForPlayer = (item: Item | undefined, fallbackSlot?: EquipmentSlot): Item | undefined => {
+  if (!item) {
+    return item;
+  }
+
+  const clone: Item = { ...item };
+
+  if (clone.durability) {
+    clone.durability = { ...clone.durability };
+  }
+
+  if (isWeaponItem(clone)) {
+    const baseDurability = clone.durability ?? { max: 0, current: 0 };
+    const max = Number.isFinite(baseDurability.max) && baseDurability.max > 0
+      ? Math.round(baseDurability.max)
+      : 100;
+    const current = Number.isFinite(baseDurability.current)
+      ? Math.max(0, Math.round(baseDurability.current))
+      : max;
+    clone.durability = {
+      max,
+      current: Math.min(max, current),
+    };
+    clone.equipSlot = fallbackSlot ?? resolveDefaultWeaponSlot(clone);
+  } else if (isArmorItem(clone)) {
+    const baseDurability = clone.durability ?? { max: 0, current: 0 };
+    const max = Number.isFinite(baseDurability.max) && baseDurability.max > 0
+      ? Math.round(baseDurability.max)
+      : 120;
+    const current = Number.isFinite(baseDurability.current)
+      ? Math.max(0, Math.round(baseDurability.current))
+      : max;
+    clone.durability = {
+      max,
+      current: Math.min(max, current),
+    };
+    clone.equipSlot = fallbackSlot ?? 'bodyArmor';
+  } else if (fallbackSlot) {
+    clone.equipSlot = fallbackSlot;
+  }
+
+  if (clone.stackable) {
+    const quantity = getStackQuantity(clone) || 1;
+    clone.quantity = quantity;
+    if (!Number.isFinite(clone.maxStack) || clone.maxStack === undefined || clone.maxStack <= 0) {
+      clone.maxStack = Math.max(5, quantity);
+    }
+  } else {
+    delete clone.quantity;
+    delete clone.maxStack;
+  }
+
+  if (!Number.isFinite(clone.weight)) {
+    clone.weight = 0;
+  }
+
+  if (!Number.isFinite(clone.value)) {
+    clone.value = 0;
+  }
+
+  return clone;
+};
+
 const calculateInventoryWeight = (items: Item[]): number => {
   const total = items.reduce((sum, entry) => {
     const unitWeight = Number.isFinite(entry.weight) ? entry.weight : 0;
@@ -256,6 +422,7 @@ const calculateInventoryWeight = (items: Item[]): number => {
 };
 
 const refreshInventoryMetrics = (player: Player): void => {
+  player.inventory.items = player.inventory.items.map((entry) => sanitizeItemForPlayer(entry) ?? entry);
   const nextWeight = calculateInventoryWeight(player.inventory.items);
   const normalizedHotbar = ensureHotbar(player.inventory.hotbar);
   player.inventory = {
@@ -478,6 +645,10 @@ const repairItemInternal = (player: Player, payload: RepairItemPayload): boolean
   const durability = located.item.durability;
   durability.current = Math.min(durability.max, durability.current + repairAmount);
 
+  if (located.location === 'equipped') {
+    placeEquippedItem(player, located.slot, located.item);
+  }
+
   return true;
 };
 
@@ -564,6 +735,23 @@ const consumeInventoryItemInternal = (player: Player, itemId: string): boolean =
 
   const consumable = candidate as Consumable;
 
+  const effect = consumable.effect;
+
+  let repairTargetId: string | null = null;
+  let repairAmount = 0;
+
+  if (effect.type === 'repair') {
+    repairAmount = Math.floor(effect.value ?? 0);
+    if (repairAmount <= 0) {
+      return false;
+    }
+
+    repairTargetId = selectRepairTarget(player, effect.target ?? 'any');
+    if (!repairTargetId) {
+      return false;
+    }
+  }
+
   let removed = false;
 
   if (candidate.stackable) {
@@ -588,8 +776,6 @@ const consumeInventoryItemInternal = (player: Player, itemId: string): boolean =
     player.inventory.hotbar = player.inventory.hotbar.map((entry) => (entry === itemId ? null : entry));
   }
 
-  const effect = consumable.effect;
-
   switch (effect.type) {
     case 'health': {
       const nextHealth = Number.isFinite(effect.value) ? effect.value : 0;
@@ -612,6 +798,15 @@ const consumeInventoryItemInternal = (player: Player, itemId: string): boolean =
       }
       break;
     }
+    case 'repair': {
+      if (repairTargetId) {
+        repairItemInternal(player, {
+          itemId: repairTargetId,
+          amount: repairAmount,
+        });
+      }
+      break;
+    }
     default:
       break;
   }
@@ -623,6 +818,26 @@ const consumeInventoryItemInternal = (player: Player, itemId: string): boolean =
 
 const applyStartingItem = (player: Player, item: StartingItemDefinition): void => {
   switch (item.type) {
+    case 'catalog': {
+      const instance = instantiateItem(item.definitionId, {
+        quantity: item.quantity,
+        durability: item.durability,
+      });
+
+      if (item.equip) {
+        const slot = resolveEquipSlot(instance);
+        if (slot) {
+          placeEquippedItem(player, slot, instance);
+          if (slot === 'primaryWeapon' || slot === 'secondaryWeapon' || slot === 'meleeWeapon') {
+            player.activeWeaponSlot = slot;
+          }
+          break;
+        }
+      }
+
+      player.inventory.items.push(instance);
+      break;
+    }
     case 'weapon': {
       const weapon = createWeapon(
         item.name,
@@ -654,8 +869,14 @@ const applyStartingItem = (player: Player, item: StartingItemDefinition): void =
         item.name,
         item.effectType,
         item.value,
-        item.statAffected,
-        item.weight
+        {
+          statAffected: item.statAffected,
+          weight: item.weight,
+          target: item.target,
+          stackable: item.stackable,
+          maxStack: item.maxStack,
+          quantity: item.quantity,
+        }
       );
       player.inventory.items.push(consumable);
       break;
@@ -989,7 +1210,8 @@ export const playerSlice = createSlice({
 
     // Set the entire player data object (useful after complex operations)
     setPlayerData: (state, action: PayloadAction<Player>) => {
-      state.data = action.payload;
+      const clonedPlayer = deepClone(action.payload) as Player;
+      state.data = clonedPlayer;
 
       if (!state.data.perkRuntime) {
         state.data.perkRuntime = {
@@ -1026,6 +1248,44 @@ export const playerSlice = createSlice({
           attackApMultiplier: 1,
         };
       }
+
+      state.data.inventory.items = state.data.inventory.items.map((entry) => sanitizeItemForPlayer(entry) ?? entry);
+      state.data.equipped.weapon = sanitizeItemForPlayer(state.data.equipped.weapon, 'primaryWeapon') as Weapon | undefined;
+      state.data.equipped.secondaryWeapon = sanitizeItemForPlayer(
+        state.data.equipped.secondaryWeapon,
+        'secondaryWeapon'
+      ) as Weapon | undefined;
+      state.data.equipped.meleeWeapon = sanitizeItemForPlayer(
+        state.data.equipped.meleeWeapon,
+        'meleeWeapon'
+      ) as Weapon | undefined;
+      state.data.equipped.bodyArmor = sanitizeItemForPlayer(
+        state.data.equipped.bodyArmor,
+        'bodyArmor'
+      ) as Armor | undefined;
+      state.data.equipped.helmet = sanitizeItemForPlayer(
+        state.data.equipped.helmet,
+        'helmet'
+      ) as Armor | undefined;
+      state.data.equipped.accessory1 = sanitizeItemForPlayer(
+        state.data.equipped.accessory1,
+        'accessory1'
+      );
+      state.data.equipped.accessory2 = sanitizeItemForPlayer(
+        state.data.equipped.accessory2,
+        'accessory2'
+      );
+
+      const equippedSlots = state.data.equippedSlots ?? {};
+      state.data.equippedSlots = equippedSlots;
+
+      Object.entries(equippedSlots).forEach(([slot, value]) => {
+        if (!value) {
+          return;
+        }
+        const sanitized = sanitizeItemForPlayer(value, slot as EquipmentSlot);
+        equippedSlots[slot as EquipmentSlot] = sanitized as Item;
+      });
 
       ensureStaminaFields(state.data);
       refreshInventoryMetrics(state.data);

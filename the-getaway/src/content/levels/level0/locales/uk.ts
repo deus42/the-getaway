@@ -1,4 +1,29 @@
 import { Level0LocaleContent } from '../types';
+import { getItemPrototype } from '../../../items';
+
+const encryptedDatapadUk = {
+  ...getItemPrototype('misc_encrypted_datapad'),
+  name: 'Зашифрований дата-пад',
+  description: 'Містить маніфести чорного ринку, які охороняє Ліра.',
+};
+
+const corporateKeycardUk = {
+  ...getItemPrototype('misc_corporate_keycard'),
+  name: 'Корпоративна ключ-картка',
+  description: 'Пропуск, поцуплений у топ-менеджера корпорації.',
+};
+
+const holoLensUk = {
+  ...getItemPrototype('misc_holo_projector_lens'),
+  name: 'Призма голографа',
+  description: 'Лінза з корпоративного голографічного борда. Дозволяє підмінювати ідентифікатори патрулів.',
+};
+
+const repairKitUk = {
+  ...getItemPrototype('consumable_basic_repair_kit'),
+  name: 'Ремкомплект',
+  description: 'Смола, нанонитки та герметик для екстреного ремонту зброї чи броні.',
+};
 
 export const level0UkrainianContent: Level0LocaleContent = {
   dialogues: [
@@ -808,30 +833,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
       isInteractive: true,
     },
   ],
-  itemBlueprints: [
-    // All ground items removed - clean map with only buildings, NPCs, and doors
-    {
-      name: 'Зашифрований дата-пад',
-      description: 'Містить маніфести чорного ринку, які охороняє Ліра.',
-      weight: 1,
-      value: 150,
-      isQuestItem: true,
-    },
-    {
-      name: 'Корпоративна ключ-картка',
-      description: 'Пропуск, поцуплений у топ-менеджера корпорації.',
-      weight: 0.2,
-      value: 200,
-      isQuestItem: true,
-    },
-    {
-      name: 'Призма голографа',
-      description: 'Лінза з корпоративного голографічного борда. Дозволяє підмінювати ідентифікатори патрулів.',
-      weight: 0.3,
-      value: 220,
-      isQuestItem: false,
-    },
-  ],
+  itemBlueprints: [encryptedDatapadUk, corporateKeycardUk, holoLensUk, repairKitUk],
   buildingDefinitions: [
     {
       id: 'block_1_1',

@@ -1,4 +1,14 @@
-import { Item, Player, Weapon, Armor, Consumable, CombatSkillId } from '../interfaces/types';
+import {
+  Item,
+  Player,
+  Weapon,
+  Armor,
+  Consumable,
+  CombatSkillId,
+  EquipmentSlot,
+  StatModifiers,
+  ConsumableEffectType,
+} from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
 // Check if player can add an item to inventory (based on weight)
@@ -120,6 +130,24 @@ export const sortInventoryByCategory = (player: Player): Player => {
   };
 };
 
+const clampDurability = (maxValue: number, current?: number): { current: number; max: number } => {
+  const max = Math.max(1, Math.round(maxValue));
+  const currentValue = Number.isFinite(current) ? Math.round(current ?? max) : max;
+  return {
+    max,
+    current: Math.min(max, Math.max(0, currentValue)),
+  };
+};
+
+export interface WeaponCreationOptions {
+  statModifiers?: StatModifiers;
+  skillType?: CombatSkillId;
+  durability?: { max?: number; current?: number };
+  equipSlot?: EquipmentSlot;
+  value?: number;
+  tags?: string[];
+}
+
 // Create a basic weapon
 export const createWeapon = (
   name: string,
@@ -127,9 +155,15 @@ export const createWeapon = (
   range: number,
   apCost: number,
   weight: number,
-  statModifiers?: import('../interfaces/types').StatModifiers,
-  skillType: CombatSkillId = range <= 1 ? 'meleeCombat' : 'smallGuns'
+  statModifiers?: StatModifiers,
+  skillType: CombatSkillId = range <= 1 ? 'meleeCombat' : 'smallGuns',
+  options: WeaponCreationOptions = {}
 ): Weapon => {
+  const resolvedEquipSlot: EquipmentSlot = options.equipSlot
+    ?? (range <= 1 || skillType === 'meleeCombat' ? 'meleeWeapon' : 'primaryWeapon');
+
+  const durability = clampDurability(options.durability?.max ?? 100, options.durability?.current);
+
   return {
     id: uuidv4(),
     name,
@@ -138,78 +172,145 @@ export const createWeapon = (
     range,
     apCost,
     weight,
-    value: damage * 10,
+    value: options.value ?? damage * 10,
     isQuestItem: false,
     skillType,
     slot: 'weapon',
-    statModifiers
+    statModifiers: options.statModifiers ?? statModifiers,
+    equipSlot: resolvedEquipSlot,
+    durability,
+    stackable: false,
+    tags: options.tags,
   };
 };
+
+export interface ArmorCreationOptions {
+  statModifiers?: StatModifiers;
+  durability?: { max?: number; current?: number };
+  equipSlot?: EquipmentSlot;
+  value?: number;
+  tags?: string[];
+}
 
 // Create basic armor
 export const createArmor = (
   name: string,
   protection: number,
   weight: number,
-  statModifiers?: import('../interfaces/types').StatModifiers
+  statModifiers?: StatModifiers,
+  options: ArmorCreationOptions = {}
 ): Armor => {
+  const durability = clampDurability(options.durability?.max ?? 120, options.durability?.current);
+  const equipSlot: EquipmentSlot = options.equipSlot ?? 'bodyArmor';
+
   return {
     id: uuidv4(),
     name,
     description: `${name} that provides ${protection} protection.`,
     protection,
     weight,
-    value: protection * 15,
+    value: options.value ?? protection * 15,
     isQuestItem: false,
     slot: 'armor',
-    statModifiers
+    statModifiers: options.statModifiers ?? statModifiers,
+    durability,
+    equipSlot,
+    stackable: false,
+    tags: options.tags,
   };
 };
+
+export interface ConsumableCreationOptions {
+  statAffected?: keyof Player['skills'];
+  weight?: number;
+  duration?: number;
+  target?: 'weapon' | 'armor' | 'any';
+  stackable?: boolean;
+  maxStack?: number;
+  quantity?: number;
+  value?: number;
+  description?: string;
+  tags?: string[];
+}
 
 // Create a consumable item
 export const createConsumable = (
   name: string,
-  effectType: 'health' | 'actionPoints' | 'stat',
+  effectType: ConsumableEffectType,
   value: number,
-  statAffected?: keyof Player['skills'],
-  weight: number = 0.5
+  options: ConsumableCreationOptions = {}
 ): Consumable => {
-  let description = '';
-  
-  switch (effectType) {
-    case 'health':
-      description = `Restores ${value} health points.`;
-      break;
-    case 'actionPoints':
-      description = `Restores ${value} action points.`;
-      break;
-    case 'stat':
-      description = `Increases ${statAffected} by ${value}.`;
-      break;
+  const {
+    statAffected,
+    weight = 0.5,
+    duration,
+    target,
+    stackable = true,
+    maxStack = 5,
+    quantity = 1,
+    description,
+    tags,
+  } = options;
+
+  let resolvedDescription = description ?? '';
+
+  if (!resolvedDescription) {
+    switch (effectType) {
+      case 'health':
+        resolvedDescription = `Restores ${value} health points.`;
+        break;
+      case 'actionPoints':
+        resolvedDescription = `Restores ${value} action points.`;
+        break;
+      case 'stat':
+        resolvedDescription = statAffected
+          ? `Increases ${statAffected} by ${value} for a short duration.`
+          : `Boosts a core stat by ${value}.`;
+        break;
+      case 'repair':
+        resolvedDescription = `Repairs ${value} durability on equipped gear.`;
+        break;
+      default:
+        resolvedDescription = `Utility consumable.`;
+    }
   }
-  
-  return {
+
+  const effectDuration = duration ?? (effectType === 'stat' ? 3 : undefined);
+
+  const consumable: Consumable = {
     id: uuidv4(),
     name,
-    description,
+    description: resolvedDescription,
     weight,
-    value: value * 5,
+    value: options.value ?? value * 5,
     isQuestItem: false,
+    stackable,
+    maxStack,
+    quantity: stackable ? quantity : undefined,
     effect: {
       type: effectType,
       statAffected,
       value,
-      duration: effectType === 'stat' ? 3 : undefined // Duration for stat effects in turns
-    }
+      duration: effectDuration,
+      target,
+    },
+    tags,
   };
+
+  if (!stackable) {
+    delete consumable.quantity;
+    delete consumable.maxStack;
+  }
+
+  return consumable;
 };
 
 // Create starter items for the player
 export const createStarterItems = (): Item[] => {
   return [
     createWeapon('Pistol', 5, 3, 2, 2),
-    createConsumable('Medkit', 'health', 30, undefined, 1),
-    createConsumable('Stimpack', 'actionPoints', 3, undefined, 0.5)
+    createConsumable('Medkit', 'health', 30, { weight: 1, stackable: false }),
+    createConsumable('Stimpack', 'actionPoints', 3, { weight: 0.5 }),
   ];
 };
 

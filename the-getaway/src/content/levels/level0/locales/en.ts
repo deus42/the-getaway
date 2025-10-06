@@ -1,4 +1,5 @@
 import { Level0LocaleContent } from '../types';
+import { getItemPrototype } from '../../../items';
 
 export const level0EnglishContent: Level0LocaleContent = {
   dialogues: [
@@ -803,28 +804,10 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
   ],
   itemBlueprints: [
-    // All ground items removed - clean map with only buildings, NPCs, and doors
-    {
-      name: 'Encrypted Datapad',
-      description: 'Contains black market manifests guarded by Lira.',
-      weight: 1,
-      value: 150,
-      isQuestItem: true,
-    },
-    {
-      name: 'Corporate Keycard',
-      description: 'Security clearance stolen from a tower executive.',
-      weight: 0.2,
-      value: 200,
-      isQuestItem: true,
-    },
-    {
-      name: 'Holo Projector Lens',
-      description: 'A prismatic lens ripped from a corporate holo-billboard. Can spoof patrol IDs when paired with the right codec.',
-      weight: 0.3,
-      value: 220,
-      isQuestItem: false,
-    },
+    getItemPrototype('misc_encrypted_datapad'),
+    getItemPrototype('misc_corporate_keycard'),
+    getItemPrototype('misc_holo_projector_lens'),
+    getItemPrototype('consumable_basic_repair_kit'),
   ],
   buildingDefinitions: [
     {
