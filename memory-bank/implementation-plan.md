@@ -2822,12 +2822,37 @@ Display the current level metadata and mission objectives directly in the game o
 Load each level (Slums, Downtown, Industrial Wasteland) and verify the panel shows the correct level number, zone name, and objectives. Confirm environmental hazard warnings appear in Industrial Wasteland. Verify NPCs/items appear outside building footprints. Test that zone transitions update the HUD information correctly. Check that quest objectives for the current zone are highlighted.
 </test>
 </step>
+
+<step id="35.5">
+<step_metadata>
+  <number>35.5</number>
+  <title>Implement George AI Assistant Overlay</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Deliver the George AI assistant overlay that anchors to the Level 0 objectives hub, providing contextual guidance, adaptive banter, and a lightweight dialogue interface.
+</instructions>
+
+<details>
+- Build a `GeorgeAssistant` React component that nests inside the Level 0 objectives HUD container without obscuring existing mission data.
+- Connect the assistant to Redux selectors for current objective queue, active quests, karma, faction reputation, and player personality flags (derived from dialogue choices/background traits).
+- Implement hint generation rules: surface top-priority main quest hints by default, optionally rotate in relevant side quest or dynamic event prompts when player intent matches (use existing tagging on quests/events).
+- Add a collapsible conversation widget (keyboard shortcut `G` and clickable entry point) offering quick options like "What should I do?", "How are we doing?", and a rotating banter hook. Responses should pull tone variants keyed to the player’s personality alignment (sarcastic, earnest, ruthless, etc.).
+- Author initial dialogue lines following plot bible tone guidelines; include JSON/script entries with references to source guideline IDs for later expansion.
+- Queue assistant interjections tied to major state changes (quest completion, reputation swing thresholds, entering hostile territory). Ensure timings respect cooldowns to avoid chat spam.
+</details>
+
+<test>
+Launch the HUD and confirm George appears within the Level 0 objectives area without overlapping other controls. Trigger `G` and verify conversation options render, can be navigated via mouse and keyboard, and dispatch responses matching the player’s current personality alignment. Change karma/reputation values and confirm George updates commentary tone within two subsequent interactions. Complete a quest and enter a hostile zone to ensure contextual alerts fire once, respect cooldowns, and reference the correct objectives. Toggle the overlay collapsed/expanded state and confirm persistence across scene reloads.
+</test>
+</step>
 </phase>
 
 <summary>
 ## Summary
 
-This plan now outlines **49 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **50 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
@@ -2836,7 +2861,7 @@ This plan now outlines **49 implementable steps** organized into **10 phases** t
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Steps 27.1, 27.2, 28.1)**: Optional expansions (vehicle and survival mechanics) - POST-MVP, deferred to v1.1+ (3 steps)
   - Steps physically located after Step 26.3 in document but conceptually belong to Phase 9
-- **Phase 10 (Steps 32.1-35)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35)
+- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (9 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35, 35.5)
 </phase_structure>
 
 <focus_areas>

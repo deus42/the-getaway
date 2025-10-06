@@ -1,5 +1,5 @@
 import { Provider, useSelector } from "react-redux";
-import { CSSProperties, useEffect, useState, lazy, Suspense } from "react";
+import { CSSProperties, useEffect, useLayoutEffect, useRef, useState, lazy, Suspense } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
@@ -51,6 +51,7 @@ const layoutShellStyle: CSSProperties = {
 };
 
 const SIDEBAR_BASIS = 'min(26rem, 24vw)';
+const SIDEBAR_FALLBACK_PX = 320;
 
 const mainStageStyle: CSSProperties = {
   position: "absolute",
@@ -198,37 +199,112 @@ const CommandShell: React.FC<CommandShellProps> = ({
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
 
+  const leftSidebarRef = useRef<HTMLDivElement | null>(null);
+  const rightSidebarRef = useRef<HTMLDivElement | null>(null);
+  const [leftWidth, setLeftWidth] = useState<number>(0);
+  const [rightWidth, setRightWidth] = useState<number>(0);
+  const lastLeftWidth = useRef<number>(0);
+  const lastRightWidth = useRef<number>(0);
+
+  useLayoutEffect(() => {
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const target = leftSidebarRef.current;
+    if (!target) {
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        setLeftWidth(width);
+        if (width > 0) {
+          lastLeftWidth.current = width;
+        }
+      }
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
+  useLayoutEffect(() => {
+    if (typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const target = rightSidebarRef.current;
+    if (!target) {
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const width = entry.contentRect.width;
+        setRightWidth(width);
+        if (width > 0) {
+          lastRightWidth.current = width;
+        }
+      }
+    });
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, []);
+
   const leftStyle: CSSProperties = leftCollapsed
-    ? { display: 'none' }
+    ? {
+        ...leftSidebarStyle,
+        flex: '0 0 0px',
+        width: 0,
+        padding: 0,
+        opacity: 0,
+        pointerEvents: 'none',
+        visibility: 'hidden',
+        borderRight: 'none',
+        minWidth: 0,
+      }
     : leftSidebarStyle;
 
   const rightStyle: CSSProperties = rightCollapsed
-    ? { display: 'none' }
+    ? {
+        ...rightSidebarStyle,
+        flex: '0 0 0px',
+        width: 0,
+        padding: 0,
+        opacity: 0,
+        pointerEvents: 'none',
+        visibility: 'hidden',
+        borderLeft: 'none',
+        minWidth: 0,
+      }
     : rightSidebarStyle;
 
   const centerStyle: CSSProperties = { ...centerStageStyle };
 
+  const measuredLeftWidth = leftWidth > 0 ? leftWidth : (lastLeftWidth.current || SIDEBAR_FALLBACK_PX);
+  const measuredRightWidth = rightWidth > 0 ? rightWidth : (lastRightWidth.current || SIDEBAR_FALLBACK_PX);
+
+  const effectiveLeftWidth = leftCollapsed ? 0 : measuredLeftWidth;
+  const effectiveRightWidth = rightCollapsed ? 0 : measuredRightWidth;
+
   const leftToggleStyle: CSSProperties = leftCollapsed
     ? {
         ...sidebarToggleBaseStyle,
-        left: '1.5rem',
+        left: '1.75rem',
         transform: 'translate(-50%, -50%)',
       }
     : {
         ...sidebarToggleBaseStyle,
-        left: `calc(${SIDEBAR_BASIS} + 0.5rem)`,
+        left: `${Math.max(effectiveLeftWidth, 0) + 12}px`,
         transform: 'translate(-50%, -50%)',
       };
 
   const rightToggleStyle: CSSProperties = rightCollapsed
     ? {
         ...sidebarToggleBaseStyle,
-        right: '1.5rem',
+        right: '1.75rem',
         transform: 'translate(50%, -50%)',
       }
     : {
         ...sidebarToggleBaseStyle,
-        right: `calc(${SIDEBAR_BASIS} + 0.5rem)`,
+        right: `${Math.max(effectiveRightWidth, 0) + 12}px`,
         transform: 'translate(50%, -50%)',
       };
 
@@ -271,7 +347,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
             </button>
           </>
         )}
-        <div style={leftStyle}>
+        <div style={leftStyle} ref={leftSidebarRef}>
           {!leftCollapsed && (
             <>
               <div style={{ ...panelBaseStyle }}>
@@ -312,7 +388,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <DialogueOverlay />
           <CombatFeedbackManager />
         </div>
-        <div style={rightStyle}>
+        <div style={rightStyle} ref={rightSidebarRef}>
           {!rightCollapsed && (
             <>
               <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
@@ -422,6 +498,15 @@ function App() {
 
     setHasSavedGame(hasPersistedGame());
   }, [showMenu, gameStarted]);
+
+  useEffect(() => {
+    if (!gameStarted) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+  }, [leftSidebarCollapsed, rightSidebarCollapsed, gameStarted]);
 
   useEffect(() => {
     if (showMenu || showCharacterCreation) {
