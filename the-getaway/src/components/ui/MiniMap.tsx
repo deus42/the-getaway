@@ -1304,4 +1304,4 @@ const MiniMap: React.FC = () => {
   );
 };
 
-export default MiniMap;
+export default React.memo(MiniMap);

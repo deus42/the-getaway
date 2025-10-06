@@ -1,4 +1,4 @@
-import { CSSProperties } from "react";
+import React, { CSSProperties } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { getUIStrings } from "../../content/ui";
@@ -220,4 +220,4 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
   );
 };
 
-export default OpsBriefingsPanel;
+export default React.memo(OpsBriefingsPanel);

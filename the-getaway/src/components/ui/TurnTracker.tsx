@@ -154,4 +154,4 @@ const TurnTracker: React.FC = () => {
   );
 };
 
-export default TurnTracker;
+export default React.memo(TurnTracker);

@@ -1,5 +1,5 @@
 import { Provider, useSelector } from "react-redux";
-import { CSSProperties, useEffect, useState } from "react";
+import { CSSProperties, useEffect, useState, lazy, Suspense } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
@@ -8,15 +8,9 @@ import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
 import LevelIndicator from "./components/ui/LevelIndicator";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
-import GameMenu from "./components/ui/GameMenu";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
 import TurnTracker from "./components/ui/TurnTracker";
-import CharacterCreationScreen, { CharacterCreationData } from "./components/ui/CharacterCreationScreen";
-import { LevelUpModal } from "./components/ui/LevelUpModal";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
-import CharacterScreen from "./components/ui/CharacterScreen";
-import PerkSelectionPanel from "./components/ui/PerkSelectionPanel";
-import LevelUpPointAllocationPanel from "./components/ui/LevelUpPointAllocationPanel";
 import CornerAccents from "./components/ui/CornerAccents";
 import ScanlineOverlay from "./components/ui/ScanlineOverlay";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
@@ -32,6 +26,17 @@ import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import "./App.css";
+
+// Lazy load heavy components that aren't needed immediately
+const GameMenu = lazy(() => import("./components/ui/GameMenu"));
+const CharacterCreationScreen = lazy(() => import("./components/ui/CharacterCreationScreen"));
+const CharacterScreen = lazy(() => import("./components/ui/CharacterScreen"));
+const LevelUpModal = lazy(() => import("./components/ui/LevelUpModal").then(m => ({ default: m.LevelUpModal })));
+const PerkSelectionPanel = lazy(() => import("./components/ui/PerkSelectionPanel"));
+const LevelUpPointAllocationPanel = lazy(() => import("./components/ui/LevelUpPointAllocationPanel"));
+
+// Type import for CharacterCreationData
+import type { CharacterCreationData } from "./components/ui/CharacterCreationScreen";
 
 const layoutShellStyle: CSSProperties = {
   margin: 0,
@@ -489,39 +494,41 @@ function App() {
           />
         )}
       </div>
-      {showMenu && (
-        <GameMenu
-          onStartNewGame={handleStartNewGame}
-          onContinue={handleContinueGame}
-          hasActiveGame={gameStarted || hasSavedGame}
+      <Suspense fallback={null}>
+        {showMenu && (
+          <GameMenu
+            onStartNewGame={handleStartNewGame}
+            onContinue={handleContinueGame}
+            hasActiveGame={gameStarted || hasSavedGame}
+          />
+        )}
+        {showCharacterCreation && (
+          <CharacterCreationScreen
+            onComplete={handleCharacterCreationComplete}
+            onCancel={handleCharacterCreationCancel}
+          />
+        )}
+        {levelUpData && (
+          <LevelUpModal
+            newLevel={levelUpData.newLevel}
+            skillPointsEarned={levelUpData.skillPointsEarned}
+            attributePointsEarned={levelUpData.attributePointsEarned}
+            perksUnlocked={levelUpData.perksUnlocked}
+            onContinue={handleLevelUpContinue}
+          />
+        )}
+        <PerkSelectionPanel
+          open={showPerkSelection}
+          pendingSelections={pendingPerkSelections}
+          onClose={handlePerkSelectionClose}
         />
-      )}
-      {showCharacterCreation && (
-        <CharacterCreationScreen
-          onComplete={handleCharacterCreationComplete}
-          onCancel={handleCharacterCreationCancel}
-        />
-      )}
-      {levelUpData && (
-        <LevelUpModal
-          newLevel={levelUpData.newLevel}
-          skillPointsEarned={levelUpData.skillPointsEarned}
-          attributePointsEarned={levelUpData.attributePointsEarned}
-          perksUnlocked={levelUpData.perksUnlocked}
-          onContinue={handleLevelUpContinue}
-        />
-      )}
-      <PerkSelectionPanel
-        open={showPerkSelection}
-        pendingSelections={pendingPerkSelections}
-        onClose={handlePerkSelectionClose}
-      />
-      {showPointAllocation && (
-        <LevelUpPointAllocationPanel
-          onComplete={handlePointAllocationComplete}
-        />
-      )}
-      <CharacterScreen open={showCharacterScreen} onClose={handleCharacterScreenClose} />
+        {showPointAllocation && (
+          <LevelUpPointAllocationPanel
+            onComplete={handlePointAllocationComplete}
+          />
+        )}
+        <CharacterScreen open={showCharacterScreen} onClose={handleCharacterScreenClose} />
+      </Suspense>
       <XPNotificationManager
         notifications={xpNotifications}
         onDismiss={handleDismissXPNotification}
