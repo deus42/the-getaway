@@ -18,6 +18,7 @@ import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
 import DataStreamParticles from "./components/ui/DataStreamParticles";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
+import MissionProgressionManager from "./components/system/MissionProgressionManager";
 import { addLogMessage } from "./store/logSlice";
 import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections, removeXPNotification } from "./store/playerSlice";
 import { clearAllFeedback } from "./store/combatFeedbackSlice";
@@ -26,6 +27,7 @@ import { DEFAULT_SKILLS } from "./game/interfaces/player";
 import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
+import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -768,6 +770,7 @@ function App() {
 
   return (
     <Provider store={store}>
+      <MissionProgressionManager />
       <div style={layoutShellStyle}>
         {gameStarted && (
           <CommandShell
@@ -816,6 +819,7 @@ function App() {
           />
         )}
         <CharacterScreen open={showCharacterScreen} onClose={handleCharacterScreenClose} />
+        <MissionCompletionOverlay />
       </Suspense>
       <XPNotificationManager
         notifications={xpNotifications}

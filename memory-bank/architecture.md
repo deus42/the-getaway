@@ -83,7 +83,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 </design_principles>
 
 <technical_flow>
-1. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> subscribes to `selectObjectiveQueue`, `selectLevelObjectives`, `selectPlayerKarma`, `selectPlayerFactionReputation`, and `selectPlayerPersonalityProfile`, renders the center-aligned console dock with CSS tokens, and binds the global `G` shortcut alongside pointer interaction.
+1. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> subscribes to `selectObjectiveQueue`, `selectMissionProgress`, `selectNextPrimaryObjective`, `selectPlayerKarma`, `selectPlayerFactionReputation`, and `selectPlayerPersonalityProfile`, renders the center-aligned console dock with CSS tokens, and binds the global `G` shortcut alongside pointer interaction.
 2. <code_location>the-getaway/src/App.tsx</code_location> positions the level card and the George console within the same HUD layer while keeping the console centered along the top edge.
 3. <code_location>the-getaway/src/game/systems/georgeAssistant.ts</code_location> consolidates intelligence by formatting primary/secondary hints, karma summaries, and conversation payloads, pulling tone-specific templates from <code_location>the-getaway/src/content/assistants/george.ts</code_location>.
 4. Interjection hooks cache quest completion sets, faction deltas, mission-complete signals (`missionAccomplished`), and hostile-state transitions; when thresholds are crossed the assistant queues a guideline-tagged line, throttled by `INTERJECTION_COOLDOWN_MS` so alerts surface once and then cool off.
@@ -98,16 +98,18 @@ Dedicated folder for reusable React UI components, separate from core game logic
 <architecture_section id="level_objectives_panel" category="hud_systems">
 <design_principles>
 - Keep the level card and objectives list anchored to the top-center HUD rail so mission metadata is always visible without crowding the playfield.
-- Drive all content from structured selectors (`selectLevelObjectives`, `selectSideQuestSummaries`) so the React panel remains declarative and mirrors Redux truth without local bookkeeping.
+- Drive all content from structured selectors (`selectMissionProgress`, `selectPrimaryObjectives`, `selectSideObjectives`) so the React panel remains declarative and mirrors Redux truth without local bookkeeping.
 - Treat mission completion as a formal state transition that can be observed by cinematics, reward flows, and save-game checkpoints rather than ad-hoc UI toggles.
 </design_principles>
 
 <technical_flow>
 1. <code_location>the-getaway/src/components/ui/LevelIndicator.tsx</code_location> renders the level badge plus two ordered lists: primary objectives and optional side quests. Each entry receives `isComplete` from selector output and toggles a `objective-item--complete` class that applies the cross-out/checkbox styling.
-2. <code_location>the-getaway/src/store/selectors/questSelectors.ts</code_location> exposes `selectLevelObjectives` which aggregates quests by objective, injects display order, and distinguishes primary vs side content. The selector memoises on quest state hashes to avoid recalculating during idle frames.
-3. <code_location>the-getaway/src/store/worldSlice.ts</code_location> (or successor mission slice) owns `currentLevel`, `completedObjectives`, and the derived `isMissionComplete` flag. When every primary objective resolves, it dispatches `missionAccomplished()` and sets `levelTransitionReady = true`.
-4. <code_location>the-getaway/src/game/systems/missionProgression.ts</code_location> listens for `missionAccomplished` via middleware, queues celebration UX (toast + George callout), persists a checkpoint, and publishes `LEVEL_ADVANCE_REQUESTED` so scene loaders and narrative scripts can prep the next level.
+2. <code_location>the-getaway/src/store/selectors/missionSelectors.ts</code_location> resolves mission progress by combining objective definitions with quest completion state, exposing memoised primary/side arrays, `allPrimaryComplete`, and helper selectors for HUD/assistant consumers.
+3. <code_location>the-getaway/src/store/missionSlice.ts</code_location> stores the manifest, tracks `pendingAdvance`, and flips `missionAccomplished()` when selectors report that all primary objectives are complete.
+4. <code_location>the-getaway/src/game/systems/missionProgression.ts</code_location> exports DOM event helpers used by HUD components to broadcast mission completion and level advance requests to Phaser scenes and the assistant.
 5. Confirmation flows call `advanceToNextLevel()` which increments `currentLevel`, hydrates the next level's objective bundles, and resets the panel lists while leaving incomplete side quests in the log until dismissed.
+6. <code_location>the-getaway/src/components/system/MissionProgressionManager.tsx</code_location> watches mission selectors, dispatches `missionAccomplished` once per completion, and emits `MISSION_ACCOMPLISHED` DOM events for HUD consumers.
+7. <code_location>the-getaway/src/components/ui/MissionCompletionOverlay.tsx</code_location> shows the Mission Accomplished modal, allows deferral, presents a mission-ready toast, and fires `LEVEL_ADVANCE_REQUESTED` via `emitLevelAdvanceRequestedEvent` when the player opts to continue.
 </technical_flow>
 
 <pattern name="ObjectiveCrossOut">
@@ -119,6 +121,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - Redux action contract: `missionAccomplished` → middleware `missionProgressionListener` → `LEVEL_ADVANCE_REQUESTED` custom event for Phaser scenes → `advanceToNextLevel` reducer.
 - The contract ensures George assistant, minimap, and save systems can subscribe to a single signal instead of duplicating mission-complete checks.
 - George listens for the same `LEVEL_ADVANCE_REQUESTED` emit to stage "Mission Accomplished" callouts only after the confirmation modal resolves, keeping guidance synchronized with HUD state.
+- `MISSION_ACCOMPLISHED` DOM events fan out when primary objectives resolve, letting HUD systems celebrate immediately while the toast/overlay keeps player control.
 </pattern>
 </architecture_section>
 

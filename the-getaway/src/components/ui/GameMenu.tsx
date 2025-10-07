@@ -5,6 +5,7 @@ import { getUIStrings } from "../../content/ui";
 import { setLocale, setTestMode } from "../../store/settingsSlice";
 import { applyLocaleToQuests } from "../../store/questsSlice";
 import { applyLocaleToWorld } from "../../store/worldSlice";
+import { applyLocaleToMissions } from "../../store/missionSlice";
 import { RootState, AppDispatch } from "../../store";
 import EnhancedButton from "./EnhancedButton";
 import { gradientTextStyle } from "./theme";
@@ -33,6 +34,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
     dispatch(setLocale(nextLocale));
     dispatch(applyLocaleToQuests(nextLocale));
     dispatch(applyLocaleToWorld(nextLocale));
+    dispatch(applyLocaleToMissions(nextLocale));
   };
 
   const handleTestModeToggle = () => {

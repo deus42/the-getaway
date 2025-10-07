@@ -8,6 +8,11 @@ import {
 } from '../../store/selectors/playerSelectors';
 import { selectObjectiveQueue } from '../../store/selectors/questSelectors';
 import {
+  selectMissionProgress,
+  selectNextPrimaryObjective,
+  selectNextSideObjective,
+} from '../../store/selectors/missionSelectors';
+import {
   AssistantIntel,
   buildAssistantIntel,
   pickBanterLine,
@@ -15,6 +20,12 @@ import {
 } from '../../game/systems/georgeAssistant';
 import { GeorgeInterjectionTrigger, GeorgeLine } from '../../content/assistants/george';
 import { getUIStrings } from '../../content/ui';
+import {
+  LEVEL_ADVANCE_REQUESTED_EVENT,
+  MISSION_ACCOMPLISHED_EVENT,
+  LevelAdvanceEventDetail,
+  MissionEventDetail,
+} from '../../game/systems/missionProgression';
 
 const STORAGE_KEY = 'the-getaway:george-panel-open';
 const INTERJECTION_COOLDOWN_MS = 9000;
@@ -299,6 +310,9 @@ const GeorgeAssistant: React.FC = () => {
   const georgeStrings = uiStrings.george;
 
   const objectiveQueue = useSelector(selectObjectiveQueue);
+  const missionProgress = useSelector(selectMissionProgress);
+  const nextPrimaryObjective = useSelector(selectNextPrimaryObjective);
+  const nextSideObjective = useSelector(selectNextSideObjective);
   const personality = useSelector(selectPlayerPersonalityProfile);
   const karma = useSelector(selectPlayerKarma);
   const factionReputation = useSelector(selectPlayerFactionReputation);
@@ -310,7 +324,9 @@ const GeorgeAssistant: React.FC = () => {
     personality,
     karma,
     factionReputation,
-  }), [objectiveQueue, personality, karma, factionReputation]);
+    missionPrimary: nextPrimaryObjective,
+    missionSide: nextSideObjective,
+  }), [objectiveQueue, personality, karma, factionReputation, nextPrimaryObjective, nextSideObjective]);
 
   const conversationOptions = useMemo(
     () => [
@@ -374,8 +390,37 @@ const GeorgeAssistant: React.FC = () => {
 
     switch (id) {
       case 'guidance': {
+        const missionLines: string[] = [];
+        const levelName = missionProgress?.name ?? 'current zone';
+
+        if (missionProgress) {
+          if (missionProgress.allPrimaryComplete) {
+            missionLines.push(`• Primary: Mission accomplished in ${levelName}.`);
+          } else if (nextPrimaryObjective) {
+            const suffix = nextPrimaryObjective.totalQuests > 1
+              ? ` (${nextPrimaryObjective.completedQuests}/${nextPrimaryObjective.totalQuests})`
+              : '';
+            missionLines.push(`• Primary: ${nextPrimaryObjective.label}${suffix}`);
+          }
+
+          if (nextSideObjective) {
+            missionLines.push(`• Optional: ${nextSideObjective.label}`);
+          }
+        }
+
         const questLines = buildQuestReadout(objectiveQueue, georgeStrings, 3);
-        const message = `${georgeStrings.guidanceIntro}\n${questLines.join('\n')}`.trim();
+        const segments = [georgeStrings.guidanceIntro];
+        if (missionLines.length > 0) {
+          segments.push(...missionLines);
+        }
+        if (questLines.length > 0) {
+          if (missionLines.length > 0) {
+            segments.push('');
+          }
+          segments.push(...questLines);
+        }
+
+        const message = segments.join('\n').trim();
         appendEntry('george', message, 'guidance');
         break;
       }
@@ -393,7 +438,7 @@ const GeorgeAssistant: React.FC = () => {
       default:
         break;
     }
-  }, [appendEntry, conversationOptions, georgeStrings, intel.statusLine, objectiveQueue]);
+  }, [appendEntry, conversationOptions, georgeStrings, intel.statusLine, objectiveQueue, missionProgress, nextPrimaryObjective, nextSideObjective]);
 
   const queueInterjection = useCallback((trigger: GeorgeInterjectionTrigger) => {
     const line = pickInterjectionLine(trigger, personality.alignment);
@@ -454,6 +499,38 @@ const GeorgeAssistant: React.FC = () => {
       }
     };
   }, [scheduleAmbientBanter]);
+
+  useEffect(() => {
+    const handleMissionAccomplished = (event: Event) => {
+      const detail = (event as CustomEvent<MissionEventDetail>).detail;
+      if (!detail) {
+        return;
+      }
+
+      const message = `Mission secured in ${detail.name}. Awaiting redeploy.`;
+      appendEntry('george', message, 'guidance');
+      queueInterjection('questCompleted');
+    };
+
+    const handleLevelAdvance = (event: Event) => {
+      const detail = (event as CustomEvent<LevelAdvanceEventDetail>).detail;
+      if (!detail) {
+        return;
+      }
+
+      const nextDescriptor = detail.nextLevelId ?? `level ${detail.nextLevel}`;
+      const message = `Prepping overlays for ${nextDescriptor}. Say the word and I’ll broadcast updates.`;
+      appendEntry('george', message, 'status');
+    };
+
+    window.addEventListener(MISSION_ACCOMPLISHED_EVENT, handleMissionAccomplished as EventListener);
+    window.addEventListener(LEVEL_ADVANCE_REQUESTED_EVENT, handleLevelAdvance as EventListener);
+
+    return () => {
+      window.removeEventListener(MISSION_ACCOMPLISHED_EVENT, handleMissionAccomplished as EventListener);
+      window.removeEventListener(LEVEL_ADVANCE_REQUESTED_EVENT, handleLevelAdvance as EventListener);
+    };
+  }, [appendEntry, queueInterjection]);
 
   useEffect(() => {
     const completed = new Set(quests.filter((quest) => quest.isCompleted).map((quest) => quest.id));

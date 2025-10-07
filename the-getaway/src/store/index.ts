@@ -2,6 +2,7 @@ import { AnyAction, combineReducers, configureStore, createAction } from '@redux
 import playerReducer from './playerSlice';
 import worldReducer, { applyLocaleToWorld } from './worldSlice';
 import questsReducer, { applyLocaleToQuests } from './questsSlice';
+import missionReducer, { applyLocaleToMissions } from './missionSlice';
 import logReducer from './logSlice';
 import settingsReducer from './settingsSlice';
 import combatFeedbackReducer from './combatFeedbackSlice';
@@ -16,6 +17,7 @@ const reducers = {
   log: logReducer,
   settings: settingsReducer,
   combatFeedback: combatFeedbackReducer,
+  missions: missionReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -65,6 +67,7 @@ const rootReducer = (state: CombinedState | undefined, action: AnyAction) => {
     if (preservedSettings) {
       baseState = combinedReducer(baseState, applyLocaleToQuests(preservedSettings.locale));
       baseState = combinedReducer(baseState, applyLocaleToWorld(preservedSettings.locale));
+      baseState = combinedReducer(baseState, applyLocaleToMissions(preservedSettings.locale));
       baseState = {
         ...baseState,
         settings: preservedSettings,
@@ -100,6 +103,7 @@ store.subscribe(() => {
     log: state.log,
     settings: state.settings,
     combatFeedback: state.combatFeedback,
+    missions: state.missions,
   };
   saveState(stateToPersist);
 });

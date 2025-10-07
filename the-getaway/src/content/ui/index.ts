@@ -135,6 +135,20 @@ interface LevelIndicatorStrings {
   levelLabel: string;
   objectivesLabel: string;
   emptyObjectives: string;
+  sideObjectivesLabel: string;
+  noSideObjectives: string;
+  missionReadyBadge: string;
+  primaryCompleteFootnote: string;
+  unknownLevel: string;
+}
+
+interface MissionStrings {
+  accomplishedTitle: string;
+  accomplishedSubtitle: (levelName: string) => string;
+  continueCta: string;
+  deferCta: string;
+  deferHint: string;
+  sideReminder: string;
 }
 
 interface DialogueOverlayStrings {
@@ -197,6 +211,7 @@ interface UIStrings {
   skillDescriptions: Record<SkillKey, string>;
   statFocus: Record<StatFocusKey, string>;
   george: GeorgeStrings;
+  mission: MissionStrings;
 }
 
 const STRINGS: Record<Locale, UIStrings> = {
@@ -320,8 +335,13 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     levelIndicator: {
       levelLabel: 'LEVEL',
-      objectivesLabel: 'OBJECTIVES',
+      objectivesLabel: 'PRIMARY OBJECTIVES',
       emptyObjectives: 'No active tasks in this sector.',
+      sideObjectivesLabel: 'SIDE OPERATIONS',
+      noSideObjectives: 'No optional ops tracked.',
+      missionReadyBadge: 'MISSION READY',
+      primaryCompleteFootnote: 'All primary objectives secured.',
+      unknownLevel: 'Unknown district',
     },
     dialogueOverlay: {
       closeButton: 'Close',
@@ -391,6 +411,14 @@ const STRINGS: Record<Locale, UIStrings> = {
         'If you spot Theo, remind him the coffee synth still needs a filter.',
         'Today’s lucky number is 404. Let’s try not to vanish.',
       ],
+    },
+    mission: {
+      accomplishedTitle: 'Mission Accomplished',
+      accomplishedSubtitle: (levelName: string) => `Primary objectives cleared for ${levelName}.`,
+      continueCta: 'Advance to Next Level',
+      deferCta: 'Stay in Level',
+      deferHint: 'You can remain in this district to finish optional operations or resupply before deploying.',
+      sideReminder: 'Optional operations remaining:',
     },
     skills: {
       strength: 'Strength',
@@ -543,8 +571,13 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     levelIndicator: {
       levelLabel: 'РІВЕНЬ',
-      objectivesLabel: 'ЦІЛІ',
+      objectivesLabel: 'ОСНОВНІ ЦІЛІ',
       emptyObjectives: 'У цьому секторі немає активних завдань.',
+      sideObjectivesLabel: 'ДОДАТКОВІ ОПЕРАЦІЇ',
+      noSideObjectives: 'Побічні операції не відстежуються.',
+      missionReadyBadge: 'МІСІЮ ВИКОНАНО',
+      primaryCompleteFootnote: 'Усі основні цілі виконані.',
+      unknownLevel: 'Невідомий район',
     },
     dialogueOverlay: {
       closeButton: 'Закрити',
@@ -617,6 +650,14 @@ const STRINGS: Record<Locale, UIStrings> = {
         'Якщо побачиш Тео, нагадай про фільтр у кавовому синті.',
         'Сьогодні щасливе число 404. Постараймося не зникнути.',
       ],
+    },
+    mission: {
+      accomplishedTitle: 'Місію виконано',
+      accomplishedSubtitle: (levelName: string) => `Основні цілі для «${levelName}» виконані.`,
+      continueCta: 'Перейти до наступного рівня',
+      deferCta: 'Залишитися у секторі',
+      deferHint: 'Можна залишитися, щоб завершити побічні операції або поповнити ресурси.',
+      sideReminder: 'Незавершені побічні операції:',
     },
     skills: {
       strength: 'Сила',

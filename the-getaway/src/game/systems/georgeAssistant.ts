@@ -1,5 +1,6 @@
 import { PersonalityProfile, PersonalityTrait } from '../interfaces/types';
 import { ObjectiveQueueEntry } from '../../store/selectors/questSelectors';
+import { ResolvedMissionObjective } from '../interfaces/missions';
 import { GEORGE_DIALOGUE_LIBRARY, GeorgeDialogueTemplate, GeorgeLine, GeorgeInterjectionTrigger } from '../../content/assistants/george';
 
 interface KarmaDescriptor {
@@ -111,20 +112,33 @@ export interface HintBuildContext {
   personality: PersonalityProfile;
   karma: number;
   factionReputation: Record<string, number>;
+  missionPrimary?: ResolvedMissionObjective | null;
+  missionSide?: ResolvedMissionObjective | null;
 }
 
+const formatMissionObjective = (objective: ResolvedMissionObjective, opener: string): string => {
+  const countSuffix = objective.totalQuests > 1
+    ? ` (${objective.completedQuests}/${objective.totalQuests})`
+    : '';
+  return `${opener}: ${objective.label}${countSuffix}`;
+};
+
 export const buildAssistantIntel = (context: HintBuildContext): AssistantIntel => {
-  const { objectiveQueue, personality, karma, factionReputation } = context;
-  const primaryObjective = objectiveQueue[0];
-  const secondaryObjective = objectiveQueue[1];
+  const { objectiveQueue, personality, karma, factionReputation, missionPrimary, missionSide } = context;
+  const primaryObjective = missionPrimary ?? objectiveQueue[0] ?? null;
+  const secondaryObjective = missionSide ?? objectiveQueue[1] ?? null;
 
   const karmaDescriptor = describeKarma(karma);
-  const primaryHint = primaryObjective
-    ? formatObjectiveLine(primaryObjective, toneOpeners[personality.alignment])
+  const primaryHint = missionPrimary
+    ? formatMissionObjective(missionPrimary, toneOpeners[personality.alignment])
+    : primaryObjective
+    ? formatObjectiveLine(primaryObjective as ObjectiveQueueEntry, toneOpeners[personality.alignment])
     : 'Quiet moment. No tracked objectives pinging.';
 
-  const secondaryHint = secondaryObjective
-    ? formatObjectiveLine(secondaryObjective, sideOpeners[personality.alignment])
+  const secondaryHint = missionSide
+    ? formatMissionObjective(missionSide, sideOpeners[personality.alignment])
+    : secondaryObjective
+    ? formatObjectiveLine(secondaryObjective as ObjectiveQueueEntry, sideOpeners[personality.alignment])
     : undefined;
 
   const statusLine = `Karma ${karmaDescriptor.label} (${karma >= 0 ? '+' : ''}${karma}) · ${formatFactionStanding(

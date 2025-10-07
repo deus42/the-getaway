@@ -1219,6 +1219,43 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 </notes>
 </step>
 
+<step id="35.2" status="completed">
+<step_metadata>
+  <number>35.2</number>
+  <title>Level Objective Progression Flow</title>
+  <status>Completed</status>
+  <date>October 8, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Authored a locale-aware mission manifest and Redux mission slice so each level exposes primary vs side objectives with quest bindings and completion flags.
+2. Rebuilt `LevelIndicator` to consume mission selectors, display objective progress with cross-out/checkbox styling, and badge mission-ready states.
+3. Added the mission progression manager and completion overlay to broadcast `MISSION_ACCOMPLISHED`/`LEVEL_ADVANCE_REQUESTED` events, surface a deferrable Mission Accomplished modal, and provide a toast to reopen the hand-off.
+4. Retuned George’s guidance pipeline to pull from the same mission selectors, react to mission events, and refreshed helper tests alongside new mission selector coverage.
+</tasks>
+
+<implementation>
+- Mission state lives in `missionSlice`, cloning content definitions per locale and exposing selectors that resolve quest completion counts for HUD and guidance systems.
+- The Level HUD now renders primary and optional lists with inline progress metrics while the overlay coordinates mission accomplishment prompts, deferral flow, and level advance event emission.
+- George assistant wiring now feeds mission objective summaries into `buildAssistantIntel`, syncs modal events into the chat log, and keeps guidance copy aligned with the Level panel.
+</implementation>
+
+<code_reference file="the-getaway/src/content/missions.ts" />
+<code_reference file="the-getaway/src/store/missionSlice.ts" />
+<code_reference file="the-getaway/src/store/selectors/missionSelectors.ts" />
+<code_reference file="the-getaway/src/components/ui/LevelIndicator.tsx" />
+<code_reference file="the-getaway/src/components/system/MissionProgressionManager.tsx" />
+<code_reference file="the-getaway/src/components/ui/MissionCompletionOverlay.tsx" />
+<code_reference file="the-getaway/src/components/ui/GeorgeAssistant.tsx" />
+<code_reference file="the-getaway/src/game/systems/georgeAssistant.ts" />
+<code_reference file="the-getaway/src/__tests__/missionSelectors.test.ts" />
+<code_reference file="the-getaway/src/__tests__/missionSlice.test.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/missionSelectors.test.ts src/__tests__/missionSlice.test.ts src/__tests__/georgeAssistant.test.ts --watch=false`
+</validation>
+</step>
+
 <step id="35.5" status="completed">
 <step_metadata>
   <number>35.5</number>

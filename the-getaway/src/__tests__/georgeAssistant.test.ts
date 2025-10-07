@@ -93,6 +93,38 @@ describe('George assistant helper utilities', () => {
     }
   });
 
+  it('buildAssistantIntel prefers mission objective summaries when provided', () => {
+    const intel = buildAssistantIntel({
+      objectiveQueue,
+      personality: basePersonality,
+      karma: 0,
+      factionReputation: {},
+      missionPrimary: {
+        id: 'mission-primary',
+        label: 'Cut the broadcast uplink',
+        summary: 'Silence the corp propaganda tower before curfew.',
+        questIds: ['quest_market_cache'],
+        kind: 'primary',
+        totalQuests: 1,
+        completedQuests: 0,
+        isComplete: false,
+      },
+      missionSide: {
+        id: 'mission-side',
+        label: 'Map the drone sweep',
+        summary: 'Shadow drones and log their corridor rotations.',
+        questIds: ['quest_datapad_truth'],
+        kind: 'side',
+        totalQuests: 1,
+        completedQuests: 0,
+        isComplete: false,
+      },
+    });
+
+    expect(intel.primaryHint).toContain('Cut the broadcast uplink');
+    expect(intel.secondaryHint).toContain('Map the drone sweep');
+  });
+
   it('pickInterjectionLine surfaces lines for distinct triggers', () => {
     const originalRandom = Math.random;
     Math.random = () => 0;
