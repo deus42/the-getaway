@@ -2838,7 +2838,8 @@ Tie the HUD objectives state to formal mission progression so completed objectiv
 - Extend mission data in `worldSlice` (or dedicated mission slice) to mark objectives as primary vs side, persist quest IDs, and expose an `isComplete` flag once all child quests resolve.
 - Update Level & Objectives panel to animate cross-outs and show completion checkboxes while leaving side quests in an optional section that never blocks main progression.
 - Dispatch a `missionAccomplished` action when every primary objective completes. Surface a confirmation modal bannering rewards, allow players to defer the transition to finish side quests, and fire an advancement event that loads the next level when accepted.
-- Inform auxiliary systems (George assistant, minimap focus, save checkpoints) by broadcasting mission completion through a shared event so they refresh guidance without polling quest internals.
+- Wire George assistant to the same selectors and mission-complete event so its guidance line, celebration copy, and defer/continue prompts stay synchronized with the Level & Objectives panel.
+- Inform auxiliary systems (assistant, minimap focus, save checkpoints) by broadcasting mission completion through a shared event so they refresh guidance without polling quest internals.
 </details>
 
 <prerequisites>

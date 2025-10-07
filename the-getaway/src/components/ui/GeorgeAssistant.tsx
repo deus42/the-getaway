@@ -21,7 +21,7 @@ const INTERJECTION_COOLDOWN_MS = 9000;
 const INTERJECTION_DISPLAY_MS = 5200;
 const AMBIENT_BANTER_MIN_MS = 48000;
 const AMBIENT_BANTER_MAX_MS = 96000;
-const DOCK_TICKER_INTERVAL_MS = 14000;
+const DOCK_TICKER_INTERVAL_MS = 20000;
 
 const FALLBACK_AMBIENT = [
   'Diagnostics show morale at "manageable"—keep it that way.',
@@ -136,17 +136,14 @@ const styles = `
   }
   .george-dock-status--scroll {
     padding-left: 100%;
-    animation: george-dock-ticker 16s linear infinite;
+    animation: george-dock-ticker 20s linear infinite;
   }
   @keyframes george-dock-ticker {
     0% {
       transform: translateX(0%);
     }
-    18% {
+    25% {
       transform: translateX(0%);
-    }
-    85% {
-      transform: translateX(-100%);
     }
     100% {
       transform: translateX(-100%);
@@ -544,25 +541,29 @@ const GeorgeAssistant: React.FC = () => {
     };
 
     push(baseTickerLine);
-    push(intel.primaryHint);
-    push(intel.secondaryHint);
-    push(intel.statusLine);
 
-    objectiveQueue.slice(0, 3).forEach((entry) => {
-      const countSuffix = entry.objective.count && entry.objective.count > 1
-        ? ` (${entry.objective.currentCount ?? 0}/${entry.objective.count})`
+    const primaryHint = intel.primaryHint?.trim();
+    if (primaryHint) {
+      push(primaryHint);
+    }
+
+    const objective = objectiveQueue[0];
+    if (objective) {
+      const countSuffix = objective.objective.count && objective.objective.count > 1
+        ? ` (${objective.objective.currentCount ?? 0}/${objective.objective.count})`
         : '';
-      push(`${entry.questName}: ${entry.objective.description}${countSuffix}`);
-    });
+      push(`${objective.questName}: ${objective.objective.description}${countSuffix}`);
+    }
 
-    ambientLines.slice(0, 3).forEach((line) => push(line));
+    logEntries.slice(-2).forEach((entry) => push(entry.text));
+    ambientLines.slice(0, 2).forEach((line) => push(line));
 
     if (unique.length === 0) {
       push(georgeStrings.dockStatusIdle);
     }
 
     return unique.slice(0, 6);
-  }, [ambientLines, baseTickerLine, georgeStrings.dockStatusIdle, intel.primaryHint, intel.secondaryHint, intel.statusLine, objectiveQueue]);
+  }, [ambientLines, baseTickerLine, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue, logEntries]);
 
   const feedSignature = useMemo(() => feedLines.join('|'), [feedLines]);
 
@@ -592,7 +593,17 @@ const GeorgeAssistant: React.FC = () => {
   }, [feedLines.length, feedSignature]);
 
   const tickerText = feedLines[tickerIndex] ?? georgeStrings.dockStatusIdle;
-  const animateTicker = tickerText.length > 40;
+  const animateTicker = tickerText.length > 20;
+
+  const logViewRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const node = logViewRef.current;
+    if (!node) {
+      return;
+    }
+    node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
+  }, [logEntries, isOpen]);
 
   const panelId = 'george-console-panel';
 
@@ -638,7 +649,7 @@ const GeorgeAssistant: React.FC = () => {
             )}
 
             <div className="george-log-container">
-              <div className="george-log" role="log" aria-live="polite">
+              <div className="george-log" role="log" aria-live="polite" ref={logViewRef}>
                 {logEntries.length === 0 ? (
                   <div className="george-log-item">
                     <div className="george-log-meta">

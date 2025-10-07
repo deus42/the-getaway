@@ -83,11 +83,16 @@ Dedicated folder for reusable React UI components, separate from core game logic
 </design_principles>
 
 <technical_flow>
-1. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> subscribes to `selectObjectiveQueue`, `selectPlayerKarma`, `selectPlayerFactionReputation`, and `selectPlayerPersonalityProfile`, renders the center-aligned console dock with CSS tokens, and binds the global `G` shortcut alongside pointer interaction.
+1. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> subscribes to `selectObjectiveQueue`, `selectLevelObjectives`, `selectPlayerKarma`, `selectPlayerFactionReputation`, and `selectPlayerPersonalityProfile`, renders the center-aligned console dock with CSS tokens, and binds the global `G` shortcut alongside pointer interaction.
 2. <code_location>the-getaway/src/App.tsx</code_location> positions the level card and the George console within the same HUD layer while keeping the console centered along the top edge.
 3. <code_location>the-getaway/src/game/systems/georgeAssistant.ts</code_location> consolidates intelligence by formatting primary/secondary hints, karma summaries, and conversation payloads, pulling tone-specific templates from <code_location>the-getaway/src/content/assistants/george.ts</code_location>.
-4. Interjection hooks cache quest completion sets, faction deltas, and hostile-state transitions; when thresholds are crossed the assistant queues a guideline-tagged line, throttled by `INTERJECTION_COOLDOWN_MS` so alerts surface once and then cool off.
+4. Interjection hooks cache quest completion sets, faction deltas, mission-complete signals (`missionAccomplished`), and hostile-state transitions; when thresholds are crossed the assistant queues a guideline-tagged line, throttled by `INTERJECTION_COOLDOWN_MS` so alerts surface once and then cool off.
 </technical_flow>
+
+<pattern name="ObjectiveSync">
+- George assistant treats the Level Objectives selector set as source of truth, mirroring cross-out state and surfacing the highest-priority incomplete objective as the default guidance line.
+- Mission-complete dispatches route through the same event contract as the Level Objectives panel, allowing George to deliver celebration copy only after the HUD updates.
+</pattern>
 </architecture_section>
 
 <architecture_section id="level_objectives_panel" category="hud_systems">
@@ -113,6 +118,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 <pattern name="MissionAdvancementContract">
 - Redux action contract: `missionAccomplished` → middleware `missionProgressionListener` → `LEVEL_ADVANCE_REQUESTED` custom event for Phaser scenes → `advanceToNextLevel` reducer.
 - The contract ensures George assistant, minimap, and save systems can subscribe to a single signal instead of duplicating mission-complete checks.
+- George listens for the same `LEVEL_ADVANCE_REQUESTED` emit to stage "Mission Accomplished" callouts only after the confirmation modal resolves, keeping guidance synchronized with HUD state.
 </pattern>
 </architecture_section>
 
