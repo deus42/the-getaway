@@ -1,6 +1,6 @@
 import { Locale } from '../locales';
 
-interface LogStrings {
+export interface LogStrings {
   npcNotReady: (name: string) => string;
   npcNoNewInfo: (name: string) => string;
   npcChannelEmpty: (name: string) => string;

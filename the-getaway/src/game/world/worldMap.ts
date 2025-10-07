@@ -51,10 +51,17 @@ const isStreet = (y: number) => {
 const isCityBoulevard = (x: number, y: number) => isAvenue(x) || isStreet(y);
 
 
-const createInteriorArea = (name: string, width: number, height: number, level: number): InteriorSpec => {
+const createInteriorArea = (
+  name: string,
+  width: number,
+  height: number,
+  level: number,
+  zoneId: string
+): InteriorSpec => {
   const interior = createBasicMapArea(name, width, height, {
     level,
     isInterior: true,
+    zoneId,
   });
   const doorPosition: Position = { x: Math.floor(width / 2), y: height - 1 };
   const entryPosition: Position = {
@@ -112,7 +119,8 @@ const applyBuildingConnections = (
       `${settlementName} :: ${building.name}`,
       building.interior.width,
       building.interior.height,
-      hostArea.level ?? 0
+      hostArea.level ?? 0,
+      `${hostArea.zoneId}::interior`
     );
 
     interiors.push(interiorSpec.area);
@@ -135,10 +143,7 @@ const applyBuildingConnections = (
   return { connections, interiors };
 };
 
-const applyDistrictDecorations = (
-  mapArea: MapArea,
-  _buildings: LevelBuildingDefinition[]
-): MapArea => {
+const applyDistrictDecorations = (mapArea: MapArea): MapArea => {
   // All decorative cover objects disabled - clean map with only buildings, NPCs, and doors
   return mapArea;
 };
@@ -149,6 +154,7 @@ interface BuildWorldParams {
 
 const createCityArea = (
   areaName: string,
+  zoneId: string,
   objectives: string[],
   buildings: LevelBuildingDefinition[],
   coverSpots: Position[],
@@ -158,6 +164,7 @@ const createCityArea = (
   const area = createBasicMapArea(areaName, DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT, {
     level: 0,
     objectives,
+    zoneId,
   });
   const walls: Position[] = [];
 
@@ -194,7 +201,7 @@ const createCityArea = (
 
   const withCover = addCover(withWalls, coverSpotsOnWalkableTiles);
 
-  const withDistrictDecor = applyDistrictDecorations(withCover, buildings);
+  const withDistrictDecor = applyDistrictDecorations(withCover);
 
   const isTileOpen = (position: Position): boolean => {
     const tile = withDistrictDecor.tiles[position.y]?.[position.x];
@@ -269,6 +276,7 @@ export const buildWorldResources = ({ locale }: BuildWorldParams): BuiltWorldRes
 
   const cityResult = createCityArea(
     content.world.areaName,
+    content.world.zoneId,
     content.world.objectives,
     content.buildingDefinitions,
     content.coverSpots.all,

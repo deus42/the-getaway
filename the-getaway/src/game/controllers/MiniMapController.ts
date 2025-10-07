@@ -1,11 +1,12 @@
 import type { RootState } from '../../store';
-import type { MapArea, Enemy, NPC, Item, Position } from '../interfaces/types';
+import type { MapArea, Enemy, NPC, Item, Position, CameraRuntimeState } from '../interfaces/types';
 import type { MainScene } from '../scenes/MainScene';
 import {
   MiniMapRenderState,
   MiniMapViewportDetail,
   MiniMapDirtyLayers,
   MiniMapObjectiveDetail,
+  MiniMapCameraDetail,
   TileTypeGrid,
 } from '../events';
 
@@ -178,8 +179,11 @@ export class MiniMapController {
     const enemies = rootState.world.currentMapArea.entities.enemies;
     const npcs = rootState.world.currentMapArea.entities.npcs;
     const items = rootState.world.currentMapArea.entities.items;
+    const surveillanceZone = rootState.surveillance.zones[area.id];
 
     const entitySignature = createEntitySignature(enemies, npcs, player.id, player.position.x, player.position.y);
+    const cameras = surveillanceZone ? this.buildCameras(surveillanceZone.cameras) : [];
+    const cameraSignature = this.createCameraSignature(cameras);
 
     const tilesRef = area.tiles;
     let tileVersion = this.tileSignature?.version ?? 0;
@@ -227,6 +231,8 @@ export class MiniMapController {
       tiles: tilesRef,
       entities: this.buildEntities(player.id ?? 'player', player.position.x, player.position.y, enemies, npcs),
       entitiesSignature: entitySignature,
+      cameras,
+      camerasSignature: cameraSignature,
       viewport: normalizedViewport,
       curfewActive: rootState.world.curfewActive,
       timestamp: Date.now(),
@@ -237,6 +243,7 @@ export class MiniMapController {
       dirtyLayers: this.resolveDirtyLayers({
         tileVersion,
         entitySignature,
+        cameraSignature,
         objectivesSignature,
         pathSignature,
         viewport: normalizedViewport,
@@ -292,6 +299,29 @@ export class MiniMapController {
     return entities;
   }
 
+  private buildCameras(cameras: Record<string, CameraRuntimeState>): MiniMapCameraDetail[] {
+    return Object.values(cameras).map((camera) => ({
+      id: camera.id,
+      type: camera.type,
+      x: camera.position.x,
+      y: camera.position.y,
+      alertState: camera.alertState,
+      isActive: camera.isActive,
+    }));
+  }
+
+  private createCameraSignature(cameras: MiniMapCameraDetail[]): string {
+    if (!cameras.length) {
+      return '';
+    }
+
+    return cameras
+      .map((camera) => (
+        `${camera.id}:${camera.type}:${camera.x}:${camera.y}:${camera.alertState}:${camera.isActive ? 1 : 0}`
+      ))
+      .join('|');
+  }
+
   private buildObjectives(items: Item[]): MiniMapObjectiveDetail[] {
     return items
       .filter((item): item is Item & { position: Position } => Boolean(item.position))
@@ -307,6 +337,7 @@ export class MiniMapController {
   private resolveDirtyLayers(params: {
     tileVersion: number;
     entitySignature: string;
+    cameraSignature: string;
     objectivesSignature: string;
     pathSignature: string;
     viewport: MiniMapViewportDetail;
@@ -329,7 +360,8 @@ export class MiniMapController {
     const areaChanged = previous.areaId !== params.areaId;
     const scaleChanged = previous.tileScale !== params.tileScale;
     const tilesDirty = areaChanged || previous.tileVersion !== params.tileVersion || scaleChanged;
-    const entitiesDirty = areaChanged || previous.entitiesSignature !== params.entitySignature || scaleChanged;
+    const camerasDirty = areaChanged || previous.camerasSignature !== params.cameraSignature || scaleChanged;
+    const entitiesDirty = areaChanged || previous.entitiesSignature !== params.entitySignature || scaleChanged || camerasDirty;
     const objectivesDirty = areaChanged || previous.objectivesSignature !== params.objectivesSignature || scaleChanged;
     const viewportDirty = areaChanged ||
       previous.viewport.x !== params.viewport.x ||

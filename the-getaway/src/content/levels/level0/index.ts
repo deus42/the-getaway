@@ -20,6 +20,7 @@ interface Level0Content {
     areaName: string;
     objectives: string[];
     initialEnemyName: string;
+    zoneId: string;
   };
 }
 
@@ -136,6 +137,7 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
       areaName: source.world.areaName,
       objectives: [...source.world.objectives],
       initialEnemyName: source.world.initialEnemyName,
+      zoneId: source.world.zoneId,
     },
   };
 };

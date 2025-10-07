@@ -948,5 +948,6 @@ export const level0UkrainianContent: Level0LocaleContent = {
       'Знайдіть укриття до початку комендантських облав',
     ],
     initialEnemyName: 'Гвардієць',
+    zoneId: 'downtown_checkpoint',
   },
 };

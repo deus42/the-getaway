@@ -6,6 +6,7 @@ import missionReducer, { applyLocaleToMissions } from './missionSlice';
 import logReducer from './logSlice';
 import settingsReducer from './settingsSlice';
 import combatFeedbackReducer from './combatFeedbackSlice';
+import surveillanceReducer from './surveillanceSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -18,6 +19,7 @@ const reducers = {
   settings: settingsReducer,
   combatFeedback: combatFeedbackReducer,
   missions: missionReducer,
+  surveillance: surveillanceReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -104,6 +106,7 @@ store.subscribe(() => {
     settings: state.settings,
     combatFeedback: state.combatFeedback,
     missions: state.missions,
+    surveillance: state.surveillance,
   };
   saveState(stateToPersist);
 });

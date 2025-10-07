@@ -37,6 +37,7 @@ const createMockPlayer = (overrides?: Partial<Player>): Player => {
     stamina: 100,
     maxStamina: 100,
     isExhausted: false,
+    isCrouching: false,
     skills: defaultSkills,
     skillTraining: { ...DEFAULT_PLAYER.skillTraining },
     taggedSkillIds: [...DEFAULT_PLAYER.taggedSkillIds],

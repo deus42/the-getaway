@@ -76,6 +76,7 @@ export interface Player extends Entity {
   stamina: number;
   maxStamina: number;
   isExhausted: boolean;
+  isCrouching: boolean;
   skills: PlayerSkills;
   skillTraining: PlayerSkillValues;
   taggedSkillIds: SkillId[];
@@ -131,6 +132,93 @@ export interface VisionCone {
   range: number;        // How far the enemy can see (in tiles)
   angle: number;        // Field of view in degrees (e.g., 90 for 90° cone)
   direction: number;    // Direction enemy is facing in degrees (0 = right, 90 = down, etc.)
+}
+
+export type CameraType = 'static' | 'motionSensor' | 'drone';
+
+export type SurveillanceActivationPhase = 'morning' | 'day' | 'evening' | 'night';
+
+export enum CameraAlertState {
+  IDLE = 'idle',
+  SUSPICIOUS = 'suspicious',
+  ALARMED = 'alarmed',
+  DISABLED = 'disabled',
+}
+
+export interface CameraSweepConfig {
+  angles: number[];
+  cycleDurationMs: number;
+}
+
+export interface CameraPathConfig {
+  waypoints: Position[];
+  travelDurationMs: number;
+}
+
+export interface CameraHackState {
+  loopFootageUntil?: number;
+  disabledUntil?: number;
+  redirectUntil?: number;
+}
+
+export interface CameraDefinition {
+  id: string;
+  type: CameraType;
+  position: Position;
+  range: number;
+  fieldOfView: number;
+  activationPhases: SurveillanceActivationPhase[];
+  sweep?: CameraSweepConfig;
+  motionRadius?: number;
+  patrolPath?: CameraPathConfig;
+}
+
+export interface CameraRuntimeState extends CameraDefinition {
+  alertState: CameraAlertState;
+  detectionProgress: number;
+  isActive: boolean;
+  hackState: CameraHackState;
+  lastDetectionTimestamp?: number;
+  currentDirection: number;
+  sweepDirection?: 1 | -1;
+  sweepElapsedMs?: number;
+  sweepIndex?: number;
+  patrolProgressMs?: number;
+  currentWaypointIndex?: number;
+  networkAlertContributionAt?: number;
+}
+
+export interface CameraNetworkAlert {
+  triggeredAt: number;
+  expiresAt: number;
+  contributingCameraIds: string[];
+}
+
+export interface SurveillanceZoneState {
+  areaId: string;
+  zoneId: string;
+  cameras: Record<string, CameraRuntimeState>;
+  networkAlert: CameraNetworkAlert | null;
+  lastUpdatedAt: number;
+}
+
+export interface SurveillanceHUDState {
+  overlayEnabled: boolean;
+  camerasNearby: number;
+  detectionProgress: number;
+  activeCameraId: string | null;
+  alertState: CameraAlertState;
+  networkAlertActive: boolean;
+  networkAlertExpiresAt: number | null;
+}
+
+export interface SurveillanceState {
+  zones: Record<string, SurveillanceZoneState>;
+  hud: SurveillanceHUDState;
+  curfewBanner: {
+    visible: boolean;
+    lastActivatedAt: number | null;
+  };
 }
 
 // Enemy specific attributes
@@ -351,6 +439,7 @@ export interface MapTile {
 export interface MapArea {
   id: string;
   name: string;
+  zoneId: string;
   level?: number;
   objectives?: string[];
   isInterior?: boolean;

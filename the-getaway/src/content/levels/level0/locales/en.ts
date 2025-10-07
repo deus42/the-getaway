@@ -923,5 +923,6 @@ export const level0EnglishContent: Level0LocaleContent = {
       'Secure shelter before curfew sweeps begin',
     ],
     initialEnemyName: 'Guard',
+    zoneId: 'downtown_checkpoint',
   },
 };

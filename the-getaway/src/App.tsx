@@ -17,6 +17,8 @@ import ScanlineOverlay from "./components/ui/ScanlineOverlay";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
 import DataStreamParticles from "./components/ui/DataStreamParticles";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
+import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
+import CurfewWarning from "./components/ui/CurfewWarning";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
 import { addLogMessage } from "./store/logSlice";
@@ -237,6 +239,7 @@ interface CommandShellProps {
   rightCollapsed: boolean;
   onToggleLeftSidebar: () => void;
   onToggleRightSidebar: () => void;
+  objectivesPanelCollapsed: boolean;
 }
 
 const CommandShell: React.FC<CommandShellProps> = ({
@@ -248,6 +251,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
   rightCollapsed,
   onToggleLeftSidebar,
   onToggleRightSidebar,
+  objectivesPanelCollapsed,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
@@ -460,6 +464,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />
           </div>
+          <CameraDetectionHUD />
           <DayNightIndicator />
           <DialogueOverlay />
           <CombatFeedbackManager />
@@ -493,7 +498,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 <DataStreamParticles color="#f0abfc" count={2} side="right" />
                 <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
-                <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
+                <OpsBriefingsPanel containerStyle={scrollSectionStyle} collapsed={objectivesPanelCollapsed} />
               </div>
               <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
                 <CornerAccents color="#60a5fa" size={14} />
@@ -554,6 +559,7 @@ function App() {
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+  const [objectivesPanelCollapsed, setObjectivesPanelCollapsed] = useState(false);
 
   useEffect(() => {
     console.log("[App] Component mounted");
@@ -615,6 +621,9 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === 'c' && gameStarted && !showMenu && !showCharacterCreation) {
         setShowCharacterScreen((prev) => !prev);
+      }
+      if (event.key.toLowerCase() === 'l' && gameStarted && !showMenu && !showCharacterCreation) {
+        setObjectivesPanelCollapsed((prev) => !prev);
       }
     };
 
@@ -782,8 +791,10 @@ function App() {
             rightCollapsed={rightSidebarCollapsed}
             onToggleLeftSidebar={() => setLeftSidebarCollapsed((prev) => !prev)}
             onToggleRightSidebar={() => setRightSidebarCollapsed((prev) => !prev)}
+            objectivesPanelCollapsed={objectivesPanelCollapsed}
           />
         )}
+        <CurfewWarning />
       </div>
       <Suspense fallback={null}>
         {showMenu && (

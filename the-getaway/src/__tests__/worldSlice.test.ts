@@ -50,6 +50,7 @@ const createTestMapArea = (): MapArea => {
   return {
     id: 'test-area',
     name: 'Test Area',
+    zoneId: 'test-zone',
     width,
     height,
     tiles,

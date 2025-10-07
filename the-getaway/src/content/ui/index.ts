@@ -72,6 +72,7 @@ interface PlayerStatusStrings {
   staminaLabel: string;
   fatigueStatus: string;
   fatigueHint: string;
+  crouchIndicator: string;
   roundLabel: (round: number) => string;
   yourMove: string;
   enemyAdvance: string;
@@ -270,6 +271,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       staminaLabel: 'Stamina',
       fatigueStatus: 'Fatigued',
       fatigueHint: 'Fatigue makes this harder—rest or recover stamina to shake it off.',
+      crouchIndicator: 'Crouching',
       roundLabel: (round) => `Round ${round}`,
       yourMove: 'Your move',
       enemyAdvance: 'Enemy advance',
@@ -506,6 +508,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       staminaLabel: 'Витривалість',
       fatigueStatus: 'Виснажено',
       fatigueHint: 'Виснаження ускладнює кожну дію — відпочиньте або відновіть витривалість.',
+      crouchIndicator: 'Присів',
       roundLabel: (round) => `Раунд ${round}`,
       yourMove: 'Ваш хід',
       enemyAdvance: 'Хід противника',

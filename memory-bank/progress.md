@@ -612,6 +612,38 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 </validation>
 </step>
 
+<step id="19.5" status="completed">
+<step_metadata>
+  <number>19.5</number>
+  <title>Surveillance Camera System (Curfew Enforcement)</title>
+  <status>Completed</status>
+  <date>October 9, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Authored per-zone camera configurations and registered surveillance state in Redux so runtime cameras and HUD telemetry share a single source.
+2. Built Phaser `CameraSprite` containers plus the surveillance update loop, applying stealth/crouch modifiers, curfew activation, and network alert escalation.
+3. Added `CameraDetectionHUD`, `CurfewWarning`, overlay toggles, crouch keybindings, and minimap camera glyphs reflecting alert status.
+4. Exercised slice behaviour with dedicated tests covering zone registration, HUD merges, overlay toggles, and curfew banner lifecycle.
+</tasks>
+
+<implementation>
+<code_reference file="the-getaway/src/content/cameraConfigs.ts" />
+<code_reference file="the-getaway/src/store/surveillanceSlice.ts" />
+<code_reference file="the-getaway/src/game/systems/surveillance/cameraSystem.ts" />
+<code_reference file="the-getaway/src/game/objects/CameraSprite.ts" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/components/ui/CameraDetectionHUD.tsx" />
+<code_reference file="the-getaway/src/components/ui/CurfewWarning.tsx" />
+<code_reference file="the-getaway/src/components/ui/MiniMap.tsx" />
+<code_reference file="the-getaway/src/__tests__/surveillanceSlice.test.ts" />
+</implementation>
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/surveillanceSlice.test.ts --watch=false`
+</validation>
+</step>
+
 <step id="21" status="completed">
 <step_metadata>
   <number>21</number>

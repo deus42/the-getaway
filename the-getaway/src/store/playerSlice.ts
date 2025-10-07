@@ -1225,6 +1225,10 @@ export const playerSlice = createSlice({
       const clonedPlayer = deepClone(action.payload) as Player;
       state.data = clonedPlayer;
 
+      if (typeof state.data.isCrouching !== 'boolean') {
+        state.data.isCrouching = false;
+      }
+
       if (!state.data.perkRuntime) {
         state.data.perkRuntime = {
           gunFuShotsThisTurn: 0,
@@ -1321,6 +1325,10 @@ export const playerSlice = createSlice({
       if (shouldTriggerAdrenalineRush(state.data)) {
         state.data = activateAdrenalineRush(state.data);
       }
+    },
+
+    setCrouching: (state, action: PayloadAction<boolean>) => {
+      state.data.isCrouching = action.payload;
     },
 
     equipItem: (state, action: PayloadAction<EquipItemPayload>) => {
@@ -1589,6 +1597,7 @@ export const {
   useInventoryItem,
   resetPlayer,
   setPlayerData,
+  setCrouching,
   equipWeapon,
   equipArmor,
   unequipWeapon,

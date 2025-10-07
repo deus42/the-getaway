@@ -175,6 +175,31 @@ Dedicated folder for reusable React UI components, separate from core game logic
 </pattern>
 </architecture_section>
 
+<architecture_section id="surveillance_network" category="gameplay_systems">
+<design_principles>
+- Author surveillance configuration outside runtime logic so curfew coverage can scale with new zones.
+- Keep camera alert state in Redux to synchronize Phaser rendering, HUD, and minimap overlays.
+- Treat observation cones as optional guidance: players explicitly toggle them so the base render stays uncluttered.
+</design_principles>
+
+<technical_flow>
+1. `src/content/cameraConfigs.ts` declares static, motion, and drone camera blueprints per zone; `cameraTypes.ts` converts them into runtime state with sweep metadata.
+2. `surveillanceSlice` stores zone cameras, HUD metrics, overlay toggles, and curfew banner visibility so React components can subscribe to a single source of truth.
+3. `GameController` loads zone surveillance on area transitions, throttles crouch movement, and drives `updateSurveillance` every frame while binding `Tab`/`C` hotkeys through `setOverlayEnabled` and `setCrouching`.
+4. `game/systems/surveillance/cameraSystem.ts` advances sweeps/patrols, applies stealth + crouch modifiers, raises network alerts, schedules reinforcements, and snapshots HUD values for the slice.
+5. `MainScene` listens to store changes and instantiates `CameraSprite` containers that animate LEDs and cones, respecting the overlay flag on each update.
+6. React HUD layers (`CameraDetectionHUD.tsx`, `CurfewWarning.tsx`) surface detection progress and curfew activation, while `MiniMap.tsx` renders camera glyphs with alert-state colors.
+</technical_flow>
+
+<code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
+<code_location>the-getaway/src/game/objects/CameraSprite.ts</code_location>
+<code_location>the-getaway/src/store/surveillanceSlice.ts</code_location>
+<code_location>the-getaway/src/components/GameController.tsx</code_location>
+<code_location>the-getaway/src/components/ui/CameraDetectionHUD.tsx</code_location>
+<code_location>the-getaway/src/components/ui/CurfewWarning.tsx</code_location>
+<code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location>
+</architecture_section>
+
 ### `/the-getaway/src/content`
 
 Authorial data that defines the playable world, separated from runtime systems so levels can be versioned and reviewed independently.

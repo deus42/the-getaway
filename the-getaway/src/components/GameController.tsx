@@ -8,6 +8,7 @@ import {
   beginPlayerTurn,
   consumeStamina,
   regenerateStamina,
+  setCrouching,
 } from "../store/playerSlice";
 import {
   updateEnemy,
@@ -29,7 +30,16 @@ import {
   isInAttackRange,
   DEFAULT_ATTACK_COST,
 } from "../game/combat/combatSystem";
-import { Enemy, Player, Position, MapArea, TileType, NPC, AlertLevel } from "../game/interfaces/types";
+import {
+  Enemy,
+  Player,
+  Position,
+  MapArea,
+  TileType,
+  NPC,
+  AlertLevel,
+  SurveillanceZoneState,
+} from "../game/interfaces/types";
 import { determineEnemyMove } from "../game/combat/enemyAI";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -40,6 +50,13 @@ import { getSystemStrings } from "../content/system";
 import { processPerceptionUpdates, getAlertMessageKey, shouldSpawnReinforcements, getReinforcementDelay } from "../game/combat/perceptionManager";
 import { shouldGunFuAttackBeFree } from "../game/systems/perks";
 import { STAMINA_COSTS } from "../game/systems/stamina";
+import {
+  initializeZoneSurveillance,
+  teardownZoneSurveillance,
+  handleTimeOfDayForSurveillance,
+  updateSurveillance,
+} from "../game/systems/surveillance/cameraSystem";
+import { setOverlayEnabled } from "../store/surveillanceSlice";
 
 const GameController: React.FC = () => {
   const dispatch = useDispatch();
@@ -76,15 +93,26 @@ const GameController: React.FC = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const globalAlertLevel = useSelector((state: RootState) => state.world.globalAlertLevel);
   const reinforcementsScheduled = useSelector((state: RootState) => state.world.reinforcementsScheduled);
+  const surveillanceZone = useSelector((state: RootState) => (mapAreaId ? state.surveillance.zones[mapAreaId] : undefined));
+  const overlayEnabled = useSelector((state: RootState) => state.surveillance.hud.overlayEnabled);
   const logStrings = getSystemStrings(locale).logs;
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
   const previousGlobalAlertLevel = useRef(globalAlertLevel);
+  const surveillanceZoneRef = useRef<SurveillanceZoneState | undefined>(undefined);
+  const playerRef = useRef<Player>(player);
+  const mapAreaRef = useRef<MapArea | null>(currentMapArea ?? null);
+  const reinforcementsScheduledRef = useRef(reinforcementsScheduled);
+  const globalAlertLevelRef = useRef(globalAlertLevel);
+  const timeOfDayRef = useRef(timeOfDay);
+  const overlayEnabledRef = useRef(overlayEnabled);
+  const previousSurveillanceAreaId = useRef<string | null>(null);
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
   const enemyActionTimeoutRef = useRef<number | null>(null);
   const processingEnemyIdRef = useRef<string | null>(null);
+  const movementStepTimeoutRef = useRef<number | null>(null);
   type CurfewAlertState = "clear" | "warning" | "spawned";
   const [curfewAlertState, setCurfewAlertState] =
     useState<CurfewAlertState>("clear");
@@ -188,6 +216,36 @@ const GameController: React.FC = () => {
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
 
+  const getNow = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+
+  useEffect(() => {
+    surveillanceZoneRef.current = surveillanceZone;
+  }, [surveillanceZone]);
+
+  useEffect(() => {
+    playerRef.current = player;
+  }, [player]);
+
+  useEffect(() => {
+    mapAreaRef.current = currentMapArea ?? null;
+  }, [currentMapArea]);
+
+  useEffect(() => {
+    reinforcementsScheduledRef.current = reinforcementsScheduled;
+  }, [reinforcementsScheduled]);
+
+  useEffect(() => {
+    globalAlertLevelRef.current = globalAlertLevel;
+  }, [globalAlertLevel]);
+
+  useEffect(() => {
+    timeOfDayRef.current = timeOfDay;
+  }, [timeOfDay]);
+
+  useEffect(() => {
+    overlayEnabledRef.current = overlayEnabled;
+  }, [overlayEnabled]);
+
   // Auto-focus when component mounts
   useEffect(() => {
     if (controllerRef.current) {
@@ -207,6 +265,129 @@ const GameController: React.FC = () => {
       document.removeEventListener("click", handleClick);
     };
   }, []);
+
+  useEffect(() => {
+    const area = mapAreaRef.current;
+    if (!area || !mapAreaId) {
+      return;
+    }
+
+    const zoneState = surveillanceZoneRef.current;
+    if (!zoneState || zoneState.areaId !== mapAreaId) {
+      initializeZoneSurveillance({
+        area,
+        timeOfDay: timeOfDayRef.current,
+        dispatch,
+        timestamp: getNow(),
+      });
+    }
+
+    previousSurveillanceAreaId.current = mapAreaId;
+
+    return () => {
+      const previousId = previousSurveillanceAreaId.current;
+      if (previousId) {
+        teardownZoneSurveillance({ areaId: previousId, dispatch });
+        previousSurveillanceAreaId.current = null;
+      }
+    };
+  }, [mapAreaId, dispatch]);
+
+  useEffect(() => {
+    if (!currentMapArea || !mapAreaId) {
+      return;
+    }
+
+    const zoneState = surveillanceZoneRef.current ?? surveillanceZone;
+    if (!zoneState) {
+      return;
+    }
+
+    handleTimeOfDayForSurveillance({
+      zone: zoneState,
+      area: currentMapArea,
+      timeOfDay,
+      dispatch,
+      timestamp: getNow(),
+      showBanner: true,
+    });
+  }, [timeOfDay, mapAreaId, surveillanceZone, currentMapArea, dispatch]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) {
+        return;
+      }
+
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        if (event.repeat) {
+          return;
+        }
+        dispatch(setOverlayEnabled({ enabled: !overlayEnabledRef.current }));
+        return;
+      }
+
+      if (event.key.toLowerCase() === 'x') {
+        if (event.repeat) {
+          return;
+        }
+        const currentPlayer = playerRef.current;
+        if (!currentPlayer) {
+          return;
+        }
+        dispatch(setCrouching(!currentPlayer.isCrouching));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!mapAreaId || typeof window === "undefined") {
+      return;
+    }
+
+    let frameId: number | null = null;
+    let lastFrameTime = getNow();
+
+    const tick = () => {
+      const zoneState = surveillanceZoneRef.current;
+      const area = mapAreaRef.current;
+      const playerState = playerRef.current;
+
+      if (zoneState && area && playerState) {
+        const currentTime = getNow();
+        const deltaMs = currentTime - lastFrameTime;
+        lastFrameTime = currentTime;
+
+        updateSurveillance({
+          zone: zoneState,
+          mapArea: area,
+          player: playerState,
+          deltaMs,
+          timestamp: currentTime,
+          dispatch,
+          logStrings,
+          reinforcementsScheduled: reinforcementsScheduledRef.current ?? false,
+          globalAlertLevel: globalAlertLevelRef.current ?? AlertLevel.IDLE,
+        });
+      }
+
+      frameId = window.requestAnimationFrame(tick);
+    };
+
+    frameId = window.requestAnimationFrame(tick);
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
+  }, [mapAreaId, dispatch, logStrings]);
 
   useEffect(() => {
     const handleTileClick = (event: Event) => {
@@ -707,6 +888,21 @@ const GameController: React.FC = () => {
       return;
     }
 
+    const delayMs = player.isCrouching ? 180 : 0;
+
+    if (delayMs > 0) {
+      if (movementStepTimeoutRef.current !== null) {
+        return;
+      }
+
+      movementStepTimeoutRef.current = window.setTimeout(() => {
+        movementStepTimeoutRef.current = null;
+        dispatch(movePlayer(nextStep));
+      }, delayMs);
+
+      return;
+    }
+
     dispatch(movePlayer(nextStep));
   }, [
     queuedPath,
@@ -721,6 +917,22 @@ const GameController: React.FC = () => {
     logStrings,
     attemptMovementStamina,
   ]);
+
+  useEffect(() => {
+    if (queuedPath.length === 0 && movementStepTimeoutRef.current !== null) {
+      window.clearTimeout(movementStepTimeoutRef.current);
+      movementStepTimeoutRef.current = null;
+    }
+  }, [queuedPath.length]);
+
+  useEffect(() => {
+    return () => {
+      if (movementStepTimeoutRef.current !== null) {
+        window.clearTimeout(movementStepTimeoutRef.current);
+        movementStepTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const warning = encumbranceWarning ?? null;

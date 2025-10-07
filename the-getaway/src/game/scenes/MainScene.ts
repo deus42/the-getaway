@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel, Item } from '../interfaces/types';
+import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel, Item, SurveillanceZoneState } from '../interfaces/types';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
@@ -17,6 +17,7 @@ import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPo
 import { getVisionConeTiles } from '../combat/perception';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { miniMapService } from '../services/miniMapService';
+import CameraSprite from '../objects/CameraSprite';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
@@ -65,6 +66,7 @@ export class MainScene extends Phaser.Scene {
   private playerNameLabel?: Phaser.GameObjects.Text;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private npcSprites: Map<string, NpcSpriteData> = new Map();
+  private cameraSprites: Map<string, CameraSprite> = new Map();
   private currentMapArea: MapArea | null = null;
   private buildingLabels: Phaser.GameObjects.Container[] = [];
   private unsubscribe: (() => void) | null = null;
@@ -189,11 +191,21 @@ export class MainScene extends Phaser.Scene {
            this.updateEnemies(initialState.world.currentMapArea.entities.enemies);
         }
         if (initialState?.world?.currentMapArea?.entities?.npcs) {
-           this.updateNpcs(initialState.world.currentMapArea.entities.npcs);
+          this.updateNpcs(initialState.world.currentMapArea.entities.npcs);
         }
+        const zoneState = initialState?.surveillance?.zones?.[initialState.world.currentMapArea.id];
+        const overlayEnabled = initialState?.surveillance?.hud?.overlayEnabled ?? false;
+        this.updateSurveillanceCameras(zoneState, overlayEnabled);
         this.renderVisionCones();
       }
     }, 0);
+  }
+
+  private destroyCameraSprites(): void {
+    this.cameraSprites.forEach((sprite) => {
+      sprite.destroy(true);
+    });
+    this.cameraSprites.clear();
   }
 
   private cleanupScene(): void {
@@ -212,6 +224,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.destroyPlayerVitalsIndicator();
+    this.destroyCameraSprites();
     this.npcSprites.forEach((data) => {
       if (data.indicator) {
         data.indicator.destroy();
@@ -267,6 +280,7 @@ export class MainScene extends Phaser.Scene {
         }
       });
       this.npcSprites.clear();
+      this.destroyCameraSprites();
       this.setupCameraAndMap();
       this.clearPathPreview();
       this.enablePlayerCameraFollow();
@@ -281,6 +295,9 @@ export class MainScene extends Phaser.Scene {
     this.updateEnemies(currentEnemies);
     this.updateNpcs(worldState.currentMapArea.entities.npcs);
     this.renderVisionCones();
+    const zoneState = newState.surveillance?.zones?.[this.currentMapArea.id];
+    const overlayEnabled = newState.surveillance?.hud?.overlayEnabled ?? false;
+    this.updateSurveillanceCameras(zoneState, overlayEnabled);
   }
   private ensureIsoFactory(): void {
     if (!this.isoFactory) {
@@ -729,6 +746,51 @@ export class MainScene extends Phaser.Scene {
     });
   }
 
+  private updateSurveillanceCameras(zone?: SurveillanceZoneState, overlayEnabled: boolean = false): void {
+    if (!zone || !this.currentMapArea) {
+      if (this.cameraSprites.size > 0) {
+        this.destroyCameraSprites();
+      }
+      return;
+    }
+
+    const remainingIds = new Set(this.cameraSprites.keys());
+    const metrics = this.getIsoMetrics();
+
+    Object.values(zone.cameras).forEach((camera) => {
+      remainingIds.delete(camera.id);
+      const pixelPos = this.calculatePixelPosition(camera.position.x, camera.position.y);
+      let sprite = this.cameraSprites.get(camera.id);
+
+      if (!sprite) {
+        sprite = new CameraSprite(this, pixelPos.x, pixelPos.y, {
+          tileSize: this.tileSize,
+          rangeTiles: camera.range,
+          fieldOfView: camera.fieldOfView,
+          initialDirection: camera.currentDirection,
+        });
+        this.cameraSprites.set(camera.id, sprite);
+      } else {
+        sprite.setPosition(pixelPos.x, pixelPos.y);
+        sprite.setRangeTiles(camera.range);
+      }
+
+      sprite.setDepth(pixelPos.y + metrics.tileHeight * 0.5);
+      sprite.setOverlayVisible(overlayEnabled);
+      sprite.setActiveState(camera.isActive);
+      sprite.setAlertState(camera.alertState);
+      sprite.setDirection(camera.currentDirection);
+    });
+
+    remainingIds.forEach((cameraId) => {
+      const sprite = this.cameraSprites.get(cameraId);
+      if (sprite) {
+        sprite.destroy(true);
+      }
+      this.cameraSprites.delete(cameraId);
+    });
+  }
+
   public shutdown(): void {
     if (this.unsubscribe) {
       this.unsubscribe();
@@ -749,6 +811,7 @@ export class MainScene extends Phaser.Scene {
       }
     });
     this.npcSprites.clear();
+    this.destroyCameraSprites();
     if (this.playerToken) {
       this.playerToken.container.destroy(true);
       this.playerToken = undefined;

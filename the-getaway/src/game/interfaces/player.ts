@@ -58,6 +58,7 @@ export const DEFAULT_PLAYER: Player = {
   stamina: defaultMaxStamina,
   maxStamina: defaultMaxStamina,
   isExhausted: false,
+  isCrouching: false,
   skills: DEFAULT_SKILLS,
   skillTraining: createDefaultSkillTraining(),
   taggedSkillIds: [],

@@ -36,5 +36,6 @@ export interface Level0LocaleContent {
     areaName: string;
     objectives: string[];
     initialEnemyName: string;
+    zoneId: string;
   };
 }

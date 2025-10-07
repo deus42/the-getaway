@@ -18,6 +18,7 @@ const createEmptyMapArea = (id: string, width: number, height: number, npc: NPC)
   return {
     id,
     name: 'Routine Test Sector',
+    zoneId: 'test-zone',
     width,
     height,
     tiles,
@@ -84,4 +85,3 @@ describe('NPC routines', () => {
     expect(updatedNpc!.position).toEqual({ x: 4, y: 1 });
   });
 });
-

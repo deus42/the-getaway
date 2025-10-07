@@ -111,6 +111,22 @@ const fatigueBadgeStyle: React.CSSProperties = {
   boxShadow: '0 8px 18px -12px rgba(250, 204, 21, 0.6)',
 };
 
+const crouchBadgeStyle: React.CSSProperties = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '0.25rem',
+  padding: '0.22rem 0.55rem',
+  borderRadius: '999px',
+  border: '1px solid rgba(148, 163, 184, 0.65)',
+  background: 'rgba(148, 163, 184, 0.12)',
+  color: '#e2e8f0',
+  fontSize: '0.55rem',
+  fontWeight: 600,
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  boxShadow: '0 8px 18px -12px rgba(148, 163, 184, 0.55)',
+};
+
 const statCardStyle: React.CSSProperties = {
   background: cardSurface.background,
   border: cardSurface.border,
@@ -222,7 +238,12 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={nameStyle}>
             <span>{player.name}</span>
-            <span style={levelBadgeStyle}>Level {player.level}</span>
+            <span style={levelBadgeStyle}>
+              {uiStrings.playerStatus.levelLabel} {player.level}
+            </span>
+            {player.isCrouching && (
+              <span style={crouchBadgeStyle}>{uiStrings.playerStatus.crouchIndicator}</span>
+            )}
           </div>
           <div style={backgroundLabelStyle}>{background?.name ?? 'Unaffiliated'}</div>
         </div>

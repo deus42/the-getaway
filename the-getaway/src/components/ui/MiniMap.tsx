@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
 import type { Position } from '../../game/interfaces/types';
+import { CameraAlertState } from '../../game/interfaces/types';
 import {
   MINIMAP_STATE_EVENT,
   MINIMAP_VIEWPORT_CLICK_EVENT,
@@ -34,6 +35,13 @@ const ENTITY_STYLE: Record<MiniMapEntityDetail['kind'], { fill: string; stroke: 
   enemy: { fill: '#ef4444', stroke: 'rgba(248, 113, 113, 0.85)', size: 0.65 },
   npc: { fill: '#22c55e', stroke: 'rgba(187, 247, 208, 0.85)', size: 0.55 },
   objective: { fill: '#fbbf24', stroke: 'rgba(253, 230, 138, 0.8)', size: 0.55 },
+};
+
+const CAMERA_COLORS: Record<CameraAlertState, string> = {
+  [CameraAlertState.IDLE]: '#38bdf8',
+  [CameraAlertState.SUSPICIOUS]: '#fbbf24',
+  [CameraAlertState.ALARMED]: '#ef4444',
+  [CameraAlertState.DISABLED]: '#64748b',
 };
 
 const OBJECTIVE_STYLE = {
@@ -240,6 +248,51 @@ const drawEntitiesLayer = (
 
   objectiveMarkers.forEach((marker) => {
     drawObjectiveMarker(ctx, marker, state.tileScale);
+  });
+
+  state.cameras.forEach((camera) => {
+    const color = camera.isActive ? CAMERA_COLORS[camera.alertState] : CAMERA_COLORS[CameraAlertState.DISABLED];
+    const centerX = (camera.x + 0.5) * state.tileScale;
+    const centerY = (camera.y + 0.5) * state.tileScale;
+    const size = Math.max(4, state.tileScale * 0.55);
+
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.globalAlpha = camera.isActive ? 0.9 : 0.45;
+    ctx.fillStyle = color;
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.lineWidth = Math.max(1, state.tileScale * 0.08);
+
+    switch (camera.type) {
+      case 'motionSensor':
+        ctx.beginPath();
+        ctx.arc(0, 0, size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        break;
+      case 'drone':
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size, 0);
+        ctx.lineTo(0, size);
+        ctx.lineTo(-size, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+      case 'static':
+      default:
+        ctx.beginPath();
+        ctx.moveTo(0, -size);
+        ctx.lineTo(size, size);
+        ctx.lineTo(-size, size);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        break;
+    }
+
+    ctx.restore();
   });
 
   ctx.restore();

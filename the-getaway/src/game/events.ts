@@ -1,4 +1,4 @@
-import { Position, MapTile } from './interfaces/types';
+import { Position, MapTile, CameraAlertState, CameraType } from './interfaces/types';
 
 export const TILE_CLICK_EVENT = 'isoTileSelected';
 export const PATH_PREVIEW_EVENT = 'isoPathPreview';
@@ -66,6 +66,15 @@ export interface MiniMapEntityDetail {
   status: 'active' | 'inactive';
 }
 
+export interface MiniMapCameraDetail {
+  id: string;
+  type: CameraType;
+  x: number;
+  y: number;
+  alertState: CameraAlertState;
+  isActive: boolean;
+}
+
 export interface MiniMapViewportDetail extends ViewportUpdateDetail {
   zoom: number;
 }
@@ -103,6 +112,8 @@ export interface MiniMapRenderState {
   tiles: TileTypeGrid;
   entities: MiniMapEntityDetail[];
   entitiesSignature: string;
+  cameras: MiniMapCameraDetail[];
+  camerasSignature: string;
   viewport: MiniMapViewportDetail;
   curfewActive: boolean;
   timestamp: number;
