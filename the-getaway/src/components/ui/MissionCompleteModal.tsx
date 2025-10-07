@@ -46,8 +46,21 @@ const shellStyle: React.CSSProperties = {
 
 const buttonRowStyle: React.CSSProperties = {
   display: 'flex',
-  flexWrap: 'wrap',
   gap: '0.75rem',
+};
+
+const buttonBaseStyle: React.CSSProperties = {
+  all: 'unset',
+  cursor: 'pointer',
+  flex: 1,
+  padding: '0.7rem 1.2rem',
+  borderRadius: '999px',
+  letterSpacing: '0.15em',
+  fontSize: '0.72rem',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  textAlign: 'center',
+  minWidth: 0,
 };
 
 const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
@@ -136,17 +149,10 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
             type="button"
             onClick={onContinue}
             style={{
-              all: 'unset',
-              cursor: 'pointer',
-              padding: '0.65rem 1.4rem',
-              borderRadius: '999px',
+              ...buttonBaseStyle,
               border: '1px solid rgba(94, 234, 212, 0.5)',
               background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.7), rgba(94, 234, 212, 0.65))',
               color: '#02111f',
-              letterSpacing: '0.15em',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              textTransform: 'uppercase',
               boxShadow: '0 20px 36px rgba(13, 148, 136, 0.35)',
             }}
           >
@@ -156,16 +162,10 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
             type="button"
             onClick={onDefer}
             style={{
-              all: 'unset',
-              cursor: 'pointer',
-              padding: '0.6rem 1.25rem',
-              borderRadius: '999px',
+              ...buttonBaseStyle,
               border: '1px solid rgba(148, 163, 184, 0.45)',
               background: 'rgba(15, 23, 42, 0.75)',
               color: 'rgba(226, 232, 240, 0.9)',
-              letterSpacing: '0.12em',
-              fontSize: '0.7rem',
-              textTransform: 'uppercase',
             }}
           >
             {missionStrings.deferCta}

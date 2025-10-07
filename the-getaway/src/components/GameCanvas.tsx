@@ -237,6 +237,7 @@ const GameCanvas: React.FC = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
+        pointerEvents: "none",
       }}
     >
       <div
@@ -253,8 +254,9 @@ const GameCanvas: React.FC = () => {
           justifyContent: "center",
           alignItems: "center",
           backgroundColor: "#1a1a1a",
-          minWidth: "400px", // Ensure minimum width to prevent extreme squishing
-          minHeight: "300px", // Ensure minimum height
+          minWidth: "400px",
+          minHeight: "300px",
+          pointerEvents: "auto",
         }}
       />
       {/* Remove position display overlay */}

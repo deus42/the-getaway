@@ -239,7 +239,8 @@ interface CommandShellProps {
   rightCollapsed: boolean;
   onToggleLeftSidebar: () => void;
   onToggleRightSidebar: () => void;
-  objectivesPanelCollapsed: boolean;
+  levelPanelCollapsed: boolean;
+  onToggleLevelPanel: () => void;
 }
 
 const CommandShell: React.FC<CommandShellProps> = ({
@@ -251,7 +252,8 @@ const CommandShell: React.FC<CommandShellProps> = ({
   rightCollapsed,
   onToggleLeftSidebar,
   onToggleRightSidebar,
-  objectivesPanelCollapsed,
+  levelPanelCollapsed,
+  onToggleLevelPanel,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
@@ -458,8 +460,11 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <TacticalHUDFrame />
           <GameCanvas />
           <GameController />
-          <div style={topLeftOverlayStyle}>
-            <LevelIndicator />
+          <div style={{ ...topLeftOverlayStyle, pointerEvents: 'auto' }}>
+            <LevelIndicator
+              collapsed={levelPanelCollapsed}
+              onToggle={onToggleLevelPanel}
+            />
           </div>
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />
@@ -498,7 +503,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 <DataStreamParticles color="#f0abfc" count={2} side="right" />
                 <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
-                <OpsBriefingsPanel containerStyle={scrollSectionStyle} collapsed={objectivesPanelCollapsed} />
+                <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
               </div>
               <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
                 <CornerAccents color="#60a5fa" size={14} />
@@ -559,7 +564,7 @@ function App() {
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  const [objectivesPanelCollapsed, setObjectivesPanelCollapsed] = useState(false);
+  const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(false);
 
   useEffect(() => {
     console.log("[App] Component mounted");
@@ -623,7 +628,7 @@ function App() {
         setShowCharacterScreen((prev) => !prev);
       }
       if (event.key.toLowerCase() === 'l' && gameStarted && !showMenu && !showCharacterCreation) {
-        setObjectivesPanelCollapsed((prev) => !prev);
+        setLevelPanelCollapsed((prev) => !prev);
       }
     };
 
@@ -791,7 +796,8 @@ function App() {
             rightCollapsed={rightSidebarCollapsed}
             onToggleLeftSidebar={() => setLeftSidebarCollapsed((prev) => !prev)}
             onToggleRightSidebar={() => setRightSidebarCollapsed((prev) => !prev)}
-            objectivesPanelCollapsed={objectivesPanelCollapsed}
+            levelPanelCollapsed={levelPanelCollapsed}
+            onToggleLevelPanel={() => setLevelPanelCollapsed((prev) => !prev)}
           />
         )}
         <CurfewWarning />

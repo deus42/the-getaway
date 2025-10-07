@@ -7,12 +7,11 @@ import { gradientTextStyle } from "./theme";
 
 interface OpsBriefingsPanelProps {
   containerStyle: CSSProperties;
-  collapsed?: boolean;
 }
 
 const mutedText = "rgba(148, 163, 184, 0.78)";
 
-const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle, collapsed = false }) => {
+const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle }) => {
   const quests = useSelector((state: RootState) => state.quests.quests);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
@@ -22,24 +21,6 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle, c
     .filter((quest) => quest.isCompleted)
     .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, 3);
-
-  if (collapsed) {
-    return (
-      <div
-        style={{
-          ...containerStyle,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: mutedText,
-          fontStyle: 'italic',
-          fontSize: '0.85rem',
-        }}
-      >
-        Press L to show objectives
-      </div>
-    );
-  }
 
   const formatReward = (rewardCount: number, label: string) => {
     if (rewardCount <= 0) {

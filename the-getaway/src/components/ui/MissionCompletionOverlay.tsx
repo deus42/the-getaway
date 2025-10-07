@@ -81,27 +81,15 @@ const MissionCompletionOverlay: React.FC = () => {
   };
 
   return (
-    <>
-      <MissionCompleteModal
-        open={modalOpen}
-        levelName={missionProgress?.name ?? 'Current Sector'}
-        missionStrings={uiStrings.mission}
-        primaryObjectives={missionProgress?.primary ?? []}
-        sideObjectives={missionProgress?.side ?? []}
-        onContinue={handleContinue}
-        onDefer={handleDefer}
-      />
-      {pendingAdvance && celebrationAcknowledged && (
-        <div style={toastStyle} role="status" aria-live="polite">
-          <span style={{ fontSize: '0.64rem', color: 'rgba(226, 232, 240, 0.9)' }}>
-            {uiStrings.levelIndicator.primaryCompleteFootnote}
-          </span>
-          <button type="button" onClick={handleReopen} style={toastButtonStyle}>
-            {uiStrings.levelIndicator.missionReadyBadge}
-          </button>
-        </div>
-      )}
-    </>
+    <MissionCompleteModal
+      open={modalOpen}
+      levelName={missionProgress?.name ?? 'Current Sector'}
+      missionStrings={uiStrings.mission}
+      primaryObjectives={missionProgress?.primary ?? []}
+      sideObjectives={missionProgress?.side ?? []}
+      onContinue={handleContinue}
+      onDefer={handleDefer}
+    />
   );
 };
 

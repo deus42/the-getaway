@@ -1,11 +1,12 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { getUIStrings } from '../../content/ui';
 import {
   selectMissionPendingAdvance,
   selectMissionProgress,
 } from '../../store/selectors/missionSelectors';
 import { RootState } from '../../store';
+import { showMissionAdvancePrompt } from '../../store/missionSlice';
 
 const listBaseStyle: React.CSSProperties = {
   margin: 0,
@@ -15,11 +16,27 @@ const listBaseStyle: React.CSSProperties = {
   listStyle: 'none',
 };
 
-const LevelIndicator: React.FC = () => {
+interface LevelIndicatorProps {
+  collapsed?: boolean;
+  onToggle?: () => void;
+}
+
+const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onToggle }) => {
+  const dispatch = useDispatch();
   const locale = useSelector((state: RootState) => state.settings.locale);
   const missionProgress = useSelector(selectMissionProgress);
   const missionAdvancePending = useSelector(selectMissionPendingAdvance);
   const uiStrings = getUIStrings(locale);
+
+  const handleMissionAdvanceClick = () => {
+    dispatch(showMissionAdvancePrompt());
+  };
+
+  const handleToggleClick = () => {
+    if (onToggle) {
+      onToggle();
+    }
+  };
 
   const levelNumber = missionProgress?.level ?? 0;
   const levelName = missionProgress?.name ?? uiStrings.levelIndicator.unknownLevel;
@@ -42,11 +59,11 @@ const LevelIndicator: React.FC = () => {
         flexDirection: 'column',
         gap: '0.4rem',
         boxShadow: '0 12px 32px rgba(15, 23, 42, 0.45)',
-        pointerEvents: 'none',
+        pointerEvents: 'auto',
         backdropFilter: 'blur(4px)',
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', pointerEvents: 'auto' }}>
         <div
           style={{
             display: 'flex',
@@ -54,46 +71,88 @@ const LevelIndicator: React.FC = () => {
             alignItems: 'center',
           }}
         >
-          <span style={{ fontSize: '0.7rem', color: '#94a3b8', opacity: 0.9 }}>
-            {uiStrings.levelIndicator.levelLabel}
-          </span>
-          <span style={{ fontSize: '0.96rem', fontWeight: 600 }}>{levelNumber}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.7rem', color: '#94a3b8', opacity: 0.9 }}>
+              {uiStrings.levelIndicator.levelLabel}
+            </span>
+            <span style={{ fontSize: '0.96rem', fontWeight: 600 }}>{levelNumber}</span>
+          </div>
+          {missionAdvancePending && (
+            <button
+              type="button"
+              onClick={handleMissionAdvanceClick}
+              style={{
+                all: 'unset',
+                cursor: 'pointer',
+                fontSize: '0.66rem',
+                color: '#5eead4',
+                border: '1px solid rgba(94, 234, 212, 0.38)',
+                borderRadius: '999px',
+                padding: '0.18rem 0.55rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.18em',
+                transition: 'all 0.2s ease',
+                pointerEvents: 'auto',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(15, 118, 110, 0.22)';
+                e.currentTarget.style.borderColor = 'rgba(94, 234, 212, 0.55)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'rgba(94, 234, 212, 0.38)';
+              }}
+            >
+              {uiStrings.levelIndicator.missionReadyBadge}
+            </button>
+          )}
         </div>
-        <span
+        <div
+          onClick={handleToggleClick}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (onToggle && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              handleToggleClick();
+            }
+          }}
           style={{
+            display: 'block',
+            width: '100%',
+            cursor: onToggle ? 'pointer' : 'default',
             fontSize: '0.72rem',
             color: 'rgba(148, 163, 184, 0.82)',
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
+            textAlign: 'left',
+            transition: 'color 0.2s ease',
+            userSelect: 'none',
+            pointerEvents: 'auto',
+          }}
+          onMouseEnter={(e) => {
+            if (onToggle) {
+              e.currentTarget.style.color = 'rgba(226, 232, 240, 0.92)';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = 'rgba(148, 163, 184, 0.82)';
           }}
         >
-          {levelName}
-        </span>
-        {missionAdvancePending && (
-          <span
+          {levelName} {onToggle && <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{collapsed ? '▸' : '▾'}</span>}
+        </div>
+      </div>
+      {!collapsed && (
+        <>
+          <div
             style={{
-              fontSize: '0.66rem',
-              color: '#5eead4',
-              border: '1px solid rgba(94, 234, 212, 0.38)',
-              borderRadius: '999px',
-              padding: '0.18rem 0.55rem',
-              textTransform: 'uppercase',
-              letterSpacing: '0.18em',
-              alignSelf: 'flex-start',
+              borderTop: '1px solid rgba(148, 163, 184, 0.22)',
+              paddingTop: '0.45rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.3rem',
             }}
           >
-            {uiStrings.levelIndicator.missionReadyBadge}
-          </span>
-        )}
-        <div
-          style={{
-            borderTop: '1px solid rgba(148, 163, 184, 0.22)',
-            paddingTop: '0.45rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.3rem',
-          }}
-        >
           <span style={{ fontSize: '0.7rem', color: '#94a3b8', opacity: 0.85 }}>
             {uiStrings.levelIndicator.objectivesLabel}
           </span>
@@ -160,16 +219,16 @@ const LevelIndicator: React.FC = () => {
               ))}
             </ul>
           )}
-        </div>
-        <div
-          style={{
-            borderTop: '1px solid rgba(148, 163, 184, 0.16)',
-            paddingTop: '0.4rem',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '0.24rem',
-          }}
-        >
+          </div>
+          <div
+            style={{
+              borderTop: '1px solid rgba(148, 163, 184, 0.16)',
+              paddingTop: '0.4rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.24rem',
+            }}
+          >
           <span style={{ fontSize: '0.68rem', color: 'rgba(148, 163, 184, 0.7)' }}>
             {uiStrings.levelIndicator.sideObjectivesLabel}
           </span>
@@ -221,20 +280,21 @@ const LevelIndicator: React.FC = () => {
               ))}
             </ul>
           )}
-        </div>
-        {allPrimaryComplete && !missionAdvancePending && (
-          <span
-            style={{
-              marginTop: '0.3rem',
-              fontSize: '0.66rem',
-              color: 'rgba(94, 234, 212, 0.76)',
-              fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-            }}
-          >
-            {uiStrings.levelIndicator.primaryCompleteFootnote}
-          </span>
-        )}
-      </div>
+          </div>
+          {allPrimaryComplete && !missionAdvancePending && (
+            <span
+              style={{
+                marginTop: '0.3rem',
+                fontSize: '0.66rem',
+                color: 'rgba(94, 234, 212, 0.76)',
+                fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+              }}
+            >
+              {uiStrings.levelIndicator.primaryCompleteFootnote}
+            </span>
+          )}
+        </>
+      )}
     </div>
   );
 };
