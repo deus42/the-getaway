@@ -12,7 +12,7 @@ import {
   XP_REWARDS
 } from '../game/systems/progression';
 import { Player, PlayerSkills } from '../game/interfaces/types';
-import { DEFAULT_PLAYER } from '../game/interfaces/player';
+import { DEFAULT_PLAYER, createDefaultPersonalityProfile } from '../game/interfaces/player';
 import { v4 as uuidv4 } from 'uuid';
 
 const createMockPlayer = (overrides?: Partial<Player>): Player => {
@@ -26,7 +26,7 @@ const createMockPlayer = (overrides?: Partial<Player>): Player => {
     luck: 5
   };
 
-  return {
+  const base: Player = {
     id: uuidv4(),
     name: 'Test Player',
     position: { x: 0, y: 0 },
@@ -73,6 +73,8 @@ const createMockPlayer = (overrides?: Partial<Player>): Player => {
   equippedSlots: {},
   activeWeaponSlot: 'primaryWeapon',
   pendingPerkSelections: 0,
+  karma: 0,
+  personality: createDefaultPersonalityProfile(),
   perkRuntime: {
     gunFuShotsThisTurn: 0,
     adrenalineRushTurnsRemaining: 0,
@@ -85,8 +87,17 @@ const createMockPlayer = (overrides?: Partial<Player>): Player => {
     movementApMultiplier: 1,
     attackApMultiplier: 1,
   },
-  ...overrides
-};
+  };
+
+  return {
+    ...base,
+    ...overrides,
+    karma: overrides?.karma ?? base.karma,
+    personality: overrides?.personality ?? {
+      ...base.personality,
+      flags: { ...base.personality.flags },
+    },
+  };
 };
 
 describe('XP Progression System', () => {

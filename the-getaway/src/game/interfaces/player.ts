@@ -1,4 +1,4 @@
-import { Player, PlayerSkills, PlayerSkillValues, Position } from './types';
+import { Player, PlayerSkills, PlayerSkillValues, Position, PersonalityProfile } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateMaxHP, calculateBaseAP, calculateCarryWeight, calculateMaxStamina } from '../systems/statCalculations';
 
@@ -35,6 +35,17 @@ const createDefaultSkillTraining = (): PlayerSkillValues => ({
   barter: 0,
 });
 
+export const createDefaultPersonalityProfile = (): PersonalityProfile => ({
+  alignment: 'earnest',
+  flags: {
+    earnest: 1,
+    sarcastic: 0,
+    ruthless: 0,
+    stoic: 0,
+  },
+  lastUpdated: 0,
+});
+
 // Default player configuration
 export const DEFAULT_PLAYER: Player = {
   id: uuidv4(),
@@ -58,6 +69,8 @@ export const DEFAULT_PLAYER: Player = {
   backgroundId: undefined,
   perks: [],
   pendingPerkSelections: 0,
+  karma: 0,
+  personality: createDefaultPersonalityProfile(),
   factionReputation: {
     resistance: 0,
     corpsec: 0,

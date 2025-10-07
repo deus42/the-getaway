@@ -1218,3 +1218,46 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Jest run emits `SerializableStateInvariantMiddleware` warnings while resetting the store in tests; no functional issues observed but worth monitoring if suite time increases.
 </notes>
 </step>
+
+<step id="35.5" status="completed">
+<step_metadata>
+  <number>35.5</number>
+  <title>Implement George AI Assistant Overlay</title>
+  <status>Completed</status>
+  <date>October 7, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Extended the player schema with karma and personality defaults, plus Redux actions/selectors that expose reputation, objective queue, and tone flags for HUD consumers.
+2. Rebuilt George as a top-centre Pip-Boy console dock with a collapsible panel, chat-style history, and three core prompts (guidance, status, quests).
+3. Authored guideline-tagged dialogue templates for George, added helper utilities to format hints/status strings, and integrated them with Redux data for adaptive conversation responses.
+4. Added helper unit tests covering hint assembly, template replacement, and interjection selection to pin the new narrative logic.
+</tasks>
+
+<implementation>
+- Player karma defaults to `0` with clamped adjust/set reducers; personality profiles normalise flags from background weighting so tone selection stays deterministic for the assistant.
+- New selectors (`playerSelectors`, `questSelectors`) flatten active objectives into a priority queue that the React assistant converts into primary/secondary callouts alongside karma/reputation status lines.
+- The assistant listens for the `G` key or dock clicks, logs player requests and George responses in a rolling chat feed, and emits guideline-referenced interjection copy sourced from `content/assistants/george.ts`.
+- Helper module `game/systems/georgeAssistant.ts` centralises hint formatting and template filling, while the component throttles alerts with a 12s cooldown to prevent duplicate chatter.
+</implementation>
+
+<code_reference file="the-getaway/src/game/interfaces/types.ts" />
+<code_reference file="the-getaway/src/game/interfaces/player.ts" />
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="the-getaway/src/store/selectors/playerSelectors.ts" />
+<code_reference file="the-getaway/src/store/selectors/questSelectors.ts" />
+<code_reference file="the-getaway/src/game/systems/georgeAssistant.ts" />
+<code_reference file="the-getaway/src/content/assistants/george.ts" />
+<code_reference file="the-getaway/src/components/ui/GeorgeAssistant.tsx" />
+<code_reference file="the-getaway/src/App.tsx" />
+<code_reference file="the-getaway/src/components/ui/LevelIndicator.tsx" />
+<code_reference file="the-getaway/src/__tests__/georgeAssistant.test.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/georgeAssistant.test.ts`
+</validation>
+
+<notes>
+- Future polish: feed actual personality deltas from dialogue choices once that logging lands so alignment shifts reflect player tone beyond background weighting.
+</notes>
+</step>

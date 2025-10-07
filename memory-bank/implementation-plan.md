@@ -2823,6 +2823,33 @@ Load each level (Slums, Downtown, Industrial Wasteland) and verify the panel sho
 </test>
 </step>
 
+<step id="35.2">
+<step_metadata>
+  <number>35.2</number>
+  <title>Level Objective Progression Flow</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Tie the HUD objectives state to formal mission progression so completed objectives cross out, trigger a Mission Accomplished celebration, and advance the campaign to the next level when confirmed.
+</instructions>
+
+<details>
+- Extend mission data in `worldSlice` (or dedicated mission slice) to mark objectives as primary vs side, persist quest IDs, and expose an `isComplete` flag once all child quests resolve.
+- Update Level & Objectives panel to animate cross-outs and show completion checkboxes while leaving side quests in an optional section that never blocks main progression.
+- Dispatch a `missionAccomplished` action when every primary objective completes. Surface a confirmation modal bannering rewards, allow players to defer the transition to finish side quests, and fire an advancement event that loads the next level when accepted.
+- Inform auxiliary systems (George assistant, minimap focus, save checkpoints) by broadcasting mission completion through a shared event so they refresh guidance without polling quest internals.
+</details>
+
+<prerequisites>
+- Step 35 (Surface Level & Objective HUD)
+</prerequisites>
+
+<test>
+Complete all quests inside a level's primary objectives and verify each line crosses out in the HUD with a checked state. Confirm the Mission Accomplished prompt appears, offers defer and continue options, and that choosing continue loads the next level with fresh objectives. Ensure optional side quests remain visible and can still be finished after the banner appears until the player confirms advancement. Attempt to progress before all objectives are complete and confirm the confirmation is blocked.
+</test>
+</step>
+
 <step id="35.5">
 <step_metadata>
   <number>35.5</number>
@@ -2852,7 +2879,7 @@ Launch the HUD and confirm George appears within the Level 0 objectives area wit
 <summary>
 ## Summary
 
-This plan now outlines **50 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **51 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
@@ -2861,7 +2888,7 @@ This plan now outlines **50 implementable steps** organized into **10 phases** t
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Steps 27.1, 27.2, 28.1)**: Optional expansions (vehicle and survival mechanics) - POST-MVP, deferred to v1.1+ (3 steps)
   - Steps physically located after Step 26.3 in document but conceptually belong to Phase 9
-- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (9 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35, 35.5)
+- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (10 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35, 35.2, 35.5)
 </phase_structure>
 
 <focus_areas>

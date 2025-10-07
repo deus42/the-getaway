@@ -422,6 +422,34 @@ Faction quests are a major component of the game and directly influence the bala
 Faction quests ensure that the game's political landscape is an integral part of the gameplay. By choosing which faction quests to pursue, the player is actively choosing winners and losers in the city, and they get to see the results of those choices play out in real time. This gives a strategic layer to questing: it's not just about experience points, but about sculpting the world's power structure.
 </mechanic>
 
+<mechanic name="level_objective_structure">
+<rule type="structure">
+Level Progression & Objective Hierarchy
+
+- The campaign advances through discrete levels (Level 0: Slums, Level 1: Downtown, Level 2: Industrial Wasteland, and future tiers). Each level ships with a curated list of primary objectives that embody the main mission beats for that space.
+- Every primary objective is composed of one or more quests. Quests define the atomic interactions (dialogue, combat encounters, searches) that flip the underlying state flags. Objectives are therefore collections that resolve to complete when all child quests reach a terminal state (complete or failed when permitted).
+- Objectives include structured metadata: display label, summary copy, gating requirements, and an ordered quest ID list. This enables the HUD panel and quest log to render consistent sequencing and partial progress regardless of how the player reached the current level.
+</rule>
+
+<rule type="completion_feedback">
+Objective Completion & Level Advancement
+
+- The HUD Level & Objectives panel mirrors the quest log: active objectives render with an inline checkbox and will be crossed out visually once the associated quest set reports completion. Partial progress lines remain normal weight so players can scan outstanding tasks quickly.
+- When all primary objectives for the current level are complete, the UI announces "Mission Accomplished" and hands control to the level advancement funnel. Progression offers a continue prompt, then loads post-mission dialogue, rewards, or the world transition for the next level. Side content remains available until the player confirms the transition.
+- Objective state changes emit Redux events so auxiliary systems (assistant hints, minimap focus, George overlay) can react immediately without polling bespoke quest state.
+</rule>
+
+<rule type="side_content">
+Side Quests & Optional Tasks
+
+- Side quests coexist alongside primary objectives but are tagged as optional. They inherit the same quest atom structure yet render in a dedicated subsection of the HUD panel so they never block level completion.
+- Completing or abandoning side quests has no effect on the Mission Accomplished gate; however, they can grant bonuses, reputation shifts, or alternate dialogue in the next level's intro sequences to reward thorough players.
+- Optional quest metadata includes recommended level and originating faction so the assistant and logbook can surface the most relevant detours without overwhelming the player during critical objectives.
+</rule>
+
+<implementation_status>⚠️ PARTIAL - HUD scaffold exists; objective gating and mission celebration flow targeted for Step 35.2.</implementation_status>
+</mechanic>
+
 <mechanic name="karma_system">
 <rule type="morality">
 Karma System (Morality)

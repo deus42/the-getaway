@@ -7,6 +7,7 @@ import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
 import LevelIndicator from "./components/ui/LevelIndicator";
+import GeorgeAssistant from "./components/ui/GeorgeAssistant";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
 import TurnTracker from "./components/ui/TurnTracker";
@@ -177,6 +178,31 @@ const centerStageStyle: CSSProperties = {
   height: "100%",
   position: "relative",
   overflow: "hidden",
+};
+
+const topLeftOverlayStyle: CSSProperties = {
+  position: "absolute",
+  top: "1.25rem",
+  left: "1.25rem",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  gap: "1rem",
+  zIndex: 5,
+  pointerEvents: "none",
+};
+
+const topCenterOverlayStyle: CSSProperties = {
+  position: "absolute",
+  top: "1.25rem",
+  left: "50%",
+  transform: "translateX(-50%)",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "0.75rem",
+  zIndex: 6,
+  pointerEvents: "auto",
 };
 
 const sidebarToggleBaseStyle: CSSProperties = {
@@ -426,7 +452,12 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <TacticalHUDFrame />
           <GameCanvas />
           <GameController />
-          <LevelIndicator />
+          <div style={topLeftOverlayStyle}>
+            <LevelIndicator />
+          </div>
+          <div style={topCenterOverlayStyle}>
+            <GeorgeAssistant />
+          </div>
           <DayNightIndicator />
           <DialogueOverlay />
           <CombatFeedbackManager />

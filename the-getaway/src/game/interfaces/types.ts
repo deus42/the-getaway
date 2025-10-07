@@ -50,6 +50,17 @@ export interface PerkRuntimeState {
 
 export type PlayerSkillValues = Record<SkillId, number>;
 
+export type PersonalityTrait = 'earnest' | 'sarcastic' | 'ruthless' | 'stoic';
+
+export type PersonalityFlags = Record<PersonalityTrait, number>;
+
+export interface PersonalityProfile {
+  alignment: PersonalityTrait;
+  flags: PersonalityFlags;
+  lastUpdated: number;
+  lastChangeSource?: string;
+}
+
 // Player entity with core stats, skill tree progress, and equipment
 export interface EncumbranceState {
   level: 'normal' | 'heavy' | 'overloaded' | 'immobile';
@@ -76,6 +87,8 @@ export interface Player extends Entity {
   backgroundId?: string;
   perks: string[];
   pendingPerkSelections: number;
+  karma: number;
+  personality: PersonalityProfile;
   factionReputation: {
     resistance: number;
     corpsec: number;

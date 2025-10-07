@@ -165,6 +165,24 @@ interface PerkStrings {
   emptyLabel: string;
 }
 
+interface GeorgeStrings {
+  dockLabel: string;
+  dockStatusIdle: string;
+  consoleTitle: string;
+  subtitle: (alignment: string) => string;
+  guidanceIntro: string;
+  statusIntro: (statusLine: string) => string;
+  questsIntro: string;
+  questNone: string;
+  questMore: string;
+  interjectionIdle: string;
+  logEmpty: string;
+  options: Record<'guidance' | 'status' | 'quests', string>;
+  references: Record<'guidance' | 'status' | 'quests' | 'ambient' | 'prompt', string>;
+  actors: Record<'george' | 'player', string>;
+  ambient: string[];
+}
+
 interface UIStrings {
   menu: MenuStrings;
   questLog: QuestLogStrings;
@@ -178,6 +196,7 @@ interface UIStrings {
   skills: Record<SkillKey, string>;
   skillDescriptions: Record<SkillKey, string>;
   statFocus: Record<StatFocusKey, string>;
+  george: GeorgeStrings;
 }
 
 const STRINGS: Record<Locale, UIStrings> = {
@@ -337,6 +356,41 @@ const STRINGS: Record<Locale, UIStrings> = {
       alreadyOwnedLabel: 'Already owned',
       capstoneTag: 'Capstone',
       emptyLabel: 'No perks acquired yet.',
+    },
+    george: {
+      dockLabel: 'GEORGE // AI ASSISTANT',
+      dockStatusIdle: 'Tap the console or press G to check in.',
+      consoleTitle: 'George // AI Assistant',
+      subtitle: (alignment: string) => `Alignment: ${alignment.toUpperCase()} mode engaged.`,
+      guidanceIntro: 'Priority queue coming online:',
+      statusIntro: (statusLine: string) => `Status report: ${statusLine}`,
+      questsIntro: 'Objectives in motion:',
+      questNone: 'No active quests on deck—time to improvise.',
+      questMore: 'Additional objectives are parked in the ops log.',
+      interjectionIdle: 'Console linked. You speak, I listen.',
+      logEmpty: 'Awaiting your command. No dialogue logged yet.',
+      options: {
+        guidance: 'What should I do?',
+        status: 'How are we doing?',
+        quests: 'Remind me of quests',
+      },
+      references: {
+        guidance: 'guidance',
+        status: 'status report',
+        quests: 'quest log',
+        ambient: 'ambient',
+        prompt: 'command',
+      },
+      actors: {
+        george: 'GEORGE',
+        player: 'YOU',
+      },
+      ambient: [
+        'Diagnostics show morale at "manageable"—keep it that way.',
+        'Filed another complaint against the rain. Status: pending since 2034.',
+        'If you spot Theo, remind him the coffee synth still needs a filter.',
+        'Today’s lucky number is 404. Let’s try not to vanish.',
+      ],
     },
     skills: {
       strength: 'Strength',
@@ -528,6 +582,41 @@ const STRINGS: Record<Locale, UIStrings> = {
       alreadyOwnedLabel: 'Уже отримано',
       capstoneTag: 'Капстон',
       emptyLabel: 'Таланти ще не відкриті.',
+    },
+    george: {
+      dockLabel: 'ДЖОРДЖ // AI-АСИСТЕНТ',
+      dockStatusIdle: 'Торкнись консолі або натисни G, щоб підключитися.',
+      consoleTitle: 'Джордж // AI-асистент',
+      subtitle: (alignment: string) => `Режим: ${alignment.toUpperCase()} активовано.`,
+      guidanceIntro: 'Пріоритетні завдання:',
+      statusIntro: (statusLine: string) => `Звіт стану: ${statusLine}`,
+      questsIntro: 'Активні цілі:',
+      questNone: 'Наразі немає активних завдань — час дослідити район.',
+      questMore: 'Додаткові цілі чекають у журналі операцій.',
+      interjectionIdle: 'Канал відкрито. Говори — слухаю.',
+      logEmpty: 'Чекаю на твою команду. Діалогів ще не було.',
+      options: {
+        guidance: 'Що мені робити?',
+        status: 'Як у нас справи?',
+        quests: 'Нагадай про завдання',
+      },
+      references: {
+        guidance: 'керівництво',
+        status: 'звіт',
+        quests: 'журнал',
+        ambient: 'коментар',
+        prompt: 'запит',
+      },
+      actors: {
+        george: 'ДЖОРДЖ',
+        player: 'ТИ',
+      },
+      ambient: [
+        'Сенсори показують, що мораль «прийнятна» — тримайся цього рівня.',
+        'Знову подав скаргу на дощ. Статус: у черзі з 2034 року.',
+        'Якщо побачиш Тео, нагадай про фільтр у кавовому синті.',
+        'Сьогодні щасливе число 404. Постараймося не зникнути.',
+      ],
     },
     skills: {
       strength: 'Сила',

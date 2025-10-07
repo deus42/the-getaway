@@ -12,7 +12,7 @@ import {
   EquipmentSlot,
   Consumable,
 } from '../game/interfaces/types';
-import { DEFAULT_PLAYER } from '../game/interfaces/player';
+import { DEFAULT_PLAYER, createDefaultPersonalityProfile } from '../game/interfaces/player';
 import {
   calculateDerivedStats,
   calculateMaxHP,
@@ -65,6 +65,8 @@ const createFreshPlayer = (): Player => {
       currentWeight: 0,
       hotbar: [null, null, null, null, null],
     },
+    karma: DEFAULT_PLAYER.karma,
+    personality: createDefaultPersonalityProfile(),
     equipped: {
       weapon: undefined,
       armor: undefined,
@@ -1116,6 +1118,20 @@ export const playerSlice = createSlice({
       state.data.credits = Math.max(0, state.data.credits + action.payload);
     },
 
+    setKarma: (state, action: PayloadAction<number>) => {
+      const clamped = Math.max(-1000, Math.min(1000, action.payload));
+      state.data.karma = clamped;
+      state.data.personality.lastUpdated = Date.now();
+      state.data.personality.lastChangeSource = 'karma:set';
+    },
+
+    adjustKarma: (state, action: PayloadAction<number>) => {
+      const clamped = Math.max(-1000, Math.min(1000, state.data.karma + action.payload));
+      state.data.karma = clamped;
+      state.data.personality.lastUpdated = Date.now();
+      state.data.personality.lastChangeSource = 'karma:adjust';
+    },
+
     removeXPNotification: (state, action: PayloadAction<string>) => {
       const currentNotifications = state.xpNotifications ?? [];
       state.xpNotifications = currentNotifications.filter(
@@ -1242,6 +1258,22 @@ export const playerSlice = createSlice({
           percentage: 0,
           movementApMultiplier: 1,
           attackApMultiplier: 1,
+        };
+      }
+
+      if (!state.data.personality) {
+        state.data.personality = createDefaultPersonalityProfile();
+      } else {
+        const flags = state.data.personality.flags ?? {};
+        state.data.personality = {
+          ...state.data.personality,
+          flags: {
+            earnest: flags.earnest ?? 0,
+            sarcastic: flags.sarcastic ?? 0,
+            ruthless: flags.ruthless ?? 0,
+            stoic: flags.stoic ?? 0,
+          },
+          lastUpdated: state.data.personality.lastUpdated ?? 0,
         };
       }
 
@@ -1541,6 +1573,8 @@ export const {
   updateMaxStamina,
   addExperience,
   addCredits,
+  setKarma,
+  adjustKarma,
   removeXPNotification,
   levelUp,
   updateSkill,

@@ -56,6 +56,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, viewport reticle, and supports drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles.
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
+- **`GeorgeAssistant.tsx`**: React HUD console that anchors top-center, presenting a compact status dock and an expandable chat feed while pulling quest, karma, reputation, and personality data straight from Redux.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 - **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
 
@@ -72,6 +73,47 @@ Dedicated folder for reusable React UI components, separate from core game logic
 3. Toggle buttons now live inside each rail, positioned with `calc(100% - 1.1rem)` (left) and `-1.1rem` (right) offsets plus a clamped vertical anchor (`clamp(6rem, 50%, calc(100% - 6rem))`) so they never overlap the menu, level, or day/night overlays; the stage exports `--left-sidebar-width` / `--right-sidebar-width` and their `--*-last-width` counterparts for downstream layout logic.
 4. <code_location>the-getaway/src/components/GameCanvas.tsx</code_location> subscribes to the center column via `ResizeObserver`, debounces updates (~40 ms), caches the last applied canvas size, and only calls `game.scale.resize` when dimensions change so the Phaser world stretches instantly during rail transitions without black-frame flicker.
 </technical_flow>
+</architecture_section>
+
+<architecture_section id="george_assistant_overlay" category="hud_ai">
+<design_principles>
+- Keep George docked to the left Pip-Boy rail so guidance lives alongside other command UI without occluding the playfield.
+- Source hints and tone entirely from Redux selectors and content tables, ensuring HUD logic stays declarative and dialogue copy remains data-driven for localisation.
+- Respect player agency with a collapsible conversation shell, keyboard shortcut, and cooldown-gated interjections so the assistant never spams the log or steals focus during combat.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> subscribes to `selectObjectiveQueue`, `selectPlayerKarma`, `selectPlayerFactionReputation`, and `selectPlayerPersonalityProfile`, renders the center-aligned console dock with CSS tokens, and binds the global `G` shortcut alongside pointer interaction.
+2. <code_location>the-getaway/src/App.tsx</code_location> positions the level card and the George console within the same HUD layer while keeping the console centered along the top edge.
+3. <code_location>the-getaway/src/game/systems/georgeAssistant.ts</code_location> consolidates intelligence by formatting primary/secondary hints, karma summaries, and conversation payloads, pulling tone-specific templates from <code_location>the-getaway/src/content/assistants/george.ts</code_location>.
+4. Interjection hooks cache quest completion sets, faction deltas, and hostile-state transitions; when thresholds are crossed the assistant queues a guideline-tagged line, throttled by `INTERJECTION_COOLDOWN_MS` so alerts surface once and then cool off.
+</technical_flow>
+</architecture_section>
+
+<architecture_section id="level_objectives_panel" category="hud_systems">
+<design_principles>
+- Keep the level card and objectives list anchored to the top-center HUD rail so mission metadata is always visible without crowding the playfield.
+- Drive all content from structured selectors (`selectLevelObjectives`, `selectSideQuestSummaries`) so the React panel remains declarative and mirrors Redux truth without local bookkeeping.
+- Treat mission completion as a formal state transition that can be observed by cinematics, reward flows, and save-game checkpoints rather than ad-hoc UI toggles.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/components/ui/LevelIndicator.tsx</code_location> renders the level badge plus two ordered lists: primary objectives and optional side quests. Each entry receives `isComplete` from selector output and toggles a `objective-item--complete` class that applies the cross-out/checkbox styling.
+2. <code_location>the-getaway/src/store/selectors/questSelectors.ts</code_location> exposes `selectLevelObjectives` which aggregates quests by objective, injects display order, and distinguishes primary vs side content. The selector memoises on quest state hashes to avoid recalculating during idle frames.
+3. <code_location>the-getaway/src/store/worldSlice.ts</code_location> (or successor mission slice) owns `currentLevel`, `completedObjectives`, and the derived `isMissionComplete` flag. When every primary objective resolves, it dispatches `missionAccomplished()` and sets `levelTransitionReady = true`.
+4. <code_location>the-getaway/src/game/systems/missionProgression.ts</code_location> listens for `missionAccomplished` via middleware, queues celebration UX (toast + George callout), persists a checkpoint, and publishes `LEVEL_ADVANCE_REQUESTED` so scene loaders and narrative scripts can prep the next level.
+5. Confirmation flows call `advanceToNextLevel()` which increments `currentLevel`, hydrates the next level's objective bundles, and resets the panel lists while leaving incomplete side quests in the log until dismissed.
+</technical_flow>
+
+<pattern name="ObjectiveCrossOut">
+- Cross-out effect leverages a `::after` pseudo-element with a 200 ms width transition so objectives animate cleanly when their quests resolve.
+- Checkbox state is purely cosmetic; assistive text announces "Completed" via `aria-live` for screen-reader parity.
+</pattern>
+
+<pattern name="MissionAdvancementContract">
+- Redux action contract: `missionAccomplished` → middleware `missionProgressionListener` → `LEVEL_ADVANCE_REQUESTED` custom event for Phaser scenes → `advanceToNextLevel` reducer.
+- The contract ensures George assistant, minimap, and save systems can subscribe to a single signal instead of duplicating mission-complete checks.
+</pattern>
 </architecture_section>
 
 <architecture_section id="level_up_flow" category="progression_ui">
