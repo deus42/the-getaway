@@ -1367,3 +1367,75 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - `yarn test --runTestsByPath src/__tests__/playerSlice.test.ts src/__tests__/dialogueSystem.test.ts`
 </validation>
 </step>
+
+<step id="25" status="completed">
+<step_metadata>
+  <number>25</number>
+  <title>Expand Inventory System with Equipment and Durability</title>
+  <status>Completed</status>
+  <date>October 10, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Finalised the inventory data model with durability, slot metadata, stacking rules, and encumbrance tracking so saves persist the richer item schema.
+2. Wired reducer helpers for equipping, repairing, splitting stacks, and enforcing durability/weight limits, then surfaced hotbar assignment plus repair flows in the UI panels.
+3. Populated the content catalog and migration utilities so items ship with durability defaults while combat math, loading, and sanitisation keep legacy saves consistent.
+4. Hardened the experience with targeted unit/UI tests around durability decay, encumbrance penalties, repair consumables, and the refreshed PlayerInventoryPanel.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/store/playerSlice.ts</code_location> houses the expanded inventory state, helper reducers, durability checks, repair routing, and weight calculations shared across combat and movement.
+- <code_location>the-getaway/src/game/inventory/inventorySystem.ts</code_location> and <code_location>the-getaway/src/game/combat/combatSystem.ts</code_location> generate hydrated item instances, apply durability modifiers, and trigger decay during attacks or mitigation.
+- <code_location>the-getaway/src/components/ui/PlayerInventoryPanel.tsx</code_location> plus <code_location>the-getaway/src/components/ui/PlayerLoadoutPanel.tsx</code_location> render slot grids, durability bars, encumbrance banners, and hotbar controls with accessible labels.
+- <code_location>the-getaway/src/content/items/index.ts</code_location> seeds durability defaults and cloning helpers so backgrounds, loot tables, and migration scripts share a single authoritative catalog.
+</implementation>
+
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="the-getaway/src/game/inventory/inventorySystem.ts" />
+<code_reference file="the-getaway/src/game/combat/combatSystem.ts" />
+<code_reference file="the-getaway/src/components/ui/PlayerInventoryPanel.tsx" />
+<code_reference file="the-getaway/src/components/ui/PlayerLoadoutPanel.tsx" />
+<code_reference file="the-getaway/src/content/items/index.ts" />
+<code_reference file="the-getaway/src/__tests__/playerSlice.test.ts" />
+<code_reference file="the-getaway/src/__tests__/PlayerInventoryPanel.test.tsx" />
+<code_reference file="the-getaway/src/__tests__/combat.test.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/playerSlice.test.ts src/__tests__/PlayerInventoryPanel.test.tsx src/__tests__/combat.test.ts`
+</validation>
+</step>
+
+<step id="25.5" status="completed">
+<step_metadata>
+  <number>25.5</number>
+  <title>Integrate Equipment Effects with Combat and Movement</title>
+  <status>Completed</status>
+  <date>October 10, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Tagged catalog weapons and armor for two-handed, silenced, armor-piercing, hollow-point, and weight-class behaviour so the data layer exposes intent for reducers and combat maths.
+2. Restricted secondary slots when a two-handed primary is equipped, auto-stowing conflicting gear, and refreshed encumbrance metrics to keep carry weight and hotbar state consistent.
+3. Applied weapon trait handling in the combat system—scaling damage with durability, hollow-point multipliers, armor-piercing reductions, energy weapon armor bypass, and optional noise events for unsilenced guns.
+4. Added focused unit tests around two-handed equipping, trait-driven combat damage, and silencer noise suppression to lock in the new behaviour.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/store/playerSlice.ts</code_location> blocks secondary equips while a two-handed primary is active, auto-unequips conflicting slots, and preserves inventory consistency before refreshing encumbrance.
+- <code_location>the-getaway/src/game/combat/combatSystem.ts</code_location> interprets trait tags to adjust damage, crit flows, armor mitigation, and noise events while still emitting durability telemetry.
+- <code_location>the-getaway/src/content/items/index.ts</code_location> annotates baseline armours with AP penalties and heavy/medium/light tags while flagging the industrial crowbar as two-handed.
+- <code_location>the-getaway/src/game/systems/equipmentTags.ts</code_location> centralises tag helpers so reducers and combat logic share trait detection.
+</implementation>
+
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="the-getaway/src/game/combat/combatSystem.ts" />
+<code_reference file="the-getaway/src/game/systems/equipmentTags.ts" />
+<code_reference file="the-getaway/src/content/items/index.ts" />
+<code_reference file="the-getaway/src/game/systems/equipmentEffects.ts" />
+<code_reference file="the-getaway/src/__tests__/playerSlice.test.ts" />
+<code_reference file="the-getaway/src/__tests__/combat.test.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/playerSlice.test.ts src/__tests__/combat.test.ts`
+</validation>
+</step>

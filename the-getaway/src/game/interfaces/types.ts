@@ -260,6 +260,9 @@ export type EquipmentSlot =
   | 'accessory1'
   | 'accessory2';
 
+export type WeaponTag = 'twoHanded' | 'silenced' | 'energy' | 'armorPiercing' | 'hollowPoint';
+export type ArmorTag = 'lightArmor' | 'mediumArmor' | 'heavyArmor';
+
 export interface Durability {
   current: number;
   max: number;
@@ -305,6 +308,7 @@ export interface Weapon extends Item {
   skillType: CombatSkillId;
   slot: 'weapon';
   statModifiers?: StatModifiers;
+  tags?: WeaponTag[];
 }
 
 // Armor extends item
@@ -312,6 +316,7 @@ export interface Armor extends Item {
   protection: number;
   slot: 'armor';
   statModifiers?: StatModifiers;
+  tags?: ArmorTag[];
 }
 
 // Consumable extends item

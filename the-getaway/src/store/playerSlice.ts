@@ -50,6 +50,7 @@ import {
   ReputationAdjustmentResult,
   setFactionReputation as setFactionReputationHelper,
 } from '../game/systems/factions';
+import { isTwoHandedWeapon } from '../game/systems/equipmentTags';
 
 export interface PlayerState {
   data: Player;
@@ -661,6 +662,19 @@ const equipItemInternal = (player: Player, payload: EquipItemPayload): boolean =
     return false;
   }
 
+  const asWeapon = 'damage' in inventoryItem ? (inventoryItem as Weapon) : undefined;
+
+  if (slot === 'secondaryWeapon') {
+    if (asWeapon && isTwoHandedWeapon(asWeapon)) {
+      return false;
+    }
+
+    const primaryWeapon = getEquippedItemBySlot(player, 'primaryWeapon') as Weapon | undefined;
+    if (isTwoHandedWeapon(primaryWeapon)) {
+      return false;
+    }
+  }
+
   const removedItem = detachItemFromInventory(player, itemId);
   if (!removedItem) {
     return false;
@@ -669,6 +683,21 @@ const equipItemInternal = (player: Player, payload: EquipItemPayload): boolean =
   const previouslyEquipped = getEquippedItemBySlot(player, slot);
   if (previouslyEquipped) {
     player.inventory.items.push(cloneItem(previouslyEquipped));
+  }
+
+  if (
+    slot === 'primaryWeapon' &&
+    'damage' in removedItem &&
+    isTwoHandedWeapon(removedItem as Weapon)
+  ) {
+    const secondaryEquipped = getEquippedItemBySlot(player, 'secondaryWeapon') as Weapon | undefined;
+    if (secondaryEquipped) {
+      player.inventory.items.push(cloneItem(secondaryEquipped));
+      placeEquippedItem(player, 'secondaryWeapon', undefined);
+      if (player.activeWeaponSlot === 'secondaryWeapon') {
+        player.activeWeaponSlot = 'primaryWeapon';
+      }
+    }
   }
 
   placeEquippedItem(player, slot, removedItem);

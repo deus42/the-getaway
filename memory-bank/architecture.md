@@ -1164,6 +1164,7 @@ Record licence and attribution requirements for every imported pack in `/src/ass
 3. <code_location>src/game/combat/combatSystem.ts</code_location> now multiplies weapon/armor effectiveness by durability modifiers, decays durability after every attack, and emits structured combat events (`weaponDamaged`, `armorBroken`, etc.).
 4. <code_location>src/components/GameController.tsx</code_location> watches encumbrance warnings and combat events, logging them through `logSlice` and halting queued movement when the player is immobile.
 5. <code_location>src/store/playerSlice.ts</code_location> also exposes `useInventoryItem`, consuming stackable consumables, updating health/AP/stat effects, normalising hotbar slots when items vanish, and rerunning `refreshInventoryMetrics` so UI panels stay in sync.
+6. Weapon/armor trait tags live in <code_location>src/game/systems/equipmentTags.ts</code_location>; two-handed locking and trait-aware combat adjustments (armor-piercing, hollow-point, silenced, energy) are enforced by <code_location>src/store/playerSlice.ts</code_location> and <code_location>src/game/combat/combatSystem.ts</code_location> to keep behaviour declarative.
 </technical_flow>
 
 <code_location>src/store/playerSlice.ts</code_location>

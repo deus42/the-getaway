@@ -1051,6 +1051,115 @@ describe('playerSlice', () => {
       expect(player.inventory.items.some((entry) => entry.name === weapon1.name)).toBe(true);
     });
 
+    it('auto-unequips secondary weapon when equipping a two-handed primary weapon', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const sidearm: Weapon = {
+        id: uuidv4(),
+        name: 'Backup Pistol',
+        description: 'Compact firearm for emergencies.',
+        weight: 2,
+        value: 60,
+        damage: 8,
+        range: 6,
+        apCost: 2,
+        isQuestItem: false,
+        slot: 'weapon',
+        skillType: 'smallGuns',
+        durability: { current: 80, max: 80 },
+      };
+
+      const longRifle: Weapon = {
+        id: uuidv4(),
+        name: 'Long Rifle',
+        description: 'Precision two-handed rifle.',
+        weight: 12,
+        value: 220,
+        damage: 18,
+        range: 12,
+        apCost: 3,
+        isQuestItem: false,
+        slot: 'weapon',
+        skillType: 'smallGuns',
+        durability: { current: 120, max: 120 },
+        tags: ['twoHanded'],
+      };
+
+      store.dispatch(addItem(sidearm));
+      store.dispatch(addItem(longRifle));
+      store.dispatch(equipItem({ itemId: sidearm.id, slot: 'secondaryWeapon' }));
+
+      store.dispatch(equipItem({ itemId: longRifle.id, slot: 'primaryWeapon' }));
+
+      const player = store.getState().player.data;
+      expect(player.equipped.secondaryWeapon).toBeUndefined();
+      expect(player.equipped.weapon?.id).toBe(longRifle.id);
+      expect(player.inventory.items.some((entry) => entry.id === sidearm.id)).toBe(true);
+    });
+
+    it('prevents equipping a secondary weapon while a two-handed primary is equipped', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        initializeCharacter({
+          name: 'Test',
+          skills: DEFAULT_SKILLS,
+          backgroundId: 'corpsec_defector',
+          visualPreset: 'preset_1',
+        })
+      );
+
+      const longRifle: Weapon = {
+        id: uuidv4(),
+        name: 'Long Rifle',
+        description: 'Precision two-handed rifle.',
+        weight: 12,
+        value: 220,
+        damage: 18,
+        range: 12,
+        apCost: 3,
+        isQuestItem: false,
+        slot: 'weapon',
+        skillType: 'smallGuns',
+        durability: { current: 120, max: 120 },
+        tags: ['twoHanded'],
+      };
+
+      const compactPistol: Weapon = {
+        id: uuidv4(),
+        name: 'Compact Pistol',
+        description: 'Standard issue sidearm.',
+        weight: 2,
+        value: 75,
+        damage: 9,
+        range: 6,
+        apCost: 2,
+        isQuestItem: false,
+        slot: 'weapon',
+        skillType: 'smallGuns',
+        durability: { current: 90, max: 90 },
+      };
+
+      store.dispatch(addItem(longRifle));
+      store.dispatch(addItem(compactPistol));
+      store.dispatch(equipItem({ itemId: longRifle.id, slot: 'primaryWeapon' }));
+
+      store.dispatch(equipItem({ itemId: compactPistol.id, slot: 'secondaryWeapon' }));
+
+      const player = store.getState().player.data;
+      expect(player.equipped.secondaryWeapon).toBeUndefined();
+      expect(player.inventory.items.some((entry) => entry.id === compactPistol.id)).toBe(true);
+    });
+
     it('unequips weapon back to inventory', () => {
       const store = createTestStore();
 

@@ -105,7 +105,9 @@ export const getEffectiveArmorRating = (player: Player): number => {
  * @returns Effective max AP with penalties applied
  */
 export const getEffectiveMaxAP = (baseAP: number, bonuses: EquipmentBonuses): number => {
-  return Math.max(1, baseAP - (bonuses.totalAPPenalty || 0));
+  const penalty = bonuses.totalAPPenalty || 0;
+  const adjusted = baseAP - penalty;
+  return Math.max(1, Math.floor(adjusted));
 };
 
 /**

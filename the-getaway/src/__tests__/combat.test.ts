@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Player, Enemy, Position } from '../game/interfaces/types';
+import { Player, Enemy, Position, Weapon } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { 
   executeAttack, 
@@ -36,6 +36,33 @@ function createEnemy(
     attackRange: 1,
     isHostile: true,
   };
+}
+
+function createPlayerClone(): Player {
+  const base = JSON.parse(JSON.stringify(DEFAULT_PLAYER)) as Player;
+  base.id = uuidv4();
+  base.position = { x: 1, y: 1 };
+  base.health = base.maxHealth;
+  base.actionPoints = base.maxActionPoints;
+  base.inventory = {
+    items: [],
+    maxWeight: DEFAULT_PLAYER.inventory.maxWeight,
+    currentWeight: 0,
+    hotbar: [null, null, null, null, null],
+  };
+  base.equipped = {
+    weapon: undefined,
+    armor: undefined,
+    accessory: undefined,
+    secondaryWeapon: undefined,
+    meleeWeapon: undefined,
+    bodyArmor: undefined,
+    helmet: undefined,
+    accessory1: undefined,
+    accessory2: undefined,
+  };
+  base.equippedSlots = {};
+  return base;
 }
 
 describe('Combat System Tests', () => {
@@ -244,6 +271,140 @@ describe('Combat System Tests', () => {
 
       expect(result.success).toBe(true);
       expect((result.newAttacker as Player).actionPoints).toBe(6);
+    });
+  });
+
+  describe('Weapon trait interactions', () => {
+    const buildAttacker = (weapon: Weapon) => {
+      const attacker = createPlayerClone();
+      attacker.equipped.weapon = weapon;
+      attacker.equippedSlots = { primaryWeapon: weapon };
+      return attacker;
+    };
+
+    const buildArmoredDefender = () => {
+      const defender = createPlayerClone();
+      defender.position = { x: 1, y: 2 };
+      defender.health = 60;
+      defender.maxHealth = 60;
+      const armor = createArmor('Composite Vest', 8, 8);
+      defender.equipped.bodyArmor = armor;
+      defender.equipped.armor = armor;
+      defender.equippedSlots = { bodyArmor: armor };
+      return defender;
+    };
+
+    test('energy weapons ignore armor mitigation', () => {
+      setRandomGenerator(() => 0.1);
+
+      const standardWeapon = createWeapon('Service Rifle', 18, 6, 2, 5, undefined, 'smallGuns', {
+        durability: { max: 100, current: 100 },
+      });
+      const energyWeapon = createWeapon('Plasma Pistol', 18, 6, 2, 4, undefined, 'energyWeapons', {
+        durability: { max: 100, current: 100 },
+        tags: ['energy'],
+      });
+
+      const standardAttacker = buildAttacker(standardWeapon);
+      const energyAttacker = buildAttacker(energyWeapon);
+
+      const standardDefender = buildArmoredDefender();
+      const energyDefender = buildArmoredDefender();
+
+      const standardResult = executeAttack(standardAttacker, standardDefender, false);
+      const energyResult = executeAttack(energyAttacker, energyDefender, false);
+
+      expect(energyResult.damage).toBeGreaterThan(standardResult.damage);
+    });
+
+    test('armor-piercing rounds reduce armor effectiveness', () => {
+      setRandomGenerator(() => 0.1);
+
+      const baseWeapon = createWeapon('Slug Rifle', 16, 7, 2, 6, undefined, 'smallGuns', {
+        durability: { max: 100, current: 100 },
+      });
+      const apWeapon = createWeapon('AP Rifle', 16, 7, 2, 6, undefined, 'smallGuns', {
+        durability: { max: 100, current: 100 },
+        tags: ['armorPiercing'],
+      });
+
+      const baseAttacker = buildAttacker(baseWeapon);
+      const apAttacker = buildAttacker(apWeapon);
+
+      const baseDefender = buildArmoredDefender();
+      const apDefender = buildArmoredDefender();
+
+      const baseResult = executeAttack(baseAttacker, baseDefender, false);
+      const apResult = executeAttack(apAttacker, apDefender, false);
+
+      expect(apResult.damage).toBeGreaterThan(baseResult.damage);
+    });
+
+    test('hollow-point rounds adjust damage based on armor presence', () => {
+      setRandomGenerator(() => 0.1);
+
+      const standardWeapon = createWeapon('Service Pistol', 12, 6, 2, 3, undefined, 'smallGuns', {
+        durability: { max: 100, current: 100 },
+      });
+      const hollowWeapon = createWeapon('Hollow Point Pistol', 12, 6, 2, 3, undefined, 'smallGuns', {
+        durability: { max: 100, current: 100 },
+        tags: ['hollowPoint'],
+      });
+
+      const standardEnemy = createEnemy({ x: 1, y: 2 });
+      const hollowEnemy = createEnemy({ x: 1, y: 2 });
+
+      const standardAttacker = buildAttacker(standardWeapon);
+      const hollowAttacker = buildAttacker(hollowWeapon);
+
+      const standardVsUnarmored = executeAttack(standardAttacker, standardEnemy, false);
+      const hollowVsUnarmored = executeAttack(hollowAttacker, hollowEnemy, false);
+
+      expect(hollowVsUnarmored.damage).toBeGreaterThan(standardVsUnarmored.damage);
+
+      const armoredStandardAttacker = buildAttacker(
+        createWeapon('Service Pistol', 12, 6, 2, 3, undefined, 'smallGuns', {
+          durability: { max: 100, current: 100 },
+        })
+      );
+      const armoredHollowAttacker = buildAttacker(
+        createWeapon('Hollow Point Pistol', 12, 6, 2, 3, undefined, 'smallGuns', {
+          durability: { max: 100, current: 100 },
+          tags: ['hollowPoint'],
+        })
+      );
+
+      const armoredDefenderStandard = buildArmoredDefender();
+      const armoredDefenderHollow = buildArmoredDefender();
+
+      const standardVsArmored = executeAttack(armoredStandardAttacker, armoredDefenderStandard, false);
+      const hollowVsArmored = executeAttack(armoredHollowAttacker, armoredDefenderHollow, false);
+
+      expect(hollowVsArmored.damage).toBeLessThan(standardVsArmored.damage);
+    });
+
+    test('silenced weapons suppress weapon noise events', () => {
+      setRandomGenerator(() => 0.1);
+
+      const loudWeapon = createWeapon('Loud Pistol', 10, 6, 2, 3, undefined, 'smallGuns', {
+        durability: { max: 100, current: 100 },
+      });
+      const silencedWeapon = createWeapon('Suppressed Pistol', 10, 6, 2, 3, undefined, 'smallGuns', {
+        durability: { max: 100, current: 100 },
+        tags: ['silenced'],
+      });
+
+      const loudAttacker = buildAttacker(loudWeapon);
+      const silencedAttacker = buildAttacker(silencedWeapon);
+
+      const loudTarget = createEnemy({ x: 1, y: 2 });
+      const silentTarget = createEnemy({ x: 1, y: 2 });
+
+      const loudResult = executeAttack(loudAttacker, loudTarget, false);
+      expect(loudResult.events?.some((event) => event.type === 'weaponNoise')).toBe(true);
+
+      const silentResult = executeAttack(silencedAttacker, silentTarget, false);
+      expect(silentResult.events?.some((event) => event.type === 'weaponNoise')).toBeFalsy();
     });
   });
 

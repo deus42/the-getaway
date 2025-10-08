@@ -8,6 +8,8 @@ import {
   EquipmentSlot,
   StatModifiers,
   ConsumableEffectType,
+  WeaponTag,
+  ArmorTag,
 } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -145,7 +147,7 @@ export interface WeaponCreationOptions {
   durability?: { max?: number; current?: number };
   equipSlot?: EquipmentSlot;
   value?: number;
-  tags?: string[];
+  tags?: WeaponTag[];
 }
 
 // Create a basic weapon
@@ -189,7 +191,7 @@ export interface ArmorCreationOptions {
   durability?: { max?: number; current?: number };
   equipSlot?: EquipmentSlot;
   value?: number;
-  tags?: string[];
+  tags?: ArmorTag[];
 }
 
 // Create basic armor

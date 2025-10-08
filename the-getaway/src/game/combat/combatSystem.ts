@@ -10,6 +10,7 @@ import {
   applyArmorReduction,
   getEffectiveArmorRating,
 } from '../systems/equipmentEffects';
+import { hasWeaponTag } from '../systems/equipmentTags';
 import {
   calculateEnergyWeaponsBonuses,
   calculateExplosivesBonuses,
@@ -55,7 +56,12 @@ const getRandomRoll = (): number => {
   return roll;
 };
 
-export type CombatEventType = 'weaponDamaged' | 'weaponBroken' | 'armorDamaged' | 'armorBroken';
+export type CombatEventType =
+  | 'weaponDamaged'
+  | 'weaponBroken'
+  | 'armorDamaged'
+  | 'armorBroken'
+  | 'weaponNoise';
 
 export interface CombatEvent {
   type: CombatEventType;
@@ -383,19 +389,29 @@ export const executeAttack = (
 
   let equippedWeapon: Weapon | undefined;
   let weaponModifier = 1;
+  let weaponIsSilenced = false;
+  let weaponIsArmorPiercing = false;
+  let weaponIsEnergy = false;
+  let weaponIsHollowPoint = false;
 
   if ('skills' in attacker) {
     equippedWeapon = (attacker as Player).equipped.weapon;
     weaponModifier = getDurabilityModifier(equippedWeapon);
+    weaponIsSilenced = hasWeaponTag(equippedWeapon, 'silenced');
+    weaponIsArmorPiercing = hasWeaponTag(equippedWeapon, 'armorPiercing');
+    weaponIsEnergy = hasWeaponTag(equippedWeapon, 'energy');
+    weaponIsHollowPoint = hasWeaponTag(equippedWeapon, 'hollowPoint');
   }
 
   let armorModifier = 1;
   let equippedArmor: Armor | undefined;
+  let baseArmorRating = 0;
 
   if ('skills' in target) {
     const targetPlayer = target as Player;
     equippedArmor = targetPlayer.equipped.bodyArmor ?? targetPlayer.equipped.armor;
     armorModifier = getDurabilityModifier(equippedArmor);
+    baseArmorRating = Math.max(0, Math.round(getEffectiveArmorRating(targetPlayer)));
   }
 
   if (hit) {
@@ -412,7 +428,7 @@ export const executeAttack = (
       const weaponSkill = resolveWeaponSkillType(equippedWeapon);
       const skillValue = getPlayerSkillValue(playerAttacker, weaponSkill);
 
-      damageAmount = getEffectiveDamage(baseWeaponDamage, bonuses, strengthBonus);
+      let workingDamage = getEffectiveDamage(baseWeaponDamage, bonuses, strengthBonus);
 
       switch (weaponSkill) {
         case 'energyWeapons': {
@@ -422,7 +438,7 @@ export const executeAttack = (
         }
         case 'meleeCombat': {
           const bonusesBySkill = calculateMeleeCombatBonuses(skillValue);
-          damageAmount += bonusesBySkill.damage;
+          workingDamage += bonusesBySkill.damage;
           break;
         }
         case 'explosives':
@@ -431,7 +447,15 @@ export const executeAttack = (
           break;
       }
 
-      damageAmount = Math.round(damageAmount * weaponModifier);
+      workingDamage = Math.max(0, workingDamage);
+
+      let damageMultiplier = weaponModifier;
+
+      if (weaponIsHollowPoint) {
+        damageMultiplier *= baseArmorRating > 0 ? 0.5 : 1.25;
+      }
+
+      damageAmount = Math.round(workingDamage * damageMultiplier);
       damageAmount = Math.max(0, damageAmount);
 
       const totalCriticalChance = Math.max(0, Math.min(95, attackerDerived.criticalChance + critChanceBonus));
@@ -458,8 +482,16 @@ export const executeAttack = (
     }
 
     if ('skills' in target && damageAmount > 0) {
-      const targetPlayer = target as Player;
-      const armorRating = Math.round(getEffectiveArmorRating(targetPlayer) * armorModifier);
+      let armorRating = Math.round(baseArmorRating * armorModifier);
+
+      if (weaponIsArmorPiercing && armorRating > 0) {
+        armorRating = Math.max(0, Math.floor(armorRating * 0.5));
+      }
+
+      if (weaponIsEnergy) {
+        armorRating = 0;
+      }
+
       if (armorRating > 0) {
         damageAmount = applyArmorReduction(damageAmount, armorRating);
       }
@@ -514,6 +546,13 @@ export const executeAttack = (
       if (attackerPlayerClone.equippedSlots?.primaryWeapon?.id === equippedWeapon.id) {
         attackerPlayerClone.equippedSlots.primaryWeapon = updatedWeapon;
       }
+    }
+
+    if (equippedWeapon && equippedWeapon.range > 1 && !weaponIsSilenced) {
+      events.push({
+        type: 'weaponNoise',
+        message: `${equippedWeapon.name} echoes loudly—nearby hostiles are on edge.`,
+      });
     }
 
     attackerPlayerClone.actionPoints = Math.max(0, attackerPlayerClone.actionPoints - attackCost);

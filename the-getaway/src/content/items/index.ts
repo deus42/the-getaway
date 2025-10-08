@@ -97,18 +97,22 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     durability: { max: 150 },
     skillType: 'meleeCombat',
     statModifiers: { strengthBonus: 1 },
+    tags: ['twoHanded'],
   }),
   armor_kevlar_vest: armorPrototype('Kevlar Vest', 4, 6, {
     durability: { max: 140 },
-    statModifiers: { enduranceBonus: 1 },
+    statModifiers: { enduranceBonus: 1, apPenalty: 1 },
+    tags: ['heavyArmor'],
   }),
   armor_layered_leather_jacket: armorPrototype('Layered Leather Jacket', 2, 3, {
     durability: { max: 90 },
-    statModifiers: { agilityBonus: 1 },
+    statModifiers: { agilityBonus: 1, apPenalty: 0.5 },
+    tags: ['mediumArmor'],
   }),
   armor_utility_hoodie: armorPrototype('Utility Hoodie', 1, 2, {
     durability: { max: 80 },
     statModifiers: { intelligenceBonus: 1 },
+    tags: ['lightArmor'],
   }),
   consumable_field_medkit: consumablePrototype('Field Medkit', 'health', 35, {
     weight: 1.2,
