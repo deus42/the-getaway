@@ -2078,22 +2078,22 @@ Open each UI element (character sheet, inventory, crafting, vehicle management, 
 <step id="34.5">
 <step_metadata>
   <number>34.5</number>
-  <title>Accessibility Audit and Fixes (WCAG 2.1 AA Compliance)</title>
+  <title>Accessibility Audit and Fixes</title>
   <phase>Phase 10: Testing, Polish, and Release</phase>
 </step_metadata>
 
 <instructions>
-Conduct comprehensive accessibility audit and implement fixes to ensure the game meets WCAG 2.1 Level AA standards, making it playable for users with disabilities.
+Conduct a comprehensive accessibility audit and implement fixes so the game remains playable for users with disabilities.
 </instructions>
 
 <details>
-**Accessibility Standards Goal**: WCAG 2.1 Level AA compliance for:
+**Accessibility Focus Areas**:
 - Visual impairments (low vision, colorblindness)
 - Motor disabilities (keyboard-only navigation)
 - Cognitive disabilities (clear language, consistent UI)
 - Screen reader compatibility (ARIA labels, semantic HTML)
 
-**1. Keyboard Navigation (WCAG 2.1.1, 2.1.3)**:
+**1. Keyboard Navigation**:
 - **Full keyboard accessibility**: Ensure ALL interactive elements (buttons, inputs, NPCs, loot containers, enemies) are keyboard-accessible without requiring mouse
 - **Focus indicators**: Add visible focus rings (2px solid outline) to all focusable elements with high contrast (yellow/cyan on dark backgrounds)
 - **Tab order**: Implement logical tab order for UI panels (left-to-right, top-to-bottom), skip decorative elements
@@ -2110,7 +2110,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
 - **Focus trapping**: When modal opens (dialogue, inventory), trap focus within modal, ESC to close
 - **Skip links**: Add "Skip to main content" link at top of page for screen reader users
 
-**2. Screen Reader Support (WCAG 1.3.1, 4.1.2)**:
+**2. Screen Reader Support**:
 - **Semantic HTML**: Use proper HTML elements (`<button>`, `<input>`, `<nav>`) instead of divs with onClick
 - **ARIA labels**: Add `aria-label` or `aria-labelledby` to all interactive elements
   - Example: `<button aria-label="Equip pistol">Equip</button>`
@@ -2122,7 +2122,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
   - Example: `<img src="pistol.png" alt="9mm pistol, ranged weapon" />`
 - **Screen reader testing**: Test with NVDA (Windows) or VoiceOver (macOS) to ensure all UI navigable and comprehensible
 
-**3. Color Contrast (WCAG 1.4.3, 1.4.11)**:
+**3. Color Contrast**:
 - **Text contrast ratio**: Ensure 4.5:1 minimum contrast for normal text, 3:1 for large text (18pt+)
   - Check all UI text: dialogue, stats, tooltips, quest descriptions
   - Tool: Use WebAIM Contrast Checker or Chrome DevTools Accessibility panel
@@ -2136,7 +2136,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
   - Subtle hover states (make more obvious)
   - Red-only error messages (add icons and text labels)
 
-**4. Colorblind Modes (WCAG 1.4.1)**:
+**4. Colorblind Modes**:
 - **Implement colorblind mode toggle** in settings (`src/game/settings/accessibilitySettings.ts`):
   - **Protanopia** (red-green colorblindness, ~8% of males): Use blue/yellow palette instead of red/green
   - **Deuteranopia** (green-red colorblindness): Similar to protanopia
@@ -2154,7 +2154,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
   - Avoid red/green combinations for critical information
   - Use blue/orange, yellow/purple instead
 
-**5. Font Size and Readability (WCAG 1.4.4, 1.4.12)**:
+**5. Font Size and Readability**:
 - **Font size settings**: Add font size slider in settings (Small 14px, Medium 16px, Large 18px, Extra Large 20px)
 - **Text scaling**: Ensure UI scales correctly when font size increases (don't break layouts at 200% zoom)
 - **Font choice**: Use sans-serif fonts (Arial, Roboto, Open Sans) for better readability
@@ -2162,7 +2162,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
 - **Paragraph width**: Limit text width to 80 characters maximum (use max-width on dialogue boxes)
 - **Dyslexia support**: Offer dyslexia-friendly font option (OpenDyslexic or similar)
 
-**6. Reduced Motion (WCAG 2.3.3)**:
+**6. Reduced Motion**:
 - **Detect prefers-reduced-motion**: Check `window.matchMedia('(prefers-reduced-motion: reduce)')`
 - **Disable animations**: When reduced motion enabled:
   - Remove combat attack animations (instant damage application)
@@ -2171,7 +2171,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
   - Keep essential feedback (damage numbers, tooltips) but without motion
 - **Settings toggle**: Add "Reduce Animations" checkbox in accessibility settings
 
-**7. Audio Accessibility (WCAG 1.4.2)**:
+**7. Audio Accessibility**:
 - **Subtitles/Captions**: If audio dialogue is added, provide text captions
 - **Visual cues**: Ensure all audio cues have visual equivalents
   - Low HP warning: Audio beep AND red screen border pulsing
@@ -2179,7 +2179,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
   - Quest complete: Audio chime AND notification banner
 - **Volume controls**: Separate volume sliders for music, SFX, and UI sounds
 
-**8. Form Input Accessibility (WCAG 3.3.1, 3.3.2)**:
+**8. Form Input Accessibility**:
 - **Label all inputs**: Every form field has associated `<label>` element
   - Example: `<label for="char-name">Character Name:</label><input id="char-name" />`
 - **Error messages**: Display clear error messages near input fields with suggestions
@@ -2189,7 +2189,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
 
 **Testing Tools and Process**:
 - **Automated testing**:
-  - Install axe DevTools Chrome extension: scan each page for WCAG violations
+  - Install axe DevTools Chrome extension: scan each page for accessibility violations
   - Install WAVE Chrome extension: visual feedback on accessibility issues
   - Run Lighthouse accessibility audit in Chrome DevTools
   - Target score: 90+ accessibility score in Lighthouse
@@ -2228,7 +2228,7 @@ Conduct comprehensive accessibility audit and implement fixes to ensure the game
 - Lighthouse accessibility score ≥90 on all major pages
 - Entire game completable using keyboard only (no mouse required)
 - Screen reader announces all UI elements and game state correctly
-- All text meets WCAG AA contrast requirements (4.5:1)
+- All text meets target contrast requirements (4.5:1)
 - Colorblind mode functional for 3 types of colorblindness
 - Reduced motion mode disables all non-essential animations
 </details>
@@ -2523,7 +2523,7 @@ This plan now outlines **51 implementable steps** organized into **10 phases** t
 - **Expanded World**: Industrial Wasteland zone (80×80 tiles) with specific environmental hazards and zone-specific quests.
 - **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
 - **Testing & Quality**: Unit test suite (70% coverage target), integration test scenarios, manual QA playtest checklist.
-- **Accessibility & Documentation**: WCAG 2.1 AA compliance, keyboard navigation, screen readers, in-game help system, and external documentation.
+- **Accessibility & Documentation**: Accessibility audit, keyboard navigation, screen readers, in-game help system, and external documentation.
 - **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, and UI refinement across all systems.
 </focus_areas>
 
@@ -2555,7 +2555,7 @@ This revised plan addresses critical quality issues identified in the analysis:
 - Industrial Wasteland: 80×80 tile map, 3 zone-specific quests
 
 **Quality Assurance**: New steps for comprehensive testing and accessibility:
-- Step 34.5: Accessibility audit and WCAG 2.1 AA compliance
+- Step 34.5: Accessibility audit covering keyboard, screen reader, contrast, and customization fixes
 - Step 34.7: In-game help system and external documentation
 </key_improvements>
 
