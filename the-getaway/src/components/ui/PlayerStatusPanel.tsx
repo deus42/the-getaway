@@ -2,13 +2,10 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { BACKGROUND_MAP } from '../../content/backgrounds';
-import { getUIStrings } from '../../content/ui';
 import { neonPalette, panelSurface, subtleText, statValueStyle } from './theme';
 
 const PlayerStatusPanel: React.FC = () => {
   const player = useSelector((state: RootState) => state.player.data);
-  const locale = useSelector((state: RootState) => state.settings.locale);
-  const uiStrings = getUIStrings(locale);
 
   const { inventory } = player;
   const itemCount = inventory.items.length;

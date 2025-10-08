@@ -20,9 +20,7 @@ export interface FactionDefinition {
   defaultReputation: number;
 }
 
-export interface FactionStandingEffectMap {
-  [standing in FactionStandingId]: string[];
-}
+export type FactionStandingEffectMap = Record<FactionStandingId, string[]>;
 
 export interface FactionMetadata {
   definition: FactionDefinition;

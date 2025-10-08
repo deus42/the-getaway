@@ -9,7 +9,7 @@ import {
 } from '../../game/systems/factions';
 
 const selectPlayerFactionMap = (state: RootState) => state.player.data.factionReputation;
-const selectFactionEventsRoot = (state: RootState) => state.player.pendingFactionEvents;
+const selectFactionEventsRoot = (state: RootState) => state.player.pendingFactionEvents ?? [];
 
 export const selectFactionDefinitions = () => getFactionDefinitions();
 
