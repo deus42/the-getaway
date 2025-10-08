@@ -32,8 +32,8 @@
 - Aim to cover reducers, selectors, and core game logic (`game/*`). Optional coverage: `yarn test --coverage`.
 
 ## Roadmap Tracking
-- The 24-step implementation roadmap lives in `memory-bank/implementation-plan.md` (Phases 1–8). Keep numbering intact and update the plan whenever scope changes.
-- Treat `memory-bank/implementation-plan.md` as the authoritative scope document only—do not record completion status there.
+- The 24-step implementation roadmap lives in `memory-bank/mvp-plan.md` (Phases 1–8). Keep numbering intact and update the plan whenever scope changes.
+- Treat `memory-bank/mvp-plan.md` as the authoritative scope document only—do not record completion status there.
 - Mirror completed work in `memory-bank/progress.md`; each new milestone should reference the matching step number and live in chronological order.
 - Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
 
@@ -41,6 +41,7 @@
 - `memory-bank/plot.md` now folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
 - `memory-bank/game-design.md` documents the agreed toolchain and gameplay pillars; align new systems with it or log deviations.
 - `memory-bank/architecture.md` must reflect current code structure. Update it alongside architectural changes so docs never drift.
+- `memory-bank/post-mvp-plan.md` captures deferred Phase 9 optional expansions (advanced stamina, vehicle systems, survival mode); consult it when planning post-MVP work.
 
 ## Commit & Pull Request Guidelines
 - Use imperative, concise commits. Conventional Commits are welcome (e.g., `fix(build): ...`).
@@ -56,7 +57,7 @@
 
 ## Agent-Specific Instructions
 - Follow this AGENTS.md across the repo. Keep changes minimal and focused. Prefer `yarn` for scripts. When adding files, mirror existing naming and structure.
-- At the start of any feature task, review `memory-bank/implementation-plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
+- At the start of any feature task, review `memory-bank/mvp-plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
 - **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
 - After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
 - When adding or revising dialogue, quest text, or narrative copy, align tone with the writing guidelines in `memory-bank/plot.md` and note the consulted section in your change log or PR summary.
@@ -97,7 +98,7 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 - `<validation>` - Test commands and validation procedures
 - `<notes>` or `<maintenance_notes date="...">` - Additional context
 
-### implementation-plan.md Structure
+### mvp-plan.md Structure
 - `<phase id="N" name="...">` - Groups related steps by implementation phase
 - `<step id="N">` - Individual implementation steps (no status attribute; track status only in progress.md)
 - `<step_metadata>` - Step metadata including phase assignment

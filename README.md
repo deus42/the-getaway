@@ -78,7 +78,7 @@ yarn test         # Jest + Testing Library suites
 1. Draft quests, dialogue branches, NPC routines, loot tables, and signage metadata inside `src/content/levels/<level-id>/locales`.
 2. Register new IDs through slice loaders—never mutate source exports directly; runtime clones keep authoring files pristine.
 3. Update relevant Redux selectors/services (`playerSlice`, `worldSlice`, `questsSlice`, etc.) if systems evolve.
-4. Mirror roadmap updates in `memory-bank/implementation-plan.md` and log completions in `memory-bank/progress.md`.
+4. Mirror roadmap updates in `memory-bank/mvp-plan.md` and log completions in `memory-bank/progress.md`.
 
 ## Testing & QA
 - Jest suites cover combat maths, dialogue gating, skill allocation, curfew flows, and UI regression (`src/__tests__`).
@@ -90,7 +90,7 @@ yarn test         # Jest + Testing Library suites
 - **Perk System (Step 24.3)**: Capstone perks and perk-aware combat hooks on deck.
 - **Equipment Durability & Encumbrance (Step 25+)**: Extend stat aggregation into movement penalties and maintenance loops.
 - **Directional Cover & Overwatch (Step 26+)**: Deepen tactical positioning with flanking, overwatch cones, and targeted shots.
-- Track the full 24-step roadmap inside `memory-bank/implementation-plan.md`—Level 0 continues to expand toward full campaign readiness.
+- Track the full 24-step roadmap inside `memory-bank/mvp-plan.md`—Level 0 continues to expand toward full campaign readiness.
 
 ## License – Vibe MIT
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:
