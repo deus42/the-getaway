@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: the-getaway/the-getaway
+        working-directory: the-getaway
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 20
           cache: 'yarn'
-          cache-dependency-path: the-getaway/the-getaway/yarn.lock
+          cache-dependency-path: the-getaway/yarn.lock
 
       - name: Enable Corepack
         run: corepack enable
@@ -54,7 +54,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: the-getaway/the-getaway/dist
+          path: the-getaway/dist
 
   deploy:
     runs-on: ubuntu-latest

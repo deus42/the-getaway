@@ -306,8 +306,8 @@ const buildQuestReadout = (
 
 const GeorgeAssistant: React.FC = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
-  const uiStrings = getUIStrings(locale);
-  const georgeStrings = uiStrings.george;
+  const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
+  const georgeStrings = useMemo(() => uiStrings.george, [uiStrings]);
 
   const objectiveQueue = useSelector(selectObjectiveQueue);
   const missionProgress = useSelector(selectMissionProgress);
@@ -334,10 +334,13 @@ const GeorgeAssistant: React.FC = () => {
       { id: 'status' as ConversationId, label: georgeStrings.options.status },
       { id: 'quests' as ConversationId, label: georgeStrings.options.quests },
     ],
-    [georgeStrings.options]
+    [georgeStrings]
   );
 
-  const ambientLines = useMemo(() => georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT, [georgeStrings]);
+  const ambientLines = useMemo(
+    () => (georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT),
+    [georgeStrings]
+  );
 
   const [isOpen, setIsOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') {
@@ -369,7 +372,7 @@ const GeorgeAssistant: React.FC = () => {
         return next.slice(-8);
       });
     },
-    [georgeStrings.references]
+    [georgeStrings]
   );
 
   const presentInterjection = useCallback((line: GeorgeLine, log = false) => {
@@ -545,13 +548,29 @@ const GeorgeAssistant: React.FC = () => {
   useEffect(() => {
     const previous = factionRef.current;
     const current = factionReputation;
-    const positive = Object.keys(current).some((key) => (current as any)[key] - (previous as any)[key] >= 20);
-    const negative = Object.keys(current).some((key) => (current as any)[key] - (previous as any)[key] <= -20);
+    const factionIds = new Set<FactionId>([
+      ...(Object.keys(current) as FactionId[]),
+      ...(Object.keys(previous) as FactionId[]),
+    ]);
+
+    const positive = Array.from(factionIds).some((factionId) => {
+      const currentValue = current[factionId] ?? 0;
+      const previousValue = previous[factionId] ?? 0;
+      return currentValue - previousValue >= 20;
+    });
+
+    const negative = Array.from(factionIds).some((factionId) => {
+      const currentValue = current[factionId] ?? 0;
+      const previousValue = previous[factionId] ?? 0;
+      return currentValue - previousValue <= -20;
+    });
+
     if (positive) {
       queueInterjection('reputationPositive');
     } else if (negative) {
       queueInterjection('reputationNegative');
     }
+
     factionRef.current = current;
   }, [factionReputation, queueInterjection]);
 

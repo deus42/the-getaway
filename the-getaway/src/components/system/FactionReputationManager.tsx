@@ -169,7 +169,7 @@ export const FactionReputationManager: React.FC = () => {
     });
 
     dispatch(consumeFactionReputationEvents());
-  }, [dispatch, events, factionNames, locale, removeToast]);
+  }, [dispatch, events, factionNames, locale, removeToast, uiStrings.factionToast]);
 
   useEffect(() => () => {
     Object.values(timeoutRefs.current).forEach((handle) => window.clearTimeout(handle));
