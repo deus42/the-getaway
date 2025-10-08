@@ -39,6 +39,9 @@ const cloneDialogue = (dialogue: Dialogue): Dialogue => ({
       ...option,
       skillCheck: option.skillCheck ? { ...option.skillCheck } : undefined,
       questEffect: option.questEffect ? { ...option.questEffect } : undefined,
+      factionRequirement: option.factionRequirement
+        ? { ...option.factionRequirement }
+        : undefined,
     })),
   })),
 });
@@ -72,6 +75,9 @@ const cloneBuildingDefinition = (building: LevelBuildingDefinition): LevelBuildi
   signageStyle: building.signageStyle,
   propDensity: building.propDensity,
   encounterProfile: building.encounterProfile,
+  factionRequirement: building.factionRequirement
+    ? { ...building.factionRequirement }
+    : undefined,
   footprint: {
     from: { ...building.footprint.from },
     to: { ...building.footprint.to },

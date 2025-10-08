@@ -56,12 +56,14 @@ const createInteriorArea = (
   width: number,
   height: number,
   level: number,
-  zoneId: string
+  zoneId: string,
+  factionRequirement?: MapArea['factionRequirement']
 ): InteriorSpec => {
   const interior = createBasicMapArea(name, width, height, {
     level,
     isInterior: true,
     zoneId,
+    factionRequirement,
   });
   const doorPosition: Position = { x: Math.floor(width / 2), y: height - 1 };
   const entryPosition: Position = {
@@ -120,7 +122,8 @@ const applyBuildingConnections = (
       building.interior.width,
       building.interior.height,
       hostArea.level ?? 0,
-      `${hostArea.zoneId}::interior`
+      `${hostArea.zoneId}::interior`,
+      building.factionRequirement
     );
 
     interiors.push(interiorSpec.area);

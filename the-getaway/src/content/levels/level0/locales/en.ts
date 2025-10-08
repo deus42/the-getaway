@@ -18,6 +18,10 @@ export const level0EnglishContent: Level0LocaleContent = {
                 skill: 'charisma',
                 threshold: 6,
               },
+              factionRequirement: {
+                factionId: 'scavengers',
+                minimumStanding: 'friendly',
+              },
             },
             {
               text: 'Any shipments vanish like the coyotes Harbour Control promised us?',
@@ -88,6 +92,10 @@ export const level0EnglishContent: Level0LocaleContent = {
                 questId: 'quest_datapad_truth',
                 effect: 'start',
               },
+              factionRequirement: {
+                factionId: 'resistance',
+                minimumStanding: 'friendly',
+              },
             },
             {
               text: 'The manifests are singing on my rig.',
@@ -139,6 +147,10 @@ export const level0EnglishContent: Level0LocaleContent = {
               questEffect: {
                 questId: 'quest_courier_network',
                 effect: 'start',
+              },
+              factionRequirement: {
+                factionId: 'resistance',
+                minimumStanding: 'friendly',
               },
             },
             {
@@ -195,6 +207,10 @@ export const level0EnglishContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'charisma',
                 threshold: 7,
+              },
+              factionRequirement: {
+                factionId: 'resistance',
+                minimumStanding: 'friendly',
               },
             },
             {
@@ -831,6 +847,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       signageStyle: 'corp_holo',
       propDensity: 'high',
       encounterProfile: 'downtown_market_patrol',
+      factionRequirement: {
+        factionId: 'scavengers',
+        minimumStanding: 'friendly',
+      },
     },
     {
       id: 'block_1_3',
@@ -875,6 +895,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       signageStyle: 'corp_holo',
       propDensity: 'high',
       encounterProfile: 'downtown_exec_patrol',
+      factionRequirement: {
+        factionId: 'corpsec',
+        minimumStanding: 'friendly',
+      },
     },
     {
       id: 'block_3_1',
@@ -886,6 +910,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       signageStyle: 'slums_scrap',
       propDensity: 'medium',
       encounterProfile: 'slums_industrial_watch',
+      factionRequirement: {
+        factionId: 'resistance',
+        minimumStanding: 'friendly',
+      },
     },
     {
       id: 'block_3_2',
@@ -897,6 +925,10 @@ export const level0EnglishContent: Level0LocaleContent = {
       signageStyle: 'slums_neon',
       propDensity: 'high',
       encounterProfile: 'slums_transit_crossroads',
+      factionRequirement: {
+        factionId: 'resistance',
+        minimumStanding: 'friendly',
+      },
     },
     {
       id: 'block_3_3',

@@ -122,6 +122,13 @@ interface FactionPanelStrings {
   maxStanding: string;
 }
 
+interface FactionToastStrings {
+  reputationChange: (factionName: string, delta: string, reason?: string) => string;
+  standingChange: (standing: string) => string;
+  rivalChange: (factionName: string, delta: string, standing?: string) => string;
+  reasons: Record<string, string>;
+}
+
 interface MiniMapStrings {
   heading: string;
   playerLabel?: string;
@@ -215,6 +222,7 @@ interface UIStrings {
   shell: ShellStrings;
   playerStatus: PlayerStatusStrings;
   factionPanel: FactionPanelStrings;
+  factionToast: FactionToastStrings;
   miniMap: MiniMapStrings;
   dayNight: DayNightStrings;
   levelIndicator: LevelIndicatorStrings;
@@ -332,6 +340,30 @@ const STRINGS: Record<Locale, UIStrings> = {
       noEffects: 'No active benefits at this standing.',
       nextThreshold: (standing, value) => `${standing} at ${value}`,
       maxStanding: 'Maximum standing reached',
+    },
+    factionToast: {
+      reputationChange: (faction, delta, reason) =>
+        reason ? `${faction} reputation ${delta} — ${reason}` : `${faction} reputation ${delta}`,
+      standingChange: (standing) => `Standing now ${standing}`,
+      rivalChange: (faction, delta, standing) =>
+        standing ? `${faction} ${delta} (${standing})` : `${faction} ${delta}`,
+      reasons: {
+        resistance_rescue_civilian: 'Civilian rescued',
+        resistance_sabotage_corpsec: 'CorpSec assets sabotaged',
+        resistance_complete_quest: 'Resistance op completed',
+        resistance_betray_member: 'Resistance member betrayed',
+        resistance_turn_in_contact: 'Resistance contact exposed',
+        corpsec_report_crime: 'Incident reported to CorpSec',
+        corpsec_eliminate_resistance: 'Resistance cell neutralised',
+        corpsec_complete_contract: 'CorpSec contract fulfilled',
+        corpsec_attack_patrol: 'CorpSec patrol attacked',
+        corpsec_sabotage_checkpoint: 'Checkpoint sabotaged',
+        scavengers_trade: 'Traded with Scavengers',
+        scavengers_salvage_contract: 'Salvage contract completed',
+        scavengers_share_loot: 'Shared loot intel',
+        scavengers_steal_cache: 'Scavenger cache stolen',
+        scavengers_kill_merchant: 'Scavenger merchant killed',
+      },
     },
     miniMap: {
       heading: 'Tactical Map',
@@ -579,6 +611,30 @@ const STRINGS: Record<Locale, UIStrings> = {
       noEffects: 'На цьому рівні немає активних бонусів.',
       nextThreshold: (standing, value) => `${standing} при значенні ${value}`,
       maxStanding: 'Досягнуто максимального статусу',
+    },
+    factionToast: {
+      reputationChange: (faction, delta, reason) =>
+        reason ? `Репутація ${faction}: ${delta} — ${reason}` : `Репутація ${faction}: ${delta}`,
+      standingChange: (standing) => `Новий статус: ${standing}`,
+      rivalChange: (faction, delta, standing) =>
+        standing ? `${faction}: ${delta} (${standing})` : `${faction}: ${delta}`,
+      reasons: {
+        resistance_rescue_civilian: 'Врятовано цивільного',
+        resistance_sabotage_corpsec: 'Диверсія проти CorpSec',
+        resistance_complete_quest: 'Завдання Опору виконано',
+        resistance_betray_member: 'Зраджено члена Опору',
+        resistance_turn_in_contact: 'Контакт Опору видано CorpSec',
+        corpsec_report_crime: 'Повідомлено про правопорушення CorpSec',
+        corpsec_eliminate_resistance: 'Знищено осередок Опору',
+        corpsec_complete_contract: 'Контракт CorpSec виконано',
+        corpsec_attack_patrol: 'Напад на патруль CorpSec',
+        corpsec_sabotage_checkpoint: 'Саботовано блокпост',
+        scavengers_trade: 'Укладено угоду зі Скраперами',
+        scavengers_salvage_contract: 'Виконано контракт на брухт',
+        scavengers_share_loot: 'Поділенося місцем схованки',
+        scavengers_steal_cache: 'Вкрадено тайник Скраперів',
+        scavengers_kill_merchant: 'Вбито торговця Скраперів',
+      },
     },
     miniMap: {
       heading: 'Тактична мапа',

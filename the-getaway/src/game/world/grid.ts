@@ -30,7 +30,13 @@ export const createBasicMapArea = (
   name: string,
   width: number = DEFAULT_GRID_SIZE,
   height: number = DEFAULT_GRID_SIZE,
-  options: { level?: number; objectives?: string[]; isInterior?: boolean; zoneId?: string } = {}
+  options: {
+    level?: number;
+    objectives?: string[];
+    isInterior?: boolean;
+    zoneId?: string;
+    factionRequirement?: MapArea['factionRequirement'];
+  } = {}
 ): MapArea => {
   const grid = createEmptyGrid(width, height);
   
@@ -58,6 +64,7 @@ export const createBasicMapArea = (
     level: options.level ?? 0,
     objectives: options.objectives ?? [],
     isInterior: options.isInterior ?? false,
+    factionRequirement: options.factionRequirement,
     width,
     height,
     tiles: grid,

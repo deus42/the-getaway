@@ -6,7 +6,6 @@ import { consumeFactionReputationEvents } from '../../store/playerSlice';
 import { getUIStrings } from '../../content/ui';
 import { selectPendingFactionEvents } from '../../store/selectors/factionSelectors';
 import { FactionStanding, FactionId } from '../../game/interfaces/types';
-import { Locale } from '../../content/locales';
 import { getLocalizedStandingLabel } from '../../game/systems/factions';
 
 interface FactionToast {
@@ -64,52 +63,6 @@ const formatDelta = (delta: number): string => {
   return `${sign}${delta}`;
 };
 
-const buildPrimaryMessage = (
-  locale: Locale,
-  factionName: string,
-  delta: number,
-  reason?: string
-): string => {
-  const deltaFragment = `${formatDelta(delta)}`;
-  if (locale === 'uk') {
-    return reason
-      ? `${factionName}: ${deltaFragment} репутації — ${reason}`
-      : `${factionName}: ${deltaFragment} репутації`;
-  }
-  return reason
-    ? `${factionName} reputation ${deltaFragment} — ${reason}`
-    : `${factionName} reputation ${deltaFragment}`;
-};
-
-const buildStandingNote = (
-  locale: Locale,
-  standing: FactionStanding
-): string => {
-  const label = getLocalizedStandingLabel(locale, standing);
-  return locale === 'uk' ? `Новий статус: ${label}` : `Standing now ${label}`;
-};
-
-const buildRivalNote = (
-  locale: Locale,
-  rivalName: string,
-  delta: number,
-  standing?: FactionStanding
-): string => {
-  const deltaFragment = formatDelta(delta);
-  const standingFragment =
-    standing !== undefined ? getLocalizedStandingLabel(locale, standing) : undefined;
-
-  if (locale === 'uk') {
-    return standingFragment
-      ? `${rivalName}: ${deltaFragment}, статус ${standingFragment}`
-      : `${rivalName}: ${deltaFragment}`;
-  }
-
-  return standingFragment
-    ? `${rivalName} ${deltaFragment} (${standingFragment})`
-    : `${rivalName} ${deltaFragment}`;
-};
-
 const TOAST_DURATION_MS = 4200;
 
 export const FactionReputationManager: React.FC = () => {
@@ -149,23 +102,35 @@ export const FactionReputationManager: React.FC = () => {
       const rivalEntries = Object.entries(event.rivalDeltas ?? {});
       const rivalEntry = rivalEntries.length > 0 ? rivalEntries[0] : undefined;
 
-      const standingNote = primaryStandingChange
-        ? buildStandingNote(locale, primaryStandingChange.nextStanding as FactionStanding)
+      const reasonText = event.reason
+        ? uiStrings.factionToast.reasons[event.reason] ?? event.reason
+        : undefined;
+      const deltaFragment = formatDelta(event.delta);
+
+      const standingLabel = primaryStandingChange
+        ? getLocalizedStandingLabel(locale, primaryStandingChange.nextStanding as FactionStanding)
+        : undefined;
+      const standingNote = standingLabel
+        ? uiStrings.factionToast.standingChange(standingLabel)
+        : undefined;
+
+      const rivalLabel = rivalStandingChange
+        ? getLocalizedStandingLabel(locale, rivalStandingChange.nextStanding as FactionStanding)
         : undefined;
 
       const rivalNote = rivalEntry
-        ? buildRivalNote(
-            locale,
+        ? uiStrings.factionToast.rivalChange(
             factionNames[rivalEntry[0] as FactionId] ?? rivalEntry[0],
-            rivalEntry[1],
-            rivalStandingChange ? (rivalStandingChange.nextStanding as FactionStanding) : undefined
+            formatDelta(rivalEntry[1]),
+            rivalLabel
           )
         : undefined;
 
-      const hasReputationDelta = event.delta !== 0;
-      const message = hasReputationDelta
-        ? buildPrimaryMessage(locale, factionName, event.delta, event.reason)
-        : standingNote ?? buildPrimaryMessage(locale, factionName, event.delta, event.reason);
+      const message = uiStrings.factionToast.reputationChange(
+        factionName,
+        deltaFragment,
+        reasonText
+      );
 
       const toastId = `${event.factionId}-${event.timestamp}`;
 
@@ -218,7 +183,7 @@ export const FactionReputationManager: React.FC = () => {
   return (
     <div style={toastStackStyle} aria-live="polite" aria-atomic="false">
       {toasts.map((toast) => (
-        <div key={toast.id} style={toastCardStyle(toast.color)}>
+        <div key={toast.id} style={toastCardStyle(toast.color)} role="status" aria-live="polite">
           <span style={toastTitleStyle}>{toast.message}</span>
           {toast.standingNote && <span style={toastDetailStyle}>{toast.standingNote}</span>}
           {toast.rivalNote && <span style={toastDetailStyle}>{toast.rivalNote}</span>}
