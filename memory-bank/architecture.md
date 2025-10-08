@@ -339,6 +339,42 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 
 </architecture_section>
 
+<architecture_section id="faction_reputation_system" category="progression">
+## Faction Reputation System
+
+<design_principles>
+- Keep faction definitions declarative so content updates never require reducer rewrites.
+- Treat rival penalties and allied hostilities as systemic rules living in one helper so Redux, UI, and content stay in sync.
+- Surface every reputation change through a dedicated event queue so HUD, toast, and accessibility layers consume a single source of truth.
+</design_principles>
+
+<pattern name="Faction Definitions & Math">
+- <code_location>the-getaway/src/game/systems/factions.ts</code_location> enumerates Resistance/CorpSec/Scavengers metadata, standing thresholds, and defaults, and exports helpers to clamp values, derive standings, and localise standing labels.
+- Rival logic lives in `applyFactionDelta`, applying the 50% cross-faction penalty and forcing the opposing faction to at least Hostile (-70) when a side reaches Allied (≥60).
+- `resolveReputationAction` maps roadmap actions (sabotage, reporting crimes, trading, etc.) to faction deltas so quests and events can request adjustments without hardcoding numbers.
+</pattern>
+
+<pattern name="State Management & Events">
+- <code_location>the-getaway/src/store/playerSlice.ts</code_location> introduces `pendingFactionEvents` plus reducers `adjustFactionReputation`, `setFactionReputation`, and `consumeFactionReputationEvents`; each update records deltas, rival impacts, and standing changes with timestamps for downstream consumers.
+- Background seeding now clones default faction standings from the metadata and clamps background adjustments via `clampFactionReputation`.
+- Selectors in <code_location>the-getaway/src/store/selectors/factionSelectors.ts</code_location> expose structured standing summaries (value, localised standing, effects, next thresholds) so UI components stay presentation-only.
+</pattern>
+
+<pattern name="UI & Feedback Loop">
+- <code_location>the-getaway/src/components/ui/FactionReputationPanel.tsx</code_location> renders the character-screen panel with colour-coded bars, standing badges, and effect summaries, pulling copy from `UIStrings.factionPanel` and selector data.
+- <code_location>the-getaway/src/components/system/FactionReputationManager.tsx</code_location> watches the pending event queue, pushes log lines, and raises toast notifications with rival notes and standing shifts before clearing the queue.
+- <code_location>the-getaway/src/App.tsx</code_location> mounts both the mission manager and the new faction manager so HUD feedback persists regardless of scene.
+</pattern>
+
+<pattern name="Gameplay Gating">
+- <code_location>the-getaway/src/game/quests/dialogueSystem.ts</code_location> now honours `DialogueOption.factionRequirement`, blocking dialogue paths unless reputation or standing thresholds are met.
+- <code_location>the-getaway/src/game/interfaces/types.ts</code_location> extends `DialogueOption`, `MapArea`, and `Player` definitions with faction-aware metadata and requirements.
+- <code_location>the-getaway/src/components/GameController.tsx</code_location> evaluates `MapArea.factionRequirement` before changing scenes, logging `factionAccessDenied` when the player lacks the required standing or raw reputation.
+- <code_location>the-getaway/src/content/system/index.ts</code_location> supplies the new localisation strings so denial messages and toast summaries respect the active locale.
+</pattern>
+
+</architecture_section>
+
 #### `/the-getaway/src/game/quests`
 
 Quest and dialogue systems:

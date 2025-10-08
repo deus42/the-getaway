@@ -98,7 +98,11 @@ describe('George assistant helper utilities', () => {
       objectiveQueue,
       personality: basePersonality,
       karma: 0,
-      factionReputation: {},
+      factionReputation: {
+        resistance: 0,
+        corpsec: 0,
+        scavengers: 0,
+      },
       missionPrimary: {
         id: 'mission-primary',
         label: 'Cut the broadcast uplink',

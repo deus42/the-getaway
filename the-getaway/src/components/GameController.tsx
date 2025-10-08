@@ -47,8 +47,10 @@ import { findPath } from "../game/world/pathfinding";
 import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT, MINIMAP_PATH_PREVIEW_EVENT, MiniMapPathPreviewDetail } from "../game/events";
 import { startDialogue, endDialogue } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
+import { getUIStrings } from "../content/ui";
 import { processPerceptionUpdates, getAlertMessageKey, shouldSpawnReinforcements, getReinforcementDelay } from "../game/combat/perceptionManager";
 import { shouldGunFuAttackBeFree } from "../game/systems/perks";
+import { getStandingForValue, getStandingRank, getLocalizedStandingLabel } from "../game/systems/factions";
 import { STAMINA_COSTS } from "../game/systems/stamina";
 import {
   initializeZoneSurveillance,
@@ -96,6 +98,7 @@ const GameController: React.FC = () => {
   const surveillanceZone = useSelector((state: RootState) => (mapAreaId ? state.surveillance.zones[mapAreaId] : undefined));
   const overlayEnabled = useSelector((state: RootState) => state.surveillance.hud.overlayEnabled);
   const logStrings = getSystemStrings(locale).logs;
+  const uiStrings = getUIStrings(locale);
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
   const previousGlobalAlertLevel = useRef(globalAlertLevel);
@@ -861,6 +864,52 @@ const GameController: React.FC = () => {
       const targetArea = mapDirectory[connection.toAreaId];
 
       if (targetArea) {
+        if (targetArea.factionRequirement) {
+          const requirement = targetArea.factionRequirement;
+          const factionName = uiStrings.playerStatus.factions[requirement.factionId] ?? requirement.factionId;
+          const reputationValue = player.factionReputation?.[requirement.factionId] ?? 0;
+          const standing = getStandingForValue(reputationValue);
+
+          let allowed = true;
+
+          if (requirement.minimumStanding) {
+            const currentRank = getStandingRank(standing.id);
+            const requiredRank = getStandingRank(requirement.minimumStanding);
+            if (currentRank < requiredRank) {
+              allowed = false;
+            }
+          }
+
+          if (allowed && typeof requirement.minimumReputation === 'number') {
+            if (reputationValue < requirement.minimumReputation) {
+              allowed = false;
+            }
+          }
+
+          if (!allowed) {
+            const requirementFragments: string[] = [];
+            if (requirement.minimumStanding) {
+              requirementFragments.push(
+                getLocalizedStandingLabel(locale, requirement.minimumStanding)
+              );
+            }
+            if (typeof requirement.minimumReputation === 'number') {
+              requirementFragments.push(
+                `${uiStrings.factionPanel.reputationLabel} ${requirement.minimumReputation}+`
+              );
+            }
+
+            const requirementText = requirementFragments.join(' • ') ||
+              getLocalizedStandingLabel(locale, standing.id);
+
+            dispatch(addLogMessage(logStrings.factionAccessDenied(factionName, requirementText)));
+            setQueuedPath([]);
+            setPendingNpcInteractionId(null);
+            setPendingEnemyEngagementId(null);
+            return;
+          }
+        }
+
         if (!attemptMovementStamina()) {
           setQueuedPath([]);
           setPendingNpcInteractionId(null);

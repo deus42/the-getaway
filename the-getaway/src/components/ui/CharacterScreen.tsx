@@ -10,6 +10,7 @@ import { characterPanelSurface } from './theme';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
+import FactionReputationPanel from './FactionReputationPanel';
 
 interface CharacterScreenProps {
   open: boolean;
@@ -329,6 +330,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             <div style={profileColumnStyle}>
               <PlayerSummaryPanel showActionButton={false} />
               <PlayerStatsPanel />
+              <FactionReputationPanel />
             </div>
           )}
           {showSystems && (

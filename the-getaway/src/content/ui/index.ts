@@ -111,6 +111,17 @@ interface DerivedStatsStrings {
   dodge: string;
 }
 
+interface FactionPanelStrings {
+  heading: string;
+  ariaLabel: string;
+  standingLabel: string;
+  reputationLabel: string;
+  effectsLabel: string;
+  noEffects: string;
+  nextThreshold: (standing: string, value: number) => string;
+  maxStanding: string;
+}
+
 interface MiniMapStrings {
   heading: string;
   playerLabel?: string;
@@ -203,6 +214,7 @@ interface UIStrings {
   questLog: QuestLogStrings;
   shell: ShellStrings;
   playerStatus: PlayerStatusStrings;
+  factionPanel: FactionPanelStrings;
   miniMap: MiniMapStrings;
   dayNight: DayNightStrings;
   levelIndicator: LevelIndicatorStrings;
@@ -310,6 +322,16 @@ const STRINGS: Record<Locale, UIStrings> = {
         corpsec: 'CorpSec',
         scavengers: 'Scavengers',
       },
+    },
+    factionPanel: {
+      heading: 'Faction Reputation',
+      ariaLabel: 'Faction reputation standings',
+      standingLabel: 'Standing',
+      reputationLabel: 'Reputation',
+      effectsLabel: 'Active Effects',
+      noEffects: 'No active benefits at this standing.',
+      nextThreshold: (standing, value) => `${standing} at ${value}`,
+      maxStanding: 'Maximum standing reached',
     },
     miniMap: {
       heading: 'Tactical Map',
@@ -547,6 +569,16 @@ const STRINGS: Record<Locale, UIStrings> = {
         corpsec: 'КорпСек',
         scavengers: 'Мародери',
       },
+    },
+    factionPanel: {
+      heading: 'Репутація у фракціях',
+      ariaLabel: 'Поточний статус репутації у фракціях',
+      standingLabel: 'Статус',
+      reputationLabel: 'Репутація',
+      effectsLabel: 'Активні ефекти',
+      noEffects: 'На цьому рівні немає активних бонусів.',
+      nextThreshold: (standing, value) => `${standing} при значенні ${value}`,
+      maxStanding: 'Досягнуто максимального статусу',
     },
     miniMap: {
       heading: 'Тактична мапа',

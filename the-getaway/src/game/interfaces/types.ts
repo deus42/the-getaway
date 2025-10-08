@@ -54,6 +54,9 @@ export type PersonalityTrait = 'earnest' | 'sarcastic' | 'ruthless' | 'stoic';
 
 export type PersonalityFlags = Record<PersonalityTrait, number>;
 
+export type FactionId = 'resistance' | 'corpsec' | 'scavengers';
+export type FactionStanding = 'hostile' | 'unfriendly' | 'neutral' | 'friendly' | 'allied';
+
 export interface PersonalityProfile {
   alignment: PersonalityTrait;
   flags: PersonalityFlags;
@@ -90,11 +93,7 @@ export interface Player extends Entity {
   pendingPerkSelections: number;
   karma: number;
   personality: PersonalityProfile;
-  factionReputation: {
-    resistance: number;
-    corpsec: number;
-    scavengers: number;
-  };
+  factionReputation: Record<FactionId, number>;
   appearancePreset?: string;
   inventory: {
     items: Item[];
@@ -383,6 +382,13 @@ export interface DialogueOption {
     threshold: number;
     domain?: 'attribute' | 'skill';
   };
+  factionRequirement?: {
+    factionId: FactionId;
+    minimumStanding?: FactionStanding;
+    maximumStanding?: FactionStanding;
+    minimumReputation?: number;
+    maximumReputation?: number;
+  };
   questEffect?: {
     questId: string;
     effect: 'start' | 'complete' | 'update';
@@ -443,6 +449,11 @@ export interface MapArea {
   level?: number;
   objectives?: string[];
   isInterior?: boolean;
+  factionRequirement?: {
+    factionId: FactionId;
+    minimumStanding?: FactionStanding;
+    minimumReputation?: number;
+  };
   width: number;
   height: number;
   tiles: MapTile[][];

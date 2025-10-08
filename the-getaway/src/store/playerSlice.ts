@@ -11,6 +11,7 @@ import {
   PerkId,
   EquipmentSlot,
   Consumable,
+  FactionId,
 } from '../game/interfaces/types';
 import { DEFAULT_PLAYER, createDefaultPersonalityProfile } from '../game/interfaces/player';
 import {
@@ -42,11 +43,30 @@ import {
   shouldEnterExhaustion,
   shouldLeaveExhaustion,
 } from '../game/systems/stamina';
+import {
+  applyFactionDelta,
+  clampFactionReputation,
+  FactionStandingChange,
+  ReputationAdjustmentResult,
+  setFactionReputation as setFactionReputationHelper,
+} from '../game/systems/factions';
 
 export interface PlayerState {
   data: Player;
   pendingLevelUpEvents: LevelUpEvent[];
   xpNotifications: XPNotificationData[];
+  pendingFactionEvents: FactionReputationEvent[];
+}
+
+interface FactionReputationEvent {
+  factionId: FactionId;
+  delta: number;
+  updatedValue: number;
+  rivalDeltas: Partial<Record<FactionId, number>>;
+  standingChanges: FactionStandingChange[];
+  reason?: string;
+  source?: string;
+  timestamp: number;
 }
 
 type AddExperiencePayload = number | { amount: number; reason?: string };
@@ -102,6 +122,7 @@ const initialState: PlayerState = {
   data: createFreshPlayer(),
   pendingLevelUpEvents: [],
   xpNotifications: [],
+  pendingFactionEvents: [],
 };
 
 type InitializeCharacterPayload = {
@@ -135,6 +156,20 @@ interface AssignHotbarPayload {
   itemId: string | null;
 }
 
+interface AdjustFactionReputationPayload {
+  factionId: FactionId;
+  delta: number;
+  reason?: string;
+  source?: string;
+}
+
+interface SetFactionReputationPayload {
+  factionId: FactionId;
+  value: number;
+  reason?: string;
+  source?: string;
+}
+
 const clampSkillValue = (value: number): number => Math.max(1, Math.min(10, Math.round(value)));
 
 /**
@@ -153,6 +188,48 @@ const EQUIPMENT_SLOTS: EquipmentSlot[] = [
   'accessory1',
   'accessory2',
 ];
+
+const MAX_PENDING_FACTION_EVENTS = 20;
+
+const shouldRecordFactionEvent = (result: ReputationAdjustmentResult): boolean => {
+  return (
+    result.primaryDelta !== 0 ||
+    Object.values(result.rivalDeltas).some((value) => value !== 0) ||
+    result.standingChanges.length > 0
+  );
+};
+
+const pushFactionEvent = (
+  state: PlayerState,
+  event: FactionReputationEvent
+): void => {
+  state.pendingFactionEvents.push(event);
+  if (state.pendingFactionEvents.length > MAX_PENDING_FACTION_EVENTS) {
+    state.pendingFactionEvents.shift();
+  }
+};
+
+const recordFactionAdjustment = (
+  state: PlayerState,
+  factionId: FactionId,
+  result: ReputationAdjustmentResult,
+  metadata?: { reason?: string; source?: string }
+): void => {
+  if (!shouldRecordFactionEvent(result)) {
+    return;
+  }
+
+  pushFactionEvent(state, {
+    factionId,
+    delta: result.primaryDelta,
+    updatedValue: state.data.factionReputation[factionId],
+    rivalDeltas: result.rivalDeltas,
+    standingChanges: result.standingChanges,
+    reason: metadata?.reason,
+    source: metadata?.source,
+    timestamp: Date.now(),
+  });
+};
 
 function updateExhaustionState(player: Player): void {
   if (!Number.isFinite(player.maxStamina) || player.maxStamina <= 0) {
@@ -971,8 +1048,10 @@ export const playerSlice = createSlice({
         }
 
         Object.entries(background.factionAdjustments).forEach(([faction, value]) => {
-          const key = faction as keyof Player['factionReputation'];
-          freshPlayer.factionReputation[key] += value ?? 0;
+          const key = faction as FactionId;
+          const adjustment = value ?? 0;
+          const current = freshPlayer.factionReputation[key] ?? 0;
+          freshPlayer.factionReputation[key] = clampFactionReputation(current + adjustment);
         });
 
         background.startingEquipment.forEach((item) => applyStartingItem(freshPlayer, item));
@@ -985,6 +1064,34 @@ export const playerSlice = createSlice({
         movementApMultiplier: 1,
         attackApMultiplier: 1,
       };
+    },
+
+    adjustFactionReputation: (
+      state,
+      action: PayloadAction<AdjustFactionReputationPayload>
+    ) => {
+      const { factionId, delta, reason, source } = action.payload;
+      if (!Number.isFinite(delta) || delta === 0) {
+        return;
+      }
+
+      const result = applyFactionDelta(state.data.factionReputation, factionId, delta);
+      state.data.factionReputation = { ...result.values };
+      recordFactionAdjustment(state, factionId, result, { reason, source });
+    },
+
+    setFactionReputation: (
+      state,
+      action: PayloadAction<SetFactionReputationPayload>
+    ) => {
+      const { factionId, value, reason, source } = action.payload;
+      const result = setFactionReputationHelper(state.data.factionReputation, factionId, value);
+      state.data.factionReputation = { ...result.values };
+      recordFactionAdjustment(state, factionId, result, { reason, source });
+    },
+
+    consumeFactionReputationEvents: (state) => {
+      state.pendingFactionEvents = [];
     },
 
     // Move player to a new position
@@ -1218,6 +1325,7 @@ export const playerSlice = createSlice({
       state.data = createFreshPlayer();
       state.pendingLevelUpEvents = [];
       state.xpNotifications = [];
+      state.pendingFactionEvents = [];
     },
 
     // Set the entire player data object (useful after complex operations)
@@ -1228,6 +1336,20 @@ export const playerSlice = createSlice({
       if (typeof state.data.isCrouching !== 'boolean') {
         state.data.isCrouching = false;
       }
+
+      if (!state.data.factionReputation) {
+        state.data.factionReputation = { ...DEFAULT_PLAYER.factionReputation };
+      }
+
+      (['resistance', 'corpsec', 'scavengers'] as FactionId[]).forEach((factionId) => {
+        const fallback = DEFAULT_PLAYER.factionReputation[factionId] ?? 0;
+        const current = state.data.factionReputation[factionId];
+        state.data.factionReputation[factionId] = clampFactionReputation(
+          typeof current === 'number' ? current : fallback
+        );
+      });
+
+      state.pendingFactionEvents = [];
 
       if (!state.data.perkRuntime) {
         state.data.perkRuntime = {
@@ -1583,6 +1705,9 @@ export const {
   addCredits,
   setKarma,
   adjustKarma,
+  adjustFactionReputation,
+  setFactionReputation,
+  consumeFactionReputationEvents,
   removeXPNotification,
   levelUp,
   updateSkill,

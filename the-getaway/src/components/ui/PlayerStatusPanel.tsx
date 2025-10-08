@@ -73,18 +73,6 @@ const PlayerStatusPanel: React.FC = () => {
         <span style={{ ...subtleText, fontSize: '0.48rem', color: neonPalette.textSecondary, whiteSpace: 'nowrap' }}>
           {backgroundLabel}
         </span>
-        <span
-          title={uiStrings.playerStatus.factionReputationLabel}
-          style={{
-            ...subtleText,
-            fontSize: '0.46rem',
-            letterSpacing: '0.08em',
-            color: neonPalette.textSecondary,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          R {player.factionReputation.resistance} • C {player.factionReputation.corpsec} • S {player.factionReputation.scavengers}
-        </span>
       </div>
     </div>
   );

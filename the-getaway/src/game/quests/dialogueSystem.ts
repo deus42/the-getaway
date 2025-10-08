@@ -2,6 +2,7 @@ import { Dialogue, DialogueNode, DialogueOption, Player, PlayerSkills, Quest, Sk
 import { v4 as uuidv4 } from 'uuid';
 import { startQuest, updateObjective, completeQuest } from './questSystem';
 import { calculateDerivedStatsWithEquipment, calculateDerivedStats, skillCheckPasses } from '../systems/statCalculations';
+import { getStandingForValue, getStandingRank } from '../systems/factions';
 
 // Create a dialogue
 export const createDialogue = (npcId: string, nodes: Omit<DialogueNode, 'id'>[]): Dialogue => {
@@ -61,9 +62,48 @@ export const checkSkillRequirement = (player: Player, option: DialogueOption): b
   return skillCheckPasses(attributeValue, threshold, bonus);
 };
 
+const checkFactionRequirement = (player: Player, option: DialogueOption): boolean => {
+  if (!option.factionRequirement) {
+    return true;
+  }
+
+  const { factionId, minimumStanding, maximumStanding, minimumReputation, maximumReputation } =
+    option.factionRequirement;
+  const value = player.factionReputation?.[factionId] ?? 0;
+  const standing = getStandingForValue(value);
+
+  if (typeof minimumReputation === 'number' && value < minimumReputation) {
+    return false;
+  }
+
+  if (typeof maximumReputation === 'number' && value > maximumReputation) {
+    return false;
+  }
+
+  if (minimumStanding) {
+    const currentRank = getStandingRank(standing.id);
+    const minimumRank = getStandingRank(minimumStanding);
+    if (currentRank < minimumRank) {
+      return false;
+    }
+  }
+
+  if (maximumStanding) {
+    const currentRank = getStandingRank(standing.id);
+    const maximumRank = getStandingRank(maximumStanding);
+    if (currentRank > maximumRank) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 // Filter dialogue options based on player skills
 export const getAvailableOptions = (player: Player, node: DialogueNode): DialogueOption[] => {
-  return node.options.filter(option => checkSkillRequirement(player, option));
+  return node.options.filter(
+    (option) => checkSkillRequirement(player, option) && checkFactionRequirement(player, option)
+  );
 };
 
 // Select a dialogue option and get next node
@@ -95,7 +135,7 @@ export const selectDialogueOption = (
   }
   
   // Check if skill requirement is met
-  if (!checkSkillRequirement(player, selectedOption)) {
+  if (!checkSkillRequirement(player, selectedOption) || !checkFactionRequirement(player, selectedOption)) {
     return { nextNode: null, player, quests };
   }
   

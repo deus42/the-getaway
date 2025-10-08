@@ -1330,3 +1330,40 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Future polish: feed actual personality deltas from dialogue choices once that logging lands so alignment shifts reflect player tone beyond background weighting.
 </notes>
 </step>
+
+<step id="29" status="completed">
+<step_metadata>
+  <number>29</number>
+  <title>Implement Faction Reputation System with Three Core Factions</title>
+  <status>Completed</status>
+  <date>October 9, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added faction definitions, standing thresholds, and reputation action helpers while wiring rival penalties and allied hostilities into a single maths module.
+2. Extended `playerSlice` with `adjustFactionReputation`/`setFactionReputation`, a pending event queue, and selectors for consuming structured standing summaries.
+3. Shipped the character-screen `FactionReputationPanel`, toast manager, and localised strings, replacing the old inline HUD readout.
+4. Enforced faction gating across dialogue options and map transitions, surfacing denial logs when prerequisites are unmet.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/game/systems/factions.ts</code_location> now owns faction metadata, standing localisation, automated rival penalties, and declarative action mappings for storyline beats.
+- <code_location>the-getaway/src/store/playerSlice.ts</code_location> records faction changes, clamps background defaults, and exposes reducers so quests or scripted events can mutate reputation without duplicating logic.
+- <code_location>the-getaway/src/components/ui/FactionReputationPanel.tsx</code_location> and <code_location>the-getaway/src/components/system/FactionReputationManager.tsx</code_location> connect the new selectors to HUD presentation and toast/log feedback.
+- Dialogue and traversal gating respect faction requirements via <code_location>the-getaway/src/game/quests/dialogueSystem.ts</code_location> and <code_location>the-getaway/src/components/GameController.tsx</code_location>, reusing shared localisation from `content/system/ui`.
+</implementation>
+
+<code_reference file="the-getaway/src/game/systems/factions.ts" />
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="the-getaway/src/store/selectors/factionSelectors.ts" />
+<code_reference file="the-getaway/src/components/ui/FactionReputationPanel.tsx" />
+<code_reference file="the-getaway/src/components/system/FactionReputationManager.tsx" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/game/quests/dialogueSystem.ts" />
+<code_reference file="the-getaway/src/__tests__/playerSlice.test.ts" />
+<code_reference file="the-getaway/src/__tests__/dialogueSystem.test.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/playerSlice.test.ts src/__tests__/dialogueSystem.test.ts`
+</validation>
+</step>

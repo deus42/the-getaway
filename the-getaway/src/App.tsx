@@ -21,6 +21,7 @@ import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
 import CurfewWarning from "./components/ui/CurfewWarning";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
+import FactionReputationManager from "./components/system/FactionReputationManager";
 import { addLogMessage } from "./store/logSlice";
 import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections, removeXPNotification } from "./store/playerSlice";
 import { clearAllFeedback } from "./store/combatFeedbackSlice";
@@ -785,6 +786,7 @@ function App() {
   return (
     <Provider store={store}>
       <MissionProgressionManager />
+      <FactionReputationManager />
       <div style={layoutShellStyle}>
         {gameStarted && (
           <CommandShell

@@ -310,6 +310,38 @@ describe('dialogueSystem', () => {
 
       expect(available).toHaveLength(2);
     });
+
+    it('filters options when faction requirements are not met', () => {
+      const player = createTestPlayer();
+      const node: DialogueNode = {
+        id: uuidv4(),
+        text: 'Faction gate',
+        speaker: 'NPC',
+        options: [
+          {
+            text: 'Resistance intel',
+            nextNodeId: null,
+            factionRequirement: {
+              factionId: 'resistance',
+              minimumStanding: 'friendly',
+            },
+          },
+          {
+            text: 'Scavenger trade',
+            nextNodeId: null,
+            factionRequirement: {
+              factionId: 'scavengers',
+              minimumStanding: 'neutral',
+            },
+          },
+        ],
+      };
+
+      const available = getAvailableOptions(player, node);
+
+      expect(available).toHaveLength(1);
+      expect(available[0].text).toBe('Scavenger trade');
+    });
   });
 
   describe('selectDialogueOption', () => {

@@ -1,6 +1,7 @@
-import { Player, PlayerSkills, PlayerSkillValues, Position, PersonalityProfile } from './types';
+import { FactionId, Player, PlayerSkills, PlayerSkillValues, Position, PersonalityProfile } from './types';
 import { v4 as uuidv4 } from 'uuid';
 import { calculateMaxHP, calculateBaseAP, calculateCarryWeight, calculateMaxStamina } from '../systems/statCalculations';
+import { getFactionDefinitions } from '../systems/factions';
 
 // Default skill values
 export const DEFAULT_SKILLS: PlayerSkills = {
@@ -18,6 +19,18 @@ const defaultMaxHP = calculateMaxHP(DEFAULT_SKILLS.endurance);
 const defaultBaseAP = calculateBaseAP(DEFAULT_SKILLS.agility);
 const defaultCarryWeight = calculateCarryWeight(DEFAULT_SKILLS.strength);
 const defaultMaxStamina = calculateMaxStamina(DEFAULT_SKILLS.endurance);
+
+const DEFAULT_FACTION_REPUTATION = getFactionDefinitions().reduce<Record<FactionId, number>>(
+  (acc, faction) => {
+    acc[faction.id] = faction.defaultReputation;
+    return acc;
+  },
+  {
+    resistance: 0,
+    corpsec: 0,
+    scavengers: 0,
+  }
+);
 
 const createDefaultSkillTraining = (): PlayerSkillValues => ({
   smallGuns: 0,
@@ -72,11 +85,7 @@ export const DEFAULT_PLAYER: Player = {
   pendingPerkSelections: 0,
   karma: 0,
   personality: createDefaultPersonalityProfile(),
-  factionReputation: {
-    resistance: 0,
-    corpsec: 0,
-    scavengers: 0,
-  },
+  factionReputation: { ...DEFAULT_FACTION_REPUTATION },
   appearancePreset: undefined,
   inventory: {
     items: [],

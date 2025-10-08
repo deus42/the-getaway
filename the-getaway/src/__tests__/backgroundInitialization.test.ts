@@ -34,8 +34,8 @@ describe('Player initialization with backgrounds', () => {
     // Background perks not yet implemented (reserved for future expansion)
     // expect(player.perks).toContain('tactical_training');
     expect(player.perks).toHaveLength(0); // No background perks yet
-    expect(player.factionReputation.resistance).toBe(10);
-    expect(player.factionReputation.corpsec).toBe(-20);
+    expect(player.factionReputation.resistance).toBe(20);
+    expect(player.factionReputation.corpsec).toBe(-40);
     expect(player.factionReputation.scavengers).toBe(0);
     expect(player.equipped.weapon?.name).toBe('CorpSec Service Pistol');
     expect(player.equipped.armor?.name).toBe('Kevlar Vest');

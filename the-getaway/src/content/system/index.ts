@@ -9,6 +9,7 @@ export interface LogStrings {
   combatChatterOverrides: string;
   npcBoxedIn: (name: string) => string;
   checkpointSealed: string;
+  factionAccessDenied: (factionName: string, requirement: string) => string;
   npcOutOfReach: (name: string) => string;
   nightFalls: string;
   dawnBreaks: string;
@@ -63,6 +64,8 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       npcBoxedIn: (name) => `${name} is boxed in—you can't reach their position.`,
       checkpointSealed:
         "Checkpoint sealed. The regime's curfew keeps the district locked down.",
+      factionAccessDenied: (factionName, requirement) =>
+        `Access denied: ${factionName} territory requires ${requirement}.`,
       npcOutOfReach: (name) => `${name} is out of reach—their channel fades into static.`,
       nightFalls: 'Night falls over the Slums. Curfew squadrons sweep the streets.',
       dawnBreaks: 'Dawn breaks. The regime eases the curfew for a few precious hours.',
@@ -115,6 +118,8 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       npcBoxedIn: (name) => `${name} заблокований — до їхньої позиції не дістатися.`,
       checkpointSealed:
         'Контрольно-пропускний пункт зачинено. Комендантська година тримає район у блокаді.',
+      factionAccessDenied: (factionName, requirement) =>
+        `Доступ заборонено: територія ${factionName} потребує ${requirement}.`,
       npcOutOfReach: (name) => `${name} поза досяжністю — канал тоне у перешкодах.`,
       nightFalls: 'Ніч накриває Нетрища. Патрулі прочісують вулиці.',
       dawnBreaks: 'Світання. Режим тимчасово послаблює комендантську годину.',

@@ -23,6 +23,9 @@ import playerReducer, {
   assignHotbarSlot,
   useInventoryItem,
   resetPlayer,
+  adjustFactionReputation,
+  setFactionReputation,
+  consumeFactionReputationEvents,
   equipWeapon,
   equipArmor,
   unequipWeapon,
@@ -1356,6 +1359,52 @@ describe('playerSlice', () => {
       const expected = Math.floor((beforeStamina / beforeMax) * (beforeMax + 5));
       expect(afterState.stamina).toBe(expected);
       expect(afterState.isExhausted).toBe(false);
+    });
+  });
+
+  describe('faction reputation reducers', () => {
+    it('adjustFactionReputation applies delta, rival penalty, and records event', () => {
+      const store = createTestStore();
+
+      store.dispatch(
+        adjustFactionReputation({ factionId: 'resistance', delta: 20, reason: 'test action' })
+      );
+
+      const state = store.getState().player;
+      expect(state.data.factionReputation.resistance).toBe(30);
+      expect(state.data.factionReputation.corpsec).toBe(-30);
+
+      expect(state.pendingFactionEvents).toHaveLength(1);
+      const event = state.pendingFactionEvents[0];
+      expect(event.factionId).toBe('resistance');
+      expect(event.delta).toBe(20);
+      expect(event.reason).toBe('test action');
+      expect(event.rivalDeltas.corpsec).toBe(-10);
+      expect(event.standingChanges.some((change) => change.factionId === 'resistance')).toBe(true);
+    });
+
+    it('setFactionReputation enforces allied rival hostility and queues events', () => {
+      const store = createTestStore();
+
+      store.dispatch(setFactionReputation({ factionId: 'resistance', value: 80 }));
+
+      const state = store.getState().player;
+      expect(state.data.factionReputation.resistance).toBe(80);
+      expect(state.data.factionReputation.corpsec).toBe(-70);
+      expect(state.pendingFactionEvents.length).toBeGreaterThan(0);
+      const alliedEvent = state.pendingFactionEvents.find((event) => event.factionId === 'resistance');
+      expect(alliedEvent).toBeDefined();
+      expect(alliedEvent?.standingChanges.some((change) => change.factionId === 'corpsec')).toBe(true);
+    });
+
+    it('consumeFactionReputationEvents clears pending queue', () => {
+      const store = createTestStore();
+
+      store.dispatch(adjustFactionReputation({ factionId: 'scavengers', delta: 5 }));
+      expect(store.getState().player.pendingFactionEvents).toHaveLength(1);
+
+      store.dispatch(consumeFactionReputationEvents());
+      expect(store.getState().player.pendingFactionEvents).toHaveLength(0);
     });
   });
 
