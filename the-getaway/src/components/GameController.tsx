@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   movePlayer,
@@ -97,8 +97,8 @@ const GameController: React.FC = () => {
   const reinforcementsScheduled = useSelector((state: RootState) => state.world.reinforcementsScheduled);
   const surveillanceZone = useSelector((state: RootState) => (mapAreaId ? state.surveillance.zones[mapAreaId] : undefined));
   const overlayEnabled = useSelector((state: RootState) => state.surveillance.hud.overlayEnabled);
-  const logStrings = getSystemStrings(locale).logs;
-  const uiStrings = getUIStrings(locale);
+  const logStrings = useMemo(() => getSystemStrings(locale).logs, [locale]);
+  const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
   const previousGlobalAlertLevel = useRef(globalAlertLevel);
@@ -965,6 +965,8 @@ const GameController: React.FC = () => {
     mapConnections,
     logStrings,
     attemptMovementStamina,
+    locale,
+    uiStrings,
   ]);
 
   useEffect(() => {

@@ -39,6 +39,12 @@ const clonePrototype = <T extends ItemPrototype | ConsumablePrototype>(prototype
   return JSON.parse(JSON.stringify(prototype)) as T;
 };
 
+const stripId = <T extends { id: string }>(entity: T): Omit<T, 'id'> => {
+  const { id: _unusedId, ...rest } = entity;
+  void _unusedId;
+  return rest;
+};
+
 const weaponPrototype = (
   name: string,
   damage: number,
@@ -47,18 +53,18 @@ const weaponPrototype = (
   weight: number,
   options?: WeaponCreationOptions
 ): ItemPrototype => {
-  const { id: _discard, ...weapon } = createWeapon(
-    name,
-    damage,
-    range,
-    apCost,
-    weight,
-    options?.statModifiers,
-    options?.skillType,
-    options
+  return stripId(
+    createWeapon(
+      name,
+      damage,
+      range,
+      apCost,
+      weight,
+      options?.statModifiers,
+      options?.skillType,
+      options
+    )
   );
-
-  return weapon;
 };
 
 const armorPrototype = (
@@ -67,8 +73,7 @@ const armorPrototype = (
   weight: number,
   options?: ArmorCreationOptions
 ): ItemPrototype => {
-  const { id: _discard, ...armor } = createArmor(name, protection, weight, options?.statModifiers, options);
-  return armor;
+  return stripId(createArmor(name, protection, weight, options?.statModifiers, options));
 };
 
 const consumablePrototype = (
@@ -77,8 +82,7 @@ const consumablePrototype = (
   value: number,
   options?: ConsumableCreationOptions
 ): ConsumablePrototype => {
-  const { id: _discard, ...consumable } = createConsumable(name, effectType, value, options);
-  return consumable;
+  return stripId(createConsumable(name, effectType, value, options));
 };
 
 const questItemPrototype = (prototype: ItemPrototype): ItemPrototype => prototype;
