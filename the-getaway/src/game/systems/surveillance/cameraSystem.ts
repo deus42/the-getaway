@@ -30,6 +30,7 @@ import {
 } from './cameraTypes';
 import { hasLineOfSight, isInVisionCone } from '../../combat/perception';
 import { Position, SkillId } from '../../interfaces/types';
+import { clamp } from '../../utils/math';
 import type { LogStrings } from '../../../content/system';
 
 const PROGRESS_GAIN_PER_MS = 100 / 3000; // 0 → 100 over ~3s
@@ -59,9 +60,6 @@ const shouldCameraBeActive = (camera: CameraRuntimeState, timeOfDay: TimeOfDay):
   }
   return camera.activationPhases.includes(timeOfDay);
 };
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(max, value));
 
 const distanceBetween = (a: Position, b: Position): number => {
   const dx = b.x - a.x;
