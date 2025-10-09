@@ -18,6 +18,7 @@ import {
   pickBanterLine,
   pickInterjectionLine,
 } from '../../game/systems/georgeAssistant';
+import type { FactionId } from '../../game/interfaces/types';
 import { GeorgeInterjectionTrigger, GeorgeLine } from '../../content/assistants/george';
 import { getUIStrings } from '../../content/ui';
 import {
@@ -315,7 +316,7 @@ const GeorgeAssistant: React.FC = () => {
   const nextSideObjective = useSelector(selectNextSideObjective);
   const personality = useSelector(selectPlayerPersonalityProfile);
   const karma = useSelector(selectPlayerKarma);
-  const factionReputation = useSelector(selectPlayerFactionReputation);
+  const factionReputation = useSelector(selectPlayerFactionReputation) as Record<FactionId, number>;
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
 
@@ -323,7 +324,7 @@ const GeorgeAssistant: React.FC = () => {
     objectiveQueue,
     personality,
     karma,
-    factionReputation,
+    factionReputation: factionReputation as Record<string, number>,
     missionPrimary: nextPrimaryObjective,
     missionSide: nextSideObjective,
   }), [objectiveQueue, personality, karma, factionReputation, nextPrimaryObjective, nextSideObjective]);
@@ -354,7 +355,7 @@ const GeorgeAssistant: React.FC = () => {
   const cooldownRef = useRef<number>(0);
   const pendingInterjectionRef = useRef<GeorgeLine | null>(null);
   const completedQuestIdsRef = useRef<Set<string>>(new Set());
-  const factionRef = useRef(factionReputation);
+  const factionRef = useRef<Record<FactionId, number>>(factionReputation);
   const alertRef = useRef({ level: world.globalAlertLevel, inCombat: world.inCombat });
   const ambientTimerRef = useRef<number | null>(null);
 
