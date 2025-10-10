@@ -1421,6 +1421,37 @@ Complete Resistance quest and verify +20 Resistance reputation, -10 CorpSec repu
 </test>
 </step>
 
+<step id="29.5">
+<step_metadata>
+  <number>29.5</number>
+  <title>Implement Localized Witness Reputation Propagation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Layer a witness-and-gossip reputation network on top of the faction standings so notoriety spreads through observers and their close contacts rather than globally.
+</instructions>
+
+<details>
+- **Event capture pipeline** (`src/game/systems/reputation/events.ts`): Emit structured `ReputationEvent` payloads whenever the player performs a notable act (combat finisher, theft, rescue) with tags for trait deltas (heroic, cruel, sneaky, competent) and intensity.
+- **Witness sampling service** (`src/game/systems/reputation/witnessService.ts`): Query nearby NPCs within the active map cell, evaluate line of sight, distance falloff, lighting, disguise, and noise to produce a `visibilityScore`; discard witnesses below threshold τ.
+- **Interpretation model** (`src/game/systems/reputation/interpretation.ts`): Combine each witness’s faction values, personal biases, and event tags to derive trait adjustments and confidence. Persist `WitnessRecord` entries keyed by event.
+- **Reputation scopes** (`src/store/reputationSlice.ts`): Track layered reputation buckets for (a) individual witnesses, (b) their faction, and (c) the local neighborhood cell. Apply weighted deltas using confidence to adjust `ReputationProfile` traits (heroic, cruel, sneaky, intimidating, competent) with decay timestamps.
+- **Propagation graph** (`src/game/systems/reputation/propagationService.ts`): Maintain bounded gossip edges between NPC social links. Each tick, spend limited "gossip energy" to advance rumors with latency falloff and strength decay. Prevent cross-cell spread unless events exceed intensity threshold.
+- **NPC reactions integration**: Update dialogue controllers, shop pricing hooks, guard AI alertness, and quest availability checks to query scoped reputation rather than global faction standing when determining responses.
+- **Debug overlays**: Add a developer-only heatmap toggle and NPC inspector panel showing top perceived traits, confidence, and rumor sources for troubleshooting.
+</details>
+
+<prerequisites>
+- Step 29 (Implement Faction Reputation System with Three Core Factions)
+- Step 23.5 (Dynamic NPC Scheduling) for routine-aware witness sampling
+</prerequisites>
+
+<test>
+Trigger three contrasting events in the Slums: rescue civilians (heroic), intimidate a ganger (scary), and pickpocket a vendor (sneaky). Verify only NPCs within line of sight update immediately, nearby contacts learn over time, and Downtown NPCs remain unaware. Check discounts apply only with witnesses and their friends, guards in the same cell escalate hostility, and dialogue lines reference observed deeds with confidence qualifiers. Advance time and confirm scores decay without reinforcement.
+</test>
+</step>
+
 <step id="30.1">
 <step_metadata>
   <number>30.1</number>
@@ -2501,11 +2532,11 @@ Launch the HUD and confirm George appears within the Level 0 objectives area wit
 <summary>
 ## Summary
 
-This plan now outlines **51 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **52 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (18 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26.1/26.2/26.3, 29, 30.1/30.2)
+- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (19 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26.1/26.2/26.3, 29/29.5, 30.1/30.2)
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
 - **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (10 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35, 35.2, 35.5)
