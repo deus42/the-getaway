@@ -40,6 +40,11 @@ import {
   AlertLevel,
   SurveillanceZoneState,
 } from "../game/interfaces/types";
+import {
+  CurfewStateMachine,
+  CurfewTimeoutHandle,
+  createCurfewStateMachine,
+} from "../game/systems/curfewStateMachine";
 import { determineEnemyMove } from "../game/combat/enemyAI";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
@@ -108,6 +113,8 @@ const GameController: React.FC = () => {
   const playerRef = useRef<Player>(player);
   const mapAreaRef = useRef<MapArea | null>(currentMapArea ?? null);
   const reinforcementsScheduledRef = useRef(reinforcementsScheduled);
+  const curfewStateMachineRef = useRef<CurfewStateMachine>(createCurfewStateMachine());
+  const reinforcementTimeoutRef = useRef<CurfewTimeoutHandle | null>(null);
   const globalAlertLevelRef = useRef(globalAlertLevel);
   const timeOfDayRef = useRef(timeOfDay);
   const overlayEnabledRef = useRef(overlayEnabled);
@@ -237,6 +244,13 @@ const GameController: React.FC = () => {
 
   useEffect(() => {
     reinforcementsScheduledRef.current = reinforcementsScheduled;
+  }, [reinforcementsScheduled]);
+
+  useEffect(() => {
+    if (!reinforcementsScheduled && reinforcementTimeoutRef.current !== null) {
+      curfewStateMachineRef.current.cancel(reinforcementTimeoutRef.current);
+      reinforcementTimeoutRef.current = null;
+    }
   }, [reinforcementsScheduled]);
 
   useEffect(() => {
@@ -965,6 +979,7 @@ const GameController: React.FC = () => {
     dispatch,
     mapDirectory,
     mapConnections,
+    log,
     logStrings,
     attemptMovementStamina,
     locale,
@@ -1148,8 +1163,12 @@ const GameController: React.FC = () => {
         dispatch(scheduleReinforcements());
         dispatch(addLogMessage(logStrings.reinforcementsIncoming));
 
-        // Schedule reinforcement spawn
-        setTimeout(() => {
+        if (reinforcementTimeoutRef.current !== null) {
+          curfewStateMachineRef.current.cancel(reinforcementTimeoutRef.current);
+        }
+
+        reinforcementTimeoutRef.current = curfewStateMachineRef.current.schedule(() => {
+          reinforcementTimeoutRef.current = null;
           if (!inCombat) {
             dispatch(enterCombat());
           }
@@ -1387,6 +1406,7 @@ const GameController: React.FC = () => {
     player,
     currentMapArea,
     cancelPendingEnemyAction,
+    log,
   ]);
 
   useEffect(() => {
@@ -1394,6 +1414,14 @@ const GameController: React.FC = () => {
       cancelPendingEnemyAction();
     };
   }, [cancelPendingEnemyAction]);
+
+  useEffect(() => {
+    const curfewStateMachine = curfewStateMachineRef.current;
+    return () => {
+      curfewStateMachine.dispose();
+      reinforcementTimeoutRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     if (!inCombat) {
@@ -1420,7 +1448,7 @@ const GameController: React.FC = () => {
     }
     // Update the ref *after* the check for the next render
     prevInCombat.current = inCombat;
-  }, [inCombat, dispatch, logStrings]); // Run whenever inCombat changes (add dispatch if used inside)
+  }, [inCombat, dispatch, log, logStrings]); // Run whenever inCombat changes (add dispatch if used inside)
 
   // Handle attacking an enemy
   const attackEnemy = useCallback(
@@ -1524,7 +1552,7 @@ const GameController: React.FC = () => {
         dispatch(switchTurn());
       }
     },
-    [player, enemies, dispatch, logStrings]
+    [player, enemies, dispatch, log, logStrings]
   );
 
   // Find the closest enemy to a position
@@ -1899,6 +1927,7 @@ const GameController: React.FC = () => {
       activeDialogueId,
       mapConnections,
       dialogues,
+      log,
       logStrings,
       attemptMovementStamina,
     ]
