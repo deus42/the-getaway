@@ -7,6 +7,9 @@ import { describeSkillEffect, getPlayerSkillValue, getSkillPointIncrement, isSki
 import NotificationBadge from './NotificationBadge';
 import { gradientTextStyle } from './theme';
 import { allocateSkillPointToSkill, refundSkillPointFromSkill } from '../../store/playerSlice';
+import { createScopedLogger } from '../../utils/logger';
+
+const log = createScopedLogger('SkillTreePanel');
 
 const panelStyle: React.CSSProperties = {
   background: 'transparent',
@@ -234,7 +237,7 @@ const SkillTreePanel: React.FC = () => {
   }, [player.skillTraining]);
 
   const switchBranch = useCallback((branchId: SkillBranchId) => {
-    console.log('[SkillTreePanel] Switching to branch:', branchId);
+    log.debug('Switching to branch:', branchId);
     setActiveBranch(branchId);
     const target = tabRefs.current[branchId];
     if (target) {
@@ -314,7 +317,7 @@ const SkillTreePanel: React.FC = () => {
 
   const activeBranchDefinition = getBranchById(activeBranch);
 
-  console.log('[SkillTreePanel] Render - Active branch:', activeBranch, 'Branch:', activeBranchDefinition.label);
+  log.debug('Render - Active branch:', activeBranch, 'Branch:', activeBranchDefinition.label);
 
   return (
     <section style={panelStyle} aria-labelledby="skill-tree-title">
@@ -350,7 +353,7 @@ const SkillTreePanel: React.FC = () => {
               tabIndex={0}
               onKeyDown={(event) => handleTabKeyDown(event, branch.id)}
               onClick={() => {
-                console.log('[SkillTreePanel] Tab clicked:', branch.id, branch.label);
+                log.debug('Tab clicked:', branch.id, branch.label);
                 switchBranch(branch.id);
               }}
               style={tabStyle(selected)}

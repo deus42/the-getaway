@@ -59,8 +59,10 @@ import {
   updateSurveillance,
 } from "../game/systems/surveillance/cameraSystem";
 import { setOverlayEnabled } from "../store/surveillanceSlice";
+import { createScopedLogger } from "../utils/logger";
 
 const GameController: React.FC = () => {
+  const log = useMemo(() => createScopedLogger("GameController"), []);
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
   const encumbranceLevel = player.encumbrance.level;
@@ -919,8 +921,8 @@ const GameController: React.FC = () => {
         dispatch(setMapArea(targetArea));
         dispatch(movePlayer(connection.toPosition));
       } else {
-        console.warn(
-          `[GameController] Missing target area in state for ${connection.toAreaId}`
+        log.warn(
+          `Missing target area in state for ${connection.toAreaId}`
         );
       }
 
@@ -1191,8 +1193,8 @@ const GameController: React.FC = () => {
 
   // --- Enemy Turn Logic ---
   useEffect(() => {
-    console.log(
-      `[GameController] === useEffect RUNNING === Turn: ${
+    log.debug(
+      `=== useEffect RUNNING === Turn: ${
         isPlayerTurn ? "Player" : "Enemy"
       }, Combat: ${inCombat}, Processing: ${processingEnemyIdRef.current ? "true" : "false"}, EnemyIdx: ${currentEnemyTurnIndex}`
     );
@@ -1208,15 +1210,15 @@ const GameController: React.FC = () => {
     const livingEnemies = enemies.filter((enemy) => enemy.health > 0);
     if (livingEnemies.length === 0) {
       cancelPendingEnemyAction();
-      console.warn(
-        "[GameController] Enemy turn effect running but no living enemies found."
+      log.warn(
+        "Enemy turn effect running but no living enemies found."
       );
       return;
     }
 
     if (currentEnemyTurnIndex >= enemies.length) {
-      console.log(
-        `[GameController] Enemy index ${currentEnemyTurnIndex} out of bounds (length: ${enemies.length}). Ending enemy turn.`
+      log.debug(
+        `Enemy index ${currentEnemyTurnIndex} out of bounds (length: ${enemies.length}). Ending enemy turn.`
       );
       cancelPendingEnemyAction();
       dispatch(switchTurn());
@@ -1228,8 +1230,8 @@ const GameController: React.FC = () => {
     const currentEnemy = enemies[currentEnemyTurnIndex];
 
     if (!currentEnemy || currentEnemy.health <= 0 || currentEnemy.actionPoints <= 0) {
-      console.log(
-        `[GameController] Enemy ${
+      log.debug(
+        `Enemy ${
           currentEnemy?.id ?? `at index ${currentEnemyTurnIndex}`
         } cannot act (Dead or 0 AP). Checking next.`
       );
@@ -1249,12 +1251,12 @@ const GameController: React.FC = () => {
       }
 
       if (!foundValidEnemy) {
-        console.log("[GameController] All enemies processed, switching back to player.");
+        log.debug("All enemies processed, switching back to player.");
         dispatch(switchTurn());
         dispatch(resetActionPoints());
         setCurrentEnemyTurnIndex(0);
       } else {
-        console.log(`[GameController] Moving to next valid enemy at index ${nextIndex}`);
+        log.debug(`Moving to next valid enemy at index ${nextIndex}`);
         setCurrentEnemyTurnIndex(nextIndex);
       }
       return;
@@ -1264,25 +1266,25 @@ const GameController: React.FC = () => {
       return;
     }
 
-    console.log(
-      `[GameController] Scheduling action for enemy index ${currentEnemyTurnIndex}: ${currentEnemy.id} (AP: ${currentEnemy.actionPoints})`
+    log.debug(
+      `Scheduling action for enemy index ${currentEnemyTurnIndex}: ${currentEnemy.id} (AP: ${currentEnemy.actionPoints})`
     );
 
     processingEnemyIdRef.current = currentEnemy.id;
     enemyActionTimeoutRef.current = window.setTimeout(() => {
-      console.log(
-        `[GameController] >>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
+      log.debug(
+        `>>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
       );
 
       if (!inCombat) {
-        console.log('[GameController] Combat ended, skipping enemy action');
+        log.debug('Combat ended, skipping enemy action');
         cancelPendingEnemyAction(false);
         return;
       }
 
       try {
-        console.log(
-          `[GameController] Enemy Turn AI: START for ${currentEnemy.id}`
+        log.debug(
+          `Enemy Turn AI: START for ${currentEnemy.id}`
         );
 
         const coverPositions: Position[] = [];
@@ -1293,8 +1295,8 @@ const GameController: React.FC = () => {
             }
           }
         }
-        console.log(
-          `[GameController] Enemy Turn AI: Got cover positions for ${currentEnemy.id}`
+        log.debug(
+          `Enemy Turn AI: Got cover positions for ${currentEnemy.id}`
         );
 
         const result = determineEnemyMove(
@@ -1305,8 +1307,8 @@ const GameController: React.FC = () => {
           coverPositions,
           currentMapArea.entities.npcs
         );
-        console.log(
-          `[GameController] Enemy ${currentEnemy.id} action: ${result.action}, AP left: ${result.enemy.actionPoints}`
+        log.debug(
+          `Enemy ${currentEnemy.id} action: ${result.action}, AP left: ${result.enemy.actionPoints}`
         );
 
         // Combat feedback for enemy attacks
@@ -1342,35 +1344,35 @@ const GameController: React.FC = () => {
           }
         }
 
-        console.log(
-          `[GameController] Enemy Turn AI: BEFORE dispatching updates for ${currentEnemy.id}`
+        log.debug(
+          `Enemy Turn AI: BEFORE dispatching updates for ${currentEnemy.id}`
         );
         dispatch(updateEnemy(result.enemy));
-        console.log(
-          `[GameController] Enemy Turn AI: AFTER dispatch(updateEnemy) for ${currentEnemy.id}`
+        log.debug(
+          `Enemy Turn AI: AFTER dispatch(updateEnemy) for ${currentEnemy.id}`
         );
 
         if (result.player.id === player.id) {
-          console.log(
-            `[GameController] Enemy Turn AI: BEFORE dispatch(setPlayerData) for ${currentEnemy.id}`
+          log.debug(
+            `Enemy Turn AI: BEFORE dispatch(setPlayerData) for ${currentEnemy.id}`
           );
           dispatch(setPlayerData(result.player));
-          console.log(
-            `[GameController] Enemy Turn AI: AFTER dispatch(setPlayerData) for ${currentEnemy.id}`
+          log.debug(
+            `Enemy Turn AI: AFTER dispatch(setPlayerData) for ${currentEnemy.id}`
           );
         }
 
-        console.log(
-          `[GameController] Enemy Turn AI: END AI & Dispatches for ${currentEnemy.id}`
+        log.debug(
+          `Enemy Turn AI: END AI & Dispatches for ${currentEnemy.id}`
         );
       } catch (error) {
-        console.error("[GameController] Error during enemy turn AI:", {
+        log.error("Error during enemy turn AI:", {
           enemyId: currentEnemy?.id,
           error,
         });
       } finally {
-        console.log(
-          `[GameController] Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Advancing to next enemy.`
+        log.debug(
+          `Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Advancing to next enemy.`
         );
         setCurrentEnemyTurnIndex((prev) => prev + 1);
         cancelPendingEnemyAction(false);
@@ -1410,8 +1412,8 @@ const GameController: React.FC = () => {
     // Check if the value changed from true to false
     if (prevInCombat.current && !inCombat) {
       dispatch(addLogMessage(logStrings.combatOver));
-      console.log(
-        "[GameController] Combat ended (detected via useEffect watching inCombat)."
+      log.debug(
+        "Combat ended (detected via useEffect watching inCombat)."
       );
       // Explicitly reset player AP when combat ends.
       dispatch(resetActionPoints());
@@ -1449,7 +1451,7 @@ const GameController: React.FC = () => {
         mapArea.tiles[enemy.position.y][enemy.position.x].provideCover;
 
       // Log cover status before attacking
-      console.log("[GameController] attackEnemy: PRE-ATTACK", {
+      log.debug("attackEnemy: PRE-ATTACK", {
         enemyId: enemy.id,
         enemyPosition: enemy.position,
         isBehindCover: isBehindCover,
@@ -1467,7 +1469,7 @@ const GameController: React.FC = () => {
         result.events.forEach((event) => dispatch(addLogMessage(event.message)));
       }
 
-      console.log("[GameController] attackEnemy: POST-ATTACK", {
+      log.debug("attackEnemy: POST-ATTACK", {
         apCost: attackCost,
         playerAP_after: updatedPlayer.actionPoints,
       });
@@ -1498,7 +1500,7 @@ const GameController: React.FC = () => {
 
       // Update enemy
       const updatedEnemyTarget = result.newTarget as Enemy;
-      console.log("[GameController] attackEnemy: PRE-DISPATCH updateEnemy", {
+      log.debug("attackEnemy: PRE-DISPATCH updateEnemy", {
         enemyId: updatedEnemyTarget.id,
         healthBeforeUpdate: enemy.health, // Health of original enemy object passed to function
         healthInNewTarget: updatedEnemyTarget.health, // Health in the object to be dispatched
@@ -1516,8 +1518,8 @@ const GameController: React.FC = () => {
         dispatch(addLogMessage(logStrings.allEnemiesDefeated));
       } else if (updatedPlayer.actionPoints <= 0) {
         // If player has no more AP or exactly enough for this attack, switch turn
-        console.log(
-          "[GameController] attackEnemy: Player out of AP after attack, switching turn."
+        log.debug(
+          "attackEnemy: Player out of AP after attack, switching turn."
         );
         dispatch(switchTurn());
       }
@@ -1795,8 +1797,8 @@ const GameController: React.FC = () => {
               setCurfewAlertState("clear");
             }
           } else {
-            console.warn(
-              `[GameController] Missing target area in state for ${connection.toAreaId}`
+            log.warn(
+              `Missing target area in state for ${connection.toAreaId}`
             );
           }
 
@@ -1852,13 +1854,13 @@ const GameController: React.FC = () => {
         }
         // dispatch(addLogMessage({ type: "info", message: `Moved to (${newPosition.x}, ${newPosition.y})` })); // COMMENTED OUT
         if (inCombat) {
-          console.log("[GameController] handleKeyDown: PRE-MOVE AP DEDUCTION", {
+          log.debug("handleKeyDown: PRE-MOVE AP DEDUCTION", {
             apCost: 1,
             playerAP_before: player.actionPoints,
           });
           dispatch(updateActionPoints(-1)); // Reduce action points by 1
-          console.log(
-            "[GameController] handleKeyDown: POST-MOVE AP DEDUCTION",
+          log.debug(
+            "handleKeyDown: POST-MOVE AP DEDUCTION",
             {
               apCost: 1,
               playerAP_after: player.actionPoints - 1, // Simulate state update for logging
@@ -1867,8 +1869,8 @@ const GameController: React.FC = () => {
 
           // If player has no more AP, switch turn
           if (player.actionPoints <= 1) {
-            console.log(
-              "[GameController] handleKeyDown: Player out of AP after move, switching turn."
+            log.debug(
+              "handleKeyDown: Player out of AP after move, switching turn."
             );
             dispatch(switchTurn());
           }
