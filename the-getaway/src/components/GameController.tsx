@@ -108,6 +108,7 @@ const GameController: React.FC = () => {
   const playerRef = useRef<Player>(player);
   const mapAreaRef = useRef<MapArea | null>(currentMapArea ?? null);
   const reinforcementsScheduledRef = useRef(reinforcementsScheduled);
+  const reinforcementTimeoutRef = useRef<number | null>(null);
   const globalAlertLevelRef = useRef(globalAlertLevel);
   const timeOfDayRef = useRef(timeOfDay);
   const overlayEnabledRef = useRef(overlayEnabled);
@@ -237,6 +238,13 @@ const GameController: React.FC = () => {
 
   useEffect(() => {
     reinforcementsScheduledRef.current = reinforcementsScheduled;
+  }, [reinforcementsScheduled]);
+
+  useEffect(() => {
+    if (!reinforcementsScheduled && reinforcementTimeoutRef.current !== null) {
+      window.clearTimeout(reinforcementTimeoutRef.current);
+      reinforcementTimeoutRef.current = null;
+    }
   }, [reinforcementsScheduled]);
 
   useEffect(() => {
@@ -1148,8 +1156,12 @@ const GameController: React.FC = () => {
         dispatch(scheduleReinforcements());
         dispatch(addLogMessage(logStrings.reinforcementsIncoming));
 
-        // Schedule reinforcement spawn
-        setTimeout(() => {
+        if (reinforcementTimeoutRef.current !== null) {
+          window.clearTimeout(reinforcementTimeoutRef.current);
+        }
+
+        reinforcementTimeoutRef.current = window.setTimeout(() => {
+          reinforcementTimeoutRef.current = null;
           if (!inCombat) {
             dispatch(enterCombat());
           }
@@ -1394,6 +1406,15 @@ const GameController: React.FC = () => {
       cancelPendingEnemyAction();
     };
   }, [cancelPendingEnemyAction]);
+
+  useEffect(() => {
+    return () => {
+      if (reinforcementTimeoutRef.current !== null) {
+        window.clearTimeout(reinforcementTimeoutRef.current);
+        reinforcementTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!inCombat) {

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { getUIStrings } from '../../content/ui';
@@ -496,7 +496,8 @@ const MiniMap: React.FC = () => {
   const draggingRef = useRef(false);
   const dragModeRef = useRef<'pan' | 'waypoint'>('pan');
   const dragMovedRef = useRef(false);
-  const lastDragUpdateRef = useRef(0);
+  const dragFrameRef = useRef<number | null>(null);
+  const pendingDragCoordsRef = useRef<{ gridX: number; gridY: number } | null>(null);
   const rotationDegRef = useRef(0);
   const playerHeadingRef = useRef(0);
   const previousPlayerPositionRef = useRef<Position | null>(null);
@@ -586,6 +587,12 @@ const MiniMap: React.FC = () => {
       window.removeEventListener(PATH_PREVIEW_EVENT, handler as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    return () => {
+      cancelDragAnimation();
+    };
+  }, [cancelDragAnimation]);
 
   useEffect(() => {
     const activeState = latestStateRef.current;
@@ -730,6 +737,53 @@ const MiniMap: React.FC = () => {
     });
   }, []);
 
+  const cancelDragAnimation = useCallback(() => {
+    if (dragFrameRef.current !== null) {
+      cancelAnimationFrame(dragFrameRef.current);
+      dragFrameRef.current = null;
+    }
+    pendingDragCoordsRef.current = null;
+  }, []);
+
+  const scheduleDragUpdate = useCallback(
+    (coords: { gridX: number; gridY: number }) => {
+      pendingDragCoordsRef.current = coords;
+      if (dragFrameRef.current !== null) {
+        return;
+      }
+
+      dragFrameRef.current = window.requestAnimationFrame(() => {
+        const next = pendingDragCoordsRef.current;
+        dragFrameRef.current = null;
+        pendingDragCoordsRef.current = null;
+
+        if (!next) {
+          return;
+        }
+
+        dragMovedRef.current = true;
+
+        if (dragModeRef.current === 'pan') {
+          focusCamera(next, false);
+          return;
+        }
+
+        const state = latestStateRef.current;
+        const player = state?.entities.find((entity) => entity.kind === 'player');
+        if (!player) {
+          return;
+        }
+
+        draftPathRef.current = [
+          { x: player.x, y: player.y },
+          { x: next.gridX, y: next.gridY },
+        ];
+        setRenderTick((tick) => tick + 1);
+      });
+    },
+    [focusCamera]
+  );
+
   const dispatchWaypointEvent = useCallback((target: Position) => {
     const state = latestStateRef.current;
     if (!state) {
@@ -804,9 +858,9 @@ const MiniMap: React.FC = () => {
       return;
     }
 
+    cancelDragAnimation();
     draggingRef.current = true;
     dragMovedRef.current = false;
-    lastDragUpdateRef.current = performance.now();
     dragModeRef.current = event.shiftKey ? 'waypoint' : 'pan';
 
     if (dragModeRef.current === 'pan') {
@@ -833,23 +887,7 @@ const MiniMap: React.FC = () => {
       return;
     }
 
-    const now = performance.now();
-    if (now - lastDragUpdateRef.current < 35) {
-      return;
-    }
-    lastDragUpdateRef.current = now;
-    dragMovedRef.current = true;
-
-    if (dragModeRef.current === 'pan') {
-      focusCamera(resolved, false);
-    } else {
-      const state = latestStateRef.current;
-      const player = state?.entities.find((entity) => entity.kind === 'player');
-      if (player) {
-        draftPathRef.current = [{ x: player.x, y: player.y }, { x: resolved.gridX, y: resolved.gridY }];
-        setRenderTick((tick) => tick + 1);
-      }
-    }
+    scheduleDragUpdate(resolved);
   };
 
   const handleMouseUp = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -857,6 +895,7 @@ const MiniMap: React.FC = () => {
       return;
     }
 
+    cancelDragAnimation();
     const resolved = resolveGridFromEvent(event);
     draggingRef.current = false;
 
@@ -881,6 +920,7 @@ const MiniMap: React.FC = () => {
     hoverInfoRef.current = null;
     setHoverInfo(null);
     draftPathRef.current = null;
+    cancelDragAnimation();
   };
 
   const handleWheel = (event: React.WheelEvent<HTMLDivElement>) => {
@@ -928,6 +968,7 @@ const MiniMap: React.FC = () => {
   };
 
   const activeState = resolveState();
+  const objectiveMarkers = useMemo(() => activeState?.objectiveMarkers ?? [], [activeState?.objectiveMarkers]);
 
   if (!activeState) {
     return null;
@@ -1321,11 +1362,11 @@ const MiniMap: React.FC = () => {
             <div style={{ marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: '0.58rem', opacity: 0.7 }}>
               {uiStrings.miniMap.objectivesHeading ?? 'Tracked Objectives'}
             </div>
-            {activeState.objectiveMarkers.length === 0 ? (
+            {objectiveMarkers.length === 0 ? (
               <span style={{ opacity: 0.6 }}>{uiStrings.miniMap.noObjectives ?? 'No objectives visible.'}</span>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-                {activeState.objectiveMarkers.map((objective) => (
+                {objectiveMarkers.map((objective) => (
                   <div
                     key={objective.id}
                     style={{

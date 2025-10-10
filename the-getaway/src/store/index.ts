@@ -1,5 +1,5 @@
 import { AnyAction, combineReducers, configureStore, createAction } from '@reduxjs/toolkit';
-import playerReducer from './playerSlice';
+import playerReducer, { PLAYER_STATE_VERSION, PlayerState, initialPlayerState } from './playerSlice';
 import worldReducer, { applyLocaleToWorld } from './worldSlice';
 import questsReducer, { applyLocaleToQuests } from './questsSlice';
 import missionReducer, { applyLocaleToMissions } from './missionSlice';
@@ -29,6 +29,56 @@ export const PERSISTED_STATE_KEY = STORAGE_KEY;
 
 type CombinedState = ReturnType<typeof combinedReducer>;
 type PersistedState = CombinedState;
+
+const cloneOrDefault = <T>(value: T[] | undefined, fallback: T[]): T[] =>
+  Array.isArray(value) ? [...value] : [...fallback];
+
+const migratePlayerState = (state?: Partial<PlayerState> | null): PlayerState => {
+  if (!state) {
+    return {
+      ...initialPlayerState,
+      version: PLAYER_STATE_VERSION,
+      data: {
+        ...initialPlayerState.data,
+        perks: [...initialPlayerState.data.perks],
+        perkRuntime: { ...initialPlayerState.data.perkRuntime },
+        factionReputation: { ...initialPlayerState.data.factionReputation },
+      },
+      pendingLevelUpEvents: [...initialPlayerState.pendingLevelUpEvents],
+      xpNotifications: [...initialPlayerState.xpNotifications],
+      pendingFactionEvents: [...initialPlayerState.pendingFactionEvents],
+    };
+  }
+
+  const persistedData = state.data ?? null;
+  const mergedData = {
+    ...initialPlayerState.data,
+    ...(persistedData ?? {}),
+    perks: cloneOrDefault(persistedData?.perks, initialPlayerState.data.perks),
+    perkRuntime: {
+      ...initialPlayerState.data.perkRuntime,
+      ...(persistedData?.perkRuntime ?? {}),
+    },
+    factionReputation: {
+      ...initialPlayerState.data.factionReputation,
+      ...(persistedData?.factionReputation ?? {}),
+    },
+  };
+
+  return {
+    version: PLAYER_STATE_VERSION,
+    data: mergedData,
+    pendingLevelUpEvents: cloneOrDefault(
+      state.pendingLevelUpEvents,
+      initialPlayerState.pendingLevelUpEvents
+    ),
+    xpNotifications: cloneOrDefault(state.xpNotifications, initialPlayerState.xpNotifications),
+    pendingFactionEvents: cloneOrDefault(
+      state.pendingFactionEvents,
+      initialPlayerState.pendingFactionEvents
+    ),
+  };
+};
 
 const loadState = (): PersistedState | undefined => {
   if (!isBrowser) {
@@ -61,6 +111,17 @@ const saveState = (state: PersistedState) => {
   }
 };
 
+const migratePersistedState = (state?: PersistedState): PersistedState | undefined => {
+  if (!state) {
+    return undefined;
+  }
+
+  return {
+    ...state,
+    player: migratePlayerState(state.player),
+  };
+};
+
 const rootReducer = (state: CombinedState | undefined, action: AnyAction) => {
   if (resetGame.match(action)) {
     const preservedSettings = state?.settings;
@@ -82,7 +143,8 @@ const rootReducer = (state: CombinedState | undefined, action: AnyAction) => {
   return combinedReducer(state, action);
 };
 
-const preloadedState = loadState();
+const persistedState = loadState();
+const preloadedState = migratePersistedState(persistedState);
 
 export const store = configureStore({
   reducer: rootReducer,
