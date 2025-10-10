@@ -1,19 +1,32 @@
 # The Getaway
 
-A Phaser-powered tactics prototype built with React, Redux Toolkit, and Vite. The project now includes a fully automated CI/CD pipeline that tests, builds, and deploys the site to GitHub Pages for release snapshots.
+A tactical stealth RPG prototype built with Phaser, React, and Redux Toolkit. The project ships a fully automated CI/CD pipeline that tests, builds, and deploys nightly snapshots to GitHub Pages.
 
-## Local development
+## Quickstart (5-minute run)
 
 ```bash
+# install
+yarn install
+# dev
 yarn dev
+# tests
+yarn test
+# build
+yarn build && yarn preview
 ```
 
-Runs the development server with hot module replacement. Additional helpful commands:
+## Architecture snapshot
+- Rendering → Phaser 3 scenes with an isometric camera stack.
+- HUD / UX → React (Vite) mounted over the Phaser canvas through a shared Redux store.
+- State → Redux Toolkit slices persisted to `localStorage` with hydration guards.
+- Interop → Event-driven bridge plus Redux actions keep Phaser and React in sync.
 
-- `yarn lint` – ESLint validation.
-- `yarn test` – Jest unit tests (jsdom environment).
-- `yarn build` – Type-checks and generates a production bundle in `dist/`.
-- `yarn preview` – Serves the built bundle locally.
+For the full breakdown, including the Mermaid data-flow diagram, read [`../memory-bank/architecture.md`](../memory-bank/architecture.md).
+
+## Roadmap & design notes
+- Roadmap → [`../memory-bank/mvp-plan.md`](../memory-bank/mvp-plan.md)
+- Progress log → [`../memory-bank/progress.md`](../memory-bank/progress.md)
+- Design notes → [`memory-bank/`](../memory-bank/) *(key: `plot.md`, `game-design.md`)*
 
 ## Continuous integration & deployment
 
@@ -33,3 +46,7 @@ The Vite configuration automatically detects the repository name when running in
 Once the workflow finishes successfully on `main`, GitHub Pages publishes the latest build at the URL reported in the workflow summary. This first deployment acts as the initial public release of the project.
 
 If you fork the repository under a different name, the base path will update automatically without further changes.
+
+## License
+
+The project is released under the [MIT License](../LICENSE).
