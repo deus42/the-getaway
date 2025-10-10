@@ -200,6 +200,35 @@ Dedicated folder for reusable React UI components, separate from core game logic
 <code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location>
 </architecture_section>
 
+<architecture_section id="localized_reputation_network" category="gameplay_systems">
+<design_principles>
+- Scope notoriety updates to the smallest meaningful audience first (witness → faction → neighborhood) so systemic reactions stay believable and performant.
+- Keep event sensing, witness evaluation, interpretation, propagation, and reaction decoupled through message contracts to minimize feedback loops between UI, AI, and data layers.
+- Budget rumor spread and decay inside the system itself so designers tweak pacing without touching consuming systems.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/systems/reputation/events.ts</code_location> exposes `emitReputationEvent` which game actions call with trait tags, intensity, and location metadata. Events fan out through an in-memory queue managed by `reputationSystem`.
+2. <code_location>the-getaway/src/game/systems/reputation/witnessService.ts</code_location> samples NPCs from the active `MapCell`, computes `visibilityScore = los * distanceFalloff * lighting * disguise * noise`, and yields `WitnessCandidate` objects. Candidates below threshold τ are flagged as rumor-only observers.
+3. <code_location>the-getaway/src/game/systems/reputation/interpretation.ts</code_location> merges candidate data with faction value tables and personal bias traits to generate `WitnessRecord` entries containing trait deltas, confidence, and perceived alignment. Records persist to <code_location>the-getaway/src/store/reputationSlice.ts</code_location> for auditing.
+4. <code_location>the-getaway/src/store/reputationSlice.ts</code_location> maintains layered `ReputationProfile` maps keyed by witness ID, faction ID, and `cellId`. Reducers apply weighted deltas, schedule decay ticks, and expose selectors for scoped lookups (e.g., `selectCellReputation(cellId, trait)`).
+5. <code_location>the-getaway/src/game/systems/reputation/propagationService.ts</code_location> advances bounded gossip edges once per heartbeat using NPC social graphs pulled from `npcDirectory`. Each edge stores strength, latency, and remaining gossip energy to cap daily rumor spread.
+6. Consumers pull scoped data through selectors: `DialogueController` adjusts available lines, `PricingService` modifies price multipliers, `GuardAIController` escalates alertness, and `QuestGatingService` unlocks/locks missions based on the relevant audience’s perception.
+7. Developer tooling lives in <code_location>the-getaway/src/debug/reputationInspector.tsx</code_location> and <code_location>the-getaway/src/debug/reputationHeatmapLayer.tsx</code_location>, rendering overlays that visualize trait intensity by cell and witness breakdowns for tuning.
+</technical_flow>
+
+<pattern name="RumorPropagationBudget">
+- Each NPC carries a `gossipEnergy` counter replenished daily; propagation edges consume energy per hop, enforcing slow spread without bespoke timers in consumers.
+- Latency offsets ensure rumors resolve after a delay rather than instantly applying deltas, enabling designers to stage delayed reactions.
+- Intensity gates allow catastrophic events to bypass normal caps by flagging `allowCrossCell` when thresholds exceed configured bounds.
+</pattern>
+
+<pattern name="ScopedReputationLookup">
+- Selector priority order: direct witness override → social graph aggregate → faction aggregate → cell aggregate → fallback to global faction standing (Step 29).
+- Each selector returns both score and confidence so UI and AI can present uncertain reactions (“I heard…” vs “I saw…”).
+- Hooks expose subscription APIs for React HUD (discount banners, dialogue hints) without leaking Redux internals into Phaser systems.
+</pattern>
+</architecture_section>
 ### `/the-getaway/src/content`
 
 Authorial data that defines the playable world, separated from runtime systems so levels can be versioned and reviewed independently.
