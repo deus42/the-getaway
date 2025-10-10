@@ -71,8 +71,16 @@ const toRadians = (degrees: number): number => (degrees * Math.PI) / 180;
 
 const distanceBetween = (a: Position, b: Position): number => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
 
+const isJsdomEnvironment = (): boolean => {
+  if (typeof navigator === 'undefined') {
+    return false;
+  }
+
+  return /jsdom/i.test(navigator.userAgent ?? '');
+};
+
 const get2dContext = (canvas: HTMLCanvasElement | null): CanvasRenderingContext2D | null => {
-  if (!canvas || typeof canvas.getContext !== 'function') {
+  if (!canvas || typeof canvas.getContext !== 'function' || isJsdomEnvironment()) {
     return null;
   }
 
