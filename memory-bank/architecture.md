@@ -60,6 +60,32 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 - **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
 
+<architecture_section id="high_level_overview" category="summary">
+<design_principles>
+- Phaser scenes own simulation and rendering while React manages HUD overlays that subscribe to Redux selectors.
+- Redux Toolkit slices centralise world, player, and quest data so both runtimes consume a single state graph.
+- Persistence hydrates from `localStorage` with schema guards and version tags to keep older saves compatible.
+- Content remains immutable under `src/content/levels/<level-id>/locales/{en,uk}.ts`, cloned into runtime stores before mutation.
+</design_principles>
+
+<technical_flow>
+1. `GameCanvas` boots Phaser scenes, wiring scene lifecycle hooks into Redux dispatchers and DOM CustomEvents.
+2. Bridge services in `src/game/services/*` proxy Phaser events to React HUD listeners while React components dispatch Redux actions that Phaser systems observe.
+3. Persistence helpers serialise whitelisted slices with version metadata and rehydrate on boot, invoking migrators when the stored version lags.
+4. Localisation helpers resolve bilingual content for both HUD strings and scene metadata, ensuring English remains the source of truth with Ukrainian kept in lockstep.
+
+```mermaid
+flowchart LR
+  Input[Mouse/KB] --> Phaser[Phaser Scenes]
+  Phaser <-->|events| Bridge[Custom Event Bridge]
+  Bridge <--> Redux[Redux Toolkit Store]
+  Redux <--> React[React HUD]
+  Content[(Locales + Level Data)] --> Phaser
+  LocalStorage[(localStorage)] <--> Redux
+```
+</technical_flow>
+</architecture_section>
+
 <architecture_section id="command_shell_layout" category="ui_shell">
 <design_principles>
 - Maintain the three-column command shell while letting each sidebar collapse without removing it from the flex context so the world view can immediately claim the freed space.
