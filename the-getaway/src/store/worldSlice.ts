@@ -11,6 +11,7 @@ import {
   DEFAULT_DAY_NIGHT_CONFIG,
 } from '../game/world/dayNightCycle';
 import { findNearestWalkablePosition, getAdjacentWalkablePositions } from '../game/world/grid';
+import { createScopedLogger } from '../utils/logger';
 
 export interface WorldState {
   currentMapArea: MapArea;
@@ -25,6 +26,8 @@ export interface WorldState {
   globalAlertLevel: AlertLevel;
   reinforcementsScheduled: boolean;
 }
+
+const log = createScopedLogger('worldSlice');
 
 const buildEnemy = (name: string): Enemy => ({
   id: uuidv4(),
@@ -58,7 +61,7 @@ const buildWorldState = (locale: Locale): WorldState => {
     initialEnemy.position = sanitizedPosition;
   }
   currentMapArea.entities.enemies.push(initialEnemy);
-  console.log('[worldSlice] Initial map generated with enemy:', initialEnemy);
+  log.debug('Initial map generated with enemy:', initialEnemy);
 
   return {
     currentMapArea,
@@ -108,11 +111,11 @@ export const worldSlice = createSlice({
         );
 
         if (livingEnemies.length === 0) {
-          console.log('[worldSlice] Cannot enter combat: no living enemies');
+          log.debug('Cannot enter combat: no living enemies');
           return;
         }
 
-        console.log('[worldSlice] Entering Combat Mode');
+        log.debug('Entering Combat Mode');
         state.inCombat = true;
         state.isPlayerTurn = true;
         state.turnCount = 1;
@@ -121,7 +124,7 @@ export const worldSlice = createSlice({
 
     exitCombat: (state) => {
       if (state.inCombat) {
-        console.log('[worldSlice] Exiting Combat Mode');
+        log.debug('Exiting Combat Mode');
         state.inCombat = false;
         state.isPlayerTurn = true;
         state.turnCount = 1;
@@ -135,10 +138,10 @@ export const worldSlice = createSlice({
 
       if (state.isPlayerTurn) {
         state.turnCount++;
-        console.log(`[worldSlice] switchTurn: Starting Player Turn ${state.turnCount}`);
+        log.debug(`switchTurn: Starting Player Turn ${state.turnCount}`);
       } else {
-        console.log(`[worldSlice] switchTurn: Starting Enemy Turn (during Player Turn ${state.turnCount})`);
-        console.log('[worldSlice] switchTurn: Resetting AP for all living enemies');
+        log.debug(`switchTurn: Starting Enemy Turn (during Player Turn ${state.turnCount})`);
+        log.debug('switchTurn: Resetting AP for all living enemies');
         state.currentMapArea.entities.enemies.forEach((enemy, index) => {
           if (enemy.health > 0) {
             state.currentMapArea.entities.enemies[index].actionPoints = enemy.maxActionPoints;
@@ -169,7 +172,7 @@ export const worldSlice = createSlice({
         return true;
       };
 
-      console.log('[worldSlice] updateEnemy reducer running', {
+      log.debug('updateEnemy reducer running', {
         enemyId: incoming.id,
         health: incoming.health,
       });
@@ -184,14 +187,14 @@ export const worldSlice = createSlice({
       });
 
       if (incoming.health <= 0) {
-        console.log(`[worldSlice updateEnemy] Enemy ${incoming.id} removed from all areas.`);
+        log.debug(`updateEnemy: Enemy ${incoming.id} removed from all areas.`);
 
         const livingEnemies = state.currentMapArea.entities.enemies.filter(
           (enemy) => enemy.health > 0
         );
 
         if (livingEnemies.length === 0) {
-          console.log('[worldSlice updateEnemy] No living enemies remain. Clearing combat state.');
+          log.debug('updateEnemy: No living enemies remain. Clearing combat state.');
           state.inCombat = false;
           state.isPlayerTurn = true;
           state.turnCount = 1;
