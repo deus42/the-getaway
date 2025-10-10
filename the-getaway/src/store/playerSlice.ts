@@ -53,11 +53,14 @@ import {
 import { isTwoHandedWeapon } from '../game/systems/equipmentTags';
 
 export interface PlayerState {
+  version: number;
   data: Player;
   pendingLevelUpEvents: LevelUpEvent[];
   xpNotifications: XPNotificationData[];
   pendingFactionEvents: FactionReputationEvent[];
 }
+
+export const PLAYER_STATE_VERSION = 2;
 
 interface FactionReputationEvent {
   factionId: FactionId;
@@ -119,7 +122,8 @@ const createFreshPlayer = (): Player => {
   return base;
 };
 
-const initialState: PlayerState = {
+export const initialPlayerState: PlayerState = {
+  version: PLAYER_STATE_VERSION,
   data: createFreshPlayer(),
   pendingLevelUpEvents: [],
   xpNotifications: [],
@@ -1006,7 +1010,7 @@ const applyStartingItem = (player: Player, item: StartingItemDefinition): void =
 
 export const playerSlice = createSlice({
   name: 'player',
-  initialState,
+  initialState: initialPlayerState,
   reducers: {
     initializeCharacter: (state, action: PayloadAction<InitializeCharacterPayload>) => {
       const { name, skills, backgroundId, visualPreset } = action.payload;
@@ -1351,6 +1355,7 @@ export const playerSlice = createSlice({
     
     // Reset player to default
     resetPlayer: (state) => {
+      state.version = PLAYER_STATE_VERSION;
       state.data = createFreshPlayer();
       state.pendingLevelUpEvents = [];
       state.xpNotifications = [];
@@ -1360,6 +1365,7 @@ export const playerSlice = createSlice({
     // Set the entire player data object (useful after complex operations)
     setPlayerData: (state, action: PayloadAction<Player>) => {
       const clonedPlayer = deepClone(action.payload) as Player;
+      state.version = PLAYER_STATE_VERSION;
       state.data = clonedPlayer;
 
       if (typeof state.data.isCrouching !== 'boolean') {

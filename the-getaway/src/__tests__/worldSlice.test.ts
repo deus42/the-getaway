@@ -27,6 +27,11 @@ const createTestStore = (preloadedState?: { world: WorldState }) => {
     reducer: {
       world: worldReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false,
+        immutableCheck: false,
+      }),
     preloadedState,
   });
 };
