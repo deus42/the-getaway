@@ -32,6 +32,7 @@ import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import { createScopedLogger } from "./utils/logger";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
+import { dystopianTokens } from "./theme/dystopianTokens";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -47,6 +48,8 @@ import type { CharacterCreationData } from "./components/ui/CharacterCreationScr
 
 const log = createScopedLogger('App');
 
+const { colors, fonts, surfaces, motion } = dystopianTokens;
+
 const layoutShellStyle: CSSProperties = {
   margin: 0,
   padding: 0,
@@ -54,9 +57,9 @@ const layoutShellStyle: CSSProperties = {
   height: "100vh",
   overflow: "hidden",
   position: "relative",
-  backgroundColor: "#0f172a",
-  color: "#e2e8f0",
-  fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+  backgroundColor: colors.background,
+  color: colors.foreground,
+  fontFamily: fonts.body,
 };
 
 const SIDEBAR_BASIS = 'min(26rem, 24vw)';
@@ -69,7 +72,7 @@ const mainStageStyle: CSSProperties = {
   right: 0,
   bottom: 0,
   display: "flex",
-  background: "radial-gradient(circle at top, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.95))",
+  background: surfaces.stage,
 };
 
 type StageStyle = CSSProperties & {
@@ -91,7 +94,7 @@ const sidebarRailBaseStyle: CSSProperties = {
   alignItems: "stretch",
   minHeight: 0,
   overflow: "visible",
-  transition: "flex-basis 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
+  transition: `flex-basis 0.28s ${motion.hoverEase}`,
 };
 
 const sidebarBaseStyle: CSSProperties = {
@@ -103,7 +106,7 @@ const sidebarBaseStyle: CSSProperties = {
   gap: "1rem",
   minHeight: 0,
   width: "100%",
-  backdropFilter: "blur(6px)",
+  backdropFilter: "blur(8px)",
   overflowX: "hidden",
   overflowY: "auto",
   transition: "opacity 0.25s ease, padding 0.25s ease",
@@ -111,24 +114,24 @@ const sidebarBaseStyle: CSSProperties = {
 
 const leftSidebarStyle: CSSProperties = {
   ...sidebarBaseStyle,
-  borderRight: "1px solid rgba(51, 65, 85, 0.65)",
-  background: "linear-gradient(180deg, rgba(15, 23, 42, 0.78) 0%, rgba(15, 23, 42, 0.92) 100%)",
+  borderRight: `1px solid ${colors.divider}`,
+  background: surfaces.panelEdge,
   justifyContent: "flex-start",
 };
 
 const rightSidebarStyle: CSSProperties = {
   ...sidebarBaseStyle,
-  borderLeft: "1px solid rgba(51, 65, 85, 0.65)",
-  background: "linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(15, 23, 42, 0.94) 100%)",
+  borderLeft: `1px solid ${colors.divider}`,
+  background: surfaces.panelEdge,
 };
 
 const panelBaseStyle: CSSProperties = {
   position: "relative",
-  background: "linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))",
-  border: "1px solid rgba(148, 163, 184, 0.24)",
+  background: surfaces.panel,
+  border: `1px solid ${colors.panelBorder}`,
   borderRadius: "14px",
   padding: "1rem 0.9rem",
-  boxShadow: "0 24px 42px rgba(15, 23, 42, 0.32)",
+  boxShadow: "0 28px 44px rgba(10, 30, 32, 0.42)",
   display: "flex",
   flexDirection: "column",
   minHeight: 0,
@@ -142,14 +145,16 @@ const panelLabelStyle = (color: string): CSSProperties => ({
   color,
   opacity: 0.85,
   marginBottom: "0.35rem",
+  fontFamily: fonts.badge,
 });
 
 const panelTitleStyle: CSSProperties = {
   fontSize: "1rem",
   fontWeight: 700,
-  color: "#f8fafc",
+  color: colors.foreground,
   marginBottom: "0.65rem",
   letterSpacing: "0.05em",
+  fontFamily: fonts.heading,
 };
 
 const scrollSectionStyle: CSSProperties = {
@@ -434,7 +439,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 <CornerAccents color="#38bdf8" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#38bdf8" count={2} side="left" />
-                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.reconLabel}</span>
+                <span style={panelLabelStyle(colors.accent)}>{uiStrings.shell.reconLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.shell.reconTitle}</h2>
                 <MiniMap />
               </div>
@@ -442,7 +447,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 <CornerAccents color="#38bdf8" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#38bdf8" count={2} side="left" />
-                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.squadLabel}</span>
+                <span style={panelLabelStyle(colors.accent)}>{uiStrings.shell.squadLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.shell.squadTitle}</h2>
                 <div
                   style={{
@@ -505,7 +510,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 <CornerAccents color="#f0abfc" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#f0abfc" count={2} side="right" />
-                <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
+                <span style={panelLabelStyle(colors.accentSecondary)}>{uiStrings.questLog.panelLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
                 <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
               </div>
@@ -513,7 +518,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                 <CornerAccents color="#60a5fa" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#60a5fa" count={2} side="right" />
-                <span style={panelLabelStyle("#60a5fa")}>{uiStrings.shell.telemetryLabel}</span>
+                <span style={panelLabelStyle(colors.accentGlow)}>{uiStrings.shell.telemetryLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.shell.telemetryTitle}</h2>
                 <div style={scrollSectionStyle}>
                   <LogPanel />

@@ -18,15 +18,43 @@ import { getVisionConeTiles } from '../combat/perception';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { miniMapService } from '../services/miniMapService';
 import CameraSprite from '../objects/CameraSprite';
+import { CrtScanlinePipeline } from '../fx/CrtScanlinePipeline';
+import { dystopianTokens } from '../../theme/dystopianTokens';
+
+const parseHexColor = (hex: string) => Phaser.Display.Color.HexStringToColor(hex).color;
+const themeColors = dystopianTokens.colors;
+const themeFonts = dystopianTokens.fonts;
+const themeMotion = dystopianTokens.motion;
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
-  [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
-  [TileType.COVER]: { even: 0x26363c, odd: 0x202f33 },
-  [TileType.WATER]: { even: 0x16405a, odd: 0x12364d },
-  [TileType.TRAP]: { even: 0x462342, odd: 0x3b1c37 },
-  [TileType.DOOR]: { even: 0x2a2622, odd: 0x221e1b },
-  [TileType.FLOOR]: { even: 0x1e2432, odd: 0x232838 },
-  DEFAULT: { even: 0x1e2432, odd: 0x232838 },
+  [TileType.WALL]: {
+    even: parseHexColor('#1f2a32'),
+    odd: parseHexColor('#162028'),
+  },
+  [TileType.COVER]: {
+    even: parseHexColor('#1a2f2d'),
+    odd: parseHexColor('#142524'),
+  },
+  [TileType.WATER]: {
+    even: parseHexColor('#0d2d3a'),
+    odd: parseHexColor('#0a2430'),
+  },
+  [TileType.TRAP]: {
+    even: parseHexColor('#35212d'),
+    odd: parseHexColor('#2a1a24'),
+  },
+  [TileType.DOOR]: {
+    even: parseHexColor('#1d1d20'),
+    odd: parseHexColor('#15161a'),
+  },
+  [TileType.FLOOR]: {
+    even: parseHexColor('#152126'),
+    odd: parseHexColor('#101a1f'),
+  },
+  DEFAULT: {
+    even: parseHexColor('#152126'),
+    odd: parseHexColor('#101a1f'),
+  },
 };
 
 const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
@@ -115,11 +143,22 @@ export class MainScene extends Phaser.Scene {
     }
 
     // Fill the entire canvas with background color
-    this.cameras.main.setBackgroundColor(0x1a1a1a);
+    this.cameras.main.setBackgroundColor(parseHexColor(themeColors.background));
 
     // Setup map graphics
     this.backdropGraphics = this.add.graphics();
     this.backdropGraphics.setDepth(-20);
+
+    const renderer = this.game.renderer;
+    if (renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+      const hasPipeline =
+        typeof renderer.hasPipeline === 'function' &&
+        renderer.hasPipeline(CrtScanlinePipeline.KEY);
+
+      if (hasPipeline) {
+        this.backdropGraphics.setPostPipeline(CrtScanlinePipeline.KEY);
+      }
+    }
 
     this.mapGraphics = this.add.graphics();
     this.mapGraphics.setDepth(-5);
@@ -172,8 +211,14 @@ export class MainScene extends Phaser.Scene {
       const metrics = this.getIsoMetrics();
       const pixelPos = this.calculatePixelPosition(this.playerInitialPosition.x, this.playerInitialPosition.y);
       const playerName = store.getState().player.data.name ?? 'Operative';
-      this.playerNameLabel = this.createCharacterNameLabel(playerName, 0x38bdf8, 14);
+      this.playerNameLabel = this.createCharacterNameLabel(
+        playerName,
+        parseHexColor(themeColors.accent),
+        14
+      );
       this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6, 18);
+      this.triggerFocusFlicker(this.playerNameLabel);
+      this.applyMicroHover(this.playerNameLabel);
 
       this.enablePlayerCameraFollow();
     } else {
@@ -1310,12 +1355,16 @@ export class MainScene extends Phaser.Scene {
     );
   }
 
-  private createCharacterNameLabel(name: string, accentColor: number, fontSize: number = 12): Phaser.GameObjects.Text {
+  private createCharacterNameLabel(
+    name: string,
+    accentColor: number,
+    fontSize: number = 12
+  ): Phaser.GameObjects.Text {
     const label = this.add.text(0, 0, name.toUpperCase(), {
-      fontFamily: 'Orbitron, "DM Sans", sans-serif',
+      fontFamily: themeFonts.heading,
       fontSize: `${fontSize}px`,
       fontStyle: '700',
-      color: this.colorToHex(0xf8fafc),
+      color: themeColors.foreground,
       align: 'center',
     });
     label.setOrigin(0.5, 1);
@@ -1750,10 +1799,10 @@ export class MainScene extends Phaser.Scene {
 
     this.backdropGraphics.clear();
     this.backdropGraphics.fillGradientStyle(
-      0x05070f,
-      0x0a1423,
-      0x0d1321,
-      0x17213a,
+      parseHexColor('#06090f'),
+      parseHexColor('#0d151d'),
+      parseHexColor('#0f1c24'),
+      parseHexColor('#162530'),
       1,
       1,
       1,
@@ -1762,10 +1811,10 @@ export class MainScene extends Phaser.Scene {
     this.backdropGraphics.fillRect(originX, originY, width, height);
 
     const horizonY = originY + height * 0.28;
-    this.backdropGraphics.fillStyle(0x1c314d, 0.22);
-    this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.06, height * 0.5);
+    this.backdropGraphics.fillStyle(parseHexColor('#173339'), 0.28);
+    this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
 
-    this.backdropGraphics.fillStyle(0x070b12, 0.5);
+    this.backdropGraphics.fillStyle(parseHexColor('#060c11'), 0.55);
     this.backdropGraphics.fillRect(originX, originY + height * 0.62, width, height * 0.55);
 
     for (let i = 0; i < 4; i++) {
@@ -1773,8 +1822,8 @@ export class MainScene extends Phaser.Scene {
       if (alpha <= 0) {
         continue;
       }
-      const factor = 1.2 + i * 0.25;
-      this.backdropGraphics.lineStyle(2, 0x132034, alpha);
+      const factor = 1.18 + i * 0.24;
+      this.backdropGraphics.lineStyle(2, parseHexColor('#102026'), alpha);
       this.backdropGraphics.strokeEllipse(
         originX + width / 2,
         originY + height * 0.78,
@@ -1782,6 +1831,63 @@ export class MainScene extends Phaser.Scene {
         height * 0.46 * factor
       );
     }
+  }
+
+  private applyMicroHover(
+    gameObject: Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Transform
+  ): void {
+    const interactiveTarget = gameObject as Phaser.GameObjects.GameObject &
+      Phaser.GameObjects.Components.Transform &
+      Phaser.GameObjects.Components.Input;
+
+    if (typeof interactiveTarget.setInteractive !== 'function') {
+      return;
+    }
+
+    interactiveTarget.setInteractive({ useHandCursor: true });
+    interactiveTarget.on('pointerover', () => {
+      this.tweens.add({
+        targets: gameObject,
+        scale: themeMotion.hoverScale,
+        duration: themeMotion.hoverDuration,
+        ease: 'Quad.easeOut',
+      });
+    });
+
+    interactiveTarget.on('pointerout', () => {
+      this.tweens.add({
+        targets: gameObject,
+        scale: 1,
+        duration: themeMotion.hoverDuration,
+        ease: 'Quad.easeOut',
+      });
+    });
+  }
+
+  private triggerFocusFlicker(gameObject?: Phaser.GameObjects.GameObject): void {
+    if (!gameObject) {
+      return;
+    }
+
+    const alphaTarget = gameObject as Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Alpha;
+    if (typeof alphaTarget.setAlpha !== 'function') {
+      return;
+    }
+
+    this.tweens.addCounter({
+      from: 0,
+      to: 1,
+      duration: themeMotion.focusFlickerDuration,
+      yoyo: true,
+      repeat: 0,
+      ease: 'Quad.easeInOut',
+      onUpdate: () => {
+        alphaTarget.setAlpha(0.85 + 0.15 * Math.random());
+      },
+      onComplete: () => {
+        alphaTarget.setAlpha(1);
+      },
+    });
   }
 
   private computeIsoBounds(): { minX: number; maxX: number; minY: number; maxY: number } {

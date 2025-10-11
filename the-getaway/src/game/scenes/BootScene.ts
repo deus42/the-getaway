@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { store } from '../../store';
 import { RootState } from '../../store'; // Import RootState
 import { getLevel0Content } from '../../content/levels/level0';
+import { CrtScanlinePipeline } from '../fx/CrtScanlinePipeline';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -10,6 +11,22 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     console.log('[BootScene] create: Fetching initial state and starting MainScene...');
+    const renderer = this.game.renderer;
+
+    if (renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
+      const webglRenderer = renderer as Phaser.Renderer.WebGL.WebGLRenderer;
+      const hasPipeline =
+        typeof webglRenderer.hasPipeline === 'function' &&
+        webglRenderer.hasPipeline(CrtScanlinePipeline.KEY);
+
+      if (!hasPipeline) {
+        webglRenderer.addPipeline(
+          CrtScanlinePipeline.KEY,
+          new CrtScanlinePipeline(this.game)
+        );
+      }
+    }
+
     const initialState: RootState = store.getState();
     const initialMapArea = initialState.world.currentMapArea;
     const initialPlayerPosition = initialState.player.data.position;
