@@ -18,6 +18,9 @@ import {
   glowTextStyle,
   importantValueStyle,
 } from './theme';
+import { dystopianTokens } from '../../theme/dystopianTokens';
+
+const { colors, fonts, motion } = dystopianTokens;
 
 interface PlayerSummaryPanelProps {
   onOpenCharacter?: () => void;
@@ -36,7 +39,7 @@ const summaryContainerStyle: React.CSSProperties = {
   boxShadow: panelSurface.boxShadow,
   backdropFilter: panelSurface.backdropFilter,
   color: neonPalette.textPrimary,
-  fontFamily: '"DM Sans", "Inter", sans-serif',
+  fontFamily: fonts.body,
 };
 
 const headerStyle: React.CSSProperties = {
@@ -48,13 +51,13 @@ const headerStyle: React.CSSProperties = {
 
 const nameStyle: React.CSSProperties = {
   ...headingStyle,
-  ...gradientTextStyle('#bfdbfe', '#38bdf8'),
+  ...gradientTextStyle(colors.accentGlow, colors.accentSecondary),
   fontSize: '0.9rem',
   letterSpacing: '0.26em',
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))',
+  filter: 'drop-shadow(0 0 8px rgba(75, 231, 207, 0.32))',
 };
 
 const levelBadgeStyle: React.CSSProperties = {
@@ -64,9 +67,9 @@ const levelBadgeStyle: React.CSSProperties = {
   padding: '0.22rem 0.55rem',
   borderRadius: '999px',
   letterSpacing: '0.14em',
-  background: 'rgba(56, 189, 248, 0.18)',
-  boxShadow: '0 10px 20px -10px rgba(56, 189, 248, 0.55)',
-  ...glowTextStyle(neonPalette.cyan, 6),
+  background: 'rgba(75, 231, 207, 0.16)',
+  boxShadow: '0 10px 22px -12px rgba(75, 231, 207, 0.55)',
+  ...glowTextStyle(neonPalette.cyan, 5),
 };
 
 const backgroundLabelStyle: React.CSSProperties = {
@@ -75,6 +78,7 @@ const backgroundLabelStyle: React.CSSProperties = {
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
   marginTop: '0.2rem',
+  fontFamily: fonts.badge,
 };
 
 const statGridStyle: React.CSSProperties = {
@@ -101,14 +105,14 @@ const fatigueBadgeStyle: React.CSSProperties = {
   gap: '0.25rem',
   padding: '0.22rem 0.55rem',
   borderRadius: '999px',
-  border: '1px solid rgba(250, 204, 21, 0.65)',
-  background: 'rgba(250, 204, 21, 0.08)',
-  color: '#facc15',
+  border: `1px solid ${colors.warning}`,
+  background: colors.warningSoft,
+  color: colors.warning,
   fontSize: '0.55rem',
   fontWeight: 600,
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
-  boxShadow: '0 8px 18px -12px rgba(250, 204, 21, 0.6)',
+  boxShadow: '0 8px 18px -12px rgba(255, 212, 121, 0.6)',
 };
 
 const crouchBadgeStyle: React.CSSProperties = {
@@ -117,14 +121,14 @@ const crouchBadgeStyle: React.CSSProperties = {
   gap: '0.25rem',
   padding: '0.22rem 0.55rem',
   borderRadius: '999px',
-  border: '1px solid rgba(148, 163, 184, 0.65)',
-  background: 'rgba(148, 163, 184, 0.12)',
-  color: '#e2e8f0',
+  border: `1px solid ${colors.divider}`,
+  background: 'rgba(21, 33, 38, 0.42)',
+  color: colors.foreground,
   fontSize: '0.55rem',
   fontWeight: 600,
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
-  boxShadow: '0 8px 18px -12px rgba(148, 163, 184, 0.55)',
+  boxShadow: '0 8px 18px -12px rgba(45, 62, 72, 0.55)',
 };
 
 const statCardStyle: React.CSSProperties = {
@@ -162,12 +166,12 @@ const skillChipStyle = (accent: string): React.CSSProperties => ({
   padding: '0.38rem 0.85rem',
   borderRadius: '999px',
   border: `1px solid ${accent}`,
-  background: `linear-gradient(140deg, ${accent}1F, rgba(15, 23, 42, 0.92))`,
+  background: `linear-gradient(140deg, ${accent}20, rgba(11, 17, 23, 0.88))`,
   color: neonPalette.textPrimary,
   fontSize: '0.6rem',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  boxShadow: `0 10px 18px -12px ${accent}99`,
+  boxShadow: `0 10px 18px -12px ${accent}88`,
   flex: '1 1 calc(50% - 0.5rem)',
   minWidth: '140px',
 });
@@ -177,22 +181,22 @@ const actionButtonStyle = (active: boolean): React.CSSProperties => ({
   marginTop: '0.2rem',
   padding: active ? '0.42rem 0.75rem' : '0.38rem 0.72rem',
   borderRadius: '999px',
-  border: `1px solid ${active ? neonPalette.amber : neonPalette.cyan}`,
+  border: `1px solid ${active ? colors.warning : colors.accent}`,
   background: active
-    ? 'linear-gradient(130deg, rgba(251, 191, 36, 0.6), rgba(249, 115, 22, 0.55))'
-    : 'linear-gradient(130deg, rgba(56, 189, 248, 0.48), rgba(14, 165, 233, 0.45))',
-  color: active ? '#fff7e1' : '#e0f2fe',
+    ? 'linear-gradient(130deg, rgba(255, 212, 121, 0.42), rgba(255, 184, 107, 0.55))'
+    : 'linear-gradient(130deg, rgba(75, 231, 207, 0.34), rgba(43, 197, 249, 0.42))',
+  color: active ? '#fff7de' : colors.foreground,
   fontSize: '0.58rem',
   fontWeight: 600,
   letterSpacing: '0.18em',
   textTransform: 'uppercase',
   cursor: 'pointer',
-  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+  transition: `transform ${motion.hoverDuration}ms ${motion.hoverEase}, box-shadow ${motion.hoverDuration}ms ${motion.hoverEase}`,
   textAlign: 'center',
   transform: 'translateY(0)',
   boxShadow: active
-    ? '0 12px 20px -16px rgba(251, 191, 36, 0.48)'
-    : '0 12px 20px -18px rgba(56, 189, 248, 0.45)',
+    ? '0 12px 20px -16px rgba(255, 184, 107, 0.48)'
+    : '0 12px 20px -18px rgba(75, 231, 207, 0.45)',
 });
 
 const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({

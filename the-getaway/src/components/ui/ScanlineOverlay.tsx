@@ -1,4 +1,5 @@
 import React from 'react';
+import { dystopianTokens } from '../../theme/dystopianTokens';
 
 interface ScanlineOverlayProps {
   opacity?: number;
@@ -6,8 +7,8 @@ interface ScanlineOverlayProps {
 }
 
 const ScanlineOverlay: React.FC<ScanlineOverlayProps> = ({
-  opacity = 0.03,
-  lineHeight = 2,
+  opacity = dystopianTokens.effects.scanlineOpacity * 0.06,
+  lineHeight = dystopianTokens.effects.scanlineSpacing,
 }) => {
   return (
     <div

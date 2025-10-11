@@ -1,34 +1,36 @@
 import React from 'react';
+import { dystopianTokens } from '../../theme/dystopianTokens';
+
+const { colors, fonts, surfaces } = dystopianTokens;
 
 export const neonPalette = {
-  slate: '#0b1220',
-  slateSoft: 'rgba(15, 23, 42, 0.88)',
-  cyan: '#38bdf8',
-  cyanSoft: 'rgba(56, 189, 248, 0.28)',
-  amber: '#fbbf24',
-  amberSoft: 'rgba(251, 191, 36, 0.28)',
-  violet: '#c084fc',
-  violetSoft: 'rgba(192, 132, 252, 0.24)',
-  emerald: '#34d399',
-  textPrimary: '#f8fafc',
-  textSecondary: 'rgba(226, 232, 240, 0.78)',
-  textMuted: 'rgba(148, 163, 184, 0.72)',
+  slate: colors.background,
+  slateSoft: colors.backgroundAlt,
+  cyan: colors.accent,
+  cyanSoft: 'rgba(75, 231, 207, 0.28)',
+  amber: colors.warning,
+  amberSoft: colors.warningSoft,
+  violet: colors.accentSecondary,
+  violetSoft: 'rgba(43, 197, 249, 0.28)',
+  emerald: colors.accentSoft,
+  textPrimary: colors.foreground,
+  textSecondary: colors.foregroundSubtle,
+  textMuted: colors.foregroundMuted,
 };
 
 export const panelSurface = {
-  background:
-    'linear-gradient(145deg, rgba(8, 15, 30, 0.92) 0%, rgba(12, 22, 42, 0.82) 50%, rgba(6, 12, 28, 0.92) 100%)',
-  border: '1px solid rgba(59, 130, 246, 0.22)',
-  boxShadow: '0 28px 40px -24px rgba(14, 116, 144, 0.45)',
-  backdropFilter: 'blur(14px)',
+  background: surfaces.panel,
+  border: `1px solid ${colors.panelBorder}`,
+  boxShadow: '0 36px 48px -28px rgba(31, 197, 170, 0.32)',
+  backdropFilter: 'blur(16px)',
 };
 
 export const characterPanelSurface: React.CSSProperties = {
-  background: 'rgba(15, 23, 42, 0.6)',
+  background: 'rgba(12, 18, 24, 0.68)',
   borderRadius: '12px',
-  border: '1px solid rgba(148, 163, 184, 0.18)',
+  border: `1px solid ${colors.divider}`,
   padding: '0.8rem',
-  boxShadow: 'inset 0 1px 0 rgba(148, 163, 184, 0.18)',
+  boxShadow: 'inset 0 1px 0 rgba(115, 140, 155, 0.3)',
 };
 
 export const characterPanelHeaderStyle: React.CSSProperties = {
@@ -41,31 +43,35 @@ export const characterPanelLabelStyle: React.CSSProperties = {
   fontSize: '0.52rem',
   letterSpacing: '0.19em',
   textTransform: 'uppercase',
-  color: 'rgba(148, 163, 184, 0.72)',
+  color: colors.foregroundMuted,
+  fontFamily: fonts.badge,
 };
 
 export const characterPanelTitleStyle: React.CSSProperties = {
   fontSize: '0.72rem',
   fontWeight: 600,
   letterSpacing: '0.05em',
-  color: '#f8fafc',
+  color: colors.foreground,
   margin: 0,
+  fontFamily: fonts.heading,
 };
 
 export const cardSurface = {
-  background: 'linear-gradient(160deg, rgba(14, 26, 52, 0.88), rgba(10, 18, 34, 0.88))',
-  border: '1px solid rgba(248, 250, 252, 0.08)',
-  boxShadow: '0 16px 30px -20px rgba(13, 148, 136, 0.6)',
+  background: surfaces.card,
+  border: `1px solid ${colors.cardBorder}`,
+  boxShadow: '0 18px 32px -22px rgba(36, 180, 186, 0.35)',
 };
 
 export const badgeSurface = (accent: string) => ({
   border: `1px solid ${accent}`,
   color: accent,
-  background: `rgba(23, 37, 84, 0.55)`,
+  background: surfaces.badge,
+  fontFamily: fonts.badge,
+  letterSpacing: '0.1em',
 });
 
 export const headingStyle: React.CSSProperties = {
-  fontFamily: '"Orbitron", "DM Sans", sans-serif',
+  fontFamily: fonts.heading,
   textTransform: 'uppercase',
   letterSpacing: '0.24em',
   color: neonPalette.textPrimary,
@@ -73,7 +79,7 @@ export const headingStyle: React.CSSProperties = {
 };
 
 export const subheadingStyle: React.CSSProperties = {
-  fontFamily: '"DM Sans", "Inter", sans-serif',
+  fontFamily: fonts.body,
   letterSpacing: '0.16em',
   color: neonPalette.textMuted,
   fontSize: '0.64rem',
@@ -81,14 +87,14 @@ export const subheadingStyle: React.CSSProperties = {
 };
 
 export const statValueStyle: React.CSSProperties = {
-  fontFamily: '"DM Sans", "Inter", sans-serif',
+  fontFamily: fonts.body,
   fontSize: '0.85rem',
   fontWeight: 700,
   color: neonPalette.textPrimary,
 };
 
 export const subtleText: React.CSSProperties = {
-  fontFamily: '"DM Sans", "Inter", sans-serif',
+  fontFamily: fonts.body,
   fontSize: '0.62rem',
   color: neonPalette.textMuted,
 };
@@ -118,10 +124,10 @@ export const importantValueStyle = (color: string): React.CSSProperties => ({
 
 export const headingGradientStyle: React.CSSProperties = {
   ...headingStyle,
-  background: 'linear-gradient(135deg, #bfdbfe, #38bdf8)',
+  background: `linear-gradient(135deg, ${colors.accentGlow}, ${colors.accentSecondary})`,
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
   textShadow: 'none',
-  filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))',
+  filter: 'drop-shadow(0 0 8px rgba(75, 231, 207, 0.3))',
 };
