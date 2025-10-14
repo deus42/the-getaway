@@ -30,6 +30,7 @@ import { DEFAULT_SKILLS } from "./game/interfaces/player";
 import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
+import { createScopedLogger } from "./utils/logger";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import "./App.css";
 
@@ -43,6 +44,8 @@ const LevelUpPointAllocationPanel = lazy(() => import("./components/ui/LevelUpPo
 
 // Type import for CharacterCreationData
 import type { CharacterCreationData } from "./components/ui/CharacterCreationScreen";
+
+const log = createScopedLogger('App');
 
 const layoutShellStyle: CSSProperties = {
   margin: 0,
@@ -568,8 +571,8 @@ function App() {
   const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(false);
 
   useEffect(() => {
-    console.log("[App] Component mounted");
-    console.log("[App] Store state:", store.getState());
+    log.debug('Component mounted');
+    log.debug('Store state:', store.getState());
   }, []);
 
   useEffect(() => {

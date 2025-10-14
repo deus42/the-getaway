@@ -1,54 +1,52 @@
-# React + TypeScript + Vite
+# The Getaway
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A tactical stealth RPG prototype built with Phaser, React, and Redux Toolkit. The project ships a fully automated CI/CD pipeline that tests, builds, and deploys nightly snapshots to GitHub Pages.
 
-Currently, two official plugins are available:
+## Quickstart (5-minute run)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```bash
+# install
+yarn install
+# dev
+yarn dev
+# tests
+yarn test
+# build
+yarn build && yarn preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Architecture snapshot
+- Rendering → Phaser 3 scenes with an isometric camera stack.
+- HUD / UX → React (Vite) mounted over the Phaser canvas through a shared Redux store.
+- State → Redux Toolkit slices persisted to `localStorage` with hydration guards.
+- Interop → Event-driven bridge plus Redux actions keep Phaser and React in sync.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+For the full breakdown, including the Mermaid data-flow diagram, read [`../memory-bank/architecture.md`](../memory-bank/architecture.md).
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
+## Roadmap & design notes
+- Roadmap → [`../memory-bank/mvp-plan.md`](../memory-bank/mvp-plan.md)
+- Progress log → [`../memory-bank/progress.md`](../memory-bank/progress.md)
+- Design notes → [`memory-bank/`](../memory-bank/) *(key: `plot.md`, `game-design.md`)*
+
+## Continuous integration & deployment
+
+The workflow in [`.github/workflows/ci-pages.yml`](.github/workflows/ci-pages.yml) performs the following on every push and pull request targeting `main`:
+
+1. Installs dependencies with Yarn using Node.js 20.
+2. Runs linting and unit tests to guard code quality.
+3. Builds the production bundle.
+4. When running on `main`, uploads the bundle as a Pages artifact and deploys it to the `github-pages` environment.
+
+You can also trigger the workflow manually from the **Actions** tab via the "Run workflow" button (workflow dispatch).
+
+## GitHub Pages
+
+The Vite configuration automatically detects the repository name when running in GitHub Actions and sets the correct `base` path so assets resolve under `https://<your-username>.github.io/<repository>/`.
+
+Once the workflow finishes successfully on `main`, GitHub Pages publishes the latest build at the URL reported in the workflow summary. This first deployment acts as the initial public release of the project.
+
+If you fork the repository under a different name, the base path will update automatically without further changes.
+
+## License
+
+The project is released under the [MIT License](../LICENSE).

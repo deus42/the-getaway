@@ -1,0 +1,83 @@
+name: CI and GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      app-version: ${{ steps.version_check.outputs.version }}
+    defaults:
+      run:
+        working-directory: the-getaway
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'yarn'
+          cache-dependency-path: the-getaway/yarn.lock
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Verify release version
+        id: version_check
+        run: |
+          VERSION=$(node ./scripts/check-version.mjs)
+          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Run tests
+        run: yarn test --runInBand
+
+      - name: Build
+        run: yarn build
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: the-getaway/dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name != 'pull_request'
+    env:
+      APP_VERSION: ${{ needs.build.outputs.app-version }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Announce release version
+        run: echo "Deploying The Getaway version $APP_VERSION"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

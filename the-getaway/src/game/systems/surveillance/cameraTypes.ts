@@ -1,9 +1,15 @@
-import Phaser from 'phaser';
 import {
   CameraAlertState,
   CameraDefinition,
   CameraRuntimeState,
 } from '../../interfaces/types';
+import {
+  clamp,
+  lerp,
+  radiansToDegrees,
+  shortestAngleBetween,
+  wrapDegrees,
+} from '../../utils/math';
 
 const MIN_SWEEP_DURATION = 400;
 const DEFAULT_SWEEP_DURATION = 3200;
@@ -14,7 +20,7 @@ const safeCycleDuration = (value?: number): number => {
 };
 
 const normaliseAngle = (angle: number): number => {
-  const wrapped = Phaser.Math.Angle.WrapDegrees(angle);
+  const wrapped = wrapDegrees(angle);
   return wrapped < 0 ? wrapped + 360 : wrapped;
 };
 
@@ -80,7 +86,7 @@ const advanceSweep = (
   }
 
   let sweepDirection: 1 | -1 = camera.sweepDirection ?? 1;
-  let currentIndex = Phaser.Math.Clamp(camera.sweepIndex ?? 0, 0, count - 1);
+  let currentIndex = clamp(camera.sweepIndex ?? 0, 0, count - 1);
   let elapsed = (camera.sweepElapsedMs ?? 0) + deltaMs;
 
   const segmentDuration = safeCycleDuration(sweep.cycleDurationMs) / (count - 1);
@@ -97,15 +103,15 @@ const advanceSweep = (
       nextIndex = 1;
     }
 
-    currentIndex = Phaser.Math.Clamp(nextIndex, 0, count - 1);
+    currentIndex = clamp(nextIndex, 0, count - 1);
   }
 
-  const nextIndex = Phaser.Math.Clamp(currentIndex + sweepDirection, 0, count - 1);
-  const ratio = Phaser.Math.Clamp(elapsed / segmentDuration, 0, 1);
+  const nextIndex = clamp(currentIndex + sweepDirection, 0, count - 1);
+  const ratio = clamp(segmentDuration === 0 ? 0 : elapsed / segmentDuration, 0, 1);
 
   const startAngle = angles[currentIndex];
   const endAngle = angles[nextIndex];
-  const diff = Phaser.Math.Angle.ShortestBetween(startAngle, endAngle);
+  const diff = shortestAngleBetween(startAngle, endAngle);
   const interpolated = startAngle + diff * ratio;
   const absolute = relative ? baseDirection + interpolated : interpolated;
 
@@ -166,12 +172,12 @@ export const updateDroneCameraOrientation = (
   const from = waypoints[currentIndex];
   const to = waypoints[nextIndex];
 
-  const ratio = segmentDuration <= 0 ? 0 : Phaser.Math.Clamp(progress / segmentDuration, 0, 1);
-  const interpolatedX = Phaser.Math.Linear(from.x, to.x, ratio);
-  const interpolatedY = Phaser.Math.Linear(from.y, to.y, ratio);
+  const ratio = segmentDuration <= 0 ? 0 : clamp(progress / segmentDuration, 0, 1);
+  const interpolatedX = lerp(from.x, to.x, ratio);
+  const interpolatedY = lerp(from.y, to.y, ratio);
 
   const heading = Math.atan2(to.y - from.y, to.x - from.x);
-  const headingDegrees = Phaser.Math.RadToDeg(heading);
+  const headingDegrees = radiansToDegrees(heading);
 
   const sweep = advanceSweep(camera, deltaMs, true, headingDegrees);
 

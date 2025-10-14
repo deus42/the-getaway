@@ -18,6 +18,7 @@ import {
   pickBanterLine,
   pickInterjectionLine,
 } from '../../game/systems/georgeAssistant';
+import type { FactionId } from '../../game/interfaces/types';
 import { GeorgeInterjectionTrigger, GeorgeLine } from '../../content/assistants/george';
 import { getUIStrings } from '../../content/ui';
 import {
@@ -306,8 +307,8 @@ const buildQuestReadout = (
 
 const GeorgeAssistant: React.FC = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
-  const uiStrings = getUIStrings(locale);
-  const georgeStrings = uiStrings.george;
+  const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
+  const georgeStrings = useMemo(() => uiStrings.george, [uiStrings]);
 
   const objectiveQueue = useSelector(selectObjectiveQueue);
   const missionProgress = useSelector(selectMissionProgress);
@@ -315,7 +316,7 @@ const GeorgeAssistant: React.FC = () => {
   const nextSideObjective = useSelector(selectNextSideObjective);
   const personality = useSelector(selectPlayerPersonalityProfile);
   const karma = useSelector(selectPlayerKarma);
-  const factionReputation = useSelector(selectPlayerFactionReputation);
+  const factionReputation = useSelector(selectPlayerFactionReputation) as Record<FactionId, number>;
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
 
@@ -323,7 +324,7 @@ const GeorgeAssistant: React.FC = () => {
     objectiveQueue,
     personality,
     karma,
-    factionReputation,
+    factionReputation: factionReputation as Record<string, number>,
     missionPrimary: nextPrimaryObjective,
     missionSide: nextSideObjective,
   }), [objectiveQueue, personality, karma, factionReputation, nextPrimaryObjective, nextSideObjective]);
@@ -334,10 +335,13 @@ const GeorgeAssistant: React.FC = () => {
       { id: 'status' as ConversationId, label: georgeStrings.options.status },
       { id: 'quests' as ConversationId, label: georgeStrings.options.quests },
     ],
-    [georgeStrings.options]
+    [georgeStrings]
   );
 
-  const ambientLines = useMemo(() => georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT, [georgeStrings]);
+  const ambientLines = useMemo(
+    () => (georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT),
+    [georgeStrings]
+  );
 
   const [isOpen, setIsOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') {
@@ -351,7 +355,7 @@ const GeorgeAssistant: React.FC = () => {
   const cooldownRef = useRef<number>(0);
   const pendingInterjectionRef = useRef<GeorgeLine | null>(null);
   const completedQuestIdsRef = useRef<Set<string>>(new Set());
-  const factionRef = useRef(factionReputation);
+  const factionRef = useRef<Record<FactionId, number>>(factionReputation);
   const alertRef = useRef({ level: world.globalAlertLevel, inCombat: world.inCombat });
   const ambientTimerRef = useRef<number | null>(null);
 
@@ -369,7 +373,7 @@ const GeorgeAssistant: React.FC = () => {
         return next.slice(-8);
       });
     },
-    [georgeStrings.references]
+    [georgeStrings]
   );
 
   const presentInterjection = useCallback((line: GeorgeLine, log = false) => {
@@ -545,13 +549,29 @@ const GeorgeAssistant: React.FC = () => {
   useEffect(() => {
     const previous = factionRef.current;
     const current = factionReputation;
-    const positive = Object.keys(current).some((key) => (current as any)[key] - (previous as any)[key] >= 20);
-    const negative = Object.keys(current).some((key) => (current as any)[key] - (previous as any)[key] <= -20);
+    const factionIds = new Set<FactionId>([
+      ...(Object.keys(current) as FactionId[]),
+      ...(Object.keys(previous) as FactionId[]),
+    ]);
+
+    const positive = Array.from(factionIds).some((factionId) => {
+      const currentValue = current[factionId] ?? 0;
+      const previousValue = previous[factionId] ?? 0;
+      return currentValue - previousValue >= 20;
+    });
+
+    const negative = Array.from(factionIds).some((factionId) => {
+      const currentValue = current[factionId] ?? 0;
+      const previousValue = previous[factionId] ?? 0;
+      return currentValue - previousValue <= -20;
+    });
+
     if (positive) {
       queueInterjection('reputationPositive');
     } else if (negative) {
       queueInterjection('reputationNegative');
     }
+
     factionRef.current = current;
   }, [factionReputation, queueInterjection]);
 

@@ -4,6 +4,7 @@ import {
   selectNextPrimaryObjective,
   selectNextSideObjective,
 } from '../store/selectors/missionSelectors';
+import type { RootState } from '../store';
 import { MissionState } from '../store/missionSlice';
 import { Quest } from '../game/interfaces/types';
 
@@ -15,7 +16,7 @@ const buildState = ({ missions, quests }: { missions: MissionState; quests: Ques
     activeDialogue: { dialogueId: null, currentNodeId: null },
     lastBriefing: { dialogueId: null, nodeId: null },
   },
-}) as any;
+}) as unknown as RootState;
 
 const createMissionState = (): MissionState => ({
   levels: [

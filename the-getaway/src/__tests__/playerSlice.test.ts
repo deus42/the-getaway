@@ -50,6 +50,11 @@ const createTestStore = (preloadedState?: { player: PlayerState }) => {
     reducer: {
       player: playerReducer,
     },
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false,
+        immutableCheck: false,
+      }),
     preloadedState,
   });
 };

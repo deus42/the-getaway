@@ -52,6 +52,41 @@ The game world is persistent and simulated, meaning changes endure and NPCs beha
 These systems ensure the city feels alive and immersive. The player is one part of a larger ecosystem, and the world can surprise them with new developments during their journey.
 </mechanic>
 
+<mechanic name="localized_reputation_network">
+Localized Reputation & Gossip System
+
+The city remembers what it actually sees. Instead of a single global meter, reputation propagates through witnesses and their social webs so fame and infamy feel rooted in specific places and crews.
+
+**Core Loop**
+        •       **Sense**: Any notable deed (heroic rescue, brutal execution, slick theft, dazzling competence) emits a `ReputationEvent` tagged with traits, intensity, and context (district cell, time of day, factions involved).
+        •       **Perceive**: Potential witnesses are sampled from the active map cell. Each calculates a visibility score factoring line-of-sight, distance, lighting, crowd density, disguise modifiers, and ambient noise. Sub-threshold observers become rumor fodder rather than eyewitnesses.
+        •       **Interpret**: Witnesses filter events through faction values and personal biases to produce trait deltas (heroic, cruel, sneaky, intimidating, competent) with a confidence grade. Saving a raider hostage might read as “honorable” to fellow raiders but “traitorous” to settlers.
+        •       **Write**: Scoped reputation buckets update for the individual witness, their faction, and the local neighborhood cell. High confidence yields stronger adjustments; low confidence generates tentative rumors that affect dialogue tone but not hard gating.
+        •       **Propagate**: Gossip travels across pre-authored social links with latency, falloff, and daily "gossip energy" budgets so stories spread in pockets. Intense, spectacular events can jump cells; mundane actions usually stay local.
+        •       **React**: NPC behaviors (prices, quest offers, guard alertness, bouncer access) read the highest-weighted reputation scope relevant to their relationship. A vendor who watched you defend their stall grants discounts immediately; their cousin down the block hears later.
+        •       **Decay**: Trait scores degrade toward neutral unless refreshed, preventing permanent notoriety from a single incident and encouraging players to cultivate their image intentionally.
+
+**Design Principles**
+        •       **Local First**: Start with per-cell reputation to ensure District A can adore the player while District B shrugs.
+        •       **Subjective Truth**: Factions interpret the same act differently; conflicting rumors can coexist until clarified by direct observation.
+        •       **Uncertainty in Dialogue**: NPCs surface their confidence—"I heard you iced those CorpSec goons" (low confidence) vs. "I saw you drag Mara out of the fire" (high confidence).
+        •       **Budgeted Gossip**: Each NPC has limited rumor tokens per day, preventing instant world coverage and letting designers tune information speed.
+        •       **Heuristic Flavor**: Quick-feel formulas keep events punchy (e.g., Scary = weapon weight × finisher style × bloodiness × crowd density; Helpful = lives saved × aid value × risk × style bonus).
+
+**Gameplay Hooks**
+        •       **Economy**: Shopkeepers who witnessed heroics apply 10–20% discounts; rival witnesses impose surcharges until you repair your image.
+        •       **Access Control**: Bouncers or gate guards rely on their clique’s perception to open back rooms or lock you out. Flashy intimidation builds unlock intimidation-only routes where locals watched you dismantle threats.
+        •       **Law & Security**: Guard responses escalate only in cells where hostility has been observed or gossiped with high confidence; elsewhere they remain neutral.
+        •       **Quest Variants**: Missions reframe based on localized reputation—districts that saw your collateral damage request clean-up gigs, while others pitch you as a covert hero.
+
+**Authoring & Debugging Tools**
+        •       **Heatmap Overlay**: Visualize trait perception per cell to tune propagation falloff.
+        •       **NPC Inspector**: Inspectors list top-three traits, confidence, and rumor sources so writers can adjust dialogue lines.
+        •       **Sandbox Controls**: Designers can scrub decay rates, propagation caps, and thresholds live to feel how fast stories travel.
+
+This system reinforces stealth, intimidation, and altruism builds by rewarding intentional play in front of the right audience while keeping the city’s reaction plausibly fragmented.
+</mechanic>
+
 <mechanic name="ai_assistant">
 AI Assistant & Player Guidance
 

@@ -7,6 +7,7 @@ import { applyLocaleToQuests } from "../../store/questsSlice";
 import { applyLocaleToWorld } from "../../store/worldSlice";
 import { applyLocaleToMissions } from "../../store/missionSlice";
 import { RootState, AppDispatch } from "../../store";
+import { GAME_VERSION, GAME_YEAR } from "../../version";
 import EnhancedButton from "./EnhancedButton";
 import { gradientTextStyle } from "./theme";
 
@@ -302,9 +303,18 @@ const GameMenu: React.FC<GameMenuProps> = ({
             textTransform: "uppercase",
             color: "#64748b",
             textAlign: "center",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "0.65rem",
+            flexWrap: "wrap",
           }}
         >
-          {strings.menu.alphaLabel(new Date().getFullYear())}
+          <span>{strings.menu.alphaLabel(GAME_YEAR)}</span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#94a3b8" }}>
+            <span aria-hidden="true">•</span>
+            <span>{`v${GAME_VERSION}`}</span>
+          </span>
         </div>
       </div>
     </div>

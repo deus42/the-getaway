@@ -43,7 +43,7 @@ const usePlayerAnchor = (): { x: number; y: number } | null => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const initial = (window as any).__getawayPlayerScreenPosition as PlayerScreenPositionDetail | undefined;
+      const initial = window.__getawayPlayerScreenPosition;
       if (initial) {
         updateAnchor(initial);
       }

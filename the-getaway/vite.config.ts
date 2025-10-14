@@ -1,8 +1,14 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+const repository = process.env.GITHUB_REPOSITORY;
+const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
+const repoName = repository?.split('/')[1];
+const base = isGitHubActions && repoName ? `/${repoName}/` : '/';
 
 // https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [react()],
   build: {
     rollupOptions: {
@@ -39,4 +45,4 @@ export default defineConfig({
     },
     chunkSizeWarningLimit: 1500, // Phaser alone is ~1.4MB, which is expected
   },
-})
+});
