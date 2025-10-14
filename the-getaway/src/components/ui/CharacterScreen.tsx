@@ -226,7 +226,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const [activeTab, setActiveTab] = useState<'inventory' | 'loadout' | 'skills'>('inventory');
+  const [activeTab, setActiveTab] = useState<'inventory' | 'loadout' | 'skills' | 'reputation'>('inventory');
   const [showProfile, setShowProfile] = useState(true);
   const [showSystems, setShowSystems] = useState(true);
 
@@ -330,7 +330,6 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             <div style={profileColumnStyle}>
               <PlayerSummaryPanel showActionButton={false} />
               <PlayerStatsPanel />
-              <FactionReputationPanel />
             </div>
           )}
           {showSystems && (
@@ -341,9 +340,10 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
                     [
                       { id: 'inventory', label: 'Inventory' },
                       { id: 'loadout', label: 'Loadout' },
-                    { id: 'skills', label: 'Skill Tree' },
-                  ] as const
-                ).map((tab) => {
+                      { id: 'skills', label: 'Skill Tree' },
+                      { id: 'reputation', label: 'Reputation' },
+                    ] as const
+                  ).map((tab) => {
                   const isActive = activeTab === tab.id;
                   return (
                     <button
@@ -396,6 +396,16 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
                       <ScanlineOverlay opacity={0.04} />
                       <SkillTreePanel />
                     </div>
+                  </div>
+                )}
+                {activeTab === 'reputation' && (
+                  <div
+                    id="character-tab-reputation"
+                    role="tabpanel"
+                    aria-labelledby="character-tab-trigger-reputation"
+                    style={tabContentInnerStyle}
+                  >
+                    <FactionReputationPanel />
                   </div>
                 )}
               </div>
