@@ -4,10 +4,11 @@ import {
   calculateHitChance,
   executeAttack,
   setRandomGenerator,
+  applyCoverStateFromTile,
 } from '../combatSystem';
 import { determineEnemyMove } from '../enemyAI';
 import { createWeapon, createArmor } from '../../inventory/inventorySystem';
-import { createBasicMapArea } from '../../world/grid';
+import { createBasicMapArea, setTileCoverProfile } from '../../world/grid';
 import {
   DEFAULT_PLAYER,
   createDefaultPersonalityProfile,
@@ -75,7 +76,7 @@ describe('combatSystem core mechanics', () => {
 
       expect(baseChance).toBeCloseTo(0.6, 5);
       expect(distantChance).toBeLessThan(baseChance);
-      expect(coverChance).toBeCloseTo(baseChance * 0.5, 5);
+      expect(coverChance).toBeCloseTo(baseChance - 0.2, 5);
     });
   });
 
@@ -85,7 +86,7 @@ describe('combatSystem core mechanics', () => {
       player.equipped.weapon = rifle;
       player.equippedSlots = { primaryWeapon: rifle };
 
-      mockRandom([0.05]);
+      mockRandom([0.05, 0.95]);
 
       const result = executeAttack(player, enemy, false);
 
@@ -135,7 +136,7 @@ describe('combatSystem core mechanics', () => {
         maxHealth: 80,
       });
 
-      mockRandom([0.05]);
+      mockRandom([0.05, 0.95]);
 
       const result = executeAttack(player, defender, false);
       const updatedDefender = result.newTarget as Player;
@@ -145,6 +146,43 @@ describe('combatSystem core mechanics', () => {
       expect(result.damage).toBeLessThan(hammer.damage);
       expect(updatedDefender.health).toBeLessThan(defender.health);
       expect(updatedArmor.durability.current).toBe(19);
+    });
+  });
+
+  describe('directional cover scaffolding', () => {
+    it('reduces accuracy and damage when attacking into fortified edge', () => {
+      const rifle = createWeapon('Scoped Rifle', 20, 6, 4, 6);
+
+      const attacker = applyCoverStateFromTile(
+        clonePlayer({
+          position: { x: 2, y: 0 },
+          equipped: { ...DEFAULT_PLAYER.equipped, weapon: rifle },
+          equippedSlots: { primaryWeapon: rifle },
+        })
+      );
+
+      let coverMap = createBasicMapArea('Cover Map', 5, 5);
+      coverMap = setTileCoverProfile(coverMap, { x: 2, y: 2 }, { north: 'full' });
+
+      const defenderWithCover = applyCoverStateFromTile(
+        clonePlayer({ position: { x: 2, y: 2 } }),
+        coverMap
+      );
+
+      const openMap = createBasicMapArea('Open Map', 5, 5);
+      const defenderExposed = clonePlayer({ position: { x: 2, y: 2 } });
+
+      const coveredChance = calculateHitChance(attacker, defenderWithCover, { mapArea: coverMap });
+      const exposedChance = calculateHitChance(attacker, defenderExposed, { mapArea: openMap });
+
+      expect(coveredChance).toBeLessThan(exposedChance);
+
+      setRandomGenerator(() => 0.05);
+      const result = executeAttack(attacker, defenderWithCover, { mapArea: coverMap });
+
+      expect(result.success).toBe(true);
+      expect(result.damage).toBeLessThan(20);
+      expect((result.newAttacker as Player).facing).toBe('south');
     });
   });
 
@@ -169,4 +207,3 @@ describe('combatSystem core mechanics', () => {
     });
   });
 });
-

@@ -6,6 +6,17 @@ export interface Position {
   y: number;
 }
 
+export type CardinalDirection = 'north' | 'east' | 'south' | 'west';
+
+export type CoverLevel = 'none' | 'half' | 'full';
+
+export interface TileCoverProfile {
+  north?: CoverLevel;
+  east?: CoverLevel;
+  south?: CoverLevel;
+  west?: CoverLevel;
+}
+
 // Base entity interface
 export interface Entity {
   id: string;
@@ -78,6 +89,9 @@ export interface Player extends Entity {
   maxActionPoints: number;
   stamina: number;
   maxStamina: number;
+  facing: CardinalDirection;
+  coverOrientation?: CardinalDirection | null;
+  suppression?: number;
   isExhausted: boolean;
   isCrouching: boolean;
   skills: PlayerSkills;
@@ -226,6 +240,9 @@ export interface Enemy extends Entity {
   maxActionPoints: number;
   damage: number;
   attackRange: number;
+  facing?: CardinalDirection;
+  coverOrientation?: CardinalDirection | null;
+  suppression?: number;
   isHostile: boolean;
   visionCone?: VisionCone;
   alertLevel?: AlertLevel;
@@ -440,6 +457,7 @@ export interface MapTile {
   position: Position;
   isWalkable: boolean;
   provideCover: boolean;
+  cover?: TileCoverProfile;
   skillRequirement?: {
     skill: SkillId;
     threshold: number;

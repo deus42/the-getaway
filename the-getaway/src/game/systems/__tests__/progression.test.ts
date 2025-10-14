@@ -59,8 +59,7 @@ describe('progression system', () => {
     const updated = awardXP(player, -50);
     expect(updated.experience).toBe(0);
 
-    const guardReward = XP_REWARDS.enemyLevel[5];
-    expect(guardReward).toBeGreaterThan(0);
+    expect(XP_REWARDS.ENEMY_NORMAL).toBeGreaterThan(0);
   });
 
   it('computes progress percentage toward the next level', () => {
@@ -75,4 +74,3 @@ describe('progression system', () => {
     expect(shouldUnlockPerkSelection(3)).toBe(false);
   });
 });
-

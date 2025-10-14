@@ -1,4 +1,14 @@
-import { Enemy, Player, Position, MapArea, Weapon, Armor } from '../interfaces/types';
+import {
+  Enemy,
+  Player,
+  Position,
+  MapArea,
+  Weapon,
+  Armor,
+  CardinalDirection,
+  TileCoverProfile,
+  CoverLevel,
+} from '../interfaces/types';
 import { isPositionWalkable } from '../world/grid';
 import {
   calculateDerivedStatsWithEquipment,
@@ -27,12 +37,216 @@ import {
   isRangedWeapon,
 } from '../systems/perks';
 import { isMovementBlockedByEncumbrance } from '../inventory/encumbrance';
+import {
+  ReactionQueue,
+  ReactionEntry,
+  ReactionEnqueueInput,
+  createReactionQueue,
+  enqueueReaction,
+  consumeReactions,
+  clearReactionQueue,
+} from './reactions';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
 export const DEFAULT_ATTACK_COST = 1;
 export const DEFAULT_MOVEMENT_COST = 1;
-export const COVER_DAMAGE_REDUCTION = 0.5;
+const DEFAULT_FACING: CardinalDirection = 'south';
+const DEFAULT_SUPPRESSION = 0;
+
+const COVER_LEVEL_ORDER: CoverLevel[] = ['none', 'half', 'full'];
+const COVER_DAMAGE_MULTIPLIER: Record<CoverLevel, number> = {
+  none: 1,
+  half: 0.75,
+  full: 0.55,
+};
+const COVER_HIT_ADJUSTMENT: Record<CoverLevel, number> = {
+  none: 0,
+  half: -0.2,
+  full: -0.4,
+};
+
+type AttackCoverArg =
+  | boolean
+  | {
+      isBehindCover?: boolean;
+      mapArea?: MapArea;
+    };
+
+const getCoverLevelRank = (level: CoverLevel): number => COVER_LEVEL_ORDER.indexOf(level);
+
+const preferStrongerCover = (current: CoverLevel, candidate: CoverLevel): CoverLevel =>
+  getCoverLevelRank(candidate) > getCoverLevelRank(current) ? candidate : current;
+
+let reactionQueue: ReactionQueue = createReactionQueue();
+
+export const queueReaction = (entry: ReactionEnqueueInput): ReactionEntry => {
+  const result = enqueueReaction(reactionQueue, entry);
+  reactionQueue = result.queue;
+  return result.entry;
+};
+
+export const drainReactions = (
+  predicate: (entry: ReactionEntry) => boolean
+): ReactionEntry[] => {
+  const result = consumeReactions(reactionQueue, predicate);
+  reactionQueue = result.queue;
+  return result.reactions;
+};
+
+export const resetReactions = (): void => {
+  reactionQueue = clearReactionQueue();
+};
+
+export const getReactionQueueSnapshot = (): ReactionQueue => reactionQueue;
+
+export const resolveCardinalDirection = (from: Position, to: Position): CardinalDirection => {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    if (dx > 0) {
+      return 'east';
+    }
+    if (dx < 0) {
+      return 'west';
+    }
+  }
+
+  if (dy > 0) {
+    return 'south';
+  }
+  if (dy < 0) {
+    return 'north';
+  }
+
+  return DEFAULT_FACING;
+};
+
+export const getOppositeDirection = (direction: CardinalDirection): CardinalDirection => {
+  switch (direction) {
+    case 'north':
+      return 'south';
+    case 'south':
+      return 'north';
+    case 'east':
+      return 'west';
+    case 'west':
+    default:
+      return 'east';
+  }
+};
+
+const resolveCoverLevelFromProfile = (
+  profile: TileCoverProfile | undefined,
+  direction: CardinalDirection
+): CoverLevel => {
+  if (!profile) {
+    return 'none';
+  }
+
+  return profile[direction] ?? 'none';
+};
+
+const resolvePrimaryCoverDirection = (profile?: TileCoverProfile): CardinalDirection | null => {
+  if (!profile) {
+    return null;
+  }
+
+  let bestDirection: CardinalDirection = 'north';
+  let bestLevel: CoverLevel = 'none';
+
+  (['north', 'east', 'south', 'west'] as CardinalDirection[]).forEach((direction) => {
+    const level = resolveCoverLevelFromProfile(profile, direction);
+    if (getCoverLevelRank(level) > getCoverLevelRank(bestLevel)) {
+      bestLevel = level;
+      bestDirection = direction;
+    }
+  });
+
+  return bestLevel === 'none' ? null : bestDirection;
+};
+
+const getTileCoverProfile = (mapArea: MapArea | undefined, position: Position): TileCoverProfile | undefined => {
+  if (!mapArea) {
+    return undefined;
+  }
+
+  return mapArea.tiles[position.y]?.[position.x]?.cover;
+};
+
+const normalizeCoverArg = (arg?: AttackCoverArg): { isBehindCover: boolean; mapArea?: MapArea } => {
+  if (typeof arg === 'boolean') {
+    return { isBehindCover: arg };
+  }
+
+  if (!arg) {
+    return { isBehindCover: false };
+  }
+
+  return {
+    isBehindCover: Boolean(arg.isBehindCover),
+    mapArea: arg.mapArea,
+  };
+};
+
+const resolveDirectionalCover = (
+  attacker: Player | Enemy,
+  target: Player | Enemy,
+  options: { isBehindCover: boolean; mapArea?: MapArea }
+): { level: CoverLevel; attackDirection: CardinalDirection } => {
+  let coverLevel: CoverLevel = options.isBehindCover ? 'half' : 'none';
+
+  const incomingDirection = resolveCardinalDirection(target.position, attacker.position);
+
+  const tileCover = getTileCoverProfile(options.mapArea, target.position);
+  coverLevel = preferStrongerCover(coverLevel, resolveCoverLevelFromProfile(tileCover, incomingDirection));
+
+  if (target.coverOrientation && target.coverOrientation === incomingDirection) {
+    coverLevel = preferStrongerCover(coverLevel, 'half');
+  }
+
+  return {
+    level: coverLevel,
+    attackDirection: incomingDirection,
+  };
+};
+
+const applyFacing = <TEntity extends Player | Enemy>(entity: TEntity, facing: CardinalDirection): TEntity => ({
+  ...entity,
+  facing,
+});
+
+export const applyCoverStateFromTile = <TEntity extends Player | Enemy>(
+  entity: TEntity,
+  mapArea?: MapArea
+): TEntity => {
+  if (!mapArea) {
+    return {
+      ...entity,
+      coverOrientation: entity.coverOrientation ?? null,
+      suppression: entity.suppression ?? DEFAULT_SUPPRESSION,
+    };
+  }
+
+  const tileCover = getTileCoverProfile(mapArea, entity.position);
+
+  return {
+    ...entity,
+    coverOrientation: resolvePrimaryCoverDirection(tileCover),
+    suppression: entity.suppression ?? DEFAULT_SUPPRESSION,
+  };
+};
+
+export const applyMovementOrientation = <TEntity extends Player | Enemy>(
+  entity: TEntity,
+  previousPosition: Position,
+  mapArea?: MapArea
+): TEntity => {
+  const facing = resolveCardinalDirection(previousPosition, entity.position);
+  const oriented = applyFacing(entity, facing);
+  return applyCoverStateFromTile(oriented, mapArea);
+};
 
 export type RandomGenerator = () => number;
 
@@ -261,16 +475,16 @@ const getPlayerDerivedStats = (entity: Player) => {
 export const calculateHitChance = (
   attacker: Player | Enemy,
   target: Player | Enemy,
-  isBehindCover: boolean
+  coverArg?: AttackCoverArg
 ): number => {
+  const options = normalizeCoverArg(coverArg);
+  const { level, attackDirection } = resolveDirectionalCover(attacker, target, options);
   const distance = calculateDistance(attacker.position, target.position);
 
   // Start from a conservative baseline; distance and cover apply first.
   let hitChance = 0.65 - distance * 0.05;
 
-  if (isBehindCover) {
-    hitChance *= 1 - COVER_DAMAGE_REDUCTION;
-  }
+  hitChance += COVER_HIT_ADJUSTMENT[level];
 
   // Player-based modifiers
   if ('skills' in attacker) {
@@ -321,7 +535,8 @@ export const calculateHitChance = (
     attacker: attacker.id,
     target: target.id,
     distance,
-    isBehindCover,
+    attackDirection,
+    coverLevel: level,
     finalHitChance,
   });
 
@@ -332,7 +547,7 @@ export const calculateHitChance = (
 export const executeAttack = (
   attacker: Player | Enemy,
   target: Player | Enemy,
-  isBehindCover: boolean
+  coverArg?: AttackCoverArg
 ): {
   success: boolean;
   damage: number;
@@ -341,6 +556,8 @@ export const executeAttack = (
   newTarget: Player | Enemy;
   events?: CombatEvent[];
 } => {
+  const options = normalizeCoverArg(coverArg);
+  const coverAssessment = resolveDirectionalCover(attacker, target, options);
   const attackCost = resolveAttackCost(attacker);
 
   if (!Number.isFinite(attackCost) || attacker.actionPoints < attackCost) {
@@ -377,7 +594,7 @@ export const executeAttack = (
 
   const events: CombatEvent[] = [];
 
-  const hitChance = calculateHitChance(attacker, target, isBehindCover);
+  const hitChance = calculateHitChance(attacker, target, options);
   const roll = getRandomRoll();
   const hit = roll <= hitChance;
 
@@ -386,6 +603,8 @@ export const executeAttack = (
 
   let attackerClone: Player | Enemy = attacker;
   let targetClone: Player | Enemy;
+
+  const attackDirection = resolveCardinalDirection(attacker.position, target.position);
 
   let equippedWeapon: Weapon | undefined;
   let weaponModifier = 1;
@@ -450,6 +669,8 @@ export const executeAttack = (
       workingDamage = Math.max(0, workingDamage);
 
       let damageMultiplier = weaponModifier;
+
+      damageMultiplier *= COVER_DAMAGE_MULTIPLIER[coverAssessment.level];
 
       if (weaponIsHollowPoint) {
         damageMultiplier *= baseArmorRating > 0 ? 0.5 : 1.25;
@@ -569,8 +790,8 @@ export const executeAttack = (
     success: hit,
     damage: damageAmount,
     isCritical,
-    newAttacker: attackerClone,
-    newTarget: targetClone,
+    newAttacker: applyCoverStateFromTile(applyFacing(attackerClone, attackDirection), options.mapArea),
+    newTarget: applyCoverStateFromTile(targetClone, options.mapArea),
     events: events.length > 0 ? events : undefined,
   };
 };
@@ -630,17 +851,33 @@ export const initializeCombat = (
   player: Player,
   enemies: Enemy[]
 ): { player: Player; enemies: Enemy[] } => {
+  resetReactions();
+
   // Reset player AP
-  const refreshedPlayer = {
-    ...player,
-    actionPoints: player.maxActionPoints
-  };
+  const refreshedPlayer = applyCoverStateFromTile(
+    applyFacing(
+      {
+        ...player,
+        actionPoints: player.maxActionPoints,
+        suppression: player.suppression ?? DEFAULT_SUPPRESSION,
+      },
+      player.facing ?? DEFAULT_FACING
+    )
+  );
   
   // Reset enemies AP
-  const refreshedEnemies = enemies.map(enemy => ({
-    ...enemy,
-    actionPoints: enemy.maxActionPoints
-  }));
+  const refreshedEnemies = enemies.map((enemy) =>
+    applyCoverStateFromTile(
+      applyFacing(
+        {
+          ...enemy,
+          actionPoints: enemy.maxActionPoints,
+          suppression: enemy.suppression ?? DEFAULT_SUPPRESSION,
+        },
+        enemy.facing ?? DEFAULT_FACING
+      )
+    )
+  );
   
   return { player: refreshedPlayer, enemies: refreshedEnemies };
 };

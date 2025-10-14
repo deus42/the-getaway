@@ -1,4 +1,4 @@
-import { MapArea, MapTile, Position, TileType, Player, Enemy, NPC } from '../interfaces/types';
+import { MapArea, MapTile, Position, TileType, Player, Enemy, NPC, TileCoverProfile } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getPlayerSkillValue } from '../systems/skillTree';
 
@@ -120,6 +120,34 @@ export const addCover = (mapArea: MapArea, coverPositions: Position[]): MapArea 
   return {
     ...mapArea,
     tiles: updatedGrid
+  };
+};
+
+export const setTileCoverProfile = (
+  mapArea: MapArea,
+  position: Position,
+  profile: TileCoverProfile
+): MapArea => {
+  if (!isPositionInBounds(position, mapArea)) {
+    return mapArea;
+  }
+
+  const updatedTiles = mapArea.tiles.map((row, rowIndex) =>
+    row.map((tile, columnIndex) => {
+      if (rowIndex === position.y && columnIndex === position.x) {
+        return {
+          ...tile,
+          cover: { ...profile },
+          provideCover: true,
+        };
+      }
+      return tile;
+    })
+  );
+
+  return {
+    ...mapArea,
+    tiles: updatedTiles,
   };
 };
 

@@ -815,6 +815,7 @@ This file defines the core grid functionality:
 - **Map Manipulation**:
   - `addWalls`: Adds walls to specific positions in a map area
   - `addCover`: Adds cover elements that provide tactical advantages during combat
+  - `setTileCoverProfile`: Annotates tiles with directional cover levels (`north`, `east`, `south`, `west`) so combat logic and HUD debugging can reason about half/full protection.
 
 - **Coordinate Conversion**:
   - `gridToPixel`: Converts grid coordinates to pixel positions for rendering
@@ -837,6 +838,7 @@ Renders the grid and player:
 - Draws the grid with visual elements for different tile types
 - Updates player sprite position based on grid coordinates
 - Uses distinctive visual indicators for walls, cover, and floor tiles
+- Highlights directional cover on hover using `coverDebugGraphics`, shading the tile edge that shields the defender relative to the player's current position.
 - Subscribes to Redux state changes to refresh rendering when needed
 
 ### Movement Workflow
@@ -890,6 +892,7 @@ This module provides the core combat functionality:
 - **Attack Mechanics**:
   - `executeAttack`: Handles attack logic including hit chance calculation and damage application
   - `calculateHitChance`: Determines probability of hitting based on distance and cover
+  - Directional cover: entities carry `facing`, `coverOrientation`, and `suppression`; combat reads `MapTile.cover` profiles to apply half/full mitigation based on approach angle and uses exported reaction queue helpers for upcoming overwatch triggers.
   - Damage system that reduces target health while respecting constraints like minimum health (0)
 
 - **Movement During Combat**:
@@ -912,7 +915,7 @@ The AI module governs enemy behavior during combat:
 
 - **Tactical Positioning**:
   - `moveTowardPlayer`: Calculates optimal move to approach the player
-  - `seekCover`: Finds and moves toward cover positions
+  - `seekCover`: Finds and moves toward cover positions while updating facing/cover state via `applyMovementOrientation`
   - `findNearestCover`: Locates the closest cover element
 
 - **Position Evaluation**:

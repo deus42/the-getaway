@@ -1132,7 +1132,21 @@ export const playerSlice = createSlice({
       if (state.data.encumbrance.level === 'immobile') {
         return;
       }
+      const previous = state.data.position;
       state.data.position = action.payload;
+      if (previous) {
+        const dx = action.payload.x - previous.x;
+        const dy = action.payload.y - previous.y;
+        if (dx !== 0 || dy !== 0) {
+          if (Math.abs(dx) >= Math.abs(dy)) {
+            state.data.facing = dx >= 0 ? 'east' : 'west';
+          } else {
+            state.data.facing = dy >= 0 ? 'south' : 'north';
+          }
+        }
+      }
+      state.data.coverOrientation = null;
+      state.data.suppression = state.data.suppression ?? 0;
     },
     
     // Update player health

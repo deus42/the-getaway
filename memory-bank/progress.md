@@ -1477,3 +1477,47 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Crafting suite slated in Step 30 remains pending until the crafting systems land; no stubs created to avoid false completeness.
 </notes>
 </step>
+
+<step id="26" status="completed">
+<step_metadata>
+  <number>26</number>
+  <title>Advanced Combat Foundations</title>
+  <status>Completed</status>
+  <date>October 12, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Extended combat entities with `facing`, `coverOrientation`, and `suppression` fields plus directional tile cover metadata (`MapTile.cover`), updating player defaults and movement reducers to keep orientation in sync.
+2. Refactored `calculateHitChance`/`executeAttack` to resolve directional cover mitigation, introduced reaction queue scaffolding (`queueReaction`, `drainReactions`), and taught enemy AI to update facing/cover state after movement.
+3. Added `setTileCoverProfile` for grid authoring and a MainScene cover preview wedge that highlights the protected edge while hovering tiles; verified behaviour with new combat + reactions unit tests.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/game/interfaces/types.ts</code_location> models cardinal facings, cover profiles, and new combat state fields on `Player`/`Enemy` entities.
+- <code_location>the-getaway/src/game/combat/combatSystem.ts</code_location> normalises cover arguments, applies half/full mitigation, exports reaction queue helpers, and keeps attackers oriented via `applyCoverStateFromTile`/`applyMovementOrientation`.
+- <code_location>the-getaway/src/game/combat/reactions.ts</code_location> provides the queue primitive consumed by combat.
+- <code_location>the-getaway/src/game/combat/enemyAI.ts</code_location> now orients enemies after movement and passes map context into attacks so cover math engages.
+- <code_location>the-getaway/src/game/world/grid.ts</code_location> exposes `setTileCoverProfile` for directional cover authoring.
+- <code_location>the-getaway/src/game/scenes/MainScene.ts</code_location> renders a cover wedge overlay during path previews.
+- <code_location>the-getaway/src/store/playerSlice.ts</code_location> updates facing when the player moves.
+</implementation>
+
+<code_reference file="the-getaway/src/game/interfaces/types.ts" />
+<code_reference file="the-getaway/src/game/interfaces/player.ts" />
+<code_reference file="the-getaway/src/game/combat/combatSystem.ts" />
+<code_reference file="the-getaway/src/game/combat/reactions.ts" />
+<code_reference file="the-getaway/src/game/combat/enemyAI.ts" />
+<code_reference file="the-getaway/src/game/world/grid.ts" />
+<code_reference file="the-getaway/src/game/scenes/MainScene.ts" />
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="the-getaway/src/game/combat/__tests__/combatSystem.test.ts" />
+<code_reference file="the-getaway/src/game/combat/__tests__/reactions.test.ts" />
+
+<validation>
+- `yarn test --coverage`
+</validation>
+
+<notes>
+- Directional cover currently applies 25%/45% hit penalties for half/full protection and scales damage via the same profile, laying groundwork for the overwatch/AoE features in Steps 26.1–26.3.
+</notes>
+</step>

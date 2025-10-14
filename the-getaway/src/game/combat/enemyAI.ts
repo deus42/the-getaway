@@ -4,7 +4,8 @@ import {
   isInAttackRange,
   canMoveToPosition,
   executeMove,
-  executeAttack
+  executeAttack,
+  applyMovementOrientation,
 } from './combatSystem';
 import { findPath } from '../world/pathfinding';
 import { isPositionInBounds, isPositionWalkable } from '../world/grid';
@@ -39,7 +40,8 @@ export const determineEnemyMove = (
   if (enemy.health <= enemy.maxHealth * HEALTH_THRESHOLD_SEEK_COVER) {
     const coverMove = seekCover(enemy, player, mapArea, enemies, coverPositions, npcs);
     if (coverMove) {
-      updatedEnemy = executeMove(enemy, coverMove) as Enemy;
+      const movedEnemy = executeMove(enemy, coverMove) as Enemy;
+      updatedEnemy = applyMovementOrientation(movedEnemy, enemy.position, mapArea);
       return { enemy: updatedEnemy, player: updatedPlayer, action: 'seek_cover' };
     }
   }
@@ -52,7 +54,10 @@ export const determineEnemyMove = (
     );
     
     // Execute attack
-    const attackResult = executeAttack(enemy, player, playerBehindCover);
+    const attackResult = executeAttack(enemy, player, {
+      isBehindCover: playerBehindCover,
+      mapArea,
+    });
 
     if (attackResult.success) {
       // Safely cast attacker back to Enemy and target back to Player
@@ -82,7 +87,8 @@ export const determineEnemyMove = (
   // Otherwise, try to move toward player
   const nextMove = moveTowardPlayer(enemy, player, mapArea, enemies, npcs);
   if (nextMove) {
-    updatedEnemy = executeMove(enemy, nextMove) as Enemy;
+    const movedEnemy = executeMove(enemy, nextMove) as Enemy;
+    updatedEnemy = applyMovementOrientation(movedEnemy, enemy.position, mapArea);
     return { enemy: updatedEnemy, player: updatedPlayer, action: 'move' };
   }
 
