@@ -390,6 +390,35 @@ Stand up the narrative data layer that ties NPCs, quests, and rewards together.
 Dispatch dialogue and quest reducer actions (e.g., `startDialogue`, `startQuest`, `updateObjectiveCounter`) in Redux devtools and confirm quest state updates as expected.
 </test>
 </step>
+
+<step id="16.5">
+<step_metadata>
+  <number>16.5</number>
+  <title>Author Storylet Library Framework</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16 completed (narrative data layer in questsSlice)
+</prerequisites>
+
+<instructions>
+Implement a “Library of Plays” style storylet system so modular narrative beats slot into the campaign spine while reacting to character state.
+</instructions>
+
+<details>
+- Create `src/game/quests/storylets/storyletTypes.ts` defining contracts for `StoryletPlay`, `StoryRole`, `Trigger`, `Branch`, and `Outcome`, including villain arc alignment, tags, cooldown windows, and required character traits.
+- Add `src/game/quests/storylets/storyletRegistry.ts` exporting curated storylets grouped by villain arc phase (Act I setup, Act II escalation, Act III finale) with sample plays (ambush vignette, relationship beat, transformation aftermath). Each play lists eligible roles (`protagonist`, `foil`, `witness`) and trait-driven variant lines.
+- Build `src/game/quests/storylets/storyletEngine.ts` with helpers to score available storylets, cast party members into roles based on tags/traits, and emit structured outcomes that Redux reducers can apply to quests, reputation, injuries, or boons.
+- Extend `questsSlice` (or new `storyletSlice`) to track storylet cooldowns, last-seen plays per location, and queue selected storylets for UI rendering via dialogue/comic panels.
+- Wire exploration/combat hooks (mission completion, patrol ambush, campfire rest) to call the engine, filter by current campaign beat, and dispatch the selected storylet payload.
+- Provide starter localization entries under `src/content/storylets/` for at least three plays covering villain spine alignment, relationship-driven variation, and injury/trait-driven consequences.
+</details>
+
+<test>
+Trigger the engine with mocked party state (injured stealth specialist, bonded partners, rival NPC) and assert it casts roles correctly, respects cooldowns, and returns variant text keyed to traits. Simulate exploration loop dispatching `storyletTriggered` and verify state prevents immediate repeats. Snapshot a rendered vignette to ensure placeholders populate with assigned character names/traits.
+</test>
+</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
