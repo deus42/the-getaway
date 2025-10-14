@@ -464,6 +464,8 @@ export interface MapTile {
   };
 }
 
+export type DangerRating = 'low' | 'moderate' | 'high' | 'critical';
+
 // Map area/zone
 export interface MapArea {
   id: string;
@@ -477,6 +479,10 @@ export interface MapArea {
     minimumStanding?: FactionStanding;
     minimumReputation?: number;
   };
+  displayName?: string;
+  summary?: string;
+  dangerRating?: DangerRating;
+  hazards?: string[];
   width: number;
   height: number;
   tiles: MapTile[][];

@@ -145,7 +145,7 @@ describe('combatSystem core mechanics', () => {
       expect(result.success).toBe(true);
       expect(result.damage).toBeLessThan(hammer.damage);
       expect(updatedDefender.health).toBeLessThan(defender.health);
-      expect(updatedArmor.durability.current).toBe(19);
+      expect(updatedArmor.durability!.current).toBe(19);
     });
   });
 

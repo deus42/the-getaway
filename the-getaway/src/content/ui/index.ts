@@ -152,6 +152,10 @@ interface DayNightStrings {
 
 interface LevelIndicatorStrings {
   levelLabel: string;
+  zoneLabel: string;
+  dangerLabel: string;
+  zoneSummaryLabel: string;
+  zoneObjectivesLabel: string;
   objectivesLabel: string;
   emptyObjectives: string;
   sideObjectivesLabel: string;
@@ -159,6 +163,9 @@ interface LevelIndicatorStrings {
   missionReadyBadge: string;
   primaryCompleteFootnote: string;
   unknownLevel: string;
+  hazardsLabel: string;
+  hazardsNone: string;
+  dangerLevels: Record<'low' | 'moderate' | 'high' | 'critical', string>;
 }
 
 interface MissionStrings {
@@ -391,6 +398,10 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     levelIndicator: {
       levelLabel: 'LEVEL',
+      zoneLabel: 'ZONE',
+      dangerLabel: 'DANGER',
+      zoneSummaryLabel: 'SUMMARY',
+      zoneObjectivesLabel: 'LOCAL DIRECTIVES',
       objectivesLabel: 'PRIMARY OBJECTIVES',
       emptyObjectives: 'No active tasks in this sector.',
       sideObjectivesLabel: 'SIDE OPERATIONS',
@@ -398,6 +409,14 @@ const STRINGS: Record<Locale, UIStrings> = {
       missionReadyBadge: 'MISSION READY',
       primaryCompleteFootnote: 'All primary objectives secured.',
       unknownLevel: 'Unknown district',
+      hazardsLabel: 'ENVIRONMENTAL HAZARDS',
+      hazardsNone: 'No environmental hazards detected.',
+      dangerLevels: {
+        low: 'Low',
+        moderate: 'Elevated',
+        high: 'Hazardous',
+        critical: 'Critical',
+      },
     },
     dialogueOverlay: {
       closeButton: 'Close',
@@ -662,6 +681,10 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     levelIndicator: {
       levelLabel: 'РІВЕНЬ',
+      zoneLabel: 'ЗОНА',
+      dangerLabel: 'ЗАГРОЗА',
+      zoneSummaryLabel: 'ЗВІТ',
+      zoneObjectivesLabel: 'МІСЦЕВІ ЗАВДАННЯ',
       objectivesLabel: 'ОСНОВНІ ЦІЛІ',
       emptyObjectives: 'У цьому секторі немає активних завдань.',
       sideObjectivesLabel: 'ДОДАТКОВІ ОПЕРАЦІЇ',
@@ -669,6 +692,14 @@ const STRINGS: Record<Locale, UIStrings> = {
       missionReadyBadge: 'МІСІЮ ВИКОНАНО',
       primaryCompleteFootnote: 'Усі основні цілі виконані.',
       unknownLevel: 'Невідомий район',
+      hazardsLabel: 'НЕБЕЗПЕКИ СЕРЕДОВИЩА',
+      hazardsNone: 'Небезпек не виявлено.',
+      dangerLevels: {
+        low: 'Низька',
+        moderate: 'Підвищена',
+        high: 'Висока',
+        critical: 'Критична',
+      },
     },
     dialogueOverlay: {
       closeButton: 'Закрити',

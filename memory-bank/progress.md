@@ -1521,3 +1521,39 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Directional cover currently applies 25%/45% hit penalties for half/full protection and scales damage via the same profile, laying groundwork for the overwatch/AoE features in Steps 26.1–26.3.
 </notes>
 </step>
+
+<step id="35" status="completed">
+<step_metadata>
+  <number>35</number>
+  <title>Surface Level & Objective HUD</title>
+  <status>Completed</status>
+  <date>February 15, 2026</date>
+</step_metadata>
+
+<tasks>
+1. Introduced structured zone descriptors (`content/zones.ts`) covering level index, hazard roster, and local directives for Slums, Downtown, and Industrial tiers.
+2. Enriched world generation so `buildWorldResources` stamps each `MapArea` with display name, summary, danger rating, and hazard list derived from the zone descriptor registry.
+3. Expanded the LevelIndicator HUD to show zone banner, danger pill, environmental hazards, and local directives alongside mission objectives with refreshed locale strings.
+4. Extended the mission manifest to define Level 1 (Downtown Governance Ring) and Level 2 (Industrial Wasteland) objective scaffolds, aligning HUD data with the expanded roadmap.
+</tasks>
+
+<implementation>
+- Zone metadata lives in <code>getZoneMetadata</code> and is merged during `createCityArea` / interior creation so Phaser scenes and HUD consumers read a single enriched `MapArea`.
+- `LevelIndicator.tsx` now derives zone context from `world.currentMapArea`, renders hazard chips, and keeps mission lists driven by the existing selectors.
+- Mission definitions grow to three tiers, supplying localization-friendly titles and future quest hooks without impacting current Level 0 progress.
+</implementation>
+
+<code_reference file="the-getaway/src/content/zones.ts" />
+<code_reference file="the-getaway/src/game/world/worldMap.ts" />
+<code_reference file="the-getaway/src/components/ui/LevelIndicator.tsx" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+<code_reference file="the-getaway/src/content/missions.ts" />
+
+<validation>
+- `yarn build` *(fails: TypeScript catches pre-existing test fixtures that omit required quest/skill properties; no new runtime regressions observed in modified modules)*.
+</validation>
+
+<notes>
+- Hazard chips currently list textual warnings; once Industrial maps land we can hook sensor data to toggle chips dynamically (e.g., disable when filters equipped).
+</notes>
+</step>

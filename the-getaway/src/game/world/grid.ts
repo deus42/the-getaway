@@ -1,4 +1,4 @@
-import { MapArea, MapTile, Position, TileType, Player, Enemy, NPC, TileCoverProfile } from '../interfaces/types';
+import { MapArea, MapTile, Position, TileType, Player, Enemy, NPC, TileCoverProfile, DangerRating } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 import { getPlayerSkillValue } from '../systems/skillTree';
 
@@ -36,6 +36,10 @@ export const createBasicMapArea = (
     isInterior?: boolean;
     zoneId?: string;
     factionRequirement?: MapArea['factionRequirement'];
+    displayName?: string;
+    summary?: string;
+    dangerRating?: DangerRating;
+    hazards?: string[];
   } = {}
 ): MapArea => {
   const grid = createEmptyGrid(width, height);
@@ -65,6 +69,10 @@ export const createBasicMapArea = (
     objectives: options.objectives ?? [],
     isInterior: options.isInterior ?? false,
     factionRequirement: options.factionRequirement,
+    displayName: options.displayName,
+    summary: options.summary,
+    dangerRating: options.dangerRating,
+    hazards: options.hazards ?? [],
     width,
     height,
     tiles: grid,

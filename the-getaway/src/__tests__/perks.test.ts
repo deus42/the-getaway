@@ -24,89 +24,73 @@ import {
 import { executeAttack } from '../game/combat/combatSystem';
 import { createWeapon } from '../game/inventory/inventorySystem';
 
-const createTestPlayer = (overrides?: Partial<Player>): Player => {
-  const defaultSkills: PlayerSkills = {
-    strength: 5,
-    perception: 5,
-    endurance: 5,
-    charisma: 5,
-    intelligence: 5,
-    agility: 5,
-    luck: 5,
-  };
+const cloneDefault = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
-  const base: Player = {
-    id: uuidv4(),
-    name: 'Test Player',
-    position: { x: 0, y: 0 },
-    health: 100,
-    maxHealth: 100,
-    actionPoints: 10,
-    maxActionPoints: 10,
-  stamina: 100,
-  maxStamina: 100,
-  isExhausted: false,
-  isCrouching: false,
-    skills: defaultSkills,
-    skillTraining: { ...DEFAULT_PLAYER.skillTraining },
-    taggedSkillIds: [...DEFAULT_PLAYER.taggedSkillIds],
-    level: 1,
-    experience: 0,
-    credits: 0,
-    skillPoints: 0,
-    attributePoints: 0,
-    backgroundId: undefined,
-    perks: [],
-    pendingPerkSelections: 0,
-    factionReputation: {
-      resistance: 0,
-      corpsec: 0,
-      scavengers: 0,
-    },
-    appearancePreset: undefined,
-  inventory: {
-    items: [],
-    maxWeight: 50,
-    currentWeight: 0,
-    hotbar: [null, null, null, null, null],
-  },
-  equipped: {
-    weapon: undefined,
-    armor: undefined,
-    accessory: undefined,
-    secondaryWeapon: undefined,
-    meleeWeapon: undefined,
-    bodyArmor: undefined,
-    helmet: undefined,
-    accessory1: undefined,
-    accessory2: undefined,
-  },
-  equippedSlots: {},
-  activeWeaponSlot: 'primaryWeapon',
-  karma: 0,
-  personality: createDefaultPersonalityProfile(),
-  perkRuntime: {
-    gunFuShotsThisTurn: 0,
-    adrenalineRushTurnsRemaining: 0,
-    ghostInvisibilityTurns: 0,
-    ghostConsumed: false,
-  },
-  encumbrance: {
-    level: 'normal',
-    percentage: 0,
-    movementApMultiplier: 1,
-    attackApMultiplier: 1,
-  },
+const createTestPlayer = (overrides?: Partial<Player>): Player => {
+  const base = cloneDefault(DEFAULT_PLAYER);
+  const mergedSkills: PlayerSkills = {
+    ...base.skills,
+    ...(overrides?.skills ?? {}),
   };
 
   return {
     ...base,
-    ...overrides,
-    karma: overrides?.karma ?? base.karma,
-    personality: overrides?.personality ?? {
-      ...base.personality,
-      flags: { ...base.personality.flags },
+    id: uuidv4(),
+    name: overrides?.name ?? 'Test Player',
+    skills: mergedSkills,
+    skillTraining: {
+      ...base.skillTraining,
+      ...(overrides?.skillTraining ?? {}),
     },
+    taggedSkillIds: overrides?.taggedSkillIds ?? [...base.taggedSkillIds],
+    level: overrides?.level ?? base.level,
+    experience: overrides?.experience ?? base.experience,
+    credits: overrides?.credits ?? base.credits,
+    skillPoints: overrides?.skillPoints ?? base.skillPoints,
+    attributePoints: overrides?.attributePoints ?? base.attributePoints,
+    perks: overrides?.perks ?? [...base.perks],
+    pendingPerkSelections: overrides?.pendingPerkSelections ?? base.pendingPerkSelections,
+    factionReputation: {
+      ...base.factionReputation,
+      ...(overrides?.factionReputation ?? {}),
+    },
+    inventory: {
+      ...cloneDefault(base.inventory),
+      ...(overrides?.inventory ?? {}),
+    },
+    equipped: {
+      ...cloneDefault(base.equipped),
+      ...(overrides?.equipped ?? {}),
+    },
+    equippedSlots: {
+      ...cloneDefault(base.equippedSlots),
+      ...(overrides?.equippedSlots ?? {}),
+    },
+    encumbrance: {
+      ...base.encumbrance,
+      ...(overrides?.encumbrance ?? {}),
+    },
+    perkRuntime: {
+      ...base.perkRuntime,
+      ...(overrides?.perkRuntime ?? {}),
+    },
+    activeWeaponSlot: overrides?.activeWeaponSlot ?? base.activeWeaponSlot,
+    karma: overrides?.karma ?? base.karma,
+    personality: overrides?.personality ?? createDefaultPersonalityProfile(),
+    position: overrides?.position ?? base.position,
+    health: overrides?.health ?? base.health,
+    maxHealth: overrides?.maxHealth ?? base.maxHealth,
+    actionPoints: overrides?.actionPoints ?? base.actionPoints,
+    maxActionPoints: overrides?.maxActionPoints ?? base.maxActionPoints,
+    stamina: overrides?.stamina ?? base.stamina,
+    maxStamina: overrides?.maxStamina ?? base.maxStamina,
+    isExhausted: overrides?.isExhausted ?? base.isExhausted,
+    isCrouching: overrides?.isCrouching ?? base.isCrouching,
+    facing: overrides?.facing ?? base.facing,
+    coverOrientation: overrides?.coverOrientation ?? base.coverOrientation,
+    suppression: overrides?.suppression ?? base.suppression,
+    backgroundId: overrides?.backgroundId ?? base.backgroundId,
+    appearancePreset: overrides?.appearancePreset ?? base.appearancePreset,
   };
 };
 
@@ -121,6 +105,9 @@ const createEnemy = (position: { x: number; y: number }, health = 50, maxHealth 
   isHostile: true,
   actionPoints: 4,
   maxActionPoints: 4,
+  facing: 'south',
+  coverOrientation: null,
+  suppression: 0,
   visionCone: {
     range: 5,
     angle: 90,

@@ -1,5 +1,7 @@
 import type { Enemy, MapArea, Player, VisionCone } from '../game/interfaces/types';
 import { AlertLevel } from '../game/interfaces/types';
+import { DEFAULT_PLAYER } from '../game/interfaces/player';
+import { createBasicMapArea } from '../game/world/grid';
 
 jest.mock('../game/combat/perception', () => {
   const actual = jest.requireActual('../game/combat/perception');
@@ -30,7 +32,9 @@ const perception = perceptionModule as jest.Mocked<typeof perceptionModule>;
 describe('perceptionManager', () => {
   const mockVisionCone: VisionCone = { range: 5, angle: 90, direction: 0 };
 
-  const baseEnemy: Enemy = {
+const cloneDefault = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
+
+const baseEnemy: Enemy = {
     id: 'enemy-1',
     name: 'Guard',
     position: { x: 0, y: 0 },
@@ -41,96 +45,30 @@ describe('perceptionManager', () => {
     damage: 2,
     attackRange: 3,
     isHostile: true,
+    facing: 'north',
+    coverOrientation: null,
+    suppression: 0,
     visionCone: mockVisionCone,
     alertLevel: AlertLevel.IDLE,
+    alertProgress: 0,
   };
 
   const player: Player = {
+    ...cloneDefault(DEFAULT_PLAYER),
     id: 'player-1',
-    name: 'Runner',
     position: { x: 1, y: 1 },
     health: 30,
     maxHealth: 30,
     actionPoints: 6,
     maxActionPoints: 6,
-    damage: 2,
-    attackRange: 3,
-    isHostile: false,
-    skills: {
-      strength: 5,
-      perception: 5,
-      endurance: 5,
-      charisma: 5,
-      intelligence: 5,
-      agility: 5,
-      luck: 5,
-    },
-    skillTraining: {},
-    taggedSkillIds: [],
-    level: 1,
-    experience: 0,
-    credits: 0,
-    skillPoints: 0,
-    attributePoints: 0,
     inventory: {
-      items: [],
+      ...structuredClone(DEFAULT_PLAYER.inventory),
       maxWeight: 20,
       currentWeight: 0,
-      hotbar: [null, null, null, null, null],
     },
-    equipped: {},
-    perks: [],
-    factionReputation: {
-      resistance: 0,
-      corpsec: 0,
-      scavengers: 0,
-    },
-    personality: {
-      dominantTrait: 'earnest',
-      flags: {
-        earnest: 0,
-        sarcastic: 0,
-        ruthless: 0,
-        stoic: 0,
-      },
-    },
-    perkRuntime: {
-      gunFuShotsThisTurn: 0,
-      adrenalineRushTurnsRemaining: 0,
-      ghostInvisibilityTurns: 0,
-      ghostConsumed: false,
-    },
-    encumbrance: {
-      level: 'normal',
-      percentage: 0,
-      movementApMultiplier: 1,
-      attackApMultiplier: 1,
-    },
-    stamina: 100,
-    maxStamina: 100,
-    isExhausted: false,
-    isCrouching: false,
-    backgroundId: undefined,
-    appearancePreset: undefined,
-    equippedSlots: {},
-    activeWeaponSlot: 'primaryWeapon',
-    pendingPerkSelections: 0,
-    karma: 0,
   };
 
-  const mapArea: MapArea = {
-    id: 'area-1',
-    name: 'Test',
-    zoneId: 'zone-1',
-    width: 10,
-    height: 10,
-    tiles: Array.from({ length: 10 }, () => Array.from({ length: 10 }, () => ({ type: 'floor' } as any))),
-    entities: {
-      enemies: [],
-      npcs: [],
-      items: [],
-    },
-  };
+  const mapArea: MapArea = createBasicMapArea('Test', 10, 10, { zoneId: 'zone-1' });
 
   afterEach(() => {
     jest.clearAllMocks();

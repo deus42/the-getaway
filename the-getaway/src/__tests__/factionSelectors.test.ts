@@ -31,112 +31,71 @@ jest.mock('../game/systems/factions', () => {
 
 import { selectFactionDefinitions, selectFactionReputationMap, selectPendingFactionEvents, makeSelectFactionStanding, selectAllFactionStandings } from '../store/selectors/factionSelectors';
 import * as factionModule from '../game/systems/factions';
+import { store } from '../store';
 
 const factionsMock = factionModule as jest.Mocked<typeof factionModule>;
 
 describe('factionSelectors', () => {
-  const buildState = (overrides?: Partial<RootState['player']>): RootState => ({
-    player: {
-      version: 1,
+  const deepClone = <T>(value: T): T => {
+    if (value instanceof Set) {
+      return new Set(Array.from(value, (item) => deepClone(item))) as unknown as T;
+    }
+    if (Array.isArray(value)) {
+      return value.map((item) => deepClone(item)) as unknown as T;
+    }
+    if (value && typeof value === 'object') {
+      const result: Record<PropertyKey, unknown> = {};
+      Object.entries(value as Record<string, unknown>).forEach(([key, val]) => {
+        result[key] = deepClone(val);
+      });
+      return result as T;
+    }
+    return value;
+  };
+
+  const createFactionEvent = (delta: number) =>
+    ({
+      factionId: 'corpsec',
+      delta,
+      updatedValue: -30 + delta,
+      rivalDeltas: {},
+      standingChanges: [],
+      timestamp: Date.now(),
+    }) as unknown as RootState['player']['pendingFactionEvents'][number];
+
+  const buildState = (overrides?: Partial<RootState['player']>): RootState => {
+    const state = deepClone(store.getState()) as RootState;
+    const overrideData = overrides?.data;
+
+    state.player = {
+      ...state.player,
+      ...overrides,
       data: {
-        id: 'player',
-        name: 'Runner',
-        position: { x: 0, y: 0 },
-        health: 100,
-        maxHealth: 100,
-        actionPoints: 6,
-        maxActionPoints: 6,
-        stamina: 100,
-        maxStamina: 100,
-        isExhausted: false,
-        isCrouching: false,
-        skills: {
-          strength: 5,
-          perception: 5,
-          endurance: 5,
-          charisma: 5,
-          intelligence: 5,
-          agility: 5,
-          luck: 5,
-        },
-        skillTraining: {},
-        taggedSkillIds: [],
-        level: 1,
-        experience: 0,
-        credits: 0,
-        skillPoints: 0,
-        attributePoints: 0,
-        inventory: {
-          items: [],
-          maxWeight: 50,
-          currentWeight: 0,
-          hotbar: [null, null, null, null, null],
-        },
-        equipped: {},
-        equippedSlots: {},
-        activeWeaponSlot: 'primaryWeapon',
-        perks: [],
-        pendingPerkSelections: 0,
-        perkRuntime: {
-          gunFuShotsThisTurn: 0,
-          adrenalineRushTurnsRemaining: 0,
-          ghostInvisibilityTurns: 0,
-          ghostConsumed: false,
-        },
-        encumbrance: {
-          level: 'normal',
-          percentage: 0,
-          movementApMultiplier: 1,
-          attackApMultiplier: 1,
-        },
+        ...state.player.data,
+        ...overrideData,
         factionReputation: {
+          ...state.player.data.factionReputation,
           resistance: 15,
           corpsec: -30,
           scavengers: 0,
+          ...(overrideData?.factionReputation ?? {}),
         },
-        personality: {
-          dominantTrait: 'earnest',
-          flags: {
-            earnest: 0,
-            sarcastic: 0,
-            ruthless: 0,
-            stoic: 0,
-          },
-        },
-        backgroundId: undefined,
-        appearancePreset: undefined,
-        karma: 0,
+        personality: overrideData?.personality
+          ? {
+              ...state.player.data.personality,
+              ...overrideData.personality,
+              flags: {
+                ...state.player.data.personality.flags,
+                ...(overrideData.personality.flags ?? {}),
+              },
+            }
+        : state.player.data.personality,
       },
-      pendingLevelUpEvents: [],
-      xpNotifications: [],
-      pendingFactionEvents: [{ factionId: 'corpsec', delta: -10 }],
-      ...(overrides ?? {}),
-    },
-    world: {} as RootState['world'],
-    quests: { quests: [], completedQuestIds: new Set() },
-    log: { entries: [], lastUpdated: 0 },
-    settings: {
-      locale: 'en',
-      uiScale: 1,
-      tutorialEnabled: true,
-      audio: { master: 1, music: 1, effects: 1 },
-    },
-    combatFeedback: { events: [] },
-    missions: { missions: [], completedObjectives: {} },
-    surveillance: {
-      zones: {},
-      hud: {
-        overlayEnabled: false,
-        camerasNearby: 0,
-        detectionProgress: 0,
-        activeCameraId: null,
-        alertState: 'idle',
-        networkAlertActive: false,
-        networkAlertExpiresAt: null,
-      },
-      curfewBanner: { visible: false, lastActivatedAt: null },
-    },
-  } as RootState);
+      pendingFactionEvents: overrides?.pendingFactionEvents ?? [createFactionEvent(-10)],
+    };
+
+    return state;
+  };
 
   afterEach(() => {
     jest.clearAllMocks();
@@ -180,7 +139,7 @@ describe('factionSelectors', () => {
         ...buildState().player.data,
         factionReputation: {
           resistance: 15,
-        },
+        } as any,
       },
     });
 
