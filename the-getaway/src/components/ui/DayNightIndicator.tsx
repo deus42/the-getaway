@@ -40,24 +40,23 @@ const DayNightIndicator: React.FC = () => {
   return (
     <div
       style={{
-        position: "absolute",
-        top: "1.25rem",
-        right: "1.25rem",
-        minWidth: "172px",
+        position: "relative",
+        width: "min(18.5rem, 46vw)",
+        minWidth: "16.5rem",
         background:
-          "linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.8))",
+          "linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.82))",
         border: "1px solid rgba(148, 163, 184, 0.35)",
         borderRadius: "14px",
-        padding: "0.85rem 1.05rem",
+        padding: "1rem 1.1rem 1.1rem",
         fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
         color: "#f8fafc",
-        letterSpacing: "0.05em",
+        letterSpacing: "0.06em",
         display: "flex",
         flexDirection: "column",
-        gap: "0.45rem",
-        boxShadow: "0 12px 32px rgba(15, 23, 42, 0.45)",
-        pointerEvents: "none",
-        backdropFilter: "blur(4px)",
+        gap: "0.55rem",
+        boxShadow: "0 20px 38px rgba(15, 23, 42, 0.45)",
+        pointerEvents: "auto",
+        backdropFilter: "blur(6px)",
       }}
     >
       <div
