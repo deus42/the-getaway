@@ -2509,6 +2509,61 @@ Press F1 and verify HelpPanel modal opens with 8 tabs. Click through each tab (C
 </test>
 </step>
 
+<step id="34.8">
+<step_metadata>
+  <number>34.8</number>
+  <title>Implement WebGL Context Loss Recovery</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Add robust WebGL context loss handling so Phaser scenes pause gracefully, rebuild GPU resources, and resume without forcing a full page reload.
+</instructions>
+
+<details>
+- Register `webglcontextlost` and `webglcontextrestored` listeners on the game canvas during boot. Prevent default behavior so the browser does not attempt an automatic reload loop.
+- Detect loss inside the main render loop (`MainScene` update hook or a shared game manager) and short-circuit draw logic while the context is unavailable.
+- On restore, rebuild Phaser-managed render textures, custom `Graphics` primitives from `IsoObjectFactory`, and any post-processing pipelines. Centralize the recreation code so future renderable objects can opt-in.
+- Expose a lightweight scene callback (`onContextRestore`) that rehydrates shaders, repopulates static prop containers, and repositions dynamic tokens from Redux state.
+- Hook the recovery path into the existing mini-map, day/night overlay, and HUD widgets to ensure their textures and gradient fills refresh correctly.
+- Add a developer toggle (e.g., hidden debug key) that calls `gl.getExtension('WEBGL_lose_context').loseContext()` while running in development to validate the recovery flow without manual tab throttling.
+</details>
+
+<test>
+- In development mode, trigger a deliberate context loss via `WEBGL_lose_context` and verify the game stops rendering without crashing.
+- Confirm Redux-driven state (player position, quests, HUD selections) persists through context loss and that the scene resumes once the context is restored.
+- Inspect the rebuilt scene for missing textures, blank `Graphics`, or misordered depths after recovery.
+- Repeat the test on Chrome and Firefox to ensure cross-browser stability.
+</test>
+</step>
+
+<step id="34.9">
+<step_metadata>
+  <number>34.9</number>
+  <title>Document SpectorJS Profiling Workflow</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Create a repeatable WebGL profiling guide using SpectorJS so developers can diagnose draw-call spikes, shader bottlenecks, and texture churn.
+</instructions>
+
+<details>
+- Add `docs/perf-playbook.md` (or update an existing performance section) outlining prerequisites, how to install the SpectorJS extension/app, and steps to capture a representative frame.
+- Document capture triage: sorting by program/texture, spotting redundant binds, identifying excessive draw calls, and correlating them with Phaser objects (sprites, graphics, pipelines).
+- Include a checklist for perf regressions: verify batching, texture atlas usage, shader complexity, and overdraw from large `Graphics` fills.
+- Describe how to export captures and attach them to bug reports for cross-team review.
+- Reference the guide from `memory-bank/architecture.md` under the rendering/diagnostics section so team members know where to find it.
+- Add an action item to integrate the profiling checklist into milestone playtests (e.g., run SpectorJS once per release candidate).
+</details>
+
+<test>
+- Follow the new playbook to capture a SpectorJS frame in a busy downtown scene and confirm every step produces the expected screenshots/logs.
+- Validate that another developer can repeat the process using only the documentation and share an exported capture linked to a sample issue.
+- Verify the memory bank reference resolves correctly and that the docs build (if applicable) without broken links.
+</test>
+</step>
+
 <step id="35">
 <step_metadata>
   <number>35</number>
@@ -2590,14 +2645,14 @@ Launch the HUD and confirm George appears within the Level 0 objectives area wit
 <summary>
 ## Summary
 
-This plan now outlines **52 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **54 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
 - **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (20 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5, 30.1/30.2)
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
-- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (10 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35, 35.2, 35.5)
+- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (12 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 34.8, 34.9, 35, 35.2, 35.5)
 </phase_structure>
 
 <focus_areas>
@@ -2613,7 +2668,7 @@ This plan now outlines **52 implementable steps** organized into **10 phases** t
 - **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
 - **Testing & Quality**: Unit test suite (70% coverage target), integration test scenarios, manual QA playtest checklist.
 - **Accessibility & Documentation**: Accessibility audit, keyboard navigation, screen readers, in-game help system, and external documentation.
-- **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, and UI refinement across all systems.
+- **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, WebGL context loss recovery, SpectorJS profiling playbook, and UI refinement across all systems.
 </focus_areas>
 
 <key_improvements>
