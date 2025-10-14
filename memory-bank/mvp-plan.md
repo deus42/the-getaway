@@ -449,6 +449,39 @@ Establish a canonical Level → Mission → Quest content hierarchy backed by st
 Add automated content validation that runs `validateContent` across all definitions, failing on missing keys, invalid references, or locale gaps. Smoke test a sample level to verify NPCs, quests, and UI strings resolve via the centralized locale helpers while respecting the new hierarchical imports.
 </test>
 </step>
+
+<step id="16.7">
+<step_metadata>
+  <number>16.7</number>
+  <title>Prototype Narrative → Triple → Scene Pipeline</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.5 completed (storylet library framework)
+- Step 16.6 completed (Level → Mission → Quest hierarchy & resource keys)
+</prerequisites>
+
+<instructions>
+Build a tooling pipeline that converts short narrative prompts into 2D tilemap blueprints by extracting `(object, relation, object)` triples, mapping them to placement rules, and emitting Phaser-ready scene definitions aligned with the level/mission hierarchy.
+</instructions>
+
+<details>
+- Define JSON schemas in `src/game/narrative/tripleTypes.ts` for `NarrativeTriple`, `SceneMoment`, and `GeneratedSceneDefinition`, including fields for `resourceKey`, `priority`, `relation`, and optional spatial hints.
+- Add `src/game/narrative/tripleExtraction.ts` with an adapter that accepts mission/quest text, runs an LLM prompt (tooling-only), and returns validated triple bundles per moment (time frame), with a manual authoring fallback.
+- Create relation-to-placement mappings under `src/game/world/generation/relationRules.ts`, implementing functions for `on`, `near`, `inside`, `left_of`, and similar relations using existing grid helpers and respecting collision layers.
+- Extend the map generation pipeline (`worldGenerationPipeline.ts`) to accept `GeneratedSceneDefinition` payloads: generate base terrain first, then apply prop placements and depth sorting based on rule outputs.
+- Store generated scenes under `src/content/levels/{levelId}/missions/{missionId}/generatedScenes/` and register them via resource keys so missions can reference auto-generated layouts.
+- Provide a CLI script `scripts/generate-scene-from-story.ts` that orchestrates extraction, invokes relation rules, writes the resulting scene JSON, and reports validation issues for missing assets or collisions.
+- Document the workflow in `memory-bank/architecture.md`, covering how writers supply prompts, review triples, and integrate generated tilemaps.
+</details>
+
+<test>
+- Unit test `relationRules` to ensure each relation produces valid tile placements without overlapping blocked cells.
+- Add integration tests that feed sample triple bundles into the generator and assert the emitted scene references known resource keys and passes collision validation.
+- Run the CLI on a sample mission narrative, load the generated scene in Phaser, and verify props appear in the correct locations with proper depth sorting.
+</test>
+</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
