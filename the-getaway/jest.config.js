@@ -1,9 +1,47 @@
 export default {
   preset: "ts-jest",
   testEnvironment: "jsdom",
+  coverageProvider: "v8",
   moduleNameMapper: {
     "\\.(css|less|scss|sass)$": "<rootDir>/__mocks__/styleMock.js",
     "\\.(gif|ttf|eot|svg|png)$": "<rootDir>/__mocks__/fileMock.js",
   },
   setupFilesAfterEnv: ["<rootDir>/src/setupTests.ts"],
+  collectCoverageFrom: [
+    "<rootDir>/src/game/**/*.{ts,tsx}",
+    "<rootDir>/src/store/**/*.{ts,tsx}",
+    "<rootDir>/src/utils/**/*.{ts,tsx}",
+    "!<rootDir>/src/content/**/*",
+    "!<rootDir>/src/game/scenes/**/*",
+    "!<rootDir>/src/game/objects/**/*",
+    "!<rootDir>/src/game/utils/IsoObjectFactory.ts",
+    "!<rootDir>/src/game/services/**/*",
+    "!<rootDir>/src/game/systems/surveillance/**/*",
+    "!<rootDir>/src/game/systems/curfewStateMachine.ts",
+    "!<rootDir>/src/game/systems/missionProgression.ts",
+    "!<rootDir>/src/game/world/dayNightCycle.ts",
+    "!<rootDir>/src/components/**/*",
+    "!<rootDir>/src/App.tsx",
+  ],
+  coveragePathIgnorePatterns: [
+    "/node_modules/",
+    "<rootDir>/src/components/",
+    "/src/App.tsx$",
+    "<rootDir>/src/content/",
+  ],
+  coverageReporters: ["text", "text-summary", "lcov", "json-summary"],
+  coverageThreshold: {
+    global: {
+      statements: 70,
+      branches: 65,
+      functions: 70,
+      lines: 70,
+    },
+    "./src/game/": {
+      statements: 75,
+      branches: 70,
+      functions: 75,
+      lines: 75,
+    },
+  },
 };

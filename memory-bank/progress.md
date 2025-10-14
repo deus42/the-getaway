@@ -1439,3 +1439,41 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - `yarn test --runTestsByPath src/__tests__/playerSlice.test.ts src/__tests__/combat.test.ts`
 </validation>
 </step>
+
+<step id="32.1" status="completed">
+<step_metadata>
+  <number>32.1</number>
+  <title>Implement Unit Test Suite (70%+ Code Coverage)</title>
+  <status>Completed</status>
+  <date>October 12, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added module-scoped combat, pathfinding, inventory, progression, and dialogue test suites under `src/game/**/__tests__` with deterministic helpers covering hit chance, crits, AI movement, weighted paths, inventory swaps, XP leveling, and faction/skill dialogue gating.
+2. Updated Jest coverage settings to require 70/65/70/70 global thresholds, enforce 75/70/75/75 for `src/game`, enable `v8` coverage provider, and emit JSON summaries for tooling.
+3. Verified full suite via `yarn test --coverage`, capturing 87.9% statements and 77.6% branches with the new tests exercising combat durability, performance constraints, and quest flow.
+</tasks>
+
+<implementation>
+- New module-level specs (`combatSystem.test.ts`, `pathfinding.test.ts`, `inventorySystem.test.ts`, `progression.test.ts`, `dialogueSystem.test.ts`) live alongside the systems they validate, reusing factory helpers to clone `DEFAULT_PLAYER`, seed enemies, and assert deterministic outcomes across AP costs, armor decay, diagonal routing, and quest effects.
+- Combat coverage now includes deterministic random generators for crit flows plus AI attack assertions, while pathfinding asserts diagonal toggles and sub-50ms traversal on 50×50 grids.
+- Inventory and progression tests exercise weight ceilings, equipment swaps, consumable caps, skill point awards, and perk unlock cadence; dialogue tests gate options by attribute/skill training and confirm quest hooks emit `started` events.
+- Jest configuration switches to V8 coverage, raises branch thresholds to 65% globally, and adds `json-summary` output, ensuring CI enforces the new bar and downstream tooling can ingest coverage metrics.
+</implementation>
+
+<code_reference file="the-getaway/src/game/combat/__tests__/combatSystem.test.ts" />
+<code_reference file="the-getaway/src/game/world/__tests__/pathfinding.test.ts" />
+<code_reference file="the-getaway/src/game/inventory/__tests__/inventorySystem.test.ts" />
+<code_reference file="the-getaway/src/game/systems/__tests__/progression.test.ts" />
+<code_reference file="the-getaway/src/game/quests/__tests__/dialogueSystem.test.ts" />
+<code_reference file="the-getaway/jest.config.js" />
+
+<validation>
+- `yarn test --coverage`
+</validation>
+
+<notes>
+- Coverage summary: 87.9% statements, 77.6% branches, 83.7% functions, 87.9% lines with per-module floors enforced (`src/game` ≥75/70/75/75%).
+- Crafting suite slated in Step 30 remains pending until the crafting systems land; no stubs created to avoid false completeness.
+</notes>
+</step>
