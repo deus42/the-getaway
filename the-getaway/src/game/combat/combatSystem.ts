@@ -49,7 +49,7 @@ import {
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
-export const DEFAULT_ATTACK_COST = 1;
+export const DEFAULT_ATTACK_COST = 2;
 export const DEFAULT_MOVEMENT_COST = 1;
 const DEFAULT_FACING: CardinalDirection = 'south';
 const DEFAULT_SUPPRESSION = 0;

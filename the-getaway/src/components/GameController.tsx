@@ -1180,15 +1180,18 @@ const GameController: React.FC = () => {
             id: uuidv4(),
             name: logStrings.curfewPatrolName,
             position: { x: player.position.x + 5, y: player.position.y + 2 },
-            health: 25,
-            maxHealth: 25,
-            actionPoints: spawnDuringEnemyTurn ? 0 : 6,
-            maxActionPoints: 6,
-            damage: 5,
-            attackRange: 1,
+            facing: 'west',
+            coverOrientation: null,
+            suppression: 0,
+            health: 45,
+            maxHealth: 45,
+            actionPoints: spawnDuringEnemyTurn ? 0 : 4,
+            maxActionPoints: 4,
+            damage: 7,
+            attackRange: 2,
             isHostile: true,
             visionCone: {
-              range: 8,
+              range: 10,
               angle: 90,
               direction: 180,
             },
@@ -1290,6 +1293,7 @@ const GameController: React.FC = () => {
     );
 
     processingEnemyIdRef.current = currentEnemy.id;
+    let actionResult: ReturnType<typeof determineEnemyMove> | null = null;
     enemyActionTimeoutRef.current = window.setTimeout(() => {
       log.debug(
         `>>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
@@ -1326,6 +1330,7 @@ const GameController: React.FC = () => {
           coverPositions,
           currentMapArea.entities.npcs
         );
+        actionResult = result;
         log.debug(
           `Enemy ${currentEnemy.id} action: ${result.action}, AP left: ${result.enemy.actionPoints}`
         );
@@ -1390,11 +1395,21 @@ const GameController: React.FC = () => {
           error,
         });
       } finally {
+        const latestEnemy = actionResult?.enemy ?? currentEnemy;
+        const shouldRepeatEnemy =
+          latestEnemy &&
+          latestEnemy.health > 0 &&
+          latestEnemy.actionPoints > 0;
+
         log.debug(
-          `Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Advancing to next enemy.`
+          `Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Remaining AP: ${latestEnemy?.actionPoints ?? currentEnemy.actionPoints}. Repeat: ${shouldRepeatEnemy}`
         );
-        setCurrentEnemyTurnIndex((prev) => prev + 1);
+
         cancelPendingEnemyAction(false);
+
+        if (!shouldRepeatEnemy) {
+          setCurrentEnemyTurnIndex((prev) => prev + 1);
+        }
       }
     }, 500);
   }, [
