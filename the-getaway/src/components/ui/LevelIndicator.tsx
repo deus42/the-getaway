@@ -57,7 +57,9 @@ const hazardChipStyle: React.CSSProperties = {
   background: 'rgba(59, 130, 246, 0.18)',
   border: '1px solid rgba(59, 130, 246, 0.35)',
   textTransform: 'uppercase',
-  whiteSpace: 'nowrap',
+  lineHeight: 1.2,
+  textAlign: 'center',
+  whiteSpace: 'normal',
 };
 
 const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onToggle }) => {
@@ -134,7 +136,7 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
   return (
     <div
       style={{
-        width: '280px',
+        width: 'min(92vw, 320px)',
         background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.82))',
         border: '1px solid rgba(148, 163, 184, 0.35)',
         borderRadius: '14px',
