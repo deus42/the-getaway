@@ -54,7 +54,8 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`PlayerInventoryPanel.tsx`**: Full inventory console with filter tabs, encumbrance telemetry, equipment slot grid, hotbar management, and inline equip/repair/use actions that dispatch Redux inventory reducers.
 - **Inventory data model**: `Player.inventory` now tracks `hotbar` slots alongside `items`, and `Player.equippedSlots`/`activeWeaponSlot` mirror the expanded slot framework (primary/secondary/melee weapons, body armor, helmet, accessories). `Player.encumbrance` persists the derived weight ratio so reducers and UI can apply penalties without recomputing totals each frame.
 - **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, viewport reticle, and supports drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles.
-- **`CommandStatusConsole.tsx`**: Unified status dock that condenses zone intel, day/night cadence, surveillance exposure, and turn state into a single top-right console with contextual reveals and auto-hide behaviour.
+- **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
+- **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
 - **`GeorgeAssistant.tsx`**: React HUD console that anchors top-center, presenting a compact status dock and an expandable chat feed while pulling quest, karma, reputation, and personality data straight from Redux.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 - **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
@@ -120,28 +121,28 @@ flowchart LR
 </pattern>
 </architecture_section>
 
-<architecture_section id="command_status_console" category="hud_systems">
+<architecture_section id="level_objectives_panel" category="hud_systems">
 <design_principles>
-- Collapse zone intel, mission readiness, day/night cadence, surveillance status, and turn summary into a single top-right console so high-signal data is glanceable without scattering overlays.
-- Drive console visibility entirely from Redux selectors; each band (environment, surveillance, engagement) self-activates when its data is relevant and withdraws the rest of the time.
-- Favor motion that feels alive but restrained: fade/translate transitions in sub-250 ms windows, glow treatments for urgent alerts, and a six-second idle auto-hide that recovers instantly on interaction.
-- Keep actionable controls (mission advance, camera cone toggle) colocated with their telemetry, reinforcing muscle memory and keeping keyboard shortcuts discoverable.
+- Keep the level card and objectives list anchored to the top-center HUD rail so mission metadata is always visible without crowding the playfield.
+- Drive all content from structured selectors (`selectMissionProgress`, `selectPrimaryObjectives`, `selectSideObjectives`) so the React panel remains declarative and mirrors Redux truth without local bookkeeping.
+- Treat mission completion as a formal state transition that can be observed by cinematics, reward flows, and save-game checkpoints rather than ad-hoc UI toggles.
+- Surface zone context (danger rating, hazard list, local directives) alongside mission objectives so players can assess environmental risk without leaving the HUD.
 </design_principles>
 
 <technical_flow>
-1. <code_location>the-getaway/src/components/ui/CommandStatusConsole.tsx</code_location> aggregates mission, world, surveillance, and player selectors into memoised view models, renders contextual bands, and manages auto-hide/reset timers plus alert animations.
-2. <code_location>the-getaway/src/content/zones.ts</code_location> defines canonical zone descriptors (display name, level, danger rating, environmental hazards, local directives). <code_location>the-getaway/src/game/world/worldMap.ts</code_location> merges that metadata into each `MapArea` so Phaser scenes and HUD read a single enriched structure.
-3. <code_location>the-getaway/src/store/selectors/missionSelectors.ts</code_location> combines mission manifests with completion state, supplying the console with mission names, primary completion flags, and the pending-advance badge.
-4. <code_location>the-getaway/src/store/surveillanceSlice.ts</code_location> exposes camera counts, detection progress, overlay toggle state, and network alerts that drive the surveillance band’s badges, progress meter, and CTA.
-5. <code_location>the-getaway/src/store/worldSlice.ts</code_location> contributes `timeOfDay`, `curfewActive`, `currentTime`, `inCombat`, `isPlayerTurn`, and hostile rosters so the console can pulse curfew warnings and only reveal engagement data during combat.
-6. <code_location>the-getaway/src/store/playerSlice.ts</code_location> provides current/max AP so the console’s engagement band mirrors action point drain via `AnimatedStatBar`.
-7. <code_location>the-getaway/src/components/system/MissionProgressionManager.tsx</code_location> and <code_location>the-getaway/src/components/ui/MissionCompletionOverlay.tsx</code_location> maintain the broader advancement contract; the console simply surfaces the CTA and mirrors readiness state.
+1. <code_location>the-getaway/src/components/ui/LevelIndicator.tsx</code_location> renders the level badge, zone banner (danger pill, hazard chips, local directives), and the ordered mission objective lists. Completed objectives animate via the existing cross-out styling, while zone metadata is pulled directly from the active `MapArea`.
+2. <code_location>the-getaway/src/content/zones.ts</code_location> defines canonical zone descriptors (display name, zone level, danger rating, environmental hazards, local directives). <code_location>the-getaway/src/game/world/worldMap.ts</code_location> merges this metadata into each `MapArea` so Phaser scenes and the HUD consume a single enriched structure.
+3. <code_location>the-getaway/src/store/selectors/missionSelectors.ts</code_location> resolves mission progress by combining objective definitions with quest completion state, exposing memoised primary/side arrays, `allPrimaryComplete`, and helper selectors for HUD/assistant consumers.
+4. <code_location>the-getaway/src/store/missionSlice.ts</code_location> stores the manifest, tracks `pendingAdvance`, and flips `missionAccomplished()` when selectors report that all primary objectives are complete.
+5. <code_location>the-getaway/src/game/systems/missionProgression.ts</code_location> exports DOM event helpers used by HUD components to broadcast mission completion and level advance requests to Phaser scenes and the assistant.
+6. Confirmation flows call `advanceToNextLevel()` which increments `currentLevel`, hydrates the next level's objective bundles, and resets the panel lists while leaving incomplete side quests in the log until dismissed.
+7. <code_location>the-getaway/src/components/system/MissionProgressionManager.tsx</code_location> watches mission selectors, dispatches `missionAccomplished` once per completion, and emits `MISSION_ACCOMPLISHED` DOM events for HUD consumers.
+8. <code_location>the-getaway/src/components/ui/MissionCompletionOverlay.tsx</code_location> shows the Mission Accomplished modal, allows deferral, presents a mission-ready toast, and fires `LEVEL_ADVANCE_REQUESTED` via `emitLevelAdvanceRequestedEvent` when the player opts to continue.
 </technical_flow>
 
-<pattern name="StatusConsoleAutoHide">
-- Idle timeout hides the console after six seconds of calm; high-priority states (combat, curfew, alarms, mission-ready) reset the timer and keep opacity pinned at 1.
-- Pointer movement anywhere on screen cancels the hidden state, guaranteeing the console is reachable even when invisible.
-- Section toggles animate with 180–220 ms translate/fade to communicate change without pulling focus from the playfield.
+<pattern name="ObjectiveCrossOut">
+- Cross-out effect leverages a `::after` pseudo-element with a 200 ms width transition so objectives animate cleanly when their quests resolve.
+- Checkbox state is purely cosmetic; assistive text announces "Completed" via `aria-live` for screen-reader parity.
 </pattern>
 
 <pattern name="MissionAdvancementContract">
@@ -215,14 +216,14 @@ flowchart LR
 3. `GameController` loads zone surveillance on area transitions, throttles crouch movement, and drives `updateSurveillance` every frame while binding `Tab`/`C` hotkeys through `setOverlayEnabled` and `setCrouching`.
 4. `game/systems/surveillance/cameraSystem.ts` advances sweeps/patrols, applies stealth + crouch modifiers, raises network alerts, schedules reinforcements, and snapshots HUD values for the slice.
 5. `MainScene` listens to store changes and instantiates `CameraSprite` containers that animate LEDs and cones, respecting the overlay flag on each update.
-6. React HUD layers (`CommandStatusConsole.tsx`, `CurfewWarning.tsx`) surface detection progress, curfew activation, and contextual guidance, while `MiniMap.tsx` renders camera glyphs with alert-state colors.
+6. React HUD layers (`CameraDetectionHUD.tsx`, `CurfewWarning.tsx`) surface detection progress and curfew activation, while `MiniMap.tsx` renders camera glyphs with alert-state colors.
 </technical_flow>
 
 <code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
 <code_location>the-getaway/src/game/objects/CameraSprite.ts</code_location>
 <code_location>the-getaway/src/store/surveillanceSlice.ts</code_location>
 <code_location>the-getaway/src/components/GameController.tsx</code_location>
-<code_location>the-getaway/src/components/ui/CommandStatusConsole.tsx</code_location>
+<code_location>the-getaway/src/components/ui/CameraDetectionHUD.tsx</code_location>
 <code_location>the-getaway/src/components/ui/CurfewWarning.tsx</code_location>
 <code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location>
 </architecture_section>

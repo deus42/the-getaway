@@ -4,18 +4,21 @@ import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
 import LogPanel from "./components/ui/LogPanel";
+import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
+import LevelIndicator from "./components/ui/LevelIndicator";
 import GeorgeAssistant from "./components/ui/GeorgeAssistant";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
+import TurnTracker from "./components/ui/TurnTracker";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import CornerAccents from "./components/ui/CornerAccents";
 import ScanlineOverlay from "./components/ui/ScanlineOverlay";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
 import DataStreamParticles from "./components/ui/DataStreamParticles";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
+import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
 import CurfewWarning from "./components/ui/CurfewWarning";
-import CommandStatusConsole from "./components/ui/CommandStatusConsole";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
 import FactionReputationManager from "./components/system/FactionReputationManager";
@@ -185,6 +188,18 @@ const centerStageStyle: CSSProperties = {
   overflow: "hidden",
 };
 
+const topLeftOverlayStyle: CSSProperties = {
+  position: "absolute",
+  top: "1.25rem",
+  left: "1.25rem",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  gap: "1rem",
+  zIndex: 5,
+  pointerEvents: "none",
+};
+
 const statusDockStyle: CSSProperties = {
   position: "absolute",
   top: "1.25rem",
@@ -194,7 +209,7 @@ const statusDockStyle: CSSProperties = {
   alignItems: "flex-end",
   gap: "0.75rem",
   zIndex: 7,
-  pointerEvents: "auto",
+  pointerEvents: "none",
 };
 
 const topCenterOverlayStyle: CSSProperties = {
@@ -240,6 +255,8 @@ interface CommandShellProps {
   rightCollapsed: boolean;
   onToggleLeftSidebar: () => void;
   onToggleRightSidebar: () => void;
+  levelPanelCollapsed: boolean;
+  onToggleLevelPanel: () => void;
 }
 
 const CommandShell: React.FC<CommandShellProps> = ({
@@ -251,6 +268,8 @@ const CommandShell: React.FC<CommandShellProps> = ({
   rightCollapsed,
   onToggleLeftSidebar,
   onToggleRightSidebar,
+  levelPanelCollapsed,
+  onToggleLevelPanel,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
@@ -446,6 +465,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                   }}
                 >
                   <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
+                  <TurnTracker />
                 </div>
               </div>
             </>
@@ -456,11 +476,18 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <TacticalHUDFrame />
           <GameCanvas />
           <GameController />
+          <div style={{ ...topLeftOverlayStyle, pointerEvents: 'auto' }}>
+            <LevelIndicator
+              collapsed={levelPanelCollapsed}
+              onToggle={onToggleLevelPanel}
+            />
+          </div>
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />
           </div>
           <div style={statusDockStyle}>
-            <CommandStatusConsole />
+            <CameraDetectionHUD />
+            <DayNightIndicator />
           </div>
           <DialogueOverlay />
           <CombatFeedbackManager />
@@ -555,6 +582,7 @@ function App() {
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+  const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(false);
 
   useEffect(() => {
     log.debug('Component mounted');
@@ -616,6 +644,9 @@ function App() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === 'c' && gameStarted && !showMenu && !showCharacterCreation) {
         setShowCharacterScreen((prev) => !prev);
+      }
+      if (event.key.toLowerCase() === 'l' && gameStarted && !showMenu && !showCharacterCreation) {
+        setLevelPanelCollapsed((prev) => !prev);
       }
     };
 
@@ -784,6 +815,8 @@ function App() {
             rightCollapsed={rightSidebarCollapsed}
             onToggleLeftSidebar={() => setLeftSidebarCollapsed((prev) => !prev)}
             onToggleRightSidebar={() => setRightSidebarCollapsed((prev) => !prev)}
+            levelPanelCollapsed={levelPanelCollapsed}
+            onToggleLevelPanel={() => setLevelPanelCollapsed((prev) => !prev)}
           />
         )}
         <CurfewWarning />
