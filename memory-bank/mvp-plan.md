@@ -509,7 +509,7 @@ Implement surveillance cameras that activate during nighttime curfew, creating d
 - **Avoidance**: TAB toggles vision overlay, timing rotation gaps, use cover for LOS break, wait until dawn
 
 **UI Components**
-- `CameraDetectionHUD.tsx` (top-right): "Cameras Nearby: X", detection bar 0-100%, "TAB - Toggle Camera Vision"
+- `CommandStatusConsole.tsx` (top-right): Unified environment/surveillance/turn console with cameras nearby count, exposure meter, mission-ready badge, day-night countdown, and `TAB`-backed cone toggle
 - `CurfewWarning.tsx` (full-screen): "CURFEW ACTIVE" banner, "SURVEILLANCE ENGAGED" subtitle, 3s auto-dismiss, alarm sound
 - Minimap: Triangle icons, color-coded (Gray=dormant, Blue=idle, Yellow=suspicious, Red=alarmed, Dark gray=disabled), pulse when rotating toward player
 
@@ -2577,7 +2577,7 @@ Display the current level metadata and mission objectives directly in the game o
 
 <details>
 - Extend `MapArea` definitions with `level` numbers and objective lists for all zones (Level 0 for Slums, Level 1 for Downtown, Level 2 for Industrial Wasteland).
-- Render a `LevelIndicator` panel in the HUD that mirrors the day/night widget placement, listing active tasks without blocking gameplay.
+- Render a unified `CommandStatusConsole` panel in the HUD that mirrors the day/night placement while listing active tasks, hazards, and surveillance status without blocking gameplay.
 - Show zone-specific information: current zone name, danger level, environmental hazards present, and active quests for that area.
 - Ensure all map entities respect their building boundaries so overlays and sprites do not intersect structures.
 - Add minimap or zone overview showing key locations, vehicle position if applicable, and discovered points of interest.
