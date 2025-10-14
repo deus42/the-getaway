@@ -12,6 +12,7 @@ import {
 } from '../game/world/dayNightCycle';
 import { findNearestWalkablePosition, getAdjacentWalkablePositions } from '../game/world/grid';
 import { createScopedLogger } from '../utils/logger';
+import { getZoneMetadata } from '../content/zones';
 
 export interface WorldState {
   currentMapArea: MapArea;
@@ -92,6 +93,32 @@ export const worldSlice = createSlice({
       state.inCombat = false;
       state.isPlayerTurn = true;
       state.turnCount = 1;
+    },
+
+    setCurrentMapAreaZoneMetadata: (state, action: PayloadAction<{ zoneId: string }>) => {
+      const zone = getZoneMetadata(action.payload.zoneId);
+      const currentArea = state.currentMapArea;
+
+      currentArea.zoneId = zone.zoneId;
+      currentArea.name = zone.name;
+      currentArea.displayName = zone.name;
+      currentArea.level = zone.level;
+      currentArea.summary = zone.summary;
+      currentArea.dangerRating = zone.danger;
+      currentArea.hazards = [...zone.hazards];
+      currentArea.objectives = [...zone.objectives];
+
+      const storedArea = state.mapAreas[currentArea.id];
+      if (storedArea) {
+        storedArea.zoneId = currentArea.zoneId;
+        storedArea.name = currentArea.name;
+        storedArea.displayName = currentArea.displayName;
+        storedArea.level = currentArea.level;
+        storedArea.summary = currentArea.summary;
+        storedArea.dangerRating = currentArea.dangerRating;
+        storedArea.hazards = [...currentArea.hazards];
+        storedArea.objectives = [...currentArea.objectives];
+      }
     },
 
     updateGameTime: (state, action: PayloadAction<number>) => {
@@ -292,6 +319,7 @@ export const worldSlice = createSlice({
 
 export const {
   setMapArea,
+  setCurrentMapAreaZoneMetadata,
   updateGameTime,
   setGameTime,
   enterCombat,

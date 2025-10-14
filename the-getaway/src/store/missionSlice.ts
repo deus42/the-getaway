@@ -17,6 +17,7 @@ const buildMissionLevels = (locale: Locale): MissionLevelState[] => {
     level: entry.level,
     levelId: entry.levelId,
     name: entry.name,
+    zoneId: entry.zoneId,
     objectives: entry.objectives.map((objective) => ({
       ...objective,
       questIds: [...objective.questIds],

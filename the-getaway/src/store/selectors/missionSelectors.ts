@@ -54,6 +54,7 @@ export const selectMissionProgress = createSelector(
       level: level.level,
       levelId: level.levelId,
       name: level.name,
+      zoneId: level.zoneId,
       primary,
       side,
       allPrimaryComplete,

@@ -171,6 +171,7 @@ interface LevelIndicatorStrings {
 interface MissionStrings {
   accomplishedTitle: string;
   accomplishedSubtitle: (levelName: string) => string;
+  primarySummaryLabel: string;
   continueCta: string;
   deferCta: string;
   deferHint: string;
@@ -490,7 +491,8 @@ const STRINGS: Record<Locale, UIStrings> = {
     mission: {
       accomplishedTitle: 'Mission Accomplished',
       accomplishedSubtitle: (levelName: string) => `Primary objectives cleared for ${levelName}.`,
-      continueCta: 'Advance to Next Level',
+      primarySummaryLabel: 'Primary objectives completed:',
+      continueCta: 'Next Level',
       deferCta: 'Stay in Level',
       deferHint: 'You can remain in this district to finish optional operations or resupply before deploying.',
       sideReminder: 'Optional operations remaining:',
@@ -776,7 +778,8 @@ const STRINGS: Record<Locale, UIStrings> = {
     mission: {
       accomplishedTitle: 'Місію виконано',
       accomplishedSubtitle: (levelName: string) => `Основні цілі для «${levelName}» виконані.`,
-      continueCta: 'Перейти до наступного рівня',
+      primarySummaryLabel: 'Основні цілі виконано:',
+      continueCta: 'Наступний рівень',
       deferCta: 'Залишитися у секторі',
       deferHint: 'Можна залишитися, щоб завершити побічні операції або поповнити ресурси.',
       sideReminder: 'Незавершені побічні операції:',
