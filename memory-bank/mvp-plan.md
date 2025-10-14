@@ -1206,6 +1206,64 @@ Equip weapon at 100% durability and note damage output. Use weapon until durabil
 </test>
 </step>
 
+<step id="26">
+<step_metadata>
+  <number>26</number>
+  <title>Advanced Combat Foundations</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 25.5 completed (equipment effects integrated with combat)
+</prerequisites>
+
+<instructions>
+Refactor combat state and systems to support directional cover, queued reactions, and facing-aware calculations needed for Steps 26.1–26.3.
+</instructions>
+
+<details>
+**Data Model Updates:**
+- Extend `Player` and `Enemy` combat state with `facing`, `coverOrientation`, and `suppression` fields.
+- Annotate `MapArea` tiles with directional cover metadata (`tileCover` map noting half/full cover per compass direction).
+- Introduce a shared `ReactionQueue` structure in `src/game/combat/reactions.ts` for pending overwatch or delayed actions.
+
+**Engine Changes:**
+- Update `combatSystem.ts` to compute mitigation using attacker vs. defender facing and tile cover orientation.
+- Ensure `determineEnemyMove` (and any player-facing move helpers) track and update entity facing whenever positions change.
+- Add scaffolding to enqueue and resolve reaction actions without yet implementing overwatch logic.
+
+**Grid & Scene Integration:**
+- Propagate cover metadata through `grid.ts` / pathfinding helpers so movement previews can surface directional cover.
+- In `MainScene` combat overlays, render indicators that show the defender’s cover direction relative to the attacker.
+
+**Persistence & State:**
+- Migrate Redux slices / save data to include the new combat fields with backward-compatible defaults.
+- Provide selectors/utilities for reading facing/cover state so upcoming features can consume them cleanly.
+
+**Developer Tooling:**
+- Add debug logging or overlay toggles to visualize cover vectors, facings, and reaction queue contents during playtests.
+
+</details>
+
+<test>
+- Unit: Verify cover orientation math and reaction queue enqueue/dequeue behavior in `combatSystem` and `reactions` tests.
+- Integration: Simulate a combat round on a mocked map and assert defenders receive different mitigation when hit from front vs. flank.
+- Manual: Use a debug build to step through tiles with varying cover directions, rotate attacker facings, and confirm UI indicators and damage adjustments respond accordingly.
+</test>
+</step>
+
+<step id="26.1">
+<step_metadata>
+  <number>26.1</number>
+  <title>Directional Cover and Flanking Mechanics</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 26 completed (advanced combat foundations in place)
+- Step 25.5 completed (equipment effects integrated with combat)
+</prerequisites>
+
 <step id="26.1">
 <step_metadata>
   <number>26.1</number>
@@ -2536,7 +2594,7 @@ This plan now outlines **52 implementable steps** organized into **10 phases** t
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (19 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26.1/26.2/26.3, 29/29.5, 30.1/30.2)
+- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (20 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5, 30.1/30.2)
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
 - **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (10 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35, 35.2, 35.5)
