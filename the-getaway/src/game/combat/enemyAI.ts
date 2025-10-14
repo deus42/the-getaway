@@ -1,11 +1,12 @@
 import { Enemy, Player, Position, MapArea, NPC } from '../interfaces/types';
-import { 
-  calculateManhattanDistance, 
+import {
+  calculateManhattanDistance,
   isInAttackRange,
   canMoveToPosition,
   executeMove,
   executeAttack,
   applyMovementOrientation,
+  DEFAULT_ATTACK_COST,
 } from './combatSystem';
 import { findPath } from '../world/pathfinding';
 import { isPositionInBounds, isPositionWalkable } from '../world/grid';
@@ -48,6 +49,14 @@ export const determineEnemyMove = (
   
   // If in attack range, attack player
   if (isInAttackRange(enemy.position, player.position, enemy.attackRange)) {
+    if (enemy.actionPoints < DEFAULT_ATTACK_COST) {
+      updatedEnemy = {
+        ...updatedEnemy,
+        actionPoints: 0,
+      };
+      return { enemy: updatedEnemy, player: updatedPlayer, action: 'no_ap' };
+    }
+
     // Determine if player is behind cover
     const playerBehindCover = coverPositions.some(
       cover => cover.x === player.position.x && cover.y === player.position.y
