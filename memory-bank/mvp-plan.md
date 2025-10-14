@@ -419,36 +419,6 @@ Implement a “Library of Plays” style storylet system so modular narrative be
 Trigger the engine with mocked party state (injured stealth specialist, bonded partners, rival NPC) and assert it casts roles correctly, respects cooldowns, and returns variant text keyed to traits. Simulate exploration loop dispatching `storyletTriggered` and verify state prevents immediate repeats. Snapshot a rendered vignette to ensure placeholders populate with assigned character names/traits.
 </test>
 </step>
-
-<step id="16.6">
-<step_metadata>
-  <number>16.6</number>
-  <title>Standardize Level → Mission → Quest Hierarchy & Resource Keys</title>
-  <phase>Phase 5: Narrative and Quest Layer</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 15 completed (basic quest implementation)
-- Step 16 completed (narrative data layer in questsSlice)
-</prerequisites>
-
-<instructions>
-Establish a canonical Level → Mission → Quest content hierarchy backed by stable resource keys. Centralize localization into shared key/value maps while keeping structural data in dedicated modules so every NPC, asset, and narrative element references its owner via keys instead of ad-hoc embeds.
-</instructions>
-
-<details>
-- Create `src/game/narrative/structureTypes.ts` defining `LevelDefinition`, `MissionDefinition`, and `QuestDefinition` interfaces with `resourceKey` naming conventions and helpers to flag mission quests versus `missionId: null` side quests.
-- Restructure content folders to mirror the hierarchy (`src/content/levels/{levelId}/levelDefinition.ts`, `missions/{missionId}/missionDefinition.ts`, `quests/{questId}/questDefinition.ts`), ensuring definitions reference assets/NPCs via resource keys rather than inline data.
-- Move localization into shared `src/content/locales/{lang}/` bundles keyed by these resource identifiers (e.g., `levels`, `missions`, `quests`, `npcs` maps) so strings are maintained centrally and imported via lookup helpers.
-- Update aggregate registries (`src/content/levels/index.ts`, `src/content/missions.ts`, `src/content/quests.ts`) to compose the hierarchy, enforcing that missions register under their level key, quests declare a valid `missionKey` or `null`, and NPC registries store owning `levelKey`/`missionKey` pairs.
-- Introduce a validation utility (`src/game/narrative/validateContent.ts`) to assert key format compliance, resolve cross-references, and confirm locale entries exist for every registered resource key.
-- Document the hierarchy and authoring workflow in `memory-bank/architecture.md`, covering how to add new levels, missions, quests, NPCs, assets, and localization entries using the standardized keys.
-</details>
-
-<test>
-Add automated content validation that runs `validateContent` across all definitions, failing on missing keys, invalid references, or locale gaps. Smoke test a sample level to verify NPCs, quests, and UI strings resolve via the centralized locale helpers while respecting the new hierarchical imports.
-</test>
-</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
