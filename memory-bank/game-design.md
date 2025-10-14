@@ -52,6 +52,46 @@ The game world is persistent and simulated, meaning changes endure and NPCs beha
 These systems ensure the city feels alive and immersive. The player is one part of a larger ecosystem, and the world can surprise them with new developments during their journey.
 </mechanic>
 
+<mechanic name="trust_fear_ethics">
+Trust/Fear Ethics Layer (MVP - Step 29.2)
+
+<implementation_status>⚠️ PARTIAL - Introduced in Step 29.2, expands into localized gossip network in Step 29.5</implementation_status>
+
+Moral perception in The Getaway leans into survival pragmatism rather than binary good/evil. Each faction and neighborhood cell maintains a lightweight `EthicsProfile` with two axes:
+	•	**Trust (-100..100)** — Measures whether locals believe the crew will protect their interests. Positive trust unlocks safer routes, better prices, and candid intel.
+	•	**Fear (0..100)** — Captures how dangerous or volatile the crew appears. Elevated fear intimidates holdouts, deters harassment, and increases checkpoint scrutiny.
+
+**Action Records & Context Tags**
+	•	Player-facing systems (combat, quests, barter, exploration choices) emit `ActionRecord` payloads: `{ actor, verb, target, locationId, tags[], witnesses[], timestamp }`.
+	•	Tags describe situational ethics rather than outcomes: `scarcity_high`, `aid_given`, `threat_displayed`, `resource_hoarding`, `lawless_zone`, `medical_need`, `witness_children`.
+	•	Trust and fear deltas map from these tags. Example: `aid_given` during `scarcity_high` grants +15 trust, while `threat_displayed` in a `lawless_zone` drives +10 fear but only +2 resentment.
+
+**SPECIAL & Background Modifiers**
+	•	Charisma amplifies positive trust swings (+10% per point above 6); low Charisma dampens gains and accelerates decay.
+	•	Strength above 7 boosts fear impact (+8% per point) and slows fear decay; fragile builds struggle to intimidate without escalating violence.
+	•	Background perks supply signature biases (e.g., Ex-CorpSec gets a +5 baseline fear in CorpSec precincts; Street Urchin halves fear gain when actions target civilians).
+
+**Systemic Hooks**
+	•	**Economy**: Shop price multiplier = faction reputation modifier × trust discount × fear surcharge. High-trust vendors offer better rates; high fear forces bribes.
+	•	**Encounters**: Ambient encounter tables adjust patrol density and ambush likelihood using fear as a weight. Trust unlocks escort offers or emergency aid events.
+	•	**Dialogue Tone**: NPC bark variants pull from trust/fear bands (e.g., high trust & low fear = warm gratitude; high fear = clipped, cautious responses).
+	•	**Soft Locks**: Low trust may gate official clinics, but high fear opens clandestine routes (night market with riskier odds instead of hard failure).
+
+**Decay & Maintenance**
+	•	Trust decays slowly toward neutral when the crew ignores a faction or cell (−2 per in-game day). Fear evaporates faster (−5 per day) unless reinforced.
+	•	Specific events (festivals, ceasefires, curfews) can temporarily freeze decay or spike thresholds, tying ethics flow into world scheduling.
+
+**Rumor Seed**
+	•	Actions with deltas over configured thresholds enqueue a `Rumor` entry `{ contentKey, accuracy, sourceFaction, spreadTimer, audiences[] }`.
+	•	Rumors remain scoped to the originating faction/location until Step 29.5 introduces full propagation. Accuracy defaults to 0.8 for firsthand witnesses, 0.5 otherwise.
+
+**Developer Telemetry**
+	•	A dev-only `EthicsDebugPanel` surfaces current trust/fear values per faction, the last three action records, and derived modifiers for quick balancing.
+	•	Designers can tweak tag-to-delta tables via JSON without code changes, encouraging rapid iteration on ethical nuance.
+
+This layer ensures the world reacts to scarcity-driven ethics immediately while leaving room for the deeper witness gossip network to evolve those reactions into long-term, subjective reputations.
+</mechanic>
+
 <mechanic name="localized_reputation_network">
 Localized Reputation & Gossip System
 

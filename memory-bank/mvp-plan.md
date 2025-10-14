@@ -1571,6 +1571,35 @@ Complete Resistance quest and verify +20 Resistance reputation, -10 CorpSec repu
 </test>
 </step>
 
+<step id="29.2">
+<step_metadata>
+  <number>29.2</number>
+  <title>Establish Trust/Fear Ethics Layer</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Create a lightweight ethics model that augments faction reputation by tracking trust and fear scores per faction/location, logging contextual action records, and surfacing immediate systemic effects (pricing, encounters, dialogue tone) without yet implementing full witness propagation.
+</instructions>
+
+<details>
+- **Ethics service module** (`src/game/systems/ethics/ethicsService.ts`): Define `EthicsProfile` with `trust` (-100..100) and `fear` (0..100) axes per faction and active location cell. Provide helpers to apply deltas, clamp ranges, decay values, and broadcast updates.
+- **Redux integration** (`src/store/ethicsSlice.ts`): Persist trust/fear state, last three `ActionRecord` entries, and computed modifiers (price multiplier, encounter weight, dialogue mood). Expose selectors wired into UI/components.
+- **Action capture**: Emit `ActionRecord` objects (`{ actor, verb, target, locationId, tags: string[], witnesses: string[], timestamp }`) from existing combat/quest/economy reducers. Seed core tags: `scarcity_high`, `aid_given`, `threat_displayed`, `resource_hoarding`, `lawless_zone`.
+- **Contextual adjustments**: Map tags to trust/fear deltas with SPECIAL-aware scaling (e.g., Charisma > 6 boosts trust gains by 10%, Strength > 7 increases fear impact). Convert existing barter pricing and encounter generation to consult combined faction reputation + trust/fear modifiers.
+- **Rumor hooks**: When actions exceed configured thresholds, enqueue a simplified rumor payload (`src/game/systems/rumors/simpleRumorQueue.ts`) with faction/location scope for Step 29.5 to expand. Include accuracy defaults and spread timers but keep propagation local.
+- **Developer HUD**: Add dev-only overlay (`EthicsDebugPanel`) showing current trust/fear per faction, recent action tags, and resulting modifiers to support balancing sessions.
+</details>
+
+<prerequisites>
+- Step 29 (Implement Faction Reputation System with Three Core Factions)
+</prerequisites>
+
+<test>
+Trigger representative actions: donate water during `scarcity_high`, extort a vendor, and fire warning shots in a neutral zone. Verify trust/fear meters update independently of base reputation, barter prices and encounter rolls reflect new modifiers, rumors are queued for qualifying acts, and the debug overlay lists the latest three action records with correct tag-derived deltas.
+</test>
+</step>
+
 <step id="29.5">
 <step_metadata>
   <number>29.5</number>
