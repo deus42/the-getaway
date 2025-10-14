@@ -200,18 +200,6 @@ const topLeftOverlayStyle: CSSProperties = {
   pointerEvents: "none",
 };
 
-const statusDockStyle: CSSProperties = {
-  position: "absolute",
-  top: "1.25rem",
-  right: "1.25rem",
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-end",
-  gap: "0.75rem",
-  zIndex: 7,
-  pointerEvents: "none",
-};
-
 const topCenterOverlayStyle: CSSProperties = {
   position: "absolute",
   top: "1.25rem",
@@ -485,10 +473,8 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />
           </div>
-          <div style={statusDockStyle}>
-            <CameraDetectionHUD />
-            <DayNightIndicator />
-          </div>
+          <CameraDetectionHUD />
+          <DayNightIndicator />
           <DialogueOverlay />
           <CombatFeedbackManager />
         </div>
