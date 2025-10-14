@@ -61,6 +61,7 @@
 - **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
 - After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
 - When adding or revising dialogue, quest text, or narrative copy, align tone with the writing guidelines in `memory-bank/plot.md` and note the consulted section in your change log or PR summary.
+- Before committing any improvement, step, or task, confirm the implementation is sound and explicitly request the commit only after that confirmation.
 
 ## Separation of Concerns: Design vs Architecture
 
