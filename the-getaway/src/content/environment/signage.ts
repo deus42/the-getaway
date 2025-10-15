@@ -53,3 +53,7 @@ export const getSignageVariantsForFlag = (
   value: SignageVariantDefinition['value']
 ): SignageVariantDefinition[] =>
   signageVariants.filter((variant) => variant.flag === flag && variant.value === value);
+
+export const findSignageVariantById = (
+  id: string
+): SignageVariantDefinition | undefined => signageVariants.find((variant) => variant.id === id);

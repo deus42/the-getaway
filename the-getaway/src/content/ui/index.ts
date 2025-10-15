@@ -168,6 +168,25 @@ interface LevelIndicatorStrings {
   dangerLevels: Record<'low' | 'moderate' | 'high' | 'critical', string>;
 }
 
+interface AmbientTickerStrings {
+  panelTitle: string;
+  flagsLabel: string;
+  flagLabels: {
+    gangHeat: string;
+    curfew: string;
+    supply: string;
+    blackout: string;
+  };
+  rumorLabel: string;
+  signageLabel: string;
+  weatherLabel: string;
+  fallback: {
+    rumor: string;
+    signage: string;
+    weather: string;
+  };
+}
+
 interface MissionStrings {
   accomplishedTitle: string;
   accomplishedSubtitle: (levelName: string) => string;
@@ -234,6 +253,7 @@ interface UIStrings {
   miniMap: MiniMapStrings;
   dayNight: DayNightStrings;
   levelIndicator: LevelIndicatorStrings;
+  ambientTicker: AmbientTickerStrings;
   dialogueOverlay: DialogueOverlayStrings;
   perks: PerkStrings;
   skills: Record<SkillKey, string>;
@@ -417,6 +437,24 @@ const STRINGS: Record<Locale, UIStrings> = {
         moderate: 'Elevated',
         high: 'Hazardous',
         critical: 'Critical',
+      },
+    },
+    ambientTicker: {
+      panelTitle: 'Ambient Feed',
+      flagsLabel: 'World Flags',
+      flagLabels: {
+        gangHeat: 'Gang Heat',
+        curfew: 'Curfew Tier',
+        supply: 'Supply Scarcity',
+        blackout: 'Blackout Tier',
+      },
+      rumorLabel: 'Latest Rumor',
+      signageLabel: 'Signage Swap',
+      weatherLabel: 'Weather Preset',
+      fallback: {
+        rumor: 'No rumors circulating.',
+        signage: 'Signage stable.',
+        weather: 'Weather steady.',
       },
     },
     dialogueOverlay: {
@@ -701,6 +739,24 @@ const STRINGS: Record<Locale, UIStrings> = {
         moderate: 'Підвищена',
         high: 'Висока',
         critical: 'Критична',
+      },
+    },
+    ambientTicker: {
+      panelTitle: 'Стрічка середовища',
+      flagsLabel: 'Прапорці світу',
+      flagLabels: {
+        gangHeat: 'Активність банд',
+        curfew: 'Рівень комендантської',
+        supply: 'Дефіцит постачання',
+        blackout: 'Рівень відключень',
+      },
+      rumorLabel: 'Останній слух',
+      signageLabel: 'Оновлена вивіска',
+      weatherLabel: 'Погодний режим',
+      fallback: {
+        rumor: 'Слухів не помічено.',
+        signage: 'Вивіски без змін.',
+        weather: 'Погода стабільна.',
       },
     },
     dialogueOverlay: {

@@ -67,3 +67,6 @@ export const getWeatherPresetForGangHeat = (
   weatherPresets.find(
     (preset) => preset.flag === 'gangHeat' && preset.value === level
   );
+
+export const findWeatherPresetById = (id: string): WeatherPresetDefinition | undefined =>
+  weatherPresets.find((preset) => preset.id === id);

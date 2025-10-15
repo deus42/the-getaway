@@ -1,7 +1,11 @@
 export { getRumorRotationsForGangHeat } from './rumors';
 export { getNoteDefinitionsForFlag } from './notes';
-export { getSignageVariantsForFlag } from './signage';
-export { getWeatherPresetForCurfewLevel, getWeatherPresetForGangHeat } from './weather';
+export { getSignageVariantsForFlag, findSignageVariantById } from './signage';
+export {
+  getWeatherPresetForCurfewLevel,
+  getWeatherPresetForGangHeat,
+  findWeatherPresetById,
+} from './weather';
 export type {
   RumorRotationDefinition,
   EnvironmentalNoteDefinition,
