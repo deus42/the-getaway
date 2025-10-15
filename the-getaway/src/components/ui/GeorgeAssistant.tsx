@@ -47,6 +47,7 @@ const FALLBACK_AMBIENT = [
 ];
 
 type FeedCategory = 'mission' | 'status' | 'guidance' | 'interjection' | GeorgeAmbientEvent['category'];
+type FeedTone = 'mission' | 'status' | 'ambient' | 'warning' | 'zone' | 'broadcast';
 
 type FeedEntry = {
   id: string;
@@ -54,6 +55,8 @@ type FeedEntry = {
   text: string;
   label: string;
   timestamp: number;
+  badge: string;
+  tone: FeedTone;
 };
 
 type FeedEntryPayload = {
@@ -62,6 +65,21 @@ type FeedEntryPayload = {
   label: string;
   timestamp: number;
 };
+
+const FEED_CATEGORY_META: Record<FeedCategory, { badge: string; tone: FeedTone }> = {
+  mission: { badge: 'MS', tone: 'mission' },
+  status: { badge: 'ST', tone: 'status' },
+  guidance: { badge: 'GD', tone: 'mission' },
+  interjection: { badge: 'BC', tone: 'broadcast' },
+  rumor: { badge: 'RM', tone: 'ambient' },
+  signage: { badge: 'SG', tone: 'ambient' },
+  weather: { badge: 'WX', tone: 'ambient' },
+  zoneDanger: { badge: 'DZ', tone: 'warning' },
+  hazardChange: { badge: 'HZ', tone: 'warning' },
+  zoneBrief: { badge: 'ZB', tone: 'zone' },
+};
+
+const DEFAULT_FEED_META: { badge: string; tone: FeedTone } = { badge: '--', tone: 'ambient' };
 
 const styles = `
   .george-layer {
@@ -231,6 +249,30 @@ const styles = `
     background: rgba(10, 26, 43, 0.72);
     border: 1px solid rgba(59, 130, 246, 0.15);
   }
+  .george-log-item--mission {
+    background: rgba(30, 64, 175, 0.42);
+    border-color: rgba(96, 165, 250, 0.35);
+  }
+  .george-log-item--status {
+    background: rgba(21, 128, 61, 0.32);
+    border-color: rgba(74, 222, 128, 0.35);
+  }
+  .george-log-item--ambient {
+    background: rgba(8, 47, 73, 0.55);
+    border-color: rgba(45, 212, 191, 0.28);
+  }
+  .george-log-item--warning {
+    background: rgba(120, 53, 15, 0.38);
+    border-color: rgba(251, 191, 36, 0.45);
+  }
+  .george-log-item--zone {
+    background: rgba(29, 78, 216, 0.38);
+    border-color: rgba(147, 197, 253, 0.35);
+  }
+  .george-log-item--broadcast {
+    background: rgba(88, 28, 135, 0.4);
+    border-color: rgba(192, 132, 252, 0.4);
+  }
   .george-log-item--latest {
     background: rgba(30, 64, 175, 0.5);
     border-color: rgba(125, 211, 252, 0.4);
@@ -243,18 +285,58 @@ const styles = `
   .george-log-meta {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 0.6rem;
     font-family: 'DM Mono', 'IBM Plex Mono', monospace;
   }
-  .george-log-actor {
-    font-size: 0.64rem;
+  .george-log-meta-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .george-log-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.6rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: rgba(178, 230, 255, 0.78);
+    background: rgba(148, 163, 184, 0.18);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: rgba(226, 232, 240, 0.85);
   }
-  .george-log-item--player .george-log-actor {
-    color: rgba(191, 219, 254, 0.85);
+  .george-log-badge--mission {
+    background: rgba(37, 99, 235, 0.25);
+    border-color: rgba(96, 165, 250, 0.55);
+  }
+  .george-log-badge--status {
+    background: rgba(22, 163, 74, 0.25);
+    border-color: rgba(74, 222, 128, 0.55);
+  }
+  .george-log-badge--ambient {
+    background: rgba(15, 118, 110, 0.25);
+    border-color: rgba(45, 212, 191, 0.55);
+  }
+  .george-log-badge--warning {
+    background: rgba(180, 83, 9, 0.25);
+    border-color: rgba(251, 191, 36, 0.55);
+  }
+  .george-log-badge--zone {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: rgba(147, 197, 253, 0.55);
+  }
+  .george-log-badge--broadcast {
+    background: rgba(126, 58, 242, 0.25);
+    border-color: rgba(192, 132, 252, 0.55);
+  }
+  .george-log-actor {
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(178, 230, 255, 0.82);
   }
   .george-log-reference {
     font-size: 0.62rem;
@@ -267,35 +349,6 @@ const styles = `
     line-height: 1.4;
     color: rgba(226, 232, 240, 0.86);
     white-space: pre-line;
-  }
-  .george-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.3rem;
-    flex-wrap: wrap;
-  }
-  .george-action-button {
-    all: unset;
-    cursor: pointer;
-    padding: 0.32rem 0.8rem;
-    border-radius: 999px;
-    border: 1px solid rgba(96, 165, 250, 0.4);
-    background: rgba(11, 34, 54, 0.82);
-    color: #dbeafe;
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .george-action-button:hover {
-    transform: translateY(-1px);
-    border-color: rgba(148, 211, 252, 0.55);
-    box-shadow: 0 10px 18px rgba(6, 20, 36, 0.45);
-  }
-  .george-action-button:focus-visible {
-    outline: 2px solid rgba(148, 211, 252, 0.82);
-    outline-offset: 2px;
   }
 `;
 
@@ -372,6 +425,7 @@ const GeorgeAssistant: React.FC = () => {
   const pushFeedEntry = useCallback(
     ({ category, label, text, timestamp }: { category: FeedCategory; label: string; text: string; timestamp?: number }) => {
       const entryTimestamp = timestamp ?? Date.now();
+      const meta = FEED_CATEGORY_META[category] ?? DEFAULT_FEED_META;
       setFeedEntries((prev) => {
         const entry: FeedEntry = {
           id: `${entryTimestamp}-${Math.random().toString(36).slice(2)}`,
@@ -379,6 +433,8 @@ const GeorgeAssistant: React.FC = () => {
           text,
           label,
           timestamp: entryTimestamp,
+          badge: meta.badge,
+          tone: meta.tone,
         };
         const next = [...prev, entry];
         if (next.length > FEED_ENTRY_LIMIT) {
@@ -950,9 +1006,12 @@ const GeorgeAssistant: React.FC = () => {
             <div className="george-log-container">
               <div className="george-log" role="log" aria-live="polite" ref={feedViewRef}>
                 {feedEntries.length === 0 ? (
-                  <div className="george-log-item">
+                  <div className="george-log-item george-log-item--ambient">
                     <div className="george-log-meta">
-                      <span className="george-log-actor">{georgeStrings.feedLabels.ambient}</span>
+                      <div className="george-log-meta-main">
+                        <span className="george-log-badge george-log-badge--ambient" aria-hidden="true">NB</span>
+                        <span className="george-log-actor">{georgeStrings.feedLabels.ambient}</span>
+                      </div>
                       <span className="george-log-reference">—</span>
                     </div>
                     <div className="george-log-text">{georgeStrings.logEmpty}</div>
@@ -961,10 +1020,13 @@ const GeorgeAssistant: React.FC = () => {
                   feedEntries.map((entry, index) => (
                     <div
                       key={entry.id}
-                      className={`george-log-item${index === feedEntries.length - 1 ? ' george-log-item--latest' : ''}`}
+                      className={`george-log-item george-log-item--${entry.tone}${index === feedEntries.length - 1 ? ' george-log-item--latest' : ''}`}
                     >
                       <div className="george-log-meta">
-                        <span className="george-log-actor">{entry.label}</span>
+                        <div className="george-log-meta-main">
+                          <span className={`george-log-badge george-log-badge--${entry.tone}`} aria-hidden="true">{entry.badge}</span>
+                          <span className="george-log-actor">{entry.label}</span>
+                        </div>
                         <span className="george-log-reference">{formatTimestamp(entry.timestamp)}</span>
                       </div>
                       <div className="george-log-text">{entry.text}</div>
