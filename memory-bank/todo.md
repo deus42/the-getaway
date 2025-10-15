@@ -19,6 +19,13 @@
         <status>pending</status>
       </step_metadata>
     </step>
+    <step id="19.7">
+      <step_metadata>
+        <number>19.7</number>
+        <title>Street-Tension Director</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
     <step id="19.8">
       <step_metadata>
         <number>19.8</number>
@@ -29,6 +36,13 @@
   </phase>
 
   <phase id="7" name="Character Progression and Inventory">
+    <step id="24.4">
+      <step_metadata>
+        <number>24.4</number>
+        <title>Rumor Cabinet Intel Perk Branch</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
     <step id="26.1">
       <step_metadata>
         <number>26.1</number>
@@ -54,6 +68,13 @@
       <step_metadata>
         <number>29.5</number>
         <title>Implement Localized Witness Reputation Propagation</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+    <step id="29.6">
+      <step_metadata>
+        <number>29.6</number>
+        <title>Gossip Heat Rumor Propagation</title>
         <status>pending</status>
       </step_metadata>
     </step>

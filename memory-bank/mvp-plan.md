@@ -734,6 +734,33 @@ Model NPC suspicion as decaying eyewitness memory that aggregates into zone heat
 </test>
 </step>
 
+<step id="19.7">
+<step_metadata>
+  <number>19.7</number>
+  <title>Street-Tension Director</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<instructions>
+Introduce a pacing director that reads suspicion pressure, recent encounters, and player stress to modulate patrol density, encounter frequency, and ambient presentation.
+</instructions>
+
+<details>
+- **Director State Machine**: Create `src/game/systems/director/` with a `DirectorState` (`pressure`, `respite`, `noise`, `intensityTier`) derived from witness heat (Step 19.6), alert flags, and elapsed downtime. Persist state in `worldSlice` (or a dedicated slice) and expose selectors for HUD/debug consumers.
+- **Signal Inputs**: Listen for guard alerts, combat outcomes, alarm triggers, and resource telemetry (ammo/medkit thresholds) so the director detects stress spikes or recovery streaks. Provide an action for George Assistant (Step 16.9) to request respite that temporarily caps pressure gain.
+- **Dials & Outputs**: Map director tiers to tunable knobs: patrol spawn cadence, roaming route variance, spontaneous street encounter probability, ambient VFX/SFX intensity, and merchant caution dialogue. Apply adjustments via existing spawners/controllers rather than bespoke logic.
+- **Integration Hooks**: Update `GameController` (or the scene orchestrator) to tick the director each world step, lerp knob deltas over configurable windows, and dispatch Redux actions so UI/audio react declaratively. Author per-district profiles under `src/content/director/directorProfiles.ts`.
+- **Debug & Overrides**: Add dev-only inspector controls to freeze tiers, tweak thresholds, and log transitions. Emit telemetry events so balancing sessions can review escalation/cooldown timelines.
+</details>
+
+<test>
+- Unit test director reducers/helpers to confirm pressure/respite accumulation, tier transitions, and cooldown behaviour across multiple profiles.
+- Script repeated alerts in a headless simulation to push the director into crackdown, then grant downtime and verify it cools back to calm while patrol density and ambient audio follow suit.
+- Disable the director profile and confirm baseline spawn logic remains unchanged (regression guard).
+- Trigger the George respite request and ensure the director honours the cooldown window without blocking future escalations.
+</test>
+</step>
+
 <step id="19.8">
 <step_metadata>
   <number>19.8</number>
@@ -1156,6 +1183,39 @@ Implement the perk selection system allowing players to choose powerful abilitie
 
 <test>
 Reach level 2 and verify perk selection modal appears automatically. View available perks and confirm prerequisite validation (perks requiring Perception 6 should be locked if player has Perception 5). Select "Steady Hands" perk and confirm it applies to character. Enter combat and verify +10% hit chance bonus from perk. Reach level 4 and select "Quick Draw", then verify weapon switching costs 0 AP. Reach level 12 with Small Guns 75 and verify "Gun Fu" capstone perk becomes available. Select Gun Fu and confirm first shot each turn costs 0 AP in combat. Get below 30% HP with "Adrenaline Rush" perk and verify +2 AP buff activates. Check character sheet displays all acquired perks correctly.
+</test>
+</step>
+
+<step id="24.4">
+<step_metadata>
+  <number>24.4</number>
+  <title>Rumor Cabinet Intel Perk Branch</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 24.3 completed (perk selection infrastructure)
+- Step 19.6 completed (witness memory & regional heat supplies telemetry)
+</prerequisites>
+
+<instructions>
+Add an Intel-focused perk branch—“Rumor Cabinet”—that lets players reshape rumor spread, witness decay, and information control through specialized perks.
+</instructions>
+
+<details>
+- **Content Definitions**: Extend `src/content/perks.ts` with a new `intel` (or `rumorCabinet`) category containing at least five perks: Whistle-Friendly, Folk Hero, Shadow Broker, Panic Whisper, and False Lead. Each defines level/attribute/skill prerequisites (e.g., high Speech, Stealth, or Intelligence), effect payloads, and mutually exclusive choices where appropriate.
+- **Effect Plumbing**: Update the perk evaluation layer (`src/game/systems/perks/` or equivalent) to expose hooks consumed by the rumor/suspicion systems—e.g., modifiers for rumor TTL/decay, share fan-out, confidence multipliers, and access to “plant rumor” social actions at bars/markets. Ensure effects stack predictably with existing modifiers from disguises or faction standing.
+- **Redux & Selectors**: Add derived selectors (`selectRumorPerkModifiers`) that aggregate active Intel perks and feed them into gossip propagation (Step 29.6) and witness decay (Step 19.6). Persist any new perk runtime state (e.g., Shadow Broker cooldowns) in `playerSlice`.
+- **UI/UX Updates**: Update `PerkSelectionPanel.tsx` to surface the Intel category with bespoke iconography and copy referencing the Thought Cabinet inspiration. Include tooltips that explain how each perk manipulates rumor mechanics and call out any faction biases (e.g., Folk Hero stronger in worker districts).
+- **New Actions**: Unlock contextual “plant rumor”/“suppress rumor” interactions in applicable social hubs (bars, markets, safehouses) once Shadow Broker (or similar) is learned. Stub dialogue hooks so Step 16.9 George prompts reflect available Intel maneuvers.
+- **Documentation**: Note the new perk branch and data flow in `memory-bank/game-design.md` (Rumor systems) and `memory-bank/architecture.md` (perks-to-gossip integration) during implementation.
+</details>
+
+<test>
+- Unit test perk modifiers to ensure Intel perks adjust rumor TTL, decay, and spread multipliers according to spec and clamp within safe bounds.
+- Integration test gossip propagation with and without Intel perks: confirm Whistle-Friendly speeds rumor spread for player-sourced tips, while Folk Hero biases positive rumors in worker districts and dampens elite neighborhoods.
+- Verify Shadow Broker unlocks the “plant rumor” interaction in bar dialogue once prerequisites are met and enforces any cooldowns.
+- Run regression on non-Intel perks to confirm existing combat/utility perks still evaluate correctly and UI category navigation remains accessible.
 </test>
 </step>
 
@@ -1757,6 +1817,39 @@ Layer a witness-and-gossip reputation network on top of the faction standings so
 
 <test>
 Trigger three contrasting events in the Slums: rescue civilians (heroic), intimidate a ganger (scary), and pickpocket a vendor (sneaky). Verify only NPCs within line of sight update immediately, nearby contacts learn over time, and Downtown NPCs remain unaware. Check discounts apply only with witnesses and their friends, guards in the same cell escalate hostility, and dialogue lines reference observed deeds with confidence qualifiers. Advance time and confirm scores decay without reinforcement.
+</test>
+</step>
+
+<step id="29.6">
+<step_metadata>
+  <number>29.6</number>
+  <title>Gossip Heat Rumor Propagation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19.6 completed (witness memory & regional heat)
+- Step 29.5 completed (localized witness reputation propagation)
+</prerequisites>
+
+<instructions>
+Implement a lightweight rumor propagation layer that fans out short-lived gossip flags across social graphs, influences regional heat, and exposes player counterplay via safehouses, disguises, and Intel perks.
+</instructions>
+
+<details>
+- **Rumor Model**: Define `Rumor` contracts in `src/game/systems/rumors/gossipHeat.ts` with `{ rumorId, topic, sentiment, sourceFaction, originCell, confidence, ttl, decayRate, lastSharedAt, plantedByPlayer? }`. Persist per-NPC rumor buffers with tight caps (e.g., max 5 active rumors).
+- **Propagation Tick**: Each world tick (or configurable cadence), eligible NPCs share up to two rumors to neighbors sampled from the social graph (Step 29.5). Decrease `ttl`/`confidence` on send, drop rumors when `ttl <= 0` or confidence falls below threshold. Apply faction bias weights (e.g., CorpSec forwards negative player rumors faster).
+- **Heat Integration**: Feed rumor sentiment into the heat system (Step 19.6) by raising or lowering zone pressure proportional to aggregated rumor confidence, ensuring direct eyewitness reports still override gossip. Surface rumor-driven modifiers so the Street-Tension Director (Step 19.7) can react to rising chatter even without new sightings.
+- **Player Counterplay**: Hook safehouse interactions and bribery/disguise actions into rumor buffers—safehouses purge or flag `plantedByPlayer` rumors for decay, bribes reduce confidence for specific factions, disguises slow rumor acceptance outside their origin cell.
+- **Intel Perk Hooks**: Integrate `selectRumorPerkModifiers` from Step 24.4 so perks like Whistle-Friendly, Folk Hero, and Shadow Broker adjust decay, fan-out, or unlock “plant rumor” actions. Respect cooldowns and prevent stacking exploits.
+- **UX Touchpoints**: Add an optional “Ask Around” prompt (HUD or dialogue) that surfaces the top three rumors in the current block with confidence icons, reinforcing diegetic feedback. Expose dev-only logging/visualization to inspect rumor spread for tuning.
+</details>
+
+<test>
+- Unit test rumor decay and propagation helpers to confirm TTL, confidence, and fan-out obey configured caps and faction biases.
+- Simulate a run where a negative rumor originates in Slums and ensure it spreads to adjacent cells over several ticks, raising local heat, while distant districts remain unaffected until contacts connect.
+- Verify safehouse usage clears or dampens rumors as specified and that disguised travel slows uptake in new zones.
+- Acquire Intel perks and confirm their effects (e.g., Whistle-Friendly accelerates player-planted rumors, Folk Hero boosts positive sentiment in worker districts) without breaking baseline propagation.
 </test>
 </step>
 
