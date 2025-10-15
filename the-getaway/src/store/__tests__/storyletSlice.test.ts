@@ -5,9 +5,12 @@ import missionReducer, { buildMissionState } from '../missionSlice';
 import settingsReducer from '../settingsSlice';
 import storyletReducer, { triggerStorylet, selectStoryletQueue } from '../storyletSlice';
 import logReducer from '../logSlice';
+import questsReducer from '../questsSlice';
+import combatFeedbackReducer from '../combatFeedbackSlice';
+import surveillanceReducer from '../surveillanceSlice';
 import { NPC, AlertLevel } from '../../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../../game/interfaces/player';
-import { RootState } from '..';
+import { AppDispatch, RootState } from '..';
 
 const createNpc = (dialogueId: string, name: string, overrides: Partial<NPC> = {}): NPC => ({
   id: dialogueId,
@@ -67,6 +70,9 @@ const createTestStore = (options?: { missionLevelIndex?: number; playerHealth?: 
       settings: settingsReducer,
       storylets: storyletReducer,
       log: logReducer,
+      quests: questsReducer,
+      combatFeedback: combatFeedbackReducer,
+      surveillance: surveillanceReducer,
     },
     preloadedState: {
       player: playerState,
@@ -75,6 +81,9 @@ const createTestStore = (options?: { missionLevelIndex?: number; playerHealth?: 
       settings: settingsReducer(undefined, { type: 'storylet/init' } as any),
       storylets: storyletReducer(undefined, { type: 'storylet/init' } as any),
       log: logReducer(undefined, { type: 'storylet/init' } as any),
+      quests: questsReducer(undefined, { type: 'storylet/init' } as any),
+      combatFeedback: combatFeedbackReducer(undefined, { type: 'storylet/init' } as any),
+      surveillance: surveillanceReducer(undefined, { type: 'storylet/init' } as any),
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({
@@ -89,10 +98,11 @@ const createTestStore = (options?: { missionLevelIndex?: number; playerHealth?: 
 describe('storyletSlice triggerStorylet', () => {
   it('queues mission-completion storylet and applies faction bonuses', () => {
     const store = createTestStore({ missionLevelIndex: 0, playerHealth: 40 });
+    const dispatch = store.dispatch as AppDispatch;
 
-    store.dispatch(triggerStorylet({ type: 'missionCompletion' }));
+    dispatch(triggerStorylet({ type: 'missionCompletion' }));
 
-    const state: RootState = store.getState();
+    const state = store.getState() as RootState;
     const queue = selectStoryletQueue(state);
     expect(queue).toHaveLength(1);
     expect(queue[0].storyletId).toBe('firelight_ambush');
@@ -101,18 +111,19 @@ describe('storyletSlice triggerStorylet', () => {
     const lastLog = state.log.messages[state.log.messages.length - 1];
     expect(lastLog).toMatch(/Lira/i);
 
-    store.dispatch(triggerStorylet({ type: 'missionCompletion' }));
-    expect(selectStoryletQueue(store.getState())).toHaveLength(1);
+    dispatch(triggerStorylet({ type: 'missionCompletion' }));
+    expect(selectStoryletQueue(store.getState() as RootState)).toHaveLength(1);
   });
 
   it('triggers campfire rest storylet and adjusts personality flags', () => {
     const store = createTestStore({ missionLevelIndex: 1, playerHealth: 90 });
+    const dispatch = store.dispatch as AppDispatch;
 
     const initialEarnest = store.getState().player.data.personality.flags.earnest ?? 0;
 
-    store.dispatch(triggerStorylet({ type: 'campfireRest' }));
+    dispatch(triggerStorylet({ type: 'campfireRest' }));
 
-    const queue = selectStoryletQueue(store.getState());
+    const queue = selectStoryletQueue(store.getState() as RootState);
     expect(queue).toHaveLength(1);
     expect(queue[0].storyletId).toBe('neon_bivouac');
 
@@ -122,12 +133,13 @@ describe('storyletSlice triggerStorylet', () => {
 
   it('processes patrol ambush storylet and applies injuries', () => {
     const store = createTestStore({ missionLevelIndex: 2, playerHealth: 60 });
+    const dispatch = store.dispatch as AppDispatch;
     const healthBefore = store.getState().player.data.health;
 
-    store.dispatch(triggerStorylet({ type: 'patrolAmbush', tags: ['corpsec'] }));
+    dispatch(triggerStorylet({ type: 'patrolAmbush', tags: ['corpsec'] }));
 
     const state = store.getState();
-    const queue = selectStoryletQueue(state);
+    const queue = selectStoryletQueue(state as RootState);
     expect(queue).toHaveLength(1);
     expect(queue[0].storyletId).toBe('serrated_omen');
     expect(state.player.data.health).toBe(healthBefore - 4);

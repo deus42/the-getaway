@@ -1618,3 +1618,43 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Hazard chips currently list textual warnings; once Industrial maps land we can hook sensor data to toggle chips dynamically (e.g., disable when filters equipped).
 </notes>
 </step>
+
+<step id="16.7" status="completed">
+<step_metadata>
+  <number>16.7</number>
+  <title>Prototype Narrative → Triple → Scene Pipeline</title>
+  <status>Completed</status>
+  <date>February 17, 2026</date>
+</step_metadata>
+
+<tasks>
+1. Introduced narrative triple schemas and extraction helpers that translate mission prompts into ordered `(subject, relation, object)` bundles with validation feedback.
+2. Added relation rules plus a world generation pipeline stage that resolves triple placements into depth-sorted map props, honouring walkability and cover tags.
+3. Published the `generate-scene-from-story` CLI workflow and seeded the first generated scene asset under Level 0 → Recover Cache, wiring the mission to its resource key registry.
+</tasks>
+
+<implementation>
+- `tripleExtraction` heuristically tokenises prompts and supports manual fallback bundles so writers can override LLM output while keeping schema validation intact.
+- Relation rules leverage existing grid helpers (`isPositionWalkable`, `findNearestWalkablePosition`) to map verbs like `near`, `inside`, or `left_of` to concrete tile offsets without colliding with blocked cells.
+- The world generation pipeline materialises `GeneratedSceneDefinition` payloads into `MapArea` instances, tagging tiles from placement metadata (cover vs blocking) and writing issue telemetry back into scene metadata.
+- The CLI stitches extraction + generation, emits JSON into <code>content/levels/{level}/missions/{mission}/generatedScenes</code>, and logs validation issues for missing assets or collisions.
+</implementation>
+
+<code_reference file="the-getaway/src/game/narrative/tripleTypes.ts" />
+<code_reference file="the-getaway/src/game/narrative/tripleExtraction.ts" />
+<code_reference file="the-getaway/src/game/world/generation/relationRules.ts" />
+<code_reference file="the-getaway/src/game/world/generation/worldGenerationPipeline.ts" />
+<code_reference file="the-getaway/scripts/generate-scene-from-story.ts" />
+<code_reference file="the-getaway/src/content/levels/level0/missions/level0-recover-cache/generatedScenes/scene-level0-recover-cache-ambush-route.json" />
+<code_reference file="the-getaway/src/content/missions/level0-recover-cache/missionDefinition.ts" />
+<code_reference file="the-getaway/src/content/scenes/generatedScenes.ts" />
+
+<validation>
+- `yarn test` *(fails: existing suites `storyletSlice`, `perceptionManager`, `factionSelectors` already red prior to this change; new world generation specs pass)*.
+</validation>
+
+<notes>
+- Scene metadata now records pipeline issues; expose this in author tooling dashboards before scaling to multi-mission generation.
+- Script expects Node 20+ (for `structuredClone`); align dev docs when documenting narrative tooling walkthrough.
+</notes>
+</step>

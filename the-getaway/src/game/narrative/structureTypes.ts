@@ -26,6 +26,7 @@ export interface MissionDefinition {
   recommendedLevel?: number;
   factionTag?: string;
   relatedNpcKeys?: NPCResourceKey[];
+  generatedSceneKeys?: string[];
 }
 
 export interface QuestObjectiveStructure {

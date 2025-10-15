@@ -108,6 +108,22 @@ flowchart LR
 </pattern>
 </architecture_section>
 
+<architecture_section id="narrative_scene_generation" category="world_generation">
+<design_principles>
+- Keep `(subject, relation, object)` triples as the single interface between narrative prompts and spatial generation, allowing either heuristic extraction or manual authoring to feed the same tooling.
+- Resolve placement requests through existing grid utilities (`isPositionWalkable`, `findNearestWalkablePosition`) so generated props honour collision layers and cover metadata.
+- Feed telemetry (collisions, missing assets) back into scene metadata so the CLI and future dashboards can surface author-facing diagnostics.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/narrative/tripleExtraction.ts</code_location> tokenises mission copy, matches supported relations (`near`, `inside`, `left_of`, etc.), and emits ordered `SceneMoment` bundles; manual fallback bundles run through the same validators.
+2. <code_location>the-getaway/src/game/world/generation/relationRules.ts</code_location> translates relations into placement strategies (directional offsets, adjacency searches, interior resolution) while guarding against occupied or non-walkable tiles.
+3. <code_location>the-getaway/src/game/world/generation/worldGenerationPipeline.ts</code_location> instantiates a `MapArea`, seeds manual placements, resolves anchors, applies computed props, and annotates tiles (cover vs blocking) before recording any pipeline issues.
+4. <code_location>the-getaway/scripts/generate-scene-from-story.ts</code_location> orchestrates extraction + generation, writing validated JSON under <code>src/content/levels/{level}/missions/{mission}/generatedScenes</code> and reporting validation errors in the CLI output.
+5. <code_location>the-getaway/src/content/scenes/generatedScenes.ts</code_location> indexes emitted scene definitions so mission records (e.g., `level0RecoverCacheMission`) can reference `generatedSceneKeys` without manual filesystem lookups.
+</technical_flow>
+</architecture_section>
+
 <architecture_section id="command_shell_layout" category="ui_shell">
 <design_principles>
 - Maintain the three-column command shell while letting each sidebar collapse without removing it from the flex context so the world view can immediately claim the freed space.

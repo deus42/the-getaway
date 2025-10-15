@@ -7,4 +7,5 @@ export const level0RecoverCacheMission: MissionDefinition = {
   kind: 'primary',
   questKeys: ['quests.market_cache'],
   relatedNpcKeys: ['npcs.lira_smuggler'],
+  generatedSceneKeys: ['scenes.level0.recover_cache.ambush_route'],
 };

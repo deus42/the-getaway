@@ -23,7 +23,7 @@ import {
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
 import { addFloatingNumber, triggerHitFlash } from "../store/combatFeedbackSlice";
-import { RootState } from "../store";
+import { AppDispatch, RootState } from "../store";
 import { isPositionWalkable } from "../game/world/grid";
 import {
   executeAttack,
@@ -69,7 +69,7 @@ import { triggerStorylet } from "../store/storyletSlice";
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
   const encumbranceLevel = player.encumbrance.level;
   const encumbranceWarning = player.encumbrance.warning;

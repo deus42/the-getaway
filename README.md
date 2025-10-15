@@ -10,6 +10,7 @@
 - [Tech Stack & Architecture](#tech-stack--architecture)
 - [Working With The Game](#working-with-the-game)
 - [Content Authoring Pipeline](#content-authoring-pipeline)
+- [Narrative Authoring & Storylets](#narrative-authoring--storylets)
 - [Testing & QA](#testing--qa)
 - [Roadmap Signal](#roadmap-signal)
 - [License – Vibe MIT](#license--vibe-mit)
@@ -79,6 +80,41 @@ yarn test         # Jest + Testing Library suites
 2. Register new IDs through slice loaders—never mutate source exports directly; runtime clones keep authoring files pristine.
 3. Update relevant Redux selectors/services (`playerSlice`, `worldSlice`, `questsSlice`, etc.) if systems evolve.
 4. Mirror roadmap updates in `memory-bank/mvp-plan.md` and log completions in `memory-bank/progress.md`.
+
+## Narrative Authoring & Storylets
+### Storylet Workflow
+1. Define new narrative beats in the locale bundles under `src/content/storylets/{en,uk}.ts`, mirroring the structure in `types.ts`.
+2. Register each storylet in `src/content/storylets/index.ts` so the Redux slice can look it up by resource key.
+3. Wire mission/quest triggers through `storyletSlice.ts`—queue entries reference the storylet ID, locale keys, and any faction or skill rewards.
+4. Add coverage in `src/store/__tests__/storyletSlice.test.ts` (and related selector specs) to lock in trigger logic, queue ordering, and reward application.
+5. Run `yarn test --runTestsByPath src/store/__tests__/storyletSlice.test.ts` while iterating so regressions in queue logic surface quickly.
+
+### Scene Generation From Narrative Prompts
+Use the narrative triple pipeline when you want a mission prompt to spawn a Phaser-ready layout:
+
+```bash
+cd the-getaway
+yarn narrative:generate \
+  --level levels.slums_command_grid \
+  --mission missions.level0.recover_cache \
+  --quest quests.market_cache \
+  --story "The crew drags salvage carts into the stair-cut alley under the market signal tower, locking it down before the patrol loop returns."
+```
+
+- The CLI validates the generated payload, materialises prop placements, and writes JSON to `src/content/levels/<level-id>/missions/<mission-id>/generatedScenes/`.
+- Use `--input ./prompt.txt` instead of `--story` to read longer briefs from disk.
+- Pass `--dry-run` to preview validation and placement issues without writing files; add `--verbose` to surface triple-validation warnings.
+- For manual control, edit the emitted JSON directly or iterate on the mission prompt and rerun the CLI; advanced authors can fork the script to pass explicit triple bundles.
+
+After generation:
+1. Register the new scene in `src/content/scenes/generatedScenes.ts` (resource key → definition).
+2. Append the scene key to the owning mission via the `generatedSceneKeys` array so gameplay systems can discover it.
+3. If placements need tweaking, adjust the JSON manually or rerun the CLI with refined prompts.
+
+### Validating Narrative Assets
+- `yarn test --runTestsByPath src/__tests__/narrativeValidation.test.ts` ensures all locale, mission, quest, and storylet references resolve.
+- `yarn test --runTestsByPath src/game/world/__tests__/worldGenerationPipeline.test.ts src/game/world/__tests__/relationRules.test.ts` confirms relation rules produce collision-safe placements.
+- Keep `memory-bank/architecture.md` and `memory-bank/progress.md` updated whenever you introduce new authoring patterns or complete roadmap steps.
 
 ## Testing & QA
 - Jest suites cover combat maths, dialogue gating, skill allocation, curfew flows, and UI regression (`src/__tests__`).

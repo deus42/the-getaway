@@ -11,14 +11,11 @@ import {
   QUEST_DEFINITION_BY_KEY,
 } from '../../content/quests';
 import { NPC_REGISTRATIONS } from '../../content/npcs';
-import {
+import type {
   LevelDefinition,
   MissionDefinition,
   QuestDefinition,
   NarrativeLocaleBundle,
-  LevelResourceKey,
-  MissionResourceKey,
-  QuestResourceKey,
   NPCResourceKey,
 } from './structureTypes';
 import {
@@ -62,8 +59,7 @@ const validateLevel = (
 
 const validateMission = (
   mission: MissionDefinition,
-  errors: NarrativeValidationIssue[],
-  warnings: NarrativeValidationIssue[]
+  errors: NarrativeValidationIssue[]
 ) => {
   if (!LEVEL_DEFINITION_BY_KEY[mission.levelKey]) {
     addIssue(errors, 'error', `Mission ${mission.resourceKey} references unknown level ${mission.levelKey}`, mission.resourceKey);
@@ -91,8 +87,7 @@ const validateMissionLocales = (
 
 const validateQuest = (
   quest: QuestDefinition,
-  errors: NarrativeValidationIssue[],
-  warnings: NarrativeValidationIssue[]
+  errors: NarrativeValidationIssue[]
 ) => {
   if (!LEVEL_DEFINITION_BY_KEY[quest.levelKey]) {
     addIssue(errors, 'error', `Quest ${quest.resourceKey} references unknown level ${quest.levelKey}`, quest.resourceKey);
@@ -147,12 +142,12 @@ export const validateNarrativeContent = (): NarrativeValidationReport => {
   LEVEL_DEFINITIONS.forEach((level) => validateLevel(level, localeBundles, errors));
 
   MISSION_DEFINITIONS.forEach((mission) => {
-    validateMission(mission, errors, warnings);
+    validateMission(mission, errors);
     validateMissionLocales(mission, localeBundles, errors);
   });
 
   QUEST_DEFINITIONS.forEach((quest) => {
-    validateQuest(quest, errors, warnings);
+    validateQuest(quest, errors);
     validateQuestLocales(quest, localeBundles, errors);
   });
 

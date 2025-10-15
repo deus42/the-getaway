@@ -1,10 +1,9 @@
 import { Locale } from '../locales';
 import { storyletStringsEn } from './en';
 import { storyletStringsUk } from './uk';
-import {
+import type {
   StoryletLocaleStrings,
   StoryletOutcomeLocaleVariant,
-  StoryletPlayLocale,
   StoryletOutcomeLocale,
 } from './types';
 
