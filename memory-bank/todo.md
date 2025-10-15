@@ -2,13 +2,6 @@
 
 <todo_list>
   <phase id="5" name="Narrative and Quest Layer">
-    <step id="16.5">
-      <step_metadata>
-        <number>16.5</number>
-        <title>Author Storylet Library Framework</title>
-        <status>pending</status>
-      </step_metadata>
-    </step>
     <step id="16.6">
       <step_metadata>
         <number>16.6</number>

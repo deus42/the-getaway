@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '../../store';
 import { selectMissionPendingAdvance, selectMissionProgress } from '../../store/selectors/missionSelectors';
 import { missionAccomplished } from '../../store/missionSlice';
+import { triggerStorylet } from '../../store/storyletSlice';
 import { emitMissionAccomplishedEvent } from '../../game/systems/missionProgression';
 
 export const MissionProgressionManager: React.FC = () => {
@@ -34,6 +35,12 @@ export const MissionProgressionManager: React.FC = () => {
         levelId: missionProgress.levelId,
         name: missionProgress.name,
       });
+      dispatch(
+        triggerStorylet({
+          type: 'missionCompletion',
+          missionId: missionProgress.levelId,
+        })
+      );
       broadcastRef.current = true;
     }
 

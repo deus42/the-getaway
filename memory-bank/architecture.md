@@ -151,6 +151,29 @@ flowchart LR
 </pattern>
 </architecture_section>
 
+<architecture_section id="storylet_framework" category="narrative_systems">
+<design_principles>
+- Keep story-driven vignettes fully data-driven so designers can add new plays by extending a registry and localization files without touching reducers.
+- Evaluate eligibility with a pure engine that inspects state snapshots (actors, triggers, cooldowns) to keep Redux mutations isolated to a single slice.
+- Surface resolved storylets through a queue abstractions so UI layers can render comic/dialogue panels asynchronously while side effects (logs, faction deltas, personality shifts) apply immediately.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/quests/storylets/storyletTypes.ts</code_location> defines the canonical structures for plays, roles, triggers, branches, outcomes, and runtime bookkeeping used across the system.
+2. <code_location>the-getaway/src/game/quests/storylets/storyletRegistry.ts</code_location> enumerates act-aligned plays (ambush, rest, omen) with cooldown windows, role definitions, and branch metadata that reference localized keys.
+3. <code_location>the-getaway/src/game/quests/storylets/storyletEngine.ts</code_location> assembles an actor pool (player, contacts, nearby NPCs), scores eligible plays against the incoming trigger, casts roles, resolves branch conditions, and returns a `StoryletResolution`.
+4. <code_location>the-getaway/src/content/storylets/index.ts</code_location> plus locale files (`en.ts`, `uk.ts`) supply titles, synopses, narrative text, and log copy keyed to each outcome/variant.
+5. <code_location>the-getaway/src/store/storyletSlice.ts</code_location> hosts the runtime slice/thunk: it snapshots state, calls the engine, applies outcome effects (log messages, faction deltas, personality adjustments, health changes), and enqueues resolved storylets for UI consumption.
+6. <code_location>the-getaway/src/components/system/MissionProgressionManager.tsx</code_location> fires a mission-completion trigger, while <code_location>the-getaway/src/components/GameController.tsx</code_location> raises campfire-rest and curfew-ambush triggers so the system reacts to exploration and combat beats.
+</technical_flow>
+
+<pattern name="StoryletTriggering">
+- Trigger payloads carry semantic tags (`resistance`, `rest`, `corpsec`, `injury`) so the engine can filter plays and match variance without peeking into Redux internals.
+- Cooldowns are enforced both globally and per-location via `storylets.entries` and `lastSeenByLocation`, preventing repeat vignettes from spamming the player while still allowing act progression to surface fresh content.
+- Queue entries persist localization keys alongside rendered text, letting future UI layers rehydrate narrative panels in the current locale while maintaining audit trails for what fired when.
+</pattern>
+</architecture_section>
+
 <architecture_section id="level_up_flow" category="progression_ui">
 ##### Level-Up Flow Orchestration
 

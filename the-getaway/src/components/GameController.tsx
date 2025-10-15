@@ -65,6 +65,7 @@ import {
 } from "../game/systems/surveillance/cameraSystem";
 import { setOverlayEnabled } from "../store/surveillanceSlice";
 import { createScopedLogger } from "../utils/logger";
+import { triggerStorylet } from "../store/storyletSlice";
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
@@ -1836,6 +1837,12 @@ const GameController: React.FC = () => {
             dispatch(movePlayer(connection.toPosition));
 
             if (targetArea.isInterior) {
+              dispatch(
+                triggerStorylet({
+                  type: 'campfireRest',
+                  locationId: targetArea.id,
+                })
+              );
               dispatch(addLogMessage(logStrings.slipInsideStructure));
               setCurfewAlertState("clear");
             }
@@ -1879,6 +1886,13 @@ const GameController: React.FC = () => {
               };
 
               dispatch(addEnemy(patrol));
+              dispatch(
+                triggerStorylet({
+                  type: 'patrolAmbush',
+                  locationId: currentMapArea?.id,
+                  tags: ['corpsec'],
+                })
+              );
 
               if (!inCombat) {
                 dispatch(enterCombat());

@@ -497,6 +497,36 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 </validation>
 </step>
 
+<step id="16.5" status="completed">
+<step_metadata>
+  <number>16.5</number>
+  <title>Author Storylet Library Framework</title>
+  <status>Completed</status>
+  <date>October 12, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Defined a reusable storylet contract and seeded the inaugural catalog with act-aligned plays plus localized narrative payloads.
+2. Implemented the storylet engine to score triggers, cast actors into roles, evaluate branches, and honor cooldowns/location locks.
+3. Added a dedicated Redux slice that queues resolved storylets, applies faction/personality/health effects, and exposes selectors for future UI rendering.
+4. Wired mission completion, campfire rest, and curfew ambush flows to dispatch storylet triggers and introduced focused Jest coverage for engine + slice logic.
+</tasks>
+
+<implementation>
+<code_reference file="the-getaway/src/game/quests/storylets/storyletTypes.ts" />
+<code_reference file="the-getaway/src/game/quests/storylets/storyletRegistry.ts" />
+<code_reference file="the-getaway/src/game/quests/storylets/storyletEngine.ts" />
+<code_reference file="the-getaway/src/store/storyletSlice.ts" />
+<code_reference file="the-getaway/src/components/system/MissionProgressionManager.tsx" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/content/storylets/index.ts" />
+</implementation>
+
+<validation>
+- `yarn test --runTestsByPath src/game/quests/storylets/__tests__/storyletEngine.test.ts src/store/__tests__/storyletSlice.test.ts --watch=false`
+</validation>
+</step>
+
 <step id="17" status="completed">
 <step_metadata>
   <number>17</number>

@@ -12,6 +12,7 @@ import {
   EquipmentSlot,
   Consumable,
   FactionId,
+  PersonalityTrait,
 } from '../game/interfaces/types';
 import { DEFAULT_PLAYER, createDefaultPersonalityProfile } from '../game/interfaces/player';
 import {
@@ -1127,6 +1128,32 @@ export const playerSlice = createSlice({
       state.pendingFactionEvents = [];
     },
 
+    adjustPersonalityTrait: (
+      state,
+      action: PayloadAction<{ trait: PersonalityTrait; delta: number; source?: string }>
+    ) => {
+      const { trait, delta, source } = action.payload;
+      if (!state.data.personality) {
+        state.data.personality = createDefaultPersonalityProfile();
+      }
+
+      const flags = {
+        ...state.data.personality.flags,
+      };
+
+      const currentValue = flags[trait] ?? 0;
+      const nextValue = Math.max(-5, Math.min(5, currentValue + delta));
+
+      flags[trait] = nextValue;
+
+      state.data.personality = {
+        ...state.data.personality,
+        flags,
+        lastUpdated: Date.now(),
+        lastChangeSource: source ?? 'storylet',
+      };
+    },
+
     // Move player to a new position
     movePlayer: (state, action: PayloadAction<Position>) => {
       if (state.data.encumbrance.level === 'immobile') {
@@ -1757,6 +1784,7 @@ export const {
   adjustFactionReputation,
   setFactionReputation,
   consumeFactionReputationEvents,
+  adjustPersonalityTrait,
   removeXPNotification,
   levelUp,
   updateSkill,
