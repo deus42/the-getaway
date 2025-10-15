@@ -1,6 +1,16 @@
 # TODO — Unfinished MVP Steps
 
 <todo_list>
+  <phase id="5" name="Narrative and Quest Layer">
+    <step id="16.8">
+      <step_metadata>
+        <number>16.8</number>
+        <title>Environmental Story Triggers & Ambient Feedback</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+  </phase>
+
   <phase id="7" name="Character Progression and Inventory">
     <step id="26.1">
       <step_metadata>

@@ -482,6 +482,38 @@ Build a tooling pipeline that converts short narrative prompts into 2D tilemap b
 - Run the CLI on a sample mission narrative, load the generated scene in Phaser, and verify props appear in the correct locations with proper depth sorting.
 </test>
 </step>
+
+<step id="16.8">
+<step_metadata>
+  <number>16.8</number>
+  <title>Environmental Story Triggers & Ambient Feedback</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 7 completed (explorable map scaffolding establishes world entities to decorate)
+- Step 16 completed (narrative data layer provides quest/dialogue context for trigger payoffs)
+</prerequisites>
+
+<instructions>
+Implement a lightweight environmental trigger framework that reacts to world-state flags and surfaces diegetic hints (rumors, notes, ambient shifts) without new cutscenes.
+</instructions>
+
+<details>
+- Extend `worldSlice` with narrative-facing flags (`gangHeat`, `curfewLevel`, `supplyScarcity`, `blackoutTier`) plus selectors and actions so narrative systems can drive environmental changes.
+- Add `src/game/world/triggers/triggerRegistry.ts` to register trigger definitions (`when`, `fire`, `once`) and expose `tickEnvironmentalTriggers` for scene/game-loop integration.
+- Create content tables (TS/JSON) under `src/content/environment/` for rumor rotations, notes, signage variants, and weather/power presets, each keyed by flag/value with one-line story function metadata.
+- Wire NPC bark updates, ambient weather toggles, signage swaps, and collectible notes into existing entity managers (NPC dialogue hooks, weather service, poster/sign registries, map item spawners) so triggers mutate live state.
+- Ensure triggers de-duplicate via `once` or cooldown tracking and log events to the HUD/action log for debugging.
+- Document the authoring workflow in `memory-bank/architecture.md`, covering flag additions, trigger registration, and content authoring, and reference tone rules from `memory-bank/plot.md`.
+</details>
+
+<test>
+- Use Redux DevTools or scripted actions to bump each flag and verify matching triggers fire exactly once (unless configured to repeat) and update NPC barks, weather, signage, or spawned notes accordingly.
+- Load a scene, call `tickEnvironmentalTriggers` per frame/turn, and confirm idle triggers do nothing until conditions are met.
+- Snapshot rumor and note content to confirm flag-conditioned variants appear and log entries match the expected tone.
+</test>
+</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
