@@ -27,6 +27,34 @@ The city is divided into several zones, each acting as a distinct "biome" with i
 Each zone offers unique resources, enemies, and quests. Transitioning between zones may require planning and equipment adjustments, reinforcing the feeling of entering a different world or biome within the city.
 </world_structure>
 
+<game_system id="art_direction" status="partial">
+Painterly Noir Art Direction
+
+The Getaway’s visual identity leans into a painterly noir aesthetic—thick atmospheric mood, imperfect brushwork, and deliberate grime that mirrors the city’s moral rot.
+
+Color Language & Palette Guardrails
+	•	Primary palette draws from desaturated crimsons, bruised umbers, muted teals, sodium ambers, and electric cyan accents reserved for interactables or faction tech.
+	•	Value structure favors high-contrast silhouettes against hazy midtones; brightest highlights are scarce and purposeful (siren lights, HUD callouts, corporate signage).
+	•	Weathering layers (soot streaks, rain wash, chipped enamel) should be hand-painted or overlaid with visible brush grain to avoid sterile gradients.
+
+Material & Edge Treatment Rules
+	•	Metals: cold base tones with warm edge catches; add micro-scratches and oil bloom to break up flat planes.
+	•	Concrete & masonry: mottled texture passes with charcoal edging; drift grime vertically to imply runoff.
+	•	Fabric & leather: softened edges, frayed seams, and occasional stitch highlights to keep silhouettes readable.
+	•	Hard vs. soft edges: reserve razor-sharp cuts for weapons and corporate hardware; diffuse edges elsewhere to maintain painterly cohesion.
+
+Signage, UI Diegesis & Lighting Motifs
+	•	District signage should riff on period noir typography (condensed sans-serifs, deco ligatures) while integrating glitched neon or flicker passes for lived-in decay.
+	•	Diegetic displays (billboards, kiosks, George’s overlays) glow with cool cyan/teal, contrasted by warmer street lighting to frame interactable spaces.
+	•	Use motivated pools of light (overhead lamps, leaking neon, vehicle headlights) to sculpt scenes and reinforce cover silhouettes in gameplay spaces.
+
+Reference Sheets & Production Workflow
+	•	Produce a one-page style sheet per district outlining palette swatches, texture callouts, signage exemplars, and “do/don’t” mini-comparisons.
+	•	Each sheet should cite relevant narrative beats from `memory-bank/plot.md` so faction tone and environmental storytelling stay aligned.
+	•	Store sheets under `the-getaway/src/assets/style-guides/` (or equivalent) with versioned filenames (`districtName_style_v###.mdx/png`) and log updates in `memory-bank/progress.md` when districts evolve.
+	•	All outsourced or generated art must reference the applicable sheet to ensure external collaborators hit the noir constraints without guesswork.
+</game_system>
+
 <narrative_alignment document="memory-bank/plot.md">
 Narrative Alignment & Tone Reference
 
