@@ -84,14 +84,7 @@
         <status>pending</status>
       </step_metadata>
     </step>
-    <step id="32.3">
-      <step_metadata>
-        <number>32.3</number>
-        <title>Manual QA Playtest Checklist (Multi-Browser Testing)</title>
-        <status>pending</status>
-      </step_metadata>
-    </step>
-    <step id="33">
+        <step id="33">
       <step_metadata>
         <number>33</number>
         <title>Expand Save Functionality</title>
@@ -105,14 +98,7 @@
         <status>pending</status>
       </step_metadata>
     </step>
-    <step id="34.5">
-      <step_metadata>
-        <number>34.5</number>
-        <title>Accessibility Audit and Fixes</title>
-        <status>pending</status>
-      </step_metadata>
-    </step>
-    <step id="34.7">
+        <step id="34.7">
       <step_metadata>
         <number>34.7</number>
         <title>Create In-Game Help System and External Documentation</title>

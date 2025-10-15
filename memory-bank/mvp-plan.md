@@ -2160,182 +2160,6 @@ Run `yarn test:e2e` and verify all 20-30 tests execute successfully. Verify char
 </test>
 </step>
 
-<step id="32.3">
-<step_metadata>
-  <number>32.3</number>
-  <title>Manual QA Playtest Checklist (Multi-Browser Testing)</title>
-  <phase>Phase 10: Testing, Polish, and Release</phase>
-</step_metadata>
-
-<instructions>
-Conduct comprehensive manual quality assurance playtests using a structured checklist to identify bugs, usability issues, and edge cases that automated tests cannot catch. Test across multiple browsers and devices.
-</instructions>
-
-<details>
-**Manual QA Playtest Checklist** (detailed test scenarios for human testers):
-
-**1. Character Creation (15-20 minutes)**:
-- [ ] Create character with minimum name length (1 character), verify accepted
-- [ ] Create character with maximum name length (30 characters), verify accepted
-- [ ] Try to create character with invalid characters (emojis, special symbols), verify validation
-- [ ] Allocate all 40 SPECIAL points, verify cannot proceed without full allocation
-- [ ] Try to allocate more than 10 points to single stat, verify capped at 10
-- [ ] Tag 3 skills, verify cannot proceed with <3 or >3 skills tagged
-- [ ] Hover over each background trait and verify tooltips explain bonuses/penalties
-- [ ] Complete character creation and verify starting location is Slums safe zone
-- [ ] Verify character sheet displays correct starting stats derived from SPECIAL
-
-**2. Movement and World Exploration (20-25 minutes)**:
-- [ ] Use arrow keys to move player in 4 directions, verify smooth movement
-- [ ] Try to walk through wall/obstacle, verify blocked movement
-- [ ] Click on tile 10+ tiles away, verify pathfinding calculates route
-- [ ] Walk to zone boundary (Downtown → Slums), verify transition prompt appears
-- [ ] Transition between all 3 zones (Slums, Downtown, Industrial Wasteland) and verify no crashes
-- [ ] Enter building interior, verify indoor tileset loads, NPCs present
-- [ ] Exit building, verify outdoor environment restored correctly
-- [ ] Save game, reload, verify player position persists correctly
-
-**3. Combat System (30-40 minutes)**:
-- [ ] Engage enemy in Slums, verify combat grid appears with correct turn order
-- [ ] Attack enemy with pistol, verify attack animation, damage numbers, HP decreases
-- [ ] Move player 5 tiles, verify AP cost deducts correctly (5 AP)
-- [ ] Run out of AP, end turn, verify enemy takes turn automatically
-- [ ] Reload weapon, verify reload animation plays, magazine refilled, 3 AP cost
-- [ ] Use cover (wall/crate), verify cover icon appears, verify enemy misses more often
-- [ ] Get flanked by enemy, verify player takes increased damage (flanking bonus)
-- [ ] Use targeted shot (leg), verify reduced hit chance, verify enemy movement penalty on hit
-- [ ] Throw grenade at 2+ enemies, verify AoE damage applies to all in radius
-- [ ] Defeat all enemies, verify combat ends, XP notification appears, loot drops
-- [ ] Open loot containers, verify items lootable, added to inventory
-- [ ] Die in combat, verify death screen appears, "Load Game" option present
-
-**4. Dialogue and NPC Interactions (20-25 minutes)**:
-- [ ] Talk to quest-giver NPC, verify dialogue box opens with options
-- [ ] Read through all dialogue branches for main quest, verify text readable, no typos
-- [ ] Choose dialogue option with [Speech 50] check, verify success/failure based on skill
-- [ ] Attempt [Hacking 40] check with low skill, verify failure message, negative outcome
-- [ ] Talk to NPC with Good Karma requirement, verify option unavailable if karma <500
-- [ ] Gain Good Karma (>500), talk to same NPC, verify option now available
-- [ ] Choose aggressive dialogue option, verify NPC turns hostile, combat starts
-- [ ] Choose peaceful dialogue option, verify quest accepted without combat
-- [ ] Talk to NPC after completing quest, verify dialogue changes to post-quest lines
-
-**5. Inventory and Equipment (20-25 minutes)**:
-- [ ] Open inventory (I key), verify all carried items display with icons
-- [ ] Equip pistol, verify weapon appears in character sheet, attack stat increases
-- [ ] Equip leather armor, verify armor appears in character sheet, defense stat increases
-- [ ] Unequip weapon, verify attack stat decreases to base unarmed damage
-- [ ] Pick up 10+ items until over weight limit (50 kg), verify encumbered warning
-- [ ] Verify movement speed reduced when over-encumbered
-- [ ] Drop items to reduce weight below limit, verify normal movement restored
-- [ ] Stack items (ammo, stim packs), verify stack count increases correctly
-- [ ] Use consumable (stim pack), verify HP heals, item removed from inventory
-- [ ] Compare two weapons (hover over second weapon while one equipped), verify stat comparison tooltip
-
-**6. Quests and Progression (30-40 minutes)**:
-- [ ] Accept quest from NPC, verify quest added to Quest Log with description
-- [ ] Open Quest Log, verify objectives listed with checkboxes
-- [ ] Complete first objective (e.g., talk to NPC), verify checkbox marked complete
-- [ ] Complete final objective, return to quest giver, verify reward options appear
-- [ ] Choose credit reward (500 credits), verify credits added to inventory
-- [ ] Complete another quest, choose item reward, verify item added to inventory
-- [ ] Complete another quest, choose XP reward, verify extra XP awarded
-- [ ] Accept side quest with branching paths, choose one path, verify other path closes
-- [ ] Fail quest by killing quest-critical NPC, verify quest marked FAILED in log
-- [ ] Gain enough XP to level up (100 XP for level 2), verify level-up notification
-- [ ] Open character sheet, allocate 10 skill points across skills, verify increases
-- [ ] Reach level 3, verify perk selection screen appears with 5 perk choices
-- [ ] Select perk (e.g., "Better Criticals"), verify perk bonus applies immediately
-
-**7. Faction Reputation and Karma (15-20 minutes)**:
-- [ ] Complete quest for Resistance faction, verify Resistance reputation increases (+20)
-- [ ] Check faction status screen, verify Resistance shows "Friendly" at 250+ rep
-- [ ] Kill Resistance NPC, verify reputation decreases (-50), status changes to "Neutral" or "Hostile"
-- [ ] Complete quest for CorpSec, verify CorpSec reputation increases, Resistance decreases (opposed factions)
-- [ ] Perform good action (help civilian), verify karma increases (+10), notification appears
-- [ ] Perform bad action (kill civilian), verify karma decreases (-20), notification appears
-- [ ] Check karma level: verify Good (>500), Neutral (0-500), or Evil (<0) classification
-
-**8. Crafting and Upgrades (20-25 minutes)**:
-- [ ] Gather crafting materials: Metal Scrap (×10), Gunpowder (×5), Electronic Parts (×3)
-- [ ] Open crafting panel, verify recipes display with material requirements
-- [ ] Craft 9mm Ammo (requires Gunpowder ×2), verify materials deducted, ammo added
-- [ ] Attempt to craft Stim Pack without Medicine 30 skill, verify recipe grayed out
-- [ ] Read medical textbook to gain Medicine skill, reach 30, verify recipe now craftable
-- [ ] Craft Stim Pack, verify 15-second craft time elapses with progress bar
-- [ ] Travel to Resistance safe house, interact with workbench, verify weapon mod panel opens
-- [ ] Craft Reflex Sight mod (requires Engineering 15, Electronic Parts ×2)
-- [ ] Open weapon modification panel, drag Reflex Sight to Optics slot
-- [ ] Verify stat preview shows +10% accuracy before confirming
-- [ ] Apply mod, verify accuracy stat increases, mod consumed from inventory
-
-**9. Day/Night Cycle and Environmental Hazards (15-20 minutes)**:
-- [ ] Wait for day/night transition (6 AM, 6 PM), verify lighting changes from day to night
-- [ ] Verify curfew enforcement: patrol NPCs hostile at night if not in safe zone
-- [ ] Enter Industrial Wasteland without Gas Mask, verify toxic gas damage (10 HP/turn)
-- [ ] Equip Gas Mask, verify damage stops, breathing sound effect plays
-- [ ] Step on Chemical Spill, verify 15 HP damage, armor durability decreases
-- [ ] Stand in Radiation Pocket without Hazmat Suit, verify radiation accumulates (+2/turn)
-- [ ] Navigate smog area, verify perception range reduced to 6 tiles
-- [ ] Equip flashlight, verify perception range increases to 9 tiles
-
-**10. Save/Load System (10-15 minutes)**:
-- [ ] Save game in Slot 1, verify save appears with timestamp, location, level
-- [ ] Save game in Slot 2, verify both saves coexist independently
-- [ ] Load Slot 1, verify all state restores: player position, inventory, quests, stats
-- [ ] Load Slot 2, verify different state loads correctly
-- [ ] Delete Slot 1, verify save removed from list
-- [ ] Trigger auto-save by leveling up, verify auto-save slot appears with "Auto-Save" label
-- [ ] Quit game, relaunch, verify save slots persist across sessions
-
-**11. UI/UX and Accessibility (15-20 minutes)**:
-- [ ] Hover over all UI elements (buttons, icons), verify tooltips appear with helpful text
-- [ ] Test keyboard shortcuts: I (inventory), C (character sheet), Q (quest log), ESC (menu)
-- [ ] Verify all modals/panels can be closed with ESC key or X button
-- [ ] Test UI responsiveness: resize browser window, verify UI scales/reflows correctly
-- [ ] Verify text is readable at minimum supported resolution (1280×720)
-- [ ] Check colorblind mode (if implemented): verify UI distinguishes colors for red-green colorblindness
-- [ ] Test tab navigation: verify can navigate UI with Tab key, Enter to activate buttons
-
-**12. Multi-Browser Testing (30-40 minutes per browser)**:
-- **Chrome (Latest)**: Run full playtest checklist (1-11), document any issues
-- **Firefox (Latest)**: Run full playtest checklist, compare performance vs Chrome
-- **Edge (Latest)**: Run full playtest checklist, verify compatibility
-- **Safari (Latest macOS)**: Run full playtest checklist, verify WebGL/Canvas rendering correct
-- **Mobile Safari (iOS)**: Test touch controls, verify UI scales for mobile, performance acceptable
-- **Chrome Android**: Test touch controls, verify no major UI issues on smaller screens
-
-**Bug Documentation Process**:
-- Use issue tracker (GitHub Issues, Jira, Linear) to log all bugs
-- For each bug, document:
-  - **Title**: Concise description (e.g., "Character sheet not updating after level-up")
-  - **Severity**: Critical (blocks gameplay), High (major feature broken), Medium (minor issue), Low (cosmetic)
-  - **Steps to reproduce**: Exact steps to trigger bug
-  - **Expected behavior**: What should happen
-  - **Actual behavior**: What actually happens
-  - **Browser/Device**: Where bug occurs (e.g., "Chrome 120, Windows 11")
-  - **Screenshots/Video**: Attach visual evidence if applicable
-- Assign priority: P0 (fix before launch), P1 (fix soon), P2 (fix eventually), P3 (nice to have)
-
-**Acceptance Criteria**:
-- Complete full playtest checklist (1-12) with at least 2 testers
-- Test in all 4 major browsers (Chrome, Firefox, Edge, Safari)
-- Document all bugs found in issue tracker with severity/priority
-- Zero P0 (critical) bugs remaining before launch
-- <5 P1 (high) bugs remaining before launch (with plan to fix in v1.1)
-</details>
-
-<prerequisites>
-- Steps 32.1 and 32.2 (Unit and E2E tests) should be completed first
-- Game fully implemented and deployed to staging environment
-- Multiple human testers available (ideally 2-3 for comprehensive coverage)
-</prerequisites>
-
-<test>
-Assign 2-3 testers to complete full playtest checklist independently. Verify each tester logs bugs in issue tracker with detailed repro steps. Review bug reports and categorize by severity (Critical, High, Medium, Low) and priority (P0, P1, P2, P3). Fix all P0 bugs and verify fixes with re-testing. Verify game tested in Chrome, Firefox, Edge, and Safari with results documented. Verify mobile testing completed on iOS Safari and Chrome Android. Confirm all sections of checklist completed (checkboxes marked). Review any recurring bugs reported by multiple testers and prioritize fixes. Verify edge cases tested: character with all stats at 1, character with 10 STR vs 1 STR, inventory at exactly 50 kg weight limit, quest with all paths explored. Confirm game playable start-to-finish without game-breaking bugs across all tested browsers.
-</test>
-</step>
-
 <step id="33">
 <step_metadata>
   <number>33</number>
@@ -2383,178 +2207,6 @@ Enhance the user interface for clarity, thematic consistency, and usability acro
 
 <test>
 Open each UI element (character sheet, inventory, crafting, vehicle management, karma/reputation screen, quest log, dialogue system). Ensure they look cohesive with consistent styling. Hover over various elements and confirm tooltips appear with helpful information. Test keyboard shortcuts work correctly. Verify animations are smooth. Check UI responsiveness at different browser window sizes.
-</test>
-</step>
-
-<step id="34.5">
-<step_metadata>
-  <number>34.5</number>
-  <title>Accessibility Audit and Fixes</title>
-  <phase>Phase 10: Testing, Polish, and Release</phase>
-</step_metadata>
-
-<instructions>
-Conduct a comprehensive accessibility audit and implement fixes so the game remains playable for users with disabilities.
-</instructions>
-
-<details>
-**Accessibility Focus Areas**:
-- Visual impairments (low vision, colorblindness)
-- Motor disabilities (keyboard-only navigation)
-- Cognitive disabilities (clear language, consistent UI)
-- Screen reader compatibility (ARIA labels, semantic HTML)
-
-**1. Keyboard Navigation**:
-- **Full keyboard accessibility**: Ensure ALL interactive elements (buttons, inputs, NPCs, loot containers, enemies) are keyboard-accessible without requiring mouse
-- **Focus indicators**: Add visible focus rings (2px solid outline) to all focusable elements with high contrast (yellow/cyan on dark backgrounds)
-- **Tab order**: Implement logical tab order for UI panels (left-to-right, top-to-bottom), skip decorative elements
-- **Keyboard shortcuts** (already in Step 34, verify functionality):
-  - I: Inventory
-  - C: Character Sheet
-  - Q: Quest Log
-  - M: Map/Minimap
-  - K: Crafting Panel
-  - ESC: Close current panel/pause menu
-  - Tab: Cycle through interactive elements
-  - Enter/Space: Activate focused element
-  - Arrow keys: Navigate world AND navigate within UI lists/grids
-- **Focus trapping**: When modal opens (dialogue, inventory), trap focus within modal, ESC to close
-- **Skip links**: Add "Skip to main content" link at top of page for screen reader users
-
-**2. Screen Reader Support**:
-- **Semantic HTML**: Use proper HTML elements (`<button>`, `<input>`, `<nav>`) instead of divs with onClick
-- **ARIA labels**: Add `aria-label` or `aria-labelledby` to all interactive elements
-  - Example: `<button aria-label="Equip pistol">Equip</button>`
-  - Example: `<div role="region" aria-label="Combat grid">...</div>`
-- **Live regions**: Use `aria-live="polite"` for status updates (HP changes, XP gains, notifications)
-  - Example: `<div aria-live="polite" aria-atomic="true">{notificationMessage}</div>`
-- **State announcements**: Use `aria-pressed`, `aria-expanded`, `aria-selected` for interactive elements
-- **Image alt text**: Add descriptive alt text to all images (character portraits, item icons, zone images)
-  - Example: `<img src="pistol.png" alt="9mm pistol, ranged weapon" />`
-- **Screen reader testing**: Test with NVDA (Windows) or VoiceOver (macOS) to ensure all UI navigable and comprehensible
-
-**3. Color Contrast**:
-- **Text contrast ratio**: Ensure 4.5:1 minimum contrast for normal text, 3:1 for large text (18pt+)
-  - Check all UI text: dialogue, stats, tooltips, quest descriptions
-  - Tool: Use WebAIM Contrast Checker or Chrome DevTools Accessibility panel
-- **UI element contrast**: Ensure 3:1 minimum contrast for interactive elements (buttons, inputs, icons)
-- **Focus indicator contrast**: Ensure focus rings have 3:1 contrast against background
-- **Status indicators**: Use BOTH color AND icon/text to convey information
-  - Example: HP bar uses red color BUT also displays "25/100 HP" text
-  - Example: Karma uses color (green/gray/red) BUT also displays "Good" / "Neutral" / "Evil" text
-- **Fix common issues**:
-  - Light gray text on white backgrounds (increase contrast)
-  - Subtle hover states (make more obvious)
-  - Red-only error messages (add icons and text labels)
-
-**4. Colorblind Modes**:
-- **Implement colorblind mode toggle** in settings (`src/game/settings/accessibilitySettings.ts`):
-  - **Protanopia** (red-green colorblindness, ~8% of males): Use blue/yellow palette instead of red/green
-  - **Deuteranopia** (green-red colorblindness): Similar to protanopia
-  - **Tritanopia** (blue-yellow colorblindness, rare): Use red/green palette
-- **Pattern overlays**: Add patterns/textures to color-coded elements
-  - HP bar: Green with horizontal lines, Red with diagonal lines
-  - Karma: Good has checkmark pattern, Evil has X pattern
-  - Loot rarity: Common (solid), Rare (dots), Epic (stripes)
-- **Icon shapes**: Use different shapes for different item types (not just colors)
-  - Weapons: Pentagon icon
-  - Armor: Shield icon
-  - Consumables: Circle icon
-  - Quest items: Star icon
-- **Color palette**: Use colorblind-safe palettes for UI elements
-  - Avoid red/green combinations for critical information
-  - Use blue/orange, yellow/purple instead
-
-**5. Font Size and Readability**:
-- **Font size settings**: Add font size slider in settings (Small 14px, Medium 16px, Large 18px, Extra Large 20px)
-- **Text scaling**: Ensure UI scales correctly when font size increases (don't break layouts at 200% zoom)
-- **Font choice**: Use sans-serif fonts (Arial, Roboto, Open Sans) for better readability
-- **Line height**: Set line-height to 1.5x font size minimum for better readability
-- **Paragraph width**: Limit text width to 80 characters maximum (use max-width on dialogue boxes)
-- **Dyslexia support**: Offer dyslexia-friendly font option (OpenDyslexic or similar)
-
-**6. Reduced Motion**:
-- **Detect prefers-reduced-motion**: Check `window.matchMedia('(prefers-reduced-motion: reduce)')`
-- **Disable animations**: When reduced motion enabled:
-  - Remove combat attack animations (instant damage application)
-  - Remove zone transition animations (instant fade in/out)
-  - Remove UI panel sliding animations (instant show/hide)
-  - Keep essential feedback (damage numbers, tooltips) but without motion
-- **Settings toggle**: Add "Reduce Animations" checkbox in accessibility settings
-
-**7. Audio Accessibility**:
-- **Subtitles/Captions**: If audio dialogue is added, provide text captions
-- **Visual cues**: Ensure all audio cues have visual equivalents
-  - Low HP warning: Audio beep AND red screen border pulsing
-  - Enemy approaching: Audio footsteps AND minimap indicator
-  - Quest complete: Audio chime AND notification banner
-- **Volume controls**: Separate volume sliders for music, SFX, and UI sounds
-
-**8. Form Input Accessibility**:
-- **Label all inputs**: Every form field has associated `<label>` element
-  - Example: `<label for="char-name">Character Name:</label><input id="char-name" />`
-- **Error messages**: Display clear error messages near input fields with suggestions
-  - Example: "Character name must be 1-30 characters" (not just "Invalid")
-- **Required field indicators**: Mark required fields with asterisk AND aria-required="true"
-- **Input validation**: Provide real-time feedback on input validity (green checkmark / red X)
-
-**Testing Tools and Process**:
-- **Automated testing**:
-  - Install axe DevTools Chrome extension: scan each page for accessibility violations
-  - Install WAVE Chrome extension: visual feedback on accessibility issues
-  - Run Lighthouse accessibility audit in Chrome DevTools
-  - Target score: 90+ accessibility score in Lighthouse
-- **Manual testing**:
-  - Navigate entire game using ONLY keyboard (no mouse), verify all features accessible
-  - Test with screen reader (NVDA or VoiceOver), verify all elements announced correctly
-  - Test with 200% browser zoom, verify UI remains usable
-  - Test with colorblind simulator (Chrome extension "Colorblindly"), verify information distinguishable
-  - Test with reduced motion preference enabled, verify animations disabled
-- **Accessibility checklist**:
-  - [ ] All interactive elements keyboard-accessible (Tab, Enter, Arrow keys)
-  - [ ] Visible focus indicators on all focusable elements (2px solid outline)
-  - [ ] Screen reader announces all UI elements correctly (tested with NVDA/VoiceOver)
-  - [ ] All text meets 4.5:1 contrast ratio minimum (checked with contrast tool)
-  - [ ] All status information uses color + icon/text (not color alone)
-  - [ ] Colorblind mode available in settings (protanopia, deuteranopia, tritanopia)
-  - [ ] Font size adjustable (14px-20px range)
-  - [ ] Reduced motion mode available and functional
-  - [ ] All images have alt text
-  - [ ] All form inputs have labels
-  - [ ] Lighthouse accessibility score ≥90
-
-**Common Fixes**:
-- Replace `<div onClick>` with `<button>` for interactive elements
-- Add `tabIndex="0"` to focusable custom elements (NPCs, loot containers)
-- Add `role="button"` and `onKeyPress` handler to clickable divs (if button not possible)
-- Add `aria-label` to icon-only buttons (e.g., close X button)
-- Add `alt=""` (empty) to decorative images (don't announce in screen reader)
-- Add `aria-hidden="true"` to decorative elements (background graphics, flourishes)
-- Use `<h1>`, `<h2>`, `<h3>` for headings in proper hierarchy (not just styled divs)
-- Add `role="dialog"` and `aria-modal="true"` to modal windows
-
-**Acceptance Criteria**:
-- Pass axe DevTools scan with zero critical/serious violations
-- Pass WAVE scan with zero errors (warnings acceptable if justified)
-- Lighthouse accessibility score ≥90 on all major pages
-- Entire game completable using keyboard only (no mouse required)
-- Screen reader announces all UI elements and game state correctly
-- All text meets target contrast requirements (4.5:1)
-- Colorblind mode functional for 3 types of colorblindness
-- Reduced motion mode disables all non-essential animations
-</details>
-
-<prerequisites>
-- Step 34 (Polish the UI) should be completed first for baseline UI quality
-- All game systems implemented for comprehensive accessibility testing
-</prerequisites>
-
-<accessibility>
-This step IS the accessibility implementation - all features here are accessibility-focused.
-</accessibility>
-
-<test>
-Run axe DevTools scan on game homepage, character creation, main game screen, and verify zero critical/serious violations. Run WAVE scan and verify zero errors. Run Lighthouse accessibility audit and verify score ≥90. Attempt to play entire game using ONLY keyboard: create character (Tab/Enter to allocate stats, select background), navigate world (arrow keys), engage in combat (Tab to select target, Enter to attack), open inventory (I key), equip weapon (Tab to weapon, Enter to equip), accept and complete quest, level up and allocate skill points - all without touching mouse. Enable screen reader (NVDA or VoiceOver), navigate through character creation and verify all elements announced correctly. Open inventory and verify item names, stats, and actions announced. Enter combat and verify turn announcements, damage numbers, and enemy information announced. Check all text in UI with contrast checker tool and verify 4.5:1 minimum ratio. Enable colorblind mode (protanopia) and verify HP bar, karma display, and item rarity distinguishable without color. Test with deuteranopia and tritanopia modes. Increase font size to Extra Large (20px) and verify UI doesn't break, text remains readable. Zoom browser to 200% and verify game still playable. Enable reduced motion setting and verify animations disabled (combat, transitions) but essential feedback (damage numbers, tooltips) still visible. Test all form inputs (character name, stat allocation) have labels and error messages. Verify focus indicators visible on all interactive elements (buttons, NPCs, containers). Test with "Colorblindly" Chrome extension (simulate protanopia) and verify all information distinguishable.
 </test>
 </step>
 
@@ -2723,7 +2375,6 @@ Build a comprehensive in-game help system and update external documentation (REA
 <prerequisites>
 - All game systems implemented for complete help documentation
 - Step 34 (Polish the UI) completed for UI consistency
-- Step 34.5 (Accessibility) completed to ensure help system is accessible
 </prerequisites>
 
 <test>
@@ -2867,14 +2518,14 @@ Launch the HUD and confirm George appears within the Level 0 objectives area wit
 <summary>
 ## Summary
 
-This plan now outlines **54 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **52 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
 - **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (20 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5, 30.1/30.2)
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
-- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (12 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 34.8, 34.9, 35, 35.2, 35.5)
+- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, and documentation - FINAL RELEASE PREP (10 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5)
 </phase_structure>
 
 <focus_areas>
@@ -2888,8 +2539,8 @@ This plan now outlines **54 implementable steps** organized into **10 phases** t
 - **Crafting & Upgrades**: Basic crafting for ammo and medical supplies, weapon modification system with concrete recipes.
 - **Expanded World**: Industrial Wasteland zone (80×80 tiles) with specific environmental hazards and zone-specific quests.
 - **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
-- **Testing & Quality**: Unit test suite (70% coverage target), integration test scenarios, manual QA playtest checklist.
-- **Accessibility & Documentation**: Accessibility audit, keyboard navigation, screen readers, in-game help system, and external documentation.
+- **Testing & Quality**: Unit test suite (70% coverage target) and integration test scenarios.
+- **Documentation & Support**: In-game help system and external documentation updates.
 - **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, WebGL context loss recovery, SpectorJS profiling playbook, and UI refinement across all systems.
 </focus_areas>
 
@@ -2901,7 +2552,7 @@ This revised plan addresses critical quality issues identified in the analysis:
 - Step 24 → 24.1 (XP/leveling), 24.2 (skill trees), 24.3 (perk selection)
 - Step 26 → 26.1 (flanking), 26.2 (overwatch/targeted shots), 26.3 (AoE/consumables)
 - Step 30 → 30.1 (basic crafting), 30.2 (weapon mods)
-- Step 32 → 32.1 (unit tests), 32.2 (integration tests), 32.3 (manual QA)
+- Step 32 → 32.1 (unit tests), 32.2 (integration tests)
 
 **Bridge Steps Added**:
 - Step 23.5: Wire equipment stats to combat formulas
@@ -2921,7 +2572,6 @@ This revised plan addresses critical quality issues identified in the analysis:
 - Industrial Wasteland: 80×80 tile map, 3 zone-specific quests
 
 **Quality Assurance**: New steps for comprehensive testing and accessibility:
-- Step 34.5: Accessibility audit covering keyboard, screen reader, contrast, and customization fixes
 - Step 34.7: In-game help system and external documentation
 </key_improvements>
 
