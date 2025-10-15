@@ -274,9 +274,7 @@ const styles = `
     border-color: rgba(192, 132, 252, 0.4);
   }
   .george-log-item--latest {
-    background: rgba(30, 64, 175, 0.5);
-    border-color: rgba(125, 211, 252, 0.4);
-    box-shadow: 0 0 18px rgba(56, 189, 248, 0.15);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.2);
   }
   .george-log-item--player {
     background: rgba(15, 42, 72, 0.75);
