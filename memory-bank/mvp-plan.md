@@ -514,6 +514,38 @@ Implement a lightweight environmental trigger framework that reacts to world-sta
 - Snapshot rumor and note content to confirm flag-conditioned variants appear and log entries match the expected tone.
 </test>
 </step>
+
+<step id="16.9">
+<step_metadata>
+  <number>16.9</number>
+  <title>Route Ambient World Events Through George Assistant</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.8 completed (environment trigger framework in place)
+- George assistant overlay (HUD AI) active and emitting quest/objective updates
+</prerequisites>
+
+<instructions>
+Promote George to the sole narrator for environmental changes by piping ambient triggers and zone hazard updates into his AI console instead of the HUD ticker.
+</instructions>
+
+<details>
+- Extend George’s system module and selectors to monitor environment flags, trigger events, and zone metadata while caching previous values for comparison.
+- Emit structured ambient events (`rumor`, `signage`, `weather`, `zoneDanger`, `hazardChange`) whenever trigger reducers fire; queue them in a new assistant event log with per-category cooldowns to avoid spam.
+- Add a dedicated “Ambient Feed” tab in George’s console plus dock highlights so the latest world change surfaces even when the panel is collapsed.
+- Remove the standalone HUD ambient ticker and migrate zone hazard/danger copy so George announces changes (“Zone danger elevated to Hazardous”, “New graffiti campaign spotted”) following the straight-faced absurdity tone.
+- Update localization to cover the new callouts and ensure assistant personality/tone controls apply to ambient chatter.
+- Document the assistant-driven ambient workflow in `memory-bank/architecture.md` and note the HUD change in `memory-bank/progress.md`.
+</details>
+
+<test>
+- Simulate flag flips and zone transitions in Redux DevTools; confirm George queues a single notification per change type and respects cooldowns.
+- Toggle assistant quiet mode/personality variants to verify ambient entries appear (or silence) appropriately.
+- Play through a scenario with multiple trigger firings and ensure the assistant feed lists each change chronologically while the HUD no longer shows the removed ticker.
+</test>
+</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">

@@ -1,6 +1,16 @@
 # TODO — Unfinished MVP Steps
 
 <todo_list>
+  <phase id="5" name="Narrative and Quest Layer">
+    <step id="16.9">
+      <step_metadata>
+        <number>16.9</number>
+        <title>Route Ambient World Events Through George Assistant</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+  </phase>
+
   <phase id="6" name="Visual and Navigation Upgrades">
     <step id="19.8">
       <step_metadata>
