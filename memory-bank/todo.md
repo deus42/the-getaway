@@ -92,6 +92,13 @@
         <status>pending</status>
       </step_metadata>
     </step>
+    <step id="29.7">
+      <step_metadata>
+        <number>29.7</number>
+        <title>Dynamic District Uprisings & Resistance Simulation</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
     <step id="30.1">
       <step_metadata>
         <number>30.1</number>
@@ -113,6 +120,13 @@
       <step_metadata>
         <number>31</number>
         <title>Build Industrial Wasteland Zone with Concrete Specifications</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+    <step id="31.5">
+      <step_metadata>
+        <number>31.5</number>
+        <title>Seasonal Narrative Arc Episodes</title>
         <status>pending</status>
       </step_metadata>
     </step>

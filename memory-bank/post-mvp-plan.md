@@ -36,6 +36,40 @@ Integrate a guardrailed LLM service that generates adaptive NPC dialogue and enc
 </test>
 </step>
 
+<step id="40.5">
+<step_metadata>
+  <number>40.5</number>
+  <title>Dynamic Black Market Economy & Smuggling Missions</title>
+  <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+</step_metadata>
+
+<prerequisites>
+- Core crafting and inventory loops completed (Steps 30.1, 30.2)
+- Faction reputation/heat systems live (Steps 29.x)
+- Save migration tooling established (Step 33)
+</prerequisites>
+
+<instructions>
+Introduce a reactive black-market economy that mirrors citywide scarcity and enforcement pressure. Prices, inventory, and smuggling contracts should ebb and flow based on regional heat, uprisings, and faction control, giving players strategic reasons to manage supply lines and take risks for profit.
+</instructions>
+
+<details>
+- Extend `economySlice` (or create `blackMarketSlice`) to track commodity demand (`ammo`, `meds`, `contraband`, `intel`), enforcement pressure, and faction ownership per district. Persist rolling averages so trends feel lived-in rather than spiky.
+- Author `blackMarketDirector.ts` that ticks daily: ingests district heat/uprising data, populates vendor inventories, sets price multipliers, and spawns limited-time smuggling contracts. Provide hooks for player actions (sabotage, propaganda, supply drops) to influence indices.
+- Build merchant UI expansions (`BlackMarketPanel.tsx`) showing fluctuating prices, scarcity badges, and risk indicators (e.g., high surveillance, undercover stings). Support bulk trades, haggle rolls, and intel-based forecasts.
+- Create contract templates in `src/content/economy/contracts.ts` (e.g., deliver meds during crackdown, smuggle hacked chips past CorpSec) with branching outcomes that adjust reputation and economy metrics. Integrate contract selection into safehouses/contacts.
+- Implement risk mechanics: covert runs roll against patrol density; failure triggers ambush encounters or confiscation. Allow equipment/perks to mitigate risk (e.g., forged permits, stealth vehicles).
+- Update `memory-bank/game-design.md` with economy formulas (WHAT) and `memory-bank/architecture.md` with data flow and director integration (HOW) when implemented.
+</details>
+
+<test>
+- Simulate high heat in Downtown and confirm ammo/med prices spike, legal vendors lock inventory, and black-market traders offer inflated rates with added risk warnings.
+- Complete a smuggling contract under varying patrol pressure to verify risk calculations, reward distribution, and economy deltas behave as expected.
+- Use Intel perks or crew missions to manipulate supply; ensure the director reflects the change on the next tick and UI surfaces trend updates.
+- Save/load mid-contract and post-transaction to confirm economy indices and limited-time offers persist accurately.
+</test>
+</step>
+
 <step id="26.1">
 <step_metadata>
   <number>26.1</number>

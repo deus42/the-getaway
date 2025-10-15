@@ -1953,6 +1953,40 @@ Implement a lightweight rumor propagation layer that fans out short-lived gossip
 </test>
 </step>
 
+<step id="29.7">
+<step_metadata>
+  <number>29.7</number>
+  <title>Dynamic District Uprisings & Resistance Simulation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 29.5 completed (localized witness reputation propagation supplies neighborhood notoriety)
+- Step 29.6 completed (gossip heat propagation exposes cross-district sentiment)
+- Step 16.9 completed (George assistant ambient feed ready to broadcast citywide events)
+</prerequisites>
+
+<instructions>
+Stand up a systemic uprising simulation that tracks morale, supplies, and corporate pressure per district, allowing uprisings to ignite, escalate, or be crushed based on player and systemic actions. Ensure each stage drives tangible gameplay changes—patrol patterns, vendor inventory, quest hooks—and that George, signage, and NPCs surface the shifting resistance state.
+</instructions>
+
+<details>
+- Extend `worldSlice` with `districtState` records `{ morale, supply, securityPresence, uprisingStage, pendingEvents }` plus selectors summarizing pressure trends, liberation odds, and countdown timers. Persist state to saves and expose dev tooling for inspection.
+- Author `uprisingDirector.ts` in `src/game/world/directors/` that ticks each in-game hour. It should read witness heat (Step 29.5), gossip sentiment (Step 29.6), faction reputation deltas, resource shipments, and recent mission outcomes to adjust district metrics. Apply designer-tunable thresholds to transition stages: Calm → Tension → Spark → Siege → Liberation or Crackdown.
+- When stages change, enqueue systemic responses: patrol spawn tables, curfew intensity, and surveillance loadouts shift; vendors adjust stock/discounts; safehouses grant temporary buffs or go dark; random encounter tables unlock escort/sabotage opportunities. Emit structured events consumed by George, signage packs, and quest generators.
+- Seed authoring data in `src/content/world/uprisings.ts` describing per-district modifiers (e.g., corp stronghold vs. worker slum), escalation pacing, morale boosts for key story beats, and narrative flavor text for each stage.
+- Provide player counterplay hooks: sabotage missions reduce securityPresence, supply raids boost morale, propaganda runs raise supply while risking crackdown. Ensure Intel perks from Step 24.4 interact (e.g., reveal impending crackdowns, unlock negotiation options).
+- Document the director flow and authoring expectations in `memory-bank/architecture.md` (HOW) and note tonal guidelines for uprising messaging in `memory-bank/plot.md` (WHAT) during implementation.
+</details>
+
+<test>
+- Scripted scenario: intentionally raise morale and drop security to trigger Spark, verify George announces it, signage swaps, and patrol density changes. Continue actions to reach Liberation and confirm safehouses upgrade perks while corp presence retreats.
+- Stress test: allow corp pressure to outweigh morale leading to Crackdown; ensure curfew escalates, vendors restrict access, and NPC dialogue reflects fear. Confirm the simulation cools back to Tension when players counteract pressure.
+- Multi-district regression: run parallel simulations in Downtown and Slums to confirm events remain scoped; George should interleave updates without duplication, and stage timers respect per-district cooldowns.
+- Persistence check: save mid-Siege, reload, and confirm director resumes correctly with queued events intact and timers continuing from the saved state.
+</test>
+</step>
+
 <step id="30.1">
 <step_metadata>
   <number>30.1</number>
@@ -2143,6 +2177,40 @@ Create the Industrial Wasteland as an 80×80 tile high-danger zone with specific
 
 <test>
 Travel to Industrial Wasteland via Downtown eastern gate and verify entry warning appears. Enter without Gas Mask and confirm 10 HP/turn damage from toxic gas. Find and equip Gas Mask, verify damage stops. Navigate outdoor smog area and confirm perception range reduced to 6 tiles. Equip flashlight and verify range increases to 9. Enter Refinery factory interior and confirm normal vision restored. Encounter Industrial Robot and verify 8 armor rating, high durability. Use EMP grenade and confirm -50% HP bonus damage. Fight Mutated Worker and verify poison DoT effect (5 damage/turn for 3 turns). Encounter Automated Turret and attempt hack with Hacking 50+, verify turret turns friendly. Step on Chemical Spill and verify 15 HP damage, armor durability loss. Fight Toxic Sludge Creature mini-boss, verify explosion on death (3-tile AoE). Loot Advanced Tech Components and verify rare status. Find Gas Mask in guaranteed location. Accept "Clear the Refinery" quest, complete objectives (15 kills, disable defense), verify rewards and safe zone unlocked. Accept "Toxic Rescue", navigate to Chemical Storage, rescue 3 scouts, verify Hazmat Suit location unlocked. Trigger "Rogue AI Shutdown" quest, reach control room, attempt hack (or fight drones), verify turret deactivation upon completion. Confirm zone is fully explorable with all landmarks accessible.
+</test>
+</step>
+
+<step id="31.5">
+<step_metadata>
+  <number>31.5</number>
+  <title>Seasonal Narrative Arc Episodes</title>
+  <phase>Phase 8: World Expansion</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.9 completed (George assistant ambient feed)
+- Step 29.7 completed (Dynamic District Uprisings & Resistance Simulation)
+- Step 33 completed (save system resilience)
+</prerequisites>
+
+<instructions>
+Create a seasonal episode framework that schedules limited-time citywide arcs. Each episode layers bespoke ambient dressing, missions, and rewards on top of the uprising/heat systems so returning players see fresh stakes without fragmenting saves.
+</instructions>
+
+<details>
+- Extend `worldSlice` with a `seasonState` record storing `currentEpisodeId`, phase progression, timestamps, and active modifiers. Provide selectors and persistence hooks so mid-episode saves restore safely.
+- Add `seasonDirector.ts` in `src/game/world/directors/` that loads episode configs from `src/content/seasons/<episodeId>.ts`, ticks phases (`Prelude`, `Escalation`, `Climax`, `Aftermath`), and dispatches structured events for George, signage, quest generators, and ambient triggers.
+- Author baseline episode templates (e.g., CorpSec Crackdown, Resistance Festival, Blackout Amnesty) defining prop swaps, lighting presets, patrol modifiers, vendor adjustments, limited-time missions, and reward tables. Ensure localization keys and narration blurbs live alongside content.
+- Update George assistant with a “Season Briefing” tab describing the active episode, remaining time, and recommended actions. Mirror high-level summaries in the quest log/planning board and broadcast milestone changes through ambient systems.
+- Provide player agency: episodic missions, donation drives, or sabotage tasks that influence episode outcomes and tie back into uprising metrics. Rewards should include cosmetics, schematics, and faction perks that persist post-episode.
+- Document the episode authoring workflow in `memory-bank/architecture.md` (director flow, save considerations) and record tone/style rules per episode type in `memory-bank/plot.md`.
+</details>
+
+<test>
+- Fast-forward through an episode in a dev harness; confirm each phase activates the correct ambient assets, missions, and George briefings, even across reloads.
+- Trigger liberation and crackdown scenarios during an episode to ensure modifiers stack cleanly with uprising effects and revert when the episode ends.
+- Accept and complete limited-time missions; verify rewards grant persistent perks/schematics and that failure paths adjust future phase modifiers.
+- Save/quit in each episode phase; on reload ensure `seasonDirector` resumes timers, pending events, and UI with no duplication or desync.
 </test>
 </step>
 </phase>
