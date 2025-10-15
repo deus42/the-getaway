@@ -1,5 +1,6 @@
 import type { StoryFunctionTag, EnvironmentFlags } from './environment';
 import type { DangerRating } from './types';
+import type { TimeOfDay } from '../world/dayNightCycle';
 
 export type GeorgeAmbientCategory =
   | 'rumor'
@@ -30,6 +31,7 @@ export interface GeorgeAmbientWeatherSnapshot {
   updatedAt: number;
   rainIntensity: number;
   thunderActive: boolean;
+  timeOfDay: TimeOfDay | null;
 }
 
 export interface GeorgeAmbientZoneSnapshot {

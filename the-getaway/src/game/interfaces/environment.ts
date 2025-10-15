@@ -13,6 +13,8 @@ export interface EnvironmentFlags {
   blackoutTier: BlackoutTier;
 }
 
+import type { TimeOfDay } from '../world/dayNightCycle';
+
 export interface WeatherStateSnapshot {
   presetId: string | null;
   rainIntensity: number;
@@ -20,6 +22,7 @@ export interface WeatherStateSnapshot {
   sirenLoop: boolean;
   storyFunction?: StoryFunctionTag;
   updatedAt: number;
+  timeOfDay: TimeOfDay | null;
 }
 
 export interface SignageStateSnapshot {

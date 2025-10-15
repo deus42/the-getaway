@@ -52,6 +52,7 @@ const createInitialEnvironmentState = (): EnvironmentState => ({
     thunderActive: false,
     sirenLoop: false,
     updatedAt: 0,
+    timeOfDay: null,
   },
   signage: {},
   rumorSets: {},

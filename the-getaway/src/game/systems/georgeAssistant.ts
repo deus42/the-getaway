@@ -5,6 +5,7 @@ import { GEORGE_DIALOGUE_LIBRARY, GeorgeDialogueTemplate, GeorgeLine, GeorgeInte
 import type { EnvironmentFlags, StoryFunctionTag } from '../interfaces/environment';
 import type { GeorgeAmbientCategory, GeorgeAmbientSnapshot } from '../interfaces/georgeAssistant';
 import type { DangerRating } from '../interfaces/types';
+import type { TimeOfDay } from '../world/dayNightCycle';
 
 interface KarmaDescriptor {
   label: string;
@@ -220,6 +221,7 @@ export type GeorgeAmbientEvent =
       storyFunction?: StoryFunctionTag;
       rainIntensity: number;
       thunderActive: boolean;
+      timeOfDay: TimeOfDay | null;
     }
   | {
       category: 'zoneDanger';
@@ -296,6 +298,7 @@ const cloneSnapshot = (snapshot: GeorgeAmbientSnapshot): GeorgeAmbientSnapshot =
     updatedAt: snapshot.weather.updatedAt,
     rainIntensity: snapshot.weather.rainIntensity,
     thunderActive: snapshot.weather.thunderActive,
+    timeOfDay: snapshot.weather.timeOfDay,
   },
   zone: {
     zoneId: snapshot.zone.zoneId,
@@ -422,7 +425,8 @@ export class GeorgeAmbientTracker {
       previous.weather.presetId !== current.weather.presetId ||
       previous.weather.updatedAt !== current.weather.updatedAt ||
       previous.weather.rainIntensity !== current.weather.rainIntensity ||
-      previous.weather.thunderActive !== current.weather.thunderActive;
+      previous.weather.thunderActive !== current.weather.thunderActive ||
+      previous.weather.timeOfDay !== current.weather.timeOfDay;
 
     if (weatherChanged) {
       events.push({
@@ -434,6 +438,7 @@ export class GeorgeAmbientTracker {
         storyFunction: current.weather.storyFunction,
         rainIntensity: current.weather.rainIntensity,
         thunderActive: current.weather.thunderActive,
+        timeOfDay: current.weather.timeOfDay,
       });
     }
 

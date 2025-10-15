@@ -17,6 +17,7 @@ const buildSnapshot = (overrides: Partial<GeorgeAmbientSnapshot> = {}): GeorgeAm
     updatedAt: 0,
     rainIntensity: 0,
     thunderActive: false,
+    timeOfDay: 'day',
   },
   zone: {
     zoneId: overrides.zone?.zoneId ?? 'zone-1',
@@ -73,6 +74,7 @@ describe('GeorgeAmbientTracker', () => {
           updatedAt: 100,
           rainIntensity: 3,
           thunderActive: false,
+          timeOfDay: 'morning',
         },
       }),
       1000
@@ -87,6 +89,7 @@ describe('GeorgeAmbientTracker', () => {
           updatedAt: 200,
           rainIntensity: 5,
           thunderActive: true,
+          timeOfDay: 'day',
         },
       }),
       4000
@@ -101,6 +104,7 @@ describe('GeorgeAmbientTracker', () => {
           updatedAt: 300,
           rainIntensity: 6,
           thunderActive: true,
+          timeOfDay: 'evening',
         },
       }),
       7000

@@ -129,16 +129,17 @@ flowchart LR
 - Keep environment reactivity declarative: world-facing flags live under `world.environment.flags` and drive all swaps through a trigger registry rather than ad-hoc conditionals.
 - Favour data tables over inline copy so rumors, signage, and notes remain tone-consistent with `memory-bank/plot.md` and can scale through content-only additions.
 - Ensure triggers are idempotent and observable—every swap records the source ID and timestamp so reducers, HUD, and QA tooling can diff the current ambient state.
+- Throttle weather shifts to once per recorded time-of-day so ambient logs surface meaningful beats instead of oscillating between severity presets.
 </design_principles>
 
 <technical_flow>
 1. <code_location>the-getaway/src/game/interfaces/environment.ts</code_location> defines flag enums (`gangHeat`, `curfewLevel`, `supplyScarcity`, `blackoutTier`) plus serialized snapshots for rumors, signage, weather, and spawned notes.
 2. <code_location>the-getaway/src/store/worldSlice.ts</code_location> seeds the environment state, exposes reducers (`setEnvironmentFlags`, `applyEnvironmentSignage`, `applyEnvironmentRumorSet`, `registerEnvironmentalNote`, `setNpcAmbientProfile`), and maps existing systems to the new flags (curfew to `curfewLevel`, alert level to `gangHeat`/`supplyScarcity`, reinforcements to blackout tiers).
 3. <code_location>the-getaway/src/content/environment/</code_location> holds trigger tables (`rumors.ts`, `notes.ts`, `signage.ts`, `weather.ts`) with one-liner metadata so writers can add swaps without touching logic.
-4. <code_location>the-getaway/src/game/world/triggers/triggerRegistry.ts</code_location> maintains registered triggers with cooldown/once semantics; <code_location>the-getaway/src/game/world/triggers/defaultTriggers.ts</code_location> registers the shipping set (rumor pulses, weather beats, signage swaps, note drops) and exports a test-only reset helper.
+4. <code_location>the-getaway/src/game/world/triggers/triggerRegistry.ts</code_location> maintains registered triggers with cooldown/once semantics; <code_location>the-getaway/src/game/world/triggers/defaultTriggers.ts</code_location> now derives weather via a single daily updater that records the active `TimeOfDay`, preferring gang-heat overrides until curfew level 3 and logging at most one shift per phase, while keeping the remaining rumor, signage, and note triggers unchanged. A test-only reset helper exposes clean registration for specs.
 5. <code_location>the-getaway/src/components/GameController.tsx</code_location> initialises the registry and ticks triggers each animation frame, feeding the Redux dispatch/getState pair so triggers stay in sync with the active scene.
-6. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> surfaces memoised selectors for flags, signage variants, rumor sets, and spawned notes for HUD consumers.
-7. <code_location>the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts</code_location> drives the reducers through the registry, asserting rumor rotations, signage swaps, and note spawns when flags shift.
+6. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> surfaces memoised selectors for flags, signage variants, rumor sets, weather snapshots (including last `TimeOfDay`), and spawned notes for HUD consumers.
+7. <code_location>the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts</code_location> drives the reducers through the registry, asserting rumor rotations, signage swaps, note spawns, and the daily weather gate when flags or time phases shift.
 </technical_flow>
 </architecture_section>
 

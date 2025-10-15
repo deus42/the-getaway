@@ -102,6 +102,7 @@ export const selectAmbientWorldSnapshot = createSelector(
       updatedAt: environment.weather.updatedAt,
       rainIntensity: environment.weather.rainIntensity,
       thunderActive: environment.weather.thunderActive,
+      timeOfDay: environment.weather.timeOfDay,
     };
 
   const zone: GeorgeAmbientZoneSnapshot = {

@@ -1,5 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import worldReducer, { setEnvironmentFlags } from '../../../../store/worldSlice';
+import worldReducer, { setEnvironmentFlags, setGameTime } from '../../../../store/worldSlice';
 import playerReducer from '../../../../store/playerSlice';
 import settingsReducer from '../../../../store/settingsSlice';
 import logReducer from '../../../../store/logSlice';
@@ -17,8 +17,8 @@ const createTestStore = () =>
     },
   });
 
-const runTriggerTick = (store: ReturnType<typeof createTestStore>) =>
-  tickEnvironmentalTriggers(store.dispatch, store.getState);
+const runTriggerTick = (store: ReturnType<typeof createTestStore>, now?: number) =>
+  tickEnvironmentalTriggers(store.dispatch, store.getState, now);
 
 describe('default environmental triggers', () => {
   beforeEach(() => {
@@ -79,5 +79,56 @@ describe('default environmental triggers', () => {
       item.id.startsWith('env-note-item::')
     );
     expect(noteItem).toBeDefined();
+  });
+
+  it('updates weather once per time of day and respects severity overrides', () => {
+    const store = createTestStore();
+
+    ensureDefaultEnvironmentalTriggersRegistered();
+
+    runTriggerTick(store, 1_000);
+    let state: RootState = store.getState();
+    const initialWeather = state.world.environment.weather;
+    expect(initialWeather.timeOfDay).toEqual(state.world.timeOfDay);
+    const initialPreset = initialWeather.presetId;
+
+    runTriggerTick(store, 2_000);
+    state = store.getState();
+    expect(state.world.environment.weather.updatedAt).toBe(initialWeather.updatedAt);
+    expect(state.world.environment.weather.timeOfDay).toBe(initialWeather.timeOfDay);
+
+    store.dispatch(setEnvironmentFlags({ curfewLevel: 2 }));
+    runTriggerTick(store, 3_000);
+    state = store.getState();
+    expect(state.world.environment.weather.presetId).toBe('weather.curfew.2');
+    expect(state.world.environment.weather.updatedAt).toBe(3_000);
+
+    runTriggerTick(store, 4_000);
+    state = store.getState();
+    expect(state.world.environment.weather.updatedAt).toBe(3_000);
+
+    store.dispatch(setGameTime(150)); // transitions into night
+    runTriggerTick(store, 5_000);
+    state = store.getState();
+    expect(state.world.environment.weather.timeOfDay).toBe(state.world.timeOfDay);
+    expect(state.world.environment.weather.updatedAt).toBe(5_000);
+
+    store.dispatch(setEnvironmentFlags({ gangHeat: 'high' }));
+    runTriggerTick(store, 6_000);
+    state = store.getState();
+    expect(state.world.environment.weather.presetId).toBe('weather.gangHeat.high');
+    expect(state.world.environment.weather.updatedAt).toBe(6_000);
+
+    runTriggerTick(store, 7_000);
+    state = store.getState();
+    expect(state.world.environment.weather.updatedAt).toBe(6_000);
+
+    store.dispatch(setEnvironmentFlags({ curfewLevel: 3 }));
+    runTriggerTick(store, 8_000);
+    state = store.getState();
+    expect(state.world.environment.weather.presetId).toBe('weather.curfew.3');
+    expect(state.world.environment.weather.updatedAt).toBe(8_000);
+
+    expect(initialPreset).not.toBeNull();
   });
 });

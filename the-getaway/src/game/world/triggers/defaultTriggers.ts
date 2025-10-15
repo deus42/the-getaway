@@ -8,7 +8,6 @@ import {
   RumorRotationDefinition,
   SignageVariantDefinition,
   EnvironmentalNoteDefinition,
-  WeatherPresetDefinition,
 } from '../../../content/environment';
 import {
   registerEnvironmentalTriggers,
@@ -102,89 +101,69 @@ const createRumorTriggers = (): EnvironmentalTrigger[] => {
   });
 };
 
-const createWeatherTriggers = (): EnvironmentalTrigger[] => {
-  const curfewLevels = [0, 1, 2, 3];
+const chooseWeatherPresetForState = (state: RootState) => {
+  const { flags } = state.world.environment;
+  if (flags.curfewLevel < 3) {
+    const gangHeatPreset = getWeatherPresetForGangHeat(flags.gangHeat);
+    if (gangHeatPreset) {
+      return gangHeatPreset;
+    }
+  }
 
-  const curfewTriggers = curfewLevels
-    .map<WeatherPresetDefinition | undefined>((level) => getWeatherPresetForCurfewLevel(level))
-    .filter((preset): preset is WeatherPresetDefinition => Boolean(preset))
-    .map<EnvironmentalTrigger>((preset) => ({
-      id: `environment.weather.curfew.${preset.id}`,
-      cooldownMs: 2_000,
-      when: (state) => {
-        if (state.world.environment.flags.curfewLevel !== preset.value) {
-          return false;
-        }
-
-        return state.world.environment.weather.presetId !== preset.id;
-      },
-      fire: ({ dispatch, getState, now }) => {
-        const presetForOverride = getWeatherPresetForCurfewLevel(
-          getState().world.environment.flags.curfewLevel
-        );
-
-        if (!presetForOverride) {
-          return;
-        }
-
-        const locale = getState().settings.locale;
-        const logStrings = getSystemStrings(locale).logs;
-
-        dispatch(
-          applyEnvironmentWeather({
-            presetId: presetForOverride.id,
-            rainIntensity: presetForOverride.rainIntensity,
-            sirenLoop: presetForOverride.sirenLoop,
-            thunderActive: presetForOverride.thunderActive,
-            storyFunction: presetForOverride.storyFunction,
-            updatedAt: now,
-          })
-        );
-
-        dispatch(addLogMessage(logStrings.environmentWeatherShift(presetForOverride.description)));
-      },
-    }));
-
-  const gangHeatOverrides: EnvironmentalTrigger[] = ['med', 'high']
-    .map<GangHeatLevel>((level) => level)
-    .map((level) => getWeatherPresetForGangHeat(level))
-    .filter((preset): preset is WeatherPresetDefinition => Boolean(preset))
-    .map<EnvironmentalTrigger>((preset) => ({
-      id: `environment.weather.gangHeat.${preset.id}`,
-      cooldownMs: 2_000,
-      when: (state) => {
-        if (state.world.environment.flags.gangHeat !== preset.value) {
-          return false;
-        }
-
-        if (state.world.environment.flags.curfewLevel >= 3) {
-          // Highest curfew already covers thunder cues.
-          return false;
-        }
-
-        return state.world.environment.weather.presetId !== preset.id;
-      },
-      fire: ({ dispatch, getState, now }) => {
-        const locale = getState().settings.locale;
-        const logStrings = getSystemStrings(locale).logs;
-
-        dispatch(
-          applyEnvironmentWeather({
-            presetId: preset.id,
-            rainIntensity: preset.rainIntensity,
-            sirenLoop: preset.sirenLoop,
-            thunderActive: preset.thunderActive,
-            storyFunction: preset.storyFunction,
-            updatedAt: now,
-          })
-        );
-
-        dispatch(addLogMessage(logStrings.environmentWeatherShift(preset.description)));
-      },
-    }));
-
-  return [...curfewTriggers, ...gangHeatOverrides];
+  return getWeatherPresetForCurfewLevel(flags.curfewLevel) ?? null;
 };
+
+const createWeatherTriggers = (): EnvironmentalTrigger[] => [
+  {
+    id: 'environment.weather.update',
+    when: (state) => {
+      const desiredPreset = chooseWeatherPresetForState(state);
+
+      if (!desiredPreset) {
+        return false;
+      }
+
+      const weather = state.world.environment.weather;
+      const currentTimeOfDay = state.world.timeOfDay;
+      const presetChanged = weather.presetId !== desiredPreset.id;
+      const timeOfDayChanged = weather.timeOfDay !== currentTimeOfDay;
+
+      return presetChanged || timeOfDayChanged;
+    },
+    fire: ({ dispatch, getState, now }) => {
+      const state = getState();
+      const desiredPreset = chooseWeatherPresetForState(state);
+
+      if (!desiredPreset) {
+        return;
+      }
+
+      const previousWeather = state.world.environment.weather;
+      const currentTimeOfDay = state.world.timeOfDay;
+      const locale = state.settings.locale;
+      const logStrings = getSystemStrings(locale).logs;
+
+      dispatch(
+        applyEnvironmentWeather({
+          presetId: desiredPreset.id,
+          rainIntensity: desiredPreset.rainIntensity,
+          sirenLoop: desiredPreset.sirenLoop,
+          thunderActive: desiredPreset.thunderActive,
+          storyFunction: desiredPreset.storyFunction,
+          updatedAt: now,
+          timeOfDay: currentTimeOfDay,
+        })
+      );
+
+      if (
+        previousWeather.presetId !== desiredPreset.id ||
+        previousWeather.timeOfDay !== currentTimeOfDay
+      ) {
+        dispatch(addLogMessage(logStrings.environmentWeatherShift(desiredPreset.description)));
+      }
+    },
+  },
+];
 
 const createSignageTriggers = (): EnvironmentalTrigger[] => {
   const flags: Array<SignageVariantDefinition['flag']> = ['blackoutTier', 'supplyScarcity'];
