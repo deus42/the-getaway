@@ -1,4 +1,4 @@
-import { Dialogue, Quest, NPC, Item, Position, FactionId, FactionStanding } from '../../../game/interfaces/types';
+import { Dialogue, NPC, Item, Position, FactionId, FactionStanding } from '../../../game/interfaces/types';
 
 export type BuildingSignageStyle =
   | 'slums_scrap'
@@ -29,7 +29,6 @@ export interface LevelBuildingDefinition {
 
 export interface Level0LocaleContent {
   dialogues: Dialogue[];
-  quests: Quest[];
   npcBlueprints: Array<Omit<NPC, 'id'>>;
   itemBlueprints: Array<Omit<Item, 'id'>>;
   buildingDefinitions: LevelBuildingDefinition[];

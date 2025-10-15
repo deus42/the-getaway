@@ -86,6 +86,28 @@ flowchart LR
 </technical_flow>
 </architecture_section>
 
+<architecture_section id="narrative_resource_hierarchy" category="content_pipeline">
+<design_principles>
+- Standardise narrative data around stable resource keys (`levels.*`, `missions.*`, `quests.*`, `npcs.*`) so structural definitions stay immutable and language-agnostic.
+- Keep localisation bundles separate from structural content, letting writers update copy without touching TypeScript modules.
+- Validate cross-references (level ↔ mission ↔ quest ↔ NPC) automatically so regressions surface during CI/testing instead of in gameplay.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/narrative/structureTypes.ts</code_location> introduces canonical interfaces plus locale bundle contracts for levels, missions, quests, and NPC registrations.
+2. Structural definitions live under `src/content/levels/*/levelDefinition.ts`, `src/content/missions/**/missionDefinition.ts`, and `src/content/quests/**/questDefinition.ts`, with registries in `src/content/levels/index.ts`, `src/content/missions/index.ts`, and `src/content/quests/index.ts`.
+3. Localised strings consolidate into `src/content/locales/<locale>/{levels,missions,quests,npcs}.ts`, aggregated via <code_location>the-getaway/src/content/locales/index.ts</code_location>.
+4. Runtime loaders (`src/content/missions.ts`, `src/content/levels/level0/index.ts`, and `src/content/quests/builders.ts`) merge structural data with locale bundles to emit `MissionLevelDefinition` and `Quest` instances for Redux slices.
+5. <code_location>the-getaway/src/game/narrative/validateContent.ts</code_location> walks the hierarchy, confirming every reference resolves and every resource key has locale coverage; a Jest spec (`src/__tests__/narrativeValidation.test.ts`) keeps the check wired into the suite.
+</technical_flow>
+
+<pattern name="ResourceKeyLifecycle">
+- Authors add or modify structural content via the definition modules, wire resource keys into locale bundles, and register associated NPCs in `src/content/npcs/index.ts`.
+- Validation runs as part of the test suite, blocking commits that forget locale copy or miswire cross-resource keys.
+- UI and Redux consumers never read raw locale files; instead they call the derived builders so future content (additional locales or metadata) continues to flow through the same pipeline.
+</pattern>
+</architecture_section>
+
 <architecture_section id="command_shell_layout" category="ui_shell">
 <design_principles>
 - Maintain the three-column command shell while letting each sidebar collapse without removing it from the flex context so the world view can immediately claim the freed space.

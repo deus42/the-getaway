@@ -1552,6 +1552,37 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 </notes>
 </step>
 
+<step id="16.6" status="completed">
+<step_metadata>
+  <number>16.6</number>
+  <title>Standardize Level → Mission → Quest Hierarchy & Resource Keys</title>
+  <status>Completed</status>
+  <date>October 15, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added narrative structure contracts (`structureTypes.ts`) and registered level/mission/quest definitions plus NPC ownership metadata under `src/content/**`.
+2. Centralised localisation into `src/content/locales/<locale>` bundles and rewired mission/quest loaders to compose structural data with resource-keyed copy.
+3. Introduced the narrative validation utility with Jest coverage so missing locales or broken cross-references fail fast during development.
+</tasks>
+
+<implementation>
+- `getMissionManifest` now assembles objectives by resolving mission/quest definitions against locale bundles, while `buildQuestsForLevel` materialises Redux-ready quest instances for `level0` content.
+- `validateNarrativeContent` audits level, mission, quest, and NPC registries across all locales, surfaced through a dedicated Jest spec to keep the hierarchy airtight.
+</implementation>
+
+<code_reference file="the-getaway/src/game/narrative/structureTypes.ts" />
+<code_reference file="the-getaway/src/content/missions.ts" />
+<code_reference file="the-getaway/src/content/quests/builders.ts" />
+<code_reference file="the-getaway/src/game/narrative/validateContent.ts" />
+<code_reference file="the-getaway/src/content/locales/en/index.ts" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn test narrativeValidation.test.ts --watch=false`
+</validation>
+</step>
+
 <step id="35" status="completed">
 <step_metadata>
   <number>35</number>

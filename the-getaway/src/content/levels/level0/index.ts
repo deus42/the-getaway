@@ -3,7 +3,9 @@ import { Dialogue, Quest, NPC, Item, Position } from '../../../game/interfaces/t
 import { LevelBuildingDefinition, Level0LocaleContent } from './types';
 import { level0EnglishContent } from './locales/en';
 import { level0UkrainianContent } from './locales/uk';
+import { buildQuestsForLevel } from '../../quests/builders';
 
+const LEVEL_RESOURCE_KEY = 'levels.slums_command_grid';
 
 interface Level0Content {
   dialogues: Dialogue[];
@@ -43,16 +45,6 @@ const cloneDialogue = (dialogue: Dialogue): Dialogue => ({
         ? { ...option.factionRequirement }
         : undefined,
     })),
-  })),
-});
-
-const cloneQuest = (quest: Quest): Quest => ({
-  ...quest,
-  objectives: quest.objectives.map((objective) => ({
-    ...objective,
-  })),
-  rewards: quest.rewards.map((reward) => ({
-    ...reward,
   })),
 });
 
@@ -117,7 +109,7 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const source = LOCALE_CONTENT[locale] ?? level0EnglishContent;
 
   const dialogues = source.dialogues.map(cloneDialogue);
-  const quests = source.quests.map(cloneQuest);
+  const quests = buildQuestsForLevel(locale, LEVEL_RESOURCE_KEY);
   const npcBlueprints = source.npcBlueprints.map(cloneNPCBlueprint);
   const itemBlueprints = source.itemBlueprints.map(cloneItemBlueprint);
   const buildingDefinitions = source.buildingDefinitions.map((definition) =>

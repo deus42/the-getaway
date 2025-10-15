@@ -2,13 +2,6 @@
 
 <todo_list>
   <phase id="5" name="Narrative and Quest Layer">
-    <step id="16.6">
-      <step_metadata>
-        <number>16.6</number>
-        <title>Standardize Level → Mission → Quest Hierarchy &amp; Resource Keys</title>
-        <status>pending</status>
-      </step_metadata>
-    </step>
     <step id="16.7">
       <step_metadata>
         <number>16.7</number>
