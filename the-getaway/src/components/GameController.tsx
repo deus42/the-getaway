@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 import {
   movePlayer,
   updateActionPoints,
@@ -66,10 +66,13 @@ import {
 import { setOverlayEnabled } from "../store/surveillanceSlice";
 import { createScopedLogger } from "../utils/logger";
 import { triggerStorylet } from "../store/storyletSlice";
+import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistry";
+import { ensureDefaultEnvironmentalTriggersRegistered } from "../game/world/triggers/defaultTriggers";
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
   const dispatch = useDispatch<AppDispatch>();
+  const store = useStore<RootState>();
   const player = useSelector((state: RootState) => state.player.data);
   const encumbranceLevel = player.encumbrance.level;
   const encumbranceWarning = player.encumbrance.warning;
@@ -371,6 +374,8 @@ const GameController: React.FC = () => {
       return;
     }
 
+    ensureDefaultEnvironmentalTriggersRegistered();
+
     let frameId: number | null = null;
     let lastFrameTime = getNow();
 
@@ -397,6 +402,7 @@ const GameController: React.FC = () => {
         });
       }
 
+      tickEnvironmentalTriggers(dispatch, store.getState);
       frameId = window.requestAnimationFrame(tick);
     };
 
@@ -407,7 +413,7 @@ const GameController: React.FC = () => {
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [mapAreaId, dispatch, logStrings]);
+  }, [mapAreaId, dispatch, logStrings, store]);
 
   useEffect(() => {
     const handleTileClick = (event: Event) => {

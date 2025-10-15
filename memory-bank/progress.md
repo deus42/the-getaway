@@ -19,6 +19,48 @@
 </notes>
 </step>
 
+<step id="16.8" status="completed">
+<step_metadata>
+  <number>16.8</number>
+  <title>Environmental Story Triggers & Ambient Feedback</title>
+  <status>Completed</status>
+  <date>October 8, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Introduced serialisable environment state (`world.environment`) with narrative flags, rumor/signage/weather snapshots, and NPC ambient profiles threaded through the existing alert/curfew reducers.
+2. Authored environment content tables (rumors, notes, signage, weather) plus selectors so ambient copy stays data-driven and consistent with the tone set in `memory-bank/plot.md`.
+3. Shipped a reusable trigger registry and default trigger pack that rotates barfly gossip, toggles weather/sirens, swaps propaganda signage, and seeds collectible notes when flags flip.
+4. Wired GameController to tick the registry each frame and added focused Jest coverage to confirm rumors, signage, and notes respond to flag changes.
+</tasks>
+
+<implementation>
+- `worldSlice` now hydrates `EnvironmentState`, mirrors curfew/alert events into `gangHeat`, `curfewLevel`, `supplyScarcity`, and `blackoutTier`, and exposes helpers to persist signage, rumor sets, and spawned notes alongside NPC bark profiles.
+- Content under `src/content/environment` defines short-form rumors, notes, signage variants, and weather presets with story-function metadata; selectors in `worldSelectors.ts` deliver memoised reads for HUD consumers.
+- The trigger registry (`triggerRegistry.ts`) tracks cooldown/once semantics while `defaultTriggers.ts` maps table entries to Redux actions, logging swaps through the updated system strings.
+- `GameController` initialises and ticks triggers every animation frame so Phaser scenes and Redux stay synchronised; tests simulate flag shifts to verify rumor updates, signage swaps, and note drops land as expected.
+</implementation>
+
+<code_reference file="the-getaway/src/store/worldSlice.ts" />
+<code_reference file="the-getaway/src/game/interfaces/environment.ts" />
+<code_reference file="the-getaway/src/content/environment/index.ts" />
+<code_reference file="the-getaway/src/game/world/triggers/triggerRegistry.ts" />
+<code_reference file="the-getaway/src/game/world/triggers/defaultTriggers.ts" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/store/selectors/worldSelectors.ts" />
+<code_reference file="the-getaway/src/content/system/index.ts" />
+<code_reference file="the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/world/triggers/__tests__/defaultTriggers.test.ts --runInBand --silent`
+</validation>
+
+<notes>
+- Rumor copy, signage quips, and notes follow the straight-faced absurdity guidelines from `memory-bank/plot.md`, keeping punchlines in the final line for easy future audits.
+- Registry exposes a reset hook for tests; production code only registers once to prevent duplicate swaps when React remounts controllers.
+</notes>
+</step>
+
 <step id="25.4" status="completed">
 <step_metadata>
   <number>25.4</number>

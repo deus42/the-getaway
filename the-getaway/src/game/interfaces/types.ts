@@ -1,3 +1,5 @@
+import { StoryFunctionTag } from './environment';
+
 // Core Game Types and Interfaces
 
 // Position in the game grid
@@ -255,6 +257,12 @@ export interface NPC extends Entity {
   routine: RoutePoint[];
   dialogueId: string;
   isInteractive: boolean;
+  ambientProfile?: {
+    lines: string[];
+    storyFunction?: StoryFunctionTag;
+    sourceId?: string;
+    updatedAt?: number;
+  };
 }
 
 // Player skills

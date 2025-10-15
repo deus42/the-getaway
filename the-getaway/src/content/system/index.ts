@@ -45,6 +45,10 @@ export interface LogStrings {
   endingTurn: string;
   notEnoughStamina: (required: number, available: number) => string;
   tooTiredToSprint: string;
+  environmentRumorSwap: (description: string) => string;
+  environmentWeatherShift: (description: string) => string;
+  environmentSignageSwap: (text: string) => string;
+  environmentNoteSpawned: (description: string) => string;
 }
 
 interface SystemStrings {
@@ -104,6 +108,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       notEnoughStamina: (required, available) =>
         `Not enough stamina (need ${required}, have ${available}).`,
       tooTiredToSprint: 'You are too tired to sprint.',
+      environmentRumorSwap: (description) => `Rumor pulse rewired: ${description}.`,
+      environmentWeatherShift: (description) => `Weather hum shifts: ${description}.`,
+      environmentSignageSwap: (text) => `Signage flickers to: “${text}”.`,
+      environmentNoteSpawned: (description) => `Recovered note: ${description}.`,
     },
   },
   uk: {
@@ -158,6 +166,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       notEnoughStamina: (required, available) =>
         `Недостатньо витривалості (потрібно ${required}, маєте ${available}).`,
       tooTiredToSprint: 'Ви надто виснажені, щоб бігти.',
+      environmentRumorSwap: (description) => `Чутки змінюються: ${description}.`,
+      environmentWeatherShift: (description) => `Погода міняє тон: ${description}.`,
+      environmentSignageSwap: (text) => `Вивіска миготить: «${text}».`,
+      environmentNoteSpawned: (description) => `Знайдено записку: ${description}.`,
     },
   },
 };

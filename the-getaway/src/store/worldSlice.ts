@@ -1,6 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Enemy, NPC, Position, Item, AlertLevel } from '../game/interfaces/types';
+import {
+  EnvironmentFlags,
+  EnvironmentState,
+  WeatherStateSnapshot,
+  SignageStateSnapshot,
+  RumorSetSnapshot,
+  EnvironmentalNoteInstance,
+} from '../game/interfaces/environment';
 import { DEFAULT_LOCALE, Locale } from '../content/locales';
 import { getLevel0Content } from '../content/levels/level0';
 import { buildWorldResources, MapConnection } from '../game/world/worldMap';
@@ -26,9 +34,29 @@ export interface WorldState {
   turnCount: number;
   globalAlertLevel: AlertLevel;
   reinforcementsScheduled: boolean;
+  environment: EnvironmentState;
 }
 
 const log = createScopedLogger('worldSlice');
+
+const createInitialEnvironmentState = (): EnvironmentState => ({
+  flags: {
+    gangHeat: 'low',
+    curfewLevel: 0,
+    supplyScarcity: 'norm',
+    blackoutTier: 'none',
+  },
+  weather: {
+    presetId: null,
+    rainIntensity: 0,
+    thunderActive: false,
+    sirenLoop: false,
+    updatedAt: 0,
+  },
+  signage: {},
+  rumorSets: {},
+  notes: [],
+});
 
 const buildEnemy = (name: string): Enemy => ({
   id: uuidv4(),
@@ -79,6 +107,7 @@ const buildWorldState = (locale: Locale): WorldState => {
     turnCount: 1,
     globalAlertLevel: AlertLevel.IDLE,
     reinforcementsScheduled: false,
+    environment: createInitialEnvironmentState(),
   };
 };
 
@@ -88,6 +117,107 @@ export const worldSlice = createSlice({
   name: 'world',
   initialState,
   reducers: {
+    setEnvironmentFlags: (state, action: PayloadAction<Partial<EnvironmentFlags>>) => {
+      state.environment.flags = {
+        ...state.environment.flags,
+        ...action.payload,
+      };
+    },
+
+    applyEnvironmentWeather: (state, action: PayloadAction<WeatherStateSnapshot>) => {
+      state.environment.weather = { ...action.payload };
+    },
+
+    applyEnvironmentSignage: (
+      state,
+      action: PayloadAction<{ signId: string; snapshot: SignageStateSnapshot }>
+    ) => {
+      const { signId, snapshot } = action.payload;
+      state.environment.signage = {
+        ...state.environment.signage,
+        [signId]: { ...snapshot },
+      };
+    },
+
+    removeEnvironmentSignage: (state, action: PayloadAction<string>) => {
+      const { [action.payload]: _removed, ...rest } = state.environment.signage;
+      state.environment.signage = rest;
+    },
+
+    applyEnvironmentRumorSet: (
+      state,
+      action: PayloadAction<{ groupId: string; snapshot: RumorSetSnapshot }>
+    ) => {
+      const { groupId, snapshot } = action.payload;
+      state.environment.rumorSets = {
+        ...state.environment.rumorSets,
+        [groupId]: { ...snapshot },
+      };
+    },
+
+    removeEnvironmentRumorSet: (state, action: PayloadAction<string>) => {
+      const { [action.payload]: _removed, ...rest } = state.environment.rumorSets;
+      state.environment.rumorSets = rest;
+    },
+
+    registerEnvironmentalNote: (state, action: PayloadAction<EnvironmentalNoteInstance>) => {
+      const incoming = action.payload;
+      const existingIndex = state.environment.notes.findIndex(
+        (note) => note.instanceId === incoming.instanceId
+      );
+
+      if (existingIndex >= 0) {
+        state.environment.notes[existingIndex] = { ...incoming };
+      } else {
+        state.environment.notes.push({ ...incoming });
+      }
+    },
+
+    clearEnvironmentalNotesForArea: (state, action: PayloadAction<string>) => {
+      const areaId = action.payload;
+      state.environment.notes = state.environment.notes.filter(
+        (note) => note.areaId !== areaId
+      );
+    },
+
+    setNpcAmbientProfile: (
+      state,
+      action: PayloadAction<{
+        profile: NPC['ambientProfile'] | null;
+        match: { dialogueId?: string; name?: string };
+      }>
+    ) => {
+      const { profile, match } = action.payload;
+      const { dialogueId, name } = match;
+
+      const applyProfile = (npcs: NPC[]): NPC[] => {
+        let mutated = false;
+
+        const updated = npcs.map((npc) => {
+          const dialogueMatches = dialogueId ? npc.dialogueId === dialogueId : false;
+          const nameMatches = name ? npc.name === name : false;
+
+          if (!dialogueMatches && !nameMatches) {
+            return npc;
+          }
+
+          mutated = true;
+          return {
+            ...npc,
+            ambientProfile: profile ? { ...profile } : undefined,
+          };
+        });
+
+        return mutated ? updated : npcs;
+      };
+
+      state.currentMapArea.entities.npcs = applyProfile(state.currentMapArea.entities.npcs);
+
+      Object.values(state.mapAreas).forEach((area) => {
+        area.entities.npcs = applyProfile(area.entities.npcs);
+      });
+    },
+
     setMapArea: (state, action: PayloadAction<MapArea>) => {
       state.currentMapArea = action.payload;
       state.inCombat = false;
@@ -125,12 +255,30 @@ export const worldSlice = createSlice({
       state.currentTime += action.payload;
       state.timeOfDay = getCurrentTimeOfDay(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
       state.curfewActive = isCurfewTime(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
+      if (state.curfewActive) {
+        state.environment.flags.curfewLevel = state.reinforcementsScheduled ? 3 : 2;
+      } else {
+        state.environment.flags.curfewLevel = 0;
+      }
+
+      if (state.environment.flags.blackoutTier !== 'rolling') {
+        state.environment.flags.blackoutTier = state.curfewActive ? 'brownout' : 'none';
+      }
     },
 
     setGameTime: (state, action: PayloadAction<number>) => {
       state.currentTime = action.payload;
       state.timeOfDay = getCurrentTimeOfDay(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
       state.curfewActive = isCurfewTime(state.currentTime, DEFAULT_DAY_NIGHT_CONFIG);
+      if (state.curfewActive) {
+        state.environment.flags.curfewLevel = state.reinforcementsScheduled ? 3 : 2;
+      } else {
+        state.environment.flags.curfewLevel = 0;
+      }
+
+      if (state.environment.flags.blackoutTier !== 'rolling') {
+        state.environment.flags.blackoutTier = state.curfewActive ? 'brownout' : 'none';
+      }
     },
 
     enterCombat: (state) => {
@@ -305,19 +453,60 @@ export const worldSlice = createSlice({
 
     setGlobalAlertLevel: (state, action: PayloadAction<AlertLevel>) => {
       state.globalAlertLevel = action.payload;
+      const nextGangHeat =
+        action.payload === AlertLevel.ALARMED
+          ? 'high'
+          : action.payload === AlertLevel.IDLE
+          ? 'low'
+          : 'med';
+
+      const nextScarcity =
+        action.payload === AlertLevel.ALARMED
+          ? 'rationed'
+          : action.payload === AlertLevel.IDLE
+          ? 'norm'
+          : 'tight';
+
+      state.environment.flags.gangHeat = nextGangHeat;
+      state.environment.flags.supplyScarcity = nextScarcity;
+
+      if (action.payload === AlertLevel.ALARMED) {
+        state.environment.flags.blackoutTier = 'rolling';
+        state.environment.flags.curfewLevel = Math.max(state.environment.flags.curfewLevel, 3);
+      } else if (state.environment.flags.blackoutTier === 'rolling') {
+        state.environment.flags.blackoutTier = state.curfewActive ? 'brownout' : 'none';
+        state.environment.flags.curfewLevel = state.curfewActive ? 2 : 0;
+      }
     },
 
     scheduleReinforcements: (state) => {
       state.reinforcementsScheduled = true;
+      state.environment.flags.curfewLevel = 3;
+      if (state.globalAlertLevel === AlertLevel.ALARMED) {
+        state.environment.flags.blackoutTier = 'rolling';
+      }
     },
 
     clearReinforcementsSchedule: (state) => {
       state.reinforcementsScheduled = false;
+      state.environment.flags.curfewLevel = state.curfewActive ? 2 : 0;
+      if (state.environment.flags.blackoutTier !== 'rolling') {
+        state.environment.flags.blackoutTier = state.curfewActive ? 'brownout' : 'none';
+      }
     },
   },
 });
 
 export const {
+  setEnvironmentFlags,
+  applyEnvironmentWeather,
+  applyEnvironmentSignage,
+  removeEnvironmentSignage,
+  applyEnvironmentRumorSet,
+  removeEnvironmentRumorSet,
+  registerEnvironmentalNote,
+  clearEnvironmentalNotesForArea,
+  setNpcAmbientProfile,
   setMapArea,
   setCurrentMapAreaZoneMetadata,
   updateGameTime,
