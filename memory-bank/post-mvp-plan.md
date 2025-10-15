@@ -3,6 +3,39 @@
 This document catalogs Phase 9 optional expansions that were split out of `memory-bank/mvp-plan.md`. Step numbering is preserved to keep roadmap references intact.
 
 <phase id="9" name="Optional Expansions (POST-MVP)">
+<step id="40.2">
+<step_metadata>
+  <number>40.2</number>
+  <title>LLM-driven Narrative Orchestrator (PANGeA-style)</title>
+  <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+</step_metadata>
+
+<prerequisites>
+- Core dialogue system complete (Steps 15.x or equivalent)
+- Server infrastructure baseline deployed (auth, logging, rate limiting)
+</prerequisites>
+
+<instructions>
+Integrate a guardrailed LLM service that generates adaptive NPC dialogue and encounters from designer-authored rules, using a validation loop to enforce canon and tone.
+</instructions>
+
+<details>
+- Draft designer rule packs (`memory-bank/plot.md`, `memory-bank/game-design.md`) into machine-readable “Game Rules” fed to the service (allowed topics, banned actions, tone, fail conditions).
+- Stand up a Node-based narrative service (`services/narrative/`) with REST endpoints for session init, player turn submission, validator feedback, and memory updates. Wire it to an embeddings-backed memory store (e.g., vector DB or bespoke cosine matcher) for short- and long-term recall per playthrough.
+- Implement validation pipeline: rule checks, content filters, and structural validators (quest state alignment) that loop until responses meet constraints or escalate errors.
+- Generate NPC profiles using Big Five traits and faction metadata; persist them so repeated encounters stay consistent. Provide hooks so designers can seed fixed archetypes before runtime variation kicks in.
+- Bridge Phaser/React client to the narrative service via a lightweight HTTP client, handling conversational state, streaming outputs, and fallbacks when service is unavailable.
+- Document the workflow in `memory-bank/architecture.md` and add a companion `memory-bank/narrative-ai.md` outlining prompt schemas, validation stages, and operational safeguards.
+</details>
+
+<test>
+- Run service-level tests that feed sample player prompts through the validator to confirm tonal and rule compliance before dialogue is accepted.
+- Simulate multi-turn conversations with NPCs to ensure memory recall, personality consistency, and quest-state alignment.
+- Perform load and failure simulations (service unavailable, rate limits exceeded) so the client degrades gracefully to scripted dialogue.
+- Security review: confirm prompts and responses are logged/audited per privacy guidelines and that abuse filters block disallowed content.
+</test>
+</step>
+
 <step id="26.1">
 <step_metadata>
   <number>26.1</number>
