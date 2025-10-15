@@ -920,6 +920,39 @@ Inspect the generated map to verify doors sit on street tiles, no buildings over
 </test>
 </step>
 
+<step id="20.5">
+<step_metadata>
+  <number>20.5</number>
+  <title>Streamable World Parcel Infrastructure</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 20 completed (Downtown grid standardized into predictable parcels)
+- Step 18 completed (click-to-move + path previews functional)
+</prerequisites>
+
+<instructions>
+Introduce an on-demand parcel streaming layer so large districts can load and unload map chunks without blowing memory. Ensure scene streaming integrates with existing world map connections, NPC schedules, and ambient triggers.
+</instructions>
+
+<details>
+- Refactor `buildWorldResources` to emit parcel manifests (`ParcelDescriptor`) and defer tile/entity hydration to a new `parcelLoader` in `src/game/world/streaming/`.
+- Implement `ParcelStreamManager` that tracks active parcels around the player, preloads neighbors (configurable radius), and dispatches load/unload events to scenes, Redux slices, and trigger registries. Provide hooks for manual pinning (e.g., cinematics, boss fights).
+- Update pathfinding/grid systems to stitch parcel edges seamlessly—cache nav meshes per parcel, and rebuild adjacency when new chunks load. Include fallbacks when requested tiles belong to unloaded parcels (auto-request or return safe alternative).
+- Thread streaming events through `GameController`/Phaser scenes so entities spawn/despawn cleanly, loot persists, and lighting/FX layers rehydrate with minimal churn.
+- Extend save/load routines to serialize parcel cache metadata (loaded set, seed data) so reloads resume without full world regeneration.
+- Document the streaming architecture and authoring expectations in `memory-bank/architecture.md`, covering parcel sizing guidelines and performance targets.
+</details>
+
+<test>
+- Profiling pass: traverse multiple districts and confirm parcel load/unload stays under target budget (e.g., <50 ms spikes) with memory plateauing once cache warms.
+- Regression: run automated walk cycles that cross parcel boundaries; verify NPCs, triggers, and signage persist correctly and no duplicates spawn.
+- Save mid-transition with parcels loading; reload to ensure the active parcel set and entity states match pre-save conditions.
+- Stress test by teleporting between far-flung parcels; confirm manager handles rapid swaps without leaking references or crashing.
+</test>
+</step>
+
 <step id="21">
 <step_metadata>
   <number>21</number>

@@ -47,6 +47,13 @@
         <status>pending</status>
       </step_metadata>
     </step>
+    <step id="20.5">
+      <step_metadata>
+        <number>20.5</number>
+        <title>Streamable World Parcel Infrastructure</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
   </phase>
 
   <phase id="7" name="Character Progression and Inventory">
