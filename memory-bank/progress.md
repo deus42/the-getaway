@@ -61,6 +61,44 @@
 </notes>
 </step>
 
+<step id="16.9" status="completed">
+<step_metadata>
+  <number>16.9</number>
+  <title>Route Ambient World Events Through George Assistant</title>
+  <status>Completed</status>
+  <date>October 15, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Replaced the HUD ambient ticker by streaming rumor, signage, weather, and zone danger updates into George’s console with a dedicated Ambient Feed tab and dock highlight.
+2. Added `selectAmbientWorldSnapshot` plus a `GeorgeAmbientTracker` diff/cooldown layer so ambient triggers enqueue structured events without spamming repeat notifications.
+3. Localised the new ambient callouts (English/UA), introduced tone-aware formatters, and trimmed the legacy ticker component and strings from the app shell.
+</tasks>
+
+<implementation>
+- New snapshot types (`game/interfaces/georgeAssistant.ts`) and selectors (`store/selectors/worldSelectors.ts`) capture the latest environment state for the assistant.
+- `game/systems/georgeAssistant.ts` now exports `GeorgeAmbientTracker` with per-category cooldowns and is covered by `src/game/systems/__tests__/georgeAmbientTracker.test.ts`.
+- `components/ui/GeorgeAssistant.tsx` renders the Ambient Feed tab, dock alert visuals, and dock ticker integration while removing `components/ui/AmbientTicker.tsx` from `App.tsx`.
+- UI strings (`content/ui/index.ts`) gained ambient-feed formatters and flag vocabulary for both locales.
+</implementation>
+
+<code_reference file="the-getaway/src/game/interfaces/georgeAssistant.ts" />
+<code_reference file="the-getaway/src/store/selectors/worldSelectors.ts" />
+<code_reference file="the-getaway/src/game/systems/georgeAssistant.ts" />
+<code_reference file="the-getaway/src/game/systems/__tests__/georgeAmbientTracker.test.ts" />
+<code_reference file="the-getaway/src/components/ui/GeorgeAssistant.tsx" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+<code_reference file="the-getaway/src/App.tsx" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/systems/__tests__/georgeAmbientTracker.test.ts --runInBand`
+</validation>
+
+<notes>
+- Dock highlight auto-clears when players open the Ambient Feed, ensuring the ticker and badge never linger once updates are reviewed.
+</notes>
+</step>
+
 <step id="25.4" status="completed">
 <step_metadata>
   <number>25.4</number>

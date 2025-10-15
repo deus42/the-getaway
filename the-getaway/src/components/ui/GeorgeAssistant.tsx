@@ -12,11 +12,14 @@ import {
   selectNextPrimaryObjective,
   selectNextSideObjective,
 } from '../../store/selectors/missionSelectors';
+import { selectAmbientWorldSnapshot } from '../../store/selectors/worldSelectors';
 import {
   AssistantIntel,
+  GeorgeAmbientTracker,
   buildAssistantIntel,
   pickBanterLine,
   pickInterjectionLine,
+  GeorgeAmbientEvent,
 } from '../../game/systems/georgeAssistant';
 import type { FactionId } from '../../game/interfaces/types';
 import { GeorgeInterjectionTrigger, GeorgeLine } from '../../content/assistants/george';
@@ -34,6 +37,7 @@ const INTERJECTION_DISPLAY_MS = 5200;
 const AMBIENT_BANTER_MIN_MS = 48000;
 const AMBIENT_BANTER_MAX_MS = 96000;
 const DOCK_TICKER_INTERVAL_MS = 20000;
+const AMBIENT_FEED_LIMIT = 10;
 
 const FALLBACK_AMBIENT = [
   'Diagnostics show morale at "manageable"—keep it that way.',
@@ -50,6 +54,16 @@ type ConversationEntry = {
   actor: Actor;
   text: string;
   reference: string;
+};
+
+type AssistantTab = 'intel' | 'ambient';
+
+type AmbientFeedEntry = {
+  id: string;
+  category: GeorgeAmbientEvent['category'];
+  summary: string;
+  label: string;
+  timestamp: number;
 };
 
 const styles = `
@@ -90,6 +104,10 @@ const styles = `
   .george-dock-button.open {
     border-color: rgba(59, 130, 246, 0.45);
     transform: translateY(-1px);
+  }
+  .george-dock-button.alert {
+    border-color: rgba(16, 185, 129, 0.55);
+    box-shadow: 0 18px 32px rgba(14, 116, 144, 0.45);
   }
   .george-dock-button:focus-visible {
     outline: 2px solid rgba(125, 211, 252, 0.85);
@@ -282,6 +300,95 @@ const styles = `
     outline: 2px solid rgba(148, 211, 252, 0.82);
     outline-offset: 2px;
   }
+  .george-tabs {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.2rem 0;
+  }
+  .george-tab-button {
+    all: unset;
+    cursor: pointer;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.55);
+    color: rgba(226, 232, 240, 0.78);
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  }
+  .george-tab-button:hover {
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.35);
+  }
+  .george-tab-button:focus-visible {
+    outline: 2px solid rgba(94, 234, 212, 0.6);
+    outline-offset: 2px;
+  }
+  .george-tab-button.active {
+    background: rgba(37, 99, 235, 0.28);
+    border-color: rgba(125, 211, 252, 0.45);
+    color: rgba(226, 232, 240, 0.92);
+    box-shadow: 0 12px 20px rgba(15, 23, 42, 0.45);
+  }
+  .george-ambient-feed {
+    flex: 1 1 auto;
+    max-height: 320px;
+    min-height: 200px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-right: 0.3rem;
+  }
+  .george-ambient-feed::-webkit-scrollbar {
+    width: 6px;
+  }
+  .george-ambient-feed::-webkit-scrollbar-thumb {
+    background: rgba(16, 185, 129, 0.35);
+    border-radius: 999px;
+  }
+  .george-ambient-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 12px;
+    background: rgba(8, 47, 73, 0.55);
+    border: 1px solid rgba(45, 212, 191, 0.28);
+  }
+  .george-ambient-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.6rem;
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+  }
+  .george-ambient-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(125, 211, 252, 0.85);
+  }
+  .george-ambient-time {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.65);
+  }
+  .george-ambient-text {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: rgba(226, 232, 240, 0.88);
+  }
+  .george-ambient-empty {
+    font-size: 0.76rem;
+    line-height: 1.4;
+    color: rgba(148, 163, 184, 0.78);
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+  }
 `;
 
 const buildQuestReadout = (
@@ -319,6 +426,7 @@ const GeorgeAssistant: React.FC = () => {
   const factionReputation = useSelector(selectPlayerFactionReputation) as Record<FactionId, number>;
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
+  const ambientSnapshot = useSelector(selectAmbientWorldSnapshot);
 
   const intel = useMemo<AssistantIntel>(() => buildAssistantIntel({
     objectiveQueue,
@@ -351,6 +459,9 @@ const GeorgeAssistant: React.FC = () => {
   });
   const [interjection, setInterjection] = useState<string | null>(null);
   const [logEntries, setLogEntries] = useState<ConversationEntry[]>([]);
+  const [activeTab, setActiveTab] = useState<AssistantTab>('intel');
+  const [ambientEntries, setAmbientEntries] = useState<AmbientFeedEntry[]>([]);
+  const [hasAmbientPing, setHasAmbientPing] = useState(false);
 
   const cooldownRef = useRef<number>(0);
   const pendingInterjectionRef = useRef<GeorgeLine | null>(null);
@@ -358,6 +469,7 @@ const GeorgeAssistant: React.FC = () => {
   const factionRef = useRef<Record<FactionId, number>>(factionReputation);
   const alertRef = useRef({ level: world.globalAlertLevel, inCombat: world.inCombat });
   const ambientTimerRef = useRef<number | null>(null);
+  const ambientTrackerRef = useRef<GeorgeAmbientTracker | null>(null);
 
   const appendEntry = useCallback(
     (actor: Actor, text: string, referenceKey: keyof typeof georgeStrings.references) => {
@@ -504,6 +616,128 @@ const GeorgeAssistant: React.FC = () => {
     };
   }, [scheduleAmbientBanter]);
 
+  const formatTimestamp = useCallback((value: number): string => {
+    if (!value) {
+      return '';
+    }
+    try {
+      return new Intl.DateTimeFormat(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(value));
+    } catch {
+      return new Date(value).toLocaleTimeString();
+    }
+  }, [locale]);
+
+  const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): AmbientFeedEntry | null => {
+    const ambientFeed = georgeStrings.ambientFeed;
+    const alignment = personality.alignment;
+    const label = ambientFeed.categoryLabels[event.category] ?? event.category.toUpperCase();
+    const id = `${event.category}-${event.timestamp}-${Math.random().toString(36).slice(2)}`;
+
+    switch (event.category) {
+      case 'rumor': {
+        const line = event.lines.find((entry) => entry && entry.trim().length > 0)?.trim() ?? ambientFeed.fallbacks.rumor;
+        const storyLabel = event.storyFunction
+          ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
+            event.storyFunction.replace(/-/g, ' ').toUpperCase()
+          : undefined;
+        const summary = ambientFeed.formatRumor({ line, storyLabel }, alignment);
+        return {
+          id,
+          category: event.category,
+          summary,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'signage': {
+        const text = event.text && event.text.trim().length > 0 ? event.text.trim() : ambientFeed.fallbacks.signage;
+        const storyLabel = event.storyFunction
+          ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
+            event.storyFunction.replace(/-/g, ' ').toUpperCase()
+          : undefined;
+        const summary = ambientFeed.formatSignage({ text, storyLabel }, alignment);
+        return {
+          id,
+          category: event.category,
+          summary,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'weather': {
+        const description = event.description && event.description.trim().length > 0
+          ? event.description.trim()
+          : ambientFeed.fallbacks.weather;
+        const storyLabel = event.storyFunction
+          ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
+            event.storyFunction.replace(/-/g, ' ').toUpperCase()
+          : undefined;
+        const summary = ambientFeed.formatWeather({ description, storyLabel }, alignment);
+        return {
+          id,
+          category: event.category,
+          summary,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'zoneDanger': {
+        const dangerLevels = uiStrings.levelIndicator.dangerLevels;
+        const dangerLabel = event.dangerRating
+          ? dangerLevels[event.dangerRating] ?? event.dangerRating
+          : ambientFeed.dangerFallback;
+        const previousDangerLabel = event.previousDangerRating
+          ? dangerLevels[event.previousDangerRating] ?? event.previousDangerRating
+          : null;
+        const flagChanges = event.changedFlags.map((change) => ({
+          label: ambientFeed.flagLabels[change.key] ?? change.key,
+          previous: ambientFeed.formatFlagValue(change.key, change.previous),
+          next: ambientFeed.formatFlagValue(change.key, change.next),
+        }));
+        const summary = ambientFeed.formatZoneDanger(
+          {
+            zoneName: event.zoneName,
+            dangerLabel,
+            previousDangerLabel,
+            flagChanges,
+          },
+          alignment
+        );
+        return {
+          id,
+          category: event.category,
+          summary,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'hazardChange': {
+        const additions = event.added.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+        const removals = event.removed.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+        const summary = ambientFeed.formatHazards(
+          {
+            zoneName: event.zoneName,
+            additions,
+            removals,
+          },
+          alignment
+        );
+        return {
+          id,
+          category: event.category,
+          summary,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      default:
+        return null;
+    }
+  }, [georgeStrings.ambientFeed, personality.alignment, uiStrings.levelIndicator.dangerLevels]);
+
   useEffect(() => {
     const handleMissionAccomplished = (event: Event) => {
       const detail = (event as CustomEvent<MissionEventDetail>).detail;
@@ -545,6 +779,45 @@ const GeorgeAssistant: React.FC = () => {
     }
     completedQuestIdsRef.current = completed;
   }, [quests, queueInterjection]);
+
+  useEffect(() => {
+    if (!ambientSnapshot) {
+      return;
+    }
+    if (!ambientTrackerRef.current) {
+      ambientTrackerRef.current = new GeorgeAmbientTracker();
+      ambientTrackerRef.current.prime(ambientSnapshot);
+      return;
+    }
+
+    const tracker = ambientTrackerRef.current;
+    const events = tracker.collect(ambientSnapshot);
+    if (!events.length) {
+      return;
+    }
+
+    const formatted = events
+      .map((event) => formatAmbientEvent(event))
+      .filter((entry): entry is AmbientFeedEntry => entry !== null);
+    if (!formatted.length) {
+      return;
+    }
+
+    setAmbientEntries((prev) => {
+      const next = [...prev, ...formatted];
+      return next.slice(-AMBIENT_FEED_LIMIT);
+    });
+
+    if (!isOpen || activeTab !== 'ambient') {
+      setHasAmbientPing(true);
+    }
+  }, [ambientSnapshot, formatAmbientEvent, isOpen, activeTab]);
+
+  useEffect(() => {
+    if (isOpen && activeTab === 'ambient' && hasAmbientPing) {
+      setHasAmbientPing(false);
+    }
+  }, [isOpen, activeTab, hasAmbientPing]);
 
   useEffect(() => {
     const previous = factionRef.current;
@@ -605,6 +878,9 @@ const GeorgeAssistant: React.FC = () => {
         setIsOpen((prev) => {
           const next = !prev;
           if (next) {
+            if (hasAmbientPing) {
+              setActiveTab('ambient');
+            }
             respondToPrompt('guidance');
           }
           return next;
@@ -613,7 +889,7 @@ const GeorgeAssistant: React.FC = () => {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [respondToPrompt]);
+  }, [respondToPrompt, hasAmbientPing]);
 
   useEffect(() => {
     if (isOpen) {
@@ -622,7 +898,8 @@ const GeorgeAssistant: React.FC = () => {
   }, [isOpen, respondToPrompt]);
 
   const lastLog = logEntries.length > 0 ? logEntries[logEntries.length - 1] : null;
-  const baseTickerLine = interjection ?? lastLog?.text ?? georgeStrings.dockStatusIdle;
+  const latestAmbient = ambientEntries.length > 0 ? ambientEntries[ambientEntries.length - 1] : null;
+  const baseTickerLine = interjection ?? lastLog?.text ?? latestAmbient?.summary ?? georgeStrings.dockStatusIdle;
 
   const feedLines = useMemo(() => {
     const unique: string[] = [];
@@ -653,6 +930,7 @@ const GeorgeAssistant: React.FC = () => {
     }
 
     logEntries.slice(-2).forEach((entry) => push(entry.text));
+    ambientEntries.slice(-2).forEach((entry) => push(entry.summary));
     ambientLines.slice(0, 2).forEach((line) => push(line));
 
     if (unique.length === 0) {
@@ -660,7 +938,7 @@ const GeorgeAssistant: React.FC = () => {
     }
 
     return unique.slice(0, 6);
-  }, [ambientLines, baseTickerLine, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue, logEntries]);
+  }, [ambientEntries, ambientLines, baseTickerLine, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue, logEntries]);
 
   const feedSignature = useMemo(() => feedLines.join('|'), [feedLines]);
 
@@ -693,16 +971,27 @@ const GeorgeAssistant: React.FC = () => {
   const animateTicker = tickerText.length > 20;
 
   const logViewRef = useRef<HTMLDivElement | null>(null);
+  const ambientFeedRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const node = logViewRef.current;
-    if (!node) {
+    if (!node || activeTab !== 'intel') {
       return;
     }
     node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
-  }, [logEntries, isOpen]);
+  }, [logEntries, isOpen, activeTab]);
+
+  useEffect(() => {
+    const node = ambientFeedRef.current;
+    if (!node || activeTab !== 'ambient' || !isOpen) {
+      return;
+    }
+    node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
+  }, [ambientEntries, isOpen, activeTab]);
 
   const panelId = 'george-console-panel';
+  const intelPanelId = 'george-console-intel';
+  const ambientPanelId = 'george-console-ambient';
 
   return (
     <div className="george-layer">
@@ -710,10 +999,13 @@ const GeorgeAssistant: React.FC = () => {
       <div className="george-shell">
         <button
           type="button"
-          className={`george-dock-button ${isOpen ? 'open' : ''}`}
+          className={`george-dock-button${isOpen ? ' open' : ''}${hasAmbientPing ? ' alert' : ''}`}
           onClick={() => setIsOpen((prev) => {
             const next = !prev;
             if (next) {
+              if (hasAmbientPing) {
+                setActiveTab('ambient');
+              }
               respondToPrompt('guidance');
             }
             return next;
@@ -745,45 +1037,88 @@ const GeorgeAssistant: React.FC = () => {
               </div>
             )}
 
-            <div className="george-log-container">
-              <div className="george-log" role="log" aria-live="polite" ref={logViewRef}>
-                {logEntries.length === 0 ? (
-                  <div className="george-log-item">
-                    <div className="george-log-meta">
-                      <span className="george-log-actor">{georgeStrings.actors.george}</span>
-                      <span className="george-log-reference">{georgeStrings.references.guidance}</span>
-                    </div>
-                    <div className="george-log-text">{georgeStrings.logEmpty}</div>
-                  </div>
-                ) : (
-                  logEntries.map((entry, index) => (
-                    <div
-                      key={entry.id}
-                      className={`george-log-item george-log-item--${entry.actor}${index === logEntries.length - 1 ? ' george-log-item--latest' : ''}`}
-                    >
-                      <div className="george-log-meta">
-                        <span className="george-log-actor">{georgeStrings.actors[entry.actor]}</span>
-                        <span className="george-log-reference">{entry.reference}</span>
-                      </div>
-                      <div className="george-log-text">{entry.text}</div>
-                    </div>
-                  ))
-                )}
-              </div>
+            <div className="george-tabs" role="tablist" aria-label={georgeStrings.consoleTitle}>
+              <button
+                type="button"
+                role="tab"
+                className={`george-tab-button${activeTab === 'intel' ? ' active' : ''}`}
+                aria-selected={activeTab === 'intel'}
+                aria-controls={intelPanelId}
+                onClick={() => setActiveTab('intel')}
+              >
+                {georgeStrings.ambientFeed.tabs.intel}
+              </button>
+              <button
+                type="button"
+                role="tab"
+                className={`george-tab-button${activeTab === 'ambient' ? ' active' : ''}`}
+                aria-selected={activeTab === 'ambient'}
+                aria-controls={ambientPanelId}
+                onClick={() => setActiveTab('ambient')}
+              >
+                {georgeStrings.ambientFeed.tabs.ambient}
+              </button>
             </div>
 
-            <div className="george-actions">
-              {conversationOptions.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className="george-action-button"
-                  onClick={() => respondToPrompt(option.id)}
-                >
-                  {option.label}
-                </button>
-              ))}
+            <div className="george-log-container">
+              {activeTab === 'intel' ? (
+                <div className="george-log" id={intelPanelId} role="log" aria-live="polite" ref={logViewRef}>
+                  {logEntries.length === 0 ? (
+                    <div className="george-log-item">
+                      <div className="george-log-meta">
+                        <span className="george-log-actor">{georgeStrings.actors.george}</span>
+                        <span className="george-log-reference">{georgeStrings.references.guidance}</span>
+                      </div>
+                      <div className="george-log-text">{georgeStrings.logEmpty}</div>
+                    </div>
+                  ) : (
+                    logEntries.map((entry, index) => (
+                      <div
+                        key={entry.id}
+                        className={`george-log-item george-log-item--${entry.actor}${index === logEntries.length - 1 ? ' george-log-item--latest' : ''}`}
+                      >
+                        <div className="george-log-meta">
+                          <span className="george-log-actor">{georgeStrings.actors[entry.actor]}</span>
+                          <span className="george-log-reference">{entry.reference}</span>
+                        </div>
+                        <div className="george-log-text">{entry.text}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="george-ambient-feed" id={ambientPanelId} role="log" aria-live="polite" ref={ambientFeedRef}>
+                  {ambientEntries.length === 0 ? (
+                    <div className="george-ambient-empty">{georgeStrings.ambientFeed.empty}</div>
+                  ) : (
+                    ambientEntries.map((entry) => (
+                      <div key={entry.id} className="george-ambient-item">
+                        <div className="george-ambient-meta">
+                          <span className="george-ambient-label">{entry.label}</span>
+                          <span className="george-ambient-time">{formatTimestamp(entry.timestamp)}</span>
+                        </div>
+                        <div className="george-ambient-text">{entry.summary}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
+
+            {activeTab === 'intel' && (
+              <div className="george-actions">
+                {conversationOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className="george-action-button"
+                    onClick={() => respondToPrompt(option.id)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </div>

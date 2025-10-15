@@ -19,6 +19,11 @@ type StatFocusKey =
   | 'mobility'
   | 'fortuity';
 
+type PersonalityAlignment = 'earnest' | 'sarcastic' | 'ruthless' | 'stoic';
+type AmbientCategoryKey = 'rumor' | 'signage' | 'weather' | 'zoneDanger' | 'hazardChange';
+type StoryFunctionKey = 'foreshadow' | 'misdirect' | 'payoff' | 'world-building';
+type EnvironmentFlagKey = 'gangHeat' | 'curfewLevel' | 'supplyScarcity' | 'blackoutTier';
+
 interface MenuStrings {
   tag: string;
   title: string;
@@ -168,25 +173,6 @@ interface LevelIndicatorStrings {
   dangerLevels: Record<'low' | 'moderate' | 'high' | 'critical', string>;
 }
 
-interface AmbientTickerStrings {
-  panelTitle: string;
-  flagsLabel: string;
-  flagLabels: {
-    gangHeat: string;
-    curfew: string;
-    supply: string;
-    blackout: string;
-  };
-  rumorLabel: string;
-  signageLabel: string;
-  weatherLabel: string;
-  fallback: {
-    rumor: string;
-    signage: string;
-    weather: string;
-  };
-}
-
 interface MissionStrings {
   accomplishedTitle: string;
   accomplishedSubtitle: (levelName: string) => string;
@@ -240,6 +226,31 @@ interface GeorgeStrings {
   options: Record<'guidance' | 'status' | 'quests', string>;
   references: Record<'guidance' | 'status' | 'quests' | 'ambient' | 'prompt', string>;
   actors: Record<'george' | 'player', string>;
+  ambientFeed: {
+    tabs: { intel: string; ambient: string };
+    empty: string;
+    dockBadge: string;
+    categoryLabels: Record<AmbientCategoryKey, string>;
+    fallbacks: Record<'rumor' | 'signage' | 'weather', string>;
+    storyFunctionLabels: Record<StoryFunctionKey, string>;
+    flagLabels: Record<EnvironmentFlagKey, string>;
+    formatFlagValue: (key: EnvironmentFlagKey, value: string | number) => string;
+    dangerFallback: string;
+    formatRumor: (payload: { line: string; storyLabel?: string }, alignment: PersonalityAlignment) => string;
+    formatSignage: (payload: { text: string; storyLabel?: string }, alignment: PersonalityAlignment) => string;
+    formatWeather: (payload: { description: string; storyLabel?: string }, alignment: PersonalityAlignment) => string;
+    formatZoneDanger: (payload: {
+      zoneName?: string | null;
+      dangerLabel: string;
+      previousDangerLabel?: string | null;
+      flagChanges: Array<{ label: string; previous: string; next: string }>;
+    }, alignment: PersonalityAlignment) => string;
+    formatHazards: (payload: {
+      zoneName?: string | null;
+      additions: string[];
+      removals: string[];
+    }, alignment: PersonalityAlignment) => string;
+  };
   ambient: string[];
 }
 
@@ -253,7 +264,6 @@ interface UIStrings {
   miniMap: MiniMapStrings;
   dayNight: DayNightStrings;
   levelIndicator: LevelIndicatorStrings;
-  ambientTicker: AmbientTickerStrings;
   dialogueOverlay: DialogueOverlayStrings;
   perks: PerkStrings;
   skills: Record<SkillKey, string>;
@@ -439,24 +449,6 @@ const STRINGS: Record<Locale, UIStrings> = {
         critical: 'Critical',
       },
     },
-    ambientTicker: {
-      panelTitle: 'Ambient Feed',
-      flagsLabel: 'World Flags',
-      flagLabels: {
-        gangHeat: 'Gang Heat',
-        curfew: 'Curfew Tier',
-        supply: 'Supply Scarcity',
-        blackout: 'Blackout Tier',
-      },
-      rumorLabel: 'Latest Rumor',
-      signageLabel: 'Signage Swap',
-      weatherLabel: 'Weather Preset',
-      fallback: {
-        rumor: 'No rumors circulating.',
-        signage: 'Signage stable.',
-        weather: 'Weather steady.',
-      },
-    },
     dialogueOverlay: {
       closeButton: 'Close',
       questLocks: {
@@ -518,6 +510,152 @@ const STRINGS: Record<Locale, UIStrings> = {
       actors: {
         george: 'GEORGE',
         player: 'YOU',
+      },
+      ambientFeed: {
+        tabs: {
+          intel: 'Intel Feed',
+          ambient: 'Ambient Feed',
+        },
+        empty: 'No ambient signals logged yet.',
+        dockBadge: 'Ambient ping',
+        categoryLabels: {
+          rumor: 'Rumor',
+          signage: 'Signage',
+          weather: 'Weather',
+          zoneDanger: 'Danger',
+          hazardChange: 'Hazards',
+        },
+        fallbacks: {
+          rumor: 'No rumors circulating.',
+          signage: 'Signage stable.',
+          weather: 'Weather steady.',
+        },
+        storyFunctionLabels: {
+          foreshadow: 'Foreshadow',
+          misdirect: 'Misdirect',
+          payoff: 'Payoff',
+          'world-building': 'World Beat',
+        },
+        flagLabels: {
+          gangHeat: 'Gang Heat',
+          curfewLevel: 'Curfew Tier',
+          supplyScarcity: 'Supply Lines',
+          blackoutTier: 'Grid Status',
+        },
+        formatFlagValue: (key, value) => {
+          switch (key) {
+            case 'gangHeat': {
+              const mapping: Record<string, string> = {
+                low: 'LOW',
+                med: 'ELEVATED',
+                high: 'LOCKDOWN',
+              };
+              return mapping[String(value)] ?? String(value).toUpperCase();
+            }
+            case 'supplyScarcity': {
+              const mapping: Record<string, string> = {
+                norm: 'NORMAL',
+                tight: 'TIGHT',
+                rationed: 'RATIONED',
+              };
+              return mapping[String(value)] ?? String(value).toUpperCase();
+            }
+            case 'blackoutTier': {
+              const mapping: Record<string, string> = {
+                none: 'NONE',
+                brownout: 'BROWNOUT',
+                rolling: 'ROLLING',
+              };
+              return mapping[String(value)] ?? String(value).toUpperCase();
+            }
+            case 'curfewLevel': {
+              const tier = Number(value);
+              if (!Number.isFinite(tier) || tier <= 0) {
+                return 'OFF';
+              }
+              return `TIER ${tier}`;
+            }
+            default:
+              return String(value).toUpperCase();
+          }
+        },
+        dangerFallback: 'Danger steady.',
+        formatRumor: ({ line, storyLabel }, alignment) => {
+          const suffix = storyLabel ? ` (${storyLabel})` : '';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Gossip wire update: ${line}${suffix}. Try not to look surprised.`;
+            case 'ruthless':
+              return `Rumor ping logged: ${line}${suffix}. Treat it as actionable until proven soft.`;
+            case 'stoic':
+              return `Rumor archived: ${line}${suffix}. Monitoring for confirmation.`;
+            default:
+              return `Street whisper: ${line}${suffix}. Stay sharp out there.`;
+          }
+        },
+        formatSignage: ({ text, storyLabel }, alignment) => {
+          const suffix = storyLabel ? ` (${storyLabel})` : '';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Prop desk swapped the billboards again: ${text}${suffix}. Clap if the drones notice.`;
+            case 'ruthless':
+              return `Signage intercept: ${text}${suffix}. Bank it for propaganda leverage.`;
+            case 'stoic':
+              return `Signage update: ${text}${suffix}. Logging the change for records.`;
+            default:
+              return `Fresh signage drop: ${text}${suffix}. Shelterline will appreciate the morale boost.`;
+          }
+        },
+        formatWeather: ({ description, storyLabel }, alignment) => {
+          const suffix = storyLabel ? ` (${storyLabel})` : '';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Sky mood swing: ${description}${suffix}. Pack a poncho or an attitude.`;
+            case 'ruthless':
+              return `Weather shift logged: ${description}${suffix}. Adjust tactics accordingly.`;
+            case 'stoic':
+              return `Atmospheric update: ${description}${suffix}. Calibrating alerts.`;
+            default:
+              return `Weather drift: ${description}${suffix}. Keep the crew dry and breathing.`;
+          }
+        },
+        formatZoneDanger: ({ zoneName, dangerLabel, previousDangerLabel, flagChanges }, alignment) => {
+          const zone = zoneName ?? 'this sector';
+          const dangerSummary =
+            previousDangerLabel && previousDangerLabel !== dangerLabel
+              ? `${dangerLabel.toUpperCase()} (was ${previousDangerLabel.toUpperCase()})`
+              : dangerLabel.toUpperCase();
+          const flagSummary = flagChanges.length
+            ? flagChanges.map((change) => `${change.label}: ${change.next}`).join(' · ')
+            : 'No flag shifts.';
+          const base = `${zone}: danger now ${dangerSummary}. ${flagSummary}`;
+          switch (alignment) {
+            case 'sarcastic':
+              return `Conditions report: ${base} Try not to make it worse.`;
+            case 'ruthless':
+              return `Operational alert: ${base} Leverage the churn.`;
+            case 'stoic':
+              return `Zone telemetry: ${base} Updating playbook.`;
+            default:
+              return `Heads-up: ${base} Keep civilians breathing.`;
+          }
+        },
+        formatHazards: ({ zoneName, additions, removals }, alignment) => {
+          const zone = zoneName ?? 'this sector';
+          const additionText = additions.length ? `New hazard: ${additions.join(', ')}.` : '';
+          const removalText = removals.length ? `Cleared: ${removals.join(', ')}.` : '';
+          const summary = [additionText, removalText].filter(Boolean).join(' ') || 'No changes recorded.';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Hazard graffiti for ${zone}: ${summary} Welcome to the obstacle course.`;
+            case 'ruthless':
+              return `Hazard ledger (${zone}): ${summary} Exploit the chaos.`;
+            case 'stoic':
+              return `Hazard register (${zone}): ${summary} Logging adjustments.`;
+            default:
+              return `Hazard update for ${zone}: ${summary} Stay nimble.`;
+          }
+        },
       },
       ambient: [
         'Diagnostics show morale at "manageable"—keep it that way.',
@@ -741,24 +879,6 @@ const STRINGS: Record<Locale, UIStrings> = {
         critical: 'Критична',
       },
     },
-    ambientTicker: {
-      panelTitle: 'Стрічка середовища',
-      flagsLabel: 'Прапорці світу',
-      flagLabels: {
-        gangHeat: 'Активність банд',
-        curfew: 'Рівень комендантської',
-        supply: 'Дефіцит постачання',
-        blackout: 'Рівень відключень',
-      },
-      rumorLabel: 'Останній слух',
-      signageLabel: 'Оновлена вивіска',
-      weatherLabel: 'Погодний режим',
-      fallback: {
-        rumor: 'Слухів не помічено.',
-        signage: 'Вивіски без змін.',
-        weather: 'Погода стабільна.',
-      },
-    },
     dialogueOverlay: {
       closeButton: 'Закрити',
       questLocks: {
@@ -823,6 +943,152 @@ const STRINGS: Record<Locale, UIStrings> = {
       actors: {
         george: 'ДЖОРДЖ',
         player: 'ТИ',
+      },
+      ambientFeed: {
+        tabs: {
+          intel: 'Інтел-стрічка',
+          ambient: 'Середовище',
+        },
+        empty: 'Сигнали середовища ще не зафіксовані.',
+        dockBadge: 'Сигнал середовища',
+        categoryLabels: {
+          rumor: 'Поголос',
+          signage: 'Вивіски',
+          weather: 'Погода',
+          zoneDanger: 'Небезпека',
+          hazardChange: 'Небезпеки',
+        },
+        fallbacks: {
+          rumor: 'Слухів не помічено.',
+          signage: 'Вивіски без змін.',
+          weather: 'Погода стабільна.',
+        },
+        storyFunctionLabels: {
+          foreshadow: 'Передвістя',
+          misdirect: 'Відволікання',
+          payoff: 'Розв’язка',
+          'world-building': 'Світ',
+        },
+        flagLabels: {
+          gangHeat: 'Активність банд',
+          curfewLevel: 'Рівень комендантської',
+          supplyScarcity: 'Ланцюги постачання',
+          blackoutTier: 'Статус мережі',
+        },
+        formatFlagValue: (key, value) => {
+          switch (key) {
+            case 'gangHeat': {
+              const mapping: Record<string, string> = {
+                low: 'НИЗЬКА',
+                med: 'ПІДВИЩЕНА',
+                high: 'БЛОКАДА',
+              };
+              return mapping[String(value)] ?? String(value).toUpperCase();
+            }
+            case 'supplyScarcity': {
+              const mapping: Record<string, string> = {
+                norm: 'НОРМА',
+                tight: 'ОБМЕЖЕНА',
+                rationed: 'РАЦІОН',
+              };
+              return mapping[String(value)] ?? String(value).toUpperCase();
+            }
+            case 'blackoutTier': {
+              const mapping: Record<string, string> = {
+                none: 'НЕМАЄ',
+                brownout: 'ПРИГЛУШЕНЕ',
+                rolling: 'ХВИЛЬОВЕ',
+              };
+              return mapping[String(value)] ?? String(value).toUpperCase();
+            }
+            case 'curfewLevel': {
+              const tier = Number(value);
+              if (!Number.isFinite(tier) || tier <= 0) {
+                return 'ВИМКНЕНО';
+              }
+              return `РІВЕНЬ ${tier}`;
+            }
+            default:
+              return String(value).toUpperCase();
+          }
+        },
+        dangerFallback: 'Небезпека без змін.',
+        formatRumor: ({ line, storyLabel }, alignment) => {
+          const suffix = storyLabel ? ` (${storyLabel})` : '';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Піратські хвилі шепочуть: ${line}${suffix}. Не роби вигляд, що здивований.`;
+            case 'ruthless':
+              return `Оперативний слух: ${line}${suffix}. Використаємо, якщо підтвердиться.`;
+            case 'stoic':
+              return `Поголос зафіксовано: ${line}${suffix}. Слідкую за підтвердженням.`;
+            default:
+              return `Новий поголос: ${line}${suffix}. Бережи наших.`;
+          }
+        },
+        formatSignage: ({ text, storyLabel }, alignment) => {
+          const suffix = storyLabel ? ` (${storyLabel})` : '';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Пропагандисти перемалювали вивіски: ${text}${suffix}. Хай дрони захлинаються плакатами.`;
+            case 'ruthless':
+              return `Вивіски оновлено: ${text}${suffix}. Обернемо на свою користь.`;
+            case 'stoic':
+              return `Оновлення вивісок: ${text}${suffix}. Фіксую в журналі.`;
+            default:
+              return `Нова вивіска на районах: ${text}${suffix}. Люди матимуть привід усміхнутися.`;
+          }
+        },
+        formatWeather: ({ description, storyLabel }, alignment) => {
+          const suffix = storyLabel ? ` (${storyLabel})` : '';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Небо знову в настрої: ${description}${suffix}. Парасоля чи сарказм — обирай.`;
+            case 'ruthless':
+              return `Погодна поправка: ${description}${suffix}. Перебудовую маршрути.`;
+            case 'stoic':
+              return `Атмосферний звіт: ${description}${suffix}. Синхронізую сирени.`;
+            default:
+              return `Погодний дрейф: ${description}${suffix}. Тримай команду в теплі.`;
+          }
+        },
+        formatZoneDanger: ({ zoneName, dangerLabel, previousDangerLabel, flagChanges }, alignment) => {
+          const zone = zoneName ?? 'цей сектор';
+          const dangerSummary =
+            previousDangerLabel && previousDangerLabel !== dangerLabel
+              ? `${dangerLabel.toUpperCase()} (було ${previousDangerLabel.toUpperCase()})`
+              : dangerLabel.toUpperCase();
+          const flagSummary = flagChanges.length
+            ? flagChanges.map((change) => `${change.label}: ${change.next}`).join(' · ')
+            : 'Без змін прапорців.';
+          const base = `${zone}: небезпека тепер ${dangerSummary}. ${flagSummary}`;
+          switch (alignment) {
+            case 'sarcastic':
+              return `Зведення умов: ${base} Спробуй не погіршити статистику.`;
+            case 'ruthless':
+              return `Тривога по району: ${base} Використаємо турбулентність.`;
+            case 'stoic':
+              return `Телеметрія сектора: ${base} Перераховую маршрути.`;
+            default:
+              return `Попередження: ${base} Пильнуй цивільних.`;
+          }
+        },
+        formatHazards: ({ zoneName, additions, removals }, alignment) => {
+          const zone = zoneName ?? 'цей сектор';
+          const additionText = additions.length ? `Новий ризик: ${additions.join(', ')}.` : '';
+          const removalText = removals.length ? `Усунуто: ${removals.join(', ')}.` : '';
+          const summary = [additionText, removalText].filter(Boolean).join(' ') || 'Змін не виявлено.';
+          switch (alignment) {
+            case 'sarcastic':
+              return `Дошка небезпек для ${zone}: ${summary} Прохідний двір зі спецефектами.`;
+            case 'ruthless':
+              return `Реєстр небезпек (${zone}): ${summary} Плануємо удари відповідно.`;
+            case 'stoic':
+              return `Журнал небезпек (${zone}): ${summary} Запис зроблено.`;
+            default:
+              return `Оновлення небезпек у ${zone}: ${summary} Тримайся гнучко.`;
+          }
+        },
       },
       ambient: [
         'Сенсори показують, що мораль «прийнятна» — тримайся цього рівня.',

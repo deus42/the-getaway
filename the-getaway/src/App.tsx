@@ -7,7 +7,6 @@ import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
 import LevelIndicator from "./components/ui/LevelIndicator";
-import AmbientTicker from "./components/ui/AmbientTicker";
 import GeorgeAssistant from "./components/ui/GeorgeAssistant";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
@@ -494,7 +493,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
               collapsed={levelPanelCollapsed}
               onToggle={onToggleLevelPanel}
             />
-            <AmbientTicker />
           </div>
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />
