@@ -593,6 +593,38 @@ Click long-distance destinations across multiple doors, confirm the preview matc
 </test>
 </step>
 
+<step id="18.5">
+<step_metadata>
+  <number>18.5</number>
+  <title>Centralize Depth Ordering and Camera PostFX Defaults</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 17 completed (baseline isometric projection in place)
+- Step 18 completed (click-to-move path previews wired through MainScene)
+</prerequisites>
+
+<instructions>
+Unify draw-order determinism and camera-wide post-processing so every scene renders through a single, documented pipeline.
+</instructions>
+
+<details>
+- Stand up `src/game/utils/depth.ts` with a `computeDepth(sx, sy, bias = 0)` helper that returns `(sy << 10) + (sx & 0x3ff) + bias` and export bias constants for UI overlays, tall props, and debug layers.
+- Add a `DepthManager` (or equivalent service) that registers dynamic game objects from `MainScene` and performs a single pre-update pass each frame to assign depth via `computeDepth`, removing ad-hoc `setDepth` calls from factories and entity classes. Provide override hooks for objects that must pin to reserved bands (e.g., day/night overlay, path previews).
+- Refactor `IsoObjectFactory`, `CameraSprite`, combat markers, and other render helpers to rely on the centralized manager for depth, keeping any remaining offsets in one `DepthBiasConfig`.
+- Move default visual FX (bloom, vignette, color grading) onto the primary camera with toggles exposed through `src/game/settings/visualSettings.ts`, and ensure object-level FX are limited to unique cases.
+- Author `memory-bank/rendering.md` that captures the depth rule, bias bands, camera FX order, and guidelines for introducing new FX or overlays. Link to this doc from `memory-bank/architecture.md` once implemented.
+</details>
+
+<test>
+- Spawn a representative scene (player, enemies, tall props, overlays) and confirm depth remains stable while moving, zooming, and panning without per-entity overrides.
+- Verify reserved bands keep the day-night overlay, HUD bridges, and debug paths clamped above/below dynamic actors.
+- Toggle camera FX defaults on/off to confirm they apply globally and avoid duplicating shaders on individual sprites.
+- Run unit coverage on `computeDepth` to ensure the helper respects clamped ranges and bias handling.
+</test>
+</step>
+
 <step id="19">
 <step_metadata>
   <number>19</number>

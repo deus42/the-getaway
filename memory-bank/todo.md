@@ -2,6 +2,13 @@
 
 <todo_list>
   <phase id="6" name="Visual and Navigation Upgrades">
+    <step id="18.5">
+      <step_metadata>
+        <number>18.5</number>
+        <title>Centralize Depth Ordering and Camera PostFX Defaults</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
     <step id="19.6">
       <step_metadata>
         <number>19.6</number>
