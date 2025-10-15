@@ -12,6 +12,13 @@
   </phase>
 
   <phase id="6" name="Visual and Navigation Upgrades">
+    <step id="19.6">
+      <step_metadata>
+        <number>19.6</number>
+        <title>Implement Witness Memory & Regional Heat</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
     <step id="19.8">
       <step_metadata>
         <number>19.8</number>

@@ -155,6 +155,38 @@ The city remembers what it actually sees. Instead of a single global meter, repu
 This system reinforces stealth, intimidation, and altruism builds by rewarding intentional play in front of the right audience while keeping the city’s reaction plausibly fragmented.
 </mechanic>
 
+<mechanic name="witness_memory_heat">
+Witness Memory & Regional Heat
+
+Binary "wanted" flags flatten stealth play. Instead, eyewitnesses retain fuzzy memories that cool over time unless refreshed, and nearby security forces read the hottest memories to decide how aggressively they respond.
+
+**Witness Memory Model**
+	•	Every NPC who positively identifies the player (or their vehicle/disguise) records a `WitnessMemory` `{ targetId, certainty, recognitionChannel, lastSeenAt, halfLife, reinforcedAt?, reported }`.
+	•	`certainty ∈ [0,1]` expresses how confident the witness is; direct, well-lit sightings trend toward 0.8–1.0 while peripheral glimpses land near 0.2–0.4.
+	•	Decay follows a configurable half-life tuned per district density (crowded downtown = 72 in-game hours, rural outskirts = 168). Designers can adjust half-lives to pace stealth fantasy per zone.
+
+```
+certainty_w(t) = certainty_w(t0) * 0.5 ^ ((t - t0) / half_life)
+```
+
+**Reinforcement & Suppression**
+	•	Repeat sightings, guard briefings, or seeing wanted posters refresh `lastSeenAt` and add certainty (clamped at 1). Recognition channels (`face`, `outfit`, `vehicle`, `gait/voice`) stack so swapping cars removes vehicle memories without invalidating facial recognition.
+	•	Bribes, intimidation, or trusted alibis can mark a memory as `suppressed`, immediately lowering certainty or capping future reinforcement gains until the witness is convinced again.
+	•	Lighting, distance, disguise quality, crouch state, and crowd density reduce incremental certainty gains to reward smart stealth play. Night operations combined with high-tier disguises may keep certainty below the reporting threshold.
+
+**Regional Heat Calculation**
+	•	Each map cell or district aggregates the top-K active memories (default 5) weighting certainty by proximity and whether the witness has reported to authorities.
+	•	Heat tiers: `0–0.4 = calm`, `0.4–0.7 = tracking` (guards fan out, passive searches), `0.7+ = crackdown` (reinforcements, checkpoints). Designers can override thresholds per faction temperament.
+	•	Heat naturally subsides as memories decay. No magical timer clears suspicion—the player must hide, relocate, or disrupt reinforcement loops to cool a district.
+
+**Player Counterplay**
+	•	Disguises, vehicle swaps, and night travel erode specific recognition channels, letting players strategically break links without wiping all notoriety.
+	•	Destroying cameras or silencing witnesses prevents reinforcement. Conversely, letting witnesses gossip kicks certainty into the guard network faster.
+	•	Debug-facing HUD overlays (or George’s dev feed) can surface leading witnesses and current heat bands for balancing without exposing meta numbers to players.
+
+This mechanic grounds stealth tension in human memory—witnesses forget, rumors blur, and thoughtful downtime matters—while dovetailing with the localized reputation network for longer-term social consequences.
+</mechanic>
+
 <mechanic name="ai_assistant">
 AI Assistant & Player Guidance
 

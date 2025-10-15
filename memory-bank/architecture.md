@@ -305,6 +305,34 @@ flowchart LR
 <code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location>
 </architecture_section>
 
+<architecture_section id="witness_memory_heat" category="gameplay_systems">
+<design_principles>
+- Model suspicion as decaying eyewitness memory so stealth pressure emerges from elapsed time and behaviour rather than scripted cooldowns.
+- Keep per-witness data local to observers while exposing aggregated heat via memoised selectors that HUD, AI, and content systems can share.
+- Synchronise decay with world time controls (pause, cutscenes, dialogue) to avoid double ticks or skipped updates during freezes.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/systems/suspicion/witnessMemory.ts</code_location> defines the `WitnessMemory` model plus `decayWitnessMemory`, `reinforceWitnessMemory`, and pruning helpers parameterised by half-life and certainty floor.
+2. <code_location>the-getaway/src/game/systems/suspicion/suspicionSystem.ts</code_location> listens to guard vision cone events (Step 19) and surveillance detections (Step 19.5), applies disguise/lighting/crowd modifiers, and creates or reinforces memories per witness and recognition channel.
+3. <code_location>the-getaway/src/store/suspicionSlice.ts</code_location> (or an extended `worldSlice`) stores memories keyed by zone, exposes `selectHeatByZone`, `selectLeadingWitnesses`, and derives alert tiers from the top-K weighted memories (certainty × proximity × report status).
+4. <code_location>the-getaway/src/game/systems/ai/guardResponseCoordinator.ts</code_location> consumes heat tiers to escalate patrol density, checkpoint lockdowns, and combat readiness, reverting to calm behaviour as heat cools.
+5. <code_location>the-getaway/src/components/debug/SuspicionInspector.tsx</code_location> and <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> surface developer-facing heat telemetry and witness breakdowns gated behind feature flags.
+</technical_flow>
+
+<pattern name="WitnessDecayScheduler">
+- `GameController` advances suspicion ticks alongside world time pulses, skipping decay when `time.isFrozen` (menus, dialogue) and clamping certainty within [0,1].
+- Memories below the configured floor (default 0.05) are pruned immediately; suppressed memories remain stored but excluded from aggregation until reactivated.
+- Save/load serialises witness snapshots `{ witnessId, recognitionChannel, certainty, lastSeenAt, halfLife, reported, suppressed }` with schema version guards.
+</pattern>
+
+<pattern name="HeatTierThresholds">
+- Zone heat tiers map to enumerated guard states (`calm`, `tracking`, `crackdown`) so AI, HUD, and quests share a single source of truth instead of hard-coded floats.
+- Aggregation sums the top-K certainty scores (default 5) multiplied by proximity and report multipliers, preventing dozens of faint memories from dwarfing primary witnesses.
+- Designers override half-life and tier thresholds per district via `src/content/suspicion/heatProfiles.ts` to support paranoid corporate sectors versus sleepy outskirts without code edits.
+</pattern>
+</architecture_section>
+
 <architecture_section id="localized_reputation_network" category="gameplay_systems">
 <design_principles>
 - Scope notoriety updates to the smallest meaningful audience first (witness → faction → neighborhood) so systemic reactions stay believable and performant.

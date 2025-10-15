@@ -706,6 +706,34 @@ Wait until nighttime and verify "CURFEW ACTIVE" notification appears with all ca
 </test>
 </step>
 
+<step id="19.6">
+<step_metadata>
+  <number>19.6</number>
+  <title>Implement Witness Memory & Regional Heat</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<instructions>
+Model NPC suspicion as decaying eyewitness memory that aggregates into zone heat instead of binary wanted flags.
+</instructions>
+
+<details>
+- **Suspicion Module**: Stand up `src/game/systems/suspicion/` with `WitnessMemory` models, decay/reinforce helpers, and pruning thresholds (`certainty < 0.05`). Expose utilities for half-life tuned decay, reinforcement payloads, and serialization.
+- **Guard Perception Hooks**: When Step 19 vision cones or Step 19.5 surveillance calls flag the player, emit `WitnessMemory` entries tagged by observer, recognition channel (`face | outfit | vehicle`), certainty score, and `lastSeenAt` game time. Reinforcement events (repeat sighting, guard briefings, poster scans) reset decay timers and boost certainty.
+- **Regional Heat Aggregation**: Extend `worldSlice` (or dedicated `suspicionSlice`) with per-zone memory registries, selectors for `selectHeatByZone`, and derived alert tiers (calm, tracking, crackdown) keyed to the sum of top-K memories × proximity factors. Route heat thresholds into existing alert escalation instead of binary `isWanted`.
+- **Dampeners & Disguises**: Introduce modifiers sourced from disguise items, lighting conditions, distance, and player stance so stealth actions reduce certainty ceilings; intimidation/bribery actions can mark memories as `suppressed`.
+- **UI & Debugging**: Surface aggregate heat and the top suspect memories to George’s debug tab or a dev-only overlay for tuning. Provide logging hooks so designers can inspect decay rates live.
+- **Persistence & Performance**: Ensure memories pause decay when `worldSlice.time.isFrozen`, cull expired entries to avoid list bloat, and persist minimal witness snapshots in save data with version guards.
+</details>
+
+<test>
+- Unit test decay and reinforcement helpers with multiple half-life configurations to confirm certainty halves over time and clamps within [0,1].
+- Simulate guard sightings in a headless test scene: confirm memories spawn, reinforce on repeat sightings, decay after lying low, and drop once certainty < 0.05.
+- Drive region heat above configured tiers via scripted sightings and verify guard AI escalates responses, then allow time to pass and ensure heat cools naturally without manual resets.
+- Toggle disguises/lighting modifiers in integration tests to confirm certainty gains shrink appropriately and suppressed memories stop contributing to heat.
+</test>
+</step>
+
 <step id="19.8">
 <step_metadata>
   <number>19.8</number>
