@@ -1,6 +1,16 @@
 # TODO — Unfinished MVP Steps
 
 <todo_list>
+  <phase id="5" name="Narrative and Quest Layer">
+    <step id="16.10">
+      <step_metadata>
+        <number>16.10</number>
+        <title>Tone-Preserving Procedural Dialogue System</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+  </phase>
+
   <phase id="6" name="Visual and Navigation Upgrades">
     <step id="18.5">
       <step_metadata>

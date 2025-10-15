@@ -546,6 +546,40 @@ Promote George to the sole narrator for environmental changes by piping ambient 
 - Play through a scenario with multiple trigger firings and ensure the assistant feed lists each change chronologically while the HUD no longer shows the removed ticker.
 </test>
 </step>
+<step id="16.10">
+<step_metadata>
+  <number>16.10</number>
+  <title>Tone-Preserving Procedural Dialogue System</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16 completed (dialogue and quest threads seeded in Redux)
+- Step 16.5 completed (storylet framework routes modular narrative beats)
+- Review `memory-bank/plot.md` voice guidelines to align tone axes
+</prerequisites>
+
+<instructions>
+Design a reusable tone-tagging pipeline that keeps the game’s authorial “voice” while generating replayable character dialogue.
+</instructions>
+
+<details>
+- **Define Style Space**: Stand up `src/game/narrative/dialogueTone/` with TypeScript types describing tone trait axes (e.g., sarcasm, melancholy, warmth, surrealism) plus optional rhetorical knobs (sentence length mean, metaphor rate). Author a JSON schema so tools can validate tone configs.
+- **Author & Persona Fingerprints**: Seed `src/content/dialogueTone/authors.ts` with the agreed influence vectors (e.g., Vonnegutish, Brautiganish) and `personas.ts` with stable character personas (Mara, Eli, etc.) capturing trait baselines, verbal tics, and lexicon overrides. Ensure data stays locale-agnostic.
+- **Scene Style Hints**: Add `scenes.ts` entries tagged by narrative intent (`share_scarce_food`, `post_ambush_reassurance`) so quest/dialogue nodes can declare a target mood without hard-coding copy.
+- **Templates & Palettes**: Define micro-templates (`templates.ts`) and trait-weighted synonym palettes (`palettes.ts`) that map style traits to concrete phrasing choices (e.g., deadpan prefers fragments, surreal adds unexpected imagery). Track lightweight motifs with counters keyed per character.
+- **Runtime Mixer**: Implement `dialogueToneMixer.ts` that blends author, persona, and scene vectors (e.g., 0.4/0.4/0.2 weighting), clamps conflicting traits (terse vs. sentence length), selects a compatible template, chooses palette variants via weighted sampling, and applies persona tics/motifs.
+- **Integration Layer**: Update `DialogueManager` (or dedicated helper) so dialogue nodes can reference style hints and request generated lines while preserving existing handcrafted copy as fallback. Provide deterministic seeds for regression tests and content tooling.
+- **Documentation**: Capture the system architecture in `memory-bank/architecture.md` and refresh `memory-bank/game-design.md` with the narrative “voice” axis definitions and blending rules. Note tooling expectations in `memory-bank/progress.md` once implemented.
+</details>
+
+<test>
+- Author sample configs and run schema validation to ensure tone payloads pass structural checks.
+- Unit test the mixer: verify trait blending produces expected weights, clamp rules respect terse limits, and template selection honors constraints.
+- Generate lines for contrasting personas (e.g., Mara vs. Eli) against the same scene hint and confirm style distances exceed the distinctness threshold while cosine similarity to the author fingerprint remains within tolerance.
+- Trigger dialogue/storylet nodes that use procedural lines; ensure deterministic seed reproduction, lexicon palettes map correctly, and handcrafted fallback copy appears if configs are missing.
+</test>
+</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
