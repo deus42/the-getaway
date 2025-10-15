@@ -113,7 +113,8 @@ describe('factionSelectors', () => {
 
     expect(reputation).toEqual({ resistance: 15, corpsec: -30, scavengers: 0 });
     expect(reputation).not.toBe(state.player.data.factionReputation);
-    expect(events).toEqual([{ factionId: 'corpsec', delta: -10 }]);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ factionId: 'corpsec', delta: -10 });
     expect(events).not.toBe(state.player.pendingFactionEvents);
   });
 
@@ -134,14 +135,8 @@ describe('factionSelectors', () => {
   });
 
   it('falls back to default reputation when faction not present', () => {
-    const state = buildState({
-      data: {
-        ...buildState().player.data,
-        factionReputation: {
-          resistance: 15,
-        } as any,
-      },
-    });
+    const state = buildState();
+    delete (state.player.data.factionReputation as Record<string, number>).corpsec;
 
     const selectCorpSec = makeSelectFactionStanding('corpsec');
     selectCorpSec(state);

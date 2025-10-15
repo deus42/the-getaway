@@ -100,7 +100,13 @@ describe('storyletSlice triggerStorylet', () => {
     const store = createTestStore({ missionLevelIndex: 0, playerHealth: 40 });
     const dispatch = store.dispatch as AppDispatch;
 
-    dispatch(triggerStorylet({ type: 'missionCompletion' }));
+    dispatch(
+      triggerStorylet({
+        type: 'missionCompletion',
+        tags: ['resistance'],
+        locationId: 'slums',
+      })
+    );
 
     const state = store.getState() as RootState;
     const queue = selectStoryletQueue(state);
@@ -111,7 +117,13 @@ describe('storyletSlice triggerStorylet', () => {
     const lastLog = state.log.messages[state.log.messages.length - 1];
     expect(lastLog).toMatch(/Lira/i);
 
-    dispatch(triggerStorylet({ type: 'missionCompletion' }));
+    dispatch(
+      triggerStorylet({
+        type: 'missionCompletion',
+        tags: ['resistance'],
+        locationId: 'slums',
+      })
+    );
     expect(selectStoryletQueue(store.getState() as RootState)).toHaveLength(1);
   });
 

@@ -31,10 +31,9 @@ const perception = perceptionModule as jest.Mocked<typeof perceptionModule>;
 
 describe('perceptionManager', () => {
   const mockVisionCone: VisionCone = { range: 5, angle: 90, direction: 0 };
+  const cloneDefault = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
-const cloneDefault = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
-
-const baseEnemy: Enemy = {
+  const baseEnemy: Enemy = {
     id: 'enemy-1',
     name: 'Guard',
     position: { x: 0, y: 0 },
@@ -62,7 +61,7 @@ const baseEnemy: Enemy = {
     actionPoints: 6,
     maxActionPoints: 6,
     inventory: {
-      ...structuredClone(DEFAULT_PLAYER.inventory),
+      ...cloneDefault(DEFAULT_PLAYER.inventory),
       maxWeight: 20,
       currentWeight: 0,
     },
