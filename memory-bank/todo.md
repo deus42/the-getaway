@@ -1,6 +1,16 @@
 # TODO — Unfinished MVP Steps
 
 <todo_list>
+  <phase id="6" name="Visual and Navigation Upgrades">
+    <step id="19.8">
+      <step_metadata>
+        <number>19.8</number>
+        <title>Establish Atlas-Driven Noir Lighting Pipeline</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+  </phase>
+
   <phase id="7" name="Character Progression and Inventory">
     <step id="26.1">
       <step_metadata>
