@@ -674,6 +674,43 @@ Wait until nighttime and verify "CURFEW ACTIVE" notification appears with all ca
 </test>
 </step>
 
+<step id="19.8">
+<step_metadata>
+  <number>19.8</number>
+  <title>Establish Atlas-Driven Noir Lighting Pipeline</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 17 completed (isometric renderer scaffolding in place)
+- Step 18 completed (click-to-move path previews respect tile metadata)
+- Step 19 completed (alert systems consume consistent entity depth sorting)
+</prerequisites>
+
+<instructions>
+Replace key procedural `Graphics` primitives with atlas-driven sprites and enable Phaser Light2D + post-processing so the painterly noir art direction carries through gameplay.
+</instructions>
+
+<details>
+- Stand up an art-export pipeline: define painterly diffuse + normal map pairs per district prop under `src/assets/sprites/`, create a `config/texture-atlas.noir.json` (TexturePacker or equivalent), and add `scripts/pack-noir-atlas.mjs` to emit `noir-environment.json/png` + `noir-environment-n.json/png`.
+- In `BootScene`, load the new atlases via `this.load.multiatlas('noir-environment', json, path)` and a matching call for normal maps; version atlases so runtime caches can detect updates.
+- Extend `MapTile`/`MapArea` data to expose an optional `spriteFrame` and `normalFrame`, and add authoring helpers under `src/content/environment/atlasFrames.ts` that map tile biome + condition → atlas frame IDs.
+- Refactor `IsoObjectFactory`: keep existing `Graphics` helpers for fallback, but introduce sprite-based creators (`createSpriteTile`, `createSpriteProp`, `createSpriteCharacter`) that position atlas frames, apply `setPipeline('Light2D')`, and assign normal textures.
+- Update `MainScene.drawMap` to prefer sprite frames when `spriteFrame` is defined, maintain depth sorting via `setDepth(pixelY)`, and batch static layers into `Phaser.GameObjects.Layer` or `RenderTexture` for fewer draw calls.
+- Enable the Light2D system once sprite assets exist: call `this.lights.enable().setAmbientColor(0x16202a)` in `MainScene.create`, register rim, sodium, and emergency lights keyed to world triggers, and gate light creation behind a feature flag until the atlas rollout is complete.
+- Add camera post FX helpers (`camera.postFX.addBloom`, `addColorMatrix`) with noir-friendly defaults, but expose tunable settings in `src/game/settings/visualSettings.ts` for QA to adjust brightness/contrast per district.
+- Document asset naming (e.g., `district_propName_variant_v###.png`), normal-map conventions, and Light2D integration steps in `memory-bank/architecture.md`, linking back to the painterly noir guidance in `memory-bank/game-design.md`.
+</details>
+
+<test>
+- Run `yarn pack:noir-atlas` (wrapper for `pack-noir-atlas.mjs`) and confirm atlases build without orphaned frames or duplicate keys.
+- Load BootScene and verify atlases/normal maps register; inspect DevTools to ensure sprite counts drop vs. equivalent Graphics-heavy scene.
+- Walk Downtown at night and confirm Light2D rim, sodium, and beacon lights affect atlas sprites while legacy Graphics fallback continues to render without artifacts.
+- Toggle the bloom/color-matrix settings via the visual settings module and validate render output against style sheets (maintain readable silhouettes, avoid blown highlights).
+- Profile the scene (Phaser inspector/SpectorJS) to confirm draw calls remain within target budget after Light2D activation and that normal maps respond as expected when lights move.
+</test>
+</step>
+
 <step id="20">
 <step_metadata>
   <number>20</number>
