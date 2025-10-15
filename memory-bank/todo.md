@@ -9,6 +9,13 @@
         <status>pending</status>
       </step_metadata>
     </step>
+    <step id="19.55">
+      <step_metadata>
+        <number>19.55</number>
+        <title>Adaptive NPC FSM Behaviors</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
     <step id="19.6">
       <step_metadata>
         <number>19.6</number>

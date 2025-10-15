@@ -738,6 +738,40 @@ Wait until nighttime and verify "CURFEW ACTIVE" notification appears with all ca
 </test>
 </step>
 
+<step id="19.55">
+<step_metadata>
+  <number>19.55</number>
+  <title>Adaptive NPC FSM Behaviors</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 5 completed (baseline combat loop and enemy turns)
+- Step 19 completed (guard perception + alert states)
+- Step 19.5 completed (surveillance escalation hooks)
+</prerequisites>
+
+<instructions>
+Replace the brittle guard/hostile decision flow with a deterministic-yet-varied finite-state machine that layers weighted randomness and lightweight utility nudges so patrols feel reactive without incurring heavy CPU cost.
+</instructions>
+
+<details>
+- **State Model**: Define `NpcAiState`, `NpcTransitionWeights`, and `NpcContext` interfaces in `src/game/ai/fsm/types.ts`, modelling canonical states (`Idle`, `Patrol`, `Chase`, `Search`, `Flee`, `Panic`, `InspectNoise`, etc.), cooldown data, and situational signals (HP, stamina, line of sight, recent hits, squad influences).
+- **Controller Core**: Implement `createNpcFsmController` in `src/game/ai/fsm/controller.ts` that stores current state, applies base weights per state, applies utility modifiers (HP thresholds, LOS, morale, leader influence), zeroes transitions on cooldown, and selects the next state via weighted sampling with pluggable RNG.
+- **Seeded Personalities**: Introduce a deterministic RNG helper (`src/game/ai/fsm/random.ts`) that seeds from NPC id so replays remain stable. Expose optional entropy injection for director-driven variance (Step 19.7).
+- **Action Hooks**: Map each state to action callbacks (`NpcStateHandlers`) that drive existing movement/pathfinding, cover seeking, pursuit, or flee routes via injected services. Panic transitions should set flee burst duration and respect cooldown windows before the next panic roll.
+- **Integration**: Thread the FSM controller through guard/patrol entity classes, reading perception data from Step 19 vision cones and Step 19.5 surveillance pings, and emitting telemetry (state transitions, utility adjustments) for debugging overlays.
+- **Configuration Surface**: Provide archetype configs in `src/content/ai/guardArchetypes.ts` where designers can tune base weights, modifiers, and cooldowns. Document authoring workflow in `memory-bank/architecture.md` when implemented.
+</details>
+
+<test>
+- Unit-test controller helpers: weight normalization, cooldown clamping, seed-stable transition selection, panic cooldown enforcement, and utility modifiers reacting to HP/LOS inputs.
+- Write an integration test (headless scene or mocked loop) that simulates 60 seconds of patrol behavior with deterministic RNG; assert patrol cycles between Idle/Patrol with occasional Search/Panic according to configured weights.
+- Script a chase scenario where LOS is lost; confirm FSM transitions to `Search`, times out to `Patrol`, and only re-enters `Panic` when cooldown expires and stimuli warrant it.
+- Run performance profiling (e.g., 200 NPCs stepping through the controller) to confirm budget fits within frame targets (<0.5 ms/frame on baseline hardware) and no garbage spikes occur.
+</test>
+</step>
+
 <step id="19.6">
 <step_metadata>
   <number>19.6</number>
