@@ -1,7 +1,13 @@
 import type { StoryFunctionTag, EnvironmentFlags } from './environment';
 import type { DangerRating } from './types';
 
-export type GeorgeAmbientCategory = 'rumor' | 'signage' | 'weather' | 'zoneDanger' | 'hazardChange';
+export type GeorgeAmbientCategory =
+  | 'rumor'
+  | 'signage'
+  | 'weather'
+  | 'zoneDanger'
+  | 'hazardChange'
+  | 'zoneBrief';
 
 export interface GeorgeAmbientRumorSnapshot {
   groupId: string;
@@ -31,6 +37,8 @@ export interface GeorgeAmbientZoneSnapshot {
   zoneName: string | null;
   dangerRating: DangerRating | null;
   hazards: string[];
+  summary: string | null;
+  directives: string[];
 }
 
 export interface GeorgeAmbientSnapshot {

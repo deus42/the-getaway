@@ -37,7 +37,7 @@ const INTERJECTION_DISPLAY_MS = 5200;
 const AMBIENT_BANTER_MIN_MS = 48000;
 const AMBIENT_BANTER_MAX_MS = 96000;
 const DOCK_TICKER_INTERVAL_MS = 20000;
-const AMBIENT_FEED_LIMIT = 10;
+const FEED_ENTRY_LIMIT = 12;
 
 const FALLBACK_AMBIENT = [
   'Diagnostics show morale at "manageable"—keep it that way.',
@@ -46,22 +46,19 @@ const FALLBACK_AMBIENT = [
   'Today’s lucky number is 404. Let’s try not to vanish.',
 ];
 
-type ConversationId = 'guidance' | 'status' | 'quests';
-type Actor = 'george' | 'player';
+type FeedCategory = 'mission' | 'status' | 'guidance' | 'interjection' | GeorgeAmbientEvent['category'];
 
-type ConversationEntry = {
+type FeedEntry = {
   id: string;
-  actor: Actor;
+  category: FeedCategory;
   text: string;
-  reference: string;
+  label: string;
+  timestamp: number;
 };
 
-type AssistantTab = 'intel' | 'ambient';
-
-type AmbientFeedEntry = {
-  id: string;
-  category: GeorgeAmbientEvent['category'];
-  summary: string;
+type FeedEntryPayload = {
+  category: FeedCategory;
+  text: string;
   label: string;
   timestamp: number;
 };
@@ -300,95 +297,6 @@ const styles = `
     outline: 2px solid rgba(148, 211, 252, 0.82);
     outline-offset: 2px;
   }
-  .george-tabs {
-    display: flex;
-    gap: 0.4rem;
-    padding: 0.2rem 0;
-  }
-  .george-tab-button {
-    all: unset;
-    cursor: pointer;
-    padding: 0.22rem 0.65rem;
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    background: rgba(15, 23, 42, 0.55);
-    color: rgba(226, 232, 240, 0.78);
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-    font-size: 0.64rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  }
-  .george-tab-button:hover {
-    border-color: rgba(59, 130, 246, 0.45);
-    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.35);
-  }
-  .george-tab-button:focus-visible {
-    outline: 2px solid rgba(94, 234, 212, 0.6);
-    outline-offset: 2px;
-  }
-  .george-tab-button.active {
-    background: rgba(37, 99, 235, 0.28);
-    border-color: rgba(125, 211, 252, 0.45);
-    color: rgba(226, 232, 240, 0.92);
-    box-shadow: 0 12px 20px rgba(15, 23, 42, 0.45);
-  }
-  .george-ambient-feed {
-    flex: 1 1 auto;
-    max-height: 320px;
-    min-height: 200px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-right: 0.3rem;
-  }
-  .george-ambient-feed::-webkit-scrollbar {
-    width: 6px;
-  }
-  .george-ambient-feed::-webkit-scrollbar-thumb {
-    background: rgba(16, 185, 129, 0.35);
-    border-radius: 999px;
-  }
-  .george-ambient-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.5rem 0.65rem;
-    border-radius: 12px;
-    background: rgba(8, 47, 73, 0.55);
-    border: 1px solid rgba(45, 212, 191, 0.28);
-  }
-  .george-ambient-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 0.6rem;
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-  }
-  .george-ambient-label {
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: rgba(125, 211, 252, 0.85);
-  }
-  .george-ambient-time {
-    font-size: 0.58rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: rgba(148, 163, 184, 0.65);
-  }
-  .george-ambient-text {
-    font-size: 0.78rem;
-    line-height: 1.4;
-    color: rgba(226, 232, 240, 0.88);
-  }
-  .george-ambient-empty {
-    font-size: 0.76rem;
-    line-height: 1.4;
-    color: rgba(148, 163, 184, 0.78);
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-  }
 `;
 
 const buildQuestReadout = (
@@ -437,15 +345,6 @@ const GeorgeAssistant: React.FC = () => {
     missionSide: nextSideObjective,
   }), [objectiveQueue, personality, karma, factionReputation, nextPrimaryObjective, nextSideObjective]);
 
-  const conversationOptions = useMemo(
-    () => [
-      { id: 'guidance' as ConversationId, label: georgeStrings.options.guidance },
-      { id: 'status' as ConversationId, label: georgeStrings.options.status },
-      { id: 'quests' as ConversationId, label: georgeStrings.options.quests },
-    ],
-    [georgeStrings]
-  );
-
   const ambientLines = useMemo(
     () => (georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT),
     [georgeStrings]
@@ -458,9 +357,7 @@ const GeorgeAssistant: React.FC = () => {
     return window.localStorage.getItem(STORAGE_KEY) === 'true';
   });
   const [interjection, setInterjection] = useState<string | null>(null);
-  const [logEntries, setLogEntries] = useState<ConversationEntry[]>([]);
-  const [activeTab, setActiveTab] = useState<AssistantTab>('intel');
-  const [ambientEntries, setAmbientEntries] = useState<AmbientFeedEntry[]>([]);
+  const [feedEntries, setFeedEntries] = useState<FeedEntry[]>([]);
   const [hasAmbientPing, setHasAmbientPing] = useState(false);
 
   const cooldownRef = useRef<number>(0);
@@ -470,22 +367,30 @@ const GeorgeAssistant: React.FC = () => {
   const alertRef = useRef({ level: world.globalAlertLevel, inCombat: world.inCombat });
   const ambientTimerRef = useRef<number | null>(null);
   const ambientTrackerRef = useRef<GeorgeAmbientTracker | null>(null);
+  const missionSummaryRef = useRef<string>('');
 
-  const appendEntry = useCallback(
-    (actor: Actor, text: string, referenceKey: keyof typeof georgeStrings.references) => {
-      const reference = georgeStrings.references[referenceKey];
-      setLogEntries((prev) => {
-        const entry: ConversationEntry = {
-          id: `${Date.now()}-${Math.random()}`,
-          actor,
+  const pushFeedEntry = useCallback(
+    ({ category, label, text, timestamp }: { category: FeedCategory; label: string; text: string; timestamp?: number }) => {
+      const entryTimestamp = timestamp ?? Date.now();
+      setFeedEntries((prev) => {
+        const entry: FeedEntry = {
+          id: `${entryTimestamp}-${Math.random().toString(36).slice(2)}`,
+          category,
           text,
-          reference,
+          label,
+          timestamp: entryTimestamp,
         };
         const next = [...prev, entry];
-        return next.slice(-8);
+        if (next.length > FEED_ENTRY_LIMIT) {
+          return next.slice(next.length - FEED_ENTRY_LIMIT);
+        }
+        return next;
       });
+      if (!isOpen) {
+        setHasAmbientPing(true);
+      }
     },
-    [georgeStrings]
+    [isOpen]
   );
 
   const presentInterjection = useCallback((line: GeorgeLine, log = false) => {
@@ -493,68 +398,14 @@ const GeorgeAssistant: React.FC = () => {
     pendingInterjectionRef.current = null;
     setInterjection(line.text);
     if (log) {
-      appendEntry('george', line.text, 'ambient');
+      pushFeedEntry({
+        category: 'interjection',
+        label: georgeStrings.feedLabels.interjection,
+        text: line.text,
+      });
     }
     window.setTimeout(() => setInterjection(null), INTERJECTION_DISPLAY_MS);
-  }, [appendEntry]);
-
-  const respondToPrompt = useCallback((id: ConversationId) => {
-    const option = conversationOptions.find((entry) => entry.id === id);
-    if (option) {
-      appendEntry('player', option.label, 'prompt');
-    }
-
-    switch (id) {
-      case 'guidance': {
-        const missionLines: string[] = [];
-        const levelName = missionProgress?.name ?? 'current zone';
-
-        if (missionProgress) {
-          if (missionProgress.allPrimaryComplete) {
-            missionLines.push(`• Primary: Mission accomplished in ${levelName}.`);
-          } else if (nextPrimaryObjective) {
-            const suffix = nextPrimaryObjective.totalQuests > 1
-              ? ` (${nextPrimaryObjective.completedQuests}/${nextPrimaryObjective.totalQuests})`
-              : '';
-            missionLines.push(`• Primary: ${nextPrimaryObjective.label}${suffix}`);
-          }
-
-          if (nextSideObjective) {
-            missionLines.push(`• Optional: ${nextSideObjective.label}`);
-          }
-        }
-
-        const questLines = buildQuestReadout(objectiveQueue, georgeStrings, 3);
-        const segments = [georgeStrings.guidanceIntro];
-        if (missionLines.length > 0) {
-          segments.push(...missionLines);
-        }
-        if (questLines.length > 0) {
-          if (missionLines.length > 0) {
-            segments.push('');
-          }
-          segments.push(...questLines);
-        }
-
-        const message = segments.join('\n').trim();
-        appendEntry('george', message, 'guidance');
-        break;
-      }
-      case 'status': {
-        const message = georgeStrings.statusIntro(intel.statusLine);
-        appendEntry('george', message, 'status');
-        break;
-      }
-      case 'quests': {
-        const questLines = buildQuestReadout(objectiveQueue, georgeStrings);
-        const message = `${georgeStrings.questsIntro}\n${questLines.join('\n')}`.trim();
-        appendEntry('george', message, 'quests');
-        break;
-      }
-      default:
-        break;
-    }
-  }, [appendEntry, conversationOptions, georgeStrings, intel.statusLine, objectiveQueue, missionProgress, nextPrimaryObjective, nextSideObjective]);
+  }, [georgeStrings.feedLabels.interjection, pushFeedEntry]);
 
   const queueInterjection = useCallback((trigger: GeorgeInterjectionTrigger) => {
     const line = pickInterjectionLine(trigger, personality.alignment);
@@ -616,6 +467,56 @@ const GeorgeAssistant: React.FC = () => {
     };
   }, [scheduleAmbientBanter]);
 
+  useEffect(() => {
+    const levelName = missionProgress?.name ?? 'current zone';
+    const missionLines: string[] = [];
+
+    if (missionProgress) {
+      if (missionProgress.allPrimaryComplete) {
+        missionLines.push(`• Primary: Mission accomplished in ${levelName}.`);
+      } else if (nextPrimaryObjective) {
+        const suffix = nextPrimaryObjective.totalQuests > 1
+          ? ` (${nextPrimaryObjective.completedQuests}/${nextPrimaryObjective.totalQuests})`
+          : '';
+        missionLines.push(`• Primary: ${nextPrimaryObjective.label}${suffix}`);
+      }
+
+      if (nextSideObjective) {
+        missionLines.push(`• Optional: ${nextSideObjective.label}`);
+      }
+    }
+
+    const questLines = buildQuestReadout(objectiveQueue, georgeStrings, 3);
+    const segments = [georgeStrings.guidanceIntro];
+    if (missionLines.length > 0) {
+      segments.push(...missionLines);
+    }
+    if (questLines.length > 0) {
+      if (missionLines.length > 0) {
+        segments.push('');
+      }
+      segments.push(...questLines);
+    }
+
+    const message = segments.join('\n').trim();
+    if (!message || missionSummaryRef.current === message) {
+      return;
+    }
+    missionSummaryRef.current = message;
+    pushFeedEntry({
+      category: 'guidance',
+      label: georgeStrings.feedLabels.guidance,
+      text: message,
+    });
+  }, [
+    georgeStrings,
+    missionProgress,
+    nextPrimaryObjective,
+    nextSideObjective,
+    objectiveQueue,
+    pushFeedEntry,
+  ]);
+
   const formatTimestamp = useCallback((value: number): string => {
     if (!value) {
       return '';
@@ -630,11 +531,10 @@ const GeorgeAssistant: React.FC = () => {
     }
   }, [locale]);
 
-  const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): AmbientFeedEntry | null => {
+  const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): FeedEntryPayload | null => {
     const ambientFeed = georgeStrings.ambientFeed;
     const alignment = personality.alignment;
-    const label = ambientFeed.categoryLabels[event.category] ?? event.category.toUpperCase();
-    const id = `${event.category}-${event.timestamp}-${Math.random().toString(36).slice(2)}`;
+    const label = ambientFeed.categoryLabels[event.category] ?? georgeStrings.feedLabels.ambient;
 
     switch (event.category) {
       case 'rumor': {
@@ -643,11 +543,10 @@ const GeorgeAssistant: React.FC = () => {
           ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
             event.storyFunction.replace(/-/g, ' ').toUpperCase()
           : undefined;
-        const summary = ambientFeed.formatRumor({ line, storyLabel }, alignment);
+        const text = ambientFeed.formatRumor({ line, storyLabel }, alignment);
         return {
-          id,
           category: event.category,
-          summary,
+          text,
           label,
           timestamp: event.timestamp,
         };
@@ -658,11 +557,10 @@ const GeorgeAssistant: React.FC = () => {
           ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
             event.storyFunction.replace(/-/g, ' ').toUpperCase()
           : undefined;
-        const summary = ambientFeed.formatSignage({ text, storyLabel }, alignment);
+        const formatted = ambientFeed.formatSignage({ text, storyLabel }, alignment);
         return {
-          id,
           category: event.category,
-          summary,
+          text: formatted,
           label,
           timestamp: event.timestamp,
         };
@@ -675,11 +573,10 @@ const GeorgeAssistant: React.FC = () => {
           ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
             event.storyFunction.replace(/-/g, ' ').toUpperCase()
           : undefined;
-        const summary = ambientFeed.formatWeather({ description, storyLabel }, alignment);
+        const formatted = ambientFeed.formatWeather({ description, storyLabel }, alignment);
         return {
-          id,
           category: event.category,
-          summary,
+          text: formatted,
           label,
           timestamp: event.timestamp,
         };
@@ -697,7 +594,7 @@ const GeorgeAssistant: React.FC = () => {
           previous: ambientFeed.formatFlagValue(change.key, change.previous),
           next: ambientFeed.formatFlagValue(change.key, change.next),
         }));
-        const summary = ambientFeed.formatZoneDanger(
+        const formatted = ambientFeed.formatZoneDanger(
           {
             zoneName: event.zoneName,
             dangerLabel,
@@ -707,9 +604,8 @@ const GeorgeAssistant: React.FC = () => {
           alignment
         );
         return {
-          id,
           category: event.category,
-          summary,
+          text: formatted,
           label,
           timestamp: event.timestamp,
         };
@@ -717,7 +613,7 @@ const GeorgeAssistant: React.FC = () => {
       case 'hazardChange': {
         const additions = event.added.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
         const removals = event.removed.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
-        const summary = ambientFeed.formatHazards(
+        const formatted = ambientFeed.formatHazards(
           {
             zoneName: event.zoneName,
             additions,
@@ -726,9 +622,30 @@ const GeorgeAssistant: React.FC = () => {
           alignment
         );
         return {
-          id,
           category: event.category,
-          summary,
+          text: formatted,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'zoneBrief': {
+        const dangerLevels = uiStrings.levelIndicator.dangerLevels;
+        const dangerLabel = event.dangerRating
+          ? dangerLevels[event.dangerRating] ?? event.dangerRating
+          : ambientFeed.dangerFallback;
+        const formatted = ambientFeed.formatZoneBrief(
+          {
+            zoneName: event.zoneName,
+            summary: event.summary ?? null,
+            dangerLabel,
+            hazards: event.hazards,
+            directives: event.directives,
+          },
+          alignment
+        );
+        return {
+          category: event.category,
+          text: formatted,
           label,
           timestamp: event.timestamp,
         };
@@ -736,7 +653,7 @@ const GeorgeAssistant: React.FC = () => {
       default:
         return null;
     }
-  }, [georgeStrings.ambientFeed, personality.alignment, uiStrings.levelIndicator.dangerLevels]);
+  }, [georgeStrings.ambientFeed, georgeStrings.feedLabels.ambient, personality.alignment, uiStrings.levelIndicator.dangerLevels]);
 
   useEffect(() => {
     const handleMissionAccomplished = (event: Event) => {
@@ -746,7 +663,11 @@ const GeorgeAssistant: React.FC = () => {
       }
 
       const message = `Mission secured in ${detail.name}. Awaiting redeploy.`;
-      appendEntry('george', message, 'guidance');
+      pushFeedEntry({
+        category: 'mission',
+        label: georgeStrings.feedLabels.mission,
+        text: message,
+      });
       queueInterjection('questCompleted');
     };
 
@@ -758,7 +679,11 @@ const GeorgeAssistant: React.FC = () => {
 
       const nextDescriptor = detail.nextLevelId ?? `level ${detail.nextLevel}`;
       const message = `Prepping overlays for ${nextDescriptor}. Say the word and I’ll broadcast updates.`;
-      appendEntry('george', message, 'status');
+      pushFeedEntry({
+        category: 'status',
+        label: georgeStrings.feedLabels.status,
+        text: message,
+      });
     };
 
     window.addEventListener(MISSION_ACCOMPLISHED_EVENT, handleMissionAccomplished as EventListener);
@@ -768,7 +693,7 @@ const GeorgeAssistant: React.FC = () => {
       window.removeEventListener(MISSION_ACCOMPLISHED_EVENT, handleMissionAccomplished as EventListener);
       window.removeEventListener(LEVEL_ADVANCE_REQUESTED_EVENT, handleLevelAdvance as EventListener);
     };
-  }, [appendEntry, queueInterjection]);
+  }, [georgeStrings.feedLabels.mission, georgeStrings.feedLabels.status, pushFeedEntry, queueInterjection]);
 
   useEffect(() => {
     const completed = new Set(quests.filter((quest) => quest.isCompleted).map((quest) => quest.id));
@@ -785,8 +710,23 @@ const GeorgeAssistant: React.FC = () => {
       return;
     }
     if (!ambientTrackerRef.current) {
-      ambientTrackerRef.current = new GeorgeAmbientTracker();
-      ambientTrackerRef.current.prime(ambientSnapshot);
+      const tracker = new GeorgeAmbientTracker();
+      tracker.prime(ambientSnapshot);
+      ambientTrackerRef.current = tracker;
+
+      const initialEvent: GeorgeAmbientEvent = {
+        category: 'zoneBrief',
+        timestamp: Date.now(),
+        zoneName: ambientSnapshot.zone.zoneName,
+        summary: ambientSnapshot.zone.summary,
+        dangerRating: ambientSnapshot.zone.dangerRating ?? null,
+        hazards: [...ambientSnapshot.zone.hazards],
+        directives: [...ambientSnapshot.zone.directives],
+      };
+      const formatted = formatAmbientEvent(initialEvent);
+      if (formatted) {
+        pushFeedEntry(formatted);
+      }
       return;
     }
 
@@ -796,28 +736,14 @@ const GeorgeAssistant: React.FC = () => {
       return;
     }
 
-    const formatted = events
-      .map((event) => formatAmbientEvent(event))
-      .filter((entry): entry is AmbientFeedEntry => entry !== null);
-    if (!formatted.length) {
-      return;
-    }
-
-    setAmbientEntries((prev) => {
-      const next = [...prev, ...formatted];
-      return next.slice(-AMBIENT_FEED_LIMIT);
+    events.forEach((event) => {
+      const formatted = formatAmbientEvent(event);
+      if (!formatted) {
+        return;
+      }
+      pushFeedEntry(formatted);
     });
-
-    if (!isOpen || activeTab !== 'ambient') {
-      setHasAmbientPing(true);
-    }
-  }, [ambientSnapshot, formatAmbientEvent, isOpen, activeTab]);
-
-  useEffect(() => {
-    if (isOpen && activeTab === 'ambient' && hasAmbientPing) {
-      setHasAmbientPing(false);
-    }
-  }, [isOpen, activeTab, hasAmbientPing]);
+  }, [ambientSnapshot, formatAmbientEvent, pushFeedEntry]);
 
   useEffect(() => {
     const previous = factionRef.current;
@@ -878,10 +804,7 @@ const GeorgeAssistant: React.FC = () => {
         setIsOpen((prev) => {
           const next = !prev;
           if (next) {
-            if (hasAmbientPing) {
-              setActiveTab('ambient');
-            }
-            respondToPrompt('guidance');
+            setHasAmbientPing(false);
           }
           return next;
         });
@@ -889,17 +812,10 @@ const GeorgeAssistant: React.FC = () => {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [respondToPrompt, hasAmbientPing]);
+  }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      respondToPrompt('guidance');
-    }
-  }, [isOpen, respondToPrompt]);
-
-  const lastLog = logEntries.length > 0 ? logEntries[logEntries.length - 1] : null;
-  const latestAmbient = ambientEntries.length > 0 ? ambientEntries[ambientEntries.length - 1] : null;
-  const baseTickerLine = interjection ?? lastLog?.text ?? latestAmbient?.summary ?? georgeStrings.dockStatusIdle;
+  const latestEntry = feedEntries.length > 0 ? feedEntries[feedEntries.length - 1] : null;
+  const baseTickerLine = interjection ?? latestEntry?.text ?? georgeStrings.dockStatusIdle;
 
   const feedLines = useMemo(() => {
     const unique: string[] = [];
@@ -929,8 +845,7 @@ const GeorgeAssistant: React.FC = () => {
       push(`${objective.questName}: ${objective.objective.description}${countSuffix}`);
     }
 
-    logEntries.slice(-2).forEach((entry) => push(entry.text));
-    ambientEntries.slice(-2).forEach((entry) => push(entry.summary));
+    feedEntries.slice(-3).forEach((entry) => push(entry.text));
     ambientLines.slice(0, 2).forEach((line) => push(line));
 
     if (unique.length === 0) {
@@ -938,7 +853,7 @@ const GeorgeAssistant: React.FC = () => {
     }
 
     return unique.slice(0, 6);
-  }, [ambientEntries, ambientLines, baseTickerLine, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue, logEntries]);
+  }, [ambientLines, baseTickerLine, feedEntries, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue]);
 
   const feedSignature = useMemo(() => feedLines.join('|'), [feedLines]);
 
@@ -970,28 +885,26 @@ const GeorgeAssistant: React.FC = () => {
   const tickerText = feedLines[tickerIndex] ?? georgeStrings.dockStatusIdle;
   const animateTicker = tickerText.length > 20;
 
-  const logViewRef = useRef<HTMLDivElement | null>(null);
-  const ambientFeedRef = useRef<HTMLDivElement | null>(null);
+  const feedViewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const node = logViewRef.current;
-    if (!node || activeTab !== 'intel') {
+    if (!isOpen) {
+      return;
+    }
+    const node = feedViewRef.current;
+    if (!node) {
       return;
     }
     node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
-  }, [logEntries, isOpen, activeTab]);
+  }, [feedEntries, isOpen]);
 
   useEffect(() => {
-    const node = ambientFeedRef.current;
-    if (!node || activeTab !== 'ambient' || !isOpen) {
-      return;
+    if (isOpen && hasAmbientPing) {
+      setHasAmbientPing(false);
     }
-    node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
-  }, [ambientEntries, isOpen, activeTab]);
+  }, [isOpen, hasAmbientPing]);
 
   const panelId = 'george-console-panel';
-  const intelPanelId = 'george-console-intel';
-  const ambientPanelId = 'george-console-ambient';
 
   return (
     <div className="george-layer">
@@ -1003,10 +916,7 @@ const GeorgeAssistant: React.FC = () => {
           onClick={() => setIsOpen((prev) => {
             const next = !prev;
             if (next) {
-              if (hasAmbientPing) {
-                setActiveTab('ambient');
-              }
-              respondToPrompt('guidance');
+              setHasAmbientPing(false);
             }
             return next;
           })}
@@ -1037,88 +947,32 @@ const GeorgeAssistant: React.FC = () => {
               </div>
             )}
 
-            <div className="george-tabs" role="tablist" aria-label={georgeStrings.consoleTitle}>
-              <button
-                type="button"
-                role="tab"
-                className={`george-tab-button${activeTab === 'intel' ? ' active' : ''}`}
-                aria-selected={activeTab === 'intel'}
-                aria-controls={intelPanelId}
-                onClick={() => setActiveTab('intel')}
-              >
-                {georgeStrings.ambientFeed.tabs.intel}
-              </button>
-              <button
-                type="button"
-                role="tab"
-                className={`george-tab-button${activeTab === 'ambient' ? ' active' : ''}`}
-                aria-selected={activeTab === 'ambient'}
-                aria-controls={ambientPanelId}
-                onClick={() => setActiveTab('ambient')}
-              >
-                {georgeStrings.ambientFeed.tabs.ambient}
-              </button>
-            </div>
-
             <div className="george-log-container">
-              {activeTab === 'intel' ? (
-                <div className="george-log" id={intelPanelId} role="log" aria-live="polite" ref={logViewRef}>
-                  {logEntries.length === 0 ? (
-                    <div className="george-log-item">
-                      <div className="george-log-meta">
-                        <span className="george-log-actor">{georgeStrings.actors.george}</span>
-                        <span className="george-log-reference">{georgeStrings.references.guidance}</span>
-                      </div>
-                      <div className="george-log-text">{georgeStrings.logEmpty}</div>
+              <div className="george-log" role="log" aria-live="polite" ref={feedViewRef}>
+                {feedEntries.length === 0 ? (
+                  <div className="george-log-item">
+                    <div className="george-log-meta">
+                      <span className="george-log-actor">{georgeStrings.feedLabels.ambient}</span>
+                      <span className="george-log-reference">—</span>
                     </div>
-                  ) : (
-                    logEntries.map((entry, index) => (
-                      <div
-                        key={entry.id}
-                        className={`george-log-item george-log-item--${entry.actor}${index === logEntries.length - 1 ? ' george-log-item--latest' : ''}`}
-                      >
-                        <div className="george-log-meta">
-                          <span className="george-log-actor">{georgeStrings.actors[entry.actor]}</span>
-                          <span className="george-log-reference">{entry.reference}</span>
-                        </div>
-                        <div className="george-log-text">{entry.text}</div>
+                    <div className="george-log-text">{georgeStrings.logEmpty}</div>
+                  </div>
+                ) : (
+                  feedEntries.map((entry, index) => (
+                    <div
+                      key={entry.id}
+                      className={`george-log-item${index === feedEntries.length - 1 ? ' george-log-item--latest' : ''}`}
+                    >
+                      <div className="george-log-meta">
+                        <span className="george-log-actor">{entry.label}</span>
+                        <span className="george-log-reference">{formatTimestamp(entry.timestamp)}</span>
                       </div>
-                    ))
-                  )}
-                </div>
-              ) : (
-                <div className="george-ambient-feed" id={ambientPanelId} role="log" aria-live="polite" ref={ambientFeedRef}>
-                  {ambientEntries.length === 0 ? (
-                    <div className="george-ambient-empty">{georgeStrings.ambientFeed.empty}</div>
-                  ) : (
-                    ambientEntries.map((entry) => (
-                      <div key={entry.id} className="george-ambient-item">
-                        <div className="george-ambient-meta">
-                          <span className="george-ambient-label">{entry.label}</span>
-                          <span className="george-ambient-time">{formatTimestamp(entry.timestamp)}</span>
-                        </div>
-                        <div className="george-ambient-text">{entry.summary}</div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
-
-            {activeTab === 'intel' && (
-              <div className="george-actions">
-                {conversationOptions.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className="george-action-button"
-                    onClick={() => respondToPrompt(option.id)}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+                      <div className="george-log-text">{entry.text}</div>
+                    </div>
+                  ))
+                )}
               </div>
-            )}
+            </div>
           </section>
         )}
       </div>

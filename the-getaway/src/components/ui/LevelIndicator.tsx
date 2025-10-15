@@ -7,8 +7,6 @@ import {
 } from '../../store/selectors/missionSelectors';
 import { RootState } from '../../store';
 import { showMissionAdvancePrompt } from '../../store/missionSlice';
-import type { DangerRating } from '../../game/interfaces/types';
-
 const listBaseStyle: React.CSSProperties = {
   margin: 0,
   padding: 0,
@@ -17,50 +15,10 @@ const listBaseStyle: React.CSSProperties = {
   listStyle: 'none',
 };
 
-const dangerColors: Record<DangerRating, { background: string; text: string; border: string }> = {
-  low: {
-    background: 'rgba(34, 197, 94, 0.18)',
-    text: '#bbf7d0',
-    border: 'rgba(34, 197, 94, 0.45)',
-  },
-  moderate: {
-    background: 'rgba(249, 115, 22, 0.18)',
-    text: '#fed7aa',
-    border: 'rgba(249, 115, 22, 0.55)',
-  },
-  high: {
-    background: 'rgba(250, 204, 21, 0.16)',
-    text: '#fef08a',
-    border: 'rgba(250, 204, 21, 0.55)',
-  },
-  critical: {
-    background: 'rgba(239, 68, 68, 0.2)',
-    text: '#fecaca',
-    border: 'rgba(239, 68, 68, 0.55)',
-  },
-};
-
 interface LevelIndicatorProps {
   collapsed?: boolean;
   onToggle?: () => void;
 }
-
-const hazardChipStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '0.18rem 0.55rem',
-  borderRadius: '999px',
-  fontSize: '0.62rem',
-  letterSpacing: '0.08em',
-  color: '#f8fafc',
-  background: 'rgba(59, 130, 246, 0.18)',
-  border: '1px solid rgba(59, 130, 246, 0.35)',
-  textTransform: 'uppercase',
-  lineHeight: 1.2,
-  textAlign: 'center',
-  whiteSpace: 'normal',
-};
 
 const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onToggle }) => {
   const dispatch = useDispatch();
@@ -72,10 +30,6 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
 
   const zoneName =
     currentArea?.displayName ?? currentArea?.name ?? missionProgress?.name ?? uiStrings.levelIndicator.unknownLevel;
-  const zoneSummary = currentArea?.summary;
-  const hazards = (currentArea?.hazards ?? []).filter((hazard) => hazard && hazard.trim().length > 0);
-  const zoneDirectives = (currentArea?.objectives ?? []).filter((objective) => objective && objective.trim().length > 0);
-  const dangerRating = currentArea?.dangerRating ?? null;
   const displayedLevel = currentArea?.level ?? missionProgress?.level ?? 0;
   const missionName = missionProgress?.name;
 
@@ -91,46 +45,6 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
     if (onToggle) {
       onToggle();
     }
-  };
-
-  const renderDangerPill = () => {
-    if (!dangerRating) {
-      return (
-        <span
-          style={{
-            fontSize: '0.62rem',
-            color: 'rgba(148, 163, 184, 0.7)',
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-          }}
-        >
-          —
-        </span>
-      );
-    }
-
-    const palette = dangerColors[dangerRating];
-    const label = uiStrings.levelIndicator.dangerLevels[dangerRating] ?? dangerRating;
-
-    return (
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '0.18rem 0.6rem',
-          borderRadius: '999px',
-          fontSize: '0.62rem',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          background: palette.background,
-          color: palette.text,
-          border: `1px solid ${palette.border}`,
-        }}
-      >
-        {label}
-      </span>
-    );
   };
 
   return (
@@ -251,90 +165,6 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
       </div>
       {!collapsed && (
         <>
-          <div
-            style={{
-              borderTop: '1px solid rgba(148, 163, 184, 0.22)',
-              paddingTop: '0.45rem',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.38rem',
-            }}
-          >
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}
-            >
-              <span style={{ fontSize: '0.68rem', color: '#94a3b8', opacity: 0.85, letterSpacing: '0.1em' }}>
-                {uiStrings.levelIndicator.zoneLabel}
-              </span>
-              {renderDangerPill()}
-            </div>
-            {zoneSummary && (
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: '0.66rem',
-                  lineHeight: 1.35,
-                  color: 'rgba(209, 213, 219, 0.88)',
-                }}
-              >
-                {zoneSummary}
-              </p>
-            )}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
-              <span style={{ fontSize: '0.66rem', color: 'rgba(148, 163, 184, 0.78)', letterSpacing: '0.09em' }}>
-                {uiStrings.levelIndicator.hazardsLabel}
-              </span>
-              {hazards.length === 0 ? (
-                <span style={{ fontSize: '0.64rem', color: 'rgba(148, 163, 184, 0.6)' }}>
-                  {uiStrings.levelIndicator.hazardsNone}
-                </span>
-              ) : (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '0.4rem',
-                  }}
-                >
-                  {hazards.map((hazard) => (
-                    <span key={hazard} style={hazardChipStyle}>
-                      {hazard}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            {zoneDirectives.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.24rem' }}>
-                <span style={{ fontSize: '0.66rem', color: 'rgba(148, 163, 184, 0.78)', letterSpacing: '0.09em' }}>
-                  {uiStrings.levelIndicator.zoneObjectivesLabel}
-                </span>
-                <ul
-                  style={{
-                    ...listBaseStyle,
-                    gap: '0.25rem',
-                  }}
-                >
-                  {zoneDirectives.map((directive) => (
-                    <li
-                      key={directive}
-                      style={{
-                        fontSize: '0.64rem',
-                        color: 'rgba(226, 232, 240, 0.86)',
-                        lineHeight: 1.35,
-                      }}
-                    >
-                      {directive}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
           <div
             style={{
               borderTop: '1px solid rgba(148, 163, 184, 0.22)',

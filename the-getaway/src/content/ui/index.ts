@@ -223,13 +223,16 @@ interface GeorgeStrings {
   questMore: string;
   interjectionIdle: string;
   logEmpty: string;
-  options: Record<'guidance' | 'status' | 'quests', string>;
-  references: Record<'guidance' | 'status' | 'quests' | 'ambient' | 'prompt', string>;
-  actors: Record<'george' | 'player', string>;
+  feedLabels: {
+    mission: string;
+    status: string;
+    guidance: string;
+    interjection: string;
+    zone: string;
+    ambient: string;
+  };
   ambientFeed: {
-    tabs: { intel: string; ambient: string };
     empty: string;
-    dockBadge: string;
     categoryLabels: Record<AmbientCategoryKey, string>;
     fallbacks: Record<'rumor' | 'signage' | 'weather', string>;
     storyFunctionLabels: Record<StoryFunctionKey, string>;
@@ -249,6 +252,13 @@ interface GeorgeStrings {
       zoneName?: string | null;
       additions: string[];
       removals: string[];
+    }, alignment: PersonalityAlignment) => string;
+    formatZoneBrief: (payload: {
+      zoneName?: string | null;
+      summary?: string | null;
+      dangerLabel: string;
+      hazards: string[];
+      directives: string[];
     }, alignment: PersonalityAlignment) => string;
   };
   ambient: string[];
@@ -494,36 +504,24 @@ const STRINGS: Record<Locale, UIStrings> = {
       questNone: 'No active quests on deck—time to improvise.',
       questMore: 'Additional objectives are parked in the ops log.',
       interjectionIdle: 'Console linked. You speak, I listen.',
-      logEmpty: 'Awaiting your command. No dialogue logged yet.',
-      options: {
-        guidance: 'What should I do?',
-        status: 'How are we doing?',
-        quests: 'Remind me of quests',
-      },
-      references: {
-        guidance: 'guidance',
-        status: 'status report',
-        quests: 'quest log',
-        ambient: 'ambient',
-        prompt: 'command',
-      },
-      actors: {
-        george: 'GEORGE',
-        player: 'YOU',
+      logEmpty: 'No notifications yet. I’ll ping when the city twitches.',
+      feedLabels: {
+        mission: 'Mission Intel',
+        status: 'Status',
+        guidance: 'Guidance',
+        interjection: 'Broadcast',
+        zone: 'Zone Brief',
+        ambient: 'Ambient',
       },
       ambientFeed: {
-        tabs: {
-          intel: 'Intel Feed',
-          ambient: 'Ambient Feed',
-        },
         empty: 'No ambient signals logged yet.',
-        dockBadge: 'Ambient ping',
         categoryLabels: {
           rumor: 'Rumor',
           signage: 'Signage',
           weather: 'Weather',
           zoneDanger: 'Danger',
           hazardChange: 'Hazards',
+          zoneBrief: 'Zone Brief',
         },
         fallbacks: {
           rumor: 'No rumors circulating.',
@@ -654,6 +652,25 @@ const STRINGS: Record<Locale, UIStrings> = {
               return `Hazard register (${zone}): ${summary} Logging adjustments.`;
             default:
               return `Hazard update for ${zone}: ${summary} Stay nimble.`;
+          }
+        },
+        formatZoneBrief: ({ zoneName, summary, dangerLabel, hazards, directives }, alignment) => {
+          const zone = zoneName ?? 'this sector';
+          const infoLines = [
+            `Danger: ${dangerLabel.toUpperCase()}`,
+            summary ? `Summary: ${summary}` : 'Summary: No intel logged.',
+            hazards.length ? `Hazards: ${hazards.join(', ')}` : 'Hazards: none logged.',
+            directives.length ? `Local directives: ${directives.join('; ')}` : 'Local directives: none posted.',
+          ].join('\n');
+          switch (alignment) {
+            case 'sarcastic':
+              return `Zone brief: ${zone}.\n${infoLines}\nStay sarcastic, stay alive.`;
+            case 'ruthless':
+              return `Zone briefing (${zone}).\n${infoLines}\nLeverage every edge.`;
+            case 'stoic':
+              return `Zone telemetry synced for ${zone}.\n${infoLines}\nAdjusting projections.`;
+            default:
+              return `Zone brief for ${zone}.\n${infoLines}\nKeep the crew steady.`;
           }
         },
       },
@@ -927,36 +944,24 @@ const STRINGS: Record<Locale, UIStrings> = {
       questNone: 'Наразі немає активних завдань — час дослідити район.',
       questMore: 'Додаткові цілі чекають у журналі операцій.',
       interjectionIdle: 'Канал відкрито. Говори — слухаю.',
-      logEmpty: 'Чекаю на твою команду. Діалогів ще не було.',
-      options: {
-        guidance: 'Що мені робити?',
-        status: 'Як у нас справи?',
-        quests: 'Нагадай про завдання',
-      },
-      references: {
-        guidance: 'керівництво',
-        status: 'звіт',
-        quests: 'журнал',
-        ambient: 'коментар',
-        prompt: 'запит',
-      },
-      actors: {
-        george: 'ДЖОРДЖ',
-        player: 'ТИ',
+      logEmpty: 'Сповіщень поки немає. Дам знак, коли місто заворушиться.',
+      feedLabels: {
+        mission: 'Місія',
+        status: 'Статус',
+        guidance: 'Підказка',
+        interjection: 'Вихід в ефір',
+        zone: 'Зведення зони',
+        ambient: 'Середовище',
       },
       ambientFeed: {
-        tabs: {
-          intel: 'Інтел-стрічка',
-          ambient: 'Середовище',
-        },
         empty: 'Сигнали середовища ще не зафіксовані.',
-        dockBadge: 'Сигнал середовища',
         categoryLabels: {
           rumor: 'Поголос',
           signage: 'Вивіски',
           weather: 'Погода',
           zoneDanger: 'Небезпека',
           hazardChange: 'Небезпеки',
+          zoneBrief: 'Зведення зони',
         },
         fallbacks: {
           rumor: 'Слухів не помічено.',
@@ -1087,6 +1092,25 @@ const STRINGS: Record<Locale, UIStrings> = {
               return `Журнал небезпек (${zone}): ${summary} Запис зроблено.`;
             default:
               return `Оновлення небезпек у ${zone}: ${summary} Тримайся гнучко.`;
+          }
+        },
+        formatZoneBrief: ({ zoneName, summary, dangerLabel, hazards, directives }, alignment) => {
+          const zone = zoneName ?? 'цей сектор';
+          const infoLines = [
+            `Небезпека: ${dangerLabel.toUpperCase()}`,
+            summary ? `Зведення: ${summary}` : 'Зведення: даних немає.',
+            hazards.length ? `Небезпеки: ${hazards.join(', ')}` : 'Небезпеки: не виявлено.',
+            directives.length ? `Локальні директиви: ${directives.join('; ')}` : 'Локальні директиви: відсутні.',
+          ].join('\n');
+          switch (alignment) {
+            case 'sarcastic':
+              return `Зведення зони: ${zone}.\n${infoLines}\nСарказм – теж броня.`;
+            case 'ruthless':
+              return `Бойове зведення (${zone}).\n${infoLines}\nВикористаємо кожну слабку ланку.`;
+            case 'stoic':
+              return `Телеметрія зони для ${zone}.\n${infoLines}\nКоригую сценарії.`;
+            default:
+              return `Зведення для ${zone}.\n${infoLines}\nБерегти команду.`;
           }
         },
       },

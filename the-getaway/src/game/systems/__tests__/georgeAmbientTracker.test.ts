@@ -18,11 +18,13 @@ const buildSnapshot = (overrides: Partial<GeorgeAmbientSnapshot> = {}): GeorgeAm
     rainIntensity: 0,
     thunderActive: false,
   },
-  zone: overrides.zone ?? {
-    zoneId: 'zone-1',
-    zoneName: 'Test Zone',
-    dangerRating: 'low',
-    hazards: [],
+  zone: {
+    zoneId: overrides.zone?.zoneId ?? 'zone-1',
+    zoneName: overrides.zone?.zoneName ?? 'Test Zone',
+    dangerRating: overrides.zone?.dangerRating ?? 'low',
+    hazards: overrides.zone?.hazards ?? [],
+    summary: overrides.zone?.summary ?? null,
+    directives: overrides.zone?.directives ?? [],
   },
 });
 
@@ -148,5 +150,32 @@ describe('GeorgeAmbientTracker', () => {
     expect(hazardEvent).toBeDefined();
     expect(hazardEvent?.added).toEqual(['Rooftop Snipers']);
     expect(hazardEvent?.removed).toEqual([]);
+  });
+
+  it('emits zone brief when zone metadata changes', () => {
+    const tracker = new GeorgeAmbientTracker({ cooldowns: { zoneBrief: 0 } });
+    tracker.prime(buildSnapshot());
+
+    const events = tracker.collect(
+      buildSnapshot({
+        zone: {
+          zoneId: 'zone-2',
+          zoneName: 'Neon Docks',
+          dangerRating: 'moderate',
+          hazards: ['Static Storm'],
+          summary: 'Dockhands are striking; patrols lean corporate.',
+          directives: ['Secure fuel lines', 'Protect picket leaders'],
+        },
+      }),
+      12000
+    );
+
+    const zoneBrief = events.find((event) => event.category === 'zoneBrief');
+    expect(zoneBrief).toBeDefined();
+    expect(zoneBrief).toMatchObject({
+      zoneName: 'Neon Docks',
+      hazards: ['Static Storm'],
+      directives: ['Secure fuel lines', 'Protect picket leaders'],
+    });
   });
 });

@@ -104,12 +104,16 @@ export const selectAmbientWorldSnapshot = createSelector(
       thunderActive: environment.weather.thunderActive,
     };
 
-    const zone: GeorgeAmbientZoneSnapshot = {
-      zoneId: currentArea?.zoneId ?? null,
-      zoneName: currentArea?.displayName ?? currentArea?.name ?? null,
-      dangerRating: currentArea?.dangerRating ?? null,
-      hazards: Array.isArray(currentArea?.hazards) ? [...currentArea.hazards] : [],
-    };
+  const zone: GeorgeAmbientZoneSnapshot = {
+    zoneId: currentArea?.zoneId ?? null,
+    zoneName: currentArea?.displayName ?? currentArea?.name ?? null,
+    dangerRating: currentArea?.dangerRating ?? null,
+    hazards: Array.isArray(currentArea?.hazards) ? [...currentArea.hazards] : [],
+    summary: currentArea?.summary ?? null,
+    directives: Array.isArray(currentArea?.objectives)
+      ? currentArea.objectives.filter((value) => value && value.trim().length > 0).map((value) => value.trim())
+      : [],
+  };
 
     return {
       flags: { ...environment.flags },

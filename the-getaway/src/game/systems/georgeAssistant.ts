@@ -237,6 +237,15 @@ export type GeorgeAmbientEvent =
       added: string[];
       removed: string[];
       zoneName: string | null;
+    }
+  | {
+      category: 'zoneBrief';
+      timestamp: number;
+      zoneName: string | null;
+      summary: string | null;
+      dangerRating: DangerRating | null;
+      hazards: string[];
+      directives: string[];
     };
 
 const ENVIRONMENT_FLAG_KEYS: Array<keyof EnvironmentFlags> = [
@@ -252,6 +261,7 @@ const DEFAULT_AMBIENT_COOLDOWNS: Record<GeorgeAmbientCategory, number> = {
   weather: 30000,
   zoneDanger: 15000,
   hazardChange: 12000,
+  zoneBrief: 60000,
 };
 
 const cloneFlags = (flags: EnvironmentFlags): EnvironmentFlags => ({
@@ -292,6 +302,8 @@ const cloneSnapshot = (snapshot: GeorgeAmbientSnapshot): GeorgeAmbientSnapshot =
     zoneName: snapshot.zone.zoneName,
     dangerRating: snapshot.zone.dangerRating,
     hazards: [...snapshot.zone.hazards],
+    summary: snapshot.zone.summary,
+    directives: [...snapshot.zone.directives],
   },
 });
 
@@ -308,6 +320,18 @@ const buildHazardMap = (hazards: string[]): Map<string, string> => {
     }
   });
   return map;
+};
+
+const areStringArraysEqual = (a: string[], b: string[]): boolean => {
+  if (a.length !== b.length) {
+    return false;
+  }
+  for (let index = 0; index < a.length; index += 1) {
+    if (a[index] !== b[index]) {
+      return false;
+    }
+  }
+  return true;
 };
 
 interface GeorgeAmbientTrackerOptions {
@@ -463,6 +487,24 @@ export class GeorgeAmbientTracker {
         added,
         removed,
         zoneName,
+      });
+    }
+
+    const zoneChanged =
+      previous.zone.zoneId !== current.zone.zoneId ||
+      previous.zone.zoneName !== current.zone.zoneName ||
+      previous.zone.summary !== current.zone.summary ||
+      !areStringArraysEqual(previous.zone.directives, current.zone.directives);
+
+    if (zoneChanged) {
+      events.push({
+        category: 'zoneBrief',
+        timestamp,
+        zoneName: current.zone.zoneName ?? zoneName,
+        summary: current.zone.summary ?? null,
+        dangerRating: current.zone.dangerRating ?? null,
+        hazards: [...current.zone.hazards],
+        directives: [...current.zone.directives],
       });
     }
 
