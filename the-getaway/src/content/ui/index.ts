@@ -20,7 +20,7 @@ type StatFocusKey =
   | 'fortuity';
 
 type PersonalityAlignment = 'earnest' | 'sarcastic' | 'ruthless' | 'stoic';
-type AmbientCategoryKey = 'rumor' | 'signage' | 'weather' | 'zoneDanger' | 'hazardChange';
+type AmbientCategoryKey = 'rumor' | 'signage' | 'weather' | 'zoneDanger' | 'hazardChange' | 'zoneBrief';
 type StoryFunctionKey = 'foreshadow' | 'misdirect' | 'payoff' | 'world-building';
 type EnvironmentFlagKey = 'gangHeat' | 'curfewLevel' | 'supplyScarcity' | 'blackoutTier';
 

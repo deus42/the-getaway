@@ -121,6 +121,45 @@ describe('GeorgeAmbientTracker', () => {
     });
   });
 
+  it('emits weather event when only time of day changes', () => {
+    const tracker = new GeorgeAmbientTracker({ cooldowns: { weather: 0 } });
+    tracker.prime(
+      buildSnapshot({
+        weather: {
+          presetId: 'overcast',
+          description: 'Overcast skyline',
+          storyFunction: 'world-building',
+          updatedAt: 400,
+          rainIntensity: 1,
+          thunderActive: false,
+          timeOfDay: 'day',
+        },
+      })
+    );
+
+    const events = tracker.collect(
+      buildSnapshot({
+        weather: {
+          presetId: 'overcast',
+          description: 'Overcast skyline',
+          storyFunction: 'world-building',
+          updatedAt: 400,
+          rainIntensity: 1,
+          thunderActive: false,
+          timeOfDay: 'night',
+        },
+      }),
+      600
+    );
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      category: 'weather',
+      presetId: 'overcast',
+      timeOfDay: 'night',
+    });
+  });
+
   it('aggregates hazard additions and removals into a single event', () => {
     const tracker = new GeorgeAmbientTracker({ cooldowns: { hazardChange: 0 } });
     tracker.prime(
@@ -130,6 +169,8 @@ describe('GeorgeAmbientTracker', () => {
           zoneName: 'Test Zone',
           dangerRating: 'low',
           hazards: ['Lingering Tear Gas'],
+          summary: null,
+          directives: [],
         },
       })
     );
@@ -141,6 +182,8 @@ describe('GeorgeAmbientTracker', () => {
           zoneName: 'Test Zone',
           dangerRating: 'moderate',
           hazards: ['Lingering Tear Gas', 'Rooftop Snipers'],
+          summary: null,
+          directives: [],
         },
       }),
       9000

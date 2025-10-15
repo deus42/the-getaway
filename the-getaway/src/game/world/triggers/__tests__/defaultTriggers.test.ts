@@ -3,6 +3,11 @@ import worldReducer, { setEnvironmentFlags, setGameTime } from '../../../../stor
 import playerReducer from '../../../../store/playerSlice';
 import settingsReducer from '../../../../store/settingsSlice';
 import logReducer from '../../../../store/logSlice';
+import questsReducer from '../../../../store/questsSlice';
+import combatFeedbackReducer from '../../../../store/combatFeedbackSlice';
+import missionsReducer from '../../../../store/missionSlice';
+import surveillanceReducer from '../../../../store/surveillanceSlice';
+import storyletReducer from '../../../../store/storyletSlice';
 import { ensureDefaultEnvironmentalTriggersRegistered, resetEnvironmentalTriggersForTest } from '../defaultTriggers';
 import { tickEnvironmentalTriggers } from '../triggerRegistry';
 import { RootState } from '../../../../store';
@@ -14,6 +19,11 @@ const createTestStore = () =>
       player: playerReducer,
       settings: settingsReducer,
       log: logReducer,
+      quests: questsReducer,
+      combatFeedback: combatFeedbackReducer,
+      missions: missionsReducer,
+      surveillance: surveillanceReducer,
+      storylets: storyletReducer,
     },
   });
 

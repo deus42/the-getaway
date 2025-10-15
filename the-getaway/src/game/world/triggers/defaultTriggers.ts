@@ -5,8 +5,6 @@ import {
   getSignageVariantsForFlag,
   getWeatherPresetForCurfewLevel,
   getWeatherPresetForGangHeat,
-  RumorRotationDefinition,
-  SignageVariantDefinition,
   EnvironmentalNoteDefinition,
 } from '../../../content/environment';
 import {
@@ -25,7 +23,7 @@ import {
 import { addLogMessage } from '../../../store/logSlice';
 import { getSystemStrings } from '../../../content/system';
 import { Item } from '../../interfaces/types';
-import { GangHeatLevel } from '../../interfaces/environment';
+import { BlackoutTier, GangHeatLevel, SupplyScarcityLevel } from '../../interfaces/environment';
 import { RootState } from '../../../store';
 
 type NpcMatcher = { dialogueId?: string; name?: string };
@@ -159,61 +157,86 @@ const createWeatherTriggers = (): EnvironmentalTrigger[] => [
         previousWeather.presetId !== desiredPreset.id ||
         previousWeather.timeOfDay !== currentTimeOfDay
       ) {
-        dispatch(addLogMessage(logStrings.environmentWeatherShift(desiredPreset.description)));
+        const weatherDescription = desiredPreset.description ?? desiredPreset.id;
+        dispatch(addLogMessage(logStrings.environmentWeatherShift(weatherDescription)));
       }
     },
   },
 ];
 
 const createSignageTriggers = (): EnvironmentalTrigger[] => {
-  const flags: Array<SignageVariantDefinition['flag']> = ['blackoutTier', 'supplyScarcity'];
+  const BLACKOUT_VALUES: BlackoutTier[] = ['none', 'brownout', 'rolling'];
+  const SUPPLY_VALUES: SupplyScarcityLevel[] = ['norm', 'tight', 'rationed'];
 
-  return flags
-    .flatMap((flag) => {
-      const values = flag === 'blackoutTier' ? ['none', 'brownout', 'rolling'] : ['norm', 'tight', 'rationed'];
+  const blackoutTriggers = BLACKOUT_VALUES.flatMap<EnvironmentalTrigger>((value) => {
+    const variants = getSignageVariantsForFlag('blackoutTier', value);
 
-      return values.flatMap<EnvironmentalTrigger>((value) => {
-        const variants = getSignageVariantsForFlag(
-          flag,
-          flag === 'blackoutTier' ? (value as SignageVariantDefinition['value']) : (value as SignageVariantDefinition['value'])
+    return variants.map((variant) => ({
+      id: `environment.signage.${variant.id}`,
+      cooldownMs: 4_000,
+      when: (state) => {
+        if (state.world.environment.flags.blackoutTier !== value) {
+          return false;
+        }
+
+        const currentVariant = state.world.environment.signage[variant.signId];
+        return !currentVariant || currentVariant.variantId !== variant.id;
+      },
+      fire: ({ dispatch, getState, now }) => {
+        const locale = getState().settings.locale;
+        const logStrings = getSystemStrings(locale).logs;
+
+        dispatch(
+          applyEnvironmentSignage({
+            signId: variant.signId,
+            snapshot: {
+              variantId: variant.id,
+              storyFunction: variant.storyFunction,
+              updatedAt: now,
+            },
+          })
         );
 
-        return variants.map((variant) => ({
-          id: `environment.signage.${variant.id}`,
-          cooldownMs: 4_000,
-          when: (state) => {
-            const currentValue =
-              flag === 'blackoutTier'
-                ? state.world.environment.flags.blackoutTier
-                : state.world.environment.flags.supplyScarcity;
+        dispatch(addLogMessage(logStrings.environmentSignageSwap(variant.text)));
+      },
+    }));
+  });
 
-            if (currentValue !== value) {
-              return false;
-            }
+  const supplyTriggers = SUPPLY_VALUES.flatMap<EnvironmentalTrigger>((value) => {
+    const variants = getSignageVariantsForFlag('supplyScarcity', value);
 
-            const currentVariant = state.world.environment.signage[variant.signId];
-            return !currentVariant || currentVariant.variantId !== variant.id;
-          },
-          fire: ({ dispatch, getState, now }) => {
-            const locale = getState().settings.locale;
-            const logStrings = getSystemStrings(locale).logs;
+    return variants.map((variant) => ({
+      id: `environment.signage.${variant.id}`,
+      cooldownMs: 4_000,
+      when: (state) => {
+        if (state.world.environment.flags.supplyScarcity !== value) {
+          return false;
+        }
 
-            dispatch(
-              applyEnvironmentSignage({
-                signId: variant.signId,
-                snapshot: {
-                  variantId: variant.id,
-                  storyFunction: variant.storyFunction,
-                  updatedAt: now,
-                },
-              })
-            );
+        const currentVariant = state.world.environment.signage[variant.signId];
+        return !currentVariant || currentVariant.variantId !== variant.id;
+      },
+      fire: ({ dispatch, getState, now }) => {
+        const locale = getState().settings.locale;
+        const logStrings = getSystemStrings(locale).logs;
 
-            dispatch(addLogMessage(logStrings.environmentSignageSwap(variant.text)));
-          },
-        }));
-      });
-    });
+        dispatch(
+          applyEnvironmentSignage({
+            signId: variant.signId,
+            snapshot: {
+              variantId: variant.id,
+              storyFunction: variant.storyFunction,
+              updatedAt: now,
+            },
+          })
+        );
+
+        dispatch(addLogMessage(logStrings.environmentSignageSwap(variant.text)));
+      },
+    }));
+  });
+
+  return [...blackoutTriggers, ...supplyTriggers];
 };
 
 const findNotePosition = (state: RootState, definition: EnvironmentalNoteDefinition) => {
@@ -230,17 +253,15 @@ const findNotePosition = (state: RootState, definition: EnvironmentalNoteDefinit
 };
 
 const createNoteTriggers = (): EnvironmentalTrigger[] => {
-  const noteFlags: Array<EnvironmentalNoteDefinition['flag']> = ['supplyScarcity', 'curfewLevel', 'gangHeat'];
+  const SCARCITY_VALUES: SupplyScarcityLevel[] = ['norm', 'tight', 'rationed'];
+  const HEAT_VALUES: GangHeatLevel[] = ['low', 'med', 'high'];
+  const CURFEW_VALUES: number[] = [0, 1, 2, 3];
 
-  return noteFlags.flatMap<EnvironmentalTrigger>((flag) => {
-    const candidateValues =
-      flag === 'supplyScarcity'
-        ? ['norm', 'tight', 'rationed']
-        : flag === 'gangHeat'
-        ? ['low', 'med', 'high']
-        : [0, 1, 2, 3];
-
-    return candidateValues.flatMap<EnvironmentalTrigger>((value) => {
+  const buildTriggers = <T extends EnvironmentalNoteDefinition['value']>(
+    flag: EnvironmentalNoteDefinition['flag'],
+    values: readonly T[]
+  ): EnvironmentalTrigger[] =>
+    values.flatMap<EnvironmentalTrigger>((value) => {
       const definitions = getNoteDefinitionsForFlag(flag, value);
 
       return definitions.map<EnvironmentalTrigger>((definition) => ({
@@ -307,7 +328,12 @@ const createNoteTriggers = (): EnvironmentalTrigger[] => {
         },
       }));
     });
-  });
+
+  return [
+    ...buildTriggers('supplyScarcity', SCARCITY_VALUES),
+    ...buildTriggers('gangHeat', HEAT_VALUES),
+    ...buildTriggers('curfewLevel', CURFEW_VALUES),
+  ];
 };
 
 let triggersRegistered = false;
