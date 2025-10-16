@@ -301,7 +301,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
               aria-pressed={showProfile}
               onClick={() => setShowProfile((current) => !current)}
             >
-              Profile
+              {uiStrings.character.profileToggle}
             </button>
             <button
               type="button"
@@ -312,7 +312,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
               aria-pressed={showSystems}
               onClick={() => setShowSystems((current) => !current)}
             >
-              Systems
+              {uiStrings.character.systemsToggle}
             </button>
             <button
               type="button"
@@ -321,7 +321,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
               data-testid="close-character"
               ref={closeButtonRef}
             >
-              Close
+              {uiStrings.character.closeLabel}
             </button>
           </div>
         </header>
@@ -335,15 +335,13 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
           {showSystems && (
             <div style={systemsColumnStyle}>
               <div style={tabShellStyle}>
-                <div style={tabListStyle} role="tablist" aria-label="Character systems">
-                  {(
-                    [
-                      { id: 'inventory', label: 'Inventory' },
-                      { id: 'loadout', label: 'Loadout' },
-                      { id: 'skills', label: 'Skill Tree' },
-                      { id: 'reputation', label: 'Reputation' },
-                    ] as const
-                  ).map((tab) => {
+                <div style={tabListStyle} role="tablist" aria-label={uiStrings.character.tablistAria}>
+                  {([
+                    { id: 'inventory', label: uiStrings.character.tabs.inventory },
+                    { id: 'loadout', label: uiStrings.character.tabs.loadout },
+                    { id: 'skills', label: uiStrings.character.tabs.skills },
+                    { id: 'reputation', label: uiStrings.character.tabs.reputation },
+                  ] as const).map((tab) => {
                   const isActive = activeTab === tab.id;
                   return (
                     <button
@@ -414,7 +412,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
           )}
           {!showProfile && !showSystems && (
             <div style={{ ...hiddenStateStyle, gridColumn: '1 / -1' }}>
-              Toggle a panel to view character data.
+              {uiStrings.character.hiddenState}
             </div>
           )}
         </div>

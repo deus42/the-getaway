@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import {
@@ -36,7 +36,9 @@ const INTERJECTION_COOLDOWN_MS = 9000;
 const INTERJECTION_DISPLAY_MS = 5200;
 const AMBIENT_BANTER_MIN_MS = 48000;
 const AMBIENT_BANTER_MAX_MS = 96000;
-const DOCK_TICKER_INTERVAL_MS = 20000;
+const DOCK_TICKER_MIN_DURATION_MS = 26000;
+const DOCK_TICKER_MAX_DURATION_MS = 62000;
+const DOCK_TICKER_MS_PER_CHARACTER = 580;
 const FEED_ENTRY_LIMIT = 12;
 
 const FALLBACK_AMBIENT = [
@@ -181,7 +183,7 @@ const styles = `
   }
   .george-dock-status--scroll {
     padding-left: 100%;
-    animation: george-dock-ticker 20s linear infinite;
+    animation: george-dock-ticker var(--ticker-duration, 32s) linear infinite;
   }
   @keyframes george-dock-ticker {
     0% {
@@ -522,21 +524,21 @@ const GeorgeAssistant: React.FC = () => {
   }, [scheduleAmbientBanter]);
 
   useEffect(() => {
-    const levelName = missionProgress?.name ?? 'current zone';
+    const levelName = missionProgress?.name ?? georgeStrings.zoneFallback;
     const missionLines: string[] = [];
 
     if (missionProgress) {
       if (missionProgress.allPrimaryComplete) {
-        missionLines.push(`• Primary: Mission accomplished in ${levelName}.`);
+        missionLines.push(georgeStrings.guidancePrimaryComplete(levelName));
       } else if (nextPrimaryObjective) {
-        const suffix = nextPrimaryObjective.totalQuests > 1
-          ? ` (${nextPrimaryObjective.completedQuests}/${nextPrimaryObjective.totalQuests})`
+        const progress = nextPrimaryObjective.totalQuests > 1
+          ? georgeStrings.guidanceProgress(nextPrimaryObjective.completedQuests ?? 0, nextPrimaryObjective.totalQuests)
           : '';
-        missionLines.push(`• Primary: ${nextPrimaryObjective.label}${suffix}`);
+        missionLines.push(georgeStrings.guidancePrimaryObjective(nextPrimaryObjective.label, progress));
       }
 
       if (nextSideObjective) {
-        missionLines.push(`• Optional: ${nextSideObjective.label}`);
+        missionLines.push(georgeStrings.guidanceSideObjective(nextSideObjective.label));
       }
     }
 
@@ -716,7 +718,7 @@ const GeorgeAssistant: React.FC = () => {
         return;
       }
 
-      const message = `Mission secured in ${detail.name}. Awaiting redeploy.`;
+      const message = georgeStrings.missionComplete(detail.name);
       pushFeedEntry({
         category: 'mission',
         label: georgeStrings.feedLabels.mission,
@@ -732,7 +734,7 @@ const GeorgeAssistant: React.FC = () => {
       }
 
       const nextDescriptor = detail.nextLevelId ?? `level ${detail.nextLevel}`;
-      const message = `Prepping overlays for ${nextDescriptor}. Say the word and I’ll broadcast updates.`;
+      const message = georgeStrings.levelAdvance(nextDescriptor);
       pushFeedEntry({
         category: 'status',
         label: georgeStrings.feedLabels.status,
@@ -747,7 +749,14 @@ const GeorgeAssistant: React.FC = () => {
       window.removeEventListener(MISSION_ACCOMPLISHED_EVENT, handleMissionAccomplished as EventListener);
       window.removeEventListener(LEVEL_ADVANCE_REQUESTED_EVENT, handleLevelAdvance as EventListener);
     };
-  }, [georgeStrings.feedLabels.mission, georgeStrings.feedLabels.status, pushFeedEntry, queueInterjection]);
+  }, [
+    georgeStrings.feedLabels.mission,
+    georgeStrings.feedLabels.status,
+    georgeStrings.levelAdvance,
+    georgeStrings.missionComplete,
+    pushFeedEntry,
+    queueInterjection,
+  ]);
 
   useEffect(() => {
     const completed = new Set(quests.filter((quest) => quest.isCompleted).map((quest) => quest.id));
@@ -919,6 +928,30 @@ const GeorgeAssistant: React.FC = () => {
     setTickerKey(Date.now());
   }, [feedSignature]);
 
+  const tickerText = feedLines[tickerIndex] ?? georgeStrings.dockStatusIdle;
+  const animateTicker = tickerText.length > 20;
+  const tickerDurationMs = useMemo(() => {
+    if (!animateTicker) {
+      return DOCK_TICKER_MIN_DURATION_MS;
+    }
+    const estimated = tickerText.length * DOCK_TICKER_MS_PER_CHARACTER;
+    if (estimated < DOCK_TICKER_MIN_DURATION_MS) {
+      return DOCK_TICKER_MIN_DURATION_MS;
+    }
+    if (estimated > DOCK_TICKER_MAX_DURATION_MS) {
+      return DOCK_TICKER_MAX_DURATION_MS;
+    }
+    return estimated;
+  }, [animateTicker, tickerText]);
+  const tickerStyle = useMemo<CSSProperties | undefined>(() => {
+    if (!animateTicker) {
+      return undefined;
+    }
+    return {
+      '--ticker-duration': `${tickerDurationMs}ms`,
+    } as CSSProperties;
+  }, [animateTicker, tickerDurationMs]);
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
@@ -926,18 +959,14 @@ const GeorgeAssistant: React.FC = () => {
     if (feedLines.length <= 1) {
       return undefined;
     }
-    const interval = window.setInterval(() => {
-      setTickerIndex((prev) => {
-        const next = prev + 1;
-        return next >= feedLines.length ? 0 : next;
-      });
-      setTickerKey(Date.now());
-    }, DOCK_TICKER_INTERVAL_MS);
-    return () => window.clearInterval(interval);
-  }, [feedLines.length, feedSignature]);
-
-  const tickerText = feedLines[tickerIndex] ?? georgeStrings.dockStatusIdle;
-  const animateTicker = tickerText.length > 20;
+    const nextIndex = tickerIndex + 1 >= feedLines.length ? 0 : tickerIndex + 1;
+    const nextKeySeed = Date.now() + feedSignature.length;
+    const timeout = window.setTimeout(() => {
+      setTickerIndex(nextIndex);
+      setTickerKey(nextKeySeed);
+    }, tickerDurationMs);
+    return () => window.clearTimeout(timeout);
+  }, [feedLines.length, feedSignature, tickerDurationMs, tickerIndex]);
 
   const feedViewRef = useRef<HTMLDivElement | null>(null);
 
@@ -986,6 +1015,7 @@ const GeorgeAssistant: React.FC = () => {
                 key={tickerKey}
                 className={`george-dock-status${animateTicker ? ' george-dock-status--scroll' : ''}`}
                 title={tickerText}
+                style={tickerStyle}
               >
                 {tickerText}
               </span>

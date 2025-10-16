@@ -75,6 +75,7 @@ interface PlayerStatusStrings {
   creditsLabel: string;
   actionPointsLabel: string;
   staminaLabel: string;
+  healthLabel: string;
   fatigueStatus: string;
   fatigueHint: string;
   crouchIndicator: string;
@@ -104,6 +105,12 @@ interface PlayerStatusStrings {
     corpsec: string;
     scavengers: string;
   };
+  loadLabel: string;
+  itemsLabel: string;
+  perksLabel: string;
+  backgroundLabel: string;
+  backgroundFallback: string;
+  loadUnit: string;
 }
 
 interface DerivedStatsStrings {
@@ -211,6 +218,144 @@ interface PerkStrings {
   emptyLabel: string;
 }
 
+type InventoryFilterId = 'all' | 'weapons' | 'armor' | 'consumables' | 'quest' | 'misc';
+type EquipmentSlotKey =
+  | 'primaryWeapon'
+  | 'secondaryWeapon'
+  | 'meleeWeapon'
+  | 'bodyArmor'
+  | 'helmet'
+  | 'accessory1'
+  | 'accessory2';
+type EncumbranceDescriptorKey = 'normal' | 'heavy' | 'overloaded' | 'immobile' | 'unknown';
+type SkillBranchKey = 'combat' | 'tech' | 'survival' | 'social';
+
+interface TurnTrackerStrings {
+  heading: string;
+  playerTurn: string;
+  enemyTurn: string;
+  exploration: string;
+  hostileReadout: string;
+  timeLabel: string;
+}
+
+interface CharacterScreenStrings {
+  profileToggle: string;
+  systemsToggle: string;
+  closeLabel: string;
+  tablistAria: string;
+  tabs: Record<'inventory' | 'loadout' | 'skills' | 'reputation', string>;
+  hiddenState: string;
+}
+
+interface InventoryPanelStrings {
+  title: string;
+  summary: (inventoryWeight: string, loadoutWeight: string) => string;
+  filters: Record<InventoryFilterId, string>;
+  filtersAriaLabel: string;
+  itemsAriaLabel: string;
+  equippedAriaLabel: string;
+  hotbarAriaLabel: string;
+  showingCount: (visible: number, total: number) => string;
+  emptyState: string;
+  weightTitle: string;
+  badges: {
+    quest: string;
+    weapon: string;
+    armor: string;
+    consumable: string;
+  };
+  encumbranceLabel: string;
+  encumbranceDescriptors: Record<EncumbranceDescriptorKey, string>;
+  encumbranceSummary: {
+    normal: string;
+    heavy: (movement: number, attack: number) => string;
+    overloaded: (movement: number, attack: number) => string;
+    immobile: string;
+    unknown: string;
+  };
+  encumbranceWarning: Record<EncumbranceDescriptorKey, string | null>;
+  weightValue: (weight: string, value: number) => string;
+  durabilityLabel: (current: number, max: number) => string;
+  conditionLabel: (percentage: number) => string;
+  itemWeightAria: (weight: string, value: number) => string;
+  actions: {
+    equip: string;
+    unequip: string;
+    use: string;
+    repair: (cost: number) => string;
+    repairAria: (itemName: string, cost: number) => string;
+    addToHotbar: string;
+    removeFromHotbar: string;
+    hotbarFull: string;
+    clearHotbar: string;
+  };
+  equipment: {
+    title: string;
+    slotEmpty: string;
+    slots: Record<EquipmentSlotKey, { label: string; description: string; empty: string }>;
+    conditionHeading: string;
+    noCompatible: string;
+  };
+  hotbar: {
+    title: string;
+    slotLabel: (index: number) => string;
+    unassigned: string;
+  };
+  hotbarBadge: (index: number) => string;
+}
+
+interface LoadoutPanelStrings {
+  ariaLabel: string;
+  headingLabel: string;
+  headingTitle: string;
+  perksLabel: string;
+  noPerks: string;
+  stats: {
+    damage: string;
+    range: string;
+    apCost: string;
+    skill: string;
+    protection: string;
+    weight: string;
+    value: string;
+    durability: string;
+  };
+  condition: {
+    pristine: (percentage: number) => string;
+    broken: string;
+    critical: (percentage: number) => string;
+    worn: (percentage: number) => string;
+    used: (percentage: number) => string;
+  };
+  actions: {
+    unequip: string;
+    equip: (itemName: string) => string;
+  };
+  noCompatible: string;
+}
+
+interface SkillTreePanelStrings {
+  title: string;
+  baseHint: string;
+  pointsLabel: (count: number) => string;
+  tablistAria: string;
+  branches: Record<SkillBranchKey, string>;
+  tagBadge: string;
+  incrementLabel: (increment: number, tagged: boolean) => string;
+  decreaseAria: (skillName: string) => string;
+  increaseAria: (skillName: string) => string;
+  announcement: (skillName: string, verb: 'increase' | 'decrease', value: number, effect: string) => string;
+}
+
+interface PlayerStatsPanelStrings {
+  ariaLabel: string;
+  equipmentWarning: string;
+  rankLabel: (value: number) => string;
+  baseLabel: (value: number) => string;
+  focusLabel: (focusName: string) => string;
+}
+
 interface GeorgeStrings {
   dockLabel: string;
   dockStatusIdle: string;
@@ -231,6 +376,13 @@ interface GeorgeStrings {
     zone: string;
     ambient: string;
   };
+  levelAdvance: (descriptor: string) => string;
+  guidancePrimaryComplete: (levelName: string) => string;
+  guidancePrimaryObjective: (label: string, progress?: string) => string;
+  guidanceSideObjective: (label: string) => string;
+  guidanceProgress: (completed: number, total: number) => string;
+  missionComplete: (name: string) => string;
+  zoneFallback: string;
   ambientFeed: {
     empty: string;
     categoryLabels: Record<AmbientCategoryKey, string>;
@@ -279,6 +431,12 @@ interface UIStrings {
   skills: Record<SkillKey, string>;
   skillDescriptions: Record<SkillKey, string>;
   statFocus: Record<StatFocusKey, string>;
+  turnTracker: TurnTrackerStrings;
+  character: CharacterScreenStrings;
+  inventoryPanel: InventoryPanelStrings;
+  loadoutPanel: LoadoutPanelStrings;
+  skillTreePanel: SkillTreePanelStrings;
+  playerStatsPanel: PlayerStatsPanelStrings;
   george: GeorgeStrings;
   mission: MissionStrings;
 }
@@ -337,6 +495,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       creditsLabel: 'Credits',
       actionPointsLabel: 'Action Points',
       staminaLabel: 'Stamina',
+      healthLabel: 'Health',
       fatigueStatus: 'Fatigued',
       fatigueHint: 'Fatigue makes this harder—rest or recover stamina to shake it off.',
       crouchIndicator: 'Crouching',
@@ -378,6 +537,12 @@ const STRINGS: Record<Locale, UIStrings> = {
         corpsec: 'CorpSec',
         scavengers: 'Scavengers',
       },
+      loadLabel: 'Load',
+      itemsLabel: 'Items',
+      perksLabel: 'Perks',
+      backgroundLabel: 'Background',
+      backgroundFallback: 'Unaffiliated',
+      loadUnit: 'kg',
     },
     factionPanel: {
       heading: 'Faction Reputation',
@@ -505,6 +670,13 @@ const STRINGS: Record<Locale, UIStrings> = {
       questMore: 'Additional objectives are parked in the ops log.',
       interjectionIdle: 'Console linked. You speak, I listen.',
       logEmpty: 'No notifications yet. I’ll ping when the city twitches.',
+      levelAdvance: (descriptor) => `Prepping overlays for ${descriptor}. Say the word and I’ll broadcast updates.`,
+      guidancePrimaryComplete: (levelName) => `• Primary: Mission accomplished in ${levelName}.`,
+      guidancePrimaryObjective: (label, progress = '') => `• Primary: ${label}${progress}`,
+      guidanceSideObjective: (label) => `• Optional: ${label}`,
+      guidanceProgress: (completed, total) => ` (${completed}/${total})`,
+      missionComplete: (name) => `Mission secured in ${name}. Awaiting redeploy.`,
+      zoneFallback: 'current zone',
       feedLabels: {
         mission: 'Mission Intel',
         status: 'Status',
@@ -717,6 +889,198 @@ const STRINGS: Record<Locale, UIStrings> = {
       mobility: 'Mobility',
       fortuity: 'Fortune',
     },
+    turnTracker: {
+      heading: 'Turn Status',
+      playerTurn: 'Player Turn',
+      enemyTurn: 'Enemy Turn',
+      exploration: 'Exploration',
+      hostileReadout: 'Hostile Readout',
+      timeLabel: 'Local Time',
+    },
+    character: {
+      profileToggle: 'Profile',
+      systemsToggle: 'Systems',
+      closeLabel: 'Close',
+      tablistAria: 'Character systems',
+      tabs: {
+        inventory: 'Inventory',
+        loadout: 'Loadout',
+        skills: 'Skill Tree',
+        reputation: 'Reputation',
+      },
+      hiddenState: 'Toggle a panel to view character data.',
+    },
+    inventoryPanel: {
+      title: 'Inventory',
+      summary: (inventoryWeight, loadoutWeight) => `Inventory ${inventoryWeight} · Loadout ${loadoutWeight}`,
+      filters: {
+        all: 'All',
+        weapons: 'Weapons',
+        armor: 'Armor',
+        consumables: 'Consumables',
+        quest: 'Quest',
+        misc: 'Misc',
+      },
+      filtersAriaLabel: 'Inventory filters',
+      itemsAriaLabel: 'Inventory items',
+      equippedAriaLabel: 'Equipped items',
+      hotbarAriaLabel: 'Hotbar assignments',
+      showingCount: (visible, total) => `Showing ${visible} of ${total} items`,
+      emptyState: 'Pack is empty — time to scavenge.',
+      weightTitle: 'Total Weight',
+      badges: {
+        quest: 'Quest',
+        weapon: 'Weapon',
+        armor: 'Armor',
+        consumable: 'Use',
+      },
+      encumbranceLabel: 'Encumbrance',
+      encumbranceDescriptors: {
+        normal: 'Stable',
+        heavy: 'Heavy',
+        overloaded: 'Overloaded',
+        immobile: 'Immobile',
+        unknown: 'Unknown',
+      },
+      encumbranceSummary: {
+        normal: 'Encumbrance nominal',
+        heavy: (movement, attack) =>
+          `Heavy load: movement x${movement.toFixed(2)}, attacks x${attack.toFixed(2)}`,
+        overloaded: (movement, attack) =>
+          `Overloaded: movement x${movement.toFixed(2)}, attacks x${attack.toFixed(2)}`,
+        immobile: 'Immobile: cannot move or act',
+        unknown: 'Encumbrance unknown',
+      },
+      encumbranceWarning: {
+        normal: null,
+        heavy: 'Pack weight is slowing you. You will bleed AP if you keep hauling this much.',
+        overloaded: 'Overloaded. Movement now chews double AP until you off-load gear.',
+        immobile: 'You are pinned by your gear. Drop items before you can move or fight.',
+        unknown: null,
+      },
+      weightValue: (weight, value) => `${weight} • ₿${value}`,
+      durabilityLabel: (current, max) => `Durability ${current}/${max}`,
+      conditionLabel: (percentage) => `Condition ${percentage}%`,
+      itemWeightAria: (weight, value) => `Weight ${weight}, value ₿${value}`,
+      actions: {
+        equip: 'Equip',
+        unequip: 'Unequip',
+        use: 'Use',
+        repair: (cost) => `Repair (${cost} parts)`,
+        repairAria: (itemName, cost) => `Repair ${itemName}, estimated cost ${cost} parts`,
+        addToHotbar: 'Add to Hotbar',
+        removeFromHotbar: 'Remove from Hotbar',
+        hotbarFull: 'Hotbar Full',
+        clearHotbar: 'Clear',
+      },
+      equipment: {
+        title: 'Equipped Loadout',
+        slotEmpty: 'Empty',
+        slots: {
+          primaryWeapon: {
+            label: 'Primary Weapon',
+            description: 'Main-hand firearms and rifles.',
+            empty: 'No weapon equipped',
+          },
+          secondaryWeapon: {
+            label: 'Secondary Weapon',
+            description: 'Sidearms and backup firearms.',
+            empty: 'No sidearm equipped',
+          },
+          meleeWeapon: {
+            label: 'Melee Weapon',
+            description: 'Close-quarters blades and batons.',
+            empty: 'No melee weapon equipped',
+          },
+          bodyArmor: {
+            label: 'Body Armor',
+            description: 'Chest protection layers.',
+            empty: 'No armor equipped',
+          },
+          helmet: {
+            label: 'Headgear',
+            description: 'Visors, helmets, and masks.',
+            empty: 'No headgear equipped',
+          },
+          accessory1: {
+            label: 'Accessory I',
+            description: 'Implants, belts, or wrist mods.',
+            empty: 'No accessory slotted',
+          },
+          accessory2: {
+            label: 'Accessory II',
+            description: 'Secondary accessory slot.',
+            empty: 'No accessory slotted',
+          },
+        },
+        conditionHeading: 'Condition',
+        noCompatible: 'No compatible items in pack',
+      },
+      hotbar: {
+        title: 'Hotbar',
+        slotLabel: (index) => `Slot ${index}`,
+        unassigned: 'Unassigned',
+      },
+      hotbarBadge: (index) => `Hotbar ${index}`,
+    },
+    loadoutPanel: {
+      ariaLabel: 'Player Loadout',
+      headingLabel: 'Operative',
+      headingTitle: 'Loadout',
+      perksLabel: 'Perks',
+      noPerks: 'No perks acquired',
+      stats: {
+        damage: 'Damage',
+        range: 'Range',
+        apCost: 'AP Cost',
+        skill: 'Skill',
+        protection: 'Protection',
+        weight: 'Weight',
+        value: 'Value',
+        durability: 'Durability',
+      },
+      condition: {
+        pristine: (percentage) => `Condition ${percentage}%`,
+        broken: 'Condition 0% – Broken',
+        critical: (percentage) => `Condition ${percentage}% – Critical`,
+        worn: (percentage) => `Condition ${percentage}% – Worn`,
+        used: (percentage) => `Condition ${percentage}%`,
+      },
+      actions: {
+        unequip: 'Unequip',
+        equip: (itemName) => `Equip ${itemName}`,
+      },
+      noCompatible: 'No compatible items in pack',
+    },
+    skillTreePanel: {
+      title: 'Skill Trees',
+      baseHint: '+5 base • +10 tagged',
+      pointsLabel: (count) => `${count} Skill Point${count === 1 ? '' : 's'}`,
+      tablistAria: 'Skill branches',
+      branches: {
+        combat: 'Combat',
+        tech: 'Tech',
+        survival: 'Survival',
+        social: 'Social',
+      },
+      tagBadge: 'Tag',
+      incrementLabel: (increment, tagged) =>
+        tagged ? `1 pt → +${increment} (tag)` : `1 pt → +${increment}`,
+      decreaseAria: (skillName) => `Decrease ${skillName}`,
+      increaseAria: (skillName) => `Increase ${skillName}`,
+      announcement: (skillName, verb, value, effect) => `${skillName} ${verb} to ${value}. ${effect}`,
+      verbs: {
+        increase: 'increased',
+        decrease: 'decreased',
+      },
+    },
+    playerStatsPanel: {
+      ariaLabel: 'Player statistics',
+      equipmentWarning: 'Equipment stats unavailable. Showing base attributes only.',
+      rankLabel: (value) => `Rank ${value}`,
+      baseLabel: (value) => `Base ${value}`,
+      focusLabel: (focusName) => `${focusName} Focus`,
+    },
   },
   uk: {
     menu: {
@@ -774,6 +1138,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       creditsLabel: 'Кредити',
       actionPointsLabel: 'Очки дії',
       staminaLabel: 'Витривалість',
+      healthLabel: 'Здоровʼя',
       fatigueStatus: 'Виснажено',
       fatigueHint: 'Виснаження ускладнює кожну дію — відпочиньте або відновіть витривалість.',
       crouchIndicator: 'Присів',
@@ -815,6 +1180,12 @@ const STRINGS: Record<Locale, UIStrings> = {
         corpsec: 'КорпСек',
         scavengers: 'Мародери',
       },
+      loadLabel: 'Навантаження',
+      itemsLabel: 'Предмети',
+      perksLabel: 'Таланти',
+      backgroundLabel: 'Походження',
+      backgroundFallback: 'Без приналежності',
+      loadUnit: 'кг',
     },
     factionPanel: {
       heading: 'Репутація у фракціях',
@@ -945,6 +1316,13 @@ const STRINGS: Record<Locale, UIStrings> = {
       questMore: 'Додаткові цілі чекають у журналі операцій.',
       interjectionIdle: 'Канал відкрито. Говори — слухаю.',
       logEmpty: 'Сповіщень поки немає. Дам знак, коли місто заворушиться.',
+      levelAdvance: (descriptor) => `Готую накладки для ${descriptor}. Дай сигнал — запущу трансляцію.`,
+      guidancePrimaryComplete: (levelName) => `• Основна: місію у ${levelName} виконано.`,
+      guidancePrimaryObjective: (label, progress = '') => `• Основна: ${label}${progress}`,
+      guidanceSideObjective: (label) => `• Побічна: ${label}`,
+      guidanceProgress: (completed, total) => ` (${completed}/${total})`,
+      missionComplete: (name) => `Операцію в ${name} завершено. Чекаю на нове розгортання.`,
+      zoneFallback: 'поточна зона',
       feedLabels: {
         mission: 'Місія',
         status: 'Статус',
@@ -1156,6 +1534,207 @@ const STRINGS: Record<Locale, UIStrings> = {
       intellect: 'Тактичний інтелект',
       mobility: 'Мобільність',
       fortuity: 'Удача',
+    },
+    turnTracker: {
+      heading: 'Стан ходу',
+      playerTurn: 'Хід гравця',
+      enemyTurn: 'Хід ворога',
+      exploration: 'Дослідження',
+      hostileReadout: 'Зведення ворогів',
+      timeLabel: 'Локальний час',
+    },
+    character: {
+      profileToggle: 'Профіль',
+      systemsToggle: 'Системи',
+      closeLabel: 'Закрити',
+      tablistAria: 'Системи персонажа',
+      tabs: {
+        inventory: 'Інвентар',
+        loadout: 'Спорядження',
+        skills: 'Дерево навичок',
+        reputation: 'Репутація',
+      },
+      hiddenState: 'Увімкніть панель, щоб переглянути дані оперативника.',
+    },
+    inventoryPanel: {
+      title: 'Інвентар',
+      summary: (inventoryWeight, loadoutWeight) => `Інвентар ${inventoryWeight} · Спорядження ${loadoutWeight}`,
+      filters: {
+        all: 'Усе',
+        weapons: 'Зброя',
+        armor: 'Броня',
+        consumables: 'Витратні',
+        quest: 'Завдання',
+        misc: 'Інше',
+      },
+      filtersAriaLabel: 'Фільтри інвентарю',
+      itemsAriaLabel: 'Елементи інвентарю',
+      equippedAriaLabel: 'Екіпіровані предмети',
+      hotbarAriaLabel: 'Оснащення хотбару',
+      showingCount: (visible, total) => `Показано ${visible} з ${total} предметів`,
+      emptyState: 'Наплічник порожній — час на пошуки.',
+      weightTitle: 'Загальна вага',
+      badges: {
+        quest: 'Квест',
+        weapon: 'Зброя',
+        armor: 'Броня',
+        consumable: 'Використати',
+      },
+      encumbranceLabel: 'Навантаження',
+      encumbranceDescriptors: {
+        normal: 'Стабільне',
+        heavy: 'Важке',
+        overloaded: 'Перевантаження',
+        immobile: 'Нерухомий',
+        unknown: 'Невідоме',
+      },
+      encumbranceSummary: {
+        normal: 'Навантаження в нормі',
+        heavy: (movement, attack) =>
+          `Важке навантаження: рух x${movement.toFixed(2)}, атаки x${attack.toFixed(2)}`,
+        overloaded: (movement, attack) =>
+          `Критичне перевантаження: рух x${movement.toFixed(2)}, атаки x${attack.toFixed(2)}`,
+        immobile: 'Нерухомий: не може рухатись чи діяти',
+        unknown: 'Навантаження невідоме',
+      },
+      encumbranceWarning: {
+        normal: null,
+        heavy: 'Вага гальмує. Ви втратите ОД, якщо не розвантажитеся.',
+        overloaded: 'Перевантажено. Рух коштує подвійні ОД, доки не позбудетеся баласту.',
+        immobile: 'Спорядження скувало вас. Скиньте речі, щоб зрушити.',
+        unknown: null,
+      },
+      weightValue: (weight, value) => `${weight} • ₿${value}`,
+      durabilityLabel: (current, max) => `Міцність ${current}/${max}`,
+      conditionLabel: (percentage) => `Стан ${percentage}%`,
+      itemWeightAria: (weight, value) => `Вага ${weight}, вартість ₿${value}`,
+      actions: {
+        equip: 'Екіпірувати',
+        unequip: 'Зняти',
+        use: 'Використати',
+        repair: (cost) => `Полагодити (${cost} деталей)`,
+        repairAria: (itemName, cost) => `Полагодити ${itemName}, орієнтовно ${cost} деталей`,
+        addToHotbar: 'Додати до хотбару',
+        removeFromHotbar: 'Прибрати з хотбару',
+        hotbarFull: 'Хотбар заповнений',
+        clearHotbar: 'Очистити',
+      },
+      equipment: {
+        title: 'Екіпіроване спорядження',
+        slotEmpty: 'Порожньо',
+        slots: {
+          primaryWeapon: {
+            label: 'Основна зброя',
+            description: 'Основні вогнепальні та гвинтівки.',
+            empty: 'Зброя не споряджена',
+          },
+          secondaryWeapon: {
+            label: 'Резервна зброя',
+            description: 'Пістолети та запасні стволи.',
+            empty: 'Резервна зброя відсутня',
+          },
+          meleeWeapon: {
+            label: 'Ближній бій',
+            description: 'Клинки та кийки для короткої дистанції.',
+            empty: 'Зброю ближнього бою не споряджено',
+          },
+          bodyArmor: {
+            label: 'Броня корпусу',
+            description: 'Захисні шари на торс.',
+            empty: 'Броню не споряджено',
+          },
+          helmet: {
+            label: 'Головний захист',
+            description: 'Візори, шоломи та маски.',
+            empty: 'Шолом не споряджено',
+          },
+          accessory1: {
+            label: 'Аксесуар I',
+            description: 'Імпланти, пояси чи наручні моди.',
+            empty: 'Слот аксесуару порожній',
+          },
+          accessory2: {
+            label: 'Аксесуар II',
+            description: 'Другий слот аксесуару.',
+            empty: 'Слот аксесуару порожній',
+          },
+        },
+        conditionHeading: 'Стан',
+        noCompatible: 'Сумісних предметів у рюкзаку немає',
+      },
+      hotbar: {
+        title: 'Хотбар',
+        slotLabel: (index) => `Слот ${index}`,
+        unassigned: 'Не призначено',
+      },
+      hotbarBadge: (index) => `Хотбар ${index}`,
+    },
+    loadoutPanel: {
+      ariaLabel: 'Спорядження оперативника',
+      headingLabel: 'Оперативник',
+      headingTitle: 'Спорядження',
+      perksLabel: 'Таланти',
+      noPerks: 'Таланти ще не здобуті',
+      stats: {
+        damage: 'Шкода',
+        range: 'Дальність',
+        apCost: 'Ціна ОД',
+        skill: 'Навичка',
+        protection: 'Захист',
+        weight: 'Вага',
+        value: 'Вартість',
+        durability: 'Міцність',
+      },
+      condition: {
+        pristine: (percentage) => `Стан ${percentage}%`,
+        broken: 'Стан 0% — Зламано',
+        critical: (percentage) => `Стан ${percentage}% — Критично`,
+        worn: (percentage) => `Стан ${percentage}% — Зношено`,
+        used: (percentage) => `Стан ${percentage}%`,
+      },
+      actions: {
+        unequip: 'Зняти',
+        equip: (itemName) => `Екіпірувати ${itemName}`,
+      },
+      noCompatible: 'Сумісних предметів у рюкзаку немає',
+    },
+    skillTreePanel: {
+      title: 'Дерево навичок',
+      baseHint: '+5 базово • +10 з тегом',
+      pointsLabel: (count) => {
+        const mod10 = count % 10;
+        const mod100 = count % 100;
+        let suffix = 'очок';
+        if (mod10 === 1 && mod100 !== 11) {
+          suffix = 'очко';
+        } else if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
+          suffix = 'очки';
+        }
+        return `${count} ${suffix} навичок`;
+      },
+      tablistAria: 'Гілки навичок',
+      branches: {
+        combat: 'Бойове',
+        tech: 'Техніка',
+        survival: 'Виживання',
+        social: 'Соціальне',
+      },
+      tagBadge: 'Тег',
+      incrementLabel: (increment, tagged) =>
+        tagged ? `1 очк. → +${increment} (тег)` : `1 очк. → +${increment}`,
+      decreaseAria: (skillName) => `Зменшити ${skillName}`,
+      increaseAria: (skillName) => `Збільшити ${skillName}`,
+      announcement: (skillName, verb, value, effect) => {
+        const verbText = verb === 'increase' ? 'підвищено' : 'знижено';
+        return `${skillName} ${verbText} до ${value}. ${effect}`;
+      },
+    },
+    playerStatsPanel: {
+      ariaLabel: 'Характеристики гравця',
+      equipmentWarning: 'Дані спорядження недоступні. Показано базові атрибути.',
+      rankLabel: (value) => `Ранг ${value}`,
+      baseLabel: (value) => `База ${value}`,
+      focusLabel: (focusName) => `Фокус: ${focusName}`,
     },
   },
 };

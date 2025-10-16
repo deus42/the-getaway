@@ -2,16 +2,21 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { BACKGROUND_MAP } from '../../content/backgrounds';
+import { getUIStrings } from '../../content/ui';
 import { neonPalette, panelSurface, subtleText, statValueStyle } from './theme';
 
 const PlayerStatusPanel: React.FC = () => {
   const player = useSelector((state: RootState) => state.player.data);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
 
   const { inventory } = player;
   const itemCount = inventory.items.length;
 
   const background = player.backgroundId ? BACKGROUND_MAP[player.backgroundId] : undefined;
-  const backgroundLabel = background ? background.name : 'Unaffiliated';
+  const backgroundLabel = background ? background.name : uiStrings.playerStatus.backgroundFallback;
+  const weightUnit = uiStrings.playerStatus.loadUnit;
+  const formatWeight = (value: number): string => (Number.isFinite(value) ? (Math.round(value * 10) / 10).toString() : '0');
 
   return (
     <div
@@ -40,17 +45,23 @@ const PlayerStatusPanel: React.FC = () => {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ ...subtleText, fontSize: '0.42rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Load</span>
+          <span style={{ ...subtleText, fontSize: '0.42rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {uiStrings.playerStatus.loadLabel}
+          </span>
           <span style={{ ...statValueStyle, fontSize: '0.6rem', color: neonPalette.cyan }}>
-            {inventory.currentWeight}/{inventory.maxWeight} kg
+            {formatWeight(inventory.currentWeight)}/{formatWeight(inventory.maxWeight)} {weightUnit}
           </span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ ...subtleText, fontSize: '0.42rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Items</span>
+          <span style={{ ...subtleText, fontSize: '0.42rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {uiStrings.playerStatus.itemsLabel}
+          </span>
           <span style={{ ...statValueStyle, fontSize: '0.6rem', color: neonPalette.amber }}>{itemCount}</span>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <span style={{ ...subtleText, fontSize: '0.42rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Perks</span>
+          <span style={{ ...subtleText, fontSize: '0.42rem', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            {uiStrings.playerStatus.perksLabel}
+          </span>
           <span style={{ ...statValueStyle, fontSize: '0.6rem', color: neonPalette.violet }}>{player.perks.length}</span>
         </div>
       </div>
@@ -66,7 +77,9 @@ const PlayerStatusPanel: React.FC = () => {
           fontSize: '0.48rem',
         }}
       >
-        <span style={{ letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>Background</span>
+        <span style={{ letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+          {uiStrings.playerStatus.backgroundLabel}
+        </span>
         <span style={{ ...subtleText, fontSize: '0.48rem', color: neonPalette.textSecondary, whiteSpace: 'nowrap' }}>
           {backgroundLabel}
         </span>

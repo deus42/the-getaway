@@ -160,21 +160,21 @@ const focusColorMap: Record<PlayerStatFocus, string> = {
   fortuity: 'linear-gradient(135deg, rgba(250, 204, 21, 0.85), rgba(245, 158, 11, 0.85))',
 };
 
-const focusLabelMap: Record<PlayerStatFocus, string> = {
-  combat: 'Combat Focus',
-  perception: 'Perception Focus',
-  survival: 'Survival Focus',
-  social: 'Social Focus',
-  intellect: 'Intellect Focus',
-  mobility: 'Mobility Focus',
-  fortuity: 'Fortuity Focus',
-};
-
 const PlayerStatsPanel: React.FC = () => {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
+  const playerStatsStrings = uiStrings.playerStatsPanel;
+  const focusLabelMap = useMemo<Record<PlayerStatFocus, string>>(() => ({
+    combat: playerStatsStrings.focusLabel(uiStrings.statFocus.combat),
+    perception: playerStatsStrings.focusLabel(uiStrings.statFocus.perception),
+    survival: playerStatsStrings.focusLabel(uiStrings.statFocus.survival),
+    social: playerStatsStrings.focusLabel(uiStrings.statFocus.social),
+    intellect: playerStatsStrings.focusLabel(uiStrings.statFocus.intellect),
+    mobility: playerStatsStrings.focusLabel(uiStrings.statFocus.mobility),
+    fortuity: playerStatsStrings.focusLabel(uiStrings.statFocus.fortuity),
+  }), [playerStatsStrings, uiStrings.statFocus]);
 
   // Calculate effective skills including equipment bonuses
   const effectiveSkills = useMemo(() => {
@@ -244,7 +244,7 @@ const PlayerStatsPanel: React.FC = () => {
   ];
 
   return (
-    <section style={containerStyle} aria-label="player-statistics">
+    <section style={containerStyle} aria-label={playerStatsStrings.ariaLabel}>
       <header style={headerStyle}>
         <span style={headingLabelStyle}>{uiStrings.playerStatus.attributesLabel}</span>
         <h3 style={headingTitleStyle}>{uiStrings.playerStatus.attributesTitle}</h3>
@@ -253,7 +253,7 @@ const PlayerStatsPanel: React.FC = () => {
       {equipmentError && (
         <div style={warningBannerStyle} role="alert">
           <span>⚠️</span>
-          <span>Equipment stats unavailable. Showing base attributes only.</span>
+          <span>{playerStatsStrings.equipmentWarning}</span>
         </div>
       )}
 
@@ -281,11 +281,11 @@ const PlayerStatsPanel: React.FC = () => {
           const increaseAttributeLabel = getIncreaseAttributeLabel(entry.abbreviation);
 
           const tooltipMeta: string[] = [
-            `Rank ${entry.value}`,
+            playerStatsStrings.rankLabel(entry.value),
           ];
 
           if (hasBonus) {
-            tooltipMeta.push(`Base ${baseValue}`);
+            tooltipMeta.push(playerStatsStrings.baseLabel(baseValue));
           }
 
           tooltipMeta.push(focusLabelMap[entry.focus]);

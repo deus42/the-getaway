@@ -8,6 +8,7 @@ import NotificationBadge from './NotificationBadge';
 import { gradientTextStyle } from './theme';
 import { allocateSkillPointToSkill, refundSkillPointFromSkill } from '../../store/playerSlice';
 import { createScopedLogger } from '../../utils/logger';
+import { getUIStrings } from '../../content/ui';
 
 const log = createScopedLogger('SkillTreePanel');
 
@@ -185,6 +186,9 @@ const getBranchById = (branchId: SkillBranchId): SkillBranchDefinition => {
 const SkillTreePanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
+  const skillStrings = uiStrings.skillTreePanel;
   const availablePoints = player.skillPoints;
 
   const defaultBranch: SkillBranchId = useMemo(() => {
@@ -225,8 +229,8 @@ const SkillTreePanel: React.FC = () => {
         if (before !== after) {
           const effectMessage = describeSkillEffect(skill.id, after);
           const delta = (after ?? 0) - (before ?? 0);
-          const changeVerb = delta > 0 ? 'increased' : 'decreased';
-          setAnnouncement(`${skill.name} ${changeVerb} to ${after}. ${effectMessage}`);
+          const verb = delta > 0 ? 'increase' : 'decrease';
+          setAnnouncement(skillStrings.announcement(skill.name, verb, after ?? 0, effectMessage));
           previousValuesRef.current = current;
           return;
         }
@@ -234,7 +238,7 @@ const SkillTreePanel: React.FC = () => {
     }
 
     previousValuesRef.current = current;
-  }, [player.skillTraining]);
+  }, [player.skillTraining, skillStrings]);
 
   const switchBranch = useCallback((branchId: SkillBranchId) => {
     log.debug('Switching to branch:', branchId);
@@ -273,7 +277,7 @@ const SkillTreePanel: React.FC = () => {
     const tagged = isSkillTagged(player, skill.id);
     const increment = getSkillPointIncrement(player, skill.id);
     const effectMessage = describeSkillEffect(skill.id, currentValue);
-    const incrementLabel = tagged ? `1 pt → +${increment} (tag)` : `1 pt → +${increment}`;
+    const incrementLabel = skillStrings.incrementLabel(increment, tagged);
     const canIncrease = availablePoints > 0 && currentValue + increment <= skill.maxValue;
     const canDecrease = currentValue - increment >= 0 && currentValue > 0;
 
@@ -282,7 +286,7 @@ const SkillTreePanel: React.FC = () => {
         <div style={skillInfoStyle}>
           <div style={skillNameRowStyle}>
             <span style={{ fontSize: '0.68rem', fontWeight: 600, color: '#f8fafc' }}>{skill.name}</span>
-            {tagged && <span style={tagBadgeStyle}>Tag</span>}
+            {tagged && <span style={tagBadgeStyle}>{skillStrings.tagBadge}</span>}
           </div>
           <p style={descriptionStyle}>{skill.description}</p>
           <p style={effectStyle}>{effectMessage}</p>
@@ -293,7 +297,7 @@ const SkillTreePanel: React.FC = () => {
             type="button"
             style={skillButtonStyle(!canDecrease)}
             disabled={!canDecrease}
-            aria-label={`Decrease ${skill.name}`}
+            aria-label={skillStrings.decreaseAria(skill.name)}
             onClick={() => dispatch(refundSkillPointFromSkill(skill.id))}
           >
             −
@@ -305,7 +309,7 @@ const SkillTreePanel: React.FC = () => {
             type="button"
             style={skillButtonStyle(!canIncrease)}
             disabled={!canIncrease}
-            aria-label={`Increase ${skill.name}`}
+            aria-label={skillStrings.increaseAria(skill.name)}
             onClick={() => dispatch(allocateSkillPointToSkill(skill.id))}
           >
             +
@@ -322,19 +326,19 @@ const SkillTreePanel: React.FC = () => {
   return (
     <section style={panelStyle} aria-labelledby="skill-tree-title">
       <div style={headerStyle}>
-        <h2 id="skill-tree-title" style={titleStyle}>Skill Trees</h2>
+        <h2 id="skill-tree-title" style={titleStyle}>{skillStrings.title}</h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <span style={helpTextStyle}>+5 base • +10 tagged</span>
+          <span style={helpTextStyle}>{skillStrings.baseHint}</span>
           <div style={skillControlsStyle}>
             <NotificationBadge count={availablePoints} color="#38bdf8" size={22} pulse={availablePoints > 0} />
             <span style={{ ...helpTextStyle, fontSize: '0.6rem' }} aria-live="polite">
-              {`${availablePoints} Skill Points`}
+              {skillStrings.pointsLabel(availablePoints)}
             </span>
           </div>
         </div>
       </div>
 
-      <div role="tablist" aria-label="Skill branches" style={tabListStyle}>
+      <div role="tablist" aria-label={skillStrings.tablistAria} style={tabListStyle}>
         {SKILL_BRANCHES.map((branch) => {
           const selected = activeBranch === branch.id;
           return (
@@ -358,7 +362,7 @@ const SkillTreePanel: React.FC = () => {
               }}
               style={tabStyle(selected)}
             >
-              {branch.label}
+              {skillStrings.branches[branch.id] ?? branch.label}
             </button>
           );
         })}
