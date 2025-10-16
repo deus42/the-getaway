@@ -275,6 +275,11 @@ const cloneFlags = (flags: EnvironmentFlags): EnvironmentFlags => ({
 
 const cloneSnapshot = (snapshot: GeorgeAmbientSnapshot): GeorgeAmbientSnapshot => ({
   flags: cloneFlags(snapshot.flags),
+  impacts: {
+    behavior: { ...snapshot.impacts.behavior },
+    faction: { ...snapshot.impacts.faction },
+    travel: { ...snapshot.impacts.travel },
+  },
   rumor: snapshot.rumor
     ? {
         groupId: snapshot.rumor.groupId,

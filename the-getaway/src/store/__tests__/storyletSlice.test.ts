@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, type UnknownAction } from '@reduxjs/toolkit';
 import playerReducer, { initialPlayerState } from '../playerSlice';
 import worldReducer from '../worldSlice';
 import missionReducer, { buildMissionState } from '../missionSlice';
@@ -41,7 +41,9 @@ const createTestStore = (options?: { missionLevelIndex?: number; playerHealth?: 
     },
   };
 
-  const worldBase = worldReducer(undefined, { type: 'storylet/init' } as any);
+  const initAction: UnknownAction = { type: 'storylet/init' };
+
+  const worldBase = worldReducer(undefined, initAction);
   const worldState = {
     ...worldBase,
     inCombat: false,
@@ -78,12 +80,12 @@ const createTestStore = (options?: { missionLevelIndex?: number; playerHealth?: 
       player: playerState,
       world: worldState,
       missions: missionState,
-      settings: settingsReducer(undefined, { type: 'storylet/init' } as any),
-      storylets: storyletReducer(undefined, { type: 'storylet/init' } as any),
-      log: logReducer(undefined, { type: 'storylet/init' } as any),
-      quests: questsReducer(undefined, { type: 'storylet/init' } as any),
-      combatFeedback: combatFeedbackReducer(undefined, { type: 'storylet/init' } as any),
-      surveillance: surveillanceReducer(undefined, { type: 'storylet/init' } as any),
+      settings: settingsReducer(undefined, initAction),
+      storylets: storyletReducer(undefined, initAction),
+      log: logReducer(undefined, initAction),
+      quests: questsReducer(undefined, initAction),
+      combatFeedback: combatFeedbackReducer(undefined, initAction),
+      surveillance: surveillanceReducer(undefined, initAction),
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

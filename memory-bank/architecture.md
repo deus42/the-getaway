@@ -139,7 +139,8 @@ flowchart LR
 4. <code_location>the-getaway/src/game/world/triggers/triggerRegistry.ts</code_location> maintains registered triggers with cooldown/once semantics; <code_location>the-getaway/src/game/world/triggers/defaultTriggers.ts</code_location> now derives weather via a single daily updater that records the active `TimeOfDay`, preferring gang-heat overrides until curfew level 3 and logging at most one shift per phase, while keeping the remaining rumor, signage, and note triggers unchanged. A test-only reset helper exposes clean registration for specs.
 5. <code_location>the-getaway/src/components/GameController.tsx</code_location> initialises the registry and ticks triggers each animation frame, feeding the Redux dispatch/getState pair so triggers stay in sync with the active scene.
 6. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> surfaces memoised selectors for flags, signage variants, rumor sets, weather snapshots (including last `TimeOfDay`), and spawned notes for HUD consumers.
-7. <code_location>the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts</code_location> drives the reducers through the registry, asserting rumor rotations, signage swaps, note spawns, and the daily weather gate when flags or time phases shift.
+7. <code_location>the-getaway/src/game/world/environment/environmentMatrix.ts</code_location> codifies the hazard-to-system matrix: `resolveEnvironmentalFactors` folds zone hazards and environment flags into canonical factors, while `combineSystemImpacts` emits aggregated behaviour/faction/travel weights. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> exposes `selectEnvironmentSystemImpacts`, and the consumers tie into <code_location>the-getaway/src/components/GameController.tsx</code_location> (NPC routine pacing + reinforcement delays) and <code_location>the-getaway/src/components/ui/DayNightIndicator.tsx</code_location> (travel advisory overlay).
+8. <code_location>the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts</code_location> drives the reducers through the registry, asserting rumor rotations, signage swaps, note spawns, and the daily weather gate when flags or time phases shift.
 </technical_flow>
 </architecture_section>
 
@@ -557,6 +558,22 @@ Quest and dialogue systems:
   - Quest-related dialogue options for starting/completing quests
   - Dialogue navigation and branching conversations
   - Helper functions for creating common dialogue patterns
+
+<architecture_section id="dialogue_tone_pipeline" category="narrative_systems">
+<design_principles>
+- Procedural dialogue lines stay anchored to the plot bible influences (dry wit, surreal melancholy) and remain locale agnostic by sampling from data-driven templates.
+- Persona, author, and scene vectors blend deterministically so regenerated lines are reproducible during tests or localisation review; fallback copy remains intact if tone configs are missing or explicitly opt out.
+- Motif counters live per persona to prevent repeating signature imagery in adjacent lines while decaying across conversations so motifs can resurface over longer arcs.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/content/dialogueTone/index.ts</code_location> composes the tone library by merging author fingerprints, persona baselines, scene hints, micro-templates, and synonym palettes. Entries encode trait weighting, motif tags (`motif.streetlight`, `motif.compass`, `motif.rain_hum`, `motif.glowsticks`), and optional lexicon overrides.
+2. <code_location>the-getaway/src/game/narrative/dialogueTone/dialogueToneMixer.ts</code_location> blends author/persona/scene vectors with normalised weights, clamps conflicts (e.g., fragment preference on templates that forbid fragments), selects compatible templates, and samples palettes via seeded RNG so identical `(dialogueId, nodeId, seedKey)` inputs yield identical prose.
+3. <code_location>the-getaway/src/game/narrative/dialogueTone/dialogueToneManager.ts</code_location> wraps the mixer with caching and persona-scoped motif tracking. It merges dialogue-level defaults with node overrides, resolves seed keys, and memoises results so repeated React renders do not mutate motif state or reshuffle generated text.
+4. <code_location>the-getaway/src/components/ui/DialogueOverlay.tsx</code_location> requests generated copy through the manager. When `Dialogue.toneDefaults` / `DialogueNode.tone` metadata is present, the overlay renders the generated line; otherwise it falls back to the handcrafted `node.text`.
+5. Locale bundles such as <code_location>the-getaway/src/content/levels/level0/locales/en.ts</code_location> opt in node-by-node. Archivist Naila now routes intro/mission/complete beats through the mixer, blending the Vonnegut-Brautigan author fingerprint with the Amara persona while retaining translated fallback text.
+</technical_flow>
+</architecture_section>
 
 #### `/the-getaway/src/game/inventory`
 

@@ -1,5 +1,48 @@
 import { GeorgeAmbientTracker } from '../georgeAssistant';
 import type { GeorgeAmbientSnapshot } from '../../interfaces/georgeAssistant';
+import type { CombinedSystemImpact } from '../../world/environment/environmentMatrix';
+
+const cloneImpacts = (impacts: CombinedSystemImpact): CombinedSystemImpact => ({
+  behavior: {
+    sightMultiplier: impacts.behavior.sightMultiplier,
+    chaseMultiplier: impacts.behavior.chaseMultiplier,
+    routineIntervalMultiplier: impacts.behavior.routineIntervalMultiplier,
+    loadoutBias: impacts.behavior.loadoutBias,
+  },
+  faction: {
+    shopMarkupDelta: impacts.faction.shopMarkupDelta,
+    reinforcementDelayMultiplier: impacts.faction.reinforcementDelayMultiplier,
+    safehouseAccess: impacts.faction.safehouseAccess,
+  },
+  travel: {
+    staminaDrainPerMinute: impacts.travel.staminaDrainPerMinute,
+    vehicleWearMultiplier: impacts.travel.vehicleWearMultiplier,
+    encounterRiskModifier: impacts.travel.encounterRiskModifier,
+    advisoryLevel: impacts.travel.advisoryLevel,
+    visibilityMultiplier: impacts.travel.visibilityMultiplier,
+  },
+});
+
+const DEFAULT_IMPACTS: CombinedSystemImpact = {
+  behavior: {
+    sightMultiplier: 1,
+    chaseMultiplier: 1,
+    routineIntervalMultiplier: 1,
+    loadoutBias: 'balanced',
+  },
+  faction: {
+    shopMarkupDelta: 0,
+    reinforcementDelayMultiplier: 1,
+    safehouseAccess: 'open',
+  },
+  travel: {
+    staminaDrainPerMinute: 0,
+    vehicleWearMultiplier: 1,
+    encounterRiskModifier: 1,
+    advisoryLevel: 'clear',
+    visibilityMultiplier: 1,
+  },
+};
 
 const buildSnapshot = (overrides: Partial<GeorgeAmbientSnapshot> = {}): GeorgeAmbientSnapshot => ({
   flags: {
@@ -8,6 +51,7 @@ const buildSnapshot = (overrides: Partial<GeorgeAmbientSnapshot> = {}): GeorgeAm
     supplyScarcity: 'norm',
     blackoutTier: 'none',
   },
+  impacts: cloneImpacts(overrides.impacts ?? DEFAULT_IMPACTS),
   rumor: overrides.rumor ?? null,
   signage: overrides.signage ?? null,
   weather: overrides.weather ?? {

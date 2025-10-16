@@ -378,6 +378,8 @@ const GeorgeAssistant: React.FC = () => {
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const georgeStrings = useMemo(() => uiStrings.george, [uiStrings]);
 
+  const { feedLabels, levelAdvance: levelAdvanceMessage, missionComplete: missionCompleteMessage } = georgeStrings;
+
   const objectiveQueue = useSelector(selectObjectiveQueue);
   const missionProgress = useSelector(selectMissionProgress);
   const nextPrimaryObjective = useSelector(selectNextPrimaryObjective);
@@ -718,10 +720,10 @@ const GeorgeAssistant: React.FC = () => {
         return;
       }
 
-      const message = georgeStrings.missionComplete(detail.name);
+      const message = missionCompleteMessage(detail.name);
       pushFeedEntry({
         category: 'mission',
-        label: georgeStrings.feedLabels.mission,
+        label: feedLabels.mission,
         text: message,
       });
       queueInterjection('questCompleted');
@@ -734,10 +736,10 @@ const GeorgeAssistant: React.FC = () => {
       }
 
       const nextDescriptor = detail.nextLevelId ?? `level ${detail.nextLevel}`;
-      const message = georgeStrings.levelAdvance(nextDescriptor);
+      const message = levelAdvanceMessage(nextDescriptor);
       pushFeedEntry({
         category: 'status',
-        label: georgeStrings.feedLabels.status,
+        label: feedLabels.status,
         text: message,
       });
     };
@@ -750,10 +752,10 @@ const GeorgeAssistant: React.FC = () => {
       window.removeEventListener(LEVEL_ADVANCE_REQUESTED_EVENT, handleLevelAdvance as EventListener);
     };
   }, [
-    georgeStrings.feedLabels.mission,
-    georgeStrings.feedLabels.status,
-    georgeStrings.levelAdvance,
-    georgeStrings.missionComplete,
+    feedLabels.mission,
+    feedLabels.status,
+    levelAdvanceMessage,
+    missionCompleteMessage,
     pushFeedEntry,
     queueInterjection,
   ]);

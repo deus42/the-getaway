@@ -160,6 +160,11 @@ interface DayNightStrings {
   progressLabel: string;
   curfewEnforced: string;
   safeToTravel: string;
+  travelAdvisory: {
+    label: string;
+    levels: Record<'clear' | 'caution' | 'severe', string>;
+    stats: (values: { stamina: number; encounters: number }) => string;
+  };
 }
 
 interface LevelIndicatorStrings {
@@ -601,6 +606,27 @@ const STRINGS: Record<Locale, UIStrings> = {
       progressLabel: 'PROGRESS',
       curfewEnforced: 'CURFEW ENFORCED',
       safeToTravel: 'SAFE TO TRAVEL',
+      travelAdvisory: {
+        label: 'TRAVEL ADVISORY',
+        levels: {
+          clear: 'Clear corridors',
+          caution: 'Heightened patrols',
+          severe: 'Hazardous transit',
+        },
+        stats: ({ stamina, encounters }) => {
+          const segments: string[] = [];
+          if (stamina > 0) {
+            segments.push(`Stamina +${stamina}/min`);
+          }
+          if (Math.abs(encounters - 1) > 0.01) {
+            segments.push(`Encounters ×${encounters.toFixed(2)}`);
+          }
+          if (segments.length === 0) {
+            return 'Conditions stable';
+          }
+          return segments.join(' · ');
+        },
+      },
     },
     levelIndicator: {
       levelLabel: 'LEVEL',
@@ -1068,10 +1094,9 @@ const STRINGS: Record<Locale, UIStrings> = {
         tagged ? `1 pt → +${increment} (tag)` : `1 pt → +${increment}`,
       decreaseAria: (skillName) => `Decrease ${skillName}`,
       increaseAria: (skillName) => `Increase ${skillName}`,
-      announcement: (skillName, verb, value, effect) => `${skillName} ${verb} to ${value}. ${effect}`,
-      verbs: {
-        increase: 'increased',
-        decrease: 'decreased',
+      announcement: (skillName, verb, value, effect) => {
+        const verbText = verb === 'increase' ? 'increased' : 'decreased';
+        return `${skillName} ${verbText} to ${value}. ${effect}`;
       },
     },
     playerStatsPanel: {
@@ -1244,6 +1269,27 @@ const STRINGS: Record<Locale, UIStrings> = {
       progressLabel: 'ПРОГРЕС',
       curfewEnforced: 'КОМЕНДАНТСЬКА ДІЄ',
       safeToTravel: 'РУХ БЕЗПЕЧНИЙ',
+      travelAdvisory: {
+        label: 'ПОПЕРЕДЖЕННЯ РУХУ',
+        levels: {
+          clear: 'Маршрути чисті',
+          caution: 'Підвищений ризик',
+          severe: 'Рух небезпечний',
+        },
+        stats: ({ stamina, encounters }) => {
+          const segments: string[] = [];
+          if (stamina > 0) {
+            segments.push(`Витривалість +${stamina}/хв`);
+          }
+          if (Math.abs(encounters - 1) > 0.01) {
+            segments.push(`Сутички ×${encounters.toFixed(2)}`);
+          }
+          if (segments.length === 0) {
+            return 'Умови стабільні';
+          }
+          return segments.join(' · ');
+        },
+      },
     },
     levelIndicator: {
       levelLabel: 'РІВЕНЬ',

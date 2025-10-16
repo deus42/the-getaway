@@ -80,10 +80,21 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_archivist_naila',
       npcId: 'Archivist Naila',
+      toneDefaults: {
+        personaId: 'persona.amara_velez',
+        authorId: 'author.vonnegut_brautigan_core',
+        sceneId: 'scene.post_ambush_reassurance',
+        seedKey: 'naila',
+      },
       nodes: [
         {
           id: 'intro',
           text: 'Naila polishes cracked lenses that reflect three different skies. "Knowledge is leverage. Help me unmask their manifests and I’ll carve you breathing space."',
+          tone: {
+            sceneId: 'scene.share_scarce_food',
+            templateId: 'template.deadpan.reassure',
+            seedKey: 'intro',
+          },
           options: [
             {
               text: 'What relic are we lifting today?',
@@ -114,6 +125,11 @@ export const level0EnglishContent: Level0LocaleContent = {
         {
           id: 'mission',
           text: '"Lira’s guarding a datapad fat with patrol math. Bring it home and I’ll paint their rotations like constellations."',
+          tone: {
+            sceneId: 'scene.pre_heist_briefing',
+            templateId: 'template.urgent.push',
+            seedKey: 'mission',
+          },
           options: [
             {
               text: 'I’ll fetch the glowing brick.',
@@ -124,6 +140,11 @@ export const level0EnglishContent: Level0LocaleContent = {
         {
           id: 'mission_complete',
           text: '"This cracks them wide open. Uploading safe windows to your ops board before Harrow’s speechwriters invent new lies."',
+          tone: {
+            sceneId: 'scene.post_ambush_reassurance',
+            templateId: 'template.surreal.resilience',
+            seedKey: 'complete',
+          },
           options: [
             {
               text: 'Appreciate the starlight, Naila.',
@@ -629,10 +650,16 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
   ],
   itemBlueprints: [
+    getItemPrototype('weapon_corpsec_service_pistol'),
+    getItemPrototype('armor_layered_leather_jacket'),
+    getItemPrototype('consumable_field_medkit'),
+    getItemPrototype('consumable_basic_repair_kit'),
+    getItemPrototype('misc_emp_charge'),
+    getItemPrototype('misc_custom_deck'),
+    getItemPrototype('misc_lockpick_set'),
     getItemPrototype('misc_encrypted_datapad'),
     getItemPrototype('misc_corporate_keycard'),
     getItemPrototype('misc_holo_projector_lens'),
-    getItemPrototype('consumable_basic_repair_kit'),
   ],
   buildingDefinitions: [
     {
@@ -752,18 +779,71 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
   ],
   coverSpots: {
-    // All cover objects removed - clean map with only buildings, NPCs, and doors
-    slums: [],
-    downtown: [],
+    downtown: [
+      {
+        position: { x: 13, y: 21 },
+        profile: { north: 'full', east: 'half' },
+      },
+      {
+        position: { x: 24, y: 32 },
+        profile: { west: 'full', south: 'half' },
+      },
+      {
+        position: { x: 43, y: 21 },
+        profile: { north: 'full', west: 'half' },
+      },
+      {
+        position: { x: 61, y: 34 },
+        profile: { east: 'full', south: 'half' },
+      },
+      {
+        position: { x: 79, y: 21 },
+        profile: { north: 'full' },
+      },
+      {
+        position: { x: 13, y: 45 },
+        profile: { north: 'half', south: 'half' },
+      },
+      {
+        position: { x: 43, y: 45 },
+        profile: { north: 'half', east: 'half' },
+      },
+      {
+        position: { x: 79, y: 45 },
+        profile: { north: 'half', west: 'half' },
+      },
+    ],
+    slums: [
+      {
+        position: { x: 24, y: 58 },
+        profile: { west: 'full', north: 'half' },
+      },
+      {
+        position: { x: 13, y: 69 },
+        profile: { south: 'full', west: 'half' },
+      },
+      {
+        position: { x: 43, y: 69 },
+        profile: { south: 'full', east: 'half' },
+      },
+      {
+        position: { x: 79, y: 69 },
+        profile: { south: 'full', east: 'half' },
+      },
+    ],
   },
   world: {
-    areaName: 'Downtown',
+    areaName: 'Slums Command Grid',
     objectives: [
-      'Survey the Slums perimeter and mark hostile patrols',
-      'Establish contact with Lira the Smuggler',
-      'Secure shelter before curfew sweeps begin',
+      'Recover Lira\'s contraband cache from the downtown evidence lockers.',
+      'Decrypt the surveillance manifests Archivist Naila smuggled out.',
+      'Re-establish Brant\'s courier drop routes across the grid before curfew.',
+      'Black out the CorpSec camera grid guarding the barricades.',
+      'Map patrol drone loops and assign safe counter-routes.',
+      'Restock Medic Yara\'s rebel clinic with field medkits.',
+      'Ambush the transit patrol escorting the sweep captain.',
     ],
-    initialEnemyName: 'Guard',
+    initialEnemyName: 'CorpSec Sweep Captain',
     zoneId: 'downtown_checkpoint',
   },
 };

@@ -89,7 +89,7 @@ const createTriple = (
 
 const parseTextIntoSentences = (text: string): string[] =>
   text
-    .split(/[\.\n\r;]+/g)
+    .split(/[.\n\r;]+/g)
     .map((sentence) => sentence.trim())
     .filter(Boolean);
 

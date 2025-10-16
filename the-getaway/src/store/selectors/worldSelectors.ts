@@ -1,6 +1,11 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '..';
 import { findSignageVariantById, findWeatherPresetById } from '../../content/environment';
+import {
+  combineSystemImpacts,
+  resolveEnvironmentalFactors,
+  CombinedSystemImpact,
+} from '../../game/world/environment/environmentMatrix';
 import type {
   GeorgeAmbientRumorSnapshot,
   GeorgeAmbientSignageSnapshot,
@@ -49,6 +54,25 @@ export const selectEnvironmentNotes = createSelector(
 
 const selectCurrentMapArea = (state: RootState) => state.world.currentMapArea;
 
+const selectEnvironmentMatrixContext = createSelector(
+  [selectEnvironmentFlags, selectCurrentMapArea],
+  (flags, currentArea) => ({
+    flags,
+    zoneHazards: currentArea?.hazards ?? [],
+    zoneId: currentArea?.zoneId ?? null,
+  })
+);
+
+export const selectEnvironmentalFactors = createSelector(
+  selectEnvironmentMatrixContext,
+  (context) => resolveEnvironmentalFactors(context)
+);
+
+export const selectEnvironmentSystemImpacts = createSelector(
+  selectEnvironmentalFactors,
+  (factors): CombinedSystemImpact => combineSystemImpacts(factors)
+);
+
 const pickLatestRumor = (rumorSets: GeorgeAmbientRumorSnapshot[]): GeorgeAmbientRumorSnapshot | null => {
   if (rumorSets.length === 0) {
     return null;
@@ -68,8 +92,8 @@ const pickLatestSignage = (signage: GeorgeAmbientSignageSnapshot[]): GeorgeAmbie
 };
 
 export const selectAmbientWorldSnapshot = createSelector(
-  [selectEnvironment, selectCurrentMapArea],
-  (environment, currentArea): GeorgeAmbientSnapshot => {
+  [selectEnvironment, selectCurrentMapArea, selectEnvironmentSystemImpacts],
+  (environment, currentArea, impacts): GeorgeAmbientSnapshot => {
     const rumorEntries: GeorgeAmbientRumorSnapshot[] = Object.entries(environment.rumorSets).map(
       ([groupId, snapshot]) => ({
         groupId,
@@ -118,6 +142,7 @@ export const selectAmbientWorldSnapshot = createSelector(
 
     return {
       flags: { ...environment.flags },
+      impacts,
       rumor: pickLatestRumor(rumorEntries),
       signage: pickLatestSignage(signageEntries),
       weather,

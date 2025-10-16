@@ -195,7 +195,6 @@ const assembleSceneDefinition = (
 
   if (extraction.issues.length > 0 && options.verbose) {
     extraction.issues.forEach((issue) => {
-      // eslint-disable-next-line no-console
       console.warn(`Extraction issue ${issue.path}: ${issue.message}`);
     });
   }
@@ -291,30 +290,24 @@ const run = async (): Promise<CliResult> => {
 run()
   .then((result) => {
     if (result.status === 'error') {
-      // eslint-disable-next-line no-console
       console.error(result.message);
       if (result.issues?.length) {
         result.issues.forEach((issue) => {
-          // eslint-disable-next-line no-console
           console.error(`  - ${issue}`);
         });
       }
       process.exitCode = 1;
     } else {
-      // eslint-disable-next-line no-console
       console.log(result.message);
       if (result.issues?.length) {
-        // eslint-disable-next-line no-console
         console.warn('Pipeline issues:');
         result.issues.forEach((issue) => {
-          // eslint-disable-next-line no-console
           console.warn(`  - ${issue}`);
         });
       }
     }
   })
   .catch((error) => {
-    // eslint-disable-next-line no-console
     console.error(error);
     process.exitCode = 1;
   });

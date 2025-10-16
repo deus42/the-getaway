@@ -32,9 +32,13 @@ const ZONE_METADATA: Record<string, ZoneMetadata> = {
       'Tight choke points with improvised barricades',
     ],
     objectives: [
-      'Survey the Slums perimeter and mark hostile patrols',
-      'Establish contact with Lira the Smuggler',
-      'Secure shelter before curfew sweeps begin',
+      'Recover Lira\'s contraband cache from the downtown evidence lockers.',
+      'Decrypt the surveillance manifests Archivist Naila smuggled out.',
+      'Re-establish Brant\'s courier drop routes across the grid before curfew.',
+      'Black out the CorpSec camera grid guarding the barricades.',
+      'Map patrol drone loops and assign safe counter-routes.',
+      'Restock Medic Yara\'s rebel clinic with field medkits.',
+      'Ambush the transit patrol escorting the sweep captain.',
     ],
     summary:
       'Primary resistance staging ground on the edge of Downtown. Expect constant patrol loops and rapid curfew escalations once alarms trip.',
