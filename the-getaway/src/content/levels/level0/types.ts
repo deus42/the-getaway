@@ -1,4 +1,12 @@
-import { Dialogue, NPC, Item, Position, FactionId, FactionStanding } from '../../../game/interfaces/types';
+import {
+  Dialogue,
+  NPC,
+  Item,
+  Position,
+  FactionId,
+  FactionStanding,
+  TileCoverProfile,
+} from '../../../game/interfaces/types';
 
 export type BuildingSignageStyle =
   | 'slums_scrap'
@@ -27,14 +35,19 @@ export interface LevelBuildingDefinition {
   };
 }
 
+export interface CoverSpotDefinition {
+  position: Position;
+  profile?: TileCoverProfile;
+}
+
 export interface Level0LocaleContent {
   dialogues: Dialogue[];
   npcBlueprints: Array<Omit<NPC, 'id'>>;
   itemBlueprints: Array<Omit<Item, 'id'>>;
   buildingDefinitions: LevelBuildingDefinition[];
   coverSpots: {
-    slums: Position[];
-    downtown: Position[];
+    slums: CoverSpotDefinition[];
+    downtown: CoverSpotDefinition[];
   };
   world: {
     areaName: string;

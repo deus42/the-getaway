@@ -25,6 +25,42 @@ const repairKitUk = {
   description: 'Смола, нанонитки та герметик для екстреного ремонту зброї чи броні.',
 };
 
+const corpsecPistolUk = {
+  ...getItemPrototype('weapon_corpsec_service_pistol'),
+  name: 'Службовий пістолет КорпСеку',
+  description: 'Стандартна зброя загонів безпеки: надійна, точна й болісно нагадує про службу на їхньому боці.',
+};
+
+const layeredJacketUk = {
+  ...getItemPrototype('armor_layered_leather_jacket'),
+  name: 'Багатошарова шкіряна куртка',
+  description: 'Посилена шкіра з прихованими пластинами — додає живучості без зайвої ваги.',
+};
+
+const fieldMedkitUk = {
+  ...getItemPrototype('consumable_field_medkit'),
+  name: 'Польова аптечка',
+  description: 'Комплект коагулянтів і синт-ниток для швидкої стабілізації поранень.',
+};
+
+const empChargeUk = {
+  ...getItemPrototype('misc_emp_charge'),
+  name: 'Імпульсний заряд',
+  description: 'Одноразовий пристрій, що глушить камери та дрони різким електромагнітним спалахом.',
+};
+
+const customDeckUk = {
+  ...getItemPrototype('misc_custom_deck'),
+  name: 'Кастомний дек',
+  description: 'Портативна злам-панель з модифікованою прошивкою та світними клавішами.',
+};
+
+const lockpickSetUk = {
+  ...getItemPrototype('misc_lockpick_set'),
+  name: 'Набір відмичок',
+  description: 'Ручна збірка відмичок у тканинному футлярі для дверей і тайників.',
+};
+
 export const level0UkrainianContent: Level0LocaleContent = {
   dialogues: [
     {
@@ -679,7 +715,18 @@ export const level0UkrainianContent: Level0LocaleContent = {
       isInteractive: true,
     },
   ],
-  itemBlueprints: [encryptedDatapadUk, corporateKeycardUk, holoLensUk, repairKitUk],
+  itemBlueprints: [
+    corpsecPistolUk,
+    layeredJacketUk,
+    fieldMedkitUk,
+    repairKitUk,
+    empChargeUk,
+    customDeckUk,
+    lockpickSetUk,
+    encryptedDatapadUk,
+    corporateKeycardUk,
+    holoLensUk,
+  ],
   buildingDefinitions: [
     {
       id: 'block_1_1',
@@ -798,18 +845,71 @@ export const level0UkrainianContent: Level0LocaleContent = {
     },
   ],
   coverSpots: {
-    // All cover objects removed - clean map with only buildings, NPCs, and doors
-    slums: [],
-    downtown: [],
+    downtown: [
+      {
+        position: { x: 13, y: 21 },
+        profile: { north: 'full', east: 'half' },
+      },
+      {
+        position: { x: 24, y: 32 },
+        profile: { west: 'full', south: 'half' },
+      },
+      {
+        position: { x: 43, y: 21 },
+        profile: { north: 'full', west: 'half' },
+      },
+      {
+        position: { x: 61, y: 34 },
+        profile: { east: 'full', south: 'half' },
+      },
+      {
+        position: { x: 79, y: 21 },
+        profile: { north: 'full' },
+      },
+      {
+        position: { x: 13, y: 45 },
+        profile: { north: 'half', south: 'half' },
+      },
+      {
+        position: { x: 43, y: 45 },
+        profile: { north: 'half', east: 'half' },
+      },
+      {
+        position: { x: 79, y: 45 },
+        profile: { north: 'half', west: 'half' },
+      },
+    ],
+    slums: [
+      {
+        position: { x: 24, y: 58 },
+        profile: { west: 'full', north: 'half' },
+      },
+      {
+        position: { x: 13, y: 69 },
+        profile: { south: 'full', west: 'half' },
+      },
+      {
+        position: { x: 43, y: 69 },
+        profile: { south: 'full', east: 'half' },
+      },
+      {
+        position: { x: 79, y: 69 },
+        profile: { south: 'full', east: 'half' },
+      },
+    ],
   },
   world: {
-    areaName: 'Центр міста',
+    areaName: 'Командна сітка Нетрищ',
     objectives: [
-      'Обстежте периметр Нетрищ і позначте ворожі патрулі',
-      'Встановіть контакт із Лірою-контрабандисткою',
-      'Знайдіть укриття до початку комендантських облав',
+      'Поверніть контрабандний сховок Ліри з центрових камер зберігання доказів.',
+      'Розшифруйте наглядові маніфести, які Архіварка Найла винесла потайки.',
+      'Відновіть кур\'єрські маршрути Бранта по сітці Нетрищ до початку комендантської години.',
+      'Заглушіть мережу камер КорпСеку, що охороняє барикади.',
+      'Картуйте петлі патрульних дронів і призначте безпечні обхідні стежки.',
+      'Поповніть критичні запаси клініки Медика Яри польовими аптечками.',
+      'Влаштуйте засідку на транзитний патруль, що супроводжує капітана зачисток.',
     ],
-    initialEnemyName: 'Гвардієць',
+    initialEnemyName: 'Капітан зачисток КорпСеку',
     zoneId: 'downtown_checkpoint',
   },
 };

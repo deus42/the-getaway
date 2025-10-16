@@ -1,6 +1,13 @@
 import { Locale } from '../../locales';
-import { Dialogue, Quest, NPC, Item, Position } from '../../../game/interfaces/types';
-import { LevelBuildingDefinition, Level0LocaleContent } from './types';
+import {
+  Dialogue,
+  Quest,
+  NPC,
+  Item,
+  Position,
+  TileCoverProfile,
+} from '../../../game/interfaces/types';
+import { CoverSpotDefinition, LevelBuildingDefinition, Level0LocaleContent } from './types';
 import { level0EnglishContent } from './locales/en';
 import { level0UkrainianContent } from './locales/uk';
 import { buildQuestsForLevel } from '../../quests/builders';
@@ -14,9 +21,9 @@ interface Level0Content {
   itemBlueprints: Array<Omit<Item, 'id'>>;
   buildingDefinitions: LevelBuildingDefinition[];
   coverSpots: {
-    slums: Position[];
-    downtown: Position[];
-    all: Position[];
+    slums: CoverSpotDefinition[];
+    downtown: CoverSpotDefinition[];
+    all: CoverSpotDefinition[];
   };
   world: {
     areaName: string;
@@ -32,6 +39,9 @@ const LOCALE_CONTENT: Record<Locale, Level0LocaleContent> = {
 };
 
 const clonePosition = (position: Position): Position => ({ ...position });
+
+const cloneCoverProfile = (profile: TileCoverProfile | undefined): TileCoverProfile | undefined =>
+  profile ? { ...profile } : undefined;
 
 const cloneDialogue = (dialogue: Dialogue): Dialogue => ({
   ...dialogue,
@@ -102,8 +112,10 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
   return sanitized;
 };
 
-const clonePositions = (positions: Position[]): Position[] =>
-  positions.map((position) => clonePosition(position));
+const cloneCoverSpot = (spot: CoverSpotDefinition): CoverSpotDefinition => ({
+  position: clonePosition(spot.position),
+  profile: cloneCoverProfile(spot.profile),
+});
 
 export const getLevel0Content = (locale: Locale): Level0Content => {
   const source = LOCALE_CONTENT[locale] ?? level0EnglishContent;
@@ -116,9 +128,9 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
     moveDoorToPerimeter(definition)
   );
 
-  const slumsCover = clonePositions(source.coverSpots.slums);
-  const downtownCover = clonePositions(source.coverSpots.downtown);
-  const allCover = [...slumsCover, ...downtownCover];
+  const slumsCover = source.coverSpots.slums.map(cloneCoverSpot);
+  const downtownCover = source.coverSpots.downtown.map(cloneCoverSpot);
+  const allCover = [...slumsCover, ...downtownCover].map(cloneCoverSpot);
 
   return {
     dialogues,

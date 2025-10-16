@@ -2,12 +2,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { MapArea, Position, TileType, NPC, Item } from '../interfaces/types';
 import { Locale } from '../../content/locales';
 import { getLevel0Content } from '../../content/levels/level0';
-import { LevelBuildingDefinition } from '../../content/levels/level0/types';
+import { CoverSpotDefinition, LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { getZoneMetadata } from '../../content/zones';
 import {
   createBasicMapArea,
   addWalls,
   addCover,
+  setTileCoverProfile,
   findNearestWalkablePosition,
   getAdjacentWalkablePositions,
 } from './grid';
@@ -172,7 +173,7 @@ const createCityArea = (
   zoneId: string,
   objectives: string[],
   buildings: LevelBuildingDefinition[],
-  coverSpots: Position[],
+  coverSpots: CoverSpotDefinition[],
   npcBlueprints: NPCBlueprint[],
   itemBlueprints: ItemBlueprint[]
 ): GeneratedArea => {
@@ -215,7 +216,9 @@ const createCityArea = (
 
   const withWalls = addWalls(areaWithMeta, walls);
 
-  const coverSpotsOnWalkableTiles = coverSpots.filter((position) => {
+  const coverPositions = coverSpots.map((spot) => spot.position);
+
+  const coverSpotsOnWalkableTiles = coverPositions.filter((position) => {
     const tile = withWalls.tiles[position.y]?.[position.x];
 
     if (!tile) {
@@ -227,7 +230,24 @@ const createCityArea = (
 
   const withCover = addCover(withWalls, coverSpotsOnWalkableTiles);
 
-  const withDistrictDecor = applyDistrictDecorations(withCover);
+  const walkableCoverKeys = new Set(
+    coverSpotsOnWalkableTiles.map((position) => `${position.x}:${position.y}`)
+  );
+
+  const withCoverProfiles = coverSpots.reduce((acc, spot) => {
+    if (!spot.profile) {
+      return acc;
+    }
+
+    const key = `${spot.position.x}:${spot.position.y}`;
+    if (!walkableCoverKeys.has(key)) {
+      return acc;
+    }
+
+    return setTileCoverProfile(acc, spot.position, spot.profile);
+  }, withCover);
+
+  const withDistrictDecor = applyDistrictDecorations(withCoverProfiles);
 
   const isTileOpen = (position: Position): boolean => {
     const tile = withDistrictDecor.tiles[position.y]?.[position.x];
