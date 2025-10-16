@@ -52,6 +52,7 @@ const DayNightIndicator: React.FC = () => {
     stamina: Math.max(0, Math.round(environmentImpacts.travel.staminaDrainPerMinute)),
     encounters: Number(environmentImpacts.travel.encounterRiskModifier.toFixed(2)),
   });
+  const showAdvisoryPanel = advisoryLevel !== "clear";
 
   const label = dayNightStrings.timeOfDay[timeOfDay];
   const phaseTiming = getPhaseTimingInfo(currentTime, DEFAULT_DAY_NIGHT_CONFIG);
@@ -174,57 +175,88 @@ const DayNightIndicator: React.FC = () => {
           }}
         />
       </div>
-      <div
-        style={{
-          borderTop: "1px solid rgba(148, 163, 184, 0.22)",
-          paddingTop: "0.45rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.3rem",
-        }}
-      >
+      {showAdvisoryPanel ? (
         <div
           style={{
+            borderTop: "1px solid rgba(148, 163, 184, 0.22)",
+            paddingTop: "0.45rem",
             display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            color: advisoryPalette.text,
-            fontSize: "0.72rem",
-            letterSpacing: "0.12em",
-            textTransform: "uppercase",
+            flexDirection: "column",
+            gap: "0.3rem",
           }}
         >
-          <span
+          <div
             style={{
-              padding: "0.1rem 0.5rem",
-              borderRadius: "999px",
-              border: `1px solid ${advisoryPalette.badgeBorder}`,
-              background: advisoryPalette.badge,
-              boxShadow: `0 0 10px ${advisoryPalette.glow}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              color: advisoryPalette.text,
+              fontSize: "0.72rem",
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
             }}
           >
-            {dayNightStrings.travelAdvisory.label}
-          </span>
-          <span style={{ fontWeight: 600 }}>
-            {dayNightStrings.travelAdvisory.levels[advisoryLevel]}
-          </span>
+            <span
+              style={{
+                padding: "0.1rem 0.5rem",
+                borderRadius: "999px",
+                border: `1px solid ${advisoryPalette.badgeBorder}`,
+                background: advisoryPalette.badge,
+                boxShadow: `0 0 10px ${advisoryPalette.glow}`,
+              }}
+            >
+              {dayNightStrings.travelAdvisory.label}
+            </span>
+            <span style={{ fontWeight: 600 }}>
+              {dayNightStrings.travelAdvisory.levels[advisoryLevel]}
+            </span>
+          </div>
+          <div
+            style={{
+              fontSize: "0.64rem",
+              color: "rgba(226, 232, 240, 0.82)",
+              fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+            }}
+          >
+            {travelStatsLine}
+          </div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.25rem",
+              color: curfewActive ? "#f87171" : "#34d399",
+              fontSize: "0.72rem",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: "0.6rem",
+                height: "0.6rem",
+                borderRadius: "9999px",
+                backgroundColor: curfewActive ? "#ef4444" : "#22c55e",
+                boxShadow: curfewActive
+                  ? "0 0 8px rgba(239, 68, 68, 0.6)"
+                  : "0 0 8px rgba(34, 197, 94, 0.45)",
+                transform: "translateY(1px)",
+              }}
+            />
+            {curfewActive
+              ? dayNightStrings.curfewEnforced
+              : dayNightStrings.safeToTravel}
+          </div>
         </div>
+      ) : (
         <div
           style={{
-            fontSize: "0.64rem",
-            color: "rgba(226, 232, 240, 0.82)",
-            fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-          }}
-        >
-          {travelStatsLine}
-        </div>
-        <div
-          style={{
+            borderTop: "1px solid rgba(148, 163, 184, 0.22)",
+            paddingTop: "0.4rem",
             display: "flex",
             alignItems: "center",
             gap: "0.25rem",
             color: curfewActive ? "#f87171" : "#34d399",
-            fontSize: "0.72rem",
+            fontSize: "0.75rem",
           }}
         >
           <span
@@ -244,7 +276,7 @@ const DayNightIndicator: React.FC = () => {
             ? dayNightStrings.curfewEnforced
             : dayNightStrings.safeToTravel}
         </div>
-      </div>
+      )}
     </div>
   );
 };
