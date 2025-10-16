@@ -1,145 +1,79 @@
-# Repository Guidelines
+# Agent Operating Guide
 
-## Project Structure & Module Organization
-- Root app lives in `the-getaway/` (Vite + React + TypeScript).
-- Source code in `the-getaway/src/`:
-  - `components/` (UI like `GameCanvas.tsx`, `GameController.tsx`)
-  - `game/` (core logic: `combat/`, `world/`, `quests/`, `interfaces/`, `scenes/`)
-  - `store/` (Redux Toolkit slices: `playerSlice.ts`, `worldSlice.ts`)
-  - `__tests__/` (unit/integration tests)
-  - `assets/` and `public/` for static files
-- Build output in `the-getaway/dist/`. Jest mocks in `the-getaway/__mocks__/`.
+This guide defines how Codex agents work inside **The Getaway** repository. Follow it end-to-end before writing code.
 
-## Build, Test, and Development Commands
-- Dev server: `cd the-getaway && yarn dev` (Vite on localhost)
-- Build: `yarn build` (type-check + production bundle to `dist/`)
-- Preview build: `yarn preview`
-- Lint: `yarn lint` (ESLint per `eslint.config.js`)
-- Tests: `yarn test` or `yarn test:watch` (Jest + jsdom)
+## 1. Quick Reference
+- Root app: `the-getaway/` (Vite + React + TypeScript).
+- Source folders: `src/components`, `src/game`, `src/store`, `src/__tests__`, `src/assets`, `public/`.
+- Primary scripts (run from `the-getaway/`): `yarn dev`, `yarn build`, `yarn preview`, `yarn lint`, `yarn test`, `yarn test:watch`.
+- Use Yarn for all package scripts and installs.
 
-## Coding Style & Naming Conventions
-- TypeScript throughout; prefer explicit types on public APIs.
-- Indentation: 2 spaces; single quotes; trailing semicolons.
-- React components and files: PascalCase (e.g., `GameCanvas.tsx`).
-- Functions, variables, and Redux slices: camelCase (e.g., `playerSlice.ts`).
-- Avoid default exports for shared utilities; prefer named exports.
-- Linting: ESLint with `react-hooks` and `react-refresh` rules. Fix warnings before PR.
+## 2. Pre-Task Checklist (Mandatory)
+1. **Check Linear first**  
+   - Open the **MVP** (and **PostMVP** when relevant) Linear projects.  
+   - Identify the next `Todo` issue you are assigned to or that matches the roadmap order.  
+   - If the target roadmap step lacks a Linear issue, create one immediately under the MVP project before coding.
+2. **Confirm task scope**  
+   - Read the Linear issue, `memory-bank/mvp-plan.md`, and related memory bank docs (`game-design.md`, `architecture.md`, `plot.md`).  
+   - Note prerequisites, validation steps, and documentation requirements.
+3. **Update Linear status**  
+   - Move the issue to `In Progress` only when you start implementation.  
+   - Keep status synchronized; revert to `Todo` if you stop work without finishing.
 
-## Testing Guidelines
-- Framework: Jest (`ts-jest`, `jest-environment-jsdom`) with React Testing Library.
+Do not begin coding until this checklist is complete.
+
+## 3. Implementation Workflow
+- **During development**
+  - Keep changes focused on the active Linear issue. Ignore unrelated modified files; never revert user-authored work.
+  - Prefer incremental commits; use imperative commit messages (Conventional Commits welcome).
+  - Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
+- **Testing**
+  - Match validation steps from the roadmap and Linear ticket.  
+  - Default commands: `yarn lint`, targeted `yarn test` runs, or full suites when coverage is expected.  
+  - Record executed commands in PR summaries, progress logs, or issue comments.
+- **Documentation updates**
+  - Update `memory-bank/architecture.md` whenever architectural patterns, game systems, or data flow change.  
+  - Update `memory-bank/game-design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  
+  - After finishing a roadmap step, log it in `memory-bank/progress.md` using the XML structure.  
+  - Mirror scope changes in `memory-bank/mvp-plan.md` only when the plan itself evolves (never mark completion there).
+- **Linear sync**
+  - When work completes, add a comment to the Linear issue summarizing tasks performed, validation, and key code references.  
+  - Move the issue to `Done` immediately after the implementation, docs, and validation are complete.
+
+## 4. Coding Standards
+- TypeScript throughout; add explicit types on exported/public APIs.
+- Indentation: 2 spaces, single quotes, trailing semicolons.
+- React components use PascalCase files; functions, variables, slices use camelCase.
+- Keep code self-explanatory; add brief comments only when complex logic needs framing.
+- Prefer `apply_patch` for manual edits; avoid using it for generated files.
+
+## 5. Testing & Validation Expectations
+- Jest + React Testing Library (`ts-jest`, `jest-environment-jsdom`).
+- Tests live in `src/__tests__/` with `.test.ts` or `.test.tsx` suffixes.
 - Setup file: `src/setupTests.ts` (includes `@testing-library/jest-dom`).
-- Test files live in `src/__tests__/` and end with `.test.ts` or `.test.tsx`.
-- Aim to cover reducers, selectors, and core game logic (`game/*`). Optional coverage: `yarn test --coverage`.
+- Aim to cover reducers, selectors, and core game logic. Optional coverage via `yarn test --coverage`.
+- Document exact commands executed when reporting validation results.
 
-## Roadmap Tracking
-- The 24-step implementation roadmap lives in `memory-bank/mvp-plan.md` (Phases 1–8). Keep numbering intact and update the plan whenever scope changes.
-- Treat `memory-bank/mvp-plan.md` as the authoritative scope document only—do not record completion status there.
-- Mirror completed work in `memory-bank/progress.md`; each new milestone should reference the matching step number and live in chronological order.
-- Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
+## 6. Memory Bank Discipline
+- **Design vs. Architecture**  
+  - `game-design.md` = game mechanics, balance, player experience (WHAT).  
+  - `architecture.md` = code patterns, modules, data flow (HOW).  
+  - Never mix the two; sync both whenever implementation deviates from plan.
+- **Progress tracking**  
+  - `memory-bank/progress.md` records completed steps only (with XML tags).  
+  - `memory-bank/mvp-plan.md` lists scope; edit only to change requirements or ordering.
+- **Narrative work**  
+  - When adding or editing dialogue/quests, align tone with `memory-bank/plot.md` and cite the referenced section in change summaries.
 
-## Reference Memory Bank
-- `memory-bank/plot.md` now folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
-- `memory-bank/game-design.md` documents the agreed toolchain and gameplay pillars; align new systems with it or log deviations.
-- `memory-bank/architecture.md` must reflect current code structure. Update it alongside architectural changes so docs never drift.
-- `memory-bank/post-mvp-plan.md` captures deferred Phase 9 optional expansions (advanced stamina, vehicle systems, survival mode); consult it when planning post-MVP work.
+## 7. Commit & PR Guidelines
+- Use imperative messages (`feat:`, `fix:`, etc. acceptable).  
+- PRs must include: summary + rationale, linked issues (e.g., `Closes #123`), screenshots/GIFs for UI changes, tests executed, and note any breaking changes.
+- Never commit secrets; keep runtime config in `.env.local` with `VITE_` prefixes.
+- Place large/optimized assets in `public/`.
 
-## Commit & Pull Request Guidelines
-- Use imperative, concise commits. Conventional Commits are welcome (e.g., `fix(build): ...`).
-- PRs should include:
-  - Summary of changes and rationale
-  - Linked issues (e.g., `Closes #123`)
-  - Screenshots/GIFs for UI changes
-  - Notes on tests added/updated and any breaking changes
+## 8. Handoff Requirements
+- Before requesting review or merging: confirm implementation, docs, tests, and Linear status are all updated.  
+- Provide logical next steps (tests to rerun, smoke checks) when delivering work.  
+- If unexpected repo changes appear, pause and ask the user how to proceed—do not revert unowned work.
 
-## Security & Configuration Tips
-- Do not commit secrets. For runtime config, prefer Vite envs prefixed with `VITE_` and keep local values in `.env.local` (gitignored).
-- Large assets belong in `public/` and should be optimized.
-
-## Agent-Specific Instructions
-- Follow this AGENTS.md across the repo. Keep changes minimal and focused. Prefer `yarn` for scripts. When adding files, mirror existing naming and structure.
-- At the start of any feature task, scan the Linear "MVP" (and "PostMVP" when relevant) boards for active `Todo` issues and confirm the next assignment there before diving into code.
-- Once the Linear source of truth is identified, review `memory-bank/mvp-plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
-- Use the Linear “MVP” and “PostMVP” projects as the live task index; review them before picking up work so you don’t have to rescan the full plan/progress set each time.
-- Keep Linear issues in sync with roadmap status; update the issue state and descriptions whenever a step is added, started, or completed.
-- Create a Linear issue under the “MVP” project for every roadmap step/task as soon as it is added, and keep the issue status in sync with its completion in the docs.
-- Leave roadmap issues in `Todo` until explicitly asked to take the task; switch the Linear issue to `In Progress` only while actively implementing it, and move it to `Done` immediately after the corresponding commit/validation finishes.
-- **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
-- After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
-- After finishing a roadmap step (or related Linear task), add an implementation summary comment to the matching Linear issue before moving it to `Done`; include key tasks, validation, and notable code references.
-- When adding or revising dialogue, quest text, or narrative copy, align tone with the writing guidelines in `memory-bank/plot.md` and note the consulted section in your change log or PR summary.
-- Before committing any improvement, step, or task, confirm the implementation is sound and explicitly request the commit only after that confirmation.
-
-## Separation of Concerns: Design vs Architecture
-
-**CRITICAL:** Understand the difference before making changes.
-
-- **game-design.md = WHAT** (gameplay mechanics, rules, balance numbers, player experience)
-- **architecture.md = HOW** (code patterns, modules, file paths, technical implementation)
-
-### Decision Guide:
-- Player mechanics, AP costs, damage? → **game-design.md**
-- Code organization, Redux slices, file paths? → **architecture.md**
-- Game rules and formulas? → **game-design.md**
-- Design patterns, data flow? → **architecture.md**
-
-### Two-Way Sync:
-1. **Design → Implementation**: Update game-design.md (WHAT) → Implement → Document in architecture.md (HOW) → Log in progress.md
-2. **Technical Constraint → Design**: Note in architecture.md → Adjust game-design.md if needed → Document compromise
-
-### Common Mistakes:
-- ❌ Putting code paths in game-design.md
-- ❌ Putting balance numbers in architecture.md
-- ✅ Keep WHAT and HOW separate
-
----
-
-## XML Tagging in Documentation
-The memory-bank documentation uses XML tags to improve LLM agent parsing and information retrieval. When reading or updating documentation:
-
-### progress.md Structure
-- `<step id="N" status="completed|pending">` - Wraps each completed implementation step
-- `<step_metadata>` - Contains step number, title, status, and completion date
-- `<tasks>` - Lists concrete tasks accomplished in the step
-- `<implementation>` - Technical implementation details (optional)
-- `<code_reference file="path">` - References specific files modified
-- `<validation>` - Test commands and validation procedures
-- `<notes>` or `<maintenance_notes date="...">` - Additional context
-
-### mvp-plan.md Structure
-- `<phase id="N" name="...">` - Groups related steps by implementation phase
-- `<step id="N">` - Individual implementation steps (no status attribute; track status only in progress.md)
-- `<step_metadata>` - Step metadata including phase assignment
-- `<instructions>` - High-level task description
-- `<details>` - Detailed implementation requirements
-- `<test>` - Validation and testing procedures
-
-### Benefits of XML Structure
-- **Quick Navigation**: Agents can extract specific steps by ID or status
-- **Structured Queries**: Easy to find all pending tasks or completed work
-- **Hierarchical Context**: Phase grouping provides implementation context
-- **Validation Tracking**: Test procedures are explicitly tagged for reference
-
-### architecture.md Structure
-- `<architecture_section id="..." category="...">` - Major architectural patterns and systems
-- `<pattern name="...">` - Named design patterns (e.g., "Manhattan Grid System", "Unidirectional Data Flow")
-- `<design_principles>` - Key design decisions and principles
-- `<technical_flow>` - Step-by-step technical implementation flows
-- `<code_location>` - File paths and module references
-
-### game-design.md Structure (Optional Tags)
-- `<game_system id status>` - Major gameplay systems (status: implemented|partial|not_implemented)
-- `<mechanic name>` - Individual game mechanics
-- `<rule type>` - Game rules (type: formula|constraint|condition)
-- `<balance_values system>` - Numerical tuning values
-- `<implementation_status>` - Current state (✅ IMPLEMENTED | ⚠️ PARTIAL | ❌ NOT IMPLEMENTED)
-
-### When Updating Documentation
-- Maintain existing XML structure and tag hierarchy
-- Record completion status exclusively in `memory-bank/progress.md`; update the plan only when scope or requirements change
-- Keep tags well-formed (properly opened and closed)
-- Use appropriate category attributes
-
-### Validation Before/After Implementation
-- **Before:** Check game-design.md for feature spec (WHAT), check architecture.md for patterns (HOW)
-- **After:** Update both documents with what changed, log completion in progress.md
-- Tag XML sections incrementally as they're referenced/updated (not required for all content immediately)
+Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Follow it strictly for every task.
