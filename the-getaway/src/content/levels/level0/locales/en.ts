@@ -80,10 +80,21 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_archivist_naila',
       npcId: 'Archivist Naila',
+      toneDefaults: {
+        personaId: 'persona.amara_velez',
+        authorId: 'author.vonnegut_brautigan_core',
+        sceneId: 'scene.post_ambush_reassurance',
+        seedKey: 'naila',
+      },
       nodes: [
         {
           id: 'intro',
           text: 'Naila polishes cracked lenses that reflect three different skies. "Knowledge is leverage. Help me unmask their manifests and I’ll carve you breathing space."',
+          tone: {
+            sceneId: 'scene.share_scarce_food',
+            templateId: 'template.deadpan.reassure',
+            seedKey: 'intro',
+          },
           options: [
             {
               text: 'What relic are we lifting today?',
@@ -114,6 +125,11 @@ export const level0EnglishContent: Level0LocaleContent = {
         {
           id: 'mission',
           text: '"Lira’s guarding a datapad fat with patrol math. Bring it home and I’ll paint their rotations like constellations."',
+          tone: {
+            sceneId: 'scene.pre_heist_briefing',
+            templateId: 'template.urgent.push',
+            seedKey: 'mission',
+          },
           options: [
             {
               text: 'I’ll fetch the glowing brick.',
@@ -124,6 +140,11 @@ export const level0EnglishContent: Level0LocaleContent = {
         {
           id: 'mission_complete',
           text: '"This cracks them wide open. Uploading safe windows to your ops board before Harrow’s speechwriters invent new lies."',
+          tone: {
+            sceneId: 'scene.post_ambush_reassurance',
+            templateId: 'template.surreal.resilience',
+            seedKey: 'complete',
+          },
           options: [
             {
               text: 'Appreciate the starlight, Naila.',

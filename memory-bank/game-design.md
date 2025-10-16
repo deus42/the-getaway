@@ -497,6 +497,19 @@ Dialogue is a crucial tool for storytelling, delivered in a text-driven format r
 The dialogue system is essentially the narrative engine of the game, driving story progression, quest initiation/completion, and delivering the rich story we plan. It's designed to handle complex branching while giving the player clarity and meaningful choices.
 </mechanic>
 
+<mechanic name="tone_preserving_dialogue">
+Tone-Preserving Procedural Dialogue
+
+The tone mixer keeps emergent dialogue aligned with the agreed voice pillars while giving designers replayable variation:
+	•	Trait Axes: Author, persona, and scene fingerprints score seven axes (warmth, melancholy, sarcasm, surrealism, urgency, steadiness, wit) in the `[0,1]` range so the runtime can blend them deterministically.
+	•	Rhetorical Controls: Blended traits feed sentence length mean/std dev, metaphor rate, and fragment preference. Urgency shortens lines, surrealism and melancholy raise imagery density, steadiness reins in fragments.
+	•	Weighted Blending: Default weighting is `0.4 author / 0.4 persona / 0.2 scene`. When no scene hint is supplied the weights re-normalise to author/persona. Designers can override the weighting per request if a scene mood should dominate.
+	•	Templates & Palettes: Micro-templates (deadpan reassurance, urgent push, surreal resilience) declare slots that draw from trait-weighted synonym palettes. Entries may tag motifs such as `motif.streetlight`, `motif.compass`, `motif.rain_hum`, `motif.glowsticks` to maintain recurring imagery.
+	•	Motif Hygiene: Each persona owns a lightweight motif counter. Selecting a motif-tagged line bumps the counter, reducing its weight on the next pull while the manager decays counters every time the persona speaks so imagery can return after a breather.
+	•	Deterministic Seeds: Dialogue nodes provide a `seedKey` that, combined with `(dialogueId, nodeId)`, guarantees the same prose in UI, tests, and localisation tooling while preserving `node.text` as the fallback.
+	•	Content Authoring: Author fingerprints live in `content/dialogueTone/authors.ts`, personas in `personas.ts`, scene hints in `scenes.ts`, and template/palette definitions in `templates.ts` / `palettes.ts`. Locale bundles opt in via `toneDefaults` / `tone` metadata so translators see both the generated output and the underlying fallback line.
+</mechanic>
+
 <mechanic name="choices_consequences">
 Choices & Consequences
 

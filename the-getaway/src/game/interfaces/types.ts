@@ -389,10 +389,20 @@ export interface QuestReward {
 }
 
 // Dialogue interface
+export interface DialogueToneConfig {
+  authorId?: string;
+  personaId?: string;
+  sceneId?: string;
+  templateId?: string;
+  seedKey?: string;
+  useGenerated?: boolean;
+}
+
 export interface Dialogue {
   id: string;
   npcId: string;
   nodes: DialogueNode[];
+  toneDefaults?: DialogueToneConfig;
 }
 
 // Dialogue node
@@ -401,6 +411,7 @@ export interface DialogueNode {
   text: string;
   options: DialogueOption[];
   speaker?: string;
+  tone?: DialogueToneConfig;
 }
 
 // Dialogue option

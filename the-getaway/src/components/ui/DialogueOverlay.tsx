@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store";
@@ -21,6 +21,7 @@ import {
   Item,
   SkillId,
 } from "../../game/interfaces/types";
+import { dialogueToneManager } from "../../game/narrative/dialogueTone/dialogueToneManager";
 import { getSystemStrings } from "../../content/system";
 import { getUIStrings } from "../../content/ui";
 import { getSkillDefinition } from "../../content/skills";
@@ -187,17 +188,42 @@ const DialogueOverlay: React.FC = () => {
     dialogues,
   } = useSelector((state: RootState) => state.quests);
 
-  if (!dialogueId) {
+  const dialogue = useMemo(() => {
+    if (!dialogueId) {
+      return null;
+    }
+    return dialogues.find((entry) => entry.id === dialogueId) ?? null;
+  }, [dialogueId, dialogues]);
+
+  const currentNode: DialogueNode | null = useMemo(() => {
+    if (!dialogue) {
+      return null;
+    }
+    if (dialogue.nodes.length === 0) {
+      return null;
+    }
+    const node = dialogue.nodes.find((entry) => entry.id === currentNodeId);
+    return node ?? dialogue.nodes[0];
+  }, [dialogue, currentNodeId]);
+
+  const toneLine = useMemo(() => {
+    if (!dialogue || !currentNode) {
+      return null;
+    }
+    const resolvedNode =
+      dialogue.nodes.find((node) => node.id === currentNode.id) ?? currentNode;
+    return dialogueToneManager.resolveLine({
+      dialogue,
+      node: resolvedNode,
+      fallbackText: resolvedNode.text,
+    });
+  }, [dialogue, currentNode]);
+
+  const displayText = toneLine?.text ?? currentNode?.text ?? '...';
+
+  if (!dialogueId || !dialogue || !currentNode) {
     return null;
   }
-
-  const dialogue = dialogues.find((entry) => entry.id === dialogueId);
-  if (!dialogue || dialogue.nodes.length === 0) {
-    return null;
-  }
-
-  const currentNode: DialogueNode | undefined =
-    dialogue.nodes.find((node) => node.id === currentNodeId) ?? dialogue.nodes[0];
 
   const getQuestLockReason = (option: DialogueOption): QuestLockReason | null => {
     if (!option.questEffect) {
@@ -320,7 +346,7 @@ const DialogueOverlay: React.FC = () => {
               color: "#f8fafc",
             }}
           >
-            {currentNode?.text ?? "..."}
+            {displayText}
           </h2>
         </div>
 

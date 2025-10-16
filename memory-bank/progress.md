@@ -19,6 +19,53 @@
 </notes>
 </step>
 
+<step id="16.10" status="completed">
+<step_metadata>
+  <number>16.10</number>
+  <title>Tone-Preserving Procedural Dialogue System</title>
+  <status>Completed</status>
+  <date>October 16, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Introduced tone trait vectors, rhetorical controls, and JSON-schema validation helpers so author, persona, and scene fingerprints share a deterministic format.
+2. Seeded the dialogue tone content library (authors, personas, scene hints, templates, synonym palettes) with motif tagging and added Jest coverage to guard schema drift.
+3. Implemented the tone mixer plus cache-aware `DialogueToneManager`, including seeded RNG, motif decay, and template selection clamps.
+4. Wired `DialogueOverlay` and Level 0 locale bundles to consume the manager, enabling tone-aware lines with deterministic fallbacks in both English and Ukrainian.
+</tasks>
+
+<implementation>
+- `game/narrative/dialogueTone` now hosts trait definitions, schema validation, a seeded RNG helper, the blending/motif-aware mixer, and the runtime manager that memoises generated lines per `(dialogueId, nodeId, seedKey)`.
+- Content under `content/dialogueTone` defines author fingerprints, persona baselines (Trace, Amara, Theo, Sadiq), scene hints, micro-templates, and trait-weighted palettes; `buildToneLibrary` exposes these for runtime/tests while motif defaults keep counters persona-scoped.
+- `DialogueOverlay` resolves tone metadata via `dialogueToneManager`, leaving handcrafted text intact as fallback, and Level 0’s Archivist Naila dialogue now opts into tone defaults per node across EN/UA bundles.
+- Architecture and design docs capture the new pipeline: blending weights, motif hygiene rules, authoring locations, and the integration path through the overlay.
+</implementation>
+
+<code_reference file="the-getaway/src/game/narrative/dialogueTone/toneTypes.ts" />
+<code_reference file="the-getaway/src/game/narrative/dialogueTone/dialogueToneMixer.ts" />
+<code_reference file="the-getaway/src/game/narrative/dialogueTone/dialogueToneManager.ts" />
+<code_reference file="the-getaway/src/content/dialogueTone/index.ts" />
+<code_reference file="the-getaway/src/content/dialogueTone/templates.ts" />
+<code_reference file="the-getaway/src/content/dialogueTone/palettes.ts" />
+<code_reference file="the-getaway/src/content/dialogueTone/personas.ts" />
+<code_reference file="the-getaway/src/components/ui/DialogueOverlay.tsx" />
+<code_reference file="the-getaway/src/content/levels/level0/locales/en.ts" />
+<code_reference file="the-getaway/src/content/levels/level0/locales/uk.ts" />
+<code_reference file="memory-bank/game-design.md" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/narrative/dialogueTone/__tests__/dialogueToneMixer.test.ts --runInBand`
+- `yarn test --runTestsByPath src/game/narrative/dialogueTone/__tests__/dialogueToneManager.test.ts --runInBand`
+- `yarn test --runTestsByPath src/content/dialogueTone/__tests__/toneContent.test.ts --runInBand`
+- `yarn test --runTestsByPath src/__tests__/dialogueOverlay.test.tsx --runInBand`
+</validation>
+
+<notes>
+- Dialogue nodes honour `toneDefaults` / `tone` metadata but default to handcrafted copy when configs opt out, keeping localisation review predictable while enabling procedural tone.
+</notes>
+</step>
+
 <step id="16.8" status="completed">
 <step_metadata>
   <number>16.8</number>

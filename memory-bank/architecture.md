@@ -558,6 +558,22 @@ Quest and dialogue systems:
   - Dialogue navigation and branching conversations
   - Helper functions for creating common dialogue patterns
 
+<architecture_section id="dialogue_tone_pipeline" category="narrative_systems">
+<design_principles>
+- Procedural dialogue lines stay anchored to the plot bible influences (dry wit, surreal melancholy) and remain locale agnostic by sampling from data-driven templates.
+- Persona, author, and scene vectors blend deterministically so regenerated lines are reproducible during tests or localisation review; fallback copy remains intact if tone configs are missing or explicitly opt out.
+- Motif counters live per persona to prevent repeating signature imagery in adjacent lines while decaying across conversations so motifs can resurface over longer arcs.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/content/dialogueTone/index.ts</code_location> composes the tone library by merging author fingerprints, persona baselines, scene hints, micro-templates, and synonym palettes. Entries encode trait weighting, motif tags (`motif.streetlight`, `motif.compass`, `motif.rain_hum`, `motif.glowsticks`), and optional lexicon overrides.
+2. <code_location>the-getaway/src/game/narrative/dialogueTone/dialogueToneMixer.ts</code_location> blends author/persona/scene vectors with normalised weights, clamps conflicts (e.g., fragment preference on templates that forbid fragments), selects compatible templates, and samples palettes via seeded RNG so identical `(dialogueId, nodeId, seedKey)` inputs yield identical prose.
+3. <code_location>the-getaway/src/game/narrative/dialogueTone/dialogueToneManager.ts</code_location> wraps the mixer with caching and persona-scoped motif tracking. It merges dialogue-level defaults with node overrides, resolves seed keys, and memoises results so repeated React renders do not mutate motif state or reshuffle generated text.
+4. <code_location>the-getaway/src/components/ui/DialogueOverlay.tsx</code_location> requests generated copy through the manager. When `Dialogue.toneDefaults` / `DialogueNode.tone` metadata is present, the overlay renders the generated line; otherwise it falls back to the handcrafted `node.text`.
+5. Locale bundles such as <code_location>the-getaway/src/content/levels/level0/locales/en.ts</code_location> opt in node-by-node. Archivist Naila now routes intro/mission/complete beats through the mixer, blending the Vonnegut-Brautigan author fingerprint with the Amara persona while retaining translated fallback text.
+</technical_flow>
+</architecture_section>
+
 #### `/the-getaway/src/game/inventory`
 
 Inventory and item management:

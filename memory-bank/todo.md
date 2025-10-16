@@ -2,13 +2,6 @@
 
 <todo_list>
   <phase id="5" name="Narrative and Quest Layer">
-    <step id="16.10">
-      <step_metadata>
-        <number>16.10</number>
-        <title>Tone-Preserving Procedural Dialogue System</title>
-        <status>pending</status>
-      </step_metadata>
-    </step>
     <step id="16.11">
       <step_metadata>
         <number>16.11</number>

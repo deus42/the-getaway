@@ -248,10 +248,21 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_archivist_naila',
       npcId: 'Архіварка Найла',
+      toneDefaults: {
+        personaId: 'persona.amara_velez',
+        authorId: 'author.vonnegut_brautigan_core',
+        sceneId: 'scene.post_ambush_reassurance',
+        seedKey: 'naila',
+      },
       nodes: [
         {
           id: 'intro',
           text: 'Найла протирає побиті лінзи, що показують три різні небеса. "Знання — це важіль. Допоможи зняти маску з маніфестів, і я виріжу для тебе вікно повітря."',
+          tone: {
+            sceneId: 'scene.share_scarce_food',
+            templateId: 'template.deadpan.reassure',
+            seedKey: 'intro',
+          },
           options: [
             {
               text: 'Який артефакт витягаємо цього разу?',
@@ -282,6 +293,11 @@ export const level0UkrainianContent: Level0LocaleContent = {
         {
           id: 'mission',
           text: '"Ліра тримає дата-пад, повний патрульної математики. Принеси — і я намалюю їхні маршрути, як сузір’я."',
+          tone: {
+            sceneId: 'scene.pre_heist_briefing',
+            templateId: 'template.urgent.push',
+            seedKey: 'mission',
+          },
           options: [
             {
               text: 'Заберу сяйливу цеглину.',
@@ -292,6 +308,11 @@ export const level0UkrainianContent: Level0LocaleContent = {
         {
           id: 'mission_complete',
           text: '"Це їх розкриває. Завантажую безпечні вікна, поки спічрайтери Гарроу не вигадають нових казок."',
+          tone: {
+            sceneId: 'scene.post_ambush_reassurance',
+            templateId: 'template.surreal.resilience',
+            seedKey: 'complete',
+          },
           options: [
             {
               text: 'Дякую за зорі, Найло.',
