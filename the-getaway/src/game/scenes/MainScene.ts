@@ -130,7 +130,9 @@ export class MainScene extends Phaser.Scene {
 
     const renderer = this.game.renderer;
     if (renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-      const hasPipeline = typeof renderer.hasPipeline === 'function' && renderer.hasPipeline(CrtScanlinePipeline.KEY);
+      const hasPipelineFn = (renderer as unknown as { hasPipeline?: (key: string) => boolean }).hasPipeline;
+      const hasPipeline =
+        typeof hasPipelineFn === 'function' ? hasPipelineFn.call(renderer, CrtScanlinePipeline.KEY) : false;
       if (hasPipeline) {
         this.backdropGraphics.setPostPipeline(CrtScanlinePipeline.KEY);
       }

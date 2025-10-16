@@ -13,9 +13,14 @@ export class BootScene extends Phaser.Scene {
     console.log('[BootScene] create: Fetching initial state and starting MainScene...');
     const renderer = this.game.renderer;
     if (renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer) {
-      const hasPipeline = typeof renderer.hasPipeline === 'function' && renderer.hasPipeline(CrtScanlinePipeline.KEY);
-      if (!hasPipeline) {
-        renderer.addPipeline(CrtScanlinePipeline.KEY, new CrtScanlinePipeline(this.game));
+      const hasPipelineFn = (renderer as unknown as { hasPipeline?: (key: string) => boolean }).hasPipeline;
+      const addPipelineFn = (renderer as unknown as {
+        addPipeline?: (key: string, pipeline: Phaser.Renderer.WebGL.WebGLPipeline) => void;
+      }).addPipeline;
+      const hasPipeline =
+        typeof hasPipelineFn === 'function' ? hasPipelineFn.call(renderer, CrtScanlinePipeline.KEY) : false;
+      if (!hasPipeline && typeof addPipelineFn === 'function') {
+        addPipelineFn.call(renderer, CrtScanlinePipeline.KEY, new CrtScanlinePipeline(this.game));
       }
     }
     const initialState: RootState = store.getState();
