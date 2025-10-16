@@ -19,6 +19,86 @@
 </notes>
 </step>
 
+<step id="16.8" status="completed">
+<step_metadata>
+  <number>16.8</number>
+  <title>Environmental Story Triggers & Ambient Feedback</title>
+  <status>Completed</status>
+  <date>October 8, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Introduced serialisable environment state (`world.environment`) with narrative flags, rumor/signage/weather snapshots, and NPC ambient profiles threaded through the existing alert/curfew reducers.
+2. Authored environment content tables (rumors, notes, signage, weather) plus selectors so ambient copy stays data-driven and consistent with the tone set in `memory-bank/plot.md`.
+3. Shipped a reusable trigger registry and default trigger pack that rotates barfly gossip, toggles weather/sirens, swaps propaganda signage, and seeds collectible notes when flags flip.
+4. Wired GameController to tick the registry each frame and added focused Jest coverage to confirm rumors, signage, and notes respond to flag changes.
+</tasks>
+
+<implementation>
+- `worldSlice` now hydrates `EnvironmentState`, mirrors curfew/alert events into `gangHeat`, `curfewLevel`, `supplyScarcity`, and `blackoutTier`, and exposes helpers to persist signage, rumor sets, and spawned notes alongside NPC bark profiles.
+- Content under `src/content/environment` defines short-form rumors, notes, signage variants, and weather presets with story-function metadata; selectors in `worldSelectors.ts` deliver memoised reads for HUD consumers.
+- The trigger registry (`triggerRegistry.ts`) tracks cooldown/once semantics while `defaultTriggers.ts` maps table entries to Redux actions, logging swaps through the updated system strings.
+- `GameController` initialises and ticks triggers every animation frame so Phaser scenes and Redux stay synchronised; tests simulate flag shifts to verify rumor updates, signage swaps, and note drops land as expected.
+</implementation>
+
+<code_reference file="the-getaway/src/store/worldSlice.ts" />
+<code_reference file="the-getaway/src/game/interfaces/environment.ts" />
+<code_reference file="the-getaway/src/content/environment/index.ts" />
+<code_reference file="the-getaway/src/game/world/triggers/triggerRegistry.ts" />
+<code_reference file="the-getaway/src/game/world/triggers/defaultTriggers.ts" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/store/selectors/worldSelectors.ts" />
+<code_reference file="the-getaway/src/content/system/index.ts" />
+<code_reference file="the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/world/triggers/__tests__/defaultTriggers.test.ts --runInBand --silent`
+</validation>
+
+<notes>
+- Rumor copy, signage quips, and notes follow the straight-faced absurdity guidelines from `memory-bank/plot.md`, keeping punchlines in the final line for easy future audits.
+- Registry exposes a reset hook for tests; production code only registers once to prevent duplicate swaps when React remounts controllers.
+</notes>
+</step>
+
+<step id="16.9" status="completed">
+<step_metadata>
+  <number>16.9</number>
+  <title>Route Ambient World Events Through George Assistant</title>
+  <status>Completed</status>
+  <date>October 15, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Replaced the HUD ambient ticker by streaming rumor, signage, weather, and zone danger updates into George’s console with a dedicated Ambient Feed tab and dock highlight.
+2. Added `selectAmbientWorldSnapshot` plus a `GeorgeAmbientTracker` diff/cooldown layer so ambient triggers enqueue structured events without spamming repeat notifications.
+3. Localised the new ambient callouts (English/UA), introduced tone-aware formatters, and trimmed the legacy ticker component and strings from the app shell.
+</tasks>
+
+<implementation>
+- New snapshot types (`game/interfaces/georgeAssistant.ts`) and selectors (`store/selectors/worldSelectors.ts`) capture the latest environment state for the assistant.
+- `game/systems/georgeAssistant.ts` now exports `GeorgeAmbientTracker` with per-category cooldowns and is covered by `src/game/systems/__tests__/georgeAmbientTracker.test.ts`.
+- `components/ui/GeorgeAssistant.tsx` renders the Ambient Feed tab, dock alert visuals, and dock ticker integration while removing `components/ui/AmbientTicker.tsx` from `App.tsx`.
+- UI strings (`content/ui/index.ts`) gained ambient-feed formatters and flag vocabulary for both locales.
+</implementation>
+
+<code_reference file="the-getaway/src/game/interfaces/georgeAssistant.ts" />
+<code_reference file="the-getaway/src/store/selectors/worldSelectors.ts" />
+<code_reference file="the-getaway/src/game/systems/georgeAssistant.ts" />
+<code_reference file="the-getaway/src/game/systems/__tests__/georgeAmbientTracker.test.ts" />
+<code_reference file="the-getaway/src/components/ui/GeorgeAssistant.tsx" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+<code_reference file="the-getaway/src/App.tsx" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/systems/__tests__/georgeAmbientTracker.test.ts --runInBand`
+</validation>
+
+<notes>
+- Dock highlight auto-clears when players open the Ambient Feed, ensuring the ticker and badge never linger once updates are reviewed.
+</notes>
+</step>
+
 <step id="25.4" status="completed">
 <step_metadata>
   <number>25.4</number>
@@ -494,6 +574,36 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 
 <validation>
 - `yarn test src/__tests__/dialogueOverlay.test.tsx --watch=false`
+</validation>
+</step>
+
+<step id="16.5" status="completed">
+<step_metadata>
+  <number>16.5</number>
+  <title>Author Storylet Library Framework</title>
+  <status>Completed</status>
+  <date>October 12, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Defined a reusable storylet contract and seeded the inaugural catalog with act-aligned plays plus localized narrative payloads.
+2. Implemented the storylet engine to score triggers, cast actors into roles, evaluate branches, and honor cooldowns/location locks.
+3. Added a dedicated Redux slice that queues resolved storylets, applies faction/personality/health effects, and exposes selectors for future UI rendering.
+4. Wired mission completion, campfire rest, and curfew ambush flows to dispatch storylet triggers and introduced focused Jest coverage for engine + slice logic.
+</tasks>
+
+<implementation>
+<code_reference file="the-getaway/src/game/quests/storylets/storyletTypes.ts" />
+<code_reference file="the-getaway/src/game/quests/storylets/storyletRegistry.ts" />
+<code_reference file="the-getaway/src/game/quests/storylets/storyletEngine.ts" />
+<code_reference file="the-getaway/src/store/storyletSlice.ts" />
+<code_reference file="the-getaway/src/components/system/MissionProgressionManager.tsx" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/content/storylets/index.ts" />
+</implementation>
+
+<validation>
+- `yarn test --runTestsByPath src/game/quests/storylets/__tests__/storyletEngine.test.ts src/store/__tests__/storyletSlice.test.ts --watch=false`
 </validation>
 </step>
 
@@ -1438,4 +1548,193 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 <validation>
 - `yarn test --runTestsByPath src/__tests__/playerSlice.test.ts src/__tests__/combat.test.ts`
 </validation>
+</step>
+
+<step id="32.1" status="completed">
+<step_metadata>
+  <number>32.1</number>
+  <title>Implement Unit Test Suite (70%+ Code Coverage)</title>
+  <status>Completed</status>
+  <date>October 12, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added module-scoped combat, pathfinding, inventory, progression, and dialogue test suites under `src/game/**/__tests__` with deterministic helpers covering hit chance, crits, AI movement, weighted paths, inventory swaps, XP leveling, and faction/skill dialogue gating.
+2. Updated Jest coverage settings to require 70/65/70/70 global thresholds, enforce 75/70/75/75 for `src/game`, enable `v8` coverage provider, and emit JSON summaries for tooling.
+3. Verified full suite via `yarn test --coverage`, capturing 87.9% statements and 77.6% branches with the new tests exercising combat durability, performance constraints, and quest flow.
+</tasks>
+
+<implementation>
+- New module-level specs (`combatSystem.test.ts`, `pathfinding.test.ts`, `inventorySystem.test.ts`, `progression.test.ts`, `dialogueSystem.test.ts`) live alongside the systems they validate, reusing factory helpers to clone `DEFAULT_PLAYER`, seed enemies, and assert deterministic outcomes across AP costs, armor decay, diagonal routing, and quest effects.
+- Combat coverage now includes deterministic random generators for crit flows plus AI attack assertions, while pathfinding asserts diagonal toggles and sub-50ms traversal on 50×50 grids.
+- Inventory and progression tests exercise weight ceilings, equipment swaps, consumable caps, skill point awards, and perk unlock cadence; dialogue tests gate options by attribute/skill training and confirm quest hooks emit `started` events.
+- Jest configuration switches to V8 coverage, raises branch thresholds to 65% globally, and adds `json-summary` output, ensuring CI enforces the new bar and downstream tooling can ingest coverage metrics.
+</implementation>
+
+<code_reference file="the-getaway/src/game/combat/__tests__/combatSystem.test.ts" />
+<code_reference file="the-getaway/src/game/world/__tests__/pathfinding.test.ts" />
+<code_reference file="the-getaway/src/game/inventory/__tests__/inventorySystem.test.ts" />
+<code_reference file="the-getaway/src/game/systems/__tests__/progression.test.ts" />
+<code_reference file="the-getaway/src/game/quests/__tests__/dialogueSystem.test.ts" />
+<code_reference file="the-getaway/jest.config.js" />
+
+<validation>
+- `yarn test --coverage`
+</validation>
+
+<notes>
+- Coverage summary: 87.9% statements, 77.6% branches, 83.7% functions, 87.9% lines with per-module floors enforced (`src/game` ≥75/70/75/75%).
+- Crafting suite slated in Step 30 remains pending until the crafting systems land; no stubs created to avoid false completeness.
+</notes>
+</step>
+
+<step id="26" status="completed">
+<step_metadata>
+  <number>26</number>
+  <title>Advanced Combat Foundations</title>
+  <status>Completed</status>
+  <date>October 12, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Extended combat entities with `facing`, `coverOrientation`, and `suppression` fields plus directional tile cover metadata (`MapTile.cover`), updating player defaults and movement reducers to keep orientation in sync.
+2. Refactored `calculateHitChance`/`executeAttack` to resolve directional cover mitigation, introduced reaction queue scaffolding (`queueReaction`, `drainReactions`), and taught enemy AI to update facing/cover state after movement.
+3. Added `setTileCoverProfile` for grid authoring and a MainScene cover preview wedge that highlights the protected edge while hovering tiles; verified behaviour with new combat + reactions unit tests.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/game/interfaces/types.ts</code_location> models cardinal facings, cover profiles, and new combat state fields on `Player`/`Enemy` entities.
+- <code_location>the-getaway/src/game/combat/combatSystem.ts</code_location> normalises cover arguments, applies half/full mitigation, exports reaction queue helpers, and keeps attackers oriented via `applyCoverStateFromTile`/`applyMovementOrientation`.
+- <code_location>the-getaway/src/game/combat/reactions.ts</code_location> provides the queue primitive consumed by combat.
+- <code_location>the-getaway/src/game/combat/enemyAI.ts</code_location> now orients enemies after movement and passes map context into attacks so cover math engages.
+- <code_location>the-getaway/src/game/world/grid.ts</code_location> exposes `setTileCoverProfile` for directional cover authoring.
+- <code_location>the-getaway/src/game/scenes/MainScene.ts</code_location> renders a cover wedge overlay during path previews.
+- <code_location>the-getaway/src/store/playerSlice.ts</code_location> updates facing when the player moves.
+</implementation>
+
+<code_reference file="the-getaway/src/game/interfaces/types.ts" />
+<code_reference file="the-getaway/src/game/interfaces/player.ts" />
+<code_reference file="the-getaway/src/game/combat/combatSystem.ts" />
+<code_reference file="the-getaway/src/game/combat/reactions.ts" />
+<code_reference file="the-getaway/src/game/combat/enemyAI.ts" />
+<code_reference file="the-getaway/src/game/world/grid.ts" />
+<code_reference file="the-getaway/src/game/scenes/MainScene.ts" />
+<code_reference file="the-getaway/src/store/playerSlice.ts" />
+<code_reference file="the-getaway/src/game/combat/__tests__/combatSystem.test.ts" />
+<code_reference file="the-getaway/src/game/combat/__tests__/reactions.test.ts" />
+
+<validation>
+- `yarn test --coverage`
+</validation>
+
+<notes>
+- Directional cover currently applies 25%/45% hit penalties for half/full protection and scales damage via the same profile, laying groundwork for the overwatch/AoE features in Steps 26.1–26.3.
+</notes>
+</step>
+
+<step id="16.6" status="completed">
+<step_metadata>
+  <number>16.6</number>
+  <title>Standardize Level → Mission → Quest Hierarchy & Resource Keys</title>
+  <status>Completed</status>
+  <date>October 15, 2025</date>
+</step_metadata>
+
+<tasks>
+1. Added narrative structure contracts (`structureTypes.ts`) and registered level/mission/quest definitions plus NPC ownership metadata under `src/content/**`.
+2. Centralised localisation into `src/content/locales/<locale>` bundles and rewired mission/quest loaders to compose structural data with resource-keyed copy.
+3. Introduced the narrative validation utility with Jest coverage so missing locales or broken cross-references fail fast during development.
+</tasks>
+
+<implementation>
+- `getMissionManifest` now assembles objectives by resolving mission/quest definitions against locale bundles, while `buildQuestsForLevel` materialises Redux-ready quest instances for `level0` content.
+- `validateNarrativeContent` audits level, mission, quest, and NPC registries across all locales, surfaced through a dedicated Jest spec to keep the hierarchy airtight.
+</implementation>
+
+<code_reference file="the-getaway/src/game/narrative/structureTypes.ts" />
+<code_reference file="the-getaway/src/content/missions.ts" />
+<code_reference file="the-getaway/src/content/quests/builders.ts" />
+<code_reference file="the-getaway/src/game/narrative/validateContent.ts" />
+<code_reference file="the-getaway/src/content/locales/en/index.ts" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn test narrativeValidation.test.ts --watch=false`
+</validation>
+</step>
+
+<step id="35" status="completed">
+<step_metadata>
+  <number>35</number>
+  <title>Surface Level & Objective HUD</title>
+  <status>Completed</status>
+  <date>February 15, 2026</date>
+</step_metadata>
+
+<tasks>
+1. Introduced structured zone descriptors (`content/zones.ts`) covering level index, hazard roster, and local directives for Slums, Downtown, and Industrial tiers.
+2. Enriched world generation so `buildWorldResources` stamps each `MapArea` with display name, summary, danger rating, and hazard list derived from the zone descriptor registry.
+3. Expanded the LevelIndicator HUD to show zone banner, danger pill, environmental hazards, and local directives alongside mission objectives with refreshed locale strings.
+4. Extended the mission manifest to define Level 1 (Downtown Governance Ring) and Level 2 (Industrial Wasteland) objective scaffolds, aligning HUD data with the expanded roadmap.
+</tasks>
+
+<implementation>
+- Zone metadata lives in <code>getZoneMetadata</code> and is merged during `createCityArea` / interior creation so Phaser scenes and HUD consumers read a single enriched `MapArea`.
+- `LevelIndicator.tsx` now derives zone context from `world.currentMapArea`, renders hazard chips, and keeps mission lists driven by the existing selectors.
+- Mission definitions grow to three tiers, supplying localization-friendly titles and future quest hooks without impacting current Level 0 progress.
+</implementation>
+
+<code_reference file="the-getaway/src/content/zones.ts" />
+<code_reference file="the-getaway/src/game/world/worldMap.ts" />
+<code_reference file="the-getaway/src/components/ui/LevelIndicator.tsx" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+<code_reference file="the-getaway/src/content/missions.ts" />
+
+<validation>
+- `yarn build` *(fails: TypeScript catches pre-existing test fixtures that omit required quest/skill properties; no new runtime regressions observed in modified modules)*.
+</validation>
+
+<notes>
+- Hazard chips currently list textual warnings; once Industrial maps land we can hook sensor data to toggle chips dynamically (e.g., disable when filters equipped).
+</notes>
+</step>
+
+<step id="16.7" status="completed">
+<step_metadata>
+  <number>16.7</number>
+  <title>Prototype Narrative → Triple → Scene Pipeline</title>
+  <status>Completed</status>
+  <date>February 17, 2026</date>
+</step_metadata>
+
+<tasks>
+1. Introduced narrative triple schemas and extraction helpers that translate mission prompts into ordered `(subject, relation, object)` bundles with validation feedback.
+2. Added relation rules plus a world generation pipeline stage that resolves triple placements into depth-sorted map props, honouring walkability and cover tags.
+3. Published the `generate-scene-from-story` CLI workflow and seeded the first generated scene asset under Level 0 → Recover Cache, wiring the mission to its resource key registry.
+</tasks>
+
+<implementation>
+- `tripleExtraction` heuristically tokenises prompts and supports manual fallback bundles so writers can override LLM output while keeping schema validation intact.
+- Relation rules leverage existing grid helpers (`isPositionWalkable`, `findNearestWalkablePosition`) to map verbs like `near`, `inside`, or `left_of` to concrete tile offsets without colliding with blocked cells.
+- The world generation pipeline materialises `GeneratedSceneDefinition` payloads into `MapArea` instances, tagging tiles from placement metadata (cover vs blocking) and writing issue telemetry back into scene metadata.
+- The CLI stitches extraction + generation, emits JSON into <code>content/levels/{level}/missions/{mission}/generatedScenes</code>, and logs validation issues for missing assets or collisions.
+</implementation>
+
+<code_reference file="the-getaway/src/game/narrative/tripleTypes.ts" />
+<code_reference file="the-getaway/src/game/narrative/tripleExtraction.ts" />
+<code_reference file="the-getaway/src/game/world/generation/relationRules.ts" />
+<code_reference file="the-getaway/src/game/world/generation/worldGenerationPipeline.ts" />
+<code_reference file="the-getaway/scripts/generate-scene-from-story.ts" />
+<code_reference file="the-getaway/src/content/levels/level0/missions/level0-recover-cache/generatedScenes/scene-level0-recover-cache-ambush-route.json" />
+<code_reference file="the-getaway/src/content/missions/level0-recover-cache/missionDefinition.ts" />
+<code_reference file="the-getaway/src/content/scenes/generatedScenes.ts" />
+
+<validation>
+- `yarn test` *(fails: existing suites `storyletSlice`, `perceptionManager`, `factionSelectors` already red prior to this change; new world generation specs pass)*.
+</validation>
+
+<notes>
+- Scene metadata now records pipeline issues; expose this in author tooling dashboards before scaling to multi-mission generation.
+- Script expects Node 20+ (for `structuredClone`); align dev docs when documenting narrative tooling walkthrough.
+</notes>
 </step>

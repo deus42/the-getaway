@@ -59,12 +59,15 @@
 - Follow this AGENTS.md across the repo. Keep changes minimal and focused. Prefer `yarn` for scripts. When adding files, mirror existing naming and structure.
 - The repo uses the Yarn v1 lockfile that ships with `main`. Avoid running modern Yarn releases that rewrite `yarn.lock` into Berry format—doing so creates noisy diffs and merge conflicts when rebasing with `main`. If Corepack has activated Yarn 4 in your environment, run commands via `yarn set version classic` or fall back to `npx yarn@1 <command>` so the lockfile stays compatible.
 - At the start of any feature task, review `memory-bank/mvp-plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
+- Reference `memory-bank/todo.md` first when checking what remains; it lists pending roadmap steps so you don't have to rescan the full plan/progress set for every task.
+- Keep `memory-bank/todo.md` in sync with roadmap status; whenever a step is completed or added, update the corresponding `<step>` entry so it remains an accurate pending-task index.
 - **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
 - After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
 - When adding or revising dialogue, quest text, or narrative copy, align tone with the writing guidelines in `memory-bank/plot.md` and note the consulted section in your change log or PR summary.
 - Maintain the dystopian CRT-inspired HUD kit currently active across the React shell and Phaser scenes. Extend or adjust the exported tokens/utilities (`src/theme/dystopianTokens.ts`, `src/theme/dystopian.css`) instead of replacing the structure outright.
 - Keep typography crisp—scanline, bloom, and noise effects belong on panels or overlays (for example `ScanlineOverlay`) while text layers should remain sharp using the Inter/JetBrains Mono pairing already configured.
 - Phaser background layers may opt into the CRT pipeline, but gameplay-critical elements should remain unaffected to preserve readability.
+- Before committing any improvement, step, or task, confirm the implementation is sound and explicitly request the commit only after that confirmation.
 
 ## Separation of Concerns: Design vs Architecture
 

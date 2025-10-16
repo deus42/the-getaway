@@ -6,6 +6,7 @@ import { getPerkDefinition, PerkDefinition } from '../../content/perks';
 import { Durability, PerkId, EquipmentSlot, Item, Weapon, Armor } from '../../game/interfaces/types';
 import { equipItem, unequipItem } from '../../store/playerSlice';
 import Tooltip, { TooltipContent } from './Tooltip';
+import { getUIStrings } from '../../content/ui';
 import {
   characterPanelSurface,
   characterPanelHeaderStyle,
@@ -110,6 +111,16 @@ const perksListStyle: React.CSSProperties = {
   paddingTop: '0.35rem',
 };
 
+const SLOT_BADGE_COLORS: Record<EquipmentSlot, string> = {
+  primaryWeapon: 'rgba(56, 189, 248, 0.75)',
+  secondaryWeapon: 'rgba(59, 130, 246, 0.65)',
+  meleeWeapon: 'rgba(251, 191, 36, 0.75)',
+  bodyArmor: 'rgba(96, 165, 250, 0.75)',
+  helmet: 'rgba(147, 197, 253, 0.75)',
+  accessory1: 'rgba(236, 72, 153, 0.65)',
+  accessory2: 'rgba(236, 72, 153, 0.65)',
+};
+
 const perkBadgeStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -200,73 +211,89 @@ const isWeapon = (item?: Item): item is Weapon => Boolean(item && 'damage' in it
 
 const isArmor = (item?: Item): item is Armor => Boolean(item && 'protection' in item);
 
-const describeDurability = (durability?: Durability) => {
-  if (!durability || durability.max <= 0) {
-    return null;
-  }
-
-  const ratio = Math.max(0, Math.min(1, durability.current / durability.max));
-  const percentage = Math.round(ratio * 100);
-
-  if (ratio === 1) {
-    return {
-      copy: `Condition ${percentage}%`,
-      style: statRowStyle,
-      color: 'rgba(226, 232, 240, 0.86)',
-    };
-  }
-
-  if (ratio <= 0) {
-    return {
-      copy: 'Condition 0% – Broken',
-      style: warningRowStyle,
-      color: '#f87171',
-    };
-  }
-
-  if (ratio <= 0.25) {
-    return {
-      copy: `Condition ${percentage}% – Critical`,
-      style: warningRowStyle,
-      color: '#fbbf24',
-    };
-  }
-
-  if (ratio <= 0.5) {
-    return {
-      copy: `Condition ${percentage}% – Worn`,
-      style: warningRowStyle,
-      color: '#f59e0b',
-    };
-  }
-
-  return {
-    copy: `Condition ${percentage}%`,
-    style: statRowStyle,
-    color: 'rgba(250, 204, 21, 0.95)',
-  };
-};
-
-const SLOT_DEFINITIONS: Array<{
-  id: EquipmentSlot;
-  badgeColor: string;
-  label: string;
-  emptyCopy: string;
-}> = [
-  { id: 'primaryWeapon', badgeColor: 'rgba(56, 189, 248, 0.75)', label: 'Primary Weapon', emptyCopy: 'No weapon equipped' },
-  { id: 'secondaryWeapon', badgeColor: 'rgba(59, 130, 246, 0.65)', label: 'Secondary Weapon', emptyCopy: 'No sidearm equipped' },
-  { id: 'meleeWeapon', badgeColor: 'rgba(251, 191, 36, 0.75)', label: 'Melee Weapon', emptyCopy: 'No melee weapon equipped' },
-  { id: 'bodyArmor', badgeColor: 'rgba(96, 165, 250, 0.75)', label: 'Body Armor', emptyCopy: 'No armor equipped' },
-  { id: 'helmet', badgeColor: 'rgba(147, 197, 253, 0.75)', label: 'Headgear', emptyCopy: 'No headgear equipped' },
-  { id: 'accessory1', badgeColor: 'rgba(236, 72, 153, 0.65)', label: 'Accessory I', emptyCopy: 'No accessory slotted' },
-  { id: 'accessory2', badgeColor: 'rgba(236, 72, 153, 0.65)', label: 'Accessory II', emptyCopy: 'No accessory slotted' },
-];
-
-const formatWeight = (value: number): string => value.toFixed(1);
-
 const PlayerLoadoutPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
+  const loadoutStrings = uiStrings.loadoutPanel;
+  const inventoryStrings = uiStrings.inventoryPanel;
+  const weightUnit = uiStrings.playerStatus.loadUnit;
+
+  const formatWeightWithUnit = useCallback((value: number): string => {
+    const rounded = Number.isFinite(value) ? Math.round(value * 10) / 10 : 0;
+    return `${rounded.toFixed(1)} ${weightUnit}`;
+  }, [weightUnit]);
+
+  const describeDurability = useCallback((durability?: Durability) => {
+    if (!durability || durability.max <= 0) {
+      return null;
+    }
+    const ratio = Math.max(0, Math.min(1, durability.current / durability.max));
+    const percentage = Math.round(ratio * 100);
+
+    if (ratio >= 1) {
+      return { copy: loadoutStrings.condition.pristine(percentage), style: statRowStyle, color: 'rgba(226, 232, 240, 0.86)' };
+    }
+    if (ratio <= 0) {
+      return { copy: loadoutStrings.condition.broken, style: warningRowStyle, color: '#f87171' };
+    }
+    if (ratio <= 0.25) {
+      return { copy: loadoutStrings.condition.critical(percentage), style: warningRowStyle, color: '#fbbf24' };
+    }
+    if (ratio <= 0.5) {
+      return { copy: loadoutStrings.condition.worn(percentage), style: warningRowStyle, color: '#f59e0b' };
+    }
+    return { copy: loadoutStrings.condition.used(percentage), style: statRowStyle, color: 'rgba(250, 204, 21, 0.95)' };
+  }, [loadoutStrings.condition]);
+
+  const slotDefinitions = useMemo(() => {
+    const slots = inventoryStrings.equipment.slots;
+    return [
+      {
+        id: 'primaryWeapon' as const,
+        badgeColor: SLOT_BADGE_COLORS.primaryWeapon,
+        label: slots.primaryWeapon.label,
+        emptyCopy: slots.primaryWeapon.empty,
+      },
+      {
+        id: 'secondaryWeapon' as const,
+        badgeColor: SLOT_BADGE_COLORS.secondaryWeapon,
+        label: slots.secondaryWeapon.label,
+        emptyCopy: slots.secondaryWeapon.empty,
+      },
+      {
+        id: 'meleeWeapon' as const,
+        badgeColor: SLOT_BADGE_COLORS.meleeWeapon,
+        label: slots.meleeWeapon.label,
+        emptyCopy: slots.meleeWeapon.empty,
+      },
+      {
+        id: 'bodyArmor' as const,
+        badgeColor: SLOT_BADGE_COLORS.bodyArmor,
+        label: slots.bodyArmor.label,
+        emptyCopy: slots.bodyArmor.empty,
+      },
+      {
+        id: 'helmet' as const,
+        badgeColor: SLOT_BADGE_COLORS.helmet,
+        label: slots.helmet.label,
+        emptyCopy: slots.helmet.empty,
+      },
+      {
+        id: 'accessory1' as const,
+        badgeColor: SLOT_BADGE_COLORS.accessory1,
+        label: slots.accessory1.label,
+        emptyCopy: slots.accessory1.empty,
+      },
+      {
+        id: 'accessory2' as const,
+        badgeColor: SLOT_BADGE_COLORS.accessory2,
+        label: slots.accessory2.label,
+        emptyCopy: slots.accessory2.empty,
+      },
+    ];
+  }, [inventoryStrings.equipment.slots]);
   const { knownPerks, unknownPerkIds } = useMemo(() => {
     const known: PerkDefinition[] = [];
     const unknown: string[] = [];
@@ -348,9 +375,9 @@ const PlayerLoadoutPanel: React.FC = () => {
 
   const renderPerks = () => (
     <div style={cardStyle}>
-      <div style={badgeStyle('rgba(236, 72, 153, 0.65)')}>Perks</div>
+      <div style={badgeStyle('rgba(236, 72, 153, 0.65)')}>{loadoutStrings.perksLabel}</div>
       {knownPerks.length === 0 && unknownPerkIds.length === 0 ? (
-        <span style={subtleText}>No perks acquired</span>
+        <span style={subtleText}>{loadoutStrings.noPerks}</span>
       ) : (
         <div style={perksListStyle}>
           {knownPerks.map((perk) => (
@@ -382,16 +409,18 @@ const PlayerLoadoutPanel: React.FC = () => {
         return [];
       }
 
+      const stats = loadoutStrings.stats;
+
       if (isWeapon(item)) {
-        const lines = [
-          { label: 'Damage', value: `${item.damage}` },
-          { label: 'Range', value: `${item.range}` },
-          { label: 'AP Cost', value: `${item.apCost}` },
+        const lines: { label: string; value: string }[] = [
+          { label: stats.damage, value: `${item.damage}` },
+          { label: stats.range, value: `${item.range}` },
+          { label: stats.apCost, value: `${item.apCost}` },
         ];
 
         if (item.skillType) {
           lines.push({
-            label: 'Skill',
+            label: stats.skill,
             value: getSkillDefinition(item.skillType)?.name ?? '—',
           });
         }
@@ -402,14 +431,14 @@ const PlayerLoadoutPanel: React.FC = () => {
       if (isArmor(item)) {
         const protection = typeof item.protection === 'number' ? `${item.protection}` : '—';
         return [
-          { label: 'Protection', value: protection },
-          { label: 'Weight', value: `${formatWeight(item.weight)} kg` },
+          { label: stats.protection, value: protection },
+          { label: stats.weight, value: formatWeightWithUnit(item.weight) },
         ];
       }
 
       const genericLines = [
-        { label: 'Weight', value: `${formatWeight(item.weight)} kg` },
-        { label: 'Value', value: `₿${item.value}` },
+        { label: stats.weight, value: formatWeightWithUnit(item.weight) },
+        { label: stats.value, value: `₿${item.value}` },
       ];
 
       if (slot === 'accessory1' || slot === 'accessory2') {
@@ -418,10 +447,10 @@ const PlayerLoadoutPanel: React.FC = () => {
 
       return genericLines;
     },
-    []
+    [formatWeightWithUnit, loadoutStrings.stats]
   );
 
-  const renderSlotCard = (slotDefinition: (typeof SLOT_DEFINITIONS)[number]) => {
+  const renderSlotCard = (slotDefinition: (typeof slotDefinitions)[number]) => {
     const { id, label, badgeColor, emptyCopy } = slotDefinition;
     const equippedItem = getEquippedItem(id);
     const durability = describeDurability(equippedItem?.durability);
@@ -450,7 +479,7 @@ const PlayerLoadoutPanel: React.FC = () => {
 
             {durability && (
               <div style={durability.style}>
-                <span style={statLabelStyle}>Durability</span>
+                <span style={statLabelStyle}>{loadoutStrings.stats.durability}</span>
                 <span style={{ ...statValueEmphasis, color: durability.color }}>{durability.copy}</span>
               </div>
             )}
@@ -465,7 +494,7 @@ const PlayerLoadoutPanel: React.FC = () => {
                 style={unequipButtonStyle}
                 onClick={() => handleUnequip(id)}
               >
-                Unequip
+                {loadoutStrings.actions.unequip}
               </button>
               {reserveItems
                 .filter((item) => item.id !== equippedItem.id)
@@ -476,7 +505,7 @@ const PlayerLoadoutPanel: React.FC = () => {
                     style={equipButtonStyle}
                     onClick={() => handleEquipItem(item.id, id)}
                   >
-                    Equip {item.name}
+                    {loadoutStrings.actions.equip(item.name)}
                   </button>
                 ))}
             </div>
@@ -493,12 +522,12 @@ const PlayerLoadoutPanel: React.FC = () => {
                     style={equipButtonStyle}
                     onClick={() => handleEquipItem(item.id, id)}
                   >
-                    Equip {item.name}
+                    {loadoutStrings.actions.equip(item.name)}
                   </button>
                 ))}
               </div>
             ) : (
-              <span style={{ ...subtleText, fontSize: '0.58rem' }}>No compatible items in pack</span>
+              <span style={{ ...subtleText, fontSize: '0.58rem' }}>{loadoutStrings.noCompatible}</span>
             )}
           </>
         )}
@@ -507,14 +536,19 @@ const PlayerLoadoutPanel: React.FC = () => {
   };
 
   return (
-    <div style={panelStyle} data-testid="player-loadout-panel" role="region" aria-label="Player Loadout">
+    <div
+      style={panelStyle}
+      data-testid="player-loadout-panel"
+      role="region"
+      aria-label={loadoutStrings.ariaLabel}
+    >
       <header style={headerStyle}>
-        <span style={headingLabelStyle}>Operative</span>
-        <h3 style={headingTitleStyle}>Loadout</h3>
+        <span style={headingLabelStyle}>{loadoutStrings.headingLabel}</span>
+        <h3 style={headingTitleStyle}>{loadoutStrings.headingTitle}</h3>
       </header>
       <div style={cardsWrapperStyle}>
         <div style={equipmentGridStyle}>
-          {SLOT_DEFINITIONS.map(renderSlotCard)}
+          {slotDefinitions.map(renderSlotCard)}
         </div>
         {renderPerks()}
       </div>

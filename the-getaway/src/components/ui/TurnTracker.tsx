@@ -2,6 +2,7 @@ import React, { CSSProperties, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import AnimatedStatBar from './AnimatedStatBar';
+import { getUIStrings } from '../../content/ui';
 
 const trackerContainerStyle: CSSProperties = {
   display: 'flex',
@@ -83,6 +84,8 @@ const enemyRowStyle: CSSProperties = {
 const TurnTracker: React.FC = () => {
   const { inCombat, isPlayerTurn, currentMapArea } = useSelector((state: RootState) => state.world);
   const player = useSelector((state: RootState) => state.player.data);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
 
   const enemySnapshots = useMemo(() => {
     return currentMapArea?.entities.enemies.map((enemy) => ({
@@ -93,22 +96,28 @@ const TurnTracker: React.FC = () => {
     })) ?? [];
   }, [currentMapArea?.entities.enemies]);
 
-  const turnLabel = inCombat ? (isPlayerTurn ? 'Player Turn' : 'Enemy Turn') : 'Exploration';
+  const turnLabel = inCombat
+    ? isPlayerTurn
+      ? uiStrings.turnTracker.playerTurn
+      : uiStrings.turnTracker.enemyTurn
+    : uiStrings.turnTracker.exploration;
 
   const currentBadgeStyle = isPlayerTurn ? playerBadgeStyle : enemyBadgeStyle;
 
   return (
     <div style={trackerContainerStyle}>
       <div style={headerStyle}>
-        <span>Turn Status</span>
-        <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        <span>{uiStrings.turnTracker.heading}</span>
+        <span title={uiStrings.turnTracker.timeLabel}>
+          {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
         <div style={currentBadgeStyle}>{turnLabel}</div>
 
         <AnimatedStatBar
-          label="Action Points"
+          label={uiStrings.playerStatus.actionPointsLabel}
           current={player.actionPoints}
           max={player.maxActionPoints}
           icon="⚡"
@@ -120,7 +129,7 @@ const TurnTracker: React.FC = () => {
         {inCombat && enemySnapshots.length > 0 && (
           <div>
             <div style={{ fontSize: '0.62rem', color: 'rgba(248, 113, 113, 0.7)', marginBottom: '0.3rem' }}>
-              Hostile Readout
+              {uiStrings.turnTracker.hostileReadout}
             </div>
             <div style={enemyListStyle}>
               {enemySnapshots.map((enemy) => {

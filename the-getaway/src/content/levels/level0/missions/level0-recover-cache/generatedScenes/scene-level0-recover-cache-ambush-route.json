@@ -1,0 +1,101 @@
+{
+  "id": "scene-level0-recover-cache-ambush-route",
+  "resourceKey": "scenes.level0.recover_cache.ambush_route",
+  "levelKey": "levels.slums_command_grid",
+  "missionKey": "missions.level0.recover_cache",
+  "questKeys": [
+    "quests.market_cache"
+  ],
+  "width": 24,
+  "height": 16,
+  "baseTile": "floor",
+  "defaultDepthScale": 24,
+  "metadata": {
+    "story": "The crew drags salvage carts into the stair-cut alley under the market signal tower, locking it down before the patrol loop returns.",
+    "usedManualFallback": false,
+    "pipelineIssues": [],
+    "generatedAt": "2025-02-15T00:00:00.000Z"
+  },
+  "moments": [
+    {
+      "id": "moment-ambush-pivot",
+      "label": "Ambush Pivot",
+      "summary": "Resistance quartermasters erect a choke point beneath the signal tower while lookouts climb to maintain sightlines.",
+      "order": 0,
+      "priority": 0,
+      "triples": [
+        {
+          "id": "triple-barricade-signal",
+          "subject": {
+            "label": "barricade carts",
+            "resourceKey": "props.barricade_carts",
+            "tags": [
+              "cover",
+              "blocking"
+            ]
+          },
+          "relation": "near",
+          "object": {
+            "label": "market signal tower",
+            "resourceKey": "props.market_signal_tower"
+          },
+          "priority": 0,
+          "resourceKey": "triples.level0.recover_cache.ambush_route.1"
+        },
+        {
+          "id": "triple-lookouts-tower",
+          "subject": {
+            "label": "lookout team",
+            "resourceKey": "props.lookout_team"
+          },
+          "relation": "above",
+          "object": {
+            "label": "market signal tower",
+            "resourceKey": "props.market_signal_tower"
+          },
+          "priority": 1,
+          "resourceKey": "triples.level0.recover_cache.ambush_route.2"
+        }
+      ]
+    }
+  ],
+  "placements": [
+    {
+      "resourceKey": "props.market_signal_tower",
+      "originTripleId": "anchor::triple-barricade-signal",
+      "position": {
+        "x": 12,
+        "y": 6
+      },
+      "depth": 156,
+      "relationApplied": "on",
+      "metadata": {
+        "anchor": true
+      }
+    },
+    {
+      "resourceKey": "props.barricade_carts",
+      "originTripleId": "triple-barricade-signal",
+      "position": {
+        "x": 13,
+        "y": 6
+      },
+      "depth": 157,
+      "relationApplied": "near",
+      "tags": [
+        "cover",
+        "blocking"
+      ]
+    },
+    {
+      "resourceKey": "props.lookout_team",
+      "originTripleId": "triple-lookouts-tower",
+      "position": {
+        "x": 12,
+        "y": 5
+      },
+      "depth": 132,
+      "relationApplied": "above"
+    }
+  ]
+}

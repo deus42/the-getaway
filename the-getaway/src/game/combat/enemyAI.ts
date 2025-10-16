@@ -1,10 +1,12 @@
 import { Enemy, Player, Position, MapArea, NPC } from '../interfaces/types';
-import { 
-  calculateManhattanDistance, 
+import {
+  calculateManhattanDistance,
   isInAttackRange,
   canMoveToPosition,
   executeMove,
-  executeAttack
+  executeAttack,
+  applyMovementOrientation,
+  DEFAULT_ATTACK_COST,
 } from './combatSystem';
 import { findPath } from '../world/pathfinding';
 import { isPositionInBounds, isPositionWalkable } from '../world/grid';
@@ -39,20 +41,32 @@ export const determineEnemyMove = (
   if (enemy.health <= enemy.maxHealth * HEALTH_THRESHOLD_SEEK_COVER) {
     const coverMove = seekCover(enemy, player, mapArea, enemies, coverPositions, npcs);
     if (coverMove) {
-      updatedEnemy = executeMove(enemy, coverMove) as Enemy;
+      const movedEnemy = executeMove(enemy, coverMove) as Enemy;
+      updatedEnemy = applyMovementOrientation(movedEnemy, enemy.position, mapArea);
       return { enemy: updatedEnemy, player: updatedPlayer, action: 'seek_cover' };
     }
   }
   
   // If in attack range, attack player
   if (isInAttackRange(enemy.position, player.position, enemy.attackRange)) {
+    if (enemy.actionPoints < DEFAULT_ATTACK_COST) {
+      updatedEnemy = {
+        ...updatedEnemy,
+        actionPoints: 0,
+      };
+      return { enemy: updatedEnemy, player: updatedPlayer, action: 'no_ap' };
+    }
+
     // Determine if player is behind cover
     const playerBehindCover = coverPositions.some(
       cover => cover.x === player.position.x && cover.y === player.position.y
     );
     
     // Execute attack
-    const attackResult = executeAttack(enemy, player, playerBehindCover);
+    const attackResult = executeAttack(enemy, player, {
+      isBehindCover: playerBehindCover,
+      mapArea,
+    });
 
     if (attackResult.success) {
       // Safely cast attacker back to Enemy and target back to Player
@@ -82,7 +96,8 @@ export const determineEnemyMove = (
   // Otherwise, try to move toward player
   const nextMove = moveTowardPlayer(enemy, player, mapArea, enemies, npcs);
   if (nextMove) {
-    updatedEnemy = executeMove(enemy, nextMove) as Enemy;
+    const movedEnemy = executeMove(enemy, nextMove) as Enemy;
+    updatedEnemy = applyMovementOrientation(movedEnemy, enemy.position, mapArea);
     return { enemy: updatedEnemy, player: updatedPlayer, action: 'move' };
   }
 

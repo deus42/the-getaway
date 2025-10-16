@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import {
@@ -12,11 +12,14 @@ import {
   selectNextPrimaryObjective,
   selectNextSideObjective,
 } from '../../store/selectors/missionSelectors';
+import { selectAmbientWorldSnapshot } from '../../store/selectors/worldSelectors';
 import {
   AssistantIntel,
+  GeorgeAmbientTracker,
   buildAssistantIntel,
   pickBanterLine,
   pickInterjectionLine,
+  GeorgeAmbientEvent,
 } from '../../game/systems/georgeAssistant';
 import type { FactionId } from '../../game/interfaces/types';
 import { GeorgeInterjectionTrigger, GeorgeLine } from '../../content/assistants/george';
@@ -33,7 +36,10 @@ const INTERJECTION_COOLDOWN_MS = 9000;
 const INTERJECTION_DISPLAY_MS = 5200;
 const AMBIENT_BANTER_MIN_MS = 48000;
 const AMBIENT_BANTER_MAX_MS = 96000;
-const DOCK_TICKER_INTERVAL_MS = 20000;
+const DOCK_TICKER_MIN_DURATION_MS = 26000;
+const DOCK_TICKER_MAX_DURATION_MS = 62000;
+const DOCK_TICKER_MS_PER_CHARACTER = 580;
+const FEED_ENTRY_LIMIT = 12;
 
 const FALLBACK_AMBIENT = [
   'Diagnostics show morale at "manageable"—keep it that way.',
@@ -42,15 +48,40 @@ const FALLBACK_AMBIENT = [
   'Today’s lucky number is 404. Let’s try not to vanish.',
 ];
 
-type ConversationId = 'guidance' | 'status' | 'quests';
-type Actor = 'george' | 'player';
+type FeedCategory = 'mission' | 'status' | 'guidance' | 'interjection' | GeorgeAmbientEvent['category'];
+type FeedTone = 'mission' | 'status' | 'ambient' | 'warning' | 'zone' | 'broadcast';
 
-type ConversationEntry = {
+type FeedEntry = {
   id: string;
-  actor: Actor;
+  category: FeedCategory;
   text: string;
-  reference: string;
+  label: string;
+  timestamp: number;
+  badge: string;
+  tone: FeedTone;
 };
+
+type FeedEntryPayload = {
+  category: FeedCategory;
+  text: string;
+  label: string;
+  timestamp: number;
+};
+
+const FEED_CATEGORY_META: Record<FeedCategory, { badge: string; tone: FeedTone }> = {
+  mission: { badge: 'MS', tone: 'mission' },
+  status: { badge: 'ST', tone: 'status' },
+  guidance: { badge: 'GD', tone: 'mission' },
+  interjection: { badge: 'BC', tone: 'broadcast' },
+  rumor: { badge: 'RM', tone: 'ambient' },
+  signage: { badge: 'SG', tone: 'ambient' },
+  weather: { badge: 'WX', tone: 'ambient' },
+  zoneDanger: { badge: 'DZ', tone: 'warning' },
+  hazardChange: { badge: 'HZ', tone: 'warning' },
+  zoneBrief: { badge: 'ZB', tone: 'zone' },
+};
+
+const DEFAULT_FEED_META: { badge: string; tone: FeedTone } = { badge: '--', tone: 'ambient' };
 
 const styles = `
   .george-layer {
@@ -90,6 +121,10 @@ const styles = `
   .george-dock-button.open {
     border-color: rgba(59, 130, 246, 0.45);
     transform: translateY(-1px);
+  }
+  .george-dock-button.alert {
+    border-color: rgba(16, 185, 129, 0.55);
+    box-shadow: 0 18px 32px rgba(14, 116, 144, 0.45);
   }
   .george-dock-button:focus-visible {
     outline: 2px solid rgba(125, 211, 252, 0.85);
@@ -148,7 +183,7 @@ const styles = `
   }
   .george-dock-status--scroll {
     padding-left: 100%;
-    animation: george-dock-ticker 20s linear infinite;
+    animation: george-dock-ticker var(--ticker-duration, 32s) linear infinite;
   }
   @keyframes george-dock-ticker {
     0% {
@@ -216,10 +251,32 @@ const styles = `
     background: rgba(10, 26, 43, 0.72);
     border: 1px solid rgba(59, 130, 246, 0.15);
   }
+  .george-log-item--mission {
+    background: rgba(30, 64, 175, 0.42);
+    border-color: rgba(96, 165, 250, 0.35);
+  }
+  .george-log-item--status {
+    background: rgba(21, 128, 61, 0.32);
+    border-color: rgba(74, 222, 128, 0.35);
+  }
+  .george-log-item--ambient {
+    background: rgba(8, 47, 73, 0.55);
+    border-color: rgba(45, 212, 191, 0.28);
+  }
+  .george-log-item--warning {
+    background: rgba(120, 53, 15, 0.38);
+    border-color: rgba(251, 191, 36, 0.45);
+  }
+  .george-log-item--zone {
+    background: rgba(29, 78, 216, 0.38);
+    border-color: rgba(147, 197, 253, 0.35);
+  }
+  .george-log-item--broadcast {
+    background: rgba(88, 28, 135, 0.4);
+    border-color: rgba(192, 132, 252, 0.4);
+  }
   .george-log-item--latest {
-    background: rgba(30, 64, 175, 0.5);
-    border-color: rgba(125, 211, 252, 0.4);
-    box-shadow: 0 0 18px rgba(56, 189, 248, 0.15);
+    box-shadow: 0 0 18px rgba(56, 189, 248, 0.2);
   }
   .george-log-item--player {
     background: rgba(15, 42, 72, 0.75);
@@ -228,18 +285,58 @@ const styles = `
   .george-log-meta {
     display: flex;
     justify-content: space-between;
-    align-items: baseline;
+    align-items: center;
     gap: 0.6rem;
     font-family: 'DM Mono', 'IBM Plex Mono', monospace;
   }
-  .george-log-actor {
-    font-size: 0.64rem;
+  .george-log-meta-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .george-log-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.9rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-size: 0.6rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    color: rgba(178, 230, 255, 0.78);
+    background: rgba(148, 163, 184, 0.18);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: rgba(226, 232, 240, 0.85);
   }
-  .george-log-item--player .george-log-actor {
-    color: rgba(191, 219, 254, 0.85);
+  .george-log-badge--mission {
+    background: rgba(37, 99, 235, 0.25);
+    border-color: rgba(96, 165, 250, 0.55);
+  }
+  .george-log-badge--status {
+    background: rgba(22, 163, 74, 0.25);
+    border-color: rgba(74, 222, 128, 0.55);
+  }
+  .george-log-badge--ambient {
+    background: rgba(15, 118, 110, 0.25);
+    border-color: rgba(45, 212, 191, 0.55);
+  }
+  .george-log-badge--warning {
+    background: rgba(180, 83, 9, 0.25);
+    border-color: rgba(251, 191, 36, 0.55);
+  }
+  .george-log-badge--zone {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: rgba(147, 197, 253, 0.55);
+  }
+  .george-log-badge--broadcast {
+    background: rgba(126, 58, 242, 0.25);
+    border-color: rgba(192, 132, 252, 0.55);
+  }
+  .george-log-actor {
+    font-size: 0.64rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(178, 230, 255, 0.82);
   }
   .george-log-reference {
     font-size: 0.62rem;
@@ -252,35 +349,6 @@ const styles = `
     line-height: 1.4;
     color: rgba(226, 232, 240, 0.86);
     white-space: pre-line;
-  }
-  .george-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.3rem;
-    flex-wrap: wrap;
-  }
-  .george-action-button {
-    all: unset;
-    cursor: pointer;
-    padding: 0.32rem 0.8rem;
-    border-radius: 999px;
-    border: 1px solid rgba(96, 165, 250, 0.4);
-    background: rgba(11, 34, 54, 0.82);
-    color: #dbeafe;
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  }
-  .george-action-button:hover {
-    transform: translateY(-1px);
-    border-color: rgba(148, 211, 252, 0.55);
-    box-shadow: 0 10px 18px rgba(6, 20, 36, 0.45);
-  }
-  .george-action-button:focus-visible {
-    outline: 2px solid rgba(148, 211, 252, 0.82);
-    outline-offset: 2px;
   }
 `;
 
@@ -319,6 +387,7 @@ const GeorgeAssistant: React.FC = () => {
   const factionReputation = useSelector(selectPlayerFactionReputation) as Record<FactionId, number>;
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
+  const ambientSnapshot = useSelector(selectAmbientWorldSnapshot);
 
   const intel = useMemo<AssistantIntel>(() => buildAssistantIntel({
     objectiveQueue,
@@ -328,15 +397,6 @@ const GeorgeAssistant: React.FC = () => {
     missionPrimary: nextPrimaryObjective,
     missionSide: nextSideObjective,
   }), [objectiveQueue, personality, karma, factionReputation, nextPrimaryObjective, nextSideObjective]);
-
-  const conversationOptions = useMemo(
-    () => [
-      { id: 'guidance' as ConversationId, label: georgeStrings.options.guidance },
-      { id: 'status' as ConversationId, label: georgeStrings.options.status },
-      { id: 'quests' as ConversationId, label: georgeStrings.options.quests },
-    ],
-    [georgeStrings]
-  );
 
   const ambientLines = useMemo(
     () => (georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT),
@@ -350,7 +410,8 @@ const GeorgeAssistant: React.FC = () => {
     return window.localStorage.getItem(STORAGE_KEY) === 'true';
   });
   const [interjection, setInterjection] = useState<string | null>(null);
-  const [logEntries, setLogEntries] = useState<ConversationEntry[]>([]);
+  const [feedEntries, setFeedEntries] = useState<FeedEntry[]>([]);
+  const [hasAmbientPing, setHasAmbientPing] = useState(false);
 
   const cooldownRef = useRef<number>(0);
   const pendingInterjectionRef = useRef<GeorgeLine | null>(null);
@@ -358,22 +419,34 @@ const GeorgeAssistant: React.FC = () => {
   const factionRef = useRef<Record<FactionId, number>>(factionReputation);
   const alertRef = useRef({ level: world.globalAlertLevel, inCombat: world.inCombat });
   const ambientTimerRef = useRef<number | null>(null);
+  const ambientTrackerRef = useRef<GeorgeAmbientTracker | null>(null);
+  const missionSummaryRef = useRef<string>('');
 
-  const appendEntry = useCallback(
-    (actor: Actor, text: string, referenceKey: keyof typeof georgeStrings.references) => {
-      const reference = georgeStrings.references[referenceKey];
-      setLogEntries((prev) => {
-        const entry: ConversationEntry = {
-          id: `${Date.now()}-${Math.random()}`,
-          actor,
+  const pushFeedEntry = useCallback(
+    ({ category, label, text, timestamp }: { category: FeedCategory; label: string; text: string; timestamp?: number }) => {
+      const entryTimestamp = timestamp ?? Date.now();
+      const meta = FEED_CATEGORY_META[category] ?? DEFAULT_FEED_META;
+      setFeedEntries((prev) => {
+        const entry: FeedEntry = {
+          id: `${entryTimestamp}-${Math.random().toString(36).slice(2)}`,
+          category,
           text,
-          reference,
+          label,
+          timestamp: entryTimestamp,
+          badge: meta.badge,
+          tone: meta.tone,
         };
         const next = [...prev, entry];
-        return next.slice(-8);
+        if (next.length > FEED_ENTRY_LIMIT) {
+          return next.slice(next.length - FEED_ENTRY_LIMIT);
+        }
+        return next;
       });
+      if (!isOpen) {
+        setHasAmbientPing(true);
+      }
     },
-    [georgeStrings]
+    [isOpen]
   );
 
   const presentInterjection = useCallback((line: GeorgeLine, log = false) => {
@@ -381,68 +454,14 @@ const GeorgeAssistant: React.FC = () => {
     pendingInterjectionRef.current = null;
     setInterjection(line.text);
     if (log) {
-      appendEntry('george', line.text, 'ambient');
+      pushFeedEntry({
+        category: 'interjection',
+        label: georgeStrings.feedLabels.interjection,
+        text: line.text,
+      });
     }
     window.setTimeout(() => setInterjection(null), INTERJECTION_DISPLAY_MS);
-  }, [appendEntry]);
-
-  const respondToPrompt = useCallback((id: ConversationId) => {
-    const option = conversationOptions.find((entry) => entry.id === id);
-    if (option) {
-      appendEntry('player', option.label, 'prompt');
-    }
-
-    switch (id) {
-      case 'guidance': {
-        const missionLines: string[] = [];
-        const levelName = missionProgress?.name ?? 'current zone';
-
-        if (missionProgress) {
-          if (missionProgress.allPrimaryComplete) {
-            missionLines.push(`• Primary: Mission accomplished in ${levelName}.`);
-          } else if (nextPrimaryObjective) {
-            const suffix = nextPrimaryObjective.totalQuests > 1
-              ? ` (${nextPrimaryObjective.completedQuests}/${nextPrimaryObjective.totalQuests})`
-              : '';
-            missionLines.push(`• Primary: ${nextPrimaryObjective.label}${suffix}`);
-          }
-
-          if (nextSideObjective) {
-            missionLines.push(`• Optional: ${nextSideObjective.label}`);
-          }
-        }
-
-        const questLines = buildQuestReadout(objectiveQueue, georgeStrings, 3);
-        const segments = [georgeStrings.guidanceIntro];
-        if (missionLines.length > 0) {
-          segments.push(...missionLines);
-        }
-        if (questLines.length > 0) {
-          if (missionLines.length > 0) {
-            segments.push('');
-          }
-          segments.push(...questLines);
-        }
-
-        const message = segments.join('\n').trim();
-        appendEntry('george', message, 'guidance');
-        break;
-      }
-      case 'status': {
-        const message = georgeStrings.statusIntro(intel.statusLine);
-        appendEntry('george', message, 'status');
-        break;
-      }
-      case 'quests': {
-        const questLines = buildQuestReadout(objectiveQueue, georgeStrings);
-        const message = `${georgeStrings.questsIntro}\n${questLines.join('\n')}`.trim();
-        appendEntry('george', message, 'quests');
-        break;
-      }
-      default:
-        break;
-    }
-  }, [appendEntry, conversationOptions, georgeStrings, intel.statusLine, objectiveQueue, missionProgress, nextPrimaryObjective, nextSideObjective]);
+  }, [georgeStrings.feedLabels.interjection, pushFeedEntry]);
 
   const queueInterjection = useCallback((trigger: GeorgeInterjectionTrigger) => {
     const line = pickInterjectionLine(trigger, personality.alignment);
@@ -505,14 +524,206 @@ const GeorgeAssistant: React.FC = () => {
   }, [scheduleAmbientBanter]);
 
   useEffect(() => {
+    const levelName = missionProgress?.name ?? georgeStrings.zoneFallback;
+    const missionLines: string[] = [];
+
+    if (missionProgress) {
+      if (missionProgress.allPrimaryComplete) {
+        missionLines.push(georgeStrings.guidancePrimaryComplete(levelName));
+      } else if (nextPrimaryObjective) {
+        const progress = nextPrimaryObjective.totalQuests > 1
+          ? georgeStrings.guidanceProgress(nextPrimaryObjective.completedQuests ?? 0, nextPrimaryObjective.totalQuests)
+          : '';
+        missionLines.push(georgeStrings.guidancePrimaryObjective(nextPrimaryObjective.label, progress));
+      }
+
+      if (nextSideObjective) {
+        missionLines.push(georgeStrings.guidanceSideObjective(nextSideObjective.label));
+      }
+    }
+
+    const questLines = buildQuestReadout(objectiveQueue, georgeStrings, 3);
+    const segments = [georgeStrings.guidanceIntro];
+    if (missionLines.length > 0) {
+      segments.push(...missionLines);
+    }
+    if (questLines.length > 0) {
+      if (missionLines.length > 0) {
+        segments.push('');
+      }
+      segments.push(...questLines);
+    }
+
+    const message = segments.join('\n').trim();
+    if (!message || missionSummaryRef.current === message) {
+      return;
+    }
+    missionSummaryRef.current = message;
+    pushFeedEntry({
+      category: 'guidance',
+      label: georgeStrings.feedLabels.guidance,
+      text: message,
+    });
+  }, [
+    georgeStrings,
+    missionProgress,
+    nextPrimaryObjective,
+    nextSideObjective,
+    objectiveQueue,
+    pushFeedEntry,
+  ]);
+
+  const formatTimestamp = useCallback((value: number): string => {
+    if (!value) {
+      return '';
+    }
+    try {
+      return new Intl.DateTimeFormat(locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+      }).format(new Date(value));
+    } catch {
+      return new Date(value).toLocaleTimeString();
+    }
+  }, [locale]);
+
+  const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): FeedEntryPayload | null => {
+    const ambientFeed = georgeStrings.ambientFeed;
+    const alignment = personality.alignment;
+    const label = ambientFeed.categoryLabels[event.category] ?? georgeStrings.feedLabels.ambient;
+
+    switch (event.category) {
+      case 'rumor': {
+        const line = event.lines.find((entry) => entry && entry.trim().length > 0)?.trim() ?? ambientFeed.fallbacks.rumor;
+        const storyLabel = event.storyFunction
+          ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
+            event.storyFunction.replace(/-/g, ' ').toUpperCase()
+          : undefined;
+        const text = ambientFeed.formatRumor({ line, storyLabel }, alignment);
+        return {
+          category: event.category,
+          text,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'signage': {
+        const text = event.text && event.text.trim().length > 0 ? event.text.trim() : ambientFeed.fallbacks.signage;
+        const storyLabel = event.storyFunction
+          ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
+            event.storyFunction.replace(/-/g, ' ').toUpperCase()
+          : undefined;
+        const formatted = ambientFeed.formatSignage({ text, storyLabel }, alignment);
+        return {
+          category: event.category,
+          text: formatted,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'weather': {
+        const description = event.description && event.description.trim().length > 0
+          ? event.description.trim()
+          : ambientFeed.fallbacks.weather;
+        const storyLabel = event.storyFunction
+          ? ambientFeed.storyFunctionLabels[event.storyFunction] ??
+            event.storyFunction.replace(/-/g, ' ').toUpperCase()
+          : undefined;
+        const formatted = ambientFeed.formatWeather({ description, storyLabel }, alignment);
+        return {
+          category: event.category,
+          text: formatted,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'zoneDanger': {
+        const dangerLevels = uiStrings.levelIndicator.dangerLevels;
+        const dangerLabel = event.dangerRating
+          ? dangerLevels[event.dangerRating] ?? event.dangerRating
+          : ambientFeed.dangerFallback;
+        const previousDangerLabel = event.previousDangerRating
+          ? dangerLevels[event.previousDangerRating] ?? event.previousDangerRating
+          : null;
+        const flagChanges = event.changedFlags.map((change) => ({
+          label: ambientFeed.flagLabels[change.key] ?? change.key,
+          previous: ambientFeed.formatFlagValue(change.key, change.previous),
+          next: ambientFeed.formatFlagValue(change.key, change.next),
+        }));
+        const formatted = ambientFeed.formatZoneDanger(
+          {
+            zoneName: event.zoneName,
+            dangerLabel,
+            previousDangerLabel,
+            flagChanges,
+          },
+          alignment
+        );
+        return {
+          category: event.category,
+          text: formatted,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'hazardChange': {
+        const additions = event.added.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+        const removals = event.removed.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+        const formatted = ambientFeed.formatHazards(
+          {
+            zoneName: event.zoneName,
+            additions,
+            removals,
+          },
+          alignment
+        );
+        return {
+          category: event.category,
+          text: formatted,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      case 'zoneBrief': {
+        const dangerLevels = uiStrings.levelIndicator.dangerLevels;
+        const dangerLabel = event.dangerRating
+          ? dangerLevels[event.dangerRating] ?? event.dangerRating
+          : ambientFeed.dangerFallback;
+        const formatted = ambientFeed.formatZoneBrief(
+          {
+            zoneName: event.zoneName,
+            summary: event.summary ?? null,
+            dangerLabel,
+            hazards: event.hazards,
+            directives: event.directives,
+          },
+          alignment
+        );
+        return {
+          category: event.category,
+          text: formatted,
+          label,
+          timestamp: event.timestamp,
+        };
+      }
+      default:
+        return null;
+    }
+  }, [georgeStrings.ambientFeed, georgeStrings.feedLabels.ambient, personality.alignment, uiStrings.levelIndicator.dangerLevels]);
+
+  useEffect(() => {
     const handleMissionAccomplished = (event: Event) => {
       const detail = (event as CustomEvent<MissionEventDetail>).detail;
       if (!detail) {
         return;
       }
 
-      const message = `Mission secured in ${detail.name}. Awaiting redeploy.`;
-      appendEntry('george', message, 'guidance');
+      const message = georgeStrings.missionComplete(detail.name);
+      pushFeedEntry({
+        category: 'mission',
+        label: georgeStrings.feedLabels.mission,
+        text: message,
+      });
       queueInterjection('questCompleted');
     };
 
@@ -523,8 +734,12 @@ const GeorgeAssistant: React.FC = () => {
       }
 
       const nextDescriptor = detail.nextLevelId ?? `level ${detail.nextLevel}`;
-      const message = `Prepping overlays for ${nextDescriptor}. Say the word and I’ll broadcast updates.`;
-      appendEntry('george', message, 'status');
+      const message = georgeStrings.levelAdvance(nextDescriptor);
+      pushFeedEntry({
+        category: 'status',
+        label: georgeStrings.feedLabels.status,
+        text: message,
+      });
     };
 
     window.addEventListener(MISSION_ACCOMPLISHED_EVENT, handleMissionAccomplished as EventListener);
@@ -534,7 +749,14 @@ const GeorgeAssistant: React.FC = () => {
       window.removeEventListener(MISSION_ACCOMPLISHED_EVENT, handleMissionAccomplished as EventListener);
       window.removeEventListener(LEVEL_ADVANCE_REQUESTED_EVENT, handleLevelAdvance as EventListener);
     };
-  }, [appendEntry, queueInterjection]);
+  }, [
+    georgeStrings.feedLabels.mission,
+    georgeStrings.feedLabels.status,
+    georgeStrings.levelAdvance,
+    georgeStrings.missionComplete,
+    pushFeedEntry,
+    queueInterjection,
+  ]);
 
   useEffect(() => {
     const completed = new Set(quests.filter((quest) => quest.isCompleted).map((quest) => quest.id));
@@ -545,6 +767,46 @@ const GeorgeAssistant: React.FC = () => {
     }
     completedQuestIdsRef.current = completed;
   }, [quests, queueInterjection]);
+
+  useEffect(() => {
+    if (!ambientSnapshot) {
+      return;
+    }
+    if (!ambientTrackerRef.current) {
+      const tracker = new GeorgeAmbientTracker();
+      tracker.prime(ambientSnapshot);
+      ambientTrackerRef.current = tracker;
+
+      const initialEvent: GeorgeAmbientEvent = {
+        category: 'zoneBrief',
+        timestamp: Date.now(),
+        zoneName: ambientSnapshot.zone.zoneName,
+        summary: ambientSnapshot.zone.summary,
+        dangerRating: ambientSnapshot.zone.dangerRating ?? null,
+        hazards: [...ambientSnapshot.zone.hazards],
+        directives: [...ambientSnapshot.zone.directives],
+      };
+      const formatted = formatAmbientEvent(initialEvent);
+      if (formatted) {
+        pushFeedEntry(formatted);
+      }
+      return;
+    }
+
+    const tracker = ambientTrackerRef.current;
+    const events = tracker.collect(ambientSnapshot);
+    if (!events.length) {
+      return;
+    }
+
+    events.forEach((event) => {
+      const formatted = formatAmbientEvent(event);
+      if (!formatted) {
+        return;
+      }
+      pushFeedEntry(formatted);
+    });
+  }, [ambientSnapshot, formatAmbientEvent, pushFeedEntry]);
 
   useEffect(() => {
     const previous = factionRef.current;
@@ -605,7 +867,7 @@ const GeorgeAssistant: React.FC = () => {
         setIsOpen((prev) => {
           const next = !prev;
           if (next) {
-            respondToPrompt('guidance');
+            setHasAmbientPing(false);
           }
           return next;
         });
@@ -613,16 +875,10 @@ const GeorgeAssistant: React.FC = () => {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [respondToPrompt]);
+  }, []);
 
-  useEffect(() => {
-    if (isOpen) {
-      respondToPrompt('guidance');
-    }
-  }, [isOpen, respondToPrompt]);
-
-  const lastLog = logEntries.length > 0 ? logEntries[logEntries.length - 1] : null;
-  const baseTickerLine = interjection ?? lastLog?.text ?? georgeStrings.dockStatusIdle;
+  const latestEntry = feedEntries.length > 0 ? feedEntries[feedEntries.length - 1] : null;
+  const baseTickerLine = interjection ?? latestEntry?.text ?? georgeStrings.dockStatusIdle;
 
   const feedLines = useMemo(() => {
     const unique: string[] = [];
@@ -652,7 +908,7 @@ const GeorgeAssistant: React.FC = () => {
       push(`${objective.questName}: ${objective.objective.description}${countSuffix}`);
     }
 
-    logEntries.slice(-2).forEach((entry) => push(entry.text));
+    feedEntries.slice(-3).forEach((entry) => push(entry.text));
     ambientLines.slice(0, 2).forEach((line) => push(line));
 
     if (unique.length === 0) {
@@ -660,7 +916,7 @@ const GeorgeAssistant: React.FC = () => {
     }
 
     return unique.slice(0, 6);
-  }, [ambientLines, baseTickerLine, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue, logEntries]);
+  }, [ambientLines, baseTickerLine, feedEntries, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue]);
 
   const feedSignature = useMemo(() => feedLines.join('|'), [feedLines]);
 
@@ -672,6 +928,30 @@ const GeorgeAssistant: React.FC = () => {
     setTickerKey(Date.now());
   }, [feedSignature]);
 
+  const tickerText = feedLines[tickerIndex] ?? georgeStrings.dockStatusIdle;
+  const animateTicker = tickerText.length > 20;
+  const tickerDurationMs = useMemo(() => {
+    if (!animateTicker) {
+      return DOCK_TICKER_MIN_DURATION_MS;
+    }
+    const estimated = tickerText.length * DOCK_TICKER_MS_PER_CHARACTER;
+    if (estimated < DOCK_TICKER_MIN_DURATION_MS) {
+      return DOCK_TICKER_MIN_DURATION_MS;
+    }
+    if (estimated > DOCK_TICKER_MAX_DURATION_MS) {
+      return DOCK_TICKER_MAX_DURATION_MS;
+    }
+    return estimated;
+  }, [animateTicker, tickerText]);
+  const tickerStyle = useMemo<CSSProperties | undefined>(() => {
+    if (!animateTicker) {
+      return undefined;
+    }
+    return {
+      '--ticker-duration': `${tickerDurationMs}ms`,
+    } as CSSProperties;
+  }, [animateTicker, tickerDurationMs]);
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
@@ -679,28 +959,33 @@ const GeorgeAssistant: React.FC = () => {
     if (feedLines.length <= 1) {
       return undefined;
     }
-    const interval = window.setInterval(() => {
-      setTickerIndex((prev) => {
-        const next = prev + 1;
-        return next >= feedLines.length ? 0 : next;
-      });
-      setTickerKey(Date.now());
-    }, DOCK_TICKER_INTERVAL_MS);
-    return () => window.clearInterval(interval);
-  }, [feedLines.length, feedSignature]);
+    const nextIndex = tickerIndex + 1 >= feedLines.length ? 0 : tickerIndex + 1;
+    const nextKeySeed = Date.now() + feedSignature.length;
+    const timeout = window.setTimeout(() => {
+      setTickerIndex(nextIndex);
+      setTickerKey(nextKeySeed);
+    }, tickerDurationMs);
+    return () => window.clearTimeout(timeout);
+  }, [feedLines.length, feedSignature, tickerDurationMs, tickerIndex]);
 
-  const tickerText = feedLines[tickerIndex] ?? georgeStrings.dockStatusIdle;
-  const animateTicker = tickerText.length > 20;
-
-  const logViewRef = useRef<HTMLDivElement | null>(null);
+  const feedViewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const node = logViewRef.current;
+    if (!isOpen) {
+      return;
+    }
+    const node = feedViewRef.current;
     if (!node) {
       return;
     }
     node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
-  }, [logEntries, isOpen]);
+  }, [feedEntries, isOpen]);
+
+  useEffect(() => {
+    if (isOpen && hasAmbientPing) {
+      setHasAmbientPing(false);
+    }
+  }, [isOpen, hasAmbientPing]);
 
   const panelId = 'george-console-panel';
 
@@ -710,11 +995,11 @@ const GeorgeAssistant: React.FC = () => {
       <div className="george-shell">
         <button
           type="button"
-          className={`george-dock-button ${isOpen ? 'open' : ''}`}
+          className={`george-dock-button${isOpen ? ' open' : ''}${hasAmbientPing ? ' alert' : ''}`}
           onClick={() => setIsOpen((prev) => {
             const next = !prev;
             if (next) {
-              respondToPrompt('guidance');
+              setHasAmbientPing(false);
             }
             return next;
           })}
@@ -730,6 +1015,7 @@ const GeorgeAssistant: React.FC = () => {
                 key={tickerKey}
                 className={`george-dock-status${animateTicker ? ' george-dock-status--scroll' : ''}`}
                 title={tickerText}
+                style={tickerStyle}
               >
                 {tickerText}
               </span>
@@ -746,43 +1032,36 @@ const GeorgeAssistant: React.FC = () => {
             )}
 
             <div className="george-log-container">
-              <div className="george-log" role="log" aria-live="polite" ref={logViewRef}>
-                {logEntries.length === 0 ? (
-                  <div className="george-log-item">
+              <div className="george-log" role="log" aria-live="polite" ref={feedViewRef}>
+                {feedEntries.length === 0 ? (
+                  <div className="george-log-item george-log-item--ambient">
                     <div className="george-log-meta">
-                      <span className="george-log-actor">{georgeStrings.actors.george}</span>
-                      <span className="george-log-reference">{georgeStrings.references.guidance}</span>
+                      <div className="george-log-meta-main">
+                        <span className="george-log-badge george-log-badge--ambient" aria-hidden="true">NB</span>
+                        <span className="george-log-actor">{georgeStrings.feedLabels.ambient}</span>
+                      </div>
+                      <span className="george-log-reference">—</span>
                     </div>
                     <div className="george-log-text">{georgeStrings.logEmpty}</div>
                   </div>
                 ) : (
-                  logEntries.map((entry, index) => (
+                  feedEntries.map((entry, index) => (
                     <div
                       key={entry.id}
-                      className={`george-log-item george-log-item--${entry.actor}${index === logEntries.length - 1 ? ' george-log-item--latest' : ''}`}
+                      className={`george-log-item george-log-item--${entry.tone}${index === feedEntries.length - 1 ? ' george-log-item--latest' : ''}`}
                     >
                       <div className="george-log-meta">
-                        <span className="george-log-actor">{georgeStrings.actors[entry.actor]}</span>
-                        <span className="george-log-reference">{entry.reference}</span>
+                        <div className="george-log-meta-main">
+                          <span className={`george-log-badge george-log-badge--${entry.tone}`} aria-hidden="true">{entry.badge}</span>
+                          <span className="george-log-actor">{entry.label}</span>
+                        </div>
+                        <span className="george-log-reference">{formatTimestamp(entry.timestamp)}</span>
                       </div>
                       <div className="george-log-text">{entry.text}</div>
                     </div>
                   ))
                 )}
               </div>
-            </div>
-
-            <div className="george-actions">
-              {conversationOptions.map((option) => (
-                <button
-                  key={option.id}
-                  type="button"
-                  className="george-action-button"
-                  onClick={() => respondToPrompt(option.id)}
-                >
-                  {option.label}
-                </button>
-              ))}
             </div>
           </section>
         )}

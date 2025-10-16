@@ -1,0 +1,360 @@
+import { v4 as uuidv4 } from 'uuid';
+import {
+  getRumorRotationsForGangHeat,
+  getNoteDefinitionsForFlag,
+  getSignageVariantsForFlag,
+  getWeatherPresetForCurfewLevel,
+  getWeatherPresetForGangHeat,
+  EnvironmentalNoteDefinition,
+} from '../../../content/environment';
+import {
+  registerEnvironmentalTriggers,
+  clearEnvironmentalTriggers,
+  EnvironmentalTrigger,
+} from './triggerRegistry';
+import {
+  applyEnvironmentRumorSet,
+  setNpcAmbientProfile,
+  applyEnvironmentWeather,
+  applyEnvironmentSignage,
+  registerEnvironmentalNote,
+  addItemToMap,
+} from '../../../store/worldSlice';
+import { addLogMessage } from '../../../store/logSlice';
+import { getSystemStrings } from '../../../content/system';
+import { Item } from '../../interfaces/types';
+import { BlackoutTier, GangHeatLevel, SupplyScarcityLevel } from '../../interfaces/environment';
+import { RootState } from '../../../store';
+
+type NpcMatcher = { dialogueId?: string; name?: string };
+
+const NPC_GROUPS: Record<string, NpcMatcher[]> = {
+  'slum-barflies': [
+    { dialogueId: 'npc_lira_vendor' },
+    { dialogueId: 'npc_courier_brant' },
+  ],
+  'dock-liquor-patrons': [
+    { dialogueId: 'npc_captain_reyna' },
+    { dialogueId: 'npc_drone_handler_kesh' },
+  ],
+};
+
+const createRumorTriggers = (): EnvironmentalTrigger[] => {
+  const levels: GangHeatLevel[] = ['low', 'med', 'high'];
+
+  return levels.flatMap<EnvironmentalTrigger>((level) => {
+    const rotations = getRumorRotationsForGangHeat(level);
+
+    return rotations.map<EnvironmentalTrigger>((rotation) => ({
+      id: `environment.rumor.${rotation.id}`,
+      cooldownMs: 1_000,
+      when: (state) => {
+        const { flags, rumorSets } = state.world.environment;
+        if (flags.gangHeat !== level) {
+          return false;
+        }
+
+        if (!(rotation.groupId in NPC_GROUPS)) {
+          return false;
+        }
+
+        const current = rumorSets[rotation.groupId];
+        return !current || current.sourceId !== rotation.id;
+      },
+      fire: ({ dispatch, getState, now }) => {
+        const state = getState();
+        const locale = state.settings.locale;
+        const logStrings = getSystemStrings(locale).logs;
+        const groupTargets = NPC_GROUPS[rotation.groupId];
+
+        dispatch(
+          applyEnvironmentRumorSet({
+            groupId: rotation.groupId,
+            snapshot: {
+              lines: [...rotation.lines],
+              storyFunction: rotation.storyFunction,
+              sourceId: rotation.id,
+              updatedAt: now,
+            },
+          })
+        );
+
+        groupTargets.forEach((matcher) => {
+          dispatch(
+            setNpcAmbientProfile({
+              match: matcher,
+              profile: {
+                lines: [...rotation.lines],
+                storyFunction: rotation.storyFunction,
+                sourceId: rotation.id,
+                updatedAt: now,
+              },
+            })
+          );
+        });
+
+        dispatch(addLogMessage(logStrings.environmentRumorSwap(rotation.description)));
+      },
+    }));
+  });
+};
+
+const chooseWeatherPresetForState = (state: RootState) => {
+  const { flags } = state.world.environment;
+  if (flags.curfewLevel < 3) {
+    const gangHeatPreset = getWeatherPresetForGangHeat(flags.gangHeat);
+    if (gangHeatPreset) {
+      return gangHeatPreset;
+    }
+  }
+
+  return getWeatherPresetForCurfewLevel(flags.curfewLevel) ?? null;
+};
+
+const createWeatherTriggers = (): EnvironmentalTrigger[] => [
+  {
+    id: 'environment.weather.update',
+    when: (state) => {
+      const desiredPreset = chooseWeatherPresetForState(state);
+
+      if (!desiredPreset) {
+        return false;
+      }
+
+      const weather = state.world.environment.weather;
+      const currentTimeOfDay = state.world.timeOfDay;
+      const presetChanged = weather.presetId !== desiredPreset.id;
+      const timeOfDayChanged = weather.timeOfDay !== currentTimeOfDay;
+
+      return presetChanged || timeOfDayChanged;
+    },
+    fire: ({ dispatch, getState, now }) => {
+      const state = getState();
+      const desiredPreset = chooseWeatherPresetForState(state);
+
+      if (!desiredPreset) {
+        return;
+      }
+
+      const previousWeather = state.world.environment.weather;
+      const currentTimeOfDay = state.world.timeOfDay;
+      const locale = state.settings.locale;
+      const logStrings = getSystemStrings(locale).logs;
+
+      dispatch(
+        applyEnvironmentWeather({
+          presetId: desiredPreset.id,
+          rainIntensity: desiredPreset.rainIntensity,
+          sirenLoop: desiredPreset.sirenLoop,
+          thunderActive: desiredPreset.thunderActive,
+          storyFunction: desiredPreset.storyFunction,
+          updatedAt: now,
+          timeOfDay: currentTimeOfDay,
+        })
+      );
+
+      if (
+        previousWeather.presetId !== desiredPreset.id ||
+        previousWeather.timeOfDay !== currentTimeOfDay
+      ) {
+        const weatherDescription = desiredPreset.description ?? desiredPreset.id;
+        dispatch(addLogMessage(logStrings.environmentWeatherShift(weatherDescription)));
+      }
+    },
+  },
+];
+
+const createSignageTriggers = (): EnvironmentalTrigger[] => {
+  const BLACKOUT_VALUES: BlackoutTier[] = ['none', 'brownout', 'rolling'];
+  const SUPPLY_VALUES: SupplyScarcityLevel[] = ['norm', 'tight', 'rationed'];
+
+  const blackoutTriggers = BLACKOUT_VALUES.flatMap<EnvironmentalTrigger>((value) => {
+    const variants = getSignageVariantsForFlag('blackoutTier', value);
+
+    return variants.map((variant) => ({
+      id: `environment.signage.${variant.id}`,
+      cooldownMs: 4_000,
+      when: (state) => {
+        if (state.world.environment.flags.blackoutTier !== value) {
+          return false;
+        }
+
+        const currentVariant = state.world.environment.signage[variant.signId];
+        return !currentVariant || currentVariant.variantId !== variant.id;
+      },
+      fire: ({ dispatch, getState, now }) => {
+        const locale = getState().settings.locale;
+        const logStrings = getSystemStrings(locale).logs;
+
+        dispatch(
+          applyEnvironmentSignage({
+            signId: variant.signId,
+            snapshot: {
+              variantId: variant.id,
+              storyFunction: variant.storyFunction,
+              updatedAt: now,
+            },
+          })
+        );
+
+        dispatch(addLogMessage(logStrings.environmentSignageSwap(variant.text)));
+      },
+    }));
+  });
+
+  const supplyTriggers = SUPPLY_VALUES.flatMap<EnvironmentalTrigger>((value) => {
+    const variants = getSignageVariantsForFlag('supplyScarcity', value);
+
+    return variants.map((variant) => ({
+      id: `environment.signage.${variant.id}`,
+      cooldownMs: 4_000,
+      when: (state) => {
+        if (state.world.environment.flags.supplyScarcity !== value) {
+          return false;
+        }
+
+        const currentVariant = state.world.environment.signage[variant.signId];
+        return !currentVariant || currentVariant.variantId !== variant.id;
+      },
+      fire: ({ dispatch, getState, now }) => {
+        const locale = getState().settings.locale;
+        const logStrings = getSystemStrings(locale).logs;
+
+        dispatch(
+          applyEnvironmentSignage({
+            signId: variant.signId,
+            snapshot: {
+              variantId: variant.id,
+              storyFunction: variant.storyFunction,
+              updatedAt: now,
+            },
+          })
+        );
+
+        dispatch(addLogMessage(logStrings.environmentSignageSwap(variant.text)));
+      },
+    }));
+  });
+
+  return [...blackoutTriggers, ...supplyTriggers];
+};
+
+const findNotePosition = (state: RootState, definition: EnvironmentalNoteDefinition) => {
+  if (definition.position) {
+    return definition.position;
+  }
+
+  const playerPosition = state.player.data.position;
+
+  return {
+    x: Math.max(0, playerPosition.x),
+    y: Math.max(0, playerPosition.y - 1),
+  };
+};
+
+const createNoteTriggers = (): EnvironmentalTrigger[] => {
+  const SCARCITY_VALUES: SupplyScarcityLevel[] = ['norm', 'tight', 'rationed'];
+  const HEAT_VALUES: GangHeatLevel[] = ['low', 'med', 'high'];
+  const CURFEW_VALUES: number[] = [0, 1, 2, 3];
+
+  const buildTriggers = <T extends EnvironmentalNoteDefinition['value']>(
+    flag: EnvironmentalNoteDefinition['flag'],
+    values: readonly T[]
+  ): EnvironmentalTrigger[] =>
+    values.flatMap<EnvironmentalTrigger>((value) => {
+      const definitions = getNoteDefinitionsForFlag(flag, value);
+
+      return definitions.map<EnvironmentalTrigger>((definition) => ({
+        id: `environment.notes.${definition.id}`,
+        cooldownMs: 5_000,
+        when: (state) => {
+          const flags = state.world.environment.flags;
+          const matchesFlag =
+            flag === 'supplyScarcity'
+              ? flags.supplyScarcity === value
+              : flag === 'gangHeat'
+              ? flags.gangHeat === value
+              : flags.curfewLevel === value;
+
+          if (!matchesFlag) {
+            return false;
+          }
+
+          return !state.world.environment.notes.some(
+            (instance) => instance.definitionId === definition.id
+          );
+        },
+        fire: ({ dispatch, getState, now }) => {
+          const state = getState();
+
+          const position = findNotePosition(state, definition);
+          const areaId = state.world.currentMapArea.id;
+          const locale = state.settings.locale;
+          const logStrings = getSystemStrings(locale).logs;
+
+          dispatch(
+            registerEnvironmentalNote({
+              instanceId: `env-note::${definition.id}`,
+              definitionId: definition.id,
+              areaId,
+              lines: [...definition.lines],
+              storyFunction: definition.storyFunction,
+              spawnedAt: now,
+            })
+          );
+
+          const noteItem: Item = {
+            id: `env-note-item::${definition.id}::${uuidv4()}`,
+            name: 'Found Note',
+            description: definition.lines.join(' / '),
+            weight: 0,
+            value: 0,
+            isQuestItem: false,
+            stackable: false,
+          };
+
+          dispatch(
+            addItemToMap({
+              item: noteItem,
+              position,
+            })
+          );
+
+          dispatch(
+            addLogMessage(
+              logStrings.environmentNoteSpawned(definition.description ?? 'new memo recovered')
+            )
+          );
+        },
+      }));
+    });
+
+  return [
+    ...buildTriggers('supplyScarcity', SCARCITY_VALUES),
+    ...buildTriggers('gangHeat', HEAT_VALUES),
+    ...buildTriggers('curfewLevel', CURFEW_VALUES),
+  ];
+};
+
+let triggersRegistered = false;
+
+export const resetEnvironmentalTriggersForTest = (): void => {
+  triggersRegistered = false;
+  clearEnvironmentalTriggers();
+};
+
+export const ensureDefaultEnvironmentalTriggersRegistered = (): void => {
+  if (triggersRegistered) {
+    return;
+  }
+
+  const triggers: EnvironmentalTrigger[] = [
+    ...createRumorTriggers(),
+    ...createWeatherTriggers(),
+    ...createSignageTriggers(),
+    ...createNoteTriggers(),
+  ];
+
+  registerEnvironmentalTriggers(triggers);
+  triggersRegistered = true;
+};

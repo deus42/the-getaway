@@ -7,6 +7,7 @@ import logReducer from './logSlice';
 import settingsReducer from './settingsSlice';
 import combatFeedbackReducer from './combatFeedbackSlice';
 import surveillanceReducer from './surveillanceSlice';
+import storyletReducer from './storyletSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -23,6 +24,7 @@ const reducers = {
   combatFeedback: combatFeedbackReducer,
   missions: missionReducer,
   surveillance: surveillanceReducer,
+  storylets: storyletReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -179,6 +181,7 @@ store.subscribe(() => {
     combatFeedback: state.combatFeedback,
     missions: state.missions,
     surveillance: state.surveillance,
+    storylets: state.storylets,
   };
   saveState(stateToPersist);
 });

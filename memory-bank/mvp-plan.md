@@ -390,6 +390,256 @@ Stand up the narrative data layer that ties NPCs, quests, and rewards together.
 Dispatch dialogue and quest reducer actions (e.g., `startDialogue`, `startQuest`, `updateObjectiveCounter`) in Redux devtools and confirm quest state updates as expected.
 </test>
 </step>
+
+<step id="16.5">
+<step_metadata>
+  <number>16.5</number>
+  <title>Author Storylet Library Framework</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16 completed (narrative data layer in questsSlice)
+</prerequisites>
+
+<instructions>
+Implement a “Library of Plays” style storylet system so modular narrative beats slot into the campaign spine while reacting to character state.
+</instructions>
+
+<details>
+- Create `src/game/quests/storylets/storyletTypes.ts` defining contracts for `StoryletPlay`, `StoryRole`, `Trigger`, `Branch`, and `Outcome`, including villain arc alignment, tags, cooldown windows, and required character traits.
+- Add `src/game/quests/storylets/storyletRegistry.ts` exporting curated storylets grouped by villain arc phase (Act I setup, Act II escalation, Act III finale) with sample plays (ambush vignette, relationship beat, transformation aftermath). Each play lists eligible roles (`protagonist`, `foil`, `witness`) and trait-driven variant lines.
+- Build `src/game/quests/storylets/storyletEngine.ts` with helpers to score available storylets, cast party members into roles based on tags/traits, and emit structured outcomes that Redux reducers can apply to quests, reputation, injuries, or boons.
+- Extend `questsSlice` (or new `storyletSlice`) to track storylet cooldowns, last-seen plays per location, and queue selected storylets for UI rendering via dialogue/comic panels.
+- Wire exploration/combat hooks (mission completion, patrol ambush, campfire rest) to call the engine, filter by current campaign beat, and dispatch the selected storylet payload.
+- Provide starter localization entries under `src/content/storylets/` for at least three plays covering villain spine alignment, relationship-driven variation, and injury/trait-driven consequences.
+</details>
+
+<test>
+Trigger the engine with mocked party state (injured stealth specialist, bonded partners, rival NPC) and assert it casts roles correctly, respects cooldowns, and returns variant text keyed to traits. Simulate exploration loop dispatching `storyletTriggered` and verify state prevents immediate repeats. Snapshot a rendered vignette to ensure placeholders populate with assigned character names/traits.
+</test>
+</step>
+
+<step id="16.6">
+<step_metadata>
+  <number>16.6</number>
+  <title>Standardize Level → Mission → Quest Hierarchy & Resource Keys</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 15 completed (basic quest implementation)
+- Step 16 completed (narrative data layer in questsSlice)
+</prerequisites>
+
+<instructions>
+Establish a canonical Level → Mission → Quest content hierarchy backed by stable resource keys. Centralize localization into shared key/value maps while keeping structural data in dedicated modules so every NPC, asset, and narrative element references its owner via keys instead of ad-hoc embeds.
+</instructions>
+
+<details>
+- Create `src/game/narrative/structureTypes.ts` defining `LevelDefinition`, `MissionDefinition`, and `QuestDefinition` interfaces with `resourceKey` naming conventions and helpers to flag mission quests versus `missionId: null` side quests.
+- Restructure content folders to mirror the hierarchy (`src/content/levels/{levelId}/levelDefinition.ts`, `missions/{missionId}/missionDefinition.ts`, `quests/{questId}/questDefinition.ts`), ensuring definitions reference assets/NPCs via resource keys rather than inline data.
+- Move localization into shared `src/content/locales/{lang}/` bundles keyed by these resource identifiers (e.g., `levels`, `missions`, `quests`, `npcs` maps) so strings are maintained centrally and imported via lookup helpers.
+- Update aggregate registries (`src/content/levels/index.ts`, `src/content/missions.ts`, `src/content/quests.ts`) to compose the hierarchy, enforcing that missions register under their level key, quests declare a valid `missionKey` or `null`, and NPC registries store owning `levelKey`/`missionKey` pairs.
+- Introduce a validation utility (`src/game/narrative/validateContent.ts`) to assert key format compliance, resolve cross-references, and confirm locale entries exist for every registered resource key.
+- Document the hierarchy and authoring workflow in `memory-bank/architecture.md`, covering how to add new levels, missions, quests, NPCs, assets, and localization entries using the standardized keys.
+</details>
+
+<test>
+Add automated content validation that runs `validateContent` across all definitions, failing on missing keys, invalid references, or locale gaps. Smoke test a sample level to verify NPCs, quests, and UI strings resolve via the centralized locale helpers while respecting the new hierarchical imports.
+</test>
+</step>
+
+<step id="16.7">
+<step_metadata>
+  <number>16.7</number>
+  <title>Prototype Narrative → Triple → Scene Pipeline</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.5 completed (storylet library framework)
+- Step 16.6 completed (Level → Mission → Quest hierarchy & resource keys)
+</prerequisites>
+
+<instructions>
+Build a tooling pipeline that converts short narrative prompts into 2D tilemap blueprints by extracting `(object, relation, object)` triples, mapping them to placement rules, and emitting Phaser-ready scene definitions aligned with the level/mission hierarchy.
+</instructions>
+
+<details>
+- Define JSON schemas in `src/game/narrative/tripleTypes.ts` for `NarrativeTriple`, `SceneMoment`, and `GeneratedSceneDefinition`, including fields for `resourceKey`, `priority`, `relation`, and optional spatial hints.
+- Add `src/game/narrative/tripleExtraction.ts` with an adapter that accepts mission/quest text, runs an LLM prompt (tooling-only), and returns validated triple bundles per moment (time frame), with a manual authoring fallback.
+- Create relation-to-placement mappings under `src/game/world/generation/relationRules.ts`, implementing functions for `on`, `near`, `inside`, `left_of`, and similar relations using existing grid helpers and respecting collision layers.
+- Extend the map generation pipeline (`worldGenerationPipeline.ts`) to accept `GeneratedSceneDefinition` payloads: generate base terrain first, then apply prop placements and depth sorting based on rule outputs.
+- Store generated scenes under `src/content/levels/{levelId}/missions/{missionId}/generatedScenes/` and register them via resource keys so missions can reference auto-generated layouts.
+- Provide a CLI script `scripts/generate-scene-from-story.ts` that orchestrates extraction, invokes relation rules, writes the resulting scene JSON, and reports validation issues for missing assets or collisions.
+- Document the workflow in `memory-bank/architecture.md`, covering how writers supply prompts, review triples, and integrate generated tilemaps.
+</details>
+
+<test>
+- Unit test `relationRules` to ensure each relation produces valid tile placements without overlapping blocked cells.
+- Add integration tests that feed sample triple bundles into the generator and assert the emitted scene references known resource keys and passes collision validation.
+- Run the CLI on a sample mission narrative, load the generated scene in Phaser, and verify props appear in the correct locations with proper depth sorting.
+</test>
+</step>
+
+<step id="16.8">
+<step_metadata>
+  <number>16.8</number>
+  <title>Environmental Story Triggers & Ambient Feedback</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 7 completed (explorable map scaffolding establishes world entities to decorate)
+- Step 16 completed (narrative data layer provides quest/dialogue context for trigger payoffs)
+</prerequisites>
+
+<instructions>
+Implement a lightweight environmental trigger framework that reacts to world-state flags and surfaces diegetic hints (rumors, notes, ambient shifts) without new cutscenes.
+</instructions>
+
+<details>
+- Extend `worldSlice` with narrative-facing flags (`gangHeat`, `curfewLevel`, `supplyScarcity`, `blackoutTier`) plus selectors and actions so narrative systems can drive environmental changes.
+- Add `src/game/world/triggers/triggerRegistry.ts` to register trigger definitions (`when`, `fire`, `once`) and expose `tickEnvironmentalTriggers` for scene/game-loop integration.
+- Create content tables (TS/JSON) under `src/content/environment/` for rumor rotations, notes, signage variants, and weather/power presets, each keyed by flag/value with one-line story function metadata.
+- Wire NPC bark updates, ambient weather toggles, signage swaps, and collectible notes into existing entity managers (NPC dialogue hooks, weather service, poster/sign registries, map item spawners) so triggers mutate live state.
+- Ensure triggers de-duplicate via `once` or cooldown tracking and log events to the HUD/action log for debugging.
+- Document the authoring workflow in `memory-bank/architecture.md`, covering flag additions, trigger registration, and content authoring, and reference tone rules from `memory-bank/plot.md`.
+</details>
+
+<test>
+- Use Redux DevTools or scripted actions to bump each flag and verify matching triggers fire exactly once (unless configured to repeat) and update NPC barks, weather, signage, or spawned notes accordingly.
+- Load a scene, call `tickEnvironmentalTriggers` per frame/turn, and confirm idle triggers do nothing until conditions are met.
+- Snapshot rumor and note content to confirm flag-conditioned variants appear and log entries match the expected tone.
+</test>
+</step>
+
+<step id="16.9">
+<step_metadata>
+  <number>16.9</number>
+  <title>Route Ambient World Events Through George Assistant</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.8 completed (environment trigger framework in place)
+- George assistant overlay (HUD AI) active and emitting quest/objective updates
+</prerequisites>
+
+<instructions>
+Promote George to the sole narrator for environmental changes by piping ambient triggers and zone hazard updates into his AI console instead of the HUD ticker.
+</instructions>
+
+<details>
+- Extend George’s system module and selectors to monitor environment flags, trigger events, and zone metadata while caching previous values for comparison.
+- Emit structured ambient events (`rumor`, `signage`, `weather`, `zoneDanger`, `hazardChange`) whenever trigger reducers fire; queue them in a new assistant event log with per-category cooldowns to avoid spam.
+- Add a dedicated “Ambient Feed” tab in George’s console plus dock highlights so the latest world change surfaces even when the panel is collapsed.
+- Remove the standalone HUD ambient ticker and migrate zone hazard/danger copy so George announces changes (“Zone danger elevated to Hazardous”, “New graffiti campaign spotted”) following the straight-faced absurdity tone.
+- Update localization to cover the new callouts and ensure assistant personality/tone controls apply to ambient chatter.
+- Document the assistant-driven ambient workflow in `memory-bank/architecture.md` and note the HUD change in `memory-bank/progress.md`.
+</details>
+
+<test>
+- Simulate flag flips and zone transitions in Redux DevTools; confirm George queues a single notification per change type and respects cooldowns.
+- Toggle assistant quiet mode/personality variants to verify ambient entries appear (or silence) appropriately.
+- Play through a scenario with multiple trigger firings and ensure the assistant feed lists each change chronologically while the HUD no longer shows the removed ticker.
+</test>
+</step>
+<step id="16.10">
+<step_metadata>
+  <number>16.10</number>
+  <title>Tone-Preserving Procedural Dialogue System</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16 completed (dialogue and quest threads seeded in Redux)
+- Step 16.5 completed (storylet framework routes modular narrative beats)
+- Review `memory-bank/plot.md` voice guidelines to align tone axes
+</prerequisites>
+
+<instructions>
+Design a reusable tone-tagging pipeline that keeps the game’s authorial “voice” while generating replayable character dialogue.
+</instructions>
+
+<details>
+- **Define Style Space**: Stand up `src/game/narrative/dialogueTone/` with TypeScript types describing tone trait axes (e.g., sarcasm, melancholy, warmth, surrealism) plus optional rhetorical knobs (sentence length mean, metaphor rate). Author a JSON schema so tools can validate tone configs.
+- **Author & Persona Fingerprints**: Seed `src/content/dialogueTone/authors.ts` with the agreed influence vectors (e.g., Vonnegutish, Brautiganish) and `personas.ts` with stable character personas (Mara, Eli, etc.) capturing trait baselines, verbal tics, and lexicon overrides. Ensure data stays locale-agnostic.
+- **Scene Style Hints**: Add `scenes.ts` entries tagged by narrative intent (`share_scarce_food`, `post_ambush_reassurance`) so quest/dialogue nodes can declare a target mood without hard-coding copy.
+- **Templates & Palettes**: Define micro-templates (`templates.ts`) and trait-weighted synonym palettes (`palettes.ts`) that map style traits to concrete phrasing choices (e.g., deadpan prefers fragments, surreal adds unexpected imagery). Track lightweight motifs with counters keyed per character.
+- **Runtime Mixer**: Implement `dialogueToneMixer.ts` that blends author, persona, and scene vectors (e.g., 0.4/0.4/0.2 weighting), clamps conflicting traits (terse vs. sentence length), selects a compatible template, chooses palette variants via weighted sampling, and applies persona tics/motifs.
+- **Integration Layer**: Update `DialogueManager` (or dedicated helper) so dialogue nodes can reference style hints and request generated lines while preserving existing handcrafted copy as fallback. Provide deterministic seeds for regression tests and content tooling.
+- **Documentation**: Capture the system architecture in `memory-bank/architecture.md` and refresh `memory-bank/game-design.md` with the narrative “voice” axis definitions and blending rules. Note tooling expectations in `memory-bank/progress.md` once implemented.
+</details>
+
+<test>
+- Author sample configs and run schema validation to ensure tone payloads pass structural checks.
+- Unit test the mixer: verify trait blending produces expected weights, clamp rules respect terse limits, and template selection honors constraints.
+- Generate lines for contrasting personas (e.g., Mara vs. Eli) against the same scene hint and confirm style distances exceed the distinctness threshold while cosine similarity to the author fingerprint remains within tolerance.
+- Trigger dialogue/storylet nodes that use procedural lines; ensure deterministic seed reproduction, lexicon palettes map correctly, and handcrafted fallback copy appears if configs are missing.
+</test>
+</step>
+<step id="16.11">
+<step_metadata>
+  <number>16.11</number>
+  <title>Hazard-to-System Integration Matrix</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 7 completed (baseline zones and hazards defined on the overworld map)
+- Step 16.8 completed (environmental trigger flags and ambient feedback loop live in `worldSlice`)
+</prerequisites>
+
+<instructions>
+Codify how district hazards propagate into AI behavior, faction pressure, and traversal safety through a shared integration matrix and accompanying documentation.
+</instructions>
+
+<details>
+- Introduce `EnvironmentalFactor`, `SystemImpact`, and matrix helper types in `src/game/world/environment/environmentMatrix.ts` with entries for smog, blackout tiers, surveillance density, radiation pockets, and curfew status.
+- Populate `environmentMatrix` so each hazard lists AI modifiers (sight cones, chase persistence, weapon loadouts), faction economy effects (shop markup, patrol strength, safe house availability), and travel risks (stamina drain, vehicle reliability, encounter tables). Provide numeric weights or script hooks that downstream systems can consume.
+- Extend `worldSlice` selectors (or create `selectEffectiveEnvironmentImpacts`) to fuse live hazard flags with the matrix, emitting derived summaries for AI planners, encounter generation, and navigation warnings.
+- Wire existing systems to the selectors: adjust NPC schedule weights, faction reinforcement budgeting, and travel advisory overlays to read matrix outputs instead of ad-hoc constants.
+- Document the matrix in `memory-bank/game-design.md` (worldbuilding section) and summarize the data flow in `memory-bank/architecture.md`, including guidance for adding new hazards.
+</details>
+
+<test>
+- Add unit tests in `environmentMatrix.test.ts` that validate every hazard enumerated in `EnvironmentalFactor` has matrix coverage and that selectors emit merged impacts when multiple hazards stack.
+- Snapshot the derived selector output for representative districts (Industrial Wasteland, Downtown blackout, curfew escalation) to guard against regressions.
+- Run an integration test or scripted simulation that toggles hazard flags and confirms AI patrol weights, faction pricing, and travel warnings update according to the matrix entries.
+</test>
+</step>
+<step id="16.12">
+<step_metadata>
+  <number>16.12</number>
+  <title>Role-Based Procedural Dialogue Templates</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.5 completed (storylet library available for systemic narrative beats)
+- Step 16.10 completed (tone-preserving procedural dialogue pipeline and mixer)
+</prerequisites>
+
+<instructions>
+Author reusable dialogue templates for systemic NPC roles so merchants, guards, medics, and gang lieutenants can speak consistently across dynamic encounters.
+</instructions>
+
+<details>
+- Stand up `src/content/dialogueTemplates/roles/` with JSON/TS modules that define template families per role (`merchant`, `checkpoint_guard`, `street_doc`, `gang_scout`, etc.) referencing tone traits, required world-state flags, and failover copy.
+- Add template metadata for gating (reputation thresholds, faction alignment, time-of-day, hazard context) so the dialogue mixer can filter candidates before sampling.
+- Implement a `resolveRoleDialogueTemplate` helper in `src/game/narrative/dialogueTone/templateResolver.ts` that merges role metadata with the tone mixer output, fills placeholder tokens (item of the day, faction slang), and returns deterministic seeds for localization/testing.
+- Expose role templates to the dialogue system by updating `DialogueManager` (or quest dialogue nodes) to allow `[roleTemplate:merchant.default_greeting]` references alongside existing handcrafted keys.
+- Document authoring guidance in `memory-bank/game-design.md` (narrative systems section) and log the new tooling in `memory-bank/progress.md` once implemented.
+</details>
+
+<test>
+- Add unit tests for `resolveRoleDialogueTemplate` that verify role gating respects reputation and hazard filters, returns seeded results, and falls back to default copy when requirements fail.
+- Author snapshot tests that render sample role dialogues for contrasting personas (e.g., cautious vs. flamboyant merchant) to confirm tone modulation works with the new templates.
+- Trigger in-game conversations with at least three systemic NPC roles and confirm dialogue pulls from the new template library, honors gating, and reports deterministic IDs for localization.
+</test>
+</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
@@ -434,6 +684,38 @@ Modernize free-roam navigation with click targeting and visual path confirmation
 
 <test>
 Click long-distance destinations across multiple doors, confirm the preview matches the executed path, and ensure curfew-locked doors cancel movement.
+</test>
+</step>
+
+<step id="18.5">
+<step_metadata>
+  <number>18.5</number>
+  <title>Centralize Depth Ordering and Camera PostFX Defaults</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 17 completed (baseline isometric projection in place)
+- Step 18 completed (click-to-move path previews wired through MainScene)
+</prerequisites>
+
+<instructions>
+Unify draw-order determinism and camera-wide post-processing so every scene renders through a single, documented pipeline.
+</instructions>
+
+<details>
+- Stand up `src/game/utils/depth.ts` with a `computeDepth(sx, sy, bias = 0)` helper that returns `(sy << 10) + (sx & 0x3ff) + bias` and export bias constants for UI overlays, tall props, and debug layers.
+- Add a `DepthManager` (or equivalent service) that registers dynamic game objects from `MainScene` and performs a single pre-update pass each frame to assign depth via `computeDepth`, removing ad-hoc `setDepth` calls from factories and entity classes. Provide override hooks for objects that must pin to reserved bands (e.g., day/night overlay, path previews).
+- Refactor `IsoObjectFactory`, `CameraSprite`, combat markers, and other render helpers to rely on the centralized manager for depth, keeping any remaining offsets in one `DepthBiasConfig`.
+- Move default visual FX (bloom, vignette, color grading) onto the primary camera with toggles exposed through `src/game/settings/visualSettings.ts`, and ensure object-level FX are limited to unique cases.
+- Author `memory-bank/rendering.md` that captures the depth rule, bias bands, camera FX order, and guidelines for introducing new FX or overlays. Link to this doc from `memory-bank/architecture.md` once implemented.
+</details>
+
+<test>
+- Spawn a representative scene (player, enemies, tall props, overlays) and confirm depth remains stable while moving, zooming, and panning without per-entity overrides.
+- Verify reserved bands keep the day-night overlay, HUD bridges, and debug paths clamped above/below dynamic actors.
+- Toggle camera FX defaults on/off to confirm they apply globally and avoid duplicating shaders on individual sprites.
+- Run unit coverage on `computeDepth` to ensure the helper respects clamped ranges and bias handling.
 </test>
 </step>
 
@@ -550,6 +832,132 @@ Wait until nighttime and verify "CURFEW ACTIVE" notification appears with all ca
 </test>
 </step>
 
+<step id="19.55">
+<step_metadata>
+  <number>19.55</number>
+  <title>Adaptive NPC FSM Behaviors</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 5 completed (baseline combat loop and enemy turns)
+- Step 19 completed (guard perception + alert states)
+- Step 19.5 completed (surveillance escalation hooks)
+</prerequisites>
+
+<instructions>
+Replace the brittle guard/hostile decision flow with a deterministic-yet-varied finite-state machine that layers weighted randomness and lightweight utility nudges so patrols feel reactive without incurring heavy CPU cost.
+</instructions>
+
+<details>
+- **State Model**: Define `NpcAiState`, `NpcTransitionWeights`, and `NpcContext` interfaces in `src/game/ai/fsm/types.ts`, modelling canonical states (`Idle`, `Patrol`, `Chase`, `Search`, `Flee`, `Panic`, `InspectNoise`, etc.), cooldown data, and situational signals (HP, stamina, line of sight, recent hits, squad influences).
+- **Controller Core**: Implement `createNpcFsmController` in `src/game/ai/fsm/controller.ts` that stores current state, applies base weights per state, applies utility modifiers (HP thresholds, LOS, morale, leader influence), zeroes transitions on cooldown, and selects the next state via weighted sampling with pluggable RNG.
+- **Seeded Personalities**: Introduce a deterministic RNG helper (`src/game/ai/fsm/random.ts`) that seeds from NPC id so replays remain stable. Expose optional entropy injection for director-driven variance (Step 19.7).
+- **Action Hooks**: Map each state to action callbacks (`NpcStateHandlers`) that drive existing movement/pathfinding, cover seeking, pursuit, or flee routes via injected services. Panic transitions should set flee burst duration and respect cooldown windows before the next panic roll.
+- **Integration**: Thread the FSM controller through guard/patrol entity classes, reading perception data from Step 19 vision cones and Step 19.5 surveillance pings, and emitting telemetry (state transitions, utility adjustments) for debugging overlays.
+- **Configuration Surface**: Provide archetype configs in `src/content/ai/guardArchetypes.ts` where designers can tune base weights, modifiers, and cooldowns. Document authoring workflow in `memory-bank/architecture.md` when implemented.
+</details>
+
+<test>
+- Unit-test controller helpers: weight normalization, cooldown clamping, seed-stable transition selection, panic cooldown enforcement, and utility modifiers reacting to HP/LOS inputs.
+- Write an integration test (headless scene or mocked loop) that simulates 60 seconds of patrol behavior with deterministic RNG; assert patrol cycles between Idle/Patrol with occasional Search/Panic according to configured weights.
+- Script a chase scenario where LOS is lost; confirm FSM transitions to `Search`, times out to `Patrol`, and only re-enters `Panic` when cooldown expires and stimuli warrant it.
+- Run performance profiling (e.g., 200 NPCs stepping through the controller) to confirm budget fits within frame targets (<0.5 ms/frame on baseline hardware) and no garbage spikes occur.
+</test>
+</step>
+
+<step id="19.6">
+<step_metadata>
+  <number>19.6</number>
+  <title>Implement Witness Memory & Regional Heat</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<instructions>
+Model NPC suspicion as decaying eyewitness memory that aggregates into zone heat instead of binary wanted flags.
+</instructions>
+
+<details>
+- **Suspicion Module**: Stand up `src/game/systems/suspicion/` with `WitnessMemory` models, decay/reinforce helpers, and pruning thresholds (`certainty < 0.05`). Expose utilities for half-life tuned decay, reinforcement payloads, and serialization.
+- **Guard Perception Hooks**: When Step 19 vision cones or Step 19.5 surveillance calls flag the player, emit `WitnessMemory` entries tagged by observer, recognition channel (`face | outfit | vehicle`), certainty score, and `lastSeenAt` game time. Reinforcement events (repeat sighting, guard briefings, poster scans) reset decay timers and boost certainty.
+- **Regional Heat Aggregation**: Extend `worldSlice` (or dedicated `suspicionSlice`) with per-zone memory registries, selectors for `selectHeatByZone`, and derived alert tiers (calm, tracking, crackdown) keyed to the sum of top-K memories × proximity factors. Route heat thresholds into existing alert escalation instead of binary `isWanted`.
+- **Dampeners & Disguises**: Introduce modifiers sourced from disguise items, lighting conditions, distance, and player stance so stealth actions reduce certainty ceilings; intimidation/bribery actions can mark memories as `suppressed`.
+- **UI & Debugging**: Surface aggregate heat and the top suspect memories to George’s debug tab or a dev-only overlay for tuning. Provide logging hooks so designers can inspect decay rates live.
+- **Persistence & Performance**: Ensure memories pause decay when `worldSlice.time.isFrozen`, cull expired entries to avoid list bloat, and persist minimal witness snapshots in save data with version guards.
+</details>
+
+<test>
+- Unit test decay and reinforcement helpers with multiple half-life configurations to confirm certainty halves over time and clamps within [0,1].
+- Simulate guard sightings in a headless test scene: confirm memories spawn, reinforce on repeat sightings, decay after lying low, and drop once certainty < 0.05.
+- Drive region heat above configured tiers via scripted sightings and verify guard AI escalates responses, then allow time to pass and ensure heat cools naturally without manual resets.
+- Toggle disguises/lighting modifiers in integration tests to confirm certainty gains shrink appropriately and suppressed memories stop contributing to heat.
+</test>
+</step>
+
+<step id="19.7">
+<step_metadata>
+  <number>19.7</number>
+  <title>Street-Tension Director</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<instructions>
+Introduce a pacing director that reads suspicion pressure, recent encounters, and player stress to modulate patrol density, encounter frequency, and ambient presentation.
+</instructions>
+
+<details>
+- **Director State Machine**: Create `src/game/systems/director/` with a `DirectorState` (`pressure`, `respite`, `noise`, `intensityTier`) derived from witness heat (Step 19.6), alert flags, and elapsed downtime. Persist state in `worldSlice` (or a dedicated slice) and expose selectors for HUD/debug consumers.
+- **Signal Inputs**: Listen for guard alerts, combat outcomes, alarm triggers, and resource telemetry (ammo/medkit thresholds) so the director detects stress spikes or recovery streaks. Provide an action for George Assistant (Step 16.9) to request respite that temporarily caps pressure gain.
+- **Dials & Outputs**: Map director tiers to tunable knobs: patrol spawn cadence, roaming route variance, spontaneous street encounter probability, ambient VFX/SFX intensity, and merchant caution dialogue. Apply adjustments via existing spawners/controllers rather than bespoke logic.
+- **Integration Hooks**: Update `GameController` (or the scene orchestrator) to tick the director each world step, lerp knob deltas over configurable windows, and dispatch Redux actions so UI/audio react declaratively. Author per-district profiles under `src/content/director/directorProfiles.ts`.
+- **Debug & Overrides**: Add dev-only inspector controls to freeze tiers, tweak thresholds, and log transitions. Emit telemetry events so balancing sessions can review escalation/cooldown timelines.
+</details>
+
+<test>
+- Unit test director reducers/helpers to confirm pressure/respite accumulation, tier transitions, and cooldown behaviour across multiple profiles.
+- Script repeated alerts in a headless simulation to push the director into crackdown, then grant downtime and verify it cools back to calm while patrol density and ambient audio follow suit.
+- Disable the director profile and confirm baseline spawn logic remains unchanged (regression guard).
+- Trigger the George respite request and ensure the director honours the cooldown window without blocking future escalations.
+</test>
+</step>
+
+<step id="19.8">
+<step_metadata>
+  <number>19.8</number>
+  <title>Establish Atlas-Driven Noir Lighting Pipeline</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 17 completed (isometric renderer scaffolding in place)
+- Step 18 completed (click-to-move path previews respect tile metadata)
+- Step 19 completed (alert systems consume consistent entity depth sorting)
+</prerequisites>
+
+<instructions>
+Replace key procedural `Graphics` primitives with atlas-driven sprites and enable Phaser Light2D + post-processing so the painterly noir art direction carries through gameplay.
+</instructions>
+
+<details>
+- Stand up an art-export pipeline: define painterly diffuse + normal map pairs per district prop under `src/assets/sprites/`, create a `config/texture-atlas.noir.json` (TexturePacker or equivalent), and add `scripts/pack-noir-atlas.mjs` to emit `noir-environment.json/png` + `noir-environment-n.json/png`.
+- In `BootScene`, load the new atlases via `this.load.multiatlas('noir-environment', json, path)` and a matching call for normal maps; version atlases so runtime caches can detect updates.
+- Extend `MapTile`/`MapArea` data to expose an optional `spriteFrame` and `normalFrame`, and add authoring helpers under `src/content/environment/atlasFrames.ts` that map tile biome + condition → atlas frame IDs.
+- Refactor `IsoObjectFactory`: keep existing `Graphics` helpers for fallback, but introduce sprite-based creators (`createSpriteTile`, `createSpriteProp`, `createSpriteCharacter`) that position atlas frames, apply `setPipeline('Light2D')`, and assign normal textures.
+- Update `MainScene.drawMap` to prefer sprite frames when `spriteFrame` is defined, maintain depth sorting via `setDepth(pixelY)`, and batch static layers into `Phaser.GameObjects.Layer` or `RenderTexture` for fewer draw calls.
+- Enable the Light2D system once sprite assets exist: call `this.lights.enable().setAmbientColor(0x16202a)` in `MainScene.create`, register rim, sodium, and emergency lights keyed to world triggers, and gate light creation behind a feature flag until the atlas rollout is complete.
+- Add camera post FX helpers (`camera.postFX.addBloom`, `addColorMatrix`) with noir-friendly defaults, but expose tunable settings in `src/game/settings/visualSettings.ts` for QA to adjust brightness/contrast per district.
+- Document asset naming (e.g., `district_propName_variant_v###.png`), normal-map conventions, and Light2D integration steps in `memory-bank/architecture.md`, linking back to the painterly noir guidance in `memory-bank/game-design.md`.
+</details>
+
+<test>
+- Run `yarn pack:noir-atlas` (wrapper for `pack-noir-atlas.mjs`) and confirm atlases build without orphaned frames or duplicate keys.
+- Load BootScene and verify atlases/normal maps register; inspect DevTools to ensure sprite counts drop vs. equivalent Graphics-heavy scene.
+- Walk Downtown at night and confirm Light2D rim, sodium, and beacon lights affect atlas sprites while legacy Graphics fallback continues to render without artifacts.
+- Toggle the bloom/color-matrix settings via the visual settings module and validate render output against style sheets (maintain readable silhouettes, avoid blown highlights).
+- Profile the scene (Phaser inspector/SpectorJS) to confirm draw calls remain within target budget after Light2D activation and that normal maps respond as expected when lights move.
+</test>
+</step>
+
 <step id="20">
 <step_metadata>
   <number>20</number>
@@ -569,6 +977,39 @@ Rebuild Downtown into a readable NYC-inspired grid with consistent building parc
 
 <test>
 Inspect the generated map to verify doors sit on street tiles, no buildings overlap boulevards, and each block renders exactly one label/door pairing.
+</test>
+</step>
+
+<step id="20.5">
+<step_metadata>
+  <number>20.5</number>
+  <title>Streamable World Parcel Infrastructure</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 20 completed (Downtown grid standardized into predictable parcels)
+- Step 18 completed (click-to-move + path previews functional)
+</prerequisites>
+
+<instructions>
+Introduce an on-demand parcel streaming layer so large districts can load and unload map chunks without blowing memory. Ensure scene streaming integrates with existing world map connections, NPC schedules, and ambient triggers.
+</instructions>
+
+<details>
+- Refactor `buildWorldResources` to emit parcel manifests (`ParcelDescriptor`) and defer tile/entity hydration to a new `parcelLoader` in `src/game/world/streaming/`.
+- Implement `ParcelStreamManager` that tracks active parcels around the player, preloads neighbors (configurable radius), and dispatches load/unload events to scenes, Redux slices, and trigger registries. Provide hooks for manual pinning (e.g., cinematics, boss fights).
+- Update pathfinding/grid systems to stitch parcel edges seamlessly—cache nav meshes per parcel, and rebuild adjacency when new chunks load. Include fallbacks when requested tiles belong to unloaded parcels (auto-request or return safe alternative).
+- Thread streaming events through `GameController`/Phaser scenes so entities spawn/despawn cleanly, loot persists, and lighting/FX layers rehydrate with minimal churn.
+- Extend save/load routines to serialize parcel cache metadata (loaded set, seed data) so reloads resume without full world regeneration.
+- Document the streaming architecture and authoring expectations in `memory-bank/architecture.md`, covering parcel sizing guidelines and performance targets.
+</details>
+
+<test>
+- Profiling pass: traverse multiple districts and confirm parcel load/unload stays under target budget (e.g., <50 ms spikes) with memory plateauing once cache warms.
+- Regression: run automated walk cycles that cross parcel boundaries; verify NPCs, triggers, and signage persist correctly and no duplicates spawn.
+- Save mid-transition with parcels loading; reload to ensure the active parcel set and entity states match pre-save conditions.
+- Stress test by teleporting between far-flung parcels; confirm manager handles rapid swaps without leaking references or crashing.
 </test>
 </step>
 
@@ -938,6 +1379,39 @@ Reach level 2 and verify perk selection modal appears automatically. View availa
 </test>
 </step>
 
+<step id="24.4">
+<step_metadata>
+  <number>24.4</number>
+  <title>Rumor Cabinet Intel Perk Branch</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 24.3 completed (perk selection infrastructure)
+- Step 19.6 completed (witness memory & regional heat supplies telemetry)
+</prerequisites>
+
+<instructions>
+Add an Intel-focused perk branch—“Rumor Cabinet”—that lets players reshape rumor spread, witness decay, and information control through specialized perks.
+</instructions>
+
+<details>
+- **Content Definitions**: Extend `src/content/perks.ts` with a new `intel` (or `rumorCabinet`) category containing at least five perks: Whistle-Friendly, Folk Hero, Shadow Broker, Panic Whisper, and False Lead. Each defines level/attribute/skill prerequisites (e.g., high Speech, Stealth, or Intelligence), effect payloads, and mutually exclusive choices where appropriate.
+- **Effect Plumbing**: Update the perk evaluation layer (`src/game/systems/perks/` or equivalent) to expose hooks consumed by the rumor/suspicion systems—e.g., modifiers for rumor TTL/decay, share fan-out, confidence multipliers, and access to “plant rumor” social actions at bars/markets. Ensure effects stack predictably with existing modifiers from disguises or faction standing.
+- **Redux & Selectors**: Add derived selectors (`selectRumorPerkModifiers`) that aggregate active Intel perks and feed them into gossip propagation (Step 29.6) and witness decay (Step 19.6). Persist any new perk runtime state (e.g., Shadow Broker cooldowns) in `playerSlice`.
+- **UI/UX Updates**: Update `PerkSelectionPanel.tsx` to surface the Intel category with bespoke iconography and copy referencing the Thought Cabinet inspiration. Include tooltips that explain how each perk manipulates rumor mechanics and call out any faction biases (e.g., Folk Hero stronger in worker districts).
+- **New Actions**: Unlock contextual “plant rumor”/“suppress rumor” interactions in applicable social hubs (bars, markets, safehouses) once Shadow Broker (or similar) is learned. Stub dialogue hooks so Step 16.9 George prompts reflect available Intel maneuvers.
+- **Documentation**: Note the new perk branch and data flow in `memory-bank/game-design.md` (Rumor systems) and `memory-bank/architecture.md` (perks-to-gossip integration) during implementation.
+</details>
+
+<test>
+- Unit test perk modifiers to ensure Intel perks adjust rumor TTL, decay, and spread multipliers according to spec and clamp within safe bounds.
+- Integration test gossip propagation with and without Intel perks: confirm Whistle-Friendly speeds rumor spread for player-sourced tips, while Folk Hero biases positive rumors in worker districts and dampens elite neighborhoods.
+- Verify Shadow Broker unlocks the “plant rumor” interaction in bar dialogue once prerequisites are met and enforces any cooldowns.
+- Run regression on non-Intel perks to confirm existing combat/utility perks still evaluate correctly and UI category navigation remains accessible.
+</test>
+</step>
+
 <step id="24.5">
 <step_metadata>
   <number>24.5</number>
@@ -1206,6 +1680,64 @@ Equip weapon at 100% durability and note damage output. Use weapon until durabil
 </test>
 </step>
 
+<step id="26">
+<step_metadata>
+  <number>26</number>
+  <title>Advanced Combat Foundations</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 25.5 completed (equipment effects integrated with combat)
+</prerequisites>
+
+<instructions>
+Refactor combat state and systems to support directional cover, queued reactions, and facing-aware calculations needed for Steps 26.1–26.3.
+</instructions>
+
+<details>
+**Data Model Updates:**
+- Extend `Player` and `Enemy` combat state with `facing`, `coverOrientation`, and `suppression` fields.
+- Annotate `MapArea` tiles with directional cover metadata (`tileCover` map noting half/full cover per compass direction).
+- Introduce a shared `ReactionQueue` structure in `src/game/combat/reactions.ts` for pending overwatch or delayed actions.
+
+**Engine Changes:**
+- Update `combatSystem.ts` to compute mitigation using attacker vs. defender facing and tile cover orientation.
+- Ensure `determineEnemyMove` (and any player-facing move helpers) track and update entity facing whenever positions change.
+- Add scaffolding to enqueue and resolve reaction actions without yet implementing overwatch logic.
+
+**Grid & Scene Integration:**
+- Propagate cover metadata through `grid.ts` / pathfinding helpers so movement previews can surface directional cover.
+- In `MainScene` combat overlays, render indicators that show the defender’s cover direction relative to the attacker.
+
+**Persistence & State:**
+- Migrate Redux slices / save data to include the new combat fields with backward-compatible defaults.
+- Provide selectors/utilities for reading facing/cover state so upcoming features can consume them cleanly.
+
+**Developer Tooling:**
+- Add debug logging or overlay toggles to visualize cover vectors, facings, and reaction queue contents during playtests.
+
+</details>
+
+<test>
+- Unit: Verify cover orientation math and reaction queue enqueue/dequeue behavior in `combatSystem` and `reactions` tests.
+- Integration: Simulate a combat round on a mocked map and assert defenders receive different mitigation when hit from front vs. flank.
+- Manual: Use a debug build to step through tiles with varying cover directions, rotate attacker facings, and confirm UI indicators and damage adjustments respond accordingly.
+</test>
+</step>
+
+<step id="26.1">
+<step_metadata>
+  <number>26.1</number>
+  <title>Directional Cover and Flanking Mechanics</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 26 completed (advanced combat foundations in place)
+- Step 25.5 completed (equipment effects integrated with combat)
+</prerequisites>
+
 <step id="26.1">
 <step_metadata>
   <number>26.1</number>
@@ -1421,6 +1953,35 @@ Complete Resistance quest and verify +20 Resistance reputation, -10 CorpSec repu
 </test>
 </step>
 
+<step id="29.2">
+<step_metadata>
+  <number>29.2</number>
+  <title>Establish Trust/Fear Ethics Layer</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Create a lightweight ethics model that augments faction reputation by tracking trust and fear scores per faction/location, logging contextual action records, and surfacing immediate systemic effects (pricing, encounters, dialogue tone) without yet implementing full witness propagation.
+</instructions>
+
+<details>
+- **Ethics service module** (`src/game/systems/ethics/ethicsService.ts`): Define `EthicsProfile` with `trust` (-100..100) and `fear` (0..100) axes per faction and active location cell. Provide helpers to apply deltas, clamp ranges, decay values, and broadcast updates.
+- **Redux integration** (`src/store/ethicsSlice.ts`): Persist trust/fear state, last three `ActionRecord` entries, and computed modifiers (price multiplier, encounter weight, dialogue mood). Expose selectors wired into UI/components.
+- **Action capture**: Emit `ActionRecord` objects (`{ actor, verb, target, locationId, tags: string[], witnesses: string[], timestamp }`) from existing combat/quest/economy reducers. Seed core tags: `scarcity_high`, `aid_given`, `threat_displayed`, `resource_hoarding`, `lawless_zone`.
+- **Contextual adjustments**: Map tags to trust/fear deltas with SPECIAL-aware scaling (e.g., Charisma > 6 boosts trust gains by 10%, Strength > 7 increases fear impact). Convert existing barter pricing and encounter generation to consult combined faction reputation + trust/fear modifiers.
+- **Rumor hooks**: When actions exceed configured thresholds, enqueue a simplified rumor payload (`src/game/systems/rumors/simpleRumorQueue.ts`) with faction/location scope for Step 29.5 to expand. Include accuracy defaults and spread timers but keep propagation local.
+- **Developer HUD**: Add dev-only overlay (`EthicsDebugPanel`) showing current trust/fear per faction, recent action tags, and resulting modifiers to support balancing sessions.
+</details>
+
+<prerequisites>
+- Step 29 (Implement Faction Reputation System with Three Core Factions)
+</prerequisites>
+
+<test>
+Trigger representative actions: donate water during `scarcity_high`, extort a vendor, and fire warning shots in a neutral zone. Verify trust/fear meters update independently of base reputation, barter prices and encounter rolls reflect new modifiers, rumors are queued for qualifying acts, and the debug overlay lists the latest three action records with correct tag-derived deltas.
+</test>
+</step>
+
 <step id="29.5">
 <step_metadata>
   <number>29.5</number>
@@ -1449,6 +2010,104 @@ Layer a witness-and-gossip reputation network on top of the faction standings so
 
 <test>
 Trigger three contrasting events in the Slums: rescue civilians (heroic), intimidate a ganger (scary), and pickpocket a vendor (sneaky). Verify only NPCs within line of sight update immediately, nearby contacts learn over time, and Downtown NPCs remain unaware. Check discounts apply only with witnesses and their friends, guards in the same cell escalate hostility, and dialogue lines reference observed deeds with confidence qualifiers. Advance time and confirm scores decay without reinforcement.
+</test>
+</step>
+
+<step id="29.6">
+<step_metadata>
+  <number>29.6</number>
+  <title>Gossip Heat Rumor Propagation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19.6 completed (witness memory & regional heat)
+- Step 29.5 completed (localized witness reputation propagation)
+</prerequisites>
+
+<instructions>
+Implement a lightweight rumor propagation layer that fans out short-lived gossip flags across social graphs, influences regional heat, and exposes player counterplay via safehouses, disguises, and Intel perks.
+</instructions>
+
+<details>
+- **Rumor Model**: Define `Rumor` contracts in `src/game/systems/rumors/gossipHeat.ts` with `{ rumorId, topic, sentiment, sourceFaction, originCell, confidence, ttl, decayRate, lastSharedAt, plantedByPlayer? }`. Persist per-NPC rumor buffers with tight caps (e.g., max 5 active rumors).
+- **Propagation Tick**: Each world tick (or configurable cadence), eligible NPCs share up to two rumors to neighbors sampled from the social graph (Step 29.5). Decrease `ttl`/`confidence` on send, drop rumors when `ttl <= 0` or confidence falls below threshold. Apply faction bias weights (e.g., CorpSec forwards negative player rumors faster).
+- **Heat Integration**: Feed rumor sentiment into the heat system (Step 19.6) by raising or lowering zone pressure proportional to aggregated rumor confidence, ensuring direct eyewitness reports still override gossip. Surface rumor-driven modifiers so the Street-Tension Director (Step 19.7) can react to rising chatter even without new sightings.
+- **Player Counterplay**: Hook safehouse interactions and bribery/disguise actions into rumor buffers—safehouses purge or flag `plantedByPlayer` rumors for decay, bribes reduce confidence for specific factions, disguises slow rumor acceptance outside their origin cell.
+- **Intel Perk Hooks**: Integrate `selectRumorPerkModifiers` from Step 24.4 so perks like Whistle-Friendly, Folk Hero, and Shadow Broker adjust decay, fan-out, or unlock “plant rumor” actions. Respect cooldowns and prevent stacking exploits.
+- **UX Touchpoints**: Add an optional “Ask Around” prompt (HUD or dialogue) that surfaces the top three rumors in the current block with confidence icons, reinforcing diegetic feedback. Expose dev-only logging/visualization to inspect rumor spread for tuning.
+</details>
+
+<test>
+- Unit test rumor decay and propagation helpers to confirm TTL, confidence, and fan-out obey configured caps and faction biases.
+- Simulate a run where a negative rumor originates in Slums and ensure it spreads to adjacent cells over several ticks, raising local heat, while distant districts remain unaffected until contacts connect.
+- Verify safehouse usage clears or dampens rumors as specified and that disguised travel slows uptake in new zones.
+- Acquire Intel perks and confirm their effects (e.g., Whistle-Friendly accelerates player-planted rumors, Folk Hero boosts positive sentiment in worker districts) without breaking baseline propagation.
+</test>
+</step>
+
+<step id="29.7">
+<step_metadata>
+  <number>29.7</number>
+  <title>Dynamic District Uprisings & Resistance Simulation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 29.5 completed (localized witness reputation propagation supplies neighborhood notoriety)
+- Step 29.6 completed (gossip heat propagation exposes cross-district sentiment)
+- Step 16.9 completed (George assistant ambient feed ready to broadcast citywide events)
+</prerequisites>
+
+<instructions>
+Stand up a systemic uprising simulation that tracks morale, supplies, and corporate pressure per district, allowing uprisings to ignite, escalate, or be crushed based on player and systemic actions. Ensure each stage drives tangible gameplay changes—patrol patterns, vendor inventory, quest hooks—and that George, signage, and NPCs surface the shifting resistance state.
+</instructions>
+
+<details>
+- Extend `worldSlice` with `districtState` records `{ morale, supply, securityPresence, uprisingStage, pendingEvents }` plus selectors summarizing pressure trends, liberation odds, and countdown timers. Persist state to saves and expose dev tooling for inspection.
+- Author `uprisingDirector.ts` in `src/game/world/directors/` that ticks each in-game hour. It should read witness heat (Step 29.5), gossip sentiment (Step 29.6), faction reputation deltas, resource shipments, and recent mission outcomes to adjust district metrics. Apply designer-tunable thresholds to transition stages: Calm → Tension → Spark → Siege → Liberation or Crackdown.
+- When stages change, enqueue systemic responses: patrol spawn tables, curfew intensity, and surveillance loadouts shift; vendors adjust stock/discounts; safehouses grant temporary buffs or go dark; random encounter tables unlock escort/sabotage opportunities. Emit structured events consumed by George, signage packs, and quest generators.
+- Seed authoring data in `src/content/world/uprisings.ts` describing per-district modifiers (e.g., corp stronghold vs. worker slum), escalation pacing, morale boosts for key story beats, and narrative flavor text for each stage.
+- Provide player counterplay hooks: sabotage missions reduce securityPresence, supply raids boost morale, propaganda runs raise supply while risking crackdown. Ensure Intel perks from Step 24.4 interact (e.g., reveal impending crackdowns, unlock negotiation options).
+- Document the director flow and authoring expectations in `memory-bank/architecture.md` (HOW) and note tonal guidelines for uprising messaging in `memory-bank/plot.md` (WHAT) during implementation.
+</details>
+
+<test>
+- Scripted scenario: intentionally raise morale and drop security to trigger Spark, verify George announces it, signage swaps, and patrol density changes. Continue actions to reach Liberation and confirm safehouses upgrade perks while corp presence retreats.
+- Stress test: allow corp pressure to outweigh morale leading to Crackdown; ensure curfew escalates, vendors restrict access, and NPC dialogue reflects fear. Confirm the simulation cools back to Tension when players counteract pressure.
+- Multi-district regression: run parallel simulations in Downtown and Slums to confirm events remain scoped; George should interleave updates without duplication, and stage timers respect per-district cooldowns.
+- Persistence check: save mid-Siege, reload, and confirm director resumes correctly with queued events intact and timers continuing from the saved state.
+</test>
+</step>
+<step id="29.8">
+<step_metadata>
+  <number>29.8</number>
+  <title>Compile World-State Variable Atlas</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19.6 completed (witness memory & regional heat scaffolds localized notoriety)
+- Step 29 completed (core faction reputation system online)
+- Step 29.5 completed (localized witness reputation propagation feeding district sentiment)
+</prerequisites>
+
+<instructions>
+Create a centralized atlas that inventories every persistent world-state variable, its owner system, ranges, and downstream consumers so quests, AI, and narrative logic stay synchronized.
+</instructions>
+
+<details>
+- Audit Redux slices (`worldSlice`, `playerSlice`, `questsSlice`, `factionsSlice`, `reputationSlice`, etc.) and catalog each persistent variable that gates content or drives systemic reactions (e.g., `curfewLevel`, `supplyScarcity`, `corpSecAlert`, `resistanceIntel`, `districtHeat`).
+- Implement `src/game/state/stateAtlas.ts` exporting strongly typed descriptors `{ key, slice, datatype, range, description, consumers[] }` alongside helpers for retrieving current values plus normalized percentages.
+- Add an automated validation script (`yarn atlas:verify`) that diff-checks live Redux state keys against the atlas, emitting actionable errors when a slice introduces a new variable without documentation or range metadata.
+- Extend `memory-bank/game-design.md` with an XML-tagged appendix mirroring the atlas for designers, and update `memory-bank/architecture.md` to map each variable to its data flow, persistence requirements, and key listeners.
+- Generate machine-readable output (`memory-bank/exports/state-atlas.json`) during the validation script so tooling, analytics, and narrative planners can ingest the canonical sheet.
+</details>
+
+<test>
+- Add unit tests for `stateAtlas.ts` ensuring descriptors cover all registered keys, consumer arrays reference implemented systems, and range metadata matches runtime bounds.
+- Run `yarn atlas:verify` against mocked state snapshots to confirm it fails when variables lack atlas entries or when range docs fall out of sync.
+- Trigger gameplay scenarios (curfew escalation, faction swing, blackout chain) and verify the exported `state-atlas.json` reflects updated values/timestamps, demonstrating the atlas stays wired to live data.
 </test>
 </step>
 
@@ -1642,6 +2301,40 @@ Create the Industrial Wasteland as an 80×80 tile high-danger zone with specific
 
 <test>
 Travel to Industrial Wasteland via Downtown eastern gate and verify entry warning appears. Enter without Gas Mask and confirm 10 HP/turn damage from toxic gas. Find and equip Gas Mask, verify damage stops. Navigate outdoor smog area and confirm perception range reduced to 6 tiles. Equip flashlight and verify range increases to 9. Enter Refinery factory interior and confirm normal vision restored. Encounter Industrial Robot and verify 8 armor rating, high durability. Use EMP grenade and confirm -50% HP bonus damage. Fight Mutated Worker and verify poison DoT effect (5 damage/turn for 3 turns). Encounter Automated Turret and attempt hack with Hacking 50+, verify turret turns friendly. Step on Chemical Spill and verify 15 HP damage, armor durability loss. Fight Toxic Sludge Creature mini-boss, verify explosion on death (3-tile AoE). Loot Advanced Tech Components and verify rare status. Find Gas Mask in guaranteed location. Accept "Clear the Refinery" quest, complete objectives (15 kills, disable defense), verify rewards and safe zone unlocked. Accept "Toxic Rescue", navigate to Chemical Storage, rescue 3 scouts, verify Hazmat Suit location unlocked. Trigger "Rogue AI Shutdown" quest, reach control room, attempt hack (or fight drones), verify turret deactivation upon completion. Confirm zone is fully explorable with all landmarks accessible.
+</test>
+</step>
+
+<step id="31.5">
+<step_metadata>
+  <number>31.5</number>
+  <title>Seasonal Narrative Arc Episodes</title>
+  <phase>Phase 8: World Expansion</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.9 completed (George assistant ambient feed)
+- Step 29.7 completed (Dynamic District Uprisings & Resistance Simulation)
+- Step 33 completed (save system resilience)
+</prerequisites>
+
+<instructions>
+Create a seasonal episode framework that schedules limited-time citywide arcs. Each episode layers bespoke ambient dressing, missions, and rewards on top of the uprising/heat systems so returning players see fresh stakes without fragmenting saves.
+</instructions>
+
+<details>
+- Extend `worldSlice` with a `seasonState` record storing `currentEpisodeId`, phase progression, timestamps, and active modifiers. Provide selectors and persistence hooks so mid-episode saves restore safely.
+- Add `seasonDirector.ts` in `src/game/world/directors/` that loads episode configs from `src/content/seasons/<episodeId>.ts`, ticks phases (`Prelude`, `Escalation`, `Climax`, `Aftermath`), and dispatches structured events for George, signage, quest generators, and ambient triggers.
+- Author baseline episode templates (e.g., CorpSec Crackdown, Resistance Festival, Blackout Amnesty) defining prop swaps, lighting presets, patrol modifiers, vendor adjustments, limited-time missions, and reward tables. Ensure localization keys and narration blurbs live alongside content.
+- Update George assistant with a “Season Briefing” tab describing the active episode, remaining time, and recommended actions. Mirror high-level summaries in the quest log/planning board and broadcast milestone changes through ambient systems.
+- Provide player agency: episodic missions, donation drives, or sabotage tasks that influence episode outcomes and tie back into uprising metrics. Rewards should include cosmetics, schematics, and faction perks that persist post-episode.
+- Document the episode authoring workflow in `memory-bank/architecture.md` (director flow, save considerations) and record tone/style rules per episode type in `memory-bank/plot.md`.
+</details>
+
+<test>
+- Fast-forward through an episode in a dev harness; confirm each phase activates the correct ambient assets, missions, and George briefings, even across reloads.
+- Trigger liberation and crackdown scenarios during an episode to ensure modifiers stack cleanly with uprising effects and revert when the episode ends.
+- Accept and complete limited-time missions; verify rewards grant persistent perks/schematics and that failure paths adjust future phase modifiers.
+- Save/quit in each episode phase; on reload ensure `seasonDirector` resumes timers, pending events, and UI with no duplication or desync.
 </test>
 </step>
 </phase>
@@ -1880,182 +2573,6 @@ Run `yarn test:e2e` and verify all 20-30 tests execute successfully. Verify char
 </test>
 </step>
 
-<step id="32.3">
-<step_metadata>
-  <number>32.3</number>
-  <title>Manual QA Playtest Checklist (Multi-Browser Testing)</title>
-  <phase>Phase 10: Testing, Polish, and Release</phase>
-</step_metadata>
-
-<instructions>
-Conduct comprehensive manual quality assurance playtests using a structured checklist to identify bugs, usability issues, and edge cases that automated tests cannot catch. Test across multiple browsers and devices.
-</instructions>
-
-<details>
-**Manual QA Playtest Checklist** (detailed test scenarios for human testers):
-
-**1. Character Creation (15-20 minutes)**:
-- [ ] Create character with minimum name length (1 character), verify accepted
-- [ ] Create character with maximum name length (30 characters), verify accepted
-- [ ] Try to create character with invalid characters (emojis, special symbols), verify validation
-- [ ] Allocate all 40 SPECIAL points, verify cannot proceed without full allocation
-- [ ] Try to allocate more than 10 points to single stat, verify capped at 10
-- [ ] Tag 3 skills, verify cannot proceed with <3 or >3 skills tagged
-- [ ] Hover over each background trait and verify tooltips explain bonuses/penalties
-- [ ] Complete character creation and verify starting location is Slums safe zone
-- [ ] Verify character sheet displays correct starting stats derived from SPECIAL
-
-**2. Movement and World Exploration (20-25 minutes)**:
-- [ ] Use arrow keys to move player in 4 directions, verify smooth movement
-- [ ] Try to walk through wall/obstacle, verify blocked movement
-- [ ] Click on tile 10+ tiles away, verify pathfinding calculates route
-- [ ] Walk to zone boundary (Downtown → Slums), verify transition prompt appears
-- [ ] Transition between all 3 zones (Slums, Downtown, Industrial Wasteland) and verify no crashes
-- [ ] Enter building interior, verify indoor tileset loads, NPCs present
-- [ ] Exit building, verify outdoor environment restored correctly
-- [ ] Save game, reload, verify player position persists correctly
-
-**3. Combat System (30-40 minutes)**:
-- [ ] Engage enemy in Slums, verify combat grid appears with correct turn order
-- [ ] Attack enemy with pistol, verify attack animation, damage numbers, HP decreases
-- [ ] Move player 5 tiles, verify AP cost deducts correctly (5 AP)
-- [ ] Run out of AP, end turn, verify enemy takes turn automatically
-- [ ] Reload weapon, verify reload animation plays, magazine refilled, 3 AP cost
-- [ ] Use cover (wall/crate), verify cover icon appears, verify enemy misses more often
-- [ ] Get flanked by enemy, verify player takes increased damage (flanking bonus)
-- [ ] Use targeted shot (leg), verify reduced hit chance, verify enemy movement penalty on hit
-- [ ] Throw grenade at 2+ enemies, verify AoE damage applies to all in radius
-- [ ] Defeat all enemies, verify combat ends, XP notification appears, loot drops
-- [ ] Open loot containers, verify items lootable, added to inventory
-- [ ] Die in combat, verify death screen appears, "Load Game" option present
-
-**4. Dialogue and NPC Interactions (20-25 minutes)**:
-- [ ] Talk to quest-giver NPC, verify dialogue box opens with options
-- [ ] Read through all dialogue branches for main quest, verify text readable, no typos
-- [ ] Choose dialogue option with [Speech 50] check, verify success/failure based on skill
-- [ ] Attempt [Hacking 40] check with low skill, verify failure message, negative outcome
-- [ ] Talk to NPC with Good Karma requirement, verify option unavailable if karma <500
-- [ ] Gain Good Karma (>500), talk to same NPC, verify option now available
-- [ ] Choose aggressive dialogue option, verify NPC turns hostile, combat starts
-- [ ] Choose peaceful dialogue option, verify quest accepted without combat
-- [ ] Talk to NPC after completing quest, verify dialogue changes to post-quest lines
-
-**5. Inventory and Equipment (20-25 minutes)**:
-- [ ] Open inventory (I key), verify all carried items display with icons
-- [ ] Equip pistol, verify weapon appears in character sheet, attack stat increases
-- [ ] Equip leather armor, verify armor appears in character sheet, defense stat increases
-- [ ] Unequip weapon, verify attack stat decreases to base unarmed damage
-- [ ] Pick up 10+ items until over weight limit (50 kg), verify encumbered warning
-- [ ] Verify movement speed reduced when over-encumbered
-- [ ] Drop items to reduce weight below limit, verify normal movement restored
-- [ ] Stack items (ammo, stim packs), verify stack count increases correctly
-- [ ] Use consumable (stim pack), verify HP heals, item removed from inventory
-- [ ] Compare two weapons (hover over second weapon while one equipped), verify stat comparison tooltip
-
-**6. Quests and Progression (30-40 minutes)**:
-- [ ] Accept quest from NPC, verify quest added to Quest Log with description
-- [ ] Open Quest Log, verify objectives listed with checkboxes
-- [ ] Complete first objective (e.g., talk to NPC), verify checkbox marked complete
-- [ ] Complete final objective, return to quest giver, verify reward options appear
-- [ ] Choose credit reward (500 credits), verify credits added to inventory
-- [ ] Complete another quest, choose item reward, verify item added to inventory
-- [ ] Complete another quest, choose XP reward, verify extra XP awarded
-- [ ] Accept side quest with branching paths, choose one path, verify other path closes
-- [ ] Fail quest by killing quest-critical NPC, verify quest marked FAILED in log
-- [ ] Gain enough XP to level up (100 XP for level 2), verify level-up notification
-- [ ] Open character sheet, allocate 10 skill points across skills, verify increases
-- [ ] Reach level 3, verify perk selection screen appears with 5 perk choices
-- [ ] Select perk (e.g., "Better Criticals"), verify perk bonus applies immediately
-
-**7. Faction Reputation and Karma (15-20 minutes)**:
-- [ ] Complete quest for Resistance faction, verify Resistance reputation increases (+20)
-- [ ] Check faction status screen, verify Resistance shows "Friendly" at 250+ rep
-- [ ] Kill Resistance NPC, verify reputation decreases (-50), status changes to "Neutral" or "Hostile"
-- [ ] Complete quest for CorpSec, verify CorpSec reputation increases, Resistance decreases (opposed factions)
-- [ ] Perform good action (help civilian), verify karma increases (+10), notification appears
-- [ ] Perform bad action (kill civilian), verify karma decreases (-20), notification appears
-- [ ] Check karma level: verify Good (>500), Neutral (0-500), or Evil (<0) classification
-
-**8. Crafting and Upgrades (20-25 minutes)**:
-- [ ] Gather crafting materials: Metal Scrap (×10), Gunpowder (×5), Electronic Parts (×3)
-- [ ] Open crafting panel, verify recipes display with material requirements
-- [ ] Craft 9mm Ammo (requires Gunpowder ×2), verify materials deducted, ammo added
-- [ ] Attempt to craft Stim Pack without Medicine 30 skill, verify recipe grayed out
-- [ ] Read medical textbook to gain Medicine skill, reach 30, verify recipe now craftable
-- [ ] Craft Stim Pack, verify 15-second craft time elapses with progress bar
-- [ ] Travel to Resistance safe house, interact with workbench, verify weapon mod panel opens
-- [ ] Craft Reflex Sight mod (requires Engineering 15, Electronic Parts ×2)
-- [ ] Open weapon modification panel, drag Reflex Sight to Optics slot
-- [ ] Verify stat preview shows +10% accuracy before confirming
-- [ ] Apply mod, verify accuracy stat increases, mod consumed from inventory
-
-**9. Day/Night Cycle and Environmental Hazards (15-20 minutes)**:
-- [ ] Wait for day/night transition (6 AM, 6 PM), verify lighting changes from day to night
-- [ ] Verify curfew enforcement: patrol NPCs hostile at night if not in safe zone
-- [ ] Enter Industrial Wasteland without Gas Mask, verify toxic gas damage (10 HP/turn)
-- [ ] Equip Gas Mask, verify damage stops, breathing sound effect plays
-- [ ] Step on Chemical Spill, verify 15 HP damage, armor durability decreases
-- [ ] Stand in Radiation Pocket without Hazmat Suit, verify radiation accumulates (+2/turn)
-- [ ] Navigate smog area, verify perception range reduced to 6 tiles
-- [ ] Equip flashlight, verify perception range increases to 9 tiles
-
-**10. Save/Load System (10-15 minutes)**:
-- [ ] Save game in Slot 1, verify save appears with timestamp, location, level
-- [ ] Save game in Slot 2, verify both saves coexist independently
-- [ ] Load Slot 1, verify all state restores: player position, inventory, quests, stats
-- [ ] Load Slot 2, verify different state loads correctly
-- [ ] Delete Slot 1, verify save removed from list
-- [ ] Trigger auto-save by leveling up, verify auto-save slot appears with "Auto-Save" label
-- [ ] Quit game, relaunch, verify save slots persist across sessions
-
-**11. UI/UX and Accessibility (15-20 minutes)**:
-- [ ] Hover over all UI elements (buttons, icons), verify tooltips appear with helpful text
-- [ ] Test keyboard shortcuts: I (inventory), C (character sheet), Q (quest log), ESC (menu)
-- [ ] Verify all modals/panels can be closed with ESC key or X button
-- [ ] Test UI responsiveness: resize browser window, verify UI scales/reflows correctly
-- [ ] Verify text is readable at minimum supported resolution (1280×720)
-- [ ] Check colorblind mode (if implemented): verify UI distinguishes colors for red-green colorblindness
-- [ ] Test tab navigation: verify can navigate UI with Tab key, Enter to activate buttons
-
-**12. Multi-Browser Testing (30-40 minutes per browser)**:
-- **Chrome (Latest)**: Run full playtest checklist (1-11), document any issues
-- **Firefox (Latest)**: Run full playtest checklist, compare performance vs Chrome
-- **Edge (Latest)**: Run full playtest checklist, verify compatibility
-- **Safari (Latest macOS)**: Run full playtest checklist, verify WebGL/Canvas rendering correct
-- **Mobile Safari (iOS)**: Test touch controls, verify UI scales for mobile, performance acceptable
-- **Chrome Android**: Test touch controls, verify no major UI issues on smaller screens
-
-**Bug Documentation Process**:
-- Use issue tracker (GitHub Issues, Jira, Linear) to log all bugs
-- For each bug, document:
-  - **Title**: Concise description (e.g., "Character sheet not updating after level-up")
-  - **Severity**: Critical (blocks gameplay), High (major feature broken), Medium (minor issue), Low (cosmetic)
-  - **Steps to reproduce**: Exact steps to trigger bug
-  - **Expected behavior**: What should happen
-  - **Actual behavior**: What actually happens
-  - **Browser/Device**: Where bug occurs (e.g., "Chrome 120, Windows 11")
-  - **Screenshots/Video**: Attach visual evidence if applicable
-- Assign priority: P0 (fix before launch), P1 (fix soon), P2 (fix eventually), P3 (nice to have)
-
-**Acceptance Criteria**:
-- Complete full playtest checklist (1-12) with at least 2 testers
-- Test in all 4 major browsers (Chrome, Firefox, Edge, Safari)
-- Document all bugs found in issue tracker with severity/priority
-- Zero P0 (critical) bugs remaining before launch
-- <5 P1 (high) bugs remaining before launch (with plan to fix in v1.1)
-</details>
-
-<prerequisites>
-- Steps 32.1 and 32.2 (Unit and E2E tests) should be completed first
-- Game fully implemented and deployed to staging environment
-- Multiple human testers available (ideally 2-3 for comprehensive coverage)
-</prerequisites>
-
-<test>
-Assign 2-3 testers to complete full playtest checklist independently. Verify each tester logs bugs in issue tracker with detailed repro steps. Review bug reports and categorize by severity (Critical, High, Medium, Low) and priority (P0, P1, P2, P3). Fix all P0 bugs and verify fixes with re-testing. Verify game tested in Chrome, Firefox, Edge, and Safari with results documented. Verify mobile testing completed on iOS Safari and Chrome Android. Confirm all sections of checklist completed (checkboxes marked). Review any recurring bugs reported by multiple testers and prioritize fixes. Verify edge cases tested: character with all stats at 1, character with 10 STR vs 1 STR, inventory at exactly 50 kg weight limit, quest with all paths explored. Confirm game playable start-to-finish without game-breaking bugs across all tested browsers.
-</test>
-</step>
-
 <step id="33">
 <step_metadata>
   <number>33</number>
@@ -2103,178 +2620,6 @@ Enhance the user interface for clarity, thematic consistency, and usability acro
 
 <test>
 Open each UI element (character sheet, inventory, crafting, vehicle management, karma/reputation screen, quest log, dialogue system). Ensure they look cohesive with consistent styling. Hover over various elements and confirm tooltips appear with helpful information. Test keyboard shortcuts work correctly. Verify animations are smooth. Check UI responsiveness at different browser window sizes.
-</test>
-</step>
-
-<step id="34.5">
-<step_metadata>
-  <number>34.5</number>
-  <title>Accessibility Audit and Fixes</title>
-  <phase>Phase 10: Testing, Polish, and Release</phase>
-</step_metadata>
-
-<instructions>
-Conduct a comprehensive accessibility audit and implement fixes so the game remains playable for users with disabilities.
-</instructions>
-
-<details>
-**Accessibility Focus Areas**:
-- Visual impairments (low vision, colorblindness)
-- Motor disabilities (keyboard-only navigation)
-- Cognitive disabilities (clear language, consistent UI)
-- Screen reader compatibility (ARIA labels, semantic HTML)
-
-**1. Keyboard Navigation**:
-- **Full keyboard accessibility**: Ensure ALL interactive elements (buttons, inputs, NPCs, loot containers, enemies) are keyboard-accessible without requiring mouse
-- **Focus indicators**: Add visible focus rings (2px solid outline) to all focusable elements with high contrast (yellow/cyan on dark backgrounds)
-- **Tab order**: Implement logical tab order for UI panels (left-to-right, top-to-bottom), skip decorative elements
-- **Keyboard shortcuts** (already in Step 34, verify functionality):
-  - I: Inventory
-  - C: Character Sheet
-  - Q: Quest Log
-  - M: Map/Minimap
-  - K: Crafting Panel
-  - ESC: Close current panel/pause menu
-  - Tab: Cycle through interactive elements
-  - Enter/Space: Activate focused element
-  - Arrow keys: Navigate world AND navigate within UI lists/grids
-- **Focus trapping**: When modal opens (dialogue, inventory), trap focus within modal, ESC to close
-- **Skip links**: Add "Skip to main content" link at top of page for screen reader users
-
-**2. Screen Reader Support**:
-- **Semantic HTML**: Use proper HTML elements (`<button>`, `<input>`, `<nav>`) instead of divs with onClick
-- **ARIA labels**: Add `aria-label` or `aria-labelledby` to all interactive elements
-  - Example: `<button aria-label="Equip pistol">Equip</button>`
-  - Example: `<div role="region" aria-label="Combat grid">...</div>`
-- **Live regions**: Use `aria-live="polite"` for status updates (HP changes, XP gains, notifications)
-  - Example: `<div aria-live="polite" aria-atomic="true">{notificationMessage}</div>`
-- **State announcements**: Use `aria-pressed`, `aria-expanded`, `aria-selected` for interactive elements
-- **Image alt text**: Add descriptive alt text to all images (character portraits, item icons, zone images)
-  - Example: `<img src="pistol.png" alt="9mm pistol, ranged weapon" />`
-- **Screen reader testing**: Test with NVDA (Windows) or VoiceOver (macOS) to ensure all UI navigable and comprehensible
-
-**3. Color Contrast**:
-- **Text contrast ratio**: Ensure 4.5:1 minimum contrast for normal text, 3:1 for large text (18pt+)
-  - Check all UI text: dialogue, stats, tooltips, quest descriptions
-  - Tool: Use WebAIM Contrast Checker or Chrome DevTools Accessibility panel
-- **UI element contrast**: Ensure 3:1 minimum contrast for interactive elements (buttons, inputs, icons)
-- **Focus indicator contrast**: Ensure focus rings have 3:1 contrast against background
-- **Status indicators**: Use BOTH color AND icon/text to convey information
-  - Example: HP bar uses red color BUT also displays "25/100 HP" text
-  - Example: Karma uses color (green/gray/red) BUT also displays "Good" / "Neutral" / "Evil" text
-- **Fix common issues**:
-  - Light gray text on white backgrounds (increase contrast)
-  - Subtle hover states (make more obvious)
-  - Red-only error messages (add icons and text labels)
-
-**4. Colorblind Modes**:
-- **Implement colorblind mode toggle** in settings (`src/game/settings/accessibilitySettings.ts`):
-  - **Protanopia** (red-green colorblindness, ~8% of males): Use blue/yellow palette instead of red/green
-  - **Deuteranopia** (green-red colorblindness): Similar to protanopia
-  - **Tritanopia** (blue-yellow colorblindness, rare): Use red/green palette
-- **Pattern overlays**: Add patterns/textures to color-coded elements
-  - HP bar: Green with horizontal lines, Red with diagonal lines
-  - Karma: Good has checkmark pattern, Evil has X pattern
-  - Loot rarity: Common (solid), Rare (dots), Epic (stripes)
-- **Icon shapes**: Use different shapes for different item types (not just colors)
-  - Weapons: Pentagon icon
-  - Armor: Shield icon
-  - Consumables: Circle icon
-  - Quest items: Star icon
-- **Color palette**: Use colorblind-safe palettes for UI elements
-  - Avoid red/green combinations for critical information
-  - Use blue/orange, yellow/purple instead
-
-**5. Font Size and Readability**:
-- **Font size settings**: Add font size slider in settings (Small 14px, Medium 16px, Large 18px, Extra Large 20px)
-- **Text scaling**: Ensure UI scales correctly when font size increases (don't break layouts at 200% zoom)
-- **Font choice**: Use sans-serif fonts (Arial, Roboto, Open Sans) for better readability
-- **Line height**: Set line-height to 1.5x font size minimum for better readability
-- **Paragraph width**: Limit text width to 80 characters maximum (use max-width on dialogue boxes)
-- **Dyslexia support**: Offer dyslexia-friendly font option (OpenDyslexic or similar)
-
-**6. Reduced Motion**:
-- **Detect prefers-reduced-motion**: Check `window.matchMedia('(prefers-reduced-motion: reduce)')`
-- **Disable animations**: When reduced motion enabled:
-  - Remove combat attack animations (instant damage application)
-  - Remove zone transition animations (instant fade in/out)
-  - Remove UI panel sliding animations (instant show/hide)
-  - Keep essential feedback (damage numbers, tooltips) but without motion
-- **Settings toggle**: Add "Reduce Animations" checkbox in accessibility settings
-
-**7. Audio Accessibility**:
-- **Subtitles/Captions**: If audio dialogue is added, provide text captions
-- **Visual cues**: Ensure all audio cues have visual equivalents
-  - Low HP warning: Audio beep AND red screen border pulsing
-  - Enemy approaching: Audio footsteps AND minimap indicator
-  - Quest complete: Audio chime AND notification banner
-- **Volume controls**: Separate volume sliders for music, SFX, and UI sounds
-
-**8. Form Input Accessibility**:
-- **Label all inputs**: Every form field has associated `<label>` element
-  - Example: `<label for="char-name">Character Name:</label><input id="char-name" />`
-- **Error messages**: Display clear error messages near input fields with suggestions
-  - Example: "Character name must be 1-30 characters" (not just "Invalid")
-- **Required field indicators**: Mark required fields with asterisk AND aria-required="true"
-- **Input validation**: Provide real-time feedback on input validity (green checkmark / red X)
-
-**Testing Tools and Process**:
-- **Automated testing**:
-  - Install axe DevTools Chrome extension: scan each page for accessibility violations
-  - Install WAVE Chrome extension: visual feedback on accessibility issues
-  - Run Lighthouse accessibility audit in Chrome DevTools
-  - Target score: 90+ accessibility score in Lighthouse
-- **Manual testing**:
-  - Navigate entire game using ONLY keyboard (no mouse), verify all features accessible
-  - Test with screen reader (NVDA or VoiceOver), verify all elements announced correctly
-  - Test with 200% browser zoom, verify UI remains usable
-  - Test with colorblind simulator (Chrome extension "Colorblindly"), verify information distinguishable
-  - Test with reduced motion preference enabled, verify animations disabled
-- **Accessibility checklist**:
-  - [ ] All interactive elements keyboard-accessible (Tab, Enter, Arrow keys)
-  - [ ] Visible focus indicators on all focusable elements (2px solid outline)
-  - [ ] Screen reader announces all UI elements correctly (tested with NVDA/VoiceOver)
-  - [ ] All text meets 4.5:1 contrast ratio minimum (checked with contrast tool)
-  - [ ] All status information uses color + icon/text (not color alone)
-  - [ ] Colorblind mode available in settings (protanopia, deuteranopia, tritanopia)
-  - [ ] Font size adjustable (14px-20px range)
-  - [ ] Reduced motion mode available and functional
-  - [ ] All images have alt text
-  - [ ] All form inputs have labels
-  - [ ] Lighthouse accessibility score ≥90
-
-**Common Fixes**:
-- Replace `<div onClick>` with `<button>` for interactive elements
-- Add `tabIndex="0"` to focusable custom elements (NPCs, loot containers)
-- Add `role="button"` and `onKeyPress` handler to clickable divs (if button not possible)
-- Add `aria-label` to icon-only buttons (e.g., close X button)
-- Add `alt=""` (empty) to decorative images (don't announce in screen reader)
-- Add `aria-hidden="true"` to decorative elements (background graphics, flourishes)
-- Use `<h1>`, `<h2>`, `<h3>` for headings in proper hierarchy (not just styled divs)
-- Add `role="dialog"` and `aria-modal="true"` to modal windows
-
-**Acceptance Criteria**:
-- Pass axe DevTools scan with zero critical/serious violations
-- Pass WAVE scan with zero errors (warnings acceptable if justified)
-- Lighthouse accessibility score ≥90 on all major pages
-- Entire game completable using keyboard only (no mouse required)
-- Screen reader announces all UI elements and game state correctly
-- All text meets target contrast requirements (4.5:1)
-- Colorblind mode functional for 3 types of colorblindness
-- Reduced motion mode disables all non-essential animations
-</details>
-
-<prerequisites>
-- Step 34 (Polish the UI) should be completed first for baseline UI quality
-- All game systems implemented for comprehensive accessibility testing
-</prerequisites>
-
-<accessibility>
-This step IS the accessibility implementation - all features here are accessibility-focused.
-</accessibility>
-
-<test>
-Run axe DevTools scan on game homepage, character creation, main game screen, and verify zero critical/serious violations. Run WAVE scan and verify zero errors. Run Lighthouse accessibility audit and verify score ≥90. Attempt to play entire game using ONLY keyboard: create character (Tab/Enter to allocate stats, select background), navigate world (arrow keys), engage in combat (Tab to select target, Enter to attack), open inventory (I key), equip weapon (Tab to weapon, Enter to equip), accept and complete quest, level up and allocate skill points - all without touching mouse. Enable screen reader (NVDA or VoiceOver), navigate through character creation and verify all elements announced correctly. Open inventory and verify item names, stats, and actions announced. Enter combat and verify turn announcements, damage numbers, and enemy information announced. Check all text in UI with contrast checker tool and verify 4.5:1 minimum ratio. Enable colorblind mode (protanopia) and verify HP bar, karma display, and item rarity distinguishable without color. Test with deuteranopia and tritanopia modes. Increase font size to Extra Large (20px) and verify UI doesn't break, text remains readable. Zoom browser to 200% and verify game still playable. Enable reduced motion setting and verify animations disabled (combat, transitions) but essential feedback (damage numbers, tooltips) still visible. Test all form inputs (character name, stat allocation) have labels and error messages. Verify focus indicators visible on all interactive elements (buttons, NPCs, containers). Test with "Colorblindly" Chrome extension (simulate protanopia) and verify all information distinguishable.
 </test>
 </step>
 
@@ -2443,11 +2788,65 @@ Build a comprehensive in-game help system and update external documentation (REA
 <prerequisites>
 - All game systems implemented for complete help documentation
 - Step 34 (Polish the UI) completed for UI consistency
-- Step 34.5 (Accessibility) completed to ensure help system is accessible
 </prerequisites>
 
 <test>
 Press F1 and verify HelpPanel modal opens with 8 tabs. Click through each tab (Combat, Character, Inventory, Quests, World, Crafting, Factions, Controls) and verify content is present and readable. Use search box to search "skill check" and verify Combat and Quests tabs highlighted. Close help with F1, ESC, or X button and verify modal closes. Open character creation screen and verify "?" icon present near SPECIAL stats. Click "?" icon and verify HelpPanel opens to Character Development tab. Open crafting panel and verify "?" icon present, click and verify opens to Crafting tab. Check README.md and verify installation instructions (yarn install, yarn dev), build instructions (yarn build), and test instructions (yarn test) are present. Check ARCHITECTURE.md exists and verify system architecture overview, core systems descriptions, and file organization sections present. Check CONTRIBUTING.md exists and verify code style guide, git workflow, and PR process documented. Verify all help content accurate (no outdated information from earlier development). Test help system with keyboard only (Tab to navigate tabs, Enter to select, ESC to close) and verify accessible.
+</test>
+</step>
+
+<step id="34.8">
+<step_metadata>
+  <number>34.8</number>
+  <title>Implement WebGL Context Loss Recovery</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Add robust WebGL context loss handling so Phaser scenes pause gracefully, rebuild GPU resources, and resume without forcing a full page reload.
+</instructions>
+
+<details>
+- Register `webglcontextlost` and `webglcontextrestored` listeners on the game canvas during boot. Prevent default behavior so the browser does not attempt an automatic reload loop.
+- Detect loss inside the main render loop (`MainScene` update hook or a shared game manager) and short-circuit draw logic while the context is unavailable.
+- On restore, rebuild Phaser-managed render textures, custom `Graphics` primitives from `IsoObjectFactory`, and any post-processing pipelines. Centralize the recreation code so future renderable objects can opt-in.
+- Expose a lightweight scene callback (`onContextRestore`) that rehydrates shaders, repopulates static prop containers, and repositions dynamic tokens from Redux state.
+- Hook the recovery path into the existing mini-map, day/night overlay, and HUD widgets to ensure their textures and gradient fills refresh correctly.
+- Add a developer toggle (e.g., hidden debug key) that calls `gl.getExtension('WEBGL_lose_context').loseContext()` while running in development to validate the recovery flow without manual tab throttling.
+</details>
+
+<test>
+- In development mode, trigger a deliberate context loss via `WEBGL_lose_context` and verify the game stops rendering without crashing.
+- Confirm Redux-driven state (player position, quests, HUD selections) persists through context loss and that the scene resumes once the context is restored.
+- Inspect the rebuilt scene for missing textures, blank `Graphics`, or misordered depths after recovery.
+- Repeat the test on Chrome and Firefox to ensure cross-browser stability.
+</test>
+</step>
+
+<step id="34.9">
+<step_metadata>
+  <number>34.9</number>
+  <title>Document SpectorJS Profiling Workflow</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Create a repeatable WebGL profiling guide using SpectorJS so developers can diagnose draw-call spikes, shader bottlenecks, and texture churn.
+</instructions>
+
+<details>
+- Add `docs/perf-playbook.md` (or update an existing performance section) outlining prerequisites, how to install the SpectorJS extension/app, and steps to capture a representative frame.
+- Document capture triage: sorting by program/texture, spotting redundant binds, identifying excessive draw calls, and correlating them with Phaser objects (sprites, graphics, pipelines).
+- Include a checklist for perf regressions: verify batching, texture atlas usage, shader complexity, and overdraw from large `Graphics` fills.
+- Describe how to export captures and attach them to bug reports for cross-team review.
+- Reference the guide from `memory-bank/architecture.md` under the rendering/diagnostics section so team members know where to find it.
+- Add an action item to integrate the profiling checklist into milestone playtests (e.g., run SpectorJS once per release candidate).
+</details>
+
+<test>
+- Follow the new playbook to capture a SpectorJS frame in a busy downtown scene and confirm every step produces the expected screenshots/logs.
+- Validate that another developer can repeat the process using only the documentation and share an exported capture linked to a sample issue.
+- Verify the memory bank reference resolves correctly and that the docs build (if applicable) without broken links.
 </test>
 </step>
 
@@ -2527,24 +2926,56 @@ Deliver the George AI assistant overlay that anchors to the Level 0 objectives h
 Launch the HUD and confirm George appears within the Level 0 objectives area without overlapping other controls. Trigger `G` and verify conversation options render, can be navigated via mouse and keyboard, and dispatch responses matching the player’s current personality alignment. Change karma/reputation values and confirm George updates commentary tone within two subsequent interactions. Complete a quest and enter a hostile zone to ensure contextual alerts fire once, respect cooldowns, and reference the correct objectives. Toggle the overlay collapsed/expanded state and confirm persistence across scene reloads.
 </test>
 </step>
+<step id="35.7">
+<step_metadata>
+  <number>35.7</number>
+  <title>Generate Narrative Ledger Epilogue</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 33 completed (multi-slot save manager captures full world state)
+- Step 35.2 completed (mission progression flow signals campaign completion)
+- Step 29 completed (faction reputation data available for endings)
+</prerequisites>
+
+<instructions>
+Deliver an end-of-campaign narrative ledger that summarizes the player’s key decisions, faction standings, karmic trajectory, and district outcomes before the epilogue slideshow or free roam.
+</instructions>
+
+<details>
+- Implement `buildNarrativeLedger` in `src/game/narrative/ledger/ledgerBuilder.ts` to collate core variables: karma track, faction reputation, trust/fear axes, district uprising outcomes, signature quest resolutions, companion status, vehicle condition, and standout rumors/actions.
+- Create a `NarrativeLedgerPanel` React component surfaced during the Mission Accomplished banner (Step 35.2) and accessible from the pause menu post-credits. Present sections with short prose summaries plus bullet callouts, and include an export/share option for QA or community sharing.
+- Author copy templates under `src/content/ledger/` that map ledger facts to tone-appropriate blurbs, citing references to `memory-bank/plot.md` for consistency. Provide localization IDs for each template.
+- Persist the generated ledger snapshot into campaign saves so post-game free roam or epilogue slides reuse the same decisions without recomputation. Store a hash/timestamp to detect stale ledgers when reloading older saves.
+- Document ledger data sources and authoring rules in `memory-bank/game-design.md` (narrative systems appendix) and summarize the technical pipeline in `memory-bank/architecture.md`. Log completion in `memory-bank/progress.md`.
+</details>
+
+<test>
+- Add unit tests for `buildNarrativeLedger` verifying deterministic output across scripted endgame states (Resistance victory, CorpSec crackdown, neutral broker outcome).
+- Run an end-to-end test script that reaches campaign completion, opens the ledger panel, navigates sections via keyboard, triggers export, and confirms the file/string reflects the expected decisions.
+- Reload a post-game save and confirm the persisted ledger matches the original run, updates if new significant actions occur, and gracefully handles missing data or DLC variables.
+</test>
+</step>
 </phase>
 
 <summary>
 ## Summary
 
-This plan now outlines **52 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **56 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (19 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26.1/26.2/26.3, 29/29.5, 30.1/30.2)
+- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (21 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5/29.6/29.7/29.8, 30.1/30.2)
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
-- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, accessibility, and documentation - FINAL RELEASE PREP (10 steps: 32.1/32.2/32.3, 33, 34, 34.5, 34.7, 35, 35.2, 35.5)
+- **Phase 10 (Steps 32.1-35.7)**: Testing, polish, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5, 35.7)
 </phase_structure>
 
 <focus_areas>
 - **Command & Atmosphere**: Resistance command hub UI, neon isometric presentation, and curfew pressure loops.
 - **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
+- **Hazard Integration**: Environment matrix tying smog, surveillance, radiation, and curfew states into AI, faction economies, and travel safety.
 - **Combat & Navigation**: Turn-based encounters with cover awareness, guard perception loops, click-to-move traversal, and readable path previews.
 - **Character Progression**: Modular character creation flow, existing playerStats.ts integration, XP/leveling foundation, skill tree system, and perk selection with capstones.
 - **Equipment & Inventory**: Expanded inventory system building on existing interfaces, equipment effects, durability mechanics, and weight penalties.
@@ -2553,9 +2984,9 @@ This plan now outlines **52 implementable steps** organized into **10 phases** t
 - **Crafting & Upgrades**: Basic crafting for ammo and medical supplies, weapon modification system with concrete recipes.
 - **Expanded World**: Industrial Wasteland zone (80×80 tiles) with specific environmental hazards and zone-specific quests.
 - **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
-- **Testing & Quality**: Unit test suite (70% coverage target), integration test scenarios, manual QA playtest checklist.
-- **Accessibility & Documentation**: Accessibility audit, keyboard navigation, screen readers, in-game help system, and external documentation.
-- **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, and UI refinement across all systems.
+- **Testing & Quality**: Unit test suite (70% coverage target) and integration test scenarios.
+- **Documentation & Support**: In-game help system, state atlas exports, narrative ledger epilogue, and external documentation updates.
+- **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, WebGL context loss recovery, SpectorJS profiling playbook, and UI refinement across all systems.
 </focus_areas>
 
 <key_improvements>
@@ -2566,7 +2997,7 @@ This revised plan addresses critical quality issues identified in the analysis:
 - Step 24 → 24.1 (XP/leveling), 24.2 (skill trees), 24.3 (perk selection)
 - Step 26 → 26.1 (flanking), 26.2 (overwatch/targeted shots), 26.3 (AoE/consumables)
 - Step 30 → 30.1 (basic crafting), 30.2 (weapon mods)
-- Step 32 → 32.1 (unit tests), 32.2 (integration tests), 32.3 (manual QA)
+- Step 32 → 32.1 (unit tests), 32.2 (integration tests)
 
 **Bridge Steps Added**:
 - Step 23.5: Wire equipment stats to combat formulas
@@ -2586,8 +3017,12 @@ This revised plan addresses critical quality issues identified in the analysis:
 - Industrial Wasteland: 80×80 tile map, 3 zone-specific quests
 
 **Quality Assurance**: New steps for comprehensive testing and accessibility:
-- Step 34.5: Accessibility audit covering keyboard, screen reader, contrast, and customization fixes
 - Step 34.7: In-game help system and external documentation
+
+**System Transparency**: Simulation bookkeeping steps make systemic consequences observable and maintainable:
+- Step 16.11: Hazard-to-system integration matrix aligns environmental threats with AI, faction pressure, and travel loops.
+- Step 29.8: World-state variable atlas catalogs persistent flags for designers, tooling, and validation scripts.
+- Step 35.7: Narrative ledger epilogue records player choices and world outcomes for coherent endings and regression tracking.
 </key_improvements>
 
 Each step includes concrete validation targets to keep development measurable. The architecture prioritizes modularity and scalability, drawing inspiration from Fallout 2 while focusing on a maintainable modern web stack. Iterative playtesting complements automated checks to preserve feel and performance.

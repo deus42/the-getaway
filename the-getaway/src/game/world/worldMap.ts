@@ -3,6 +3,7 @@ import { MapArea, Position, TileType, NPC, Item } from '../interfaces/types';
 import { Locale } from '../../content/locales';
 import { getLevel0Content } from '../../content/levels/level0';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
+import { getZoneMetadata } from '../../content/zones';
 import {
   createBasicMapArea,
   addWalls,
@@ -55,15 +56,25 @@ const createInteriorArea = (
   name: string,
   width: number,
   height: number,
-  level: number,
-  zoneId: string,
-  factionRequirement?: MapArea['factionRequirement']
+  options: {
+    level: number;
+    zoneId: string;
+    factionRequirement?: MapArea['factionRequirement'];
+    displayName?: string;
+    summary?: string;
+    dangerRating?: MapArea['dangerRating'];
+    hazards?: string[];
+  }
 ): InteriorSpec => {
   const interior = createBasicMapArea(name, width, height, {
-    level,
+    level: options.level,
     isInterior: true,
-    zoneId,
-    factionRequirement,
+    zoneId: options.zoneId,
+    factionRequirement: options.factionRequirement,
+    displayName: options.displayName,
+    summary: options.summary,
+    dangerRating: options.dangerRating,
+    hazards: options.hazards,
   });
   const doorPosition: Position = { x: Math.floor(width / 2), y: height - 1 };
   const entryPosition: Position = {
@@ -117,14 +128,15 @@ const applyBuildingConnections = (
     doorTile.type = TileType.DOOR;
     doorTile.isWalkable = true;
 
-    const interiorSpec = createInteriorArea(
-      `${settlementName} :: ${building.name}`,
-      building.interior.width,
-      building.interior.height,
-      hostArea.level ?? 0,
-      `${hostArea.zoneId}::interior`,
-      building.factionRequirement
-    );
+    const interiorSpec = createInteriorArea(`${settlementName} :: ${building.name}`, building.interior.width, building.interior.height, {
+      level: hostArea.level ?? 0,
+      zoneId: `${hostArea.zoneId}::interior`,
+      factionRequirement: building.factionRequirement,
+      displayName: `${settlementName} :: ${building.name}`,
+      summary: hostArea.summary,
+      dangerRating: hostArea.dangerRating,
+      hazards: hostArea.hazards,
+    });
 
     interiors.push(interiorSpec.area);
 
@@ -169,6 +181,17 @@ const createCityArea = (
     objectives,
     zoneId,
   });
+  const zoneMetadata = getZoneMetadata(zoneId);
+  const areaWithMeta: MapArea = {
+    ...area,
+    name: zoneMetadata.name,
+    displayName: zoneMetadata.name,
+    level: zoneMetadata.level,
+    objectives: zoneMetadata.objectives.length ? zoneMetadata.objectives : area.objectives,
+    dangerRating: zoneMetadata.danger,
+    hazards: zoneMetadata.hazards,
+    summary: zoneMetadata.summary,
+  };
   const walls: Position[] = [];
 
   const addBlock = (x1: number, y1: number, x2: number, y2: number) => {
@@ -190,7 +213,7 @@ const createCityArea = (
     );
   });
 
-  const withWalls = addWalls(area, walls);
+  const withWalls = addWalls(areaWithMeta, walls);
 
   const coverSpotsOnWalkableTiles = coverSpots.filter((position) => {
     const tile = withWalls.tiles[position.y]?.[position.x];

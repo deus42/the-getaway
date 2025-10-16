@@ -216,6 +216,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   const testMode = useSelector((state: RootState) => state.settings.testMode);
   const uiStrings = getUIStrings(locale);
   const background = player.backgroundId ? BACKGROUND_MAP[player.backgroundId] : undefined;
+  const backgroundName = background?.name ?? uiStrings.playerStatus.backgroundFallback;
 
   const handleLevelUp = () => {
     const currentLevel = player.level;
@@ -255,12 +256,14 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
               <span style={crouchBadgeStyle}>{uiStrings.playerStatus.crouchIndicator}</span>
             )}
           </div>
-          <div style={backgroundLabelStyle}>{background?.name ?? 'Unaffiliated'}</div>
+          <div style={backgroundLabelStyle}>
+            {uiStrings.playerStatus.backgroundLabel}: {backgroundName}
+          </div>
         </div>
       </div>
 
       <AnimatedStatBar
-        label="Health"
+        label={uiStrings.playerStatus.healthLabel}
         current={player.health}
         max={player.maxHealth}
         baseColor="#ef4444"
@@ -293,11 +296,11 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
 
       <div style={statGridStyle}>
         <div style={statCardStyle}>
-          <span style={statLabelStyle}>Credits</span>
+          <span style={statLabelStyle}>{uiStrings.playerStatus.creditsLabel}</span>
           <span style={{ ...importantValueStyle('#fbbf24') }}>₿{player.credits}</span>
         </div>
         <div style={statCardStyle}>
-          <span style={statLabelStyle}>Experience</span>
+          <span style={statLabelStyle}>{uiStrings.playerStatus.experienceLabel}</span>
           <span style={{ ...importantValueStyle('#38bdf8') }}>{formatXPDisplay(player.experience, player.level)}</span>
         </div>
       </div>

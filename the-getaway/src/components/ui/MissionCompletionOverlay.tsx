@@ -13,6 +13,7 @@ import {
 } from '../../store/missionSlice';
 import { emitLevelAdvanceRequestedEvent } from '../../game/systems/missionProgression';
 import { AppDispatch, RootState } from '../../store';
+import { setCurrentMapAreaZoneMetadata } from '../../store/worldSlice';
 
 const MissionCompletionOverlay: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -24,12 +25,13 @@ const MissionCompletionOverlay: React.FC = () => {
   const uiStrings = getUIStrings(locale);
 
   const modalOpen = pendingAdvance && !celebrationAcknowledged;
-  const nextLevel = missionState.levels[missionState.currentLevelIndex + 1];
-
   const handleContinue = () => {
     if (!missionProgress) {
       return;
     }
+
+    const nextLevel = missionState.levels[missionState.currentLevelIndex + 1];
+    const targetZoneId = nextLevel?.zoneId ?? null;
 
     emitLevelAdvanceRequestedEvent({
       level: missionProgress.level,
@@ -40,6 +42,10 @@ const MissionCompletionOverlay: React.FC = () => {
     });
 
     dispatch(advanceToNextLevel());
+
+    if (targetZoneId) {
+      dispatch(setCurrentMapAreaZoneMetadata({ zoneId: targetZoneId }));
+    }
   };
 
   const handleDefer = () => {

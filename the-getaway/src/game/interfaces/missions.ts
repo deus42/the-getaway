@@ -15,6 +15,7 @@ export interface MissionLevelDefinition {
   levelId: string;
   name: string;
   objectives: MissionObjectiveDefinition[];
+  zoneId?: string;
 }
 
 export interface MissionLevelState {
@@ -22,6 +23,7 @@ export interface MissionLevelState {
   levelId: string;
   name: string;
   objectives: MissionObjectiveDefinition[];
+  zoneId?: string;
 }
 
 export interface ResolvedMissionObjective extends MissionObjectiveDefinition {
@@ -34,6 +36,7 @@ export interface MissionProgressSnapshot {
   level: number;
   levelId: string;
   name: string;
+  zoneId?: string;
   primary: ResolvedMissionObjective[];
   side: ResolvedMissionObjective[];
   allPrimaryComplete: boolean;

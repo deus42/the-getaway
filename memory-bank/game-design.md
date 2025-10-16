@@ -27,6 +27,34 @@ The city is divided into several zones, each acting as a distinct "biome" with i
 Each zone offers unique resources, enemies, and quests. Transitioning between zones may require planning and equipment adjustments, reinforcing the feeling of entering a different world or biome within the city.
 </world_structure>
 
+<game_system id="art_direction" status="partial">
+Painterly Noir Art Direction
+
+The Getaway’s visual identity leans into a painterly noir aesthetic—thick atmospheric mood, imperfect brushwork, and deliberate grime that mirrors the city’s moral rot.
+
+Color Language & Palette Guardrails
+	•	Primary palette draws from desaturated crimsons, bruised umbers, muted teals, sodium ambers, and electric cyan accents reserved for interactables or faction tech.
+	•	Value structure favors high-contrast silhouettes against hazy midtones; brightest highlights are scarce and purposeful (siren lights, HUD callouts, corporate signage).
+	•	Weathering layers (soot streaks, rain wash, chipped enamel) should be hand-painted or overlaid with visible brush grain to avoid sterile gradients.
+
+Material & Edge Treatment Rules
+	•	Metals: cold base tones with warm edge catches; add micro-scratches and oil bloom to break up flat planes.
+	•	Concrete & masonry: mottled texture passes with charcoal edging; drift grime vertically to imply runoff.
+	•	Fabric & leather: softened edges, frayed seams, and occasional stitch highlights to keep silhouettes readable.
+	•	Hard vs. soft edges: reserve razor-sharp cuts for weapons and corporate hardware; diffuse edges elsewhere to maintain painterly cohesion.
+
+Signage, UI Diegesis & Lighting Motifs
+	•	District signage should riff on period noir typography (condensed sans-serifs, deco ligatures) while integrating glitched neon or flicker passes for lived-in decay.
+	•	Diegetic displays (billboards, kiosks, George’s overlays) glow with cool cyan/teal, contrasted by warmer street lighting to frame interactable spaces.
+	•	Use motivated pools of light (overhead lamps, leaking neon, vehicle headlights) to sculpt scenes and reinforce cover silhouettes in gameplay spaces.
+
+Reference Sheets & Production Workflow
+	•	Produce a one-page style sheet per district outlining palette swatches, texture callouts, signage exemplars, and “do/don’t” mini-comparisons.
+	•	Each sheet should cite relevant narrative beats from `memory-bank/plot.md` so faction tone and environmental storytelling stay aligned.
+	•	Store sheets under `the-getaway/src/assets/style-guides/` (or equivalent) with versioned filenames (`districtName_style_v###.mdx/png`) and log updates in `memory-bank/progress.md` when districts evolve.
+	•	All outsourced or generated art must reference the applicable sheet to ensure external collaborators hit the noir constraints without guesswork.
+</game_system>
+
 <narrative_alignment document="memory-bank/plot.md">
 Narrative Alignment & Tone Reference
 
@@ -50,6 +78,46 @@ The game world is persistent and simulated, meaning changes endure and NPCs beha
 	•	Day/Night Behavior: Tied to the day-night cycle, NPC behavior changes over time (e.g., at night, law-abiding citizens stay home while gangs and predators become more active). Shops open and close at certain hours. Some quests or events are only available at a particular time of day.
 
 These systems ensure the city feels alive and immersive. The player is one part of a larger ecosystem, and the world can surprise them with new developments during their journey.
+</mechanic>
+
+<mechanic name="trust_fear_ethics">
+Trust/Fear Ethics Layer (MVP - Step 29.2)
+
+<implementation_status>⚠️ PARTIAL - Introduced in Step 29.2, expands into localized gossip network in Step 29.5</implementation_status>
+
+Moral perception in The Getaway leans into survival pragmatism rather than binary good/evil. Each faction and neighborhood cell maintains a lightweight `EthicsProfile` with two axes:
+	•	**Trust (-100..100)** — Measures whether locals believe the crew will protect their interests. Positive trust unlocks safer routes, better prices, and candid intel.
+	•	**Fear (0..100)** — Captures how dangerous or volatile the crew appears. Elevated fear intimidates holdouts, deters harassment, and increases checkpoint scrutiny.
+
+**Action Records & Context Tags**
+	•	Player-facing systems (combat, quests, barter, exploration choices) emit `ActionRecord` payloads: `{ actor, verb, target, locationId, tags[], witnesses[], timestamp }`.
+	•	Tags describe situational ethics rather than outcomes: `scarcity_high`, `aid_given`, `threat_displayed`, `resource_hoarding`, `lawless_zone`, `medical_need`, `witness_children`.
+	•	Trust and fear deltas map from these tags. Example: `aid_given` during `scarcity_high` grants +15 trust, while `threat_displayed` in a `lawless_zone` drives +10 fear but only +2 resentment.
+
+**SPECIAL & Background Modifiers**
+	•	Charisma amplifies positive trust swings (+10% per point above 6); low Charisma dampens gains and accelerates decay.
+	•	Strength above 7 boosts fear impact (+8% per point) and slows fear decay; fragile builds struggle to intimidate without escalating violence.
+	•	Background perks supply signature biases (e.g., Ex-CorpSec gets a +5 baseline fear in CorpSec precincts; Street Urchin halves fear gain when actions target civilians).
+
+**Systemic Hooks**
+	•	**Economy**: Shop price multiplier = faction reputation modifier × trust discount × fear surcharge. High-trust vendors offer better rates; high fear forces bribes.
+	•	**Encounters**: Ambient encounter tables adjust patrol density and ambush likelihood using fear as a weight. Trust unlocks escort offers or emergency aid events.
+	•	**Dialogue Tone**: NPC bark variants pull from trust/fear bands (e.g., high trust & low fear = warm gratitude; high fear = clipped, cautious responses).
+	•	**Soft Locks**: Low trust may gate official clinics, but high fear opens clandestine routes (night market with riskier odds instead of hard failure).
+
+**Decay & Maintenance**
+	•	Trust decays slowly toward neutral when the crew ignores a faction or cell (−2 per in-game day). Fear evaporates faster (−5 per day) unless reinforced.
+	•	Specific events (festivals, ceasefires, curfews) can temporarily freeze decay or spike thresholds, tying ethics flow into world scheduling.
+
+**Rumor Seed**
+	•	Actions with deltas over configured thresholds enqueue a `Rumor` entry `{ contentKey, accuracy, sourceFaction, spreadTimer, audiences[] }`.
+	•	Rumors remain scoped to the originating faction/location until Step 29.5 introduces full propagation. Accuracy defaults to 0.8 for firsthand witnesses, 0.5 otherwise.
+
+**Developer Telemetry**
+	•	A dev-only `EthicsDebugPanel` surfaces current trust/fear values per faction, the last three action records, and derived modifiers for quick balancing.
+	•	Designers can tweak tag-to-delta tables via JSON without code changes, encouraging rapid iteration on ethical nuance.
+
+This layer ensures the world reacts to scarcity-driven ethics immediately while leaving room for the deeper witness gossip network to evolve those reactions into long-term, subjective reputations.
 </mechanic>
 
 <mechanic name="localized_reputation_network">
@@ -85,6 +153,38 @@ The city remembers what it actually sees. Instead of a single global meter, repu
         •       **Sandbox Controls**: Designers can scrub decay rates, propagation caps, and thresholds live to feel how fast stories travel.
 
 This system reinforces stealth, intimidation, and altruism builds by rewarding intentional play in front of the right audience while keeping the city’s reaction plausibly fragmented.
+</mechanic>
+
+<mechanic name="witness_memory_heat">
+Witness Memory & Regional Heat
+
+Binary "wanted" flags flatten stealth play. Instead, eyewitnesses retain fuzzy memories that cool over time unless refreshed, and nearby security forces read the hottest memories to decide how aggressively they respond.
+
+**Witness Memory Model**
+	•	Every NPC who positively identifies the player (or their vehicle/disguise) records a `WitnessMemory` `{ targetId, certainty, recognitionChannel, lastSeenAt, halfLife, reinforcedAt?, reported }`.
+	•	`certainty ∈ [0,1]` expresses how confident the witness is; direct, well-lit sightings trend toward 0.8–1.0 while peripheral glimpses land near 0.2–0.4.
+	•	Decay follows a configurable half-life tuned per district density (crowded downtown = 72 in-game hours, rural outskirts = 168). Designers can adjust half-lives to pace stealth fantasy per zone.
+
+```
+certainty_w(t) = certainty_w(t0) * 0.5 ^ ((t - t0) / half_life)
+```
+
+**Reinforcement & Suppression**
+	•	Repeat sightings, guard briefings, or seeing wanted posters refresh `lastSeenAt` and add certainty (clamped at 1). Recognition channels (`face`, `outfit`, `vehicle`, `gait/voice`) stack so swapping cars removes vehicle memories without invalidating facial recognition.
+	•	Bribes, intimidation, or trusted alibis can mark a memory as `suppressed`, immediately lowering certainty or capping future reinforcement gains until the witness is convinced again.
+	•	Lighting, distance, disguise quality, crouch state, and crowd density reduce incremental certainty gains to reward smart stealth play. Night operations combined with high-tier disguises may keep certainty below the reporting threshold.
+
+**Regional Heat Calculation**
+	•	Each map cell or district aggregates the top-K active memories (default 5) weighting certainty by proximity and whether the witness has reported to authorities.
+	•	Heat tiers: `0–0.4 = calm`, `0.4–0.7 = tracking` (guards fan out, passive searches), `0.7+ = crackdown` (reinforcements, checkpoints). Designers can override thresholds per faction temperament.
+	•	Heat naturally subsides as memories decay. No magical timer clears suspicion—the player must hide, relocate, or disrupt reinforcement loops to cool a district.
+
+**Player Counterplay**
+	•	Disguises, vehicle swaps, and night travel erode specific recognition channels, letting players strategically break links without wiping all notoriety.
+	•	Destroying cameras or silencing witnesses prevents reinforcement. Conversely, letting witnesses gossip kicks certainty into the guard network faster.
+	•	Debug-facing HUD overlays (or George’s dev feed) can surface leading witnesses and current heat bands for balancing without exposing meta numbers to players.
+
+This mechanic grounds stealth tension in human memory—witnesses forget, rumors blur, and thoughtful downtime matters—while dovetailing with the localized reputation network for longer-term social consequences.
 </mechanic>
 
 <mechanic name="ai_assistant">
@@ -361,6 +461,27 @@ The Getaway features an open-ended, branching narrative in which the player’s 
 
 Overall, the story structure is designed for branching and convergence: there are multiple branches (faction paths, moral choices) that can lead to a variety of mid-game scenarios and eventually converge into several distinct endgames. This structure offers replayability and a personalized story experience.
 </narrative_structure>
+
+<mechanic name="procedural_storylets">
+Procedural Storylets (“Library of Plays”)
+
+To keep emergent runs feeling authored, the campaign adopts a three-layer storylet framework inspired by Wildermyth’s “Library of Plays” approach:
+	•	Villain Plot Spine: Each campaign arc defines explicit Act I / II / III beats (setup, escalation, finale). These beats act as the narrative spine that anchors randomization to a destination. The spine tracks active antagonist goals, required locations, and milestone quests that must land to keep the story coherent.
+	•	Modular Event Plays: Storylets are self-contained vignettes written as tiny stage plays. Each play declares roles (e.g., `protagonist`, `foil`, `witness`), entry triggers (mission completion, exploration discovery, relationship threshold, ambush, downtime rest), and outcomes that update quests, reputation, injuries, or boons. Plays live in a shared library and can run in any eligible scene provided their inputs are satisfied.
+	•	Embedded Variation: Character traits, injuries, factions, and relationship states swap specific lines, reactions, or follow-up branches inside each play. The same vignette reads differently when a bonded ally fills the `witness` role versus a rival, and mechanical consequences (temporary buffs, mood shifts, scars) reference those personal states.
+
+Design requirements:
+	•	Write storylets with explicit preconditions, cooldowns, and completion tags so they can’t repeat too frequently or clash with the campaign spine.
+	•	Cast roles dynamically using the current party roster and companion bench; fall back to archetype NPCs if mandatory roles are missing.
+	•	Surface required traits/tags directly in content definitions (e.g., `needsTrait: ["stealth_specialist"]`) to keep authoring declarative and data-driven.
+	•	Ensure outcomes cleanly route back into gameplay systems: redux reducers update quest state, relationship meters, or apply status effects; UI panels render the resulting comic/dialogue with placeholders swapped for the assigned characters.
+	•	Allow designer-authored weighting so certain plays prefer early/late arc placement or specific zones, keeping tone aligned with the villain plot.
+
+Testing expectations:
+	•	Simulate multiple party compositions and campaign states to confirm the engine casts roles without leaving gaps or repeating recently played vignettes.
+	•	Verify localization stubs exist for every branch/variant line and that placeholders insert correct pronouns/names.
+	•	Confirm mechanical consequences (injury flags, reputation shifts, temporary buffs) propagate to the corresponding systems and decay/resolve as scripted.
+</mechanic>
 
 <mechanic name="dialogue_system">
 Dialogue System

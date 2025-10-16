@@ -15,6 +15,7 @@ import {
 import { IsoObjectFactory, CharacterToken } from '../utils/IsoObjectFactory';
 import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, adjustColor as isoAdjustColor, IsoMetrics } from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
+import { resolveCardinalDirection } from '../combat/combatSystem';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { miniMapService } from '../services/miniMapService';
 import CameraSprite from '../objects/CameraSprite';
@@ -72,6 +73,7 @@ export class MainScene extends Phaser.Scene {
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private npcSprites: Map<string, NpcSpriteData> = new Map();
   private cameraSprites: Map<string, CameraSprite> = new Map();
+  private coverDebugGraphics?: Phaser.GameObjects.Graphics;
   private currentMapArea: MapArea | null = null;
   private buildingLabels: Phaser.GameObjects.Container[] = [];
   private unsubscribe: (() => void) | null = null;
@@ -142,6 +144,10 @@ export class MainScene extends Phaser.Scene {
 
     this.pathGraphics = this.add.graphics();
     this.pathGraphics.setDepth(4);
+
+    this.coverDebugGraphics = this.add.graphics();
+    this.coverDebugGraphics.setDepth(5);
+    this.coverDebugGraphics.setVisible(false);
 
     // Initial setup of camera and map
     this.setupCameraAndMap();
@@ -244,6 +250,11 @@ export class MainScene extends Phaser.Scene {
         data.indicator = undefined;
       }
     });
+
+    if (this.coverDebugGraphics) {
+      this.coverDebugGraphics.destroy();
+      this.coverDebugGraphics = undefined;
+    }
   }
 
   private handleStateChange(): void {
@@ -1670,12 +1681,76 @@ export class MainScene extends Phaser.Scene {
       this.pathGraphics.fillStyle(color, alpha);
       this.pathGraphics.fillPoints(points, true);
     });
+
+    const destination = detail.path[detail.path.length - 1];
+    this.renderCoverPreview(destination);
   };
 
   private clearPathPreview(): void {
     if (this.pathGraphics) {
       this.pathGraphics.clear();
     }
+    this.renderCoverPreview();
+  }
+
+  private renderCoverPreview(position?: Position): void {
+    if (!this.coverDebugGraphics) {
+      return;
+    }
+
+    this.coverDebugGraphics.clear();
+
+    if (!position || !this.currentMapArea) {
+      this.coverDebugGraphics.setVisible(false);
+      return;
+    }
+
+    const reference = this.lastPlayerGridPosition ?? this.playerInitialPosition;
+    if (!reference) {
+      this.coverDebugGraphics.setVisible(false);
+      return;
+    }
+
+    const tile = this.currentMapArea.tiles[position.y]?.[position.x];
+    if (!tile?.cover) {
+      this.coverDebugGraphics.setVisible(false);
+      return;
+    }
+
+    const incomingDirection = resolveCardinalDirection(position, reference);
+    const coverLevel = tile.cover[incomingDirection];
+
+    if (!coverLevel || coverLevel === 'none') {
+      this.coverDebugGraphics.setVisible(false);
+      return;
+    }
+
+    const { tileWidth, tileHeight } = this.getIsoMetrics();
+    const center = this.calculatePixelPosition(position.x, position.y);
+    const points = this.getDiamondPoints(center.x, center.y, tileWidth * 0.7, tileHeight * 0.7);
+    const [top, right, bottom, left] = points;
+
+    const color = coverLevel === 'full' ? 0x38bdf8 : 0xfbbf24;
+    const alpha = coverLevel === 'full' ? 0.35 : 0.25;
+
+    this.coverDebugGraphics.fillStyle(color, alpha);
+    switch (incomingDirection) {
+      case 'north':
+        this.coverDebugGraphics.fillTriangle(top.x, top.y, right.x, right.y, left.x, left.y);
+        break;
+      case 'south':
+        this.coverDebugGraphics.fillTriangle(bottom.x, bottom.y, right.x, right.y, left.x, left.y);
+        break;
+      case 'east':
+        this.coverDebugGraphics.fillTriangle(right.x, right.y, top.x, top.y, bottom.x, bottom.y);
+        break;
+      case 'west':
+        this.coverDebugGraphics.fillTriangle(left.x, left.y, bottom.x, bottom.y, top.x, top.y);
+        break;
+    }
+
+    this.coverDebugGraphics.fillCircle(center.x, center.y, tileHeight * 0.08);
+    this.coverDebugGraphics.setVisible(true);
   }
 
   private emitViewportUpdate(): void {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { getUIStrings } from '../../content/ui';
 import {
   selectMissionPendingAdvance,
@@ -7,7 +7,6 @@ import {
 } from '../../store/selectors/missionSelectors';
 import { RootState } from '../../store';
 import { showMissionAdvancePrompt } from '../../store/missionSlice';
-
 const listBaseStyle: React.CSSProperties = {
   margin: 0,
   padding: 0,
@@ -26,7 +25,17 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
   const locale = useSelector((state: RootState) => state.settings.locale);
   const missionProgress = useSelector(selectMissionProgress);
   const missionAdvancePending = useSelector(selectMissionPendingAdvance);
+  const currentArea = useSelector((state: RootState) => state.world.currentMapArea);
   const uiStrings = getUIStrings(locale);
+
+  const zoneName =
+    currentArea?.displayName ?? currentArea?.name ?? missionProgress?.name ?? uiStrings.levelIndicator.unknownLevel;
+  const displayedLevel = currentArea?.level ?? missionProgress?.level ?? 0;
+  const missionName = missionProgress?.name;
+
+  const primaryObjectives = missionProgress?.primary ?? [];
+  const sideObjectives = missionProgress?.side ?? [];
+  const allPrimaryComplete = missionProgress?.allPrimaryComplete ?? false;
 
   const handleMissionAdvanceClick = () => {
     dispatch(showMissionAdvancePrompt());
@@ -38,16 +47,10 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
     }
   };
 
-  const levelNumber = missionProgress?.level ?? 0;
-  const levelName = missionProgress?.name ?? uiStrings.levelIndicator.unknownLevel;
-  const primaryObjectives = missionProgress?.primary ?? [];
-  const sideObjectives = missionProgress?.side ?? [];
-  const allPrimaryComplete = missionProgress?.allPrimaryComplete ?? false;
-
   return (
     <div
       style={{
-        width: '280px',
+        width: 'min(92vw, 320px)',
         background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.82))',
         border: '1px solid rgba(148, 163, 184, 0.35)',
         borderRadius: '14px',
@@ -75,7 +78,7 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
             <span style={{ fontSize: '0.7rem', color: '#94a3b8', opacity: 0.9 }}>
               {uiStrings.levelIndicator.levelLabel}
             </span>
-            <span style={{ fontSize: '0.96rem', fontWeight: 600 }}>{levelNumber}</span>
+            <span style={{ fontSize: '0.96rem', fontWeight: 600 }}>{displayedLevel}</span>
           </div>
           {missionAdvancePending && (
             <button
@@ -118,12 +121,11 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
             }
           }}
           style={{
-            display: 'block',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: missionName && missionName !== zoneName ? '0.25rem' : 0,
             width: '100%',
             cursor: onToggle ? 'pointer' : 'default',
-            fontSize: '0.72rem',
-            color: 'rgba(148, 163, 184, 0.82)',
-            letterSpacing: '0.12em',
             textTransform: 'uppercase',
             textAlign: 'left',
             transition: 'color 0.2s ease',
@@ -136,10 +138,29 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
             }
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = 'rgba(148, 163, 184, 0.82)';
+            e.currentTarget.style.color = 'inherit';
           }}
         >
-          {levelName} {onToggle && <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{collapsed ? '▸' : '▾'}</span>}
+          <span
+            style={{
+              fontSize: '0.72rem',
+              color: 'rgba(148, 163, 184, 0.82)',
+              letterSpacing: '0.12em',
+            }}
+          >
+            {zoneName} {onToggle && <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{collapsed ? '▸' : '▾'}</span>}
+          </span>
+          {missionName && missionName !== zoneName && (
+            <span
+              style={{
+                fontSize: '0.62rem',
+                color: 'rgba(148, 163, 184, 0.6)',
+                letterSpacing: '0.14em',
+              }}
+            >
+              {missionName}
+            </span>
+          )}
         </div>
       </div>
       {!collapsed && (
@@ -153,72 +174,72 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
               gap: '0.3rem',
             }}
           >
-          <span style={{ fontSize: '0.7rem', color: '#94a3b8', opacity: 0.85 }}>
-            {uiStrings.levelIndicator.objectivesLabel}
-          </span>
-          {primaryObjectives.length === 0 ? (
-            <span style={{ fontSize: '0.72rem', color: '#cbd5f5', opacity: 0.85 }}>
-              {uiStrings.levelIndicator.emptyObjectives}
+            <span style={{ fontSize: '0.7rem', color: '#94a3b8', opacity: 0.85 }}>
+              {uiStrings.levelIndicator.objectivesLabel}
             </span>
-          ) : (
-            <ul
-              style={{
-                ...listBaseStyle,
-                gap: '0.32rem',
-              }}
-            >
-              {primaryObjectives.map((objective, index) => (
-                <li
-                  key={objective.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.45rem',
-                    fontSize: '0.74rem',
-                    lineHeight: 1.2,
-                    color: objective.isComplete ? 'rgba(148, 163, 184, 0.7)' : 'rgba(226, 232, 240, 0.92)',
-                    textDecoration: objective.isComplete ? 'line-through' : 'none',
-                    textDecorationThickness: '1px',
-                    textDecorationColor: 'rgba(94, 234, 212, 0.75)',
-                    transition: 'color 0.18s ease',
-                  }}
-                >
-                  <span
+            {primaryObjectives.length === 0 ? (
+              <span style={{ fontSize: '0.72rem', color: '#cbd5f5', opacity: 0.85 }}>
+                {uiStrings.levelIndicator.emptyObjectives}
+              </span>
+            ) : (
+              <ul
+                style={{
+                  ...listBaseStyle,
+                  gap: '0.32rem',
+                }}
+              >
+                {primaryObjectives.map((objective, index) => (
+                  <li
+                    key={objective.id}
                     style={{
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '0.85rem',
-                      height: '0.85rem',
-                      borderRadius: '999px',
-                      border: '1px solid rgba(94, 234, 212, 0.45)',
-                      background: objective.isComplete
-                        ? 'linear-gradient(135deg, rgba(94, 234, 212, 0.45), rgba(56, 189, 248, 0.35))'
-                        : 'rgba(14, 165, 233, 0.14)',
-                      color: objective.isComplete ? '#0f172a' : '#5eead4',
-                      fontSize: '0.64rem',
-                      fontWeight: 600,
+                      gap: '0.45rem',
+                      fontSize: '0.74rem',
+                      lineHeight: 1.2,
+                      color: objective.isComplete ? 'rgba(148, 163, 184, 0.7)' : 'rgba(226, 232, 240, 0.92)',
+                      textDecoration: objective.isComplete ? 'line-through' : 'none',
+                      textDecorationThickness: '1px',
+                      textDecorationColor: 'rgba(94, 234, 212, 0.75)',
+                      transition: 'color 0.18s ease',
                     }}
-                    aria-hidden
                   >
-                    {objective.isComplete ? '✓' : index + 1}
-                  </span>
-                  <span style={{ flex: 1 }}>{objective.label}</span>
-                  {objective.totalQuests > 1 && (
                     <span
                       style={{
-                        fontSize: '0.62rem',
-                        color: 'rgba(148, 163, 184, 0.75)',
-                        fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '0.85rem',
+                        height: '0.85rem',
+                        borderRadius: '999px',
+                        border: '1px solid rgba(94, 234, 212, 0.45)',
+                        background: objective.isComplete
+                          ? 'linear-gradient(135deg, rgba(94, 234, 212, 0.45), rgba(56, 189, 248, 0.35))'
+                          : 'rgba(14, 165, 233, 0.14)',
+                        color: objective.isComplete ? '#0f172a' : '#5eead4',
+                        fontSize: '0.64rem',
+                        fontWeight: 600,
                       }}
+                      aria-hidden
                     >
-                      {objective.completedQuests}/{objective.totalQuests}
+                      {objective.isComplete ? '✓' : index + 1}
                     </span>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
+                    <span style={{ flex: 1 }}>{objective.label}</span>
+                    {objective.totalQuests > 1 && (
+                      <span
+                        style={{
+                          fontSize: '0.62rem',
+                          color: 'rgba(148, 163, 184, 0.75)',
+                          fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+                        }}
+                      >
+                        {objective.completedQuests}/{objective.totalQuests}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div
             style={{
@@ -229,57 +250,57 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
               gap: '0.24rem',
             }}
           >
-          <span style={{ fontSize: '0.68rem', color: 'rgba(148, 163, 184, 0.7)' }}>
-            {uiStrings.levelIndicator.sideObjectivesLabel}
-          </span>
-          {sideObjectives.length === 0 ? (
-            <span style={{ fontSize: '0.68rem', color: 'rgba(148, 163, 184, 0.55)' }}>
-              {uiStrings.levelIndicator.noSideObjectives}
+            <span style={{ fontSize: '0.68rem', color: 'rgba(148, 163, 184, 0.7)' }}>
+              {uiStrings.levelIndicator.sideObjectivesLabel}
             </span>
-          ) : (
-            <ul
-              style={{
-                ...listBaseStyle,
-                gap: '0.22rem',
-              }}
-            >
-              {sideObjectives.map((objective) => (
-                <li
-                  key={objective.id}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.4rem',
-                    fontSize: '0.68rem',
-                    color: objective.isComplete ? 'rgba(148, 163, 184, 0.6)' : 'rgba(226, 232, 240, 0.78)',
-                    textDecoration: objective.isComplete ? 'line-through' : 'none',
-                    textDecorationThickness: '1px',
-                    textDecorationColor: 'rgba(99, 102, 241, 0.6)',
-                  }}
-                >
-                  <span
+            {sideObjectives.length === 0 ? (
+              <span style={{ fontSize: '0.68rem', color: 'rgba(148, 163, 184, 0.55)' }}>
+                {uiStrings.levelIndicator.noSideObjectives}
+              </span>
+            ) : (
+              <ul
+                style={{
+                  ...listBaseStyle,
+                  gap: '0.22rem',
+                }}
+              >
+                {sideObjectives.map((objective) => (
+                  <li
+                    key={objective.id}
                     style={{
-                      width: '0.5rem',
-                      height: '0.5rem',
-                      borderRadius: '999px',
-                      background: objective.isComplete
-                        ? 'linear-gradient(135deg, rgba(129, 140, 248, 0.6), rgba(99, 102, 241, 0.45))'
-                        : 'rgba(99, 102, 241, 0.25)',
-                      display: 'inline-flex',
+                      display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#0f172a',
-                      fontSize: '0.55rem',
+                      gap: '0.4rem',
+                      fontSize: '0.68rem',
+                      color: objective.isComplete ? 'rgba(148, 163, 184, 0.6)' : 'rgba(226, 232, 240, 0.78)',
+                      textDecoration: objective.isComplete ? 'line-through' : 'none',
+                      textDecorationThickness: '1px',
+                      textDecorationColor: 'rgba(99, 102, 241, 0.6)',
                     }}
-                    aria-hidden
                   >
-                    {objective.isComplete ? '✓' : ''}
-                  </span>
-                  <span style={{ flex: 1 }}>{objective.label}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+                    <span
+                      style={{
+                        width: '0.5rem',
+                        height: '0.5rem',
+                        borderRadius: '999px',
+                        background: objective.isComplete
+                          ? 'linear-gradient(135deg, rgba(129, 140, 248, 0.6), rgba(99, 102, 241, 0.45))'
+                          : 'rgba(99, 102, 241, 0.25)',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#0f172a',
+                        fontSize: '0.55rem',
+                      }}
+                      aria-hidden
+                    >
+                      {objective.isComplete ? '✓' : ''}
+                    </span>
+                    <span style={{ flex: 1 }}>{objective.label}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           {allPrimaryComplete && !missionAdvancePending && (
             <span

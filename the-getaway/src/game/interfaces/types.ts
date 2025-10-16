@@ -1,9 +1,22 @@
+import { StoryFunctionTag } from './environment';
+
 // Core Game Types and Interfaces
 
 // Position in the game grid
 export interface Position {
   x: number;
   y: number;
+}
+
+export type CardinalDirection = 'north' | 'east' | 'south' | 'west';
+
+export type CoverLevel = 'none' | 'half' | 'full';
+
+export interface TileCoverProfile {
+  north?: CoverLevel;
+  east?: CoverLevel;
+  south?: CoverLevel;
+  west?: CoverLevel;
 }
 
 // Base entity interface
@@ -78,6 +91,9 @@ export interface Player extends Entity {
   maxActionPoints: number;
   stamina: number;
   maxStamina: number;
+  facing: CardinalDirection;
+  coverOrientation?: CardinalDirection | null;
+  suppression?: number;
   isExhausted: boolean;
   isCrouching: boolean;
   skills: PlayerSkills;
@@ -226,6 +242,9 @@ export interface Enemy extends Entity {
   maxActionPoints: number;
   damage: number;
   attackRange: number;
+  facing?: CardinalDirection;
+  coverOrientation?: CardinalDirection | null;
+  suppression?: number;
   isHostile: boolean;
   visionCone?: VisionCone;
   alertLevel?: AlertLevel;
@@ -238,6 +257,12 @@ export interface NPC extends Entity {
   routine: RoutePoint[];
   dialogueId: string;
   isInteractive: boolean;
+  ambientProfile?: {
+    lines: string[];
+    storyFunction?: StoryFunctionTag;
+    sourceId?: string;
+    updatedAt?: number;
+  };
 }
 
 // Player skills
@@ -440,11 +465,14 @@ export interface MapTile {
   position: Position;
   isWalkable: boolean;
   provideCover: boolean;
+  cover?: TileCoverProfile;
   skillRequirement?: {
     skill: SkillId;
     threshold: number;
   };
 }
+
+export type DangerRating = 'low' | 'moderate' | 'high' | 'critical';
 
 // Map area/zone
 export interface MapArea {
@@ -459,6 +487,10 @@ export interface MapArea {
     minimumStanding?: FactionStanding;
     minimumReputation?: number;
   };
+  displayName?: string;
+  summary?: string;
+  dangerRating?: DangerRating;
+  hazards?: string[];
   width: number;
   height: number;
   tiles: MapTile[][];

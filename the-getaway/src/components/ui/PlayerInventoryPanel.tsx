@@ -13,7 +13,7 @@ import {
   unequipItem,
   useInventoryItem as consumeInventoryItemAction,
 } from '../../store/playerSlice';
-import { getEncumbrancePenaltySummary } from '../../game/inventory/encumbrance';
+import { getUIStrings } from '../../content/ui';
 import NotificationBadge from './NotificationBadge';
 import {
   characterPanelSurface,
@@ -270,31 +270,32 @@ const listMetaStyle: React.CSSProperties = {
   color: neonPalette.textMuted,
 };
 
+const FILTER_OPTIONS: FilterId[] = ['all', 'weapons', 'armor', 'consumables', 'quest', 'misc'];
+
+const SLOT_BADGE_COLORS: Record<EquipmentSlot, string> = {
+  primaryWeapon: 'rgba(56, 189, 248, 0.75)',
+  secondaryWeapon: 'rgba(59, 130, 246, 0.65)',
+  meleeWeapon: 'rgba(251, 191, 36, 0.75)',
+  bodyArmor: 'rgba(96, 165, 250, 0.75)',
+  helmet: 'rgba(147, 197, 253, 0.75)',
+  accessory1: 'rgba(236, 72, 153, 0.65)',
+  accessory2: 'rgba(236, 72, 153, 0.65)',
+};
+
+const encumbranceColorMap: Record<EncumbranceState['level'] | 'unknown', string> = {
+  normal: '#34d399',
+  heavy: '#fbbf24',
+  overloaded: '#fb7185',
+  immobile: '#f87171',
+  unknown: neonPalette.textSecondary,
+};
+
 type FilterId = 'all' | 'weapons' | 'armor' | 'consumables' | 'quest' | 'misc';
 interface InventoryEntry {
   item: Item;
   category: FilterId;
   condition: number | null;
 }
-
-const FILTERS: { id: FilterId; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'weapons', label: 'Weapons' },
-  { id: 'armor', label: 'Armor' },
-  { id: 'consumables', label: 'Consumables' },
-  { id: 'quest', label: 'Quest' },
-  { id: 'misc', label: 'Misc' },
-];
-
-const EQUIPMENT_SLOT_METADATA: { id: EquipmentSlot; label: string; description: string }[] = [
-  { id: 'primaryWeapon', label: 'Primary Weapon', description: 'Main-hand firearms and rifles.' },
-  { id: 'secondaryWeapon', label: 'Secondary Weapon', description: 'Sidearms and backup firearms.' },
-  { id: 'meleeWeapon', label: 'Melee Weapon', description: 'Close-quarters blades and batons.' },
-  { id: 'bodyArmor', label: 'Body Armor', description: 'Chest protection layers.' },
-  { id: 'helmet', label: 'Headgear', description: 'Visors, helmets, and masks.' },
-  { id: 'accessory1', label: 'Accessory I', description: 'Implants, belts, or wrist mods.' },
-  { id: 'accessory2', label: 'Accessory II', description: 'Secondary accessory slot.' },
-];
 
 const REPAIR_COST_PER_POINT = 2;
 
@@ -387,28 +388,18 @@ const getStackCount = (item: Item): number => {
 };
 
 
-const getEncumbranceDescriptor = (encumbrance: EncumbranceState) => {
-  switch (encumbrance.level) {
-    case 'normal':
-      return { label: 'Encumbrance Stable', color: '#34d399' };
-    case 'heavy':
-      return { label: 'Encumbrance Heavy', color: '#fbbf24' };
-    case 'overloaded':
-      return { label: 'Encumbrance Overloaded', color: '#fb7185' };
-    case 'immobile':
-      return { label: 'Encumbrance Immobile', color: '#f87171' };
-    default:
-      return { label: 'Encumbrance Unknown', color: neonPalette.textSecondary };
-  }
-};
-
-const formatWeight = (value: number): string => {
-  return value.toFixed(1);
-};
-
 const PlayerInventoryPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
+  const locale = useSelector((state: RootState) => state.settings.locale);
+  const uiStrings = getUIStrings(locale);
+  const inventoryStrings = uiStrings.inventoryPanel;
+  const weightUnit = uiStrings.playerStatus.loadUnit;
+
+  const formatWeightWithUnit = useCallback((value: number): string => {
+    const rounded = Number.isFinite(value) ? Math.round(value * 10) / 10 : 0;
+    return `${rounded.toFixed(1)} ${weightUnit}`;
+  }, [weightUnit]);
 
   const [activeFilter, setActiveFilter] = useState<FilterId>('all');
 
@@ -421,14 +412,10 @@ const PlayerInventoryPanel: React.FC = () => {
   }, [player.inventory.items]);
 
   const filterCounts = useMemo<Record<FilterId, number>>(() => {
-    const counts: Record<FilterId, number> = {
-      all: 0,
-      weapons: 0,
-      armor: 0,
-      consumables: 0,
-      quest: 0,
-      misc: 0,
-    };
+    const counts = FILTER_OPTIONS.reduce((acc, key) => {
+      acc[key] = 0;
+      return acc;
+    }, {} as Record<FilterId, number>);
 
     inventoryEntries.forEach((entry) => {
       counts.all += 1;
@@ -448,9 +435,100 @@ const PlayerInventoryPanel: React.FC = () => {
     );
   }, [filteredItems]);
 
-  const encumbranceDescriptor = useMemo(() => getEncumbranceDescriptor(player.encumbrance), [
-    player.encumbrance,
-  ]);
+  const encumbranceDescriptor = useMemo(() => {
+    const level = player.encumbrance.level ?? 'unknown';
+    const descriptorKey = (['normal', 'heavy', 'overloaded', 'immobile'].includes(level)
+      ? level
+      : 'unknown') as EncumbranceState['level'] | 'unknown';
+
+    const label =
+      inventoryStrings.encumbranceDescriptors[descriptorKey] ??
+      inventoryStrings.encumbranceDescriptors.unknown;
+
+    let summary: string;
+    if (descriptorKey === 'heavy') {
+      summary = inventoryStrings.encumbranceSummary.heavy(
+        player.encumbrance.movementApMultiplier,
+        player.encumbrance.attackApMultiplier
+      );
+    } else if (descriptorKey === 'overloaded') {
+      summary = inventoryStrings.encumbranceSummary.overloaded(
+        player.encumbrance.movementApMultiplier,
+        player.encumbrance.attackApMultiplier
+      );
+    } else if (descriptorKey === 'immobile') {
+      summary = inventoryStrings.encumbranceSummary.immobile;
+    } else if (descriptorKey === 'normal') {
+      summary = inventoryStrings.encumbranceSummary.normal;
+    } else {
+      summary = inventoryStrings.encumbranceSummary.unknown;
+    }
+
+    const warning = inventoryStrings.encumbranceWarning[descriptorKey];
+    const color = encumbranceColorMap[descriptorKey] ?? encumbranceColorMap.unknown;
+
+    return {
+      label,
+      summary,
+      warning,
+      color,
+    };
+  }, [inventoryStrings, player.encumbrance]);
+
+  const slotDefinitions = useMemo(() => {
+    const slots = inventoryStrings.equipment.slots;
+    return [
+      {
+        id: 'primaryWeapon' as const,
+        badgeColor: SLOT_BADGE_COLORS.primaryWeapon,
+        label: slots.primaryWeapon.label,
+        description: slots.primaryWeapon.description,
+        emptyCopy: slots.primaryWeapon.empty,
+      },
+      {
+        id: 'secondaryWeapon' as const,
+        badgeColor: SLOT_BADGE_COLORS.secondaryWeapon,
+        label: slots.secondaryWeapon.label,
+        description: slots.secondaryWeapon.description,
+        emptyCopy: slots.secondaryWeapon.empty,
+      },
+      {
+        id: 'meleeWeapon' as const,
+        badgeColor: SLOT_BADGE_COLORS.meleeWeapon,
+        label: slots.meleeWeapon.label,
+        description: slots.meleeWeapon.description,
+        emptyCopy: slots.meleeWeapon.empty,
+      },
+      {
+        id: 'bodyArmor' as const,
+        badgeColor: SLOT_BADGE_COLORS.bodyArmor,
+        label: slots.bodyArmor.label,
+        description: slots.bodyArmor.description,
+        emptyCopy: slots.bodyArmor.empty,
+      },
+      {
+        id: 'helmet' as const,
+        badgeColor: SLOT_BADGE_COLORS.helmet,
+        label: slots.helmet.label,
+        description: slots.helmet.description,
+        emptyCopy: slots.helmet.empty,
+      },
+      {
+        id: 'accessory1' as const,
+        badgeColor: SLOT_BADGE_COLORS.accessory1,
+        label: slots.accessory1.label,
+        description: slots.accessory1.description,
+        emptyCopy: slots.accessory1.empty,
+      },
+      {
+        id: 'accessory2' as const,
+        badgeColor: SLOT_BADGE_COLORS.accessory2,
+        label: slots.accessory2.label,
+        description: slots.accessory2.description,
+        emptyCopy: slots.accessory2.empty,
+      },
+    ];
+  }, [inventoryStrings.equipment.slots]);
 
   const hotbarAssignments = useMemo<(string | null)[]>(() => {
     const slots = player.inventory.hotbar ?? [];
@@ -551,9 +629,10 @@ const PlayerInventoryPanel: React.FC = () => {
     [dispatch]
   );
 
-  const equippedItems = useMemo(() => (
-    EQUIPMENT_SLOT_METADATA.map((slot) => getEquippedItem(slot.id)).filter(Boolean) as Item[]
-  ), [getEquippedItem]);
+  const equippedItems = useMemo(
+    () => slotDefinitions.map((slot) => getEquippedItem(slot.id)).filter(Boolean) as Item[],
+    [getEquippedItem, slotDefinitions]
+  );
 
   const equippedWeight = useMemo(
     () => equippedItems.reduce((sum, item) => sum + (Number.isFinite(item.weight) ? (item.weight as number) : 0), 0),
@@ -570,20 +649,23 @@ const PlayerInventoryPanel: React.FC = () => {
       style={panelStyle}
       data-testid="player-inventory-panel"
       role="region"
-      aria-label="Player Inventory"
+      aria-label={inventoryStrings.title}
     >
       <header style={headerRowStyle}>
         <div style={headingGroupStyle}>
-          <span style={headingLabelStyle}>Operative</span>
-          <h3 style={headingTitleStyle}>Inventory</h3>
+          <span style={headingLabelStyle}>{uiStrings.loadoutPanel.headingLabel}</span>
+          <h3 style={headingTitleStyle}>{inventoryStrings.title}</h3>
         </div>
         <div style={weightBlockStyle}>
-          <span>Total Weight</span>
+          <span>{inventoryStrings.weightTitle}</span>
           <strong style={{ fontSize: '0.74rem', color: neonPalette.textPrimary }}>
-            {`${formatWeight(totalWeight)} / ${formatWeight(player.inventory.maxWeight)} kg`}
+            {`${formatWeightWithUnit(totalWeight)} / ${formatWeightWithUnit(player.inventory.maxWeight)}`}
           </strong>
           <span style={weightDetailsStyle}>
-            {`Inventory ${formatWeight(player.inventory.currentWeight)} kg · Loadout ${formatWeight(equippedWeight)} kg`}
+            {inventoryStrings.summary(
+              formatWeightWithUnit(player.inventory.currentWeight),
+              formatWeightWithUnit(equippedWeight)
+            )}
           </span>
         </div>
       </header>
@@ -593,21 +675,21 @@ const PlayerInventoryPanel: React.FC = () => {
           {encumbranceDescriptor.label} ({player.encumbrance.percentage.toFixed(1)}%)
         </span>
         <span style={{ ...subtleText, fontSize: '0.6rem' }}>
-          {getEncumbrancePenaltySummary(player.encumbrance)}
+          {encumbranceDescriptor.summary}
         </span>
-        {player.encumbrance.warning && (
-          <span style={{ fontSize: '0.58rem', color: '#fbbf24' }}>{player.encumbrance.warning}</span>
+        {encumbranceDescriptor.warning && (
+          <span style={{ fontSize: '0.58rem', color: '#fbbf24' }}>{encumbranceDescriptor.warning}</span>
         )}
       </div>
 
       <div style={scrollContainerStyle}>
         <div style={filterBarContainerStyle}>
-          <div style={filterBarStyle} role="group" aria-label="Inventory filters">
-            {FILTERS.map((filter) => {
-              const isActive = activeFilter === filter.id;
+          <div style={filterBarStyle} role="group" aria-label={inventoryStrings.filtersAriaLabel}>
+            {FILTER_OPTIONS.map((filterId) => {
+              const isActive = activeFilter === filterId;
               return (
                 <button
-                  key={filter.id}
+                  key={filterId}
                   type="button"
                   style={{
                     ...filterButtonBase,
@@ -616,11 +698,11 @@ const PlayerInventoryPanel: React.FC = () => {
                     color: isActive ? '#e0f2fe' : filterButtonBase.color,
                   }}
                   aria-pressed={isActive}
-                  onClick={() => setActiveFilter(filter.id)}
+                  onClick={() => setActiveFilter(filterId)}
                 >
-                  {filter.label}
+                  {inventoryStrings.filters[filterId]}
                   <span style={{ marginLeft: '0.35rem', color: 'rgba(148, 163, 184, 0.75)' }}>
-                    {filterCounts[filter.id] ?? 0}
+                    {filterCounts[filterId] ?? 0}
                   </span>
                 </button>
               );
@@ -628,126 +710,132 @@ const PlayerInventoryPanel: React.FC = () => {
           </div>
 
           <span style={listMetaStyle}>
-            Showing {sortedItems.length} of {inventoryEntries.length} items
+            {inventoryStrings.showingCount(sortedItems.length, inventoryEntries.length)}
           </span>
         </div>
 
         {sortedItems.length === 0 ? (
-          <span style={emptyStateStyle}>Pack is empty — time to scavenge.</span>
+          <span style={emptyStateStyle}>{inventoryStrings.emptyState}</span>
         ) : (
-          <div style={itemGridStyle} role="list" aria-label="Inventory items">
+          <div style={itemGridStyle} role="list" aria-label={inventoryStrings.itemsAriaLabel}>
             {sortedItems.map(({ item, condition }) => {
-            const quantity = getStackCount(item);
-            const canEquip = Boolean(resolvePreferredSlot(item));
-            const canUse = isConsumable(item);
-            const needsRepair = item.durability && item.durability.current < item.durability.max;
-            const missingDurability = needsRepair && item.durability
-              ? item.durability.max - item.durability.current
-              : 0;
-            const estimatedRepairCost = missingDurability * REPAIR_COST_PER_POINT;
-            const hotbarIndex = hotbarAssignments.findIndex((entry) => entry === item.id);
-            const isHotbarAssigned = hotbarIndex !== -1;
-            const hotbarButtonDisabled = !isHotbarAssigned && hotbarIsFull;
-            const hotbarButtonLabel = isHotbarAssigned
-              ? 'Remove from Hotbar'
-              : hotbarButtonDisabled
-              ? 'Hotbar Full'
-              : 'Add to Hotbar';
+              const quantity = getStackCount(item);
+              const canEquip = Boolean(resolvePreferredSlot(item));
+              const canUse = isConsumable(item);
+              const needsRepair = item.durability && item.durability.current < item.durability.max;
+              const missingDurability = needsRepair && item.durability
+                ? item.durability.max - item.durability.current
+                : 0;
+              const estimatedRepairCost = missingDurability * REPAIR_COST_PER_POINT;
+              const hotbarIndex = hotbarAssignments.findIndex((entry) => entry === item.id);
+              const isHotbarAssigned = hotbarIndex !== -1;
+              const hotbarButtonDisabled = !isHotbarAssigned && hotbarIsFull;
+              const hotbarButtonLabel = isHotbarAssigned
+                ? inventoryStrings.actions.removeFromHotbar
+                : hotbarButtonDisabled
+                ? inventoryStrings.actions.hotbarFull
+                : inventoryStrings.actions.addToHotbar;
+              const hotbarBadgeLabel = inventoryStrings.hotbarBadge(hotbarIndex + 1);
+              const weightDisplay = formatWeightWithUnit(item.weight);
 
-            return (
-              <div key={item.id} style={itemCardStyle} role="listitem" aria-label={item.name}>
-                <div style={itemHeaderStyle}>
-                  <div style={itemTitleStyle}>
-                    <span>{item.name}</span>
-                    {quantity > 1 && <span style={{ fontSize: '0.62rem', color: neonPalette.textMuted }}>×{quantity}</span>}
-                    {isHotbarAssigned && (
-                      <span style={hotbarPillStyle}>Hotbar {hotbarIndex + 1}</span>
+              return (
+                <div key={item.id} style={itemCardStyle} role="listitem" aria-label={item.name}>
+                  <div style={itemHeaderStyle}>
+                    <div style={itemTitleStyle}>
+                      <span>{item.name}</span>
+                      {quantity > 1 && (
+                        <span style={{ fontSize: '0.62rem', color: neonPalette.textMuted }}>×{quantity}</span>
+                      )}
+                      {isHotbarAssigned && <span style={hotbarPillStyle}>{hotbarBadgeLabel}</span>}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                      {item.isQuestItem && (
+                        <span style={badgeStyle('#fbbf24')}>{inventoryStrings.badges.quest}</span>
+                      )}
+                      {isWeapon(item) && (
+                        <span style={badgeStyle('#38bdf8')}>{inventoryStrings.badges.weapon}</span>
+                      )}
+                      {isArmor(item) && (
+                        <span style={badgeStyle('#a855f7')}>{inventoryStrings.badges.armor}</span>
+                      )}
+                      {canUse && (
+                        <span style={badgeStyle('#34d399')}>{inventoryStrings.badges.consumable}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div style={itemMetaStyle}>
+                    <span>{item.description}</span>
+                    <span aria-label={inventoryStrings.itemWeightAria(weightDisplay, item.value)}>
+                      {inventoryStrings.weightValue(weightDisplay, item.value)}
+                    </span>
+                  </div>
+
+                  {item.durability && (
+                    <div>
+                      <div style={{ ...subtleText, fontSize: '0.58rem', marginBottom: '0.22rem' }}>
+                        {inventoryStrings.durabilityLabel(item.durability.current, item.durability.max)}
+                      </div>
+                      <div style={durabilityTrackStyle} aria-hidden="true">
+                        <div style={getDurabilityFillStyle(condition ?? 0)} />
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={actionRowStyle}>
+                    {canEquip && (
+                      <button type="button" style={actionButtonStyle} onClick={() => handleEquip(item)}>
+                        {inventoryStrings.actions.equip}
+                      </button>
                     )}
-                  </div>
-                  <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                    {item.isQuestItem && <span style={badgeStyle('#fbbf24')}>Quest</span>}
-                    {isWeapon(item) && <span style={badgeStyle('#38bdf8')}>Weapon</span>}
-                    {isArmor(item) && <span style={badgeStyle('#a855f7')}>Armor</span>}
-                    {canUse && <span style={badgeStyle('#34d399')}>Use</span>}
-                  </div>
-                </div>
 
-                <div style={itemMetaStyle}>
-                  <span>{item.description}</span>
-                  <span aria-label={`Weight ${item.weight.toFixed(1)} kilograms, value ${item.value} credits`}>
-                    {item.weight.toFixed(1)} kg • ₿{item.value}
-                  </span>
-                </div>
+                    {needsRepair && (
+                      <button
+                        type="button"
+                        style={{ ...actionButtonStyle, borderColor: '#fbbf24', color: '#fde68a' }}
+                        onClick={() => handleRepair(item)}
+                        aria-label={inventoryStrings.actions.repairAria(item.name, estimatedRepairCost)}
+                      >
+                        {inventoryStrings.actions.repair(estimatedRepairCost)}
+                      </button>
+                    )}
 
-                {item.durability && (
-                  <div>
-                    <div style={{ ...subtleText, fontSize: '0.58rem', marginBottom: '0.22rem' }}>
-                      Durability {item.durability.current}/{item.durability.max}
-                    </div>
-                    <div style={durabilityTrackStyle} aria-hidden="true">
-                      <div style={getDurabilityFillStyle(condition ?? 0)} />
-                    </div>
-                  </div>
-                )}
-
-                <div style={actionRowStyle}>
-                  {canEquip && (
+                    {canUse && (
+                      <button
+                        type="button"
+                        style={{ ...actionButtonStyle, borderColor: '#34d399', color: '#bbf7d0' }}
+                        onClick={() => handleUse(item)}
+                      >
+                        {inventoryStrings.actions.use}
+                      </button>
+                    )}
                     <button
                       type="button"
-                      style={actionButtonStyle}
-                      onClick={() => handleEquip(item)}
+                      style={{
+                        ...actionButtonStyle,
+                        borderColor: isHotbarAssigned ? 'rgba(248, 113, 113, 0.55)' : '#34d399',
+                        color: isHotbarAssigned ? '#fecaca' : '#bbf7d0',
+                        opacity: hotbarButtonDisabled ? 0.6 : 1,
+                        cursor: hotbarButtonDisabled ? 'not-allowed' : 'pointer',
+                      }}
+                      onClick={() => handleHotbarToggle(item)}
+                      disabled={hotbarButtonDisabled}
                     >
-                      Equip
+                      {hotbarButtonLabel}
                     </button>
-                  )}
-
-                  {needsRepair && (
-                    <button
-                      type="button"
-                      style={{ ...actionButtonStyle, borderColor: '#fbbf24', color: '#fde68a' }}
-                      onClick={() => handleRepair(item)}
-                      aria-label={`Repair ${item.name}, estimated cost ${estimatedRepairCost} parts`}
-                    >
-                      Repair ({estimatedRepairCost} parts)
-                    </button>
-                  )}
-
-                  {canUse && (
-                    <button
-                      type="button"
-                      style={{ ...actionButtonStyle, borderColor: '#34d399', color: '#bbf7d0' }}
-                      onClick={() => handleUse(item)}
-                    >
-                      Use
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    style={{
-                      ...actionButtonStyle,
-                      borderColor: isHotbarAssigned ? 'rgba(248, 113, 113, 0.55)' : '#34d399',
-                      color: isHotbarAssigned ? '#fecaca' : '#bbf7d0',
-                      opacity: hotbarButtonDisabled ? 0.6 : 1,
-                      cursor: hotbarButtonDisabled ? 'not-allowed' : 'pointer',
-                    }}
-                    onClick={() => handleHotbarToggle(item)}
-                    disabled={hotbarButtonDisabled}
-                  >
-                    {hotbarButtonLabel}
-                  </button>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
 
-        <section style={hotbarSectionStyle} aria-label="Equipped items">
+        <section style={hotbarSectionStyle} aria-label={inventoryStrings.equippedAriaLabel}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span style={equipmentLabelStyle}>Equipped Loadout</span>
+            <span style={equipmentLabelStyle}>{inventoryStrings.equipment.title}</span>
           </div>
           <div style={equipmentGridStyle}>
-            {EQUIPMENT_SLOT_METADATA.map((slot) => {
+            {slotDefinitions.map((slot) => {
               const equippedItem = getEquippedItem(slot.id);
               const condition = equippedItem ? getConditionPercentage(equippedItem) : null;
               const hasDurability = equippedItem?.durability && condition !== null;
@@ -755,12 +843,12 @@ const PlayerInventoryPanel: React.FC = () => {
               return (
                 <div key={slot.id} style={equipmentCardStyle}>
                   <span style={equipmentLabelStyle}>{slot.label}</span>
-                  <div style={equipmentValueStyle}>{equippedItem?.name ?? 'Empty'}</div>
+                  <div style={equipmentValueStyle}>{equippedItem?.name ?? slot.emptyCopy}</div>
                   <span style={{ ...subtleText, fontSize: '0.58rem' }}>{slot.description}</span>
                   {hasDurability && (
                     <div>
                       <div style={{ ...subtleText, fontSize: '0.56rem', marginBottom: '0.2rem' }}>
-                        Condition {condition}%
+                        {inventoryStrings.conditionLabel(condition ?? 0)}
                       </div>
                       <div style={durabilityTrackStyle} aria-hidden="true">
                         <div style={getDurabilityFillStyle(condition ?? 0)} />
@@ -773,7 +861,7 @@ const PlayerInventoryPanel: React.FC = () => {
                       style={{ ...actionButtonStyle, alignSelf: 'flex-start' }}
                       onClick={() => handleUnequip(slot.id)}
                     >
-                      Unequip
+                      {inventoryStrings.actions.unequip}
                     </button>
                   )}
                 </div>
@@ -782,9 +870,9 @@ const PlayerInventoryPanel: React.FC = () => {
           </div>
         </section>
 
-        <section style={hotbarSectionStyle} aria-label="Hotbar assignments">
+        <section style={hotbarSectionStyle} aria-label={inventoryStrings.hotbarAriaLabel}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <span style={equipmentLabelStyle}>Hotbar</span>
+            <span style={equipmentLabelStyle}>{inventoryStrings.hotbar.title}</span>
             <NotificationBadge count={assignedHotbarCount} color="#34d399" size={18} pulse={false} />
           </div>
           <div style={hotbarGridStyle}>
@@ -792,9 +880,11 @@ const PlayerInventoryPanel: React.FC = () => {
               const assignedItem = player.inventory.items.find((entry) => entry.id === itemId);
               return (
                 <div key={index} style={hotbarSlotStyle}>
-                  <span style={{ fontSize: '0.58rem', color: neonPalette.textMuted }}>Slot {index + 1}</span>
+                  <span style={{ fontSize: '0.58rem', color: neonPalette.textMuted }}>
+                    {inventoryStrings.hotbar.slotLabel(index + 1)}
+                  </span>
                   <span style={{ fontSize: '0.64rem', color: neonPalette.textPrimary }}>
-                    {assignedItem?.name ?? 'Unassigned'}
+                    {assignedItem?.name ?? inventoryStrings.hotbar.unassigned}
                   </span>
                   <button
                     type="button"
@@ -802,7 +892,7 @@ const PlayerInventoryPanel: React.FC = () => {
                     onClick={() => dispatch(assignHotbarSlot({ slotIndex: index, itemId: null }))}
                     disabled={!itemId}
                   >
-                    Clear
+                    {inventoryStrings.actions.clearHotbar}
                   </button>
                 </div>
               );

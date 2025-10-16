@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 import {
   movePlayer,
   updateActionPoints,
@@ -23,7 +23,7 @@ import {
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
 import { addFloatingNumber, triggerHitFlash } from "../store/combatFeedbackSlice";
-import { RootState } from "../store";
+import { AppDispatch, RootState } from "../store";
 import { isPositionWalkable } from "../game/world/grid";
 import {
   executeAttack,
@@ -65,10 +65,14 @@ import {
 } from "../game/systems/surveillance/cameraSystem";
 import { setOverlayEnabled } from "../store/surveillanceSlice";
 import { createScopedLogger } from "../utils/logger";
+import { triggerStorylet } from "../store/storyletSlice";
+import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistry";
+import { ensureDefaultEnvironmentalTriggersRegistered } from "../game/world/triggers/defaultTriggers";
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const store = useStore<RootState>();
   const player = useSelector((state: RootState) => state.player.data);
   const encumbranceLevel = player.encumbrance.level;
   const encumbranceWarning = player.encumbrance.warning;
@@ -370,6 +374,8 @@ const GameController: React.FC = () => {
       return;
     }
 
+    ensureDefaultEnvironmentalTriggersRegistered();
+
     let frameId: number | null = null;
     let lastFrameTime = getNow();
 
@@ -396,6 +402,7 @@ const GameController: React.FC = () => {
         });
       }
 
+      tickEnvironmentalTriggers(dispatch, store.getState);
       frameId = window.requestAnimationFrame(tick);
     };
 
@@ -406,7 +413,7 @@ const GameController: React.FC = () => {
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [mapAreaId, dispatch, logStrings]);
+  }, [mapAreaId, dispatch, logStrings, store]);
 
   useEffect(() => {
     const handleTileClick = (event: Event) => {
@@ -1180,15 +1187,18 @@ const GameController: React.FC = () => {
             id: uuidv4(),
             name: logStrings.curfewPatrolName,
             position: { x: player.position.x + 5, y: player.position.y + 2 },
-            health: 25,
-            maxHealth: 25,
-            actionPoints: spawnDuringEnemyTurn ? 0 : 6,
-            maxActionPoints: 6,
-            damage: 5,
-            attackRange: 1,
+            facing: 'west',
+            coverOrientation: null,
+            suppression: 0,
+            health: 45,
+            maxHealth: 45,
+            actionPoints: spawnDuringEnemyTurn ? 0 : 4,
+            maxActionPoints: 4,
+            damage: 7,
+            attackRange: 2,
             isHostile: true,
             visionCone: {
-              range: 8,
+              range: 10,
               angle: 90,
               direction: 180,
             },
@@ -1290,6 +1300,7 @@ const GameController: React.FC = () => {
     );
 
     processingEnemyIdRef.current = currentEnemy.id;
+    let actionResult: ReturnType<typeof determineEnemyMove> | null = null;
     enemyActionTimeoutRef.current = window.setTimeout(() => {
       log.debug(
         `>>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
@@ -1326,6 +1337,7 @@ const GameController: React.FC = () => {
           coverPositions,
           currentMapArea.entities.npcs
         );
+        actionResult = result;
         log.debug(
           `Enemy ${currentEnemy.id} action: ${result.action}, AP left: ${result.enemy.actionPoints}`
         );
@@ -1390,11 +1402,21 @@ const GameController: React.FC = () => {
           error,
         });
       } finally {
+        const latestEnemy = actionResult?.enemy ?? currentEnemy;
+        const shouldRepeatEnemy =
+          latestEnemy &&
+          latestEnemy.health > 0 &&
+          latestEnemy.actionPoints > 0;
+
         log.debug(
-          `Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Advancing to next enemy.`
+          `Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Remaining AP: ${latestEnemy?.actionPoints ?? currentEnemy.actionPoints}. Repeat: ${shouldRepeatEnemy}`
         );
-        setCurrentEnemyTurnIndex((prev) => prev + 1);
+
         cancelPendingEnemyAction(false);
+
+        if (!shouldRepeatEnemy) {
+          setCurrentEnemyTurnIndex((prev) => prev + 1);
+        }
       }
     }, 500);
   }, [
@@ -1821,6 +1843,12 @@ const GameController: React.FC = () => {
             dispatch(movePlayer(connection.toPosition));
 
             if (targetArea.isInterior) {
+              dispatch(
+                triggerStorylet({
+                  type: 'campfireRest',
+                  locationId: targetArea.id,
+                })
+              );
               dispatch(addLogMessage(logStrings.slipInsideStructure));
               setCurfewAlertState("clear");
             }
@@ -1864,6 +1892,13 @@ const GameController: React.FC = () => {
               };
 
               dispatch(addEnemy(patrol));
+              dispatch(
+                triggerStorylet({
+                  type: 'patrolAmbush',
+                  locationId: currentMapArea?.id,
+                  tags: ['corpsec'],
+                })
+              );
 
               if (!inCombat) {
                 dispatch(enterCombat());

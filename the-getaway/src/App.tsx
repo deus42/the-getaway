@@ -218,6 +218,30 @@ const topCenterOverlayStyle: CSSProperties = {
   pointerEvents: "auto",
 };
 
+const topRightOverlayStyle: CSSProperties = {
+  position: "absolute",
+  top: "1.25rem",
+  right: "1.25rem",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  gap: "0.75rem",
+  zIndex: 6,
+  pointerEvents: "none",
+};
+
+const bottomRightOverlayStyle: CSSProperties = {
+  position: "absolute",
+  bottom: "1.25rem",
+  right: "1.25rem",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  gap: "0.75rem",
+  zIndex: 6,
+  pointerEvents: "none",
+};
+
 const sidebarToggleBaseStyle: CSSProperties = {
   position: "absolute",
   top: "50%",
@@ -482,8 +506,16 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />
           </div>
-          <CameraDetectionHUD />
-          <DayNightIndicator />
+          <div style={topRightOverlayStyle}>
+            <div style={{ pointerEvents: "auto" }}>
+              <DayNightIndicator />
+            </div>
+          </div>
+          <div style={bottomRightOverlayStyle}>
+            <div style={{ pointerEvents: "auto" }}>
+              <CameraDetectionHUD />
+            </div>
+          </div>
           <DialogueOverlay />
           <CombatFeedbackManager />
         </div>

@@ -86,6 +86,63 @@ flowchart LR
 </technical_flow>
 </architecture_section>
 
+<architecture_section id="narrative_resource_hierarchy" category="content_pipeline">
+<design_principles>
+- Standardise narrative data around stable resource keys (`levels.*`, `missions.*`, `quests.*`, `npcs.*`) so structural definitions stay immutable and language-agnostic.
+- Keep localisation bundles separate from structural content, letting writers update copy without touching TypeScript modules.
+- Validate cross-references (level ↔ mission ↔ quest ↔ NPC) automatically so regressions surface during CI/testing instead of in gameplay.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/narrative/structureTypes.ts</code_location> introduces canonical interfaces plus locale bundle contracts for levels, missions, quests, and NPC registrations.
+2. Structural definitions live under `src/content/levels/*/levelDefinition.ts`, `src/content/missions/**/missionDefinition.ts`, and `src/content/quests/**/questDefinition.ts`, with registries in `src/content/levels/index.ts`, `src/content/missions/index.ts`, and `src/content/quests/index.ts`.
+3. Localised strings consolidate into `src/content/locales/<locale>/{levels,missions,quests,npcs}.ts`, aggregated via <code_location>the-getaway/src/content/locales/index.ts</code_location>.
+4. Runtime loaders (`src/content/missions.ts`, `src/content/levels/level0/index.ts`, and `src/content/quests/builders.ts`) merge structural data with locale bundles to emit `MissionLevelDefinition` and `Quest` instances for Redux slices.
+5. <code_location>the-getaway/src/game/narrative/validateContent.ts</code_location> walks the hierarchy, confirming every reference resolves and every resource key has locale coverage; a Jest spec (`src/__tests__/narrativeValidation.test.ts`) keeps the check wired into the suite.
+</technical_flow>
+
+<pattern name="ResourceKeyLifecycle">
+- Authors add or modify structural content via the definition modules, wire resource keys into locale bundles, and register associated NPCs in `src/content/npcs/index.ts`.
+- Validation runs as part of the test suite, blocking commits that forget locale copy or miswire cross-resource keys.
+- UI and Redux consumers never read raw locale files; instead they call the derived builders so future content (additional locales or metadata) continues to flow through the same pipeline.
+</pattern>
+</architecture_section>
+
+<architecture_section id="narrative_scene_generation" category="world_generation">
+<design_principles>
+- Keep `(subject, relation, object)` triples as the single interface between narrative prompts and spatial generation, allowing either heuristic extraction or manual authoring to feed the same tooling.
+- Resolve placement requests through existing grid utilities (`isPositionWalkable`, `findNearestWalkablePosition`) so generated props honour collision layers and cover metadata.
+- Feed telemetry (collisions, missing assets) back into scene metadata so the CLI and future dashboards can surface author-facing diagnostics.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/narrative/tripleExtraction.ts</code_location> tokenises mission copy, matches supported relations (`near`, `inside`, `left_of`, etc.), and emits ordered `SceneMoment` bundles; manual fallback bundles run through the same validators.
+2. <code_location>the-getaway/src/game/world/generation/relationRules.ts</code_location> translates relations into placement strategies (directional offsets, adjacency searches, interior resolution) while guarding against occupied or non-walkable tiles.
+3. <code_location>the-getaway/src/game/world/generation/worldGenerationPipeline.ts</code_location> instantiates a `MapArea`, seeds manual placements, resolves anchors, applies computed props, and annotates tiles (cover vs blocking) before recording any pipeline issues.
+4. <code_location>the-getaway/scripts/generate-scene-from-story.ts</code_location> orchestrates extraction + generation, writing validated JSON under <code>src/content/levels/{level}/missions/{mission}/generatedScenes</code> and reporting validation errors in the CLI output.
+5. <code_location>the-getaway/src/content/scenes/generatedScenes.ts</code_location> indexes emitted scene definitions so mission records (e.g., `level0RecoverCacheMission`) can reference `generatedSceneKeys` without manual filesystem lookups.
+</technical_flow>
+</architecture_section>
+
+<architecture_section id="environment_story_triggers" category="narrative_systems">
+<design_principles>
+- Keep environment reactivity declarative: world-facing flags live under `world.environment.flags` and drive all swaps through a trigger registry rather than ad-hoc conditionals.
+- Favour data tables over inline copy so rumors, signage, and notes remain tone-consistent with `memory-bank/plot.md` and can scale through content-only additions.
+- Ensure triggers are idempotent and observable—every swap records the source ID and timestamp so reducers, HUD, and QA tooling can diff the current ambient state.
+- Throttle weather shifts to once per recorded time-of-day so ambient logs surface meaningful beats instead of oscillating between severity presets.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/interfaces/environment.ts</code_location> defines flag enums (`gangHeat`, `curfewLevel`, `supplyScarcity`, `blackoutTier`) plus serialized snapshots for rumors, signage, weather, and spawned notes.
+2. <code_location>the-getaway/src/store/worldSlice.ts</code_location> seeds the environment state, exposes reducers (`setEnvironmentFlags`, `applyEnvironmentSignage`, `applyEnvironmentRumorSet`, `registerEnvironmentalNote`, `setNpcAmbientProfile`), and maps existing systems to the new flags (curfew to `curfewLevel`, alert level to `gangHeat`/`supplyScarcity`, reinforcements to blackout tiers).
+3. <code_location>the-getaway/src/content/environment/</code_location> holds trigger tables (`rumors.ts`, `notes.ts`, `signage.ts`, `weather.ts`) with one-liner metadata so writers can add swaps without touching logic.
+4. <code_location>the-getaway/src/game/world/triggers/triggerRegistry.ts</code_location> maintains registered triggers with cooldown/once semantics; <code_location>the-getaway/src/game/world/triggers/defaultTriggers.ts</code_location> now derives weather via a single daily updater that records the active `TimeOfDay`, preferring gang-heat overrides until curfew level 3 and logging at most one shift per phase, while keeping the remaining rumor, signage, and note triggers unchanged. A test-only reset helper exposes clean registration for specs.
+5. <code_location>the-getaway/src/components/GameController.tsx</code_location> initialises the registry and ticks triggers each animation frame, feeding the Redux dispatch/getState pair so triggers stay in sync with the active scene.
+6. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> surfaces memoised selectors for flags, signage variants, rumor sets, weather snapshots (including last `TimeOfDay`), and spawned notes for HUD consumers.
+7. <code_location>the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts</code_location> drives the reducers through the registry, asserting rumor rotations, signage swaps, note spawns, and the daily weather gate when flags or time phases shift.
+</technical_flow>
+</architecture_section>
+
 <architecture_section id="command_shell_layout" category="ui_shell">
 <design_principles>
 - Maintain the three-column command shell while letting each sidebar collapse without removing it from the flex context so the world view can immediately claim the freed space.
@@ -113,6 +170,8 @@ flowchart LR
 2. <code_location>the-getaway/src/App.tsx</code_location> positions the level card and the George console within the same HUD layer while keeping the console centered along the top edge.
 3. <code_location>the-getaway/src/game/systems/georgeAssistant.ts</code_location> consolidates intelligence by formatting primary/secondary hints, karma summaries, and conversation payloads, pulling tone-specific templates from <code_location>the-getaway/src/content/assistants/george.ts</code_location>.
 4. Interjection hooks cache quest completion sets, faction deltas, mission-complete signals (`missionAccomplished`), and hostile-state transitions; when thresholds are crossed the assistant queues a guideline-tagged line, throttled by `INTERJECTION_COOLDOWN_MS` so alerts surface once and then cool off.
+5. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> delivers a memoised `selectAmbientWorldSnapshot` bundling environment flags, rumor/signage/weather snapshots, and zone hazard metadata; <code_location>the-getaway/src/game/systems/georgeAssistant.ts</code_location> diff-checks successive snapshots via `GeorgeAmbientTracker`, enforcing per-category cooldowns before returning structured ambient events.
+6. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> merges mission guidance, ambient events, and interjections into a single notification stream, highlights the dock when unseen entries queue up, and promotes the freshest line into the collapsed ticker so world changes surface even with the console closed while the Level Indicator remains lightweight.
 </technical_flow>
 
 <pattern name="ObjectiveSync">
@@ -148,6 +207,29 @@ flowchart LR
 - The contract ensures George assistant, minimap, and save systems can subscribe to a single signal instead of duplicating mission-complete checks.
 - George listens for the same `LEVEL_ADVANCE_REQUESTED` emit to stage "Mission Accomplished" callouts only after the confirmation modal resolves, keeping guidance synchronized with HUD state.
 - `MISSION_ACCOMPLISHED` DOM events fan out when primary objectives resolve, letting HUD systems celebrate immediately while the toast/overlay keeps player control.
+</pattern>
+</architecture_section>
+
+<architecture_section id="storylet_framework" category="narrative_systems">
+<design_principles>
+- Keep story-driven vignettes fully data-driven so designers can add new plays by extending a registry and localization files without touching reducers.
+- Evaluate eligibility with a pure engine that inspects state snapshots (actors, triggers, cooldowns) to keep Redux mutations isolated to a single slice.
+- Surface resolved storylets through a queue abstractions so UI layers can render comic/dialogue panels asynchronously while side effects (logs, faction deltas, personality shifts) apply immediately.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/quests/storylets/storyletTypes.ts</code_location> defines the canonical structures for plays, roles, triggers, branches, outcomes, and runtime bookkeeping used across the system.
+2. <code_location>the-getaway/src/game/quests/storylets/storyletRegistry.ts</code_location> enumerates act-aligned plays (ambush, rest, omen) with cooldown windows, role definitions, and branch metadata that reference localized keys.
+3. <code_location>the-getaway/src/game/quests/storylets/storyletEngine.ts</code_location> assembles an actor pool (player, contacts, nearby NPCs), scores eligible plays against the incoming trigger, casts roles, resolves branch conditions, and returns a `StoryletResolution`.
+4. <code_location>the-getaway/src/content/storylets/index.ts</code_location> plus locale files (`en.ts`, `uk.ts`) supply titles, synopses, narrative text, and log copy keyed to each outcome/variant.
+5. <code_location>the-getaway/src/store/storyletSlice.ts</code_location> hosts the runtime slice/thunk: it snapshots state, calls the engine, applies outcome effects (log messages, faction deltas, personality adjustments, health changes), and enqueues resolved storylets for UI consumption.
+6. <code_location>the-getaway/src/components/system/MissionProgressionManager.tsx</code_location> fires a mission-completion trigger, while <code_location>the-getaway/src/components/GameController.tsx</code_location> raises campfire-rest and curfew-ambush triggers so the system reacts to exploration and combat beats.
+</technical_flow>
+
+<pattern name="StoryletTriggering">
+- Trigger payloads carry semantic tags (`resistance`, `rest`, `corpsec`, `injury`) so the engine can filter plays and match variance without peeking into Redux internals.
+- Cooldowns are enforced both globally and per-location via `storylets.entries` and `lastSeenByLocation`, preventing repeat vignettes from spamming the player while still allowing act progression to surface fresh content.
+- Queue entries persist localization keys alongside rendered text, letting future UI layers rehydrate narrative panels in the current locale while maintaining audit trails for what fired when.
 </pattern>
 </architecture_section>
 
@@ -224,6 +306,34 @@ flowchart LR
 <code_location>the-getaway/src/components/ui/CameraDetectionHUD.tsx</code_location>
 <code_location>the-getaway/src/components/ui/CurfewWarning.tsx</code_location>
 <code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location>
+</architecture_section>
+
+<architecture_section id="witness_memory_heat" category="gameplay_systems">
+<design_principles>
+- Model suspicion as decaying eyewitness memory so stealth pressure emerges from elapsed time and behaviour rather than scripted cooldowns.
+- Keep per-witness data local to observers while exposing aggregated heat via memoised selectors that HUD, AI, and content systems can share.
+- Synchronise decay with world time controls (pause, cutscenes, dialogue) to avoid double ticks or skipped updates during freezes.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/systems/suspicion/witnessMemory.ts</code_location> defines the `WitnessMemory` model plus `decayWitnessMemory`, `reinforceWitnessMemory`, and pruning helpers parameterised by half-life and certainty floor.
+2. <code_location>the-getaway/src/game/systems/suspicion/suspicionSystem.ts</code_location> listens to guard vision cone events (Step 19) and surveillance detections (Step 19.5), applies disguise/lighting/crowd modifiers, and creates or reinforces memories per witness and recognition channel.
+3. <code_location>the-getaway/src/store/suspicionSlice.ts</code_location> (or an extended `worldSlice`) stores memories keyed by zone, exposes `selectHeatByZone`, `selectLeadingWitnesses`, and derives alert tiers from the top-K weighted memories (certainty × proximity × report status).
+4. <code_location>the-getaway/src/game/systems/ai/guardResponseCoordinator.ts</code_location> consumes heat tiers to escalate patrol density, checkpoint lockdowns, and combat readiness, reverting to calm behaviour as heat cools.
+5. <code_location>the-getaway/src/components/debug/SuspicionInspector.tsx</code_location> and <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> surface developer-facing heat telemetry and witness breakdowns gated behind feature flags.
+</technical_flow>
+
+<pattern name="WitnessDecayScheduler">
+- `GameController` advances suspicion ticks alongside world time pulses, skipping decay when `time.isFrozen` (menus, dialogue) and clamping certainty within [0,1].
+- Memories below the configured floor (default 0.05) are pruned immediately; suppressed memories remain stored but excluded from aggregation until reactivated.
+- Save/load serialises witness snapshots `{ witnessId, recognitionChannel, certainty, lastSeenAt, halfLife, reported, suppressed }` with schema version guards.
+</pattern>
+
+<pattern name="HeatTierThresholds">
+- Zone heat tiers map to enumerated guard states (`calm`, `tracking`, `crackdown`) so AI, HUD, and quests share a single source of truth instead of hard-coded floats.
+- Aggregation sums the top-K certainty scores (default 5) multiplied by proximity and report multipliers, preventing dozens of faint memories from dwarfing primary witnesses.
+- Designers override half-life and tier thresholds per district via `src/content/suspicion/heatProfiles.ts` to support paranoid corporate sectors versus sleepy outskirts without code edits.
+</pattern>
 </architecture_section>
 
 <architecture_section id="localized_reputation_network" category="gameplay_systems">

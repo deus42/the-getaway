@@ -7,6 +7,7 @@ interface MissionCompleteModalProps {
   missionStrings: {
     accomplishedTitle: string;
     accomplishedSubtitle: (levelName: string) => string;
+    primarySummaryLabel: string;
     continueCta: string;
     deferCta: string;
     deferHint: string;
@@ -67,6 +68,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
   open,
   levelName,
   missionStrings,
+  primaryObjectives,
   sideObjectives,
   onContinue,
   onDefer,
@@ -75,6 +77,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
     return null;
   }
 
+  const completedPrimaryObjectives = primaryObjectives.filter((objective) => objective.isComplete);
   const remainingSideObjectives = sideObjectives.filter((objective) => !objective.isComplete);
 
   return (
@@ -103,6 +106,74 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
           </h2>
         </header>
         <section style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+          <div
+            style={{
+              border: '1px solid rgba(148, 163, 184, 0.22)',
+              borderRadius: '14px',
+              padding: '0.9rem 1.1rem',
+              background: 'rgba(15, 23, 42, 0.68)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.6rem',
+            }}
+          >
+            <span style={{ fontSize: '0.7rem', color: 'rgba(148, 163, 184, 0.78)' }}>
+              {missionStrings.primarySummaryLabel}
+            </span>
+            {completedPrimaryObjectives.length === 0 ? (
+              <span style={{ fontSize: '0.72rem', color: 'rgba(226, 232, 240, 0.86)' }}>—</span>
+            ) : (
+              <ul
+                style={{
+                  margin: 0,
+                  padding: 0,
+                  listStyle: 'none',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.45rem',
+                }}
+              >
+                {completedPrimaryObjectives.map((objective) => (
+                  <li
+                    key={objective.id}
+                    style={{
+                      display: 'flex',
+                      gap: '0.55rem',
+                      alignItems: 'flex-start',
+                      fontSize: '0.74rem',
+                      color: 'rgba(226, 232, 240, 0.9)',
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    <span
+                      aria-hidden
+                      style={{
+                        width: '0.9rem',
+                        height: '0.9rem',
+                        borderRadius: '999px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.55), rgba(94, 234, 212, 0.55))',
+                        color: '#02111f',
+                        fontSize: '0.62rem',
+                        fontWeight: 700,
+                        border: '1px solid rgba(94, 234, 212, 0.5)',
+                      }}
+                    >
+                      ✓
+                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', flex: 1 }}>
+                      <span style={{ fontWeight: 600 }}>{objective.label}</span>
+                      {objective.summary && (
+                        <span style={{ fontSize: '0.66rem', color: 'rgba(203, 213, 225, 0.82)' }}>{objective.summary}</span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div
             style={{
               border: '1px solid rgba(148, 163, 184, 0.22)',

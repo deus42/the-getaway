@@ -12,6 +12,7 @@ import {
   EquipmentSlot,
   Consumable,
   FactionId,
+  PersonalityTrait,
 } from '../game/interfaces/types';
 import { DEFAULT_PLAYER, createDefaultPersonalityProfile } from '../game/interfaces/player';
 import {
@@ -1127,12 +1128,52 @@ export const playerSlice = createSlice({
       state.pendingFactionEvents = [];
     },
 
+    adjustPersonalityTrait: (
+      state,
+      action: PayloadAction<{ trait: PersonalityTrait; delta: number; source?: string }>
+    ) => {
+      const { trait, delta, source } = action.payload;
+      if (!state.data.personality) {
+        state.data.personality = createDefaultPersonalityProfile();
+      }
+
+      const flags = {
+        ...state.data.personality.flags,
+      };
+
+      const currentValue = flags[trait] ?? 0;
+      const nextValue = Math.max(-5, Math.min(5, currentValue + delta));
+
+      flags[trait] = nextValue;
+
+      state.data.personality = {
+        ...state.data.personality,
+        flags,
+        lastUpdated: Date.now(),
+        lastChangeSource: source ?? 'storylet',
+      };
+    },
+
     // Move player to a new position
     movePlayer: (state, action: PayloadAction<Position>) => {
       if (state.data.encumbrance.level === 'immobile') {
         return;
       }
+      const previous = state.data.position;
       state.data.position = action.payload;
+      if (previous) {
+        const dx = action.payload.x - previous.x;
+        const dy = action.payload.y - previous.y;
+        if (dx !== 0 || dy !== 0) {
+          if (Math.abs(dx) >= Math.abs(dy)) {
+            state.data.facing = dx >= 0 ? 'east' : 'west';
+          } else {
+            state.data.facing = dy >= 0 ? 'south' : 'north';
+          }
+        }
+      }
+      state.data.coverOrientation = null;
+      state.data.suppression = state.data.suppression ?? 0;
     },
     
     // Update player health
@@ -1743,6 +1784,7 @@ export const {
   adjustFactionReputation,
   setFactionReputation,
   consumeFactionReputationEvents,
+  adjustPersonalityTrait,
   removeXPNotification,
   levelUp,
   updateSkill,
