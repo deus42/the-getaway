@@ -47,7 +47,7 @@ export const MissionProgressionManager: React.FC = () => {
     if (!pendingAdvance) {
       broadcastRef.current = false;
     }
-  }, [pendingAdvance, missionProgress]);
+  }, [dispatch, pendingAdvance, missionProgress]);
 
   return null;
 };

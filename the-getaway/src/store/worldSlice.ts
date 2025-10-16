@@ -141,8 +141,9 @@ export const worldSlice = createSlice({
     },
 
     removeEnvironmentSignage: (state, action: PayloadAction<string>) => {
-      const { [action.payload]: _removed, ...rest } = state.environment.signage;
-      state.environment.signage = rest;
+      const nextSignage = { ...state.environment.signage };
+      delete nextSignage[action.payload];
+      state.environment.signage = nextSignage;
     },
 
     applyEnvironmentRumorSet: (
@@ -157,8 +158,9 @@ export const worldSlice = createSlice({
     },
 
     removeEnvironmentRumorSet: (state, action: PayloadAction<string>) => {
-      const { [action.payload]: _removed, ...rest } = state.environment.rumorSets;
-      state.environment.rumorSets = rest;
+      const nextRumorSets = { ...state.environment.rumorSets };
+      delete nextRumorSets[action.payload];
+      state.environment.rumorSets = nextRumorSets;
     },
 
     registerEnvironmentalNote: (state, action: PayloadAction<EnvironmentalNoteInstance>) => {

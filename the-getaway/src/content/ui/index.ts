@@ -1068,10 +1068,9 @@ const STRINGS: Record<Locale, UIStrings> = {
         tagged ? `1 pt → +${increment} (tag)` : `1 pt → +${increment}`,
       decreaseAria: (skillName) => `Decrease ${skillName}`,
       increaseAria: (skillName) => `Increase ${skillName}`,
-      announcement: (skillName, verb, value, effect) => `${skillName} ${verb} to ${value}. ${effect}`,
-      verbs: {
-        increase: 'increased',
-        decrease: 'decreased',
+      announcement: (skillName, verb, value, effect) => {
+        const verbText = verb === 'increase' ? 'increased' : 'decreased';
+        return `${skillName} ${verbText} to ${value}. ${effect}`;
       },
     },
     playerStatsPanel: {
