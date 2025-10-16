@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
-import { dystopianTokens } from "../theme/dystopianTokens";
 // Remove useSelector and RootState if no longer needed here
 // import { useSelector } from "react-redux";
 // import { RootState } from "../store";
@@ -87,7 +86,7 @@ const GameCanvas: React.FC = () => {
       type: Phaser.AUTO,
       width: parentWidth > 0 ? parentWidth : 800,
       height: parentHeight > 0 ? parentHeight : 600,
-      backgroundColor: dystopianTokens.colors.background,
+      backgroundColor: "#1a1a1a",
       parent: gameContainerRef.current,
       scene: [BootScene, MainScene],
       scale: {
@@ -227,15 +226,13 @@ const GameCanvas: React.FC = () => {
 
   const testMode = useSelector((state: RootState) => state.settings.testMode);
 
-  const { colors, fonts } = dystopianTokens;
-
   return (
     <div
       style={{
         position: "relative",
         width: "100%",
         height: "100%",
-        backgroundColor: colors.background,
+        backgroundColor: "#1a1a1a",
         overflow: "hidden",
         display: "flex",
         justifyContent: "center",
@@ -245,7 +242,6 @@ const GameCanvas: React.FC = () => {
     >
       <div
         ref={gameContainerRef}
-        className="u-scan"
         style={{
           position: "absolute",
           width: "100%",
@@ -257,7 +253,7 @@ const GameCanvas: React.FC = () => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: colors.backgroundAlt,
+          backgroundColor: "#1a1a1a",
           minWidth: "400px",
           minHeight: "300px",
           pointerEvents: "auto",
@@ -272,16 +268,16 @@ const GameCanvas: React.FC = () => {
             position: "absolute",
             bottom: 16,
             right: 16,
-            backgroundColor: "rgba(8, 14, 18, 0.86)",
-            color: colors.foreground,
+            backgroundColor: "rgba(15, 23, 42, 0.85)",
+            color: "#e2e8f0",
             borderRadius: 8,
             padding: "8px 12px",
-            fontFamily: fonts.mono,
+            fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
             fontSize: 12,
             lineHeight: 1.4,
             letterSpacing: 0.4,
             backdropFilter: "blur(4px)",
-            border: `1px solid ${colors.panelBorder}`,
+            border: "1px solid rgba(148, 163, 184, 0.35)",
             pointerEvents: "none",
           }}
         >

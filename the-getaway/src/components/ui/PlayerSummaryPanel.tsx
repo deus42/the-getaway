@@ -7,6 +7,7 @@ import { SKILL_BRANCHES } from '../../content/skills';
 import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progression';
 import { addExperience } from '../../store/playerSlice';
 import AnimatedStatBar from './AnimatedStatBar';
+import { dystopianTokens } from '../../theme/dystopianTokens';
 import {
   neonPalette,
   panelSurface,
@@ -18,15 +19,14 @@ import {
   glowTextStyle,
   importantValueStyle,
 } from './theme';
-import { dystopianTokens } from '../../theme/dystopianTokens';
-
-const { colors, fonts, motion } = dystopianTokens;
 
 interface PlayerSummaryPanelProps {
   onOpenCharacter?: () => void;
   characterOpen?: boolean;
   showActionButton?: boolean;
 }
+
+const { fonts, motion } = dystopianTokens;
 
 const summaryContainerStyle: React.CSSProperties = {
   display: 'flex',
@@ -51,13 +51,14 @@ const headerStyle: React.CSSProperties = {
 
 const nameStyle: React.CSSProperties = {
   ...headingStyle,
-  ...gradientTextStyle(colors.accentGlow, colors.accentSecondary),
+  ...gradientTextStyle(neonPalette.cyan, neonPalette.violet),
   fontSize: '0.9rem',
   letterSpacing: '0.26em',
   display: 'flex',
   alignItems: 'center',
   gap: '0.5rem',
-  filter: 'drop-shadow(0 0 8px rgba(75, 231, 207, 0.32))',
+  filter: 'drop-shadow(0 0 8px rgba(75, 231, 207, 0.35))',
+  fontFamily: fonts.heading,
 };
 
 const levelBadgeStyle: React.CSSProperties = {
@@ -67,9 +68,9 @@ const levelBadgeStyle: React.CSSProperties = {
   padding: '0.22rem 0.55rem',
   borderRadius: '999px',
   letterSpacing: '0.14em',
-  background: 'rgba(75, 231, 207, 0.16)',
-  boxShadow: '0 10px 22px -12px rgba(75, 231, 207, 0.55)',
-  ...glowTextStyle(neonPalette.cyan, 5),
+  background: 'rgba(56, 189, 248, 0.18)',
+  boxShadow: '0 10px 20px -10px rgba(56, 189, 248, 0.55)',
+  ...glowTextStyle(neonPalette.cyan, 6),
 };
 
 const backgroundLabelStyle: React.CSSProperties = {
@@ -105,14 +106,15 @@ const fatigueBadgeStyle: React.CSSProperties = {
   gap: '0.25rem',
   padding: '0.22rem 0.55rem',
   borderRadius: '999px',
-  border: `1px solid ${colors.warning}`,
-  background: colors.warningSoft,
-  color: colors.warning,
+  border: '1px solid rgba(250, 204, 21, 0.65)',
+  background: 'rgba(250, 204, 21, 0.08)',
+  color: neonPalette.amber,
   fontSize: '0.55rem',
   fontWeight: 600,
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
-  boxShadow: '0 8px 18px -12px rgba(255, 212, 121, 0.6)',
+  boxShadow: '0 8px 18px -12px rgba(250, 204, 21, 0.6)',
+  fontFamily: fonts.badge,
 };
 
 const crouchBadgeStyle: React.CSSProperties = {
@@ -121,14 +123,15 @@ const crouchBadgeStyle: React.CSSProperties = {
   gap: '0.25rem',
   padding: '0.22rem 0.55rem',
   borderRadius: '999px',
-  border: `1px solid ${colors.divider}`,
-  background: 'rgba(21, 33, 38, 0.42)',
-  color: colors.foreground,
+  border: '1px solid rgba(148, 163, 184, 0.65)',
+  background: 'rgba(148, 163, 184, 0.12)',
+  color: neonPalette.textPrimary,
   fontSize: '0.55rem',
   fontWeight: 600,
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
-  boxShadow: '0 8px 18px -12px rgba(45, 62, 72, 0.55)',
+  boxShadow: '0 8px 18px -12px rgba(148, 163, 184, 0.55)',
+  fontFamily: fonts.badge,
 };
 
 const statCardStyle: React.CSSProperties = {
@@ -148,6 +151,7 @@ const statLabelStyle: React.CSSProperties = {
   fontSize: '0.5rem',
   letterSpacing: '0.12em',
   textTransform: 'uppercase',
+  fontFamily: fonts.badge,
 };
 
 
@@ -166,26 +170,27 @@ const skillChipStyle = (accent: string): React.CSSProperties => ({
   padding: '0.38rem 0.85rem',
   borderRadius: '999px',
   border: `1px solid ${accent}`,
-  background: `linear-gradient(140deg, ${accent}20, rgba(11, 17, 23, 0.88))`,
+  background: `linear-gradient(140deg, ${accent}1F, rgba(15, 23, 42, 0.92))`,
   color: neonPalette.textPrimary,
   fontSize: '0.6rem',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  boxShadow: `0 10px 18px -12px ${accent}88`,
+  boxShadow: `0 10px 18px -12px ${accent}99`,
   flex: '1 1 calc(50% - 0.5rem)',
   minWidth: '140px',
+  fontFamily: fonts.badge,
 });
 
 const actionButtonStyle = (active: boolean): React.CSSProperties => ({
   alignSelf: 'flex-start',
   marginTop: '0.2rem',
-  padding: active ? '0.42rem 0.75rem' : '0.38rem 0.72rem',
+  padding: active ? '0.48rem 0.85rem' : '0.44rem 0.8rem',
   borderRadius: '999px',
-  border: `1px solid ${active ? colors.warning : colors.accent}`,
+  border: `1px solid ${active ? neonPalette.amber : neonPalette.cyan}`,
   background: active
-    ? 'linear-gradient(130deg, rgba(255, 212, 121, 0.42), rgba(255, 184, 107, 0.55))'
-    : 'linear-gradient(130deg, rgba(75, 231, 207, 0.34), rgba(43, 197, 249, 0.42))',
-  color: active ? '#fff7de' : colors.foreground,
+    ? 'linear-gradient(130deg, rgba(255, 212, 121, 0.42), rgba(255, 184, 107, 0.36))'
+    : 'linear-gradient(130deg, rgba(75, 231, 207, 0.32), rgba(43, 197, 249, 0.28))',
+  color: active ? '#fff6d5' : neonPalette.textPrimary,
   fontSize: '0.58rem',
   fontWeight: 600,
   letterSpacing: '0.18em',
@@ -195,8 +200,9 @@ const actionButtonStyle = (active: boolean): React.CSSProperties => ({
   textAlign: 'center',
   transform: 'translateY(0)',
   boxShadow: active
-    ? '0 12px 20px -16px rgba(255, 184, 107, 0.48)'
+    ? '0 12px 20px -16px rgba(251, 191, 36, 0.48)'
     : '0 12px 20px -18px rgba(75, 231, 207, 0.45)',
+  fontFamily: fonts.badge,
 });
 
 const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
@@ -320,14 +326,9 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             type="button"
             onClick={onOpenCharacter}
             style={{ ...actionButtonStyle(characterOpen), flex: 1 }}
+            className="hud-button"
             data-testid="summary-open-character"
             aria-pressed={characterOpen}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.transform = 'translateY(0) scale(1)';
-            }}
           >
             {uiStrings.shell.characterButton}
           </button>
@@ -338,17 +339,12 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
               style={{
                 ...actionButtonStyle(false),
                 flex: 1,
-                background: 'linear-gradient(130deg, rgba(251, 191, 36, 0.48), rgba(249, 115, 22, 0.45))',
+                background: 'linear-gradient(130deg, rgba(255, 212, 121, 0.45), rgba(255, 184, 107, 0.4))',
                 border: `1px solid ${neonPalette.amber}`,
-                boxShadow: '0 12px 20px -16px rgba(251, 191, 36, 0.48)',
+                boxShadow: '0 12px 20px -16px rgba(255, 212, 121, 0.48)',
               }}
+              className="hud-button"
               title="Test Mode: Gain XP to level up"
-              onMouseEnter={(event) => {
-                event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.transform = 'translateY(0) scale(1)';
-              }}
             >
               ⬆ Level Up
             </button>

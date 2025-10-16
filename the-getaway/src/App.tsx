@@ -94,7 +94,7 @@ const sidebarRailBaseStyle: CSSProperties = {
   alignItems: "stretch",
   minHeight: 0,
   overflow: "visible",
-  transition: `flex-basis 0.28s ${motion.hoverEase}`,
+  transition: "flex-basis 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
 };
 
 const sidebarBaseStyle: CSSProperties = {
@@ -129,9 +129,9 @@ const panelBaseStyle: CSSProperties = {
   position: "relative",
   background: surfaces.panel,
   border: `1px solid ${colors.panelBorder}`,
-  borderRadius: "14px",
+  borderRadius: "16px",
   padding: "1rem 0.9rem",
-  boxShadow: "0 28px 44px rgba(10, 30, 32, 0.42)",
+  boxShadow: "0 28px 48px rgba(4, 8, 12, 0.65)",
   display: "flex",
   flexDirection: "column",
   minHeight: 0,
@@ -150,7 +150,7 @@ const panelLabelStyle = (color: string): CSSProperties => ({
 
 const panelTitleStyle: CSSProperties = {
   fontSize: "1rem",
-  fontWeight: 700,
+  fontWeight: 600,
   color: colors.foreground,
   marginBottom: "0.65rem",
   letterSpacing: "0.05em",
@@ -165,17 +165,17 @@ const scrollSectionStyle: CSSProperties = {
 };
 
 const menuButtonStyle: CSSProperties = {
-  padding: "0.65rem 1.35rem",
+  padding: "0.6rem 1.25rem",
   borderRadius: "9999px",
-  border: "1px solid rgba(56, 189, 248, 0.55)",
-  background:
-    "linear-gradient(135deg, rgba(37, 99, 235, 0.6), rgba(56, 189, 248, 0.65))",
-  color: "#e0f2fe",
-  fontSize: "0.82rem",
-  letterSpacing: "0.12em",
+  border: `1px solid ${colors.accentGlow}`,
+  background: "linear-gradient(130deg, rgba(75, 231, 207, 0.22), rgba(43, 197, 249, 0.18))",
+  color: colors.foreground,
+  fontSize: "0.78rem",
+  letterSpacing: "0.14em",
   cursor: "pointer",
-  transition: "transform 0.12s ease, box-shadow 0.12s ease",
-  boxShadow: "0 18px 32px rgba(37, 99, 235, 0.3)",
+  textTransform: "uppercase",
+  transition: `transform ${motion.hoverDuration}ms ${motion.hoverEase}, box-shadow ${motion.hoverDuration}ms ${motion.hoverEase}`,
+  boxShadow: "0 18px 32px rgba(11, 24, 22, 0.45)",
 };
 
 const menuButtonWrapperStyle: CSSProperties = {
@@ -224,17 +224,17 @@ const sidebarToggleBaseStyle: CSSProperties = {
   width: "2.2rem",
   height: "2.2rem",
   borderRadius: "999px",
-  border: "1px solid rgba(148, 163, 184, 0.45)",
-  background: "linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.88))",
-  color: "#e2e8f0",
+  border: `1px solid ${colors.divider}`,
+  background: "linear-gradient(135deg, rgba(18, 26, 34, 0.88), rgba(10, 16, 26, 0.88))",
+  color: colors.foreground,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   fontSize: "0.85rem",
   cursor: "pointer",
   zIndex: 5,
-  boxShadow: "0 14px 28px rgba(15, 23, 42, 0.45)",
-  transition: "all 0.25s ease",
+  boxShadow: "0 14px 28px rgba(6, 12, 18, 0.55)",
+  transition: `all ${motion.hoverDuration}ms ${motion.hoverEase}`,
 };
 
 const toggleVerticalPosition = "clamp(6rem, 50%, calc(100% - 6rem))";
@@ -406,18 +406,20 @@ const CommandShell: React.FC<CommandShellProps> = ({
             onClick={onOpenMenu}
             data-testid="open-menu"
             style={menuButtonStyle}
+            className="hud-button"
           >
             {uiStrings.shell.menuButton}
           </button>
         </div>
       )}
-      <div style={stageStyle}>
+      <div style={stageStyle} className="hud-stage">
         <div style={leftRailStyle}>
           {!showMenu && (
             <button
               type="button"
               onClick={onToggleLeftSidebar}
               style={leftToggleStyle}
+              className="hud-button hud-button--icon"
               aria-pressed={!leftCollapsed}
               aria-controls={leftSidebarId}
               aria-label={leftCollapsed ? uiStrings.shell.expandLeft : uiStrings.shell.collapseLeft}
@@ -432,22 +434,23 @@ const CommandShell: React.FC<CommandShellProps> = ({
             ref={leftSidebarRef}
             aria-hidden={leftCollapsed}
             data-collapsed={leftCollapsed || undefined}
+            className="hud-scroll-surface"
           >
             {!leftCollapsed && (
             <>
-              <div style={{ ...panelBaseStyle }}>
+              <div style={{ ...panelBaseStyle }} className="hud-panel u-scan">
                 <CornerAccents color="#38bdf8" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#38bdf8" count={2} side="left" />
-                <span style={panelLabelStyle(colors.accent)}>{uiStrings.shell.reconLabel}</span>
+                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.reconLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.shell.reconTitle}</h2>
                 <MiniMap />
               </div>
-              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+              <div style={{ ...panelBaseStyle, flex: "1 1 0" }} className="hud-panel u-scan">
                 <CornerAccents color="#38bdf8" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#38bdf8" count={2} side="left" />
-                <span style={panelLabelStyle(colors.accent)}>{uiStrings.shell.squadLabel}</span>
+                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.squadLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.shell.squadTitle}</h2>
                 <div
                   style={{
@@ -456,6 +459,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
                     flexDirection: "column",
                     gap: "0.8rem",
                   }}
+                  className="hud-scroll-surface"
                 >
                   <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
                   <TurnTracker />
@@ -489,6 +493,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
               type="button"
               onClick={onToggleRightSidebar}
               style={rightToggleStyle}
+              className="hud-button hud-button--icon"
               aria-pressed={!rightCollapsed}
               aria-controls={rightSidebarId}
               aria-label={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
@@ -503,24 +508,25 @@ const CommandShell: React.FC<CommandShellProps> = ({
             ref={rightSidebarRef}
             aria-hidden={rightCollapsed}
             data-collapsed={rightCollapsed || undefined}
+            className="hud-scroll-surface"
           >
             {!rightCollapsed && (
             <>
-              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+              <div style={{ ...panelBaseStyle, flex: "1 1 0" }} className="hud-panel u-scan">
                 <CornerAccents color="#f0abfc" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#f0abfc" count={2} side="right" />
-                <span style={panelLabelStyle(colors.accentSecondary)}>{uiStrings.questLog.panelLabel}</span>
+                <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
                 <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
               </div>
-              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
+              <div style={{ ...panelBaseStyle, flex: "1 1 0" }} className="hud-panel u-scan">
                 <CornerAccents color="#60a5fa" size={14} />
                 <ScanlineOverlay opacity={0.04} />
                 <DataStreamParticles color="#60a5fa" count={2} side="right" />
-                <span style={panelLabelStyle(colors.accentGlow)}>{uiStrings.shell.telemetryLabel}</span>
+                <span style={panelLabelStyle("#60a5fa")}>{uiStrings.shell.telemetryLabel}</span>
                 <h2 style={panelTitleStyle}>{uiStrings.shell.telemetryTitle}</h2>
-                <div style={scrollSectionStyle}>
+                <div style={scrollSectionStyle} className="hud-scroll-surface">
                   <LogPanel />
                 </div>
               </div>
@@ -795,7 +801,7 @@ function App() {
     <Provider store={store}>
       <MissionProgressionManager />
       <FactionReputationManager />
-      <div style={layoutShellStyle}>
+      <div style={layoutShellStyle} className="hud-shell">
         {gameStarted && (
           <CommandShell
             onOpenMenu={handleOpenMenu}

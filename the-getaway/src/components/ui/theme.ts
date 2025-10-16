@@ -4,33 +4,33 @@ import { dystopianTokens } from '../../theme/dystopianTokens';
 const { colors, fonts, surfaces } = dystopianTokens;
 
 export const neonPalette = {
-  slate: colors.background,
-  slateSoft: colors.backgroundAlt,
+  slate: colors.backgroundAlt,
+  slateSoft: 'rgba(18, 24, 32, 0.86)',
   cyan: colors.accent,
-  cyanSoft: 'rgba(75, 231, 207, 0.28)',
+  cyanSoft: colors.accentSoft,
   amber: colors.warning,
   amberSoft: colors.warningSoft,
-  violet: colors.accentSecondary,
-  violetSoft: 'rgba(43, 197, 249, 0.28)',
-  emerald: colors.accentSoft,
+  violet: '#b998ff',
+  violetSoft: 'rgba(185, 152, 255, 0.24)',
+  emerald: '#5de2b4',
   textPrimary: colors.foreground,
-  textSecondary: colors.foregroundSubtle,
+  textSecondary: '#aec0cc',
   textMuted: colors.foregroundMuted,
 };
 
 export const panelSurface = {
   background: surfaces.panel,
   border: `1px solid ${colors.panelBorder}`,
-  boxShadow: '0 36px 48px -28px rgba(31, 197, 170, 0.32)',
-  backdropFilter: 'blur(16px)',
+  boxShadow: '0 28px 48px rgba(4, 8, 12, 0.65)',
+  backdropFilter: 'blur(10px)',
 };
 
 export const characterPanelSurface: React.CSSProperties = {
-  background: 'rgba(12, 18, 24, 0.68)',
+  background: 'linear-gradient(185deg, rgba(12, 18, 26, 0.8), rgba(8, 14, 20, 0.92))',
   borderRadius: '12px',
-  border: `1px solid ${colors.divider}`,
+  border: `1px solid ${colors.cardBorder}`,
   padding: '0.8rem',
-  boxShadow: 'inset 0 1px 0 rgba(115, 140, 155, 0.3)',
+  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.05)',
 };
 
 export const characterPanelHeaderStyle: React.CSSProperties = {
@@ -59,47 +59,45 @@ export const characterPanelTitleStyle: React.CSSProperties = {
 export const cardSurface = {
   background: surfaces.card,
   border: `1px solid ${colors.cardBorder}`,
-  boxShadow: '0 18px 32px -22px rgba(36, 180, 186, 0.35)',
+  boxShadow: '0 16px 30px -18px rgba(8, 14, 20, 0.65)',
 };
 
 export const badgeSurface = (accent: string) => ({
   border: `1px solid ${accent}`,
   color: accent,
-  background: surfaces.badge,
+  background: 'rgba(8, 14, 20, 0.7)',
   fontFamily: fonts.badge,
-  letterSpacing: '0.1em',
 });
 
 export const headingStyle: React.CSSProperties = {
   fontFamily: fonts.heading,
   textTransform: 'uppercase',
   letterSpacing: '0.24em',
-  color: neonPalette.textPrimary,
+  color: colors.foreground,
   fontSize: '0.78rem',
 };
 
 export const subheadingStyle: React.CSSProperties = {
   fontFamily: fonts.body,
   letterSpacing: '0.16em',
-  color: neonPalette.textMuted,
+  color: colors.foregroundMuted,
   fontSize: '0.64rem',
   textTransform: 'uppercase',
 };
 
 export const statValueStyle: React.CSSProperties = {
-  fontFamily: fonts.body,
+  fontFamily: fonts.mono,
   fontSize: '0.85rem',
-  fontWeight: 700,
-  color: neonPalette.textPrimary,
+  fontWeight: 600,
+  color: colors.foreground,
 };
 
 export const subtleText: React.CSSProperties = {
   fontFamily: fonts.body,
   fontSize: '0.62rem',
-  color: neonPalette.textMuted,
+  color: colors.foregroundMuted,
 };
 
-// Enhanced Typography Styles
 export const gradientTextStyle = (color1: string, color2: string): React.CSSProperties => ({
   background: `linear-gradient(135deg, ${color1}, ${color2})`,
   WebkitBackgroundClip: 'text',
@@ -119,15 +117,15 @@ export const importantValueStyle = (color: string): React.CSSProperties => ({
   ...statValueStyle,
   color,
   textShadow: `0 0 12px ${color}80, 0 0 6px ${color}40`,
-  fontWeight: 800,
+  fontWeight: 700,
 });
 
 export const headingGradientStyle: React.CSSProperties = {
   ...headingStyle,
-  background: `linear-gradient(135deg, ${colors.accentGlow}, ${colors.accentSecondary})`,
+  background: `linear-gradient(135deg, ${colors.accent}, ${colors.accentSecondary})`,
   WebkitBackgroundClip: 'text',
   WebkitTextFillColor: 'transparent',
   backgroundClip: 'text',
   textShadow: 'none',
-  filter: 'drop-shadow(0 0 8px rgba(75, 231, 207, 0.3))',
+  filter: 'drop-shadow(0 0 8px rgba(75, 231, 207, 0.35))',
 };

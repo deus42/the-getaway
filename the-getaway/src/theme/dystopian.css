@@ -1,0 +1,236 @@
+:root {
+  --hud-bg: #0b0d10;
+  --hud-bg-alt: #12151b;
+  --hud-bg-deep: #060a10;
+  --hud-fg: #d7e3ea;
+  --hud-fg-muted: #7f8d99;
+  --hud-accent: #4be7cf;
+  --hud-accent-soft: rgba(75, 231, 207, 0.16);
+  --hud-accent-glow: rgba(75, 231, 207, 0.45);
+  --hud-accent-secondary: #2bc5f9;
+  --hud-warn: #ffd479;
+  --hud-warn-soft: rgba(255, 212, 121, 0.22);
+  --hud-terminal: #ffb86b;
+  --hud-divider: rgba(62, 88, 94, 0.55);
+  --hud-panel-border: rgba(74, 126, 123, 0.38);
+  --hud-card-border: rgba(82, 135, 150, 0.26);
+  --hud-overlay: rgba(10, 16, 21, 0.72);
+  --hud-font-body: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --hud-font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --hud-font-heading: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --hud-motion-scale: 1.04;
+  --hud-motion-duration: 150ms;
+  --hud-motion-ease: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+body {
+  background: var(--hud-bg);
+  color: var(--hud-fg);
+  font-family: var(--hud-font-body);
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(75, 231, 207, 0.08), transparent 55%),
+    radial-gradient(circle at 80% 10%, rgba(43, 197, 249, 0.06), transparent 65%),
+    radial-gradient(circle at 50% 120%, rgba(255, 212, 121, 0.04), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  z-index: 0;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(0deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 2px, 2px 100%;
+  mix-blend-mode: soft-light;
+  opacity: 0.45;
+  z-index: 0;
+}
+
+.hud-shell {
+  position: relative;
+  min-height: 100vh;
+  color: var(--hud-fg);
+  font-family: var(--hud-font-body);
+  background: var(--hud-bg);
+  isolation: isolate;
+}
+
+.hud-shell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(75, 231, 207, 0.05), transparent 60%);
+  mix-blend-mode: overlay;
+  z-index: 1;
+}
+
+.hud-stage {
+  position: relative;
+  z-index: 2;
+}
+
+.hud-panel {
+  position: relative;
+  background: linear-gradient(140deg, rgba(14, 20, 28, 0.9), rgba(10, 16, 24, 0.88));
+  border: 1px solid var(--hud-panel-border);
+  border-radius: 16px;
+  box-shadow: 0 28px 48px rgba(4, 8, 12, 0.65);
+  color: var(--hud-fg);
+  overflow: hidden;
+}
+
+.hud-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 18% 18%, rgba(75, 231, 207, 0.08), transparent 55%);
+  opacity: 0.6;
+  mix-blend-mode: soft-light;
+  z-index: 1;
+}
+
+.hud-panel > * {
+  position: relative;
+  z-index: 2;
+}
+
+.u-scan {
+  position: relative;
+  isolation: isolate;
+}
+
+.u-scan::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.035) 50%, transparent 50%) 0 0 / 100% 2px,
+    radial-gradient(ellipse at center, rgba(75, 231, 207, 0.08), transparent 65%);
+  mix-blend-mode: overlay;
+  opacity: 0.7;
+  filter: contrast(1.02) saturate(1.06);
+  border-radius: inherit;
+  z-index: 3;
+}
+
+.hud-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--hud-accent) 70%, white 30%);
+  background:
+    linear-gradient(125deg, rgba(75, 231, 207, 0.18), rgba(43, 197, 249, 0.14));
+  color: var(--hud-fg);
+  font-family: var(--hud-font-body);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform var(--hud-motion-duration) var(--hud-motion-ease),
+    box-shadow var(--hud-motion-duration) var(--hud-motion-ease),
+    border-color var(--hud-motion-duration) var(--hud-motion-ease);
+  box-shadow: 0 12px 22px rgba(11, 18, 24, 0.4);
+  text-decoration: none;
+}
+
+.hud-button:hover {
+  transform: translateY(-1px) scale(var(--hud-motion-scale));
+  box-shadow: 0 14px 24px rgba(75, 231, 207, 0.22);
+}
+
+.hud-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(11, 18, 24, 0.6), 0 0 0 4px rgba(75, 231, 207, 0.45);
+  animation: hud-focus-flicker calc(var(--hud-motion-duration) * 1.1) steps(2, jump-none) 1;
+}
+
+.hud-button--icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 999px;
+  padding: 0;
+  font-size: 0.85rem;
+  backdrop-filter: blur(4px);
+}
+
+.hud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.24rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--hud-panel-border);
+  background: var(--hud-accent-soft);
+  color: var(--hud-accent);
+  font-family: var(--hud-font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hud-badge--warning {
+  border-color: color-mix(in srgb, var(--hud-warn) 65%, white 35%);
+  background: var(--hud-warn-soft);
+  color: var(--hud-warn);
+}
+
+.hud-badge--terminal {
+  border-color: color-mix(in srgb, var(--hud-terminal) 70%, white 30%);
+  background: color-mix(in srgb, var(--hud-terminal) 12%, transparent);
+  color: var(--hud-terminal);
+}
+
+@keyframes hud-focus-flicker {
+  0% { opacity: 1; }
+  40% { opacity: 0.82; }
+  70% { opacity: 0.95; }
+  100% { opacity: 1; }
+}
+
+.hud-scroll-surface {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(75, 231, 207, 0.6) rgba(12, 18, 24, 0.7);
+}
+
+.hud-scroll-surface::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.hud-scroll-surface::-webkit-scrollbar-track {
+  background: rgba(12, 18, 24, 0.7);
+  border-radius: 4px;
+}
+
+.hud-scroll-surface::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, rgba(75, 231, 207, 0.5), rgba(43, 197, 249, 0.5));
+  border-radius: 4px;
+  border: 1px solid rgba(75, 231, 207, 0.25);
+}
+
+.hud-scroll-surface::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, rgba(75, 231, 207, 0.75), rgba(43, 197, 249, 0.75));
+}
+
+.hud-scroll-surface::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(135deg, rgba(75, 231, 207, 1), rgba(43, 197, 249, 1));
+}

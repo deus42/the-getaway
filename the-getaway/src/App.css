@@ -1,14 +1,4 @@
-:root {
-  --bg: #0b0d10;
-  --bg-alt: #12151b;
-  --fg: #d7e3ea;
-  --fg-subtle: #9aabb6;
-  --accent: #4be7cf;
-  --accent-soft: #2fd6c0;
-  --warn: #ffd479;
-  --font-body: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono', 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-}
+@import './theme/dystopian.css';
 
 html,
 body,
@@ -18,36 +8,10 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background: var(--bg);
-  color: var(--fg);
-  font-family: var(--font-body);
+  background: var(--hud-bg);
+  color: var(--hud-fg);
+  font-family: var(--hud-font-body);
   position: relative;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 20%, rgba(75, 231, 207, 0.04), transparent 55%),
-    radial-gradient(circle at 80% 10%, rgba(43, 197, 249, 0.05), transparent 60%),
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 2px;
-  mix-blend-mode: screen;
-  opacity: 0.85;
-  z-index: 0;
-}
-
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAB2klEQVRoge2YzY3DMAxF2cAFZAAWQAboABqgA6gAG6ACXoA26AGygA1YACtLiCFYI8a9kaI0s5momk9FcdbC9+PK1s+v6u6vlpo3L7h5CoiAiIgIiIAIioNVFNTCWyCO0AG5AJjZImnCEyBdtiGouumjGhoBeQpJCFYhJnoRlOm4fSLOF9sooQ04AnME1h3IOGDaToOOaN0mKfaAfAAt8gZkkGSXyY8CHThgXJAlQH2AK8d0kuM3AV4Hth9CAkwG3J6mFDd2G/gTWDIHW8mOAvwGtXcQai8g2WnkaM96N3CmG5l7sK8Hee4C71FJgqPRQJq5XIQJruZlYQ4ZJzhE0NGDUCOb6rrMXfhRiAW1IL3G/jOFIwHjCFoU1N1XQNQJVAdwsC/uD4Lw/wR3v0ZqOn6CzfQzM0m2BnLA6yUj61bBOGzlch/muSfaD1HUUzhicSkmPNLOlppOSbF/eU1XJH0FGO+VPnV8iXsvxgrwDLx/BN8TTIuU6jkqtfvEJQHg4H8DhWP+Zi7zdAZ+GTg6W1WY5drthA5WCnBRyGeJmFaXbgVXfH0V0HQ0dMdrqip1F7Jm/VP1HeVrfidhrP4N2tJbMkCP6HcdVprleVziX0gMygJ6FJCCGiREREREREZF/ROcnNUA9lLCYAAAAASUVORK5CYII=');
-  opacity: 0.08;
-  mix-blend-mode: soft-light;
-  z-index: 1;
 }
 
 main,
@@ -69,88 +33,4 @@ canvas {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-}
-
-.u-scan {
-  position: relative;
-  isolation: isolate;
-}
-
-.u-scan::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.03) 50%, transparent 50%) 0 0 / 100% 2px,
-    radial-gradient(ellipse at center, rgba(75, 231, 207, 0.08), transparent 60%);
-  mix-blend-mode: overlay;
-  pointer-events: none;
-  opacity: 0.7;
-  filter: contrast(1.02) saturate(1.05);
-  border-radius: inherit;
-  z-index: 3;
-}
-
-.btn {
-  border: 1px solid color-mix(in oklab, var(--accent) 60%, white);
-  padding: 10px 14px;
-  letter-spacing: 0.03em;
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  backdrop-filter: blur(2px);
-  background:
-    linear-gradient(120deg, rgba(75, 231, 207, 0.15), rgba(43, 197, 249, 0.1));
-  color: var(--fg);
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
-  cursor: pointer;
-}
-
-.btn:hover {
-  transform: translateY(-1px) scale(1.03);
-  box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 25%, transparent);
-}
-
-.btn:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-.badge {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--warn);
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-/* Custom Scrollbar Styling */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: rgba(12, 18, 24, 0.7);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, rgba(75, 231, 207, 0.5), rgba(43, 197, 249, 0.5));
-  border-radius: 4px;
-  border: 1px solid rgba(75, 231, 207, 0.25);
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, rgba(75, 231, 207, 0.75), rgba(43, 197, 249, 0.75));
-}
-
-::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(135deg, rgba(75, 231, 207, 1), rgba(43, 197, 249, 1));
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(75, 231, 207, 0.6) rgba(12, 18, 24, 0.7);
 }

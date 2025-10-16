@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
+  font-family: var(--hud-font-body, Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif);
   line-height: 1.5;
   font-weight: 400;
   color-scheme: dark;
-  color: var(--fg);
-  background-color: var(--bg);
-  font-family: var(--font-body);
+  color: var(--hud-fg, #d7e3ea);
+  background-color: var(--hud-bg, #0b0d10);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -17,21 +17,44 @@
 
 a {
   font-weight: 500;
-  color: var(--accent);
+  color: var(--hud-accent, #4be7cf);
   text-decoration: none;
+  letter-spacing: 0.04em;
   transition: color 140ms ease;
 }
 
 a:hover {
-  color: color-mix(in oklab, var(--accent) 70%, white);
+  color: color-mix(in srgb, var(--hud-accent, #4be7cf) 65%, white 35%);
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background: var(--hud-bg, #0b0d10);
+  color: var(--hud-fg, #d7e3ea);
 }
 
 button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
   font-family: inherit;
+  background-color: rgba(11, 18, 24, 0.92);
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+}
+
+button:hover {
+  border-color: var(--hud-accent, #4be7cf);
+  transform: translateY(-1px) scale(1.02);
+}
+
+button:focus,
+button:focus-visible {
+  outline: 2px solid var(--hud-accent, #4be7cf);
+  outline-offset: 2px;
 }

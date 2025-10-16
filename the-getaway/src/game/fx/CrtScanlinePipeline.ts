@@ -7,6 +7,7 @@ uniform sampler2D uMainSampler;
 uniform float uTime;
 uniform float uScanIntensity;
 uniform float uScanDensity;
+uniform float uNoiseAmount;
 
 varying vec2 outTexCoord;
 
@@ -17,9 +18,9 @@ float random(vec2 co) {
 void main() {
   vec4 color = texture2D(uMainSampler, outTexCoord);
   float scan = sin(outTexCoord.y * 3.14159 * uScanDensity) * uScanIntensity;
-  float subtleNoise = (random(outTexCoord + uTime) - 0.5) * 0.015;
+  float noise = (random(outTexCoord + uTime) - 0.5) * uNoiseAmount;
   color.rgb -= scan;
-  color.rgb += subtleNoise;
+  color.rgb += noise;
   gl_FragColor = color;
 }
 `;
@@ -38,8 +39,9 @@ export class CrtScanlinePipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXP
   }
 
   public onBoot(): void {
-    this.set1f('uScanIntensity', 0.04);
+    this.set1f('uScanIntensity', 0.035);
     this.set1f('uScanDensity', 720.0);
+    this.set1f('uNoiseAmount', 0.02);
     this.set1f('uTime', this.time);
   }
 
