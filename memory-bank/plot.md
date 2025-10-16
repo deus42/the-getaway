@@ -156,7 +156,7 @@
   </visual_audio_motifs>
 
   <future_expansion_seeds>
-    <seed id="industrial_wasteland">Chemical weapon stockpiles leak in the Midwest after Harrow falls, aligning with roadmap Step 31.</seed>
+    <seed id="industrial_wasteland">Chemical weapon stockpiles leak in the Midwest after Harrow falls, aligning with post-MVP roadmap Step 31.</seed>
     <seed id="vehicle_underground">Motorcycle network connects Shelterline safe routes, supporting Step 27.1 content.</seed>
     <seed id="survival_mode">Hunger and thirst mechanics mirror refugee supply chains, reinforcing Step 28.1 systems.</seed>
   </future_expansion_seeds>

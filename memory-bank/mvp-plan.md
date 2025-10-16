@@ -1,5 +1,10 @@
 # Implementation Plan for "The Getaway" (Base Game)
 
+<workflow_reminder>
+- After completing any roadmap step, record it in `memory-bank/progress.md` with matching step metadata before continuing.
+- Keep the corresponding Linear issue in sync: move it to `In Progress` while implementing, add a completion comment with validation commands, then mark it `Done`.
+</workflow_reminder>
+
 <phase id="1" name="Project Setup and Core Infrastructure">
 <step id="1">
 <step_metadata>
@@ -2241,67 +2246,18 @@ Gather resources and reach Engineering 15 skill. Travel to Resistance safe house
 <step id="31">
 <step_metadata>
   <number>31</number>
-  <title>Build Industrial Wasteland Zone with Concrete Specifications</title>
+  <title>Industrial Wasteland Zone (Deferred to Post-MVP)</title>
   <phase>Phase 8: World Expansion</phase>
 </step_metadata>
 
 <instructions>
-Create the Industrial Wasteland as an 80×80 tile high-danger zone with specific environmental hazards, 5 enemy types, and 3 zone-specific quests.
+This step was moved out of the MVP build. Refer to `memory-bank/post-mvp-plan.md` for the full Industrial Wasteland scope, milestone tests, and authoring guidance.
 </instructions>
 
-<details>
-- **Design map structure** in `src/content/maps/industrialWasteland.ts`:
-  - **Size**: 80×80 tiles (4x larger than Slums/Downtown starter zones)
-  - **Layout**: 3 major factory complexes (north, center, south), outdoor toxic yards connecting them, underground tunnels network (15×15 tile subsection)
-  - **Key landmarks**: Refinery (north), Assembly Plant (center), Chemical Storage (south), Scavenger Camp (northeast safe zone), Collapsed Bridge (western boundary)
-  - **Entry points**: 2 connections from Downtown (eastern gate, requires no reputation), 1 from Slums (southern border, requires Scavengers Neutral or better)
-- **Implement 4 specific environmental hazards**:
-  - **Toxic Gas Clouds** (yellow-green overlay): 10 HP/turn damage without Gas Mask. 40% of outdoor areas affected. Gas Mask (equipment slot) provides immunity.
-  - **Radiation Pockets** (purple glow effect): +2 radiation/turn exposure. 15% of factory interiors affected. Hazmat Suit or Anti-Rad Meds required.
-  - **Chemical Spills** (orange puddles): 15 HP acid damage on entering tile, corrodes armor (-5 durability/turn standing in it). 8-10 spill locations scattered across map.
-  - **Smog (Low Visibility)**: Reduce perception range from 12 tiles to 6 tiles in outdoor areas. Flashlight item extends to 9 tiles. Always active in outdoor Industrial Wasteland.
-- **Create 5 zone-specific enemy types**:
-  - **Industrial Robots** (Level 8-10): 120 HP, 8 armor rating. Weak to EMP (-50% HP from EMP grenades). Drop: Electronic Parts (×3-5).
-  - **Mutated Workers** (Level 7-9): 80 HP, 3 armor. Poison attacks (5 damage/turn for 3 turns). Aggressive behavior (always pursue). Drop: Bio Materials (×2-3).
-  - **Automated Turrets** (Level 9-11): 100 HP, 10 armor. Stationary, high damage (25 damage/shot). Can be hacked (Hacking 50) to turn friendly. Drop: Metal Scrap (×5-7).
-  - **Hazmat Scavengers** (Level 8-10): 90 HP, 5 armor. Immune to gas/radiation. Use shotguns and molotovs. Drop: Chemical Compounds (×2-4), Gas Mask (10% chance).
-  - **Toxic Sludge Creature** (Level 10-12, mini-boss): 200 HP, 2 armor. Creates chemical spills on movement. Explodes on death (3-tile AoE, 20 damage). Drop: Rare Bio Materials (×5), Advanced Tech Component (guaranteed).
-- **Add 6 unique loot types**:
-  - **Advanced Tech Component** (rare crafting material): Used for high-tier weapon mods, energy weapons. 5 guaranteed locations + random drops from robots.
-  - **Industrial-Grade Weapons**: Heavy Machine Gun (requires Strength 7), Plasma Cutter (energy melee weapon), Nail Gun (cheap ammo, high durability).
-  - **Factory Schematic** (quest item/recipe book): Teaches advanced crafting recipes (EMP Grenade, Heavy Armor Plating). 3 schematics hidden in map.
-  - **Gas Mask** (equipment): Essential for zone exploration. 2 guaranteed loot locations, drops from Hazmat Scavengers.
-  - **Hazmat Suit** (armor): Immunity to gas and radiation, 4 armor rating, -1 AP penalty. 1 guaranteed location (Chemical Storage vault).
-  - **Experimental Stim Pack** (consumable): Heals 50 HP, +3 AP for 2 turns, no withdrawal. 4 doses scattered in labs.
-- **Design 3 zone-specific quests**:
-  - **Quest 1: "Clear the Refinery"** (given by Scavenger Camp leader, requires Scavengers Neutral):
-    - Objective: Eliminate 15 enemies in Refinery building, disable automated defense system (Hacking 40 or destroy 3 control nodes)
-    - Reward: 150 XP, 500 credits, Scavengers +20 reputation, access to Refinery safe zone (crafting station available)
-  - **Quest 2: "Toxic Rescue"** (given by Resistance operative, requires Resistance Friendly):
-    - Objective: Locate and rescue 3 trapped Resistance scouts in Chemical Storage. Navigate toxic areas, provide Gas Masks (quest items provided).
-    - Reward: 200 XP, Advanced Tech Component (×2), Resistance +25 reputation, unlock Hazmat Suit location
-  - **Quest 3: "Rogue AI Shutdown"** (triggered by exploring Assembly Plant, no prerequisite):
-    - Objective: Reach Assembly Plant control room (fight through 20+ Industrial Robots), hack central AI (Hacking 60) or destroy it (boss fight: AI Defense Drones, 3× Level 12 robots)
-    - Reward: 250 XP, Factory Schematic (×2), Heavy Machine Gun, deactivates 50% of turrets across zone permanently
-- **Implement smog visibility system**:
-  - Outdoor tiles: reduce `perceptionRange` from 12 to 6
-  - Flashlight item (equipped in accessory slot): increase range to 9 while active, consumes batteries (stackable item, 1 battery per 10 minutes use)
-  - Indoor factories: normal vision (no smog)
-  - Enemies with "Thermal Vision" trait (robots, turrets): unaffected by smog, always detect player at 12 tiles
-- **Build zone access and warnings**:
-  - NPC in Downtown (near eastern gate) warns: "Industrial Wasteland is death without gas mask. Only Scavengers and madmen go there."
-  - First entry triggers warning modal: "Toxic Zone Ahead: Gas Mask required. Radiation present. Recommend Level 8+"
-  - If player <Level 6: additional warning: "You are under-leveled for this zone. Retreat advised."
-</details>
-
-<error_handling>
-- Prevent soft-locks: If player enters without Gas Mask, place 1 emergency mask at entry point (one-time pickup)
-- If player dies in toxic area, respawn at nearest safe zone (Scavenger Camp or entry point) with warning message
-</error_handling>
-
-<test>
-Travel to Industrial Wasteland via Downtown eastern gate and verify entry warning appears. Enter without Gas Mask and confirm 10 HP/turn damage from toxic gas. Find and equip Gas Mask, verify damage stops. Navigate outdoor smog area and confirm perception range reduced to 6 tiles. Equip flashlight and verify range increases to 9. Enter Refinery factory interior and confirm normal vision restored. Encounter Industrial Robot and verify 8 armor rating, high durability. Use EMP grenade and confirm -50% HP bonus damage. Fight Mutated Worker and verify poison DoT effect (5 damage/turn for 3 turns). Encounter Automated Turret and attempt hack with Hacking 50+, verify turret turns friendly. Step on Chemical Spill and verify 15 HP damage, armor durability loss. Fight Toxic Sludge Creature mini-boss, verify explosion on death (3-tile AoE). Loot Advanced Tech Components and verify rare status. Find Gas Mask in guaranteed location. Accept "Clear the Refinery" quest, complete objectives (15 kills, disable defense), verify rewards and safe zone unlocked. Accept "Toxic Rescue", navigate to Chemical Storage, rescue 3 scouts, verify Hazmat Suit location unlocked. Trigger "Rogue AI Shutdown" quest, reach control room, attempt hack (or fight drones), verify turret deactivation upon completion. Confirm zone is fully explorable with all landmarks accessible.
-</test>
+<notes>
+- Preserve dependency references in other steps, but execute the zone build only when tackling the post-MVP roadmap.
+- Keep the associated Linear issue in the PostMVP project; update its status when planning the expansion.
+</notes>
 </step>
 
 <step id="31.5">
@@ -2967,7 +2923,7 @@ This plan now outlines **56 implementable steps** organized into **10 phases** t
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
 - **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (21 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5/29.6/29.7/29.8, 30.1/30.2)
-- **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
+- **Phase 8 (Step 31 deferred, Step 31.5)**: Seasonal narrative arc framework remains in MVP; Industrial Wasteland zone moves to Post-MVP scope.
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
 - **Phase 10 (Steps 32.1-35.7)**: Testing, polish, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5, 35.7)
 </phase_structure>
@@ -2982,7 +2938,7 @@ This plan now outlines **56 implementable steps** organized into **10 phases** t
 - **Advanced Combat Systems**: Directional cover and flanking, overwatch mode, targeted shots, area-of-effect attacks, and combat consumables for deeper tactical gameplay.
 - **Reputation & Influence**: Concrete faction system (Resistance, CorpSec, Scavengers) with numerical thresholds and gameplay consequences.
 - **Crafting & Upgrades**: Basic crafting for ammo and medical supplies, weapon modification system with concrete recipes.
-- **Expanded World**: Industrial Wasteland zone (80×80 tiles) with specific environmental hazards and zone-specific quests.
+- **Expanded World**: Downtown/Slums enhancements remain core; Industrial Wasteland zone migrated to the post-MVP roadmap.
 - **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
 - **Testing & Quality**: Unit test suite (70% coverage target) and integration test scenarios.
 - **Documentation & Support**: In-game help system, state atlas exports, narrative ledger epilogue, and external documentation updates.
@@ -3014,7 +2970,7 @@ This revised plan addresses critical quality issues identified in the analysis:
 - XP formula: `xpRequired = 100 * level * (1 + level * 0.15)`
 - AP formula: `6 + floor((agility-5)*0.5)`
 - Faction thresholds: <-60 Hostile, -60 to -20 Unfriendly, etc.
-- Industrial Wasteland: 80×80 tile map, 3 zone-specific quests
+  - Industrial Wasteland scope documented in `memory-bank/post-mvp-plan.md` for the post-release expansion
 
 **Quality Assurance**: New steps for comprehensive testing and accessibility:
 - Step 34.7: In-game help system and external documentation

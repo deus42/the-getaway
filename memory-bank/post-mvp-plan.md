@@ -1,8 +1,74 @@
 # Post-MVP Roadmap for "The Getaway"
 
-This document catalogs Phase 9 optional expansions that were split out of `memory-bank/mvp-plan.md`. Step numbering is preserved to keep roadmap references intact.
+This document catalogs Phase 9 optional expansions that were split out of `memory-bank/mvp-plan.md`. Step numbering is preserved to keep roadmap references intact, including Step 31 (Industrial Wasteland) which was moved here from the MVP scope.
 
 <phase id="9" name="Optional Expansions (POST-MVP)">
+<step id="31">
+<step_metadata>
+  <number>31</number>
+  <title>Build Industrial Wasteland Zone with Concrete Specifications</title>
+  <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+</step_metadata>
+
+<instructions>
+⚠️ **POST-MVP - Defer to v1.1+**: Stand up the Industrial Wasteland district only after the core city loop (Slums + Downtown) is stable. This zone introduces high-difficulty hazards, enemy types, and quest content that require mature combat, crafting, and narrative systems.
+</instructions>
+
+<details>
+- **Design map structure** in `src/content/maps/industrialWasteland.ts`:
+  - **Size**: 80×80 tiles (4× larger than Slums/Downtown starter zones)
+  - **Layout**: 3 major factory complexes (north, center, south), outdoor toxic yards connecting them, underground tunnels network (15×15 tile subsection)
+  - **Key landmarks**: Refinery (north), Assembly Plant (center), Chemical Storage (south), Scavenger Camp (northeast safe zone), Collapsed Bridge (western boundary)
+  - **Entry points**: 2 connections from Downtown (eastern gate, requires no reputation), 1 from Slums (southern border, requires Scavengers Neutral or better)
+- **Implement 4 specific environmental hazards**:
+  - **Toxic Gas Clouds** (yellow-green overlay): 10 HP/turn damage without Gas Mask. 40% of outdoor areas affected. Gas Mask (equipment slot) provides immunity.
+  - **Radiation Pockets** (purple glow effect): +2 radiation/turn exposure. 15% of factory interiors affected. Hazmat Suit or Anti-Rad Meds required.
+  - **Chemical Spills** (orange puddles): 15 HP acid damage on entering tile, corrodes armor (-5 durability/turn standing in it). 8-10 spill locations scattered across map.
+  - **Smog (Low Visibility)**: Reduce perception range from 12 tiles to 6 tiles in outdoor areas. Flashlight item extends to 9 tiles. Always active in outdoor Industrial Wasteland.
+- **Create 5 zone-specific enemy types**:
+  - **Industrial Robots** (Level 8-10): 120 HP, 8 armor rating. Weak to EMP (-50% HP from EMP grenades). Drop: Electronic Parts (×3-5).
+  - **Mutated Workers** (Level 7-9): 80 HP, 3 armor. Poison attacks (5 damage/turn for 3 turns). Aggressive behavior (always pursue). Drop: Bio Materials (×2-3).
+  - **Automated Turrets** (Level 9-11): 100 HP, 10 armor. Stationary, high damage (25 damage/shot). Can be hacked (Hacking 50) to turn friendly. Drop: Metal Scrap (×5-7).
+  - **Hazmat Scavengers** (Level 8-10): 90 HP, 5 armor. Immune to gas/radiation. Use shotguns and molotovs. Drop: Chemical Compounds (×2-4), Gas Mask (10% chance).
+  - **Toxic Sludge Creature** (Level 10-12, mini-boss): 200 HP, 2 armor. Creates chemical spills on movement. Explodes on death (3-tile AoE, 20 damage). Drop: Rare Bio Materials (×5), Advanced Tech Component (guaranteed).
+- **Add 6 unique loot types**:
+  - **Advanced Tech Component** (rare crafting material): Used for high-tier weapon mods, energy weapons. 5 guaranteed locations + random drops from robots.
+  - **Industrial-Grade Weapons**: Heavy Machine Gun (requires Strength 7), Plasma Cutter (energy melee weapon), Nail Gun (cheap ammo, high durability).
+  - **Factory Schematic** (quest item/recipe book): Teaches advanced crafting recipes (EMP Grenade, Heavy Armor Plating). 3 schematics hidden in map.
+  - **Gas Mask** (equipment): Essential for zone exploration. 2 guaranteed loot locations, drops from Hazmat Scavengers.
+  - **Hazmat Suit** (armor): Immunity to gas and radiation, 4 armor rating, -1 AP penalty. 1 guaranteed location (Chemical Storage vault).
+  - **Experimental Stim Pack** (consumable): Heals 50 HP, +3 AP for 2 turns, no withdrawal. 4 doses scattered in labs.
+- **Design 3 zone-specific quests**:
+  - **Quest 1: "Clear the Refinery"** (given by Scavenger Camp leader, requires Scavengers Neutral):
+    - Objective: Eliminate 15 enemies in Refinery building, disable automated defense system (Hacking 40 or destroy 3 control nodes)
+    - Reward: 150 XP, 500 credits, Scavengers +20 reputation, access to Refinery safe zone (crafting station available)
+  - **Quest 2: "Toxic Rescue"** (given by Resistance operative, requires Resistance Friendly):
+    - Objective: Locate and rescue 3 trapped Resistance scouts in Chemical Storage. Navigate toxic areas, provide Gas Masks (quest items provided).
+    - Reward: 200 XP, Advanced Tech Component (×2), Resistance +25 reputation, unlock Hazmat Suit location
+  - **Quest 3: "Rogue AI Shutdown"** (triggered by exploring Assembly Plant, no prerequisite):
+    - Objective: Reach Assembly Plant control room (fight through 20+ Industrial Robots), hack central AI (Hacking 60) or destroy it (boss fight: AI Defense Drones, 3× Level 12 robots)
+    - Reward: 250 XP, Factory Schematic (×2), Heavy Machine Gun, deactivates 50% of turrets across zone permanently
+- **Implement smog visibility system**:
+  - Outdoor tiles: reduce `perceptionRange` from 12 to 6
+  - Flashlight item (equipped in accessory slot): increase range to 9 while active, consumes batteries (stackable item, 1 battery per 10 minutes use)
+  - Indoor factories: normal vision (no smog)
+  - Enemies with "Thermal Vision" trait (robots, turrets): unaffected by smog, always detect player at 12 tiles
+- **Build zone access and warnings**:
+  - NPC in Downtown (near eastern gate) warns: "Industrial Wasteland is death without gas mask. Only Scavengers and madmen go there."
+  - First entry triggers warning modal: "Toxic Zone Ahead: Gas Mask required. Radiation present. Recommend Level 8+"
+  - If player <Level 6: additional warning: "You are under-leveled for this zone. Retreat advised."
+</details>
+
+<error_handling>
+- Prevent soft-locks: If player enters without Gas Mask, place 1 emergency mask at entry point (one-time pickup)
+- If player dies in toxic area, respawn at nearest safe zone (Scavenger Camp or entry point) with warning message
+</error_handling>
+
+<test>
+Travel to Industrial Wasteland via Downtown eastern gate and verify entry warning appears. Enter without Gas Mask and confirm 10 HP/turn damage from toxic gas. Find and equip Gas Mask, verify damage stops. Navigate outdoor smog area and confirm perception range reduced to 6 tiles. Equip flashlight and verify range increases to 9. Enter Refinery factory interior and confirm normal vision restored. Encounter Industrial Robot and verify 8 armor rating, high durability. Use EMP grenade and confirm -50% HP bonus damage. Fight Mutated Worker and verify poison DoT effect (5 damage/turn for 3 turns). Encounter Automated Turret and attempt hack with Hacking 50+, verify turret turns friendly. Step on Chemical Spill and verify 15 HP damage, armor durability loss. Fight Toxic Sludge Creature mini-boss, verify explosion on death (3-tile AoE). Loot Advanced Tech Components and verify rare status. Find Gas Mask in guaranteed location. Accept "Clear the Refinery" quest, complete objectives (15 kills, disable defense), verify rewards and safe zone unlocked. Accept "Toxic Rescue", navigate to Chemical Storage, rescue 3 scouts, verify Hazmat Suit location unlocked. Trigger "Rogue AI Shutdown" quest, reach control room, attempt hack (or fight drones), verify turret deactivation upon completion. Confirm zone is fully explorable with all landmarks accessible.
+</test>
+</step>
+
 <step id="40.2">
 <step_metadata>
   <number>40.2</number>
