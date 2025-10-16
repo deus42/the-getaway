@@ -61,6 +61,9 @@
 - **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
 - After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
 - When adding or revising dialogue, quest text, or narrative copy, align tone with the writing guidelines in `memory-bank/plot.md` and note the consulted section in your change log or PR summary.
+- Maintain the dystopian CRT-inspired HUD kit currently active across the React shell and Phaser scenes. Extend or adjust the exported tokens/utilities (`src/theme/dystopianTokens.ts`, `src/theme/dystopian.css`) instead of replacing the structure outright.
+- Keep typography crisp—scanline, bloom, and noise effects belong on panels or overlays (for example `ScanlineOverlay`) while text layers should remain sharp using the Inter/JetBrains Mono pairing already configured.
+- Phaser background layers may opt into the CRT pipeline, but gameplay-critical elements should remain unaffected to preserve readability.
 
 ## Separation of Concerns: Design vs Architecture
 
