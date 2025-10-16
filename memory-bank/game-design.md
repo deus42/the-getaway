@@ -511,6 +511,18 @@ The tone mixer keeps emergent dialogue aligned with the agreed voice pillars whi
 	•	Content Authoring: Author fingerprints live in `content/dialogueTone/authors.ts`, personas in `personas.ts`, scene hints in `scenes.ts`, and template/palette definitions in `templates.ts` / `palettes.ts`. Locale bundles opt in via `toneDefaults` / `tone` metadata so translators see both the generated output and the underlying fallback line.
 </mechanic>
 
+<mechanic name="role_based_dialogue_templates">
+Role-Based Procedural Dialogue Templates
+
+Systemic NPC roles now draw from reusable dialogue families so ambient encounters stay coherent with the city’s fiction while reflecting moment-to-moment context:
+	•	Content Registry: Role templates live in `the-getaway/src/content/dialogueTemplates/roles/` (merchant, checkpoint_guard, street_doc, gang_scout, safehouse_handler). Each entry defines a `templateKey`, summary, optional tone overrides, and whether it serves as the fallback line for that role.
+	•	Gating Parameters: Templates can require specific faction standings, reputation thresholds, time-of-day windows, curfew states, blackout tiers, supply scarcity levels, hazard keywords, or owned perks. The resolver evaluates these constraints before sampling and automatically falls back to any `isFallback` variant when nothing matches.
+	•	Token Replacement: Template text supports tokens like `{{highlightItem}}` or `{{intel}}`. Token resolvers are seeded helpers that select hazard-aware stock (battery bricks during blackouts, respirators during smog alerts), perk callouts, or patrol intel so lines stay fresh but on-theme.
+	•	Deterministic Output: `resolveRoleDialogueTemplate` seeds selection with `(dialogueId, nodeId)` plus optional overrides, ensuring the same NPC delivers the same line for a given conversation while still allowing variability across runs.
+	•	Tone Integration: Template authors may supply `toneOverrides` (preferred persona/template/scene) so the tone mixer keeps the cadence consistent with the intended speaker while still leveraging palette/motif blending.
+	•	Authoring Flow: Narrative data opts into a systemic line by storing `[roleTemplate:merchant.default_greeting]` (or similar) in the dialogue node. The DialogueOverlay resolves the template, merges tone overrides, and forwards the enriched node to the mixer so handcrafted and systemic content share the same UI path.
+</mechanic>
+
 <mechanic name="choices_consequences">
 Choices & Consequences
 

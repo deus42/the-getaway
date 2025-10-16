@@ -26,6 +26,8 @@ import { getSystemStrings } from "../../content/system";
 import { getUIStrings } from "../../content/ui";
 import { getSkillDefinition } from "../../content/skills";
 import { checkSkillRequirement } from "../../game/quests/dialogueSystem";
+import { resolveRoleDialogueTemplate } from "../../game/narrative/dialogueTone/templateResolver";
+import { DialogueRoleId, RoleDialogueContext } from "../../game/narrative/dialogueTone/roleTemplateTypes";
 
 const fallbackSkillName = (skill: string) =>
   skill.charAt(0).toUpperCase() + skill.slice(1);
@@ -36,6 +38,26 @@ type QuestLockReason =
   | "notActive"
   | "objectiveCompleted";
 
+const ROLE_TEMPLATE_PATTERN = /^\[roleTemplate:([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\]$/i;
+
+const parseRoleTemplateReference = (
+  text: string | null | undefined
+): { roleId: string; templateKey: string } | null => {
+  if (!text) {
+    return null;
+  }
+  const trimmed = text.trim();
+  const match = ROLE_TEMPLATE_PATTERN.exec(trimmed);
+  if (!match) {
+    return null;
+  }
+  const [, roleId, templateKey] = match;
+  return {
+    roleId,
+    templateKey,
+  };
+};
+
 const DialogueOverlay: React.FC = () => {
   const dispatch = useDispatch();
   const quests = useSelector((state: RootState) => state.quests.quests);
@@ -44,6 +66,7 @@ const DialogueOverlay: React.FC = () => {
   const uiStrings = getUIStrings(locale);
   const { logs: logStrings } = systemStrings;
   const player = useSelector((state: RootState) => state.player.data);
+  const world = useSelector((state: RootState) => state.world);
   const [hoveredOption, setHoveredOption] = React.useState<number | null>(null);
 
   const resolveSkillName = (skill: string, domain: 'attribute' | 'skill' = 'attribute') => {
@@ -206,18 +229,83 @@ const DialogueOverlay: React.FC = () => {
     return node ?? dialogue.nodes[0];
   }, [dialogue, currentNodeId]);
 
-  const toneLine = useMemo(() => {
+  const toneRequest = useMemo(() => {
     if (!dialogue || !currentNode) {
       return null;
     }
+
     const resolvedNode =
       dialogue.nodes.find((node) => node.id === currentNode.id) ?? currentNode;
-    return dialogueToneManager.resolveLine({
+
+    let fallbackText = resolvedNode.text;
+    let toneNode: DialogueNode = resolvedNode;
+    let seedOverride: string | undefined;
+
+    const templateReference = parseRoleTemplateReference(resolvedNode.text);
+
+    if (templateReference && player && world) {
+      const roleId = templateReference.roleId as DialogueRoleId;
+      const { templateKey } = templateReference;
+      const playerContext: RoleDialogueContext['player'] = {
+        level: player.level,
+        perks: player.perks ?? [],
+        factionReputation: player.factionReputation ?? {},
+      };
+      const context: RoleDialogueContext = {
+        locale,
+        player: playerContext,
+        world: {
+          timeOfDay: world.timeOfDay,
+          curfewActive: world.curfewActive,
+          zoneId: world.currentMapArea?.zoneId ?? 'unknown_zone',
+          zoneName: world.currentMapArea?.name,
+          hazards: world.currentMapArea?.hazards ?? [],
+          environmentFlags: world.environment.flags,
+        },
+        npc: undefined,
+        randomSeed: `${dialogue.id}:${resolvedNode.id}`,
+      };
+
+      const resolution = resolveRoleDialogueTemplate({
+        roleId,
+        templateKey,
+        context,
+      });
+
+      if (resolution) {
+        fallbackText = resolution.text;
+        seedOverride = resolution.seed;
+        toneNode = {
+          ...resolvedNode,
+          text: resolution.text,
+          tone: {
+            ...(resolvedNode.tone ?? {}),
+            ...(resolution.toneOverrides ?? {}),
+          },
+        };
+      }
+    }
+
+    return {
       dialogue,
-      node: resolvedNode,
-      fallbackText: resolvedNode.text,
+      node: toneNode,
+      fallbackText,
+      seedOverride,
+    };
+  }, [dialogue, currentNode, locale, player, world]);
+
+  const toneLine = useMemo(() => {
+    if (!toneRequest) {
+      return null;
+    }
+
+    return dialogueToneManager.resolveLine({
+      dialogue: toneRequest.dialogue,
+      node: toneRequest.node,
+      fallbackText: toneRequest.fallbackText,
+      seedOverride: toneRequest.seedOverride,
     });
-  }, [dialogue, currentNode]);
+  }, [toneRequest]);
 
   const displayText = toneLine?.text ?? currentNode?.text ?? '...';
 

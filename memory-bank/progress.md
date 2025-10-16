@@ -59,6 +59,51 @@
 </notes>
 </step>
 
+<step id="16.12" status="completed">
+<step_metadata>
+  <number>16.12</number>
+  <title>Role-Based Procedural Dialogue Templates</title>
+  <status>Completed</status>
+  <date>February 22, 2026</date>
+</step_metadata>
+<linear key="GET-6" />
+
+<tasks>
+1. Authored systemic role template families (merchant, checkpoint guard, street doc, gang scout, safehouse handler) with faction/time-of-day/hazard gating, seeded token palettes, and tone hints.
+2. Implemented the role template resolver with deterministic seeding, gating evaluation, and token rendering, exposing it to the dialogue tone pipeline.
+3. Updated `DialogueOverlay` to detect `[roleTemplate:role.key]` markers, build runtime context from Redux state, merge tone overrides, and route resolved lines through the existing tone manager.
+4. Added resolver unit coverage plus documentation updates in `game-design.md` and `architecture.md` describing the authoring contract and data flow.
+</tasks>
+
+<implementation>
+- `roleTemplateTypes.ts` and `templateResolver.ts` define the runtime contract, handle gating (faction standing, curfew level, blackout tier, hazard keywords, perk ownership), render seeded tokens, and return tone overrides alongside resolved text.
+- `content/dialogueTemplates/roles/*` captures reusable prose for systemic NPCs, each variant tagged with gating metadata and contextual token resolvers so dialogue reacts to blackout tiers, smog exposure, or scavenger alliances.
+- `DialogueOverlay.tsx` now parses role template references, assembles a `RoleDialogueContext` from player/world slices, resolves the template, and forwards enriched tone requests to `dialogueToneManager`.
+- Memory-bank docs document the WHAT/HOW separation for role templates, ensuring narrative and engineering teams share the new authoring workflow.
+</implementation>
+
+<code_reference file="the-getaway/src/game/narrative/dialogueTone/roleTemplateTypes.ts" />
+<code_reference file="the-getaway/src/game/narrative/dialogueTone/templateResolver.ts" />
+<code_reference file="the-getaway/src/game/narrative/dialogueTone/__tests__/templateResolver.test.ts" />
+<code_reference file="the-getaway/src/content/dialogueTemplates/roles/index.ts" />
+<code_reference file="the-getaway/src/content/dialogueTemplates/roles/merchant.ts" />
+<code_reference file="the-getaway/src/content/dialogueTemplates/roles/checkpointGuard.ts" />
+<code_reference file="the-getaway/src/content/dialogueTemplates/roles/streetDoc.ts" />
+<code_reference file="the-getaway/src/content/dialogueTemplates/roles/gangScout.ts" />
+<code_reference file="the-getaway/src/content/dialogueTemplates/roles/safehouseHandler.ts" />
+<code_reference file="the-getaway/src/components/ui/DialogueOverlay.tsx" />
+<code_reference file="memory-bank/game-design.md" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/narrative/dialogueTone/__tests__/templateResolver.test.ts --runInBand`
+</validation>
+
+<notes>
+- Template resolution now shares deterministic seeds and tone overrides with the procedural mixer, giving systemic NPCs contextual chatter without diverging from localisation-safe pipelines.
+</notes>
+</step>
+
 <step id="16.10" status="completed">
 <step_metadata>
   <number>16.10</number>
