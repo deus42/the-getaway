@@ -8,6 +8,7 @@ This document catalogs Phase 9 optional expansions that were split out of `memor
   <number>40.2</number>
   <title>LLM-driven Narrative Orchestrator (PANGeA-style)</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+  <linear_issue key="GET-83" url="https://linear.app/the-getaway/issue/GET-83/step-402-llm-driven-narrative-orchestrator">PostMVP</linear_issue>
 </step_metadata>
 
 <prerequisites>
@@ -41,6 +42,7 @@ Integrate a guardrailed LLM service that generates adaptive NPC dialogue and enc
   <number>40.5</number>
   <title>Dynamic Black Market Economy & Smuggling Missions</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+  <linear_issue key="GET-84" url="https://linear.app/the-getaway/issue/GET-84/step-405-dynamic-black-market-economy-and-smuggling-missions">PostMVP</linear_issue>
 </step_metadata>
 
 <prerequisites>
@@ -75,6 +77,7 @@ Introduce a reactive black-market economy that mirrors citywide scarcity and enf
   <number>26.1</number>
   <title>Advanced Stamina - Day/Night, Fatigue & Environmental Systems</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+  <linear_issue key="GET-85" url="https://linear.app/the-getaway/issue/GET-85/step-261-advanced-stamina-systems">PostMVP</linear_issue>
 </step_metadata>
 
 <prerequisites>
@@ -191,6 +194,7 @@ yarn build && yarn test
   <number>27.1</number>
   <title>Vehicle Acquisition and Storage (Motorcycle Only, Basic Trunk)</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+  <linear_issue key="GET-86" url="https://linear.app/the-getaway/issue/GET-86/step-271-motorcycle-acquisition-and-storage">PostMVP</linear_issue>
 </step_metadata>
 
 <instructions>
@@ -340,6 +344,7 @@ Mount motorcycle and travel across Downtown on main roads, measure tile-to-tile 
   <number>28.1</number>
   <title>Hunger and Thirst Meters (Optional Survival Mode Toggle)</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+  <linear_issue key="GET-87" url="https://linear.app/the-getaway/issue/GET-87/step-281-hunger-and-thirst-survival-mode">PostMVP</linear_issue>
 </step_metadata>
 
 <instructions>
