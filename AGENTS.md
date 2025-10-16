@@ -57,6 +57,7 @@
 
 ## Agent-Specific Instructions
 - Follow this AGENTS.md across the repo. Keep changes minimal and focused. Prefer `yarn` for scripts. When adding files, mirror existing naming and structure.
+- The repo uses the Yarn v1 lockfile that ships with `main`. Avoid running modern Yarn releases that rewrite `yarn.lock` into Berry format—doing so creates noisy diffs and merge conflicts when rebasing with `main`. If Corepack has activated Yarn 4 in your environment, run commands via `yarn set version classic` or fall back to `npx yarn@1 <command>` so the lockfile stays compatible.
 - At the start of any feature task, review `memory-bank/mvp-plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
 - **Whenever implementing a roadmap step or major change that introduces new architectural patterns, refactors existing systems, or modifies core game structure (world map, grid systems, combat flow, etc.), you MUST update `memory-bank/architecture.md` in the same session.** Focus on documenting the high-level pattern and design decisions, not implementation details.
 - After completing any roadmap step, update `memory-bank/progress.md` to reflect the new milestone with a brief summary of what was accomplished.
