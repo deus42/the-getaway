@@ -580,6 +580,66 @@ Design a reusable tone-tagging pipeline that keeps the game’s authorial “voi
 - Trigger dialogue/storylet nodes that use procedural lines; ensure deterministic seed reproduction, lexicon palettes map correctly, and handcrafted fallback copy appears if configs are missing.
 </test>
 </step>
+<step id="16.11">
+<step_metadata>
+  <number>16.11</number>
+  <title>Hazard-to-System Integration Matrix</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 7 completed (baseline zones and hazards defined on the overworld map)
+- Step 16.8 completed (environmental trigger flags and ambient feedback loop live in `worldSlice`)
+</prerequisites>
+
+<instructions>
+Codify how district hazards propagate into AI behavior, faction pressure, and traversal safety through a shared integration matrix and accompanying documentation.
+</instructions>
+
+<details>
+- Introduce `EnvironmentalFactor`, `SystemImpact`, and matrix helper types in `src/game/world/environment/environmentMatrix.ts` with entries for smog, blackout tiers, surveillance density, radiation pockets, and curfew status.
+- Populate `environmentMatrix` so each hazard lists AI modifiers (sight cones, chase persistence, weapon loadouts), faction economy effects (shop markup, patrol strength, safe house availability), and travel risks (stamina drain, vehicle reliability, encounter tables). Provide numeric weights or script hooks that downstream systems can consume.
+- Extend `worldSlice` selectors (or create `selectEffectiveEnvironmentImpacts`) to fuse live hazard flags with the matrix, emitting derived summaries for AI planners, encounter generation, and navigation warnings.
+- Wire existing systems to the selectors: adjust NPC schedule weights, faction reinforcement budgeting, and travel advisory overlays to read matrix outputs instead of ad-hoc constants.
+- Document the matrix in `memory-bank/game-design.md` (worldbuilding section) and summarize the data flow in `memory-bank/architecture.md`, including guidance for adding new hazards.
+</details>
+
+<test>
+- Add unit tests in `environmentMatrix.test.ts` that validate every hazard enumerated in `EnvironmentalFactor` has matrix coverage and that selectors emit merged impacts when multiple hazards stack.
+- Snapshot the derived selector output for representative districts (Industrial Wasteland, Downtown blackout, curfew escalation) to guard against regressions.
+- Run an integration test or scripted simulation that toggles hazard flags and confirms AI patrol weights, faction pricing, and travel warnings update according to the matrix entries.
+</test>
+</step>
+<step id="16.12">
+<step_metadata>
+  <number>16.12</number>
+  <title>Role-Based Procedural Dialogue Templates</title>
+  <phase>Phase 5: Narrative and Quest Layer</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.5 completed (storylet library available for systemic narrative beats)
+- Step 16.10 completed (tone-preserving procedural dialogue pipeline and mixer)
+</prerequisites>
+
+<instructions>
+Author reusable dialogue templates for systemic NPC roles so merchants, guards, medics, and gang lieutenants can speak consistently across dynamic encounters.
+</instructions>
+
+<details>
+- Stand up `src/content/dialogueTemplates/roles/` with JSON/TS modules that define template families per role (`merchant`, `checkpoint_guard`, `street_doc`, `gang_scout`, etc.) referencing tone traits, required world-state flags, and failover copy.
+- Add template metadata for gating (reputation thresholds, faction alignment, time-of-day, hazard context) so the dialogue mixer can filter candidates before sampling.
+- Implement a `resolveRoleDialogueTemplate` helper in `src/game/narrative/dialogueTone/templateResolver.ts` that merges role metadata with the tone mixer output, fills placeholder tokens (item of the day, faction slang), and returns deterministic seeds for localization/testing.
+- Expose role templates to the dialogue system by updating `DialogueManager` (or quest dialogue nodes) to allow `[roleTemplate:merchant.default_greeting]` references alongside existing handcrafted keys.
+- Document authoring guidance in `memory-bank/game-design.md` (narrative systems section) and log the new tooling in `memory-bank/progress.md` once implemented.
+</details>
+
+<test>
+- Add unit tests for `resolveRoleDialogueTemplate` that verify role gating respects reputation and hazard filters, returns seeded results, and falls back to default copy when requirements fail.
+- Author snapshot tests that render sample role dialogues for contrasting personas (e.g., cautious vs. flamboyant merchant) to confirm tone modulation works with the new templates.
+- Trigger in-game conversations with at least three systemic NPC roles and confirm dialogue pulls from the new template library, honors gating, and reports deterministic IDs for localization.
+</test>
+</step>
 </phase>
 
 <phase id="6" name="Visual and Navigation Upgrades">
@@ -2019,6 +2079,37 @@ Stand up a systemic uprising simulation that tracks morale, supplies, and corpor
 - Persistence check: save mid-Siege, reload, and confirm director resumes correctly with queued events intact and timers continuing from the saved state.
 </test>
 </step>
+<step id="29.8">
+<step_metadata>
+  <number>29.8</number>
+  <title>Compile World-State Variable Atlas</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19.6 completed (witness memory & regional heat scaffolds localized notoriety)
+- Step 29 completed (core faction reputation system online)
+- Step 29.5 completed (localized witness reputation propagation feeding district sentiment)
+</prerequisites>
+
+<instructions>
+Create a centralized atlas that inventories every persistent world-state variable, its owner system, ranges, and downstream consumers so quests, AI, and narrative logic stay synchronized.
+</instructions>
+
+<details>
+- Audit Redux slices (`worldSlice`, `playerSlice`, `questsSlice`, `factionsSlice`, `reputationSlice`, etc.) and catalog each persistent variable that gates content or drives systemic reactions (e.g., `curfewLevel`, `supplyScarcity`, `corpSecAlert`, `resistanceIntel`, `districtHeat`).
+- Implement `src/game/state/stateAtlas.ts` exporting strongly typed descriptors `{ key, slice, datatype, range, description, consumers[] }` alongside helpers for retrieving current values plus normalized percentages.
+- Add an automated validation script (`yarn atlas:verify`) that diff-checks live Redux state keys against the atlas, emitting actionable errors when a slice introduces a new variable without documentation or range metadata.
+- Extend `memory-bank/game-design.md` with an XML-tagged appendix mirroring the atlas for designers, and update `memory-bank/architecture.md` to map each variable to its data flow, persistence requirements, and key listeners.
+- Generate machine-readable output (`memory-bank/exports/state-atlas.json`) during the validation script so tooling, analytics, and narrative planners can ingest the canonical sheet.
+</details>
+
+<test>
+- Add unit tests for `stateAtlas.ts` ensuring descriptors cover all registered keys, consumer arrays reference implemented systems, and range metadata matches runtime bounds.
+- Run `yarn atlas:verify` against mocked state snapshots to confirm it fails when variables lack atlas entries or when range docs fall out of sync.
+- Trigger gameplay scenarios (curfew escalation, faction swing, blackout chain) and verify the exported `state-atlas.json` reflects updated values/timestamps, demonstrating the atlas stays wired to live data.
+</test>
+</step>
 
 <step id="30.1">
 <step_metadata>
@@ -2835,24 +2926,56 @@ Deliver the George AI assistant overlay that anchors to the Level 0 objectives h
 Launch the HUD and confirm George appears within the Level 0 objectives area without overlapping other controls. Trigger `G` and verify conversation options render, can be navigated via mouse and keyboard, and dispatch responses matching the player’s current personality alignment. Change karma/reputation values and confirm George updates commentary tone within two subsequent interactions. Complete a quest and enter a hostile zone to ensure contextual alerts fire once, respect cooldowns, and reference the correct objectives. Toggle the overlay collapsed/expanded state and confirm persistence across scene reloads.
 </test>
 </step>
+<step id="35.7">
+<step_metadata>
+  <number>35.7</number>
+  <title>Generate Narrative Ledger Epilogue</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 33 completed (multi-slot save manager captures full world state)
+- Step 35.2 completed (mission progression flow signals campaign completion)
+- Step 29 completed (faction reputation data available for endings)
+</prerequisites>
+
+<instructions>
+Deliver an end-of-campaign narrative ledger that summarizes the player’s key decisions, faction standings, karmic trajectory, and district outcomes before the epilogue slideshow or free roam.
+</instructions>
+
+<details>
+- Implement `buildNarrativeLedger` in `src/game/narrative/ledger/ledgerBuilder.ts` to collate core variables: karma track, faction reputation, trust/fear axes, district uprising outcomes, signature quest resolutions, companion status, vehicle condition, and standout rumors/actions.
+- Create a `NarrativeLedgerPanel` React component surfaced during the Mission Accomplished banner (Step 35.2) and accessible from the pause menu post-credits. Present sections with short prose summaries plus bullet callouts, and include an export/share option for QA or community sharing.
+- Author copy templates under `src/content/ledger/` that map ledger facts to tone-appropriate blurbs, citing references to `memory-bank/plot.md` for consistency. Provide localization IDs for each template.
+- Persist the generated ledger snapshot into campaign saves so post-game free roam or epilogue slides reuse the same decisions without recomputation. Store a hash/timestamp to detect stale ledgers when reloading older saves.
+- Document ledger data sources and authoring rules in `memory-bank/game-design.md` (narrative systems appendix) and summarize the technical pipeline in `memory-bank/architecture.md`. Log completion in `memory-bank/progress.md`.
+</details>
+
+<test>
+- Add unit tests for `buildNarrativeLedger` verifying deterministic output across scripted endgame states (Resistance victory, CorpSec crackdown, neutral broker outcome).
+- Run an end-to-end test script that reaches campaign completion, opens the ledger panel, navigates sections via keyboard, triggers export, and confirms the file/string reflects the expected decisions.
+- Reload a post-game save and confirm the persisted ledger matches the original run, updates if new significant actions occur, and gracefully handles missing data or DLC variables.
+</test>
+</step>
 </phase>
 
 <summary>
 ## Summary
 
-This plan now outlines **52 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **56 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (20 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5, 30.1/30.2)
+- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (21 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5/29.6/29.7/29.8, 30.1/30.2)
 - **Phase 8 (Step 31)**: Industrial Wasteland zone expansion - CORE MVP (1 step)
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
-- **Phase 10 (Steps 32.1-35.5)**: Testing, polish, and documentation - FINAL RELEASE PREP (10 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5)
+- **Phase 10 (Steps 32.1-35.7)**: Testing, polish, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5, 35.7)
 </phase_structure>
 
 <focus_areas>
 - **Command & Atmosphere**: Resistance command hub UI, neon isometric presentation, and curfew pressure loops.
 - **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
+- **Hazard Integration**: Environment matrix tying smog, surveillance, radiation, and curfew states into AI, faction economies, and travel safety.
 - **Combat & Navigation**: Turn-based encounters with cover awareness, guard perception loops, click-to-move traversal, and readable path previews.
 - **Character Progression**: Modular character creation flow, existing playerStats.ts integration, XP/leveling foundation, skill tree system, and perk selection with capstones.
 - **Equipment & Inventory**: Expanded inventory system building on existing interfaces, equipment effects, durability mechanics, and weight penalties.
@@ -2862,7 +2985,7 @@ This plan now outlines **52 implementable steps** organized into **10 phases** t
 - **Expanded World**: Industrial Wasteland zone (80×80 tiles) with specific environmental hazards and zone-specific quests.
 - **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
 - **Testing & Quality**: Unit test suite (70% coverage target) and integration test scenarios.
-- **Documentation & Support**: In-game help system and external documentation updates.
+- **Documentation & Support**: In-game help system, state atlas exports, narrative ledger epilogue, and external documentation updates.
 - **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, WebGL context loss recovery, SpectorJS profiling playbook, and UI refinement across all systems.
 </focus_areas>
 
@@ -2895,6 +3018,11 @@ This revised plan addresses critical quality issues identified in the analysis:
 
 **Quality Assurance**: New steps for comprehensive testing and accessibility:
 - Step 34.7: In-game help system and external documentation
+
+**System Transparency**: Simulation bookkeeping steps make systemic consequences observable and maintainable:
+- Step 16.11: Hazard-to-system integration matrix aligns environmental threats with AI, faction pressure, and travel loops.
+- Step 29.8: World-state variable atlas catalogs persistent flags for designers, tooling, and validation scripts.
+- Step 35.7: Narrative ledger epilogue records player choices and world outcomes for coherent endings and regression tracking.
 </key_improvements>
 
 Each step includes concrete validation targets to keep development measurable. The architecture prioritizes modularity and scalability, drawing inspiration from Fallout 2 while focusing on a maintainable modern web stack. Iterative playtesting complements automated checks to preserve feel and performance.

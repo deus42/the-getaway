@@ -9,6 +9,20 @@
         <status>pending</status>
       </step_metadata>
     </step>
+    <step id="16.11">
+      <step_metadata>
+        <number>16.11</number>
+        <title>Hazard-to-System Integration Matrix</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+    <step id="16.12">
+      <step_metadata>
+        <number>16.12</number>
+        <title>Role-Based Procedural Dialogue Templates</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
   </phase>
 
   <phase id="6" name="Visual and Navigation Upgrades">
@@ -106,6 +120,13 @@
         <status>pending</status>
       </step_metadata>
     </step>
+    <step id="29.8">
+      <step_metadata>
+        <number>29.8</number>
+        <title>Compile World-State Variable Atlas</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
     <step id="30.1">
       <step_metadata>
         <number>30.1</number>
@@ -179,6 +200,13 @@
       <step_metadata>
         <number>34.9</number>
         <title>Document SpectorJS Profiling Workflow</title>
+        <status>pending</status>
+      </step_metadata>
+    </step>
+    <step id="35.7">
+      <step_metadata>
+        <number>35.7</number>
+        <title>Generate Narrative Ledger Epilogue</title>
         <status>pending</status>
       </step_metadata>
     </step>
