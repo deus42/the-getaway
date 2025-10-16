@@ -7,6 +7,7 @@
   <status>Completed</status>
   <date>March 26, 2024</date>
 </step_metadata>
+<linear key="GET-32" />
 
 <tasks>
 1. Scaffolded a Vite + React + TypeScript workspace with Phaser, Redux Toolkit, Tailwind CSS, and Jest.
@@ -26,6 +27,7 @@
   <status>Completed</status>
   <date>October 16, 2025</date>
 </step_metadata>
+<linear key="GET-33" />
 
 <tasks>
 1. Introduced tone trait vectors, rhetorical controls, and JSON-schema validation helpers so author, persona, and scene fingerprints share a deterministic format.
@@ -73,6 +75,7 @@
   <status>Completed</status>
   <date>October 8, 2025</date>
 </step_metadata>
+<linear key="GET-34" />
 
 <tasks>
 1. Introduced serialisable environment state (`world.environment`) with narrative flags, rumor/signage/weather snapshots, and NPC ambient profiles threaded through the existing alert/curfew reducers.
@@ -115,6 +118,7 @@
   <status>Completed</status>
   <date>October 15, 2025</date>
 </step_metadata>
+<linear key="GET-35" />
 
 <tasks>
 1. Replaced the HUD ambient ticker by streaming rumor, signage, weather, and zone danger updates into George’s console with a dedicated Ambient Feed tab and dock highlight.
@@ -153,6 +157,7 @@
   <status>Completed</status>
   <date>October 6, 2025</date>
 </step_metadata>
+<linear key="GET-36" />
 
 <tasks>
 1. Added a catalog module in `src/content/items/index.ts` plus background references so starting loadouts and repair kits share consistent definitions.
@@ -184,6 +189,7 @@
   <status>Completed</status>
   <date>October 2, 2025</date>
 </step_metadata>
+<linear key="GET-37" />
 
 <tasks>
 1. Introduced branch/skill definitions in `content/skills.ts` and extended core types (`SkillId`, `Player.skillTraining`, `Weapon.skillType`) so progression data is fully typed.
@@ -288,6 +294,7 @@ UI lock/unlock behaviour for skill-based dialogue options
   <status>Completed</status>
   <date>October 4, 2025</date>
 </step_metadata>
+<linear key="GET-38" />
 
 <tasks>
 1. Added inventory reducer helpers covering equipment swaps, stack splitting, repairs, and hotbar assignment while centralising weight recalculation and encumbrance updates.
@@ -321,6 +328,7 @@ UI lock/unlock behaviour for skill-based dialogue options
   <status>Completed</status>
   <date>March 26, 2024</date>
 </step_metadata>
+<linear key="GET-39" />
 
 <tasks>
 1. Authored type definitions and gameplay systems across `game/*` (player, combat, AI, world, inventory, quests, dialogue).
@@ -340,6 +348,7 @@ UI lock/unlock behaviour for skill-based dialogue options
   <status>Completed</status>
   <date>March 26, 2024</date>
 </step_metadata>
+<linear key="GET-40" />
 
 <tasks>
 1. Extended `GameCanvas` to bootstrap Phaser scenes and sync with Redux.
@@ -359,6 +368,7 @@ UI lock/unlock behaviour for skill-based dialogue options
   <status>Completed</status>
   <date>March 26, 2024</date>
 </step_metadata>
+<linear key="GET-41" />
 
 <tasks>
 1. Enhanced `grid.ts` with obstacles, cover tiles, and walkability guards.
@@ -378,6 +388,7 @@ UI lock/unlock behaviour for skill-based dialogue options
   <status>Completed</status>
   <date>March 26, 2024</date>
 </step_metadata>
+<linear key="GET-42" />
 
 <tasks>
 1. Implemented AP-driven turns (move = 1 AP, attack = 2 AP) with 5 damage baseline.
@@ -397,6 +408,7 @@ UI lock/unlock behaviour for skill-based dialogue options
   <status>Completed</status>
   <date>March 27, 2024</date>
 </step_metadata>
+<linear key="GET-43" />
 
 <tasks>
 1. Stabilized combat edge cases with a new `BootScene` and lifecycle fixes.
@@ -412,6 +424,7 @@ UI lock/unlock behaviour for skill-based dialogue options
   <status>Completed</status>
   <date>October 02, 2025</date>
 </step_metadata>
+<linear key="GET-44" />
 
 <tasks>
 1. Differentiated building metadata and world generation to add district-aware cover clusters, prop density, and signage styling across Slums and Downtown.
@@ -447,6 +460,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>June 7, 2025</date>
 </step_metadata>
+<linear key="GET-45" />
 
 <tasks>
 1. Authored Slums and Downtown areas with door connections stored in `worldMap.ts`.
@@ -461,6 +475,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>April 5, 2024</date>
 </step_metadata>
+<linear key="GET-46" />
 
 <tasks>
 1. Synced time-of-day and curfew state into Redux and advanced time in `MainScene`.
@@ -480,6 +495,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 25, 2025</date>
 </step_metadata>
+<linear key="GET-47" />
 
 <tasks>
 1. Added the `GameMenu` overlay with start/continue flows.
@@ -502,6 +518,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 25, 2025</date>
 </step_metadata>
+<linear key="GET-48" />
 
 <tasks>
 1. Built a curfew alert state machine with escalating patrol responses.
@@ -521,6 +538,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 26, 2025</date>
 </step_metadata>
+<linear key="GET-49" />
 
 <tasks>
 1. Rebuilt `worldMap.ts` into a 144×108 district with interiors and validated doors.
@@ -535,6 +553,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 26, 2025</date>
 </step_metadata>
+<linear key="GET-50" />
 
 <tasks>
 1. Scheduled NPC movement between routine points and reserved destination tiles.
@@ -553,6 +572,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>February 14, 2026</date>
 </step_metadata>
+<linear key="GET-51" />
 
 <tasks>
 1. Enabled proximity interaction (press `E`) to open dialogues.
@@ -572,6 +592,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 27, 2025</date>
 </step_metadata>
+<linear key="GET-52" />
 
 <tasks>
 1. Locked dialogue options behind skill thresholds with clear messaging.
@@ -591,6 +612,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 28, 2025</date>
 </step_metadata>
+<linear key="GET-53" />
 
 <tasks>
 1. Converted Ops Briefings into a persistent quest log with active/completed sections.
@@ -612,6 +634,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 26, 2025</date>
 </step_metadata>
+<linear key="GET-54" />
 
 <tasks>
 1. Populated `questsSlice` with branching dialogue trees for Lira, Naila, and Brant.
@@ -631,6 +654,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>October 12, 2025</date>
 </step_metadata>
+<linear key="GET-55" />
 
 <tasks>
 1. Defined a reusable storylet contract and seeded the inaugural catalog with act-aligned plays plus localized narrative payloads.
@@ -661,6 +685,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 26, 2025</date>
 </step_metadata>
+<linear key="GET-56" />
 
 <tasks>
 1. Reprojected `MainScene` to an isometric layout with recalibrated metrics and camera bounds.
@@ -680,6 +705,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 26, 2025</date>
 </step_metadata>
+<linear key="GET-57" />
 
 <tasks>
 1. Implemented breadth-first pathfinding with enemy avoidance and door awareness.
@@ -705,6 +731,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 29, 2025</date>
 </step_metadata>
+<linear key="GET-58" />
 
 <tasks>
 1. Extended `Enemy` type with `VisionCone`, `AlertLevel`, `alertProgress`, and `lastKnownPlayerPosition`.
@@ -733,6 +760,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
   <status>Completed</status>
   <date>September 29, 2025</date>
 </step_metadata>
+<linear key="GET-59" />
 
 <tasks>
 1. Locked Downtown to a Manhattan-inspired grid:
@@ -776,6 +804,7 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
   <status>Completed</status>
   <date>October 9, 2025</date>
 </step_metadata>
+<linear key="GET-60" />
 
 <tasks>
 1. Authored per-zone camera configurations and registered surveillance state in Redux so runtime cameras and HUD telemetry share a single source.
@@ -808,6 +837,7 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
   <status>Completed</status>
   <date>October 3, 2025</date>
 </step_metadata>
+<linear key="GET-61" />
 
 <tasks>
 1. Centralised isometric helpers (`getIsoMetrics`, `toPixel`, `getDiamondPoints`, `adjustColor`) in `src/game/utils/iso.ts` and added `iso.test.ts` to cover projection and colour math.
@@ -837,6 +867,7 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
   <status>Completed</status>
   <date>October 3, 2025</date>
 </step_metadata>
+<linear key="GET-62" />
 
 <tasks>
 1. Established S.P.E.C.I.A.L stat definitions with shared ranges, abbreviations, and focus tags in `playerStats.ts` plus a profile builder helper.
@@ -857,6 +888,7 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
   <status>Completed</status>
   <date>October 3, 2025</date>
 </step_metadata>
+<linear key="GET-63" />
 
 <tasks>
 1. Created `CharacterCreationScreen.tsx` with multi-step wizard interface featuring step indicators and navigation.
@@ -906,6 +938,7 @@ Modified handleStartNewGame to show character creation instead of immediately st
   <status>Completed</status>
   <date>October 4, 2025</date>
 </step_metadata>
+<linear key="GET-64" />
 
 <tasks>
 1. Finished the character creation allocation step with ± controls, point budget enforcement, and SPECIAL tooltips that mirror the stat design brief.
@@ -933,6 +966,7 @@ Reworked Step 2 interactions, tooltips, derived stat panel, and navigation guard
   <status>Completed</status>
   <date>October 4, 2025</date>
 </step_metadata>
+<linear key="GET-65" />
 
 <tasks>
 1. Authored the background catalog (`corpsec_defector`, `street_urchin`, `underground_hacker`, `wasteland_scavenger`) with faction deltas, perks, and starting loadouts.
@@ -978,6 +1012,7 @@ Defaulted character creation to a safe background fallback when debug shortcuts 
   <status>Completed</status>
   <date>October 3, 2025</date>
 </step_metadata>
+<linear key="GET-66" />
 
 <tasks>
 1. Created `statCalculations.ts` with comprehensive derived stat calculation system.
@@ -1038,6 +1073,7 @@ Added setSkill() action, enhanced updateSkill() with automatic recalculation
   <status>Completed</status>
   <date>October 3, 2025</date>
 </step_metadata>
+<linear key="GET-67" />
 
 <tasks>
 1. Extended item interfaces (Weapon, Armor) to include StatModifiers with stat bonuses (strength, perception, etc.), armor rating, AP penalty, and damage bonus fields.
@@ -1116,6 +1152,7 @@ Added regression coverage for weapon damage bonuses and armor reduction
   <status>Completed</status>
   <date>October 1, 2025</date>
 </step_metadata>
+<linear key="GET-68" />
 
 <tasks>
 1. Created progression.ts system with complete XP and leveling mechanics:
@@ -1219,6 +1256,7 @@ Integrated level-up modal and XP notification manager into main app
   <status>Completed</status>
   <date>October 3, 2025</date>
 </step_metadata>
+<linear key="GET-69" />
 
 <tasks>
 1. Defined 8 foundation perks in `perks.ts`: Steady Hands, Toughness, Quick Draw, Adrenaline Rush, Silent Runner, Gun Fu (capstone), Ghost (capstone), Executioner (capstone).
@@ -1307,6 +1345,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 5, 2025</date>
 </step_metadata>
+<linear key="GET-70" />
 
 <tasks>
 1. Added stamina fields to the player model and Redux slice, including helper utilities for clamping values and preserving stamina ratios when Endurance changes.
@@ -1349,6 +1388,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 5, 2025</date>
 </step_metadata>
+<linear key="GET-72" />
 
 <tasks>
 1. Extended item and equipment interfaces with durability, stacking, and slot metadata (`equipSlot`, `quantity`, `Durability`) so downstream systems can reason about wear, stacking, and placement.
@@ -1380,6 +1420,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 6, 2025</date>
 </step_metadata>
+<linear key="GET-73" />
 
 <tasks>
 1. Rebuilt `PlayerInventoryPanel` with filter tabs, sort controls, encumbrance readouts, equipment slot grid, and hotbar management inside the character screen shell.
@@ -1415,6 +1456,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 8, 2025</date>
 </step_metadata>
+<linear key="GET-78" />
 
 <tasks>
 1. Authored a locale-aware mission manifest and Redux mission slice so each level exposes primary vs side objectives with quest bindings and completion flags.
@@ -1452,6 +1494,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 7, 2025</date>
 </step_metadata>
+<linear key="GET-79" />
 
 <tasks>
 1. Extended the player schema with karma and personality defaults, plus Redux actions/selectors that expose reputation, objective queue, and tone flags for HUD consumers.
@@ -1495,6 +1538,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 9, 2025</date>
 </step_metadata>
+<linear key="GET-76" />
 
 <tasks>
 1. Added faction definitions, standing thresholds, and reputation action helpers while wiring rival penalties and allied hostilities into a single maths module.
@@ -1532,6 +1576,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 10, 2025</date>
 </step_metadata>
+<linear key="GET-71" />
 
 <tasks>
 1. Finalised the inventory data model with durability, slot metadata, stacking rules, and encumbrance tracking so saves persist the richer item schema.
@@ -1569,6 +1614,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 10, 2025</date>
 </step_metadata>
+<linear key="GET-74" />
 
 <tasks>
 1. Tagged catalog weapons and armor for two-handed, silenced, armor-piercing, hollow-point, and weight-class behaviour so the data layer exposes intent for reducers and combat maths.
@@ -1604,6 +1650,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 12, 2025</date>
 </step_metadata>
+<linear key="GET-77" />
 
 <tasks>
 1. Added module-scoped combat, pathfinding, inventory, progression, and dialogue test suites under `src/game/**/__tests__` with deterministic helpers covering hit chance, crits, AI movement, weighted paths, inventory swaps, XP leveling, and faction/skill dialogue gating.
@@ -1642,6 +1689,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 12, 2025</date>
 </step_metadata>
+<linear key="GET-75" />
 
 <tasks>
 1. Extended combat entities with `facing`, `coverOrientation`, and `suppression` fields plus directional tile cover metadata (`MapTile.cover`), updating player defaults and movement reducers to keep orientation in sync.
@@ -1686,6 +1734,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>October 15, 2025</date>
 </step_metadata>
+<linear key="GET-81" />
 
 <tasks>
 1. Added narrative structure contracts (`structureTypes.ts`) and registered level/mission/quest definitions plus NPC ownership metadata under `src/content/**`.
@@ -1717,6 +1766,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>February 15, 2026</date>
 </step_metadata>
+<linear key="GET-80" />
 
 <tasks>
 1. Introduced structured zone descriptors (`content/zones.ts`) covering level index, hazard roster, and local directives for Slums, Downtown, and Industrial tiers.
@@ -1753,6 +1803,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
   <status>Completed</status>
   <date>February 17, 2026</date>
 </step_metadata>
+<linear key="GET-82" />
 
 <tasks>
 1. Introduced narrative triple schemas and extraction helpers that translate mission prompts into ordered `(subject, relation, object)` bundles with validation feedback.
