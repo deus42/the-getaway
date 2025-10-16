@@ -57,7 +57,8 @@
 
 ## Agent-Specific Instructions
 - Follow this AGENTS.md across the repo. Keep changes minimal and focused. Prefer `yarn` for scripts. When adding files, mirror existing naming and structure.
-- At the start of any feature task, review `memory-bank/mvp-plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
+- At the start of any feature task, scan the Linear "MVP" (and "PostMVP" when relevant) boards for active `Todo` issues and confirm the next assignment there before diving into code.
+- Once the Linear source of truth is identified, review `memory-bank/mvp-plan.md`, `memory-bank/progress.md`, and related memory-bank docs to stay aligned with the roadmap.
 - Use the Linear “MVP” and “PostMVP” projects as the live task index; review them before picking up work so you don’t have to rescan the full plan/progress set each time.
 - Keep Linear issues in sync with roadmap status; update the issue state and descriptions whenever a step is added, started, or completed.
 - Create a Linear issue under the “MVP” project for every roadmap step/task as soon as it is added, and keep the issue status in sync with its completion in the docs.
