@@ -20,6 +20,45 @@
 </notes>
 </step>
 
+<step id="16.11" status="completed">
+<step_metadata>
+  <number>16.11</number>
+  <title>Hazard-to-System Integration Matrix</title>
+  <status>Completed</status>
+  <date>February 21, 2026</date>
+</step_metadata>
+<linear key="GET-5" />
+
+<tasks>
+1. Authored `environmentMatrix.ts` with canonical factor enums plus `resolveEnvironmentalFactors` / `combineSystemImpacts`, backed by coverage for factor completeness and aggregation behaviour.
+2. Extended world selectors with `selectEnvironmentSystemImpacts`, wiring NPC routine pacing and reinforcement delays in `GameController` to the matrix outputs while preserving existing trigger flows.
+3. Surfaced the matrix-backed travel advisory overlay in `DayNightIndicator`, localising advisory tiers/stats and exposing aggregated risk data to the HUD.
+</tasks>
+
+<implementation>
+- `environmentMatrix.ts` stores the hazard-to-system weights and clamps merged multipliers, feeding a memoised selector that now travels with the ambient snapshot so downstream systems can diff reactive risk.
+- `GameController.tsx` scales NPC movement cadence and reinforcement scheduling using the matrix output, while `DayNightIndicator.tsx` renders advisory tiers and stat callouts driven by the same selector.
+- Updated UI locale bundles and selectors/tests to cover the new travel advisory strings, factor resolution, and combined impact snapshots.
+</implementation>
+
+<code_reference file="the-getaway/src/game/world/environment/environmentMatrix.ts" />
+<code_reference file="the-getaway/src/game/world/environment/__tests__/environmentMatrix.test.ts" />
+<code_reference file="the-getaway/src/store/selectors/worldSelectors.ts" />
+<code_reference file="the-getaway/src/store/__tests__/worldSelectors.test.ts" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/components/ui/DayNightIndicator.tsx" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/world/environment/__tests__/environmentMatrix.test.ts --runInBand`
+- `yarn test --runTestsByPath src/store/__tests__/worldSelectors.test.ts --runInBand`
+</validation>
+
+<notes>
+- Matrix outputs now ride the ambient snapshot so George, HUD consumers, and systemic scheduling stay in sync when hazards or enforcement levels change mid-session.
+</notes>
+</step>
+
 <step id="16.10" status="completed">
 <step_metadata>
   <number>16.10</number>

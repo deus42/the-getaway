@@ -1,5 +1,6 @@
 import { Locale } from '../locales';
 import { TimeOfDay } from '../../game/world/dayNightCycle';
+import type { TravelAdvisoryLevel } from '../../game/world/environment/environmentMatrix';
 
 type SkillKey =
   | 'strength'
@@ -160,6 +161,11 @@ interface DayNightStrings {
   progressLabel: string;
   curfewEnforced: string;
   safeToTravel: string;
+  travelAdvisory: {
+    label: string;
+    levels: Record<TravelAdvisoryLevel, string>;
+    stats: (params: { stamina: number; encounters: number }) => string;
+  };
 }
 
 interface LevelIndicatorStrings {
@@ -601,6 +607,27 @@ const STRINGS: Record<Locale, UIStrings> = {
       progressLabel: 'PROGRESS',
       curfewEnforced: 'CURFEW ENFORCED',
       safeToTravel: 'SAFE TO TRAVEL',
+      travelAdvisory: {
+        label: 'TRAVEL ADVISORY',
+        levels: {
+          clear: 'Clear corridors',
+          caution: 'Heightened patrols',
+          severe: 'Hazardous transit',
+        },
+        stats: ({ stamina, encounters }) => {
+          const segments: string[] = [];
+          if (stamina > 0) {
+            segments.push(`Stamina +${stamina}/min`);
+          }
+          if (Math.abs(encounters - 1) > 0.01) {
+            segments.push(`Encounters ×${encounters.toFixed(2)}`);
+          }
+          if (segments.length === 0) {
+            return 'Conditions stable';
+          }
+          return segments.join(' · ');
+        },
+      },
     },
     levelIndicator: {
       levelLabel: 'LEVEL',
@@ -1243,6 +1270,27 @@ const STRINGS: Record<Locale, UIStrings> = {
       progressLabel: 'ПРОГРЕС',
       curfewEnforced: 'КОМЕНДАНТСЬКА ДІЄ',
       safeToTravel: 'РУХ БЕЗПЕЧНИЙ',
+      travelAdvisory: {
+        label: 'ПОПЕРЕДЖЕННЯ РУХУ',
+        levels: {
+          clear: 'Маршрути чисті',
+          caution: 'Підвищений ризик',
+          severe: 'Рух небезпечний',
+        },
+        stats: ({ stamina, encounters }) => {
+          const segments: string[] = [];
+          if (stamina > 0) {
+            segments.push(`Витривалість +${stamina}/хв`);
+          }
+          if (Math.abs(encounters - 1) > 0.01) {
+            segments.push(`Сутички ×${encounters.toFixed(2)}`);
+          }
+          if (segments.length === 0) {
+            return 'Умови стабільні';
+          }
+          return segments.join(' · ');
+        },
+      },
     },
     levelIndicator: {
       levelLabel: 'РІВЕНЬ',

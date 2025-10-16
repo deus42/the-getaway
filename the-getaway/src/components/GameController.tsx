@@ -68,6 +68,7 @@ import { createScopedLogger } from "../utils/logger";
 import { triggerStorylet } from "../store/storyletSlice";
 import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistry";
 import { ensureDefaultEnvironmentalTriggersRegistered } from "../game/world/triggers/defaultTriggers";
+import { selectEnvironmentSystemImpacts } from "../store/selectors/worldSelectors";
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
@@ -108,8 +109,27 @@ const GameController: React.FC = () => {
   const reinforcementsScheduled = useSelector((state: RootState) => state.world.reinforcementsScheduled);
   const surveillanceZone = useSelector((state: RootState) => (mapAreaId ? state.surveillance.zones[mapAreaId] : undefined));
   const overlayEnabled = useSelector((state: RootState) => state.surveillance.hud.overlayEnabled);
+  const environmentImpacts = useSelector(selectEnvironmentSystemImpacts);
   const logStrings = useMemo(() => getSystemStrings(locale).logs, [locale]);
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
+  const npcStepIntervalMs = useMemo(
+    () =>
+      Math.max(
+        220,
+        Math.round(320 * environmentImpacts.behavior.routineIntervalMultiplier)
+      ),
+    [environmentImpacts.behavior.routineIntervalMultiplier]
+  );
+  const reinforcementDelayMs = useMemo(
+    () =>
+      Math.max(
+        750,
+        Math.round(
+          getReinforcementDelay() * environmentImpacts.faction.reinforcementDelayMultiplier
+        )
+      ),
+    [environmentImpacts.faction.reinforcementDelayMultiplier]
+  );
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
   const previousGlobalAlertLevel = useRef(globalAlertLevel);
@@ -731,7 +751,7 @@ const GameController: React.FC = () => {
 
       activeNpcMovements.current.add(npc.id);
 
-      const stepDelayMs = 320;
+      const stepDelayMs = npcStepIntervalMs;
       let stepIndex = 0;
       let currentNpcState = npc;
 
@@ -765,7 +785,7 @@ const GameController: React.FC = () => {
 
       step();
     },
-    [dispatch]
+    [dispatch, npcStepIntervalMs]
   );
 
   useEffect(() => {
@@ -1215,10 +1235,10 @@ const GameController: React.FC = () => {
           cancelPendingEnemyAction();
           setCurrentEnemyTurnIndex(0);
           dispatch(clearReinforcementsSchedule());
-        }, getReinforcementDelay());
+        }, reinforcementDelayMs);
       }
     }
-  }, [player, enemies, currentMapArea, dispatch, logStrings, inCombat, isPlayerTurn, reinforcementsScheduled, cancelPendingEnemyAction]);
+  }, [player, enemies, currentMapArea, dispatch, logStrings, inCombat, isPlayerTurn, reinforcementsScheduled, cancelPendingEnemyAction, reinforcementDelayMs]);
 
   // --- Enemy Turn Logic ---
   useEffect(() => {

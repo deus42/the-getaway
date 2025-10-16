@@ -1,5 +1,6 @@
 import { GeorgeAmbientTracker } from '../georgeAssistant';
 import type { GeorgeAmbientSnapshot } from '../../interfaces/georgeAssistant';
+import { createNeutralImpact } from '../../world/environment/environmentMatrix';
 
 const buildSnapshot = (overrides: Partial<GeorgeAmbientSnapshot> = {}): GeorgeAmbientSnapshot => ({
   flags: {
@@ -8,6 +9,13 @@ const buildSnapshot = (overrides: Partial<GeorgeAmbientSnapshot> = {}): GeorgeAm
     supplyScarcity: 'norm',
     blackoutTier: 'none',
   },
+  impacts: overrides.impacts
+    ? {
+        behavior: { ...overrides.impacts.behavior },
+        faction: { ...overrides.impacts.faction },
+        travel: { ...overrides.impacts.travel },
+      }
+    : createNeutralImpact(),
   rumor: overrides.rumor ?? null,
   signage: overrides.signage ?? null,
   weather: overrides.weather ?? {

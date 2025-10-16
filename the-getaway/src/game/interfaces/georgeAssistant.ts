@@ -1,6 +1,7 @@
 import type { StoryFunctionTag, EnvironmentFlags } from './environment';
 import type { DangerRating } from './types';
 import type { TimeOfDay } from '../world/dayNightCycle';
+import type { CombinedSystemImpact } from '../world/environment/environmentMatrix';
 
 export type GeorgeAmbientCategory =
   | 'rumor'
@@ -45,6 +46,7 @@ export interface GeorgeAmbientZoneSnapshot {
 
 export interface GeorgeAmbientSnapshot {
   flags: EnvironmentFlags;
+  impacts: CombinedSystemImpact;
   rumor: GeorgeAmbientRumorSnapshot | null;
   signage: GeorgeAmbientSignageSnapshot | null;
   weather: GeorgeAmbientWeatherSnapshot;
