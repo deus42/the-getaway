@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../store";
@@ -307,13 +307,7 @@ const DialogueOverlay: React.FC = () => {
     });
   }, [toneRequest]);
 
-  const displayText = toneLine?.text ?? currentNode?.text ?? '...';
-
-  if (!dialogueId || !dialogue || !currentNode) {
-    return null;
-  }
-
-  const getQuestLockReason = (option: DialogueOption): QuestLockReason | null => {
+  const getQuestLockReason = useCallback((option: DialogueOption): QuestLockReason | null => {
     if (!option.questEffect) {
       return null;
     }
@@ -355,9 +349,9 @@ const DialogueOverlay: React.FC = () => {
     }
 
     return null;
-  };
+  }, [quests]);
 
-  const isOptionLocked = (option: DialogueOption) => {
+  const isOptionLocked = useCallback((option: DialogueOption) => {
     const questLock = getQuestLockReason(option);
     if (questLock) {
       return true;
@@ -368,9 +362,9 @@ const DialogueOverlay: React.FC = () => {
     }
 
     return !checkSkillRequirement(player, option);
-  };
+  }, [getQuestLockReason, player]);
 
-  const handleOptionSelect = (option: DialogueOption) => {
+  const handleOptionSelect = useCallback((option: DialogueOption) => {
     if (isOptionLocked(option)) {
       return;
     }
@@ -382,7 +376,62 @@ const DialogueOverlay: React.FC = () => {
     } else {
       dispatch(endDialogue());
     }
-  };
+  }, [dispatch, handleQuestEffect, isOptionLocked]);
+
+  useEffect(() => {
+    if (!currentNode) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.target instanceof HTMLElement &&
+        (event.target.tagName === 'INPUT' ||
+          event.target.tagName === 'TEXTAREA' ||
+          event.target.getAttribute('contenteditable') === 'true')
+      ) {
+        return;
+      }
+
+      let digit: number | null = null;
+
+      if (/^[0-9]$/.test(event.key)) {
+        digit = Number(event.key);
+      } else if (event.code?.startsWith('Numpad')) {
+        const codeDigit = Number(event.code.replace('Numpad', ''));
+        digit = Number.isNaN(codeDigit) ? null : codeDigit;
+      }
+
+      if (digit === null || digit < 1) {
+        return;
+      }
+
+      const optionIndex = digit - 1;
+      const option = currentNode.options[optionIndex];
+      if (!option) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      if (typeof event.stopImmediatePropagation === 'function') {
+        event.stopImmediatePropagation();
+      }
+      handleOptionSelect(option);
+    };
+
+    const listenerOptions: AddEventListenerOptions = { capture: true };
+    window.addEventListener('keydown', handleKeyDown, listenerOptions);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, listenerOptions);
+    };
+  }, [currentNode, handleOptionSelect]);
+
+  if (!dialogueId || !dialogue || !currentNode) {
+    return null;
+  }
+
+  const displayText = toneLine?.text ?? currentNode?.text ?? '...';
 
   return (
     <div

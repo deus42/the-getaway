@@ -661,7 +661,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       },
       requiresSkill: (requirement) => `Requires ${requirement}`,
       checkSkill: (requirement) => `Check ${requirement}`,
-      escHint: 'Press Esc to disengage',
+      escHint: 'Press 1-9 to respond, Esc to disengage',
       itemRecoveredDescription: (questName) => `Recovered during ${questName}.`,
     },
     perks: {
@@ -1324,7 +1324,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       },
       requiresSkill: (requirement) => `Потрібно: ${requirement}`,
       checkSkill: (requirement) => `Перевірка: ${requirement}`,
-      escHint: 'Натисніть Esc, щоб завершити',
+      escHint: 'Натисніть 1-9 для вибору, Esc щоб завершити',
       itemRecoveredDescription: (questName) => `Здобуто під час «${questName}».`,
     },
     perks: {
