@@ -56,7 +56,6 @@ export class CameraSprite extends Phaser.GameObjects.Container {
 
     this.add([this.cone, this.housing, this.lens, this.led]);
     this.setSize(tileSize, tileSize);
-    this.setDepth(y + tileSize * 0.25);
 
     this.scene.add.existing(this);
 

@@ -1283,9 +1283,11 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 - Ensure every imported or custom-rendered sprite bakes in the same light direction and contrast so mixed asset packs still feel cohesive.
 
 ### Layering & Depth Perception
-- Depth is driven by draw order. Continue setting each `GameObject` depth to its pixel y-coordinate (plus a small offset) so lower objects render on top of those higher up the screen.
+- Depth ordering flows through `DepthManager` (`src/game/utils/depth.ts`). Register dynamic objects via `syncDepthPoint` so `computeDepth` + `DepthBias` constants decide stacking. Avoid calling `setDepth` manually—full bias bands live in `memory-bank/graphics.md`.
+- Reserve overlay and diagnostic layers by using the exported `DepthLayers` constants (path previews, day/night tint, debug wedges) so systemic effects never fight entity ordering.
 - Reinforce depth by slightly scaling down props placed "farther back" (higher y) and reducing their saturation/brightness while increasing contrast on foreground items.
 - Use subtle atmospheric effects—soft tints, fog sprites, or gradient overlays—to imply distance without adding real 3-D geometry.
+- Camera-wide post FX (bloom, vignette, noir grading) are driven by `bindCameraToVisualSettings` in `src/game/settings/visualSettings.ts`; update that module to tweak defaults instead of configuring individual scenes.
 
 ### Variation & Texture Use
 - Generate variety by scaling, rotating 90°/180°, or skewing base primitives. Combine multiple material palettes (wood, stone, metal) on the same primitive to avoid repetitive visuals.

@@ -19,6 +19,9 @@ import { resolveCardinalDirection } from '../combat/combatSystem';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { miniMapService } from '../services/miniMapService';
 import CameraSprite from '../objects/CameraSprite';
+import { DepthManager, DepthBias, DepthLayers, syncDepthPoint } from '../utils/depth';
+import type { DepthResolvableGameObject } from '../utils/depth';
+import { bindCameraToVisualSettings } from '../settings/visualSettings';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
@@ -59,6 +62,7 @@ interface NpcSpriteData {
 
 export class MainScene extends Phaser.Scene {
   private tileSize: number = DEFAULT_TILE_SIZE;
+  private depthManager!: DepthManager;
   private mapGraphics!: Phaser.GameObjects.Graphics;
   private backdropGraphics!: Phaser.GameObjects.Graphics;
   private pathGraphics!: Phaser.GameObjects.Graphics;
@@ -85,6 +89,7 @@ export class MainScene extends Phaser.Scene {
   private playerVitalsIndicator?: Phaser.GameObjects.Graphics;
   private isoFactory?: IsoObjectFactory;
   private staticPropGroup?: Phaser.GameObjects.Group;
+  private disposeVisualSettings?: () => void;
   private lastPlayerScreenDetail?: PlayerScreenPositionDetail;
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
@@ -99,6 +104,14 @@ export class MainScene extends Phaser.Scene {
 
   constructor() {
     super({ key: 'MainScene' });
+  }
+
+  private registerStaticDepth(target: Phaser.GameObjects.GameObject, depth: number): void {
+    this.depthManager.registerStatic(target as DepthResolvableGameObject, depth);
+  }
+
+  private syncDepth(target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number): void {
+    syncDepthPoint(this.depthManager, target as DepthResolvableGameObject, pixelX, pixelY, bias);
   }
 
   public init(data: { mapArea: MapArea, playerPosition: Position, buildings?: LevelBuildingDefinition[] }): void {
@@ -118,27 +131,29 @@ export class MainScene extends Phaser.Scene {
 
     // Fill the entire canvas with background color
     this.cameras.main.setBackgroundColor(0x1a1a1a);
+    this.depthManager = new DepthManager(this);
 
     // Setup map graphics
     this.backdropGraphics = this.add.graphics();
-    this.backdropGraphics.setDepth(-20);
+    this.registerStaticDepth(this.backdropGraphics, DepthLayers.BACKDROP);
 
     this.mapGraphics = this.add.graphics();
-    this.mapGraphics.setDepth(-5);
+    this.registerStaticDepth(this.mapGraphics, DepthLayers.MAP_BASE);
 
     this.visionConeGraphics = this.add.graphics();
-    this.visionConeGraphics.setDepth(2);
+    this.registerStaticDepth(this.visionConeGraphics, DepthLayers.VISION_OVERLAY);
 
     this.pathGraphics = this.add.graphics();
-    this.pathGraphics.setDepth(4);
+    this.registerStaticDepth(this.pathGraphics, DepthLayers.PATH_PREVIEW);
 
     this.coverDebugGraphics = this.add.graphics();
-    this.coverDebugGraphics.setDepth(5);
+    this.registerStaticDepth(this.coverDebugGraphics, DepthLayers.COVER_DEBUG);
     this.coverDebugGraphics.setVisible(false);
 
     // Initial setup of camera and map
     this.setupCameraAndMap();
     this.cameras.main.setRoundPixels(true);
+    this.disposeVisualSettings = bindCameraToVisualSettings(this.cameras.main);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanupScene, this);
 
     // Cache initial world time and set up overlay
@@ -312,7 +327,7 @@ export class MainScene extends Phaser.Scene {
   }
   private ensureIsoFactory(): void {
     if (!this.isoFactory) {
-      this.isoFactory = new IsoObjectFactory(this, this.tileSize);
+      this.isoFactory = new IsoObjectFactory(this, this.tileSize, this.depthManager);
     }
 
     this.isoFactory.setIsoOrigin(this.isoOriginX, this.isoOriginY);
@@ -445,7 +460,7 @@ export class MainScene extends Phaser.Scene {
       );
     }
 
-    graphics.setDepth(pixelPos.y + 9);
+    this.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 9);
   }
 
   private destroyPlayerVitalsIndicator(): void {
@@ -590,7 +605,7 @@ export class MainScene extends Phaser.Scene {
       Math.max(1, barHeight - 2),
       Math.max(2, barHeight - 2)
     );
-    graphics.setDepth(pixelPos.y + 6);
+    this.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 6);
   }
 
   private updateNpcs(npcs: NPC[]): void {
@@ -687,7 +702,7 @@ export class MainScene extends Phaser.Scene {
       );
     }
 
-    graphics.setDepth(pixelPos.y + 7);
+    this.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 7);
   }
 
   private renderVisionCones(): void {
@@ -786,7 +801,8 @@ export class MainScene extends Phaser.Scene {
         sprite.setRangeTiles(camera.range);
       }
 
-      sprite.setDepth(pixelPos.y + metrics.tileHeight * 0.5);
+      const depthBias = DepthBias.PROP_TALL + Math.round(metrics.tileHeight * 0.5);
+      this.syncDepth(sprite, pixelPos.x, pixelPos.y, depthBias);
       sprite.setOverlayVisible(overlayEnabled);
       sprite.setActiveState(camera.isActive);
       sprite.setAlertState(camera.alertState);
@@ -803,6 +819,10 @@ export class MainScene extends Phaser.Scene {
   }
 
   public shutdown(): void {
+    if (this.disposeVisualSettings) {
+      this.disposeVisualSettings();
+      this.disposeVisualSettings = undefined;
+    }
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
@@ -1345,7 +1365,7 @@ export class MainScene extends Phaser.Scene {
     depthBoost: number
   ): void {
     label.setPosition(pixelX, pixelY - verticalOffset);
-    label.setDepth(pixelY + depthBoost);
+    this.syncDepth(label, pixelX, pixelY, DepthBias.FLOATING_UI + depthBoost);
   }
 
   private colorToHex(color: number): string {
@@ -1961,7 +1981,7 @@ export class MainScene extends Phaser.Scene {
     this.dayNightOverlay = this.add.rectangle(0, 0, width, height, 0x000000, 0);
     this.dayNightOverlay.setOrigin(0.5, 0.5);
     this.dayNightOverlay.setScrollFactor(0);
-    this.dayNightOverlay.setDepth(100);
+    this.registerStaticDepth(this.dayNightOverlay, DepthLayers.DAY_NIGHT_OVERLAY);
     this.dayNightOverlay.setBlendMode(Phaser.BlendModes.MULTIPLY);
     this.dayNightOverlay.setSize(width, height);
     this.dayNightOverlay.setDisplaySize(width, height);

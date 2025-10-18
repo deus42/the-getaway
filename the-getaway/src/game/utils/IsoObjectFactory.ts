@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { getIsoMetrics, toPixel, getDiamondPoints, adjustColor } from './iso';
+import { DepthBias, DepthManager, syncDepthPoint } from './depth';
+import type { DepthResolvableGameObject } from './depth';
 
 export interface CrateOptions {
   tint?: number;
@@ -80,7 +82,20 @@ export class IsoObjectFactory {
   private originX = 0;
   private originY = 0;
 
-  constructor(private readonly scene: Phaser.Scene, private readonly tileSize: number = DEFAULT_TILE_SIZE) {}
+  constructor(
+    private readonly scene: Phaser.Scene,
+    private readonly tileSize: number = DEFAULT_TILE_SIZE,
+    private readonly depthManager?: DepthManager
+  ) {}
+
+  private assignDepth(
+    target: Phaser.GameObjects.GameObject,
+    pixelX: number,
+    pixelY: number,
+    bias: number
+  ): void {
+    syncDepthPoint(this.depthManager, target as DepthResolvableGameObject, pixelX, pixelY, bias);
+  }
 
   public setIsoOrigin(x: number, y: number): this {
     this.originX = x;
@@ -125,7 +140,7 @@ export class IsoObjectFactory {
     graphics.strokePoints(baseDiamond, true);
     graphics.strokePoints(topDiamond, true);
 
-    graphics.setDepth(y + 6);
+    this.assignDepth(graphics, x, y, DepthBias.PROP_LOW);
     return graphics;
   }
 
@@ -144,7 +159,7 @@ export class IsoObjectFactory {
     graphics.fillPoints(diamond, true);
     graphics.lineStyle(1.5, adjustColor(color, 0.2), alpha + 0.2);
     graphics.strokePoints(diamond, true);
-    graphics.setDepth(y + 4);
+    this.assignDepth(graphics, x, y, DepthBias.TILE_OVERLAY);
 
     return graphics;
   }
@@ -184,7 +199,8 @@ export class IsoObjectFactory {
     graphics.lineStyle(1.5, adjustColor(tint, 0.18), 0.9);
     graphics.strokePoints(basePoints, true);
     graphics.strokePoints(topPoints, true);
-    graphics.setDepth(y + (options.depthOffset ?? 6));
+    const depthBias = DepthBias.PROP_TALL + (options.depthOffset ?? 0);
+    this.assignDepth(graphics, x, y, depthBias);
 
     return graphics;
   }
@@ -233,7 +249,7 @@ export class IsoObjectFactory {
     glow.setBlendMode(Phaser.BlendModes.ADD);
 
     container.add([glow, base, pole, lamp]);
-    container.setDepth(y + 14);
+    this.assignDepth(container, x, y, DepthBias.PROP_TALL + 16);
 
     return container;
   }
@@ -285,7 +301,7 @@ export class IsoObjectFactory {
     panelGlow.setBlendMode(Phaser.BlendModes.ADD);
 
     container.add([panelGlow, base, support, panel]);
-    container.setDepth(y + 12);
+    this.assignDepth(container, x, y, DepthBias.PROP_TALL + 12);
 
     return container;
   }
@@ -328,7 +344,7 @@ export class IsoObjectFactory {
     drawDiamond(pulse, pulseColor, pulseAlphaFrom);
 
     container.add([pulse, base]);
-    container.setDepth(y + depthOffset);
+    this.assignDepth(container, x, y, DepthBias.EFFECT + depthOffset);
 
     const tween = this.scene.tweens.add({
       targets: pulse,
@@ -381,7 +397,8 @@ export class IsoObjectFactory {
     graphics.fillPoints(diamond, true);
     graphics.lineStyle(1.4, resolved.outlineColor ?? adjustColor(resolved.baseColor ?? 0x111827, 0.25), (resolved.alpha ?? 0.85) + 0.1);
     graphics.strokePoints(diamond, true);
-    graphics.setDepth(y + (resolved.depthOffset ?? 2));
+    const depthBias = DepthBias.CHARACTER_BASE + (resolved.depthOffset ?? 0);
+    this.assignDepth(graphics, x, y, depthBias);
   }
 
   public createCharacterToken(gridX: number, gridY: number, options: CharacterTokenOptions = {}): CharacterToken {
@@ -452,6 +469,7 @@ export class IsoObjectFactory {
   public positionCharacterToken(token: CharacterToken, gridX: number, gridY: number): void {
     const { x, y } = toPixel(gridX, gridY, this.originX, this.originY, this.tileSize);
     token.container.setPosition(x, y);
-    token.container.setDepth(y + token.depthOffset);
+    const bias = DepthBias.CHARACTER + (token.depthOffset ?? 0);
+    this.assignDepth(token.container, x, y, bias);
   }
 }

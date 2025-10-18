@@ -713,7 +713,7 @@ Unify draw-order determinism and camera-wide post-processing so every scene rend
 - Add a `DepthManager` (or equivalent service) that registers dynamic game objects from `MainScene` and performs a single pre-update pass each frame to assign depth via `computeDepth`, removing ad-hoc `setDepth` calls from factories and entity classes. Provide override hooks for objects that must pin to reserved bands (e.g., day/night overlay, path previews).
 - Refactor `IsoObjectFactory`, `CameraSprite`, combat markers, and other render helpers to rely on the centralized manager for depth, keeping any remaining offsets in one `DepthBiasConfig`.
 - Move default visual FX (bloom, vignette, color grading) onto the primary camera with toggles exposed through `src/game/settings/visualSettings.ts`, and ensure object-level FX are limited to unique cases.
-- Author `memory-bank/rendering.md` that captures the depth rule, bias bands, camera FX order, and guidelines for introducing new FX or overlays. Link to this doc from `memory-bank/architecture.md` once implemented.
+- Author `memory-bank/graphics.md` that captures the depth rule, bias bands, camera FX order, and guidelines for introducing new FX or overlays. Link to this doc from `memory-bank/architecture.md` once implemented.
 </details>
 
 <test>

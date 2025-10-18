@@ -11,6 +11,8 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
 
 ## 2. Pre-Task Checklist (Mandatory)
 1. **Check Linear first**  
+   - Use the MCP Linear integration to query the backlog; all Linear lookups must go through MCP commands.  
+   - Before starting any roadmap step, confirm MCP access is active and immediately move the corresponding Linear issue to `In Progress` (or appropriate state) via MCP so status stays in sync.  
    - Open the **MVP** (and **PostMVP** when relevant) Linear projects and treat them as the live task index.  
    - Identify the next `Todo` issue assigned to you or that matches the roadmap order. Await explicit handoff before pulling in extra work.  
    - If the target roadmap step lacks a Linear issue, create one immediately under the MVP project before coding.

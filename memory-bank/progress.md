@@ -808,6 +808,42 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 </maintenance_notes>
 </step>
 
+<step id="18.5" status="completed">
+<step_metadata>
+  <number>18.5</number>
+  <title>Centralize Depth Ordering and Camera PostFX Defaults</title>
+  <status>Completed</status>
+  <date>February 24, 2026</date>
+</step_metadata>
+<linear key="GET-7" />
+
+<tasks>
+1. Added `computeDepth`, `DepthBias`, `DepthLayers`, and a scene-scoped `DepthManager` so isometric objects share a single ordering pipeline.
+2. Refactored `IsoObjectFactory` and `MainScene` to register dynamic props, characters, highlights, and HUD overlays through the depth manager instead of local `setDepth` calls.
+3. Introduced `visualSettings.ts` with bloom/vignette/color matrix defaults and bound `MainScene` to the shared camera FX toggles.
+4. Authored `memory-bank/graphics.md`, updated the architecture guide, and added Jest coverage for the new depth utilities.
+</tasks>
+
+<implementation>
+- `DepthManager` listens to scene pre-update ticks, applies `computeDepth` per registration, and exposes helpers (`syncDepthPoint`, `DepthLayers`) so reserved overlays stay in their bands.
+- `IsoObjectFactory` now syncs depth data for every graphic/container it spawns, translating legacy offsets into `DepthBias` additions while keeping fallback support for scenes without a manager.
+- `MainScene` instantiates the manager, routes labels/bars/path previews through `syncDepthPoint`, registers static overlays with `DepthLayers`, and now binds a neutral post-FX profile (all effects disabled by default) via `bindCameraToVisualSettings` to preserve the original brightness.
+- New documentation captures bias bands and camera FX workflow, with targeted tests guarding bias math, manager updates, and destroy cleanup.
+</implementation>
+
+<code_reference file="the-getaway/src/game/utils/depth.ts" />
+<code_reference file="the-getaway/src/game/utils/IsoObjectFactory.ts" />
+<code_reference file="the-getaway/src/game/scenes/MainScene.ts" />
+<code_reference file="the-getaway/src/game/settings/visualSettings.ts" />
+<code_reference file="the-getaway/src/game/utils/__tests__/depth.test.ts" />
+<code_reference file="memory-bank/graphics.md" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/utils/__tests__/depth.test.ts --runInBand`
+</validation>
+</step>
+
 <step id="19" status="completed">
 <step_metadata>
   <number>19</number>
