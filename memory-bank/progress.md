@@ -950,6 +950,45 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 </validation>
 </step>
 
+<step id="19.6" status="completed">
+<step_metadata>
+  <number>19.6</number>
+  <title>Implement Witness Memory & Regional Heat</title>
+  <status>Completed</status>
+  <date>October 18, 2025</date>
+</step_metadata>
+<linear key="GET-9" />
+
+<tasks>
+1. Authored suspicion domain helpers (`witnessMemory.ts`, `observationBuilders.ts`, `aggregation.ts`) with unit coverage for decay, reinforcement, and heat aggregation.
+2. Added `suspicionSlice` plus selectors, persistence migration, and decay ticks wired through `MainScene` to keep zone heat in sync with world time and pause during dialogues.
+3. Hooked guard vision and surveillance alarms to emit observations via `GameController` and `cameraSystem`, introduced the dev-only `SuspicionInspector` overlay, and seeded logging for balancing.
+</tasks>
+
+<implementation>
+- Guard and camera sightings now call `buildGuardWitnessObservation` / `buildCameraWitnessObservation` before dispatching `ingestObservation`, ensuring distance, lighting, disguise, and crouch dampeners apply consistently.
+- `suspicionSlice` stores per-zone snapshots, recomputes heat tiers using top-K weighted memories, supports suppression, and migrates existing saves via `store/index.ts`.
+- Dev tooling renders leading witnesses and heat tiers through `SuspicionInspector`, while surveillance updates propagate observations over an injected callback without duplicating Redux knowledge in the system layer.
+</implementation>
+
+<code_reference file="the-getaway/src/game/systems/suspicion/witnessMemory.ts" />
+<code_reference file="the-getaway/src/game/systems/suspicion/observationBuilders.ts" />
+<code_reference file="the-getaway/src/game/systems/suspicion/aggregation.ts" />
+<code_reference file="the-getaway/src/store/suspicionSlice.ts" />
+<code_reference file="the-getaway/src/game/scenes/MainScene.ts" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/game/systems/surveillance/cameraSystem.ts" />
+<code_reference file="the-getaway/src/components/debug/SuspicionInspector.tsx" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/systems/suspicion/__tests__/witnessMemory.test.ts src/game/systems/suspicion/__tests__/observationBuilders.test.ts src/store/__tests__/suspicionSlice.test.ts --watch=false`
+</validation>
+
+<notes>
+- Suspicion decay pauses while dialogues run, and dev logging traces guard/camera memory reinforcements for tuning future AI escalations.
+</notes>
+</step>
+
 <step id="21" status="completed">
 <step_metadata>
   <number>21</number>

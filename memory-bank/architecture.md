@@ -317,11 +317,11 @@ flowchart LR
 </design_principles>
 
 <technical_flow>
-1. <code_location>the-getaway/src/game/systems/suspicion/witnessMemory.ts</code_location> defines the `WitnessMemory` model plus `decayWitnessMemory`, `reinforceWitnessMemory`, and pruning helpers parameterised by half-life and certainty floor.
-2. <code_location>the-getaway/src/game/systems/suspicion/suspicionSystem.ts</code_location> listens to guard vision cone events (Step 19) and surveillance detections (Step 19.5), applies disguise/lighting/crowd modifiers, and creates or reinforces memories per witness and recognition channel.
-3. <code_location>the-getaway/src/store/suspicionSlice.ts</code_location> (or an extended `worldSlice`) stores memories keyed by zone, exposes `selectHeatByZone`, `selectLeadingWitnesses`, and derives alert tiers from the top-K weighted memories (certainty × proximity × report status).
-4. <code_location>the-getaway/src/game/systems/ai/guardResponseCoordinator.ts</code_location> consumes heat tiers to escalate patrol density, checkpoint lockdowns, and combat readiness, reverting to calm behaviour as heat cools.
-5. <code_location>the-getaway/src/components/debug/SuspicionInspector.tsx</code_location> and <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> surface developer-facing heat telemetry and witness breakdowns gated behind feature flags.
+ 1. <code_location>the-getaway/src/game/systems/suspicion/witnessMemory.ts</code_location> defines the `WitnessMemory` model plus `decayWitnessMemory`, `reinforceWitnessMemory`, and pruning helpers parameterised by half-life and certainty floor.
+ 2. <code_location>the-getaway/src/game/systems/suspicion/observationBuilders.ts</code_location> assembles guard and camera observations, applying distance, lighting, disguise, and posture dampeners before forwarding structured payloads.
+ 3. <code_location>the-getaway/src/store/suspicionSlice.ts</code_location> stores zone memories, derives heat tiers via the aggregation helpers, exposes selectors, and handles suppression/decay while pausing when dialogues freeze the world.
+ 4. <code_location>the-getaway/src/components/GameController.tsx</code_location>, <code_location>the-getaway/src/game/combat/perceptionManager.ts</code_location>, <code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>, and <code_location>the-getaway/src/game/scenes/MainScene.ts</code_location> emit observations and schedule decay ticks directly from guard vision, surveillance loops, and world time pulses.
+ 5. <code_location>the-getaway/src/components/debug/SuspicionInspector.tsx</code_location> renders a dev-only overlay listing current heat and leading witnesses; <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> can reference the same selectors when exposing suspicion telemetry diegetically.
 </technical_flow>
 
 <pattern name="WitnessDecayScheduler">
@@ -365,6 +365,24 @@ flowchart LR
 - Each selector returns both score and confidence so UI and AI can present uncertain reactions (“I heard…” vs “I saw…”).
 - Hooks expose subscription APIs for React HUD (discount banners, dialogue hints) without leaking Redux internals into Phaser systems.
 </pattern>
+</architecture_section>
+
+<architecture_section id="autobattle_system" category="combat_systems">
+<design_principles>
+- Treat AutoBattle as an assist layer, not a replacement—manual input must pre-empt automation instantly without desyncing turn order or AP bookkeeping.
+- Reuse existing combat primitives (`ReactionQueue`, `combatSystem` actions, selectors) so automated turns travel through the same reducers and telemetry that manual play already exercises.
+- Keep heuristics deterministic per profile seed to support replay/debug parity while allowing designers to tweak weight tables without code changes.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/store/settingsSlice.ts</code_location> stores `autoBattleEnabled` and `autoBattleProfile`, persisting via existing save hydrators so preferences survive reloads. Reducers expose `setAutoBattleEnabled`/`setAutoBattleProfile`, and selectors feed both HUD toggle state and planner config.
+2. <code_location>the-getaway/src/game/combat/automation/autoBattleProfiles.ts</code_location> defines behaviour weight tables (Aggressive, Balanced, Defensive) describing target preferences, AP reserve thresholds, consumable usage rules, and panic triggers. Profiles export pure data consumed by the planner.
+3. <code_location>the-getaway/src/game/combat/automation/autoBattlePlanner.ts</code_location> collects the current combat snapshot (initiative order, entity stats, cover arcs, available abilities), enumerates legal actions via existing helpers (`enumerateMovements`, `enumerateAttacks`, `enumerateConsumables`), and scores each option with a heuristic `score = expectedDamage + mitigationGain + objectiveBias - risk`. The planner returns the highest scoring action or a safe fallback (reposition) when no positive score exists.
+4. <code_location>the-getaway/src/game/combat/automation/AutoBattleController.ts</code_location> subscribes to combat state inside `GameController`, triggers planner evaluations whenever the player-side turn gains AP, and enqueues the selected action into the shared `ReactionQueue`. It watches for manual input, objective popups, or resource exhaustion signals to immediately cancel the automation loop.
+5. <code_location>the-getaway/src/components/ui/CombatHud.tsx</code_location> renders the AutoBattle toggle/button and profile selector, dispatching the settings reducers. Hotkeys (`Shift+A`, numeric profile cycling) route through the same actions so UI, keyboard, and settings views stay in sync.
+6. <code_location>the-getaway/src/store/logSlice.ts</code_location> receives structured entries from the controller/planner (`autoBattleDecision`, `autoBattlePaused`) so players understand why automation acted or stopped. A dev-only overlay (`AutoBattleInspector.tsx`) visualises per-action scores and rejection reasons for tuning.
+7. Fail-safe hooks fire from <code_location>the-getaway/src/game/combat/events.ts</code_location> (objective prompts, dialogue, incapacitations) to the controller, guaranteeing automation releases control before critical narrative beats or when the squad reaches configured panic thresholds.
+</technical_flow>
 </architecture_section>
 ### `/the-getaway/src/content`
 

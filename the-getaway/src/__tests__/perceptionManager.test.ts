@@ -77,23 +77,34 @@ describe('perceptionManager', () => {
     const enemies = [{ ...baseEnemy, id: 'no-vision', visionCone: undefined }];
     perception.isPlayerVisible.mockReturnValue(false);
 
-    const { updatedEnemies, maxAlertLevel } = processPerceptionUpdates(enemies, player, mapArea);
+    const { updatedEnemies, maxAlertLevel, guardPerception } = processPerceptionUpdates(
+      enemies,
+      player,
+      mapArea
+    );
 
     expect(updatedEnemies[0]).toEqual(enemies[0]);
     expect(maxAlertLevel).toBe(AlertLevel.IDLE);
     expect(perception.updateEnemyAlert).not.toHaveBeenCalled();
+    expect(guardPerception).toHaveLength(1);
+    expect(guardPerception[0].playerVisible).toBe(false);
   });
 
   it('updates alert state and direction when player visible', () => {
     const enemies = [{ ...baseEnemy }];
     perception.isPlayerVisible.mockReturnValue(true);
 
-    const { updatedEnemies, maxAlertLevel } = processPerceptionUpdates(enemies, player, mapArea);
+    const { updatedEnemies, maxAlertLevel, guardPerception } = processPerceptionUpdates(
+      enemies,
+      player,
+      mapArea
+    );
 
     expect(perception.updateEnemyAlert).toHaveBeenCalledWith(enemies[0], true);
     expect(perception.updateVisionDirection).toHaveBeenCalledWith(expect.any(Object), player.position);
     expect(updatedEnemies[0].lastKnownPlayerPosition).toEqual(player.position);
     expect(maxAlertLevel).toBe(AlertLevel.ALARMED);
+    expect(guardPerception[0].playerVisible).toBe(true);
   });
 
   it('tracks highest alert state across enemies', () => {
@@ -103,9 +114,11 @@ describe('perceptionManager', () => {
     ];
     perception.isPlayerVisible.mockImplementation((enemy: Enemy) => enemy.id === 'enemy-2');
 
-    const { maxAlertLevel } = processPerceptionUpdates(enemies, player, mapArea);
+    const { maxAlertLevel, guardPerception } = processPerceptionUpdates(enemies, player, mapArea);
 
     expect(maxAlertLevel).toBe(AlertLevel.ALARMED);
+    expect(guardPerception.find((entry) => entry.enemy.id === 'enemy-2')?.playerVisible).toBe(true);
+    expect(guardPerception.find((entry) => entry.enemy.id === 'enemy-1')?.playerVisible).toBe(false);
   });
 
   it('returns alert message keys when level increases', () => {

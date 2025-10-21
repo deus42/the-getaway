@@ -72,6 +72,20 @@ const noteDefinitions: EnvironmentalNoteDefinition[] = [
       'Report sightings to CO-LAW vending kiosks.',
     ],
   },
+  {
+    id: 'note.gangHeat.low.suspicion-drill',
+    flag: 'gangHeat',
+    value: 'low',
+    storyFunction: 'world-building',
+    description: 'Field memo coaching crews on witness heat drills.',
+    preferredZoneId: 'downtown_checkpoint',
+    position: { x: 30, y: 24 },
+    lines: [
+      'Ops memo: Trigger one patrol sighting and log the heat spike.',
+      'Break line-of-sight, watch the Suspicion Inspector cool to calm.',
+      'Report anomalies to George so the city remembers accurately.',
+    ],
+  },
 ];
 
 export const getNoteDefinitionsForFlag = (

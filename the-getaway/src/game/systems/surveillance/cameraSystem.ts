@@ -22,6 +22,7 @@ import {
   AlertLevel,
 } from '../../interfaces/types';
 import { TimeOfDay } from '../../world/dayNightCycle';
+import type { EnvironmentFlags } from '../../interfaces/environment';
 import {
   createCameraRuntimeState,
   updateCameraOrientation,
@@ -31,6 +32,8 @@ import {
 import { hasLineOfSight, isInVisionCone } from '../../combat/perception';
 import { Position, SkillId } from '../../interfaces/types';
 import { clamp } from '../../utils/math';
+import { buildCameraWitnessObservation } from '../suspicion/observationBuilders';
+import type { WitnessObservation } from '../suspicion/types';
 import type { LogStrings } from '../../../content/system';
 
 const PROGRESS_GAIN_PER_MS = 100 / 3000; // 0 → 100 over ~3s
@@ -315,6 +318,10 @@ interface SurveillanceUpdateParams {
   logStrings: LogStrings;
   reinforcementsScheduled: boolean;
   globalAlertLevel: AlertLevel;
+  timeOfDay: TimeOfDay;
+  environmentFlags: EnvironmentFlags;
+  worldTimeSeconds: number;
+  onWitnessObservation?: (observation: WitnessObservation) => void;
 }
 
 export const updateSurveillance = (
@@ -330,6 +337,10 @@ export const updateSurveillance = (
     logStrings,
     reinforcementsScheduled,
     globalAlertLevel,
+    timeOfDay,
+    environmentFlags,
+    worldTimeSeconds,
+    onWitnessObservation,
   } = params;
 
   const cache = areaRuntimeCache[zone.areaId] ?? { lastPlayerPosition: undefined };
@@ -394,6 +405,25 @@ export const updateSurveillance = (
     const sweepDirChanged = runtime.sweepDirection !== camera.sweepDirection ||
       runtime.sweepIndex !== camera.sweepIndex ||
       Math.abs((runtime.sweepElapsedMs ?? 0) - (camera.sweepElapsedMs ?? 0)) > 0.1;
+
+    if (
+      stateChanged &&
+      (runtime.alertState === CameraAlertState.SUSPICIOUS || runtime.alertState === CameraAlertState.ALARMED)
+    ) {
+      const observation = buildCameraWitnessObservation({
+        camera: runtime,
+        player,
+        mapArea,
+        timeOfDay,
+        environmentFlags,
+        timestamp: worldTimeSeconds,
+        alertState: runtime.alertState,
+      });
+
+      if (onWitnessObservation) {
+        onWitnessObservation(observation);
+      }
+    }
 
     if (stateChanged || directionChanged || positionChanged || progressChanged || timestampChanged || sweepDirChanged) {
       updates.push({ cameraId: camera.id, runtime, previous: camera });

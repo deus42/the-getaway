@@ -842,6 +842,7 @@ export const level0EnglishContent: Level0LocaleContent = {
       'Map patrol drone loops and assign safe counter-routes.',
       'Restock Medic Yara\'s rebel clinic with field medkits.',
       'Ambush the transit patrol escorting the sweep captain.',
+      'Bait a CorpSec patrol or camera, watch the Suspicion Inspector spike, then break line-of-sight until the heat cools.',
     ],
     initialEnemyName: 'CorpSec Sweep Captain',
     zoneId: 'downtown_checkpoint',

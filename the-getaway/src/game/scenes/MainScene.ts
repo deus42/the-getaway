@@ -3,6 +3,7 @@ import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel, Item, Sur
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
+import { applySuspicionDecay } from '../../store/suspicionSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 import {
   TILE_CLICK_EVENT,
@@ -2032,7 +2033,14 @@ export class MainScene extends Phaser.Scene {
     this.updateDayNightOverlay();
 
     if (this.timeDispatchAccumulator >= 0.5) {
-      store.dispatch(updateGameTimeAction(this.timeDispatchAccumulator));
+      const elapsedSeconds = this.timeDispatchAccumulator;
+      store.dispatch(updateGameTimeAction(elapsedSeconds));
+      store.dispatch(
+        applySuspicionDecay({
+          elapsedSeconds,
+          timestamp: this.currentGameTime,
+        })
+      );
       this.timeDispatchAccumulator = 0;
     }
 

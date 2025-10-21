@@ -1902,6 +1902,41 @@ Equip frag grenade and throw at clustered enemies (2+ units within 3 tiles). Ver
 </test>
 </step>
 
+<step id="26.4">
+<step_metadata>
+  <number>26.4</number>
+  <title>AutoBattle Mode & Tactical Automation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 26 completed (advanced combat foundations in place)
+- Step 26.1 completed (directional cover and flanking mechanics)
+- Step 26.2 completed (overwatch and targeted shots)
+- Step 26.3 completed (AoE attacks and combat consumables)
+</prerequisites>
+
+<instructions>
+Allow players to hand tactical control to an AutoBattle agent that resolves turns using configurable behaviour profiles inspired by modern autochess pacing. Surface the toggle in settings and combat HUD while ensuring automation can be interrupted instantly.
+</instructions>
+
+<details>
+- **Settings & Toggle Placement**: Extend `settingsSlice.ts` with `autoBattleEnabled` and `autoBattleProfile` preferences, persisting per save. Update `SettingsPanel` (and pause menu) with an AutoBattle group that exposes enable/disable plus profile dropdown. In combat HUD add a dedicated toggle button and `Shift+A` shortcut that dispatches the same reducer so players can flip automation mid-fight.
+- **Automation Profiles**: Author `src/game/combat/automation/autoBattleProfiles.ts` exporting at least Aggressive, Balanced, and Defensive profiles. Each profile defines weighted priorities for targets (focus lowest HP, focus overwatch threats, hold consumables), AP reserves, and risk tolerance so behaviour mirrors autochess archetypes.
+- **Planner & Heuristics**: Implement `autoBattlePlanner.ts` that evaluates the current initiative order, AP pools, cover arcs, and ability cooldowns to score available actions (move, attack, overwatch, consumable, retreat). Use a utility-style heuristic—sum of expected damage dealt, mitigation gained, and survival odds—to select a move each action frame, falling back to safe repositioning when no positive score exists.
+- **Command Execution Flow**: Add `AutoBattleController` glue that subscribes to Redux combat state, queues planner results into the existing `ReactionQueue`, and drives `combatSystem` actions exactly as manual input would. Ensure the controller respects animation locks, AP costs, and ability prerequisites while pausing immediately when the player issues manual input.
+- **Fail-Safes & Interrupts**: Stop automation automatically when critical prompts appear (dialogue choices, extraction timers, scripted objectives), when the player runs out of ammo/consumables required by a planned action, or when party HP drops below a configurable panic threshold. Surface status banners (e.g., “AutoBattle paused: Low ammo”) through `logSlice`.
+- **Telemetry & Debugging**: Instrument the planner to emit combat log summaries (`AutoBattle (Balanced): Move to cover, Attack Sniper (72% hit)`) and add an optional dev overlay that visualises action scores, chosen targets, and rejection reasons to aid tuning.
+</details>
+
+<test>
+- Toggle AutoBattle on via settings, start a combat encounter, and verify the HUD indicator lights up and automation begins without additional input.
+- Cycle through Aggressive, Balanced, and Defensive profiles during combat and confirm decision bias changes: Aggressive closes distance and spends consumables freely; Defensive prioritises cover and healing; Balanced mixes the two.
+- Interrupt automation by pressing movement/attack keys, receiving a new objective prompt, or depleting required ammo—verify control returns to the player and log entries explain the stop reason.
+- Persist the AutoBattle preference by saving and reloading; ensure the selected profile and toggle state restore correctly in a new session.
+</test>
+</step>
+
 <step id="29">
 <step_metadata>
   <number>29</number>
@@ -2918,11 +2953,11 @@ Deliver an end-of-campaign narrative ledger that summarizes the player’s key d
 <summary>
 ## Summary
 
-This plan now outlines **56 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+This plan now outlines **57 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (21 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3, 29/29.5/29.6/29.7/29.8, 30.1/30.2)
+- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (22 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3/26.4, 29/29.5/29.6/29.7/29.8, 30.1/30.2)
 - **Phase 8 (Step 31 deferred, Step 31.5)**: Seasonal narrative arc framework remains in MVP; Industrial Wasteland zone moves to Post-MVP scope.
 - **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
 - **Phase 10 (Steps 32.1-35.7)**: Testing, polish, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5, 35.7)

@@ -12,6 +12,17 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
     zoneId: 'downtown_checkpoint',
     cameras: [
       {
+        id: 'downtown_training_static',
+        type: 'static',
+        position: { x: 28, y: 18 },
+        range: 6,
+        fieldOfView: 90,
+        sweep: {
+          angles: [300, 270, 240],
+          cycleDurationMs: 2600,
+        },
+      },
+      {
         id: 'downtown_static_01',
         type: 'static',
         position: { x: 18, y: 22 },

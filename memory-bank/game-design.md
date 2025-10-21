@@ -183,6 +183,7 @@ certainty_w(t) = certainty_w(t0) * 0.5 ^ ((t - t0) / half_life)
 	•	Disguises, vehicle swaps, and night travel erode specific recognition channels, letting players strategically break links without wiping all notoriety.
 	•	Destroying cameras or silencing witnesses prevents reinforcement. Conversely, letting witnesses gossip kicks certainty into the guard network faster.
 	•	Debug-facing HUD overlays (or George’s dev feed) can surface leading witnesses and current heat bands for balancing without exposing meta numbers to players.
+	•	The current implementation ships a developer-only Suspicion Inspector overlay that displays the active zone’s heat tier and top witnesses for quick tuning passes.
 
 This mechanic grounds stealth tension in human memory—witnesses forget, rumors blur, and thoughtful downtime matters—while dovetailing with the localized reputation network for longer-term social consequences.
 </mechanic>
@@ -343,6 +344,19 @@ Characters and enemies have more than just basic attacks, adding depth and varie
 	•	Consumables: During combat, the player can use consumable items for tactical gains. Examples include medkits or syringes to heal or grant temporary stat boosts (like an adrenaline shot to increase AP), combat drugs that enhance speed or strength at a cost, or gadgets like an EMP device that can disable robotic enemies and electronic defenses for a short time.
 
 These varied options ensure combat doesn't feel repetitive. The player can approach encounters in different ways: one fight might involve sniping and traps, another could be resolved by hacking a security robot to turn on its masters, and another might see the player use brute force with heavy weapons. Tactical creativity is rewarded.
+</mechanic>
+
+<mechanic name="autobattle_mode">
+AutoBattle Mode & Behaviour Profiles
+
+AutoBattle lets players temporarily hand tactical control to the squad’s AI so fights can flow like a modern autochess round while still respecting The Getaway’s AP economy and cover rules.
+	•	Automation Toggle: A dedicated AutoBattle toggle lives in the settings menu, pause/options shell, and combat HUD (button plus `Shift+A`). When enabled, the preference persists per save, so grinders can clear easier encounters hands-off yet still opt for manual play in tough missions.
+	•	Behaviour Profiles: Players select Aggressive, Balanced, or Defensive profiles that weight priorities differently—Aggressive spends consumables and closes distance, Balanced values positive expected damage vs. incoming risk, Defensive hoards AP for overwatch, healing, and fortified cover. Profiles can be swapped mid-encounter to react to changing board states.
+	•	Autochess-style Planner: Each AutoBattle step evaluates all legal actions, scoring them via heuristics that consider hit odds, multi-target payoff, cover deltas, reaction triggers, and resource thresholds. The planner queues the best rated move each time AP becomes available, mirroring the “plan → resolve” cadence seen in autochess bouts instead of scripting fixed rotations.
+	•	Player Agency & Fail-Safes: Manual input instantly cancels automation. The system also disables itself when ammo/meds for the current plan run dry, when objective prompts or dialogue choices appear, or when ally health dips below a panic threshold—ensuring the AI never pushes through story decisions or wipes the squad by accident.
+	•	Transparency & Debugging: Combat logs annotate AutoBattle decisions (“AutoBattle: Balanced profile repositions to high cover, targets CorpSec Sniper (72% hit)”). A dev-only overlay can visualize action scores, letting designers tune heuristics and profile weights without stepping through code.
+
+This optional layer gives newcomers and grinders a low-friction way to enjoy turn phases while retaining deep tactical control the moment they toggle back to manual play.
 </mechanic>
 
 <mechanic name="vehicles_in_combat">

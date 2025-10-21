@@ -8,6 +8,12 @@ import settingsReducer from './settingsSlice';
 import combatFeedbackReducer from './combatFeedbackSlice';
 import surveillanceReducer from './surveillanceSlice';
 import storyletReducer from './storyletSlice';
+import suspicionReducer, {
+  SuspicionState,
+  createSuspicionInitialState,
+  SuspicionZoneState,
+  SUSPICION_STATE_VERSION,
+} from './suspicionSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -25,6 +31,7 @@ const reducers = {
   missions: missionReducer,
   surveillance: surveillanceReducer,
   storylets: storyletReducer,
+  suspicion: suspicionReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -85,6 +92,41 @@ const migratePlayerState = (state?: Partial<PlayerState> | null): PlayerState =>
   };
 };
 
+const cloneZoneState = (zone: SuspicionZoneState): SuspicionZoneState => ({
+  zoneId: zone.zoneId,
+  memories: { ...zone.memories },
+  heat: {
+    zoneId: zone.heat.zoneId,
+    totalHeat: zone.heat.totalHeat,
+    tier: zone.heat.tier,
+    leadingWitnessIds: [...zone.heat.leadingWitnessIds],
+  },
+  lastUpdatedAt: zone.lastUpdatedAt,
+  lastObservationAt: zone.lastObservationAt,
+});
+
+const migrateSuspicionState = (state?: Partial<SuspicionState> | null): SuspicionState => {
+  if (!state || state.version !== SUSPICION_STATE_VERSION) {
+    return createSuspicionInitialState();
+  }
+
+  const zones: Record<string, SuspicionZoneState> = {};
+  if (state.zones) {
+    Object.entries(state.zones).forEach(([zoneId, zone]) => {
+      if (zone) {
+        zones[zoneId] = cloneZoneState(zone);
+      }
+    });
+  }
+
+  return {
+    version: SUSPICION_STATE_VERSION,
+    zones,
+    paused: Boolean(state.paused),
+    lastTickAt: typeof state.lastTickAt === 'number' ? state.lastTickAt : null,
+  };
+};
+
 const loadState = (): PersistedState | undefined => {
   if (!isBrowser) {
     return undefined;
@@ -124,6 +166,7 @@ const migratePersistedState = (state?: PersistedState): PersistedState | undefin
   return {
     ...state,
     player: migratePlayerState(state.player),
+    suspicion: migrateSuspicionState(state.suspicion),
   };
 };
 
@@ -178,11 +221,12 @@ store.subscribe(() => {
     quests: state.quests,
     log: state.log,
     settings: state.settings,
-    combatFeedback: state.combatFeedback,
-    missions: state.missions,
-    surveillance: state.surveillance,
-    storylets: state.storylets,
-  };
+  combatFeedback: state.combatFeedback,
+  missions: state.missions,
+  surveillance: state.surveillance,
+  storylets: state.storylets,
+  suspicion: state.suspicion,
+};
   saveState(stateToPersist);
 });
 

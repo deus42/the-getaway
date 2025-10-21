@@ -12,10 +12,13 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
 ## 2. Pre-Task Checklist (Mandatory)
 1. **Check Linear first**  
    - Use the MCP Linear integration to query the backlog; all Linear lookups must go through MCP commands.  
-   - Before starting any roadmap step, confirm MCP access is active and immediately move the corresponding Linear issue to `In Progress` (or appropriate state) via MCP so status stays in sync.  
+   - Before starting any roadmap step, confirm MCP access is active. When planning or creating a new MVP task, create the Linear issue (or locate it) and set its status to `Todo`. Leave PostMVP/optional work parked in `Backlog`. Only move an issue to `In Progress` once implementation actually begins so status reflects reality.  
    - Open the **MVP** (and **PostMVP** when relevant) Linear projects and treat them as the live task index.  
    - Identify the next `Todo` issue assigned to you or that matches the roadmap order. Await explicit handoff before pulling in extra work.  
    - If the target roadmap step lacks a Linear issue, create one immediately under the MVP project before coding.
+2. **Wrap-up discipline**  
+   - Only move the active Linear issue to a terminal state (`Done`, `In Review`, etc.) after the implementation, documentation, validation, and commits are finalized.  
+   - After committing, use MCP to update the issue state before ending the task.
 2. **Confirm task scope**  
    - Read the Linear issue, `memory-bank/mvp-plan.md`, and related memory bank docs (`game-design.md`, `architecture.md`, `plot.md`, `post-mvp-plan.md` when applicable).  
    - Note prerequisites, validation steps, documentation requirements, and any linked roadmap references.
@@ -31,10 +34,13 @@ Do not begin coding until this checklist is complete.
   - Prefer incremental commits; use imperative commit messages (Conventional Commits welcome).  
   - Keep the Linear issue state aligned with reality (e.g., pause → `Todo`, active work → `In Progress`).  
   - Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
+  - When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
+  - Reference the active Linear key (for example, `GET-9`) in every commit message so Git ↔ Linear linking stays automatic.
 - **Testing**
   - Match validation steps from the roadmap and Linear ticket.  
   - Default commands: `yarn lint`, targeted `yarn test` runs, or full suites when coverage is expected.  
   - Record executed commands in PR summaries, progress logs, or issue comments.
+  - Produce a concise QA playtest script (typically 3–6 steps) that can be run in Level 0 to verify the change; include the script in the final task summary.
 - **Documentation updates**
   - Update `memory-bank/architecture.md` whenever architectural patterns, game systems, or data flow change.  
   - Update `memory-bank/game-design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  
@@ -126,7 +132,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Use the Linear “MVP” and “PostMVP” projects as the live task index; review them before picking up work so you don’t have to rescan the full plan/progress set each time.
 - Keep Linear issues in sync with roadmap status; update the issue state and descriptions whenever a step is added, started, or completed.
 - Create a Linear issue under the “MVP” project for every roadmap step/task as soon as it is added, and keep the issue status in sync with its completion in the docs.
-- Leave roadmap issues in `Todo` until explicitly asked to take the task; switch the Linear issue to `In Progress` only while actively implementing it, and move it to `Done` immediately after the corresponding commit/validation finishes.
+- Leave MVP roadmap issues in `Todo` through the planning phase and only switch to `In Progress` while actively implementing them; keep PostMVP items in `Backlog` until they are formally pulled into scope. Move issues to `Done` immediately after the corresponding implementation, documentation, and validation finish.
 - After finishing a roadmap step (or related Linear task), add an implementation summary comment to the matching Linear issue before moving it to `Done`; include key tasks, validation, and notable code references.
 
 ## 12. Separation of Concerns: Design vs Architecture

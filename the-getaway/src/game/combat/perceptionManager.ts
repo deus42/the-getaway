@@ -2,6 +2,11 @@ import { Enemy, Player, MapArea, AlertLevel } from '../interfaces/types';
 import { isPlayerVisible, updateEnemyAlert, updateVisionDirection } from './perception';
 import { PERCEPTION_CONFIG } from './perception';
 
+export interface GuardPerceptionResult {
+  enemy: Enemy;
+  playerVisible: boolean;
+}
+
 /**
  * Process perception updates for all enemies in the current map area
  * Returns updated enemies and the highest alert level detected
@@ -10,12 +15,14 @@ export const processPerceptionUpdates = (
   enemies: Enemy[],
   player: Player,
   mapArea: MapArea
-): { updatedEnemies: Enemy[]; maxAlertLevel: AlertLevel } => {
+): { updatedEnemies: Enemy[]; maxAlertLevel: AlertLevel; guardPerception: GuardPerceptionResult[] } => {
   let maxAlertLevel = AlertLevel.IDLE;
+  const guardPerception: GuardPerceptionResult[] = [];
 
   const updatedEnemies = enemies.map((enemy) => {
     // Skip enemies without vision cones
     if (!enemy.visionCone) {
+      guardPerception.push({ enemy, playerVisible: false });
       return enemy;
     }
 
@@ -31,6 +38,8 @@ export const processPerceptionUpdates = (
       updatedEnemy.lastKnownPlayerPosition = player.position;
     }
 
+    guardPerception.push({ enemy: updatedEnemy, playerVisible });
+
     // Track max alert level
     if (updatedEnemy.alertLevel) {
       const alertRank = getAlertRank(updatedEnemy.alertLevel);
@@ -43,7 +52,7 @@ export const processPerceptionUpdates = (
     return updatedEnemy;
   });
 
-  return { updatedEnemies, maxAlertLevel };
+  return { updatedEnemies, maxAlertLevel, guardPerception };
 };
 
 /**

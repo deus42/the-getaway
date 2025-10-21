@@ -64,11 +64,14 @@ import {
   updateSurveillance,
 } from "../game/systems/surveillance/cameraSystem";
 import { setOverlayEnabled } from "../store/surveillanceSlice";
+import { ingestObservation, setSuspicionPaused, purgeWitnessMemories } from "../store/suspicionSlice";
+import { buildGuardWitnessObservation, buildCameraWitnessObservation } from "../game/systems/suspicion/observationBuilders";
 import { createScopedLogger } from "../utils/logger";
 import { triggerStorylet } from "../store/storyletSlice";
 import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistry";
 import { ensureDefaultEnvironmentalTriggersRegistered } from "../game/world/triggers/defaultTriggers";
 import { selectEnvironmentSystemImpacts } from "../store/selectors/worldSelectors";
+import SuspicionInspector from "./debug/SuspicionInspector";
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
@@ -110,6 +113,8 @@ const GameController: React.FC = () => {
   const surveillanceZone = useSelector((state: RootState) => (mapAreaId ? state.surveillance.zones[mapAreaId] : undefined));
   const overlayEnabled = useSelector((state: RootState) => state.surveillance.hud.overlayEnabled);
   const environmentImpacts = useSelector(selectEnvironmentSystemImpacts);
+  const environmentFlags = useSelector((state: RootState) => state.world.environment.flags);
+  const worldCurrentTime = useSelector((state: RootState) => state.world.currentTime);
   const logStrings = useMemo(() => getSystemStrings(locale).logs, [locale]);
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const npcStepIntervalMs = useMemo(
@@ -143,6 +148,7 @@ const GameController: React.FC = () => {
   const timeOfDayRef = useRef(timeOfDay);
   const overlayEnabledRef = useRef(overlayEnabled);
   const previousSurveillanceAreaId = useRef<string | null>(null);
+  const previousEnemiesRef = useRef<Map<string, Enemy>>(new Map());
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
@@ -258,13 +264,37 @@ const GameController: React.FC = () => {
     surveillanceZoneRef.current = surveillanceZone;
   }, [surveillanceZone]);
 
-  useEffect(() => {
-    playerRef.current = player;
-  }, [player]);
+useEffect(() => {
+  playerRef.current = player;
+}, [player]);
+
+useEffect(() => {
+  mapAreaRef.current = currentMapArea ?? null;
+}, [currentMapArea]);
 
   useEffect(() => {
-    mapAreaRef.current = currentMapArea ?? null;
-  }, [currentMapArea]);
+    if (!currentMapArea) {
+      previousEnemiesRef.current = new Map(enemies.map((enemy) => [enemy.id, enemy]));
+      return;
+    }
+
+    const previousEnemies = previousEnemiesRef.current;
+    const currentEnemyMap = new Map(enemies.map((enemy) => [enemy.id, enemy]));
+
+    previousEnemies.forEach((prevEnemy, enemyId) => {
+      const currentEnemy = currentEnemyMap.get(enemyId);
+      if (!currentEnemy || currentEnemy.health <= 0) {
+        dispatch(
+          purgeWitnessMemories({
+            witnessId: enemyId,
+            zoneId: currentMapArea.zoneId,
+          })
+        );
+      }
+    });
+
+    previousEnemiesRef.current = currentEnemyMap;
+  }, [enemies, currentMapArea, dispatch]);
 
   useEffect(() => {
     reinforcementsScheduledRef.current = reinforcementsScheduled;
@@ -408,6 +438,7 @@ const GameController: React.FC = () => {
         const currentTime = getNow();
         const deltaMs = currentTime - lastFrameTime;
         lastFrameTime = currentTime;
+        const latestWorld = store.getState().world;
 
         updateSurveillance({
           zone: zoneState,
@@ -419,6 +450,15 @@ const GameController: React.FC = () => {
           logStrings,
           reinforcementsScheduled: reinforcementsScheduledRef.current ?? false,
           globalAlertLevel: globalAlertLevelRef.current ?? AlertLevel.IDLE,
+          timeOfDay: latestWorld.timeOfDay,
+          environmentFlags: latestWorld.environment.flags,
+          worldTimeSeconds: latestWorld.currentTime,
+          onWitnessObservation: (observation) => {
+            dispatch(ingestObservation(observation));
+            log.debug(
+              `Suspicion: camera ${observation.witnessId} reported player in ${observation.zoneId} (${observation.recognitionChannel})`
+            );
+          },
         });
       }
 
@@ -433,7 +473,7 @@ const GameController: React.FC = () => {
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [mapAreaId, dispatch, logStrings, store]);
+  }, [mapAreaId, dispatch, logStrings, store, log]);
 
   useEffect(() => {
     const handleTileClick = (event: Event) => {
@@ -1151,6 +1191,10 @@ const GameController: React.FC = () => {
     }
   }, [timeOfDay, dispatch, logStrings]);
 
+  useEffect(() => {
+    dispatch(setSuspicionPaused(Boolean(activeDialogueId)));
+  }, [activeDialogueId, dispatch]);
+
   // --- Perception Processing ---
   useEffect(() => {
     if (!player || enemies.length === 0 || !currentMapArea) {
@@ -1158,7 +1202,7 @@ const GameController: React.FC = () => {
     }
 
     // Process perception updates for all enemies
-    const { updatedEnemies, maxAlertLevel } = processPerceptionUpdates(
+    const { updatedEnemies, maxAlertLevel, guardPerception } = processPerceptionUpdates(
       enemies,
       player,
       currentMapArea
@@ -1173,6 +1217,29 @@ const GameController: React.FC = () => {
           updatedEnemy.alertProgress !== originalEnemy.alertProgress)
       ) {
         dispatch(updateEnemy(updatedEnemy));
+      }
+    });
+
+    guardPerception.forEach(({ enemy: guard, playerVisible }) => {
+      if (!playerVisible) {
+        return;
+      }
+
+      const observation = buildGuardWitnessObservation({
+        enemy: guard,
+        player,
+        mapArea: currentMapArea,
+        timeOfDay,
+        environmentFlags,
+        playerVisible,
+        timestamp: worldCurrentTime,
+      });
+
+      if (observation) {
+        dispatch(ingestObservation(observation));
+        log.debug(
+          `Suspicion: guard ${guard.id} observed player in ${currentMapArea.zoneId} (certainty ${(observation.baseCertainty * observation.distanceModifier).toFixed(2)})`
+        );
       }
     });
 
@@ -1238,7 +1305,21 @@ const GameController: React.FC = () => {
         }, reinforcementDelayMs);
       }
     }
-  }, [player, enemies, currentMapArea, dispatch, logStrings, inCombat, isPlayerTurn, reinforcementsScheduled, cancelPendingEnemyAction, reinforcementDelayMs]);
+  }, [
+    player,
+    enemies,
+    currentMapArea,
+    dispatch,
+    logStrings,
+    inCombat,
+    isPlayerTurn,
+    reinforcementsScheduled,
+    cancelPendingEnemyAction,
+    reinforcementDelayMs,
+    timeOfDay,
+    environmentFlags,
+    worldCurrentTime,
+  ]);
 
   // --- Enemy Turn Logic ---
   useEffect(() => {
@@ -2006,6 +2087,7 @@ const GameController: React.FC = () => {
     >
       {/* Remove the combat turn indicator UI from here */}
       {/* {inCombat && ( ... )} */}
+      <SuspicionInspector zoneId={currentMapArea?.zoneId ?? null} />
     </div>
   );
 };
