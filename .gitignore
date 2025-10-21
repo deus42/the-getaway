@@ -64,6 +64,8 @@ lerna-debug.log*
 # Vite cache and debug
 .vite/
 debug/
+!the-getaway/src/components/debug/
+!the-getaway/src/components/debug/**
 
 # Cache directories
 .npm/

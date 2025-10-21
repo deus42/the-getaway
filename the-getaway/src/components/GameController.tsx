@@ -148,6 +148,7 @@ const GameController: React.FC = () => {
   const timeOfDayRef = useRef(timeOfDay);
   const overlayEnabledRef = useRef(overlayEnabled);
   const previousSurveillanceAreaId = useRef<string | null>(null);
+  const pendingSurveillanceTeardownRef = useRef<number | null>(null);
   const previousEnemiesRef = useRef<Map<string, Enemy>>(new Map());
 
   // State to track current enemy turn processing
@@ -345,6 +346,16 @@ useEffect(() => {
       return;
     }
 
+    if (pendingSurveillanceTeardownRef.current !== null) {
+      window.clearTimeout(pendingSurveillanceTeardownRef.current);
+      pendingSurveillanceTeardownRef.current = null;
+    }
+
+    const previousId = previousSurveillanceAreaId.current;
+    if (previousId && previousId !== mapAreaId) {
+      teardownZoneSurveillance({ areaId: previousId, dispatch });
+    }
+
     const zoneState = surveillanceZoneRef.current;
     if (!zoneState || zoneState.areaId !== mapAreaId) {
       initializeZoneSurveillance({
@@ -358,11 +369,16 @@ useEffect(() => {
     previousSurveillanceAreaId.current = mapAreaId;
 
     return () => {
-      const previousId = previousSurveillanceAreaId.current;
-      if (previousId) {
-        teardownZoneSurveillance({ areaId: previousId, dispatch });
-        previousSurveillanceAreaId.current = null;
+      const currentId = previousSurveillanceAreaId.current;
+      if (!currentId) {
+        return;
       }
+
+      pendingSurveillanceTeardownRef.current = window.setTimeout(() => {
+        teardownZoneSurveillance({ areaId: currentId, dispatch });
+        previousSurveillanceAreaId.current = null;
+        pendingSurveillanceTeardownRef.current = null;
+      }, 0);
     };
   }, [mapAreaId, dispatch]);
 
