@@ -8,6 +8,8 @@ import combatFeedbackReducer from '../../../../store/combatFeedbackSlice';
 import missionsReducer from '../../../../store/missionSlice';
 import surveillanceReducer from '../../../../store/surveillanceSlice';
 import storyletReducer from '../../../../store/storyletSlice';
+import autoBattleReducer from '../../../../store/autoBattleSlice';
+import suspicionReducer from '../../../../store/suspicionSlice';
 import { ensureDefaultEnvironmentalTriggersRegistered, resetEnvironmentalTriggersForTest } from '../defaultTriggers';
 import { tickEnvironmentalTriggers } from '../triggerRegistry';
 import { RootState } from '../../../../store';
@@ -20,10 +22,12 @@ const createTestStore = () =>
       settings: settingsReducer,
       log: logReducer,
       quests: questsReducer,
+      autoBattle: autoBattleReducer,
       combatFeedback: combatFeedbackReducer,
       missions: missionsReducer,
       surveillance: surveillanceReducer,
       storylets: storyletReducer,
+      suspicion: suspicionReducer,
     },
   });
 

@@ -14,6 +14,7 @@ import suspicionReducer, {
   SuspicionZoneState,
   SUSPICION_STATE_VERSION,
 } from './suspicionSlice';
+import autoBattleReducer from './autoBattleSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -27,6 +28,7 @@ const reducers = {
   quests: questsReducer,
   log: logReducer,
   settings: settingsReducer,
+  autoBattle: autoBattleReducer,
   combatFeedback: combatFeedbackReducer,
   missions: missionReducer,
   surveillance: surveillanceReducer,
@@ -221,12 +223,13 @@ store.subscribe(() => {
     quests: state.quests,
     log: state.log,
     settings: state.settings,
-  combatFeedback: state.combatFeedback,
-  missions: state.missions,
-  surveillance: state.surveillance,
-  storylets: state.storylets,
-  suspicion: state.suspicion,
-};
+    autoBattle: state.autoBattle,
+    combatFeedback: state.combatFeedback,
+    missions: state.missions,
+    surveillance: state.surveillance,
+    storylets: state.storylets,
+    suspicion: state.suspicion,
+  };
   saveState(stateToPersist);
 });
 

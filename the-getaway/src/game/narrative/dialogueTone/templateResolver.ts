@@ -3,6 +3,7 @@ import {
   RoleDialogueContext,
   RoleDialogueTemplate,
   RoleTemplateEnvironmentGate,
+  RoleTemplateFactionGate,
   RoleTemplateRequest,
   RoleTemplateResolution,
   RoleTemplateTokenDefinition,
@@ -102,7 +103,7 @@ const checkPerkRequirements = (perks: string[], requires?: string[], forbids?: s
 
 const checkFactionGates = (
   context: RoleDialogueContext,
-  templates: RoleDialogueTemplate['gating']['faction'],
+  templates: RoleTemplateFactionGate[] | undefined,
 ): boolean => {
   if (!templates || templates.length === 0) {
     return true;
@@ -160,11 +161,10 @@ const checkHazardKeywords = (
 };
 
 const matchesTemplateGating = (template: RoleDialogueTemplate, context: RoleDialogueContext): boolean => {
-  if (!template.gating) {
+  const gating = template.gating;
+  if (!gating) {
     return true;
   }
-
-  const { gating } = template;
   const { world, player, npc } = context;
 
   if (!checkFactionGates(context, gating.faction)) {
@@ -196,7 +196,9 @@ const matchesTemplateGating = (template: RoleDialogueTemplate, context: RoleDial
   }
 
   if (gating.environment && gating.environment.length > 0) {
-    const allMatch = gating.environment.every((gate) => evaluateEnvironmentGate(gate, world.environmentFlags));
+    const allMatch = gating.environment.every((gate: RoleTemplateEnvironmentGate) =>
+      evaluateEnvironmentGate(gate, world.environmentFlags),
+    );
     if (!allMatch) {
       return false;
     }

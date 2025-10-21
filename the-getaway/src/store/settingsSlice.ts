@@ -1,14 +1,22 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { DEFAULT_LOCALE, Locale } from '../content/locales';
+import {
+  AutoBattleProfileId,
+  DEFAULT_AUTO_BATTLE_PROFILE_ID,
+} from '../game/combat/automation/autoBattleProfiles';
 
 export interface SettingsState {
   locale: Locale;
   testMode: boolean;
+  autoBattleEnabled: boolean;
+  autoBattleProfile: AutoBattleProfileId;
 }
 
 const initialState: SettingsState = {
   locale: DEFAULT_LOCALE,
   testMode: false,
+  autoBattleEnabled: false,
+  autoBattleProfile: DEFAULT_AUTO_BATTLE_PROFILE_ID,
 };
 
 const settingsSlice = createSlice({
@@ -21,9 +29,20 @@ const settingsSlice = createSlice({
     setTestMode: (state, action: PayloadAction<boolean>) => {
       state.testMode = action.payload;
     },
+    setAutoBattleEnabled: (state, action: PayloadAction<boolean>) => {
+      state.autoBattleEnabled = action.payload;
+    },
+    setAutoBattleProfile: (state, action: PayloadAction<AutoBattleProfileId>) => {
+      state.autoBattleProfile = action.payload;
+    },
   },
 });
 
-export const { setLocale, setTestMode } = settingsSlice.actions;
+export const {
+  setLocale,
+  setTestMode,
+  setAutoBattleEnabled,
+  setAutoBattleProfile,
+} = settingsSlice.actions;
 
 export default settingsSlice.reducer;

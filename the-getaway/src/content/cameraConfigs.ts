@@ -17,6 +17,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 28, y: 18 },
         range: 6,
         fieldOfView: 90,
+        activationPhases: EVENING_CURFEW_PHASES,
         sweep: {
           angles: [300, 270, 240],
           cycleDurationMs: 2600,

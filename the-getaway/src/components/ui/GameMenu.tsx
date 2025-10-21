@@ -2,7 +2,12 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { SUPPORTED_LOCALES, Locale } from "../../content/locales";
 import { getUIStrings } from "../../content/ui";
-import { setLocale, setTestMode } from "../../store/settingsSlice";
+import {
+  setLocale,
+  setTestMode,
+  setAutoBattleEnabled,
+  setAutoBattleProfile,
+} from "../../store/settingsSlice";
 import { applyLocaleToQuests } from "../../store/questsSlice";
 import { applyLocaleToWorld } from "../../store/worldSlice";
 import { applyLocaleToMissions } from "../../store/missionSlice";
@@ -10,6 +15,9 @@ import { RootState, AppDispatch } from "../../store";
 import { GAME_VERSION, GAME_YEAR } from "../../version";
 import EnhancedButton from "./EnhancedButton";
 import { gradientTextStyle } from "./theme";
+import { AUTO_BATTLE_PROFILE_IDS } from "../../game/combat/automation/autoBattleProfiles";
+import type { AutoBattleProfileId } from "../../game/combat/automation/autoBattleProfiles";
+import AutoBattleProfileSelect from "./AutoBattleProfileSelect";
 
 interface GameMenuProps {
   onStartNewGame: () => void;
@@ -25,7 +33,14 @@ const GameMenu: React.FC<GameMenuProps> = ({
   const dispatch = useDispatch<AppDispatch>();
   const locale = useSelector((state: RootState) => state.settings.locale);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
+  const autoBattleEnabled = useSelector(
+    (state: RootState) => state.settings.autoBattleEnabled
+  );
+  const autoBattleProfile = useSelector(
+    (state: RootState) => state.settings.autoBattleProfile
+  );
   const strings = getUIStrings(locale);
+  const autoBattleStrings = strings.autoBattle;
 
   const handleLocaleSelect = (nextLocale: Locale) => {
     if (nextLocale === locale) {
@@ -41,6 +56,24 @@ const GameMenu: React.FC<GameMenuProps> = ({
   const handleTestModeToggle = () => {
     dispatch(setTestMode(!testMode));
   };
+
+  const handleAutoBattleToggle = () => {
+    dispatch(setAutoBattleEnabled(!autoBattleEnabled));
+  };
+
+  const handleAutoBattleProfileChange = (nextProfile: AutoBattleProfileId) => {
+    if (nextProfile === autoBattleProfile) {
+      return;
+    }
+    dispatch(setAutoBattleProfile(nextProfile));
+  };
+
+  const profileOptions = AUTO_BATTLE_PROFILE_IDS.map((profileId) => ({
+    id: profileId,
+    name: autoBattleStrings.profiles[profileId].name,
+    summary: autoBattleStrings.profiles[profileId].summary,
+  }));
+  const selectedProfileCopy = autoBattleStrings.profiles[autoBattleProfile];
 
   return (
     <div
@@ -233,6 +266,101 @@ const GameMenu: React.FC<GameMenuProps> = ({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* AutoBattle Section */}
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.8rem",
+                color: "#94a3b8",
+                marginBottom: "0.65rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                fontWeight: 600,
+              }}
+            >
+              {autoBattleStrings.heading}
+            </label>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <label
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.75rem",
+                  padding: "0.75rem 1rem",
+                  borderRadius: "8px",
+                  backgroundColor: "rgba(30,41,59,0.5)",
+                  border: "1px solid rgba(148,163,184,0.25)",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.7)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.5)";
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={autoBattleEnabled}
+                  onChange={handleAutoBattleToggle}
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    cursor: "pointer",
+                    accentColor: "#38bdf8",
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: "0.95rem", color: "#e2e8f0", fontWeight: 500 }}>
+                    {autoBattleStrings.toggleLabel}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.15rem" }}>
+                    {autoBattleStrings.toggleDescription}
+                  </div>
+                </div>
+              </label>
+
+              <div>
+                <label
+                  htmlFor="auto-battle-profile-select"
+                  style={{
+                    display: "block",
+                    fontSize: "0.75rem",
+                    color: "#94a3b8",
+                    marginBottom: "0.5rem",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    fontWeight: 600,
+                  }}
+                >
+                  {autoBattleStrings.profileLabel}
+                </label>
+                <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.6rem" }}>
+                  {autoBattleStrings.profileDescription}
+                </div>
+                <AutoBattleProfileSelect
+                  triggerId="auto-battle-profile-select"
+                  value={autoBattleProfile}
+                  onChange={handleAutoBattleProfileChange}
+                  options={profileOptions}
+                  variant="menu"
+                  fullWidth
+                />
+                <div
+                  style={{
+                    marginTop: "0.5rem",
+                    fontSize: "0.82rem",
+                    color: "#a5b4d5",
+                  }}
+                >
+                  {selectedProfileCopy.summary}
+                </div>
+              </div>
             </div>
           </div>
 

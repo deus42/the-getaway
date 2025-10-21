@@ -1,7 +1,15 @@
 import { resolveRoleDialogueTemplate } from '../templateResolver';
 import { RoleDialogueContext } from '../roleTemplateTypes';
 
-const buildContext = (overrides: Partial<RoleDialogueContext> = {}): RoleDialogueContext => {
+type RoleDialogueContextOverrides = {
+  locale?: RoleDialogueContext['locale'];
+  player?: Partial<RoleDialogueContext['player']>;
+  world?: Partial<RoleDialogueContext['world']>;
+  npc?: RoleDialogueContext['npc'];
+  randomSeed?: string;
+};
+
+const buildContext = (overrides: RoleDialogueContextOverrides = {}): RoleDialogueContext => {
   const defaultPlayer = {
     level: 8,
     perks: [] as string[],
@@ -26,8 +34,8 @@ const buildContext = (overrides: Partial<RoleDialogueContext> = {}): RoleDialogu
     },
   };
 
-  const playerOverride = overrides.player ?? {};
-  const worldOverride = overrides.world ?? {};
+  const playerOverride: Partial<RoleDialogueContext['player']> = overrides.player ?? {};
+  const worldOverride: Partial<RoleDialogueContext['world']> = overrides.world ?? {};
 
   return {
     locale: overrides.locale ?? 'en',

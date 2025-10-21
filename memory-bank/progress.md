@@ -104,6 +104,52 @@
 </notes>
 </step>
 
+<step id="26.4" status="completed">
+<step_metadata>
+  <number>26.4</number>
+  <title>AutoBattle Mode & Tactical Automation</title>
+  <status>Completed</status>
+  <date>October 21, 2025</date>
+</step_metadata>
+<linear key="GET-89" />
+
+<tasks>
+1. Added persistent AutoBattle preferences plus localized copy, wiring `GameMenu` and the new `AutoBattleControls` HUD to mirror profile choices and the `Shift+A` hotkey.
+2. Implemented the automation core: behaviour-weighted profiles, heuristic planner, runtime slice, and `AutoBattleController` orchestration with logging and pause reasons.
+3. Integrated controller updates into `GameController`, covering fail-safes, manual override detection, and planner unit coverage for aggressive/balanced/defensive decision bias.
+</tasks>
+
+<implementation>
+- Settings and UI layers now expose enable/profile reducers, localized labels, and a HUD badge that reflects runtime status and the last chosen action while persisting preferences across saves.
+- `autoBattleProfiles`, `autoBattlePlanner`, and `AutoBattleController` coordinate to score attacks/repositions, dispatch combat actions, and emit structured telemetry through `autoBattleSlice` and `logSlice`.
+- Keyboard shortcuts and manual input hooks in `GameController` synchronise with HUD toggles, ensuring automation pauses instantly on player input, dialogue prompts, or exhausted AP reserves.
+</implementation>
+
+<code_reference file="the-getaway/src/store/settingsSlice.ts" />
+<code_reference file="the-getaway/src/store/autoBattleSlice.ts" />
+<code_reference file="the-getaway/src/game/combat/automation/autoBattleProfiles.ts" />
+<code_reference file="the-getaway/src/game/combat/automation/autoBattlePlanner.ts" />
+<code_reference file="the-getaway/src/game/combat/automation/AutoBattleController.ts" />
+<code_reference file="the-getaway/src/components/ui/AutoBattleControls.tsx" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/__tests__/autoBattlePlanner.test.ts" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/game-design.md" />
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/autoBattlePlanner.test.ts --runInBand`
+</validation>
+
+<notes>
+- Level 0 QA: toggle AutoBattle on in settings, engage trash mobs, elite patrol, and mixed squads via debug spawners, observing HUD status, log summaries, and manual overrides when interrupting automation.
+</notes>
+<maintenance_notes date="October 22, 2025">
+- Replaced the native profile dropdown with a shared `AutoBattleProfileSelect` component so the combat HUD and Game Menu share the same responsive styling, keyboard support, and focus-guarding logic.
+- Documented the UX regression fix for GET-89 and verified the new control ignores GameController refocus hooks, keeping the selection menu open until the player commits a choice.
+</maintenance_notes>
+</step>
+
 <step id="16.10" status="completed">
 <step_metadata>
   <number>16.10</number>

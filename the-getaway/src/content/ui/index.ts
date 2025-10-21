@@ -1,6 +1,7 @@
 import { Locale } from '../locales';
 import { TimeOfDay } from '../../game/world/dayNightCycle';
 import type { TravelAdvisoryLevel } from '../../game/world/environment/environmentMatrix';
+import type { AutoBattleProfileId } from '../../game/combat/automation/autoBattleProfiles';
 
 type SkillKey =
   | 'strength'
@@ -35,6 +36,31 @@ interface MenuStrings {
   languageLabel: string;
   alphaLabel: (year: number) => string;
   languageNames: Record<Locale, string>;
+}
+
+type AutoBattleProfileCopy = Record<AutoBattleProfileId, { name: string; summary: string }>;
+
+export interface AutoBattleStrings {
+  heading: string;
+  toggleLabel: string;
+  toggleDescription: string;
+  profileLabel: string;
+  profileDescription: string;
+  profiles: AutoBattleProfileCopy;
+  hudTitle: string;
+  hudStatusIdle: string;
+  hudStatusEngaged: string;
+  hudStatusPaused: string;
+  hudPauseReasons: {
+    manualInput: string;
+    dialogue: string;
+    objective: string;
+    resources: string;
+    ap: string;
+    none: string;
+  };
+  hudToggleHint: string;
+  hudProfileCycleHint: string;
 }
 
 interface QuestLogStrings {
@@ -424,6 +450,7 @@ interface GeorgeStrings {
 
 interface UIStrings {
   menu: MenuStrings;
+  autoBattle: AutoBattleStrings;
   questLog: QuestLogStrings;
   shell: ShellStrings;
   playerStatus: PlayerStatusStrings;
@@ -463,6 +490,42 @@ const STRINGS: Record<Locale, UIStrings> = {
         en: 'English',
         uk: 'Українська',
       },
+    },
+    autoBattle: {
+      heading: 'AutoBattle',
+      toggleLabel: 'Enable AutoBattle',
+      toggleDescription:
+        'Delegate turn-by-turn control to squad AI. Manual input instantly cancels automation.',
+      profileLabel: 'Behaviour Profile',
+      profileDescription: 'Profiles tune how the AI spends AP and manages risk.',
+      profiles: {
+        balanced: {
+          name: 'Balanced',
+          summary: 'Mix of ranged pressure and cover discipline.',
+        },
+        aggressive: {
+          name: 'Aggressive',
+          summary: 'Closes distance fast and spends resources to finish fights.',
+        },
+        defensive: {
+          name: 'Defensive',
+          summary: 'Turtles in cover, conserves supplies, retreats early.',
+        },
+      },
+      hudTitle: 'AutoBattle Control',
+      hudStatusIdle: 'Standby',
+      hudStatusEngaged: 'Executing',
+      hudStatusPaused: 'Paused',
+      hudPauseReasons: {
+        manualInput: 'Manual input detected',
+        dialogue: 'Dialogue or prompt active',
+        objective: 'Objective interrupt',
+        resources: 'Insufficient resources',
+        ap: 'No AP remaining',
+        none: 'Ready',
+      },
+      hudToggleHint: 'Shift+A to toggle automation.',
+      hudProfileCycleHint: 'Use the selector to swap profiles mid-fight.',
     },
     questLog: {
       panelLabel: 'Quests',
@@ -1123,6 +1186,42 @@ const STRINGS: Record<Locale, UIStrings> = {
         en: 'Англійська',
         uk: 'Українська',
       },
+    },
+    autoBattle: {
+      heading: 'Автобій',
+      toggleLabel: 'Увімкнути автобій',
+      toggleDescription:
+        'Передайте покрокове керування загону ШІ. Будь-який ручний ввід миттєво зупиняє режим.',
+      profileLabel: 'Профіль поведінки',
+      profileDescription: 'Профілі визначають, як ШІ витрачає ОД і приймає ризики.',
+      profiles: {
+        balanced: {
+          name: 'Збалансований',
+          summary: 'Поєднує вогневий тиск і дисципліну укриттів.',
+        },
+        aggressive: {
+          name: 'Агресивний',
+          summary: 'Швидко зближується та сміливо витрачає ресурси.',
+        },
+        defensive: {
+          name: 'Оборонний',
+          summary: 'Утримує укриття, економить припаси, відступає завчасно.',
+        },
+      },
+      hudTitle: 'Керування автобоєм',
+      hudStatusIdle: 'Очікування',
+      hudStatusEngaged: 'Виконує',
+      hudStatusPaused: 'Пауза',
+      hudPauseReasons: {
+        manualInput: 'Виявлено ручний ввід',
+        dialogue: 'Активний діалог або вибір',
+        objective: 'Перервано сюжетною подією',
+        resources: 'Недостатньо ресурсів',
+        ap: 'ОД вичерпано',
+        none: 'Готово',
+      },
+      hudToggleHint: 'Shift+A — перемкнути автоматизацію.',
+      hudProfileCycleHint: 'Використовуйте селектор, щоб змінити профіль під час бою.',
     },
     questLog: {
       panelLabel: 'Завдання',

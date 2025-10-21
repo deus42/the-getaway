@@ -1,3 +1,5 @@
+import type { AnyAction } from '@reduxjs/toolkit';
+
 import suspicionReducer, {
   createSuspicionInitialState,
   ingestObservation,
@@ -28,7 +30,8 @@ const buildObservation = (overrides: Partial<WitnessObservation> = {}): WitnessO
 });
 
 describe('suspicionSlice', () => {
-  const reduce = (state: SuspicionState, action: any): SuspicionState => suspicionReducer(state, action);
+  const reduce = (state: SuspicionState, action: AnyAction): SuspicionState =>
+    suspicionReducer(state, action);
 
   it('ingests observations and tracks zone memory', () => {
     let state = createSuspicionInitialState();

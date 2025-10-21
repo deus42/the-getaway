@@ -49,6 +49,9 @@ export interface LogStrings {
   environmentWeatherShift: (description: string) => string;
   environmentSignageSwap: (text: string) => string;
   environmentNoteSpawned: (description: string) => string;
+  autoBattleEngaged: (profileName: string) => string;
+  autoBattlePaused: (reason: string) => string;
+  autoBattleDecision: (profileName: string, summary: string) => string;
 }
 
 interface SystemStrings {
@@ -112,6 +115,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       environmentWeatherShift: (description) => `Weather hum shifts: ${description}.`,
       environmentSignageSwap: (text) => `Signage flickers to: “${text}”.`,
       environmentNoteSpawned: (description) => `Recovered note: ${description}.`,
+      autoBattleEngaged: (profileName) => `AutoBattle engaged (${profileName}).`,
+      autoBattlePaused: (reason) => `AutoBattle paused — ${reason}.`,
+      autoBattleDecision: (profileName, summary) => `AutoBattle (${profileName}) → ${summary}`,
     },
   },
   uk: {
@@ -170,6 +176,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       environmentWeatherShift: (description) => `Погода міняє тон: ${description}.`,
       environmentSignageSwap: (text) => `Вивіска миготить: «${text}».`,
       environmentNoteSpawned: (description) => `Знайдено записку: ${description}.`,
+      autoBattleEngaged: (profileName) => `Автобій активовано (${profileName}).`,
+      autoBattlePaused: (reason) => `Автобій призупинено — ${reason}.`,
+      autoBattleDecision: (profileName, summary) => `Автобій (${profileName}) → ${summary}`,
     },
   },
 };

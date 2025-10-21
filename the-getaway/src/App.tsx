@@ -32,6 +32,7 @@ import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import { createScopedLogger } from "./utils/logger";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
+import AutoBattleControls from "./components/ui/AutoBattleControls";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -493,6 +494,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
               collapsed={levelPanelCollapsed}
               onToggle={onToggleLevelPanel}
             />
+            <AutoBattleControls />
           </div>
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />

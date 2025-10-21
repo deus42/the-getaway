@@ -13,6 +13,8 @@ import combatFeedbackReducer from '../combatFeedbackSlice';
 import missionsReducer from '../missionSlice';
 import surveillanceReducer from '../surveillanceSlice';
 import storyletReducer from '../storyletSlice';
+import autoBattleReducer from '../autoBattleSlice';
+import suspicionReducer from '../suspicionSlice';
 import { selectAmbientWorldSnapshot, selectEnvironmentSystemImpacts } from '../selectors/worldSelectors';
 import { getWeatherPresetForCurfewLevel } from '../../content/environment';
 import type { RootState } from '../index';
@@ -25,10 +27,12 @@ const createTestStore = () =>
       settings: settingsReducer,
       quests: questsReducer,
       log: logReducer,
+      autoBattle: autoBattleReducer,
       combatFeedback: combatFeedbackReducer,
       missions: missionsReducer,
       surveillance: surveillanceReducer,
       storylets: storyletReducer,
+      suspicion: suspicionReducer,
     },
   });
 

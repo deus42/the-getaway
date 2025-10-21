@@ -20,6 +20,7 @@ import Phaser from 'phaser';
 import {
   DepthBias,
   DepthManager,
+  DepthResolvableGameObject,
   MAX_DEPTH_BIAS,
   computeDepth,
   syncDepthPoint,
@@ -121,7 +122,7 @@ describe('DepthManager', () => {
     const depthManager = new DepthManager(scene);
     const object = new MockGameObject();
 
-    syncDepthPoint(depthManager, object as unknown as any, 320, 480, DepthBias.CHARACTER);
+    syncDepthPoint(depthManager, object as unknown as DepthResolvableGameObject, 320, 480, DepthBias.CHARACTER);
 
     expect(object.depth).toBe(computeDepth(320, 480, DepthBias.CHARACTER));
   });
@@ -131,9 +132,9 @@ describe('DepthManager', () => {
     const depthManager = new DepthManager(scene);
     const object = new MockGameObject();
 
-    syncDepthPoint(depthManager, object as unknown as any, 100, 150, DepthBias.CHARACTER);
+    syncDepthPoint(depthManager, object as unknown as DepthResolvableGameObject, 100, 150, DepthBias.CHARACTER);
 
-    const registration = depthManager.getRegistration(object as unknown as any);
+    const registration = depthManager.getRegistration(object as unknown as DepthResolvableGameObject);
     expect(registration?.dynamicPoint).toBeDefined();
     if (registration?.dynamicPoint) {
       registration.dynamicPoint.x = 200;
@@ -150,10 +151,10 @@ describe('DepthManager', () => {
     const depthManager = new DepthManager(scene);
     const object = new MockGameObject();
 
-    syncDepthPoint(depthManager, object as unknown as any, 50, 60, DepthBias.CHARACTER);
+    syncDepthPoint(depthManager, object as unknown as DepthResolvableGameObject, 50, 60, DepthBias.CHARACTER);
     object.emitDestroy();
 
-    const registration = depthManager.getRegistration(object as unknown as any);
+    const registration = depthManager.getRegistration(object as unknown as DepthResolvableGameObject);
     expect(registration).toBeUndefined();
 
     (scene.events as unknown as MockEmitter).emit(Phaser.Scenes.Events.PRE_UPDATE);

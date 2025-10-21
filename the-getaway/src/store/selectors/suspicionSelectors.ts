@@ -1,7 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '..';
-import { HeatTier, getHighestHeatTier } from '../suspicionSlice';
-import { WitnessMemory } from '../../game/systems/suspicion/types';
+import { getHighestHeatTier } from '../suspicionSlice';
+import { HeatTier, WitnessMemory } from '../../game/systems/suspicion';
 import { fromWitnessMemorySnapshot } from '../../game/systems/suspicion/witnessMemory';
 
 export const selectSuspicionState = (state: RootState) => state.suspicion;

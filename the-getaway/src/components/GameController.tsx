@@ -65,13 +65,15 @@ import {
 } from "../game/systems/surveillance/cameraSystem";
 import { setOverlayEnabled } from "../store/surveillanceSlice";
 import { ingestObservation, setSuspicionPaused, purgeWitnessMemories } from "../store/suspicionSlice";
-import { buildGuardWitnessObservation, buildCameraWitnessObservation } from "../game/systems/suspicion/observationBuilders";
+import { buildGuardWitnessObservation } from "../game/systems/suspicion/observationBuilders";
 import { createScopedLogger } from "../utils/logger";
 import { triggerStorylet } from "../store/storyletSlice";
 import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistry";
 import { ensureDefaultEnvironmentalTriggersRegistered } from "../game/world/triggers/defaultTriggers";
 import { selectEnvironmentSystemImpacts } from "../store/selectors/worldSelectors";
 import SuspicionInspector from "./debug/SuspicionInspector";
+import { setAutoBattleEnabled } from "../store/settingsSlice";
+import AutoBattleController from "../game/combat/automation/AutoBattleController";
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
@@ -108,6 +110,13 @@ const GameController: React.FC = () => {
     (state: RootState) => state.quests.activeDialogue.dialogueId
   );
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const autoBattleEnabled = useSelector(
+    (state: RootState) => state.settings.autoBattleEnabled
+  );
+  const autoBattleProfile = useSelector(
+    (state: RootState) => state.settings.autoBattleProfile
+  );
+  const turnCount = useSelector((state: RootState) => state.world.turnCount);
   const globalAlertLevel = useSelector((state: RootState) => state.world.globalAlertLevel);
   const reinforcementsScheduled = useSelector((state: RootState) => state.world.reinforcementsScheduled);
   const surveillanceZone = useSelector((state: RootState) => (mapAreaId ? state.surveillance.zones[mapAreaId] : undefined));
@@ -117,6 +126,7 @@ const GameController: React.FC = () => {
   const worldCurrentTime = useSelector((state: RootState) => state.world.currentTime);
   const logStrings = useMemo(() => getSystemStrings(locale).logs, [locale]);
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
+  const autoBattleStrings = useMemo(() => uiStrings.autoBattle, [uiStrings]);
   const npcStepIntervalMs = useMemo(
     () =>
       Math.max(
@@ -150,6 +160,7 @@ const GameController: React.FC = () => {
   const previousSurveillanceAreaId = useRef<string | null>(null);
   const pendingSurveillanceTeardownRef = useRef<number | null>(null);
   const previousEnemiesRef = useRef<Map<string, Enemy>>(new Map());
+  const autoBattleControllerRef = useRef<AutoBattleController | null>(null);
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
@@ -282,7 +293,7 @@ useEffect(() => {
     const previousEnemies = previousEnemiesRef.current;
     const currentEnemyMap = new Map(enemies.map((enemy) => [enemy.id, enemy]));
 
-    previousEnemies.forEach((prevEnemy, enemyId) => {
+    previousEnemies.forEach((_, enemyId) => {
       const currentEnemy = currentEnemyMap.get(enemyId);
       if (!currentEnemy || currentEnemy.health <= 0) {
         dispatch(
@@ -320,6 +331,44 @@ useEffect(() => {
     overlayEnabledRef.current = overlayEnabled;
   }, [overlayEnabled]);
 
+  useEffect(() => {
+    if (!autoBattleControllerRef.current) {
+      autoBattleControllerRef.current = new AutoBattleController(dispatch, store);
+    }
+  }, [dispatch, store]);
+
+  useEffect(() => {
+    if (!autoBattleControllerRef.current) {
+      return;
+    }
+
+    autoBattleControllerRef.current.update({
+      enabled: autoBattleEnabled,
+      profileId: autoBattleProfile,
+      player,
+      enemies,
+      mapArea: currentMapArea ?? null,
+      inCombat,
+      isPlayerTurn,
+      turnCount,
+      activeDialogueId,
+      logStrings,
+      autoBattleStrings,
+    });
+  }, [
+    autoBattleEnabled,
+    autoBattleProfile,
+    player,
+    enemies,
+    currentMapArea,
+    inCombat,
+    isPlayerTurn,
+    turnCount,
+    activeDialogueId,
+    logStrings,
+    autoBattleStrings,
+  ]);
+
   // Auto-focus when component mounts
   useEffect(() => {
     if (controllerRef.current) {
@@ -327,10 +376,21 @@ useEffect(() => {
     }
 
     // Re-focus when clicked anywhere on the document
-    const handleClick = () => {
-      if (controllerRef.current) {
-        controllerRef.current.focus();
+    const handleClick = (event: MouseEvent) => {
+      if (!controllerRef.current) {
+        return;
       }
+
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (controllerRef.current.contains(target) ||
+          target.closest('[data-controller-focus-ignore="true"]'))
+      ) {
+        return;
+      }
+
+      controllerRef.current.focus();
     };
 
     document.addEventListener("click", handleClick);
@@ -1335,6 +1395,7 @@ useEffect(() => {
     timeOfDay,
     environmentFlags,
     worldCurrentTime,
+    log,
   ]);
 
   // --- Enemy Turn Logic ---
@@ -1772,6 +1833,18 @@ useEffect(() => {
       const key = event.key;
       const areaIsInterior = currentMapArea?.isInterior ?? false;
 
+      if (event.shiftKey && (key === "A" || key === "a")) {
+        event.preventDefault();
+        event.stopPropagation();
+        dispatch(setAutoBattleEnabled(!autoBattleEnabled));
+        return;
+      }
+
+      if (autoBattleEnabled && inCombat) {
+        autoBattleControllerRef.current?.notifyManualOverride('manual_input');
+        dispatch(setAutoBattleEnabled(false));
+      }
+
       if (activeDialogueId) {
         event.preventDefault();
         event.stopPropagation();
@@ -2082,6 +2155,7 @@ useEffect(() => {
       log,
       logStrings,
       attemptMovementStamina,
+      autoBattleEnabled,
     ]
   );
 

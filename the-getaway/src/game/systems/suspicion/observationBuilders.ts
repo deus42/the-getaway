@@ -60,7 +60,7 @@ const computeDisguiseModifier = (player: Player): number => {
 const computePostureModifier = (player: Player): number => (player.isCrouching ? 0.65 : 1);
 
 const formatCameraLabel = (camera: CameraRuntimeState): string => {
-  const explicitLabel = (camera as Record<string, unknown>).label;
+  const explicitLabel = (camera as { label?: string }).label;
   if (typeof explicitLabel === 'string' && explicitLabel.trim().length > 0) {
     return explicitLabel;
   }
@@ -95,10 +95,12 @@ export const buildGuardWitnessObservation = ({
     return null;
   }
 
+  const alertLevel = enemy.alertLevel ?? AlertLevel.IDLE;
+
   const distance = computeDistance(enemy.position, player.position);
   const range = cone.range || 8;
 
-  const baseCertainty = clamp(0.7 + rankAlertLevel(enemy.alertLevel) * 0.06, 0.6, 0.95);
+  const baseCertainty = clamp(0.7 + rankAlertLevel(alertLevel) * 0.06, 0.6, 0.95);
   const distanceModifier = clamp(1 - distance / (range + 1), 0.25, 1);
   const lightingModifier = computeLightingModifier(timeOfDay, environmentFlags);
   const disguiseModifier = computeDisguiseModifier(player);
@@ -118,7 +120,7 @@ export const buildGuardWitnessObservation = ({
     lightingModifier,
     disguiseModifier,
     postureModifier,
-    reported: rankAlertLevel(enemy.alertLevel) >= rankAlertLevel(AlertLevel.INVESTIGATING),
+    reported: rankAlertLevel(alertLevel) >= rankAlertLevel(AlertLevel.INVESTIGATING),
     location: { ...enemy.position },
   };
 };
