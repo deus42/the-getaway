@@ -143,6 +143,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Create a Linear issue under the “MVP” project for every roadmap step/task as soon as it is added, and keep the issue status in sync with its completion in the docs.
 - Leave MVP roadmap issues in `Todo` through the planning phase and only switch to `In Progress` while actively implementing them; keep PostMVP items in `Backlog` until they are formally pulled into scope. Move issues to `Done` immediately after the corresponding implementation, documentation, and validation finish.
 - After finishing a roadmap step (or related Linear task), add an implementation summary comment to the matching Linear issue before moving it to `Done`; include key tasks, validation, and notable code references.
+- **Linear ticket types**: use `Feature` for roadmap steps/increments, `Improvement` for UX/quality follow-ups, and `Bug` for regressions. Always apply the matching label when creating an issue so downstream automation stays intact; improvements do not replace feature tickets in the roadmap.
 
 ## 12. Separation of Concerns: Design vs Architecture
 **CRITICAL:** Understand the difference before making changes.
