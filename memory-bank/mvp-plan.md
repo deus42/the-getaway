@@ -1552,6 +1552,85 @@ yarn build && yarn test
 </test>
 </step>
 
+<step id="24.6">
+<step_metadata>
+  <number>24.6</number>
+  <title>Paranoia System — Player Fear Resource (MVP)</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19.5 completed (Surveillance Camera System)
+- Step 19.6 completed (Witness Memory & Regional Heat)
+- Step 24.1 completed (XP and Leveling Foundation)
+- Step 24.5 implemented (Stamina core) — keep logic intact but hide its HUD while Paranoia ships in MVP
+</prerequisites>
+
+<instructions>
+Introduce a lightweight, player-facing Paranoia resource (0–100) that rises under surveillance/pressure and cools in safety. Paranoia tiers apply simple, systemic effects (aim and stealth penalties) and feed the Street-Tension Director. For MVP, keep implementation focused: add the stat, core stimuli, HUD meter, and a couple of reducers into hit chance and stealth detection. Do not remove Stamina; simply deprioritize its HUD for now.
+</instructions>
+
+<details>
+**State & Tiers**
+- Add `paranoia` state with shape `{ value: number (0–100), tier: 'calm'|'uneasy'|'on_edge'|'panicked'|'breakdown', lastChangedAt, frozen?: boolean }` in a new `paranoiaSlice` under `src/store/paranoiaSlice.ts`.
+- Expose selectors: `selectParanoiaValue`, `selectParanoiaTier`, `selectParanoiaNormalized` and an action `applyParanoiaStimuli(payload)` plus `tickParanoia(deltaMs)` for passive decay.
+- Tiers (configurable thresholds): Calm (0–24), Uneasy (25–49), On Edge (50–74), Panicked (75–89), Breakdown (90–100).
+
+**Stimuli (Gains) & Dampeners (Reductions)**
+- Surveillance proximity (Step 19.5): within 8 tiles of an active camera, ramp +0.4/s scaled by distance; inside camera cone or while the LED sweeps over the player, +0.9/s; direct camera alert spike +10 once.
+- Guard line-of-sight/alerts (Step 19): LOS +1.0/s; in pursuit +2.5/s with one-time spike +8 when chase triggers.
+- Regional heat (Step 19.6): `+ (clamp01(heat) * 0.4)/s` baseline pressure; high heat accelerates gains from other stimuli by ×(1 + heat).
+- Time-of-day/curfew (Step 8): at night +0.1/s background; during curfew add +5 bias to current value (once) when entering a curfew block.
+- Critical state nudges: HP < 30% spike +6 and +0.3/s until above; primary weapon ammo < 20% spike +4.
+- Environmental hazards (matrix, Step 16.11): smog or blackout tiers add +0.1–0.2/s while exposed.
+
+**Cooling Sources**
+- Safehouse/sanctuary volumes: instant -25 (once) when entering; while inside, decay +0.6/s.
+- Daylight comfort: in daylight and out of LOS/cameras, decay +0.25/s.
+- Consumables: add `CalmTabs` (-25, 60s cooldown) and `Cigarettes` (-10, -0.05/s decay boost for 90s) in `src/content/items/consumables.ts` and wire into inventory use flow.
+- George “Reassure” assist (Step 16.9): action that applies -10, 120s cooldown; show in assistant panel.
+
+**SPECIAL Influence (multipliers)**
+- Perception (P): +2% paranoia gain from surveillance/LOS per P point.
+- Endurance (E): -3% gain from all sources per E point; +2% passive decay per E point.
+- Intelligence (I): -3% gain from heat/rumor-derived sources per I point; +2% passive decay per I point.
+- Charisma (C): -2% gain while near civilians/merchants; -10% effect from crowd-induced spikes at C ≥ 7.
+- Luck (L): -20% chance for large spikes to apply; otherwise halve spike magnitude.
+
+Formula sketch (per tick):
+`delta = (Σ stimuli_i × weight_i) × clamp( 1 + 0.02P - 0.03E - 0.03I - 0.02C, 0.5, 1.8 ) - (baseDecay × (1 + 0.02E + 0.02I + 0.01L) × coolingModifiers)`; clamp value to [0,100].
+
+**System Effects (MVP-scope only)**
+- Uneasy: -5% ranged hit chance.
+- On Edge: -10% ranged hit, +10% enemy detection weight vs player in stealth.
+- Panicked: -15% ranged hit, +20% detection weight, disable camera-hacking interactions.
+- Breakdown: -25% ranged hit, +30% detection weight; out of combat, trigger a brief “compose yourself” action (1s lockout) once per minute.
+- Wire these via existing calculators: extend combat hit-chance helper and stealth/vision checks to read `selectParanoiaTier`.
+
+**Integration Points**
+- Create `src/game/systems/paranoia/` with `stimuli.ts` (helpers to compute proximity to cameras/guards, time-of-day, heat), `profiles.ts` (tuning per district), and `index.ts` (tick loop glue).
+- In `GameController` (or scene orchestrator), on world step: compute and dispatch `applyParanoiaStimuli` and `tickParanoia` with elapsed ms.
+- Expose `selectParanoiaNormalized` to the Street-Tension Director (Step 19.7) so it can read player stress; add a Director action to request temporary “respite” that caps gains for N seconds.
+- HUD: add `ParanoiaMeter` to the existing HUD column showing a bar, tier label, and subtle pulse; hide Stamina meter for MVP while leaving stamina logic intact.
+
+**Content & Data**
+- Add `src/content/paranoia/paranoiaConfig.ts` with default weights/thresholds and per-district overrides.
+- Add consumables to vendor pools and loot tables minimally (one vendor in Downtown, one random lootable).
+
+**Debug/QA**
+- Dev-only overlay showing current value, tier, active stimuli, and SPECIAL multipliers; toggleable via a debug key.
+- Inspector actions to freeze tier and apply canned spikes for testing.
+</details>
+
+<test>
+- Unit test paranoia reducers and helpers: tier transitions, clamping, SPECIAL multipliers on gain/decay, camera proximity weighting, and safehouse cooling.
+- Script a headless loop: place player under an active camera, watch value rise into Panicked; move to safehouse and confirm decay to Calm.
+- Night vs day: verify identical path at night yields higher steady-state paranoia than daytime.
+- Trigger George “Reassure”; ensure cooldown enforced and gain cap applied while active.
+- Confirm combat/detection hooks: at Panicked, verify -15% hit chance applied and stealth detection weight increases.
+</test>
+</step>
+
 <step id="25">
 <step_metadata>
   <number>25</number>
