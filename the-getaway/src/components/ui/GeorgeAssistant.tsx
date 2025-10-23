@@ -1,5 +1,5 @@
 import React, { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import {
   selectPlayerFactionReputation,
@@ -30,6 +30,9 @@ import {
   LevelAdvanceEventDetail,
   MissionEventDetail,
 } from '../../game/systems/missionProgression';
+import { applyParanoiaRelief, setParanoiaRespite } from '../../store/paranoiaSlice';
+import { selectParanoiaCooldowns, selectParanoiaTier } from '../../store/selectors/paranoiaSelectors';
+import { PARANOIA_CONFIG } from '../../content/paranoia/paranoiaConfig';
 
 const STORAGE_KEY = 'the-getaway:george-panel-open';
 const INTERJECTION_COOLDOWN_MS = 9000;
@@ -275,6 +278,42 @@ const styles = `
     background: rgba(88, 28, 135, 0.4);
     border-color: rgba(192, 132, 252, 0.4);
   }
+  .george-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
+  }
+  .george-actions__button {
+    align-self: flex-start;
+    padding: 0.48rem 0.9rem;
+    border-radius: 999px;
+    border: 1px solid rgba(94, 234, 212, 0.7);
+    background: linear-gradient(130deg, rgba(56, 189, 248, 0.32), rgba(14, 165, 233, 0.28));
+    color: rgba(226, 232, 240, 0.92);
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .george-actions__button:hover:not([disabled]) {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px -14px rgba(59, 130, 246, 0.6);
+  }
+  .george-actions__button[disabled] {
+    cursor: not-allowed;
+    opacity: 0.45;
+    transform: none;
+    box-shadow: none;
+  }
+  .george-actions__hint {
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, 0.75);
+  }
   .george-log-item--latest {
     box-shadow: 0 0 18px rgba(56, 189, 248, 0.2);
   }
@@ -377,6 +416,7 @@ const GeorgeAssistant: React.FC = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const georgeStrings = useMemo(() => uiStrings.george, [uiStrings]);
+  const dispatch = useDispatch();
 
   const { feedLabels, levelAdvance: levelAdvanceMessage, missionComplete: missionCompleteMessage } = georgeStrings;
 
@@ -390,6 +430,20 @@ const GeorgeAssistant: React.FC = () => {
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
   const ambientSnapshot = useSelector(selectAmbientWorldSnapshot);
+  const paranoiaCooldowns = useSelector(selectParanoiaCooldowns);
+  const paranoiaTier = useSelector(selectParanoiaTier);
+
+  const [nowTick, setNowTick] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+    const interval = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 1000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   const intel = useMemo<AssistantIntel>(() => buildAssistantIntel({
     objectiveQueue,
@@ -404,6 +458,37 @@ const GeorgeAssistant: React.FC = () => {
     () => (georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT),
     [georgeStrings]
   );
+
+  const cooldownRemainingMs = Math.max(0, (paranoiaCooldowns?.georgeReassure ?? 0) - nowTick);
+  const reassureDisabled = paranoiaTier === 'calm' || cooldownRemainingMs > 0;
+
+  const handleReassure = useCallback(() => {
+    const cooldownUntil = paranoiaCooldowns?.georgeReassure ?? 0;
+    const timestamp = Date.now();
+    if (cooldownUntil > timestamp) {
+      return;
+    }
+
+    dispatch(
+      applyParanoiaRelief({
+        amount: PARANOIA_CONFIG.georgeReassure.relief,
+        timestamp,
+        cooldownKey: 'georgeReassure',
+        cooldownMs: PARANOIA_CONFIG.georgeReassure.cooldownMs,
+      })
+    );
+
+    dispatch(
+      setParanoiaRespite({
+        durationMs: 12_000,
+        timestamp,
+      })
+    );
+  }, [dispatch, paranoiaCooldowns]);
+
+  const reassureHint = reassureDisabled
+    ? georgeStrings.reassure.cooldown(Math.max(1, Math.ceil(cooldownRemainingMs / 1000)))
+    : georgeStrings.reassure.hint;
 
   const [isOpen, setIsOpen] = useState<boolean>(() => {
     if (typeof window === 'undefined') {
@@ -1064,6 +1149,18 @@ const GeorgeAssistant: React.FC = () => {
                   ))
                 )}
               </div>
+            </div>
+
+            <div className="george-actions">
+              <button
+                type="button"
+                className="george-actions__button"
+                onClick={handleReassure}
+                disabled={reassureDisabled}
+              >
+                {georgeStrings.reassure.button}
+              </button>
+              <span className="george-actions__hint">{reassureHint}</span>
             </div>
           </section>
         )}

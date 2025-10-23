@@ -9,6 +9,7 @@ interface AnimatedStatBarProps {
   lowThreshold?: number;
   criticalThreshold?: number;
   emphasisColor?: string;
+  disableGlow?: boolean;
 }
 
 const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
@@ -20,6 +21,7 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
   lowThreshold = 50,
   criticalThreshold = 25,
   emphasisColor,
+  disableGlow = false,
 }) => {
   const prevValueRef = useRef(current);
 
@@ -38,7 +40,7 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
     return baseColor; // Base color
   }, [percent, criticalThreshold, lowThreshold, baseColor]);
 
-  const shouldPulse = percent <= criticalThreshold;
+  const shouldPulse = percent <= criticalThreshold && !disableGlow;
 
   const labelRowStyle: React.CSSProperties = {
     display: 'flex',
@@ -58,7 +60,7 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
 
   const iconStyle: React.CSSProperties = {
     fontSize: '0.9rem',
-    filter: `drop-shadow(0 0 4px ${barColor})`,
+    filter: shouldPulse ? `drop-shadow(0 0 4px ${barColor})` : 'none',
     animation: shouldPulse ? 'pulse-icon 1.5s ease-in-out infinite' : 'none',
   };
 
@@ -69,16 +71,16 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
     background: 'rgba(30, 64, 175, 0.28)',
     overflow: 'hidden',
     border: `1px solid ${barColor}40`,
-    boxShadow: shouldPulse ? `0 0 8px ${barColor}80` : 'none',
-    animation: shouldPulse ? 'pulse-bar 1.5s ease-in-out infinite' : 'none',
+    boxShadow: disableGlow ? 'none' : shouldPulse ? `0 0 8px ${barColor}80` : 'none',
+    animation: disableGlow ? 'none' : shouldPulse ? 'pulse-bar 1.5s ease-in-out infinite' : 'none',
   };
 
   const barFillStyle: React.CSSProperties = {
     width: `${percent}%`,
     height: '100%',
     borderRadius: '999px',
-    background: `linear-gradient(135deg, ${barColor}, rgba(255, 255, 255, 0.45))`,
-    boxShadow: `0 0 12px ${barColor}80`,
+    background: `linear-gradient(135deg, ${barColor}, rgba(255, 255, 255, 0.25))`,
+    boxShadow: disableGlow ? 'none' : shouldPulse ? `0 0 12px ${barColor}80` : 'none',
     transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
     position: 'relative',
     overflow: 'hidden',
@@ -101,7 +103,7 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
     textShadow: emphasisColor
       ? `0 0 6px ${emphasisColor}80`
       : percent <= criticalThreshold
-        ? `0 0 4px ${barColor}`
+        ? disableGlow ? 'none' : `0 0 4px ${barColor}`
         : 'none',
     transition: 'color 0.3s ease',
   };
@@ -134,7 +136,7 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
         </div>
         <div style={barShellStyle}>
           <div style={barFillStyle}>
-            <div style={shimmerStyle} />
+            {!disableGlow && <div style={shimmerStyle} />}
           </div>
         </div>
       </div>

@@ -145,14 +145,16 @@ export const isPlayerVisible = (
  */
 export const updateEnemyAlert = (
   enemy: Enemy,
-  playerVisible: boolean
+  playerVisible: boolean,
+  detectionMultiplier: number = 1
 ): Enemy => {
   const currentProgress = enemy.alertProgress ?? 0;
 
   // Update progress
   let newProgress = currentProgress;
   if (playerVisible) {
-    newProgress = Math.min(100, currentProgress + PERCEPTION_CONFIG.progressGainPerTick);
+    const gain = PERCEPTION_CONFIG.progressGainPerTick * Math.max(0, detectionMultiplier);
+    newProgress = Math.min(100, currentProgress + gain);
   } else {
     newProgress = Math.max(0, currentProgress - PERCEPTION_CONFIG.progressDecayPerTick);
   }

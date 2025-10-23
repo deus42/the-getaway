@@ -12,6 +12,7 @@ import {
   ArmorCreationOptions,
   ConsumableCreationOptions,
 } from '../../game/inventory/inventorySystem';
+import { PARANOIA_CONFIG } from '../paranoia/paranoiaConfig';
 
 export type ItemDefinitionId =
   | 'weapon_corpsec_service_pistol'
@@ -22,6 +23,8 @@ export type ItemDefinitionId =
   | 'armor_utility_hoodie'
   | 'consumable_field_medkit'
   | 'consumable_basic_repair_kit'
+  | 'consumable_calm_tabs'
+  | 'consumable_cigarette_pack'
   | 'misc_lockpick_set'
   | 'misc_corpsec_credentials'
   | 'misc_custom_deck'
@@ -129,6 +132,20 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     maxStack: 5,
     quantity: 1,
     description: 'Self-curing resin, nano-thread, and sealant for emergency weapon or armor repairs.',
+  }),
+  consumable_calm_tabs: consumablePrototype('CalmTabs', 'paranoia', PARANOIA_CONFIG.calmTabs.relief, {
+    weight: 0.1,
+    maxStack: 4,
+    quantity: 2,
+    description: 'Pharma-grade microdoses. Lowers paranoia spikes when chewed slowly.',
+    tags: ['paranoia:calmtabs'],
+  }),
+  consumable_cigarette_pack: consumablePrototype('Nicotine Pack', 'paranoia', PARANOIA_CONFIG.cigarettes.relief, {
+    weight: 0.2,
+    maxStack: 3,
+    quantity: 3,
+    description: 'Cheap nicotine laced with synth-herbs. Calms nerves briefly but leaves a haze.',
+    tags: ['paranoia:cigarettes'],
   }),
   misc_lockpick_set: questItemPrototype({
     name: 'Lockpick Set',

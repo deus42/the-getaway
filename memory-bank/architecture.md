@@ -1340,6 +1340,27 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 </pattern>
 </architecture_section>
 
+<architecture_section id="paranoia_system" category="player_systems">
+<design_principles>
+- Track psychological pressure in a dedicated slice so tactical systems, directors, and HUD components can observe paranoia without mutating the core player reducer.
+- Keep weights and tier thresholds data-driven (`src/content/paranoia/paranoiaConfig.ts`) to allow live tuning per district and difficulty pass.
+- Reuse existing world signals (camera runtime, guard alerts, heat aggregation, hazard matrix) inside the controller loop to avoid bespoke event buses.
+- Surface paranoia in the HUD/George UI and provide debug overlays so balancing sessions have immediate feedback on spikes, relief, and attribute multipliers.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/store/paranoiaSlice.ts</code_location> defines `ParanoiaState` (value, tier, respite windows, decay boosts, cooldown ledger) and exposes reducers for tick decay, stimuli deltas, relief application, and snapshot logging. The slice is registered and migrated alongside player/suspicion state in <code_location>the-getaway/src/store/index.ts</code_location>.
+2. <code_location>the-getaway/src/content/paranoia/paranoiaConfig.ts</code_location> holds tier thresholds, baseline decay, per-source weights, respite caps, and relief constants shared by UI copy, consumables, George actions, and the Street-Tension director.
+3. <code_location>the-getaway/src/game/systems/paranoia/stimuli.ts</code_location> evaluates per-frame stimuli (camera proximity/cone/alarm spikes, guard LOS/pursuit, regional heat, hazards, curfew/night drift, HP panic) and returns gain/loss breakdowns with SPECIAL multipliers and luck-based spike mitigation.
+4. <code_location>the-getaway/src/components/GameController.tsx</code_location> owns a paranoia runtime ref, calls `evaluateParanoiaStimuli` each RAF tick, dispatches `tickParanoia` (passive decay) and `applyParanoiaStimuli` (net deltas), adjusts guard perception via `resolveParanoiaDetectionMultiplier`, and listens for CalmTabs/Nicotine consumption to trigger relief and decay boosts.
+5. <code_location>the-getaway/src/components/ui/PlayerSummaryPanel.tsx</code_location> swaps the stamina bar for a paranoia meter (tier-coloured `AnimatedStatBar`) while still surfacing the fatigue badge when the player enters exhaustion.
+6. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> adds a cooldown-gated “Reassure” action that applies paranoia relief and a short respite window, with copy localised in the new `georgeStrings.reassure` block.
+7. <code_location>the-getaway/src/components/debug/ParanoiaInspector.tsx</code_location> renders dev-only telemetry for current value, tier, and the latest gain/loss/spike breakdown.
+8. <code_location>the-getaway/src/content/items/index.ts</code_location> introduces CalmTabs and Nicotine packs tagged with `paranoia:*`, letting the controller detect consumption without new Redux plumbing.
+9. <code_location>the-getaway/src/store/__tests__/paranoiaSlice.test.ts</code_location> locks in regression coverage for decay, respite capping, and relief cooldown behaviour.
+</technical_flow>
+</architecture_section>
+
 ## Recommended Libraries & Tools
 - **phaser3-plugin-isometric** – Adds isometric projection helpers, isoSprites with x/y/z coordinates, and simple 3-D physics when you need vertical stacking or z-based collisions.
 - **Isomer (npm)** – Lightweight canvas engine providing `Shape`, `Point`, and `Color` classes for programmatically drawing prisms; great for rapid prototyping or generating reference art.

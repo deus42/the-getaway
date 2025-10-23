@@ -20,6 +20,47 @@
 </notes>
 </step>
 
+<step id="24.6" status="completed">
+<step_metadata>
+  <number>24.6</number>
+  <title>Paranoia System — Player Fear Resource (MVP)</title>
+  <status>Completed</status>
+  <date>February 23, 2026</date>
+</step_metadata>
+<linear key="GET-91" />
+
+<tasks>
+1. Added a dedicated `paranoiaSlice` with passive decay, respite windows, relief cooldowns, and balancing-friendly snapshots plus a supporting config module for thresholds/weights.
+2. Threaded paranoia evaluation through `GameController` (camera + guard inputs, SPECIAL multipliers, safehouse/daylight dampeners) with guard detection scaling, HUD paranoia meter, and developer inspector.
+3. Wired relief and UX loops: CalmTabs/Nicotine consumables auto-trigger reductions, George’s console gained a cooldown-gated Reassure action, and combat hit chance now honours paranoia tiers.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/store/paranoiaSlice.ts</code_location> encapsulates paranoia state, respite, decay boosts, cooldown ledger, and reducers; `paranoiaConfig.ts` contains tier thresholds and per-stimulus weights.
+- <code_location>the-getaway/src/game/systems/paranoia/stimuli.ts</code_location> aggregates surveillance, pursuit, heat, hazard, and HP signals each frame, returning gain/loss breakdowns for `GameController` to dispatch.
+- <code_location>the-getaway/src/components/GameController.tsx</code_location> evaluates stimuli, applies passive decay, adjusts guard perception multipliers, and listens for paranoia-tagged consumables; <code_location>the-getaway/src/components/ui/PlayerSummaryPanel.tsx</code_location> and <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> surface the new HUD meter and Reassure action.
+- <code_location>the-getaway/src/components/debug/ParanoiaInspector.tsx</code_location> offers live paranoia telemetry; <code_location>the-getaway/src/content/items/index.ts</code_location> introduces CalmTabs/Nicotine packs with matching tags; <code_location>the-getaway/src/game/combat/combatSystem.ts</code_location> applies tier-based hit penalties.
+</implementation>
+
+<code_reference file="the-getaway/src/store/paranoiaSlice.ts" />
+<code_reference file="the-getaway/src/game/systems/paranoia/stimuli.ts" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/components/ui/PlayerSummaryPanel.tsx" />
+<code_reference file="the-getaway/src/components/ui/GeorgeAssistant.tsx" />
+<code_reference file="the-getaway/src/components/debug/ParanoiaInspector.tsx" />
+<code_reference file="the-getaway/src/content/items/index.ts" />
+<code_reference file="the-getaway/src/store/__tests__/paranoiaSlice.test.ts" />
+
+<validation>
+- `yarn test paranoiaSlice.test.ts` *(passes)*
+</validation>
+
+<notes>
+- Stamina mechanics remain in place but the HUD meter is hidden for MVP; revisit the dual-resource presentation once Street-Tension Director tuning lands.
+- Luck currently applies deterministic spike mitigation; revisit stochastic variance post-director integration if designers want more volatility.
+</notes>
+</step>
+
 <step id="16.11" status="completed">
 <step_metadata>
   <number>16.11</number>

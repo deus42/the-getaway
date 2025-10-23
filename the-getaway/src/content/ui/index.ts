@@ -102,6 +102,8 @@ interface PlayerStatusStrings {
   creditsLabel: string;
   actionPointsLabel: string;
   staminaLabel: string;
+  paranoiaLabel: string;
+  paranoiaTierLabels: Record<string, string>;
   healthLabel: string;
   fatigueStatus: string;
   fatigueHint: string;
@@ -446,6 +448,11 @@ interface GeorgeStrings {
     }, alignment: PersonalityAlignment) => string;
   };
   ambient: string[];
+  reassure: {
+    button: string;
+    hint: string;
+    cooldown: (seconds: number) => string;
+  };
 }
 
 interface UIStrings {
@@ -564,6 +571,14 @@ const STRINGS: Record<Locale, UIStrings> = {
       creditsLabel: 'Credits',
       actionPointsLabel: 'Action Points',
       staminaLabel: 'Stamina',
+      paranoiaLabel: 'Paranoia',
+      paranoiaTierLabels: {
+        calm: 'Calm',
+        uneasy: 'Uneasy',
+        on_edge: 'On Edge',
+        panicked: 'Panicked',
+        breakdown: 'Breakdown',
+      },
       healthLabel: 'Health',
       fatigueStatus: 'Fatigued',
       fatigueHint: 'Fatigue makes this harder—rest or recover stamina to shake it off.',
@@ -942,6 +957,11 @@ const STRINGS: Record<Locale, UIStrings> = {
         'If you spot Theo, remind him the coffee synth still needs a filter.',
         'Today’s lucky number is 404. Let’s try not to vanish.',
       ],
+      reassure: {
+        button: 'Reassure',
+        hint: 'Clamps paranoia spikes for a short window. Breathe with me.',
+        cooldown: (seconds: number) => `Recharging (${seconds}s)`,
+      },
     },
     mission: {
       accomplishedTitle: 'Mission Accomplished',
@@ -1263,6 +1283,14 @@ const STRINGS: Record<Locale, UIStrings> = {
       creditsLabel: 'Кредити',
       actionPointsLabel: 'Очки дії',
       staminaLabel: 'Витривалість',
+      paranoiaLabel: 'Параноя',
+      paranoiaTierLabels: {
+        calm: 'Спокійно',
+        uneasy: 'Тривожно',
+        on_edge: 'На межі',
+        panicked: 'Паніка',
+        breakdown: 'Зрив',
+      },
       healthLabel: 'Здоровʼя',
       fatigueStatus: 'Виснажено',
       fatigueHint: 'Виснаження ускладнює кожну дію — відпочиньте або відновіть витривалість.',
@@ -1644,6 +1672,11 @@ const STRINGS: Record<Locale, UIStrings> = {
         'Якщо побачиш Тео, нагадай про фільтр у кавовому синті.',
         'Сьогодні щасливе число 404. Постараймося не зникнути.',
       ],
+      reassure: {
+        button: 'Заспокоїти',
+        hint: 'Притлуми параною і візьми паузу на подих.',
+        cooldown: (seconds: number) => `Перезарядка (${seconds}с)`,
+      },
     },
     mission: {
       accomplishedTitle: 'Місію виконано',

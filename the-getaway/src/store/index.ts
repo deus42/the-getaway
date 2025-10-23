@@ -15,6 +15,12 @@ import suspicionReducer, {
   SUSPICION_STATE_VERSION,
 } from './suspicionSlice';
 import autoBattleReducer from './autoBattleSlice';
+import paranoiaReducer, {
+  ParanoiaState,
+  PARANOIA_STATE_VERSION,
+  resetParanoiaState,
+} from './paranoiaSlice';
+import { PARANOIA_MAX_VALUE, PARANOIA_MIN_VALUE } from '../content/paranoia/paranoiaConfig';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -34,6 +40,7 @@ const reducers = {
   surveillance: surveillanceReducer,
   storylets: storyletReducer,
   suspicion: suspicionReducer,
+  paranoia: paranoiaReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -91,6 +98,28 @@ const migratePlayerState = (state?: Partial<PlayerState> | null): PlayerState =>
       state.pendingFactionEvents,
       initialPlayerState.pendingFactionEvents
     ),
+  };
+};
+
+const migrateParanoiaState = (state?: Partial<ParanoiaState> | null): ParanoiaState => {
+  if (!state || state.version !== PARANOIA_STATE_VERSION) {
+    return paranoiaReducer(undefined, resetParanoiaState());
+  }
+
+  const safeValue = Number.isFinite(state.value) ? state.value : 0;
+  return {
+    version: PARANOIA_STATE_VERSION,
+    value: Math.max(PARANOIA_MIN_VALUE, Math.min(PARANOIA_MAX_VALUE, safeValue)),
+    tier: state.tier ?? 'calm',
+    lastUpdatedAt: typeof state.lastUpdatedAt === 'number' ? state.lastUpdatedAt : null,
+    frozen: Boolean(state.frozen),
+    respiteUntil: typeof state.respiteUntil === 'number' ? state.respiteUntil : null,
+    decayBoostUntil: typeof state.decayBoostUntil === 'number' ? state.decayBoostUntil : null,
+    decayBoostPerSecond: Number.isFinite(state.decayBoostPerSecond)
+      ? Math.max(0, state.decayBoostPerSecond)
+      : 0,
+    cooldowns: { ...(state.cooldowns ?? {}) },
+    lastSnapshot: state.lastSnapshot ?? null,
   };
 };
 
@@ -169,6 +198,7 @@ const migratePersistedState = (state?: PersistedState): PersistedState | undefin
     ...state,
     player: migratePlayerState(state.player),
     suspicion: migrateSuspicionState(state.suspicion),
+    paranoia: migrateParanoiaState(state.paranoia),
   };
 };
 

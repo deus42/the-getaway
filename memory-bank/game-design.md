@@ -315,6 +315,27 @@ These extend stamina into survival and environmental storytelling without reintr
 
 **Design Philosophy:**
 Stamina reinforces the campaign’s push-and-pull between daring infiltration and safehouse reprieves. By keeping combat purely AP-driven, we avoid double bookkeeping during firefights while still rewarding players who plan routes, manage encumbrance, and schedule rest. Advanced hooks let designers layer time pressure, environmental hazards, and survival challenges without overwhelming the core tactical experience.
+
+Paranoia - Player Stress Resource (MVP - Step 24.6)
+Paranoia replaces stamina on the HUD for MVP and tracks the crew’s psychological load from corporate policing, surveillance, and night movement. The system is tiered (Calm → Uneasy → On Edge → Panicked → Breakdown) and feeds both combat modifiers and world directors.
+	•	Scale: 0–100 with tier thresholds at 25/50/75/90
+	•	Tiers apply lightweight penalties: Uneasy (-5% ranged accuracy), On Edge (-10% accuracy, +10% enemy detection weight), Panicked (-15% accuracy, +20% detection, camera hacking disabled), Breakdown (-25% accuracy, +30% detection, periodic recovery stall)
+	•	Stimuli (positive pressure): active camera proximity/cone exposure, guard line of sight or pursuit, regional heat multiplier (Step 19.6), curfew entry spike, nighttime drift, low health spike/sustain, hazard overlays (smog/blackout), exhaustion events, and future Street-Tension Director cues
+	•	Cooling (negative pressure): safehouse volumes (instant drop + sustained decay), daylight when unobserved, George’s Reassure action, CalmTabs consumable, Nicotine packs (small relief + decay boost), and natural passive decay tuned at 0.18/s
+	•	SPECIAL influence:
+		•	Perception raises sensitivity (+2% gain per point)
+		•	Endurance and Intelligence dampen gains (-3% per point) and accelerate passive decay (+2% per point)
+		•	Charisma softens crowd-induced spikes (-2% gain baseline, -10% spike severity at 7+)
+		•	Luck cushions spikes (reduces large hits by up to 50%)
+	•	Respite window: external systems (Street-Tension Director, George, calm consumables) can cap gains for a short duration to give breathing room
+	•	HUD: Paranoia bar replaces the stamina meter visually; stamina persists mechanically but is deprioritized until post-MVP. Fatigue status still surfaces when exhaustion triggers.
+	•	Interplay:
+		•	Street-Tension Director (Step 19.7) reads normalized paranoia to bias crackdown/respite patterns
+		•	George assistant is now the diegetic vent for fear management (Reassure button + ambient narration)
+		•	Consumables diversify stress relief loops (CalmTabs, Nicotine packs) and hook into loot economies
+		•	Safehouses provide tangible psychological relief in addition to logistical reset
+	•	Debugging: dev inspectors expose current value, tier, stimuli breakdowns, and allow future balancing without guessing hidden math
+
 </balance_values>
 </mechanic>
 

@@ -39,6 +39,7 @@ import {
   NPC,
   AlertLevel,
   SurveillanceZoneState,
+  Item,
 } from "../game/interfaces/types";
 import {
   CurfewStateMachine,
@@ -71,9 +72,53 @@ import { triggerStorylet } from "../store/storyletSlice";
 import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistry";
 import { ensureDefaultEnvironmentalTriggersRegistered } from "../game/world/triggers/defaultTriggers";
 import { selectEnvironmentSystemImpacts } from "../store/selectors/worldSelectors";
-import SuspicionInspector from "./debug/SuspicionInspector";
+import { selectZoneHeat } from "../store/selectors/suspicionSelectors";
+import {
+  selectParanoiaTier,
+} from "../store/selectors/paranoiaSelectors";
+import {
+  applyParanoiaStimuli,
+  tickParanoia,
+  applyParanoiaRelief,
+  setParanoiaDecayBoost,
+} from "../store/paranoiaSlice";
+import { evaluateParanoiaStimuli, createParanoiaRuntime } from "../game/systems/paranoia";
+import { PARANOIA_CONFIG } from "../content/paranoia/paranoiaConfig";
+import GameDebugInspector from "./debug/GameDebugInspector";
 import { setAutoBattleEnabled } from "../store/settingsSlice";
 import AutoBattleController from "../game/combat/automation/AutoBattleController";
+import type { ParanoiaTier } from "../game/systems/paranoia/types";
+
+const resolveParanoiaDetectionMultiplier = (tier: ParanoiaTier): number => {
+  switch (tier) {
+    case "on_edge":
+      return 1.1;
+    case "panicked":
+      return 1.2;
+    case "breakdown":
+      return 1.3;
+    default:
+      return 1;
+  }
+};
+
+const countParanoiaConsumables = (items: Item[]): { calmTabs: number; cigarettes: number } =>
+  items.reduce(
+    (acc, item) => {
+      const tags = Array.isArray(item.tags) ? item.tags : [];
+      const quantity = item.stackable ? item.quantity ?? 1 : 1;
+
+      if (tags.includes("paranoia:calmtabs")) {
+        acc.calmTabs += quantity;
+      }
+      if (tags.includes("paranoia:cigarettes")) {
+        acc.cigarettes += quantity;
+      }
+
+      return acc;
+    },
+    { calmTabs: 0, cigarettes: 0 }
+  );
 
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
@@ -124,6 +169,12 @@ const GameController: React.FC = () => {
   const environmentImpacts = useSelector(selectEnvironmentSystemImpacts);
   const environmentFlags = useSelector((state: RootState) => state.world.environment.flags);
   const worldCurrentTime = useSelector((state: RootState) => state.world.currentTime);
+  const paranoiaTier = useSelector(selectParanoiaTier);
+  const zoneHeatSelector = useMemo(
+    () => selectZoneHeat(currentMapArea?.zoneId ?? null),
+    [currentMapArea?.zoneId]
+  );
+  const zoneHeat = useSelector((state: RootState) => zoneHeatSelector(state));
   const logStrings = useMemo(() => getSystemStrings(locale).logs, [locale]);
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const autoBattleStrings = useMemo(() => uiStrings.autoBattle, [uiStrings]);
@@ -161,6 +212,13 @@ const GameController: React.FC = () => {
   const pendingSurveillanceTeardownRef = useRef<number | null>(null);
   const previousEnemiesRef = useRef<Map<string, Enemy>>(new Map());
   const autoBattleControllerRef = useRef<AutoBattleController | null>(null);
+  const paranoiaRuntimeRef = useRef(createParanoiaRuntime());
+  const paranoiaTierRef = useRef(paranoiaTier);
+  const zoneHeatRef = useRef(zoneHeat);
+  const paranoiaConsumableCountsRef = useRef<{ calmTabs: number; cigarettes: number }>({
+    calmTabs: 0,
+    cigarettes: 0,
+  });
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
@@ -276,13 +334,25 @@ const GameController: React.FC = () => {
     surveillanceZoneRef.current = surveillanceZone;
   }, [surveillanceZone]);
 
-useEffect(() => {
-  playerRef.current = player;
-}, [player]);
+  useEffect(() => {
+    paranoiaTierRef.current = paranoiaTier;
+  }, [paranoiaTier]);
 
-useEffect(() => {
-  mapAreaRef.current = currentMapArea ?? null;
-}, [currentMapArea]);
+  useEffect(() => {
+    zoneHeatRef.current = zoneHeat;
+  }, [zoneHeat]);
+
+  useEffect(() => {
+    playerRef.current = player;
+  }, [player]);
+
+  useEffect(() => {
+    mapAreaRef.current = currentMapArea ?? null;
+  }, [currentMapArea]);
+
+  useEffect(() => {
+    paranoiaRuntimeRef.current = createParanoiaRuntime();
+  }, [mapAreaId]);
 
   useEffect(() => {
     if (!currentMapArea) {
@@ -318,6 +388,41 @@ useEffect(() => {
       reinforcementTimeoutRef.current = null;
     }
   }, [reinforcementsScheduled]);
+
+  useEffect(() => {
+    const counts = countParanoiaConsumables(player.inventory.items ?? []);
+    const previous = paranoiaConsumableCountsRef.current;
+    paranoiaConsumableCountsRef.current = counts;
+
+    const timestamp = getNow();
+
+    if (counts.calmTabs < previous.calmTabs) {
+      dispatch(
+        applyParanoiaRelief({
+          amount: PARANOIA_CONFIG.calmTabs.relief,
+          timestamp,
+          cooldownKey: "calmTabs",
+          cooldownMs: PARANOIA_CONFIG.calmTabs.cooldownMs,
+        })
+      );
+    }
+
+    if (counts.cigarettes < previous.cigarettes) {
+      dispatch(
+        applyParanoiaRelief({
+          amount: PARANOIA_CONFIG.cigarettes.relief,
+          timestamp,
+        })
+      );
+      dispatch(
+        setParanoiaDecayBoost({
+          amountPerSecond: PARANOIA_CONFIG.cigarettes.decayBoostPerSecond,
+          durationMs: PARANOIA_CONFIG.cigarettes.durationMs,
+          timestamp,
+        })
+      );
+    }
+  }, [player.inventory.items, dispatch]);
 
   useEffect(() => {
     globalAlertLevelRef.current = globalAlertLevel;
@@ -509,13 +614,61 @@ useEffect(() => {
       const zoneState = surveillanceZoneRef.current;
       const area = mapAreaRef.current;
       const playerState = playerRef.current;
+      const currentTime = getNow();
+      const deltaMs = currentTime - lastFrameTime;
+      lastFrameTime = currentTime;
+      const latestState = store.getState();
+      const latestWorld = latestState.world;
+
+      if (area && playerState) {
+        const paranoiaResult = evaluateParanoiaStimuli(
+          {
+            player: playerState,
+            enemies: area.entities.enemies,
+            mapArea: area,
+            surveillanceZone: zoneState,
+            zoneHeat: zoneHeatRef.current,
+            environmentImpacts,
+            timeOfDay: latestWorld.timeOfDay,
+            curfewActive: latestWorld.curfewActive,
+            worldTimeSeconds: latestWorld.currentTime,
+            deltaMs,
+            timestamp: currentTime,
+          },
+          paranoiaRuntimeRef.current
+        );
+
+        const gainTotal = Object.values(paranoiaResult.gains).reduce((acc, value) => acc + value, 0);
+        const lossTotal = Object.values(paranoiaResult.losses).reduce((acc, value) => acc + value, 0);
+        const spikeTotal = Object.values(paranoiaResult.spikes).reduce((acc, value) => acc + value, 0);
+        const positiveDelta = gainTotal * paranoiaResult.multipliers.gain;
+        const netDelta = positiveDelta - lossTotal + spikeTotal;
+
+        if (netDelta !== 0 || gainTotal > 0 || lossTotal > 0 || spikeTotal !== 0) {
+          dispatch(
+            applyParanoiaStimuli({
+              timestamp: currentTime,
+              delta: netDelta,
+              deltaMs,
+              breakdown: {
+                gains: paranoiaResult.gains,
+                losses: paranoiaResult.losses,
+                spikes: paranoiaResult.spikes,
+              },
+            })
+          );
+        }
+
+        dispatch(
+          tickParanoia({
+            deltaMs,
+            timestamp: currentTime,
+            decayMultiplier: paranoiaResult.multipliers.decay,
+          })
+        );
+      }
 
       if (zoneState && area && playerState) {
-        const currentTime = getNow();
-        const deltaMs = currentTime - lastFrameTime;
-        lastFrameTime = currentTime;
-        const latestWorld = store.getState().world;
-
         updateSurveillance({
           zone: zoneState,
           mapArea: area,
@@ -549,7 +702,7 @@ useEffect(() => {
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [mapAreaId, dispatch, logStrings, store, log]);
+  }, [mapAreaId, dispatch, logStrings, store, log, environmentImpacts]);
 
   useEffect(() => {
     const handleTileClick = (event: Event) => {
@@ -1278,10 +1431,12 @@ useEffect(() => {
     }
 
     // Process perception updates for all enemies
+    const detectionMultiplier = resolveParanoiaDetectionMultiplier(paranoiaTierRef.current);
     const { updatedEnemies, maxAlertLevel, guardPerception } = processPerceptionUpdates(
       enemies,
       player,
-      currentMapArea
+      currentMapArea,
+      detectionMultiplier
     );
 
     // Update enemies with new alert states
@@ -2178,7 +2333,7 @@ useEffect(() => {
     >
       {/* Remove the combat turn indicator UI from here */}
       {/* {inCombat && ( ... )} */}
-      <SuspicionInspector zoneId={currentMapArea?.zoneId ?? null} />
+      <GameDebugInspector zoneId={currentMapArea?.zoneId ?? null} />
     </div>
   );
 };

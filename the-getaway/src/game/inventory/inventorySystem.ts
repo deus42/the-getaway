@@ -272,6 +272,9 @@ export const createConsumable = (
       case 'repair':
         resolvedDescription = `Repairs ${value} durability on equipped gear.`;
         break;
+      case 'paranoia':
+        resolvedDescription = 'Tempers creeping paranoia and steadies breathing.';
+        break;
       default:
         resolvedDescription = `Utility consumable.`;
     }

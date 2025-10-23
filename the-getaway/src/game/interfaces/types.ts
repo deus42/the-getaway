@@ -369,7 +369,7 @@ export interface Armor extends Item {
 }
 
 // Consumable extends item
-export type ConsumableEffectType = 'health' | 'actionPoints' | 'stat' | 'repair';
+export type ConsumableEffectType = 'health' | 'actionPoints' | 'stat' | 'repair' | 'paranoia';
 
 export interface ConsumableEffect {
   type: ConsumableEffectType;

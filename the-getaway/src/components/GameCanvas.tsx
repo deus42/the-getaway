@@ -226,6 +226,15 @@ const GameCanvas: React.FC = () => {
 
   const testMode = useSelector((state: RootState) => state.settings.testMode);
 
+  useEffect(() => {
+    if (!gameInstanceRef.current) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+  }, [testMode]);
+
   return (
     <div
       style={{

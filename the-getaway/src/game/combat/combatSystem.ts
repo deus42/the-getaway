@@ -46,6 +46,7 @@ import {
   consumeReactions,
   clearReactionQueue,
 } from './reactions';
+import { store } from '../../store';
 
 // Constants
 export const DEFAULT_ATTACK_DAMAGE = 5;
@@ -64,6 +65,28 @@ const COVER_HIT_ADJUSTMENT: Record<CoverLevel, number> = {
   none: 0,
   half: -0.2,
   full: -0.4,
+};
+
+const getParanoiaHitPenalty = (): number => {
+  try {
+    const state = store.getState();
+    const tier = state.paranoia?.tier ?? 'calm';
+    switch (tier) {
+      case 'uneasy':
+        return -0.05;
+      case 'on_edge':
+        return -0.1;
+      case 'panicked':
+        return -0.15;
+      case 'breakdown':
+        return -0.25;
+      default:
+        return 0;
+    }
+  } catch (error) {
+    void error;
+    return 0;
+  }
 };
 
 type AttackCoverArg =
@@ -527,6 +550,11 @@ export const calculateHitChance = (
   if ('skills' in target) {
     const targetStats = getPlayerDerivedStats(target as Player);
     hitChance -= targetStats.dodgeChance / 100;
+  }
+
+  const paranoiaPenalty = getParanoiaHitPenalty();
+  if (paranoiaPenalty !== 0) {
+    hitChance += paranoiaPenalty;
   }
 
   const finalHitChance = Math.max(0.1, Math.min(0.95, hitChance));

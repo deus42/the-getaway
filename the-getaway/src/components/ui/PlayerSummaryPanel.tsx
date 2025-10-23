@@ -7,6 +7,7 @@ import { SKILL_BRANCHES } from '../../content/skills';
 import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progression';
 import { addExperience } from '../../store/playerSlice';
 import AnimatedStatBar from './AnimatedStatBar';
+import { selectParanoiaValue, selectParanoiaTier } from '../../store/selectors/paranoiaSelectors';
 import {
   neonPalette,
   panelSurface,
@@ -83,18 +84,6 @@ const statGridStyle: React.CSSProperties = {
   gap: '0.32rem',
 };
 
-const staminaContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.75rem',
-  width: '100%',
-};
-
-const staminaBarWrapperStyle: React.CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-};
-
 const fatigueBadgeStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -109,6 +98,14 @@ const fatigueBadgeStyle: React.CSSProperties = {
   letterSpacing: '0.14em',
   textTransform: 'uppercase',
   boxShadow: '0 8px 18px -12px rgba(250, 204, 21, 0.6)',
+};
+
+const PARANOIA_TIER_COLORS: Record<string, string> = {
+  calm: '#22d3ee',
+  uneasy: '#fbbf24',
+  on_edge: '#fb923c',
+  panicked: '#ef4444',
+  breakdown: '#f43f5e',
 };
 
 const crouchBadgeStyle: React.CSSProperties = {
@@ -202,11 +199,15 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
 }) => {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
+  const paranoiaValue = useSelector(selectParanoiaValue);
+  const paranoiaTier = useSelector(selectParanoiaTier);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
   const uiStrings = getUIStrings(locale);
   const background = player.backgroundId ? BACKGROUND_MAP[player.backgroundId] : undefined;
   const backgroundName = background?.name ?? uiStrings.playerStatus.backgroundFallback;
+  const paranoiaColor = PARANOIA_TIER_COLORS[paranoiaTier] ?? '#38bdf8';
+  const roundedParanoia = Math.round(paranoiaValue);
 
   const handleLevelUp = () => {
     const currentLevel = player.level;
@@ -262,27 +263,24 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         emphasisColor="#ef4444"
       />
 
-      <div
-        style={staminaContainerStyle}
-        aria-label={uiStrings.playerStatus.staminaLabel}
-      >
-        <div style={staminaBarWrapperStyle}>
-          <AnimatedStatBar
-            label={uiStrings.playerStatus.staminaLabel}
-            current={player.stamina}
-            max={player.maxStamina}
-            baseColor="#10b981"
-            lowThreshold={35}
-            criticalThreshold={25}
-            emphasisColor="#10b981"
-          />
-        </div>
-        {player.isExhausted && (
-          <span style={fatigueBadgeStyle} title={uiStrings.playerStatus.fatigueHint}>
-            ⚠️ {uiStrings.playerStatus.fatigueStatus}
-          </span>
-        )}
-      </div>
+      <AnimatedStatBar
+        label={uiStrings.playerStatus.paranoiaLabel}
+        current={roundedParanoia}
+        max={100}
+        baseColor={paranoiaColor}
+        lowThreshold={50}
+        criticalThreshold={75}
+        emphasisColor={paranoiaColor}
+        disableGlow
+      />
+      {player.isExhausted && (
+        <span
+          style={{ ...fatigueBadgeStyle, marginTop: '0.35rem' }}
+          title={uiStrings.playerStatus.fatigueHint}
+        >
+          ⚠️ {uiStrings.playerStatus.fatigueStatus}
+        </span>
+      )}
 
       <div style={statGridStyle}>
         <div style={statCardStyle}>

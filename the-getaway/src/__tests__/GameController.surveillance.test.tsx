@@ -5,7 +5,7 @@ import GameController from '../components/GameController';
 import { store, resetGame } from '../store';
 import { initializeZoneSurveillance } from '../game/systems/surveillance/cameraSystem';
 
-jest.mock('../components/debug/SuspicionInspector', () => () => null);
+jest.mock('../components/debug/GameDebugInspector', () => () => null);
 
 describe('GameController surveillance bootstrap', () => {
   beforeEach(() => {

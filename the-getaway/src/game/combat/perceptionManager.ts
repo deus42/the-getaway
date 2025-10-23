@@ -14,8 +14,13 @@ export interface GuardPerceptionResult {
 export const processPerceptionUpdates = (
   enemies: Enemy[],
   player: Player,
-  mapArea: MapArea
-): { updatedEnemies: Enemy[]; maxAlertLevel: AlertLevel; guardPerception: GuardPerceptionResult[] } => {
+  mapArea: MapArea,
+  detectionMultiplier: number = 1
+): {
+  updatedEnemies: Enemy[];
+  maxAlertLevel: AlertLevel;
+  guardPerception: GuardPerceptionResult[];
+} => {
   let maxAlertLevel = AlertLevel.IDLE;
   const guardPerception: GuardPerceptionResult[] = [];
 
@@ -30,7 +35,7 @@ export const processPerceptionUpdates = (
     const playerVisible = isPlayerVisible(enemy, player, mapArea);
 
     // Update alert state
-    let updatedEnemy = updateEnemyAlert(enemy, playerVisible);
+    let updatedEnemy = updateEnemyAlert(enemy, playerVisible, detectionMultiplier);
 
     // If player is visible, update direction to face player
     if (playerVisible) {
