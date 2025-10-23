@@ -1,10 +1,10 @@
 import { createNpcFsmController } from '../controller';
 import { NpcFsmConfig } from '../types';
-import { Enemy, MapArea, NPC, Player, Position } from '../../../interfaces/types';
-import { AlertLevel } from '../../../interfaces/types';
+import { DEFAULT_PLAYER } from '../../../interfaces/player';
+import { AlertLevel, Enemy, MapArea, NPC, Player, Position, TileType } from '../../../interfaces/types';
 
 const buildTile = (position: Position) => ({
-  type: 'floor' as const,
+  type: TileType.FLOOR,
   position,
   isWalkable: true,
   provideCover: false,
@@ -55,74 +55,40 @@ const createEnemy = (overrides: Partial<Enemy> = {}): Enemy => ({
   ...overrides,
 });
 
-const createPlayer = (overrides: Partial<Player> = {}): Player => ({
-  id: 'player',
-  name: 'Runner',
-  position: { x: 2, y: 1 },
-  health: 60,
-  maxHealth: 60,
-  actionPoints: 6,
-  maxActionPoints: 6,
-  damage: 8,
-  attackRange: 1,
-  facing: 'east',
-  coverOrientation: null,
-  suppression: 0,
-  stamina: 100,
-  maxStamina: 100,
-  isExhausted: false,
-  isCrouching: false,
-  skills: {
-    strength: 5,
-    perception: 5,
-    endurance: 5,
-    charisma: 5,
-    intelligence: 5,
-    agility: 5,
-    luck: 5,
-  },
-  skillTraining: {} as Player['skillTraining'],
-  taggedSkillIds: [],
-  level: 1,
-  experience: 0,
-  credits: 0,
-  skillPoints: 0,
-  attributePoints: 0,
-  perks: [],
-  pendingPerkSelections: 0,
-  karma: 0,
-  personality: {
-    alignment: 'stoic',
-    flags: {
-      earnest: 0,
-      sarcastic: 0,
-      ruthless: 0,
-      stoic: 1,
+const clonePlayer = (): Player => JSON.parse(JSON.stringify(DEFAULT_PLAYER)) as Player;
+
+const createPlayer = (overrides: Partial<Player> = {}): Player => {
+  const base = clonePlayer();
+
+  const merged: Player = {
+    ...base,
+    id: overrides.id ?? 'player',
+    name: overrides.name ?? 'Runner',
+    position: overrides.position ?? { x: 2, y: 1 },
+    ...overrides,
+    inventory: overrides.inventory ?? {
+      ...base.inventory,
+      items: [...base.inventory.items],
+      hotbar: [...base.inventory.hotbar],
     },
-    lastUpdated: 0,
-  },
-  factionReputation: {
-    resistance: 0,
-    corpsec: 0,
-    scavengers: 0,
-  },
-  inventory: {
-    items: [],
-    maxWeight: 50,
-    currentWeight: 0,
-    hotbar: [null, null, null, null, null],
-  },
-  equipped: {
-    primaryWeapon: null,
-    secondaryWeapon: null,
-    meleeWeapon: null,
-    bodyArmor: null,
-    helmet: null,
-    accessory1: null,
-    accessory2: null,
-  },
-  ...overrides,
-});
+    skills: overrides.skills ? { ...overrides.skills } : { ...base.skills },
+    skillTraining: overrides.skillTraining
+      ? { ...overrides.skillTraining }
+      : { ...base.skillTraining },
+    taggedSkillIds: overrides.taggedSkillIds
+      ? [...overrides.taggedSkillIds]
+      : [...base.taggedSkillIds],
+    perks: overrides.perks ? [...overrides.perks] : [...base.perks],
+    personality: overrides.personality ? { ...overrides.personality } : { ...base.personality },
+    factionReputation: overrides.factionReputation
+      ? { ...overrides.factionReputation }
+      : { ...base.factionReputation },
+    perkRuntime: overrides.perkRuntime ? { ...overrides.perkRuntime } : { ...base.perkRuntime },
+    encumbrance: overrides.encumbrance ? { ...overrides.encumbrance } : { ...base.encumbrance },
+  };
+
+  return merged;
+};
 
 const baseConfig: NpcFsmConfig = {
   id: 'spec-guard',

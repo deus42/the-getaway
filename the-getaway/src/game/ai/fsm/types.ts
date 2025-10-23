@@ -92,7 +92,7 @@ export type NpcUtilityModifier =
   | DistanceUtilityModifier
   | DirectorUtilityModifier;
 
-export interface NpcCooldownConfig extends Partial<Record<NpcAiState, number>> {}
+export type NpcCooldownConfig = Partial<Record<NpcAiState, number>>;
 
 export interface NpcStateHandlers {
   [state: string]: ((context: NpcContext, step: NpcFsmStepMetadata) => void | Promise<void>) | undefined;

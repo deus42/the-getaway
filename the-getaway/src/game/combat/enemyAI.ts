@@ -267,7 +267,7 @@ const performInspectNoise = (
   player: Player,
   mapArea: MapArea,
   enemies: Enemy[],
-  npcs: NPC[],
+  _npcs: NPC[],
   rngSeed: string,
   personalitySeed: number
 ): EnemyActionResult | null => {

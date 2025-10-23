@@ -10,7 +10,6 @@ import LevelIndicator from "./components/ui/LevelIndicator";
 import GeorgeAssistant from "./components/ui/GeorgeAssistant";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
-import TurnTracker from "./components/ui/TurnTracker";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import CornerAccents from "./components/ui/CornerAccents";
 import ScanlineOverlay from "./components/ui/ScanlineOverlay";
@@ -32,7 +31,7 @@ import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import { createScopedLogger } from "./utils/logger";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
-import AutoBattleControls from "./components/ui/AutoBattleControls";
+import CombatControlWidget from "./components/ui/CombatControlWidget";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -268,6 +267,8 @@ interface CommandShellProps {
   rightCollapsed: boolean;
   onToggleLeftSidebar: () => void;
   onToggleRightSidebar: () => void;
+  setLeftSidebarCollapsed: (collapsed: boolean) => void;
+  setRightSidebarCollapsed: (collapsed: boolean) => void;
   levelPanelCollapsed: boolean;
   onToggleLevelPanel: () => void;
 }
@@ -281,10 +282,13 @@ const CommandShell: React.FC<CommandShellProps> = ({
   rightCollapsed,
   onToggleLeftSidebar,
   onToggleRightSidebar,
+  setLeftSidebarCollapsed,
+  setRightSidebarCollapsed,
   levelPanelCollapsed,
   onToggleLevelPanel,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const uiStrings = getUIStrings(locale);
 
   const leftSidebarRef = useRef<HTMLDivElement | null>(null);
@@ -293,6 +297,12 @@ const CommandShell: React.FC<CommandShellProps> = ({
   const [rightWidth, setRightWidth] = useState<number>(0);
   const lastLeftWidth = useRef<number>(0);
   const lastRightWidth = useRef<number>(0);
+  const sidebarSnapshotRef = useRef<{ active: boolean; left: boolean; right: boolean }>({
+    active: false,
+    left: leftCollapsed,
+    right: rightCollapsed,
+  });
+  const sidebarRestoreTimeoutRef = useRef<number | null>(null);
 
   useLayoutEffect(() => {
     if (typeof ResizeObserver === 'undefined') {
@@ -373,6 +383,60 @@ const CommandShell: React.FC<CommandShellProps> = ({
     '--sidebar-visible-width': `${Math.max(effectiveRightWidth, 0)}px`,
     '--sidebar-last-width': `${Math.max(lastRightWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
   };
+
+  useEffect(() => {
+    if (inCombat) {
+      if (sidebarRestoreTimeoutRef.current) {
+        window.clearTimeout(sidebarRestoreTimeoutRef.current);
+        sidebarRestoreTimeoutRef.current = null;
+      }
+      if (!sidebarSnapshotRef.current.active) {
+        sidebarSnapshotRef.current = {
+          active: true,
+          left: leftCollapsed,
+          right: rightCollapsed,
+        };
+        if (!leftCollapsed) {
+          setLeftSidebarCollapsed(true);
+        }
+        if (!rightCollapsed) {
+          setRightSidebarCollapsed(true);
+        }
+      }
+      return;
+    }
+
+    if (sidebarSnapshotRef.current.active) {
+      const snapshot = sidebarSnapshotRef.current;
+      sidebarSnapshotRef.current = { active: false, left: snapshot.left, right: snapshot.right };
+      if (sidebarRestoreTimeoutRef.current) {
+        window.clearTimeout(sidebarRestoreTimeoutRef.current);
+      }
+      sidebarRestoreTimeoutRef.current = window.setTimeout(() => {
+        if (leftCollapsed !== snapshot.left) {
+          setLeftSidebarCollapsed(snapshot.left);
+        }
+        if (rightCollapsed !== snapshot.right) {
+          setRightSidebarCollapsed(snapshot.right);
+        }
+        sidebarRestoreTimeoutRef.current = null;
+      }, 280);
+    }
+  }, [
+    inCombat,
+    leftCollapsed,
+    rightCollapsed,
+    setLeftSidebarCollapsed,
+    setRightSidebarCollapsed,
+  ]);
+
+  useEffect(() => {
+    return () => {
+      if (sidebarRestoreTimeoutRef.current) {
+        window.clearTimeout(sidebarRestoreTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const centerStyle: CSSProperties = { ...centerStageStyle };
 
@@ -478,7 +542,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
                   }}
                 >
                   <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
-                  <TurnTracker />
                 </div>
               </div>
             </>
@@ -494,10 +557,10 @@ const CommandShell: React.FC<CommandShellProps> = ({
               collapsed={levelPanelCollapsed}
               onToggle={onToggleLevelPanel}
             />
-            <AutoBattleControls />
           </div>
           <div style={topCenterOverlayStyle}>
             <GeorgeAssistant />
+            <CombatControlWidget />
           </div>
           <div style={topRightOverlayStyle}>
             <div style={{ pointerEvents: "auto" }}>
@@ -835,6 +898,8 @@ function App() {
             rightCollapsed={rightSidebarCollapsed}
             onToggleLeftSidebar={() => setLeftSidebarCollapsed((prev) => !prev)}
             onToggleRightSidebar={() => setRightSidebarCollapsed((prev) => !prev)}
+            setLeftSidebarCollapsed={setLeftSidebarCollapsed}
+            setRightSidebarCollapsed={setRightSidebarCollapsed}
             levelPanelCollapsed={levelPanelCollapsed}
             onToggleLevelPanel={() => setLevelPanelCollapsed((prev) => !prev)}
           />

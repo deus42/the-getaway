@@ -155,7 +155,7 @@
 <linear key="GET-89" />
 
 <tasks>
-1. Added persistent AutoBattle preferences plus localized copy, wiring `GameMenu` and the new `AutoBattleControls` HUD to mirror profile choices and the `Shift+A` hotkey.
+1. Added persistent AutoBattle preferences plus localized copy, wiring `GameMenu` and the combat HUD toggle (now `CombatControlWidget`) to mirror the `Shift+A` hotkey.
 2. Implemented the automation core: behaviour-weighted profiles, heuristic planner, runtime slice, and `AutoBattleController` orchestration with logging and pause reasons.
 3. Integrated controller updates into `GameController`, covering fail-safes, manual override detection, and planner unit coverage for aggressive/balanced/defensive decision bias.
 </tasks>
@@ -171,7 +171,7 @@
 <code_reference file="the-getaway/src/game/combat/automation/autoBattleProfiles.ts" />
 <code_reference file="the-getaway/src/game/combat/automation/autoBattlePlanner.ts" />
 <code_reference file="the-getaway/src/game/combat/automation/AutoBattleController.ts" />
-<code_reference file="the-getaway/src/components/ui/AutoBattleControls.tsx" />
+<code_reference file="the-getaway/src/components/ui/CombatControlWidget.tsx" />
 <code_reference file="the-getaway/src/components/GameController.tsx" />
 <code_reference file="the-getaway/src/__tests__/autoBattlePlanner.test.ts" />
 <code_reference file="the-getaway/src/content/ui/index.ts" />
@@ -188,6 +188,9 @@
 <maintenance_notes date="October 22, 2025">
 - Replaced the native profile dropdown with a shared `AutoBattleProfileSelect` component so the combat HUD and Game Menu share the same responsive styling, keyboard support, and focus-guarding logic.
 - Documented the UX regression fix for GET-89 and verified the new control ignores GameController refocus hooks, keeping the selection menu open until the player commits a choice.
+</maintenance_notes>
+<maintenance_notes date="October 23, 2025">
+- GET-97 reworked the combat HUD into `CombatControlWidget`, merging the turn tracker and AutoBattle toggle into a compact overlay while keeping behaviour profiles in the Game Menu.
 </maintenance_notes>
 </step>
 

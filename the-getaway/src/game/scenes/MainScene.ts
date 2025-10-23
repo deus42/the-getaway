@@ -39,6 +39,9 @@ const MIN_CAMERA_ZOOM = 0.6;
 const MAX_CAMERA_ZOOM = 2.3;
 const CAMERA_BOUND_PADDING_TILES = 6;
 const CAMERA_FOLLOW_LERP = 0.08;
+const COMBAT_ZOOM_MULTIPLIER = 1.28;
+const COMBAT_ZOOM_MIN_DELTA = 0.22;
+const CAMERA_ZOOM_TWEEN_MS = 340;
 
 interface ElevationProfile {
   heightOffset: number;
@@ -92,6 +95,14 @@ export class MainScene extends Phaser.Scene {
   private staticPropGroup?: Phaser.GameObjects.Group;
   private disposeVisualSettings?: () => void;
   private lastPlayerScreenDetail?: PlayerScreenPositionDetail;
+  private baselineCameraZoom = 1;
+  private cameraZoomTween: Phaser.Tweens.Tween | null = null;
+  private hasInitialZoomApplied = false;
+  private userAdjustedZoom = false;
+  private pendingCameraRestore = false;
+  private preCombatZoom: number | null = null;
+  private preCombatUserAdjusted = false;
+  private pendingRestoreUserAdjusted: boolean | null = null;
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
     if (document.visibilityState === 'visible') {
@@ -239,6 +250,7 @@ export class MainScene extends Phaser.Scene {
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
     miniMapService.shutdown();
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    this.stopCameraZoomTween();
 
     if (this.unsubscribe) {
       this.unsubscribe();
@@ -272,7 +284,12 @@ export class MainScene extends Phaser.Scene {
     const previousCombatState = this.inCombat;
     this.inCombat = worldState.inCombat;
 
+    if (this.inCombat && !previousCombatState) {
+      this.zoomCameraForCombat();
+    }
+
     if (!this.inCombat && previousCombatState) {
+      this.restoreCameraAfterCombat();
       this.destroyPlayerVitalsIndicator();
       this.enemySprites.forEach((data) => {
         data.healthBar.clear();
@@ -290,7 +307,16 @@ export class MainScene extends Phaser.Scene {
     this.currentGameTime = worldState.currentTime;
     this.updateDayNightOverlay();
 
+    if (!worldState.currentMapArea || !this.currentMapArea) {
+      return;
+    }
+
     if (this.currentMapArea.id !== worldState.currentMapArea.id) {
+      this.hasInitialZoomApplied = false;
+      this.userAdjustedZoom = false;
+      this.preCombatZoom = null;
+      this.preCombatUserAdjusted = false;
+      this.pendingRestoreUserAdjusted = null;
       this.currentMapArea = worldState.currentMapArea;
       // clear existing enemy sprites
       this.enemySprites.forEach((data) => {
@@ -1541,7 +1567,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     const camera = this.cameras.main;
-    const zoomMultiplier = deltaY > 0 ? 0.9 : 1.1;
+    const zoomMultiplier = deltaY > 0 ? 0.82 : 1.18;
     const currentZoom = camera.zoom;
     const targetZoom = Phaser.Math.Clamp(
       currentZoom * zoomMultiplier,
@@ -1552,6 +1578,12 @@ export class MainScene extends Phaser.Scene {
     if (Math.abs(targetZoom - currentZoom) < 0.0005) {
       return;
     }
+
+    if (!this.inCombat) {
+      this.userAdjustedZoom = true;
+    }
+
+    this.stopCameraZoomTween();
 
     let worldPointBefore: Phaser.Math.Vector2 | null = null;
 
@@ -1578,6 +1610,10 @@ export class MainScene extends Phaser.Scene {
 
     this.applyOverlayZoom();
     this.emitViewportUpdate();
+
+    if (!this.inCombat) {
+      this.baselineCameraZoom = targetZoom;
+    }
   };
 
   private clampCameraToBounds(camera: Phaser.Cameras.Scene2D.Camera): void {
@@ -1936,7 +1972,22 @@ export class MainScene extends Phaser.Scene {
     );
 
     const camera = this.cameras.main;
-    camera.setZoom(desiredZoom);
+
+    const restoreActive = this.pendingCameraRestore || Boolean(this.cameraZoomTween);
+
+    if (!this.inCombat) {
+      if (!this.hasInitialZoomApplied) {
+        if (!restoreActive) {
+          camera.setZoom(desiredZoom);
+        }
+      } else if (!this.userAdjustedZoom && !restoreActive) {
+        const zoomDelta = Math.abs(camera.zoom - desiredZoom);
+        if (zoomDelta > 0.0008) {
+          this.userAdjustedZoom = false;
+          this.animateCameraZoom(desiredZoom);
+        }
+      }
+    }
 
     const bounds = this.computeIsoBounds();
     const padding = this.tileSize * CAMERA_BOUND_PADDING_TILES;
@@ -1973,6 +2024,11 @@ export class MainScene extends Phaser.Scene {
     // Ensure overlay matches latest viewport size after camera adjustments
     this.resizeDayNightOverlay();
     this.emitViewportUpdate();
+
+    if (!this.inCombat && !restoreActive) {
+      this.baselineCameraZoom = camera.zoom;
+    }
+    this.hasInitialZoomApplied = true;
   }
 
   private initializeDayNightOverlay(): void {
@@ -1997,6 +2053,115 @@ export class MainScene extends Phaser.Scene {
     const centerX = this.scale.width / 2;
     const centerY = this.scale.height / 2;
     this.dayNightOverlay.setPosition(centerX, centerY);
+  }
+
+  private stopCameraZoomTween(): void {
+    if (this.cameraZoomTween) {
+      this.cameraZoomTween.remove();
+      this.cameraZoomTween = null;
+      if (this.pendingCameraRestore) {
+        this.pendingCameraRestore = false;
+        if (this.pendingRestoreUserAdjusted !== null) {
+          this.userAdjustedZoom = this.pendingRestoreUserAdjusted;
+        }
+        this.preCombatZoom = null;
+        this.preCombatUserAdjusted = false;
+        this.pendingRestoreUserAdjusted = null;
+      }
+    }
+  }
+
+  private animateCameraZoom(targetZoom: number): void {
+    if (!this.sys.isActive()) return;
+    const camera = this.cameras.main;
+    if (!camera) {
+      return;
+    }
+
+    const clampedTarget = Phaser.Math.Clamp(targetZoom, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
+    const currentZoom = camera.zoom;
+
+    this.stopCameraZoomTween();
+
+    if (Math.abs(currentZoom - clampedTarget) < 0.0005) {
+      camera.setZoom(clampedTarget);
+      this.applyOverlayZoom();
+      this.emitViewportUpdate();
+      if (!this.inCombat) {
+        this.baselineCameraZoom = camera.zoom;
+      }
+      if (this.pendingCameraRestore) {
+        this.pendingCameraRestore = false;
+        if (this.pendingRestoreUserAdjusted !== null) {
+          this.userAdjustedZoom = this.pendingRestoreUserAdjusted;
+        }
+        this.preCombatZoom = null;
+        this.preCombatUserAdjusted = false;
+        this.pendingRestoreUserAdjusted = null;
+      }
+      return;
+    }
+
+    this.cameraZoomTween = this.tweens.add({
+      targets: camera,
+      zoom: clampedTarget,
+      duration: CAMERA_ZOOM_TWEEN_MS,
+      ease: 'Sine.easeInOut',
+      onUpdate: () => {
+        this.applyOverlayZoom();
+        this.emitViewportUpdate();
+      },
+      onComplete: () => {
+        this.cameraZoomTween = null;
+        if (!this.inCombat) {
+          this.baselineCameraZoom = camera.zoom;
+        }
+        if (this.pendingCameraRestore) {
+          this.pendingCameraRestore = false;
+          if (this.pendingRestoreUserAdjusted !== null) {
+            this.userAdjustedZoom = this.pendingRestoreUserAdjusted;
+          }
+          this.preCombatZoom = null;
+          this.preCombatUserAdjusted = false;
+          this.pendingRestoreUserAdjusted = null;
+        }
+      },
+    });
+  }
+
+  private zoomCameraForCombat(): void {
+    const camera = this.cameras.main;
+    if (!camera) {
+      return;
+    }
+
+    // Capture the exploration zoom so we can restore it later
+    this.pendingCameraRestore = false;
+    const explorationZoom = camera.zoom;
+    if (this.preCombatZoom === null) {
+      this.preCombatZoom = explorationZoom;
+      this.preCombatUserAdjusted = this.userAdjustedZoom;
+    }
+    this.baselineCameraZoom = explorationZoom;
+    const targetZoom = Math.min(
+      MAX_CAMERA_ZOOM,
+      Math.max(explorationZoom * COMBAT_ZOOM_MULTIPLIER, explorationZoom + COMBAT_ZOOM_MIN_DELTA)
+    );
+    this.userAdjustedZoom = false;
+    this.animateCameraZoom(targetZoom);
+  }
+
+  private restoreCameraAfterCombat(): void {
+    const camera = this.cameras.main;
+    if (!camera) {
+      return;
+    }
+
+    const targetZoom = this.preCombatZoom ?? this.baselineCameraZoom ?? camera.zoom;
+    this.pendingRestoreUserAdjusted = this.preCombatUserAdjusted;
+    this.userAdjustedZoom = true;
+    this.pendingCameraRestore = true;
+    this.animateCameraZoom(targetZoom);
   }
 
   private resizeDayNightOverlay(): void {

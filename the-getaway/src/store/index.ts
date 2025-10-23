@@ -106,18 +106,25 @@ const migrateParanoiaState = (state?: Partial<ParanoiaState> | null): ParanoiaSt
     return paranoiaReducer(undefined, resetParanoiaState());
   }
 
-  const safeValue = Number.isFinite(state.value) ? state.value : 0;
+  const rawValue = typeof state.value === 'number' ? state.value : 0;
+  const safeValue = Number.isFinite(rawValue) ? rawValue : 0;
+  const normalizedValue = Math.max(
+    PARANOIA_MIN_VALUE,
+    Math.min(PARANOIA_MAX_VALUE, safeValue)
+  );
+  const normalizedDecayBoost = Number.isFinite(state.decayBoostPerSecond)
+    ? Math.max(0, state.decayBoostPerSecond as number)
+    : 0;
+
   return {
     version: PARANOIA_STATE_VERSION,
-    value: Math.max(PARANOIA_MIN_VALUE, Math.min(PARANOIA_MAX_VALUE, safeValue)),
+    value: normalizedValue,
     tier: state.tier ?? 'calm',
     lastUpdatedAt: typeof state.lastUpdatedAt === 'number' ? state.lastUpdatedAt : null,
     frozen: Boolean(state.frozen),
     respiteUntil: typeof state.respiteUntil === 'number' ? state.respiteUntil : null,
     decayBoostUntil: typeof state.decayBoostUntil === 'number' ? state.decayBoostUntil : null,
-    decayBoostPerSecond: Number.isFinite(state.decayBoostPerSecond)
-      ? Math.max(0, state.decayBoostPerSecond)
-      : 0,
+    decayBoostPerSecond: normalizedDecayBoost,
     cooldowns: { ...(state.cooldowns ?? {}) },
     lastSnapshot: state.lastSnapshot ?? null,
   };
@@ -259,6 +266,7 @@ store.subscribe(() => {
     surveillance: state.surveillance,
     storylets: state.storylets,
     suspicion: state.suspicion,
+    paranoia: state.paranoia,
   };
   saveState(stateToPersist);
 });

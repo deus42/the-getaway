@@ -156,6 +156,7 @@ flowchart LR
 2. Collapsing a panel drives the rail basis to `0px` while the panel stays mounted with `visibility: hidden`, `pointer-events: none`, and `max-width: 0px`, ensuring ResizeObserver retains the last visible width for smooth reopening.
 3. Toggle buttons now live inside each rail, positioned with `calc(100% - 1.1rem)` (left) and `-1.1rem` (right) offsets plus a clamped vertical anchor (`clamp(6rem, 50%, calc(100% - 6rem))`) so they never overlap the menu, level, or day/night overlays; the stage exports `--left-sidebar-width` / `--right-sidebar-width` and their `--*-last-width` counterparts for downstream layout logic.
 4. <code_location>the-getaway/src/components/GameCanvas.tsx</code_location> subscribes to the center column via `ResizeObserver`, debounces updates (~40 ms), caches the last applied canvas size, and only calls `game.scale.resize` when dimensions change so the Phaser world stretches instantly during rail transitions without black-frame flicker.
+5. Combat transitions trigger a snapshot/ref restore loop in <code_location>the-getaway/src/App.tsx</code_location>, collapsing both sidebars on battle start to prioritise the playfield and restoring the pre-combat layout once `world.inCombat` drops back to false.
 </technical_flow>
 </architecture_section>
 
@@ -380,7 +381,7 @@ flowchart LR
 3. <code_location>the-getaway/src/game/combat/automation/autoBattlePlanner.ts</code_location> evaluates the combat snapshot, scoring candidate attacks and reposition moves via expected damage, cover gain, distance deltas, and reserve penalties. It returns the highest-score action or a safe hold position fallback when no positive play exists.
 4. <code_location>the-getaway/src/game/combat/automation/AutoBattleController.ts</code_location> runs inside `GameController`, invoking the planner when the player turn is active. It dispatches `movePlayer`, `executeAttack`, and `switchTurn` actions directly, records telemetry (`recordAutoBattleDecision`), and logs via `logSlice`, while honouring fail-safes (dialogue prompts, depleted AP, manual overrides).
 5. <code_location>the-getaway/src/store/autoBattleSlice.ts</code_location> tracks runtime status (`idle`/`running`/`paused`), pause reasons, and the last planner decision so the HUD and debug overlays reflect automation state in real time.
-6. <code_location>the-getaway/src/components/ui/AutoBattleControls.tsx</code_location> surfaces the toggle, profile selector, status badge, and last-decision recap. It is mirrored by the `Shift+A` hotkey handled in `GameController` to keep keyboard, HUD, and settings in sync.
+6. <code_location>the-getaway/src/components/ui/CombatControlWidget.tsx</code_location> renders the compact combat overlay that merges the turn indicator, AP readout, foe counter, and AutoBattle toggle. It mirrors the `Shift+A` hotkey while leaving behaviour profile management in the Game Menu.
 7. <code_location>the-getaway/src/components/GameController.tsx</code_location> wires controller updates, hotkeys, and manual input detection—calling `notifyManualOverride` on the automation controller—to guarantee automation releases instantly when the player acts, dialogue opens, or objectives interrupt the turn.
 </technical_flow>
 </architecture_section>

@@ -64,18 +64,20 @@ const mapReasonToUiKey = (
   }
 };
 
+const TURN_START_BUFFER_MS = 220;
+
 export default class AutoBattleController {
   private dispatch: AppDispatch;
 
   private getState: () => RootState;
 
   private lastSignature: string | null = null;
-
   private currentStatus: 'idle' | 'running' | 'paused' = 'idle';
-
   private currentReason: AutoBattlePauseReason | null = null;
-
   private manualOverride = false;
+  private turnStartTimestamp: number | null = null;
+  private lastProcessedTurn: number | null = null;
+  private pendingBufferTimeout: number | null = null;
 
   constructor(dispatch: AppDispatch, store: { getState: () => RootState }) {
     this.dispatch = dispatch;
@@ -102,12 +104,35 @@ export default class AutoBattleController {
       this.resetStatus('idle', null, context);
       this.manualOverride = false;
       this.lastSignature = null;
+      this.clearTurnBuffer();
+      this.lastProcessedTurn = null;
       return;
     }
 
     if (this.manualOverride) {
       this.resetStatus('paused', 'manual_input', context);
+      this.clearTurnBuffer();
       return;
+    }
+
+    if (context.isPlayerTurn) {
+      if (this.lastProcessedTurn !== context.turnCount) {
+        this.lastProcessedTurn = context.turnCount;
+        this.turnStartTimestamp = this.now();
+        this.lastSignature = null;
+        this.resetStatus('idle', null, context);
+        this.scheduleBufferedUpdate(TURN_START_BUFFER_MS);
+        return;
+      }
+      if (this.turnStartTimestamp !== null) {
+        const elapsed = this.now() - this.turnStartTimestamp;
+        if (elapsed < TURN_START_BUFFER_MS) {
+          this.scheduleBufferedUpdate(TURN_START_BUFFER_MS - elapsed);
+          return;
+        }
+      }
+    } else {
+      this.clearTurnBuffer();
     }
 
     const profile = getAutoBattleProfile(context.profileId);
@@ -117,6 +142,7 @@ export default class AutoBattleController {
     if (failSafeReason) {
       this.resetStatus('paused', failSafeReason, context);
       this.lastSignature = null;
+      this.clearTurnBuffer();
       return;
     }
 
@@ -140,6 +166,56 @@ export default class AutoBattleController {
 
     this.executeDecision(decision, context);
     this.lastSignature = signature;
+  }
+
+  private clearTurnBuffer(): void {
+    if (this.pendingBufferTimeout !== null) {
+      window.clearTimeout(this.pendingBufferTimeout);
+      this.pendingBufferTimeout = null;
+    }
+    this.turnStartTimestamp = null;
+  }
+
+  private scheduleBufferedUpdate(delayMs: number): void {
+    const delay = Math.max(0, Math.round(delayMs));
+    if (this.pendingBufferTimeout !== null) {
+      window.clearTimeout(this.pendingBufferTimeout);
+    }
+    this.pendingBufferTimeout = window.setTimeout(() => {
+      this.pendingBufferTimeout = null;
+      const nextContext = this.buildContextFromStore();
+      if (nextContext) {
+        this.update(nextContext);
+      }
+    }, delay);
+  }
+
+  private buildContextFromStore(): AutoBattleUpdateContext | null {
+    const state = this.getState();
+    const { autoBattleEnabled, autoBattleProfile, locale } = state.settings;
+    const world = state.world;
+    const mapArea = world.currentMapArea ?? null;
+
+    return {
+      enabled: autoBattleEnabled,
+      profileId: autoBattleProfile,
+      player: state.player.data,
+      enemies: mapArea?.entities.enemies ?? [],
+      mapArea,
+      inCombat: world.inCombat,
+      isPlayerTurn: world.isPlayerTurn,
+      turnCount: world.turnCount,
+      activeDialogueId: state.quests.activeDialogue.dialogueId,
+      logStrings: getSystemStrings(locale).logs,
+      autoBattleStrings: getUIStrings(locale).autoBattle,
+    };
+  }
+
+  private now(): number {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+      return performance.now();
+    }
+    return Date.now();
   }
 
   private resolveFailSafe(context: AutoBattleUpdateContext): AutoBattlePauseReason | null {

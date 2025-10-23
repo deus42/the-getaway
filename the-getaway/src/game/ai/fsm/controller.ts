@@ -211,7 +211,10 @@ export const createNpcFsmController = (
 
   const step = (context: NpcContext, handlers?: NpcStateHandlers): NpcFsmStepResult => {
     const weights = ensureWeights(config.baseWeights);
-    const utilityBreakdown: Record<NpcAiState, number> = {};
+    const utilityBreakdown = ALL_STATES.reduce<Record<NpcAiState, number>>((acc, state) => {
+      acc[state] = 0;
+      return acc;
+    }, {} as Record<NpcAiState, number>);
 
     applyUtilityModifiers(weights, config.utilityModifiers, context, utilityBreakdown);
     applyCooldowns(weights, activeCooldowns, context.now);
@@ -256,4 +259,3 @@ export const createNpcFsmController = (
     step,
   };
 };
-

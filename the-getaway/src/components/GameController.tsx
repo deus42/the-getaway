@@ -1761,6 +1761,7 @@ const GameController: React.FC = () => {
     dispatch,
     player,
     currentMapArea,
+    worldCurrentTime,
     cancelPendingEnemyAction,
     log,
   ]);

@@ -56,12 +56,6 @@ const pillStyle: React.CSSProperties = {
 };
 
 const GameDebugInspector: React.FC<Props> = ({ zoneId }) => {
-  const mode = resolveRuntimeMode();
-  const testMode = useSelector((state: RootState) => state.settings.testMode);
-  if (mode === 'production' || !testMode) {
-    return null;
-  }
-
   const resolvedZoneId = zoneId ?? 'unknown';
   const heatSelector = useMemo(() => selectZoneHeat(resolvedZoneId), [resolvedZoneId]);
   const leadingSelector = useMemo(
@@ -69,10 +63,16 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId }) => {
     [resolvedZoneId]
   );
 
+  const mode = resolveRuntimeMode();
+  const testMode = useSelector((state: RootState) => state.settings.testMode);
   const heat = useSelector((state: RootState) => heatSelector(state));
   const leading = useSelector((state: RootState) => leadingSelector(state));
   const paranoia = useSelector((state: RootState) => selectParanoiaState(state));
   const snapshot = useSelector(selectParanoiaSnapshot);
+
+  if (mode === 'production' || !testMode) {
+    return null;
+  }
 
   return (
     <div
@@ -170,4 +170,3 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId }) => {
 };
 
 export default GameDebugInspector;
-

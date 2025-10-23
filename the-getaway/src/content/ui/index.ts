@@ -51,6 +51,8 @@ export interface AutoBattleStrings {
   hudStatusIdle: string;
   hudStatusEngaged: string;
   hudStatusPaused: string;
+  hudToggleOnLabel: string;
+  hudToggleOffLabel: string;
   hudPauseReasons: {
     manualInput: string;
     dialogue: string;
@@ -523,6 +525,8 @@ const STRINGS: Record<Locale, UIStrings> = {
       hudStatusIdle: 'Standby',
       hudStatusEngaged: 'Executing',
       hudStatusPaused: 'Paused',
+      hudToggleOnLabel: 'Auto On',
+      hudToggleOffLabel: 'Auto Off',
       hudPauseReasons: {
         manualInput: 'Manual input detected',
         dialogue: 'Dialogue or prompt active',
@@ -1232,6 +1236,8 @@ const STRINGS: Record<Locale, UIStrings> = {
       hudStatusIdle: 'Очікування',
       hudStatusEngaged: 'Виконує',
       hudStatusPaused: 'Пауза',
+      hudToggleOnLabel: 'Авто вкл.',
+      hudToggleOffLabel: 'Авто викл.',
       hudPauseReasons: {
         manualInput: 'Виявлено ручний ввід',
         dialogue: 'Активний діалог або вибір',
