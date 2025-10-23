@@ -7,7 +7,7 @@ import { SKILL_BRANCHES } from '../../content/skills';
 import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progression';
 import { addExperience } from '../../store/playerSlice';
 import AnimatedStatBar from './AnimatedStatBar';
-import { selectParanoiaValue, selectParanoiaTier } from '../../store/selectors/paranoiaSelectors';
+import { selectParanoiaValue } from '../../store/selectors/paranoiaSelectors';
 import {
   neonPalette,
   panelSurface,
@@ -100,13 +100,10 @@ const fatigueBadgeStyle: React.CSSProperties = {
   boxShadow: '0 8px 18px -12px rgba(250, 204, 21, 0.6)',
 };
 
-const PARANOIA_TIER_COLORS: Record<string, string> = {
-  calm: '#22d3ee',
-  uneasy: '#fbbf24',
-  on_edge: '#fb923c',
-  panicked: '#ef4444',
-  breakdown: '#f43f5e',
-};
+const PARANOIA_BAR_BASE_COLOR = '#7dd3fc';
+const PARANOIA_TITLE_COLOR = '#38bdf8';
+const PARANOIA_WARNING_COLOR = '#2563eb';
+const PARANOIA_CRITICAL_COLOR = '#1e3a8a';
 
 const crouchBadgeStyle: React.CSSProperties = {
   display: 'inline-flex',
@@ -200,13 +197,11 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
   const paranoiaValue = useSelector(selectParanoiaValue);
-  const paranoiaTier = useSelector(selectParanoiaTier);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
   const uiStrings = getUIStrings(locale);
   const background = player.backgroundId ? BACKGROUND_MAP[player.backgroundId] : undefined;
   const backgroundName = background?.name ?? uiStrings.playerStatus.backgroundFallback;
-  const paranoiaColor = PARANOIA_TIER_COLORS[paranoiaTier] ?? '#38bdf8';
   const roundedParanoia = Math.round(paranoiaValue);
 
   const handleLevelUp = () => {
@@ -267,10 +262,13 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         label={uiStrings.playerStatus.paranoiaLabel}
         current={roundedParanoia}
         max={100}
-        baseColor={paranoiaColor}
+        baseColor={PARANOIA_BAR_BASE_COLOR}
         lowThreshold={50}
         criticalThreshold={75}
-        emphasisColor={paranoiaColor}
+        emphasisColor={PARANOIA_TITLE_COLOR}
+        dangerDirection="ascending"
+        warningColor={PARANOIA_WARNING_COLOR}
+        criticalColor={PARANOIA_CRITICAL_COLOR}
         disableGlow
       />
       {player.isExhausted && (

@@ -10,6 +10,9 @@ interface AnimatedStatBarProps {
   criticalThreshold?: number;
   emphasisColor?: string;
   disableGlow?: boolean;
+  dangerDirection?: 'ascending' | 'descending' | 'none';
+  warningColor?: string;
+  criticalColor?: string;
 }
 
 const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
@@ -22,6 +25,9 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
   criticalThreshold = 25,
   emphasisColor,
   disableGlow = false,
+  dangerDirection = 'descending',
+  warningColor = '#f59e0b',
+  criticalColor = '#ef4444',
 }) => {
   const prevValueRef = useRef(current);
 
@@ -34,13 +40,46 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
     [current, max]
   );
 
-  const barColor = useMemo(() => {
-    if (percent <= criticalThreshold) return '#ef4444'; // Red
-    if (percent <= lowThreshold) return '#f59e0b'; // Amber
-    return baseColor; // Base color
-  }, [percent, criticalThreshold, lowThreshold, baseColor]);
+  const normalizedThresholds = useMemo(() => {
+    const low = Math.max(0, Math.min(100, lowThreshold));
+    const critical = Math.max(0, Math.min(100, criticalThreshold));
+    return {
+      low,
+      critical,
+    };
+  }, [lowThreshold, criticalThreshold]);
 
-  const shouldPulse = percent <= criticalThreshold && !disableGlow;
+  const { low: lowCutoff, critical: criticalCutoff } = normalizedThresholds;
+
+  const isWarning = useMemo(() => {
+    if (dangerDirection === 'none') return false;
+    if (dangerDirection === 'ascending') {
+      return percent >= lowCutoff;
+    }
+    return percent <= lowCutoff;
+  }, [dangerDirection, lowCutoff, percent]);
+
+  const isCritical = useMemo(() => {
+    if (dangerDirection === 'none') return false;
+    if (dangerDirection === 'ascending') {
+      return percent >= criticalCutoff;
+    }
+    return percent <= criticalCutoff;
+  }, [dangerDirection, criticalCutoff, percent]);
+
+  const barColor = useMemo(() => {
+    if (dangerDirection === 'none') return baseColor;
+    if (dangerDirection === 'ascending') {
+      if (percent >= criticalCutoff) return criticalColor;
+      if (percent >= lowCutoff) return warningColor;
+    } else {
+      if (percent <= criticalCutoff) return criticalColor;
+      if (percent <= lowCutoff) return warningColor;
+    }
+    return baseColor;
+  }, [baseColor, criticalColor, dangerDirection, lowCutoff, percent, warningColor, criticalCutoff]);
+
+  const shouldPulse = isCritical && !disableGlow;
 
   const labelRowStyle: React.CSSProperties = {
     display: 'flex',
@@ -99,10 +138,10 @@ const AnimatedStatBar: React.FC<AnimatedStatBarProps> = ({
   const valueStyle: React.CSSProperties = {
     fontFamily: '"DM Mono", monospace',
     fontWeight: 600,
-    color: emphasisColor ?? (percent <= lowThreshold ? barColor : '#e2e8f0'),
+    color: emphasisColor ?? (isWarning ? barColor : '#e2e8f0'),
     textShadow: emphasisColor
       ? `0 0 6px ${emphasisColor}80`
-      : percent <= criticalThreshold
+      : isCritical
         ? disableGlow ? 'none' : `0 0 4px ${barColor}`
         : 'none',
     transition: 'color 0.3s ease',
