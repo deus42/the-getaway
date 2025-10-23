@@ -1513,7 +1513,8 @@ useEffect(() => {
           currentMapArea,
           enemies,
           coverPositions,
-          currentMapArea.entities.npcs
+          currentMapArea.entities.npcs,
+          worldCurrentTime
         );
         actionResult = result;
         log.debug(

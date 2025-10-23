@@ -29,6 +29,15 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
 Do not begin coding until this checklist is complete.
 
 ## 3. Implementation Workflow
+- **Operational sequence (follow for every task)**
+  1. Accept/confirm the roadmap step or Linear ticket, then move the issue to `In Progress`.
+  2. Draft a detailed implementation plan and pause for approval or scope corrections before touching code.
+  3. Implement once the plan is approved.
+  4. Immediately after implementation, produce a structured Level 0 playtest scenario (step-by-step) that exercises the new behaviour. Do not wait for the user to request it.
+  5. Await review; if feedback requires changes, address the notes then regenerate an updated playtest scenario describing the new validation run.
+  6. Commit only when explicitly instructed to do so.
+  7. After final approval and commit, move the Linear issue to the terminal state (`Done` unless otherwise directed).
+
 - **During development**
   - Keep changes focused on the active Linear issue. Ignore unrelated modified files; never revert user-authored work.  
   - Prefer incremental commits; use imperative commit messages (Conventional Commits welcome).  
@@ -40,7 +49,7 @@ Do not begin coding until this checklist is complete.
   - Match validation steps from the roadmap and Linear ticket.  
   - Default commands: `yarn lint`, targeted `yarn test` runs, or full suites when coverage is expected.  
   - Record executed commands in PR summaries, progress logs, or issue comments.
-  - Produce a concise QA playtest script (typically 3–6 steps) that can be run in Level 0 to verify the change; include the script in the final task summary.
+  - Each time an implementation or follow-up fix lands, produce a concise QA playtest script (typically 3–6 steps) that can be run in Level 0 to verify the change; include the script in the task summary or review response.
 - **Documentation updates**
   - Update `memory-bank/architecture.md` whenever architectural patterns, game systems, or data flow change.  
   - Update `memory-bank/game-design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  

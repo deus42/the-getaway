@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from '@jest/globals';
-import { Player, Enemy, Position, Weapon } from '../game/interfaces/types';
+import { Player, Enemy, Position, Weapon, AlertLevel } from '../game/interfaces/types';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { 
   executeAttack, 
@@ -16,6 +16,7 @@ import { MapArea } from '../game/interfaces/types';
 import { createBasicMapArea } from '../game/world/grid';
 import { v4 as uuidv4 } from 'uuid';
 import { determineEnemyMove } from '../game/combat/enemyAI';
+import { DEFAULT_GUARD_ARCHETYPE_ID } from '../content/ai/guardArchetypes';
 import { createWeapon, createArmor } from '../game/inventory/inventorySystem';
 
 function createEnemy(
@@ -35,6 +36,17 @@ function createEnemy(
     damage: 5,
     attackRange: 1,
     isHostile: true,
+    visionCone: {
+      range: 8,
+      angle: 360,
+      direction: 0,
+    },
+    alertLevel: AlertLevel.IDLE,
+    alertProgress: 0,
+    lastKnownPlayerPosition: null,
+    aiProfileId: DEFAULT_GUARD_ARCHETYPE_ID,
+    aiState: 'patrol',
+    aiCooldowns: {},
   };
 }
 
@@ -671,7 +683,9 @@ describe('Combat System Tests', () => {
         player,
         mapArea,
         [enemyClose],
-        []
+        [],
+        [],
+        0
       );
       expect(result.action).toBe('attack');
       expect(result.player.health).toBeLessThan(player.health);
@@ -684,7 +698,9 @@ describe('Combat System Tests', () => {
         player,
         mapArea,
         [enemyFar],
-        []
+        [],
+        [],
+        0
       );
       expect(result.action).toBe('move');
       expect(result.enemy.position).not.toEqual(enemyFar.position);
@@ -715,7 +731,9 @@ describe('Combat System Tests', () => {
         routedPlayer,
         obstacleMap,
         [routedEnemy],
-        []
+        [],
+        [],
+        0
       );
 
       expect(result.action).toBe('move');
@@ -733,7 +751,9 @@ describe('Combat System Tests', () => {
         player,
         mapArea,
         [woundedEnemy],
-        [coverPosition]
+        [coverPosition],
+        [],
+        0
       );
 
       expect(result.action).toBe('seek_cover');
@@ -774,7 +794,9 @@ describe('Combat System Tests', () => {
         isolatedPlayer,
         testMap,
         [blockedEnemy],
-        []
+        [],
+        [],
+        0
       );
 
       expect(result.action).toBe('no_valid_move');

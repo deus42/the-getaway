@@ -236,6 +236,24 @@ export interface SurveillanceState {
   };
 }
 
+export type EnemyAiState =
+  | 'idle'
+  | 'patrol'
+  | 'chase'
+  | 'search'
+  | 'attack'
+  | 'inspectNoise'
+  | 'flee'
+  | 'panic';
+
+export interface EnemyAiTelemetry {
+  state: EnemyAiState;
+  previousState: EnemyAiState;
+  weights: Record<EnemyAiState, number>;
+  utilities: Record<EnemyAiState, number>;
+  updatedAt: number;
+}
+
 // Enemy specific attributes
 export interface Enemy extends Entity {
   actionPoints: number;
@@ -250,6 +268,12 @@ export interface Enemy extends Entity {
   alertLevel?: AlertLevel;
   alertProgress?: number;    // 0-100, increases when player is in sight
   lastKnownPlayerPosition?: Position | null;
+  aiProfileId?: string;
+  aiState?: EnemyAiState;
+  aiLastTransitionAt?: number;
+  aiCooldowns?: Partial<Record<EnemyAiState, number>>;
+  aiPersonalitySeed?: number;
+  aiTelemetry?: EnemyAiTelemetry;
 }
 
 // NPC specific attributes

@@ -3,6 +3,8 @@ import { AUTO_BATTLE_PROFILES } from '../game/combat/automation/autoBattleProfil
 import { createBasicMapArea } from '../game/world/grid';
 import { initialPlayerState } from '../store/playerSlice';
 import type { Player, Enemy, MapArea, Position, Weapon } from '../game/interfaces/types';
+import { AlertLevel } from '../game/interfaces/types';
+import { DEFAULT_GUARD_ARCHETYPE_ID } from '../content/ai/guardArchetypes';
 import { v4 as uuidv4 } from 'uuid';
 
 const clonePlayer = (overrides: Partial<Player>): Player => {
@@ -32,10 +34,17 @@ const createEnemy = (position: Position, overrides: Partial<Enemy> = {}): Enemy 
   damage: overrides.damage ?? 6,
   attackRange: overrides.attackRange ?? 2,
   isHostile: true,
-  visionCone: overrides.visionCone,
-  alertLevel: overrides.alertLevel,
-  alertProgress: overrides.alertProgress,
+  visionCone: overrides.visionCone ?? {
+    range: 8,
+    angle: 360,
+    direction: 0,
+  },
+  alertLevel: overrides.alertLevel ?? AlertLevel.IDLE,
+  alertProgress: overrides.alertProgress ?? 0,
   lastKnownPlayerPosition: overrides.lastKnownPlayerPosition ?? null,
+  aiProfileId: overrides.aiProfileId ?? DEFAULT_GUARD_ARCHETYPE_ID,
+  aiState: overrides.aiState ?? 'patrol',
+  aiCooldowns: overrides.aiCooldowns ?? {},
 });
 
 const buildMap = (): MapArea => createBasicMapArea('Planner Test', 7, 7);

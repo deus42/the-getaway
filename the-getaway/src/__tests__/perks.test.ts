@@ -23,6 +23,7 @@ import {
 } from '../content/perks';
 import { executeAttack } from '../game/combat/combatSystem';
 import { createWeapon } from '../game/inventory/inventorySystem';
+import { DEFAULT_GUARD_ARCHETYPE_ID } from '../content/ai/guardArchetypes';
 
 const cloneDefault = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
@@ -116,6 +117,9 @@ const createEnemy = (position: { x: number; y: number }, health = 50, maxHealth 
   alertLevel: AlertLevel.IDLE,
   alertProgress: 0,
   lastKnownPlayerPosition: null,
+  aiProfileId: DEFAULT_GUARD_ARCHETYPE_ID,
+  aiState: 'patrol',
+  aiCooldowns: {},
 });
 
 describe('Perk System', () => {

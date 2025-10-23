@@ -1049,18 +1049,21 @@ This module provides the core combat functionality:
 
 #### Enemy AI (`/src/game/combat/enemyAI.ts`)
 
-The AI module governs enemy behavior during combat:
+The AI module now orchestrates a finite-state controller that layers weighted randomness with utility nudges:
 
-- **Decision Making**:
-  - `determineEnemyMove`: Core function that decides the best action based on current state
-  - Prioritizes attacking if player is in range
-  - Seeks cover when health is low
-  - Moves toward player when out of range
+- **State Machine Backbone**:
+  - `determineEnemyMove` instantiates a guard archetype config from `src/content/ai/guardArchetypes.ts`, restores any serialized AI snapshot (`aiState`, `aiCooldowns`, `aiPersonalitySeed`), and drives a `createNpcFsmController` instance from `src/game/ai/fsm/controller.ts`.
+  - `NpcFsmController` evaluates base transition weights plus utility modifiers (line of sight, distance, suppression, health thresholds) defined in the archetype record, samples a next state with deterministic RNG seeded by the enemy id, and records telemetry (`weights`, `utilities`, `previousState`) into `enemy.aiTelemetry`.
+  - Guard archetypes expose authored tuning knobs (`baseWeights`, `utilityModifiers`, cooldown windows) so design can differentiate sentinel/enforcer/watchman behaviours without touching AI plumbing.
 
-- **Tactical Positioning**:
-  - `moveTowardPlayer`: Calculates optimal move to approach the player
-  - `seekCover`: Finds and moves toward cover positions
-  - `findNearestCover`: Locates the closest cover element
+- **Action Hooks & Guard Rails**:
+  - Each FSM state maps to a handler inside `enemyAI.ts` (`attack`, `chase`, `search`, `inspect_noise`, `flee`, `panic`, `patrol`, `idle`). Handlers forward to the existing tactical helpers and return the mutated enemy/player pair.
+  - Post-evaluation safeguards ensure legacy behaviours remain predictable: when line-of-sight exists but the selected state is `idle`/`inspect_noise`, the AI re-evaluates forced attacks/chases; wounded guards coerce a cover-seeking fallback; out-of-sight idling degrades into exploratory movement.
+  - Telemetry persists on the `Enemy` entity (`aiProfileId`, `aiState`, `aiLastTransitionAt`, `aiCooldowns`, `aiTelemetry`) so overlays and debugging panels can visualise transitions.
+
+- **Tactical Helpers**:
+  - `moveTowardPlayer`, `seekCover`, and `findNearestCover` remain the deterministic tactical primitives the FSM delegates to.
+  - Extra fallbacks (`performSearch`, cover coercion) reuse these helpers so new states stay composable.
 
 - **Position Evaluation**:
   - `getAdjacentPositions`: Identifies all possible move options

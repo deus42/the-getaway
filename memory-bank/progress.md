@@ -996,6 +996,49 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 </validation>
 </step>
 
+<step id="19.55" status="completed">
+<step_metadata>
+  <number>19.55</number>
+  <title>Adaptive NPC FSM Behaviors</title>
+  <status>Completed</status>
+  <date>October 22, 2025</date>
+</step_metadata>
+<linear key="GET-8" />
+
+<tasks>
+1. Added `src/game/ai/fsm` with typed state contracts, deterministic RNG, and `createNpcFsmController` so guard AI consumes a shared, seeded state machine.
+2. Authored guard archetype configs under `src/content/ai/guardArchetypes.ts`, capturing tuned weights, cooldowns, and utility modifiers that persist on each enemy entity.
+3. Rebuilt `determineEnemyMove` around the FSM controller, wiring telemetry persistence, cooldown snapshots, and guard rails that coerce attacks/search/cover fallbacks when stochastic picks would otherwise idle.
+4. Extended enemy schema/world bootstrap/GameController turn loop to hydrate FSM snapshots and expose telemetry to debugging overlays.
+5. Refreshed combat/automation/perception tests, introduced focused FSM unit coverage, and documented the new AI pipeline in `memory-bank/architecture.md`.
+</tasks>
+
+<implementation>
+- `determineEnemyMove` seeds guard archetypes, feeds perception-derived context into the FSM, stores transition telemetry (`aiTelemetry`), and enforces health/LoS fallbacks to keep behaviour deterministic when stakes are high.
+- Guard archetypes provide authored modifiers (LoS boosts, low-health panic suppression, chase dampening) while cooldowns and personality seeds persist on the `Enemy` object for Redux serialisation and debug tooling.
+- Tests lock controller weighting, cooldown enforcement, and the reworked enemy turn loop; architecture documentation captures the FSM stack so future agents know where to extend behaviours.
+</implementation>
+
+<code_reference file="the-getaway/src/game/ai/fsm/types.ts" />
+<code_reference file="the-getaway/src/game/ai/fsm/random.ts" />
+<code_reference file="the-getaway/src/game/ai/fsm/controller.ts" />
+<code_reference file="the-getaway/src/content/ai/guardArchetypes.ts" />
+<code_reference file="the-getaway/src/game/combat/enemyAI.ts" />
+<code_reference file="the-getaway/src/game/interfaces/types.ts" />
+<code_reference file="the-getaway/src/store/worldSlice.ts" />
+<code_reference file="the-getaway/src/components/GameController.tsx" />
+<code_reference file="the-getaway/src/game/ai/fsm/__tests__/controller.test.ts" />
+<code_reference file="the-getaway/src/__tests__/combat.test.ts" />
+<code_reference file="the-getaway/src/__tests__/autoBattlePlanner.test.ts" />
+<code_reference file="the-getaway/src/__tests__/perceptionManager.test.ts" />
+<code_reference file="the-getaway/src/__tests__/perks.test.ts" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn test --runTestsByPath src/game/ai/fsm/__tests__/controller.test.ts src/__tests__/combat.test.ts src/__tests__/autoBattlePlanner.test.ts src/__tests__/perceptionManager.test.ts src/__tests__/perks.test.ts --runInBand`
+</validation>
+</step>
+
 <step id="19.6" status="completed">
 <step_metadata>
   <number>19.6</number>

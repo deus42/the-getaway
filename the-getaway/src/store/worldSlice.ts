@@ -11,6 +11,7 @@ import {
 } from '../game/interfaces/environment';
 import { DEFAULT_LOCALE, Locale } from '../content/locales';
 import { getLevel0Content } from '../content/levels/level0';
+import { DEFAULT_GUARD_ARCHETYPE_ID } from '../content/ai/guardArchetypes';
 import { buildWorldResources, MapConnection } from '../game/world/worldMap';
 import {
   TimeOfDay,
@@ -81,6 +82,10 @@ const buildEnemy = (name: string): Enemy => ({
   alertLevel: AlertLevel.IDLE,
   alertProgress: 0,
   lastKnownPlayerPosition: null,
+  aiProfileId: DEFAULT_GUARD_ARCHETYPE_ID,
+  aiState: 'patrol',
+  aiLastTransitionAt: 0,
+  aiCooldowns: {},
 });
 
 const buildWorldState = (locale: Locale): WorldState => {

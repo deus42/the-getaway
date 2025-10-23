@@ -1,5 +1,6 @@
 import type { Enemy, MapArea, Player, VisionCone } from '../game/interfaces/types';
 import { AlertLevel } from '../game/interfaces/types';
+import { DEFAULT_GUARD_ARCHETYPE_ID } from '../content/ai/guardArchetypes';
 import { DEFAULT_PLAYER } from '../game/interfaces/player';
 import { createBasicMapArea } from '../game/world/grid';
 
@@ -46,10 +47,14 @@ describe('perceptionManager', () => {
     isHostile: true,
     facing: 'north',
     coverOrientation: null,
-    suppression: 0,
-    visionCone: mockVisionCone,
-    alertLevel: AlertLevel.IDLE,
-    alertProgress: 0,
+  suppression: 0,
+  visionCone: mockVisionCone,
+  alertLevel: AlertLevel.IDLE,
+  alertProgress: 0,
+  lastKnownPlayerPosition: null,
+  aiProfileId: DEFAULT_GUARD_ARCHETYPE_ID,
+  aiState: 'patrol',
+  aiCooldowns: {},
   };
 
   const player: Player = {

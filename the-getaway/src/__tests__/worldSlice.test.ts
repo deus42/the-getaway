@@ -21,6 +21,7 @@ import worldReducer, {
   WorldState,
 } from '../store/worldSlice';
 import { MapArea, Enemy, NPC, Item, AlertLevel, TileType, Position, MapTile } from '../game/interfaces/types';
+import { DEFAULT_GUARD_ARCHETYPE_ID } from '../content/ai/guardArchetypes';
 
 const createTestStore = (preloadedState?: { world: WorldState }) => {
   return configureStore({
@@ -89,6 +90,9 @@ const createTestEnemy = (name = 'Test Enemy'): Enemy => ({
   alertLevel: AlertLevel.IDLE,
   alertProgress: 0,
   lastKnownPlayerPosition: null,
+  aiProfileId: DEFAULT_GUARD_ARCHETYPE_ID,
+  aiState: 'patrol',
+  aiCooldowns: {},
 });
 
 const createTestNPC = (name = 'Test NPC'): NPC => ({
