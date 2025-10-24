@@ -7,6 +7,7 @@ import {
 } from '../../store/selectors/missionSelectors';
 import { RootState } from '../../store';
 import { showMissionAdvancePrompt } from '../../store/missionSlice';
+
 const listBaseStyle: React.CSSProperties = {
   margin: 0,
   padding: 0,
@@ -20,7 +21,10 @@ interface LevelIndicatorProps {
   onToggle?: () => void;
 }
 
-const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onToggle }) => {
+const LevelIndicator: React.FC<LevelIndicatorProps> = ({
+  collapsed = false,
+  onToggle,
+}) => {
   const dispatch = useDispatch();
   const locale = useSelector((state: RootState) => state.settings.locale);
   const missionProgress = useSelector(selectMissionProgress);
@@ -47,68 +51,82 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
     }
   };
 
+  const rootStyle: React.CSSProperties = {
+    width: collapsed ? 'min(90vw, 240px)' : 'min(92vw, 320px)',
+    background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.82))',
+    border: '1px solid rgba(148, 163, 184, 0.35)',
+    borderRadius: '14px',
+    padding: collapsed ? '0.7rem 0.85rem' : '0.9rem 1.05rem',
+    fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+    color: '#f8fafc',
+    letterSpacing: '0.05em',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: collapsed ? '0.2rem' : '0.4rem',
+    boxShadow: '0 12px 32px rgba(15, 23, 42, 0.45)',
+    pointerEvents: 'auto',
+    backdropFilter: 'blur(4px)',
+    transition: 'width 0.2s ease, padding 0.2s ease',
+  };
+
+  const infoStackStyle: React.CSSProperties = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: missionName && missionName !== zoneName ? '0.25rem' : 0,
+    flex: 1,
+    minWidth: 0,
+    width: '100%',
+    cursor: onToggle ? 'pointer' : 'default',
+    textTransform: 'uppercase',
+    textAlign: 'left',
+    transition: 'color 0.2s ease',
+    userSelect: 'none',
+    pointerEvents: 'auto',
+  };
+
   return (
-    <div
-      style={{
-        width: 'min(92vw, 320px)',
-        background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.82))',
-        border: '1px solid rgba(148, 163, 184, 0.35)',
-        borderRadius: '14px',
-        padding: '0.9rem 1.05rem',
-        fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-        color: '#f8fafc',
-        letterSpacing: '0.05em',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '0.4rem',
-        boxShadow: '0 12px 32px rgba(15, 23, 42, 0.45)',
-        pointerEvents: 'auto',
-        backdropFilter: 'blur(4px)',
-      }}
-    >
+    <div style={rootStyle}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', pointerEvents: 'auto' }}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
             <span style={{ fontSize: '0.7rem', color: '#94a3b8', opacity: 0.9 }}>
               {uiStrings.levelIndicator.levelLabel}
             </span>
-            <span style={{ fontSize: '0.96rem', fontWeight: 600 }}>{displayedLevel}</span>
+            <span style={{ fontSize: '0.96rem', fontWeight: 600, whiteSpace: 'nowrap' }}>
+              {displayedLevel}
+            </span>
           </div>
-          {missionAdvancePending && (
-            <button
-              type="button"
-              onClick={handleMissionAdvanceClick}
-              style={{
-                all: 'unset',
-                cursor: 'pointer',
-                fontSize: '0.66rem',
-                color: '#5eead4',
-                border: '1px solid rgba(94, 234, 212, 0.38)',
-                borderRadius: '999px',
-                padding: '0.18rem 0.55rem',
-                textTransform: 'uppercase',
-                letterSpacing: '0.18em',
-                transition: 'all 0.2s ease',
-                pointerEvents: 'auto',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(15, 118, 110, 0.22)';
-                e.currentTarget.style.borderColor = 'rgba(94, 234, 212, 0.55)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = 'rgba(94, 234, 212, 0.38)';
-              }}
-            >
-              {uiStrings.levelIndicator.missionReadyBadge}
-            </button>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minHeight: '1.25rem' }}>
+            {missionAdvancePending && (
+              <button
+                type="button"
+                onClick={handleMissionAdvanceClick}
+                style={{
+                  all: 'unset',
+                  cursor: 'pointer',
+                  fontSize: '0.66rem',
+                  color: '#5eead4',
+                  border: '1px solid rgba(94, 234, 212, 0.38)',
+                  borderRadius: '999px',
+                  padding: '0.18rem 0.55rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.18em',
+                  transition: 'all 0.2s ease',
+                  pointerEvents: 'auto',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(15, 118, 110, 0.22)';
+                  e.currentTarget.style.borderColor = 'rgba(94, 234, 212, 0.55)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = 'rgba(94, 234, 212, 0.38)';
+                }}
+              >
+                {uiStrings.levelIndicator.missionReadyBadge}
+              </button>
+            )}
+          </div>
         </div>
         <div
           onClick={handleToggleClick}
@@ -120,18 +138,7 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
               handleToggleClick();
             }
           }}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: missionName && missionName !== zoneName ? '0.25rem' : 0,
-            width: '100%',
-            cursor: onToggle ? 'pointer' : 'default',
-            textTransform: 'uppercase',
-            textAlign: 'left',
-            transition: 'color 0.2s ease',
-            userSelect: 'none',
-            pointerEvents: 'auto',
-          }}
+          style={infoStackStyle}
           onMouseEnter={(e) => {
             if (onToggle) {
               e.currentTarget.style.color = 'rgba(226, 232, 240, 0.92)';
@@ -146,6 +153,9 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
               fontSize: '0.72rem',
               color: 'rgba(148, 163, 184, 0.82)',
               letterSpacing: '0.12em',
+              whiteSpace: 'nowrap',
+              textOverflow: 'ellipsis',
+              overflow: 'hidden',
             }}
           >
             {zoneName} {onToggle && <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>{collapsed ? '▸' : '▾'}</span>}
@@ -156,6 +166,9 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({ collapsed = false, onTo
                 fontSize: '0.62rem',
                 color: 'rgba(148, 163, 184, 0.6)',
                 letterSpacing: '0.14em',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
               }}
             >
               {missionName}

@@ -59,7 +59,7 @@ describe("App component", () => {
     expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
     expect(screen.getByTestId("game-canvas")).toBeInTheDocument();
 
-    const openMenuButton = screen.getByTestId("open-menu");
+    const openMenuButton = await screen.findByTestId("menu-overlay-button");
     fireEvent.click(openMenuButton);
 
     const continueButton = screen.getByTestId("continue-game");
@@ -74,7 +74,7 @@ describe("App component", () => {
 
     fireEvent.click(await screen.findByTestId("start-new-game"));
     await completeCharacterCreation();
-    fireEvent.click(await screen.findByTestId("open-menu"));
+    fireEvent.click(await screen.findByTestId("menu-overlay-button"));
 
     unmount();
 

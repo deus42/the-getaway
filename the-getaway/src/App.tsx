@@ -159,27 +159,6 @@ const scrollSectionStyle: CSSProperties = {
   paddingRight: "0.4rem",
 };
 
-const menuButtonStyle: CSSProperties = {
-  padding: "0.65rem 1.35rem",
-  borderRadius: "9999px",
-  border: "1px solid rgba(56, 189, 248, 0.55)",
-  background:
-    "linear-gradient(135deg, rgba(37, 99, 235, 0.6), rgba(56, 189, 248, 0.65))",
-  color: "#e0f2fe",
-  fontSize: "0.82rem",
-  letterSpacing: "0.12em",
-  cursor: "pointer",
-  transition: "transform 0.12s ease, box-shadow 0.12s ease",
-  boxShadow: "0 18px 32px rgba(37, 99, 235, 0.3)",
-};
-
-const menuButtonWrapperStyle: CSSProperties = {
-  position: "absolute",
-  top: "1.5rem",
-  right: "1.5rem",
-  zIndex: 2,
-};
-
 const centerStageStyle: CSSProperties = {
   flex: "1 1 auto",
   minWidth: 0,
@@ -223,6 +202,25 @@ const topRightOverlayStyle: CSSProperties = {
   gap: "0.75rem",
   zIndex: 6,
   pointerEvents: "none",
+};
+
+const menuOverlayButtonStyle: CSSProperties = {
+  all: "unset",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.45rem",
+  padding: "0.55rem 1.05rem",
+  borderRadius: "999px",
+  border: "1px solid rgba(96, 165, 250, 0.45)",
+  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.55), rgba(56, 189, 248, 0.45))",
+  color: "#e0f2fe",
+  fontSize: "0.74rem",
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  cursor: "pointer",
+  pointerEvents: "auto",
+  transition: "transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease",
+  boxShadow: "0 16px 32px rgba(37, 99, 235, 0.28)",
 };
 
 const sidebarToggleBaseStyle: CSSProperties = {
@@ -471,18 +469,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
 
   return (
     <>
-      {!showMenu && (
-        <div style={menuButtonWrapperStyle}>
-          <button
-            type="button"
-            onClick={onOpenMenu}
-            data-testid="open-menu"
-            style={menuButtonStyle}
-          >
-            {uiStrings.shell.menuButton}
-          </button>
-        </div>
-      )}
       <div style={stageStyle}>
         <div style={leftRailStyle}>
           {!showMenu && (
@@ -551,6 +537,28 @@ const CommandShell: React.FC<CommandShellProps> = ({
             <CombatControlWidget />
           </div>
           <div style={topRightOverlayStyle}>
+            <div style={{ pointerEvents: "auto" }}>
+              <button
+                type="button"
+                onClick={onOpenMenu}
+                style={menuOverlayButtonStyle}
+                data-testid="menu-overlay-button"
+                aria-label={uiStrings.shell.menuButton}
+                title={uiStrings.shell.menuButton}
+                onMouseEnter={(event) => {
+                  event.currentTarget.style.transform = "translateY(-1px)";
+                  event.currentTarget.style.boxShadow = "0 18px 36px rgba(37, 99, 235, 0.34)";
+                  event.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.65)";
+                }}
+                onMouseLeave={(event) => {
+                  event.currentTarget.style.transform = "translateY(0)";
+                  event.currentTarget.style.boxShadow = "0 16px 32px rgba(37, 99, 235, 0.28)";
+                  event.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.45)";
+                }}
+              >
+                <span style={{ fontSize: "0.62rem", letterSpacing: "0.2em" }}>{uiStrings.shell.menuButton}</span>
+              </button>
+            </div>
             <div style={{ pointerEvents: "auto" }}>
               <DayNightIndicator />
             </div>
@@ -651,7 +659,7 @@ function App() {
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(false);
+  const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(true);
 
   useEffect(() => {
     log.debug('Component mounted');
