@@ -212,6 +212,20 @@ flowchart LR
 </pattern>
 </architecture_section>
 
+<architecture_section id="hud_layout_guidelines" category="hud_systems">
+<design_principles>
+- Each HUD panel owns a single system; when George, the Level Indicator, or another overlay already presents data, panels reference that source rather than duplicating copy.
+- Overlays default to zero toggles and restrained chrome—introduce controls only when direct interaction is required so the console stays legible at a glance.
+- Presentation layers never recompute mechanics (travel risk, suspicion, stamina); they consume selectors/services that already encapsulate logic.
+- Layouts respond via CSS breakpoints or data attributes to offer compact/expanded treatments instead of branching markup trees.
+- Accessibility is baseline: ensure concise `aria-label`s or `role="status"` convey implied text and reserve tooltips for modal/popup contexts only.
+</design_principles>
+<pattern name="HudPanelChecklist">
+- Pre-flight every panel by checking duplication, interaction count, and source-of-truth alignment, then log architectural/design impacts here and in `memory-bank/game-design.md` when mechanics shift.
+- Panels share the console visual language—gunmetal base, cyan edge lines, layered scanlines/particle sweeps—to maintain the painterly noir HUD identity.
+</pattern>
+</architecture_section>
+
 <architecture_section id="storylet_framework" category="narrative_systems">
 <design_principles>
 - Keep story-driven vignettes fully data-driven so designers can add new plays by extending a registry and localization files without touching reducers.
