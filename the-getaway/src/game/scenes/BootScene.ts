@@ -8,11 +8,24 @@ export class BootScene extends Phaser.Scene {
     super({ key: 'BootScene' });
   }
 
+  preload(): void {
+    this.load.atlas('props', 'atlases/props.png', 'atlases/props.json');
+    this.load.image('lamp_slim_a_n', 'normals/lamp_slim_a_n.png');
+  }
+
   create() {
     console.log('[BootScene] create: Fetching initial state and starting MainScene...');
     const initialState: RootState = store.getState();
     const initialMapArea = initialState.world.currentMapArea;
     const initialPlayerPosition = initialState.player.data.position;
+
+    const propsTexture = this.textures.get('props');
+    const normalTexture = this.textures.get('lamp_slim_a_n');
+    if (propsTexture && normalTexture && propsTexture.dataSource.length === 0) {
+        const normalSource = normalTexture.getSourceImage();
+        propsTexture.setDataSource(normalSource);
+        this.textures.remove('lamp_slim_a_n');
+    }
 
     if (!initialMapArea) {
         console.error('[BootScene] Error: initialMapArea is null or undefined in Redux state!');

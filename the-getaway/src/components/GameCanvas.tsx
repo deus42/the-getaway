@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Phaser from "phaser";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
+import { updateVisualSettings } from "../game/settings/visualSettings";
 // Remove useSelector and RootState if no longer needed here
 // import { useSelector } from "react-redux";
 // import { RootState } from "../store";
@@ -225,6 +226,11 @@ const GameCanvas: React.FC = () => {
   console.log("[GameCanvas] Rendering component");
 
   const testMode = useSelector((state: RootState) => state.settings.testMode);
+  const lightsEnabled = useSelector((state: RootState) => state.settings.lightsEnabled);
+
+  useEffect(() => {
+    updateVisualSettings({ lightsEnabled });
+  }, [lightsEnabled]);
 
   useEffect(() => {
     if (!gameInstanceRef.current) {

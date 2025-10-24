@@ -7,6 +7,7 @@ import {
   setTestMode,
   setAutoBattleEnabled,
   setAutoBattleProfile,
+  setLightsEnabled,
 } from "../../store/settingsSlice";
 import { applyLocaleToQuests } from "../../store/questsSlice";
 import { applyLocaleToWorld } from "../../store/worldSlice";
@@ -18,6 +19,7 @@ import { gradientTextStyle } from "./theme";
 import { AUTO_BATTLE_PROFILE_IDS } from "../../game/combat/automation/autoBattleProfiles";
 import type { AutoBattleProfileId } from "../../game/combat/automation/autoBattleProfiles";
 import AutoBattleProfileSelect from "./AutoBattleProfileSelect";
+import { updateVisualSettings } from "../../game/settings/visualSettings";
 
 interface GameMenuProps {
   onStartNewGame: () => void;
@@ -38,6 +40,9 @@ const GameMenu: React.FC<GameMenuProps> = ({
   );
   const autoBattleProfile = useSelector(
     (state: RootState) => state.settings.autoBattleProfile
+  );
+  const lightsEnabled = useSelector(
+    (state: RootState) => state.settings.lightsEnabled
   );
   const strings = getUIStrings(locale);
   const autoBattleStrings = strings.autoBattle;
@@ -66,6 +71,12 @@ const GameMenu: React.FC<GameMenuProps> = ({
       return;
     }
     dispatch(setAutoBattleProfile(nextProfile));
+  };
+
+  const handleLightingToggle = () => {
+    const next = !lightsEnabled;
+    dispatch(setLightsEnabled(next));
+    updateVisualSettings({ lightsEnabled: next });
   };
 
   const profileOptions = AUTO_BATTLE_PROFILE_IDS.map((profileId) => ({
@@ -362,6 +373,62 @@ const GameMenu: React.FC<GameMenuProps> = ({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Lighting Section */}
+          <div>
+            <label
+              style={{
+                display: "block",
+                fontSize: "0.8rem",
+                color: "#94a3b8",
+                marginBottom: "0.65rem",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                fontWeight: 600,
+              }}
+            >
+              {strings.menu.lightingLabel}
+            </label>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                padding: "0.75rem 1rem",
+                borderRadius: "8px",
+                backgroundColor: "rgba(30,41,59,0.5)",
+                border: "1px solid rgba(148,163,184,0.25)",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.7)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.5)";
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={lightsEnabled}
+                onChange={handleLightingToggle}
+                style={{
+                  width: "20px",
+                  height: "20px",
+                  cursor: "pointer",
+                  accentColor: "#38bdf8",
+                }}
+              />
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "0.95rem", color: "#e2e8f0", fontWeight: 500 }}>
+                  {strings.menu.lightingToggleLabel}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.15rem" }}>
+                  {strings.menu.lightingToggleDescription}
+                </div>
+              </div>
+            </label>
           </div>
 
           {/* Test Mode Section (Dev Only) */}

@@ -34,6 +34,9 @@ interface MenuStrings {
   resume: string;
   settingsHeading: string;
   languageLabel: string;
+  lightingLabel: string;
+  lightingToggleLabel: string;
+  lightingToggleDescription: string;
   alphaLabel: (year: number) => string;
   languageNames: Record<Locale, string>;
 }
@@ -494,6 +497,9 @@ const STRINGS: Record<Locale, UIStrings> = {
       resume: 'Resume Game',
       settingsHeading: 'Settings',
       languageLabel: 'Language',
+      lightingLabel: 'Visual Lighting',
+      lightingToggleLabel: 'Enable noir lighting',
+      lightingToggleDescription: 'Turns on dynamic Light2D rendering for atlas props. Requires WebGL.',
       alphaLabel: (year: number) => `Alpha Build ${year}`,
       languageNames: {
         en: 'English',
@@ -1205,6 +1211,9 @@ const STRINGS: Record<Locale, UIStrings> = {
       resume: 'Продовжити гру',
       settingsHeading: 'Налаштування',
       languageLabel: 'Мова',
+      lightingLabel: 'Візуальне освітлення',
+      lightingToggleLabel: 'Увімкнути неонове освітлення',
+      lightingToggleDescription: 'Активує динамічне Light2D-освітлення для атласних спрайтів (потрібен WebGL).',
       alphaLabel: (year: number) => `Альфа-версія ${year}`,
       languageNames: {
         en: 'Англійська',

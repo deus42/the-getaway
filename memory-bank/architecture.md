@@ -1338,6 +1338,16 @@ This rendering approach ensures the game grid maintains consistent visual qualit
   - Apply shading by calling `adjustColor` and a shared drop-shadow/highlight routine.
   - Return a `Phaser.GameObjects.Graphics` or `Container` ready to add to a scene, leaving Redux state untouched.
 - Keep factory functions stateless and testable; they should only build visuals, not mutate gameplay state.
+
+<pattern name="AtlasLightingPipeline">
+### Atlas + Light2D Integration
+- Runtime assets now ship as texture atlases under `public/atlases/`. `BootScene.preload` calls `this.load.atlas('props', 'atlases/props.png', 'atlases/props.json')` and loads matching normal maps (e.g., `lamp_slim_a_n`) from `public/normals/`.
+- `IsoObjectFactory.createSpriteProp` instantiates atlas frames as `Phaser.GameObjects.Image` instances, records their grid coordinates, applies depth through `DepthManager`, and, when a normal map key is passed, switches the image to the `Light2D` pipeline and binds the normal map via `setNormalTexture`.
+- Lighting is feature-gated through `visualSettings.lightsEnabled`. `MainScene` subscribes to `subscribeToVisualSettings`, enabling `this.lights.enable().setAmbientColor(0x16202a)` when toggled on and tearing down point lights when disabled or on shutdown.
+- A demo prop (`lamp_slim_a`) renders inside the Level 0 **Waterfront Commons** interior; when lights are enabled a `PointLight` is positioned nearby so the indoor scene showcases normal-map orientation and depth sorting without disturbing exterior overlays.
+- When the renderer falls back to Canvas the toggle auto-disables (Redux + visual settings) and sprites stay on the default pipeline, preventing black-screen failures on unsupported GPUs.
+- Future props or tiles should follow the same path: add PNG + JSON frames to the atlas, load corresponding normal textures if runtime lighting is required, then spawn them through the factory so depth and lighting stay centralised.
+</pattern>
 </pattern>
 </architecture_section>
 

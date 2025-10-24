@@ -78,6 +78,13 @@ export interface PulsingHighlightOptions extends HighlightOptions {
   depthOffset?: number;
 }
 
+export interface IsoSpriteOptions {
+  textureKey?: string;
+  normalTextureKey?: string;
+  depthBias?: number;
+  origin?: { x?: number; y?: number };
+}
+
 export class IsoObjectFactory {
   private originX = 0;
   private originY = 0;
@@ -367,6 +374,54 @@ export class IsoObjectFactory {
     return container;
   }
 
+  public createSpriteTile(
+    gridX: number,
+    gridY: number,
+    frame: string,
+    options: IsoSpriteOptions = {}
+  ): Phaser.GameObjects.Image {
+    return this.createIsoSprite(gridX, gridY, frame, {
+      textureKey: options.textureKey,
+      depthBias: options.depthBias ?? DepthBias.TILE_BASE,
+      origin: {
+        x: options.origin?.x ?? 0.5,
+        y: options.origin?.y ?? 0.5,
+      },
+      normalTextureKey: options.normalTextureKey,
+    });
+  }
+
+  public createSpriteProp(
+    gridX: number,
+    gridY: number,
+    frame: string,
+    options: IsoSpriteOptions = {}
+  ): Phaser.GameObjects.Image {
+    return this.createIsoSprite(gridX, gridY, frame, {
+      textureKey: options.textureKey,
+      depthBias: options.depthBias ?? DepthBias.PROP_TALL,
+      origin: {
+        x: options.origin?.x ?? 0.5,
+        y: options.origin?.y ?? 0.85,
+      },
+      normalTextureKey: options.normalTextureKey,
+    });
+  }
+
+  public positionSprite(
+    sprite: Phaser.GameObjects.Image,
+    gridX: number,
+    gridY: number,
+    depthBias?: number
+  ): void {
+    const { x, y } = toPixel(gridX, gridY, this.originX, this.originY, this.tileSize);
+    sprite.setPosition(x, y);
+    const resolvedBias =
+      depthBias ?? sprite.getData('isoDepthBias') ?? DepthBias.PROP_TALL;
+    this.assignDepth(sprite, x, y, resolvedBias);
+    sprite.setData('isoGrid', { x: gridX, y: gridY });
+  }
+
   public updateCharacterBase(
     graphics: Phaser.GameObjects.Graphics,
     gridX: number,
@@ -471,5 +526,51 @@ export class IsoObjectFactory {
     token.container.setPosition(x, y);
     const bias = DepthBias.CHARACTER + (token.depthOffset ?? 0);
     this.assignDepth(token.container, x, y, bias);
+  }
+
+  private createIsoSprite(
+    gridX: number,
+    gridY: number,
+    frame: string,
+    options: IsoSpriteOptions
+  ): Phaser.GameObjects.Image {
+    const textureKey = options.textureKey ?? 'props';
+    const depthBias = options.depthBias ?? DepthBias.PROP_TALL;
+    const sprite = this.scene.add.image(0, 0, textureKey, frame);
+    const originX = options.origin?.x ?? 0.5;
+    const originY = options.origin?.y ?? 0.5;
+    sprite.setOrigin(originX, originY);
+    sprite.setData('isoDepthBias', depthBias);
+    if (options.normalTextureKey) {
+      sprite.setData('isoNormalTexture', options.normalTextureKey);
+      sprite.setData('isoLightingApplied', false);
+    }
+    this.positionSprite(sprite, gridX, gridY, depthBias);
+    return sprite;
+  }
+
+  public applyLightingToSprite(
+    sprite: Phaser.GameObjects.Image | null | undefined,
+    enabled: boolean
+  ): void {
+    if (!sprite) {
+      return;
+    }
+
+    const normalKey = sprite.getData('isoNormalTexture') as string | undefined;
+    if (!normalKey) {
+      return;
+    }
+
+    const lightingApplied = sprite.getData('isoLightingApplied') === true;
+    const isWebGL = this.scene.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer;
+
+    if (enabled && isWebGL && !lightingApplied) {
+      sprite.setPipeline('Light2D');
+      sprite.setData('isoLightingApplied', true);
+    } else if ((!enabled || !isWebGL) && lightingApplied) {
+      sprite.resetPipeline();
+      sprite.setData('isoLightingApplied', false);
+    }
   }
 }

@@ -27,12 +27,14 @@ export interface ColorMatrixSettings {
 }
 
 export interface VisualFxSettings {
+  lightsEnabled: boolean;
   bloom: BloomSettings;
   vignette: VignetteSettings;
   colorMatrix: ColorMatrixSettings;
 }
 
 const defaultVisualSettings: VisualFxSettings = Object.freeze({
+  lightsEnabled: false,
   bloom: {
     enabled: false,
     color: 0xffffff,
@@ -59,6 +61,7 @@ const defaultVisualSettings: VisualFxSettings = Object.freeze({
 });
 
 let currentSettings: VisualFxSettings = {
+  lightsEnabled: defaultVisualSettings.lightsEnabled,
   bloom: { ...defaultVisualSettings.bloom },
   vignette: { ...defaultVisualSettings.vignette },
   colorMatrix: { ...defaultVisualSettings.colorMatrix },
@@ -73,6 +76,7 @@ const notify = (): void => {
 };
 
 export const getVisualSettings = (): VisualFxSettings => ({
+  lightsEnabled: currentSettings.lightsEnabled,
   bloom: { ...currentSettings.bloom },
   vignette: { ...currentSettings.vignette },
   colorMatrix: { ...currentSettings.colorMatrix },
@@ -80,6 +84,7 @@ export const getVisualSettings = (): VisualFxSettings => ({
 
 export const resetVisualSettings = (): void => {
   currentSettings = {
+    lightsEnabled: defaultVisualSettings.lightsEnabled,
     bloom: { ...defaultVisualSettings.bloom },
     vignette: { ...defaultVisualSettings.vignette },
     colorMatrix: { ...defaultVisualSettings.colorMatrix },
@@ -89,6 +94,7 @@ export const resetVisualSettings = (): void => {
 
 export const updateVisualSettings = (partial: Partial<VisualFxSettings>): void => {
   currentSettings = {
+    lightsEnabled: partial.lightsEnabled ?? currentSettings.lightsEnabled,
     bloom: { ...currentSettings.bloom, ...(partial.bloom ?? {}) },
     vignette: { ...currentSettings.vignette, ...(partial.vignette ?? {}) },
     colorMatrix: { ...currentSettings.colorMatrix, ...(partial.colorMatrix ?? {}) },

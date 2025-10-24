@@ -4,6 +4,7 @@ import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { applySuspicionDecay } from '../../store/suspicionSlice';
+import { setLightsEnabled } from '../../store/settingsSlice';
 import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 import {
   TILE_CLICK_EVENT,
@@ -22,7 +23,12 @@ import { miniMapService } from '../services/miniMapService';
 import CameraSprite from '../objects/CameraSprite';
 import { DepthManager, DepthBias, DepthLayers, syncDepthPoint } from '../utils/depth';
 import type { DepthResolvableGameObject } from '../utils/depth';
-import { bindCameraToVisualSettings } from '../settings/visualSettings';
+import {
+  bindCameraToVisualSettings,
+  subscribeToVisualSettings,
+  updateVisualSettings,
+  type VisualFxSettings,
+} from '../settings/visualSettings';
 
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
@@ -94,9 +100,15 @@ export class MainScene extends Phaser.Scene {
   private isoFactory?: IsoObjectFactory;
   private staticPropGroup?: Phaser.GameObjects.Group;
   private disposeVisualSettings?: () => void;
+  private disposeLightingSettings?: () => void;
   private lastPlayerScreenDetail?: PlayerScreenPositionDetail;
   private baselineCameraZoom = 1;
   private cameraZoomTween: Phaser.Tweens.Tween | null = null;
+  private lightsFeatureEnabled = false;
+  private demoLamp?: Phaser.GameObjects.Image;
+  private demoLampGrid?: Position;
+  private demoPointLight?: Phaser.GameObjects.PointLight;
+  private readonly lightingAmbientColor = 0x0f172a;
   private hasInitialZoomApplied = false;
   private userAdjustedZoom = false;
   private pendingCameraRestore = false;
@@ -166,6 +178,9 @@ export class MainScene extends Phaser.Scene {
     this.setupCameraAndMap();
     this.cameras.main.setRoundPixels(true);
     this.disposeVisualSettings = bindCameraToVisualSettings(this.cameras.main);
+    this.disposeLightingSettings = subscribeToVisualSettings((settings) => {
+      this.applyLightingSettings(settings);
+    });
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanupScene, this);
 
     // Cache initial world time and set up overlay
@@ -251,6 +266,12 @@ export class MainScene extends Phaser.Scene {
     miniMapService.shutdown();
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     this.stopCameraZoomTween();
+
+    if (this.disposeLightingSettings) {
+      this.disposeLightingSettings();
+      this.disposeLightingSettings = undefined;
+    }
+    this.disableLighting(true);
 
     if (this.unsubscribe) {
       this.unsubscribe();
@@ -365,7 +386,11 @@ export class MainScene extends Phaser.Scene {
       this.staticPropGroup.clear(true, true);
     }
 
-    if (!this.isoFactory || !this.currentMapArea || this.currentMapArea.isInterior) {
+    this.demoLamp = undefined;
+    this.demoLampGrid = undefined;
+    this.destroyDemoPointLight();
+
+    if (!this.isoFactory || !this.currentMapArea) {
       return;
     }
 
@@ -418,6 +443,118 @@ export class MainScene extends Phaser.Scene {
         })
       );
     });
+
+    if (
+      this.currentMapArea.isInterior &&
+      this.currentMapArea.displayName?.includes('Waterfront Commons')
+    ) {
+      const width = this.currentMapArea.width ?? DEFAULT_TILE_SIZE;
+      const height = this.currentMapArea.height ?? DEFAULT_TILE_SIZE;
+      const lampGridX = Math.min(width - 3, Math.max(2, Math.floor(width / 2)));
+      const lampGridY = Math.min(height - 3, Math.max(2, Math.floor(height / 3)));
+      const targetTile = this.currentMapArea.tiles[lampGridY]?.[lampGridX];
+
+      if (targetTile?.isWalkable) {
+        const lampPosition = { x: lampGridX, y: lampGridY };
+        const lampSprite = this.isoFactory!.createSpriteProp(
+          lampPosition.x,
+          lampPosition.y,
+          'lamp_slim_a',
+          {
+            normalTextureKey: 'lamp_slim_a_n',
+            depthBias: DepthBias.PROP_TALL + 12,
+            origin: { x: 0.5, y: 0.82 },
+          }
+        );
+        this.isoFactory!.applyLightingToSprite(lampSprite, this.lightsFeatureEnabled);
+        this.demoLamp = lampSprite;
+        this.demoLampGrid = { ...lampPosition };
+        addProp(lampSprite);
+        this.rebuildLightingDemoLight();
+      }
+    }
+  }
+
+  private applyLightingSettings(settings: VisualFxSettings): void {
+    if (settings.lightsEnabled && !this.hasLightPipelineSupport()) {
+      console.warn('[MainScene] Light2D not supported by current renderer; disabling lighting toggle.');
+      store.dispatch(setLightsEnabled(false));
+      updateVisualSettings({ lightsEnabled: false });
+      this.disableLighting(true);
+      return;
+    }
+    if (settings.lightsEnabled) {
+      this.enableLighting();
+    } else {
+      this.disableLighting();
+    }
+  }
+
+  private hasLightPipelineSupport(): boolean {
+    return this.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer;
+  }
+
+  private enableLighting(): void {
+    if (!this.hasLightPipelineSupport()) {
+      console.warn('[MainScene] WebGL renderer unavailable; Light2D disabled.');
+      this.lightsFeatureEnabled = false;
+      this.isoFactory?.applyLightingToSprite(this.demoLamp, false);
+      store.dispatch(setLightsEnabled(false));
+      updateVisualSettings({ lightsEnabled: false });
+      return;
+    }
+    if (this.lightsFeatureEnabled) {
+      this.rebuildLightingDemoLight();
+      this.isoFactory?.applyLightingToSprite(this.demoLamp, true);
+      return;
+    }
+    this.lights.enable().setAmbientColor(this.lightingAmbientColor);
+    this.lightsFeatureEnabled = true;
+    this.isoFactory?.applyLightingToSprite(this.demoLamp, true);
+    this.rebuildLightingDemoLight();
+  }
+
+  private disableLighting(force = false): void {
+    if (!this.lightsFeatureEnabled && !force) {
+      this.destroyDemoPointLight();
+      this.isoFactory?.applyLightingToSprite(this.demoLamp, false);
+      return;
+    }
+    this.destroyDemoPointLight();
+    if (this.hasLightPipelineSupport()) {
+      this.lights.removeAll();
+      this.lights.disable();
+    }
+    this.lightsFeatureEnabled = false;
+    this.isoFactory?.applyLightingToSprite(this.demoLamp, false);
+  }
+
+  private rebuildLightingDemoLight(): void {
+    if (!this.lightsFeatureEnabled || !this.demoLampGrid) {
+      this.destroyDemoPointLight();
+      return;
+    }
+
+    const { x, y } = this.calculatePixelPosition(this.demoLampGrid.x, this.demoLampGrid.y);
+    const lightY = y - this.tileSize * 0.35;
+    const radius = this.tileSize * 1.6;
+    const intensity = 0.4;
+
+    if (!this.demoPointLight) {
+      this.demoPointLight = this.add.pointlight(x, lightY, 0x7dd3fc, radius, intensity);
+      this.demoPointLight.setScrollFactor(1);
+    } else {
+      this.demoPointLight.setPosition(x, lightY);
+      this.demoPointLight.setRadius(radius);
+      this.demoPointLight.setIntensity(intensity);
+    }
+  }
+
+  private destroyDemoPointLight(): void {
+    if (this.demoPointLight) {
+      this.demoPointLight.destroy();
+      this.demoPointLight = undefined;
+    }
   }
   
   private updatePlayerPosition(position: Position): void {
