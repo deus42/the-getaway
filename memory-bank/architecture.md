@@ -310,9 +310,9 @@ flowchart LR
 1. `src/content/cameraConfigs.ts` declares static, motion, and drone camera blueprints per zone; `cameraTypes.ts` converts them into runtime state with sweep metadata.
 2. `surveillanceSlice` stores zone cameras, HUD metrics, overlay toggles, and curfew banner visibility so React components can subscribe to a single source of truth.
 3. `GameController` loads zone surveillance on area transitions, throttles crouch movement, and drives `updateSurveillance` every frame while binding `Tab`/`C` hotkeys through `setOverlayEnabled` and `setCrouching`.
-4. `game/systems/surveillance/cameraSystem.ts` advances sweeps/patrols, applies stealth + crouch modifiers, raises network alerts, schedules reinforcements, and snapshots HUD values for the slice.
+4. `game/systems/surveillance/cameraSystem.ts` advances sweeps/patrols, applies stealth + crouch modifiers, locks camera orientation on the player while they remain inside the active cone with line-of-sight and immediately releases the lock (accelerating decay) once the target escapes, raises network alerts, schedules reinforcements, and snapshots HUD values for the slice.
 5. `MainScene` listens to store changes and instantiates `CameraSprite` containers that animate LEDs and cones, respecting the overlay flag on each update.
-6. React HUD layers (`CameraDetectionHUD.tsx`, `CurfewWarning.tsx`) surface detection progress and curfew activation, while `MiniMap.tsx` renders camera glyphs with alert-state colors.
+6. React HUD layers stack the day/night wafer above the minimal camera wafer (`CameraDetectionHUD.tsx`) in the top-right rail, surfacing the SPY ACTIVITY/suspicious/alarmed intent label, styled exposure bar, and network underline while the Game Menu hosts the overlay toggle (Tab shortcut still mapped in `GameController`) and `CurfewWarning.tsx` handles curfew activations as `MiniMap.tsx` renders camera glyphs with alert-state colors.
 </technical_flow>
 
 <code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
@@ -669,6 +669,7 @@ Redux state management:
   - Combat state handling
   - Entity management (enemies, NPCs, items)
   - Environmental state like day/night cycle
+  - Seeds Level 0 with a night phase timestamp so curfew and surveillance behaviours are observable immediately on boot
   - Rebuilds map areas and door connections when the locale switches, keeping `mapConnections` in Redux so React components can resolve door transitions without touching the content layer directly.
 
 - **`questsSlice.ts`**: Quest and dialogue state:

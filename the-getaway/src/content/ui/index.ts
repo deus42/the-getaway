@@ -34,6 +34,9 @@ interface MenuStrings {
   resume: string;
   settingsHeading: string;
   languageLabel: string;
+  surveillanceLabel: string;
+  surveillanceToggleLabel: string;
+  surveillanceToggleDescription: string;
   lightingLabel: string;
   lightingToggleLabel: string;
   lightingToggleDescription: string;
@@ -497,6 +500,9 @@ const STRINGS: Record<Locale, UIStrings> = {
       resume: 'Resume Game',
       settingsHeading: 'Settings',
       languageLabel: 'Language',
+      surveillanceLabel: 'Surveillance Overlay',
+      surveillanceToggleLabel: 'Show detection cones',
+      surveillanceToggleDescription: 'Toggles the camera detection cones (same as pressing TAB).',
       lightingLabel: 'Visual Lighting',
       lightingToggleLabel: 'Enable noir lighting',
       lightingToggleDescription: 'Turns on dynamic Light2D rendering for atlas props. Requires WebGL.',
@@ -1211,6 +1217,9 @@ const STRINGS: Record<Locale, UIStrings> = {
       resume: 'Продовжити гру',
       settingsHeading: 'Налаштування',
       languageLabel: 'Мова',
+      surveillanceLabel: 'Накладка спостереження',
+      surveillanceToggleLabel: 'Показувати конуси виявлення',
+      surveillanceToggleDescription: 'Перемикає конуси виявлення камер (аналогічно клавіші TAB).',
       lightingLabel: 'Візуальне освітлення',
       lightingToggleLabel: 'Увімкнути неонове освітлення',
       lightingToggleDescription: 'Активує динамічне Light2D-освітлення для атласних спрайтів (потрібен WebGL).',

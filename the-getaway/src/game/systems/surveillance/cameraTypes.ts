@@ -46,6 +46,8 @@ export const createCameraRuntimeState = (
     patrolProgressMs: 0,
     currentWaypointIndex: 0,
     networkAlertContributionAt: undefined,
+    trackingPlayer: false,
+    trackingDirection: undefined,
   };
 };
 
@@ -196,14 +198,24 @@ export const updateCameraOrientation = (
   camera: CameraRuntimeState,
   deltaMs: number
 ): CameraRuntimeState => {
+  let updated: CameraRuntimeState;
+
   switch (camera.type) {
     case 'drone':
-      return updateDroneCameraOrientation(camera, deltaMs);
-    case 'static':
+      updated = updateDroneCameraOrientation(camera, deltaMs);
+      break;
     case 'motionSensor':
+    case 'static':
     default:
-      return updateStaticCameraOrientation(camera, deltaMs);
+      updated = updateStaticCameraOrientation(camera, deltaMs);
+      break;
   }
+
+  if (updated.trackingPlayer && typeof updated.trackingDirection === 'number') {
+    updated.currentDirection = normaliseAngle(updated.trackingDirection);
+  }
+
+  return updated;
 };
 
 export const isCameraDisabled = (camera: CameraRuntimeState, timestamp: number): boolean => {

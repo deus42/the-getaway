@@ -88,6 +88,10 @@ const buildEnemy = (name: string): Enemy => ({
   aiCooldowns: {},
 });
 
+export const NIGHT_START_SECONDS = Math.floor(
+  DEFAULT_DAY_NIGHT_CONFIG.dayEndTime * DEFAULT_DAY_NIGHT_CONFIG.cycleDuration
+);
+
 const buildWorldState = (locale: Locale): WorldState => {
   const resources = buildWorldResources({ locale });
   const content = getLevel0Content(locale);
@@ -101,13 +105,15 @@ const buildWorldState = (locale: Locale): WorldState => {
   currentMapArea.entities.enemies.push(initialEnemy);
   log.debug('Initial map generated with enemy:', initialEnemy);
 
+  const initialTime = NIGHT_START_SECONDS;
+
   return {
     currentMapArea,
     mapAreas: resources.mapAreas,
     mapConnections: resources.connections,
-    currentTime: 0,
-    timeOfDay: getCurrentTimeOfDay(0, DEFAULT_DAY_NIGHT_CONFIG),
-    curfewActive: isCurfewTime(0, DEFAULT_DAY_NIGHT_CONFIG),
+    currentTime: initialTime,
+    timeOfDay: getCurrentTimeOfDay(initialTime, DEFAULT_DAY_NIGHT_CONFIG),
+    curfewActive: isCurfewTime(initialTime, DEFAULT_DAY_NIGHT_CONFIG),
     inCombat: false,
     isPlayerTurn: true,
     turnCount: 1,

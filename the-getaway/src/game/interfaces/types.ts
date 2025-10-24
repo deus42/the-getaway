@@ -201,6 +201,8 @@ export interface CameraRuntimeState extends CameraDefinition {
   patrolProgressMs?: number;
   currentWaypointIndex?: number;
   networkAlertContributionAt?: number;
+  trackingPlayer?: boolean;
+  trackingDirection?: number;
 }
 
 export interface CameraNetworkAlert {

@@ -31,7 +31,7 @@ import {
 } from './cameraTypes';
 import { hasLineOfSight, isInVisionCone } from '../../combat/perception';
 import { Position, SkillId } from '../../interfaces/types';
-import { clamp } from '../../utils/math';
+import { clamp, radiansToDegrees } from '../../utils/math';
 import { buildCameraWitnessObservation } from '../suspicion/observationBuilders';
 import type { WitnessObservation } from '../suspicion/types';
 import type { LogStrings } from '../../../content/system';
@@ -62,6 +62,17 @@ const shouldCameraBeActive = (camera: CameraRuntimeState, timeOfDay: TimeOfDay):
     return true;
   }
   return camera.activationPhases.includes(timeOfDay);
+};
+
+const normaliseDegrees = (degrees: number): number => {
+  const wrapped = degrees % 360;
+  return wrapped < 0 ? wrapped + 360 : wrapped;
+};
+
+const computeDirectionToPlayer = (camera: CameraRuntimeState, player: Player): number => {
+  const angleRadians = Math.atan2(player.position.y - camera.position.y, player.position.x - camera.position.x);
+  const degrees = radiansToDegrees(angleRadians);
+  return normaliseDegrees(degrees);
 };
 
 const distanceBetween = (a: Position, b: Position): number => {
@@ -159,7 +170,8 @@ const evaluateDetection = (
     progress = Math.min(100, progress);
     lastDetectionTimestamp = timestamp;
   } else {
-    progress -= PROGRESS_DECAY_PER_MS * deltaMs;
+    const decayRate = previous.trackingPlayer ? PROGRESS_DECAY_PER_MS * 1.8 : PROGRESS_DECAY_PER_MS;
+    progress -= decayRate * deltaMs;
     progress = Math.max(0, progress);
   }
 
@@ -281,6 +293,8 @@ export const handleTimeOfDayForSurveillance = (
       detectionProgress: shouldActivate ? camera.detectionProgress : 0,
       lastDetectionTimestamp: shouldActivate ? camera.lastDetectionTimestamp : undefined,
       alertState: shouldActivate ? CameraAlertState.IDLE : CameraAlertState.DISABLED,
+      trackingPlayer: shouldActivate ? false : false,
+      trackingDirection: undefined,
     };
 
     if (!shouldActivate) {
@@ -397,6 +411,26 @@ export const updateSurveillance = (
       runtime.detectionProgress = 0;
     }
 
+    if (runtime.type !== 'motionSensor') {
+      const shouldLock =
+        runtime.isActive
+        && detection.detectionActive
+        && (runtime.alertState === CameraAlertState.SUSPICIOUS || runtime.alertState === CameraAlertState.ALARMED);
+
+      if (shouldLock) {
+        const lockDirection = computeDirectionToPlayer(runtime, player);
+        runtime.trackingPlayer = true;
+        runtime.trackingDirection = lockDirection;
+        runtime.currentDirection = lockDirection;
+      } else if (runtime.trackingPlayer) {
+        runtime.trackingPlayer = false;
+        runtime.trackingDirection = undefined;
+      }
+    } else if (runtime.trackingPlayer) {
+      runtime.trackingPlayer = false;
+      runtime.trackingDirection = undefined;
+    }
+
     const stateChanged = runtime.alertState !== camera.alertState;
     const directionChanged = runtime.currentDirection !== camera.currentDirection;
     const positionChanged = runtime.position.x !== camera.position.x || runtime.position.y !== camera.position.y;
@@ -405,6 +439,8 @@ export const updateSurveillance = (
     const sweepDirChanged = runtime.sweepDirection !== camera.sweepDirection ||
       runtime.sweepIndex !== camera.sweepIndex ||
       Math.abs((runtime.sweepElapsedMs ?? 0) - (camera.sweepElapsedMs ?? 0)) > 0.1;
+    const trackingChanged = (runtime.trackingPlayer ?? false) !== (camera.trackingPlayer ?? false);
+    const trackingDirectionChanged = runtime.trackingDirection !== camera.trackingDirection;
 
     if (
       stateChanged &&
@@ -425,7 +461,16 @@ export const updateSurveillance = (
       }
     }
 
-    if (stateChanged || directionChanged || positionChanged || progressChanged || timestampChanged || sweepDirChanged) {
+    if (
+      stateChanged
+      || directionChanged
+      || positionChanged
+      || progressChanged
+      || timestampChanged
+      || sweepDirChanged
+      || trackingChanged
+      || trackingDirectionChanged
+    ) {
       updates.push({ cameraId: camera.id, runtime, previous: camera });
     }
 
@@ -436,8 +481,7 @@ export const updateSurveillance = (
 
     if (runtime.isActive && runtime.alertState !== CameraAlertState.DISABLED) {
       const proximity = getProximityRadius(runtime);
-      const distance = distanceBetween(runtime.position, player.position);
-      if (distance <= proximity + 0.5) {
+      if (distanceBetween(runtime.position, player.position) <= proximity + 0.5) {
         camerasNearby += 1;
       }
     }
@@ -464,12 +508,16 @@ export const updateSurveillance = (
       sweepElapsedMs: runtime.sweepElapsedMs,
       patrolProgressMs: runtime.patrolProgressMs,
       currentWaypointIndex: runtime.currentWaypointIndex,
+      trackingPlayer: runtime.trackingPlayer,
+      trackingDirection: runtime.trackingDirection,
     };
 
     if (!runtime.isActive) {
       changes.detectionProgress = 0;
       changes.alertState = CameraAlertState.DISABLED;
       changes.lastDetectionTimestamp = undefined;
+      changes.trackingPlayer = false;
+      changes.trackingDirection = undefined;
     }
 
     dispatch(

@@ -43,7 +43,7 @@ interface ClearZonePayload {
 }
 
 const createInitialHudState = (): SurveillanceHUDState => ({
-  overlayEnabled: false,
+  overlayEnabled: true,
   camerasNearby: 0,
   detectionProgress: 0,
   activeCameraId: null,

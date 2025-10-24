@@ -1,6 +1,6 @@
 import { AnyAction, combineReducers, configureStore, createAction } from '@reduxjs/toolkit';
 import playerReducer, { PLAYER_STATE_VERSION, PlayerState, initialPlayerState } from './playerSlice';
-import worldReducer, { applyLocaleToWorld } from './worldSlice';
+import worldReducer, { applyLocaleToWorld, NIGHT_START_SECONDS } from './worldSlice';
 import questsReducer, { applyLocaleToQuests } from './questsSlice';
 import missionReducer, { applyLocaleToMissions } from './missionSlice';
 import logReducer from './logSlice';
@@ -21,6 +21,12 @@ import paranoiaReducer, {
   resetParanoiaState,
 } from './paranoiaSlice';
 import { PARANOIA_MAX_VALUE, PARANOIA_MIN_VALUE } from '../content/paranoia/paranoiaConfig';
+import {
+  DEFAULT_DAY_NIGHT_CONFIG,
+  getCurrentTimeOfDay,
+  isCurfewTime,
+} from '../game/world/dayNightCycle';
+import { SurveillanceState } from '../game/interfaces/types';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -165,6 +171,53 @@ const migrateSuspicionState = (state?: Partial<SuspicionState> | null): Suspicio
   };
 };
 
+const migrateWorldState = (state?: CombinedState['world']): CombinedState['world'] => {
+  const base = worldReducer(undefined, { type: '@@INIT' } as AnyAction);
+  if (!state) {
+    return base;
+  }
+
+  const next = {
+    ...state,
+    environment: {
+      ...state.environment,
+      flags: { ...state.environment.flags },
+      weather: { ...state.environment.weather },
+      signage: { ...state.environment.signage },
+      rumorSets: { ...(state.environment.rumorSets ?? {}) },
+      notes: Array.isArray(state.environment.notes)
+        ? [...state.environment.notes]
+        : [...base.environment.notes],
+    },
+  };
+
+  const nightTime = NIGHT_START_SECONDS;
+  next.currentTime = nightTime;
+  next.timeOfDay = getCurrentTimeOfDay(nightTime, DEFAULT_DAY_NIGHT_CONFIG);
+  next.curfewActive = isCurfewTime(nightTime, DEFAULT_DAY_NIGHT_CONFIG);
+
+  return next;
+};
+
+const migrateSurveillanceState = (state?: Partial<SurveillanceState> | null): SurveillanceState => {
+  const base = surveillanceReducer(undefined, { type: '@@INIT' } as AnyAction);
+  if (!state) {
+    return base;
+  }
+
+  return {
+    zones: state.zones ? { ...state.zones } : {},
+    hud: {
+      ...base.hud,
+      ...(state.hud ?? {}),
+      overlayEnabled: true,
+    },
+    curfewBanner: state.curfewBanner
+      ? { ...state.curfewBanner }
+      : { ...base.curfewBanner },
+  };
+};
+
 const loadState = (): PersistedState | undefined => {
   if (!isBrowser) {
     return undefined;
@@ -206,6 +259,8 @@ const migratePersistedState = (state?: PersistedState): PersistedState | undefin
     player: migratePlayerState(state.player),
     suspicion: migrateSuspicionState(state.suspicion),
     paranoia: migrateParanoiaState(state.paranoia),
+    world: migrateWorldState(state.world),
+    surveillance: migrateSurveillanceState(state.surveillance),
   };
 };
 
