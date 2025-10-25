@@ -2,16 +2,14 @@ import React, { CSSProperties } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { getUIStrings } from "../../content/ui";
-import NotificationBadge from "./NotificationBadge";
-import { gradientTextStyle } from "./theme";
-
 interface OpsBriefingsPanelProps {
   containerStyle: CSSProperties;
+  showCompleted?: boolean;
 }
 
 const mutedText = "rgba(148, 163, 184, 0.78)";
 
-const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle }) => {
+const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle, showCompleted = false }) => {
   const quests = useSelector((state: RootState) => state.quests.quests);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = getUIStrings(locale);
@@ -19,8 +17,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
   const activeQuests = quests.filter((quest) => quest.isActive && !quest.isCompleted);
   const completedQuests = quests
     .filter((quest) => quest.isCompleted)
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 3);
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   const formatReward = (rewardCount: number, label: string) => {
     if (rewardCount <= 0) {
@@ -77,7 +74,18 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
     );
   };
 
-  if (activeQuests.length === 0 && completedQuests.length === 0) {
+  const latestCompleted = completedQuests[0] ?? null;
+  const questsToRender = showCompleted
+    ? [...activeQuests, ...completedQuests]
+    : activeQuests.length > 0
+      ? activeQuests
+      : latestCompleted
+        ? [latestCompleted]
+        : [];
+
+  const shouldScroll = showCompleted ? questsToRender.length > 2 : activeQuests.length > 1;
+
+  if (questsToRender.length === 0) {
     return (
       <div
         style={{
@@ -100,122 +108,121 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle })
         ...containerStyle,
         display: 'flex',
         flexDirection: 'column',
-        gap: '1.1rem',
-        overflowY: 'auto',
+        gap: '0.85rem',
+        overflowY: shouldScroll ? 'auto' : 'hidden',
       }}
     >
-      {activeQuests.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+      {questsToRender.map((quest) => {
+        const isActiveQuest = quest.isActive && !quest.isCompleted;
+        return (
+          <div
+          key={quest.id}
+          style={{
+            border: '1px solid rgba(96, 165, 250, 0.25)',
+            borderRadius: '14px',
+            padding: '0.9rem',
+            background: isActiveQuest
+              ? 'linear-gradient(150deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.9))'
+              : 'linear-gradient(150deg, rgba(76, 29, 149, 0.45), rgba(30, 27, 75, 0.92))',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.5rem',
+          }}
+        >
           <div
             style={{
-              fontSize: '0.75rem',
-              letterSpacing: '0.28em',
-              textTransform: 'uppercase',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              ...gradientTextStyle('#93c5fd', '#60a5fa'),
-              filter: 'drop-shadow(0 0 6px rgba(96, 165, 250, 0.4))',
+              justifyContent: 'space-between',
+              gap: '0.6rem',
             }}
           >
-            {uiStrings.questLog.active}
-            <NotificationBadge count={activeQuests.length} color="#60a5fa" size={18} pulse={activeQuests.length > 0} />
-          </div>
-          {activeQuests.map((quest) => (
             <div
-              key={quest.id}
               style={{
-                border: '1px solid rgba(96, 165, 250, 0.25)',
-                borderRadius: '14px',
-                padding: '0.9rem',
-                background: 'linear-gradient(150deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.9))',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.55rem',
+                fontSize: '0.92rem',
+                fontWeight: 600,
+                color: isActiveQuest ? '#f8fafc' : '#ede9fe',
               }}
             >
-              <div
+              {quest.name}
+            </div>
+            {quest.isCompleted && (
+              <span
+                aria-hidden="true"
                 style={{
-                  fontSize: '0.92rem',
-                  fontWeight: 600,
-                  color: '#f8fafc',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '1.4rem',
+                  height: '1.4rem',
+                  borderRadius: '0.35rem',
+                  border: '1px solid rgba(196, 181, 253, 0.65)',
+                  background: 'rgba(196, 181, 253, 0.25)',
+                  color: '#0f172a',
+                  fontSize: '0.85rem',
+                  fontWeight: 700,
+                  lineHeight: '1.4rem',
+                  boxShadow: '0 8px 18px -12px rgba(196, 181, 253, 0.6)',
                 }}
               >
-                {quest.name}
-              </div>
-              <div style={{ fontSize: '0.8rem', color: mutedText }}>{quest.description}</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                {quest.objectives.map((objective) => (
-                  <div
-                    key={objective.id}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                      fontSize: '0.78rem',
-                      color: objective.isCompleted ? '#5eead4' : '#cbd5f5',
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: '0.65rem',
-                        height: '0.65rem',
-                        borderRadius: '50%',
-                        border: '1px solid rgba(94, 234, 212, 0.45)',
-                        background: objective.isCompleted ? 'rgba(94, 234, 212, 0.35)' : 'transparent',
-                      }}
-                    />
-                    <span style={{ flex: 1 }}>{objective.description}</span>
-                    {objective.count && (
-                      <span style={{ fontSize: '0.7rem', color: '#facc15' }}>
-                        {(objective.currentCount ?? 0)}/{objective.count}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-              {renderRewards(quest.id)}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {completedQuests.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                ✓
+              </span>
+            )}
+          </div>
           <div
             style={{
-              fontSize: '0.72rem',
-              letterSpacing: '0.26em',
-              textTransform: 'uppercase',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              ...gradientTextStyle('#c4b5fd', '#a78bfa'),
-              filter: 'drop-shadow(0 0 6px rgba(167, 139, 250, 0.4))',
+              fontSize: '0.8rem',
+              color: mutedText,
             }}
           >
-            {uiStrings.questLog.completed}
-            <NotificationBadge count={completedQuests.length} color="#a78bfa" size={18} pulse={false} />
+            {quest.description}
           </div>
-          {completedQuests.map((quest) => (
-            <div
-              key={quest.id}
-              style={{
-                border: '1px solid rgba(167, 139, 250, 0.25)',
-                borderRadius: '12px',
-                padding: '0.75rem',
-                background: 'linear-gradient(145deg, rgba(76, 29, 149, 0.22), rgba(30, 41, 59, 0.65))',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.4rem',
-              }}
-            >
-              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#ede9fe' }}>{quest.name}</div>
-              <div style={{ fontSize: '0.75rem', color: mutedText }}>{quest.description}</div>
-            </div>
-          ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+            {quest.objectives.map((objective) => (
+              <div
+                key={objective.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.78rem',
+                  color: isActiveQuest && !objective.isCompleted ? '#cbd5f5' : '#c4b5fd',
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: '1rem',
+                    height: '1rem',
+                    borderRadius: '0.3rem',
+                    border: '1px solid rgba(94, 234, 212, 0.6)',
+                    background: objective.isCompleted ? 'rgba(94, 234, 212, 0.35)' : 'transparent',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: objective.isCompleted ? '#0f172a' : 'transparent',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    lineHeight: '1rem',
+                    transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
+                  }}
+                >
+                  ✓
+                </span>
+                <span
+                  style={{
+                    flex: 1,
+                  }}
+                >
+                  {objective.description}
+                </span>
+              </div>
+            ))}
+          </div>
+          {renderRewards(quest.id)}
         </div>
-      )}
+        );
+      })}
     </div>
   );
 };

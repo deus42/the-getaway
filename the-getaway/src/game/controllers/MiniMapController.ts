@@ -131,7 +131,7 @@ export class MiniMapController {
 
   private tileSignature: TileSignature | null = null;
 
-  private readonly config: MiniMapControllerConfig;
+  private config: MiniMapControllerConfig;
 
   // Unused field - kept for future use
   // private readonly defaultTileScale: number = DEFAULT_TILE_SCALE;
@@ -156,6 +156,32 @@ export class MiniMapController {
 
   setViewport(detail: MiniMapViewportDetail) {
     this.viewport = detail;
+  }
+
+  setCanvasBounds(width: number, height: number): boolean {
+    const sanitizedWidth = Number.isFinite(width) ? Math.floor(width) : 0;
+    const sanitizedHeight = Number.isFinite(height) ? Math.floor(height) : 0;
+    if (sanitizedWidth <= 0 || sanitizedHeight <= 0) {
+      return false;
+    }
+
+    const clampedWidth = clampValue(sanitizedWidth, 120, 4096);
+    const clampedHeight = clampValue(sanitizedHeight, 80, 4096);
+
+    if (
+      clampedWidth === this.config.maxCanvasWidth &&
+      clampedHeight === this.config.maxCanvasHeight
+    ) {
+      return false;
+    }
+
+    this.config = {
+      ...this.config,
+      maxCanvasWidth: clampedWidth,
+      maxCanvasHeight: clampedHeight,
+    };
+
+    return true;
   }
 
   compose(rootState: RootState, userZoom: number, path: Position[] | null): MiniMapRenderState | null {

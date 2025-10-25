@@ -490,6 +490,7 @@ const MiniMap: React.FC = () => {
   const entityCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const pathCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewportCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const shellRef = useRef<HTMLDivElement | null>(null);
 
   const latestStateRef = useRef<MiniMapRenderState | null>(miniMapService.getState());
   const draftPathRef = useRef<Position[] | null>(null);
@@ -508,11 +509,12 @@ const MiniMap: React.FC = () => {
 
   const [renderTick, setRenderTick] = useState(0);
   const [canvasSize, setCanvasSize] = useState(() => ({ width: 140, height: 110 }));
+  const [availableSize, setAvailableSize] = useState(() => ({ width: 280, height: 180 }));
   const [userZoom, setUserZoom] = useState(() => miniMapService.getZoom());
   const [legendOpen, setLegendOpen] = useState(false);
   const [hoverInfo, setHoverInfo] = useState<{ label: string; x: number; y: number } | null>(null);
   const tilePalette = BASE_TILE_COLORS;
-  const controlsShouldStack = canvasSize.width < 220;
+  const controlsShouldStack = availableSize.width < 220;
   const legendItems = [
     { id: 'player', label: uiStrings.miniMap.playerLabel ?? 'Cell Lead', color: ENTITY_STYLE.player.fill },
     { id: 'enemy', label: uiStrings.miniMap.enemyLabel ?? 'Hostile', color: ENTITY_STYLE.enemy.fill },
@@ -590,13 +592,45 @@ const MiniMap: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const target = shellRef.current;
+    if (!target) {
+      return;
+    }
+
+    const measure = () => {
+      const element = shellRef.current;
+      if (!element) {
+        return;
+      }
+      const nextWidth = Math.max(120, Math.floor(element.clientWidth));
+      const nextHeight = Math.max(80, Math.floor(element.clientHeight));
+      setAvailableSize((prev) => {
+        if (prev.width === nextWidth && prev.height === nextHeight) {
+          return prev;
+        }
+        return { width: nextWidth, height: nextHeight };
+      });
+      miniMapService.setCanvasBounds(nextWidth, nextHeight);
+    };
+
+    const observer = new ResizeObserver(() => measure());
+    observer.observe(target);
+    measure();
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const activeState = latestStateRef.current;
     if (!activeState) {
       return;
     }
 
-    const cssWidth = Math.max(1, Math.round(activeState.logicalWidth));
-    const cssHeight = Math.max(1, Math.round(activeState.logicalHeight));
+    const cssWidth = Math.max(120, Math.min(Math.round(activeState.logicalWidth), availableSize.width));
+    const cssHeight = Math.max(80, Math.min(Math.round(activeState.logicalHeight), availableSize.height));
     const dpr = activeState.devicePixelRatio || 1;
 
     if (canvasSize.width !== cssWidth || canvasSize.height !== cssHeight) {
@@ -651,7 +685,7 @@ const MiniMap: React.FC = () => {
     if (containerRef.current) {
       containerRef.current.style.transform = 'rotate(0deg)';
     }
-  }, [renderTick, tilePalette, canvasSize.width, canvasSize.height]);
+  }, [renderTick, tilePalette, availableSize.width, availableSize.height, canvasSize.width, canvasSize.height]);
 
   useEffect(() => {
     const animate = () => {
@@ -1107,6 +1141,8 @@ const MiniMap: React.FC = () => {
       style={{
         display: 'flex',
         flexDirection: 'column',
+        flex: '1 1 auto',
+        minHeight: 0,
         gap: '0.6rem',
         fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
         color: '#e2e8f0',
@@ -1151,9 +1187,13 @@ const MiniMap: React.FC = () => {
         </span>
       </header>
       <div
+        ref={shellRef}
         style={{
           position: 'relative',
           display: 'flex',
+          flex: '1 1 auto',
+          width: '100%',
+          height: '100%',
           justifyContent: 'center',
           alignItems: 'center',
           borderRadius: '12px',

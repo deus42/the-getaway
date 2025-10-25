@@ -9,10 +9,20 @@ import { updateVisualSettings } from "../game/settings/visualSettings";
 import { MainScene } from "../game/scenes/MainScene";
 import { BootScene } from "../game/scenes/BootScene";
 
-const GameCanvas: React.FC = () => {
+type RendererMeta = {
+  label: string;
+  detail: string;
+  type?: number;
+};
+
+type GameCanvasProps = {
+  onRendererInfo?: (info: RendererMeta) => void;
+};
+
+const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const gameInstanceRef = useRef<Phaser.Game | null>(null);
-  const [rendererInfo, setRendererInfo] = useState({
+  const [rendererInfo, setRendererInfo] = useState<RendererMeta>({
     label: "Detecting…",
     detail: "Negotiating renderer",
   });
@@ -45,27 +55,31 @@ const GameCanvas: React.FC = () => {
       parentHeight,
     });
 
-    const describeRenderer = (type?: number) => {
+    const describeRenderer = (type?: number): RendererMeta => {
       switch (type) {
         case Phaser.WEBGL:
           return {
             label: "WebGL",
             detail: "GPU accelerated (shaders, batching)",
+            type,
           };
         case Phaser.CANVAS:
           return {
             label: "Canvas",
             detail: "CPU rasterization fallback",
+            type,
           };
         case Phaser.HEADLESS:
           return {
             label: "Headless",
             detail: "No renderer active",
+            type,
           };
         default:
           return {
             label: "Detecting…",
             detail: "Negotiating renderer",
+            type,
           };
       }
     };
@@ -73,14 +87,17 @@ const GameCanvas: React.FC = () => {
     const handleRendererUpdate = () => {
       const current = gameInstanceRef.current;
       if (!current || !current.renderer) {
-        setRendererInfo({
+        const info: RendererMeta = {
           label: "Detecting…",
           detail: "Negotiating renderer",
-        });
+          type: undefined,
+        };
+        setRendererInfo(info);
         return;
       }
 
-      setRendererInfo(describeRenderer(current.renderer.type));
+      const info = describeRenderer(current.renderer.type);
+      setRendererInfo(info);
     };
 
     const config: Phaser.Types.Core.GameConfig = {
@@ -241,6 +258,13 @@ const GameCanvas: React.FC = () => {
     });
   }, [testMode]);
 
+  useEffect(() => {
+    if (!onRendererInfo) {
+      return;
+    }
+    onRendererInfo(rendererInfo);
+  }, [onRendererInfo, rendererInfo]);
+
   return (
     <div
       style={{
@@ -274,33 +298,6 @@ const GameCanvas: React.FC = () => {
           pointerEvents: "auto",
         }}
       />
-      {/* Remove position display overlay */}
-      {/* <div ... > ... </div> */}
-      {testMode && (
-        <div
-          data-testid="renderer-debug"
-          style={{
-            position: "absolute",
-            bottom: 16,
-            right: 16,
-            backgroundColor: "rgba(15, 23, 42, 0.85)",
-            color: "#e2e8f0",
-            borderRadius: 8,
-            padding: "8px 12px",
-            fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-            fontSize: 12,
-            lineHeight: 1.4,
-            letterSpacing: 0.4,
-            backdropFilter: "blur(4px)",
-            border: "1px solid rgba(148, 163, 184, 0.35)",
-            pointerEvents: "none",
-          }}
-        >
-          <div style={{ fontWeight: 600 }}>Renderer: {rendererInfo.label}</div>
-          <div>{rendererInfo.detail}</div>
-          <div style={{ marginTop: 4 }}>Phaser {Phaser.VERSION}</div>
-        </div>
-      )}
     </div>
   );
 };

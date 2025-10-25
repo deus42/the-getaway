@@ -1,5 +1,5 @@
 import { Provider, useSelector } from "react-redux";
-import { CSSProperties, useEffect, useLayoutEffect, useRef, useState, lazy, Suspense } from "react";
+import { CSSProperties, useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
@@ -11,10 +11,7 @@ import GeorgeAssistant from "./components/ui/GeorgeAssistant";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
-import CornerAccents from "./components/ui/CornerAccents";
-import ScanlineOverlay from "./components/ui/ScanlineOverlay";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
-import DataStreamParticles from "./components/ui/DataStreamParticles";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
 import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
 import CurfewWarning from "./components/ui/CurfewWarning";
@@ -32,6 +29,7 @@ import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import { createScopedLogger } from "./utils/logger";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import CombatControlWidget from "./components/ui/CombatControlWidget";
+import GameDebugInspector from "./components/debug/GameDebugInspector";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -59,9 +57,6 @@ const layoutShellStyle: CSSProperties = {
   fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
 };
 
-const SIDEBAR_BASIS = 'min(26rem, 24vw)';
-const SIDEBAR_FALLBACK_PX = 320;
-
 const mainStageStyle: CSSProperties = {
   position: "absolute",
   top: 0,
@@ -72,91 +67,136 @@ const mainStageStyle: CSSProperties = {
   background: "radial-gradient(circle at top, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.95))",
 };
 
-type StageStyle = CSSProperties & {
-  '--left-sidebar-width'?: string;
-  '--left-sidebar-last-width'?: string;
-  '--right-sidebar-width'?: string;
-  '--right-sidebar-last-width'?: string;
-};
-
-type SidebarRailStyle = CSSProperties & {
-  '--sidebar-width'?: string;
-  '--sidebar-visible-width'?: string;
-  '--sidebar-last-width'?: string;
-};
-
-const sidebarRailBaseStyle: CSSProperties = {
-  position: "relative",
-  display: "flex",
-  alignItems: "stretch",
-  minHeight: 0,
-  overflow: "visible",
-  transition: "flex-basis 0.28s cubic-bezier(0.4, 0, 0.2, 1)",
-};
-
-const sidebarBaseStyle: CSSProperties = {
-  flex: "1 1 auto",
-  height: "100%",
-  padding: "1.2rem 1rem",
-  display: "flex",
-  flexDirection: "column",
-  gap: "1rem",
-  minHeight: 0,
-  width: "100%",
-  backdropFilter: "blur(6px)",
-  overflowX: "hidden",
-  overflowY: "auto",
-  transition: "opacity 0.25s ease, padding 0.25s ease",
-};
-
-const leftSidebarStyle: CSSProperties = {
-  ...sidebarBaseStyle,
-  borderRight: "1px solid rgba(51, 65, 85, 0.65)",
-  background: "linear-gradient(180deg, rgba(15, 23, 42, 0.78) 0%, rgba(15, 23, 42, 0.92) 100%)",
-  justifyContent: "flex-start",
-};
-
-const rightSidebarStyle: CSSProperties = {
-  ...sidebarBaseStyle,
-  borderLeft: "1px solid rgba(51, 65, 85, 0.65)",
-  background: "linear-gradient(180deg, rgba(15, 23, 42, 0.82) 0%, rgba(15, 23, 42, 0.94) 100%)",
-};
-
-const panelBaseStyle: CSSProperties = {
-  position: "relative",
-  background: "linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(15, 23, 42, 0.78))",
-  border: "1px solid rgba(148, 163, 184, 0.24)",
-  borderRadius: "14px",
-  padding: "1rem 0.9rem",
-  boxShadow: "0 24px 42px rgba(15, 23, 42, 0.32)",
-  display: "flex",
-  flexDirection: "column",
-  minHeight: 0,
-  overflow: "hidden",
-};
-
-const panelLabelStyle = (color: string): CSSProperties => ({
-  fontSize: "0.58rem",
-  letterSpacing: "0.3em",
-  textTransform: "uppercase",
-  color,
-  opacity: 0.85,
-  marginBottom: "0.35rem",
-});
-
-const panelTitleStyle: CSSProperties = {
-  fontSize: "1rem",
-  fontWeight: 700,
-  color: "#f8fafc",
-  marginBottom: "0.65rem",
-  letterSpacing: "0.05em",
-};
-
 const scrollSectionStyle: CSSProperties = {
   flex: 1,
   minHeight: 0,
   overflowY: "auto",
-  paddingRight: "0.4rem",
+  paddingRight: "0.35rem",
+};
+
+const DEFAULT_DOCK_MAX_HEIGHT = 300;
+
+const bottomPanelBaseStyle: CSSProperties = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: 0,
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  alignItems: "stretch",
+  gap: "0.75rem",
+  padding: "0.6rem 1.2rem 0.7rem",
+  background: "linear-gradient(140deg, rgba(10, 18, 34, 0.94), rgba(15, 24, 40, 0.9))",
+  boxShadow: "0 -18px 40px rgba(8, 12, 24, 0.35)",
+  pointerEvents: "auto",
+  zIndex: 6,
+  minHeight: "118px",
+  maxHeight: `${DEFAULT_DOCK_MAX_HEIGHT}px`,
+};
+
+const laneBaseStyle: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.45rem",
+  minHeight: 0,
+  height: "100%",
+  flex: "1 1 auto",
+};
+
+const mapSectionStyle: CSSProperties = {
+  ...laneBaseStyle,
+  alignItems: "stretch",
+  justifyContent: "flex-start",
+};
+
+const mapViewportStyle: CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  width: "100%",
+  height: "100%",
+  display: "flex",
+  alignItems: "stretch",
+  justifyContent: "flex-start",
+};
+
+const statusSectionStyle: CSSProperties = {
+  ...laneBaseStyle,
+};
+
+const playerSummaryScrollStyle: CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  maxHeight: "100%",
+  overflowY: "hidden",
+  paddingRight: "0.3rem",
+};
+
+const objectivesSectionStyle: CSSProperties = {
+  ...laneBaseStyle,
+  position: 'relative',
+};
+
+const objectivesListStyle: CSSProperties = {
+  flex: 1,
+  minHeight: 0,
+  maxHeight: "100%",
+  overflowY: "auto",
+  paddingRight: "0.3rem",
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.45rem",
+};
+
+const georgeSectionStyle: CSSProperties = {
+  ...laneBaseStyle,
+  position: 'relative',
+  overflow: "visible",
+};
+
+const sectionControlRowStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "flex-end",
+  alignItems: "center",
+  gap: "0.35rem",
+};
+
+const inlineButtonStyle: CSSProperties = {
+  all: "unset",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "0.28rem",
+  padding: "0.28rem 0.6rem",
+  borderRadius: "999px",
+  border: "1px solid rgba(148, 163, 184, 0.3)",
+  background: "rgba(15, 23, 42, 0.55)",
+  color: "#e2e8f0",
+  fontSize: "0.58rem",
+  letterSpacing: "0.18em",
+  textTransform: "uppercase",
+  cursor: "pointer",
+  transition: "transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease",
+};
+
+const dockExpansionBaseStyle: CSSProperties = {
+  position: "absolute",
+  left: 0,
+  right: 0,
+  bottom: "calc(100% + 0.55rem)",
+  background: "linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))",
+  border: "1px solid rgba(148, 163, 184, 0.3)",
+  borderRadius: "16px",
+  padding: "1rem 1rem 1.2rem",
+  boxShadow: "0 28px 58px rgba(10, 16, 28, 0.55)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "0.75rem",
+  maxHeight: "55vh",
+  overflow: "hidden",
+  opacity: 0,
+  pointerEvents: "none",
+  transform: "translateY(12px)",
+  transition: "opacity 0.22s ease, transform 0.22s ease",
+  zIndex: 8,
 };
 
 const centerStageStyle: CSSProperties = {
@@ -174,9 +214,9 @@ const topLeftOverlayStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
-  gap: "1rem",
+  gap: "0.75rem",
   zIndex: 5,
-  pointerEvents: "none",
+  pointerEvents: "auto",
 };
 
 const topCenterOverlayStyle: CSSProperties = {
@@ -223,38 +263,11 @@ const menuOverlayButtonStyle: CSSProperties = {
   boxShadow: "0 16px 32px rgba(37, 99, 235, 0.28)",
 };
 
-const sidebarToggleBaseStyle: CSSProperties = {
-  position: "absolute",
-  top: "50%",
-  width: "2.2rem",
-  height: "2.2rem",
-  borderRadius: "999px",
-  border: "1px solid rgba(148, 163, 184, 0.45)",
-  background: "linear-gradient(135deg, rgba(15, 23, 42, 0.88), rgba(30, 41, 59, 0.88))",
-  color: "#e2e8f0",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontSize: "0.85rem",
-  cursor: "pointer",
-  zIndex: 5,
-  boxShadow: "0 14px 28px rgba(15, 23, 42, 0.45)",
-  transition: "all 0.25s ease",
-};
-
-const toggleVerticalPosition = "clamp(6rem, 50%, calc(100% - 6rem))";
-
 interface CommandShellProps {
   onOpenMenu: () => void;
   onToggleCharacter: () => void;
   showMenu: boolean;
   characterOpen: boolean;
-  leftCollapsed: boolean;
-  rightCollapsed: boolean;
-  onToggleLeftSidebar: () => void;
-  onToggleRightSidebar: () => void;
-  setLeftSidebarCollapsed: (collapsed: boolean) => void;
-  setRightSidebarCollapsed: (collapsed: boolean) => void;
   levelPanelCollapsed: boolean;
   onToggleLevelPanel: () => void;
 }
@@ -264,358 +277,278 @@ const CommandShell: React.FC<CommandShellProps> = ({
   onToggleCharacter,
   showMenu,
   characterOpen,
-  leftCollapsed,
-  rightCollapsed,
-  onToggleLeftSidebar,
-  onToggleRightSidebar,
-  setLeftSidebarCollapsed,
-  setRightSidebarCollapsed,
   levelPanelCollapsed,
   onToggleLevelPanel,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const uiStrings = getUIStrings(locale);
+  const zoneId = useSelector((state: RootState) => state.world.currentMapArea?.zoneId ?? null);
 
-  const leftSidebarRef = useRef<HTMLDivElement | null>(null);
-  const rightSidebarRef = useRef<HTMLDivElement | null>(null);
-  const [leftWidth, setLeftWidth] = useState<number>(0);
-  const [rightWidth, setRightWidth] = useState<number>(0);
-  const lastLeftWidth = useRef<number>(0);
-  const lastRightWidth = useRef<number>(0);
-  const sidebarSnapshotRef = useRef<{ active: boolean; left: boolean; right: boolean }>({
-    active: false,
-    left: leftCollapsed,
-    right: rightCollapsed,
+  const [questExpanded, setQuestExpanded] = useState(false);
+  const [logExpanded, setLogExpanded] = useState(false);
+  const [rendererMeta, setRendererMeta] = useState<{ label?: string; detail?: string } | null>(null);
+  const statusLaneRef = useRef<HTMLDivElement | null>(null);
+  const [playerLaneHeight, setPlayerLaneHeight] = useState<number | null>(null);
+  const [bottomPanelHeight, setBottomPanelHeight] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!showMenu) {
+      return;
+    }
+    setQuestExpanded(false);
+    setLogExpanded(false);
+  }, [showMenu]);
+
+  useEffect(() => {
+    if (!inCombat) {
+      return;
+    }
+    setQuestExpanded(false);
+    setLogExpanded(false);
+  }, [inCombat]);
+
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      window.dispatchEvent(new Event('resize'));
+    });
+  }, [questExpanded, logExpanded]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
+      return;
+    }
+    const target = statusLaneRef.current;
+    if (!target) {
+      return;
+    }
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+      const nextHeight = Math.round(entry.contentRect.height);
+      setPlayerLaneHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+    });
+    observer.observe(target);
+
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const target = statusLaneRef.current;
+    if (!target) {
+      return;
+    }
+    const initialHeight = Math.round(target.getBoundingClientRect().height);
+    setPlayerLaneHeight((prev) => (prev === initialHeight ? prev : initialHeight));
+  }, []);
+
+  useEffect(() => {
+    if (!playerLaneHeight) {
+      setBottomPanelHeight(null);
+      return;
+    }
+    if (typeof window === 'undefined') {
+      setBottomPanelHeight(playerLaneHeight);
+      return;
+    }
+    const rootFontSize = parseFloat(window.getComputedStyle(document.documentElement).fontSize || '16') || 16;
+    const verticalPadding = rootFontSize * 1.3; // 0.6rem top + 0.7rem bottom
+    const nextHeight = Math.min(Math.round(playerLaneHeight + verticalPadding), DEFAULT_DOCK_MAX_HEIGHT);
+    setBottomPanelHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+  }, [playerLaneHeight]);
+
+  const questExpansionContainer: CSSProperties = {
+    ...scrollSectionStyle,
+    paddingRight: "0.4rem",
+  };
+
+  const logExpansionContainer: CSSProperties = {
+    ...scrollSectionStyle,
+    paddingRight: "0.4rem",
+  };
+
+  const expansionStyle = (expanded: boolean): CSSProperties => ({
+    ...dockExpansionBaseStyle,
+    opacity: expanded ? 1 : 0,
+    pointerEvents: expanded ? 'auto' : 'none',
+    transform: expanded ? 'translateY(0)' : 'translateY(12px)',
   });
-  const sidebarRestoreTimeoutRef = useRef<number | null>(null);
 
-  useLayoutEffect(() => {
-    if (typeof ResizeObserver === 'undefined') {
-      return;
-    }
-    const target = leftSidebarRef.current;
-    if (!target) {
-      return;
-    }
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const width = entry.contentRect.width;
-        setLeftWidth(width);
-        if (width > 0) {
-          lastLeftWidth.current = width;
-        }
+  const handleToggleQuest = () => {
+    setQuestExpanded((prev) => {
+      const next = !prev;
+      if (next) {
+        setLogExpanded(false);
       }
+      return next;
     });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, []);
+  };
 
-  useLayoutEffect(() => {
-    if (typeof ResizeObserver === 'undefined') {
-      return;
-    }
-    const target = rightSidebarRef.current;
-    if (!target) {
-      return;
-    }
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const width = entry.contentRect.width;
-        setRightWidth(width);
-        if (width > 0) {
-          lastRightWidth.current = width;
-        }
+  const handleToggleLog = () => {
+    setLogExpanded((prev) => {
+      const next = !prev;
+      if (next) {
+        setQuestExpanded(false);
       }
+      return next;
     });
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, []);
-
-  const measuredLeftWidth = leftWidth > 0 ? leftWidth : (lastLeftWidth.current || SIDEBAR_FALLBACK_PX);
-  const measuredRightWidth = rightWidth > 0 ? rightWidth : (lastRightWidth.current || SIDEBAR_FALLBACK_PX);
-
-  const effectiveLeftWidth = leftCollapsed ? 0 : measuredLeftWidth;
-  const effectiveRightWidth = rightCollapsed ? 0 : measuredRightWidth;
-
-  const stageStyle: StageStyle = {
-    ...mainStageStyle,
-    '--left-sidebar-width': `${Math.max(effectiveLeftWidth, 0)}px`,
-    '--left-sidebar-last-width': `${Math.max(lastLeftWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
-    '--right-sidebar-width': `${Math.max(effectiveRightWidth, 0)}px`,
-    '--right-sidebar-last-width': `${Math.max(lastRightWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
   };
 
-  const leftRailStyle: SidebarRailStyle = {
-    ...sidebarRailBaseStyle,
-    flexBasis: leftCollapsed ? '0px' : SIDEBAR_BASIS,
-    flexGrow: 0,
-    flexShrink: leftCollapsed ? 1 : 0,
-    minWidth: 0,
-    willChange: 'flex-basis',
-    '--sidebar-width': `${Math.max(measuredLeftWidth, 0)}px`,
-    '--sidebar-visible-width': `${Math.max(effectiveLeftWidth, 0)}px`,
-    '--sidebar-last-width': `${Math.max(lastLeftWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
-  };
-
-  const rightRailStyle: SidebarRailStyle = {
-    ...sidebarRailBaseStyle,
-    flexBasis: rightCollapsed ? '0px' : SIDEBAR_BASIS,
-    flexGrow: 0,
-    flexShrink: rightCollapsed ? 1 : 0,
-    minWidth: 0,
-    willChange: 'flex-basis',
-    '--sidebar-width': `${Math.max(measuredRightWidth, 0)}px`,
-    '--sidebar-visible-width': `${Math.max(effectiveRightWidth, 0)}px`,
-    '--sidebar-last-width': `${Math.max(lastRightWidth.current || SIDEBAR_FALLBACK_PX, 0)}px`,
-  };
+  const questToggleLabel = questExpanded ? uiStrings.shell.completedToggleClose : uiStrings.shell.completedToggleOpen;
+  const logToggleLabel = logExpanded ? uiStrings.shell.eventsToggleClose : uiStrings.shell.eventsToggleOpen;
+  const bottomPanelStyle = useMemo(() => {
+    if (!bottomPanelHeight) {
+      return bottomPanelBaseStyle;
+    }
+    const nextHeight = `${bottomPanelHeight}px`;
+    return {
+      ...bottomPanelBaseStyle,
+      height: nextHeight,
+      maxHeight: nextHeight,
+    };
+  }, [bottomPanelHeight]);
 
   useEffect(() => {
-    if (inCombat) {
-      if (sidebarRestoreTimeoutRef.current) {
-        window.clearTimeout(sidebarRestoreTimeoutRef.current);
-        sidebarRestoreTimeoutRef.current = null;
-      }
-      if (!sidebarSnapshotRef.current.active) {
-        sidebarSnapshotRef.current = {
-          active: true,
-          left: leftCollapsed,
-          right: rightCollapsed,
-        };
-        if (!leftCollapsed) {
-          setLeftSidebarCollapsed(true);
-        }
-        if (!rightCollapsed) {
-          setRightSidebarCollapsed(true);
-        }
-      }
-      return;
+    if (typeof document === 'undefined') {
+      return undefined;
+    }
+    if (bottomPanelHeight) {
+      document.documentElement.style.setProperty('--bottom-panel-height', `${bottomPanelHeight}px`);
+    } else {
+      document.documentElement.style.removeProperty('--bottom-panel-height');
     }
 
-    if (sidebarSnapshotRef.current.active) {
-      const snapshot = sidebarSnapshotRef.current;
-      sidebarSnapshotRef.current = { active: false, left: snapshot.left, right: snapshot.right };
-      if (sidebarRestoreTimeoutRef.current) {
-        window.clearTimeout(sidebarRestoreTimeoutRef.current);
-      }
-      sidebarRestoreTimeoutRef.current = window.setTimeout(() => {
-        if (leftCollapsed !== snapshot.left) {
-          setLeftSidebarCollapsed(snapshot.left);
-        }
-        if (rightCollapsed !== snapshot.right) {
-          setRightSidebarCollapsed(snapshot.right);
-        }
-        sidebarRestoreTimeoutRef.current = null;
-      }, 280);
-    }
-  }, [
-    inCombat,
-    leftCollapsed,
-    rightCollapsed,
-    setLeftSidebarCollapsed,
-    setRightSidebarCollapsed,
-  ]);
-
-  useEffect(() => {
     return () => {
-      if (sidebarRestoreTimeoutRef.current) {
-        window.clearTimeout(sidebarRestoreTimeoutRef.current);
+      if (typeof document !== 'undefined') {
+        document.documentElement.style.removeProperty('--bottom-panel-height');
       }
     };
-  }, []);
-
-  const centerStyle: CSSProperties = { ...centerStageStyle };
-
-  const leftPanelStyle: CSSProperties = leftCollapsed
-    ? {
-        ...leftSidebarStyle,
-        padding: 0,
-        opacity: 0,
-        pointerEvents: 'none',
-        visibility: 'hidden',
-        borderRight: 'none',
-        maxWidth: "0px",
-      }
-    : leftSidebarStyle;
-
-  const rightPanelStyle: CSSProperties = rightCollapsed
-    ? {
-        ...rightSidebarStyle,
-        padding: 0,
-        opacity: 0,
-        pointerEvents: 'none',
-        visibility: 'hidden',
-        borderLeft: 'none',
-        maxWidth: "0px",
-      }
-    : rightSidebarStyle;
-
-  const leftToggleStyle: CSSProperties = {
-    ...sidebarToggleBaseStyle,
-    top: toggleVerticalPosition,
-    left: 'calc(100% - 1.1rem)',
-    transform: 'translateY(-50%)',
-  };
-
-  const rightToggleStyle: CSSProperties = {
-    ...sidebarToggleBaseStyle,
-    top: toggleVerticalPosition,
-    left: '-1.1rem',
-    transform: 'translateY(-50%)',
-  };
-
-  const leftSidebarId = 'command-shell-left-sidebar';
-  const rightSidebarId = 'command-shell-right-sidebar';
+  }, [bottomPanelHeight]);
 
   return (
-    <>
-      <div style={stageStyle}>
-        <div style={leftRailStyle}>
-          {!showMenu && (
+    <div style={mainStageStyle}>
+      <div style={centerStageStyle}>
+        <TacticalHUDFrame />
+        <GameCanvas onRendererInfo={setRendererMeta} />
+        <GameController />
+        <div style={topLeftOverlayStyle}>
+          <LevelIndicator
+            collapsed={levelPanelCollapsed}
+            onToggle={onToggleLevelPanel}
+          />
+          <GameDebugInspector zoneId={zoneId} rendererInfo={rendererMeta} />
+        </div>
+        <div style={topCenterOverlayStyle}>
+          <CombatControlWidget />
+        </div>
+        <div style={topRightOverlayStyle}>
+          <div style={{ pointerEvents: 'auto' }}>
             <button
               type="button"
-              onClick={onToggleLeftSidebar}
-              style={leftToggleStyle}
-              aria-pressed={!leftCollapsed}
-              aria-controls={leftSidebarId}
-              aria-label={leftCollapsed ? uiStrings.shell.expandLeft : uiStrings.shell.collapseLeft}
-              title={leftCollapsed ? uiStrings.shell.expandLeft : uiStrings.shell.collapseLeft}
+              onClick={onOpenMenu}
+              style={menuOverlayButtonStyle}
+              data-testid="menu-overlay-button"
+              aria-label={uiStrings.shell.menuButton}
+              title={uiStrings.shell.menuButton}
+              onMouseEnter={(event) => {
+                event.currentTarget.style.transform = 'translateY(-1px)';
+                event.currentTarget.style.boxShadow = '0 18px 36px rgba(37, 99, 235, 0.34)';
+                event.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.65)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.transform = 'translateY(0)';
+                event.currentTarget.style.boxShadow = '0 16px 32px rgba(37, 99, 235, 0.28)';
+                event.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.45)';
+              }}
             >
-              {leftCollapsed ? '›' : '‹'}
+              <span style={{ fontSize: '0.62rem', letterSpacing: '0.2em' }}>{uiStrings.shell.menuButton}</span>
             </button>
-          )}
-          <div
-            id={leftSidebarId}
-            style={leftPanelStyle}
-            ref={leftSidebarRef}
-            aria-hidden={leftCollapsed}
-            data-collapsed={leftCollapsed || undefined}
-          >
-            {!leftCollapsed && (
-            <>
-              <div style={{ ...panelBaseStyle }}>
-                <CornerAccents color="#38bdf8" size={14} />
-                <ScanlineOverlay opacity={0.04} />
-                <DataStreamParticles color="#38bdf8" count={2} side="left" />
-                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.reconLabel}</span>
-                <h2 style={panelTitleStyle}>{uiStrings.shell.reconTitle}</h2>
-                <MiniMap />
-              </div>
-              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-                <CornerAccents color="#38bdf8" size={14} />
-                <ScanlineOverlay opacity={0.04} />
-                <DataStreamParticles color="#38bdf8" count={2} side="left" />
-                <span style={panelLabelStyle("#38bdf8")}>{uiStrings.shell.squadLabel}</span>
-                <h2 style={panelTitleStyle}>{uiStrings.shell.squadTitle}</h2>
-                <div
-                  style={{
-                    ...scrollSectionStyle,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "0.8rem",
-                  }}
-                >
-                  <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
-                </div>
-              </div>
-            </>
-            )}
+          </div>
+          <div style={{ pointerEvents: 'auto' }}>
+            <DayNightIndicator />
+          </div>
+          <div style={{ pointerEvents: 'auto' }}>
+            <CameraDetectionHUD />
           </div>
         </div>
-        <div style={centerStyle}>
-          <TacticalHUDFrame />
-          <GameCanvas />
-          <GameController />
-          <div style={{ ...topLeftOverlayStyle, pointerEvents: 'auto' }}>
-            <LevelIndicator
-              collapsed={levelPanelCollapsed}
-              onToggle={onToggleLevelPanel}
-            />
+        <DialogueOverlay />
+        <CombatFeedbackManager />
+      </div>
+      <div style={bottomPanelStyle}>
+        <div style={mapSectionStyle}>
+          <div style={mapViewportStyle}>
+            <MiniMap />
           </div>
-          <div style={topCenterOverlayStyle}>
-            <GeorgeAssistant />
-            <CombatControlWidget />
+        </div>
+
+        <div style={statusSectionStyle} ref={statusLaneRef}>
+          <div style={playerSummaryScrollStyle}>
+            <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
           </div>
-          <div style={topRightOverlayStyle}>
-            <div style={{ pointerEvents: "auto" }}>
+        </div>
+
+        <div style={objectivesSectionStyle}>
+          <OpsBriefingsPanel containerStyle={objectivesListStyle} />
+          <div style={sectionControlRowStyle}>
+            <button
+              type="button"
+              style={inlineButtonStyle}
+              onClick={handleToggleQuest}
+              aria-expanded={questExpanded}
+              aria-controls="command-objective-overlay"
+              onMouseEnter={(event) => {
+                event.currentTarget.style.transform = 'translateY(-1px)';
+                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.55)';
+                event.currentTarget.style.boxShadow = '0 12px 24px rgba(148, 163, 184, 0.22)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.transform = 'translateY(0)';
+                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+                event.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {questToggleLabel}
+            </button>
+          </div>
+          <div id="command-objective-overlay" style={expansionStyle(questExpanded)}>
+            <OpsBriefingsPanel containerStyle={questExpansionContainer} showCompleted />
+          </div>
+        </div>
+
+        <div style={georgeSectionStyle}>
+          <GeorgeAssistant
+            footerControls={(
               <button
                 type="button"
-                onClick={onOpenMenu}
-                style={menuOverlayButtonStyle}
-                data-testid="menu-overlay-button"
-                aria-label={uiStrings.shell.menuButton}
-                title={uiStrings.shell.menuButton}
+                style={inlineButtonStyle}
+                onClick={handleToggleLog}
+                aria-expanded={logExpanded}
+                aria-controls="command-events-overlay"
                 onMouseEnter={(event) => {
-                  event.currentTarget.style.transform = "translateY(-1px)";
-                  event.currentTarget.style.boxShadow = "0 18px 36px rgba(37, 99, 235, 0.34)";
-                  event.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.65)";
+                  event.currentTarget.style.transform = 'translateY(-1px)';
+                  event.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.55)';
+                  event.currentTarget.style.boxShadow = '0 12px 24px rgba(96, 165, 250, 0.22)';
                 }}
                 onMouseLeave={(event) => {
-                  event.currentTarget.style.transform = "translateY(0)";
-                  event.currentTarget.style.boxShadow = "0 16px 32px rgba(37, 99, 235, 0.28)";
-                  event.currentTarget.style.borderColor = "rgba(96, 165, 250, 0.45)";
+                  event.currentTarget.style.transform = 'translateY(0)';
+                  event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+                  event.currentTarget.style.boxShadow = 'none';
                 }}
               >
-                <span style={{ fontSize: "0.62rem", letterSpacing: "0.2em" }}>{uiStrings.shell.menuButton}</span>
+                {logToggleLabel}
               </button>
-            </div>
-            <div style={{ pointerEvents: "auto" }}>
-              <DayNightIndicator />
-            </div>
-            <div style={{ pointerEvents: "auto" }}>
-              <CameraDetectionHUD />
-            </div>
-          </div>
-          <DialogueOverlay />
-          <CombatFeedbackManager />
-        </div>
-        <div style={rightRailStyle}>
-          {!showMenu && (
-            <button
-              type="button"
-              onClick={onToggleRightSidebar}
-              style={rightToggleStyle}
-              aria-pressed={!rightCollapsed}
-              aria-controls={rightSidebarId}
-              aria-label={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
-              title={rightCollapsed ? uiStrings.shell.expandRight : uiStrings.shell.collapseRight}
-            >
-              {rightCollapsed ? '‹' : '›'}
-            </button>
-          )}
-          <div
-            id={rightSidebarId}
-            style={rightPanelStyle}
-            ref={rightSidebarRef}
-            aria-hidden={rightCollapsed}
-            data-collapsed={rightCollapsed || undefined}
-          >
-            {!rightCollapsed && (
-            <>
-              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-                <CornerAccents color="#f0abfc" size={14} />
-                <ScanlineOverlay opacity={0.04} />
-                <DataStreamParticles color="#f0abfc" count={2} side="right" />
-                <span style={panelLabelStyle("#f0abfc")}>{uiStrings.questLog.panelLabel}</span>
-                <h2 style={panelTitleStyle}>{uiStrings.questLog.title}</h2>
-                <OpsBriefingsPanel containerStyle={scrollSectionStyle} />
-              </div>
-              <div style={{ ...panelBaseStyle, flex: "1 1 0" }}>
-                <CornerAccents color="#60a5fa" size={14} />
-                <ScanlineOverlay opacity={0.04} />
-                <DataStreamParticles color="#60a5fa" count={2} side="right" />
-                <span style={panelLabelStyle("#60a5fa")}>{uiStrings.shell.telemetryLabel}</span>
-                <h2 style={panelTitleStyle}>{uiStrings.shell.telemetryTitle}</h2>
-                <div style={scrollSectionStyle}>
-                  <LogPanel />
-                </div>
-              </div>
-            </>
             )}
+          />
+          <div id="command-events-overlay" style={expansionStyle(logExpanded)}>
+            <div style={logExpansionContainer}>
+              <LogPanel />
+            </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -657,8 +590,6 @@ function App() {
   const [showPerkSelection, setShowPerkSelection] = useState(false);
   const [levelUpFlowActive, setLevelUpFlowActive] = useState(false);
   const [showPointAllocation, setShowPointAllocation] = useState(false);
-  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
-  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
   const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(true);
 
   useEffect(() => {
@@ -709,7 +640,7 @@ function App() {
     window.requestAnimationFrame(() => {
       window.dispatchEvent(new Event('resize'));
     });
-  }, [leftSidebarCollapsed, rightSidebarCollapsed, gameStarted]);
+  }, [gameStarted]);
 
   useEffect(() => {
     if (showMenu || showCharacterCreation) {
@@ -888,12 +819,6 @@ function App() {
             onToggleCharacter={handleToggleCharacterScreen}
             showMenu={showMenu}
             characterOpen={showCharacterScreen}
-            leftCollapsed={leftSidebarCollapsed}
-            rightCollapsed={rightSidebarCollapsed}
-            onToggleLeftSidebar={() => setLeftSidebarCollapsed((prev) => !prev)}
-            onToggleRightSidebar={() => setRightSidebarCollapsed((prev) => !prev)}
-            setLeftSidebarCollapsed={setLeftSidebarCollapsed}
-            setRightSidebarCollapsed={setRightSidebarCollapsed}
             levelPanelCollapsed={levelPanelCollapsed}
             onToggleLevelPanel={() => setLevelPanelCollapsed((prev) => !prev)}
           />

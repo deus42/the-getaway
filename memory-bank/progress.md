@@ -61,6 +61,41 @@
 </notes>
 </step>
 
+<step id="GET-93" status="completed">
+<step_metadata>
+  <number>93</number>
+  <title>Command Dock HUD consolidation</title>
+  <status>Completed</status>
+  <date>April 28, 2026</date>
+</step_metadata>
+<linear key="GET-93" />
+
+<tasks>
+1. Reshaped the HUD into a single bottom ribbon with compact map, status, objective, and comms segments, replacing both sidebar rails.
+2. Kept active objectives inline while moving completed objectives and the event history into lightweight overlays driven from the ribbon controls.
+3. Embedded George’s feed directly in the ribbon (no marquee or toggle) and left log access behind the overlay button alongside the debug inspector beneath the mission rail.
+4. Updated HUD localization strings and architecture docs to capture the unified ribbon layout and inline assistant feed.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/App.tsx</code_location> builds the bottom dock grid and manages expansion state while feeding renderer info to the debug panel.
+- <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> now renders the dock summary + expandable chat log without relying on the old marquee ticker.
+- <code_location>the-getaway/src/components/debug/GameDebugInspector.tsx</code_location> merges renderer diagnostics with suspicion/paranoia telemetry behind a collapsible toggle.
+- <code_location>the-getaway/src/components/GameCanvas.tsx</code_location> emits renderer metadata through an optional callback instead of an in-canvas overlay.
+</implementation>
+
+<code_reference file="the-getaway/src/App.tsx" />
+<code_reference file="the-getaway/src/components/ui/GeorgeAssistant.tsx" />
+<code_reference file="the-getaway/src/components/debug/GameDebugInspector.tsx" />
+<code_reference file="the-getaway/src/components/GameCanvas.tsx" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn lint`
+</validation>
+</step>
+
 <step id="16.11" status="completed">
 <step_metadata>
   <number>16.11</number>

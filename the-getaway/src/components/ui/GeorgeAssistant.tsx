@@ -1,9 +1,8 @@
-import React, { CSSProperties, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import {
   selectPlayerFactionReputation,
-  selectPlayerKarma,
   selectPlayerPersonalityProfile,
 } from '../../store/selectors/playerSelectors';
 import { selectObjectiveQueue } from '../../store/selectors/questSelectors';
@@ -14,9 +13,7 @@ import {
 } from '../../store/selectors/missionSelectors';
 import { selectAmbientWorldSnapshot } from '../../store/selectors/worldSelectors';
 import {
-  AssistantIntel,
   GeorgeAmbientTracker,
-  buildAssistantIntel,
   pickBanterLine,
   pickInterjectionLine,
   GeorgeAmbientEvent,
@@ -30,18 +27,10 @@ import {
   LevelAdvanceEventDetail,
   MissionEventDetail,
 } from '../../game/systems/missionProgression';
-import { applyParanoiaRelief, setParanoiaRespite } from '../../store/paranoiaSlice';
-import { selectParanoiaCooldowns, selectParanoiaTier } from '../../store/selectors/paranoiaSelectors';
-import { PARANOIA_CONFIG } from '../../content/paranoia/paranoiaConfig';
-
-const STORAGE_KEY = 'the-getaway:george-panel-open';
+import { addLogMessage } from '../../store/logSlice';
 const INTERJECTION_COOLDOWN_MS = 9000;
-const INTERJECTION_DISPLAY_MS = 5200;
 const AMBIENT_BANTER_MIN_MS = 48000;
 const AMBIENT_BANTER_MAX_MS = 96000;
-const DOCK_TICKER_MIN_DURATION_MS = 26000;
-const DOCK_TICKER_MAX_DURATION_MS = 62000;
-const DOCK_TICKER_MS_PER_CHARACTER = 580;
 const FEED_ENTRY_LIMIT = 12;
 
 const FALLBACK_AMBIENT = [
@@ -86,63 +75,30 @@ const FEED_CATEGORY_META: Record<FeedCategory, { badge: string; tone: FeedTone }
 
 const DEFAULT_FEED_META: { badge: string; tone: FeedTone } = { badge: '--', tone: 'ambient' };
 
+type GeorgeAssistantProps = {
+  footerControls?: React.ReactNode;
+};
+
+const LOG_ONLY_CATEGORIES: FeedCategory[] = ['weather', 'zoneDanger', 'hazardChange'];
+
 const styles = `
-  .george-layer {
-    width: min(360px, 32vw);
-    pointer-events: auto;
-  }
-  @media (max-width: 960px) {
-    .george-layer {
-      width: min(92vw, 380px);
-    }
-  }
-  .george-shell {
+  .george-inline {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
+    gap: 0.55rem;
+    height: 100%;
   }
-  .george-dock-button {
-    all: unset;
-    cursor: pointer;
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.6rem;
-    align-items: center;
-    padding: 0.55rem 1rem;
-    border-radius: 999px;
-    border: 1px solid rgba(93, 230, 216, 0.3);
-    background: linear-gradient(135deg, rgba(6, 20, 33, 0.88), rgba(11, 32, 48, 0.82));
-    box-shadow: 0 14px 22px rgba(2, 8, 20, 0.55);
-    min-width: 240px;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-  }
-  .george-dock-button:hover {
-    border-color: rgba(125, 211, 252, 0.55);
-    box-shadow: 0 18px 28px rgba(3, 12, 30, 0.6);
-  }
-  .george-dock-button.open {
-    border-color: rgba(59, 130, 246, 0.45);
-    transform: translateY(-1px);
-  }
-  .george-dock-button.alert {
-    border-color: rgba(16, 185, 129, 0.55);
-    box-shadow: 0 18px 32px rgba(14, 116, 144, 0.45);
-  }
-  .george-dock-button:focus-visible {
-    outline: 2px solid rgba(125, 211, 252, 0.85);
-    outline-offset: 2px;
-  }
-  .george-dock-icon {
-    width: 34px;
-    height: 34px;
+  .george-inline__icon {
+    width: 30px;
+    height: 30px;
     border-radius: 10px;
-    background: linear-gradient(160deg, rgba(6, 182, 212, 0.7), rgba(37, 99, 235, 0.6));
+    background: linear-gradient(160deg, rgba(6, 182, 212, 0.72), rgba(37, 99, 235, 0.65));
     position: relative;
-    box-shadow: inset 0 0 10px rgba(4, 10, 25, 0.85);
+    box-shadow: inset 0 0 8px rgba(4, 10, 25, 0.85);
+    flex-shrink: 0;
   }
-  .george-dock-icon::before,
-  .george-dock-icon::after {
+  .george-inline__icon::before,
+  .george-inline__icon::after {
     content: '';
     position: absolute;
     left: 50%;
@@ -151,243 +107,237 @@ const styles = `
     border-radius: 4px;
     border: 2px solid rgba(226, 232, 240, 0.85);
   }
-  .george-dock-icon::before {
-    width: 16px;
-    height: 16px;
+  .george-inline__icon::before {
+    width: 14px;
+    height: 14px;
   }
-  .george-dock-icon::after {
-    width: 7px;
-    height: 7px;
-  }
-  .george-dock-copy {
-    display: flex;
-    flex-direction: column;
-    gap: 0.18rem;
-    max-width: 260px;
-  }
-  .george-dock-label {
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-    font-size: 0.68rem;
-    letter-spacing: 0.24em;
-    text-transform: uppercase;
-    color: rgba(94, 234, 212, 0.85);
-  }
-  .george-dock-marquee {
-    position: relative;
-    width: 100%;
-    overflow: hidden;
-  }
-  .george-dock-status {
-    display: inline-block;
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-    font-size: 0.8rem;
-    color: rgba(226, 232, 240, 0.84);
-    white-space: nowrap;
-  }
-  .george-dock-status--scroll {
-    padding-left: 100%;
-    animation: george-dock-ticker var(--ticker-duration, 32s) linear infinite;
-  }
-  @keyframes george-dock-ticker {
-    0% {
-      transform: translateX(0%);
-    }
-    25% {
-      transform: translateX(0%);
-    }
-    100% {
-      transform: translateX(-100%);
-    }
-  }
-  .george-panel {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 0.85rem;
-    background: rgba(6, 18, 31, 0.95);
-    border-radius: 16px;
-    border: 1px solid rgba(63, 131, 248, 0.22);
-    box-shadow: 0 24px 44px rgba(2, 8, 20, 0.55);
-    padding: 1rem 1.1rem 1.3rem;
-  }
-  @media (max-width: 720px) {
-    .george-panel {
-      padding: 0.9rem 0.9rem 1.1rem;
-    }
-  }
-  .george-interjection {
-    font-size: 0.88rem;
-    line-height: 1.4;
-    color: rgba(226, 232, 240, 0.92);
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-  }
-  .george-log-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    flex: 1 1 auto;
-    min-height: 200px;
-  }
-  .george-log {
-    flex: 1 1 auto;
-    max-height: 320px;
-    min-height: 200px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    padding-right: 0.3rem;
-  }
-  .george-log::-webkit-scrollbar {
+  .george-inline__icon::after {
     width: 6px;
+    height: 6px;
   }
-  .george-log::-webkit-scrollbar-thumb {
-    background: rgba(59, 130, 246, 0.3);
-    border-radius: 999px;
-  }
-  .george-log-item {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-    padding: 0.55rem 0.65rem;
-    border-radius: 12px;
-    background: rgba(10, 26, 43, 0.72);
-    border: 1px solid rgba(59, 130, 246, 0.15);
-  }
-  .george-log-item--mission {
-    background: rgba(30, 64, 175, 0.42);
-    border-color: rgba(96, 165, 250, 0.35);
-  }
-  .george-log-item--status {
-    background: rgba(21, 128, 61, 0.32);
-    border-color: rgba(74, 222, 128, 0.35);
-  }
-  .george-log-item--ambient {
-    background: rgba(8, 47, 73, 0.55);
-    border-color: rgba(45, 212, 191, 0.28);
-  }
-  .george-log-item--warning {
-    background: rgba(120, 53, 15, 0.38);
-    border-color: rgba(251, 191, 36, 0.45);
-  }
-  .george-log-item--zone {
-    background: rgba(29, 78, 216, 0.38);
-    border-color: rgba(147, 197, 253, 0.35);
-  }
-  .george-log-item--broadcast {
-    background: rgba(88, 28, 135, 0.4);
-    border-color: rgba(192, 132, 252, 0.4);
-  }
-  .george-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
-    margin-top: 0.6rem;
-  }
-  .george-actions__button {
-    align-self: flex-start;
-    padding: 0.48rem 0.9rem;
-    border-radius: 999px;
-    border: 1px solid rgba(94, 234, 212, 0.7);
-    background: linear-gradient(130deg, rgba(56, 189, 248, 0.32), rgba(14, 165, 233, 0.28));
-    color: rgba(226, 232, 240, 0.92);
+  .george-inline__label {
     font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-    font-size: 0.62rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  .george-actions__button:hover:not([disabled]) {
-    transform: translateY(-1px);
-    box-shadow: 0 12px 22px -14px rgba(59, 130, 246, 0.6);
-  }
-  .george-actions__button[disabled] {
-    cursor: not-allowed;
-    opacity: 0.45;
-    transform: none;
-    box-shadow: none;
-  }
-  .george-actions__hint {
-    font-size: 0.62rem;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(148, 163, 184, 0.75);
-  }
-  .george-log-item--latest {
-    box-shadow: 0 0 18px rgba(56, 189, 248, 0.2);
-  }
-  .george-log-item--player {
-    background: rgba(15, 42, 72, 0.75);
-    border-color: rgba(96, 165, 250, 0.3);
-  }
-  .george-log-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 0.6rem;
-    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
-  }
-  .george-log-meta-main {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  .george-log-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 1.9rem;
-    padding: 0.12rem 0.45rem;
-    border-radius: 999px;
     font-size: 0.6rem;
     letter-spacing: 0.22em;
     text-transform: uppercase;
-    background: rgba(148, 163, 184, 0.18);
-    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: rgba(94, 234, 212, 0.78);
+  }
+  .george-inline__footer {
+    margin-top: 0.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .george-inline__footer-info {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .george-inline__footer-controls {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .george-chat {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding-right: 0.25rem;
+  }
+  .george-chat::-webkit-scrollbar {
+    width: 6px;
+  }
+  .george-chat::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 999px;
+  }
+  .george-chat-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+  .george-chat-avatar {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .george-logo {
+    position: relative;
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    background: linear-gradient(160deg, rgba(6, 182, 212, 0.72), rgba(37, 99, 235, 0.65));
+    box-shadow: inset 0 0 8px rgba(4, 10, 25, 0.85), 0 12px 26px rgba(6, 182, 212, 0.25);
+  }
+  .george-logo::before,
+  .george-logo::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 4px;
+    border: 2px solid rgba(226, 232, 240, 0.85);
+  }
+  .george-logo::before {
+    width: 12px;
+    height: 12px;
+  }
+  .george-logo::after {
+    width: 6px;
+    height: 6px;
+  }
+  .george-chat-bubble {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.6rem 0.8rem 0.7rem;
+    border-radius: 12px;
+    background: rgba(10, 26, 43, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    box-shadow: 0 16px 32px rgba(8, 12, 24, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .george-chat-bubble::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 12px 0 0 12px;
+    background: rgba(148, 163, 184, 0.45);
+  }
+  .george-chat-bubble__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    color: rgba(226, 232, 240, 0.88);
+  }
+  .george-chat-bubble__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+  .george-chat-bubble__label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .george-chat-bubble__time {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+    color: rgba(148, 163, 184, 0.7);
+    white-space: nowrap;
+  }
+  .george-chat-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.14rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(30, 64, 175, 0.12);
     color: rgba(226, 232, 240, 0.85);
   }
-  .george-log-badge--mission {
-    background: rgba(37, 99, 235, 0.25);
+  .george-chat-bubble__text {
+    font-family: 'DM Sans', 'Inter', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    color: rgba(226, 232, 240, 0.92);
+    white-space: pre-wrap;
+  }
+  .george-chat-bubble--mission {
+    border-color: rgba(96, 165, 250, 0.45);
+    box-shadow: 0 18px 34px rgba(37, 99, 235, 0.28);
+  }
+  .george-chat-bubble--mission::before {
+    background: linear-gradient(180deg, rgba(96, 165, 250, 0.9), rgba(37, 99, 235, 0.55));
+  }
+  .george-chat-badge--mission {
     border-color: rgba(96, 165, 250, 0.55);
+    background: rgba(37, 99, 235, 0.25);
+    color: rgba(219, 234, 254, 0.92);
   }
-  .george-log-badge--status {
-    background: rgba(22, 163, 74, 0.25);
+  .george-chat-bubble--status {
+    border-color: rgba(74, 222, 128, 0.45);
+    box-shadow: 0 18px 34px rgba(16, 185, 129, 0.25);
+  }
+  .george-chat-bubble--status::before {
+    background: linear-gradient(180deg, rgba(45, 212, 191, 0.9), rgba(22, 163, 74, 0.55));
+  }
+  .george-chat-badge--status {
     border-color: rgba(74, 222, 128, 0.55);
+    background: rgba(22, 163, 74, 0.25);
+    color: rgba(240, 253, 244, 0.92);
   }
-  .george-log-badge--ambient {
-    background: rgba(15, 118, 110, 0.25);
+  .george-chat-bubble--ambient {
+    border-color: rgba(45, 212, 191, 0.35);
+    box-shadow: 0 18px 28px rgba(14, 116, 144, 0.22);
+  }
+  .george-chat-bubble--ambient::before {
+    background: linear-gradient(180deg, rgba(45, 212, 191, 0.85), rgba(14, 165, 233, 0.45));
+  }
+  .george-chat-badge--ambient {
     border-color: rgba(45, 212, 191, 0.55);
+    background: rgba(15, 118, 110, 0.25);
+    color: rgba(204, 251, 241, 0.9);
   }
-  .george-log-badge--warning {
-    background: rgba(180, 83, 9, 0.25);
+  .george-chat-bubble--warning {
     border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 18px 32px rgba(251, 146, 60, 0.3);
   }
-  .george-log-badge--zone {
+  .george-chat-bubble--warning::before {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 0.9), rgba(217, 119, 6, 0.6));
+  }
+  .george-chat-badge--warning {
+    border-color: rgba(251, 191, 36, 0.65);
+    background: rgba(202, 138, 4, 0.25);
+    color: rgba(255, 249, 196, 0.95);
+  }
+  .george-chat-bubble--zone {
+    border-color: rgba(147, 197, 253, 0.5);
+    box-shadow: 0 18px 32px rgba(59, 130, 246, 0.24);
+  }
+  .george-chat-bubble--zone::before {
+    background: linear-gradient(180deg, rgba(147, 197, 253, 0.85), rgba(59, 130, 246, 0.55));
+  }
+  .george-chat-badge--zone {
+    border-color: rgba(147, 197, 253, 0.65);
     background: rgba(37, 99, 235, 0.2);
-    border-color: rgba(147, 197, 253, 0.55);
+    color: rgba(224, 242, 254, 0.92);
   }
-  .george-log-badge--broadcast {
-    background: rgba(126, 58, 242, 0.25);
+  .george-chat-bubble--broadcast {
     border-color: rgba(192, 132, 252, 0.55);
+    box-shadow: 0 18px 32px rgba(168, 85, 247, 0.28);
   }
-  .george-log-actor {
-    font-size: 0.64rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(178, 230, 255, 0.82);
+  .george-chat-bubble--broadcast::before {
+    background: linear-gradient(180deg, rgba(192, 132, 252, 0.9), rgba(126, 58, 242, 0.55));
   }
-  .george-log-reference {
-    font-size: 0.62rem;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: rgba(148, 163, 184, 0.68);
+  .george-chat-badge--broadcast {
+    border-color: rgba(192, 132, 252, 0.65);
+    background: rgba(126, 58, 242, 0.25);
+    color: rgba(243, 232, 255, 0.92);
   }
-  .george-log-text {
-    font-size: 0.8rem;
-    line-height: 1.4;
-    color: rgba(226, 232, 240, 0.86);
-    white-space: pre-line;
+  .george-chat-bubble--latest {
+    box-shadow: 0 0 26px rgba(56, 189, 248, 0.32);
   }
 `;
 
@@ -412,11 +362,11 @@ const buildQuestReadout = (
   return lines;
 };
 
-const GeorgeAssistant: React.FC = () => {
+const GeorgeAssistant: React.FC<GeorgeAssistantProps> = ({ footerControls }) => {
+  const dispatch = useDispatch();
   const locale = useSelector((state: RootState) => state.settings.locale);
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const georgeStrings = useMemo(() => uiStrings.george, [uiStrings]);
-  const dispatch = useDispatch();
 
   const { feedLabels, levelAdvance: levelAdvanceMessage, missionComplete: missionCompleteMessage } = georgeStrings;
 
@@ -425,80 +375,17 @@ const GeorgeAssistant: React.FC = () => {
   const nextPrimaryObjective = useSelector(selectNextPrimaryObjective);
   const nextSideObjective = useSelector(selectNextSideObjective);
   const personality = useSelector(selectPlayerPersonalityProfile);
-  const karma = useSelector(selectPlayerKarma);
   const factionReputation = useSelector(selectPlayerFactionReputation) as Record<FactionId, number>;
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
   const ambientSnapshot = useSelector(selectAmbientWorldSnapshot);
-  const paranoiaCooldowns = useSelector(selectParanoiaCooldowns);
-  const paranoiaTier = useSelector(selectParanoiaTier);
-
-  const [nowTick, setNowTick] = useState<number>(() => Date.now());
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-    const interval = window.setInterval(() => {
-      setNowTick(Date.now());
-    }, 1000);
-    return () => window.clearInterval(interval);
-  }, []);
-
-  const intel = useMemo<AssistantIntel>(() => buildAssistantIntel({
-    objectiveQueue,
-    personality,
-    karma,
-    factionReputation: factionReputation as Record<string, number>,
-    missionPrimary: nextPrimaryObjective,
-    missionSide: nextSideObjective,
-  }), [objectiveQueue, personality, karma, factionReputation, nextPrimaryObjective, nextSideObjective]);
 
   const ambientLines = useMemo(
     () => (georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT),
     [georgeStrings]
   );
 
-  const cooldownRemainingMs = Math.max(0, (paranoiaCooldowns?.georgeReassure ?? 0) - nowTick);
-  const reassureDisabled = paranoiaTier === 'calm' || cooldownRemainingMs > 0;
-
-  const handleReassure = useCallback(() => {
-    const cooldownUntil = paranoiaCooldowns?.georgeReassure ?? 0;
-    const timestamp = Date.now();
-    if (cooldownUntil > timestamp) {
-      return;
-    }
-
-    dispatch(
-      applyParanoiaRelief({
-        amount: PARANOIA_CONFIG.georgeReassure.relief,
-        timestamp,
-        cooldownKey: 'georgeReassure',
-        cooldownMs: PARANOIA_CONFIG.georgeReassure.cooldownMs,
-      })
-    );
-
-    dispatch(
-      setParanoiaRespite({
-        durationMs: 12_000,
-        timestamp,
-      })
-    );
-  }, [dispatch, paranoiaCooldowns]);
-
-  const reassureHint = reassureDisabled
-    ? georgeStrings.reassure.cooldown(Math.max(1, Math.ceil(cooldownRemainingMs / 1000)))
-    : georgeStrings.reassure.hint;
-
-  const [isOpen, setIsOpen] = useState<boolean>(() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-    return window.localStorage.getItem(STORAGE_KEY) === 'true';
-  });
-  const [interjection, setInterjection] = useState<string | null>(null);
   const [feedEntries, setFeedEntries] = useState<FeedEntry[]>([]);
-  const [hasAmbientPing, setHasAmbientPing] = useState(false);
 
   const cooldownRef = useRef<number>(0);
   const pendingInterjectionRef = useRef<GeorgeLine | null>(null);
@@ -529,26 +416,32 @@ const GeorgeAssistant: React.FC = () => {
         }
         return next;
       });
-      if (!isOpen) {
-        setHasAmbientPing(true);
-      }
     },
-    [isOpen]
+    []
   );
 
-  const presentInterjection = useCallback((line: GeorgeLine, log = false) => {
+  const routeFeedEntry = useCallback(
+    (entry: FeedEntryPayload) => {
+      if (LOG_ONLY_CATEGORIES.includes(entry.category)) {
+        const summary = entry.label ? `${entry.label}: ${entry.text}` : entry.text;
+        dispatch(addLogMessage(summary));
+        return;
+      }
+      pushFeedEntry(entry);
+    },
+    [dispatch, pushFeedEntry]
+  );
+
+  const presentInterjection = useCallback((line: GeorgeLine) => {
     cooldownRef.current = Date.now() + INTERJECTION_COOLDOWN_MS;
     pendingInterjectionRef.current = null;
-    setInterjection(line.text);
-    if (log) {
-      pushFeedEntry({
-        category: 'interjection',
-        label: georgeStrings.feedLabels.interjection,
-        text: line.text,
-      });
-    }
-    window.setTimeout(() => setInterjection(null), INTERJECTION_DISPLAY_MS);
-  }, [georgeStrings.feedLabels.interjection, pushFeedEntry]);
+    routeFeedEntry({
+      category: 'interjection',
+      label: georgeStrings.feedLabels.interjection,
+      text: line.text,
+      timestamp: Date.now(),
+    });
+  }, [georgeStrings.feedLabels.interjection, routeFeedEntry]);
 
   const queueInterjection = useCallback((trigger: GeorgeInterjectionTrigger) => {
     const line = pickInterjectionLine(trigger, personality.alignment);
@@ -557,7 +450,7 @@ const GeorgeAssistant: React.FC = () => {
     }
     const now = Date.now();
     if (now >= cooldownRef.current) {
-      presentInterjection(line, true);
+      presentInterjection(line);
       return;
     }
     pendingInterjectionRef.current = line;
@@ -579,7 +472,7 @@ const GeorgeAssistant: React.FC = () => {
     ambientTimerRef.current = window.setTimeout(() => {
       const line = pickAmbient();
       if (Date.now() >= cooldownRef.current) {
-        presentInterjection(line, false);
+        presentInterjection(line);
       } else {
         pendingInterjectionRef.current = line;
       }
@@ -594,7 +487,7 @@ const GeorgeAssistant: React.FC = () => {
         return;
       }
       if (Date.now() >= cooldownRef.current) {
-        presentInterjection(pending, true);
+        presentInterjection(pending);
       }
     }, 400);
     return () => window.clearInterval(timer);
@@ -646,10 +539,11 @@ const GeorgeAssistant: React.FC = () => {
       return;
     }
     missionSummaryRef.current = message;
-    pushFeedEntry({
+    routeFeedEntry({
       category: 'guidance',
       label: georgeStrings.feedLabels.guidance,
       text: message,
+      timestamp: Date.now(),
     });
   }, [
     georgeStrings,
@@ -657,7 +551,7 @@ const GeorgeAssistant: React.FC = () => {
     nextPrimaryObjective,
     nextSideObjective,
     objectiveQueue,
-    pushFeedEntry,
+    routeFeedEntry,
   ]);
 
   const formatTimestamp = useCallback((value: number): string => {
@@ -806,10 +700,11 @@ const GeorgeAssistant: React.FC = () => {
       }
 
       const message = missionCompleteMessage(detail.name);
-      pushFeedEntry({
+      routeFeedEntry({
         category: 'mission',
         label: feedLabels.mission,
         text: message,
+        timestamp: Date.now(),
       });
       queueInterjection('questCompleted');
     };
@@ -822,10 +717,11 @@ const GeorgeAssistant: React.FC = () => {
 
       const nextDescriptor = detail.nextLevelId ?? `level ${detail.nextLevel}`;
       const message = levelAdvanceMessage(nextDescriptor);
-      pushFeedEntry({
+      routeFeedEntry({
         category: 'status',
         label: feedLabels.status,
         text: message,
+        timestamp: Date.now(),
       });
     };
 
@@ -841,7 +737,7 @@ const GeorgeAssistant: React.FC = () => {
     feedLabels.status,
     levelAdvanceMessage,
     missionCompleteMessage,
-    pushFeedEntry,
+    routeFeedEntry,
     queueInterjection,
   ]);
 
@@ -875,7 +771,7 @@ const GeorgeAssistant: React.FC = () => {
       };
       const formatted = formatAmbientEvent(initialEvent);
       if (formatted) {
-        pushFeedEntry(formatted);
+        routeFeedEntry(formatted);
       }
       return;
     }
@@ -891,9 +787,9 @@ const GeorgeAssistant: React.FC = () => {
       if (!formatted) {
         return;
       }
-      pushFeedEntry(formatted);
+      routeFeedEntry(formatted);
     });
-  }, [ambientSnapshot, formatAmbientEvent, pushFeedEntry]);
+  }, [ambientSnapshot, formatAmbientEvent, routeFeedEntry]);
 
   useEffect(() => {
     const previous = factionRef.current;
@@ -933,237 +829,88 @@ const GeorgeAssistant: React.FC = () => {
     alertRef.current = { level: world.globalAlertLevel, inCombat: world.inCombat };
   }, [queueInterjection, world.globalAlertLevel, world.inCombat]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    window.localStorage.setItem(STORAGE_KEY, isOpen ? 'true' : 'false');
-  }, [isOpen]);
-
-  useEffect(() => {
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.repeat) {
-        return;
-      }
-      if (event.key.toLowerCase() === 'g') {
-        const target = event.target as HTMLElement | null;
-        if (target && ['INPUT', 'TEXTAREA'].includes(target.tagName)) {
-          return;
-        }
-        event.preventDefault();
-        setIsOpen((prev) => {
-          const next = !prev;
-          if (next) {
-            setHasAmbientPing(false);
-          }
-          return next;
-        });
-      }
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, []);
-
-  const latestEntry = feedEntries.length > 0 ? feedEntries[feedEntries.length - 1] : null;
-  const baseTickerLine = interjection ?? latestEntry?.text ?? georgeStrings.dockStatusIdle;
-
-  const feedLines = useMemo(() => {
-    const unique: string[] = [];
-    const push = (line?: string) => {
-      if (!line) {
-        return;
-      }
-      const cleaned = line.replace(/\s+/g, ' ').trim();
-      if (!cleaned || unique.includes(cleaned)) {
-        return;
-      }
-      unique.push(cleaned);
-    };
-
-    push(baseTickerLine);
-
-    const primaryHint = intel.primaryHint?.trim();
-    if (primaryHint) {
-      push(primaryHint);
-    }
-
-    const objective = objectiveQueue[0];
-    if (objective) {
-      const countSuffix = objective.objective.count && objective.objective.count > 1
-        ? ` (${objective.objective.currentCount ?? 0}/${objective.objective.count})`
-        : '';
-      push(`${objective.questName}: ${objective.objective.description}${countSuffix}`);
-    }
-
-    feedEntries.slice(-3).forEach((entry) => push(entry.text));
-    ambientLines.slice(0, 2).forEach((line) => push(line));
-
-    if (unique.length === 0) {
-      push(georgeStrings.dockStatusIdle);
-    }
-
-    return unique.slice(0, 6);
-  }, [ambientLines, baseTickerLine, feedEntries, georgeStrings.dockStatusIdle, intel.primaryHint, objectiveQueue]);
-
-  const feedSignature = useMemo(() => feedLines.join('|'), [feedLines]);
-
-  const [tickerIndex, setTickerIndex] = useState(0);
-  const [tickerKey, setTickerKey] = useState(0);
-
-  useEffect(() => {
-    setTickerIndex(0);
-    setTickerKey(Date.now());
-  }, [feedSignature]);
-
-  const tickerText = feedLines[tickerIndex] ?? georgeStrings.dockStatusIdle;
-  const animateTicker = tickerText.length > 20;
-  const tickerDurationMs = useMemo(() => {
-    if (!animateTicker) {
-      return DOCK_TICKER_MIN_DURATION_MS;
-    }
-    const estimated = tickerText.length * DOCK_TICKER_MS_PER_CHARACTER;
-    if (estimated < DOCK_TICKER_MIN_DURATION_MS) {
-      return DOCK_TICKER_MIN_DURATION_MS;
-    }
-    if (estimated > DOCK_TICKER_MAX_DURATION_MS) {
-      return DOCK_TICKER_MAX_DURATION_MS;
-    }
-    return estimated;
-  }, [animateTicker, tickerText]);
-  const tickerStyle = useMemo<CSSProperties | undefined>(() => {
-    if (!animateTicker) {
-      return undefined;
-    }
-    return {
-      '--ticker-duration': `${tickerDurationMs}ms`,
-    } as CSSProperties;
-  }, [animateTicker, tickerDurationMs]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-    if (feedLines.length <= 1) {
-      return undefined;
-    }
-    const nextIndex = tickerIndex + 1 >= feedLines.length ? 0 : tickerIndex + 1;
-    const nextKeySeed = Date.now() + feedSignature.length;
-    const timeout = window.setTimeout(() => {
-      setTickerIndex(nextIndex);
-      setTickerKey(nextKeySeed);
-    }, tickerDurationMs);
-    return () => window.clearTimeout(timeout);
-  }, [feedLines.length, feedSignature, tickerDurationMs, tickerIndex]);
+  const visibleEntries = feedEntries.slice(-5);
 
   const feedViewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
     const node = feedViewRef.current;
     if (!node) {
       return;
     }
     node.scrollTo({ top: node.scrollHeight, behavior: 'smooth' });
-  }, [feedEntries, isOpen]);
+  }, [feedEntries]);
 
-  useEffect(() => {
-    if (isOpen && hasAmbientPing) {
-      setHasAmbientPing(false);
-    }
-  }, [isOpen, hasAmbientPing]);
+  const placeholderEntry: FeedEntry = {
+    id: 'george-placeholder',
+    category: 'ambient',
+    text: georgeStrings.logEmpty,
+    label: georgeStrings.feedLabels.ambient,
+    timestamp: 0,
+    badge: 'NB',
+    tone: 'ambient',
+  };
 
-  const panelId = 'george-console-panel';
+  const entriesToRender = visibleEntries.length > 0
+    ? visibleEntries.map((entry, index) => ({
+        entry,
+        isLatest: index === visibleEntries.length - 1,
+      }))
+    : [{ entry: placeholderEntry, isLatest: false }];
 
   return (
-    <div className="george-layer">
+    <div className="george-inline">
       <style>{styles}</style>
-      <div className="george-shell">
-        <button
-          type="button"
-          className={`george-dock-button${isOpen ? ' open' : ''}${hasAmbientPing ? ' alert' : ''}`}
-          onClick={() => setIsOpen((prev) => {
-            const next = !prev;
-            if (next) {
-              setHasAmbientPing(false);
-            }
-            return next;
-          })}
-          aria-expanded={isOpen}
-          aria-controls={panelId}
-          aria-label={georgeStrings.consoleTitle}
-        >
-          <div className="george-dock-icon" aria-hidden="true" />
-          <div className="george-dock-copy">
-            <span className="george-dock-label">{georgeStrings.dockLabel}</span>
-            <div className="george-dock-marquee">
-              <span
-                key={tickerKey}
-                className={`george-dock-status${animateTicker ? ' george-dock-status--scroll' : ''}`}
-                title={tickerText}
-                style={tickerStyle}
-              >
-                {tickerText}
-              </span>
-            </div>
-          </div>
-        </button>
-
-        {isOpen && (
-          <section id={panelId} className="george-panel" aria-label={georgeStrings.consoleTitle}>
-            {interjection && (
-              <div className="george-interjection" role="status">
-                {interjection}
+      <div className="george-chat" role="log" aria-live="polite" ref={feedViewRef}>
+        {entriesToRender.map(({ entry, isLatest }) => {
+          const timestampLabel = entry.timestamp ? formatTimestamp(entry.timestamp) : '';
+          return (
+            <div key={entry.id} className="george-chat-entry">
+              <div className="george-chat-avatar" aria-hidden="true">
+                <span className="george-logo" />
               </div>
-            )}
-
-            <div className="george-log-container">
-              <div className="george-log" role="log" aria-live="polite" ref={feedViewRef}>
-                {feedEntries.length === 0 ? (
-                  <div className="george-log-item george-log-item--ambient">
-                    <div className="george-log-meta">
-                      <div className="george-log-meta-main">
-                        <span className="george-log-badge george-log-badge--ambient" aria-hidden="true">NB</span>
-                        <span className="george-log-actor">{georgeStrings.feedLabels.ambient}</span>
-                      </div>
-                      <span className="george-log-reference">—</span>
-                    </div>
-                    <div className="george-log-text">{georgeStrings.logEmpty}</div>
+              <div className={`george-chat-bubble george-chat-bubble--${entry.tone}${isLatest ? ' george-chat-bubble--latest' : ''}`}>
+                <div className="george-chat-bubble__header">
+                  <div className="george-chat-bubble__title">
+                    <span className={`george-chat-badge george-chat-badge--${entry.tone}`} aria-hidden="true">{entry.badge}</span>
+                    <span className="george-chat-bubble__label">{entry.label}</span>
                   </div>
-                ) : (
-                  feedEntries.map((entry, index) => (
-                    <div
-                      key={entry.id}
-                      className={`george-log-item george-log-item--${entry.tone}${index === feedEntries.length - 1 ? ' george-log-item--latest' : ''}`}
-                    >
-                      <div className="george-log-meta">
-                        <div className="george-log-meta-main">
-                          <span className={`george-log-badge george-log-badge--${entry.tone}`} aria-hidden="true">{entry.badge}</span>
-                          <span className="george-log-actor">{entry.label}</span>
-                        </div>
-                        <span className="george-log-reference">{formatTimestamp(entry.timestamp)}</span>
-                      </div>
-                      <div className="george-log-text">{entry.text}</div>
-                    </div>
-                  ))
-                )}
+                  {timestampLabel ? <span className="george-chat-bubble__time">{timestampLabel}</span> : null}
+                </div>
+                <p className="george-chat-bubble__text">{entry.text}</p>
               </div>
             </div>
-
-            <div className="george-actions">
-              <button
-                type="button"
-                className="george-actions__button"
-                onClick={handleReassure}
-                disabled={reassureDisabled}
-              >
-                {georgeStrings.reassure.button}
-              </button>
-              <span className="george-actions__hint">{reassureHint}</span>
-            </div>
-          </section>
-        )}
+          );
+        })}
+      </div>
+      <div className="george-inline__footer">
+        <div className="george-inline__footer-info">
+          <div className="george-inline__icon" aria-hidden="true" />
+          <label style={{ flex: 1 }}>
+            <input
+              type="text"
+              placeholder="Ask George AI Assistant"
+              aria-label="Ask George AI Assistant"
+              style={{
+                width: '100%',
+                padding: '0.45rem 0.65rem',
+                borderRadius: '0.6rem',
+                border: '1px solid rgba(148, 163, 184, 0.35)',
+                background: 'rgba(15, 23, 42, 0.55)',
+                color: '#e2e8f0',
+                fontFamily: '"DM Mono","IBM Plex Mono",monospace',
+                fontSize: '0.6rem',
+                letterSpacing: '0.12em',
+              }}
+              readOnly
+            />
+          </label>
+        </div>
+        {footerControls ? (
+          <div className="george-inline__footer-controls">
+            {footerControls}
+          </div>
+        ) : null}
       </div>
     </div>
   );

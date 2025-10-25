@@ -1,9 +1,8 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
 import { BACKGROUND_MAP } from '../../content/backgrounds';
 import { getUIStrings } from '../../content/ui';
-import { SKILL_BRANCHES } from '../../content/skills';
 import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progression';
 import { addExperience } from '../../store/playerSlice';
 import AnimatedStatBar from './AnimatedStatBar';
@@ -29,8 +28,8 @@ interface PlayerSummaryPanelProps {
 const summaryContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  gap: '0.8rem',
-  padding: '0.95rem 1rem',
+  gap: '0.6rem',
+  padding: '0.8rem 0.9rem',
   borderRadius: '18px',
   background: panelSurface.background,
   border: panelSurface.border,
@@ -81,7 +80,7 @@ const backgroundLabelStyle: React.CSSProperties = {
 const statGridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '0.32rem',
+  gap: '0.28rem',
 };
 
 const fatigueBadgeStyle: React.CSSProperties = {
@@ -141,31 +140,6 @@ const statLabelStyle: React.CSSProperties = {
 };
 
 
-const skillSummaryContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexWrap: 'wrap',
-  gap: '0.5rem',
-  marginTop: '0.25rem',
-};
-
-const skillChipStyle = (accent: string): React.CSSProperties => ({
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: '0.65rem',
-  padding: '0.38rem 0.85rem',
-  borderRadius: '999px',
-  border: `1px solid ${accent}`,
-  background: `linear-gradient(140deg, ${accent}1F, rgba(15, 23, 42, 0.92))`,
-  color: neonPalette.textPrimary,
-  fontSize: '0.6rem',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  boxShadow: `0 10px 18px -12px ${accent}99`,
-  flex: '1 1 calc(50% - 0.5rem)',
-  minWidth: '140px',
-});
-
 const actionButtonStyle = (active: boolean): React.CSSProperties => ({
   alignSelf: 'flex-start',
   marginTop: '0.2rem',
@@ -210,23 +184,6 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
     const currentXP = player.experience;
     const xpNeeded = xpForNextLevel - currentXP;
     dispatch(addExperience({ amount: Math.max(1, xpNeeded), reason: 'Test mode XP boost' }));
-  };
-
-  const branchTotals = useMemo(() => {
-    const totals = SKILL_BRANCHES.map((branch) => {
-      const total = branch.skills.reduce((acc, skill) => acc + (player.skillTraining[skill.id] ?? 0), 0);
-      return { id: branch.id, label: branch.label, total };
-    }).filter((entry) => entry.total > 0);
-
-    totals.sort((a, b) => b.total - a.total);
-    return totals;
-  }, [player.skillTraining]);
-
-  const branchAccent: Record<string, string> = {
-    combat: '#f97316',
-    tech: '#38bdf8',
-    survival: '#34d399',
-    social: '#c084fc',
   };
 
   return (
@@ -290,25 +247,6 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
           <span style={{ ...importantValueStyle('#38bdf8') }}>{formatXPDisplay(player.experience, player.level)}</span>
         </div>
       </div>
-      {branchTotals.length > 0 && (
-        <div style={skillSummaryContainerStyle}>
-          {branchTotals.slice(0, 4).map((summary) => (
-            <span
-              key={summary.id}
-              style={skillChipStyle(branchAccent[summary.id] ?? '#38bdf8')}
-            >
-              <span>{summary.label}</span>
-              <span style={{
-                fontWeight: 700,
-                color: branchAccent[summary.id] ?? neonPalette.cyan,
-                ...glowTextStyle(branchAccent[summary.id] ?? neonPalette.cyan, 4)
-              }}>
-                {summary.total}
-              </span>
-            </span>
-          ))}
-        </div>
-      )}
       {onOpenCharacter && showActionButton && (
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
           <button

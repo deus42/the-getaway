@@ -146,7 +146,14 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - After finishing a roadmap step (or related Linear task), add an implementation summary comment to the matching Linear issue before moving it to `Done`; include key tasks, validation, and notable code references.
 - **Linear ticket types**: use `Feature` for roadmap steps/increments, `Improvement` for UX/quality follow-ups, and `Bug` for regressions. Always apply the matching label when creating an issue so downstream automation stays intact; improvements do not replace feature tickets in the roadmap.
 
-## 12. Separation of Concerns: Design vs Architecture
+## 12. Accountability Protocol
+- When delivering results in this workspace, restate the user’s latest request in detail before describing your work. Include every explicit instruction so reviewers can trace outcomes back to the ask.
+- Follow the format: **Initial Ask** (verbatim or high-fidelity restatement), **What We Did**, **Playtest/Validation**.
+- Do not omit requirements even if they were later clarified; list all directives so accountability is clear.
+- Maintain a living Ask Log that captures every user directive. Group entries by related areas, work through them step-by-step, cross out items when completed, and keep the log updated as requests evolve.
+- Pause mid-implementation for validation whenever a grouped set of asks raises ambiguity or benefits from an early check-in.
+
+## 13. Separation of Concerns: Design vs Architecture
 **CRITICAL:** Understand the difference before making changes.
 
 - **game-design.md = WHAT** (gameplay mechanics, rules, balance numbers, player experience)
@@ -167,7 +174,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - ❌ Putting balance numbers in architecture.md.
 - ✅ Keep WHAT and HOW separate.
 
-## 13. XML Tagging in Documentation
+## 14. XML Tagging in Documentation
 The memory-bank documentation uses XML tags to improve LLM agent parsing and information retrieval. When reading or updating documentation:
 
 ### progress.md Structure

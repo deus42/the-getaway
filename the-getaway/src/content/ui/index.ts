@@ -84,20 +84,19 @@ interface QuestLogStrings {
 }
 
 interface ShellStrings {
-  reconLabel: string;
-  reconTitle: string;
-  squadLabel: string;
-  squadTitle: string;
-  telemetryLabel: string;
-  telemetryTitle: string;
   menuButton: string;
   characterButton: string;
   characterTitle: string;
   characterSubtitle: string;
-  collapseLeft: string;
-  expandLeft: string;
-  collapseRight: string;
-  expandRight: string;
+  completedToggleOpen: string;
+  completedToggleClose: string;
+  eventsToggleOpen: string;
+  eventsToggleClose: string;
+  completedOverlayTitle: string;
+  eventsOverlayTitle: string;
+  activeListTitle: string;
+  completedListTitle: string;
+  noAssignments: string;
 }
 
 interface PlayerStatusStrings {
@@ -402,6 +401,8 @@ interface GeorgeStrings {
   dockLabel: string;
   dockStatusIdle: string;
   consoleTitle: string;
+  openChat: string;
+  closeChat: string;
   subtitle: (alignment: string) => string;
   guidanceIntro: string;
   statusIntro: (statusLine: string) => string;
@@ -560,22 +561,21 @@ const STRINGS: Record<Locale, UIStrings> = {
       currencyLabel: (amount) => `₿${amount} ${amount === 1 ? 'credit' : 'credits'}`,
       experienceLabel: (amount) => `${amount} XP`,
       supplyFallback: 'Supply',
-    },
-    shell: {
-      reconLabel: 'Recon',
-      reconTitle: 'Tactical Feed',
-      squadLabel: 'Squad',
-      squadTitle: 'Recon Status',
-      telemetryLabel: 'Telemetry',
-      telemetryTitle: 'Action Log',
+  },
+  shell: {
       menuButton: 'Menu',
       characterButton: 'Character',
       characterTitle: 'Operative Profile',
       characterSubtitle: 'Stats • Skills • Loadout',
-      collapseLeft: 'Hide Recon Panel',
-      expandLeft: 'Show Recon Panel',
-      collapseRight: 'Hide Ops Panel',
-      expandRight: 'Show Ops Panel',
+      completedToggleOpen: 'Show All Quests',
+      completedToggleClose: 'Hide All Quests',
+      eventsToggleOpen: 'Show All Events',
+      eventsToggleClose: 'Hide All Events',
+      completedOverlayTitle: 'All Quests',
+      eventsOverlayTitle: 'Event Feed',
+      activeListTitle: 'Active Objectives',
+      completedListTitle: 'Completed Archive',
+      noAssignments: 'No active objectives.',
     },
     playerStatus: {
       vitalsLabel: 'Vital Status',
@@ -781,8 +781,10 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     george: {
       dockLabel: 'GEORGE // AI ASSISTANT',
-      dockStatusIdle: 'Tap the console or press G to check in.',
+      dockStatusIdle: 'Standing by for new intel.',
       consoleTitle: 'George // AI Assistant',
+      openChat: 'Open Chat',
+      closeChat: 'Close Chat',
       subtitle: (alignment: string) => `Alignment: ${alignment.toUpperCase()} mode engaged.`,
       guidanceIntro: 'Priority queue coming online:',
       statusIntro: (statusLine: string) => `Status report: ${statusLine}`,
@@ -1282,20 +1284,19 @@ const STRINGS: Record<Locale, UIStrings> = {
       supplyFallback: 'поставка',
     },
     shell: {
-      reconLabel: 'Розвідка',
-      reconTitle: 'Тактичний канал',
-      squadLabel: 'Загін',
-      squadTitle: 'Зведення розвідки',
-      telemetryLabel: 'Телеметрія',
-      telemetryTitle: 'Журнал дій',
       menuButton: 'Меню',
       characterButton: 'Профіль',
       characterTitle: 'Профіль оперативника',
       characterSubtitle: 'Стати • Навички • Спорядження',
-      collapseLeft: 'Приховати панель розвідки',
-      expandLeft: 'Показати панель розвідки',
-      collapseRight: 'Приховати панель операцій',
-      expandRight: 'Показати панель операцій',
+      completedToggleOpen: 'Показати завершені',
+      completedToggleClose: 'Приховати завершені',
+      eventsToggleOpen: 'Показати події',
+      eventsToggleClose: 'Приховати всі події',
+      completedOverlayTitle: 'Завершені',
+      eventsOverlayTitle: 'Журнал подій',
+      activeListTitle: 'Активні цілі',
+      completedListTitle: 'Архів цілей',
+      noAssignments: 'Немає активних цілей.',
     },
     playerStatus: {
       vitalsLabel: 'Стан бійця',
@@ -1504,8 +1505,10 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     george: {
       dockLabel: 'ДЖОРДЖ // AI-АСИСТЕНТ',
-      dockStatusIdle: 'Торкнись консолі або натисни G, щоб підключитися.',
+      dockStatusIdle: 'На зв\'язку, слухаю ефір.',
       consoleTitle: 'Джордж // AI-асистент',
+      openChat: 'Відкрити чат',
+      closeChat: 'Закрити чат',
       subtitle: (alignment: string) => `Режим: ${alignment.toUpperCase()} активовано.`,
       guidanceIntro: 'Пріоритетні завдання:',
       statusIntro: (statusLine: string) => `Звіт стану: ${statusLine}`,

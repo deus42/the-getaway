@@ -224,6 +224,22 @@ flowchart LR
 - Pre-flight every panel by checking duplication, interaction count, and source-of-truth alignment, then log architectural/design impacts here and in `memory-bank/game-design.md` when mechanics shift.
 - Panels share the console visual language—gunmetal base, cyan edge lines, layered scanlines/particle sweeps—to maintain the painterly noir HUD identity.
 </pattern>
+<architecture_section id="command_dock_layout" category="hud_systems">
+<design_principles>
+- Collapse the HUD into a single bottom ribbon split into four compact bands (map, status, objectives, comms) so the playfield stays clear while critical data sits within a short eye saccade.
+- Clamp the ribbon’s height to the Player Summary lane—`PlayerSummaryPanel` defines the ceiling and all other bands stretch to match so the dock never exceeds the HUD footprint.
+- Inline views show only current objectives and recent signals; archive states (completed objectives, event history) live in lightweight trays that slide from the same anchor to avoid screen-covering panels.
+- George’s feed is always visible: the chat scrollback captures the last few messages without requiring a toggle or ticker, and the freshest guidance is rendered as the latest chat bubble.
+- George’s assistant messaging must live exclusively in that chat feed—no inline highlight strings or truncated copy outside the log—so UX updates should never reintroduce marquee or header text.
+- Developer instrumentation remains adjacent to the mission rail—the debug inspector parks beneath the Level indicator and stays collapsed by default so production HUD users never see it.
+</design_principles>
+<technical_flow>
+1. <code_location>the-getaway/src/App.tsx</code_location> composes the unified ribbon, measures the Player Summary lane to enforce dock height, manages objective/event overlays, and forwards renderer metadata into the HUD shell.
+2. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> streams the assistant feed inline, trims the log to the latest entries, and promotes the freshest line into the ribbon headline without a marquee.
+3. <code_location>the-getaway/src/components/ui/OpsBriefingsPanel.tsx</code_location> supports a compact inline variant for active objectives and a full variant for completed archives, sharing selector logic across both.
+4. <code_location>the-getaway/src/components/ui/LogPanel.tsx</code_location> renders the expanded event history tray, while <code_location>the-getaway/src/components/debug/GameDebugInspector.tsx</code_location> houses renderer and suspicion diagnostics under the mission rail.
+5. <code_location>the-getaway/src/components/GameCanvas.tsx</code_location> emits renderer info through an optional callback so HUD overlays never depend on the in-canvas debug badge.
+</technical_flow>
 </architecture_section>
 
 <architecture_section id="storylet_framework" category="narrative_systems">

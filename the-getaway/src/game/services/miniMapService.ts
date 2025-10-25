@@ -160,6 +160,15 @@ class MiniMapService extends EventTarget {
     this.scene.focusCameraOnGridPosition(position.x, position.y, animate);
   }
 
+  setCanvasBounds(width: number, height: number) {
+    const updated = this.controller.setCanvasBounds(width, height);
+    if (!updated) {
+      return;
+    }
+    this.pendingStoreUpdate = true;
+    this.scheduleBroadcast();
+  }
+
   requestImmediateState() {
     this.pendingStoreUpdate = true;
     this.scheduleBroadcast(true);

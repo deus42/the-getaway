@@ -447,7 +447,7 @@ const DialogueOverlay: React.FC = () => {
       <div
         style={{
           width: "min(620px, 90%)",
-          marginBottom: "2.5rem",
+          marginBottom: "calc(var(--bottom-panel-height, 0px) + 2.5rem)",
           background:
             "linear-gradient(160deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.78))",
           border: "1px solid rgba(148, 163, 184, 0.35)",
