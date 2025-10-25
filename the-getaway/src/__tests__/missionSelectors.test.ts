@@ -193,4 +193,73 @@ describe('mission selectors', () => {
     const nextSide = selectNextSideObjective(state);
     expect(nextSide?.label).toBe('Shadow drone patrols');
   });
+
+  it('treats quests with finished sub-objectives as complete even if turn-in is pending', () => {
+    const missions = createMissionState();
+    const quests: Quest[] = [
+      {
+        id: 'quest_cache',
+        name: 'Cache Retrieval',
+        description: 'Bring the cache home.',
+        isActive: true,
+        isCompleted: false,
+        objectives: [
+          {
+            id: 'recover',
+            description: 'Recover cache crates',
+            isCompleted: true,
+            type: 'collect',
+            target: 'Cache crates',
+            count: 1,
+            currentCount: 1,
+          },
+        ],
+        rewards: [],
+      },
+      {
+        id: 'quest_datapad',
+        name: 'Encrypted Intel',
+        description: 'Deliver the datapad',
+        isActive: true,
+        isCompleted: false,
+        objectives: [
+          {
+            id: 'deliver',
+            description: 'Deliver the datapad',
+            isCompleted: true,
+            type: 'talk',
+            target: 'Naila',
+          },
+        ],
+        rewards: [],
+      },
+      {
+        id: 'quest_drones',
+        name: 'Drone Recon',
+        description: 'Track drone loops',
+        isActive: true,
+        isCompleted: false,
+        objectives: [
+          {
+            id: 'observe',
+            description: 'Observe patrols',
+            isCompleted: false,
+            type: 'explore',
+            target: 'Drone Patrol',
+            count: 3,
+            currentCount: 1,
+          },
+        ],
+        rewards: [],
+      },
+    ];
+
+    const state = buildState({ missions, quests });
+    const progress = selectMissionProgress(state)!;
+
+    expect(progress.primary[0].isComplete).toBe(true);
+    expect(progress.primary[1].isComplete).toBe(true);
+    expect(progress.primary[0].completedQuests).toBe(1);
+    expect(progress.primary[1].completedQuests).toBe(1);
+  });
 });

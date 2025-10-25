@@ -61,6 +61,18 @@ const lockpickSetUk = {
   description: 'Ручна збірка відмичок у тканинному футлярі для дверей і тайників.',
 };
 
+const transitTokenUk = {
+  ...getItemPrototype('misc_transit_tokens'),
+  name: 'Трамвайний жетон',
+  description: 'Штампований жетон для метро Центру. Кур’єри ховають їх, щоб прослизнути повз КПП.',
+};
+
+const abandonedMedkitUk = {
+  ...getItemPrototype('misc_abandoned_medkit'),
+  name: 'Покинута аптечка',
+  description: 'Запилений комплект першої допомоги, покинутий після раптового рейду.',
+};
+
 export const level0UkrainianContent: Level0LocaleContent = {
   dialogues: [
     {
@@ -726,6 +738,11 @@ export const level0UkrainianContent: Level0LocaleContent = {
     encryptedDatapadUk,
     corporateKeycardUk,
     holoLensUk,
+    transitTokenUk,
+    transitTokenUk,
+    transitTokenUk,
+    abandonedMedkitUk,
+    abandonedMedkitUk,
   ],
   buildingDefinitions: [
     {

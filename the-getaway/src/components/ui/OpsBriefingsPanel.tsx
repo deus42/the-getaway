@@ -177,49 +177,53 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({ containerStyle, s
           >
             {quest.description}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-            {quest.objectives.map((objective) => (
-              <div
-                key={objective.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  fontSize: '0.78rem',
-                  color: isActiveQuest && !objective.isCompleted ? '#cbd5f5' : '#c4b5fd',
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    width: '1rem',
-                    height: '1rem',
-                    borderRadius: '0.3rem',
-                    border: '1px solid rgba(94, 234, 212, 0.6)',
-                    background: objective.isCompleted ? 'rgba(94, 234, 212, 0.35)' : 'transparent',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: objective.isCompleted ? '#0f172a' : 'transparent',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    lineHeight: '1rem',
-                    transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
-                  }}
-                >
-                  ✓
-                </span>
-                <span
-                  style={{
-                    flex: 1,
-                  }}
-                >
-                  {objective.description}
-                </span>
+          {!quest.isCompleted && (
+            <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                {quest.objectives.map((objective) => (
+                  <div
+                    key={objective.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.78rem',
+                      color: isActiveQuest && !objective.isCompleted ? '#cbd5f5' : '#c4b5fd',
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: '1rem',
+                        height: '1rem',
+                        borderRadius: '0.3rem',
+                        border: '1px solid rgba(94, 234, 212, 0.6)',
+                        background: objective.isCompleted ? 'rgba(94, 234, 212, 0.35)' : 'transparent',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: objective.isCompleted ? '#0f172a' : 'transparent',
+                        fontSize: '0.7rem',
+                        fontWeight: 700,
+                        lineHeight: '1rem',
+                        transition: 'background 0.2s ease, color 0.2s ease, border-color 0.2s ease',
+                      }}
+                    >
+                      ✓
+                    </span>
+                    <span
+                      style={{
+                        flex: 1,
+                      }}
+                    >
+                      {objective.description}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          {renderRewards(quest.id)}
+              {renderRewards(quest.id)}
+            </>
+          )}
         </div>
         );
       })}

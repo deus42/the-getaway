@@ -660,6 +660,11 @@ export const level0EnglishContent: Level0LocaleContent = {
     getItemPrototype('misc_encrypted_datapad'),
     getItemPrototype('misc_corporate_keycard'),
     getItemPrototype('misc_holo_projector_lens'),
+    getItemPrototype('misc_transit_tokens'),
+    getItemPrototype('misc_transit_tokens'),
+    getItemPrototype('misc_transit_tokens'),
+    getItemPrototype('misc_abandoned_medkit'),
+    getItemPrototype('misc_abandoned_medkit'),
   ],
   buildingDefinitions: [
     {

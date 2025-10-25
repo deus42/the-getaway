@@ -14,10 +14,22 @@ export const selectCurrentMissionLevel = createSelector(selectMissionState, (mis
   return missions.levels[missions.currentLevelIndex] ?? null;
 });
 
+const isQuestComplete = (quest: Quest | undefined): boolean => {
+  if (!quest) {
+    return false;
+  }
+
+  if (quest.isCompleted) {
+    return true;
+  }
+
+  return quest.objectives.length > 0 && quest.objectives.every((objective) => objective.isCompleted);
+};
+
 const resolveObjective = (objective: MissionObjectiveDefinition, quests: Quest[]): ResolvedMissionObjective => {
   const questMatches = objective.questIds.map((questId) => quests.find((quest) => quest.id === questId));
   const totalQuests = objective.questIds.length;
-  const completedQuests = questMatches.filter((quest) => quest?.isCompleted).length;
+  const completedQuests = questMatches.filter(isQuestComplete).length;
   const isComplete = totalQuests === 0 ? false : completedQuests === totalQuests;
 
   return {

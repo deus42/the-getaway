@@ -32,7 +32,10 @@ export type ItemDefinitionId =
   | 'misc_gas_mask'
   | 'misc_encrypted_datapad'
   | 'misc_corporate_keycard'
-  | 'misc_holo_projector_lens';
+  | 'misc_holo_projector_lens'
+  | 'misc_transit_tokens'
+  | 'misc_abandoned_medkit'
+  | 'misc_saboteur_charge_kit';
 
 type ItemPrototype = Omit<Item, 'id'>;
 
@@ -201,6 +204,31 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     description: 'A prismatic lens ripped from a corporate holo-billboard. Can spoof patrol IDs when paired with the right codec.',
     weight: 0.3,
     value: 220,
+    isQuestItem: false,
+  }),
+  misc_transit_tokens: questItemPrototype({
+    name: 'Transit Token',
+    description: 'Stamped brass fare token for the Downtown tram grid. Runners stash these to bypass curfew checkpoints.',
+    weight: 0.12,
+    value: 12,
+    isQuestItem: true,
+    stackable: true,
+    quantity: 1,
+    maxStack: 10,
+  }),
+  misc_abandoned_medkit: questItemPrototype({
+    name: 'Abandoned Medkit',
+    description: 'Dust-choked field kit left behind during a sweep. Stocked just enough to stabilize wounded couriers.',
+    weight: 1.4,
+    value: 35,
+    isQuestItem: true,
+    stackable: false,
+  }),
+  misc_saboteur_charge_kit: questItemPrototype({
+    name: 'Saboteur Charge Kit',
+    description: 'Compact shaped charges and signal dampers tuned to overload surveillance relays.',
+    weight: 1.1,
+    value: 260,
     isQuestItem: false,
   }),
 };
