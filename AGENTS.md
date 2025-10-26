@@ -40,12 +40,13 @@ Do not begin coding until this checklist is complete.
   7. After final approval and commit, move the Linear issue to the terminal state (`Done` unless otherwise directed).
 
 - **During development**
-  - Keep changes focused on the active Linear issue. Ignore unrelated modified files; never revert user-authored work.  
-  - Prefer incremental commits; use imperative commit messages (Conventional Commits welcome).  
-  - Keep the Linear issue state aligned with reality (e.g., pause → `Todo`, active work → `In Progress`).  
-  - Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
-  - When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
-  - Reference the active Linear key (for example, `GET-9`) in every commit message so Git ↔ Linear linking stays automatic.
+- Keep changes focused on the active Linear issue. Ignore unrelated modified files; never revert user-authored work.  
+- Prefer incremental commits; use imperative commit messages (Conventional Commits welcome).  
+- Keep the Linear issue state aligned with reality (e.g., pause → `Todo`, active work → `In Progress`).  
+- Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
+- When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
+- Reference the active Linear key (for example, `GET-9`) in every commit message so Git ↔ Linear linking stays automatic.
+- For any styling or theming request, audit the relevant HUD/app surfaces across the whole solution and update inconsistent styles or tokens so the UX remains cohesive—do not leave outdated palettes or utilities behind.
 - **Testing**
   - Match validation steps from the roadmap and Linear ticket.  
   - Default commands: `yarn lint`, targeted `yarn test` runs, or full suites when coverage is expected.  
