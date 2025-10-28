@@ -522,7 +522,10 @@ export class MainScene extends Phaser.Scene {
     }
     this.destroyDemoPointLight();
     if (this.hasLightPipelineSupport()) {
-      this.lights.removeAll();
+      const manager = this.lights as typeof this.lights & { removeAll?: () => void };
+      if (typeof manager.removeAll === 'function') {
+        manager.removeAll();
+      }
       this.lights.disable();
     }
     this.lightsFeatureEnabled = false;
@@ -545,8 +548,8 @@ export class MainScene extends Phaser.Scene {
       this.demoPointLight.setScrollFactor(1);
     } else {
       this.demoPointLight.setPosition(x, lightY);
-      this.demoPointLight.setRadius(radius);
-      this.demoPointLight.setIntensity(intensity);
+      this.demoPointLight.radius = radius;
+      this.demoPointLight.intensity = intensity;
     }
   }
 
@@ -1941,27 +1944,42 @@ export class MainScene extends Phaser.Scene {
 
     const camera = this.cameras.main;
 
-    const topLeft = this.worldToGridContinuous(camera.worldView.x, camera.worldView.y);
-    const bottomRight = this.worldToGridContinuous(
-      camera.worldView.x + camera.worldView.width,
-      camera.worldView.y + camera.worldView.height
-    );
+    const view = camera.worldView;
+    const topLeft = this.worldToGridContinuous(view.x, view.y);
+    const topRight = this.worldToGridContinuous(view.x + view.width, view.y);
+    const bottomLeft = this.worldToGridContinuous(view.x, view.y + view.height);
+    const bottomRight = this.worldToGridContinuous(view.x + view.width, view.y + view.height);
 
-    if (!topLeft || !bottomRight) {
+    if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
       return;
     }
 
-    const minX = Math.min(topLeft.x, bottomRight.x);
-    const minY = Math.min(topLeft.y, bottomRight.y);
-    const maxX = Math.max(topLeft.x, bottomRight.x);
-    const maxY = Math.max(topLeft.y, bottomRight.y);
+    const centerX = (topLeft.x + topRight.x + bottomLeft.x + bottomRight.x) / 4;
+    const centerY = (topLeft.y + topRight.y + bottomLeft.y + bottomRight.y) / 4;
 
-    const width = Math.max(0.0001, maxX - minX);
-    const height = Math.max(0.0001, maxY - minY);
+    const horizontalEdges = [
+      Math.abs(topRight.x - topLeft.x),
+      Math.abs(bottomRight.x - bottomLeft.x),
+    ].filter((value) => Number.isFinite(value));
+
+    const verticalEdges = [
+      Math.abs(bottomLeft.y - topLeft.y),
+      Math.abs(bottomRight.y - topRight.y),
+    ].filter((value) => Number.isFinite(value));
+
+    const edgeWidth = horizontalEdges.length
+      ? horizontalEdges.reduce((acc, value) => acc + value, 0) / horizontalEdges.length
+      : 0;
+    const edgeHeight = verticalEdges.length
+      ? verticalEdges.reduce((acc, value) => acc + value, 0) / verticalEdges.length
+      : 0;
+
+    const width = Math.max(0.0001, edgeWidth);
+    const height = Math.max(0.0001, edgeHeight);
 
     const detail: ViewportUpdateDetail = {
-      x: minX,
-      y: minY,
+      x: centerX - width / 2,
+      y: centerY - height / 2,
       width,
       height,
     };

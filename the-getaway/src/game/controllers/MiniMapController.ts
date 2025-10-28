@@ -50,7 +50,7 @@ const clampBaseScale = (area: Pick<MapArea, 'width' | 'height'>, maxWidth: numbe
   const widthScale = maxWidth / Math.max(1, area.width);
   const heightScale = maxHeight / Math.max(1, area.height);
   const rawScale = Math.min(widthScale, heightScale);
-  const clamped = Math.max(0.6, Math.min(4, Math.floor(rawScale * 10) / 10 || DEFAULT_TILE_SCALE));
+  const clamped = Math.max(0.6, Math.min(4, rawScale || DEFAULT_TILE_SCALE));
   return Number.isFinite(clamped) && clamped > 0 ? clamped : DEFAULT_TILE_SCALE;
 };
 

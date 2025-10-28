@@ -20,6 +20,35 @@
 </notes>
 </step>
 
+<step id="GET-105" status="completed">
+<step_metadata>
+  <number>105</number>
+  <title>Simplify MiniMap HUD and restore full-size rendering</title>
+  <status>Completed</status>
+  <date>April 17, 2026</date>
+</step_metadata>
+<linear key="GET-105" />
+
+<tasks>
+1. Removed the minimap's auxiliary HUD controls (zoom slider, center/focus buttons, legend, status badges) leaving only the streamlined render surface.
+2. Updated canvas sizing to follow the container's measured width/height so the minimap automatically fills the allotted panel without manual clamps.
+3. Disabled 2D context smoothing after DPR transforms to keep gridlines and entity markers crisp when the map stretches to fill larger viewports.
+</tasks>
+
+<implementation>
+- The simplified `MiniMap.tsx` now renders everything on a single canvas, drives resizing via the existing `ResizeObserver`, and reuses the controller's dirty flags to redraw tiles, overlays, entities, paths, and a fixed 4:3 viewport reticle anchored to the click location.
+- Canvas buffers are resized with the full container bounds while `imageSmoothingEnabled` stays off, preserving clarity across zoom levels.
+- Documentation (`architecture.md`) reflects the streamlined HUD responsibilities and canvas auto-fit behaviour.
+</implementation>
+
+<code_reference file="the-getaway/src/components/ui/MiniMap.tsx" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- Level 0 manual playtest (see QA script in task summary) covering resize, click-to-center, drag pan, and scroll-wheel zoom interactions.
+</validation>
+</step>
+
 <step id="24.6" status="completed">
 <step_metadata>
   <number>24.6</number>

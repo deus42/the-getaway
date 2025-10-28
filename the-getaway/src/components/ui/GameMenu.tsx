@@ -112,18 +112,20 @@ const GameMenu: React.FC<GameMenuProps> = ({
     >
       <div
         style={{
-          width: "min(580px, 90%)",
-          padding: "2.5rem",
+          width: "min(520px, 92%)",
+          maxHeight: "90vh",
+          padding: "2rem 2.25rem",
           borderRadius: "18px",
           backgroundColor: "rgba(15,23,42,0.92)",
           border: "1px solid rgba(148,163,184,0.25)",
           boxShadow: "0 24px 50px rgba(15, 23, 42, 0.45)",
+          overflowY: "auto",
         }}
       >
-        <div style={{ marginBottom: "2.5rem" }}>
+        <div style={{ marginBottom: "1.75rem" }}>
           {/* Logo */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.5rem" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style={{ width: "80px", height: "80px" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style={{ width: "68px", height: "68px" }}>
               <defs>
                 <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                   <stop offset="0%" style={{ stopColor: "#1e293b", stopOpacity: 1 }} />
@@ -214,14 +216,14 @@ const GameMenu: React.FC<GameMenuProps> = ({
 
         <div
           style={{
-            marginTop: "2rem",
-            padding: "1.5rem",
+            marginTop: "1.5rem",
+            padding: "1.25rem",
             borderRadius: "14px",
             border: "1px solid rgba(148,163,184,0.25)",
             backgroundColor: "rgba(15,23,42,0.6)",
             display: "flex",
             flexDirection: "column",
-            gap: "1.5rem",
+            gap: "1.25rem",
           }}
         >
           {/* Settings Header */}
@@ -556,7 +558,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
 
         <div
           style={{
-            marginTop: "2.5rem",
+            marginTop: "1.75rem",
             fontSize: "0.75rem",
             letterSpacing: "0.22em",
             textTransform: "uppercase",

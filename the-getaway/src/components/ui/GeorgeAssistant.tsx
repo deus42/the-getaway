@@ -843,7 +843,7 @@ const GeorgeAssistant: React.FC<GeorgeAssistantProps> = ({ footerControls }) => 
 
   const placeholderEntry: FeedEntry = {
     id: 'george-placeholder',
-    category: 'ambient',
+    category: 'status',
     text: georgeStrings.logEmpty,
     label: georgeStrings.feedLabels.ambient,
     timestamp: 0,

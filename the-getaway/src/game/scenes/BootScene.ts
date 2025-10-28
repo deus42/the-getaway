@@ -22,9 +22,9 @@ export class BootScene extends Phaser.Scene {
     const propsTexture = this.textures.get('props');
     const normalTexture = this.textures.get('lamp_slim_a_n');
     if (propsTexture && normalTexture && propsTexture.dataSource.length === 0) {
-        const normalSource = normalTexture.getSourceImage();
-        propsTexture.setDataSource(normalSource);
-        this.textures.remove('lamp_slim_a_n');
+      const normalSource = normalTexture.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      propsTexture.setDataSource(normalSource);
+      this.textures.remove('lamp_slim_a_n');
     }
 
     if (!initialMapArea) {
