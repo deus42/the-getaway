@@ -7,17 +7,6 @@ import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progres
 import { addExperience } from '../../store/playerSlice';
 import AnimatedStatBar from './AnimatedStatBar';
 import { selectParanoiaValue } from '../../store/selectors/paranoiaSelectors';
-import {
-  neonPalette,
-  panelSurface,
-  cardSurface,
-  badgeSurface,
-  headingStyle,
-  subtleText,
-  gradientTextStyle,
-  glowTextStyle,
-  importantValueStyle,
-} from './theme';
 
 interface PlayerSummaryPanelProps {
   onOpenCharacter?: () => void;
@@ -25,143 +14,13 @@ interface PlayerSummaryPanelProps {
   showActionButton?: boolean;
 }
 
-const summaryContainerStyle: React.CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.6rem',
-  padding: '0.8rem 0.9rem',
-  borderRadius: '18px',
-  background: panelSurface.background,
-  border: panelSurface.border,
-  boxShadow: panelSurface.boxShadow,
-  backdropFilter: panelSurface.backdropFilter,
-  color: neonPalette.textPrimary,
-  fontFamily: '"DM Sans", "Inter", sans-serif',
-};
-
-const headerStyle: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'flex-start',
-  justifyContent: 'space-between',
-  gap: '0.75rem',
-};
-
-const nameStyle: React.CSSProperties = {
-  ...headingStyle,
-  ...gradientTextStyle('#bfdbfe', '#38bdf8'),
-  fontSize: '0.9rem',
-  letterSpacing: '0.26em',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '0.5rem',
-  filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))',
-};
-
-const levelBadgeStyle: React.CSSProperties = {
-  ...badgeSurface(neonPalette.cyan),
-  fontSize: '0.6rem',
-  textTransform: 'uppercase',
-  padding: '0.22rem 0.55rem',
-  borderRadius: '999px',
-  letterSpacing: '0.14em',
-  background: 'rgba(56, 189, 248, 0.18)',
-  boxShadow: '0 10px 20px -10px rgba(56, 189, 248, 0.55)',
-  ...glowTextStyle(neonPalette.cyan, 6),
-};
-
-const backgroundLabelStyle: React.CSSProperties = {
-  ...subtleText,
-  fontSize: '0.6rem',
-  letterSpacing: '0.12em',
-  textTransform: 'uppercase',
-  marginTop: '0.2rem',
-};
-
-const statGridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '0.28rem',
-};
-
-const fatigueBadgeStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.25rem',
-  padding: '0.22rem 0.55rem',
-  borderRadius: '999px',
-  border: '1px solid rgba(250, 204, 21, 0.65)',
-  background: 'rgba(250, 204, 21, 0.08)',
-  color: '#facc15',
-  fontSize: '0.55rem',
-  fontWeight: 600,
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  boxShadow: '0 8px 18px -12px rgba(250, 204, 21, 0.6)',
-};
-
 const PARANOIA_BAR_BASE_COLOR = '#7dd3fc';
 const PARANOIA_TITLE_COLOR = '#38bdf8';
 const PARANOIA_WARNING_COLOR = '#2563eb';
 const PARANOIA_CRITICAL_COLOR = '#1e3a8a';
 
-const crouchBadgeStyle: React.CSSProperties = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '0.25rem',
-  padding: '0.22rem 0.55rem',
-  borderRadius: '999px',
-  border: '1px solid rgba(148, 163, 184, 0.65)',
-  background: 'rgba(148, 163, 184, 0.12)',
-  color: '#e2e8f0',
-  fontSize: '0.55rem',
-  fontWeight: 600,
-  letterSpacing: '0.14em',
-  textTransform: 'uppercase',
-  boxShadow: '0 8px 18px -12px rgba(148, 163, 184, 0.55)',
-};
-
-const statCardStyle: React.CSSProperties = {
-  background: cardSurface.background,
-  border: cardSurface.border,
-  boxShadow: cardSurface.boxShadow,
-  borderRadius: '12px',
-  padding: '0.45rem 0.5rem',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '0.12rem',
-  minWidth: 0,
-};
-
-const statLabelStyle: React.CSSProperties = {
-  ...subtleText,
-  fontSize: '0.5rem',
-  letterSpacing: '0.12em',
-  textTransform: 'uppercase',
-};
-
-
-const actionButtonStyle = (active: boolean): React.CSSProperties => ({
-  alignSelf: 'flex-start',
-  marginTop: '0.2rem',
-  padding: active ? '0.42rem 0.75rem' : '0.38rem 0.72rem',
-  borderRadius: '999px',
-  border: `1px solid ${active ? neonPalette.amber : neonPalette.cyan}`,
-  background: active
-    ? 'linear-gradient(130deg, rgba(251, 191, 36, 0.6), rgba(249, 115, 22, 0.55))'
-    : 'linear-gradient(130deg, rgba(56, 189, 248, 0.48), rgba(14, 165, 233, 0.45))',
-  color: active ? '#fff7e1' : '#e0f2fe',
-  fontSize: '0.58rem',
-  fontWeight: 600,
-  letterSpacing: '0.18em',
-  textTransform: 'uppercase',
-  cursor: 'pointer',
-  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-  textAlign: 'center',
-  transform: 'translateY(0)',
-  boxShadow: active
-    ? '0 12px 20px -16px rgba(251, 191, 36, 0.48)'
-    : '0 12px 20px -18px rgba(56, 189, 248, 0.45)',
-});
+const cx = (...classes: Array<string | false | null | undefined>) =>
+  classes.filter(Boolean).join(' ');
 
 const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   onOpenCharacter,
@@ -187,19 +46,25 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   };
 
   return (
-    <div style={summaryContainerStyle} data-testid="player-summary-panel">
-      <div style={headerStyle}>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={nameStyle}>
-            <span>{player.name}</span>
-            <span style={levelBadgeStyle}>
+    <div
+      className="flex flex-col gap-[0.6rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.8rem] text-[#f8fafc] shadow-[0_28px_40px_-24px_rgba(14,116,144,0.45)] backdrop-blur-[14px]"
+      data-testid="player-summary-panel"
+      style={{ fontFamily: '"DM Sans", "Inter", sans-serif' }}
+    >
+      <div className="flex items-start justify-between gap-[0.75rem]">
+        <div className="flex min-w-0 flex-1 flex-col gap-[0.2rem]">
+          <div className='flex items-center gap-[0.5rem] text-[0.9rem] uppercase tracking-[0.26em] text-[#bfdbfe] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]'>
+            <span className="truncate">{player.name}</span>
+            <span className='inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.18)] px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold tracking-[0.14em] text-[#f8fafc] shadow-[0_10px_20px_-10px_rgba(56,189,248,0.55)]'>
               {uiStrings.playerStatus.levelLabel} {player.level}
             </span>
             {player.isCrouching && (
-              <span style={crouchBadgeStyle}>{uiStrings.playerStatus.crouchIndicator}</span>
+              <span className='inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(148,163,184,0.65)] bg-[rgba(148,163,184,0.12)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold tracking-[0.14em] text-[#e2e8f0] shadow-[0_8px_18px_-12px_rgba(148,163,184,0.55)]'>
+                {uiStrings.playerStatus.crouchIndicator}
+              </span>
             )}
           </div>
-          <div style={backgroundLabelStyle}>
+          <div className="text-[0.6rem] uppercase tracking-[0.12em] text-[rgba(226,232,240,0.72)]">
             {uiStrings.playerStatus.backgroundLabel}: {backgroundName}
           </div>
         </div>
@@ -223,44 +88,53 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         lowThreshold={50}
         criticalThreshold={75}
         emphasisColor={PARANOIA_TITLE_COLOR}
-        dangerDirection="ascending"
         warningColor={PARANOIA_WARNING_COLOR}
         criticalColor={PARANOIA_CRITICAL_COLOR}
+        dangerDirection="ascending"
         disableGlow
       />
+
       {player.isExhausted && (
         <span
-          style={{ ...fatigueBadgeStyle, marginTop: '0.35rem' }}
+          className='mt-[0.35rem] inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(250,204,21,0.65)] bg-[rgba(250,204,21,0.08)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold uppercase tracking-[0.14em] text-[#facc15] shadow-[0_8px_18px_-12px_rgba(250,204,21,0.6)]'
           title={uiStrings.playerStatus.fatigueHint}
         >
           ⚠️ {uiStrings.playerStatus.fatigueStatus}
         </span>
       )}
 
-      <div style={statGridStyle}>
-        <div style={statCardStyle}>
-          <span style={statLabelStyle}>{uiStrings.playerStatus.creditsLabel}</span>
-          <span style={{ ...importantValueStyle('#fbbf24') }}>₿{player.credits}</span>
+      <div className="grid grid-cols-2 gap-[0.28rem]">
+        <div className="flex min-w-0 flex-col gap-[0.12rem] rounded-[12px] border border-[rgba(248,250,252,0.08)] bg-[linear-gradient(160deg,rgba(14,26,52,0.88),rgba(10,18,34,0.88))] px-[0.5rem] py-[0.45rem] shadow-[0_16px_30px_-20px_rgba(13,148,136,0.6)]">
+          <span className="text-[0.5rem] uppercase tracking-[0.12em] text-[rgba(148,163,184,0.7)]">
+            {uiStrings.playerStatus.creditsLabel}
+          </span>
+          <span className="text-[0.85rem] font-semibold text-[#fbbf24] drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
+            ₿{player.credits}
+          </span>
         </div>
-        <div style={statCardStyle}>
-          <span style={statLabelStyle}>{uiStrings.playerStatus.experienceLabel}</span>
-          <span style={{ ...importantValueStyle('#38bdf8') }}>{formatXPDisplay(player.experience, player.level)}</span>
+        <div className="flex min-w-0 flex-col gap-[0.12rem] rounded-[12px] border border-[rgba(248,250,252,0.08)] bg-[linear-gradient(160deg,rgba(14,26,52,0.88),rgba(10,18,34,0.88))] px-[0.5rem] py-[0.45rem] shadow-[0_16px_30px_-20px_rgba(13,148,136,0.6)]">
+          <span className="text-[0.5rem] uppercase tracking-[0.12em] text-[rgba(148,163,184,0.7)]">
+            {uiStrings.playerStatus.experienceLabel}
+          </span>
+          <span className="text-[0.85rem] font-semibold text-[#38bdf8] drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]">
+            {formatXPDisplay(player.experience, player.level)}
+          </span>
         </div>
       </div>
+
       {onOpenCharacter && showActionButton && (
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.2rem' }}>
+        <div className="mt-[0.2rem] flex gap-[0.5rem]">
           <button
             type="button"
             onClick={onOpenCharacter}
-            style={{ ...actionButtonStyle(characterOpen), flex: 1 }}
+            className={cx(
+              "flex-1 rounded-[999px] border px-[0.75rem] py-[0.42rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#e0f2fe] shadow-[0_12px_20px_-18px_rgba(56,189,248,0.45)] transition-transform duration-200",
+              characterOpen
+                ? "border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.6),rgba(249,115,22,0.55))] text-[#fff7e1]"
+                : "border-[rgba(56,189,248,0.55)] bg-[linear-gradient(130deg,rgba(56,189,248,0.48),rgba(14,165,233,0.45))]"
+            )}
             data-testid="summary-open-character"
             aria-pressed={characterOpen}
-            onMouseEnter={(event) => {
-              event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
-            }}
-            onMouseLeave={(event) => {
-              event.currentTarget.style.transform = 'translateY(0) scale(1)';
-            }}
           >
             {uiStrings.shell.characterButton}
           </button>
@@ -268,20 +142,8 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             <button
               type="button"
               onClick={handleLevelUp}
-              style={{
-                ...actionButtonStyle(false),
-                flex: 1,
-                background: 'linear-gradient(130deg, rgba(251, 191, 36, 0.48), rgba(249, 115, 22, 0.45))',
-                border: `1px solid ${neonPalette.amber}`,
-                boxShadow: '0 12px 20px -16px rgba(251, 191, 36, 0.48)',
-              }}
+              className="flex-1 rounded-[999px] border border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.48),rgba(249,115,22,0.45))] px-[0.75rem] py-[0.38rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#fff8dc] shadow-[0_12px_20px_-16px_rgba(251,191,36,0.48)] transition-transform duration-200 hover:-translate-y-[2px] hover:scale-[1.01]"
               title="Test Mode: Gain XP to level up"
-              onMouseEnter={(event) => {
-                event.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.transform = 'translateY(0) scale(1)';
-              }}
             >
               ⬆ Level Up
             </button>

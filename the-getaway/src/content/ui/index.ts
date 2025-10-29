@@ -84,6 +84,12 @@ interface QuestLogStrings {
 }
 
 interface ShellStrings {
+  reconLabel: string;
+  reconTitle: string;
+  squadLabel: string;
+  squadTitle: string;
+  telemetryLabel: string;
+  telemetryTitle: string;
   menuButton: string;
   characterButton: string;
   characterTitle: string;
@@ -92,6 +98,10 @@ interface ShellStrings {
   completedToggleClose: string;
   eventsToggleOpen: string;
   eventsToggleClose: string;
+  collapseLeft: string;
+  expandLeft: string;
+  collapseRight: string;
+  expandRight: string;
   completedOverlayTitle: string;
   eventsOverlayTitle: string;
   activeListTitle: string;
@@ -562,7 +572,13 @@ const STRINGS: Record<Locale, UIStrings> = {
       experienceLabel: (amount) => `${amount} XP`,
       supplyFallback: 'Supply',
   },
-  shell: {
+    shell: {
+      reconLabel: 'Recon',
+      reconTitle: 'Tactical Feed',
+      squadLabel: 'Squad',
+      squadTitle: 'Recon Status',
+      telemetryLabel: 'Telemetry',
+      telemetryTitle: 'Action Log',
       menuButton: 'Menu',
       characterButton: 'Character',
       characterTitle: 'Operative Profile',
@@ -571,6 +587,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       completedToggleClose: 'Hide All Quests',
       eventsToggleOpen: 'Show All Events',
       eventsToggleClose: 'Hide All Events',
+      collapseLeft: 'Hide Recon Panel',
+      expandLeft: 'Show Recon Panel',
+      collapseRight: 'Hide Ops Panel',
+      expandRight: 'Show Ops Panel',
       completedOverlayTitle: 'All Quests',
       eventsOverlayTitle: 'Event Feed',
       activeListTitle: 'Active Objectives',
@@ -1284,6 +1304,12 @@ const STRINGS: Record<Locale, UIStrings> = {
       supplyFallback: 'поставка',
     },
     shell: {
+      reconLabel: 'Розвідка',
+      reconTitle: 'Тактичний канал',
+      squadLabel: 'Загін',
+      squadTitle: 'Статус розвідки',
+      telemetryLabel: 'Телеметрія',
+      telemetryTitle: 'Журнал дій',
       menuButton: 'Меню',
       characterButton: 'Профіль',
       characterTitle: 'Профіль оперативника',
@@ -1292,6 +1318,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       completedToggleClose: 'Приховати завершені',
       eventsToggleOpen: 'Показати події',
       eventsToggleClose: 'Приховати всі події',
+      collapseLeft: 'Сховати панель розвідки',
+      expandLeft: 'Показати панель розвідки',
+      collapseRight: 'Сховати оперативну панель',
+      expandRight: 'Показати оперативну панель',
       completedOverlayTitle: 'Завершені',
       eventsOverlayTitle: 'Журнал подій',
       activeListTitle: 'Активні цілі',

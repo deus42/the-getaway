@@ -182,6 +182,33 @@ flowchart LR
 </pattern>
 </architecture_section>
 
+<architecture_section id="noir_hud_style_system" category="ui_theming">
+<design_principles>
+- Keep every HUD surface on the same gunmetal + neon palette by sourcing colours exclusively from shared CSS variables instead of local hex values.
+- Treat typography and spacing as part of the design language: headings use the display stack while body text stays on the readable sans family.
+- Support cinematic lighting shifts (day/night/curfew) with data-attribute driven overrides so React and Phaser layers stay in sync.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/styles/hud-theme.css</code_location> defines palette, typography, spacing, and sizing tokens with `@theme static` and registers reusable component styles (e.g. `.hud-panel`). The file exports neon cyan/magenta highlights, gunmetal surfaces, focus shadows, and dimension tokens such as `--size-hud-ribbon-height` and `--size-hud-sidebar-width`.
+2. Theme overrides live behind `data-theme` (`day`, `dark`, `night`) and `data-curfew` / `data-alert` attributes, enabling day/night shifts and curfew accent swaps without touching component code. HUD consumers read the same CSS variables regardless of framework layer.
+3. <code_location>the-getaway/src/index.css</code_location> imports the theme, applies the noir gradients to the body background, and resets anchors/buttons to use shared variables so global chrome reflects the unified styling out of the box.
+4. Tailwind consumes these tokens via variable-backed utilities (`rounded-hud`, `shadow-hud`, `h-[hud-ribbon]`, etc.) allowing React components to mix utility classes with bespoke CSS while keeping the palette declarative.
+5. Implementation teams must run a full surface sweep when touching HUD styling: replace ad-hoc colours, shadows, and font stacks with the shared tokens to avoid regressing the noir identity. Any new HUD component should default to `.hud-panel` or document why it diverges.
+</technical_flow>
+
+<code_location>the-getaway/tailwind.config.js</code_location>
+<code_location>the-getaway/src/styles/hud-theme.css</code_location>
+<code_location>the-getaway/src/styles/hud-components.css</code_location>
+<code_location>the-getaway/src/index.css</code_location>
+
+<maintenance_notes date="2026-04-28">
+- Before shipping HUD changes, run `yarn build` or Tailwind CLI to confirm the trimmed colour palette and variable-backed utilities compile without pulling in the default spectrum.
+- Designers requested a holistic styling pass; when implementing this roadmap step ensure linked panels (minimap, George console, mission overlays, modals) are audited for outdated tokens and refit as needed.
+- GameMenu, CommandShell ribbon, OpsBriefingsPanel, and PlayerSummaryPanel now rely on `hud-components.css` primitives; George Assistant, Level Indicator, and auxiliary HUD overlays still need migration to the shared token classes.
+</maintenance_notes>
+</architecture_section>
+
 <architecture_section id="level_objectives_panel" category="hud_systems">
 <design_principles>
 - Keep the level card and objectives list anchored to the top-center HUD rail so mission metadata is always visible without crowding the playfield.
