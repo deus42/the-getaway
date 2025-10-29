@@ -22,6 +22,10 @@ import AutoBattleProfileSelect from "./AutoBattleProfileSelect";
 import { updateVisualSettings } from "../../game/settings/visualSettings";
 import { setOverlayEnabled } from "../../store/surveillanceSlice";
 
+const classNames = (
+  ...classes: Array<string | false | null | undefined>
+) => classes.filter(Boolean).join(" ");
+
 interface GameMenuProps {
   onStartNewGame: () => void;
   onContinue: () => void;
@@ -50,6 +54,15 @@ const GameMenu: React.FC<GameMenuProps> = ({
   );
   const strings = getUIStrings(locale);
   const autoBattleStrings = strings.autoBattle;
+
+  const sectionLabelClass =
+    "mb-[0.65rem] block text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-[#94a3b8]";
+  const toggleContainerClass =
+    "hud-menu-toggle flex cursor-pointer items-center gap-[0.75rem] rounded-[8px] border border-[rgba(148,163,184,0.25)] bg-[rgba(30,41,59,0.5)] px-[1rem] py-[0.75rem] transition-[background-color,border-color,box-shadow] duration-200 hover:border-[rgba(56,189,248,0.35)] hover:bg-[rgba(30,41,59,0.7)] hover:shadow-[0_0_12px_rgba(56,189,248,0.15)]";
+  const languageButtonBaseClass =
+    "hud-menu-language-button rounded-[8px] border border-[rgba(148,163,184,0.25)] bg-[rgba(30,41,59,0.5)] px-[1.1rem] py-[0.6rem] text-[0.9rem] font-normal tracking-[0.03em] text-[#94a3b8] transition-all duration-200 hover:border-[rgba(56,189,248,0.4)] hover:text-[#f8fafc] hover:shadow-[0_0_12px_rgba(56,189,248,0.15)]";
+  const languageButtonActiveClass =
+    "border-2 border-[rgba(56,189,248,0.6)] bg-[rgba(56,189,248,0.15)] font-semibold text-[#e2e8f0] shadow-[0_0_15px_rgba(56,189,248,0.2)]";
 
   const handleLocaleSelect = (nextLocale: Locale) => {
     if (nextLocale === locale) {
@@ -97,100 +110,53 @@ const GameMenu: React.FC<GameMenuProps> = ({
   return (
     <div
       data-testid="game-menu"
-      style={{
-        position: "fixed",
-        inset: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background:
-          "radial-gradient(circle at top, rgba(96,165,250,0.15), rgba(17,24,39,0.95))",
-        backdropFilter: "blur(4px)",
-        color: "#f8fafc",
-        zIndex: 10,
-      }}
+      className="hud-menu-backdrop fixed inset-0 z-[80] flex items-center justify-center bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.15),rgba(17,24,39,0.95))] font-body text-hud-text backdrop-blur-[4px]"
     >
-      <div
-        style={{
-          width: "min(520px, 92%)",
-          maxHeight: "90vh",
-          padding: "2rem 2.25rem",
-          borderRadius: "18px",
-          backgroundColor: "rgba(15,23,42,0.92)",
-          border: "1px solid rgba(148,163,184,0.25)",
-          boxShadow: "0 24px 50px rgba(15, 23, 42, 0.45)",
-          overflowY: "auto",
-        }}
-      >
-        <div style={{ marginBottom: "1.75rem" }}>
-          {/* Logo */}
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" style={{ width: "68px", height: "68px" }}>
+      <div className="hud-menu-modal flex w-[min(520px,92%)] max-h-[90vh] flex-col overflow-y-auto rounded-[18px] border border-[rgba(148,163,184,0.25)] bg-[rgba(15,23,42,0.92)] px-[2.25rem] py-[2rem] text-[#f8fafc] shadow-[0_24px_50px_rgba(15,23,42,0.45)]">
+        <div className="mb-[2rem] flex flex-col items-center text-center">
+          <div className="mb-[1.25rem] flex justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" className="h-[68px] w-[68px]">
               <defs>
-                <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: "#1e293b", stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: "#0f172a", stopOpacity: 1 }} />
+                <linearGradient id="menuBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#0f172a" stopOpacity={1} />
                 </linearGradient>
-                <linearGradient id="glowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: "#38bdf8", stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: "#0ea5e9", stopOpacity: 1 }} />
+                <linearGradient id="menuGlowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity={1} />
+                  <stop offset="100%" stopColor="#0ea5e9" stopOpacity={1} />
                 </linearGradient>
               </defs>
-              <circle cx="32" cy="32" r="32" fill="url(#bgGradient)"/>
-              <path d="M32 16 L46 24 L32 32 L18 24 Z" fill="#475569" opacity="0.6"/>
-              <circle cx="32" cy="32" r="10" fill="none" stroke="url(#glowGradient)" strokeWidth="2.5"/>
-              <circle cx="32" cy="32" r="6" fill="none" stroke="url(#glowGradient)" strokeWidth="1.5"/>
-              <line x1="32" y1="22" x2="32" y2="26" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/>
-              <line x1="32" y1="38" x2="32" y2="42" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/>
-              <line x1="22" y1="32" x2="26" y2="32" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/>
-              <line x1="38" y1="32" x2="42" y2="32" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="32" cy="32" r="2" fill="#38bdf8"/>
-              <path d="M8 8 L12 8 L12 12" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity="0.4"/>
-              <path d="M56 8 L52 8 L52 12" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity="0.4"/>
-              <path d="M8 56 L12 56 L12 52" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity="0.4"/>
-              <path d="M56 56 L52 56 L52 52" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity="0.4"/>
+              <circle cx="32" cy="32" r="32" fill="url(#menuBgGradient)" />
+              <path d="M32 16 L46 24 L32 32 L18 24 Z" fill="#475569" opacity="0.6" />
+              <circle cx="32" cy="32" r="10" fill="none" stroke="url(#menuGlowGradient)" strokeWidth="2.5" />
+              <circle cx="32" cy="32" r="6" fill="none" stroke="url(#menuGlowGradient)" strokeWidth="1.5" />
+              <line x1="32" y1="22" x2="32" y2="26" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
+              <line x1="32" y1="38" x2="32" y2="42" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
+              <line x1="22" y1="32" x2="26" y2="32" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
+              <line x1="38" y1="32" x2="42" y2="32" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="32" cy="32" r="2" fill="#38bdf8" />
+              <path d="M8 8 L12 8 L12 12" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
+              <path d="M56 8 L52 8 L52 12" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
+              <path d="M8 56 L12 56 L12 52" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
+              <path d="M56 56 L52 56 L52 52" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
             </svg>
           </div>
-
-          <p
-            style={{
-              fontSize: "0.875rem",
-              textTransform: "uppercase",
-              letterSpacing: "0.35em",
-              color: "#60a5fa",
-              marginBottom: "0.75rem",
-              textAlign: "center",
-            }}
-          >
+          <p className="mb-[0.75rem] text-[0.875rem] uppercase tracking-[0.35em] text-[#60a5fa]">
             {strings.menu.tag}
           </p>
           <h1
+            className="mb-[0.75rem] text-[2.5rem] font-bold leading-[1.05]"
             style={{
-              fontSize: "2.5rem",
-              lineHeight: 1.05,
-              fontWeight: 700,
-              marginBottom: "0.75rem",
-              textAlign: "center",
               ...gradientTextStyle("#bfdbfe", "#38bdf8"),
               filter: "drop-shadow(0 0 20px rgba(56, 189, 248, 0.5))",
             }}
           >
             {strings.menu.title}
           </h1>
-          <p
-            style={{
-              fontSize: "1rem",
-              lineHeight: 1.6,
-              color: "#94a3b8",
-              textAlign: "center",
-              margin: "0 auto",
-            }}
-          >
-            {strings.menu.tagline}
-          </p>
+          <p className="mx-auto text-[1rem] leading-[1.6] text-[#94a3b8]">{strings.menu.tagline}</p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <div className="flex flex-col gap-[1.15rem]">
           <EnhancedButton
             data-testid="start-new-game"
             onClick={onStartNewGame}
@@ -214,50 +180,18 @@ const GameMenu: React.FC<GameMenuProps> = ({
           </EnhancedButton>
         </div>
 
-        <div
-          style={{
-            marginTop: "1.5rem",
-            padding: "1.25rem",
-            borderRadius: "14px",
-            border: "1px solid rgba(148,163,184,0.25)",
-            backgroundColor: "rgba(15,23,42,0.6)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "1.25rem",
-          }}
-        >
-          {/* Settings Header */}
-          <div style={{ borderBottom: "1px solid rgba(148,163,184,0.15)", paddingBottom: "0.75rem" }}>
-            <h2
-              style={{
-                fontSize: "1.1rem",
-                fontWeight: 600,
-                margin: 0,
-                color: "#e2e8f0",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
-              }}
-            >
+        <div className="hud-menu-section mt-[2rem] flex flex-col gap-[1.5rem] rounded-[14px] border border-[rgba(148,163,184,0.25)] bg-[rgba(15,23,42,0.6)] p-[1.5rem]">
+          <div className="hud-menu-section__header border-b border-[rgba(148,163,184,0.15)] pb-[1rem]">
+            <h2 className="m-0 text-[1.1rem] font-semibold uppercase tracking-[0.05em] text-[#e2e8f0]">
               {strings.menu.settingsHeading}
             </h2>
           </div>
 
-          {/* Language Section */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.8rem",
-                color: "#94a3b8",
-                marginBottom: "0.65rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontWeight: 600,
-              }}
-            >
+            <label className={sectionLabelClass}>
               {strings.menu.languageLabel}
             </label>
-            <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap" }}>
+            <div className="hud-menu-language-list flex flex-wrap gap-[0.6rem]">
               {SUPPORTED_LOCALES.map((localeOption) => {
                 const isActive = localeOption === locale;
                 return (
@@ -265,23 +199,10 @@ const GameMenu: React.FC<GameMenuProps> = ({
                     type="button"
                     key={localeOption}
                     onClick={() => handleLocaleSelect(localeOption)}
-                    style={{
-                      padding: "0.6rem 1.1rem",
-                      borderRadius: "8px",
-                      border: isActive
-                        ? "2px solid rgba(56,189,248,0.6)"
-                        : "1px solid rgba(148,163,184,0.25)",
-                      backgroundColor: isActive
-                        ? "rgba(56,189,248,0.15)"
-                        : "rgba(30,41,59,0.5)",
-                      color: isActive ? "#e2e8f0" : "#94a3b8",
-                      fontSize: "0.9rem",
-                      fontWeight: isActive ? 600 : 400,
-                      letterSpacing: "0.03em",
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      boxShadow: isActive ? "0 0 15px rgba(56,189,248,0.2)" : "none",
-                    }}
+                    className={classNames(
+                      languageButtonBaseClass,
+                      isActive && languageButtonActiveClass
+                    )}
                   >
                     {strings.menu.languageNames[localeOption]}
                   </button>
@@ -290,78 +211,36 @@ const GameMenu: React.FC<GameMenuProps> = ({
             </div>
           </div>
 
-          {/* AutoBattle Section */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.8rem",
-                color: "#94a3b8",
-                marginBottom: "0.65rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontWeight: 600,
-              }}
-            >
+            <label className={sectionLabelClass}>
               {autoBattleStrings.heading}
             </label>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "8px",
-                  backgroundColor: "rgba(30,41,59,0.5)",
-                  border: "1px solid rgba(148,163,184,0.25)",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.7)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.5)";
-                }}
-              >
+            <div className="flex flex-col gap-[1.15rem]">
+              <label className={toggleContainerClass}>
                 <input
                   type="checkbox"
                   checked={autoBattleEnabled}
                   onChange={handleAutoBattleToggle}
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    cursor: "pointer",
-                    accentColor: "#38bdf8",
-                  }}
+                  className="h-5 w-5 cursor-pointer accent-[#38bdf8]"
                 />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.95rem", color: "#e2e8f0", fontWeight: 500 }}>
+                <div className="flex-1">
+                  <div className="text-[0.95rem] font-medium text-[#e2e8f0]">
                     {autoBattleStrings.toggleLabel}
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.15rem" }}>
+                  <div className="mt-[0.15rem] text-[0.75rem] text-[#94a3b8]">
                     {autoBattleStrings.toggleDescription}
                   </div>
                 </div>
               </label>
 
-              <div>
+              <div className="flex flex-col gap-[0.75rem]">
                 <label
                   htmlFor="auto-battle-profile-select"
-                  style={{
-                    display: "block",
-                    fontSize: "0.75rem",
-                    color: "#94a3b8",
-                    marginBottom: "0.5rem",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    fontWeight: 600,
-                  }}
+                  className="mb-[0.5rem] block text-[0.75rem] font-semibold uppercase tracking-[0.08em] text-[#94a3b8]"
                 >
                   {autoBattleStrings.profileLabel}
                 </label>
-                <div style={{ fontSize: "0.75rem", color: "#64748b", marginBottom: "0.6rem" }}>
+                <div className="text-[0.75rem] text-[#64748b]">
                   {autoBattleStrings.profileDescription}
                 </div>
                 <AutoBattleProfileSelect
@@ -372,182 +251,74 @@ const GameMenu: React.FC<GameMenuProps> = ({
                   variant="menu"
                   fullWidth
                 />
-                <div
-                  style={{
-                    marginTop: "0.5rem",
-                    fontSize: "0.82rem",
-                    color: "#a5b4d5",
-                  }}
-                >
+                <div className="text-[0.82rem] text-[#a5b4d5]">
                   {selectedProfileCopy.summary}
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Surveillance Overlay Section */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.8rem",
-                color: "#94a3b8",
-                marginBottom: "0.65rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontWeight: 600,
-              }}
-            >
+            <label className={sectionLabelClass}>
               {strings.menu.surveillanceLabel}
             </label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                padding: "0.75rem 1rem",
-                borderRadius: "8px",
-                backgroundColor: "rgba(30,41,59,0.5)",
-                border: "1px solid rgba(148,163,184,0.25)",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.7)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.5)";
-              }}
-            >
+            <label className={toggleContainerClass}>
               <input
                 type="checkbox"
                 checked={surveillanceOverlayEnabled}
                 onChange={handleSurveillanceToggle}
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  cursor: "pointer",
-                  accentColor: "#38bdf8",
-                }}
+                className="h-5 w-5 cursor-pointer accent-[#38bdf8]"
               />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.95rem", color: "#e2e8f0", fontWeight: 500 }}>
+              <div className="flex-1">
+                <div className="text-[0.95rem] font-medium text-[#e2e8f0]">
                   {strings.menu.surveillanceToggleLabel}
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.15rem" }}>
+                <div className="mt-[0.15rem] text-[0.75rem] text-[#94a3b8]">
                   {strings.menu.surveillanceToggleDescription}
                 </div>
               </div>
             </label>
           </div>
 
-          {/* Lighting Section */}
           <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: "0.8rem",
-                color: "#94a3b8",
-                marginBottom: "0.65rem",
-                textTransform: "uppercase",
-                letterSpacing: "0.08em",
-                fontWeight: 600,
-              }}
-            >
+            <label className={sectionLabelClass}>
               {strings.menu.lightingLabel}
             </label>
-            <label
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.75rem",
-                padding: "0.75rem 1rem",
-                borderRadius: "8px",
-                backgroundColor: "rgba(30,41,59,0.5)",
-                border: "1px solid rgba(148,163,184,0.25)",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.7)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.5)";
-              }}
-            >
+            <label className={toggleContainerClass}>
               <input
                 type="checkbox"
                 checked={lightsEnabled}
                 onChange={handleLightingToggle}
-                style={{
-                  width: "20px",
-                  height: "20px",
-                  cursor: "pointer",
-                  accentColor: "#38bdf8",
-                }}
+                className="h-5 w-5 cursor-pointer accent-[#38bdf8]"
               />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: "0.95rem", color: "#e2e8f0", fontWeight: 500 }}>
+              <div className="flex-1">
+                <div className="text-[0.95rem] font-medium text-[#e2e8f0]">
                   {strings.menu.lightingToggleLabel}
                 </div>
-                <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.15rem" }}>
+                <div className="mt-[0.15rem] text-[0.75rem] text-[#94a3b8]">
                   {strings.menu.lightingToggleDescription}
                 </div>
               </div>
             </label>
           </div>
 
-          {/* Test Mode Section (Dev Only) */}
-          {process.env.NODE_ENV === 'development' && (
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: "0.8rem",
-                  color: "#94a3b8",
-                  marginBottom: "0.65rem",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  fontWeight: 600,
-                }}
-              >
+          {process.env.NODE_ENV === "development" && (
+            <div className="flex flex-col gap-[1.15rem]">
+              <label className={sectionLabelClass}>
                 Developer Options
               </label>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.75rem",
-                  padding: "0.75rem 1rem",
-                  borderRadius: "8px",
-                  backgroundColor: "rgba(30,41,59,0.5)",
-                  border: "1px solid rgba(148,163,184,0.25)",
-                  cursor: "pointer",
-                  transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.7)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "rgba(30,41,59,0.5)";
-                }}
-              >
+              <label className={toggleContainerClass}>
                 <input
                   type="checkbox"
                   checked={testMode}
                   onChange={handleTestModeToggle}
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    cursor: "pointer",
-                    accentColor: "#38bdf8",
-                  }}
+                  className="h-5 w-5 cursor-pointer accent-[#38bdf8]"
                 />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: "0.95rem", color: "#e2e8f0", fontWeight: 500 }}>
+                <div className="flex-1">
+                  <div className="text-[0.95rem] font-medium text-[#e2e8f0]">
                     Test Mode
                   </div>
-                  <div style={{ fontSize: "0.75rem", color: "#94a3b8", marginTop: "0.15rem" }}>
+                  <div className="mt-[0.15rem] text-[0.75rem] text-[#94a3b8]">
                     Enable testing tools and shortcuts
                   </div>
                 </div>
@@ -556,23 +327,9 @@ const GameMenu: React.FC<GameMenuProps> = ({
           )}
         </div>
 
-        <div
-          style={{
-            marginTop: "1.75rem",
-            fontSize: "0.75rem",
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-            color: "#64748b",
-            textAlign: "center",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "0.65rem",
-            flexWrap: "wrap",
-          }}
-        >
+        <div className="mt-[1.75rem] flex flex-wrap items-center justify-center gap-[0.65rem] text-center text-[0.75rem] uppercase tracking-[0.22em] text-[#64748b]">
           <span>{strings.menu.alphaLabel(GAME_YEAR)}</span>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", color: "#94a3b8" }}>
+          <span className="inline-flex items-center gap-[0.35rem] text-[#94a3b8]">
             <span aria-hidden="true">•</span>
             <span>{`v${GAME_VERSION}`}</span>
           </span>
