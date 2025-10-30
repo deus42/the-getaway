@@ -332,6 +332,7 @@ Paranoia replaces stamina on the HUD for MVP and tracks the crew’s psychologic
 		•	Luck cushions spikes (reduces large hits by up to 50%)
 	•	Respite window: external systems (Street-Tension Director, George, calm consumables) can cap gains for a short duration to give breathing room
 	•	HUD: Paranoia bar replaces the stamina meter visually; stamina persists mechanically but is deprioritized until post-MVP. Fatigue status still surfaces when exhaustion triggers.
+	•	Iconography: Tactical HUD overlays and the action log reuse the shared SVG set (`src/components/ui/icons`) so combat, loot, mission, and system events read consistently without emoji fallbacks.
 	•	Interplay:
 		•	Street-Tension Director (Step 19.7) reads normalized paranoia to bias crackdown/respite patterns
 		•	George assistant is now the diegetic vent for fear management (Reassure button + ambient narration)

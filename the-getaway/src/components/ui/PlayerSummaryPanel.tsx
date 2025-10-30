@@ -6,6 +6,7 @@ import { getUIStrings } from '../../content/ui';
 import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progression';
 import { addExperience } from '../../store/playerSlice';
 import AnimatedStatBar from './AnimatedStatBar';
+import { WarningIcon } from './icons';
 import { selectParanoiaValue } from '../../store/selectors/paranoiaSelectors';
 
 interface PlayerSummaryPanelProps {
@@ -83,10 +84,11 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
 
       {player.isExhausted && (
         <span
-          className="mt-[0.35rem] inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(250,204,21,0.65)] bg-[rgba(250,204,21,0.08)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold uppercase tracking-[0.14em] text-[#facc15] shadow-[0_8px_18px_-12px_rgba(250,204,21,0.6)]"
+          className="mt-[0.35rem] inline-flex items-center gap-[0.3rem] rounded-[999px] border border-[rgba(250,204,21,0.65)] bg-[rgba(250,204,21,0.08)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold uppercase tracking-[0.14em] text-[#facc15] shadow-[0_8px_18px_-12px_rgba(250,204,21,0.6)]"
           title={uiStrings.playerStatus.fatigueHint}
         >
-          ⚠️ {uiStrings.playerStatus.fatigueStatus}
+          <WarningIcon className="text-[#facc15]" aria-hidden />
+          <span>{uiStrings.playerStatus.fatigueStatus}</span>
         </span>
       )}
 

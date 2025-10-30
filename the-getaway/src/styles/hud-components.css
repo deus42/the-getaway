@@ -802,35 +802,44 @@
   }
 
   .hud-log-entry[data-kind="combat"] {
+    color: #f87171;
     border-color: rgba(239, 68, 68, 0.3);
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
   }
 
   .hud-log-entry[data-kind="dialogue"] {
+    color: #c4b5fd;
     border-color: rgba(139, 92, 246, 0.3);
     box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
   }
 
   .hud-log-entry[data-kind="loot"] {
+    color: #facc15;
     border-color: rgba(245, 158, 11, 0.3);
     box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
   }
 
   .hud-log-entry[data-kind="mission"] {
+    color: #34d399;
     border-color: rgba(16, 185, 129, 0.3);
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
   }
 
   .hud-log-entry[data-kind="system"] {
+    color: #60a5fa;
     border-color: rgba(59, 130, 246, 0.3);
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
   }
 
   .hud-log-entry__icon {
-    font-size: 0.85rem;
-    flex-shrink: 0;
-    filter: drop-shadow(0 0 4px currentColor);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     margin-top: 0.05rem;
+  }
+
+  .hud-log-entry__icon svg {
+    filter: drop-shadow(0 0 4px currentColor);
   }
 
   .hud-log-entry__body {

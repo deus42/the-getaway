@@ -1,41 +1,21 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
+import { CombatIcon, DialogueIcon, LootIcon, MissionIcon, SystemIcon } from './icons';
+import { HUDIconProps } from './icons/IconBase';
 
 type MessageKind = 'combat' | 'dialogue' | 'loot' | 'mission' | 'system';
 
 interface MessageStyle {
-  icon: string;
-  textClass: string;
-  containerClass: string;
+  Icon: React.ComponentType<HUDIconProps>;
 }
 
 const MESSAGE_STYLES: Record<MessageKind, MessageStyle> = {
-  combat: {
-    icon: '⚔️',
-    textClass: 'text-[#f87171]',
-    containerClass: 'hud-log-entry text-[#f87171]',
-  },
-  dialogue: {
-    icon: '💬',
-    textClass: 'text-[#c4b5fd]',
-    containerClass: 'hud-log-entry text-[#c4b5fd]',
-  },
-  loot: {
-    icon: '🎁',
-    textClass: 'text-[#facc15]',
-    containerClass: 'hud-log-entry text-[#facc15]',
-  },
-  mission: {
-    icon: '📋',
-    textClass: 'text-[#34d399]',
-    containerClass: 'hud-log-entry text-[#34d399]',
-  },
-  system: {
-    icon: '⚙️',
-    textClass: 'text-[#60a5fa]',
-    containerClass: 'hud-log-entry text-[#60a5fa]',
-  },
+  combat: { Icon: CombatIcon },
+  dialogue: { Icon: DialogueIcon },
+  loot: { Icon: LootIcon },
+  mission: { Icon: MissionIcon },
+  system: { Icon: SystemIcon },
 };
 
 const resolveMessageKind = (message: string): MessageKind => {
@@ -77,17 +57,19 @@ const LogPanel: React.FC = () => {
     <div ref={containerRef} className="hud-log">
       {messages.map((message, index) => {
         const kind = resolveMessageKind(message);
-        const style = MESSAGE_STYLES[kind];
+        const { Icon } = MESSAGE_STYLES[kind];
         const isNew = animating.has(index);
 
         return (
           <article
             key={`${index}-${message.slice(0, 24)}`}
-            className={`${style.containerClass}${isNew ? ' log-entry-animate' : ''}`}
+            className={`hud-log-entry${isNew ? ' log-entry-animate' : ''}`}
             data-kind={kind}
           >
-            <span className="hud-log-entry__icon">{style.icon}</span>
-            <p className={`hud-log-entry__body ${style.textClass}`}>
+            <span className="hud-log-entry__icon">
+              <Icon aria-hidden />
+            </span>
+            <p className="hud-log-entry__body">
               {message}
             </p>
           </article>
