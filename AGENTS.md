@@ -147,6 +147,12 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - After finishing a roadmap step (or related Linear task), add an implementation summary comment to the matching Linear issue before moving it to `Done`; include key tasks, validation, and notable code references.
 - **Linear ticket types**: use `Feature` for roadmap steps/increments, `Improvement` for UX/quality follow-ups, and `Bug` for regressions. Always apply the matching label when creating an issue so downstream automation stays intact; improvements do not replace feature tickets in the roadmap.
 
+### Definition of Done
+- After the implementation is complete and before requesting feedback or review, run the full unit test suite and ensure it passes (`yarn test`).
+- Verify total Jest coverage is **greater than 80%**; use `yarn test --coverage` (or the project’s equivalent) and address any regressions before proceeding.
+- Do not hand off work, request review, or move a Linear issue forward until both conditions above are satisfied.
+- Include the executed test command(s) and coverage confirmation in the task summary or issue comment when reporting completion.
+
 ## 12. Accountability Protocol
 - When delivering results in this workspace, restate the user’s latest request in detail before describing your work. Include every explicit instruction so reviewers can trace outcomes back to the ask.
 - Follow the format: **Initial Ask** (verbatim or high-fidelity restatement), **What We Did**, **Playtest/Validation**.
