@@ -14,14 +14,6 @@ interface PlayerSummaryPanelProps {
   showActionButton?: boolean;
 }
 
-const PARANOIA_BAR_BASE_COLOR = '#7dd3fc';
-const PARANOIA_TITLE_COLOR = '#38bdf8';
-const PARANOIA_WARNING_COLOR = '#2563eb';
-const PARANOIA_CRITICAL_COLOR = '#1e3a8a';
-
-const cx = (...classes: Array<string | false | null | undefined>) =>
-  classes.filter(Boolean).join(' ');
-
 const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   onOpenCharacter,
   characterOpen = false,
@@ -47,19 +39,18 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
 
   return (
     <div
-      className="flex flex-col gap-[0.6rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.8rem] text-[#f8fafc] shadow-[0_28px_40px_-24px_rgba(14,116,144,0.45)] backdrop-blur-[14px]"
+      className="flex flex-col gap-[0.6rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.8rem] text-[#f8fafc] shadow-[0_28px_40px_-24px_rgba(14,116,144,0.45)] backdrop-blur-[14px] font-body"
       data-testid="player-summary-panel"
-      style={{ fontFamily: '"DM Sans", "Inter", sans-serif' }}
     >
       <div className="flex items-start justify-between gap-[0.75rem]">
         <div className="flex min-w-0 flex-1 flex-col gap-[0.2rem]">
-          <div className='flex items-center gap-[0.5rem] text-[0.9rem] uppercase tracking-[0.26em] text-[#bfdbfe] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]'>
+          <div className="flex items-center gap-[0.5rem] text-[0.9rem] uppercase tracking-[0.26em] text-[#bfdbfe] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]">
             <span className="truncate">{player.name}</span>
-            <span className='inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.18)] px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold tracking-[0.14em] text-[#f8fafc] shadow-[0_10px_20px_-10px_rgba(56,189,248,0.55)]'>
+            <span className="inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.18)] px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold tracking-[0.14em] text-[#f8fafc] shadow-[0_10px_20px_-10px_rgba(56,189,248,0.55)]">
               {uiStrings.playerStatus.levelLabel} {player.level}
             </span>
             {player.isCrouching && (
-              <span className='inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(148,163,184,0.65)] bg-[rgba(148,163,184,0.12)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold tracking-[0.14em] text-[#e2e8f0] shadow-[0_8px_18px_-12px_rgba(148,163,184,0.55)]'>
+              <span className="inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(148,163,184,0.65)] bg-[rgba(148,163,184,0.12)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold tracking-[0.14em] text-[#e2e8f0] shadow-[0_8px_18px_-12px_rgba(148,163,184,0.55)]">
                 {uiStrings.playerStatus.crouchIndicator}
               </span>
             )}
@@ -74,29 +65,25 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         label={uiStrings.playerStatus.healthLabel}
         current={player.health}
         max={player.maxHealth}
-        baseColor="#ef4444"
+        variant="health"
         lowThreshold={50}
         criticalThreshold={25}
-        emphasisColor="#ef4444"
       />
 
       <AnimatedStatBar
         label={uiStrings.playerStatus.paranoiaLabel}
         current={roundedParanoia}
         max={100}
-        baseColor={PARANOIA_BAR_BASE_COLOR}
+        variant="paranoia"
         lowThreshold={50}
         criticalThreshold={75}
-        emphasisColor={PARANOIA_TITLE_COLOR}
-        warningColor={PARANOIA_WARNING_COLOR}
-        criticalColor={PARANOIA_CRITICAL_COLOR}
         dangerDirection="ascending"
         disableGlow
       />
 
       {player.isExhausted && (
         <span
-          className='mt-[0.35rem] inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(250,204,21,0.65)] bg-[rgba(250,204,21,0.08)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold uppercase tracking-[0.14em] text-[#facc15] shadow-[0_8px_18px_-12px_rgba(250,204,21,0.6)]'
+          className="mt-[0.35rem] inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(250,204,21,0.65)] bg-[rgba(250,204,21,0.08)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold uppercase tracking-[0.14em] text-[#facc15] shadow-[0_8px_18px_-12px_rgba(250,204,21,0.6)]"
           title={uiStrings.playerStatus.fatigueHint}
         >
           ⚠️ {uiStrings.playerStatus.fatigueStatus}
@@ -127,12 +114,12 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
           <button
             type="button"
             onClick={onOpenCharacter}
-            className={cx(
-              "flex-1 rounded-[999px] border px-[0.75rem] py-[0.42rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#e0f2fe] shadow-[0_12px_20px_-18px_rgba(56,189,248,0.45)] transition-transform duration-200",
+            className={[
+              'flex-1 rounded-[999px] border px-[0.75rem] py-[0.42rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#e0f2fe] shadow-[0_12px_20px_-18px_rgba(56,189,248,0.45)] transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900',
               characterOpen
-                ? "border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.6),rgba(249,115,22,0.55))] text-[#fff7e1]"
-                : "border-[rgba(56,189,248,0.55)] bg-[linear-gradient(130deg,rgba(56,189,248,0.48),rgba(14,165,233,0.45))]"
-            )}
+                ? 'border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.6),rgba(249,115,22,0.55))] text-[#fff7e1]'
+                : 'border-[rgba(56,189,248,0.55)] bg-[linear-gradient(130deg,rgba(56,189,248,0.48),rgba(14,165,233,0.45))]',
+            ].join(' ')}
             data-testid="summary-open-character"
             aria-pressed={characterOpen}
           >
@@ -142,7 +129,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             <button
               type="button"
               onClick={handleLevelUp}
-              className="flex-1 rounded-[999px] border border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.48),rgba(249,115,22,0.45))] px-[0.75rem] py-[0.38rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#fff8dc] shadow-[0_12px_20px_-16px_rgba(251,191,36,0.48)] transition-transform duration-200 hover:-translate-y-[2px] hover:scale-[1.01]"
+              className="flex-1 rounded-[999px] border border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.48),rgba(249,115,22,0.45))] px-[0.75rem] py-[0.38rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#fff8dc] shadow-[0_12px_20px_-16px_rgba(251,191,36,0.48)] transition-transform duration-200 hover:-translate-y-[2px] hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900"
               title="Test Mode: Gain XP to level up"
             >
               ⬆ Level Up

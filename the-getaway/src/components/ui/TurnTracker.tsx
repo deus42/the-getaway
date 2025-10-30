@@ -121,7 +121,7 @@ const TurnTracker: React.FC = () => {
           current={player.actionPoints}
           max={player.maxActionPoints}
           icon="⚡"
-          baseColor="#38bdf8"
+          variant="action"
           lowThreshold={40}
           criticalThreshold={20}
         />
