@@ -140,6 +140,7 @@ describe('worldSlice', () => {
     it('updates game time incrementally', () => {
       const store = createTestStore();
 
+      store.dispatch(setGameTime(0));
       store.dispatch(updateGameTime(100));
       expect(store.getState().world.currentTime).toBe(100);
 
@@ -150,6 +151,7 @@ describe('worldSlice', () => {
     it('sets game time directly', () => {
       const store = createTestStore();
 
+      store.dispatch(setGameTime(0));
       store.dispatch(updateGameTime(100));
       store.dispatch(setGameTime(500));
 

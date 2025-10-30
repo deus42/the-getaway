@@ -7,6 +7,8 @@ import { movePlayer } from '../store/playerSlice';
 import { TileType, Position } from '../game/interfaces/types';
 import { findPath } from '../game/world/pathfinding';
 
+jest.mock('../components/debug/GameDebugInspector', () => () => null);
+
 const NIGHT_TIME_SECONDS = 200;
 const CORRIDOR_LENGTH = 4; // starting tile plus three moves to the right
 

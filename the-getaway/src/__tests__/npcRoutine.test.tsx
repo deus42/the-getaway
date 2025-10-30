@@ -5,6 +5,8 @@ import { store, resetGame } from '../store';
 import { setMapArea } from '../store/worldSlice';
 import { MapArea, NPC, TileType } from '../game/interfaces/types';
 
+jest.mock('../components/debug/GameDebugInspector', () => () => null);
+
 const createEmptyMapArea = (id: string, width: number, height: number, npc: NPC): MapArea => {
   const tiles = Array.from({ length: height }, (_, y) =>
     Array.from({ length: width }, (_, x) => ({

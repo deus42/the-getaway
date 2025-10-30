@@ -123,10 +123,11 @@ describe('default environmental triggers', () => {
     state = store.getState();
     expect(state.world.environment.weather.updatedAt).toBe(3_000);
 
-    store.dispatch(setGameTime(150)); // transitions into night
+    store.dispatch(setGameTime(60)); // shift into daylight window
     runTriggerTick(store, 5_000);
     state = store.getState();
     expect(state.world.environment.weather.timeOfDay).toBe(state.world.timeOfDay);
+    expect(state.world.environment.weather.presetId).toBe('weather.curfew.0');
     expect(state.world.environment.weather.updatedAt).toBe(5_000);
 
     store.dispatch(setEnvironmentFlags({ gangHeat: 'high' }));

@@ -13,7 +13,8 @@ import {
   DEFAULT_PLAYER,
   createDefaultPersonalityProfile,
 } from '../../interfaces/player';
-import { Enemy, MapArea, Player, Position } from '../../interfaces/types';
+import { Enemy, MapArea, Player, Position, AlertLevel } from '../../interfaces/types';
+import { DEFAULT_GUARD_ARCHETYPE_ID } from '../../../content/ai/guardArchetypes';
 
 const clonePlayer = (overrides: Partial<Player> = {}): Player => {
   const base = JSON.parse(JSON.stringify(DEFAULT_PLAYER)) as Player;
@@ -36,6 +37,17 @@ const createEnemy = (overrides: Partial<Enemy> = {}): Enemy => ({
   damage: 8,
   attackRange: 1,
   isHostile: true,
+  visionCone: {
+    range: 8,
+    angle: 360,
+    direction: 0,
+  },
+  alertLevel: AlertLevel.IDLE,
+  alertProgress: 0,
+  lastKnownPlayerPosition: null,
+  aiProfileId: DEFAULT_GUARD_ARCHETYPE_ID,
+  aiState: 'patrol',
+  aiCooldowns: {},
   ...overrides,
 });
 
@@ -60,7 +72,12 @@ describe('combatSystem core mechanics', () => {
       actionPoints: 10,
       maxActionPoints: 10,
     });
-    enemy = createEnemy({ position: { x: 2, y: 1 } });
+    enemy = createEnemy({
+      position: { x: 2, y: 1 },
+      alertLevel: AlertLevel.ALARMED,
+      alertProgress: 100,
+      aiState: 'attack',
+    });
   });
 
   afterEach(() => {

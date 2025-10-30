@@ -9,9 +9,13 @@ jest.mock('../game/combat/perception', () => {
   return {
     ...actual,
     isPlayerVisible: jest.fn(),
-    updateEnemyAlert: jest.fn((enemy: Enemy, visible: boolean) => ({
+    updateEnemyAlert: jest.fn((enemy: Enemy, visible: boolean, detectionMultiplier?: number) => ({
       ...enemy,
       alertLevel: visible ? AlertLevel.ALARMED : AlertLevel.SUSPICIOUS,
+      alertProgress:
+        visible
+          ? Math.min(100, (enemy.alertProgress ?? 0) + 10 * Math.max(0, detectionMultiplier ?? 1))
+          : Math.max(0, (enemy.alertProgress ?? 0) - 5),
     })),
     updateVisionDirection: jest.fn((enemy: Enemy, position: Player['position']) => ({
       ...enemy,
@@ -105,7 +109,7 @@ describe('perceptionManager', () => {
       mapArea
     );
 
-    expect(perception.updateEnemyAlert).toHaveBeenCalledWith(enemies[0], true);
+    expect(perception.updateEnemyAlert).toHaveBeenCalledWith(enemies[0], true, 1);
     expect(perception.updateVisionDirection).toHaveBeenCalledWith(expect.any(Object), player.position);
     expect(updatedEnemies[0].lastKnownPlayerPosition).toEqual(player.position);
     expect(maxAlertLevel).toBe(AlertLevel.ALARMED);

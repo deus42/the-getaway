@@ -23,7 +23,8 @@ function createEnemy(
   position: Position,
   health: number = 20,
   maxHealth: number = 20,
-  actionPoints: number = 5
+  actionPoints: number = 5,
+  overrides: Partial<Enemy> = {}
 ): Enemy {
   return {
     id: uuidv4(),
@@ -47,6 +48,7 @@ function createEnemy(
     aiProfileId: DEFAULT_GUARD_ARCHETYPE_ID,
     aiState: 'patrol',
     aiCooldowns: {},
+    ...overrides,
   };
 }
 
@@ -676,7 +678,17 @@ describe('Combat System Tests', () => {
   // Test enemy AI
   describe('Enemy AI', () => {
     test('determineEnemyMove should attack if player is in range', () => {
-      const enemyClose = createEnemy({ x: 2, y: 1 });
+      const enemyClose = createEnemy(
+        { x: 2, y: 1 },
+        20,
+        20,
+        5,
+        {
+          alertLevel: AlertLevel.ALARMED,
+          alertProgress: 100,
+          aiState: 'attack',
+        }
+      );
       setRandomGenerator(() => 0.1);
       const result = determineEnemyMove(
         enemyClose,

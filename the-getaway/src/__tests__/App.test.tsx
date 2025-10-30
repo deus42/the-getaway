@@ -9,6 +9,8 @@ jest.mock("../components/GameCanvas", () => {
   };
 });
 
+jest.mock("../components/debug/GameDebugInspector", () => () => null);
+
 describe("App component", () => {
   beforeEach(() => {
     store.dispatch(resetGame());
