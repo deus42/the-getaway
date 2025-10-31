@@ -33,6 +33,8 @@ interface MenuStrings {
   start: string;
   resume: string;
   settingsHeading: string;
+  settingsCTA: string;
+  settingsBack: string;
   languageLabel: string;
   surveillanceLabel: string;
   surveillanceToggleLabel: string;
@@ -52,6 +54,7 @@ export interface AutoBattleStrings {
   toggleDescription: string;
   profileLabel: string;
   profileDescription: string;
+  manualOption: { name: string; summary: string };
   profiles: AutoBattleProfileCopy;
   hudTitle: string;
   hudStatusIdle: string;
@@ -505,11 +508,12 @@ const STRINGS: Record<Locale, UIStrings> = {
     menu: {
       tag: 'The Getaway',
       title: 'Escape the Regime',
-      tagline:
-        'Lead your cell through the fortified Slums. Stealth or strike? Every move echoes through the city.',
+      tagline: '',
       start: 'Start New Game',
       resume: 'Resume Game',
       settingsHeading: 'Settings',
+      settingsCTA: 'Settings',
+      settingsBack: 'Return to Menu',
       languageLabel: 'Language',
       surveillanceLabel: 'Surveillance Overlay',
       surveillanceToggleLabel: 'Show detection cones',
@@ -517,7 +521,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       lightingLabel: 'Visual Lighting',
       lightingToggleLabel: 'Enable noir lighting',
       lightingToggleDescription: 'Turns on dynamic Light2D rendering for atlas props. Requires WebGL.',
-      alphaLabel: (year: number) => `Alpha Build ${year}`,
+      alphaLabel: () => 'Alpha',
       languageNames: {
         en: 'English',
         uk: 'Українська',
@@ -530,6 +534,10 @@ const STRINGS: Record<Locale, UIStrings> = {
         'Delegate turn-by-turn control to squad AI. Manual input instantly cancels automation.',
       profileLabel: 'Behaviour Profile',
       profileDescription: 'Profiles tune how the AI spends AP and manages risk.',
+      manualOption: {
+        name: 'Manual',
+        summary: 'Take every turn yourself; automation stays disabled.',
+      },
       profiles: {
         balanced: {
           name: 'Balanced',
@@ -1233,11 +1241,12 @@ const STRINGS: Record<Locale, UIStrings> = {
     menu: {
       tag: 'The Getaway',
       title: 'Втеча від режиму',
-      tagline:
-        'Проведіть свій осередок укріпленими Нетрищами. Ховатися чи бити? Кожен крок відлунює по місту.',
+      tagline: '',
       start: 'Почати нову гру',
       resume: 'Продовжити гру',
       settingsHeading: 'Налаштування',
+      settingsCTA: 'Налаштування',
+      settingsBack: 'Повернутися до меню',
       languageLabel: 'Мова',
       surveillanceLabel: 'Накладка спостереження',
       surveillanceToggleLabel: 'Показувати конуси виявлення',
@@ -1245,7 +1254,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       lightingLabel: 'Візуальне освітлення',
       lightingToggleLabel: 'Увімкнути неонове освітлення',
       lightingToggleDescription: 'Активує динамічне Light2D-освітлення для атласних спрайтів (потрібен WebGL).',
-      alphaLabel: (year: number) => `Альфа-версія ${year}`,
+      alphaLabel: () => 'Альфа',
       languageNames: {
         en: 'Англійська',
         uk: 'Українська',
@@ -1258,6 +1267,10 @@ const STRINGS: Record<Locale, UIStrings> = {
         'Передайте покрокове керування загону ШІ. Будь-який ручний ввід миттєво зупиняє режим.',
       profileLabel: 'Профіль поведінки',
       profileDescription: 'Профілі визначають, як ШІ витрачає ОД і приймає ризики.',
+      manualOption: {
+        name: 'Ручний режим',
+        summary: 'Кожну дію виконуєте самостійно; автобій вимкнено.',
+      },
       profiles: {
         balanced: {
           name: 'Збалансований',

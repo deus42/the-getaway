@@ -20,6 +20,39 @@
 </notes>
 </step>
 
+<step id="GET-92" status="completed">
+<step_metadata>
+  <number>92</number>
+  <title>Streamline main menu hierarchy and settings flow</title>
+  <status>Completed</status>
+  <date>October 30, 2025</date>
+</step_metadata>
+<linear key="GET-92" />
+
+<tasks>
+1. Split the main menu into a CTA-first landing screen with Start/Resume and a secondary settings view accessed via an explicit toggle.
+2. Tightened locale, AutoBattle, surveillance, lighting, and developer controls inside the new settings panel—combining AutoBattle enable/profile into a single Manual/Balanced/Aggressive/Defensive selector and preserving the compact layout behind the dedicated Settings entry point.
+3. Extended UI copy for the new flow, added dedicated GameMenu view-switch tests, and refreshed architecture notes to capture the landing/settings separation.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/components/ui/GameMenu.tsx</code_location> introduces a local `activeView` state to swap between landing and settings layouts, adds a dedicated Settings button beside the primary CTAs, and compacts the settings panel with a bottom-return control plus the unified AutoBattle mode selector.
+- <code_location>the-getaway/src/content/ui/index.ts</code_location> provides localisation entries for the new settings controls and guidance copy.
+- <code_location>the-getaway/src/__tests__/GameMenu.test.tsx</code_location> verifies the landing focus and ensures the settings panel opens and closes as expected.
+- Documentation update in <code_location>memory-bank/architecture.md</code_location> records the split-menu architecture for future HUD work.
+</implementation>
+
+<code_reference file="the-getaway/src/components/ui/GameMenu.tsx" />
+<code_reference file="the-getaway/src/content/ui/index.ts" />
+<code_reference file="the-getaway/src/__tests__/GameMenu.test.tsx" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/GameMenu.test.tsx --runInBand`
+- `yarn test --coverage`
+</validation>
+</step>
+
 <step id="GET-105" status="completed">
 <step_metadata>
   <number>105</number>

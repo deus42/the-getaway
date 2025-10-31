@@ -9,8 +9,10 @@ import React, {
 import type { CSSProperties } from 'react';
 import type { AutoBattleProfileId } from '../../game/combat/automation/autoBattleProfiles';
 
+export type AutoBattleMenuOptionId = AutoBattleProfileId | 'manual';
+
 export interface AutoBattleProfileOption {
-  id: AutoBattleProfileId;
+  id: AutoBattleMenuOptionId;
   name: string;
   summary: string;
 }
@@ -18,9 +20,9 @@ export interface AutoBattleProfileOption {
 export type AutoBattleProfileSelectVariant = 'hud' | 'menu';
 
 interface AutoBattleProfileSelectProps {
-  value: AutoBattleProfileId;
+  value: AutoBattleMenuOptionId;
   options: AutoBattleProfileOption[];
-  onChange: (next: AutoBattleProfileId) => void;
+  onChange: (next: AutoBattleMenuOptionId) => void;
   variant?: AutoBattleProfileSelectVariant;
   fullWidth?: boolean;
   dataFocusIgnore?: boolean;
