@@ -248,19 +248,19 @@ const menuOverlayButtonStyle: CSSProperties = {
   all: "unset",
   display: "inline-flex",
   alignItems: "center",
-  gap: "0.45rem",
-  padding: "0.55rem 1.05rem",
+  gap: "0.5rem",
+  padding: "0.6rem 1.15rem",
   borderRadius: "999px",
-  border: "1px solid rgba(96, 165, 250, 0.45)",
-  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.55), rgba(56, 189, 248, 0.45))",
-  color: "#e0f2fe",
+  border: "1.5px solid rgba(56, 189, 248, 0.75)",
+  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(56, 189, 248, 0.85))",
+  color: "#041321",
   fontSize: "0.74rem",
   letterSpacing: "0.18em",
   textTransform: "uppercase",
   cursor: "pointer",
   pointerEvents: "auto",
   transition: "transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease",
-  boxShadow: "0 16px 32px rgba(37, 99, 235, 0.28)",
+  boxShadow: "0 18px 36px rgba(56, 189, 248, 0.35)",
 };
 
 interface CommandShellProps {
@@ -454,13 +454,15 @@ const CommandShell: React.FC<CommandShellProps> = ({
               title={uiStrings.shell.menuButton}
               onMouseEnter={(event) => {
                 event.currentTarget.style.transform = 'translateY(-1px)';
-                event.currentTarget.style.boxShadow = '0 18px 36px rgba(37, 99, 235, 0.34)';
-                event.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.65)';
+                event.currentTarget.style.boxShadow = '0 20px 40px rgba(56, 189, 248, 0.4)';
+                event.currentTarget.style.borderColor = 'rgba(14, 165, 233, 0.95)';
+                event.currentTarget.style.color = '#020e1b';
               }}
               onMouseLeave={(event) => {
                 event.currentTarget.style.transform = 'translateY(0)';
-                event.currentTarget.style.boxShadow = '0 16px 32px rgba(37, 99, 235, 0.28)';
-                event.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.45)';
+                event.currentTarget.style.boxShadow = '0 18px 36px rgba(56, 189, 248, 0.35)';
+                event.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.75)';
+                event.currentTarget.style.color = '#041321';
               }}
             >
               <span style={{ fontSize: '0.62rem', letterSpacing: '0.2em' }}>{uiStrings.shell.menuButton}</span>
@@ -703,6 +705,22 @@ function App() {
     setShowMenu(false);
     setHasSavedGame(true);
   };
+
+  useEffect(() => {
+    if (!gameStarted || !showMenu) {
+      return;
+    }
+
+    const handleEscapeResume = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        handleContinueGame();
+      }
+    };
+
+    window.addEventListener('keydown', handleEscapeResume);
+    return () => window.removeEventListener('keydown', handleEscapeResume);
+  }, [gameStarted, showMenu]);
 
   const handleOpenMenu = () => {
     setShowMenu(true);
