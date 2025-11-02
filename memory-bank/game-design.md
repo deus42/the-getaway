@@ -248,7 +248,7 @@ The AP system means characters with higher agility or certain perks get more don
 
 <mechanic name="stamina_system">
 <balance_values system="stamina">
-<implementation_status>⚠️ PARTIAL - MVP in Step 24.5, Advanced features in Step 26.1</implementation_status>
+<implementation_status>⚠️ PARTIAL - MVP in Step 24.5, Advanced features in Step 26.4</implementation_status>
 
 Stamina - Sustained Effort Resource
 
@@ -286,7 +286,7 @@ When stamina drops below 30%, the character becomes exhausted:
 	•	High Endurance builds excel at long infiltration runs; low Endurance teams must plan shorter bursts and lean on equipment
 	•	Consumables and perks that mitigate fatigue are valuable for marathon operations or curfew runs
 
-**Advanced Stamina Features (POST-MVP - Step 26.1):**
+**Advanced Stamina Features (POST-MVP - Step 26.4):**
 These extend stamina into survival and environmental storytelling without reintroducing combat bookkeeping:
 
 	•	Day/Night Modifiers:

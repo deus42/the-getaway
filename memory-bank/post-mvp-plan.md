@@ -3,6 +3,58 @@
 This document catalogs Phase 9 optional expansions that were split out of `memory-bank/mvp-plan.md`. Step numbering is preserved to keep roadmap references intact, including Step 31 (Industrial Wasteland) which was moved here from the MVP scope.
 
 <phase id="9" name="Optional Expansions (POST-MVP)">
+<step id="26.1">
+<step_metadata>
+  <number>26.1</number>
+  <title>Directional Cover and Flanking Mechanics</title>
+  <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
+  <linear_issue key="GET-14" url="https://linear.app/the-getaway/issue/GET-14/step-261-directional-cover-and-flanking-mechanics">PostMVP</linear_issue>
+</step_metadata>
+
+<prerequisites>
+- Step 26 completed (advanced combat foundations in place)
+- Step 25.5 completed (equipment effects integrated with combat)
+</prerequisites>
+
+<instructions>
+Upgrade the basic cover system to directional cover with flanking mechanics that reward tactical positioning.
+</instructions>
+
+<details>
+- **Convert cover to directional system** in `src/game/combat/coverSystem.ts`:
+  - Each cover tile has a `facing` direction (north, south, east, west, or omnidirectional for full cover)
+  - Cover only protects from attacks coming from the covered direction ±45° arc
+  - Full cover (crates, pillars) provides 360° protection
+- **Implement flanking calculation**:
+  - Function `isFlanking(attackerPos, defenderPos, coverFacing)` returns boolean
+  - Flanking occurs when: (1) attacker is outside defender's cover arc, OR (2) attacker is adjacent to defender
+  - Calculate angle between attacker-to-defender vector and cover facing direction
+  - If angle > 90°, attacker is flanking
+- **Update hit chance formula** to include flanking bonus:
+  - Normal attack vs cover: `hitChance = baseHitChance * 0.5` (50% cover penalty)
+  - Flanking attack vs cover: `hitChance = baseHitChance * 1.2` (120%, negates cover + bonus)
+  - Flanking attack without cover: `hitChance = baseHitChance * 1.2` (120%, pure flanking bonus)
+- **Add cover direction indicators** in `MainScene`:
+  - Render directional arrows on cover tiles showing protection direction
+  - Highlight cover tiles in different colors during combat:
+    - Green: provides protection from selected enemy
+    - Yellow: partial cover from selected enemy
+    - Red: exposed to selected enemy (flanked position)
+- **Implement tactical AI improvements**:
+  - Enemy AI prioritizes flanking positions when calculating moves
+  - If player is behind cover, enemies attempt to move to flanking angles
+  - If flanking not possible, enemies seek their own cover
+- **Add flanking feedback to UI**:
+  - When targeting enemy, show "FLANKED" indicator if positioned correctly
+  - Display +20% hit chance bonus in combat UI
+  - Show warning to player if AI is flanking them: "Flanked! Cover ineffective!"
+</details>
+
+<test>
+Enter combat and position player behind directional cover (e.g., low wall facing north). Verify cover indicator shows protection direction. Attack enemy from behind cover facing them and verify cover provides 50% hit penalty reduction. Move enemy to side of cover (flanking position) and attack, verify cover doesn't apply and hit chance shows +20% bonus. Position player to flank enemy behind cover and verify "FLANKED" indicator appears with +20% bonus. Use full cover (crate) and verify it provides 360° protection regardless of attacker position. Watch enemy AI seek flanking positions when player is behind cover. Verify UI highlights cover tiles green/yellow/red based on selected enemy's position.
+</test>
+</step>
+
 <step id="31">
 <step_metadata>
   <number>31</number>
@@ -138,9 +190,9 @@ Introduce a reactive black-market economy that mirrors citywide scarcity and enf
 </test>
 </step>
 
-<step id="26.1">
+<step id="26.4">
 <step_metadata>
-  <number>26.1</number>
+  <number>26.4</number>
   <title>Advanced Stamina - Day/Night, Fatigue & Environmental Systems</title>
   <phase>Phase 9: Optional Expansions (POST-MVP)</phase>
   <linear_issue key="GET-85" url="https://linear.app/the-getaway/issue/GET-85/step-261-advanced-stamina-systems">PostMVP</linear_issue>

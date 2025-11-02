@@ -1811,7 +1811,7 @@ Equip weapon at 100% durability and note damage output. Use weapon until durabil
 </prerequisites>
 
 <instructions>
-Refactor combat state and systems to support directional cover, queued reactions, and facing-aware calculations needed for Steps 26.1–26.3.
+Refactor combat state and systems to support directional cover, queued reactions, and facing-aware calculations needed for Steps 26.2–26.3 and the Post-MVP Step 26.1 directional cover expansion.
 </instructions>
 
 <details>
@@ -1842,64 +1842,6 @@ Refactor combat state and systems to support directional cover, queued reactions
 - Unit: Verify cover orientation math and reaction queue enqueue/dequeue behavior in `combatSystem` and `reactions` tests.
 - Integration: Simulate a combat round on a mocked map and assert defenders receive different mitigation when hit from front vs. flank.
 - Manual: Use a debug build to step through tiles with varying cover directions, rotate attacker facings, and confirm UI indicators and damage adjustments respond accordingly.
-</test>
-</step>
-
-<step id="26.1">
-<step_metadata>
-  <number>26.1</number>
-  <title>Directional Cover and Flanking Mechanics</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 26 completed (advanced combat foundations in place)
-- Step 25.5 completed (equipment effects integrated with combat)
-</prerequisites>
-
-<step id="26.1">
-<step_metadata>
-  <number>26.1</number>
-  <title>Directional Cover and Flanking Mechanics</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<instructions>
-Upgrade the basic cover system to directional cover with flanking mechanics that reward tactical positioning.
-</instructions>
-
-<details>
-- **Convert cover to directional system** in `src/game/combat/coverSystem.ts`:
-  - Each cover tile has a `facing` direction (north, south, east, west, or omnidirectional for full cover)
-  - Cover only protects from attacks coming from the covered direction ±45° arc
-  - Full cover (crates, pillars) provides 360° protection
-- **Implement flanking calculation**:
-  - Function `isFlanking(attackerPos, defenderPos, coverFacing)` returns boolean
-  - Flanking occurs when: (1) attacker is outside defender's cover arc, OR (2) attacker is adjacent to defender
-  - Calculate angle between attacker-to-defender vector and cover facing direction
-  - If angle > 90°, attacker is flanking
-- **Update hit chance formula** to include flanking bonus:
-  - Normal attack vs cover: `hitChance = baseHitChance * 0.5` (50% cover penalty)
-  - Flanking attack vs cover: `hitChance = baseHitChance * 1.2` (120%, negates cover + bonus)
-  - Flanking attack without cover: `hitChance = baseHitChance * 1.2` (120%, pure flanking bonus)
-- **Add cover direction indicators** in `MainScene`:
-  - Render directional arrows on cover tiles showing protection direction
-  - Highlight cover tiles in different colors during combat:
-    - Green: provides protection from selected enemy
-    - Yellow: partial cover from selected enemy
-    - Red: exposed to selected enemy (flanked position)
-- **Implement tactical AI improvements**:
-  - Enemy AI prioritizes flanking positions when calculating moves
-  - If player is behind cover, enemies attempt to move to flanking angles
-  - If flanking not possible, enemies seek their own cover
-- **Add flanking feedback to UI**:
-  - When targeting enemy, show "FLANKED" indicator if positioned correctly
-  - Display +20% hit chance bonus in combat UI
-  - Show warning to player if AI is flanking them: "Flanked! Cover ineffective!"
-</details>
-
-<test>
-Enter combat and position player behind directional cover (e.g., low wall facing north). Verify cover indicator shows protection direction. Attack enemy from behind cover facing them and verify cover provides 50% hit penalty reduction. Move enemy to side of cover (flanking position) and attack, verify cover doesn't apply and hit chance shows +20% bonus. Position player to flank enemy behind cover and verify "FLANKED" indicator appears with +20% bonus. Use full cover (crate) and verify it provides 360° protection regardless of attacker position. Watch enemy AI seek flanking positions when player is behind cover. Verify UI highlights cover tiles green/yellow/red based on selected enemy's position.
 </test>
 </step>
 
@@ -2025,7 +1967,6 @@ Equip frag grenade and throw at clustered enemies (2+ units within 3 tiles). Ver
 
 <prerequisites>
 - Step 26 completed (advanced combat foundations in place)
-- Step 26.1 completed (directional cover and flanking mechanics)
 - Step 26.2 completed (overwatch and targeted shots)
 - Step 26.3 completed (AoE attacks and combat consumables)
 </prerequisites>
@@ -3071,9 +3012,9 @@ This plan now outlines **57 implementable steps** organized into **10 phases** t
 
 <phase_structure>
 - **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (22 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.1/26.2/26.3/26.4, 29/29.5/29.6/29.7/29.8, 30.1/30.2)
+- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (22 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.2/26.3/26.4, 29/29.5/29.6/29.7/29.8, 30.1/30.2; Post-MVP Step 26.1 covers directional cover and flanking)
 - **Phase 8 (Step 31 deferred, Step 31.5)**: Seasonal narrative arc framework remains in MVP; Industrial Wasteland zone moves to Post-MVP scope.
-- **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1, 27.1, 27.2, 28.1 covering advanced stamina systems, vehicle travel, and survival mode - POST-MVP, deferred to v1.1+.
+- **Phase 9 (Post-MVP Optional Expansions)**: See `memory-bank/post-mvp-plan.md` for Steps 26.1 (directional cover & flanking), 26.4 (advanced stamina systems), 27.1, 27.2, and 28.1 covering deferred tactical, travel, and survival enhancements - POST-MVP, deferred to v1.1+.
 - **Phase 10 (Steps 32.1-35.7)**: Testing, polish, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5, 35.7)
 </phase_structure>
 
@@ -3100,7 +3041,7 @@ This revised plan addresses critical quality issues identified in the analysis:
 **Step Granularity**: Complex steps split into focused substeps:
 - Step 22 → 22.1 (UI shell), 22.2 (attributes - after 23), 22.3 (backgrounds - after 24.3)
 - Step 24 → 24.1 (XP/leveling), 24.2 (skill trees), 24.3 (perk selection)
-- Step 26 → 26.1 (flanking), 26.2 (overwatch/targeted shots), 26.3 (AoE/consumables)
+- Step 26 → 26.1 (flanking, now Post-MVP), 26.2 (overwatch/targeted shots), 26.3 (AoE/consumables)
 - Step 30 → 30.1 (basic crafting), 30.2 (weapon mods)
 - Step 32 → 32.1 (unit tests), 32.2 (integration tests)
 

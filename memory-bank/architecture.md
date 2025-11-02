@@ -1240,7 +1240,7 @@ This combat architecture provides a foundation for tactical gameplay and can be 
 </pattern>
 </pattern>
 
-<pattern name="Advanced Stamina Features (POST-MVP - Step 26.1)">
+<pattern name="Advanced Stamina Features (POST-MVP - Step 26.4)">
 ### Time-of-Day Integration
 - <code_location>src/store/worldSlice.ts</code_location>:
   - Subscribe to `timeOfDay` changes (morning/day/evening/night)
@@ -1306,7 +1306,7 @@ This combat architecture provides a foundation for tactical gameplay and can be 
 4. Successful moves dispatch `movePlayer` and, when costs are zero, `regenerateStamina` to model passive recovery.
 5. Level ups recalc stamina capacity and restore the bar to full.
 
-**Advanced Flow (Step 26.1):** *(planned)*
+**Advanced Flow (Step 26.4):** *(planned)*
 1. Time-of-day or environmental events adjust cost multipliers before movement.
 2. Rest menu interactions call `regenerateStamina` with large values and reset exhaustion flags.
 3. Perks (Conditioning, Second Wind, Iron Lungs) modify costs or regen rates via shared helpers.

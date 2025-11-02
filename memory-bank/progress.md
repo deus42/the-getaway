@@ -2149,7 +2149,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 </validation>
 
 <notes>
-- Directional cover currently applies 25%/45% hit penalties for half/full protection and scales damage via the same profile, laying groundwork for the overwatch/AoE features in Steps 26.1–26.3.
+- Directional cover currently applies 25%/45% hit penalties for half/full protection and scales damage via the same profile, laying groundwork for the overwatch/AoE features in Steps 26.2–26.3 and the Post-MVP Step 26.1 enhancements.
 </notes>
 </step>
 
