@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import {
   movePlayer,
@@ -8,7 +14,8 @@ import {
   beginPlayerTurn,
   consumeStamina,
   regenerateStamina,
-  setCrouching,
+  setMovementProfile,
+  setStealthState,
 } from "../store/playerSlice";
 import {
   updateEnemy,
@@ -20,9 +27,13 @@ import {
   setGlobalAlertLevel,
   scheduleReinforcements,
   clearReinforcementsSchedule,
+  setEngagementMode,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
-import { addFloatingNumber, triggerHitFlash } from "../store/combatFeedbackSlice";
+import {
+  addFloatingNumber,
+  triggerHitFlash,
+} from "../store/combatFeedbackSlice";
 import { AppDispatch, RootState } from "../store";
 import { isPositionWalkable } from "../game/world/grid";
 import {
@@ -40,7 +51,9 @@ import {
   AlertLevel,
   SurveillanceZoneState,
   Item,
+  CameraAlertState,
 } from "../game/interfaces/types";
+import { planAutoStealthAction } from "../game/stealth/automation/autoStealthPlanner";
 import {
   CurfewStateMachine,
   CurfewTimeoutHandle,
@@ -50,13 +63,29 @@ import { determineEnemyMove } from "../game/combat/enemyAI";
 import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
 import { findPath } from "../game/world/pathfinding";
-import { TILE_CLICK_EVENT, TileClickDetail, PATH_PREVIEW_EVENT, MINIMAP_PATH_PREVIEW_EVENT, MiniMapPathPreviewDetail } from "../game/events";
+import {
+  TILE_CLICK_EVENT,
+  TileClickDetail,
+  PATH_PREVIEW_EVENT,
+  MINIMAP_PATH_PREVIEW_EVENT,
+  MiniMapPathPreviewDetail,
+} from "../game/events";
 import { startDialogue, endDialogue } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
 import { getUIStrings } from "../content/ui";
-import { processPerceptionUpdates, getAlertMessageKey, shouldSpawnReinforcements, getReinforcementDelay } from "../game/combat/perceptionManager";
+import {
+  processPerceptionUpdates,
+  getAlertMessageKey,
+  shouldSpawnReinforcements,
+  getReinforcementDelay,
+} from "../game/combat/perceptionManager";
+import { PERCEPTION_CONFIG } from "../game/combat/perception";
 import { shouldGunFuAttackBeFree } from "../game/systems/perks";
-import { getStandingForValue, getStandingRank, getLocalizedStandingLabel } from "../game/systems/factions";
+import {
+  getStandingForValue,
+  getStandingRank,
+  getLocalizedStandingLabel,
+} from "../game/systems/factions";
 import { STAMINA_COSTS } from "../game/systems/stamina";
 import {
   initializeZoneSurveillance,
@@ -65,7 +94,11 @@ import {
   updateSurveillance,
 } from "../game/systems/surveillance/cameraSystem";
 import { setOverlayEnabled } from "../store/surveillanceSlice";
-import { ingestObservation, setSuspicionPaused, purgeWitnessMemories } from "../store/suspicionSlice";
+import {
+  ingestObservation,
+  setSuspicionPaused,
+  purgeWitnessMemories,
+} from "../store/suspicionSlice";
 import { buildGuardWitnessObservation } from "../game/systems/suspicion/observationBuilders";
 import { createScopedLogger } from "../utils/logger";
 import { triggerStorylet } from "../store/storyletSlice";
@@ -73,20 +106,25 @@ import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistr
 import { ensureDefaultEnvironmentalTriggersRegistered } from "../game/world/triggers/defaultTriggers";
 import { selectEnvironmentSystemImpacts } from "../store/selectors/worldSelectors";
 import { selectZoneHeat } from "../store/selectors/suspicionSelectors";
-import {
-  selectParanoiaTier,
-} from "../store/selectors/paranoiaSelectors";
+import { selectParanoiaTier } from "../store/selectors/paranoiaSelectors";
 import {
   applyParanoiaStimuli,
   tickParanoia,
   applyParanoiaRelief,
   setParanoiaDecayBoost,
 } from "../store/paranoiaSlice";
-import { evaluateParanoiaStimuli, createParanoiaRuntime } from "../game/systems/paranoia";
+import {
+  evaluateParanoiaStimuli,
+  createParanoiaRuntime,
+} from "../game/systems/paranoia";
 import { PARANOIA_CONFIG } from "../content/paranoia/paranoiaConfig";
 import GameDebugInspector from "./debug/GameDebugInspector";
 import { setAutoBattleEnabled } from "../store/settingsSlice";
 import AutoBattleController from "../game/combat/automation/AutoBattleController";
+import {
+  selectStealthAvailability,
+  selectActiveDialogueId,
+} from "../store/selectors/engagementSelectors";
 import type { ParanoiaTier } from "../game/systems/paranoia/types";
 
 const resolveParanoiaDetectionMultiplier = (tier: ParanoiaTier): number => {
@@ -102,7 +140,30 @@ const resolveParanoiaDetectionMultiplier = (tier: ParanoiaTier): number => {
   }
 };
 
-const countParanoiaConsumables = (items: Item[]): { calmTabs: number; cigarettes: number } =>
+const STEALTH_COOLDOWN_MS = 4500;
+
+const rankAlertLevel = (level?: AlertLevel | null): number => {
+  switch (level) {
+    case AlertLevel.SUSPICIOUS:
+      return 1;
+    case AlertLevel.INVESTIGATING:
+      return 2;
+    case AlertLevel.ALARMED:
+      return 3;
+    default:
+      return 0;
+  }
+};
+
+const MOVEMENT_NOISE: Record<'silent' | 'normal' | 'sprint', { radius: number; gain: number }> = {
+  silent: { radius: 2, gain: 0 },
+  normal: { radius: 4, gain: 4 },
+  sprint: { radius: 6, gain: 8 },
+};
+
+const countParanoiaConsumables = (
+  items: Item[]
+): { calmTabs: number; cigarettes: number } =>
   items.reduce(
     (acc, item) => {
       const tags = Array.isArray(item.tags) ? item.tags : [];
@@ -144,16 +205,12 @@ const GameController: React.FC = () => {
   const enemies = useSelector(
     (state: RootState) => state.world.currentMapArea.entities.enemies
   );
-  const mapDirectory = useSelector(
-    (state: RootState) => state.world.mapAreas
-  );
+  const mapDirectory = useSelector((state: RootState) => state.world.mapAreas);
   const mapConnections = useSelector(
     (state: RootState) => state.world.mapConnections
   );
   const dialogues = useSelector((state: RootState) => state.quests.dialogues);
-  const activeDialogueId = useSelector(
-    (state: RootState) => state.quests.activeDialogue.dialogueId
-  );
+  const activeDialogueId = useSelector(selectActiveDialogueId);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const autoBattleEnabled = useSelector(
     (state: RootState) => state.settings.autoBattleEnabled
@@ -161,14 +218,36 @@ const GameController: React.FC = () => {
   const autoBattleProfile = useSelector(
     (state: RootState) => state.settings.autoBattleProfile
   );
+  const stealthAvailability = useSelector(selectStealthAvailability);
+  const stealthCooldownExpiresAt = stealthAvailability.cooldownExpiresAt;
+  const stealthEligible = stealthAvailability.eligible;
+  const stealthOnCooldown = typeof stealthCooldownExpiresAt === "number";
+  const engagementMode = useSelector(
+    (state: RootState) => state.world.engagementMode
+  );
+  const autoStealthEnabled = useSelector(
+    (state: RootState) => state.settings.autoStealthEnabled
+  );
   const turnCount = useSelector((state: RootState) => state.world.turnCount);
-  const globalAlertLevel = useSelector((state: RootState) => state.world.globalAlertLevel);
-  const reinforcementsScheduled = useSelector((state: RootState) => state.world.reinforcementsScheduled);
-  const surveillanceZone = useSelector((state: RootState) => (mapAreaId ? state.surveillance.zones[mapAreaId] : undefined));
-  const overlayEnabled = useSelector((state: RootState) => state.surveillance.hud.overlayEnabled);
+  const globalAlertLevel = useSelector(
+    (state: RootState) => state.world.globalAlertLevel
+  );
+  const reinforcementsScheduled = useSelector(
+    (state: RootState) => state.world.reinforcementsScheduled
+  );
+  const surveillanceZone = useSelector((state: RootState) =>
+    mapAreaId ? state.surveillance.zones[mapAreaId] : undefined
+  );
+  const overlayEnabled = useSelector(
+    (state: RootState) => state.surveillance.hud.overlayEnabled
+  );
   const environmentImpacts = useSelector(selectEnvironmentSystemImpacts);
-  const environmentFlags = useSelector((state: RootState) => state.world.environment.flags);
-  const worldCurrentTime = useSelector((state: RootState) => state.world.currentTime);
+  const environmentFlags = useSelector(
+    (state: RootState) => state.world.environment.flags
+  );
+  const worldCurrentTime = useSelector(
+    (state: RootState) => state.world.currentTime
+  );
   const paranoiaTier = useSelector(selectParanoiaTier);
   const zoneHeatSelector = useMemo(
     () => selectZoneHeat(currentMapArea?.zoneId ?? null),
@@ -191,7 +270,8 @@ const GameController: React.FC = () => {
       Math.max(
         750,
         Math.round(
-          getReinforcementDelay() * environmentImpacts.faction.reinforcementDelayMultiplier
+          getReinforcementDelay() *
+            environmentImpacts.faction.reinforcementDelayMultiplier
         )
       ),
     [environmentImpacts.faction.reinforcementDelayMultiplier]
@@ -199,14 +279,19 @@ const GameController: React.FC = () => {
   const prevInCombat = useRef(inCombat); // Ref to track previous value
   const previousTimeOfDay = useRef(timeOfDay);
   const previousGlobalAlertLevel = useRef(globalAlertLevel);
-  const surveillanceZoneRef = useRef<SurveillanceZoneState | undefined>(undefined);
+  const surveillanceZoneRef = useRef<SurveillanceZoneState | undefined>(
+    undefined
+  );
   const playerRef = useRef<Player>(player);
   const mapAreaRef = useRef<MapArea | null>(currentMapArea ?? null);
   const reinforcementsScheduledRef = useRef(reinforcementsScheduled);
-  const curfewStateMachineRef = useRef<CurfewStateMachine>(createCurfewStateMachine());
+  const curfewStateMachineRef = useRef<CurfewStateMachine>(
+    createCurfewStateMachine()
+  );
   const reinforcementTimeoutRef = useRef<CurfewTimeoutHandle | null>(null);
   const globalAlertLevelRef = useRef(globalAlertLevel);
   const timeOfDayRef = useRef(timeOfDay);
+  const activeDialogueIdRef = useRef<string | null>(activeDialogueId);
   const overlayEnabledRef = useRef(overlayEnabled);
   const previousSurveillanceAreaId = useRef<string | null>(null);
   const pendingSurveillanceTeardownRef = useRef<number | null>(null);
@@ -215,7 +300,10 @@ const GameController: React.FC = () => {
   const paranoiaRuntimeRef = useRef(createParanoiaRuntime());
   const paranoiaTierRef = useRef(paranoiaTier);
   const zoneHeatRef = useRef(zoneHeat);
-  const paranoiaConsumableCountsRef = useRef<{ calmTabs: number; cigarettes: number }>({
+  const paranoiaConsumableCountsRef = useRef<{
+    calmTabs: number;
+    cigarettes: number;
+  }>({
     calmTabs: 0,
     cigarettes: 0,
   });
@@ -233,8 +321,12 @@ const GameController: React.FC = () => {
   const npcMovementTimeouts = useRef<number[]>([]);
   const npcReservedDestinations = useRef<Map<string, Position>>(new Map());
   const previousEncumbranceWarning = useRef<string | null>(null);
-  const [pendingNpcInteractionId, setPendingNpcInteractionId] = useState<string | null>(null);
-  const [pendingEnemyEngagementId, setPendingEnemyEngagementId] = useState<string | null>(null);
+  const [pendingNpcInteractionId, setPendingNpcInteractionId] = useState<
+    string | null
+  >(null);
+  const [pendingEnemyEngagementId, setPendingEnemyEngagementId] = useState<
+    string | null
+  >(null);
   const beginDialogueWithNpc = useCallback(
     (npc: NPC): boolean => {
       if (!npc.isInteractive || !npc.dialogueId) {
@@ -260,13 +352,14 @@ const GameController: React.FC = () => {
         return false;
       }
 
-      dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId }));
+      dispatch(
+        startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId })
+      );
       dispatch(addLogMessage(logStrings.npcChannelOpened(npc.name)));
       return true;
     },
     [dispatch, dialogues, activeDialogueId, logStrings]
   );
-
 
   const attemptMovementStamina = useCallback(
     (options: { sprint?: boolean } = {}) => {
@@ -281,9 +374,8 @@ const GameController: React.FC = () => {
         return false;
       }
 
-      const encumbranceDrain = encumbrancePercentage >= 80
-        ? STAMINA_COSTS.strenuousInteraction
-        : 0;
+      const encumbranceDrain =
+        encumbrancePercentage >= 80 ? STAMINA_COSTS.strenuousInteraction : 0;
 
       let staminaCost = encumbranceDrain;
 
@@ -299,7 +391,11 @@ const GameController: React.FC = () => {
       }
 
       if (player.stamina < staminaCost) {
-        dispatch(addLogMessage(logStrings.notEnoughStamina(staminaCost, player.stamina)));
+        dispatch(
+          addLogMessage(
+            logStrings.notEnoughStamina(staminaCost, player.stamina)
+          )
+        );
         return false;
       }
 
@@ -317,18 +413,46 @@ const GameController: React.FC = () => {
     ]
   );
 
-  const cancelPendingEnemyAction = useCallback((shouldClearTimer: boolean = true) => {
-    if (shouldClearTimer && enemyActionTimeoutRef.current !== null) {
-      window.clearTimeout(enemyActionTimeoutRef.current);
-    }
-    enemyActionTimeoutRef.current = null;
-    processingEnemyIdRef.current = null;
-  }, []);
+  const cancelPendingEnemyAction = useCallback(
+    (shouldClearTimer: boolean = true) => {
+      if (shouldClearTimer && enemyActionTimeoutRef.current !== null) {
+        window.clearTimeout(enemyActionTimeoutRef.current);
+      }
+      enemyActionTimeoutRef.current = null;
+      processingEnemyIdRef.current = null;
+    },
+    []
+  );
 
   // Reference to the div element for focusing
   const controllerRef = useRef<HTMLDivElement>(null);
 
-  const getNow = (): number => (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  const getNow = (): number =>
+    typeof performance !== "undefined" ? performance.now() : Date.now();
+
+  const enableStealth = useCallback(() => {
+    dispatch(setStealthState({ enabled: true, cooldownExpiresAt: null }));
+    if (playerRef.current?.movementProfile !== "silent") {
+      dispatch(setMovementProfile("silent"));
+    }
+  }, [dispatch]);
+
+  const disableStealth = useCallback(
+    (applyCooldown: boolean) => {
+      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      dispatch(
+        setStealthState({
+          enabled: false,
+          cooldownExpiresAt: applyCooldown ? now + STEALTH_COOLDOWN_MS : null,
+        })
+      );
+
+      if (playerRef.current?.movementProfile === "silent") {
+        dispatch(setMovementProfile("normal"));
+      }
+    },
+    [dispatch]
+  );
 
   useEffect(() => {
     surveillanceZoneRef.current = surveillanceZone;
@@ -347,8 +471,76 @@ const GameController: React.FC = () => {
   }, [player]);
 
   useEffect(() => {
+    activeDialogueIdRef.current = activeDialogueId;
+  }, [activeDialogueId]);
+
+  useEffect(() => {
     mapAreaRef.current = currentMapArea ?? null;
   }, [currentMapArea]);
+
+  // Stealth engagement management
+  useEffect(() => {
+    const zoneState = surveillanceZoneRef.current ?? surveillanceZone;
+    const playerState = playerRef.current;
+
+    const guardAlertRank = enemies.reduce((max, enemy) => {
+      const rank = rankAlertLevel(enemy.alertLevel);
+      return rank > max ? rank : max;
+    }, 0);
+    const guardCompromised = guardAlertRank >= 2;
+
+    const cameraStates = zoneState ? Object.values(zoneState.cameras) : [];
+    const cameraAlarmed = cameraStates.some(
+      (camera) => camera.alertState === CameraAlertState.ALARMED
+    );
+
+    const now = getNow();
+    if (
+      !playerState?.stealthModeEnabled &&
+      playerState?.stealthCooldownExpiresAt &&
+      playerState.stealthCooldownExpiresAt <= now
+    ) {
+      dispatch(setStealthState({ enabled: false, cooldownExpiresAt: null }));
+    }
+
+    if (inCombat) {
+      if (playerState?.stealthModeEnabled) {
+        disableStealth(true);
+        dispatch(addLogMessage(logStrings.stealthCompromised));
+      }
+      dispatch(setEngagementMode("combat"));
+      return;
+    }
+
+    if (activeDialogueIdRef.current) {
+      if (playerState?.stealthModeEnabled) {
+        disableStealth(false);
+      }
+      dispatch(setEngagementMode("dialog"));
+      return;
+    }
+
+    if (playerState?.stealthModeEnabled) {
+      if (guardCompromised || cameraAlarmed) {
+        disableStealth(true);
+        dispatch(setEngagementMode("none"));
+        dispatch(addLogMessage(logStrings.stealthCompromised));
+        return;
+      }
+
+      dispatch(setEngagementMode("stealth"));
+    } else {
+      dispatch(setEngagementMode("none"));
+    }
+  }, [
+    activeDialogueId,
+    disableStealth,
+    dispatch,
+    enemies,
+    inCombat,
+    logStrings,
+    surveillanceZone,
+  ]);
 
   useEffect(() => {
     paranoiaRuntimeRef.current = createParanoiaRuntime();
@@ -356,7 +548,9 @@ const GameController: React.FC = () => {
 
   useEffect(() => {
     if (!currentMapArea) {
-      previousEnemiesRef.current = new Map(enemies.map((enemy) => [enemy.id, enemy]));
+      previousEnemiesRef.current = new Map(
+        enemies.map((enemy) => [enemy.id, enemy])
+      );
       return;
     }
 
@@ -438,7 +632,10 @@ const GameController: React.FC = () => {
 
   useEffect(() => {
     if (!autoBattleControllerRef.current) {
-      autoBattleControllerRef.current = new AutoBattleController(dispatch, store);
+      autoBattleControllerRef.current = new AutoBattleController(
+        dispatch,
+        store
+      );
     }
   }, [dispatch, store]);
 
@@ -573,7 +770,7 @@ const GameController: React.FC = () => {
         return;
       }
 
-      if (event.key === 'Tab') {
+      if (event.key === "Tab") {
         event.preventDefault();
         if (event.repeat) {
           return;
@@ -582,23 +779,67 @@ const GameController: React.FC = () => {
         return;
       }
 
-      if (event.key.toLowerCase() === 'x') {
+      if (event.key.toLowerCase() === "x") {
         if (event.repeat) {
           return;
         }
+
+        event.preventDefault();
         const currentPlayer = playerRef.current;
         if (!currentPlayer) {
           return;
         }
-        dispatch(setCrouching(!currentPlayer.isCrouching));
+
+        if (currentPlayer.stealthModeEnabled) {
+          disableStealth(false);
+          dispatch(setEngagementMode("none"));
+          dispatch(addLogMessage(logStrings.stealthDisengaged));
+          return;
+        }
+
+        if (!stealthEligible) {
+          if (inCombat) {
+            dispatch(addLogMessage(logStrings.stealthUnavailableCombat));
+            return;
+          }
+
+          if (activeDialogueIdRef.current) {
+            dispatch(addLogMessage(logStrings.stealthUnavailableDialogue));
+            return;
+          }
+
+          if (stealthOnCooldown && typeof stealthCooldownExpiresAt === "number") {
+            const timestamp =
+              typeof performance !== "undefined" ? performance.now() : Date.now();
+            const cooldownRemaining = Math.max(0, stealthCooldownExpiresAt - timestamp);
+            if (cooldownRemaining > 0) {
+              const seconds = Math.ceil(cooldownRemaining / 1000);
+              dispatch(addLogMessage(logStrings.stealthCooldown(seconds)));
+            }
+          }
+          return;
+        }
+
+        enableStealth();
+        dispatch(setEngagementMode("stealth"));
+        dispatch(addLogMessage(logStrings.stealthEngaged));
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [dispatch]);
+  }, [
+    dispatch,
+    disableStealth,
+    enableStealth,
+    inCombat,
+    logStrings,
+    stealthEligible,
+    stealthOnCooldown,
+    stealthCooldownExpiresAt,
+  ]);
 
   useEffect(() => {
     if (!mapAreaId || typeof window === "undefined") {
@@ -638,13 +879,27 @@ const GameController: React.FC = () => {
           paranoiaRuntimeRef.current
         );
 
-        const gainTotal = Object.values(paranoiaResult.gains).reduce((acc, value) => acc + value, 0);
-        const lossTotal = Object.values(paranoiaResult.losses).reduce((acc, value) => acc + value, 0);
-        const spikeTotal = Object.values(paranoiaResult.spikes).reduce((acc, value) => acc + value, 0);
+        const gainTotal = Object.values(paranoiaResult.gains).reduce(
+          (acc, value) => acc + value,
+          0
+        );
+        const lossTotal = Object.values(paranoiaResult.losses).reduce(
+          (acc, value) => acc + value,
+          0
+        );
+        const spikeTotal = Object.values(paranoiaResult.spikes).reduce(
+          (acc, value) => acc + value,
+          0
+        );
         const positiveDelta = gainTotal * paranoiaResult.multipliers.gain;
         const netDelta = positiveDelta - lossTotal + spikeTotal;
 
-        if (netDelta !== 0 || gainTotal > 0 || lossTotal > 0 || spikeTotal !== 0) {
+        if (
+          netDelta !== 0 ||
+          gainTotal > 0 ||
+          lossTotal > 0 ||
+          spikeTotal !== 0
+        ) {
           dispatch(
             applyParanoiaStimuli({
               timestamp: currentTime,
@@ -691,6 +946,24 @@ const GameController: React.FC = () => {
         });
       }
 
+      // Auto-Stealth (MVP stub): compute action but do not execute
+      if (
+        !inCombat &&
+        engagementMode === "stealth" &&
+        autoStealthEnabled &&
+        area &&
+        playerState
+      ) {
+        const decision = planAutoStealthAction({
+          player: playerState,
+          mapArea: area,
+          surveillanceZone: zoneState,
+        });
+        if (decision) {
+          dispatch(addLogMessage(`[Auto-Stealth]: ${decision.summary}`));
+        }
+      }
+
       tickEnvironmentalTriggers(dispatch, store.getState);
       frameId = window.requestAnimationFrame(tick);
     };
@@ -726,10 +999,7 @@ const GameController: React.FC = () => {
       setPendingNpcInteractionId(null);
       setPendingEnemyEngagementId(null);
 
-      if (
-        target.x === player.position.x &&
-        target.y === player.position.y
-      ) {
+      if (target.x === player.position.x && target.y === player.position.y) {
         setQueuedPath([]);
         setPendingEnemyEngagementId(null);
         return;
@@ -925,10 +1195,7 @@ const GameController: React.FC = () => {
       setQueuedPath(path);
     };
 
-    window.addEventListener(
-      TILE_CLICK_EVENT,
-      handleTileClick as EventListener
-    );
+    window.addEventListener(TILE_CLICK_EVENT, handleTileClick as EventListener);
 
     return () => {
       window.removeEventListener(
@@ -936,7 +1203,16 @@ const GameController: React.FC = () => {
         handleTileClick as EventListener
       );
     };
-  }, [currentMapArea, player, enemies, inCombat, dispatch, beginDialogueWithNpc, mapConnections, logStrings]);
+  }, [
+    currentMapArea,
+    player,
+    enemies,
+    inCombat,
+    dispatch,
+    beginDialogueWithNpc,
+    mapConnections,
+    logStrings,
+  ]);
 
   useEffect(() => {
     if (!currentMapArea) {
@@ -968,14 +1244,22 @@ const GameController: React.FC = () => {
       });
 
       setQueuedPath(path);
-      window.dispatchEvent(new CustomEvent(PATH_PREVIEW_EVENT, {
-        detail: { areaId: currentMapArea.id, path },
-      }));
+      window.dispatchEvent(
+        new CustomEvent(PATH_PREVIEW_EVENT, {
+          detail: { areaId: currentMapArea.id, path },
+        })
+      );
     };
 
-    window.addEventListener(MINIMAP_PATH_PREVIEW_EVENT, handleMinimapPreview as EventListener);
+    window.addEventListener(
+      MINIMAP_PATH_PREVIEW_EVENT,
+      handleMinimapPreview as EventListener
+    );
     return () => {
-      window.removeEventListener(MINIMAP_PATH_PREVIEW_EVENT, handleMinimapPreview as EventListener);
+      window.removeEventListener(
+        MINIMAP_PATH_PREVIEW_EVENT,
+        handleMinimapPreview as EventListener
+      );
     };
   }, [currentMapArea, player, enemies]);
 
@@ -1088,11 +1372,16 @@ const GameController: React.FC = () => {
         .filter(([reservedNpcId]) => reservedNpcId !== npc.id)
         .map(([, position]) => position);
 
-      const path = findPath(npc.position, targetPoint.position, currentMapArea, {
-        player,
-        enemies,
-        blockedPositions: [...otherNpcPositions, ...reservedPositions],
-      });
+      const path = findPath(
+        npc.position,
+        targetPoint.position,
+        currentMapArea,
+        {
+          player,
+          enemies,
+          blockedPositions: [...otherNpcPositions, ...reservedPositions],
+        }
+      );
 
       if (path.length > 0) {
         scheduleNpcMovement(npc, path);
@@ -1126,7 +1415,7 @@ const GameController: React.FC = () => {
       return;
     }
 
-    if (player.encumbrance.level === 'immobile') {
+    if (player.encumbrance.level === "immobile") {
       if (player.encumbrance.warning) {
         dispatch(addLogMessage(player.encumbrance.warning));
       }
@@ -1166,7 +1455,7 @@ const GameController: React.FC = () => {
 
     if (connection) {
       if (curfewActive && tile.type === TileType.DOOR) {
-      dispatch(addLogMessage(logStrings.checkpointSealed));
+        dispatch(addLogMessage(logStrings.checkpointSealed));
         setQueuedPath([]);
         setPendingNpcInteractionId(null);
         setPendingEnemyEngagementId(null);
@@ -1178,8 +1467,11 @@ const GameController: React.FC = () => {
       if (targetArea) {
         if (targetArea.factionRequirement) {
           const requirement = targetArea.factionRequirement;
-          const factionName = uiStrings.playerStatus.factions[requirement.factionId] ?? requirement.factionId;
-          const reputationValue = player.factionReputation?.[requirement.factionId] ?? 0;
+          const factionName =
+            uiStrings.playerStatus.factions[requirement.factionId] ??
+            requirement.factionId;
+          const reputationValue =
+            player.factionReputation?.[requirement.factionId] ?? 0;
           const standing = getStandingForValue(reputationValue);
 
           let allowed = true;
@@ -1192,7 +1484,7 @@ const GameController: React.FC = () => {
             }
           }
 
-          if (allowed && typeof requirement.minimumReputation === 'number') {
+          if (allowed && typeof requirement.minimumReputation === "number") {
             if (reputationValue < requirement.minimumReputation) {
               allowed = false;
             }
@@ -1205,16 +1497,21 @@ const GameController: React.FC = () => {
                 getLocalizedStandingLabel(locale, requirement.minimumStanding)
               );
             }
-            if (typeof requirement.minimumReputation === 'number') {
+            if (typeof requirement.minimumReputation === "number") {
               requirementFragments.push(
                 `${uiStrings.factionPanel.reputationLabel} ${requirement.minimumReputation}+`
               );
             }
 
-            const requirementText = requirementFragments.join(' • ') ||
+            const requirementText =
+              requirementFragments.join(" • ") ||
               getLocalizedStandingLabel(locale, standing.id);
 
-            dispatch(addLogMessage(logStrings.factionAccessDenied(factionName, requirementText)));
+            dispatch(
+              addLogMessage(
+                logStrings.factionAccessDenied(factionName, requirementText)
+              )
+            );
             setQueuedPath([]);
             setPendingNpcInteractionId(null);
             setPendingEnemyEngagementId(null);
@@ -1231,9 +1528,7 @@ const GameController: React.FC = () => {
         dispatch(setMapArea(targetArea));
         dispatch(movePlayer(connection.toPosition));
       } else {
-        log.warn(
-          `Missing target area in state for ${connection.toAreaId}`
-        );
+        log.warn(`Missing target area in state for ${connection.toAreaId}`);
       }
 
       setQueuedPath([]);
@@ -1249,7 +1544,7 @@ const GameController: React.FC = () => {
       return;
     }
 
-    const delayMs = player.isCrouching ? 180 : 0;
+    const delayMs = player.movementProfile === "silent" ? 140 : 0;
 
     if (delayMs > 0) {
       if (movementStepTimeoutRef.current !== null) {
@@ -1305,7 +1600,11 @@ const GameController: React.FC = () => {
       dispatch(addLogMessage(warning));
     }
 
-    if (!warning && previousEncumbranceWarning.current && encumbranceLevel === 'normal') {
+    if (
+      !warning &&
+      previousEncumbranceWarning.current &&
+      encumbranceLevel === "normal"
+    ) {
       previousEncumbranceWarning.current = null;
       return;
     }
@@ -1431,13 +1730,71 @@ const GameController: React.FC = () => {
     }
 
     // Process perception updates for all enemies
-    const detectionMultiplier = resolveParanoiaDetectionMultiplier(paranoiaTierRef.current);
-    const { updatedEnemies, maxAlertLevel, guardPerception } = processPerceptionUpdates(
-      enemies,
-      player,
-      currentMapArea,
-      detectionMultiplier
+    // Combine paranoia (existing), movement profile, stealth training, and night lighting
+    const paranoiaFactor = resolveParanoiaDetectionMultiplier(
+      paranoiaTierRef.current
     );
+    const movementFactor =
+      player.movementProfile === "silent"
+        ? 0.6
+        : player.movementProfile === "sprint"
+        ? 1.6
+        : 1;
+    const stealthTraining = player.skillTraining?.stealth ?? 0; // 0–100
+    const stealthFactor = Math.max(
+      0.7,
+      1 - Math.min(0.3, stealthTraining / 333)
+    );
+    const lightingFactor =
+      (timeOfDayRef.current ?? timeOfDay) === "night" ? 0.85 : 1;
+    const detectionMultiplier =
+      paranoiaFactor * movementFactor * stealthFactor * lightingFactor;
+    const { updatedEnemies, maxAlertLevel, guardPerception } =
+      processPerceptionUpdates(
+        enemies,
+        player,
+        currentMapArea,
+        detectionMultiplier
+      );
+
+    if (player.movementProfile !== "silent") {
+      const noiseProfile = MOVEMENT_NOISE[player.movementProfile];
+      updatedEnemies.forEach((enemyState, index) => {
+        const perception = guardPerception[index];
+        if (!enemyState || perception?.playerVisible) {
+          return;
+        }
+
+        const dx = enemyState.position.x - player.position.x;
+        const dy = enemyState.position.y - player.position.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance > noiseProfile.radius || noiseProfile.gain <= 0) {
+          return;
+        }
+
+        const previousProgress = enemyState.alertProgress ?? 0;
+        const nextProgress = Math.min(100, previousProgress + noiseProfile.gain);
+        if (nextProgress <= previousProgress) {
+          return;
+        }
+
+        let nextLevel = enemyState.alertLevel ?? AlertLevel.IDLE;
+        if (nextProgress >= PERCEPTION_CONFIG.alarmThreshold) {
+          nextLevel = AlertLevel.ALARMED;
+        } else if (nextProgress >= PERCEPTION_CONFIG.investigationThreshold) {
+          nextLevel = AlertLevel.INVESTIGATING;
+        } else if (nextProgress >= PERCEPTION_CONFIG.suspicionThreshold) {
+          nextLevel = AlertLevel.SUSPICIOUS;
+        }
+
+        updatedEnemies[index] = {
+          ...enemyState,
+          alertProgress: nextProgress,
+          alertLevel: nextLevel,
+        };
+      });
+    }
 
     // Update enemies with new alert states
     updatedEnemies.forEach((updatedEnemy, index) => {
@@ -1469,16 +1826,27 @@ const GameController: React.FC = () => {
       if (observation) {
         dispatch(ingestObservation(observation));
         log.debug(
-          `Suspicion: guard ${guard.id} observed player in ${currentMapArea.zoneId} (certainty ${(observation.baseCertainty * observation.distanceModifier).toFixed(2)})`
+          `Suspicion: guard ${guard.id} observed player in ${
+            currentMapArea.zoneId
+          } (certainty ${(
+            observation.baseCertainty * observation.distanceModifier
+          ).toFixed(2)})`
         );
       }
     });
 
     // Update global alert level if changed
     if (maxAlertLevel !== previousGlobalAlertLevel.current) {
-      const messageKey = getAlertMessageKey(previousGlobalAlertLevel.current, maxAlertLevel);
+      const messageKey = getAlertMessageKey(
+        previousGlobalAlertLevel.current,
+        maxAlertLevel
+      );
       if (messageKey) {
-        dispatch(addLogMessage(logStrings[messageKey as keyof typeof logStrings] as string));
+        dispatch(
+          addLogMessage(
+            logStrings[messageKey as keyof typeof logStrings] as string
+          )
+        );
       }
       dispatch(setGlobalAlertLevel(maxAlertLevel));
       previousGlobalAlertLevel.current = maxAlertLevel;
@@ -1492,48 +1860,49 @@ const GameController: React.FC = () => {
           curfewStateMachineRef.current.cancel(reinforcementTimeoutRef.current);
         }
 
-        reinforcementTimeoutRef.current = curfewStateMachineRef.current.schedule(() => {
-          reinforcementTimeoutRef.current = null;
-          if (!inCombat) {
-            dispatch(enterCombat());
-          }
+        reinforcementTimeoutRef.current =
+          curfewStateMachineRef.current.schedule(() => {
+            reinforcementTimeoutRef.current = null;
+            if (!inCombat) {
+              dispatch(enterCombat());
+            }
 
-          // If spawning during enemy turn, set AP to 0 so they don't act until next round
-          const spawnDuringEnemyTurn = inCombat && !isPlayerTurn;
+            // If spawning during enemy turn, set AP to 0 so they don't act until next round
+            const spawnDuringEnemyTurn = inCombat && !isPlayerTurn;
 
-          const reinforcementEnemy: Enemy = {
-            id: uuidv4(),
-            name: logStrings.curfewPatrolName,
-            position: { x: player.position.x + 5, y: player.position.y + 2 },
-            facing: 'west',
-            coverOrientation: null,
-            suppression: 0,
-            health: 45,
-            maxHealth: 45,
-            actionPoints: spawnDuringEnemyTurn ? 0 : 4,
-            maxActionPoints: 4,
-            damage: 7,
-            attackRange: 2,
-            isHostile: true,
-            visionCone: {
-              range: 10,
-              angle: 90,
-              direction: 180,
-            },
-            alertLevel: AlertLevel.ALARMED,
-            alertProgress: 100,
-          };
+            const reinforcementEnemy: Enemy = {
+              id: uuidv4(),
+              name: logStrings.curfewPatrolName,
+              position: { x: player.position.x + 5, y: player.position.y + 2 },
+              facing: "west",
+              coverOrientation: null,
+              suppression: 0,
+              health: 45,
+              maxHealth: 45,
+              actionPoints: spawnDuringEnemyTurn ? 0 : 4,
+              maxActionPoints: 4,
+              damage: 7,
+              attackRange: 2,
+              isHostile: true,
+              visionCone: {
+                range: 10,
+                angle: 90,
+                direction: 180,
+              },
+              alertLevel: AlertLevel.ALARMED,
+              alertProgress: 100,
+            };
 
-          dispatch(addEnemy(reinforcementEnemy));
-          dispatch(resetActionPoints());
-          if (spawnDuringEnemyTurn && !isPlayerTurn) {
-            dispatch(switchTurn());
+            dispatch(addEnemy(reinforcementEnemy));
             dispatch(resetActionPoints());
-          }
-          cancelPendingEnemyAction();
-          setCurrentEnemyTurnIndex(0);
-          dispatch(clearReinforcementsSchedule());
-        }, reinforcementDelayMs);
+            if (spawnDuringEnemyTurn && !isPlayerTurn) {
+              dispatch(switchTurn());
+              dispatch(resetActionPoints());
+            }
+            cancelPendingEnemyAction();
+            setCurrentEnemyTurnIndex(0);
+            dispatch(clearReinforcementsSchedule());
+          }, reinforcementDelayMs);
       }
     }
   }, [
@@ -1558,7 +1927,9 @@ const GameController: React.FC = () => {
     log.debug(
       `=== useEffect RUNNING === Turn: ${
         isPlayerTurn ? "Player" : "Enemy"
-      }, Combat: ${inCombat}, Processing: ${processingEnemyIdRef.current ? "true" : "false"}, EnemyIdx: ${currentEnemyTurnIndex}`
+      }, Combat: ${inCombat}, Processing: ${
+        processingEnemyIdRef.current ? "true" : "false"
+      }, EnemyIdx: ${currentEnemyTurnIndex}`
     );
 
     if (!inCombat || isPlayerTurn || enemies.length === 0) {
@@ -1572,9 +1943,7 @@ const GameController: React.FC = () => {
     const livingEnemies = enemies.filter((enemy) => enemy.health > 0);
     if (livingEnemies.length === 0) {
       cancelPendingEnemyAction();
-      log.warn(
-        "Enemy turn effect running but no living enemies found."
-      );
+      log.warn("Enemy turn effect running but no living enemies found.");
       return;
     }
 
@@ -1591,7 +1960,11 @@ const GameController: React.FC = () => {
 
     const currentEnemy = enemies[currentEnemyTurnIndex];
 
-    if (!currentEnemy || currentEnemy.health <= 0 || currentEnemy.actionPoints <= 0) {
+    if (
+      !currentEnemy ||
+      currentEnemy.health <= 0 ||
+      currentEnemy.actionPoints <= 0
+    ) {
       log.debug(
         `Enemy ${
           currentEnemy?.id ?? `at index ${currentEnemyTurnIndex}`
@@ -1635,20 +2008,16 @@ const GameController: React.FC = () => {
     processingEnemyIdRef.current = currentEnemy.id;
     let actionResult: ReturnType<typeof determineEnemyMove> | null = null;
     enemyActionTimeoutRef.current = window.setTimeout(() => {
-      log.debug(
-        `>>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`
-      );
+      log.debug(`>>> setTimeout CALLBACK for index ${currentEnemyTurnIndex}`);
 
       if (!inCombat) {
-        log.debug('Combat ended, skipping enemy action');
+        log.debug("Combat ended, skipping enemy action");
         cancelPendingEnemyAction(false);
         return;
       }
 
       try {
-        log.debug(
-          `Enemy Turn AI: START for ${currentEnemy.id}`
-        );
+        log.debug(`Enemy Turn AI: START for ${currentEnemy.id}`);
 
         const coverPositions: Position[] = [];
         for (let y = 0; y < currentMapArea.height; y += 1) {
@@ -1658,9 +2027,7 @@ const GameController: React.FC = () => {
             }
           }
         }
-        log.debug(
-          `Enemy Turn AI: Got cover positions for ${currentEnemy.id}`
-        );
+        log.debug(`Enemy Turn AI: Got cover positions for ${currentEnemy.id}`);
 
         const result = determineEnemyMove(
           currentEnemy,
@@ -1677,35 +2044,41 @@ const GameController: React.FC = () => {
         );
 
         // Combat feedback for enemy attacks
-        if (result.action === 'attack' || result.action === 'attack_missed') {
+        if (result.action === "attack" || result.action === "attack_missed") {
           const damageTaken = player.health - result.player.health;
 
           if (damageTaken > 0) {
             // Player took damage
-            dispatch(addFloatingNumber({
-              id: uuidv4(),
-              value: damageTaken,
-              gridX: player.position.x,
-              gridY: player.position.y,
-              type: result.isCritical ? 'crit' : 'damage',
-            }));
+            dispatch(
+              addFloatingNumber({
+                id: uuidv4(),
+                value: damageTaken,
+                gridX: player.position.x,
+                gridY: player.position.y,
+                type: result.isCritical ? "crit" : "damage",
+              })
+            );
 
             // Trigger hit flash
-            dispatch(triggerHitFlash({
-              id: uuidv4(),
-              type: result.isCritical ? 'crit' : 'damage',
-              intensity: 0.6,
-              duration: 300,
-            }));
-          } else if (result.action === 'attack_missed') {
+            dispatch(
+              triggerHitFlash({
+                id: uuidv4(),
+                type: result.isCritical ? "crit" : "damage",
+                intensity: 0.6,
+                duration: 300,
+              })
+            );
+          } else if (result.action === "attack_missed") {
             // Attack missed
-            dispatch(addFloatingNumber({
-              id: uuidv4(),
-              value: 0,
-              gridX: player.position.x,
-              gridY: player.position.y,
-              type: 'miss',
-            }));
+            dispatch(
+              addFloatingNumber({
+                id: uuidv4(),
+                value: 0,
+                gridX: player.position.x,
+                gridY: player.position.y,
+                type: "miss",
+              })
+            );
           }
         }
 
@@ -1727,9 +2100,7 @@ const GameController: React.FC = () => {
           );
         }
 
-        log.debug(
-          `Enemy Turn AI: END AI & Dispatches for ${currentEnemy.id}`
-        );
+        log.debug(`Enemy Turn AI: END AI & Dispatches for ${currentEnemy.id}`);
       } catch (error) {
         log.error("Error during enemy turn AI:", {
           enemyId: currentEnemy?.id,
@@ -1738,12 +2109,12 @@ const GameController: React.FC = () => {
       } finally {
         const latestEnemy = actionResult?.enemy ?? currentEnemy;
         const shouldRepeatEnemy =
-          latestEnemy &&
-          latestEnemy.health > 0 &&
-          latestEnemy.actionPoints > 0;
+          latestEnemy && latestEnemy.health > 0 && latestEnemy.actionPoints > 0;
 
         log.debug(
-          `Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Remaining AP: ${latestEnemy?.actionPoints ?? currentEnemy.actionPoints}. Repeat: ${shouldRepeatEnemy}`
+          `Enemy Turn FINALLY for index ${currentEnemyTurnIndex}. Remaining AP: ${
+            latestEnemy?.actionPoints ?? currentEnemy.actionPoints
+          }. Repeat: ${shouldRepeatEnemy}`
         );
 
         cancelPendingEnemyAction(false);
@@ -1797,9 +2168,7 @@ const GameController: React.FC = () => {
     // Check if the value changed from true to false
     if (prevInCombat.current && !inCombat) {
       dispatch(addLogMessage(logStrings.combatOver));
-      log.debug(
-        "Combat ended (detected via useEffect watching inCombat)."
-      );
+      log.debug("Combat ended (detected via useEffect watching inCombat).");
       // Explicitly reset player AP when combat ends.
       dispatch(resetActionPoints());
     }
@@ -1810,8 +2179,11 @@ const GameController: React.FC = () => {
   // Handle attacking an enemy
   const attackEnemy = useCallback(
     (enemy: Enemy, mapArea: MapArea) => {
-      const baseAttackCost = player.equipped.weapon?.apCost ?? DEFAULT_ATTACK_COST;
-      const encumbranceAttackMultiplier = Number.isFinite(player.encumbrance.attackApMultiplier)
+      const baseAttackCost =
+        player.equipped.weapon?.apCost ?? DEFAULT_ATTACK_COST;
+      const encumbranceAttackMultiplier = Number.isFinite(
+        player.encumbrance.attackApMultiplier
+      )
         ? Math.max(player.encumbrance.attackApMultiplier, 0)
         : Number.POSITIVE_INFINITY;
       const attackCost = shouldGunFuAttackBeFree(player)
@@ -1851,7 +2223,9 @@ const GameController: React.FC = () => {
       dispatch(setPlayerData(updatedPlayer));
 
       if (result.events) {
-        result.events.forEach((event) => dispatch(addLogMessage(event.message)));
+        result.events.forEach((event) =>
+          dispatch(addLogMessage(event.message))
+        );
       }
 
       log.debug("attackEnemy: POST-ATTACK", {
@@ -1863,24 +2237,28 @@ const GameController: React.FC = () => {
         dispatch(addLogMessage(logStrings.hitEnemy(enemy.name, result.damage)));
 
         // Combat feedback: floating damage number on enemy
-        dispatch(addFloatingNumber({
-          id: uuidv4(),
-          value: result.damage,
-          gridX: enemy.position.x,
-          gridY: enemy.position.y,
-          type: result.isCritical ? 'crit' : 'damage',
-        }));
+        dispatch(
+          addFloatingNumber({
+            id: uuidv4(),
+            value: result.damage,
+            gridX: enemy.position.x,
+            gridY: enemy.position.y,
+            type: result.isCritical ? "crit" : "damage",
+          })
+        );
       } else {
         dispatch(addLogMessage(logStrings.missedEnemy(enemy.name)));
 
         // Combat feedback: show miss
-        dispatch(addFloatingNumber({
-          id: uuidv4(),
-          value: 0,
-          gridX: enemy.position.x,
-          gridY: enemy.position.y,
-          type: 'miss',
-        }));
+        dispatch(
+          addFloatingNumber({
+            id: uuidv4(),
+            value: 0,
+            gridX: enemy.position.x,
+            gridY: enemy.position.y,
+            type: "miss",
+          })
+        );
       }
 
       // Update enemy
@@ -1971,8 +2349,7 @@ const GameController: React.FC = () => {
 
         const occupied = enemies.some(
           (enemy) =>
-            enemy.position.x === candidate.x &&
-            enemy.position.y === candidate.y
+            enemy.position.x === candidate.x && enemy.position.y === candidate.y
         );
 
         if (!occupied) {
@@ -1998,7 +2375,7 @@ const GameController: React.FC = () => {
       }
 
       if (autoBattleEnabled && inCombat) {
-        autoBattleControllerRef.current?.notifyManualOverride('manual_input');
+        autoBattleControllerRef.current?.notifyManualOverride("manual_input");
         dispatch(setAutoBattleEnabled(false));
       }
 
@@ -2047,8 +2424,12 @@ const GameController: React.FC = () => {
         }
 
         const initialNodeId = dialogue.nodes[0].id;
-        dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId }));
-        dispatch(addLogMessage(logStrings.npcChannelOpened(interactiveNpc.name)));
+        dispatch(
+          startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId })
+        );
+        dispatch(
+          addLogMessage(logStrings.npcChannelOpened(interactiveNpc.name))
+        );
         return;
       }
 
@@ -2088,7 +2469,10 @@ const GameController: React.FC = () => {
         if (inCombat && isPlayerTurn) {
           const nearbyEnemy = findClosestEnemy(player.position);
           const weaponRange = player.equipped.weapon?.range ?? 1;
-          if (nearbyEnemy && isInAttackRange(player.position, nearbyEnemy.position, weaponRange)) {
+          if (
+            nearbyEnemy &&
+            isInAttackRange(player.position, nearbyEnemy.position, weaponRange)
+          ) {
             attackEnemy(nearbyEnemy, currentMapArea);
             return;
           }
@@ -2177,7 +2561,12 @@ const GameController: React.FC = () => {
         if (connection) {
           const targetArea = mapDirectory[connection.toAreaId];
 
-          if (curfewActive && tile.type === TileType.DOOR && targetArea && !targetArea.isInterior) {
+          if (
+            curfewActive &&
+            tile.type === TileType.DOOR &&
+            targetArea &&
+            !targetArea.isInterior
+          ) {
             dispatch(addLogMessage(logStrings.checkpointSealed));
             return;
           }
@@ -2192,7 +2581,7 @@ const GameController: React.FC = () => {
             if (targetArea.isInterior) {
               dispatch(
                 triggerStorylet({
-                  type: 'campfireRest',
+                  type: "campfireRest",
                   locationId: targetArea.id,
                 })
               );
@@ -2200,9 +2589,7 @@ const GameController: React.FC = () => {
               setCurfewAlertState("clear");
             }
           } else {
-            log.warn(
-              `Missing target area in state for ${connection.toAreaId}`
-            );
+            log.warn(`Missing target area in state for ${connection.toAreaId}`);
           }
 
           setQueuedPath([]);
@@ -2227,7 +2614,7 @@ const GameController: React.FC = () => {
             if (spawnPosition) {
               const patrol: Enemy = {
                 id: uuidv4(),
-              name: logStrings.curfewPatrolName,
+                name: logStrings.curfewPatrolName,
                 position: spawnPosition,
                 maxHealth: 30,
                 health: 30,
@@ -2241,9 +2628,9 @@ const GameController: React.FC = () => {
               dispatch(addEnemy(patrol));
               dispatch(
                 triggerStorylet({
-                  type: 'patrolAmbush',
+                  type: "patrolAmbush",
                   locationId: currentMapArea?.id,
-                  tags: ['corpsec'],
+                  tags: ["corpsec"],
                 })
               );
 
@@ -2269,13 +2656,10 @@ const GameController: React.FC = () => {
             playerAP_before: player.actionPoints,
           });
           dispatch(updateActionPoints(-1)); // Reduce action points by 1
-          log.debug(
-            "handleKeyDown: POST-MOVE AP DEDUCTION",
-            {
-              apCost: 1,
-              playerAP_after: player.actionPoints - 1, // Simulate state update for logging
-            }
-          );
+          log.debug("handleKeyDown: POST-MOVE AP DEDUCTION", {
+            apCost: 1,
+            playerAP_after: player.actionPoints - 1, // Simulate state update for logging
+          });
 
           // If player has no more AP, switch turn
           if (player.actionPoints <= 1) {

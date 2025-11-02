@@ -36,6 +36,8 @@ export interface WorldState {
   globalAlertLevel: AlertLevel;
   reinforcementsScheduled: boolean;
   environment: EnvironmentState;
+  /** Engagement mode for HUD and turn semantics */
+  engagementMode: 'none' | 'stealth' | 'combat' | 'dialog';
 }
 
 const log = createScopedLogger('worldSlice');
@@ -120,6 +122,7 @@ const buildWorldState = (locale: Locale): WorldState => {
     globalAlertLevel: AlertLevel.IDLE,
     reinforcementsScheduled: false,
     environment: createInitialEnvironmentState(),
+    engagementMode: 'none',
   };
 };
 
@@ -237,6 +240,7 @@ export const worldSlice = createSlice({
       state.inCombat = false;
       state.isPlayerTurn = true;
       state.turnCount = 1;
+      state.engagementMode = 'none';
     },
 
     setCurrentMapAreaZoneMetadata: (state, action: PayloadAction<{ zoneId: string }>) => {
@@ -311,6 +315,7 @@ export const worldSlice = createSlice({
         state.inCombat = true;
         state.isPlayerTurn = true;
         state.turnCount = 1;
+        state.engagementMode = 'combat';
       }
     },
 
@@ -320,7 +325,12 @@ export const worldSlice = createSlice({
         state.inCombat = false;
         state.isPlayerTurn = true;
         state.turnCount = 1;
+        state.engagementMode = 'none';
       }
+    },
+
+    setEngagementMode: (state, action: PayloadAction<'none' | 'stealth' | 'combat' | 'dialog'>) => {
+      state.engagementMode = action.payload;
     },
 
     switchTurn: (state) => {
@@ -540,6 +550,7 @@ export const {
   setGlobalAlertLevel,
   scheduleReinforcements,
   clearReinforcementsSchedule,
+  setEngagementMode,
 } = worldSlice.actions;
 
 export default worldSlice.reducer;

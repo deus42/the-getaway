@@ -20,6 +20,43 @@
 </notes>
 </step>
 
+<step id="GET-108" status="completed">
+<step_metadata>
+  <number>108</number>
+  <title>MVP: Stealth Mode v1 (Visibility, Awareness, Noise) and remove crouch</title>
+  <status>Completed</status>
+  <date>May 21, 2026</date>
+</step_metadata>
+<linear key="GET-108" />
+
+<tasks>
+1. Added a persistent engagement model (`worldSlice.engagementMode`) plus stealth state fields on the player (`movementProfile`, `stealthModeEnabled`, `stealthCooldownExpiresAt`) with Redux helpers and selectors.
+2. Reworked `GameController` to drive the `X` stealth toggle, enforce cooldowns, auto-drop during combat/dialogue, and inject movement-noise awareness into guard perception.
+3. Updated surveillance, suspicion, and HUD layers to consume movement/stealth data, including the new Stealth indicator wafer and localisation updates; removed all crouch-era references.
+4. Documented the new stealth model in `memory-bank/game-design.md` and `memory-bank/architecture.md`.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/components/GameController.tsx</code_location>
+- <code_location>the-getaway/src/components/ui/StealthIndicator.tsx</code_location>
+- <code_location>the-getaway/src/store/playerSlice.ts</code_location>
+- <code_location>the-getaway/src/store/worldSlice.ts</code_location>
+- <code_location>the-getaway/src/store/selectors/engagementSelectors.ts</code_location>
+- <code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
+- <code_location>the-getaway/src/game/systems/suspicion/observationBuilders.ts</code_location>
+- <code_location>memory-bank/game-design.md</code_location>
+- <code_location>memory-bank/architecture.md</code_location>
+</implementation>
+
+<validation>
+- `yarn test --runTestsByPath src/__tests__/progression.test.ts src/__tests__/perks.test.ts`
+</validation>
+
+<notes>
+- `yarn build` remains blocked by pre-existing type errors in `AutoBattleProfileSelect`; stealth refactor compiles cleanly aside from that upstream issue.
+</notes>
+</step>
+
 <step id="GET-92" status="completed">
 <step_metadata>
   <number>92</number>

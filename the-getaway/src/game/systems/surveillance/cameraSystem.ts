@@ -98,8 +98,15 @@ const computeEffectiveRange = (camera: CameraRuntimeState, player: Player): numb
   const stealthReduction = clamp(stealth / 200, 0, 0.75);
   let effective = baseRange * (1 - stealthReduction);
 
-  if (player.isCrouching) {
-    effective *= 0.5;
+  // Movement profile influences how easily cameras pick up the player
+  const movementFactor = player.movementProfile === 'silent'
+    ? 0.8
+    : player.movementProfile === 'sprint'
+    ? 1.2
+    : 1;
+  effective *= movementFactor;
+  if (player.stealthModeEnabled) {
+    effective *= 0.75;
   }
 
   return Math.max(1, effective);
@@ -144,7 +151,9 @@ const evaluateDetection = (
 
   if (!looping) {
     if (camera.type === 'motionSensor') {
-      detectionActive = distance <= range && playerMoved && !player.isCrouching;
+      // Silent movement avoids tripping motion sensors; sprinting makes it easier
+      const motionSensitive = player.movementProfile !== 'silent';
+      detectionActive = distance <= range && playerMoved && motionSensitive;
     } else {
       const coneHit = isInVisionCone(
         camera.position,
@@ -166,7 +175,17 @@ const evaluateDetection = (
   let lastDetectionTimestamp = previous.lastDetectionTimestamp;
 
   if (detectionActive) {
-    progress += PROGRESS_GAIN_PER_MS * deltaMs;
+    // Hacking talent dampens camera detection gains; movement profile also impacts gain
+    const hacking = getPlayerSkillValue(player, 'hacking');
+    const hackingDampen = clamp(hacking / 400, 0, 0.25); // up to -25%
+    const movementGainFactor = player.movementProfile === 'silent' ? 0.7 : player.movementProfile === 'sprint' ? 1.2 : 1;
+    const stealthModifier = player.stealthModeEnabled ? 0.75 : 1;
+    progress +=
+      PROGRESS_GAIN_PER_MS *
+      deltaMs *
+      (1 - hackingDampen) *
+      movementGainFactor *
+      stealthModifier;
     progress = Math.min(100, progress);
     lastDetectionTimestamp = timestamp;
   } else {

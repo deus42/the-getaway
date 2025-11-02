@@ -1,13 +1,16 @@
-import React from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
-import { BACKGROUND_MAP } from '../../content/backgrounds';
-import { getUIStrings } from '../../content/ui';
-import { formatXPDisplay, calculateXPForLevel } from '../../game/systems/progression';
-import { addExperience } from '../../store/playerSlice';
-import AnimatedStatBar from './AnimatedStatBar';
-import { WarningIcon } from './icons';
-import { selectParanoiaValue } from '../../store/selectors/paranoiaSelectors';
+import React from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "../../store";
+import { BACKGROUND_MAP } from "../../content/backgrounds";
+import { getUIStrings } from "../../content/ui";
+import {
+  formatXPDisplay,
+  calculateXPForLevel,
+} from "../../game/systems/progression";
+import { addExperience } from "../../store/playerSlice";
+import AnimatedStatBar from "./AnimatedStatBar";
+import { WarningIcon } from "./icons";
+import { selectParanoiaValue } from "../../store/selectors/paranoiaSelectors";
 
 interface PlayerSummaryPanelProps {
   onOpenCharacter?: () => void;
@@ -26,16 +29,27 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   const locale = useSelector((state: RootState) => state.settings.locale);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
   const uiStrings = getUIStrings(locale);
-  const background = player.backgroundId ? BACKGROUND_MAP[player.backgroundId] : undefined;
-  const backgroundName = background?.name ?? uiStrings.playerStatus.backgroundFallback;
+  const background = player.backgroundId
+    ? BACKGROUND_MAP[player.backgroundId]
+    : undefined;
+  const backgroundName =
+    background?.name ?? uiStrings.playerStatus.backgroundFallback;
   const roundedParanoia = Math.round(paranoiaValue);
+  const movementLabel =
+    uiStrings.playerStatus.movementBadge[player.movementProfile] ??
+    player.movementProfile.toUpperCase();
 
   const handleLevelUp = () => {
     const currentLevel = player.level;
     const xpForNextLevel = calculateXPForLevel(currentLevel + 1);
     const currentXP = player.experience;
     const xpNeeded = xpForNextLevel - currentXP;
-    dispatch(addExperience({ amount: Math.max(1, xpNeeded), reason: 'Test mode XP boost' }));
+    dispatch(
+      addExperience({
+        amount: Math.max(1, xpNeeded),
+        reason: "Test mode XP boost",
+      })
+    );
   };
 
   return (
@@ -50,9 +64,9 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             <span className="inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.18)] px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold tracking-[0.14em] text-[#f8fafc] shadow-[0_10px_20px_-10px_rgba(56,189,248,0.55)]">
               {uiStrings.playerStatus.levelLabel} {player.level}
             </span>
-            {player.isCrouching && (
+            {player.movementProfile !== "normal" && (
               <span className="inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(148,163,184,0.65)] bg-[rgba(148,163,184,0.12)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold tracking-[0.14em] text-[#e2e8f0] shadow-[0_8px_18px_-12px_rgba(148,163,184,0.55)]">
-                {uiStrings.playerStatus.crouchIndicator}
+                {movementLabel}
               </span>
             )}
           </div>
@@ -79,7 +93,6 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         lowThreshold={50}
         criticalThreshold={75}
         dangerDirection="ascending"
-        disableGlow
       />
 
       {player.isExhausted && (
@@ -117,11 +130,11 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             type="button"
             onClick={onOpenCharacter}
             className={[
-              'flex-1 rounded-[999px] border px-[0.75rem] py-[0.42rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#e0f2fe] shadow-[0_12px_20px_-18px_rgba(56,189,248,0.45)] transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900',
+              "flex-1 rounded-[999px] border px-[0.75rem] py-[0.42rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#e0f2fe] shadow-[0_12px_20px_-18px_rgba(56,189,248,0.45)] transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900",
               characterOpen
-                ? 'border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.6),rgba(249,115,22,0.55))] text-[#fff7e1]'
-                : 'border-[rgba(56,189,248,0.55)] bg-[linear-gradient(130deg,rgba(56,189,248,0.48),rgba(14,165,233,0.45))]',
-            ].join(' ')}
+                ? "border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.6),rgba(249,115,22,0.55))] text-[#fff7e1]"
+                : "border-[rgba(56,189,248,0.55)] bg-[linear-gradient(130deg,rgba(56,189,248,0.48),rgba(14,165,233,0.45))]",
+            ].join(" ")}
             data-testid="summary-open-character"
             aria-pressed={characterOpen}
           >

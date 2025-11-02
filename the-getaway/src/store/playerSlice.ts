@@ -120,6 +120,7 @@ const createFreshPlayer = (): Player => {
   };
 
   ensureStaminaFields(base);
+  ensureStealthState(base);
   return base;
 };
 
@@ -338,6 +339,23 @@ const deepClone = <T>(value: T): T => {
   }
   return JSON.parse(JSON.stringify(value)) as T;
 };
+
+function ensureStealthState(player: Player): void {
+  if (player.movementProfile !== 'silent' && player.movementProfile !== 'sprint') {
+    player.movementProfile = 'normal';
+  }
+
+  if (typeof player.stealthModeEnabled !== 'boolean') {
+    player.stealthModeEnabled = false;
+  }
+
+  if (
+    player.stealthCooldownExpiresAt !== null &&
+    (!Number.isFinite(player.stealthCooldownExpiresAt) || player.stealthCooldownExpiresAt! < 0)
+  ) {
+    player.stealthCooldownExpiresAt = null;
+  }
+}
 
 const isWeaponItem = (item: Item): item is Weapon => {
   return (item as unknown as Record<string, unknown>).damage !== undefined;
@@ -1206,6 +1224,7 @@ export const playerSlice = createSlice({
 
     consumeStamina: (state, action: PayloadAction<number>) => {
       ensureStaminaFields(state.data);
+      ensureStealthState(state.data);
 
       const rawCost = action.payload;
       if (!Number.isFinite(rawCost) || rawCost <= 0) {
@@ -1219,6 +1238,7 @@ export const playerSlice = createSlice({
 
     regenerateStamina: (state, action: PayloadAction<number | undefined>) => {
       ensureStaminaFields(state.data);
+      ensureStealthState(state.data);
 
       const rawAmount = action.payload ?? STAMINA_REGEN_OUT_OF_COMBAT;
       if (!Number.isFinite(rawAmount) || rawAmount <= 0) {
@@ -1233,6 +1253,7 @@ export const playerSlice = createSlice({
 
     updateMaxStamina: (state) => {
       ensureStaminaFields(state.data);
+      ensureStealthState(state.data);
       const recalculated = calculateMaxStamina(state.data.skills.endurance);
       updateStaminaCapacity(state.data, recalculated, { preserveRatio: true });
     },
@@ -1255,6 +1276,7 @@ export const playerSlice = createSlice({
       const result = processLevelUp(state.data);
       state.data = result.player;
       ensureStaminaFields(state.data);
+      ensureStealthState(state.data);
 
       // Award skill points and attribute points
       if (result.skillPointsAwarded > 0) {
@@ -1409,10 +1431,6 @@ export const playerSlice = createSlice({
       state.version = PLAYER_STATE_VERSION;
       state.data = clonedPlayer;
 
-      if (typeof state.data.isCrouching !== 'boolean') {
-        state.data.isCrouching = false;
-      }
-
       if (!state.data.factionReputation) {
         state.data.factionReputation = { ...DEFAULT_PLAYER.factionReputation };
       }
@@ -1518,6 +1536,7 @@ export const playerSlice = createSlice({
       });
 
       ensureStaminaFields(state.data);
+      ensureStealthState(state.data);
       refreshInventoryMetrics(state.data);
 
       if (shouldTriggerAdrenalineRush(state.data)) {
@@ -1525,8 +1544,18 @@ export const playerSlice = createSlice({
       }
     },
 
-    setCrouching: (state, action: PayloadAction<boolean>) => {
-      state.data.isCrouching = action.payload;
+    setMovementProfile: (state, action: PayloadAction<'silent' | 'normal' | 'sprint'>) => {
+      state.data.movementProfile = action.payload;
+    },
+
+    setStealthState: (
+      state,
+      action: PayloadAction<{ enabled: boolean; cooldownExpiresAt?: number | null }>
+    ) => {
+      state.data.stealthModeEnabled = action.payload.enabled;
+      if ('cooldownExpiresAt' in action.payload) {
+        state.data.stealthCooldownExpiresAt = action.payload.cooldownExpiresAt ?? null;
+      }
     },
 
     equipItem: (state, action: PayloadAction<EquipItemPayload>) => {
@@ -1799,7 +1828,8 @@ export const {
   useInventoryItem,
   resetPlayer,
   setPlayerData,
-  setCrouching,
+  setMovementProfile,
+  setStealthState,
   equipWeapon,
   equipArmor,
   unequipWeapon,

@@ -52,6 +52,12 @@ export interface LogStrings {
   autoBattleEngaged: (profileName: string) => string;
   autoBattlePaused: (reason: string) => string;
   autoBattleDecision: (profileName: string, summary: string) => string;
+  stealthEngaged: string;
+  stealthDisengaged: string;
+  stealthCompromised: string;
+  stealthUnavailableCombat: string;
+  stealthUnavailableDialogue: string;
+  stealthCooldown: (seconds: number) => string;
 }
 
 interface SystemStrings {
@@ -118,6 +124,12 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       autoBattleEngaged: (profileName) => `AutoBattle engaged (${profileName}).`,
       autoBattlePaused: (reason) => `AutoBattle paused — ${reason}.`,
       autoBattleDecision: (profileName, summary) => `AutoBattle (${profileName}) → ${summary}`,
+      stealthEngaged: 'Stealth enabled. Your profile slips into the dark.',
+      stealthDisengaged: 'Stealth disengaged. Boots back on the pavement.',
+      stealthCompromised: 'Stealth blown! Eyes are on you.',
+      stealthUnavailableCombat: "Can't engage stealth mid-combat!",
+      stealthUnavailableDialogue: 'Finish the conversation before slipping back into stealth.',
+      stealthCooldown: (seconds) => `Stealth recalibrating (${seconds}s).`,
     },
   },
   uk: {
@@ -179,6 +191,12 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       autoBattleEngaged: (profileName) => `Автобій активовано (${profileName}).`,
       autoBattlePaused: (reason) => `Автобій призупинено — ${reason}.`,
       autoBattleDecision: (profileName, summary) => `Автобій (${profileName}) → ${summary}`,
+      stealthEngaged: 'Стелс активовано. Ви танете у темряві.',
+      stealthDisengaged: 'Стелс вимкнено. Кроки знову лунають.',
+      stealthCompromised: 'Стелс зірвано! Вас засікли.',
+      stealthUnavailableCombat: 'Не можна увійти у стелс під час бою!',
+      stealthUnavailableDialogue: 'Спершу завершіть діалог, тоді повертайтесь у стелс.',
+      stealthCooldown: (seconds) => `Стелс перезаряджається (${seconds} с).`,
     },
   },
 };

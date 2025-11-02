@@ -369,6 +369,31 @@ flowchart LR
 <code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location>
 </architecture_section>
 
+<architecture_section id="engagement_modes" category="hud_and_state">
+<design_principles>
+- Maintain a single source of truth for the player's engagement state so HUD, gameplay systems, and AI react consistently.
+- Keep stealth toggles deterministic: player intent drives entry/exit while combat, dialogue, or alarms can forcibly override with a cool-down.
+- Surface system state through lightweight selectors so UI layers stay declarative and memo-friendly.
+</design_principles>
+
+<technical_flow>
+1. `worldSlice.engagementMode` tracks `'none' | 'stealth' | 'combat' | 'dialog'`, mirroring combat/quest reducers while allowing `GameController` to set stealth manually.
+2. `playerSlice` now persists `movementProfile`, `stealthModeEnabled`, and `stealthCooldownExpiresAt`; helper reducers (`setMovementProfile`, `setStealthState`) keep runtime systems decoupled from React specifics.
+3. `selectStealthAvailability` in `store/selectors/engagementSelectors.ts` exposes eligibility/cooldown metadata that both HUD and controllers consume.
+4. `GameController` handles toggle input (`X`), enforces cooldowns, auto-drops stealth during combat/dialogue, and applies noise-based alert bumps to nearby guards when the player moves loudly.
+5. `StealthIndicator.tsx` reads engagement + surveillance telemetry, rendering the Hidden/Exposed/Compromised/Standby wafer with localisation-aware copy and state-driven styling.
+6. Surveillance and suspicion pipelines use `player.movementProfile` + `stealthModeEnabled` (replacing crouch) to scale camera range, detection gain, disguise multipliers, and witness posture modifiers.
+</technical_flow>
+
+<code_location>the-getaway/src/store/worldSlice.ts</code_location>
+<code_location>the-getaway/src/store/playerSlice.ts</code_location>
+<code_location>the-getaway/src/store/selectors/engagementSelectors.ts</code_location>
+<code_location>the-getaway/src/components/GameController.tsx</code_location>
+<code_location>the-getaway/src/components/ui/StealthIndicator.tsx</code_location>
+<code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
+<code_location>the-getaway/src/game/systems/suspicion/observationBuilders.ts</code_location>
+</architecture_section>
+
 <architecture_section id="witness_memory_heat" category="gameplay_systems">
 <design_principles>
 - Model suspicion as decaying eyewitness memory so stealth pressure emerges from elapsed time and behaviour rather than scripted cooldowns.

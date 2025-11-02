@@ -746,6 +746,42 @@ Linger inside and outside patrol vision cones to trigger each alert phase, confi
 </test>
 </step>
 
+<step id="19.4">
+<step_metadata>
+  <number>19.4</number>
+  <title>Stealth Mode Foundations (Engagement Model + Feedback)</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19 completed (baseline guard perception and alert states)
+</prerequisites>
+
+<instructions>
+Promote Stealth to a first-class engagement mode alongside Combat and Dialog while retiring crouch.
+</instructions>
+
+<details>
+- **Engagement Model**: Extend `worldSlice` with a persistent `engagementMode` union (`combat | stealth | dialog`) plus selectors (`selectEngagementMode`, `selectIsStealthEligible`, `selectIsHidden`) for HUD and systems. Combat mirrors `world.inCombat`, dialog mirrors active conversations, and stealth becomes player-driven but auto-disengages when alarms spike.
+- **Stealth Toggle**: Remove the legacy crouch reducers, inputs, and UI labels. Bind the keyboard `X` key to toggle stealth when eligibility checks pass (not in combat/dialog, cooldown cleared). Persist the flag on the player model (`stealthModeEnabled`) so runtime systems receive the state without React context.
+- **Guard Visibility & Awareness**: Adjust `isPlayerVisible`/`updateEnemyAlert` to scale vision range, cone angle, and alert gain by lighting, blackout flags, stealth skill, paranoia, and a stealth-mode coefficient. Hidden players should delay thresholds, while exposure flips immediately once multipliers exceed limits.
+- **Camera Integration**: Replace crouch modifiers with `stealthModeEnabled` in the surveillance system, keeping skill-based range dampening and ensuring motion sensors ignore stealth movement but still punish sprinting bursts.
+- **Noise Model (MVP)**: Emit radial noise from player movement profile alone (sprint > walk > stealth walk) with exponential falloff—no surface/material coefficients at MVP. Nearby guards raise detection multipliers or enter Investigating even without direct LoS.
+- **Stealth Payoffs & Fail States**: Transition into Combat immediately on detection and require a short cooldown with clear LoS before stealth can be retoggled. Defer ambitious ambush bonuses until post-MVP.
+- **HUD & Feedback**: Add a Stealth indicator wafer near the camera HUD showing `Hidden` (cool tone), `Exposed` (warm), and `Compromised` (alert) states with subtle AV ticks on transition. Align palette/intents with the existing Camera wafer.
+- **Documentation & Localisation**: Update `game-design.md` (stealth rules, tiers, cooldown), `architecture.md` (engagement data flow, detection math), and localisation bundles for the new indicator and keybinding while pruning crouch copy.
+</details>
+
+<test>
+- Follow a Level 0 night run: toggle Stealth with `X`, confirm indicator shows Hidden, and approach a patrol from shadows while awareness climbs slowly.
+- Cross an active camera arc in stealth; verify detection peaks at Suspicious before decaying as you retreat.
+- Sprint briefly; observe noise pushing a nearby guard into Investigating, then break LoS until the indicator returns to Hidden and the cooldown unlocks the toggle.
+- Enter combat while detected to confirm Stealth auto-disables and can only be re-enabled once the cooldown expires out of sight.
+- Initiate and exit a dialogue sequence to ensure the engagement mode flips to Dialog and restores the prior stealth state afterwards.
+- Run targeted unit coverage for selectors, detection multipliers, and noise helpers.
+</test>
+</step>
+
 <step id="19.5">
 <step_metadata>
   <number>19.5</number>
@@ -772,7 +808,7 @@ Implement surveillance cameras that activate during nighttime curfew, creating d
 
 **3 Camera Types** (`src/game/systems/surveillance/cameraTypes.ts`)
 - **Static Camera**: Wall-mounted, sweeps 90° cone between 2-4 preset angles in 3s cycles, 8-tile range, activates at curfew (Evening/Night)
-- **Motion Sensor**: Small box sprite, 4-tile radius circle, triggers only on movement (standing still = invisible), crouch-walk at 50% speed bypasses detection
+- **Motion Sensor**: Small box sprite, 4-tile radius circle, triggers only on movement (standing still = invisible); stealth-walking avoids trips while sprinting guarantees detection.
 - **Drone Camera**: Circular body + cone searchlight, follows patrol path, 90° cone, 10-tile range, searchlight only on at night (day = passive patrol)
 
 **Curfew Activation System** (`src/game/systems/surveillance/cameraSystem.ts`)
@@ -783,8 +819,7 @@ Implement surveillance cameras that activate during nighttime curfew, creating d
 
 **Detection & Alert System** (integrates with Step 19)
 - **Detection calc**: Each frame, check player in cone (angle + distance < range) && LOS clear (raycast no walls)
-- **Stealth modifier**: `effectiveRange = baseRange * (1 - stealthSkill / 200)` (Stealth 50 = -25%, 100 = -50%)
-- **Crouch mode**: Press C to toggle, -50% detection range, -50% movement speed
+- **Stealth modifier**: Scale detection range/angle using `stealthModeEnabled`, stealth training, and movement profile multipliers defined in Step 19.4 (crouch references removed).
 - **States**: Idle (blue cone) → Suspicious (yellow, detectionProgress 0→100 over 3s) → Alarmed (red, 100%)
 - **Yellow Alert**: Show "CAMERA DETECTING" timer, player can break LOS to reset
 - **Red Alert**: Spawn 2-4 ESD guards at nearest entry point, 10-15s countdown, lock doors 30s

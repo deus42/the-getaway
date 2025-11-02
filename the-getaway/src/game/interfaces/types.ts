@@ -95,7 +95,19 @@ export interface Player extends Entity {
   coverOrientation?: CardinalDirection | null;
   suppression?: number;
   isExhausted: boolean;
-  isCrouching: boolean;
+  /**
+   * Player movement profile influences stealth detection and stamina costs.
+   * - silent: reduced detection, slower cadence
+   * - normal: default behaviour
+   * - sprint: increased detection, higher stamina drain
+   */
+  movementProfile: 'silent' | 'normal' | 'sprint';
+  /** True when the player has manually enabled stealth mode. */
+  stealthModeEnabled: boolean;
+  /**
+   * Timestamp (ms since epoch) when the player can re-enter stealth. Null when no cooldown is active.
+   */
+  stealthCooldownExpiresAt: number | null;
   skills: PlayerSkills;
   skillTraining: PlayerSkillValues;
   taggedSkillIds: SkillId[];

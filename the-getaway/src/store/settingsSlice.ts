@@ -11,6 +11,7 @@ export interface SettingsState {
   autoBattleEnabled: boolean;
   autoBattleProfile: AutoBattleProfileId;
   lightsEnabled: boolean;
+  autoStealthEnabled: boolean;
 }
 
 const initialState: SettingsState = {
@@ -19,6 +20,7 @@ const initialState: SettingsState = {
   autoBattleEnabled: false,
   autoBattleProfile: DEFAULT_AUTO_BATTLE_PROFILE_ID,
   lightsEnabled: false,
+  autoStealthEnabled: false,
 };
 
 const settingsSlice = createSlice({
@@ -40,6 +42,9 @@ const settingsSlice = createSlice({
     setLightsEnabled: (state, action: PayloadAction<boolean>) => {
       state.lightsEnabled = action.payload;
     },
+    setAutoStealthEnabled: (state, action: PayloadAction<boolean>) => {
+      state.autoStealthEnabled = action.payload;
+    },
   },
 });
 
@@ -49,6 +54,7 @@ export const {
   setAutoBattleEnabled,
   setAutoBattleProfile,
   setLightsEnabled,
+  setAutoStealthEnabled,
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

@@ -14,6 +14,7 @@ import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNot
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
 import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
+import StealthIndicator from "./components/ui/StealthIndicator";
 import CurfewWarning from "./components/ui/CurfewWarning";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
@@ -470,6 +471,9 @@ const CommandShell: React.FC<CommandShellProps> = ({
           </div>
           <div style={{ pointerEvents: 'auto' }}>
             <DayNightIndicator />
+          </div>
+          <div style={{ pointerEvents: 'auto' }}>
+            <StealthIndicator />
           </div>
           <div style={{ pointerEvents: 'auto' }}>
             <CameraDetectionHUD />

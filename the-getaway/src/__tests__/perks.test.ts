@@ -86,7 +86,10 @@ const createTestPlayer = (overrides?: Partial<Player>): Player => {
     stamina: overrides?.stamina ?? base.stamina,
     maxStamina: overrides?.maxStamina ?? base.maxStamina,
     isExhausted: overrides?.isExhausted ?? base.isExhausted,
-    isCrouching: overrides?.isCrouching ?? base.isCrouching,
+    movementProfile: overrides?.movementProfile ?? base.movementProfile ?? 'normal',
+    stealthModeEnabled: overrides?.stealthModeEnabled ?? base.stealthModeEnabled ?? false,
+    stealthCooldownExpiresAt:
+      overrides?.stealthCooldownExpiresAt ?? base.stealthCooldownExpiresAt ?? null,
     facing: overrides?.facing ?? base.facing,
     coverOrientation: overrides?.coverOrientation ?? base.coverOrientation,
     suppression: overrides?.suppression ?? base.suppression,

@@ -57,7 +57,16 @@ const computeDisguiseModifier = (player: Player): number => {
   return clamp(1 - totalReduction, 0.55, 1);
 };
 
-const computePostureModifier = (player: Player): number => (player.isCrouching ? 0.65 : 1);
+const computePostureModifier = (player: Player): number => {
+  switch (player.movementProfile) {
+    case 'silent':
+      return 0.7;
+    case 'sprint':
+      return 1.15;
+    default:
+      return 1;
+  }
+};
 
 const formatCameraLabel = (camera: CameraRuntimeState): string => {
   const explicitLabel = (camera as { label?: string }).label;

@@ -127,7 +127,11 @@ interface PlayerStatusStrings {
   healthLabel: string;
   fatigueStatus: string;
   fatigueHint: string;
-  crouchIndicator: string;
+  movementBadge: {
+    silent: string;
+    normal: string;
+    sprint: string;
+  };
   roundLabel: (round: number) => string;
   yourMove: string;
   enemyAdvance: string;
@@ -188,6 +192,23 @@ interface FactionToastStrings {
   standingChange: (standing: string) => string;
   rivalChange: (factionName: string, delta: string, standing?: string) => string;
   reasons: Record<string, string>;
+}
+
+interface StealthIndicatorStrings {
+  label: string;
+  keyHint: string;
+  states: {
+    hidden: string;
+    exposed: string;
+    compromised: string;
+    standby: string;
+  };
+  cooldown: (seconds: number) => string;
+  unavailableReasons: {
+    combat: string;
+    dialogue: string;
+    cooldown: string;
+  };
 }
 
 interface MiniMapStrings {
@@ -483,6 +504,7 @@ interface UIStrings {
   questLog: QuestLogStrings;
   shell: ShellStrings;
   playerStatus: PlayerStatusStrings;
+  stealthIndicator: StealthIndicatorStrings;
   factionPanel: FactionPanelStrings;
   factionToast: FactionToastStrings;
   miniMap: MiniMapStrings;
@@ -626,7 +648,11 @@ const STRINGS: Record<Locale, UIStrings> = {
       healthLabel: 'Health',
       fatigueStatus: 'Fatigued',
       fatigueHint: 'Fatigue makes this harder—rest or recover stamina to shake it off.',
-      crouchIndicator: 'Crouching',
+      movementBadge: {
+        silent: 'Silent',
+        normal: 'Normal',
+        sprint: 'Sprinting',
+      },
       roundLabel: (round) => `Round ${round}`,
       yourMove: 'Your move',
       enemyAdvance: 'Enemy advance',
@@ -671,6 +697,22 @@ const STRINGS: Record<Locale, UIStrings> = {
       backgroundLabel: 'Background',
       backgroundFallback: 'Unaffiliated',
       loadUnit: 'kg',
+    },
+    stealthIndicator: {
+      label: 'Stealth',
+      keyHint: 'Press X to toggle stealth.',
+      states: {
+        hidden: 'Hidden',
+        exposed: 'Exposed',
+        compromised: 'Compromised',
+        standby: 'Standby',
+      },
+      cooldown: (seconds) => `Cooldown ${seconds}s`,
+      unavailableReasons: {
+        combat: 'Unavailable during combat.',
+        dialogue: 'Finish the conversation to re-enter stealth.',
+        cooldown: 'Cooling down before the next stealth attempt.',
+      },
     },
     factionPanel: {
       heading: 'Faction Reputation',
@@ -1362,7 +1404,11 @@ const STRINGS: Record<Locale, UIStrings> = {
       healthLabel: 'Здоровʼя',
       fatigueStatus: 'Виснажено',
       fatigueHint: 'Виснаження ускладнює кожну дію — відпочиньте або відновіть витривалість.',
-      crouchIndicator: 'Присів',
+      movementBadge: {
+        silent: 'Безшумно',
+        normal: 'Звично',
+        sprint: 'Біг',
+      },
       roundLabel: (round) => `Раунд ${round}`,
       yourMove: 'Ваш хід',
       enemyAdvance: 'Хід противника',
@@ -1407,6 +1453,22 @@ const STRINGS: Record<Locale, UIStrings> = {
       backgroundLabel: 'Походження',
       backgroundFallback: 'Без приналежності',
       loadUnit: 'кг',
+    },
+    stealthIndicator: {
+      label: 'Стелс',
+      keyHint: 'Натисніть X, щоб перемкнути стелс.',
+      states: {
+        hidden: 'Непомітно',
+        exposed: 'Під прицілом',
+        compromised: 'Розкрито',
+        standby: 'Готовність',
+      },
+      cooldown: (seconds) => `Перезарядка ${seconds} с`,
+      unavailableReasons: {
+        combat: 'Недоступно під час бою.',
+        dialogue: 'Завершіть діалог, щоб повернутися у стелс.',
+        cooldown: 'Стелс перезаряджається перед повторним запуском.',
+      },
     },
     factionPanel: {
       heading: 'Репутація у фракціях',
