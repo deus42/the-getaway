@@ -295,6 +295,9 @@ export interface NPC extends Entity {
   routine: RoutePoint[];
   dialogueId: string;
   isInteractive: boolean;
+  factionId?: FactionId;
+  reputationBias?: Partial<Record<string, number>>;
+  socialTags?: string[];
   ambientProfile?: {
     lines: string[];
     storyFunction?: StoryFunctionTag;

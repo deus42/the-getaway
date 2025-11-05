@@ -27,6 +27,8 @@ import {
   isCurfewTime,
 } from '../game/world/dayNightCycle';
 import { SurveillanceState } from '../game/interfaces/types';
+import reputationReducer, { ReputationState } from './reputationSlice';
+import { REPUTATION_STATE_VERSION } from '../game/systems/reputation/constants';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -47,6 +49,7 @@ const reducers = {
   storylets: storyletReducer,
   suspicion: suspicionReducer,
   paranoia: paranoiaReducer,
+  reputation: reputationReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -171,6 +174,30 @@ const migrateSuspicionState = (state?: Partial<SuspicionState> | null): Suspicio
   };
 };
 
+const migrateReputationState = (state?: Partial<ReputationState> | null): ReputationState => {
+  if (!state || state.version !== REPUTATION_STATE_VERSION) {
+    return reputationReducer(undefined, { type: '@@INIT' } as AnyAction);
+  }
+
+  const reducerInit = reputationReducer(undefined, { type: '@@INIT' } as AnyAction);
+  return {
+    ...reducerInit,
+    ...state,
+    events: { ...(state.events ?? {}) },
+    witnessRecords: { ...(state.witnessRecords ?? {}) },
+    recordsByEvent: { ...(state.recordsByEvent ?? {}) },
+    profiles: { ...(state.profiles ?? {}) },
+    carriers: { ...(state.carriers ?? {}) },
+    edges: { ...(state.edges ?? {}) },
+    debug: {
+      ...reducerInit.debug,
+      ...(state.debug ?? {}),
+    },
+    lastTickAt: typeof state.lastTickAt === 'number' ? state.lastTickAt : null,
+    version: REPUTATION_STATE_VERSION,
+  };
+};
+
 const migrateWorldState = (state?: CombinedState['world']): CombinedState['world'] => {
   const base = worldReducer(undefined, { type: '@@INIT' } as AnyAction);
   if (!state) {
@@ -261,6 +288,7 @@ const migratePersistedState = (state?: PersistedState): PersistedState | undefin
     paranoia: migrateParanoiaState(state.paranoia),
     world: migrateWorldState(state.world),
     surveillance: migrateSurveillanceState(state.surveillance),
+    reputation: migrateReputationState(state.reputation),
   };
 };
 
@@ -322,6 +350,7 @@ store.subscribe(() => {
     storylets: state.storylets,
     suspicion: state.suspicion,
     paranoia: state.paranoia,
+    reputation: state.reputation,
   };
   saveState(stateToPersist);
 });

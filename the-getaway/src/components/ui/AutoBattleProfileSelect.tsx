@@ -204,7 +204,7 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
   );
 
   const handleSelect = useCallback(
-    (profileId: AutoBattleProfileId) => {
+    (profileId: AutoBattleMenuOptionId) => {
       setOpen(false);
       if (profileId !== value) {
         onChange(profileId);

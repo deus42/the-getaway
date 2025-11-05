@@ -170,7 +170,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
               },
               factionRequirement: {
                 factionId: 'resistance',
-                minimumStanding: 'friendly',
+                minimumStanding: 'neutral',
               },
             },
             {
@@ -321,7 +321,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
               },
               factionRequirement: {
                 factionId: 'resistance',
-                minimumStanding: 'friendly',
+                minimumStanding: 'neutral',
               },
             },
             {

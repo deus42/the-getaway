@@ -105,7 +105,7 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
               factionRequirement: {
                 factionId: 'resistance',
-                minimumStanding: 'friendly',
+                minimumStanding: 'neutral',
               },
             },
             {
@@ -171,7 +171,7 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
               factionRequirement: {
                 factionId: 'resistance',
-                minimumStanding: 'friendly',
+                minimumStanding: 'neutral',
               },
             },
             {

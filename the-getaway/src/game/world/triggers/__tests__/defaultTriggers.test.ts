@@ -11,6 +11,7 @@ import storyletReducer from '../../../../store/storyletSlice';
 import autoBattleReducer from '../../../../store/autoBattleSlice';
 import suspicionReducer from '../../../../store/suspicionSlice';
 import paranoiaReducer from '../../../../store/paranoiaSlice';
+import reputationReducer from '../../../../store/reputationSlice';
 import { ensureDefaultEnvironmentalTriggersRegistered, resetEnvironmentalTriggersForTest } from '../defaultTriggers';
 import { tickEnvironmentalTriggers } from '../triggerRegistry';
 import { RootState } from '../../../../store';
@@ -30,6 +31,7 @@ const createTestStore = () =>
       storylets: storyletReducer,
       suspicion: suspicionReducer,
       paranoia: paranoiaReducer,
+      reputation: reputationReducer,
     },
   });
 

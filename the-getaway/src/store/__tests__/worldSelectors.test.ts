@@ -16,6 +16,7 @@ import storyletReducer from '../storyletSlice';
 import autoBattleReducer from '../autoBattleSlice';
 import suspicionReducer from '../suspicionSlice';
 import paranoiaReducer from '../paranoiaSlice';
+import reputationReducer from '../reputationSlice';
 import { selectAmbientWorldSnapshot, selectEnvironmentSystemImpacts } from '../selectors/worldSelectors';
 import { getWeatherPresetForCurfewLevel } from '../../content/environment';
 import type { RootState } from '../index';
@@ -35,6 +36,7 @@ const createTestStore = () =>
       storylets: storyletReducer,
       suspicion: suspicionReducer,
       paranoia: paranoiaReducer,
+      reputation: reputationReducer,
     },
   });
 
