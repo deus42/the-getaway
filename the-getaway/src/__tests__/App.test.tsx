@@ -132,7 +132,8 @@ describe("App component", () => {
     const menuButton = await screen.findByTestId('menu-overlay-button');
     expect(menuButton).toHaveTextContent(/Menu/i);
     expect(menuButton).toHaveTextContent(/ESC/i);
-    expect(menuButton.style.width).toBe('min(90vw, 240px)');
+    expect(menuButton.style.width).toBe('90vw');
+    expect(menuButton.style.maxWidth).toBe('240px');
 
     fireEvent.mouseEnter(menuButton);
     expect(menuButton.style.transform).toBe('translateY(-2px)');

@@ -19,6 +19,7 @@ const buildWaitDecision = (): AutoStealthDecision => ({
 });
 
 export const planAutoStealthAction = (_context: AutoStealthPlannerContext): AutoStealthDecision => {
+  void _context;
   // MVP stub: prefer waiting until heuristics are implemented (shadow seeking, cone avoidance, camera hacks)
   return buildWaitDecision();
 };

@@ -327,12 +327,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
   }, [inCombat]);
 
   useEffect(() => {
-    window.requestAnimationFrame(() => {
-      window.dispatchEvent(new Event('resize'));
-    });
-  }, [questExpanded, logExpanded]);
-
-  useEffect(() => {
     if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
       return;
     }
@@ -445,7 +439,8 @@ const CommandShell: React.FC<CommandShellProps> = ({
     };
   }, [bottomPanelHeight]);
 
-  const menuPanelWidth = "min(90vw, 240px)";
+  const menuPanelWidth = '90vw';
+  const menuPanelMaxWidth = '240px';
 
   return (
     <div style={mainStageStyle}>
@@ -457,7 +452,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <button
             type="button"
             onClick={onOpenMenu}
-            style={{ ...menuPanelButtonStyle, width: menuPanelWidth }}
+            style={{ ...menuPanelButtonStyle, width: menuPanelWidth, maxWidth: menuPanelMaxWidth }}
             data-testid="menu-overlay-button"
             aria-label={uiStrings.shell.menuButton}
             title={uiStrings.shell.menuButton}
@@ -748,6 +743,14 @@ function App() {
 
       event.preventDefault();
 
+      if (showCharacterScreen) {
+        setShowCharacterScreen(false);
+        if (levelUpFlowActive) {
+          setLevelUpFlowActive(false);
+        }
+        return;
+      }
+
       const state = store.getState();
       const hasActiveDialogue = Boolean(state.quests.activeDialogue.dialogueId);
 
@@ -768,7 +771,7 @@ function App() {
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [gameStarted, showMenu, showCharacterCreation]);
+  }, [gameStarted, showMenu, showCharacterCreation, showCharacterScreen, levelUpFlowActive]);
 
   const handleOpenMenu = () => {
     if (!gameStarted) {

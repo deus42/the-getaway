@@ -8,6 +8,7 @@ import worldReducer from '../worldSlice';
 import playerReducer from '../playerSlice';
 import { MapArea, MapTile, NPC, TileType } from '../../game/interfaces/types';
 import { ReputationTrait, createReputationEvent, WitnessRecord, ReputationProfileMutation, seedRumorsFromWitnessRecords, buildSocialEdges, advanceRumors } from '../../game/systems/reputation';
+import type { AppDispatch, RootState } from '../index';
 
 const createTile = (x: number, y: number): MapTile => ({
   type: TileType.FLOOR,
@@ -241,7 +242,9 @@ describe('reputationSlice integration', () => {
         profileMutations: propagation.mutations,
       })
     );
-    store.dispatch(tickLocalizedReputation(90, 1_000 + 90_000) as unknown as any);
+    const dispatch = store.dispatch as unknown as AppDispatch;
+    const getState = store.getState as unknown as () => RootState;
+    tickLocalizedReputation(90, 1_000 + 90_000)(dispatch, getState);
 
     const state = store.getState();
     const witnessTrait = extractTrait(state, 'npc-a', 'heroic');

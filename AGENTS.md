@@ -18,8 +18,9 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
    - If the target roadmap step lacks a Linear issue, create one immediately under the MVP project before coding.
    - For improvement requests, create the Linear ticket first and wait for explicit approval before writing code.
 2. **Wrap-up discipline**  
-   - Only move the active Linear issue to a terminal state (`Done`, `In Review`, etc.) after the implementation, documentation, validation, and commits are finalized.  
-   - After committing, use MCP to update the issue state before ending the task.
+   - Only move the active Linear issue to a terminal state (`Done`, `In Review`, etc.) after the implementation, documentation, validation, and commits are finalized **and the requester explicitly confirms the work**.  
+   - Keep the issue in `In Progress` (or `In Review` if that state exists) until the user signs off; do not self-certify completion.  
+   - After committing with approval, use MCP to update the issue state before ending the task.
 2. **Confirm task scope**  
    - Read the Linear issue, `memory-bank/mvp-plan.md`, and related memory bank docs (`game-design.md`, `architecture.md`, `plot.md`, `post-mvp-plan.md` when applicable).  
    - Note prerequisites, validation steps, documentation requirements, and any linked roadmap references.
@@ -37,7 +38,8 @@ Do not begin coding until this checklist is complete.
   4. Immediately after implementation, produce a structured Level 0 playtest scenario (step-by-step) that exercises the new behaviour. Do not wait for the user to request it.
   5. Await review; if feedback requires changes, address the notes then regenerate an updated playtest scenario describing the new validation run.
   6. Commit only when explicitly instructed to do so.
-  7. After final approval and commit, move the Linear issue to the terminal state (`Done` unless otherwise directed).
+  7. After final approval and commit, **wait for the requester to verify the change**; only then move the Linear issue to the terminal state (`Done` unless otherwise directed).
+  8. If verification is still pending, leave the issue in `In Progress` (or `In Review`) so follow-up can occur without reopening states.
 
 - **During development**
 - Keep changes focused on the active Linear issue. Ignore unrelated modified files; never revert user-authored work.  
