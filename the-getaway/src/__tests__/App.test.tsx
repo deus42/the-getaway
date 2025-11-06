@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import App from "../App";
 import { PERSISTED_STATE_KEY, resetGame, store } from "../store";
+import { startDialogue } from "../store/questsSlice";
 
 // Mock the GameCanvas component to avoid Phaser initialization in tests
 jest.mock("../components/GameCanvas", () => {
@@ -120,5 +121,70 @@ describe("App component", () => {
 
     fireEvent.keyDown(document, { key: 'c' });
     await waitFor(() => expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument());
+  });
+
+  it('renders the HUD menu control with Level Panel styling and interactions', async () => {
+    render(<App />);
+
+    fireEvent.click(await screen.findByTestId('start-new-game'));
+    await completeCharacterCreation();
+
+    const menuButton = await screen.findByTestId('menu-overlay-button');
+    expect(menuButton).toHaveTextContent(/Menu/i);
+    expect(menuButton).toHaveTextContent(/ESC/i);
+    expect(menuButton.style.width).toBe('min(90vw, 240px)');
+
+    fireEvent.mouseEnter(menuButton);
+    expect(menuButton.style.transform).toBe('translateY(-2px)');
+    expect(menuButton.style.boxShadow).toBe('0 20px 42px rgba(15, 23, 42, 0.55)');
+    expect(menuButton.style.borderColor).toBe('rgba(148, 163, 184, 0.55)');
+
+    fireEvent.mouseLeave(menuButton);
+    expect(menuButton.style.transform).toBe('translateY(0)');
+    expect(menuButton.style.boxShadow).toBe('0 12px 32px rgba(15, 23, 42, 0.45)');
+    expect(menuButton.style.borderColor).toBe('rgba(148, 163, 184, 0.35)');
+
+    const levelInfoToggle = screen.getByRole('button', { name: /slums/i });
+    const widthBeforeToggle = menuButton.style.width;
+    fireEvent.click(levelInfoToggle);
+    await waitFor(() => expect(menuButton.style.width).toBe(widthBeforeToggle));
+
+    fireEvent.focus(menuButton);
+    expect(menuButton.style.boxShadow).toBe('0 0 0 2px rgba(59, 130, 246, 0.35), 0 18px 42px rgba(15, 23, 42, 0.55)');
+    expect(menuButton.style.borderColor).toBe('rgba(59, 130, 246, 0.7)');
+
+    fireEvent.blur(menuButton);
+    expect(menuButton.style.boxShadow).toBe('0 12px 32px rgba(15, 23, 42, 0.45)');
+    expect(menuButton.style.borderColor).toBe('rgba(148, 163, 184, 0.35)');
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(await screen.findByTestId('game-menu')).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByTestId('game-menu')).not.toBeInTheDocument());
+  });
+
+  it('closes active dialogues before opening the menu', async () => {
+    render(<App />);
+
+    fireEvent.click(await screen.findByTestId('start-new-game'));
+    await completeCharacterCreation();
+
+    const dialogue = store.getState().quests.dialogues[0];
+    expect(dialogue).toBeDefined();
+    store.dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: dialogue.nodes[0].id }));
+
+    await waitFor(() => {
+      expect(store.getState().quests.activeDialogue.dialogueId).toBe(dialogue.id);
+    });
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => {
+      expect(store.getState().quests.activeDialogue.dialogueId).toBeNull();
+    });
+    expect(screen.queryByTestId('game-menu')).not.toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(await screen.findByTestId('game-menu')).toBeInTheDocument();
   });
 });

@@ -20,6 +20,7 @@ import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
 import FactionReputationManager from "./components/system/FactionReputationManager";
 import { addLogMessage } from "./store/logSlice";
+import { endDialogue } from "./store/questsSlice";
 import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections, removeXPNotification } from "./store/playerSlice";
 import { clearAllFeedback } from "./store/combatFeedbackSlice";
 import { PlayerSkills, Player } from "./game/interfaces/types";
@@ -245,23 +246,39 @@ const topRightOverlayStyle: CSSProperties = {
   pointerEvents: "none",
 };
 
-const menuOverlayButtonStyle: CSSProperties = {
+const menuPanelButtonStyle: CSSProperties = {
   all: "unset",
-  display: "inline-flex",
+  display: "flex",
   alignItems: "center",
+  justifyContent: "space-between",
   gap: "0.5rem",
-  padding: "0.6rem 1.15rem",
-  borderRadius: "999px",
-  border: "1.5px solid rgba(56, 189, 248, 0.75)",
-  background: "linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(56, 189, 248, 0.85))",
-  color: "#041321",
-  fontSize: "0.74rem",
-  letterSpacing: "0.18em",
+  padding: "0.7rem 0.9rem",
+  boxSizing: "border-box",
+  borderRadius: "14px",
+  border: "1px solid rgba(148, 163, 184, 0.35)",
+  background: "linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.84))",
+  boxShadow: "0 12px 32px rgba(15, 23, 42, 0.45)",
+  color: "#e2e8f0",
+  fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+  fontSize: "0.7rem",
+  letterSpacing: "0.14em",
   textTransform: "uppercase",
   cursor: "pointer",
   pointerEvents: "auto",
-  transition: "transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease",
-  boxShadow: "0 18px 36px rgba(56, 189, 248, 0.35)",
+  transition: "transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, color 0.16s ease",
+};
+
+const menuPanelLabelStyle: CSSProperties = {
+  fontSize: "0.78rem",
+  letterSpacing: "0.2em",
+  color: "inherit",
+};
+
+const menuPanelGlyphStyle: CSSProperties = {
+  fontSize: "0.62rem",
+  letterSpacing: "0.24em",
+  color: "rgba(148, 163, 184, 0.7)",
+  textTransform: "uppercase",
 };
 
 interface CommandShellProps {
@@ -428,6 +445,8 @@ const CommandShell: React.FC<CommandShellProps> = ({
     };
   }, [bottomPanelHeight]);
 
+  const menuPanelWidth = "min(90vw, 240px)";
+
   return (
     <div style={mainStageStyle}>
       <div style={centerStageStyle}>
@@ -435,6 +454,37 @@ const CommandShell: React.FC<CommandShellProps> = ({
         <GameCanvas onRendererInfo={setRendererMeta} />
         <GameController />
         <div style={topLeftOverlayStyle}>
+          <button
+            type="button"
+            onClick={onOpenMenu}
+            style={{ ...menuPanelButtonStyle, width: menuPanelWidth }}
+            data-testid="menu-overlay-button"
+            aria-label={uiStrings.shell.menuButton}
+            title={uiStrings.shell.menuButton}
+            onMouseEnter={(event) => {
+              event.currentTarget.style.transform = 'translateY(-2px)';
+              event.currentTarget.style.boxShadow = '0 20px 42px rgba(15, 23, 42, 0.55)';
+              event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.55)';
+              event.currentTarget.style.color = '#f8fafc';
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.transform = 'translateY(0)';
+              event.currentTarget.style.boxShadow = '0 12px 32px rgba(15, 23, 42, 0.45)';
+              event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+              event.currentTarget.style.color = '#e2e8f0';
+            }}
+            onFocus={(event) => {
+              event.currentTarget.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.35), 0 18px 42px rgba(15, 23, 42, 0.55)';
+              event.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.7)';
+            }}
+            onBlur={(event) => {
+              event.currentTarget.style.boxShadow = '0 12px 32px rgba(15, 23, 42, 0.45)';
+              event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+            }}
+          >
+            <span style={menuPanelLabelStyle}>{uiStrings.shell.menuButton}</span>
+            <span style={menuPanelGlyphStyle}>ESC</span>
+          </button>
           <LevelIndicator
             collapsed={levelPanelCollapsed}
             onToggle={onToggleLevelPanel}
@@ -445,30 +495,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <CombatControlWidget />
         </div>
         <div style={topRightOverlayStyle}>
-          <div style={{ pointerEvents: 'auto' }}>
-            <button
-              type="button"
-              onClick={onOpenMenu}
-              style={menuOverlayButtonStyle}
-              data-testid="menu-overlay-button"
-              aria-label={uiStrings.shell.menuButton}
-              title={uiStrings.shell.menuButton}
-              onMouseEnter={(event) => {
-                event.currentTarget.style.transform = 'translateY(-1px)';
-                event.currentTarget.style.boxShadow = '0 20px 40px rgba(56, 189, 248, 0.4)';
-                event.currentTarget.style.borderColor = 'rgba(14, 165, 233, 0.95)';
-                event.currentTarget.style.color = '#020e1b';
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.transform = 'translateY(0)';
-                event.currentTarget.style.boxShadow = '0 18px 36px rgba(56, 189, 248, 0.35)';
-                event.currentTarget.style.borderColor = 'rgba(56, 189, 248, 0.75)';
-                event.currentTarget.style.color = '#041321';
-              }}
-            >
-              <span style={{ fontSize: '0.62rem', letterSpacing: '0.2em' }}>{uiStrings.shell.menuButton}</span>
-            </button>
-          </div>
           <div style={{ pointerEvents: 'auto' }}>
             <DayNightIndicator />
           </div>
@@ -711,22 +737,58 @@ function App() {
   };
 
   useEffect(() => {
-    if (!gameStarted || !showMenu) {
+    if (!gameStarted) {
       return;
     }
 
-    const handleEscapeResume = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') {
+        return;
+      }
+
+      event.preventDefault();
+
+      const state = store.getState();
+      const hasActiveDialogue = Boolean(state.quests.activeDialogue.dialogueId);
+
+      if (hasActiveDialogue) {
+        store.dispatch(endDialogue());
+        return;
+      }
+
+      if (showMenu) {
         handleContinueGame();
+        return;
+      }
+
+      if (!showCharacterCreation) {
+        setShowMenu(true);
       }
     };
 
-    window.addEventListener('keydown', handleEscapeResume);
-    return () => window.removeEventListener('keydown', handleEscapeResume);
-  }, [gameStarted, showMenu]);
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [gameStarted, showMenu, showCharacterCreation]);
 
   const handleOpenMenu = () => {
+    if (!gameStarted) {
+      setShowMenu(true);
+      return;
+    }
+
+    if (showMenu) {
+      handleContinueGame();
+      return;
+    }
+
+    const state = store.getState();
+    const hasActiveDialogue = Boolean(state.quests.activeDialogue.dialogueId);
+
+    if (hasActiveDialogue) {
+      store.dispatch(endDialogue());
+      return;
+    }
+
     setShowMenu(true);
   };
 
