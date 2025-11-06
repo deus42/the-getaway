@@ -67,7 +67,12 @@ Do not begin coding until this checklist is complete.
 - **Narrative work**
   - When adding or editing dialogue/quests, align tone with `memory-bank/plot.md` and cite the referenced section in change summaries.
 - **Finalize before commits**
-  - Confirm implementation soundness before committing; do not request merges until tests, docs, and issues are aligned.
+- Confirm implementation soundness before committing; do not request merges until tests, docs, and issues are aligned.
+- Commit message format (all issue types):  
+  - Use `type(GET-XXX): imperative summary` where `type` ∈ {`feat`, `fix`, `chore`, `docs`, `refactor`, `test`, `perf`}.  
+  - The Linear key (`GET-XXX`) must appear exactly once in parentheses immediately after the type.  
+  - Keep the summary imperative and ≤ 72 characters.  
+  - Example: `fix(GET-115): prevent autobattle overlay blackout`
 
 ## 4. Coding Standards
 - TypeScript throughout; add explicit types on exported/public APIs.
@@ -156,10 +161,12 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Whenever you open an issue through MCP, apply the label that matches the ticket type so reporting and automations stay accurate.
 
 ### Definition of Done
-- After the implementation is complete and before requesting feedback or review, run the full unit test suite and ensure it passes (`yarn test`).
+- After implementation and before requesting feedback, run the full lint pass and resolve all issues (`yarn lint` must exit cleanly).
+- Build the project to confirm it compiles without errors (`yarn build`).
+- Run the full unit test suite and ensure it passes (`yarn test`).
 - Verify total Jest coverage is **greater than 80%**; use `yarn test --coverage` (or the project’s equivalent) and address any regressions before proceeding.
-- Do not hand off work, request review, or move a Linear issue forward until both conditions above are satisfied.
-- Include the executed test command(s) and coverage confirmation in the task summary or issue comment when reporting completion.
+- Do not hand off work, request review, or move a Linear issue forward until all commands above succeed.
+- Include each executed command (lint, build, test, coverage) and the coverage confirmation in the task summary or issue comment when reporting completion.
 
 ## 12. Accountability Protocol
 - When delivering results in this workspace, restate the user’s latest request in detail before describing your work. Include every explicit instruction so reviewers can trace outcomes back to the ask.
