@@ -16,7 +16,7 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
    - Open the **MVP** (and **PostMVP** when relevant) Linear projects and treat them as the live task index.  
    - Identify the next `Todo` issue assigned to you or that matches the roadmap order. Await explicit handoff before pulling in extra work.  
    - If the target roadmap step lacks a Linear issue, create one immediately under the MVP project before coding.
-   - For improvement requests, create the Linear ticket first and wait for explicit approval before drafting plans or writing code.
+   - For improvement requests, create the Linear ticket first and wait for explicit approval before writing code.
 2. **Wrap-up discipline**  
    - Only move the active Linear issue to a terminal state (`Done`, `In Review`, etc.) after the implementation, documentation, validation, and commits are finalized.  
    - After committing, use MCP to update the issue state before ending the task.
