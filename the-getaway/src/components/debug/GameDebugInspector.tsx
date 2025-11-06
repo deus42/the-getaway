@@ -11,7 +11,6 @@ import {
   makeSelectTopTraitsForScope,
 } from '../../store/selectors/reputationSelectors';
 import { toggleReputationHeatmap, setInspectorTarget, ingestReputationEvent } from '../../store/reputationSlice';
-import { setTestMode } from '../../store/settingsSlice';
 
 type Props = {
   zoneId: string | null | undefined;
@@ -234,7 +233,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
         timestamp: Date.now(),
       })
     );
-    setSeedStatus(`Seeded a heroic event around ${npc.name}. If nothing appears, make sure test mode is enabled and try again nearby.`);
+    setSeedStatus(`Seeded a heroic event around ${npc.name}. If nothing appears, try again nearby or toggle the reputation heatmap.`);
   }, [dispatch, inspectorTargetId, mapArea, npcs]);
 
   useEffect(() => {
@@ -243,7 +242,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
     }
   }, [seedStatus, topTraits.length]);
 
-  if (mode === 'production') {
+  if (mode === 'production' || !testMode) {
     return null;
   }
 
@@ -365,25 +364,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
                 >
                   {heatmapEnabled ? 'Hide Heatmap' : 'Show Heatmap'}
                 </button>
-                {!testMode && (
-                  <button
-                    type="button"
-                    style={{
-                      ...miniButtonStyle,
-                      borderColor: 'rgba(251, 191, 36, 0.55)',
-                      color: '#fbbf24',
-                    }}
-                    onClick={() => dispatch(setTestMode(true))}
-                  >
-                    Enable Test Mode
-                  </button>
-                )}
               </div>
-              {!testMode && (
-                <div style={{ fontSize: '0.62rem', color: 'rgba(251, 191, 36, 0.78)', marginBottom: '0.4rem' }}>
-                  Heatmap overlay only renders in Test Mode. Enable it to visualize cell reputation.
-                </div>
-              )}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem', marginBottom: '0.45rem' }}>
                 {npcs.length ? (
                   npcs.map((npc) => (

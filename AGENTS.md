@@ -57,7 +57,7 @@ Do not begin coding until this checklist is complete.
 - **Documentation updates**
   - Update `memory-bank/architecture.md` whenever architectural patterns, game systems, or data flow change.  
   - Update `memory-bank/game-design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  
-  - After finishing a roadmap step, log it in `memory-bank/progress.md` using the XML structure.  
+  - After finishing a feature roadmap step, log it in `memory-bank/progress.md` using the XML structure; skip improvements and bug fixes.  
   - Mirror scope changes in `memory-bank/mvp-plan.md` only when the plan itself evolves (never mark completion there).  
   - Reference `memory-bank/post-mvp-plan.md` when deferring work beyond MVP.
 - **Linear sync**
@@ -94,9 +94,9 @@ Do not begin coding until this checklist is complete.
   - `architecture.md` = code patterns, modules, data flow (HOW).  
   - Never mix the two; sync both whenever implementation deviates from plan.
 - **Progress tracking**  
-  - `memory-bank/progress.md` records completed steps only (with XML tags).  
+- `memory-bank/progress.md` records completed feature steps only (with XML tags); do not log improvements or bug fixes.  
   - `memory-bank/mvp-plan.md` lists scope; edit only to change requirements or ordering.  
-  - Log each completed roadmap step in `progress.md` with matching step IDs and summary details.
+- Log each completed feature roadmap step in `progress.md` with matching step IDs and summary details.
 - **Narrative work**  
   - When adding or editing dialogue/quests, align tone with `memory-bank/plot.md` and cite the referenced section in change summaries.  
   - Review `memory-bank/post-mvp-plan.md` for deferred narrative beats.
@@ -139,7 +139,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 ## 10. Roadmap & Memory Bank Reference
 - The 24-step implementation roadmap lives in `memory-bank/mvp-plan.md` (Phases 1–8). Keep numbering intact and update the plan only when scope changes.
 - Treat `memory-bank/mvp-plan.md` as the authoritative scope document—do not record completion status there.
-- Mirror completed work in `memory-bank/progress.md`; each milestone should reference the matching step number and appear in chronological order.
+- Mirror completed feature work in `memory-bank/progress.md`; each milestone should reference the matching step number and appear in chronological order, and skip logging improvements or bug fixes.
 - Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
 - `memory-bank/plot.md` folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
 - `memory-bank/game-design.md` documents the agreed toolchain and gameplay pillars; align new systems with it or log deviations.
@@ -188,7 +188,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Design patterns, data flow? → **architecture.md**
 
 ### Two-Way Sync
-1. **Design → Implementation**: Update game-design.md (WHAT) → Implement → Document in architecture.md (HOW) → Log in progress.md.
+1. **Design → Implementation**: Update game-design.md (WHAT) → Implement → Document in architecture.md (HOW) → Log in progress.md (feature roadmap completions only).
 2. **Technical Constraint → Design**: Note in architecture.md → Adjust game-design.md if needed → Document compromise.
 
 ### Common Mistakes
@@ -200,6 +200,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 The memory-bank documentation uses XML tags to improve LLM agent parsing and information retrieval. When reading or updating documentation:
 
 ### progress.md Structure
+(Use these tags exclusively for completed feature roadmap steps—do not add improvements or bug fixes.)
 - `<step id="N" status="completed|pending">` - Wraps each completed implementation step.
 - `<step_metadata>` - Contains step number, title, status, and completion date.
 - `<tasks>` - Lists concrete tasks accomplished in the step.
@@ -210,7 +211,7 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 
 ### mvp-plan.md Structure
 - `<phase id="N" name="...">` - Groups related steps by implementation phase.
-- `<step id="N">` - Individual implementation steps (no status attribute; track status only in progress.md).
+- `<step id="N">` - Individual feature implementation steps (no status attribute; track status only in progress.md).
 - `<step_metadata>` - Step metadata including phase assignment.
 - `<instructions>` - High-level task description.
 - `<details>` - Detailed implementation requirements.
@@ -238,11 +239,11 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 
 ### When Updating Documentation
 - Maintain existing XML structure and tag hierarchy.
-- Record completion status exclusively in `memory-bank/progress.md`; update the plan only when scope or requirements change.
+- Record feature completion status exclusively in `memory-bank/progress.md`; update the plan only when scope or requirements change.
 - Keep tags well-formed (properly opened and closed).
 - Use appropriate category attributes.
 
 ### Validation Before/After Implementation
 - **Before:** Check game-design.md for feature spec (WHAT), check architecture.md for patterns (HOW).
-- **After:** Update both documents with what changed, log completion in progress.md.
+- **After:** Update both documents with what changed, log completion in progress.md (features only).
 - Tag XML sections incrementally as they're referenced/updated (not required for all content immediately).

@@ -193,11 +193,6 @@
 <validation>
 - `yarn lint`
 </validation>
-<maintenance_notes date="November 6, 2026">
-- GET-112: Reverted `LogPanel` to the earlier icon-coded styling so the Show All Events tray once again surfaces emoji badges and colour-coded entries for combat, dialogue, loot, missions, and system messages.
-- GET-115: Removed the forced global `resize` dispatch when toggling dock overlays so Phaser no longer blanks the renderer if AutoBattle is running while the events tray opens.
-- Updates live in <code_location>the-getaway/src/components/ui/LogPanel.tsx</code_location> and <code_location>the-getaway/src/App.tsx</code_location>; verified via `yarn test`.
-</maintenance_notes>
 </step>
 
 <step id="16.11" status="completed">
