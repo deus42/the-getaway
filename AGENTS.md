@@ -69,7 +69,7 @@ Do not begin coding until this checklist is complete.
 - **Finalize before commits**
 - Confirm implementation soundness before committing; do not request merges until tests, docs, and issues are aligned.
 - Commit message format (all issue types):  
-  - Use `type(GET-XXX): imperative summary` where `type` ∈ {`feat`, `fix`, `improvement`, `chore`, `docs`, `refactor`, `test`, `perf`}.  
+  - Use `type(GET-XXX): imperative summary` where `type` ∈ {`feat`, `fix`, `improvement`, `docs`, `refactor`, `test`, `perf`}.  
   - The Linear key (`GET-XXX`) must appear exactly once in parentheses immediately after the type.  
   - Keep the summary imperative and ≤ 72 characters.  
   - Example: `fix(GET-115): prevent autobattle overlay blackout`
