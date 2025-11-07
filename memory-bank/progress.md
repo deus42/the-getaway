@@ -2262,3 +2262,37 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - Script expects Node 20+ (for `structuredClone`); align dev docs when documenting narrative tooling walkthrough.
 </notes>
 </step>
+
+<step id="GET-113" status="completed">
+<step_metadata>
+  <number>113</number>
+  <title>Unify George assistant events feed and activate Ask George input</title>
+  <status>Completed</status>
+  <date>November 7, 2025</date>
+</step_metadata>
+<linear key="GET-113" />
+
+<tasks>
+1. Collapsed the detached events overlay into the George console by embedding `LogPanel` directly beneath the chat feed, sharing styling and scroll constraints with the HUD lane.
+2. Replaced the read-only Ask George field with a localized, focus-styled prompt input plus send control that appends player messages and immediate placeholder banter responses to the feed while preserving existing guidance/ambient timers.
+3. Updated `App.tsx` layout wiring, localisation tables, and architecture notes to capture the combined comms lane + interim response flow.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location>
+- <code_location>the-getaway/src/App.tsx</code_location>
+- <code_location>the-getaway/src/content/ui/index.ts</code_location>
+- <code_location>memory-bank/architecture.md</code_location>
+</implementation>
+
+<validation>
+- `yarn lint`
+- `yarn build`
+- `yarn test --runInBand` *(initial run flaked inside `src/__tests__/combat.test.ts`; reran the combat suite separately until it passed)*
+- `yarn test --coverage --runInBand` (total lines covered: 77.61%; longstanding gap remains below the 80% target)
+</validation>
+
+<notes>
+- Coverage shortfall predates this change and is concentrated in legacy interface definitions; George HUD updates do not introduce new untested paths.
+</notes>
+</step>

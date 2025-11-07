@@ -3,7 +3,6 @@ import { CSSProperties, useEffect, useMemo, useRef, useState, lazy, Suspense } f
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
-import LogPanel from "./components/ui/LogPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
 import LevelIndicator from "./components/ui/LevelIndicator";
@@ -304,7 +303,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
   const zoneId = useSelector((state: RootState) => state.world.currentMapArea?.zoneId ?? null);
 
   const [questExpanded, setQuestExpanded] = useState(false);
-  const [logExpanded, setLogExpanded] = useState(false);
   const [rendererMeta, setRendererMeta] = useState<{ label?: string; detail?: string } | null>(null);
   const statusLaneRef = useRef<HTMLDivElement | null>(null);
   const [playerLaneHeight, setPlayerLaneHeight] = useState<number | null>(null);
@@ -315,7 +313,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
       return;
     }
     setQuestExpanded(false);
-    setLogExpanded(false);
   }, [showMenu]);
 
   useEffect(() => {
@@ -323,7 +320,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
       return;
     }
     setQuestExpanded(false);
-    setLogExpanded(false);
   }, [inCombat]);
 
   useEffect(() => {
@@ -376,11 +372,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
     paddingRight: "0.4rem",
   };
 
-  const logExpansionContainer: CSSProperties = {
-    ...scrollSectionStyle,
-    paddingRight: "0.4rem",
-  };
-
   const expansionStyle = (expanded: boolean): CSSProperties => ({
     ...dockExpansionBaseStyle,
     opacity: expanded ? 1 : 0,
@@ -389,27 +380,10 @@ const CommandShell: React.FC<CommandShellProps> = ({
   });
 
   const handleToggleQuest = () => {
-    setQuestExpanded((prev) => {
-      const next = !prev;
-      if (next) {
-        setLogExpanded(false);
-      }
-      return next;
-    });
-  };
-
-  const handleToggleLog = () => {
-    setLogExpanded((prev) => {
-      const next = !prev;
-      if (next) {
-        setQuestExpanded(false);
-      }
-      return next;
-    });
+    setQuestExpanded((prev) => !prev);
   };
 
   const questToggleLabel = questExpanded ? uiStrings.shell.completedToggleClose : uiStrings.shell.completedToggleOpen;
-  const logToggleLabel = logExpanded ? uiStrings.shell.eventsToggleClose : uiStrings.shell.eventsToggleOpen;
   const bottomPanelStyle = useMemo(() => {
     if (!bottomPanelHeight) {
       return bottomPanelBaseStyle;
@@ -517,34 +491,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
         </div>
 
         <div style={georgeSectionStyle}>
-          <GeorgeAssistant
-            footerControls={(
-              <button
-                type="button"
-                style={inlineButtonStyle}
-                onClick={handleToggleLog}
-                aria-expanded={logExpanded}
-                aria-controls="command-events-overlay"
-                onMouseEnter={(event) => {
-                  event.currentTarget.style.transform = 'translateY(-1px)';
-                  event.currentTarget.style.borderColor = 'rgba(96, 165, 250, 0.55)';
-                  event.currentTarget.style.boxShadow = '0 12px 24px rgba(96, 165, 250, 0.22)';
-                }}
-                onMouseLeave={(event) => {
-                  event.currentTarget.style.transform = 'translateY(0)';
-                  event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
-                  event.currentTarget.style.boxShadow = 'none';
-                }}
-              >
-                {logToggleLabel}
-              </button>
-            )}
-          />
-          <div id="command-events-overlay" style={expansionStyle(logExpanded)}>
-            <div style={logExpansionContainer}>
-              <LogPanel />
-            </div>
-          </div>
+          <GeorgeAssistant />
         </div>
 
         <div style={objectivesSectionStyle}>

@@ -445,13 +445,19 @@ interface GeorgeStrings {
   questMore: string;
   interjectionIdle: string;
   logEmpty: string;
+  askPlaceholder: string;
+  askInputLabel: string;
+  sendLabel: string;
+  promptPlaceholder: (banter: string) => string;
   feedLabels: {
-    mission: string;
+    operation: string;
     status: string;
-    guidance: string;
     interjection: string;
-    zone: string;
-    ambient: string;
+    broadcast: string;
+    battle: string;
+    dialog: string;
+    stealth: string;
+    player: string;
   };
   levelAdvance: (descriptor: string) => string;
   guidancePrimaryComplete: (levelName: string) => string;
@@ -863,6 +869,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       questMore: 'Additional objectives are parked in the ops log.',
       interjectionIdle: 'Console linked. You speak, I listen.',
       logEmpty: 'No notifications yet. I’ll ping when the city twitches.',
+      askPlaceholder: 'Ask George AI Assistant',
+      askInputLabel: 'Ask George AI Assistant',
+      sendLabel: 'Send',
+      promptPlaceholder: (banter) => `Routing through static. Meanwhile: ${banter}`,
       levelAdvance: (descriptor) => `Prepping overlays for ${descriptor}. Say the word and I’ll broadcast updates.`,
       guidancePrimaryComplete: (levelName) => `• Primary: Mission accomplished in ${levelName}.`,
       guidancePrimaryObjective: (label, progress = '') => `• Primary: ${label}${progress}`,
@@ -871,12 +881,14 @@ const STRINGS: Record<Locale, UIStrings> = {
       missionComplete: (name) => `Mission secured in ${name}. Awaiting redeploy.`,
       zoneFallback: 'current zone',
       feedLabels: {
-        mission: 'Mission Intel',
+        operation: 'Operation',
         status: 'Status',
-        guidance: 'Guidance',
         interjection: 'Broadcast',
-        zone: 'Zone Brief',
-        ambient: 'Ambient',
+        broadcast: 'Broadcast',
+        battle: 'Battle',
+        dialog: 'Dialogue',
+        stealth: 'Stealth',
+        player: 'Operative',
       },
       ambientFeed: {
         empty: 'No ambient signals logged yet.',
@@ -1622,6 +1634,10 @@ const STRINGS: Record<Locale, UIStrings> = {
       questMore: 'Додаткові цілі чекають у журналі операцій.',
       interjectionIdle: 'Канал відкрито. Говори — слухаю.',
       logEmpty: 'Сповіщень поки немає. Дам знак, коли місто заворушиться.',
+      askPlaceholder: 'Запитайте у Джорджа AI-асистента',
+      askInputLabel: 'Введіть підказку для Джорджа',
+      sendLabel: 'Надіслати',
+      promptPlaceholder: (banter) => `Обробляю сигнал. Поки що: ${banter}`,
       levelAdvance: (descriptor) => `Готую накладки для ${descriptor}. Дай сигнал — запущу трансляцію.`,
       guidancePrimaryComplete: (levelName) => `• Основна: місію у ${levelName} виконано.`,
       guidancePrimaryObjective: (label, progress = '') => `• Основна: ${label}${progress}`,
@@ -1630,12 +1646,14 @@ const STRINGS: Record<Locale, UIStrings> = {
       missionComplete: (name) => `Операцію в ${name} завершено. Чекаю на нове розгортання.`,
       zoneFallback: 'поточна зона',
       feedLabels: {
-        mission: 'Місія',
+        operation: 'Операція',
         status: 'Статус',
-        guidance: 'Підказка',
         interjection: 'Вихід в ефір',
-        zone: 'Зведення зони',
-        ambient: 'Середовище',
+        broadcast: 'Трансляція',
+        battle: 'Бій',
+        dialog: 'Діалог',
+        stealth: 'Стелс',
+        player: 'Оператор',
       },
       ambientFeed: {
         empty: 'Сигнали середовища ще не зафіксовані.',
