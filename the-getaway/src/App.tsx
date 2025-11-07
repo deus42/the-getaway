@@ -516,34 +516,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
           </div>
         </div>
 
-        <div style={objectivesSectionStyle}>
-          <OpsBriefingsPanel containerStyle={objectivesListStyle} />
-          <div style={sectionControlRowStyle}>
-            <button
-              type="button"
-              style={inlineButtonStyle}
-              onClick={handleToggleQuest}
-              aria-expanded={questExpanded}
-              aria-controls="command-objective-overlay"
-              onMouseEnter={(event) => {
-                event.currentTarget.style.transform = 'translateY(-1px)';
-                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.55)';
-                event.currentTarget.style.boxShadow = '0 12px 24px rgba(148, 163, 184, 0.22)';
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.transform = 'translateY(0)';
-                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
-                event.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              {questToggleLabel}
-            </button>
-          </div>
-          <div id="command-objective-overlay" style={expansionStyle(questExpanded)}>
-            <OpsBriefingsPanel containerStyle={questExpansionContainer} showCompleted />
-          </div>
-        </div>
-
         <div style={georgeSectionStyle}>
           <GeorgeAssistant
             footerControls={(
@@ -572,6 +544,34 @@ const CommandShell: React.FC<CommandShellProps> = ({
             <div style={logExpansionContainer}>
               <LogPanel />
             </div>
+          </div>
+        </div>
+
+        <div style={objectivesSectionStyle}>
+          <OpsBriefingsPanel containerStyle={objectivesListStyle} />
+          <div style={sectionControlRowStyle}>
+            <button
+              type="button"
+              style={inlineButtonStyle}
+              onClick={handleToggleQuest}
+              aria-expanded={questExpanded}
+              aria-controls="command-objective-overlay"
+              onMouseEnter={(event) => {
+                event.currentTarget.style.transform = 'translateY(-1px)';
+                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.55)';
+                event.currentTarget.style.boxShadow = '0 12px 24px rgba(148, 163, 184, 0.22)';
+              }}
+              onMouseLeave={(event) => {
+                event.currentTarget.style.transform = 'translateY(0)';
+                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+                event.currentTarget.style.boxShadow = 'none';
+              }}
+            >
+              {questToggleLabel}
+            </button>
+          </div>
+          <div id="command-objective-overlay" style={expansionStyle(questExpanded)}>
+            <OpsBriefingsPanel containerStyle={questExpansionContainer} showCompleted />
           </div>
         </div>
       </div>

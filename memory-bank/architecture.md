@@ -255,7 +255,8 @@ flowchart LR
 </pattern>
 <architecture_section id="command_dock_layout" category="hud_systems">
 <design_principles>
-- Collapse the HUD into a single bottom ribbon split into four compact bands (map, status, objectives, comms) so the playfield stays clear while critical data sits within a short eye saccade.
+- Collapse the HUD into a single bottom ribbon split into four compact bands (map, status, comms, objectives) so George stays beside the core HUD cluster while the playfield remains clear and the Quests lane anchors the right edge.
+- Keep the comms lane (George/events toggle) immediately before the Quests lane so the assistant can reference objective context without forcing eye travel across the entire ribbon; overlays continue to slide from their originating lane to avoid stacking conflicts.
 - Clamp the ribbon’s height to the Player Summary lane—`PlayerSummaryPanel` defines the ceiling and all other bands stretch to match so the dock never exceeds the HUD footprint.
 - Inline views show only current objectives and recent signals; archive states (completed objectives, event history) live in lightweight trays that slide from the same anchor to avoid screen-covering panels.
 - George’s feed is always visible: the chat scrollback captures the last few messages without requiring a toggle or ticker, and the freshest guidance is rendered as the latest chat bubble.
