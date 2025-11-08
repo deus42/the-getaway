@@ -237,6 +237,8 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
       onClose();
     }
   }, [onClose]);
