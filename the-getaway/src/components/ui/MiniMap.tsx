@@ -117,7 +117,9 @@ const computeWallCrop = (state: MiniMapRenderState): CropBounds => {
   const clampValue = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);
 
-  const findBoundaryFromLeft = (row: MiniMapRenderState["tiles"][number]): number => {
+  const findBoundaryFromLeft = (
+    row: MiniMapRenderState["tiles"][number]
+  ): number => {
     if (!row) {
       return -1;
     }
@@ -129,7 +131,9 @@ const computeWallCrop = (state: MiniMapRenderState): CropBounds => {
     return -1;
   };
 
-  const findBoundaryFromRight = (row: MiniMapRenderState["tiles"][number]): number => {
+  const findBoundaryFromRight = (
+    row: MiniMapRenderState["tiles"][number]
+  ): number => {
     if (!row) {
       return -1;
     }
@@ -201,7 +205,11 @@ const computeWallCrop = (state: MiniMapRenderState): CropBounds => {
   const safeMinX = clampValue(left, 0, Math.max(0, state.mapWidth - 1));
   const safeMaxX = clampValue(right, safeMinX, Math.max(0, state.mapWidth - 1));
   const safeMinY = clampValue(top, 0, Math.max(0, state.mapHeight - 1));
-  const safeMaxY = clampValue(bottom, safeMinY, Math.max(0, state.mapHeight - 1));
+  const safeMaxY = clampValue(
+    bottom,
+    safeMinY,
+    Math.max(0, state.mapHeight - 1)
+  );
 
   return {
     minX: safeMinX,
@@ -347,7 +355,6 @@ const drawTiles = ({ ctx, state, crop }: DrawContext) => {
       }
     }
   }
-
 };
 
 const drawOverlay = ({ ctx, state }: DrawContext) => {
@@ -556,7 +563,10 @@ const drawMiniMap = (
     return;
   }
 
-  const scale = Math.min(width / displayLogicalWidth, height / displayLogicalHeight);
+  const scale = Math.min(
+    width / displayLogicalWidth,
+    height / displayLogicalHeight
+  );
   const offsetX = (width - displayLogicalWidth * scale) / 2;
   const offsetY = (height - displayLogicalHeight * scale) / 2;
 
@@ -700,7 +710,7 @@ const MiniMap: React.FC = () => {
     dimensions.height,
     renderToken,
     resolveState,
-    resolveCropBounds
+    resolveCropBounds,
   ]);
 
   const resolveGridFromPointer = useCallback(
@@ -720,7 +730,10 @@ const MiniMap: React.FC = () => {
 
       const displayLogicalWidth = crop.width * state.tileScale;
       const displayLogicalHeight = crop.height * state.tileScale;
-      const scale = Math.min(width / displayLogicalWidth, height / displayLogicalHeight);
+      const scale = Math.min(
+        width / displayLogicalWidth,
+        height / displayLogicalHeight
+      );
       const offsetX = (width - displayLogicalWidth * scale) / 2;
       const offsetY = (height - displayLogicalHeight * scale) / 2;
 
