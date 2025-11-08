@@ -54,7 +54,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
 
   return (
     <div
-      className="flex flex-col gap-[0.6rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.8rem] text-[#f8fafc] shadow-[0_28px_40px_-24px_rgba(14,116,144,0.45)] backdrop-blur-[14px] font-body"
+      className="flex flex-col gap-[0.5rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.9rem] text-[#f8fafc] shadow-[0_20px_30px_-20px_rgba(8,12,24,0.5)] backdrop-blur-[14px] font-body"
       data-testid="player-summary-panel"
     >
       <div className="flex items-start justify-between gap-[0.75rem]">
@@ -71,7 +71,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             )}
           </div>
           <div className="text-[0.6rem] uppercase tracking-[0.12em] text-[rgba(226,232,240,0.72)]">
-            {uiStrings.playerStatus.backgroundLabel}: {backgroundName}
+            {backgroundName}
           </div>
         </div>
       </div>
@@ -125,7 +125,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
       </div>
 
       {onOpenCharacter && showActionButton && (
-        <div className="mt-[0.2rem] flex gap-[0.5rem]">
+        <div className="flex gap-[0.5rem]">
           <button
             type="button"
             onClick={onOpenCharacter}
@@ -144,7 +144,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             <button
               type="button"
               onClick={handleLevelUp}
-              className="flex-1 rounded-[999px] border border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.48),rgba(249,115,22,0.45))] px-[0.75rem] py-[0.38rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#fff8dc] shadow-[0_12px_20px_-16px_rgba(251,191,36,0.48)] transition-transform duration-200 hover:-translate-y-[2px] hover:scale-[1.01] focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900"
+              className="flex-1 rounded-[999px] border border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.48),rgba(249,115,22,0.45))] px-[0.75rem] py-[0.38rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#fff8dc] shadow-[0_12px_20px_-16px_rgba(251,191,36,0.48)] transition-all duration-200 hover:-translate-y-[2px] hover:scale-[1.01] hover:border-[rgba(251,191,36,1)] hover:shadow-[0_0_0_2px_rgba(251,191,36,0.4),0_14px_24px_-16px_rgba(251,191,36,0.6)] focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900"
               title="Test Mode: Gain XP to level up"
             >
               ⬆ Level Up

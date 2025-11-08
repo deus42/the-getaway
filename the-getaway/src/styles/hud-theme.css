@@ -21,8 +21,40 @@
   --font-body: "DM Sans", "Inter", "IBM Plex Sans", sans-serif;
   --font-mono: "DM Mono", "IBM Plex Mono", monospace;
 
+  --hud-radius-xs: 2px;
+  --hud-radius-sm: 4px;
+  --hud-radius-md: 8px;
+  --hud-radius-lg: 16px;
   --radius-md: 16px;
   --radius-pill: 999px;
+
+  --hud-space-0: 0px;
+  --hud-space-1: 4px;
+  --hud-space-2: 8px;
+  --hud-space-3: 12px;
+  --hud-space-4: 16px;
+  --hud-space-5: 24px;
+  --hud-space-6: 32px;
+  --hud-space-7: 40px;
+  --hud-space-8: 48px;
+  --hud-space-9: 64px;
+
+  --hud-font-xs: 0.75rem;
+  --hud-font-sm: 0.875rem;
+  --hud-font-md: 1rem;
+  --hud-font-lg: 1.25rem;
+  --hud-font-xl: 1.5rem;
+
+  --hud-line-xs: 1.25rem;
+  --hud-line-sm: 1.25rem;
+  --hud-line-md: 1.5rem;
+  --hud-line-lg: 1.75rem;
+  --hud-line-xl: 2rem;
+
+  --hud-icon-wrapper: 24px;
+  --hud-icon-live-area: 20px;
+  --hud-icon-stroke: 2px;
+  --hud-hit-target: 48px;
 
   --hud-panel-gradient: linear-gradient(145deg, rgba(8, 15, 30, 0.92) 0%, rgba(12, 22, 42, 0.82) 50%, rgba(6, 12, 28, 0.92) 100%);
   --hud-panel-border: 1px solid rgba(59, 130, 246, 0.22);
@@ -93,7 +125,7 @@
 @layer components {
   .hud-panel {
     position: relative;
-    border-radius: var(--radius-md);
+    border-radius: var(--hud-radius-lg);
     border: var(--hud-border);
     background: var(--color-hud-surface);
     color: var(--color-hud-text);

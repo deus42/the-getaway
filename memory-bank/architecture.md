@@ -53,7 +53,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`PlayerLoadoutPanel.tsx`**: Summarises equipped weapon/armor alongside perk badges inside the character screen.
 - **`PlayerInventoryPanel.tsx`**: Full inventory console with filter tabs, encumbrance telemetry, equipment slot grid, hotbar management, and inline equip/repair/use actions that dispatch Redux inventory reducers.
 - **Inventory data model**: `Player.inventory` now tracks `hotbar` slots alongside `items`, and `Player.equippedSlots`/`activeWeaponSlot` mirror the expanded slot framework (primary/secondary/melee weapons, body armor, helmet, accessories). `Player.encumbrance` persists the derived weight ratio so reducers and UI can apply penalties without recomputing totals each frame.
-- **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, viewport reticle, and supports drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles.
+- **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, and the viewport reticle, now framed inside the shared HUD tokens (`hudTokens.ts`). The panel sticks to the noir chrome while keeping drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles intact.
 - **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
 - **`GeorgeAssistant.tsx`**: React HUD console that anchors top-center, presenting a compact status dock and an expandable chat feed while pulling quest, karma, reputation, and personality data straight from Redux.
@@ -194,10 +194,11 @@ flowchart LR
 
 <technical_flow>
 1. <code_location>the-getaway/src/styles/hud-theme.css</code_location> defines palette, typography, spacing, and sizing tokens with `@theme static` and registers reusable component styles (e.g. `.hud-panel`). The file exports neon cyan/magenta highlights, gunmetal surfaces, focus shadows, and dimension tokens such as `--size-hud-ribbon-height` and `--size-hud-sidebar-width`.
-2. Theme overrides live behind `data-theme` (`day`, `dark`, `night`) and `data-curfew` / `data-alert` attributes, enabling day/night shifts and curfew accent swaps without touching component code. HUD consumers read the same CSS variables regardless of framework layer.
-3. <code_location>the-getaway/src/index.css</code_location> imports the theme, applies the noir gradients to the body background, and resets anchors/buttons to use shared variables so global chrome reflects the unified styling out of the box.
-4. Tailwind consumes these tokens via variable-backed utilities (`rounded-hud`, `shadow-hud`, `h-[hud-ribbon]`, etc.) allowing React components to mix utility classes with bespoke CSS while keeping the palette declarative.
-5. Implementation teams must run a full surface sweep when touching HUD styling: replace ad-hoc colours, shadows, and font stacks with the shared tokens to avoid regressing the noir identity. Any new HUD component should default to `.hud-panel` or document why it diverges.
+2. <code_location>the-getaway/src/styles/hudTokens.ts</code_location> mirrors the CSS variables inside TypeScript, exposing helpers for 8-pt spacing, radii, typography, icon sizing (24×24 wrappers / 20×20 live areas), and the 2px stroke weight so UI components can stay on the same rhythm even when they rely on inline styles.
+3. Theme overrides live behind `data-theme` (`day`, `dark`, `night`) and `data-curfew` / `data-alert` attributes, enabling day/night shifts and curfew accent swaps without touching component code. HUD consumers read the same CSS variables regardless of framework layer.
+4. <code_location>the-getaway/src/index.css</code_location> imports the theme, applies the noir gradients to the body background, and resets anchors/buttons to use shared variables so global chrome reflects the unified styling out of the box.
+5. Tailwind consumes these tokens via variable-backed utilities (`rounded-hud`, `shadow-hud`, `h-[hud-ribbon]`, etc.) allowing React components to mix utility classes with bespoke CSS while keeping the palette declarative.
+6. Implementation teams must run a full surface sweep when touching HUD styling: replace ad-hoc colours, shadows, and font stacks with the shared tokens to avoid regressing the noir identity. Any new HUD component should default to `.hud-panel` or document why it diverges.
 </technical_flow>
 
 <code_location>the-getaway/tailwind.config.js</code_location>
@@ -209,6 +210,8 @@ flowchart LR
 - Before shipping HUD changes, run `yarn build` or Tailwind CLI to confirm the trimmed colour palette and variable-backed utilities compile without pulling in the default spectrum.
 - Designers requested a holistic styling pass; when implementing this roadmap step ensure linked panels (minimap, George console, mission overlays, modals) are audited for outdated tokens and refit as needed.
 - GameMenu, CommandShell ribbon, OpsBriefingsPanel, and PlayerSummaryPanel now rely on `hud-components.css` primitives; George Assistant, Level Indicator, and auxiliary HUD overlays still need migration to the shared token classes.
+- The MiniMap column now consumes `mini-map-panel` styles + the TS token helpers; extend `hudTokens.ts` instead of sprinkling ad-hoc paddings or icon sizes whenever the HUD needs new spacing or icon primitives.
+- `MiniMap.tsx` trims its render bounds to the outer wall rectangle exposed by `MiniMapRenderState.tiles`, translating and scaling that crop so the interior fills the HUD lane while pointer math remains in world coordinates; HUD QA now relies on separate tooling for grid/icon validation, so the runtime overlay has been removed entirely to keep the panel clean.
 - <code_location>the-getaway/src/components/ui/GameMenu.tsx</code_location> now stages a landing CTA view with a dedicated Settings button and swaps to a compact secondary panel via local `activeView` state, keeping Start/Resume isolated while routing locale/surveillance/lighting controls and the unified AutoBattle mode selector (Manual/Balanced/Aggressive/Defensive) through the condensed layout.
 - Shared HUD icon primitives live in <code_location>the-getaway/src/components/ui/icons</code_location>; components such as `LogPanel` import `CombatIcon`,`DialogueIcon`, etc. so iconography stays consistent and local emoji fallbacks are no longer needed.
 </maintenance_notes>

@@ -878,6 +878,40 @@
     color: rgba(148, 163, 184, 0.7);
   }
 
+.mini-map-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.mini-map-canvas {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  border-radius: var(--hud-radius-md);
+  background: var(--color-hud-surface, rgba(15, 23, 42, 0.92));
+  border: none;
+  box-shadow: none;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+}
+
+.mini-map-canvas:active {
+  cursor: grabbing;
+}
+
+
   .hud-stat {
     display: flex;
     flex-direction: column;

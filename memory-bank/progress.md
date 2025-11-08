@@ -119,6 +119,40 @@
 </validation>
 </step>
 
+<step id="GET-116" status="completed">
+<step_metadata>
+  <number>116</number>
+  <title>Apply 8-pt styling pass to MiniMap HUD module</title>
+  <status>Completed</status>
+  <date>May 9, 2026</date>
+</step_metadata>
+<linear key="GET-116" />
+
+<tasks>
+1. Cropped the MiniMap render to the exterior wall rectangle emitted by `MiniMapRenderState.tiles`, centered the crop inside the HUD lane, and kept pointer interactions in world coordinates.
+2. Rebased the MiniMap panel, canvas shell, and dev controls onto shared HUD spacing/radius/icon tokens so every gutter, padding, and wrapper sits on the 8-pt rhythm.
+3. Added a test-mode-only 8-pt grid + icon bounding-box overlay toggle for alignment reviews and documented the new workflow in the architecture notes.
+</tasks>
+
+<implementation>
+- <code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location> now computes wall bounds once per state update, translates/scales that crop so it occupies the full tactical lane, maps pointer coordinates back to the original grid, and exposes a dev-only overlay toggle (wired through `App.tsx` test mode) that draws the 8-pt grid and icon wrappers.
+- <code_location>the-getaway/src/styles/hud-components.css</code_location> refits `.mini-map-panel`, `.mini-map-canvas`, and the new `.mini-map-dev-toggle` to the shared HUD tokens (spacing, radii, borders) so the panel matches the rest of the bottom dock.
+- <code_location>the-getaway/src/App.tsx</code_location> passes the test-mode flag into `MiniMap`, letting QA flip the overlay without leaking the control into production sessions, and `memory-bank/architecture.md` records the cropping/overlay workflow.
+</implementation>
+
+<code_reference file="the-getaway/src/components/ui/MiniMap.tsx" />
+<code_reference file="the-getaway/src/styles/hud-components.css" />
+<code_reference file="the-getaway/src/App.tsx" />
+<code_reference file="memory-bank/architecture.md" />
+
+<validation>
+- `yarn lint`
+- `yarn build`
+- `yarn test`
+- `yarn test --coverage`
+</validation>
+</step>
+
 <step id="24.6" status="completed">
 <step_metadata>
   <number>24.6</number>

@@ -70,7 +70,7 @@ export interface BackgroundDefinition {
 export const BACKGROUNDS: BackgroundDefinition[] = [
   {
     id: 'corpsec_defector',
-    name: 'Ex-CorpSec Defector',
+    name: 'Corpsec Defector',
     tagline: 'Turned the regime’s training against them.',
     description: [
       'Former security officer who leaked patrol routes until the alarms sounded on you.',

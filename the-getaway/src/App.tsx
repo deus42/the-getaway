@@ -5,6 +5,7 @@ import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
+import TacticalPanel from "./components/ui/TacticalPanel";
 import LevelIndicator from "./components/ui/LevelIndicator";
 import GeorgeAssistant from "./components/ui/GeorgeAssistant";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
@@ -32,6 +33,7 @@ import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import CombatControlWidget from "./components/ui/CombatControlWidget";
 import GameDebugInspector from "./components/debug/GameDebugInspector";
 import "./App.css";
+import { HUD_SPACING, hudSpace } from "./styles/hudTokens";
 
 // Lazy load heavy components that aren't needed immediately
 const GameMenu = lazy(() => import("./components/ui/GameMenu"));
@@ -75,7 +77,8 @@ const scrollSectionStyle: CSSProperties = {
   paddingRight: "0.35rem",
 };
 
-const DEFAULT_DOCK_MAX_HEIGHT = 300;
+const DEFAULT_DOCK_MIN_HEIGHT = 260;
+const DEFAULT_DOCK_MAX_HEIGHT = 320;
 
 const bottomPanelBaseStyle: CSSProperties = {
   position: "absolute",
@@ -85,20 +88,20 @@ const bottomPanelBaseStyle: CSSProperties = {
   display: "grid",
   gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
   alignItems: "stretch",
-  gap: "0.75rem",
-  padding: "0.6rem 1.2rem 0.7rem",
+  gap: hudSpace(HUD_SPACING.sm),
+  padding: `${hudSpace(HUD_SPACING.md)} ${hudSpace(HUD_SPACING.xxl)} ${hudSpace(HUD_SPACING.md)}`,
   background: "linear-gradient(140deg, rgba(10, 18, 34, 0.94), rgba(15, 24, 40, 0.9))",
   boxShadow: "0 -18px 40px rgba(8, 12, 24, 0.35)",
   pointerEvents: "auto",
   zIndex: 6,
-  minHeight: "118px",
+  minHeight: `${DEFAULT_DOCK_MIN_HEIGHT}px`,
   maxHeight: `${DEFAULT_DOCK_MAX_HEIGHT}px`,
 };
 
 const laneBaseStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: "0.45rem",
+  gap: hudSpace(HUD_SPACING.xs),
   minHeight: 0,
   height: "100%",
   flex: "1 1 auto",
@@ -110,26 +113,8 @@ const mapSectionStyle: CSSProperties = {
   justifyContent: "flex-start",
 };
 
-const mapViewportStyle: CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  width: "100%",
-  height: "100%",
-  display: "flex",
-  alignItems: "stretch",
-  justifyContent: "flex-start",
-};
-
 const statusSectionStyle: CSSProperties = {
   ...laneBaseStyle,
-};
-
-const playerSummaryScrollStyle: CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  maxHeight: "100%",
-  overflowY: "hidden",
-  paddingRight: "0.3rem",
 };
 
 const objectivesSectionStyle: CSSProperties = {
@@ -142,10 +127,10 @@ const objectivesListStyle: CSSProperties = {
   minHeight: 0,
   maxHeight: "100%",
   overflowY: "auto",
-  paddingRight: "0.3rem",
+  paddingRight: hudSpace(HUD_SPACING.xxs),
   display: "flex",
   flexDirection: "column",
-  gap: "0.45rem",
+  gap: hudSpace(HUD_SPACING.xs),
 };
 
 const georgeSectionStyle: CSSProperties = {
@@ -158,15 +143,15 @@ const sectionControlRowStyle: CSSProperties = {
   display: "flex",
   justifyContent: "flex-end",
   alignItems: "center",
-  gap: "0.35rem",
+  gap: hudSpace(HUD_SPACING.xs),
 };
 
 const inlineButtonStyle: CSSProperties = {
   all: "unset",
   display: "inline-flex",
   alignItems: "center",
-  gap: "0.28rem",
-  padding: "0.28rem 0.6rem",
+  gap: hudSpace(HUD_SPACING.xxs),
+  padding: `${hudSpace(HUD_SPACING.xxs)} ${hudSpace(HUD_SPACING.sm)}`,
   borderRadius: "999px",
   border: "1px solid rgba(148, 163, 184, 0.3)",
   background: "rgba(15, 23, 42, 0.55)",
@@ -182,15 +167,15 @@ const dockExpansionBaseStyle: CSSProperties = {
   position: "absolute",
   left: 0,
   right: 0,
-  bottom: "calc(100% + 0.55rem)",
+  bottom: "calc(100% + var(--hud-space-2))",
   background: "linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))",
   border: "1px solid rgba(148, 163, 184, 0.3)",
   borderRadius: "16px",
-  padding: "1rem 1rem 1.2rem",
+  padding: `${hudSpace(HUD_SPACING.lg)} ${hudSpace(HUD_SPACING.lg)} ${hudSpace(HUD_SPACING.xl)}`,
   boxShadow: "0 28px 58px rgba(10, 16, 28, 0.55)",
   display: "flex",
   flexDirection: "column",
-  gap: "0.75rem",
+  gap: hudSpace(HUD_SPACING.sm),
   maxHeight: "55vh",
   overflow: "hidden",
   opacity: 0,
@@ -306,7 +291,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
   const [rendererMeta, setRendererMeta] = useState<{ label?: string; detail?: string } | null>(null);
   const statusLaneRef = useRef<HTMLDivElement | null>(null);
   const [playerLaneHeight, setPlayerLaneHeight] = useState<number | null>(null);
-  const [bottomPanelHeight, setBottomPanelHeight] = useState<number | null>(null);
+  const [bottomPanelHeight, setBottomPanelHeight] = useState<number>(DEFAULT_DOCK_MIN_HEIGHT);
 
   useEffect(() => {
     if (!showMenu) {
@@ -354,7 +339,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
 
   useEffect(() => {
     if (!playerLaneHeight) {
-      setBottomPanelHeight(null);
+      setBottomPanelHeight(DEFAULT_DOCK_MIN_HEIGHT);
       return;
     }
     if (typeof window === 'undefined') {
@@ -363,8 +348,9 @@ const CommandShell: React.FC<CommandShellProps> = ({
     }
     const rootFontSize = parseFloat(window.getComputedStyle(document.documentElement).fontSize || '16') || 16;
     const verticalPadding = rootFontSize * 1.3; // 0.6rem top + 0.7rem bottom
-    const nextHeight = Math.min(Math.round(playerLaneHeight + verticalPadding), DEFAULT_DOCK_MAX_HEIGHT);
-    setBottomPanelHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+    const measuredHeight = Math.round(playerLaneHeight + verticalPadding);
+    const boundedHeight = Math.min(Math.max(measuredHeight, DEFAULT_DOCK_MIN_HEIGHT), DEFAULT_DOCK_MAX_HEIGHT);
+    setBottomPanelHeight((prev) => (prev === boundedHeight ? prev : boundedHeight));
   }, [playerLaneHeight]);
 
   const questExpansionContainer: CSSProperties = {
@@ -385,9 +371,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
 
   const questToggleLabel = questExpanded ? uiStrings.shell.completedToggleClose : uiStrings.shell.completedToggleOpen;
   const bottomPanelStyle = useMemo(() => {
-    if (!bottomPanelHeight) {
-      return bottomPanelBaseStyle;
-    }
     const nextHeight = `${bottomPanelHeight}px`;
     return {
       ...bottomPanelBaseStyle,
@@ -479,15 +462,13 @@ const CommandShell: React.FC<CommandShellProps> = ({
       </div>
       <div style={bottomPanelStyle}>
         <div style={mapSectionStyle}>
-          <div style={mapViewportStyle}>
+          <TacticalPanel>
             <MiniMap />
-          </div>
+          </TacticalPanel>
         </div>
 
         <div style={statusSectionStyle} ref={statusLaneRef}>
-          <div style={playerSummaryScrollStyle}>
-            <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
-          </div>
+          <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
         </div>
 
         <div style={georgeSectionStyle}>
