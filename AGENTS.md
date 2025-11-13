@@ -44,6 +44,7 @@ Do not begin coding until this checklist is complete.
 - **During development**
 - Keep changes focused on the active Linear issue. Ignore unrelated modified files; never revert user-authored work.  
 - Prefer incremental commits; use imperative commit messages (Conventional Commits welcome).  
+- When reviewing or comparing local changes, always diff against the current HEAD commit (the workspace baseline); do not compare against older commits unless the user explicitly requests a different ref.  
 - Keep the Linear issue state aligned with reality (e.g., pause → `Todo`, active work → `In Progress`).  
 - Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
 - When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
