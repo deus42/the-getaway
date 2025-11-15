@@ -66,6 +66,12 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
 - Maintain a per-task notes file. Before drafting your plan for a Linear issue, create or open a notes file at `progress/<Linear-key>.md` (for example, `progress/GET-117.md`). Use this file to record the Initial Ask, your implementation plan, key decisions, tasks executed, and the Level 0 validation script. Read and update this file whenever you resume work on the task to refresh context and mitigate context rot. These notes are separate from `memory-bank/progress.md` and should focus on actionable summaries rather than internal chain-of-thought.  
 - When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
 - Reference the active Linear key (for example, `GET-9`) in every commit message so Git ↔ Linear linking stays automatic.
+- **Session workflow (mandatory):**
+  1. Log the directive in `progress/<Linear-key>.md` with timestamp/Ask/Result placeholders.
+  2. Re-read the log + plan, update the plan for the new directive.
+  3. Only then implement. If step 1 isn’t complete, stop—no code edits.
+- **Ask Log format:** Each entry must include UTC timestamp, verbatim ask, and a concise “Result” referencing touching files/sections so we can trace Ask → Change later.
+- **Refactor & HUD styling:** When extracting/refactoring, move the existing values verbatim into dedicated component CSS (Tailwind utilities where possible). Confirm behaviour is unchanged before applying any tweaks; ask if uncertain. Every HUD/UI component keeps its own CSS surface—no bundled blobs.
 - For any styling or theming request, audit the relevant HUD/app surfaces across the whole solution and update inconsistent styles or tokens so the UX remains cohesive—do not leave outdated palettes or utilities behind.
 - **Testing**
   - Match validation steps from the roadmap and Linear ticket.  
