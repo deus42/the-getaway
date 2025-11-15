@@ -17,6 +17,7 @@ node_modules/
 /dist/
 /dist-ssr/
 /build/
+progress/
 *.local
 
 # Environment files

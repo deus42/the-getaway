@@ -27,19 +27,35 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
 3. **Update Linear status**  
    - Move the issue to `In Progress` only when you start implementation and keep status synchronized while coding.  
    - Update the issue description/notes if scope shifts; revert to `Todo` if you stop work without finishing.
+4. **Re-read the guide + notes each session**  
+   - After every new ask or when resuming work, re-open this AGENTS.md guide (especially Sections 2–3 and 15) and the active `progress/<Linear-key>.md` notes file so the Ask Log and constraints stay top-of-mind.  
+   - Ensure each `progress/<Linear-key>.md` starts with a “Session Reminders” block that explicitly tells you to re-read AGENTS.md + the notes before acting; glance at that block every time you open the file.  
+   - If a progress file already exists when you start a new session, explicitly ask the requester whether to continue from the existing notes or start fresh; if they prefer a fresh start, rewrite the notes file (preserving only the new Ask Log) before planning.  
+   - Log the latest user directive in the notes file before planning to prevent context rot.
 
 Do not begin coding until this checklist is complete.
 
 ## 3. Implementation Workflow
 - **Operational sequence (follow for every task)**
-  1. Accept/confirm the roadmap step or Linear ticket, then move the issue to `In Progress`.
-  2. Draft a detailed implementation plan and pause for approval or scope corrections before touching code.
-  3. Implement once the plan is approved.
-  4. Immediately after implementation, produce a structured Level 0 playtest scenario (step-by-step) that exercises the new behaviour. Do not wait for the user to request it.
-  5. Await review; if feedback requires changes, address the notes then regenerate an updated playtest scenario describing the new validation run.
-  6. Commit only when explicitly instructed to do so.
-  7. After final approval and commit, **wait for the requester to verify the change**; only then move the Linear issue to the terminal state (`Done` unless otherwise directed).
-  8. If verification is still pending, leave the issue in `In Progress` (or `In Review`) so follow-up can occur without reopening states.
+1. Accept/confirm the roadmap step or Linear ticket, then move the issue to `In Progress`.
+2. Draft a detailed implementation plan and pause for approval or scope corrections before touching code.
+3. Implement once the plan is approved, iterating as needed; defer automated test authoring/execution until the requester accepts the behaviour.
+4. Immediately after implementation, produce a structured Level 0 playtest scenario (step-by-step) that exercises the new behaviour. Do not wait for the user to request it.
+5. Await review; if feedback requires changes, address the notes then regenerate an updated playtest scenario describing the new validation run. Repeat this loop until the requester explicitly accepts the behaviour.
+6. Only after acceptance, add/execute the required automated tests (`yarn lint`, builds, unit/integration suites, coverage) and capture the results for handoff or a dedicated testing agent/session.
+7. Commit only when explicitly instructed to do so and after the acceptance-driven testing pass is complete.
+8. After final approval and commit, **wait for the requester to verify the change**; only then move the Linear issue to the terminal state (`Done` unless otherwise directed).
+9. If verification is still pending, leave the issue in `In Progress` (or `In Review`) so follow-up can occur without reopening states.
+
+**Magic words (finish / complete / commit)**  
+When the requester uses any of these terms, treat it as a mandate to finalize the task: (1) ensure automated tests have been written/executed (lint, build, test, coverage) even if they were deferred earlier, (2) create the instructed commit(s) referencing the Linear key, (3) post the Linear issue summary comment, and (4) move the ticket to `Done` only after verification. Ask clarifying questions if any prerequisite (acceptance, test scope, commit message) is unclear before proceeding.
+
+- **Session loop reminder**
+  1. Re-read AGENTS.md and the active `progress/<Linear-key>.md` before touching code.
+  2. Update the Ask Log/plan in `progress/<Linear-key>.md`.
+  3. Draft/refresh the implementation plan and pause for confirmation when required.
+  4. Implement, update notes with key decisions/tasks, and run validation.
+  5. Post the Linear issue comment summarizing work/tests before moving the ticket forward.
 
 - **During development**
 - Keep changes focused on the active Linear issue. Ignore unrelated modified files; never revert user-authored work.  
@@ -47,6 +63,7 @@ Do not begin coding until this checklist is complete.
 - When reviewing or comparing local changes, always diff against the current HEAD commit (the workspace baseline); do not compare against older commits unless the user explicitly requests a different ref.  
 - Keep the Linear issue state aligned with reality (e.g., pause → `Todo`, active work → `In Progress`).  
 - Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
+- Maintain a per-task notes file. Before drafting your plan for a Linear issue, create or open a notes file at `progress/<Linear-key>.md` (for example, `progress/GET-117.md`). Use this file to record the Initial Ask, your implementation plan, key decisions, tasks executed, and the Level 0 validation script. Read and update this file whenever you resume work on the task to refresh context and mitigate context rot. These notes are separate from `memory-bank/progress.md` and should focus on actionable summaries rather than internal chain-of-thought.  
 - When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
 - Reference the active Linear key (for example, `GET-9`) in every commit message so Git ↔ Linear linking stays automatic.
 - For any styling or theming request, audit the relevant HUD/app surfaces across the whole solution and update inconsistent styles or tokens so the UX remains cohesive—do not leave outdated palettes or utilities behind.
@@ -83,11 +100,11 @@ Do not begin coding until this checklist is complete.
 - Prefer `apply_patch` for manual edits; avoid using it for generated files.
 
 ## 5. Testing & Validation Expectations
-- Jest + React Testing Library (`ts-jest`, `jest-environment-jsdom`).
-- Tests live in `src/__tests__/` with `.test.ts` or `.test.tsx` suffixes.
-- Setup file: `src/setupTests.ts` (includes `@testing-library/jest-dom`).
-- Aim to cover reducers, selectors, and core game logic. Optional coverage via `yarn test --coverage`.
-- Document exact commands executed when reporting validation results.
+- **Post-acceptance only:** Do not write or execute automated tests (unit, integration, coverage) until the requester explicitly accepts the in-game behaviour proven via the Level 0 playtest loop.
+- Once acceptance is granted, add/adjust the necessary Jest suites (React Testing Library with `ts-jest`/`jest-environment-jsdom`) and run the required commands (`yarn lint`, `yarn build`, `yarn test`, `yarn test --coverage`). Capture these results in your summary or delegate them to a dedicated testing agent/session if instructed.
+- Tests live in `src/__tests__/` with `.test.ts` or `.test.tsx` suffixes; setup file remains `src/setupTests.ts` (includes `@testing-library/jest-dom`).
+- Aim to cover reducers, selectors, and core game logic. Optional coverage via `yarn test --coverage` becomes mandatory during the acceptance-to-commit phase.
+- Document the executed commands and coverage confirmation when handing off or closing the task.
 
 ## 6. Memory Bank Discipline
 - **Design vs. Architecture**  
@@ -162,11 +179,11 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Whenever you open an issue through MCP, apply the label that matches the ticket type so reporting and automations stay accurate.
 
 ### Definition of Done
-- After implementation and before requesting feedback, run the full lint pass and resolve all issues (`yarn lint` must exit cleanly).
+- After the requester explicitly accepts the Level 0 behaviour (Implementation Workflow Step 5), run the full lint pass and resolve all issues (`yarn lint` must exit cleanly).
 - Build the project to confirm it compiles without errors (`yarn build`).
 - Run the full unit test suite and ensure it passes (`yarn test`).
 - Verify total Jest coverage is **greater than 80%**; use `yarn test --coverage` (or the project’s equivalent) and address any regressions before proceeding.
-- Do not hand off work, request review, or move a Linear issue forward until all commands above succeed.
+- Do not hand off work, request review, or move a Linear issue forward until all commands above succeed; this post-acceptance testing block can be executed by you or a delegated testing agent/session.
 - Include each executed command (lint, build, test, coverage) and the coverage confirmation in the task summary or issue comment when reporting completion.
 
 ## 12. Accountability Protocol
@@ -248,3 +265,27 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 - **Before:** Check game-design.md for feature spec (WHAT), check architecture.md for patterns (HOW).
 - **After:** Update both documents with what changed, log completion in progress.md (features only).
 - Tag XML sections incrementally as they're referenced/updated (not required for all content immediately).
+
+## 15. Task Notes & Per-Task Progress Files
+
+To mitigate context rot and preserve a detailed record for every Linear ticket, create a dedicated notes file under a top-level `progress/` folder named after the Linear key (for example, `progress/GET-117.md`). Each notes file should:
+
+- Capture the Initial Ask and any clarifications so the Ask Log is always available.
+- Record the detailed implementation plan, key tasks performed, and important decisions or assumptions.
+- Include the Level 0 playtest script or other validation steps once the feature is implemented.
+- Serve as a quick reference when resuming work on the task without rereading the full conversation history.
+- Track pending follow-ups such as “post Linear summary comment” or “await requester verification,” and mark them resolved once complete so nothing is skipped.
+- Begin with a short “Session Reminders” block spelling out the re-read loop (re-open AGENTS.md, review the notes, refresh the plan, run validation, post the Linear comment) so context rot can’t skip these steps.
+- When starting a new session and a notes file already exists, ask the requester whether to continue from the current notes or start fresh; if they choose “start fresh,” rewrite the file (retaining only the new ask and plan) before proceeding.
+
+At the start of each task, open or create its notes file and log the current context. After each significant step or decision, append a concise entry so future sessions stay grounded. These notes complement `memory-bank/progress.md`, remain local-only (the `progress/` folder is `.gitignore`’d), and focus on actionable summaries rather than internal chain-of-thought. Use the notes as the source of truth for the mandatory Linear issue comment you must post before closing the ticket.
+
+### Sample Linear Issue Prompt
+
+When you start a new roadmap step, create a Linear ticket reminding yourself (or another agent) to set up the notes file. Issue creation prompt example:
+
+- `MCP: Create a new Linear issue in the "MVP" project.`
+- `Title: Initialize notes file for GET-117`
+- `Description: Create a per-task notes file at progress/GET-117.md. Use this file to record the initial ask, the detailed implementation plan, key decisions, tasks executed, and the Level 0 validation script for GET-117. This notes file will be used to refresh context and avoid context rot whenever work resumes.`
+- `Label: Improvement`
+- `Assignee: [your username]`
