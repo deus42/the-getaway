@@ -1,0 +1,41 @@
+.hud-bottom-dock {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--hud-space-3);
+  padding: var(--hud-space-4) var(--hud-space-7);
+  background: linear-gradient(140deg, rgba(10, 18, 34, 0.94), rgba(15, 24, 40, 0.9));
+  box-shadow: 0 -18px 40px rgba(8, 12, 24, 0.35);
+  pointer-events: auto;
+  z-index: 6;
+  height: var(--bottom-panel-height, 260px);
+  min-height: 260px;
+  max-height: 320px;
+}
+
+.hud-bottom-lane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hud-space-2);
+  min-height: 0;
+  height: 100%;
+  flex: 1 1 auto;
+}
+
+.hud-bottom-lane--map {
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+.hud-bottom-lane--status {
+  position: relative;
+}
+
+.hud-bottom-lane--george {
+  position: relative;
+  overflow: visible;
+}

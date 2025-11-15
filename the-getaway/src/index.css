@@ -1,5 +1,6 @@
 @import './styles/hud-theme.css';
 @import './styles/hud-components.css';
+@import './styles/hud-bottom-dock.css';
 
 @tailwind base;
 @tailwind components;

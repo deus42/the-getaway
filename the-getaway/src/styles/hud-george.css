@@ -1,0 +1,333 @@
+.george-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    height: 100%;
+  }
+.george-inline__label {
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(94, 234, 212, 0.78);
+  }
+.george-input-row {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding-top: 0.2rem;
+  }
+.george-input {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 0.85rem;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: rgba(15, 23, 42, 0.65);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+.george-input:focus-within {
+    border-color: rgba(59, 130, 246, 0.75);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  }
+.george-input__field {
+    flex: 1 1 auto;
+    background: transparent;
+    border: 0;
+    outline: none;
+    color: #e2e8f0;
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+  }
+.george-input__field::placeholder {
+    color: rgba(148, 163, 184, 0.65);
+  }
+.george-send-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.45rem 0.65rem;
+    border-radius: 999px;
+    border: 1px solid rgba(96, 165, 250, 0.5);
+    background: linear-gradient(140deg, rgba(37, 99, 235, 0.45), rgba(14, 165, 233, 0.35));
+    color: #f8fafc;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+.george-send-button:focus-visible,
+.george-send-button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(147, 197, 253, 0.85);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
+  }
+.george-send-button[data-disabled="true"] {
+    opacity: 0.5;
+  }
+.george-send-icon {
+    font-size: 0.75rem;
+    letter-spacing: 0;
+  }
+.george-chat {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding-right: 0.25rem;
+  }
+.george-chat::-webkit-scrollbar {
+    width: 6px;
+  }
+.george-chat::-webkit-scrollbar-thumb {
+    background: rgba(59, 130, 246, 0.3);
+    border-radius: 999px;
+  }
+.george-chat-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+  }
+.george-chat-avatar {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+.george-logo {
+    position: relative;
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+    background: linear-gradient(160deg, rgba(6, 182, 212, 0.72), rgba(37, 99, 235, 0.65));
+    box-shadow: inset 0 0 8px rgba(4, 10, 25, 0.85), 0 12px 26px rgba(6, 182, 212, 0.25);
+  }
+.george-logo::before,
+.george-logo::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 4px;
+    border: 2px solid rgba(226, 232, 240, 0.85);
+  }
+.george-logo::before {
+    width: 12px;
+    height: 12px;
+  }
+.george-logo::after {
+    width: 6px;
+    height: 6px;
+  }
+.george-chat-bubble {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.6rem 0.8rem 0.7rem;
+    border-radius: 12px;
+    background: rgba(10, 26, 43, 0.82);
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    box-shadow: 0 16px 32px rgba(8, 12, 24, 0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+.george-chat-bubble::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 12px 0 0 12px;
+    background: rgba(148, 163, 184, 0.45);
+  }
+.george-chat-bubble__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-family: 'DM Mono', 'IBM Plex Mono', monospace;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+    color: rgba(226, 232, 240, 0.88);
+  }
+.george-chat-bubble__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+.george-chat-bubble__label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+.george-chat-bubble__time {
+    font-size: 0.56rem;
+    letter-spacing: 0.12em;
+    color: rgba(148, 163, 184, 0.7);
+    white-space: nowrap;
+  }
+.george-chat-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.14rem 0.45rem;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.4);
+    background: rgba(30, 64, 175, 0.12);
+    color: rgba(226, 232, 240, 0.85);
+  }
+.george-chat-bubble__text {
+    font-family: 'DM Sans', 'Inter', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    line-height: 1.5;
+    color: rgba(226, 232, 240, 0.92);
+    white-space: pre-wrap;
+  }
+.george-chat-bubble--mission {
+    border-color: rgba(96, 165, 250, 0.45);
+    box-shadow: 0 18px 34px rgba(37, 99, 235, 0.28);
+  }
+.george-chat-bubble--mission::before {
+    background: linear-gradient(180deg, rgba(96, 165, 250, 0.9), rgba(37, 99, 235, 0.55));
+  }
+.george-chat-badge--mission {
+    border-color: rgba(96, 165, 250, 0.55);
+    background: rgba(37, 99, 235, 0.25);
+    color: rgba(219, 234, 254, 0.92);
+  }
+.george-chat-bubble--status {
+    border-color: rgba(74, 222, 128, 0.45);
+    box-shadow: 0 18px 34px rgba(16, 185, 129, 0.25);
+  }
+.george-chat-bubble--status::before {
+    background: linear-gradient(180deg, rgba(45, 212, 191, 0.9), rgba(22, 163, 74, 0.55));
+  }
+.george-chat-badge--status {
+    border-color: rgba(74, 222, 128, 0.55);
+    background: rgba(22, 163, 74, 0.25);
+    color: rgba(240, 253, 244, 0.92);
+  }
+.george-chat-bubble--ambient {
+    border-color: rgba(45, 212, 191, 0.35);
+    box-shadow: 0 18px 28px rgba(14, 116, 144, 0.22);
+  }
+.george-chat-bubble--ambient::before {
+    background: linear-gradient(180deg, rgba(45, 212, 191, 0.85), rgba(14, 165, 233, 0.45));
+  }
+.george-chat-badge--ambient {
+    border-color: rgba(45, 212, 191, 0.55);
+    background: rgba(15, 118, 110, 0.25);
+    color: rgba(204, 251, 241, 0.9);
+  }
+.george-chat-bubble--warning {
+    border-color: rgba(251, 191, 36, 0.55);
+    box-shadow: 0 18px 32px rgba(251, 146, 60, 0.3);
+  }
+.george-chat-bubble--warning::before {
+    background: linear-gradient(180deg, rgba(251, 191, 36, 0.9), rgba(217, 119, 6, 0.6));
+  }
+.george-chat-badge--warning {
+    border-color: rgba(251, 191, 36, 0.65);
+    background: rgba(202, 138, 4, 0.25);
+    color: rgba(255, 249, 196, 0.95);
+  }
+.george-chat-bubble--zone {
+    border-color: rgba(147, 197, 253, 0.5);
+    box-shadow: 0 18px 32px rgba(59, 130, 246, 0.24);
+  }
+.george-chat-bubble--zone::before {
+    background: linear-gradient(180deg, rgba(147, 197, 253, 0.85), rgba(59, 130, 246, 0.55));
+  }
+.george-chat-badge--zone {
+    border-color: rgba(147, 197, 253, 0.65);
+    background: rgba(37, 99, 235, 0.2);
+    color: rgba(224, 242, 254, 0.92);
+  }
+.george-chat-bubble--broadcast {
+    border-color: rgba(192, 132, 252, 0.55);
+    box-shadow: 0 18px 32px rgba(168, 85, 247, 0.28);
+  }
+.george-chat-bubble--broadcast::before {
+    background: linear-gradient(180deg, rgba(192, 132, 252, 0.9), rgba(126, 58, 242, 0.55));
+  }
+.george-chat-badge--broadcast {
+    border-color: rgba(192, 132, 252, 0.65);
+    background: rgba(126, 58, 242, 0.25);
+    color: rgba(243, 232, 255, 0.92);
+  }
+.george-chat-bubble--event {
+    border-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 18px 32px rgba(56, 189, 248, 0.24);
+  }
+.george-chat-bubble--event::before {
+    background: linear-gradient(180deg, rgba(14, 165, 233, 0.9), rgba(37, 99, 235, 0.5));
+  }
+.george-chat-badge--event {
+    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(14, 165, 233, 0.2);
+    color: rgba(224, 242, 254, 0.92);
+  }
+.george-chat-bubble--player {
+    border-color: rgba(248, 250, 252, 0.4);
+    background: rgba(248, 250, 252, 0.05);
+    box-shadow: 0 18px 32px rgba(255, 255, 255, 0.08);
+  }
+.george-chat-bubble--player::before {
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.55), rgba(148, 163, 184, 0.45));
+  }
+.george-chat-badge--player {
+    border-color: rgba(248, 250, 252, 0.5);
+    background: rgba(203, 213, 225, 0.2);
+    color: rgba(248, 250, 252, 0.9);
+  }
+.george-chat-bubble--battle {
+    border-color: rgba(239, 68, 68, 0.7);
+    box-shadow: 0 18px 32px rgba(239, 68, 68, 0.35);
+  }
+.george-chat-bubble--battle::before {
+    background: linear-gradient(180deg, rgba(239, 68, 68, 0.95), rgba(190, 18, 60, 0.7));
+  }
+.george-chat-badge--battle {
+    border-color: rgba(239, 68, 68, 0.8);
+    background: rgba(239, 68, 68, 0.2);
+    color: rgba(254, 242, 242, 0.95);
+  }
+.george-chat-bubble--dialog {
+    border-color: rgba(192, 132, 252, 0.55);
+    box-shadow: 0 18px 32px rgba(168, 85, 247, 0.28);
+  }
+.george-chat-bubble--dialog::before {
+    background: linear-gradient(180deg, rgba(192, 132, 252, 0.9), rgba(126, 58, 242, 0.55));
+  }
+.george-chat-badge--dialog {
+    border-color: rgba(192, 132, 252, 0.65);
+    background: rgba(126, 58, 242, 0.25);
+    color: rgba(243, 232, 255, 0.92);
+  }
+.george-chat-bubble--stealth {
+    border-color: rgba(16, 185, 129, 0.55);
+    box-shadow: 0 18px 32px rgba(16, 185, 129, 0.22);
+  }
+.george-chat-bubble--stealth::before {
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.9), rgba(5, 150, 105, 0.55));
+  }
+.george-chat-badge--stealth {
+    border-color: rgba(16, 185, 129, 0.65);
+    background: rgba(5, 150, 105, 0.25);
+    color: rgba(240, 253, 244, 0.92);
+  }
+.george-chat-bubble--latest {
+    box-shadow: 0 0 26px rgba(56, 189, 248, 0.32);
+  }

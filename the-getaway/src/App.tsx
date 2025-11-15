@@ -1,5 +1,5 @@
 import { Provider, useSelector } from "react-redux";
-import { CSSProperties, useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
+import { CSSProperties, useEffect, useRef, useState, lazy, Suspense } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
@@ -80,24 +80,6 @@ const scrollSectionStyle: CSSProperties = {
 const DEFAULT_DOCK_MIN_HEIGHT = 260;
 const DEFAULT_DOCK_MAX_HEIGHT = 320;
 
-const bottomPanelBaseStyle: CSSProperties = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  bottom: 0,
-  display: "grid",
-  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-  alignItems: "stretch",
-  gap: hudSpace(HUD_SPACING.sm),
-  padding: `${hudSpace(HUD_SPACING.md)} ${hudSpace(HUD_SPACING.xxl)} ${hudSpace(HUD_SPACING.md)}`,
-  background: "linear-gradient(140deg, rgba(10, 18, 34, 0.94), rgba(15, 24, 40, 0.9))",
-  boxShadow: "0 -18px 40px rgba(8, 12, 24, 0.35)",
-  pointerEvents: "auto",
-  zIndex: 6,
-  minHeight: `${DEFAULT_DOCK_MIN_HEIGHT}px`,
-  maxHeight: `${DEFAULT_DOCK_MAX_HEIGHT}px`,
-};
-
 const laneBaseStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
@@ -105,16 +87,6 @@ const laneBaseStyle: CSSProperties = {
   minHeight: 0,
   height: "100%",
   flex: "1 1 auto",
-};
-
-const mapSectionStyle: CSSProperties = {
-  ...laneBaseStyle,
-  alignItems: "stretch",
-  justifyContent: "flex-start",
-};
-
-const statusSectionStyle: CSSProperties = {
-  ...laneBaseStyle,
 };
 
 const objectivesSectionStyle: CSSProperties = {
@@ -131,12 +103,6 @@ const objectivesListStyle: CSSProperties = {
   display: "flex",
   flexDirection: "column",
   gap: hudSpace(HUD_SPACING.xs),
-};
-
-const georgeSectionStyle: CSSProperties = {
-  ...laneBaseStyle,
-  position: 'relative',
-  overflow: "visible",
 };
 
 const sectionControlRowStyle: CSSProperties = {
@@ -370,15 +336,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
   };
 
   const questToggleLabel = questExpanded ? uiStrings.shell.completedToggleClose : uiStrings.shell.completedToggleOpen;
-  const bottomPanelStyle = useMemo(() => {
-    const nextHeight = `${bottomPanelHeight}px`;
-    return {
-      ...bottomPanelBaseStyle,
-      height: nextHeight,
-      maxHeight: nextHeight,
-    };
-  }, [bottomPanelHeight]);
-
   useEffect(() => {
     if (typeof document === 'undefined') {
       return undefined;
@@ -460,18 +417,18 @@ const CommandShell: React.FC<CommandShellProps> = ({
         <DialogueOverlay />
         <CombatFeedbackManager />
       </div>
-      <div style={bottomPanelStyle}>
-        <div style={mapSectionStyle}>
+      <div className="hud-bottom-dock">
+        <div className="hud-bottom-lane hud-bottom-lane--map">
           <TacticalPanel>
             <MiniMap />
           </TacticalPanel>
         </div>
 
-        <div style={statusSectionStyle} ref={statusLaneRef}>
+        <div className="hud-bottom-lane hud-bottom-lane--status" ref={statusLaneRef}>
           <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
         </div>
 
-        <div style={georgeSectionStyle}>
+        <div className="hud-bottom-lane hud-bottom-lane--george">
           <GeorgeAssistant />
         </div>
 
