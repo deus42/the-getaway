@@ -33,7 +33,6 @@ import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import CombatControlWidget from "./components/ui/CombatControlWidget";
 import GameDebugInspector from "./components/debug/GameDebugInspector";
 import "./App.css";
-import { HUD_SPACING, hudSpace } from "./styles/hudTokens";
 
 // Lazy load heavy components that aren't needed immediately
 const GameMenu = lazy(() => import("./components/ui/GameMenu"));
@@ -70,86 +69,8 @@ const mainStageStyle: CSSProperties = {
   background: "radial-gradient(circle at top, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.95))",
 };
 
-const scrollSectionStyle: CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  overflowY: "auto",
-  paddingRight: "0.35rem",
-};
-
 const DEFAULT_DOCK_MIN_HEIGHT = 260;
 const DEFAULT_DOCK_MAX_HEIGHT = 320;
-
-const laneBaseStyle: CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: hudSpace(HUD_SPACING.xs),
-  minHeight: 0,
-  height: "100%",
-  flex: "1 1 auto",
-};
-
-const objectivesSectionStyle: CSSProperties = {
-  ...laneBaseStyle,
-  position: 'relative',
-};
-
-const objectivesListStyle: CSSProperties = {
-  flex: 1,
-  minHeight: 0,
-  maxHeight: "100%",
-  overflowY: "auto",
-  paddingRight: hudSpace(HUD_SPACING.xxs),
-  display: "flex",
-  flexDirection: "column",
-  gap: hudSpace(HUD_SPACING.xs),
-};
-
-const sectionControlRowStyle: CSSProperties = {
-  display: "flex",
-  justifyContent: "flex-end",
-  alignItems: "center",
-  gap: hudSpace(HUD_SPACING.xs),
-};
-
-const inlineButtonStyle: CSSProperties = {
-  all: "unset",
-  display: "inline-flex",
-  alignItems: "center",
-  gap: hudSpace(HUD_SPACING.xxs),
-  padding: `${hudSpace(HUD_SPACING.xxs)} ${hudSpace(HUD_SPACING.sm)}`,
-  borderRadius: "999px",
-  border: "1px solid rgba(148, 163, 184, 0.3)",
-  background: "rgba(15, 23, 42, 0.55)",
-  color: "#e2e8f0",
-  fontSize: "0.58rem",
-  letterSpacing: "0.18em",
-  textTransform: "uppercase",
-  cursor: "pointer",
-  transition: "transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease",
-};
-
-const dockExpansionBaseStyle: CSSProperties = {
-  position: "absolute",
-  left: 0,
-  right: 0,
-  bottom: "calc(100% + var(--hud-space-2))",
-  background: "linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.9))",
-  border: "1px solid rgba(148, 163, 184, 0.3)",
-  borderRadius: "16px",
-  padding: `${hudSpace(HUD_SPACING.lg)} ${hudSpace(HUD_SPACING.lg)} ${hudSpace(HUD_SPACING.xl)}`,
-  boxShadow: "0 28px 58px rgba(10, 16, 28, 0.55)",
-  display: "flex",
-  flexDirection: "column",
-  gap: hudSpace(HUD_SPACING.sm),
-  maxHeight: "55vh",
-  overflow: "hidden",
-  opacity: 0,
-  pointerEvents: "none",
-  transform: "translateY(12px)",
-  transition: "opacity 0.22s ease, transform 0.22s ease",
-  zIndex: 8,
-};
 
 const centerStageStyle: CSSProperties = {
   flex: "1 1 auto",
@@ -319,18 +240,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
     setBottomPanelHeight((prev) => (prev === boundedHeight ? prev : boundedHeight));
   }, [playerLaneHeight]);
 
-  const questExpansionContainer: CSSProperties = {
-    ...scrollSectionStyle,
-    paddingRight: "0.4rem",
-  };
-
-  const expansionStyle = (expanded: boolean): CSSProperties => ({
-    ...dockExpansionBaseStyle,
-    opacity: expanded ? 1 : 0,
-    pointerEvents: expanded ? 'auto' : 'none',
-    transform: expanded ? 'translateY(0)' : 'translateY(12px)',
-  });
-
   const handleToggleQuest = () => {
     setQuestExpanded((prev) => !prev);
   };
@@ -419,44 +328,62 @@ const CommandShell: React.FC<CommandShellProps> = ({
       </div>
       <div className="hud-bottom-dock">
         <div className="hud-bottom-lane hud-bottom-lane--map">
-          <TacticalPanel>
-            <MiniMap />
-          </TacticalPanel>
+          <div className="hud-bottom-lane-card">
+            <div className="hud-bottom-card-surface">
+              <TacticalPanel className="hud-bottom-map-card" variant="frameless">
+                <MiniMap />
+              </TacticalPanel>
+            </div>
+          </div>
         </div>
 
         <div className="hud-bottom-lane hud-bottom-lane--status" ref={statusLaneRef}>
-          <PlayerSummaryPanel onOpenCharacter={onToggleCharacter} characterOpen={characterOpen} />
+          <div className="hud-bottom-lane-card">
+            <div className="hud-bottom-card-surface">
+              <PlayerSummaryPanel
+                onOpenCharacter={onToggleCharacter}
+                characterOpen={characterOpen}
+                variant="frameless"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="hud-bottom-lane hud-bottom-lane--george">
-          <GeorgeAssistant />
+          <div className="hud-bottom-lane-card">
+            <div className="hud-bottom-card-surface">
+              <GeorgeAssistant />
+            </div>
+          </div>
         </div>
 
-        <div style={objectivesSectionStyle}>
-          <OpsBriefingsPanel containerStyle={objectivesListStyle} />
-          <div style={sectionControlRowStyle}>
-            <button
-              type="button"
-              style={inlineButtonStyle}
-              onClick={handleToggleQuest}
-              aria-expanded={questExpanded}
-              aria-controls="command-objective-overlay"
-              onMouseEnter={(event) => {
-                event.currentTarget.style.transform = 'translateY(-1px)';
-                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.55)';
-                event.currentTarget.style.boxShadow = '0 12px 24px rgba(148, 163, 184, 0.22)';
-              }}
-              onMouseLeave={(event) => {
-                event.currentTarget.style.transform = 'translateY(0)';
-                event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
-                event.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              {questToggleLabel}
-            </button>
+        <div className="hud-bottom-lane hud-bottom-lane--ops">
+          <div className="hud-bottom-lane-card">
+            <div className="hud-bottom-card-surface">
+              <div className="hud-bottom-quests">
+                <OpsBriefingsPanel />
+              </div>
+              <div className="hud-bottom-control-row">
+                <button
+                  type="button"
+                  className="hud-bottom-toggle"
+                  onClick={handleToggleQuest}
+                  aria-expanded={questExpanded}
+                  aria-controls="command-objective-overlay"
+                >
+                  {questToggleLabel}
+                </button>
+              </div>
+            </div>
           </div>
-          <div id="command-objective-overlay" style={expansionStyle(questExpanded)}>
-            <OpsBriefingsPanel containerStyle={questExpansionContainer} showCompleted />
+          <div
+            id="command-objective-overlay"
+            className="hud-bottom-overlay"
+            data-expanded={questExpanded}
+          >
+            <div className="hud-bottom-overlay__scroll">
+              <OpsBriefingsPanel showCompleted />
+            </div>
           </div>
         </div>
       </div>

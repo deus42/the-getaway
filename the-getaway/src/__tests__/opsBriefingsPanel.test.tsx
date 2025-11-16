@@ -8,10 +8,10 @@ import { DEFAULT_LOCALE } from '../content/locales';
 
 const { questLog: questLogStrings } = getUIStrings(DEFAULT_LOCALE);
 
-const renderPanel = () => {
+const renderPanel = (props?: React.ComponentProps<typeof OpsBriefingsPanel>) => {
   return render(
     <Provider store={store}>
-      <OpsBriefingsPanel containerStyle={{}} />
+      <OpsBriefingsPanel {...props} />
     </Provider>
   );
 };
@@ -34,11 +34,10 @@ describe('OpsBriefingsPanel (Quest Log)', () => {
       store.dispatch(startQuest('quest_market_cache'));
     });
 
-    expect(screen.getByText(questLogStrings.active, { exact: false })).toBeInTheDocument();
     expect(screen.getByText(/Market Cache Recovery/i)).toBeInTheDocument();
   });
 
-  it('moves quest into recently closed section upon completion', () => {
+  it('surface completed quests only when overlay is shown', () => {
     renderPanel();
 
     act(() => {
@@ -46,7 +45,9 @@ describe('OpsBriefingsPanel (Quest Log)', () => {
       store.dispatch(completeQuest('quest_market_cache'));
     });
 
-    expect(screen.getByText(questLogStrings.completed, { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText(/Market Cache Recovery/i)).not.toBeInTheDocument();
+
+    renderPanel({ showCompleted: true });
     expect(screen.getByText(/Market Cache Recovery/i)).toBeInTheDocument();
   });
 });

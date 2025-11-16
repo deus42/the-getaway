@@ -1,20 +1,17 @@
-import React, { CSSProperties } from "react";
+import React from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import { getUIStrings } from "../../content/ui";
+import "../../styles/hud-ops-panel.css";
 
 interface OpsBriefingsPanelProps {
-  containerStyle: CSSProperties;
   showCompleted?: boolean;
 }
 
 const cx = (...classes: Array<string | false | null | undefined>) =>
   classes.filter(Boolean).join(" ");
 
-const mutedText = "rgba(148, 163, 184, 0.78)";
-
 const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
-  containerStyle,
   showCompleted = false,
 }) => {
   const quests = useSelector((state: RootState) => state.quests.quests);
@@ -32,10 +29,10 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
     : completedQuests.slice(0, 1);
 
   const hasActive = activeQuests.length > 0;
-  const hasCompleted = recentCompleted.length > 0;
+  const hasCompleted = showCompleted ? recentCompleted.length > 0 : false;
 
   const shouldScroll = showCompleted
-    ? activeQuests.length + completedQuests.length > 2
+    ? activeQuests.length + recentCompleted.length > 2
     : activeQuests.length > 1;
 
   const formatReward = (rewardCount: number, label: string) => {
@@ -84,53 +81,40 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
     }
 
     return (
-      <div className="text-[0.7rem] uppercase tracking-[0.18em] text-[#34d399]">
+      <div className="text-[0.68rem] uppercase tracking-[0.18em] text-[#34d399]">
         {uiStrings.questLog.rewardsHeading}: {rewardLabels.join(" • ")}
       </div>
     );
   };
 
-  const renderActiveQuest = (
-    quest: (typeof activeQuests)[number]
-  ) => {
+  const renderActiveQuest = (quest: (typeof activeQuests)[number]) => {
     return (
       <div
         key={quest.id}
-        className="flex flex-col gap-[0.55rem] rounded-[14px] border p-[0.9rem]"
-        style={{
-          borderColor: "rgba(96, 165, 250, 0.25)",
-          background:
-            "linear-gradient(150deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.9))",
-        }}
+        className="hud-ops-card hud-ops-card--active flex flex-col gap-3.5 p-[0.95rem]"
       >
-        <div className="text-[0.92rem] font-semibold text-[#f8fafc]">
+        <div className="text-[0.92rem] font-semibold tracking-[0.08em] text-slate-50">
           {quest.name}
         </div>
-        <div className="text-[0.8rem]" style={{ color: mutedText }}>
+        <p className="hud-ops-text-muted text-[0.78rem] leading-[1.55]">
           {quest.description}
-        </div>
-        <div className="flex flex-col gap-[0.35rem]">
+        </p>
+        <div className="flex flex-col gap-3">
           {quest.objectives.map((objective) => (
             <div
               key={objective.id}
-              className="flex items-center gap-[0.5rem] text-[0.78rem] text-[#cbd5f5]"
+              className="flex items-start gap-[0.55rem] text-[0.76rem] text-[#cbd5f5]"
             >
               <span
                 aria-hidden="true"
-                className="flex h-[1rem] w-[1rem] items-center justify-center rounded-[0.3rem] border text-[0.7rem] font-bold transition-colors duration-200"
-                style={{
-                  borderColor: "rgba(94, 234, 212, 0.6)",
-                  background: objective.isCompleted
-                    ? "rgba(94, 234, 212, 0.35)"
-                    : "transparent",
-                  color: objective.isCompleted ? "#0f172a" : "transparent",
-                }}
+                className="hud-ops-objective-check mt-[2px]"
+                data-completed={objective.isCompleted}
               >
                 ✓
               </span>
-              <span className="flex-1">{objective.description}</span>
+              <span className="flex-1 leading-tight">{objective.description}</span>
               {objective.count && (
-                <span className="text-[0.7rem] text-[#facc15]">
+                <span className="text-[0.65rem] uppercase tracking-[0.16em] text-[#facc15]">
                   {(objective.currentCount ?? 0)}/{objective.count}
                 </span>
               )}
@@ -142,54 +126,33 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
     );
   };
 
-  const renderCompletedQuest = (
-    quest: (typeof recentCompleted)[number]
-  ) => {
+  const renderCompletedQuest = (quest: (typeof recentCompleted)[number]) => {
     return (
       <div
         key={quest.id}
-        className="flex flex-col gap-[0.4rem] rounded-[12px] border p-[0.75rem]"
-        style={{
-          borderColor: "rgba(167, 139, 250, 0.25)",
-          background:
-            "linear-gradient(150deg, rgba(76, 29, 149, 0.45), rgba(30, 27, 75, 0.92))",
-        }}
+        className="hud-ops-card hud-ops-card--completed flex flex-col gap-3.5 p-[0.9rem]"
       >
-        <div className="flex items-center justify-between gap-[0.6rem]">
-          <div className="text-[0.85rem] font-semibold text-[#ede9fe]">
+        <div className="flex items-center justify-between gap-[0.75rem]">
+          <div className="text-[0.85rem] font-semibold tracking-[0.05em] text-[#ede9fe]">
             {quest.name}
           </div>
           <span
             aria-hidden="true"
-            className="inline-flex h-[1.4rem] w-[1.4rem] items-center justify-center rounded-[0.35rem] border text-[0.85rem] font-bold text-[#0f172a] shadow-[0_8px_18px_-12px_rgba(196,181,253,0.6)]"
-            style={{
-              borderColor: "rgba(196, 181, 253, 0.65)",
-              background: "rgba(196, 181, 253, 0.25)",
-            }}
+            className="hud-ops-complete-badge inline-flex h-[1.25rem] w-[1.25rem] items-center justify-center rounded-[0.35rem] text-[0.78rem] font-bold"
           >
             ✓
           </span>
         </div>
-        <div className="text-[0.75rem]" style={{ color: mutedText }}>
+        <p className="hud-ops-text-muted text-[0.74rem] leading-[1.6]">
           {quest.description}
-        </div>
+        </p>
       </div>
     );
   };
 
   if (!hasActive && !hasCompleted) {
     return (
-      <div
-        style={{
-          ...containerStyle,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: mutedText,
-          fontStyle: "italic",
-        }}
-        className="flex items-center justify-center italic"
-      >
+      <div className="hud-ops-empty flex flex-1 items-center justify-center text-xs italic">
         {uiStrings.questLog.empty}
       </div>
     );
@@ -197,35 +160,16 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
 
   return (
     <div
-      style={{
-        ...containerStyle,
-        display: "flex",
-        flexDirection: "column",
-        gap: "1.1rem",
-        overflowY: shouldScroll ? "auto" : "hidden",
-      }}
       className={cx(
-        "flex flex-col gap-[1.1rem]",
+        "flex flex-col gap-3.5 pr-1",
         shouldScroll ? "overflow-y-auto" : "overflow-y-hidden"
       )}
     >
-      {hasActive && (
-        <div className="flex flex-col gap-[0.75rem]">
-          <div className="text-[0.75rem] uppercase tracking-[0.28em] text-[#93c5fd] drop-shadow-[0_0_6px_rgba(96,165,250,0.4)]">
-            {uiStrings.questLog.active}
-          </div>
-          {activeQuests.map((quest) => renderActiveQuest(quest))}
-        </div>
-      )}
-
-      {hasCompleted && (
-        <div className="flex flex-col gap-[0.5rem]">
-          <div className="text-[0.72rem] uppercase tracking-[0.26em] text-[#c4b5fd] drop-shadow-[0_0_6px_rgba(167,139,250,0.4)]">
-            {uiStrings.questLog.completed}
-          </div>
-          {recentCompleted.map((quest) => renderCompletedQuest(quest))}
-        </div>
-      )}
+      {hasActive &&
+        activeQuests.map((quest) => renderActiveQuest(quest))}
+      {showCompleted &&
+        hasCompleted &&
+        recentCompleted.map((quest) => renderCompletedQuest(quest))}
     </div>
   );
 };

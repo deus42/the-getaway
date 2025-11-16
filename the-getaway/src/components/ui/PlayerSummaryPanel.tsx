@@ -12,16 +12,22 @@ import AnimatedStatBar from "./AnimatedStatBar";
 import { WarningIcon } from "./icons";
 import { selectParanoiaValue } from "../../store/selectors/paranoiaSelectors";
 
+type PlayerSummaryVariant = "default" | "frameless";
+
 interface PlayerSummaryPanelProps {
   onOpenCharacter?: () => void;
   characterOpen?: boolean;
   showActionButton?: boolean;
+  className?: string;
+  variant?: PlayerSummaryVariant;
 }
 
 const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   onOpenCharacter,
   characterOpen = false,
   showActionButton = true,
+  className,
+  variant = "default",
 }) => {
   const dispatch = useDispatch();
   const player = useSelector((state: RootState) => state.player.data);
@@ -52,11 +58,14 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
     );
   };
 
+  const baseClasses =
+    variant === "frameless"
+      ? "flex h-full min-h-0 flex-1 flex-col gap-[0.5rem] px-0 py-0 text-[#f8fafc] font-body"
+      : "flex flex-col gap-[0.5rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.9rem] text-[#f8fafc] shadow-[0_20px_30px_-20px_rgba(8,12,24,0.5)] backdrop-blur-[14px] font-body";
+  const mergedClasses = className ? `${baseClasses} ${className}` : baseClasses;
+
   return (
-    <div
-      className="flex flex-col gap-[0.5rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.9rem] text-[#f8fafc] shadow-[0_20px_30px_-20px_rgba(8,12,24,0.5)] backdrop-blur-[14px] font-body"
-      data-testid="player-summary-panel"
-    >
+    <div className={mergedClasses} data-testid="player-summary-panel">
       <div className="flex items-start justify-between gap-[0.75rem]">
         <div className="flex min-w-0 flex-1 flex-col gap-[0.2rem]">
           <div className="flex items-center gap-[0.5rem] text-[0.9rem] uppercase tracking-[0.26em] text-[#bfdbfe] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]">
