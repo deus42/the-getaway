@@ -27,11 +27,11 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
 3. **Update Linear status**  
    - Move the issue to `In Progress` only when you start implementation and keep status synchronized while coding.  
    - Update the issue description/notes if scope shifts; revert to `Todo` if you stop work without finishing.
-4. **Re-read the guide + notes each session**  
-   - After every new ask or when resuming work, re-open this AGENTS.md guide (especially Sections 2–3 and 15) and the active `progress/<Linear-key>.md` notes file so the Ask Log and constraints stay top-of-mind.  
-   - Ensure each `progress/<Linear-key>.md` starts with a “Session Reminders” block that explicitly tells you to re-read AGENTS.md + the notes before acting; glance at that block every time you open the file.  
-   - If a progress file already exists when you start a new session, explicitly ask the requester whether to continue from the existing notes or start fresh; if they prefer a fresh start, rewrite the notes file (preserving only the new Ask Log) before planning.  
-   - Log the latest user directive in the notes file before planning to prevent context rot.
+4. **Re-read + log asks before any action**  
+   - After **every** user ask (not just each session) and when resuming work, re-open this AGENTS.md guide (Sections 2–3 & 15) and the active `progress/<Linear-key>.md` file before touching code.  
+   - Immediately append the new directive to the Ask Log (UTC timestamp + verbatim ask + result placeholder) and refresh every applicable section (plan, notes, validation, etc.) before implementing anything from that ask.  
+   - Ensure each `progress/<Linear-key>.md` starts with a “Session Reminders” block highlighting this per-ask logging requirement; glance at that block every time you open the file.  
+   - If a progress file already exists when you start a new session, explicitly ask the requester whether to continue from the existing notes or start fresh; if they prefer a fresh start, rewrite the file (preserving only the new Ask Log) before planning.
 
 Do not begin coding until this checklist is complete.
 
