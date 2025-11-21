@@ -29,6 +29,7 @@ import {
 import { SurveillanceState } from '../game/interfaces/types';
 import reputationReducer, { ReputationState } from './reputationSlice';
 import { REPUTATION_STATE_VERSION } from '../game/systems/reputation/constants';
+import hudLayoutReducer from './hudLayoutSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -50,6 +51,7 @@ const reducers = {
   suspicion: suspicionReducer,
   paranoia: paranoiaReducer,
   reputation: reputationReducer,
+  hudLayout: hudLayoutReducer,
 };
 
 const combinedReducer = combineReducers(reducers);

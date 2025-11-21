@@ -42,6 +42,14 @@ interface MenuStrings {
   lightingLabel: string;
   lightingToggleLabel: string;
   lightingToggleDescription: string;
+  hudLayoutLabel: string;
+  hudLayoutDescription: string;
+  hudLayoutOptions: {
+    auto: string;
+    exploration: string;
+    stealth: string;
+    combat: string;
+  };
   alphaLabel: (year: number) => string;
   languageNames: Record<Locale, string>;
 }
@@ -549,6 +557,15 @@ const STRINGS: Record<Locale, UIStrings> = {
       lightingLabel: 'Visual Lighting',
       lightingToggleLabel: 'Enable noir lighting',
       lightingToggleDescription: 'Turns on dynamic Light2D rendering for atlas props. Requires WebGL.',
+      hudLayoutLabel: 'HUD Layout Override',
+      hudLayoutDescription:
+        'Force a specific HUD preset for QA. Auto lets the console adapt to combat or stealth pressure.',
+      hudLayoutOptions: {
+        auto: 'Auto',
+        exploration: 'Exploration',
+        stealth: 'Stealth',
+        combat: 'Combat',
+      },
       alphaLabel: () => 'Alpha',
       languageNames: {
         en: 'English',
@@ -1307,7 +1324,17 @@ const STRINGS: Record<Locale, UIStrings> = {
       surveillanceToggleDescription: 'Перемикає конуси виявлення камер (аналогічно клавіші TAB).',
       lightingLabel: 'Візуальне освітлення',
       lightingToggleLabel: 'Увімкнути неонове освітлення',
-      lightingToggleDescription: 'Активує динамічне Light2D-освітлення для атласних спрайтів (потрібен WebGL).',
+      lightingToggleDescription:
+        'Активує динамічне Light2D-освітлення для атласних спрайтів (потрібен WebGL).',
+      hudLayoutLabel: 'Режим HUD',
+      hudLayoutDescription:
+        'Фіксує пресет HUD для QA. «Авто» перемикає розкладку залежно від бою чи стелсу.',
+      hudLayoutOptions: {
+        auto: 'Авто',
+        exploration: 'Дослідження',
+        stealth: 'Стелс',
+        combat: 'Бій',
+      },
       alphaLabel: () => 'Альфа',
       languageNames: {
         en: 'Англійська',

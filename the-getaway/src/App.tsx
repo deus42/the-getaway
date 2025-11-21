@@ -17,6 +17,8 @@ import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
 import StealthIndicator from "./components/ui/StealthIndicator";
 import CurfewWarning from "./components/ui/CurfewWarning";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
+import { selectHudLayoutPreset } from "./store/selectors/hudLayoutSelectors";
+import { HudLayoutPreset } from "./store/hudLayoutSlice";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
 import FactionReputationManager from "./components/system/FactionReputationManager";
 import { addLogMessage } from "./store/logSlice";
@@ -159,6 +161,7 @@ interface CommandShellProps {
   characterOpen: boolean;
   levelPanelCollapsed: boolean;
   onToggleLevelPanel: () => void;
+  hudLayoutPreset: HudLayoutPreset;
 }
 
 const CommandShell: React.FC<CommandShellProps> = ({
@@ -168,11 +171,16 @@ const CommandShell: React.FC<CommandShellProps> = ({
   characterOpen,
   levelPanelCollapsed,
   onToggleLevelPanel,
+  hudLayoutPreset,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const uiStrings = getUIStrings(locale);
   const zoneId = useSelector((state: RootState) => state.world.currentMapArea?.zoneId ?? null);
+  const isCombatLayout = hudLayoutPreset === 'combat';
+  const isStealthLayout = hudLayoutPreset === 'stealth';
+  const showGeorgeLane = !isCombatLayout;
+  const showOpsLane = hudLayoutPreset === 'exploration';
 
   const [questExpanded, setQuestExpanded] = useState(false);
   const [rendererMeta, setRendererMeta] = useState<{ label?: string; detail?: string } | null>(null);
@@ -193,6 +201,12 @@ const CommandShell: React.FC<CommandShellProps> = ({
     }
     setQuestExpanded(false);
   }, [inCombat]);
+
+  useEffect(() => {
+    if (!showOpsLane) {
+      setQuestExpanded(false);
+    }
+  }, [showOpsLane]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
@@ -266,7 +280,11 @@ const CommandShell: React.FC<CommandShellProps> = ({
   const menuPanelMaxWidth = '240px';
 
   return (
-    <div style={mainStageStyle}>
+    <div
+      style={mainStageStyle}
+      className="command-shell-stage"
+      data-hud-layout={hudLayoutPreset}
+    >
       <div style={centerStageStyle}>
         <TacticalHUDFrame />
         <GameCanvas onRendererInfo={setRendererMeta} />
@@ -326,8 +344,11 @@ const CommandShell: React.FC<CommandShellProps> = ({
         <DialogueOverlay />
         <CombatFeedbackManager />
       </div>
-      <div className="hud-bottom-dock">
-        <div className="hud-bottom-lane hud-bottom-lane--map">
+      <div className="hud-bottom-dock" data-hud-layout={hudLayoutPreset}>
+        <div
+          className="hud-bottom-lane hud-bottom-lane--map"
+          data-hud-emphasis={isStealthLayout ? 'true' : undefined}
+        >
           <div className="hud-bottom-lane-card">
             <div className="hud-bottom-card-surface">
               <TacticalPanel className="hud-bottom-map-card" variant="frameless">
@@ -337,7 +358,11 @@ const CommandShell: React.FC<CommandShellProps> = ({
           </div>
         </div>
 
-        <div className="hud-bottom-lane hud-bottom-lane--status" ref={statusLaneRef}>
+        <div
+          className="hud-bottom-lane hud-bottom-lane--status"
+          ref={statusLaneRef}
+          data-hud-emphasis={isCombatLayout ? 'true' : undefined}
+        >
           <div className="hud-bottom-lane-card">
             <div className="hud-bottom-card-surface">
               <PlayerSummaryPanel
@@ -349,43 +374,47 @@ const CommandShell: React.FC<CommandShellProps> = ({
           </div>
         </div>
 
-        <div className="hud-bottom-lane hud-bottom-lane--george">
-          <div className="hud-bottom-lane-card">
-            <div className="hud-bottom-card-surface">
-              <GeorgeAssistant />
+        {showGeorgeLane && (
+          <div className="hud-bottom-lane hud-bottom-lane--george">
+            <div className="hud-bottom-lane-card">
+              <div className="hud-bottom-card-surface">
+                <GeorgeAssistant />
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        <div className="hud-bottom-lane hud-bottom-lane--ops">
-          <div className="hud-bottom-lane-card">
-            <div className="hud-bottom-card-surface">
-              <div className="hud-bottom-quests">
-                <OpsBriefingsPanel />
+        {showOpsLane && (
+          <div className="hud-bottom-lane hud-bottom-lane--ops">
+            <div className="hud-bottom-lane-card">
+              <div className="hud-bottom-card-surface">
+                <div className="hud-bottom-quests">
+                  <OpsBriefingsPanel />
+                </div>
+                <div className="hud-bottom-control-row">
+                  <button
+                    type="button"
+                    className="hud-bottom-toggle"
+                    onClick={handleToggleQuest}
+                    aria-expanded={questExpanded}
+                    aria-controls="command-objective-overlay"
+                  >
+                    {questToggleLabel}
+                  </button>
+                </div>
               </div>
-              <div className="hud-bottom-control-row">
-                <button
-                  type="button"
-                  className="hud-bottom-toggle"
-                  onClick={handleToggleQuest}
-                  aria-expanded={questExpanded}
-                  aria-controls="command-objective-overlay"
-                >
-                  {questToggleLabel}
-                </button>
+            </div>
+            <div
+              id="command-objective-overlay"
+              className="hud-bottom-overlay"
+              data-expanded={questExpanded}
+            >
+              <div className="hud-bottom-overlay__scroll">
+                <OpsBriefingsPanel showCompleted />
               </div>
             </div>
           </div>
-          <div
-            id="command-objective-overlay"
-            className="hud-bottom-overlay"
-            data-expanded={questExpanded}
-          >
-            <div className="hud-bottom-overlay__scroll">
-              <OpsBriefingsPanel showCompleted />
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -404,15 +433,15 @@ const hasPersistedGame = (): boolean => {
   }
 };
 
-const getRemainingPerks = (player: Player) => listPerks().filter((definition) => !player.perks.includes(definition.id));
+const getRemainingPerks = (player: Player) =>
+  listPerks().filter((definition) => !player.perks.includes(definition.id));
 
-const getSelectablePerks = (player: Player) => {
-  return getRemainingPerks(player)
+const getSelectablePerks = (player: Player) =>
+  getRemainingPerks(player)
     .map((definition) => evaluatePerkAvailability(player, definition))
     .filter((availability) => availability.canSelect);
-};
 
-function App() {
+function AppShell() {
   const [gameStarted, setGameStarted] = useState(false);
   const [showMenu, setShowMenu] = useState(true);
   const [showCharacterCreation, setShowCharacterCreation] = useState(false);
@@ -430,6 +459,7 @@ function App() {
   const [levelUpFlowActive, setLevelUpFlowActive] = useState(false);
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(true);
+  const hudLayoutPreset = useSelector(selectHudLayoutPreset);
 
   useEffect(() => {
     log.debug('Component mounted');
@@ -708,7 +738,7 @@ function App() {
   };
 
   return (
-    <Provider store={store}>
+    <>
       <MissionProgressionManager />
       <FactionReputationManager />
       <div style={layoutShellStyle}>
@@ -720,6 +750,7 @@ function App() {
             characterOpen={showCharacterScreen}
             levelPanelCollapsed={levelPanelCollapsed}
             onToggleLevelPanel={() => setLevelPanelCollapsed((prev) => !prev)}
+            hudLayoutPreset={hudLayoutPreset}
           />
         )}
         <CurfewWarning />
@@ -764,6 +795,14 @@ function App() {
         notifications={xpNotifications}
         onDismiss={handleDismissXPNotification}
       />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <Provider store={store}>
+      <AppShell />
     </Provider>
   );
 }

@@ -259,6 +259,13 @@ flowchart LR
 - Pre-flight every panel by checking duplication, interaction count, and source-of-truth alignment, then log architectural/design impacts here and in `memory-bank/game-design.md` when mechanics shift.
 - Panels share the console visual language—gunmetal base, cyan edge lines, layered scanlines/particle sweeps—to maintain the painterly noir HUD identity.
 </pattern>
+<pattern name="HudLayoutStateMachine">
+- <code_location>the-getaway/src/store/hudLayoutSlice.ts</code_location> stores an optional QA override for layout presets (`exploration | stealth | combat`). The state stays independent of other slices so reset/locale changes do not clobber QA selections.
+- <code_location>the-getaway/src/store/selectors/hudLayoutSelectors.ts</code_location> derives the active preset by combining the override with `world.inCombat`, `world.engagementMode`, zone heat, and surveillance detection telemetry. Combat always wins, stealth engages when the player intentionally toggles stealth or pressure rises above 45%, otherwise the console falls back to exploration.
+- <code_location>the-getaway/src/App.tsx</code_location> injects `data-hud-layout` attributes on the stage + bottom dock and swaps entire HUD lanes (George, Ops Briefings) based on the preset while highlighting the remaining panels via `data-hud-emphasis`.
+- <code_location>the-getaway/src/styles/hud-bottom-dock.css</code_location> reads those attributes to reflow the dock grid (4 columns in exploration, 3 during stealth, 2 in combat) and to accentuate whichever panels are marked as emphasized.
+- QA can force any preset through the Game Menu (`HUD Layout Override` select) which dispatches `setHudLayoutOverride` so automated tests or manual sessions can lock layouts without faking combat.
+</pattern>
 <architecture_section id="command_dock_layout" category="hud_systems">
 <design_principles>
 - Collapse the HUD into a single bottom ribbon split into four compact bands (map, status, comms, objectives) so George stays beside the core HUD cluster while the playfield remains clear and the Quests lane anchors the right edge.

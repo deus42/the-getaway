@@ -20,6 +20,7 @@ import { AUTO_BATTLE_PROFILE_IDS, AutoBattleProfileId } from "../../game/combat/
 import AutoBattleProfileSelect, { AutoBattleMenuOptionId } from "./AutoBattleProfileSelect";
 import { updateVisualSettings } from "../../game/settings/visualSettings";
 import { setOverlayEnabled } from "../../store/surveillanceSlice";
+import { HudLayoutPreset, setHudLayoutOverride } from "../../store/hudLayoutSlice";
 
 const classNames = (
   ...classes: Array<string | false | null | undefined>
@@ -52,8 +53,13 @@ const GameMenu: React.FC<GameMenuProps> = ({
   const surveillanceOverlayEnabled = useSelector(
     (state: RootState) => state.surveillance.hud.overlayEnabled
   );
+  const hudLayoutOverride = useSelector(
+    (state: RootState) => state.hudLayout.override
+  );
   const strings = getUIStrings(locale);
   const autoBattleStrings = strings.autoBattle;
+  const hudLayoutSelectValue: 'auto' | HudLayoutPreset =
+    hudLayoutOverride ?? 'auto';
 
 
   const handleLocaleSelect = (nextLocale: Locale) => {
@@ -79,6 +85,17 @@ const GameMenu: React.FC<GameMenuProps> = ({
 
   const handleSurveillanceToggle = () => {
     dispatch(setOverlayEnabled({ enabled: !surveillanceOverlayEnabled }));
+  };
+
+  const handleHudLayoutOverrideSelect = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const nextValue = event.target.value as HudLayoutPreset | 'auto';
+    if (nextValue === 'auto') {
+      dispatch(setHudLayoutOverride(null));
+      return;
+    }
+    dispatch(setHudLayoutOverride(nextValue));
   };
 
   const autoBattleModeOptions: Array<{
@@ -125,6 +142,8 @@ const GameMenu: React.FC<GameMenuProps> = ({
     "hud-menu-language-button rounded-[8px] border border-[rgba(148,163,184,0.25)] bg-[rgba(30,41,59,0.5)] px-[0.9rem] py-[0.5rem] text-[0.86rem] font-normal tracking-[0.03em] text-[#94a3b8] transition-all duration-200 hover:border-[rgba(56,189,248,0.4)] hover:text-[#f8fafc] hover:shadow-[0_0_12px_rgba(56,189,248,0.15)]";
   const languageButtonActiveClass =
     "border-2 border-[rgba(56,189,248,0.6)] bg-[rgba(56,189,248,0.15)] font-semibold text-[#e2e8f0] shadow-[0_0_15px_rgba(56,189,248,0.2)]";
+  const selectInputClass =
+    "hud-menu-select w-full appearance-none rounded-[10px] border border-[rgba(148,163,184,0.25)] bg-[rgba(15,23,42,0.65)] px-[0.85rem] py-[0.55rem] text-[0.9rem] text-[#e2e8f0] outline-none transition-all duration-200 focus:border-[rgba(56,189,248,0.55)] focus:shadow-[0_0_0_2px_rgba(56,189,248,0.15)]";
 
   const renderPrimaryActions = () => {
     return (
@@ -317,6 +336,34 @@ const GameMenu: React.FC<GameMenuProps> = ({
                     </div>
                   </div>
                 </label>
+              </div>
+
+              <div>
+                <label className={sectionLabelClass} htmlFor="hud-layout-select">
+                  {strings.menu.hudLayoutLabel}
+                </label>
+                <div className="flex flex-col gap-[0.35rem]">
+                  <select
+                    id="hud-layout-select"
+                    className={selectInputClass}
+                    value={hudLayoutSelectValue}
+                    onChange={handleHudLayoutOverrideSelect}
+                  >
+                    <option value="auto">{strings.menu.hudLayoutOptions.auto}</option>
+                    <option value="exploration">
+                      {strings.menu.hudLayoutOptions.exploration}
+                    </option>
+                    <option value="stealth">
+                      {strings.menu.hudLayoutOptions.stealth}
+                    </option>
+                    <option value="combat">
+                      {strings.menu.hudLayoutOptions.combat}
+                    </option>
+                  </select>
+                  <div className="text-[0.64rem] leading-[1.35] text-[#a5b4d5]">
+                    {strings.menu.hudLayoutDescription}
+                  </div>
+                </div>
               </div>
 
               {process.env.NODE_ENV === "development" && (
