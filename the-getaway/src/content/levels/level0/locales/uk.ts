@@ -803,6 +803,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
       signageStyle: 'corp_holo',
       propDensity: 'high',
       encounterProfile: 'downtown_market_inner',
+      workbench: { type: 'market', feeRequired: 50 },
     },
     {
       id: 'block_2_3',
@@ -833,6 +834,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
         factionId: 'resistance',
         minimumStanding: 'friendly',
       },
+      workbench: { type: 'industrial' },
     },
     {
       id: 'block_3_2',
@@ -848,6 +850,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
         factionId: 'resistance',
         minimumStanding: 'friendly',
       },
+      workbench: { type: 'safehouse' },
     },
     {
       id: 'block_3_3',

@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import { Position } from '../../interfaces/types';
 
 export type RecognitionChannel = 'face' | 'outfit' | 'vehicle' | 'voice';

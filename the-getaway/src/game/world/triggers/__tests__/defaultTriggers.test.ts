@@ -12,6 +12,7 @@ import autoBattleReducer from '../../../../store/autoBattleSlice';
 import suspicionReducer from '../../../../store/suspicionSlice';
 import paranoiaReducer from '../../../../store/paranoiaSlice';
 import reputationReducer from '../../../../store/reputationSlice';
+import hudLayoutReducer from '../../../../store/hudLayoutSlice';
 import { ensureDefaultEnvironmentalTriggersRegistered, resetEnvironmentalTriggersForTest } from '../defaultTriggers';
 import { tickEnvironmentalTriggers } from '../triggerRegistry';
 import { RootState } from '../../../../store';
@@ -32,6 +33,7 @@ const createTestStore = () =>
       suspicion: suspicionReducer,
       paranoia: paranoiaReducer,
       reputation: reputationReducer,
+      hudLayout: hudLayoutReducer,
     },
   });
 

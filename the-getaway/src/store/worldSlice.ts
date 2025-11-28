@@ -23,6 +23,14 @@ import { findNearestWalkablePosition, getAdjacentWalkablePositions } from '../ga
 import { createScopedLogger } from '../utils/logger';
 import { getZoneMetadata } from '../content/zones';
 
+export interface WorkbenchStatus {
+  available: boolean;
+  locationName?: string;
+  type?: 'safehouse' | 'market' | 'industrial';
+  feeRequired?: number;
+  note?: string;
+}
+
 export interface WorldState {
   currentMapArea: MapArea;
   mapAreas: Record<string, MapArea>;
@@ -38,6 +46,8 @@ export interface WorldState {
   environment: EnvironmentState;
   /** Engagement mode for HUD and turn semantics */
   engagementMode: 'none' | 'stealth' | 'combat' | 'dialog';
+  workbenchAvailable: boolean;
+  workbenchStatus: WorkbenchStatus;
 }
 
 const log = createScopedLogger('worldSlice');
@@ -93,6 +103,13 @@ const buildEnemy = (name: string): Enemy => ({
 export const NIGHT_START_SECONDS = Math.floor(
   DEFAULT_DAY_NIGHT_CONFIG.dayEndTime * DEFAULT_DAY_NIGHT_CONFIG.cycleDuration
 );
+export const DAY_START_SECONDS = Math.floor(
+  DEFAULT_DAY_NIGHT_CONFIG.dayStartTime * DEFAULT_DAY_NIGHT_CONFIG.cycleDuration
+);
+export const MIDDAY_SECONDS = Math.floor(
+  ((DEFAULT_DAY_NIGHT_CONFIG.dayStartTime + DEFAULT_DAY_NIGHT_CONFIG.eveningStartTime) / 2)
+    * DEFAULT_DAY_NIGHT_CONFIG.cycleDuration
+);
 
 const buildWorldState = (locale: Locale): WorldState => {
   const resources = buildWorldResources({ locale });
@@ -107,7 +124,7 @@ const buildWorldState = (locale: Locale): WorldState => {
   currentMapArea.entities.enemies.push(initialEnemy);
   log.debug('Initial map generated with enemy:', initialEnemy);
 
-  const initialTime = NIGHT_START_SECONDS;
+  const initialTime = MIDDAY_SECONDS;
 
   return {
     currentMapArea,
@@ -123,6 +140,8 @@ const buildWorldState = (locale: Locale): WorldState => {
     reinforcementsScheduled: false,
     environment: createInitialEnvironmentState(),
     engagementMode: 'none',
+    workbenchAvailable: false,
+    workbenchStatus: { available: false, note: 'No workbench nearby' },
   };
 };
 
@@ -137,6 +156,17 @@ export const worldSlice = createSlice({
         ...state.environment.flags,
         ...action.payload,
       };
+    },
+    setWorkbenchAvailable: (state, action: PayloadAction<boolean>) => {
+      state.workbenchAvailable = action.payload;
+      state.workbenchStatus = {
+        available: action.payload,
+        note: action.payload ? undefined : 'No workbench nearby',
+      };
+    },
+    setWorkbenchStatus: (state, action: PayloadAction<WorkbenchStatus>) => {
+      state.workbenchStatus = { ...action.payload };
+      state.workbenchAvailable = action.payload.available;
     },
 
     applyEnvironmentWeather: (state, action: PayloadAction<WeatherStateSnapshot>) => {
@@ -241,6 +271,8 @@ export const worldSlice = createSlice({
       state.isPlayerTurn = true;
       state.turnCount = 1;
       state.engagementMode = 'none';
+      state.workbenchAvailable = false;
+      state.workbenchStatus = { available: false, note: 'No workbench nearby' };
     },
 
     setCurrentMapAreaZoneMetadata: (state, action: PayloadAction<{ zoneId: string }>) => {
@@ -255,6 +287,8 @@ export const worldSlice = createSlice({
       currentArea.dangerRating = zone.danger;
       currentArea.hazards = [...zone.hazards];
       currentArea.objectives = [...zone.objectives];
+      state.workbenchAvailable = false;
+      state.workbenchStatus = { available: false, note: 'No workbench nearby' };
 
       const storedArea = state.mapAreas[currentArea.id];
       if (storedArea) {
@@ -551,6 +585,8 @@ export const {
   scheduleReinforcements,
   clearReinforcementsSchedule,
   setEngagementMode,
+  setWorkbenchAvailable,
+  setWorkbenchStatus,
 } = worldSlice.actions;
 
 export default worldSlice.reducer;

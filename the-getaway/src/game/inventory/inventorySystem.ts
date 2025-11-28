@@ -10,6 +10,9 @@ import {
   ConsumableEffectType,
   WeaponTag,
   ArmorTag,
+  WeaponTypeId,
+  WeaponModSlot,
+  WeaponModAttachment,
 } from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -148,6 +151,12 @@ export interface WeaponCreationOptions {
   equipSlot?: EquipmentSlot;
   value?: number;
   tags?: WeaponTag[];
+  weaponType?: WeaponTypeId;
+  modSlots?: WeaponModSlot[];
+  accuracy?: number;
+  magazineSize?: number;
+  currentMagazine?: number;
+  attachedMods?: WeaponModAttachment[];
 }
 
 // Create a basic weapon
@@ -166,6 +175,10 @@ export const createWeapon = (
 
   const durability = clampDurability(options.durability?.max ?? 100, options.durability?.current);
 
+  const weaponType: WeaponTypeId =
+    options.weaponType ?? (range <= 1 || skillType === 'meleeCombat' ? 'melee' : 'pistol');
+  const defaultModSlots: WeaponModSlot[] = weaponType === 'melee' ? [] : ['barrel', 'magazine', 'optics'];
+
   return {
     id: uuidv4(),
     name,
@@ -180,6 +193,12 @@ export const createWeapon = (
     slot: 'weapon',
     statModifiers: options.statModifiers ?? statModifiers,
     equipSlot: resolvedEquipSlot,
+    weaponType,
+    modSlots: options.modSlots ?? defaultModSlots,
+    attachedMods: options.attachedMods,
+    accuracy: options.accuracy,
+    magazineSize: options.magazineSize,
+    currentMagazine: options.currentMagazine ?? options.magazineSize,
     durability,
     stackable: false,
     tags: options.tags,

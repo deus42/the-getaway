@@ -13,6 +13,9 @@ import {
   Consumable,
   FactionId,
   PersonalityTrait,
+  WeaponModId,
+  WeaponModSlot,
+  WeaponTypeId,
 } from '../game/interfaces/types';
 import { DEFAULT_PLAYER, createDefaultPersonalityProfile } from '../game/interfaces/player';
 import {
@@ -25,7 +28,9 @@ import {
 import { processLevelUp, awardXP as awardXPHelper } from '../game/systems/progression';
 import { createArmor, createConsumable, createWeapon } from '../game/inventory/inventorySystem';
 import { BACKGROUND_MAP, StartingItemDefinition } from '../content/backgrounds';
-import { instantiateItem } from '../content/items';
+import { instantiateItem, ItemDefinitionId } from '../content/items';
+import { getWeaponModDefinition } from '../content/items/weaponMods';
+import { aggregateWeaponModEffects } from '../game/systems/weaponMods';
 import { getSkillDefinition } from '../content/skills';
 import { getPerkDefinition, evaluatePerkAvailability } from '../content/perks';
 import { createLevelUpEvent, createXPNotification, LevelUpEvent } from '../utils/progressionHelpers';
@@ -163,6 +168,22 @@ interface AssignHotbarPayload {
   itemId: string | null;
 }
 
+interface AttachWeaponModPayload {
+  weaponId: string;
+  modItemId: string;
+}
+
+interface DetachWeaponModPayload {
+  weaponId: string;
+  slot: WeaponModSlot;
+}
+
+interface CraftWeaponModPayload {
+  modId: WeaponModId;
+  atWorkbench: boolean;
+  feePaid?: number;
+}
+
 interface AdjustFactionReputationPayload {
   factionId: FactionId;
   delta: number;
@@ -195,6 +216,8 @@ const EQUIPMENT_SLOTS: EquipmentSlot[] = [
   'accessory1',
   'accessory2',
 ];
+
+type ResourceCost = { id: string; quantity: number };
 
 const MAX_PENDING_FACTION_EVENTS = 20;
 
@@ -536,6 +559,66 @@ const refreshInventoryMetrics = (player: Player): void => {
   );
 };
 
+const countDefinitionQuantity = (player: Player, definitionId: string): number => {
+  return player.inventory.items.reduce((sum, item) => {
+    if (item.definitionId !== definitionId) {
+      return sum;
+    }
+    const qty = item.stackable ? item.quantity ?? 1 : 1;
+    return sum + qty;
+  }, 0);
+};
+
+const consumeDefinitionQuantity = (player: Player, definitionId: string, quantity: number): boolean => {
+  if (quantity <= 0) {
+    return true;
+  }
+
+  let remaining = quantity;
+  player.inventory.items = player.inventory.items.reduce<Item[]>((acc, item) => {
+    if (remaining <= 0 || item.definitionId !== definitionId) {
+      acc.push(item);
+      return acc;
+    }
+
+    if (item.stackable) {
+      const available = item.quantity ?? 1;
+      if (available > remaining) {
+        acc.push({ ...item, quantity: available - remaining });
+        remaining = 0;
+      } else {
+        remaining -= available;
+      }
+      return acc;
+    }
+
+    remaining -= 1;
+    if (remaining < 0) {
+      remaining = 0;
+    }
+    return acc;
+  }, []);
+
+  refreshInventoryMetrics(player);
+  return remaining === 0;
+};
+
+const consumeResourcesIfAvailable = (player: Player, costs: ResourceCost[]): boolean => {
+  const missing = costs.find((cost) => countDefinitionQuantity(player, cost.id) < cost.quantity);
+  if (missing) {
+    return false;
+  }
+
+  for (const cost of costs) {
+    const ok = consumeDefinitionQuantity(player, cost.id, cost.quantity);
+    if (!ok) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const detachItemFromInventory = (player: Player, itemId: string): Item | undefined => {
   const index = player.inventory.items.findIndex((entry) => entry.id === itemId);
   if (index === -1) {
@@ -564,6 +647,122 @@ const resolveEquipSlot = (item: Item, explicit?: EquipmentSlot): EquipmentSlot |
   }
 
   return null;
+};
+
+const resolveWeaponModSlots = (weapon: Weapon): WeaponModSlot[] => {
+  if (weapon.modSlots) {
+    return weapon.modSlots;
+  }
+  if ((weapon.weaponType ?? 'pistol') === 'melee') {
+    return [];
+  }
+  return ['barrel', 'magazine', 'optics'];
+};
+
+const clampMagazineToCapacity = (weapon: Weapon): Weapon => {
+  const baseMagazine = weapon.magazineSize ?? 0;
+  if (baseMagazine <= 0) {
+    return weapon;
+  }
+  const effects = aggregateWeaponModEffects(weapon);
+  const effectiveCapacity = Math.max(
+    1,
+    Math.round(baseMagazine * (effects.magazineSizeMultiplier ?? 1))
+  );
+  const currentMagazine = weapon.currentMagazine ?? effectiveCapacity;
+  return {
+    ...weapon,
+    currentMagazine: Math.max(0, Math.min(effectiveCapacity, currentMagazine)),
+  };
+};
+
+const detachWeaponModFromWeapon = (
+  weapon: Weapon,
+  slot: WeaponModSlot
+): { updated: Weapon; detachedModId?: WeaponModId } => {
+  const attachments = [...(weapon.attachedMods ?? [])];
+  const index = attachments.findIndex((entry) => entry.slot === slot);
+  if (index === -1) {
+    return { updated: { ...weapon, modSlots: resolveWeaponModSlots(weapon) } };
+  }
+  const [detached] = attachments.splice(index, 1);
+  return {
+    updated: {
+      ...weapon,
+      attachedMods: attachments,
+      modSlots: resolveWeaponModSlots(weapon),
+      currentMagazine: clampMagazineToCapacity(weapon).currentMagazine,
+    },
+    detachedModId: detached.modId,
+  };
+};
+
+const attachWeaponModToWeapon = (
+  weapon: Weapon,
+  modId: WeaponModId
+): { updated: Weapon; replacedModId?: WeaponModId } => {
+  const definition = getWeaponModDefinition(modId);
+  const slots = resolveWeaponModSlots(weapon);
+  const attachments = [...(weapon.attachedMods ?? [])];
+
+  const slotIndex = attachments.findIndex((entry) => entry.slot === definition.slot);
+  let replacedModId: WeaponModId | undefined;
+  if (slotIndex !== -1) {
+    replacedModId = attachments[slotIndex].modId;
+    attachments.splice(slotIndex, 1);
+  }
+
+  attachments.push({ slot: definition.slot, modId });
+
+  return {
+    updated: {
+      ...weapon,
+      attachedMods: attachments,
+      modSlots: slots,
+      currentMagazine: clampMagazineToCapacity(weapon).currentMagazine,
+    },
+    replacedModId,
+  };
+};
+
+const craftWeaponModInternal = (
+  player: Player,
+  payload: { modId: WeaponModId; atWorkbench: boolean; feePaid?: number }
+): boolean => {
+  const definition = getWeaponModDefinition(payload.modId);
+  const fee = payload.feePaid ?? 0;
+
+  if (definition.crafting.station === 'workbench' && !payload.atWorkbench) {
+    return false;
+  }
+
+  if (fee > 0 && player.credits < fee) {
+    return false;
+  }
+
+  const engineering = player.skillTraining?.engineering ?? 0;
+  if (!Number.isFinite(engineering) || engineering < definition.crafting.level) {
+    return false;
+  }
+
+  const costs: ResourceCost[] = definition.crafting.inputs.map((input) => ({
+    id: input.id,
+    quantity: input.quantity,
+  }));
+
+  const consumed = consumeResourcesIfAvailable(player, costs);
+  if (!consumed) {
+    return false;
+  }
+
+  if (fee > 0) {
+    player.credits -= fee;
+  }
+
+  const crafted = instantiateItem(payload.modId as ItemDefinitionId);
+  player.inventory.items.push(crafted);
+  refreshInventoryMetrics(player);
+  return true;
 };
 
 const placeEquippedItem = (player: Player, slot: EquipmentSlot, item?: Item): void => {
@@ -630,7 +829,14 @@ const getEquippedItemBySlot = (player: Player, slot: EquipmentSlot): Item | unde
   }
 };
 
-const cloneItem = <TItem extends Item>(item: TItem): TItem => ({ ...item });
+const cloneItem = <TItem extends Item>(item: TItem): TItem => {
+  const cloned = { ...item } as TItem;
+  const maybeWeapon = item as unknown as Weapon;
+  if (Array.isArray(maybeWeapon.attachedMods)) {
+    (cloned as unknown as Weapon).attachedMods = [...maybeWeapon.attachedMods];
+  }
+  return cloned;
+};
 
 type LocatedItem =
   | { location: 'inventory'; item: Item; index: number }
@@ -658,6 +864,18 @@ const findItemAcrossPlayer = (player: Player, itemId: string): LocatedItem | und
   }
 
   return undefined;
+};
+
+const updateWeaponInLocation = (player: Player, located: LocatedItem, weapon: Weapon): void => {
+  if (located.location === 'inventory') {
+    player.inventory.items[located.index] = weapon;
+    return;
+  }
+
+  placeEquippedItem(player, located.slot, weapon);
+  if (player.equippedSlots) {
+    player.equippedSlots[located.slot] = weapon;
+  }
 };
 
 const equipItemInternal = (player: Player, payload: EquipItemPayload): boolean => {
@@ -844,6 +1062,73 @@ const assignHotbarSlotInternal = (player: Player, payload: AssignHotbarPayload):
     player.inventory.hotbar[slotIndex] = null;
   }
 
+  return true;
+};
+
+const attachWeaponModInternal = (player: Player, payload: AttachWeaponModPayload): boolean => {
+  const { weaponId, modItemId } = payload;
+  const locatedWeapon = findItemAcrossPlayer(player, weaponId);
+
+  if (!locatedWeapon || !('damage' in locatedWeapon.item)) {
+    return false;
+  }
+
+  const weapon = locatedWeapon.item as Weapon;
+  const modItem = player.inventory.items.find(
+    (entry) => entry.id === modItemId && entry.weaponModId
+  );
+
+  if (!modItem || !modItem.weaponModId) {
+    return false;
+  }
+
+  const modId = modItem.weaponModId;
+  const definition = getWeaponModDefinition(modId);
+  const weaponType: WeaponTypeId = weapon.weaponType ?? 'pistol';
+  const slots = resolveWeaponModSlots(weapon);
+
+  if (!slots.includes(definition.slot)) {
+    return false;
+  }
+
+  if (!definition.compatibleWeaponTypes.includes(weaponType)) {
+    return false;
+  }
+
+  const removed = detachItemFromInventory(player, modItemId);
+  if (!removed) {
+    return false;
+  }
+
+  const { updated, replacedModId } = attachWeaponModToWeapon(weapon, modId);
+
+  if (replacedModId) {
+    player.inventory.items.push(instantiateItem(replacedModId));
+  }
+
+  updateWeaponInLocation(player, locatedWeapon, updated);
+  refreshInventoryMetrics(player);
+  return true;
+};
+
+const detachWeaponModInternal = (player: Player, payload: DetachWeaponModPayload): boolean => {
+  const { weaponId, slot } = payload;
+  const locatedWeapon = findItemAcrossPlayer(player, weaponId);
+
+  if (!locatedWeapon || !('damage' in locatedWeapon.item)) {
+    return false;
+  }
+
+  const weapon = locatedWeapon.item as Weapon;
+  const { updated, detachedModId } = detachWeaponModFromWeapon(weapon, slot);
+
+  if (!detachedModId) {
+    return false;
+  }
+
+  player.inventory.items.push(instantiateItem(detachedModId));
+  updateWeaponInLocation(player, locatedWeapon, updated);
+  refreshInventoryMetrics(player);
   return true;
 };
 
@@ -1579,6 +1864,18 @@ export const playerSlice = createSlice({
       refreshInventoryMetrics(state.data);
     },
 
+    attachWeaponMod: (state, action: PayloadAction<AttachWeaponModPayload>) => {
+      attachWeaponModInternal(state.data, action.payload);
+    },
+
+    detachWeaponMod: (state, action: PayloadAction<DetachWeaponModPayload>) => {
+      detachWeaponModInternal(state.data, action.payload);
+    },
+
+    craftWeaponMod: (state, action: PayloadAction<CraftWeaponModPayload>) => {
+      craftWeaponModInternal(state.data, action.payload);
+    },
+
     useInventoryItem: (state, action: PayloadAction<string>) => {
       consumeInventoryItemInternal(state.data, action.payload);
     },
@@ -1825,6 +2122,9 @@ export const {
   repairItem,
   splitStack,
   assignHotbarSlot,
+  attachWeaponMod,
+  detachWeaponMod,
+  craftWeaponMod,
   useInventoryItem,
   resetPlayer,
   setPlayerData,

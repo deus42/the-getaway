@@ -20,6 +20,7 @@ import {
   applyArmorReduction,
   getEffectiveArmorRating,
 } from '../systems/equipmentEffects';
+import { aggregateWeaponModEffects } from '../systems/weaponMods';
 import { hasWeaponTag } from '../systems/equipmentTags';
 import {
   calculateEnergyWeaponsBonuses,
@@ -514,6 +515,8 @@ export const calculateHitChance = (
     const playerAttacker = attacker as Player;
     const attackerStats = getPlayerDerivedStats(playerAttacker);
     hitChance += attackerStats.hitChanceModifier / 100;
+    const modEffects = aggregateWeaponModEffects(playerAttacker.equipped.weapon);
+    hitChance += modEffects.hitChanceBonus;
 
     const weaponSkill = resolveWeaponSkillType(playerAttacker.equipped.weapon);
     const skillValue = getPlayerSkillValue(playerAttacker, weaponSkill);
@@ -640,6 +643,10 @@ export const executeAttack = (
   let weaponIsArmorPiercing = false;
   let weaponIsEnergy = false;
   let weaponIsHollowPoint = false;
+  let armorPiercingFactor: number | undefined;
+  let modEffects = aggregateWeaponModEffects();
+  let effectiveMagazineSize = 0;
+  let remainingMagazine = 0;
 
   if ('skills' in attacker) {
     equippedWeapon = (attacker as Player).equipped.weapon;
@@ -648,6 +655,27 @@ export const executeAttack = (
     weaponIsArmorPiercing = hasWeaponTag(equippedWeapon, 'armorPiercing');
     weaponIsEnergy = hasWeaponTag(equippedWeapon, 'energy');
     weaponIsHollowPoint = hasWeaponTag(equippedWeapon, 'hollowPoint');
+
+    modEffects = aggregateWeaponModEffects(equippedWeapon);
+    if (equippedWeapon) {
+      const baseMagazineSize = equippedWeapon.magazineSize ?? 0;
+      effectiveMagazineSize =
+        baseMagazineSize > 0
+          ? Math.max(1, Math.round(baseMagazineSize * (modEffects.magazineSizeMultiplier ?? 1)))
+          : 0;
+      remainingMagazine =
+        effectiveMagazineSize > 0
+          ? Math.min(effectiveMagazineSize, equippedWeapon.currentMagazine ?? effectiveMagazineSize)
+          : 0;
+      if (effectiveMagazineSize > 0 && remainingMagazine <= 0) {
+        remainingMagazine = effectiveMagazineSize;
+      }
+    }
+    weaponIsSilenced = weaponIsSilenced || modEffects.silenced;
+    if (modEffects.armorPiercingFactor !== undefined) {
+      weaponIsArmorPiercing = true;
+      armorPiercingFactor = modEffects.armorPiercingFactor;
+    }
   }
 
   let armorModifier = 1;
@@ -698,6 +726,7 @@ export const executeAttack = (
 
       let damageMultiplier = weaponModifier;
 
+      damageMultiplier *= modEffects.damageMultiplier ?? 1;
       damageMultiplier *= COVER_DAMAGE_MULTIPLIER[coverAssessment.level];
 
       if (weaponIsHollowPoint) {
@@ -706,6 +735,10 @@ export const executeAttack = (
 
       damageAmount = Math.round(workingDamage * damageMultiplier);
       damageAmount = Math.max(0, damageAmount);
+
+      if (modEffects.critChanceBonus) {
+        critChanceBonus += modEffects.critChanceBonus;
+      }
 
       const totalCriticalChance = Math.max(0, Math.min(95, attackerDerived.criticalChance + critChanceBonus));
       let criticalApplied = false;
@@ -734,7 +767,8 @@ export const executeAttack = (
       let armorRating = Math.round(baseArmorRating * armorModifier);
 
       if (weaponIsArmorPiercing && armorRating > 0) {
-        armorRating = Math.max(0, Math.floor(armorRating * 0.5));
+        const pierceFactor = armorPiercingFactor ?? 0.5;
+        armorRating = Math.max(0, Math.floor(armorRating * pierceFactor));
       }
 
       if (weaponIsEnergy) {
@@ -791,9 +825,23 @@ export const executeAttack = (
         pushDurabilityEvents(events, 'weapon', updatedWeapon.name, previousRatio, nextRatio);
       }
 
+      if (effectiveMagazineSize > 0) {
+        const nextMagazine = Math.max(
+          0,
+          Math.min(effectiveMagazineSize, remainingMagazine - 1)
+        );
+        updatedWeapon.currentMagazine = nextMagazine;
+      }
+
       attackerPlayerClone.equipped.weapon = updatedWeapon;
       if (attackerPlayerClone.equippedSlots?.primaryWeapon?.id === equippedWeapon.id) {
         attackerPlayerClone.equippedSlots.primaryWeapon = updatedWeapon;
+      }
+      if (attackerPlayerClone.equippedSlots?.secondaryWeapon?.id === equippedWeapon.id) {
+        attackerPlayerClone.equippedSlots.secondaryWeapon = updatedWeapon;
+      }
+      if (attackerPlayerClone.equippedSlots?.meleeWeapon?.id === equippedWeapon.id) {
+        attackerPlayerClone.equippedSlots.meleeWeapon = updatedWeapon;
       }
     }
 

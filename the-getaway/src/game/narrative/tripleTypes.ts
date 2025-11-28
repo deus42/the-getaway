@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import type { Position } from '../interfaces/types';
 import type {
   LevelResourceKey,

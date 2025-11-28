@@ -144,6 +144,23 @@ flowchart LR
 </technical_flow>
 </architecture_section>
 
+<architecture_section id="weapon_mod_system" category="equipment_systems">
+<design_principles>
+- Keep attachments data-driven: weapons expose type/slots/accuracy/magazine metadata; mods declare slot, compatible weapon types, and effects so attachment logic stays declarative.
+- Centralise effect math so combat reads a single aggregated modifier bundle (hit, damage, crit, armor-pierce, silenced, magazine capacity) instead of scattered conditionals.
+- Gate crafting behind proximity-aware workbench status (safehouse, scavenger market with fee if standing < Friendly, industrial workshop) plus Engineering skill and resource costs; keep UI selection local to the inventory and allow drag/drop when possible.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/interfaces/types.ts</code_location> extends weapons with `weaponType`, `modSlots`, `attachedMods`, `accuracy`, `magazineSize`, `currentMagazine`, and typed mod IDs/slots; instantiated items now retain `definitionId` so crafting can tally stackable resources.
+2. <code_location>the-getaway/src/content/items/weaponMods.ts</code_location> defines mod payloads (slots, compat, effects, workbench + Engineering requirements) with item prototypes and resource items in <code_location>the-getaway/src/content/items/index.ts</code_location>.
+3. <code_location>the-getaway/src/game/systems/weaponMods.ts</code_location> aggregates attachment effects and validates compatibility; <code_location>the-getaway/src/game/combat/combatSystem.ts</code_location> folds the aggregated effects into hit chance, damage, crit, armor-pierce, silenced handling, and magazine tracking.
+4. Inventory reducers (<code_location>the-getaway/src/store/playerSlice.ts</code_location>) attach/detach mods, clamp magazine capacity to modded limits, deep-clone attachments on move, and craft mods via `craftWeaponMod` (Engineering gate + workbench status + optional market fee + resource spend → mod instantiation).
+5. World gating: <code_location>the-getaway/src/store/worldSlice.ts</code_location> tracks `workbenchStatus` (proximity + location type/fee) and is refreshed each tick by <code_location>the-getaway/src/components/GameController.tsx</code_location>.
+6. UI: <code_location>the-getaway/src/components/ui/PlayerInventoryPanel.tsx</code_location> hosts the “Modify” overlay (right-click entry, drag/drop slot selection, stat preview) and a workbench crafting overlay listing recipes, requirements, and resources; crafting dispatches `craftWeaponMod` with any required fee.
+</technical_flow>
+</architecture_section>
+
 <architecture_section id="command_shell_layout" category="ui_shell">
 <design_principles>
 - Maintain the three-column command shell while letting each sidebar collapse without removing it from the flex context so the world view can immediately claim the freed space.

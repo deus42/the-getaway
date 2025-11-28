@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import type { StoryFunctionTag, EnvironmentFlags } from './environment';
 import type { DangerRating } from './types';
 import type { TimeOfDay } from '../world/dayNightCycle';

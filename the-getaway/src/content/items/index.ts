@@ -3,6 +3,7 @@ import {
   Item,
   Consumable,
   ConsumableEffectType,
+  WeaponModId,
 } from '../../game/interfaces/types';
 import {
   createWeapon,
@@ -13,11 +14,23 @@ import {
   ConsumableCreationOptions,
 } from '../../game/inventory/inventorySystem';
 import { PARANOIA_CONFIG } from '../paranoia/paranoiaConfig';
+import { getWeaponModDefinition } from './weaponMods';
 
 export type ItemDefinitionId =
   | 'weapon_corpsec_service_pistol'
   | 'weapon_shiv_knife'
   | 'weapon_industrial_crowbar'
+  | 'weapon_mod_reflex_sight'
+  | 'weapon_mod_extended_magazine'
+  | 'weapon_mod_suppressor'
+  | 'weapon_mod_long_barrel'
+  | 'weapon_mod_laser_sight'
+  | 'weapon_mod_armor_piercing_barrel'
+  | 'resource_metal_scrap'
+  | 'resource_electronic_parts'
+  | 'resource_chemical_compound'
+  | 'resource_textile_fiber'
+  | 'resource_bio_material'
   | 'armor_kevlar_vest'
   | 'armor_layered_leather_jacket'
   | 'armor_utility_hoodie'
@@ -93,22 +106,91 @@ const consumablePrototype = (
 
 const questItemPrototype = (prototype: ItemPrototype): ItemPrototype => prototype;
 
+const weaponModPrototype = (modId: WeaponModId): ItemPrototype => {
+  const definition = getWeaponModDefinition(modId);
+  return {
+    name: definition.name,
+    description: definition.description,
+    weight: definition.weight,
+    value: definition.value,
+    isQuestItem: false,
+    stackable: false,
+    weaponModId: definition.id,
+    tags: ['weaponMod'],
+  };
+};
+
+const resourcePrototype = (
+  id: ItemDefinitionId,
+  name: string,
+  description: string
+): ItemPrototype => ({
+  name,
+  description,
+  weight: 0.1,
+  value: 4,
+  isQuestItem: false,
+  stackable: true,
+  quantity: 1,
+  maxStack: 99,
+  tags: ['resource', id],
+});
+
 const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
   weapon_corpsec_service_pistol: weaponPrototype('CorpSec Service Pistol', 12, 6, 3, 3, {
     durability: { max: 120 },
     statModifiers: { perceptionBonus: 1 },
+    weaponType: 'pistol',
+    modSlots: ['barrel', 'magazine', 'optics'],
+    magazineSize: 10,
+    accuracy: 0.65,
   }),
   weapon_shiv_knife: weaponPrototype('Shiv Knife', 8, 1, 2, 1, {
     durability: { max: 80 },
     skillType: 'meleeCombat',
     statModifiers: { agilityBonus: 1 },
+    weaponType: 'melee',
+    modSlots: [],
   }),
   weapon_industrial_crowbar: weaponPrototype('Industrial Crowbar', 14, 1, 3, 5, {
     durability: { max: 150 },
     skillType: 'meleeCombat',
     statModifiers: { strengthBonus: 1 },
     tags: ['twoHanded'],
+    weaponType: 'melee',
+    modSlots: [],
   }),
+  weapon_mod_reflex_sight: weaponModPrototype('weapon_mod_reflex_sight'),
+  weapon_mod_extended_magazine: weaponModPrototype('weapon_mod_extended_magazine'),
+  weapon_mod_suppressor: weaponModPrototype('weapon_mod_suppressor'),
+  weapon_mod_long_barrel: weaponModPrototype('weapon_mod_long_barrel'),
+  weapon_mod_laser_sight: weaponModPrototype('weapon_mod_laser_sight'),
+  weapon_mod_armor_piercing_barrel: weaponModPrototype('weapon_mod_armor_piercing_barrel'),
+  resource_metal_scrap: resourcePrototype(
+    'resource_metal_scrap',
+    'Metal Scrap',
+    'Salvaged metal shards useful for weapon frames and barrels.'
+  ),
+  resource_electronic_parts: resourcePrototype(
+    'resource_electronic_parts',
+    'Electronic Parts',
+    'Circuit fragments and boards for sights and emitters.'
+  ),
+  resource_chemical_compound: resourcePrototype(
+    'resource_chemical_compound',
+    'Chemical Compound',
+    'Stabilised compounds for high-pressure barrel treatments.'
+  ),
+  resource_textile_fiber: resourcePrototype(
+    'resource_textile_fiber',
+    'Textile Fiber',
+    'Heat-resistant weave used for suppressor packing.'
+  ),
+  resource_bio_material: resourcePrototype(
+    'resource_bio_material',
+    'Bio Material',
+    'Organic substrate with niche crafting uses.'
+  ),
   armor_kevlar_vest: armorPrototype('Kevlar Vest', 4, 6, {
     durability: { max: 140 },
     statModifiers: { enduranceBonus: 1, apPenalty: 1 },
@@ -254,6 +336,7 @@ export const instantiateItem = (
   const prototype = getItemPrototype(definitionId);
   const item: Item = {
     id: options.id ?? uuidv4(),
+    definitionId,
     ...prototype,
   };
 

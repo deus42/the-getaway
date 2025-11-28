@@ -6,6 +6,7 @@ import {
   FactionId,
   FactionStanding,
   TileCoverProfile,
+  WorkbenchSpec,
 } from '../../../game/interfaces/types';
 
 export type BuildingSignageStyle =
@@ -33,6 +34,7 @@ export interface LevelBuildingDefinition {
     minimumStanding?: FactionStanding;
     minimumReputation?: number;
   };
+  workbench?: WorkbenchSpec;
 }
 
 export interface CoverSpotDefinition {

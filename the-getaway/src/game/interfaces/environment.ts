@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 export type StoryFunctionTag = 'foreshadow' | 'misdirect' | 'payoff' | 'world-building';
 
 export type GangHeatLevel = 'low' | 'med' | 'high';

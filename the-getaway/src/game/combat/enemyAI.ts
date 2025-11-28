@@ -406,6 +406,13 @@ export const determineEnemyMove = (
     };
   }
 
+  if (isInAttackRange(enemy.position, player.position, enemy.attackRange)) {
+    const immediateAttack = performAttack(enemy, updatedPlayer, mapArea, coverPositions);
+    if (immediateAttack) {
+      return immediateAttack;
+    }
+  }
+
   const archetype = ensureArchetype(enemy.aiProfileId);
   const snapshot = snapshotFromEnemy(enemy, archetype.fsm.initialState);
   const controller = createNpcFsmController(archetype.fsm, snapshot);
@@ -475,7 +482,7 @@ export const determineEnemyMove = (
   }
 
   if (context.hasLineOfSight) {
-    const enemyForReevaluation = enemy;
+    const enemyForReevaluation = result.enemy ?? enemy;
     const targetInRange = isInAttackRange(
       enemyForReevaluation.position,
       updatedPlayer.position,
@@ -488,6 +495,11 @@ export const determineEnemyMove = (
         result = forcedAttack;
       }
     } else if (result.action === 'inspect_noise' && !targetInRange) {
+      const forcedChase = performChase(enemyForReevaluation, updatedPlayer, mapArea, enemies, npcs);
+      if (forcedChase) {
+        result = forcedChase;
+      }
+    } else if (result.action === 'idle' && !targetInRange) {
       const forcedChase = performChase(enemyForReevaluation, updatedPlayer, mapArea, enemies, npcs);
       if (forcedChase) {
         result = forcedChase;
@@ -516,6 +528,56 @@ export const determineEnemyMove = (
     if (defensiveMove) {
       result = defensiveMove;
     }
+  }
+
+  if (
+    result.action === 'move' &&
+    result.enemy &&
+    result.enemy.position.x === enemy.position.x &&
+    result.enemy.position.y === enemy.position.y
+  ) {
+    const retryMove = moveTowardPlayer(result.enemy, updatedPlayer, mapArea, enemies, npcs);
+    if (retryMove) {
+      const movedEnemy = executeMove(result.enemy, retryMove) as Enemy;
+      result = {
+        ...result,
+        enemy: applyMovementOrientation(movedEnemy, result.enemy.position, mapArea),
+      };
+    }
+  }
+
+  const stuckCandidate = result.enemy ?? enemy;
+  const targetInRange = isInAttackRange(
+    stuckCandidate.position,
+    updatedPlayer.position,
+    stuckCandidate.attackRange
+  );
+  const hasMovePath = !!moveTowardPlayer(stuckCandidate, updatedPlayer, mapArea, enemies, npcs);
+
+  if (result.action === 'idle' && !targetInRange && !hasMovePath) {
+    result = fallbackAction(stuckCandidate, updatedPlayer);
+  }
+
+  const attackCandidate = result.enemy ?? stuckCandidate;
+  const attackTargetInRange = isInAttackRange(
+    attackCandidate.position,
+    updatedPlayer.position,
+    attackCandidate.attackRange
+  );
+
+  if (
+    context.hasLineOfSight &&
+    attackTargetInRange &&
+    !['attack', 'attack_missed', 'seek_cover', 'flee', 'dead', 'no_ap'].includes(result.action)
+  ) {
+    const forcedAttack = performAttack(attackCandidate, updatedPlayer, mapArea, coverPositions);
+    if (forcedAttack) {
+      result = forcedAttack;
+    }
+  }
+
+  if (result.action === 'idle' && !context.hasLineOfSight && !targetInRange) {
+    result = fallbackAction(result.enemy ?? enemy, updatedPlayer);
   }
 
   const postSnapshot = controller.getSnapshot();

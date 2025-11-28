@@ -1,6 +1,6 @@
 import { AnyAction, combineReducers, configureStore, createAction } from '@reduxjs/toolkit';
 import playerReducer, { PLAYER_STATE_VERSION, PlayerState, initialPlayerState } from './playerSlice';
-import worldReducer, { applyLocaleToWorld, NIGHT_START_SECONDS } from './worldSlice';
+import worldReducer, { applyLocaleToWorld, DAY_START_SECONDS, MIDDAY_SECONDS } from './worldSlice';
 import questsReducer, { applyLocaleToQuests } from './questsSlice';
 import missionReducer, { applyLocaleToMissions } from './missionSlice';
 import logReducer from './logSlice';
@@ -220,10 +220,10 @@ const migrateWorldState = (state?: CombinedState['world']): CombinedState['world
     },
   };
 
-  const nightTime = NIGHT_START_SECONDS;
-  next.currentTime = nightTime;
-  next.timeOfDay = getCurrentTimeOfDay(nightTime, DEFAULT_DAY_NIGHT_CONFIG);
-  next.curfewActive = isCurfewTime(nightTime, DEFAULT_DAY_NIGHT_CONFIG);
+  const dayTime = MIDDAY_SECONDS || DAY_START_SECONDS;
+  next.currentTime = dayTime;
+  next.timeOfDay = getCurrentTimeOfDay(dayTime, DEFAULT_DAY_NIGHT_CONFIG);
+  next.curfewActive = isCurfewTime(dayTime, DEFAULT_DAY_NIGHT_CONFIG);
 
   return next;
 };
@@ -353,6 +353,7 @@ store.subscribe(() => {
     suspicion: state.suspicion,
     paranoia: state.paranoia,
     reputation: state.reputation,
+    hudLayout: state.hudLayout,
   };
   saveState(stateToPersist);
 });

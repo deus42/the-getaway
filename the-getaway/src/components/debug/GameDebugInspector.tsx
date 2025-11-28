@@ -11,6 +11,8 @@ import {
   makeSelectTopTraitsForScope,
 } from '../../store/selectors/reputationSelectors';
 import { toggleReputationHeatmap, setInspectorTarget, ingestReputationEvent } from '../../store/reputationSlice';
+import { setGameTime, DAY_START_SECONDS, NIGHT_START_SECONDS, MIDDAY_SECONDS } from '../../store/worldSlice';
+import { DEFAULT_DAY_NIGHT_CONFIG } from '../../game/world/dayNightCycle';
 
 type Props = {
   zoneId: string | null | undefined;
@@ -38,6 +40,17 @@ const resolveRuntimeMode = (): string => {
 const formatPercentage = (value: number): string => `${Math.round(value * 100)}`;
 const formatTraitLabel = (trait: string): string =>
   trait.charAt(0).toUpperCase() + trait.slice(1);
+
+const formatCycleClock = (seconds: number): string => {
+  if (!Number.isFinite(seconds)) {
+    return '—';
+  }
+  const total = DEFAULT_DAY_NIGHT_CONFIG.cycleDuration;
+  const normalized = ((seconds % total) + total) % total;
+  const minutes = Math.floor(normalized / 60);
+  const secs = Math.floor(normalized % 60);
+  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+};
 
 const sectionTitleStyle: React.CSSProperties = {
   fontSize: '0.64rem',
@@ -165,20 +178,23 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const traitsSelector = useMemo(() => (inspectorTargetId ? makeSelectTopTraitsForScope(inspectorTargetId, 4) : null), [inspectorTargetId]);
   const selectedProfile = useSelector((state: RootState) => (profileSelector ? profileSelector(state) : null));
   const topTraits = useSelector((state: RootState) => (traitsSelector ? traitsSelector(state) : []));
-  type SectionKey = 'renderer' | 'suspicion' | 'reputation' | 'paranoia';
+  type SectionKey = 'renderer' | 'time' | 'suspicion' | 'reputation' | 'paranoia';
   const [sectionCollapsed, setSectionCollapsed] = useState<Record<SectionKey, boolean>>({
     renderer: false,
+    time: false,
     suspicion: false,
     reputation: false,
     paranoia: false,
   });
   const sectionLabels: Record<SectionKey, string> = {
     renderer: 'Renderer diagnostics',
+    time: 'Time/lighting debug',
     suspicion: 'Suspicion snapshot',
     reputation: 'Reputation debug',
     paranoia: 'Paranoia debug',
   };
   const [seedStatus, setSeedStatus] = useState<string | null>(null);
+  const [timeStatus, setTimeStatus] = useState<string | null>(null);
 
   const toggleSection = useCallback((key: SectionKey) => {
     setSectionCollapsed((prev) => ({
@@ -193,6 +209,17 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
     }
   }, [dispatch, inspectorTargetId, npcs]);
 
+  const handleSetDay = useCallback(() => {
+    const target = MIDDAY_SECONDS || DAY_START_SECONDS;
+    dispatch(setGameTime(target));
+    setTimeStatus(`Set to day (${formatCycleClock(target)})`);
+  }, [dispatch]);
+
+  const handleSetNight = useCallback(() => {
+    dispatch(setGameTime(NIGHT_START_SECONDS));
+    setTimeStatus(`Set to night (${formatCycleClock(NIGHT_START_SECONDS)})`);
+  }, [dispatch]);
+
   const inspectorNpc = useMemo(() => npcs.find((npc) => npc.id === inspectorTargetId), [npcs, inspectorTargetId]);
   const [collapsed, setCollapsed] = useState(true);
   const mode = resolveRuntimeMode();
@@ -200,6 +227,8 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const leading = useSelector((state: RootState) => leadingSelector(state));
   const paranoia = useSelector((state: RootState) => selectParanoiaState(state));
   const snapshot = useSelector(selectParanoiaSnapshot);
+  const worldTime = useSelector((state: RootState) => state.world.currentTime);
+  const worldTimeOfDay = useSelector((state: RootState) => state.world.timeOfDay);
 
   const seedSampleEvent = useCallback(() => {
     if (!inspectorTargetId || !mapArea) {
@@ -317,6 +346,30 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
               </div>
             </>
           ), 'renderer')}
+
+          {renderSection('time', 'Time & Lighting', () => (
+            <>
+              <div style={metricRowStyle}>
+                <span>Current</span>
+                <strong>{formatCycleClock(worldTime)} · {worldTimeOfDay}</strong>
+              </div>
+              <div style={metricRowStyle}>
+                <span>Cycle Duration</span>
+                <strong>{DEFAULT_DAY_NIGHT_CONFIG.cycleDuration}s</strong>
+              </div>
+              <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap' }}>
+                <button type="button" style={miniButtonStyle} onClick={handleSetDay}>
+                  Set Day
+                </button>
+                <button type="button" style={miniButtonStyle} onClick={handleSetNight}>
+                  Set Night
+                </button>
+              </div>
+              {timeStatus && (
+                <div style={{ fontSize: '0.62rem', color: 'rgba(96, 165, 250, 0.8)' }}>{timeStatus}</div>
+              )}
+            </>
+          ), 'time')}
 
           {renderSection('suspicion', `Suspicion Snapshot · ${resolvedZoneId}`, () => (
             <>

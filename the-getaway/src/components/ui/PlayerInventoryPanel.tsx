@@ -1,10 +1,15 @@
-import React, { useMemo, useState, useCallback } from 'react';
+import React, { useMemo, useState, useCallback, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
 import {
   EquipmentSlot,
   Item,
   EncumbranceState,
+  Weapon,
+  WeaponModSlot,
+  WeaponModId,
+  WeaponModAttachment,
+  WeaponTypeId,
 } from '../../game/interfaces/types';
 import {
   assignHotbarSlot,
@@ -12,6 +17,9 @@ import {
   repairItem,
   unequipItem,
   useInventoryItem as consumeInventoryItemAction,
+  attachWeaponMod,
+  detachWeaponMod,
+  craftWeaponMod,
 } from '../../store/playerSlice';
 import { getUIStrings } from '../../content/ui';
 import NotificationBadge from './NotificationBadge';
@@ -23,6 +31,9 @@ import {
   subtleText,
   neonPalette,
 } from './theme';
+import { aggregateWeaponModEffects } from '../../game/systems/weaponMods';
+import { validateWeaponModCompatibility } from '../../game/systems/weaponMods';
+import { getWeaponModDefinition, listWeaponModDefinitions } from '../../content/items/weaponMods';
 
 const panelStyle: React.CSSProperties = {
   ...characterPanelSurface,
@@ -31,6 +42,7 @@ const panelStyle: React.CSSProperties = {
   gap: '0.75rem',
   minHeight: 0,
   height: '100%',
+  position: 'relative',
 };
 
 const headerRowStyle: React.CSSProperties = {
@@ -311,6 +323,10 @@ const isConsumable = (item: Item): boolean => {
   return (item as unknown as Record<string, unknown>).effect !== undefined;
 };
 
+const isWeaponMod = (item: Item): item is Item & { weaponModId: WeaponModId } => {
+  return Boolean((item as unknown as Record<string, unknown>).weaponModId);
+};
+
 const categorizeItem = (item: Item): FilterId => {
   if (item.isQuestItem) {
     return 'quest';
@@ -387,14 +403,83 @@ const getStackCount = (item: Item): number => {
   return Math.floor(quantity);
 };
 
+const resolveWeaponModSlots = (weapon?: Weapon): WeaponModSlot[] => {
+  if (!weapon) {
+    return [];
+  }
+  if (weapon.modSlots && weapon.modSlots.length >= 0) {
+    return weapon.modSlots;
+  }
+  const weaponType: WeaponTypeId = weapon.weaponType ?? (weapon.range <= 1 ? 'melee' : 'pistol');
+  if (weaponType === 'melee') {
+    return [];
+  }
+  return ['barrel', 'magazine', 'optics'];
+};
+
+const getWeaponType = (weapon?: Weapon): WeaponTypeId => {
+  if (!weapon) {
+    return 'pistol';
+  }
+  return weapon.weaponType ?? (weapon.range <= 1 ? 'melee' : 'pistol');
+};
+
+const formatModEffectSummary = (modId: WeaponModId): string => {
+  const definition = getWeaponModDefinition(modId);
+  const { effect } = definition;
+  const parts: string[] = [];
+
+  if (effect.hitChanceBonus) {
+    parts.push(`+${Math.round(effect.hitChanceBonus * 100)}% accuracy`);
+  }
+  if (effect.hitChancePenalty) {
+    parts.push(`-${Math.round(effect.hitChancePenalty * 100)}% accuracy`);
+  }
+  if (effect.damageMultiplier && effect.damageMultiplier !== 1) {
+    const delta = Math.round((effect.damageMultiplier - 1) * 100);
+    const prefix = delta >= 0 ? '+' : '';
+    parts.push(`${prefix}${delta}% damage`);
+  }
+  if (effect.magazineSizeMultiplier && effect.magazineSizeMultiplier !== 1) {
+    const delta = Math.round((effect.magazineSizeMultiplier - 1) * 100);
+    parts.push(`+${delta}% magazine`);
+  }
+  if (effect.critChanceBonus) {
+    parts.push(`+${effect.critChanceBonus}% crit`);
+  }
+  if (effect.silenced || effect.addTags?.includes('silenced')) {
+    parts.push('Silences shots');
+  }
+  if (effect.armorPiercingFactor !== undefined || effect.addTags?.includes('armorPiercing')) {
+    parts.push('Ignores 50% armor');
+  }
+
+  return parts.length > 0 ? parts.join(' • ') : 'No stat changes';
+};
+
+type PendingModSelection = { modId: WeaponModId; modItemId?: string } | null;
+type PendingModState = Partial<Record<WeaponModSlot, PendingModSelection>>;
+
+const getResourceDisplay = (label: string, have: number, need: number): string => {
+  return `${label}: ${have}/${need}`;
+};
+
 
 const PlayerInventoryPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const workbenchStatus = useSelector((state: RootState) => state.world.workbenchStatus);
+  const legacyWorkbenchAvailable = useSelector(
+    (state: RootState) => state.world.workbenchAvailable
+  );
+  const atWorkbench = workbenchStatus?.available ?? legacyWorkbenchAvailable;
   const uiStrings = getUIStrings(locale);
   const inventoryStrings = uiStrings.inventoryPanel;
   const weightUnit = uiStrings.playerStatus.loadUnit;
+  const workbenchFee = workbenchStatus?.feeRequired ?? 0;
+  const workbenchLocationName = workbenchStatus?.locationName;
+  const workbenchNote = workbenchStatus?.note;
 
   const formatWeightWithUnit = useCallback((value: number): string => {
     const rounded = Number.isFinite(value) ? Math.round(value * 10) / 10 : 0;
@@ -402,6 +487,19 @@ const PlayerInventoryPanel: React.FC = () => {
   }, [weightUnit]);
 
   const [activeFilter, setActiveFilter] = useState<FilterId>('all');
+  const [modTargetWeaponId, setModTargetWeaponId] = useState<string | null>(null);
+  const [pendingMods, setPendingMods] = useState<PendingModState>({});
+  const [craftingOpen, setCraftingOpen] = useState(false);
+  const [modFeedback, setModFeedback] = useState<string | null>(null);
+
+  const handleOpenWorkbench = useCallback(() => {
+    setModTargetWeaponId(null);
+    setCraftingOpen(true);
+  }, []);
+
+  const handleCloseWorkbench = useCallback(() => {
+    setCraftingOpen(false);
+  }, []);
 
   const inventoryEntries = useMemo<InventoryEntry[]>(() => {
     return player.inventory.items.map((item) => ({
@@ -543,6 +641,137 @@ const PlayerInventoryPanel: React.FC = () => {
     hotbarAssignments,
   ]);
 
+  const findWeaponById = useCallback(
+    (weaponId: string | null): Weapon | undefined => {
+      if (!weaponId) {
+        return undefined;
+      }
+      const inventoryItem = player.inventory.items.find((entry) => entry.id === weaponId);
+      if (inventoryItem && isWeapon(inventoryItem)) {
+        return inventoryItem as Weapon;
+      }
+      const equippedMatch = (Object.values(player.equipped) as Item[]).find(
+        (entry) => entry && entry.id === weaponId
+      );
+      if (equippedMatch && isWeapon(equippedMatch)) {
+        return equippedMatch as Weapon;
+      }
+      return undefined;
+    },
+    [player.equipped, player.inventory.items]
+  );
+
+  const modTargetWeapon = useMemo(
+    () => findWeaponById(modTargetWeaponId),
+    [findWeaponById, modTargetWeaponId]
+  );
+
+  const modSlots = useMemo(() => resolveWeaponModSlots(modTargetWeapon), [modTargetWeapon]);
+
+  const availableModItems = useMemo(
+    () => player.inventory.items.filter((item) => isWeaponMod(item)),
+    [player.inventory.items]
+  );
+
+  const engineeringLevel = useMemo(
+    () => player.skillTraining?.engineering ?? 0,
+    [player.skillTraining?.engineering]
+  );
+
+  const getResourceCount = useCallback(
+    (definitionId: string): number => {
+      return player.inventory.items.reduce((sum, item) => {
+        if (item.definitionId !== definitionId) {
+          return sum;
+        }
+        const qty = item.stackable ? item.quantity ?? 1 : 1;
+        return sum + qty;
+      }, 0);
+    },
+    [player.inventory.items]
+  );
+
+  const weaponModRecipes = useMemo(() => listWeaponModDefinitions(), []);
+
+  const currentAttachmentsBySlot = useMemo(() => {
+    const map: Partial<Record<WeaponModSlot, WeaponModAttachment>> = {};
+    (modTargetWeapon?.attachedMods ?? []).forEach((attachment) => {
+      map[attachment.slot] = attachment;
+    });
+    return map;
+  }, [modTargetWeapon?.attachedMods]);
+
+  const currentModEffects = useMemo(
+    () => aggregateWeaponModEffects(modTargetWeapon),
+    [modTargetWeapon]
+  );
+
+  const pendingAttachments = useMemo<WeaponModAttachment[]>(() => {
+    if (!modTargetWeapon) {
+      return [];
+    }
+
+    const attachments: WeaponModAttachment[] = [];
+    modSlots.forEach((slot) => {
+      const pending = pendingMods[slot];
+      if (pending === null) {
+        return;
+      }
+      if (pending) {
+        attachments.push({ slot, modId: pending.modId });
+        return;
+      }
+      if (currentAttachmentsBySlot[slot]) {
+        attachments.push({ slot, modId: currentAttachmentsBySlot[slot]!.modId });
+      }
+    });
+    return attachments;
+  }, [modSlots, modTargetWeapon, pendingMods, currentAttachmentsBySlot]);
+
+  const pendingEffects = useMemo(
+    () => aggregateWeaponModEffects(modTargetWeapon, pendingAttachments),
+    [modTargetWeapon, pendingAttachments]
+  );
+
+  useEffect(() => {
+    if (!modTargetWeapon) {
+      setPendingMods({});
+      setModFeedback(null);
+      return;
+    }
+
+    const initialState: PendingModState = {};
+    (modTargetWeapon.attachedMods ?? []).forEach((attachment) => {
+      initialState[attachment.slot] = { modId: attachment.modId };
+    });
+    setPendingMods(initialState);
+  }, [modTargetWeapon]);
+
+  const baseDamage = modTargetWeapon?.damage ?? 0;
+  const baseAccuracy = modTargetWeapon?.accuracy ?? 0.65;
+  const baseMagazineSize = modTargetWeapon?.magazineSize ?? 0;
+
+  const currentDamage = Math.round(baseDamage * (currentModEffects.damageMultiplier ?? 1));
+  const pendingDamage = Math.round(baseDamage * (pendingEffects.damageMultiplier ?? 1));
+
+  const currentAccuracy = Math.max(
+    0,
+    Math.min(0.99, baseAccuracy + currentModEffects.hitChanceBonus)
+  );
+  const pendingAccuracy = Math.max(
+    0,
+    Math.min(0.99, baseAccuracy + pendingEffects.hitChanceBonus)
+  );
+
+  const currentMagazine =
+    baseMagazineSize > 0
+      ? Math.max(1, Math.round(baseMagazineSize * (currentModEffects.magazineSizeMultiplier ?? 1)))
+      : 0;
+  const pendingMagazine =
+    baseMagazineSize > 0
+      ? Math.max(1, Math.round(baseMagazineSize * (pendingEffects.magazineSizeMultiplier ?? 1)))
+      : 0;
+
   const handleEquip = useCallback(
     (item: Item) => {
       const slot = resolvePreferredSlot(item);
@@ -629,6 +858,187 @@ const PlayerInventoryPanel: React.FC = () => {
     [dispatch]
   );
 
+  const handleOpenModPanel = useCallback((weaponId: string) => {
+    setModFeedback(null);
+    setModTargetWeaponId(weaponId);
+  }, []);
+
+  const handleCloseModPanel = useCallback(() => {
+    setModFeedback(null);
+    setModTargetWeaponId(null);
+  }, []);
+
+  const handlePendingChange = useCallback(
+    (slot: WeaponModSlot, value: string) => {
+      if (value === '__keep__') {
+        setPendingMods((prev) => {
+          const next = { ...prev };
+          delete next[slot];
+          return next;
+        });
+        setModFeedback(null);
+        return;
+      }
+
+      if (value === '') {
+        setPendingMods((prev) => ({ ...prev, [slot]: null }));
+        setModFeedback(null);
+        return;
+      }
+
+      const modItem = availableModItems.find((item) => item.id === value && item.weaponModId);
+      if (!modItem || !modItem.weaponModId) {
+        return;
+      }
+
+      setPendingMods((prev) => {
+        const next = { ...prev };
+        // Prevent a single mod item from being selected for multiple slots.
+        Object.entries(next).forEach(([key, selection]) => {
+          if (key !== slot && selection && selection.modItemId === value) {
+            delete next[key as WeaponModSlot];
+          }
+        });
+        next[slot] = { modId: modItem.weaponModId, modItemId: modItem.id };
+        return next;
+      });
+      setModFeedback(null);
+    },
+    [availableModItems]
+  );
+
+  const handleDetachSlot = useCallback(
+    (slot: WeaponModSlot) => {
+      if (!modTargetWeapon) {
+        return;
+      }
+      setPendingMods((prev) => ({ ...prev, [slot]: null }));
+      setModFeedback(null);
+      dispatch(detachWeaponMod({ weaponId: modTargetWeapon.id, slot }));
+    },
+    [dispatch, modTargetWeapon]
+  );
+
+  const handleModDragStart = useCallback(
+    (event: React.DragEvent, item: Item & { weaponModId?: WeaponModId }) => {
+      if (!item.weaponModId) {
+        return;
+      }
+      event.dataTransfer.setData('application/weapon-mod-item', item.id);
+      event.dataTransfer.setData('text/plain', item.name);
+      setModFeedback(null);
+    },
+    []
+  );
+
+  const handleSlotDragOver = useCallback(
+    (event: React.DragEvent, slot: WeaponModSlot) => {
+      if (!modTargetWeapon) {
+        return;
+      }
+      const modItemId = event.dataTransfer.getData('application/weapon-mod-item');
+      if (!modItemId) {
+        return;
+      }
+      const modItem = availableModItems.find((entry) => entry.id === modItemId);
+      if (!modItem?.weaponModId) {
+        return;
+      }
+      event.preventDefault();
+      const compatibility = validateWeaponModCompatibility(modTargetWeapon, modItem.weaponModId, slot);
+      if (!compatibility.compatible) {
+        event.dataTransfer.dropEffect = 'none';
+        return;
+      }
+      event.dataTransfer.dropEffect = 'copy';
+    },
+    [availableModItems, modTargetWeapon]
+  );
+
+  const handleSlotDrop = useCallback(
+    (event: React.DragEvent, slot: WeaponModSlot) => {
+      if (!modTargetWeapon) {
+        return;
+      }
+      event.preventDefault();
+      const modItemId = event.dataTransfer.getData('application/weapon-mod-item');
+      if (!modItemId) {
+        return;
+      }
+      const modItem = availableModItems.find((entry) => entry.id === modItemId);
+      if (!modItem?.weaponModId) {
+        return;
+      }
+
+      const compatibility = validateWeaponModCompatibility(modTargetWeapon, modItem.weaponModId, slot);
+      if (!compatibility.compatible) {
+        setModFeedback(compatibility.reason ?? 'This mod is not compatible with the selected slot/weapon.');
+        return;
+      }
+
+      setModFeedback(null);
+      handlePendingChange(slot, modItemId);
+    },
+    [availableModItems, handlePendingChange, modTargetWeapon]
+  );
+
+  const handleApplyPendingMods = useCallback(() => {
+    if (!modTargetWeapon) {
+      return;
+    }
+
+    modSlots.forEach((slot) => {
+      const pending = pendingMods[slot];
+      const current = currentAttachmentsBySlot[slot];
+
+      if (pending === undefined) {
+        return; // Keep current attachment as-is
+      }
+
+      if (pending === null) {
+        if (current) {
+          dispatch(detachWeaponMod({ weaponId: modTargetWeapon.id, slot }));
+        }
+        return;
+      }
+
+      if (current && current.modId === pending.modId) {
+        return;
+      }
+
+      const preferredItemId =
+        pending.modItemId ??
+        availableModItems.find((item) => item.weaponModId === pending.modId)?.id;
+
+      if (!preferredItemId) {
+        return;
+      }
+
+      dispatch(attachWeaponMod({ weaponId: modTargetWeapon.id, modItemId: preferredItemId }));
+    });
+
+    setModFeedback(null);
+    setModTargetWeaponId(null);
+  }, [
+    modSlots,
+    pendingMods,
+    currentAttachmentsBySlot,
+    dispatch,
+    modTargetWeapon,
+    availableModItems,
+  ]);
+
+  const handleCraftMod = useCallback(
+    (modId: WeaponModId) => {
+      const feePaid = workbenchFee > 0 ? workbenchFee : undefined;
+      dispatch(craftWeaponMod({ modId, atWorkbench, feePaid }));
+      if (feePaid) {
+        setModFeedback(`Paid ${feePaid} credits for market workbench access.`);
+      }
+    },
+    [atWorkbench, dispatch, workbenchFee]
+  );
+
   const equippedItems = useMemo(
     () => slotDefinitions.map((slot) => getEquippedItem(slot.id)).filter(Boolean) as Item[],
     [getEquippedItem, slotDefinitions]
@@ -651,6 +1061,392 @@ const PlayerInventoryPanel: React.FC = () => {
       role="region"
       aria-label={inventoryStrings.title}
     >
+      {craftingOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: '0.25rem',
+            background: 'rgba(15, 23, 42, 0.96)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            borderRadius: '12px',
+            padding: '0.9rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.7rem',
+            zIndex: 6,
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Workbench Crafting Panel"
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.22rem' }}>
+              <span style={{ ...characterPanelLabelStyle, letterSpacing: '0.14em' }}>Weapon Mods</span>
+              <strong style={{ ...characterPanelTitleStyle, fontSize: '1rem' }}>Workbench Crafting</strong>
+              <span style={{ ...subtleText, fontSize: '0.66rem', color: atWorkbench ? '#34d399' : '#fbbf24' }}>
+                {atWorkbench
+                  ? `Workbench ready${workbenchLocationName ? ` @ ${workbenchLocationName}` : ''}`
+                  : 'No workbench in range'}
+              </span>
+              {workbenchFee > 0 && (
+                <span style={{ ...subtleText, fontSize: '0.62rem', color: '#fbbf24' }}>
+                  {`Market access fee: ${workbenchFee} credits if Scavenger rep < Friendly`}
+                </span>
+              )}
+              {workbenchNote && (
+                <span style={{ ...subtleText, fontSize: '0.62rem', color: '#fbbf24' }}>
+                  {workbenchNote}
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleCloseWorkbench}
+              style={{ ...actionButtonStyle, padding: '0.3rem 0.65rem' }}
+            >
+              Close
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+              gap: '0.65rem',
+            }}
+          >
+            {weaponModRecipes.map((recipe) => {
+              const skillOk = engineeringLevel >= recipe.crafting.level;
+              const hasResources = recipe.crafting.inputs.every(
+                (input) => getResourceCount(input.id) >= input.quantity
+              );
+              const ready = atWorkbench && skillOk && hasResources;
+
+              return (
+                <div
+                  key={recipe.id}
+                  style={{
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    borderRadius: '10px',
+                    padding: '0.65rem',
+                    background: 'rgba(15, 23, 42, 0.78)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.14rem' }}>
+                      <span style={{ fontSize: '0.78rem', color: neonPalette.textPrimary }}>{recipe.name}</span>
+                      <span style={{ ...subtleText, fontSize: '0.6rem' }}>
+                        Slot: {recipe.slot} • {formatModEffectSummary(recipe.id)}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      style={{
+                        ...actionButtonStyle,
+                        padding: '0.24rem 0.55rem',
+                        borderColor: ready ? '#34d399' : '#64748b',
+                        color: ready ? '#bbf7d0' : '#cbd5e1',
+                        opacity: ready ? 1 : 0.6,
+                        cursor: ready ? 'pointer' : 'not-allowed',
+                      }}
+                      disabled={!ready}
+                      onClick={() => handleCraftMod(recipe.id)}
+                    >
+                      Craft
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                    <span style={{ ...subtleText, fontSize: '0.62rem' }}>
+                      Workbench required • Engineering {recipe.crafting.level}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.62rem',
+                        color: skillOk ? '#bbf7d0' : '#fbbf24',
+                      }}
+                    >
+                      Engineering: {engineeringLevel}/{recipe.crafting.level}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.22rem' }}>
+                    {recipe.crafting.inputs.map((input) => {
+                      const have = getResourceCount(input.id);
+                      const ok = have >= input.quantity;
+                      return (
+                        <span
+                          key={input.id}
+                          style={{
+                            ...subtleText,
+                            fontSize: '0.62rem',
+                            color: ok ? '#bbf7d0' : '#fbbf24',
+                          }}
+                        >
+                          {getResourceDisplay(input.id.replace('resource_', '').replace('_', ' '), have, input.quantity)}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {modTargetWeapon && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: '0.25rem',
+            background: 'rgba(15, 23, 42, 0.92)',
+            border: '1px solid rgba(56, 189, 248, 0.35)',
+            borderRadius: '12px',
+            padding: '0.8rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.7rem',
+            zIndex: 5,
+          }}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Weapon Modification Panel"
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <span style={{ ...characterPanelLabelStyle, letterSpacing: '0.14em' }}>Modify Weapon</span>
+              <strong style={{ ...characterPanelTitleStyle, fontSize: '0.95rem' }}>
+                {modTargetWeapon.name}
+              </strong>
+              <span style={{ ...subtleText, fontSize: '0.66rem' }}>
+                Slots: {modSlots.length > 0 ? modSlots.join(', ') : 'None'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleCloseModPanel}
+              style={{ ...actionButtonStyle, padding: '0.28rem 0.55rem' }}
+            >
+              Close
+            </button>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: '0.6rem',
+            }}
+          >
+            {modFeedback && (
+              <div
+                style={{
+                  gridColumn: '1 / -1',
+                  padding: '0.45rem 0.6rem',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(248, 113, 113, 0.35)',
+                  background: 'rgba(127, 29, 29, 0.35)',
+                  color: '#fecaca',
+                  fontSize: '0.64rem',
+                }}
+              >
+                {modFeedback}
+              </div>
+            )}
+            {modSlots.map((slot) => {
+              const weaponType = getWeaponType(modTargetWeapon);
+              const currentAttachment = currentAttachmentsBySlot[slot];
+              const pendingSelection = pendingMods[slot];
+              const usedIds = new Set(
+                Object.entries(pendingMods)
+                  .filter(([slotKey]) => slotKey !== slot)
+                  .map(([, selection]) => selection?.modItemId)
+                  .filter(Boolean) as string[]
+              );
+
+              const compatibleOptions = availableModItems.filter((item) => {
+                if (!item.weaponModId) return false;
+                const definition = getWeaponModDefinition(item.weaponModId);
+                if (definition.slot !== slot) return false;
+                if (!definition.compatibleWeaponTypes.includes(weaponType)) return false;
+                if (usedIds.has(item.id)) return false;
+                return true;
+              });
+
+              const currentLabel = currentAttachment
+                ? getWeaponModDefinition(currentAttachment.modId).name
+                : 'Empty';
+
+              return (
+                <div
+                  key={slot}
+                  style={{
+                    border: '1px solid rgba(148, 163, 184, 0.2)',
+                    borderRadius: '10px',
+                    padding: '0.55rem',
+                    background: 'rgba(15, 23, 42, 0.7)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.35rem',
+                  }}
+                  onDragOver={(event) => handleSlotDragOver(event, slot)}
+                  onDrop={(event) => handleSlotDrop(event, slot)}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.72rem', color: neonPalette.textPrimary, textTransform: 'capitalize' }}>
+                      {slot} slot
+                    </span>
+                    <button
+                      type="button"
+                      style={{ ...actionButtonStyle, padding: '0.2rem 0.5rem' }}
+                      onClick={() => handleDetachSlot(slot)}
+                      disabled={!currentAttachment}
+                    >
+                      Detach
+                    </button>
+                  </div>
+                  <span style={{ ...subtleText, fontSize: '0.62rem' }}>Current: {currentLabel}</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }} role="listbox" aria-label={`${slot} slot mods`}>
+                    <button
+                      type="button"
+                      style={{
+                        ...actionButtonStyle,
+                        padding: '0.24rem 0.55rem',
+                        borderColor: pendingSelection === undefined ? '#38bdf8' : 'rgba(148, 163, 184, 0.25)',
+                        color: pendingSelection === undefined ? '#e0f2fe' : subtleText.color,
+                      }}
+                      onClick={() => handlePendingChange(slot, '__keep__')}
+                    >
+                      Keep current
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        ...actionButtonStyle,
+                        padding: '0.24rem 0.55rem',
+                        borderColor: pendingSelection === null ? '#38bdf8' : 'rgba(148, 163, 184, 0.25)',
+                        color: pendingSelection === null ? '#e0f2fe' : subtleText.color,
+                      }}
+                      onClick={() => handlePendingChange(slot, '')}
+                    >
+                      Empty slot
+                    </button>
+                    {compatibleOptions.map((item) => {
+                      const isActive =
+                        pendingSelection?.modItemId === item.id || pendingSelection?.modId === item.weaponModId;
+                      return (
+                        <button
+                          key={`${slot}-${item.id}`}
+                          type="button"
+                          style={{
+                            ...actionButtonStyle,
+                            padding: '0.24rem 0.55rem',
+                            borderColor: isActive ? '#38bdf8' : 'rgba(56, 189, 248, 0.35)',
+                            color: '#e0f2fe',
+                            background: isActive ? 'rgba(14, 165, 233, 0.18)' : actionButtonStyle.background,
+                          }}
+                          onClick={() => handlePendingChange(slot, item.id)}
+                        >
+                          {item.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {compatibleOptions.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                      {compatibleOptions.map((item) => (
+                        <span key={`summary-${slot}-${item.id}`} style={{ ...subtleText, fontSize: '0.6rem' }}>
+                          {item.name}: {formatModEffectSummary(item.weaponModId!)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {compatibleOptions.length === 0 && (
+                    <span style={{ ...subtleText, fontSize: '0.6rem', color: '#fbbf24' }}>
+                      No compatible mods in inventory for this slot/weapon type. Craft one at a workbench.
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div
+            style={{
+              border: '1px solid rgba(56, 189, 248, 0.3)',
+              borderRadius: '10px',
+              padding: '0.6rem',
+              background: 'rgba(8, 47, 73, 0.35)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: '0.5rem',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <span style={{ ...characterPanelLabelStyle, letterSpacing: '0.12em' }}>Damage</span>
+              <span style={{ fontSize: '0.86rem', color: neonPalette.textPrimary }}>
+                {currentDamage} →{' '}
+                <span style={{ color: pendingDamage > currentDamage ? '#34d399' : pendingDamage < currentDamage ? '#f87171' : neonPalette.textPrimary }}>
+                  {pendingDamage}
+                </span>
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <span style={{ ...characterPanelLabelStyle, letterSpacing: '0.12em' }}>Accuracy</span>
+              <span style={{ fontSize: '0.86rem', color: neonPalette.textPrimary }}>
+                {(currentAccuracy * 100).toFixed(0)}% →{' '}
+                <span style={{ color: pendingAccuracy > currentAccuracy ? '#34d399' : pendingAccuracy < currentAccuracy ? '#f87171' : neonPalette.textPrimary }}>
+                  {(pendingAccuracy * 100).toFixed(0)}%
+                </span>
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <span style={{ ...characterPanelLabelStyle, letterSpacing: '0.12em' }}>Magazine</span>
+              <span style={{ fontSize: '0.86rem', color: neonPalette.textPrimary }}>
+                {currentMagazine > 0 ? currentMagazine : '—'} →{' '}
+                <span style={{ color: pendingMagazine > currentMagazine ? '#34d399' : pendingMagazine < currentMagazine ? '#f87171' : neonPalette.textPrimary }}>
+                  {pendingMagazine > 0 ? pendingMagazine : '—'}
+                </span>
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              <span style={{ ...characterPanelLabelStyle, letterSpacing: '0.12em' }}>Special</span>
+              <span style={{ fontSize: '0.76rem', color: neonPalette.textSecondary }}>
+                {pendingEffects.silenced ? 'Silenced shots' : 'Loud shots'}
+                {' • '}
+                {pendingEffects.armorPiercingFactor !== undefined ? 'Armor-piercing' : 'Standard rounds'}
+              </span>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+            <button
+              type="button"
+              style={{ ...actionButtonStyle, padding: '0.32rem 0.7rem' }}
+              onClick={handleCloseModPanel}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              style={{
+                ...actionButtonStyle,
+                padding: '0.32rem 0.7rem',
+                borderColor: '#34d399',
+                color: '#bbf7d0',
+              }}
+              onClick={handleApplyPendingMods}
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+      )}
+
       <header style={headerRowStyle}>
         <div style={headingGroupStyle}>
           <span style={headingLabelStyle}>{uiStrings.loadoutPanel.headingLabel}</span>
@@ -669,6 +1465,34 @@ const PlayerInventoryPanel: React.FC = () => {
           </span>
         </div>
       </header>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem' }}>
+        <button
+          type="button"
+          style={{
+            ...actionButtonStyle,
+            padding: '0.25rem 0.65rem',
+            borderColor: atWorkbench ? '#34d399' : '#64748b',
+            color: atWorkbench ? '#bbf7d0' : '#cbd5e1',
+            opacity: atWorkbench ? 1 : 0.6,
+            cursor: atWorkbench ? 'pointer' : 'not-allowed',
+          }}
+          disabled={!atWorkbench}
+          onClick={handleOpenWorkbench}
+        >
+          Use Workbench
+        </button>
+        <span style={{ ...subtleText, fontSize: '0.62rem' }}>
+          {atWorkbench
+            ? `Workbench in range${workbenchLocationName ? ` (${workbenchLocationName})` : ''}`
+            : workbenchNote ?? 'Find a workbench to craft mods'}
+        </span>
+        {workbenchFee > 0 && (
+          <span style={{ ...subtleText, fontSize: '0.6rem', color: '#fbbf24' }}>
+            {`Fee: ${workbenchFee} credits if Scavenger reputation < Friendly`}
+          </span>
+        )}
+      </div>
 
       <div style={encumbranceRowStyle}>
         <span style={{ fontSize: '0.64rem', color: encumbranceDescriptor.color }}>
@@ -737,9 +1561,27 @@ const PlayerInventoryPanel: React.FC = () => {
                 : inventoryStrings.actions.addToHotbar;
               const hotbarBadgeLabel = inventoryStrings.hotbarBadge(hotbarIndex + 1);
               const weightDisplay = formatWeightWithUnit(item.weight);
+              const canModify = isWeapon(item);
 
               return (
-                <div key={item.id} style={itemCardStyle} role="listitem" aria-label={item.name}>
+                <div
+                  key={item.id}
+                  style={itemCardStyle}
+                  role="listitem"
+                  aria-label={item.name}
+                  draggable={isWeaponMod(item)}
+                  onDragStart={(event) => {
+                    if (isWeaponMod(item)) {
+                      handleModDragStart(event, item as Item & { weaponModId?: WeaponModId });
+                    }
+                  }}
+                  onContextMenu={(event) => {
+                    if (canModify) {
+                      event.preventDefault();
+                      handleOpenModPanel(item.id);
+                    }
+                  }}
+                >
                   <div style={itemHeaderStyle}>
                     <div style={itemTitleStyle}>
                       <span>{item.name}</span>
@@ -809,6 +1651,15 @@ const PlayerInventoryPanel: React.FC = () => {
                         {inventoryStrings.actions.use}
                       </button>
                     )}
+                    {canModify && (
+                      <button
+                        type="button"
+                        style={{ ...actionButtonStyle, borderColor: '#38bdf8', color: '#e0f2fe' }}
+                        onClick={() => handleOpenModPanel(item.id)}
+                      >
+                        Modify
+                      </button>
+                    )}
                     <button
                       type="button"
                       style={{
@@ -839,9 +1690,19 @@ const PlayerInventoryPanel: React.FC = () => {
               const equippedItem = getEquippedItem(slot.id);
               const condition = equippedItem ? getConditionPercentage(equippedItem) : null;
               const hasDurability = equippedItem?.durability && condition !== null;
+              const canModifyEquipped = equippedItem && isWeapon(equippedItem);
 
               return (
-                <div key={slot.id} style={equipmentCardStyle}>
+                <div
+                  key={slot.id}
+                  style={equipmentCardStyle}
+                  onContextMenu={(event) => {
+                    if (canModifyEquipped && equippedItem) {
+                      event.preventDefault();
+                      handleOpenModPanel((equippedItem as Weapon).id);
+                    }
+                  }}
+                >
                   <span style={equipmentLabelStyle}>{slot.label}</span>
                   <div style={equipmentValueStyle}>{equippedItem?.name ?? slot.emptyCopy}</div>
                   <span style={{ ...subtleText, fontSize: '0.58rem' }}>{slot.description}</span>
@@ -856,13 +1717,24 @@ const PlayerInventoryPanel: React.FC = () => {
                     </div>
                   )}
                   {equippedItem && (
-                    <button
-                      type="button"
-                      style={{ ...actionButtonStyle, alignSelf: 'flex-start' }}
-                      onClick={() => handleUnequip(slot.id)}
-                    >
-                      {inventoryStrings.actions.unequip}
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        style={{ ...actionButtonStyle, alignSelf: 'flex-start' }}
+                        onClick={() => handleUnequip(slot.id)}
+                      >
+                        {inventoryStrings.actions.unequip}
+                      </button>
+                      {canModifyEquipped && (
+                        <button
+                          type="button"
+                          style={{ ...actionButtonStyle, alignSelf: 'flex-start', borderColor: '#38bdf8', color: '#e0f2fe' }}
+                          onClick={() => handleOpenModPanel((equippedItem as Weapon).id)}
+                        >
+                          Modify
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               );

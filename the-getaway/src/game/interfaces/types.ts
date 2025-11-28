@@ -36,6 +36,16 @@ export type TechSkillId = 'hacking' | 'engineering' | 'science';
 export type SurvivalSkillId = 'medicine' | 'stealth' | 'scavenging';
 export type SocialSkillId = 'persuasion' | 'intimidation' | 'barter';
 
+export type WeaponTypeId = 'pistol' | 'rifle' | 'shotgun' | 'smg' | 'melee';
+export type WeaponModSlot = 'barrel' | 'magazine' | 'optics';
+export type WeaponModId =
+  | 'weapon_mod_reflex_sight'
+  | 'weapon_mod_extended_magazine'
+  | 'weapon_mod_suppressor'
+  | 'weapon_mod_long_barrel'
+  | 'weapon_mod_laser_sight'
+  | 'weapon_mod_armor_piercing_barrel';
+
 export type SkillId =
   | CombatSkillId
   | TechSkillId
@@ -334,9 +344,15 @@ export interface Durability {
   max: number;
 }
 
+export interface WeaponModAttachment {
+  slot: WeaponModSlot;
+  modId: WeaponModId;
+}
+
 // Item interface
 export interface Item {
   id: string;
+  definitionId?: string;
   name: string;
   description: string;
   weight: number;
@@ -349,6 +365,7 @@ export interface Item {
   durability?: Durability;
   equipSlot?: EquipmentSlot;
   statModifiers?: StatModifiers;
+  weaponModId?: WeaponModId;
   tags?: string[];
 }
 
@@ -374,6 +391,12 @@ export interface Weapon extends Item {
   skillType: CombatSkillId;
   slot: 'weapon';
   statModifiers?: StatModifiers;
+  weaponType?: WeaponTypeId;
+  modSlots?: WeaponModSlot[];
+  attachedMods?: WeaponModAttachment[];
+  accuracy?: number;
+  magazineSize?: number;
+  currentMagazine?: number;
   tags?: WeaponTag[];
 }
 
@@ -526,6 +549,11 @@ export interface MapTile {
 
 export type DangerRating = 'low' | 'moderate' | 'high' | 'critical';
 
+export interface WorkbenchSpec {
+  type: 'safehouse' | 'market' | 'industrial';
+  feeRequired?: number;
+}
+
 // Map area/zone
 export interface MapArea {
   id: string;
@@ -551,4 +579,15 @@ export interface MapArea {
     npcs: NPC[];
     items: Item[];
   };
-} 
+  buildings?: MapBuildingDefinition[];
+}
+
+export interface MapBuildingDefinition {
+  id: string;
+  name: string;
+  footprint: { from: Position; to: Position };
+  door: Position;
+  signageStyle?: string;
+  district?: string;
+  workbench?: WorkbenchSpec;
+}

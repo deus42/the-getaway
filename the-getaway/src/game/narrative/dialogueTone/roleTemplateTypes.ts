@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 import { DialogueToneConfig, FactionId, FactionStanding, Player } from '../../interfaces/types';
 import { EnvironmentFlags } from '../../interfaces/environment';
 import { TimeOfDay } from '../../world/dayNightCycle';

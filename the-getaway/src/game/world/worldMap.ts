@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { MapArea, Position, TileType, NPC, Item } from '../interfaces/types';
+import { MapArea, Position, TileType, NPC, Item, MapBuildingDefinition } from '../interfaces/types';
 import { Locale } from '../../content/locales';
 import { getLevel0Content } from '../../content/levels/level0';
 import { CoverSpotDefinition, LevelBuildingDefinition } from '../../content/levels/level0/types';
@@ -248,6 +248,21 @@ const createCityArea = (
   }, withCover);
 
   const withDistrictDecor = applyDistrictDecorations(withCoverProfiles);
+
+  const buildingSummaries: MapBuildingDefinition[] = buildings.map((building) => ({
+    id: building.id,
+    name: building.name,
+    signageStyle: building.signageStyle,
+    district: building.district,
+    workbench: building.workbench,
+    footprint: {
+      from: { ...building.footprint.from },
+      to: { ...building.footprint.to },
+    },
+    door: { ...building.door },
+  }));
+
+  withDistrictDecor.buildings = buildingSummaries;
 
   const isTileOpen = (position: Position): boolean => {
     const tile = withDistrictDecor.tiles[position.y]?.[position.x];

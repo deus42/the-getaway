@@ -30,6 +30,17 @@ import {
   type VisualFxSettings,
 } from '../settings/visualSettings';
 
+const SIGNAGE_PALETTES: Record<
+  string,
+  { primary: string; secondary: string; glow: string; bg: string }
+> = {
+  slums_neon: { primary: '#6ff2ff', secondary: '#9c8cff', glow: 'rgba(111, 242, 255, 0.8)', bg: '#0b1220' },
+  slums_scrap: { primary: '#f97316', secondary: '#fb923c', glow: 'rgba(249, 115, 22, 0.7)', bg: '#190f08' },
+  corp_holo: { primary: '#9beafe', secondary: '#67e8f9', glow: 'rgba(103, 232, 249, 0.85)', bg: '#0d1b2a' },
+  corp_brass: { primary: '#f3ca75', secondary: '#f9e2af', glow: 'rgba(243, 202, 117, 0.8)', bg: '#1a140a' },
+  default: { primary: '#8cf7ff', secondary: '#c084fc', glow: 'rgba(140, 247, 255, 0.82)', bg: '#0d1420' },
+};
+
 const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
   [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
   [TileType.COVER]: { even: 0x26363c, odd: 0x202f33 },
@@ -1049,7 +1060,61 @@ export class MainScene extends Phaser.Scene {
     this.buildingLabels.forEach((label) => label.destroy(true));
     this.buildingLabels = [];
 
-    // Neon signage has been retired; buildings no longer spawn floating marquees.
+    if (!this.currentMapArea?.buildings || this.currentMapArea.buildings.length === 0) {
+      return;
+    }
+
+    const { tileHeight } = this.getIsoMetrics();
+
+    const signageForStyle = (style?: string) =>
+      SIGNAGE_PALETTES[style ?? ''] ?? SIGNAGE_PALETTES.default;
+
+    this.currentMapArea.buildings.forEach((building) => {
+      const palette = signageForStyle(building.signageStyle);
+      const centerX = (building.footprint.from.x + building.footprint.to.x) / 2;
+      const anchorY = Math.min(building.footprint.from.y, building.door.y) - 0.4;
+      const pixel = this.calculatePixelPosition(centerX, anchorY);
+      const container = this.add.container(pixel.x, pixel.y - tileHeight * 0.2);
+
+      const text = this.add.text(0, 0, building.name, {
+        fontFamily: '"Share Tech Mono", "IBM Plex Mono", monospace',
+        fontSize: '14px',
+        color: palette.primary,
+        stroke: palette.secondary,
+        strokeThickness: 2,
+        align: 'center',
+      });
+      text.setOrigin(0.5);
+      text.setShadow(0, 0, palette.glow, 12, true, true);
+
+      const paddingX = 16;
+      const paddingY = 10;
+      const bg = this.add.rectangle(
+        0,
+        0,
+        text.width + paddingX,
+        text.height + paddingY,
+        Phaser.Display.Color.HexStringToColor(palette.bg).color,
+        0.62
+      );
+      bg.setStrokeStyle(1.5, Phaser.Display.Color.HexStringToColor(palette.secondary).color, 0.9);
+      bg.setOrigin(0.5);
+
+      const accent = this.add.rectangle(
+        0,
+        -text.height * 0.5 - paddingY * 0.05,
+        Math.max(32, text.width * 0.7),
+        2,
+        Phaser.Display.Color.HexStringToColor(palette.secondary).color,
+        0.9
+      );
+      accent.setOrigin(0.5);
+
+      container.add([bg, accent, text]);
+      container.setDepth(DepthLayers.MAP_BASE + 50);
+      container.setScrollFactor(1);
+      this.buildingLabels.push(container);
+    });
   }
 
   private renderTile(

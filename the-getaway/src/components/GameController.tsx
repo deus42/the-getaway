@@ -28,6 +28,9 @@ import {
   scheduleReinforcements,
   clearReinforcementsSchedule,
   setEngagementMode,
+  setMapArea,
+  setWorkbenchStatus,
+  type WorkbenchStatus,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
 import {
@@ -60,7 +63,6 @@ import {
   createCurfewStateMachine,
 } from "../game/systems/curfewStateMachine";
 import { determineEnemyMove } from "../game/combat/enemyAI";
-import { setMapArea } from "../store/worldSlice";
 import { v4 as uuidv4 } from "uuid";
 import { findPath } from "../game/world/pathfinding";
 import {
@@ -181,6 +183,59 @@ const countParanoiaConsumables = (
     { calmTabs: 0, cigarettes: 0 }
   );
 
+const WORKBENCH_PROXIMITY_MARGIN = 1.5;
+
+const resolveWorkbenchStatusForArea = (
+  area: MapArea | null,
+  player: Player | null
+): WorkbenchStatus => {
+  if (!area || !player || !Array.isArray(area.buildings) || area.buildings.length === 0) {
+    return { available: false, note: "No workbench nearby" };
+  }
+
+  const { x, y } = player.position;
+  const nearBuilding = area.buildings.find((building) => {
+    if (!building.workbench) {
+      return false;
+    }
+    const { from, to } = building.footprint;
+    return (
+      x >= from.x - WORKBENCH_PROXIMITY_MARGIN &&
+      x <= to.x + WORKBENCH_PROXIMITY_MARGIN &&
+      y >= from.y - WORKBENCH_PROXIMITY_MARGIN &&
+      y <= to.y + WORKBENCH_PROXIMITY_MARGIN
+    );
+  });
+
+  if (!nearBuilding || !nearBuilding.workbench) {
+    return { available: false, note: "No workbench nearby" };
+  }
+
+  const standing = getStandingForValue(player.factionReputation?.scavengers ?? 0);
+  const isFriendlyWithScavengers =
+    standing.id === "friendly" || standing.id === "allied";
+
+  const feeRequired =
+    nearBuilding.workbench.type === "market" && !isFriendlyWithScavengers
+      ? nearBuilding.workbench.feeRequired ?? 50
+      : undefined;
+
+  const creditSufficient = feeRequired ? player.credits >= feeRequired : true;
+
+  return {
+    available: creditSufficient,
+    locationName: nearBuilding.name,
+    type: nearBuilding.workbench.type,
+    feeRequired,
+    note:
+      feeRequired && !creditSufficient
+        ? `Requires ${feeRequired} credits or Friendly scavenger standing`
+        : feeRequired
+        ? "Fee applies if scavenger standing is below Friendly"
+        : undefined,
+  };
+};
+
 const GameController: React.FC = () => {
   const log = useMemo(() => createScopedLogger("GameController"), []);
   const dispatch = useDispatch<AppDispatch>();
@@ -209,6 +264,7 @@ const GameController: React.FC = () => {
   const mapConnections = useSelector(
     (state: RootState) => state.world.mapConnections
   );
+  const worldState = useSelector((state: RootState) => state.world);
   const dialogues = useSelector((state: RootState) => state.quests.dialogues);
   const activeDialogueId = useSelector(selectActiveDialogueId);
   const locale = useSelector((state: RootState) => state.settings.locale);
@@ -307,6 +363,14 @@ const GameController: React.FC = () => {
     calmTabs: 0,
     cigarettes: 0,
   });
+  const initialWorkbenchStatus: WorkbenchStatus =
+    worldState.workbenchStatus?.available !== undefined
+      ? { ...worldState.workbenchStatus }
+      : {
+          available: worldState.workbenchAvailable ?? false,
+          note: worldState.workbenchAvailable ? undefined : "No workbench nearby",
+        };
+  const workbenchStatusRef = useRef<WorkbenchStatus>(initialWorkbenchStatus);
 
   // State to track current enemy turn processing
   const [currentEnemyTurnIndex, setCurrentEnemyTurnIndex] = useState<number>(0);
@@ -964,6 +1028,22 @@ const GameController: React.FC = () => {
         }
       }
 
+      if (area && playerState) {
+        const status = resolveWorkbenchStatusForArea(area, playerState);
+        const prevStatus = workbenchStatusRef.current;
+        const changed =
+          prevStatus.available !== status.available ||
+          prevStatus.type !== status.type ||
+          prevStatus.locationName !== status.locationName ||
+          prevStatus.feeRequired !== status.feeRequired ||
+          prevStatus.note !== status.note;
+
+        if (changed) {
+          workbenchStatusRef.current = status;
+          dispatch(setWorkbenchStatus(status));
+        }
+      }
+
       tickEnvironmentalTriggers(dispatch, store.getState);
       frameId = window.requestAnimationFrame(tick);
     };
@@ -975,7 +1055,7 @@ const GameController: React.FC = () => {
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [mapAreaId, dispatch, logStrings, store, log, environmentImpacts]);
+  }, [mapAreaId, dispatch, logStrings, store, log, environmentImpacts, autoStealthEnabled, engagementMode, inCombat]);
 
   useEffect(() => {
     const handleTileClick = (event: Event) => {

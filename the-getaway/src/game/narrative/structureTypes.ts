@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 export type ResourceKey<Domain extends string> = `${Domain}.${string}`;
 
 export type LevelResourceKey = ResourceKey<'levels'>;
