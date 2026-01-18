@@ -20,12 +20,13 @@ import { MapTile } from '../game/interfaces/types';
 
 type StateOverrides = Omit<
   Partial<RootState>,
-  'world' | 'hudLayout' | 'surveillance' | 'suspicion'
+  'world' | 'hudLayout' | 'surveillance' | 'suspicion' | 'settings'
 > & {
   world?: Partial<RootState['world']>;
   hudLayout?: Partial<RootState['hudLayout']>;
   surveillance?: Partial<RootState['surveillance']>;
   suspicion?: Partial<RootState['suspicion']>;
+  settings?: Partial<RootState['settings']>;
 };
 
 describe('selectHudLayoutPreset', () => {
