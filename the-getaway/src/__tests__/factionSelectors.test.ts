@@ -67,6 +67,11 @@ describe('factionSelectors', () => {
     const state = deepClone(store.getState()) as RootState;
     const overrideData = overrides?.data;
 
+    state.settings = {
+      ...state.settings,
+      reputationSystemsEnabled: true,
+    };
+
     state.player = {
       ...state.player,
       ...overrides,

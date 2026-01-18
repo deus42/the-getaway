@@ -5,6 +5,12 @@
 - Keep the corresponding Linear issue in sync: move it to `In Progress` while implementing, add a completion comment with validation commands, then mark it `Done`.
 </workflow_reminder>
 
+<scope_update date="2026-01-18">
+- MVP focus: stealth, dialogue, and combat as three distinct completion paths; paranoia stays core; autobattle remains available.
+- Defer to Post-MVP: reputation/witness/gossip/rumor heat systems; storylets & dialogue complications; street-tension director & seasonal episodes; advanced combat expansions (overwatch/targeted shots, AoE/consumables); crafting & weapon mods (keep data, disable runtime/UI); heavy polish/docs/E2E/save expansion items.
+- Reduce ambient noise/events and keep George to essential guidance for MVP pacing.
+</scope_update>
+
 <phase id="1" name="Project Setup and Core Infrastructure">
 <step id="1">
 <step_metadata>

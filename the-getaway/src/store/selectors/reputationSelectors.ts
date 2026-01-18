@@ -8,14 +8,23 @@ import {
 } from '../../game/systems/reputation';
 import { FactionId } from '../../game/interfaces/types';
 
+const selectReputationSystemsEnabled = (state: RootState) =>
+  Boolean(state.settings.reputationSystemsEnabled);
+const EMPTY_PROFILES: Record<string, ReputationProfile> = {};
+
 const selectReputationRoot = (state: RootState) => state.reputation;
 
 export const selectReputationHeatmapEnabled = createSelector(
+  selectReputationSystemsEnabled,
   selectReputationRoot,
-  (state) => state.debug.heatmapEnabled
+  (enabled, state) => enabled && state.debug.heatmapEnabled
 );
 
-const selectProfiles = createSelector(selectReputationRoot, (state) => state.profiles);
+const selectProfiles = createSelector(
+  selectReputationRoot,
+  selectReputationSystemsEnabled,
+  (state, enabled) => (enabled ? state.profiles : EMPTY_PROFILES)
+);
 
 const getTraitSnapshot = (
   profile: ReputationProfile | undefined,
@@ -150,37 +159,47 @@ export const makeSelectEffectiveFactionReputation = (
   factionId: FactionId,
   options?: { cellId?: string | null; witnessId?: string | null }
 ) =>
-  createSelector(selectProfiles, selectFactionReputationMap, (profiles, factionMap): EffectiveFactionReputation => {
-    let value = factionMap[factionId] ?? 0;
-    let cumulativeWeight = 0;
-
-    const applyProfileContribution = (profileId: string | null | undefined, multiplier: number) => {
-      if (!profileId) {
-        return;
-      }
-      const profile = profiles[profileId];
-      if (!profile) {
-        return;
+  createSelector(
+    selectProfiles,
+    selectFactionReputationMap,
+    selectReputationSystemsEnabled,
+    (profiles, factionMap, enabled): EffectiveFactionReputation => {
+      if (!enabled) {
+        return { value: 0, confidence: 0 };
       }
 
-      const contribution = computeWeightedContribution(profile);
-      value += contribution.value * multiplier;
-      cumulativeWeight += contribution.weight * Math.abs(multiplier);
-    };
+      let value = factionMap[factionId] ?? 0;
+      let cumulativeWeight = 0;
 
-    applyProfileContribution(factionId, 0.7);
-    applyProfileContribution(options?.cellId ?? null, 0.55);
-    applyProfileContribution(options?.witnessId ?? null, 0.9);
+      const applyProfileContribution = (profileId: string | null | undefined, multiplier: number) => {
+        if (!profileId) {
+          return;
+        }
+        const profile = profiles[profileId];
+        if (!profile) {
+          return;
+        }
 
-    const confidence = cumulativeWeight > 0 ? Math.min(1, cumulativeWeight / 10) : 0;
+        const contribution = computeWeightedContribution(profile);
+        value += contribution.value * multiplier;
+        cumulativeWeight += contribution.weight * Math.abs(multiplier);
+      };
 
-    return {
-      value,
-      confidence,
-    };
-  });
+      applyProfileContribution(factionId, 0.7);
+      applyProfileContribution(options?.cellId ?? null, 0.55);
+      applyProfileContribution(options?.witnessId ?? null, 0.9);
+
+      const confidence = cumulativeWeight > 0 ? Math.min(1, cumulativeWeight / 10) : 0;
+
+      return {
+        value,
+        confidence,
+      };
+    }
+  );
 
 export const selectInspectorTargetId = createSelector(
+  selectReputationSystemsEnabled,
   selectReputationRoot,
-  (state) => state.debug.inspectorTargetId ?? null
+  (enabled, state) => (enabled ? state.debug.inspectorTargetId ?? null : null)
 );

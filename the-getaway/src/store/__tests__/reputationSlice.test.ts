@@ -6,6 +6,7 @@ import reputationReducer, {
 } from '../reputationSlice';
 import worldReducer from '../worldSlice';
 import playerReducer from '../playerSlice';
+import settingsReducer, { setReputationSystemsEnabled } from '../settingsSlice';
 import { MapArea, MapTile, NPC, TileType } from '../../game/interfaces/types';
 import { ReputationTrait, createReputationEvent, WitnessRecord, ReputationProfileMutation, seedRumorsFromWitnessRecords, buildSocialEdges, advanceRumors } from '../../game/systems/reputation';
 import type { AppDispatch, RootState } from '../index';
@@ -52,14 +53,18 @@ const createArea = (npcs: NPC[]): MapArea => {
   };
 };
 
-const createStore = () =>
-  configureStore({
+const createStore = () => {
+  const store = configureStore({
     reducer: {
       reputation: reputationReducer,
       world: worldReducer,
       player: playerReducer,
+      settings: settingsReducer,
     },
   });
+  store.dispatch(setReputationSystemsEnabled(true));
+  return store;
+};
 
 type TestStore = ReturnType<typeof createStore>;
 type TestState = ReturnType<TestStore['getState']>;

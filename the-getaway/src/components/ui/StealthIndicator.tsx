@@ -137,11 +137,17 @@ const StealthIndicator: React.FC = () => {
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const activeDialogueId = useSelector(selectActiveDialogueId);
   const surveillanceHud = useSelector((state: RootState) => state.surveillance.hud);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const zoneId = useSelector(
     (state: RootState) => state.world.currentMapArea.zoneId
   );
   const zoneHeat = useSelector(
-    (state: RootState) => state.suspicion.zones[zoneId]?.heat?.totalHeat ?? 0
+    (state: RootState) =>
+      reputationSystemsEnabled
+        ? state.suspicion.zones[zoneId]?.heat?.totalHeat ?? 0
+        : 0
   );
 
   const detectionProgress = surveillanceHud?.detectionProgress ?? 0;

@@ -45,6 +45,7 @@ export interface RoleTemplateGating {
 
 export interface RoleDialogueContext {
   locale: Locale;
+  reputationSystemsEnabled?: boolean;
   player: Pick<Player, 'level' | 'perks' | 'factionReputation'>;
   world: {
     timeOfDay: TimeOfDay;

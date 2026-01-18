@@ -63,6 +63,10 @@ describe('selectHudLayoutPreset', () => {
     return {
       ...baseState,
       ...overrides,
+      settings: {
+        ...baseState.settings,
+        ...(overrides.settings ?? {}),
+      },
       world: {
         ...baseState.world,
         ...overrides.world,
@@ -122,6 +126,9 @@ describe('selectHudLayoutPreset', () => {
       lastObservationAt: null,
     };
     const state = mockState({
+      settings: {
+        reputationSystemsEnabled: true,
+      },
       suspicion: hotSuspicion,
       world: {
         inCombat: false,

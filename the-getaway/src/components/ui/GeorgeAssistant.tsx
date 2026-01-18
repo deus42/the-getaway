@@ -215,6 +215,9 @@ const GeorgeAssistant: React.FC = () => {
   const nextSideObjective = useSelector(selectNextSideObjective);
   const personality = useSelector(selectPlayerPersonalityProfile);
   const factionReputation = useSelector(selectPlayerFactionReputation) as Record<FactionId, number>;
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
   const ambientSnapshot = useSelector(selectAmbientWorldSnapshot);
@@ -678,6 +681,10 @@ const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): FeedEntryPay
   useEffect(() => {
     const previous = factionRef.current;
     const current = factionReputation;
+    if (!reputationSystemsEnabled) {
+      factionRef.current = current;
+      return;
+    }
     const factionIds = new Set<FactionId>([
       ...(Object.keys(current) as FactionId[]),
       ...(Object.keys(previous) as FactionId[]),
@@ -702,7 +709,7 @@ const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): FeedEntryPay
     }
 
     factionRef.current = current;
-  }, [factionReputation, queueInterjection]);
+  }, [factionReputation, queueInterjection, reputationSystemsEnabled]);
 
   useEffect(() => {
     const previous = alertRef.current;

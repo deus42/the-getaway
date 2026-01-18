@@ -174,6 +174,9 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const npcs = useSelector((state: RootState) => state.world.currentMapArea.entities.npcs);
   const mapArea = useSelector((state: RootState) => state.world.currentMapArea);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const profileSelector = useMemo(() => (inspectorTargetId ? makeSelectProfile(inspectorTargetId) : null), [inspectorTargetId]);
   const traitsSelector = useMemo(() => (inspectorTargetId ? makeSelectTopTraitsForScope(inspectorTargetId, 4) : null), [inspectorTargetId]);
   const selectedProfile = useSelector((state: RootState) => (profileSelector ? profileSelector(state) : null));
@@ -231,6 +234,10 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const worldTimeOfDay = useSelector((state: RootState) => state.world.timeOfDay);
 
   const seedSampleEvent = useCallback(() => {
+    if (!reputationSystemsEnabled) {
+      setSeedStatus('Reputation systems are disabled for MVP.');
+      return;
+    }
     if (!inspectorTargetId || !mapArea) {
       setSeedStatus('Select an NPC inside the current map to seed a sample event.');
       return;
@@ -263,7 +270,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
       })
     );
     setSeedStatus(`Seeded a heroic event around ${npc.name}. If nothing appears, try again nearby or toggle the reputation heatmap.`);
-  }, [dispatch, inspectorTargetId, mapArea, npcs]);
+  }, [dispatch, inspectorTargetId, mapArea, npcs, reputationSystemsEnabled]);
 
   useEffect(() => {
     if (seedStatus && topTraits.length > 0) {
@@ -371,7 +378,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
             </>
           ), 'time')}
 
-          {renderSection('suspicion', `Suspicion Snapshot · ${resolvedZoneId}`, () => (
+          {reputationSystemsEnabled && renderSection('suspicion', `Suspicion Snapshot · ${resolvedZoneId}`, () => (
             <>
               <div style={metricRowStyle}>
                 <span>Heat Tier</span>
@@ -402,7 +409,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
             </>
           ), 'suspicion')}
 
-          {renderSection('reputation', `Reputation Debug · ${inspectorNpc?.name ?? 'Local Cell'}`, () => (
+          {reputationSystemsEnabled && renderSection('reputation', `Reputation Debug · ${inspectorNpc?.name ?? 'Local Cell'}`, () => (
             <>
               <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.45rem' }}>
                 <button

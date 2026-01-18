@@ -419,6 +419,9 @@ export const ingestReputationEvent =
   (options: IngestEventOptions): AppThunk =>
   (dispatch, getState) => {
     const state = getState();
+    if (!state.settings.reputationSystemsEnabled) {
+      return;
+    }
     const world = state.world;
     const player = state.player.data;
 
@@ -473,6 +476,9 @@ export const tickLocalizedReputation =
   (elapsedSeconds: number, timestamp?: number): AppThunk =>
   (dispatch, getState) => {
     const state = getState();
+    if (!state.settings.reputationSystemsEnabled) {
+      return;
+    }
     const now = timestamp ?? Date.now();
     dispatch(applyDecay({ elapsedSeconds, timestamp: now }));
 

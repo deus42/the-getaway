@@ -428,6 +428,7 @@ flowchart LR
 
 <architecture_section id="witness_memory_heat" category="gameplay_systems">
 <design_principles>
+- MVP status: disabled; gated by `settings.reputationSystemsEnabled` so witness/heat updates and HUD telemetry remain off until Post-MVP.
 - Model suspicion as decaying eyewitness memory so stealth pressure emerges from elapsed time and behaviour rather than scripted cooldowns.
 - Keep per-witness data local to observers while exposing aggregated heat via memoised selectors that HUD, AI, and content systems can share.
 - Synchronise decay with world time controls (pause, cutscenes, dialogue) to avoid double ticks or skipped updates during freezes.
@@ -456,6 +457,7 @@ flowchart LR
 
 <architecture_section id="localized_reputation_network" category="gameplay_systems">
 <design_principles>
+- MVP status: disabled; gated by `settings.reputationSystemsEnabled` so reputation/gossip propagation is paused until Post-MVP.
 - Scope notoriety updates to the smallest meaningful audience first (witness → faction → neighborhood) so systemic reactions stay believable and performant.
 - Keep event sensing, witness evaluation, interpretation, propagation, and reaction decoupled through message contracts to minimize feedback loops between UI, AI, and data layers.
 - Budget rumor spread and decay inside the system itself so designers tweak pacing without touching consuming systems.
@@ -644,6 +646,7 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 ## Faction Reputation System
 
 <design_principles>
+- MVP status: disabled; gated by `settings.reputationSystemsEnabled`, hiding HUD panels and gating logic until Post-MVP.
 - Keep faction definitions declarative so content updates never require reducer rewrites.
 - Treat rival penalties and allied hostilities as systemic rules living in one helper so Redux, UI, and content stay in sync.
 - Surface every reputation change through a dedicated event queue so HUD, toast, and accessibility layers consume a single source of truth.

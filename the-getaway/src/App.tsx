@@ -460,6 +460,9 @@ function AppShell() {
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(true);
   const hudLayoutPreset = useSelector(selectHudLayoutPreset);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
 
   useEffect(() => {
     log.debug('Component mounted');
@@ -740,7 +743,7 @@ function AppShell() {
   return (
     <>
       <MissionProgressionManager />
-      <FactionReputationManager />
+      {reputationSystemsEnabled && <FactionReputationManager />}
       <div style={layoutShellStyle}>
         {gameStarted && (
           <CommandShell

@@ -2,10 +2,16 @@ import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '..';
 import { HudLayoutPreset } from '../hudLayoutSlice';
 
+const selectReputationSystemsEnabled = (state: RootState) =>
+  Boolean(state.settings.reputationSystemsEnabled);
+
 const selectHudLayoutOverrideValue = (state: RootState) =>
   state.hudLayout.override;
 
 const selectCurrentZoneHeat = (state: RootState) => {
+  if (!selectReputationSystemsEnabled(state)) {
+    return 0;
+  }
   const zoneId = state.world.currentMapArea?.zoneId ?? null;
   if (!zoneId) {
     return 0;

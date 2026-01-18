@@ -69,6 +69,9 @@ export const FactionReputationManager: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const events = useSelector(selectPendingFactionEvents);
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const factionNames = uiStrings.playerStatus.factions;
   const [toasts, setToasts] = useState<FactionToast[]>([]);
@@ -84,6 +87,12 @@ export const FactionReputationManager: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (!reputationSystemsEnabled) {
+      Object.values(timeoutRefs.current).forEach((handle) => window.clearTimeout(handle));
+      timeoutRefs.current = {};
+      setToasts([]);
+      return;
+    }
     if (!events.length) {
       return;
     }
@@ -169,14 +178,14 @@ export const FactionReputationManager: React.FC = () => {
     });
 
     dispatch(consumeFactionReputationEvents());
-  }, [dispatch, events, factionNames, locale, removeToast, uiStrings.factionToast]);
+  }, [dispatch, events, factionNames, locale, removeToast, uiStrings.factionToast, reputationSystemsEnabled]);
 
   useEffect(() => () => {
     Object.values(timeoutRefs.current).forEach((handle) => window.clearTimeout(handle));
     timeoutRefs.current = {};
   }, []);
 
-  if (toasts.length === 0) {
+  if (!reputationSystemsEnabled || toasts.length === 0) {
     return null;
   }
 

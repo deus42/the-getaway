@@ -102,6 +102,7 @@ import {
   purgeWitnessMemories,
 } from "../store/suspicionSlice";
 import { buildGuardWitnessObservation } from "../game/systems/suspicion/observationBuilders";
+import { WitnessObservation } from "../game/systems/suspicion";
 import { createScopedLogger } from "../utils/logger";
 import { triggerStorylet } from "../store/storyletSlice";
 import { tickEnvironmentalTriggers } from "../game/world/triggers/triggerRegistry";
@@ -187,7 +188,8 @@ const WORKBENCH_PROXIMITY_MARGIN = 1.5;
 
 const resolveWorkbenchStatusForArea = (
   area: MapArea | null,
-  player: Player | null
+  player: Player | null,
+  reputationSystemsEnabled: boolean
 ): WorkbenchStatus => {
   if (!area || !player || !Array.isArray(area.buildings) || area.buildings.length === 0) {
     return { available: false, note: "No workbench nearby" };
@@ -211,28 +213,38 @@ const resolveWorkbenchStatusForArea = (
     return { available: false, note: "No workbench nearby" };
   }
 
-  const standing = getStandingForValue(player.factionReputation?.scavengers ?? 0);
-  const isFriendlyWithScavengers =
-    standing.id === "friendly" || standing.id === "allied";
+  let isFriendlyWithScavengers = false;
+  if (reputationSystemsEnabled) {
+    const standing = getStandingForValue(player.factionReputation?.scavengers ?? 0);
+    isFriendlyWithScavengers =
+      standing.id === "friendly" || standing.id === "allied";
+  }
 
   const feeRequired =
-    nearBuilding.workbench.type === "market" && !isFriendlyWithScavengers
+    nearBuilding.workbench.type === "market" &&
+    (!reputationSystemsEnabled || !isFriendlyWithScavengers)
       ? nearBuilding.workbench.feeRequired ?? 50
       : undefined;
 
   const creditSufficient = feeRequired ? player.credits >= feeRequired : true;
+
+  const note =
+    feeRequired && !creditSufficient
+      ? reputationSystemsEnabled
+        ? `Requires ${feeRequired} credits or Friendly scavenger standing`
+        : `Requires ${feeRequired} credits`
+      : feeRequired
+      ? reputationSystemsEnabled
+        ? "Fee applies if scavenger standing is below Friendly"
+        : "Market workbench fee applies"
+      : undefined;
 
   return {
     available: creditSufficient,
     locationName: nearBuilding.name,
     type: nearBuilding.workbench.type,
     feeRequired,
-    note:
-      feeRequired && !creditSufficient
-        ? `Requires ${feeRequired} credits or Friendly scavenger standing`
-        : feeRequired
-        ? "Fee applies if scavenger standing is below Friendly"
-        : undefined,
+    note,
   };
 };
 
@@ -283,6 +295,9 @@ const GameController: React.FC = () => {
   );
   const autoStealthEnabled = useSelector(
     (state: RootState) => state.settings.autoStealthEnabled
+  );
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
   );
   const turnCount = useSelector((state: RootState) => state.world.turnCount);
   const globalAlertLevel = useSelector(
@@ -618,8 +633,13 @@ const GameController: React.FC = () => {
       return;
     }
 
-    const previousEnemies = previousEnemiesRef.current;
     const currentEnemyMap = new Map(enemies.map((enemy) => [enemy.id, enemy]));
+    if (!reputationSystemsEnabled) {
+      previousEnemiesRef.current = currentEnemyMap;
+      return;
+    }
+
+    const previousEnemies = previousEnemiesRef.current;
 
     previousEnemies.forEach((_, enemyId) => {
       const currentEnemy = currentEnemyMap.get(enemyId);
@@ -634,7 +654,7 @@ const GameController: React.FC = () => {
     });
 
     previousEnemiesRef.current = currentEnemyMap;
-  }, [enemies, currentMapArea, dispatch]);
+  }, [enemies, currentMapArea, dispatch, reputationSystemsEnabled]);
 
   useEffect(() => {
     reinforcementsScheduledRef.current = reinforcementsScheduled;
@@ -926,13 +946,16 @@ const GameController: React.FC = () => {
       const latestWorld = latestState.world;
 
       if (area && playerState) {
+        const effectiveZoneHeat = reputationSystemsEnabled
+          ? zoneHeatRef.current
+          : null;
         const paranoiaResult = evaluateParanoiaStimuli(
           {
             player: playerState,
             enemies: area.entities.enemies,
             mapArea: area,
             surveillanceZone: zoneState,
-            zoneHeat: zoneHeatRef.current,
+            zoneHeat: effectiveZoneHeat,
             environmentImpacts,
             timeOfDay: latestWorld.timeOfDay,
             curfewActive: latestWorld.curfewActive,
@@ -988,6 +1011,14 @@ const GameController: React.FC = () => {
       }
 
       if (zoneState && area && playerState) {
+        const handleWitnessObservation = reputationSystemsEnabled
+          ? (observation: WitnessObservation) => {
+              dispatch(ingestObservation(observation));
+              log.debug(
+                `Suspicion: camera ${observation.witnessId} reported player in ${observation.zoneId} (${observation.recognitionChannel})`
+              );
+            }
+          : undefined;
         updateSurveillance({
           zone: zoneState,
           mapArea: area,
@@ -1001,12 +1032,7 @@ const GameController: React.FC = () => {
           timeOfDay: latestWorld.timeOfDay,
           environmentFlags: latestWorld.environment.flags,
           worldTimeSeconds: latestWorld.currentTime,
-          onWitnessObservation: (observation) => {
-            dispatch(ingestObservation(observation));
-            log.debug(
-              `Suspicion: camera ${observation.witnessId} reported player in ${observation.zoneId} (${observation.recognitionChannel})`
-            );
-          },
+          onWitnessObservation: handleWitnessObservation,
         });
       }
 
@@ -1029,7 +1055,11 @@ const GameController: React.FC = () => {
       }
 
       if (area && playerState) {
-        const status = resolveWorkbenchStatusForArea(area, playerState);
+        const status = resolveWorkbenchStatusForArea(
+          area,
+          playerState,
+          reputationSystemsEnabled
+        );
         const prevStatus = workbenchStatusRef.current;
         const changed =
           prevStatus.available !== status.available ||
@@ -1055,7 +1085,18 @@ const GameController: React.FC = () => {
         window.cancelAnimationFrame(frameId);
       }
     };
-  }, [mapAreaId, dispatch, logStrings, store, log, environmentImpacts, autoStealthEnabled, engagementMode, inCombat]);
+  }, [
+    mapAreaId,
+    dispatch,
+    logStrings,
+    store,
+    log,
+    environmentImpacts,
+    autoStealthEnabled,
+    engagementMode,
+    inCombat,
+    reputationSystemsEnabled,
+  ]);
 
   useEffect(() => {
     const handleTileClick = (event: Event) => {
@@ -1545,7 +1586,7 @@ const GameController: React.FC = () => {
       const targetArea = mapDirectory[connection.toAreaId];
 
       if (targetArea) {
-        if (targetArea.factionRequirement) {
+        if (reputationSystemsEnabled && targetArea.factionRequirement) {
           const requirement = targetArea.factionRequirement;
           const factionName =
             uiStrings.playerStatus.factions[requirement.factionId] ??
@@ -1655,6 +1696,7 @@ const GameController: React.FC = () => {
     attemptMovementStamina,
     locale,
     uiStrings,
+    reputationSystemsEnabled,
   ]);
 
   useEffect(() => {
@@ -1800,8 +1842,11 @@ const GameController: React.FC = () => {
   }, [timeOfDay, dispatch, logStrings]);
 
   useEffect(() => {
+    if (!reputationSystemsEnabled) {
+      return;
+    }
     dispatch(setSuspicionPaused(Boolean(activeDialogueId)));
-  }, [activeDialogueId, dispatch]);
+  }, [activeDialogueId, dispatch, reputationSystemsEnabled]);
 
   // --- Perception Processing ---
   useEffect(() => {
@@ -1888,32 +1933,34 @@ const GameController: React.FC = () => {
       }
     });
 
-    guardPerception.forEach(({ enemy: guard, playerVisible }) => {
-      if (!playerVisible) {
-        return;
-      }
+    if (reputationSystemsEnabled) {
+      guardPerception.forEach(({ enemy: guard, playerVisible }) => {
+        if (!playerVisible) {
+          return;
+        }
 
-      const observation = buildGuardWitnessObservation({
-        enemy: guard,
-        player,
-        mapArea: currentMapArea,
-        timeOfDay,
-        environmentFlags,
-        playerVisible,
-        timestamp: worldCurrentTime,
+        const observation = buildGuardWitnessObservation({
+          enemy: guard,
+          player,
+          mapArea: currentMapArea,
+          timeOfDay,
+          environmentFlags,
+          playerVisible,
+          timestamp: worldCurrentTime,
+        });
+
+        if (observation) {
+          dispatch(ingestObservation(observation));
+          log.debug(
+            `Suspicion: guard ${guard.id} observed player in ${
+              currentMapArea.zoneId
+            } (certainty ${(
+              observation.baseCertainty * observation.distanceModifier
+            ).toFixed(2)})`
+          );
+        }
       });
-
-      if (observation) {
-        dispatch(ingestObservation(observation));
-        log.debug(
-          `Suspicion: guard ${guard.id} observed player in ${
-            currentMapArea.zoneId
-          } (certainty ${(
-            observation.baseCertainty * observation.distanceModifier
-          ).toFixed(2)})`
-        );
-      }
-    });
+    }
 
     // Update global alert level if changed
     if (maxAlertLevel !== previousGlobalAlertLevel.current) {
@@ -2000,6 +2047,7 @@ const GameController: React.FC = () => {
     environmentFlags,
     worldCurrentTime,
     log,
+    reputationSystemsEnabled,
   ]);
 
   // --- Enemy Turn Logic ---

@@ -2420,12 +2420,17 @@ export class MainScene extends Phaser.Scene {
     if (this.timeDispatchAccumulator >= 0.5) {
       const elapsedSeconds = this.timeDispatchAccumulator;
       store.dispatch(updateGameTimeAction(elapsedSeconds));
-      store.dispatch(
-        applySuspicionDecay({
-          elapsedSeconds,
-          timestamp: this.currentGameTime,
-        })
+      const reputationSystemsEnabled = Boolean(
+        store.getState().settings.reputationSystemsEnabled
       );
+      if (reputationSystemsEnabled) {
+        store.dispatch(
+          applySuspicionDecay({
+            elapsedSeconds,
+            timestamp: this.currentGameTime,
+          })
+        );
+      }
       this.timeDispatchAccumulator = 0;
     }
 

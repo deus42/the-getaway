@@ -8,6 +8,14 @@ import {
   FactionStandingId,
 } from '../../game/systems/factions';
 
+const selectReputationSystemsEnabled = (state: RootState) =>
+  Boolean(state.settings.reputationSystemsEnabled);
+const DEFAULT_FACTION_REPUTATION: Record<FactionId, number> = {
+  resistance: 0,
+  corpsec: 0,
+  scavengers: 0,
+};
+
 const selectPlayerFactionMap = (state: RootState) => state.player.data.factionReputation;
 const selectFactionEventsRoot = (state: RootState) => state.player.pendingFactionEvents ?? [];
 
@@ -15,12 +23,14 @@ export const selectFactionDefinitions = () => getFactionDefinitions();
 
 export const selectFactionReputationMap = createSelector(
   selectPlayerFactionMap,
-  (map) => ({ ...map })
+  selectReputationSystemsEnabled,
+  (map, enabled) => (enabled ? { ...map } : DEFAULT_FACTION_REPUTATION)
 );
 
 export const selectPendingFactionEvents = createSelector(
   selectFactionEventsRoot,
-  (events) => [...events]
+  selectReputationSystemsEnabled,
+  (events, enabled) => (enabled ? [...events] : [])
 );
 
 export interface FactionStandingWithMetadata {
@@ -37,9 +47,10 @@ export interface FactionStandingWithMetadata {
 }
 
 export const makeSelectFactionStanding = (factionId: FactionId) =>
-  createSelector(selectPlayerFactionMap, (map): FactionStandingWithMetadata => {
+  createSelector(selectPlayerFactionMap, selectReputationSystemsEnabled, (map, enabled): FactionStandingWithMetadata => {
     const metadata = getFactionMetadata(factionId);
-    const summary = getFactionStandingSummary(factionId, map[factionId] ?? metadata.definition.defaultReputation);
+    const value = enabled ? map[factionId] ?? metadata.definition.defaultReputation : metadata.definition.defaultReputation;
+    const summary = getFactionStandingSummary(factionId, value);
     return {
       factionId,
       name: metadata.definition.name,
@@ -54,23 +65,31 @@ export const makeSelectFactionStanding = (factionId: FactionId) =>
     };
   });
 
-export const selectAllFactionStandings = createSelector(selectPlayerFactionMap, (map) => {
-  const orderedDefinitions = getFactionDefinitions();
+export const selectAllFactionStandings = createSelector(
+  selectPlayerFactionMap,
+  selectReputationSystemsEnabled,
+  (map, enabled) => {
+    if (!enabled) {
+      return [];
+    }
 
-  return orderedDefinitions.map(({ id }) => {
-    const metadata = getFactionMetadata(id);
-    const summary = getFactionStandingSummary(id, map[id] ?? metadata.definition.defaultReputation);
-    return {
-      factionId: id,
-      name: metadata.definition.name,
-      description: metadata.definition.description,
-      value: summary.value,
-      standingId: summary.standing.id,
-      standingLabel: summary.standing.label,
-      color: summary.standing.color,
-      icon: summary.standing.icon,
-      effects: summary.effects,
-      nextThreshold: summary.nextThreshold,
-    } as FactionStandingWithMetadata;
-  });
-});
+    const orderedDefinitions = getFactionDefinitions();
+
+    return orderedDefinitions.map(({ id }) => {
+      const metadata = getFactionMetadata(id);
+      const summary = getFactionStandingSummary(id, map[id] ?? metadata.definition.defaultReputation);
+      return {
+        factionId: id,
+        name: metadata.definition.name,
+        description: metadata.definition.description,
+        value: summary.value,
+        standingId: summary.standing.id,
+        standingLabel: summary.standing.label,
+        color: summary.standing.color,
+        icon: summary.standing.icon,
+        effects: summary.effects,
+        nextThreshold: summary.nextThreshold,
+      } as FactionStandingWithMetadata;
+    });
+  }
+);

@@ -62,8 +62,12 @@ export const checkSkillRequirement = (player: Player, option: DialogueOption): b
   return skillCheckPasses(attributeValue, threshold, bonus);
 };
 
-const checkFactionRequirement = (player: Player, option: DialogueOption): boolean => {
-  if (!option.factionRequirement) {
+const checkFactionRequirement = (
+  player: Player,
+  option: DialogueOption,
+  reputationSystemsEnabled: boolean = true
+): boolean => {
+  if (!reputationSystemsEnabled || !option.factionRequirement) {
     return true;
   }
 
@@ -100,9 +104,16 @@ const checkFactionRequirement = (player: Player, option: DialogueOption): boolea
 };
 
 // Filter dialogue options based on player skills
-export const getAvailableOptions = (player: Player, node: DialogueNode): DialogueOption[] => {
+export const getAvailableOptions = (
+  player: Player,
+  node: DialogueNode,
+  options?: { reputationSystemsEnabled?: boolean }
+): DialogueOption[] => {
+  const reputationEnabled = options?.reputationSystemsEnabled ?? true;
   return node.options.filter(
-    (option) => checkSkillRequirement(player, option) && checkFactionRequirement(player, option)
+    (option) =>
+      checkSkillRequirement(player, option)
+      && checkFactionRequirement(player, option, reputationEnabled)
   );
 };
 
@@ -112,7 +123,8 @@ export const selectDialogueOption = (
   currentNodeId: string,
   optionIndex: number,
   player: Player,
-  quests: Quest[]
+  quests: Quest[],
+  options?: { reputationSystemsEnabled?: boolean }
 ): {
   nextNode: DialogueNode | null;
   player: Player;
@@ -122,6 +134,7 @@ export const selectDialogueOption = (
     questId: string;
   };
 } => {
+  const reputationEnabled = options?.reputationSystemsEnabled ?? true;
   const currentNode = getDialogueNode(dialogue, currentNodeId);
 
   if (!currentNode || optionIndex < 0 || optionIndex >= currentNode.options.length) {
@@ -135,7 +148,10 @@ export const selectDialogueOption = (
   }
   
   // Check if skill requirement is met
-  if (!checkSkillRequirement(player, selectedOption) || !checkFactionRequirement(player, selectedOption)) {
+  if (
+    !checkSkillRequirement(player, selectedOption)
+    || !checkFactionRequirement(player, selectedOption, reputationEnabled)
+  ) {
     return { nextNode: null, player, quests };
   }
   

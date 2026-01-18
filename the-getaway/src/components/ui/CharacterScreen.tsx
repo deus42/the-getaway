@@ -224,6 +224,9 @@ const hiddenStateStyle: React.CSSProperties = {
 
 const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const uiStrings = getUIStrings(locale);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [activeTab, setActiveTab] = useState<'inventory' | 'loadout' | 'skills' | 'reputation'>('inventory');
@@ -263,6 +266,22 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
       setShowSystems(true);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!reputationSystemsEnabled && activeTab === 'reputation') {
+      setActiveTab('inventory');
+    }
+  }, [activeTab, reputationSystemsEnabled]);
+
+  const tabs: Array<{ id: 'inventory' | 'loadout' | 'skills' | 'reputation'; label: string }> = [
+    { id: 'inventory', label: uiStrings.character.tabs.inventory },
+    { id: 'loadout', label: uiStrings.character.tabs.loadout },
+    { id: 'skills', label: uiStrings.character.tabs.skills },
+    { id: 'reputation', label: uiStrings.character.tabs.reputation },
+  ];
+  const visibleTabs = reputationSystemsEnabled
+    ? tabs
+    : tabs.filter((tab) => tab.id !== 'reputation');
 
   if (!open) {
     return null;
@@ -338,12 +357,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
             <div style={systemsColumnStyle}>
               <div style={tabShellStyle}>
                 <div style={tabListStyle} role="tablist" aria-label={uiStrings.character.tablistAria}>
-                  {([
-                    { id: 'inventory', label: uiStrings.character.tabs.inventory },
-                    { id: 'loadout', label: uiStrings.character.tabs.loadout },
-                    { id: 'skills', label: uiStrings.character.tabs.skills },
-                    { id: 'reputation', label: uiStrings.character.tabs.reputation },
-                  ] as const).map((tab) => {
+                  {visibleTabs.map((tab) => {
                   const isActive = activeTab === tab.id;
                   return (
                     <button
@@ -398,7 +412,7 @@ const CharacterScreen: React.FC<CharacterScreenProps> = ({ open, onClose }) => {
                     </div>
                   </div>
                 )}
-                {activeTab === 'reputation' && (
+                {reputationSystemsEnabled && activeTab === 'reputation' && (
                   <div
                     id="character-tab-reputation"
                     role="tabpanel"

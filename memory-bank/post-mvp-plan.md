@@ -2,6 +2,11 @@
 
 This document catalogs Phase 9 optional expansions that were split out of `memory-bank/mvp-plan.md`. Step numbering is preserved to keep roadmap references intact, including Step 31 (Industrial Wasteland) which was moved here from the MVP scope.
 
+<scope_update date="2026-01-18">
+- Deferred from MVP scope: storylets/dialogue complications, reputation/witness/gossip/rumor heat systems, street-tension director, seasonal episodes, advanced combat expansions (overwatch/targeted shots, AoE/consumables), crafting & weapon mods, and major polish/docs/E2E/save expansion items.
+- Keep step numbering intact; corresponding Linear issues were moved to PostMVP Backlog for sequencing.
+</scope_update>
+
 <phase id="9" name="Optional Expansions (POST-MVP)">
 <step id="26.1">
 <step_metadata>

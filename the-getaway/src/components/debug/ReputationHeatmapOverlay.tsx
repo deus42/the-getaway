@@ -47,11 +47,14 @@ const computeCellValue = (profile: ReputationProfile | undefined): number => {
 const ReputationHeatmapOverlay: React.FC = () => {
   const enabled = useSelector(selectReputationHeatmapEnabled);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const mapArea = useSelector((state: RootState) => state.world.currentMapArea);
   const profiles = useSelector((state: RootState) => state.reputation.profiles);
 
   const cells = useMemo(() => {
-    if (!mapArea) {
+    if (!mapArea || !reputationSystemsEnabled) {
       return [] as Array<{ id: string; value: number }>;
     }
     const cols = Math.ceil(mapArea.width / CELL_SIZE);
@@ -65,10 +68,10 @@ const ReputationHeatmapOverlay: React.FC = () => {
       }
     }
     return output;
-  }, [mapArea, profiles]);
+  }, [mapArea, profiles, reputationSystemsEnabled]);
 
   const gridStyle = useMemo(() => {
-    if (!mapArea) {
+    if (!mapArea || !reputationSystemsEnabled) {
       return containerStyle;
     }
     const cols = Math.ceil(mapArea.width / CELL_SIZE);
@@ -78,9 +81,9 @@ const ReputationHeatmapOverlay: React.FC = () => {
       gridTemplateColumns: `repeat(${cols}, 1fr)`,
       gridTemplateRows: `repeat(${rows}, 1fr)`,
     } as React.CSSProperties;
-  }, [mapArea]);
+  }, [mapArea, reputationSystemsEnabled]);
 
-  if (!enabled || !testMode || !mapArea) {
+  if (!reputationSystemsEnabled || !enabled || !testMode || !mapArea) {
     return null;
   }
 

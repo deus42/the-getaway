@@ -469,6 +469,9 @@ const PlayerInventoryPanel: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const player = useSelector((state: RootState) => state.player.data);
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const workbenchStatus = useSelector((state: RootState) => state.world.workbenchStatus);
   const legacyWorkbenchAvailable = useSelector(
     (state: RootState) => state.world.workbenchAvailable
@@ -1090,7 +1093,9 @@ const PlayerInventoryPanel: React.FC = () => {
               </span>
               {workbenchFee > 0 && (
                 <span style={{ ...subtleText, fontSize: '0.62rem', color: '#fbbf24' }}>
-                  {`Market access fee: ${workbenchFee} credits if Scavenger rep < Friendly`}
+                  {reputationSystemsEnabled
+                    ? `Market access fee: ${workbenchFee} credits if Scavenger rep < Friendly`
+                    : `Market access fee: ${workbenchFee} credits`}
                 </span>
               )}
               {workbenchNote && (
@@ -1489,7 +1494,9 @@ const PlayerInventoryPanel: React.FC = () => {
         </span>
         {workbenchFee > 0 && (
           <span style={{ ...subtleText, fontSize: '0.6rem', color: '#fbbf24' }}>
-            {`Fee: ${workbenchFee} credits if Scavenger reputation < Friendly`}
+            {reputationSystemsEnabled
+              ? `Fee: ${workbenchFee} credits if Scavenger reputation < Friendly`
+              : `Fee: ${workbenchFee} credits`}
           </span>
         )}
       </div>

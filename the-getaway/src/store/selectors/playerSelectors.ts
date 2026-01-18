@@ -1,14 +1,22 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '..';
-import { PersonalityFlags, PersonalityProfile, PersonalityTrait } from '../../game/interfaces/types';
+import { FactionId, PersonalityFlags, PersonalityProfile, PersonalityTrait } from '../../game/interfaces/types';
 
 const selectPlayerState = (state: RootState) => state.player.data;
+const selectReputationSystemsEnabled = (state: RootState) =>
+  Boolean(state.settings.reputationSystemsEnabled);
+const DEFAULT_FACTION_REPUTATION: Record<FactionId, number> = {
+  resistance: 0,
+  corpsec: 0,
+  scavengers: 0,
+};
 
 export const selectPlayerKarma = createSelector(selectPlayerState, (player) => player.karma);
 
 export const selectPlayerFactionReputation = createSelector(
   selectPlayerState,
-  (player) => player.factionReputation
+  selectReputationSystemsEnabled,
+  (player, enabled) => (enabled ? player.factionReputation : DEFAULT_FACTION_REPUTATION)
 );
 
 const PERSONALITY_WEIGHT_BY_BACKGROUND: Record<string, Partial<PersonalityFlags>> = {

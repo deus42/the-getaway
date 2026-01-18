@@ -9,11 +9,17 @@ const TacticalHUDFrame: React.FC = () => {
   const surveillanceHud = useSelector(
     (state: RootState) => state.surveillance.hud
   );
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const zoneId = useSelector(
     (state: RootState) => state.world.currentMapArea.zoneId
   );
   const zoneHeat = useSelector(
-    (state: RootState) => state.suspicion.zones[zoneId]?.heat
+    (state: RootState) =>
+      reputationSystemsEnabled
+        ? state.suspicion.zones[zoneId]?.heat
+        : undefined
   );
   const [time, setTime] = useState(() => new Date());
 

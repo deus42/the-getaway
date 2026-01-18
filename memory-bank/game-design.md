@@ -86,7 +86,7 @@ These systems ensure the city feels alive and immersive. The player is one part 
 <mechanic name="trust_fear_ethics">
 Trust/Fear Ethics Layer (MVP - Step 29.2)
 
-<implementation_status>⚠️ PARTIAL - Introduced in Step 29.2, expands into localized gossip network in Step 29.5</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - Trust/Fear ethics are disabled alongside reputation/witness systems; resume Post-MVP.</implementation_status>
 
 Moral perception in The Getaway leans into survival pragmatism rather than binary good/evil. Each faction and neighborhood cell maintains a lightweight `EthicsProfile` with two axes:
 	•	**Trust (-100..100)** — Measures whether locals believe the crew will protect their interests. Positive trust unlocks safer routes, better prices, and candid intel.
@@ -126,6 +126,8 @@ This layer ensures the world reacts to scarcity-driven ethics immediately while 
 <mechanic name="localized_reputation_network">
 Localized Reputation & Gossip System
 
+<implementation_status>❌ DEFERRED FOR MVP - Localized reputation/gossip propagation is disabled; resume Post-MVP.</implementation_status>
+
 The city remembers what it actually sees. Instead of a single global meter, reputation propagates through witnesses and their social webs so fame and infamy feel rooted in specific places and crews.
 
 **Core Loop**
@@ -160,6 +162,8 @@ This system reinforces stealth, intimidation, and altruism builds by rewarding i
 
 <mechanic name="witness_memory_heat">
 Witness Memory & Regional Heat
+
+<implementation_status>❌ DEFERRED FOR MVP - Witness memory & regional heat are disabled; resume Post-MVP.</implementation_status>
 
 Binary "wanted" flags flatten stealth play. Instead, eyewitnesses retain fuzzy memories that cool over time unless refreshed, and nearby security forces read the hottest memories to decide how aggressively they respond.
 
@@ -522,6 +526,8 @@ Overall, the story structure is designed for branching and convergence: there ar
 
 <mechanic name="procedural_storylets">
 Procedural Storylets (“Library of Plays”)
+
+<implementation_status>❌ DEFERRED FOR MVP - Storylets removed from MVP scope; revisit Post-MVP.</implementation_status>
 
 To keep emergent runs feeling authored, the campaign adopts a three-layer storylet framework inspired by Wildermyth’s “Library of Plays” approach:
 	•	Villain Plot Spine: Each campaign arc defines explicit Act I / II / III beats (setup, escalation, finale). These beats act as the narrative spine that anchors randomization to a destination. The spine tracks active antagonist goals, required locations, and milestone quests that must land to keep the story coherent.

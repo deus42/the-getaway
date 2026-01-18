@@ -120,10 +120,13 @@ const formatPercentage = (value: number): number => {
 
 export const FactionReputationPanel: React.FC = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const factions = useSelector(selectAllFactionStandings);
 
-  if (!factions.length) {
+  if (!reputationSystemsEnabled || !factions.length) {
     return null;
   }
 

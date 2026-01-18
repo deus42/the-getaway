@@ -4,11 +4,14 @@ import { getHighestHeatTier } from '../suspicionSlice';
 import { HeatTier, WitnessMemory } from '../../game/systems/suspicion';
 import { fromWitnessMemorySnapshot } from '../../game/systems/suspicion/witnessMemory';
 
+const selectReputationSystemsEnabled = (state: RootState) =>
+  Boolean(state.settings.reputationSystemsEnabled);
+
 export const selectSuspicionState = (state: RootState) => state.suspicion;
 
 export const selectZoneSuspicionState = (zoneId: string | null | undefined) =>
-  createSelector(selectSuspicionState, (suspicion) => {
-    if (!zoneId) {
+  createSelector(selectSuspicionState, selectReputationSystemsEnabled, (suspicion, enabled) => {
+    if (!enabled || !zoneId) {
       return null;
     }
     return suspicion.zones[zoneId] ?? null;
@@ -27,9 +30,16 @@ export const selectZoneHeat = (zoneId: string | null | undefined) =>
     return zone.heat;
   });
 
-export const selectGlobalHeatTier = createSelector(selectSuspicionState, (suspicion): HeatTier => {
-  return getHighestHeatTier(suspicion.zones);
-});
+export const selectGlobalHeatTier = createSelector(
+  selectSuspicionState,
+  selectReputationSystemsEnabled,
+  (suspicion, enabled): HeatTier => {
+    if (!enabled) {
+      return 'calm';
+    }
+    return getHighestHeatTier(suspicion.zones);
+  }
+);
 
 export const selectLeadingWitnessMemories = (zoneId: string | null | undefined) =>
   createSelector(selectZoneSuspicionState(zoneId), (zone): WitnessMemory[] => {

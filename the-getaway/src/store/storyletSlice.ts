@@ -210,7 +210,8 @@ const buildQueueItem = (
 const applyStoryletEffects = (
   resolution: StoryletResolution,
   locale: Locale,
-  dispatch: AppDispatch
+  dispatch: AppDispatch,
+  reputationSystemsEnabled: boolean
 ) => {
   const strings = getStoryletLocaleStrings(locale);
   const roleTokens: Record<string, string> = {};
@@ -231,6 +232,9 @@ const applyStoryletEffects = (
         break;
       }
       case 'faction': {
+        if (!reputationSystemsEnabled) {
+          break;
+        }
         dispatch(
           adjustFactionReputation({
             factionId: effect.factionId,
@@ -291,7 +295,12 @@ export const triggerStorylet =
       return;
     }
 
-    applyStoryletEffects(resolution, locale, dispatch);
+    applyStoryletEffects(
+      resolution,
+      locale,
+      dispatch,
+      Boolean(state.settings.reputationSystemsEnabled)
+    );
 
     const queueItem = buildQueueItem(resolution, locale);
 

@@ -18,6 +18,7 @@ import { addLogMessage } from "../../store/logSlice";
 import {
   DialogueNode,
   DialogueOption,
+  FactionId,
   Item,
   SkillId,
 } from "../../game/interfaces/types";
@@ -39,6 +40,11 @@ type QuestLockReason =
   | "objectiveCompleted";
 
 const ROLE_TEMPLATE_PATTERN = /^\[roleTemplate:([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\]$/i;
+const FALLBACK_FACTION_REPUTATION: Record<FactionId, number> = {
+  resistance: 0,
+  corpsec: 0,
+  scavengers: 0,
+};
 
 const parseRoleTemplateReference = (
   text: string | null | undefined
@@ -62,6 +68,9 @@ const DialogueOverlay: React.FC = () => {
   const dispatch = useDispatch();
   const quests = useSelector((state: RootState) => state.quests.quests);
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const reputationSystemsEnabled = useSelector(
+    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
+  );
   const systemStrings = getSystemStrings(locale);
   const uiStrings = getUIStrings(locale);
   const { logs: logStrings } = systemStrings;
@@ -249,10 +258,13 @@ const DialogueOverlay: React.FC = () => {
       const playerContext: RoleDialogueContext['player'] = {
         level: player.level,
         perks: player.perks ?? [],
-        factionReputation: player.factionReputation ?? {},
+        factionReputation: reputationSystemsEnabled
+          ? player.factionReputation ?? FALLBACK_FACTION_REPUTATION
+          : FALLBACK_FACTION_REPUTATION,
       };
       const context: RoleDialogueContext = {
         locale,
+        reputationSystemsEnabled,
         player: playerContext,
         world: {
           timeOfDay: world.timeOfDay,
@@ -292,7 +304,7 @@ const DialogueOverlay: React.FC = () => {
       fallbackText,
       seedOverride,
     };
-  }, [dialogue, currentNode, locale, player, world]);
+  }, [dialogue, currentNode, locale, player, world, reputationSystemsEnabled]);
 
   const toneLine = useMemo(() => {
     if (!toneRequest) {

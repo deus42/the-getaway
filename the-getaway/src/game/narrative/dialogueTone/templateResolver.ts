@@ -105,6 +105,9 @@ const checkFactionGates = (
   context: RoleDialogueContext,
   templates: RoleTemplateFactionGate[] | undefined,
 ): boolean => {
+  if (context.reputationSystemsEnabled === false) {
+    return true;
+  }
   if (!templates || templates.length === 0) {
     return true;
   }
