@@ -22,7 +22,7 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
    - Keep the issue in `In Progress` (or `In Review` if that state exists) until the user signs off; do not self-certify completion.  
    - After committing with approval, use MCP to update the issue state before ending the task.
 2. **Confirm task scope**  
-   - Read the Linear issue, `memory-bank/mvp-plan.md`, and related memory bank docs (`game-design.md`, `architecture.md`, `plot.md`, `post-mvp-plan.md` when applicable).  
+   - Read the Linear issue, `memory-bank/progress.md`, and related memory bank docs (`game-design.md`, `architecture.md`, `plot.md`).  
    - Note prerequisites, validation steps, documentation requirements, and any linked roadmap references.
 3. **Update Linear status**  
    - Move the issue to `In Progress` only when you start implementation and keep status synchronized while coding.  
@@ -81,9 +81,9 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
 - **Documentation updates**
   - Update `memory-bank/architecture.md` whenever architectural patterns, game systems, or data flow change.  
   - Update `memory-bank/game-design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  
-  - After finishing a feature roadmap step, log it in `memory-bank/progress.md` using the XML structure; skip improvements and bug fixes.  
-  - Mirror scope changes in `memory-bank/mvp-plan.md` only when the plan itself evolves (never mark completion there).  
-  - Reference `memory-bank/post-mvp-plan.md` when deferring work beyond MVP.
+  - After finishing a feature roadmap step, log it in `memory-bank/progress.md` (progress log section) using the XML structure; skip improvements and bug fixes.  
+  - Mirror scope changes in `memory-bank/progress.md` only when the plan itself evolves (never mark completion inside the plan section).  
+  - Reference the Post-MVP section in `memory-bank/progress.md` when deferring work beyond MVP.
 - **Linear sync**
   - Ensure every roadmap step has a corresponding Linear issue under the correct project.  
   - When work completes, add a comment to the Linear issue summarizing tasks performed, validation, and key code references.  
@@ -118,12 +118,12 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
   - `architecture.md` = code patterns, modules, data flow (HOW).  
   - Never mix the two; sync both whenever implementation deviates from plan.
 - **Progress tracking**  
-- `memory-bank/progress.md` records completed feature steps only (with XML tags); do not log improvements or bug fixes.  
-  - `memory-bank/mvp-plan.md` lists scope; edit only to change requirements or ordering.  
-- Log each completed feature roadmap step in `progress.md` with matching step IDs and summary details.
+- `memory-bank/progress.md` records completed feature steps only (with XML tags) in its progress log section; do not log improvements or bug fixes there.  
+  - The plan sections inside `memory-bank/progress.md` list scope; edit only to change requirements or ordering.  
+- Log each completed feature roadmap step in the progress log with matching step IDs and summary details.
 - **Narrative work**  
   - When adding or editing dialogue/quests, align tone with `memory-bank/plot.md` and cite the referenced section in change summaries.  
-  - Review `memory-bank/post-mvp-plan.md` for deferred narrative beats.
+  - Review the Post-MVP section in `memory-bank/progress.md` for deferred narrative beats.
 
 ## 7. Commit & PR Guidelines
 - Use imperative messages (`feat:`, `fix:`, etc. acceptable).  
@@ -161,14 +161,14 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Large assets belong in `public/` and should be optimized.
 
 ## 10. Roadmap & Memory Bank Reference
-- The 24-step implementation roadmap lives in `memory-bank/mvp-plan.md` (Phases 1–8). Keep numbering intact and update the plan only when scope changes.
-- Treat `memory-bank/mvp-plan.md` as the authoritative scope document—do not record completion status there.
-- Mirror completed feature work in `memory-bank/progress.md`; each milestone should reference the matching step number and appear in chronological order, and skip logging improvements or bug fixes.
+- The implementation roadmap lives in `memory-bank/progress.md` (MVP + Post-MVP sections). Keep numbering intact and update the plan sections only when scope changes.
+- Treat `memory-bank/progress.md` as the authoritative scope document—do not record completion status inside the plan sections.
+- Mirror completed feature work in the progress log; each milestone should reference the matching step number and appear in chronological order, and skip logging improvements or bug fixes.
 - Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
 - `memory-bank/plot.md` folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
 - `memory-bank/game-design.md` documents the agreed toolchain and gameplay pillars; align new systems with it or log deviations.
 - `memory-bank/architecture.md` must reflect current code structure. Update it alongside architectural changes so docs never drift.
-- `memory-bank/post-mvp-plan.md` captures deferred Phase 9 optional expansions (advanced stamina, vehicle systems, survival mode); consult it when planning post-MVP work.
+- The Post-MVP section in `memory-bank/progress.md` captures deferred optional expansions (advanced stamina, vehicle systems, survival mode); consult it when planning post-MVP work.
 
 ## 11. Linear Workflow Callouts
 - Use the Linear “MVP” and “PostMVP” projects as the live task index; review them before picking up work so you don’t have to rescan the full plan/progress set each time.
@@ -212,7 +212,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Design patterns, data flow? → **architecture.md**
 
 ### Two-Way Sync
-1. **Design → Implementation**: Update game-design.md (WHAT) → Implement → Document in architecture.md (HOW) → Log in progress.md (feature roadmap completions only).
+1. **Design → Implementation**: Update game-design.md (WHAT) → Implement → Document in architecture.md (HOW) → Log in the progress log (feature roadmap completions only).
 2. **Technical Constraint → Design**: Note in architecture.md → Adjust game-design.md if needed → Document compromise.
 
 ### Common Mistakes
@@ -223,7 +223,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 ## 14. XML Tagging in Documentation
 The memory-bank documentation uses XML tags to improve LLM agent parsing and information retrieval. When reading or updating documentation:
 
-### progress.md Structure
+### progress.md Structure (Progress Log)
 (Use these tags exclusively for completed feature roadmap steps—do not add improvements or bug fixes.)
 - `<step id="N" status="completed|pending">` - Wraps each completed implementation step.
 - `<step_metadata>` - Contains step number, title, status, and completion date.
@@ -233,9 +233,9 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 - `<validation>` - Test commands and validation procedures.
 - `<notes>` or `<maintenance_notes date="...">` - Additional context.
 
-### mvp-plan.md Structure
+### progress.md Structure (Plan Sections)
 - `<phase id="N" name="...">` - Groups related steps by implementation phase.
-- `<step id="N">` - Individual feature implementation steps (no status attribute; track status only in progress.md).
+- `<step id="N">` - Individual feature implementation steps (no status attribute; track status only in the progress log section).
 - `<step_metadata>` - Step metadata including phase assignment.
 - `<instructions>` - High-level task description.
 - `<details>` - Detailed implementation requirements.
@@ -263,13 +263,13 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 
 ### When Updating Documentation
 - Maintain existing XML structure and tag hierarchy.
-- Record feature completion status exclusively in `memory-bank/progress.md`; update the plan only when scope or requirements change.
+- Record feature completion status exclusively in the progress log; update the plan sections only when scope or requirements change.
 - Keep tags well-formed (properly opened and closed).
 - Use appropriate category attributes.
 
 ### Validation Before/After Implementation
 - **Before:** Check game-design.md for feature spec (WHAT), check architecture.md for patterns (HOW).
-- **After:** Update both documents with what changed, log completion in progress.md (features only).
+- **After:** Update both documents with what changed, log completion in the progress log (features only).
 - Tag XML sections incrementally as they're referenced/updated (not required for all content immediately).
 
 ## 15. Task Notes & Per-Task Progress Files

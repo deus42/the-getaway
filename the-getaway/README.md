@@ -24,8 +24,7 @@ yarn build && yarn preview
 For the full breakdown, including the Mermaid data-flow diagram, read [`../memory-bank/architecture.md`](../memory-bank/architecture.md).
 
 ## Roadmap & design notes
-- Roadmap → [`../memory-bank/mvp-plan.md`](../memory-bank/mvp-plan.md)
-- Progress log → [`../memory-bank/progress.md`](../memory-bank/progress.md)
+- Roadmap + progress → [`../memory-bank/progress.md`](../memory-bank/progress.md)
 - Design notes → [`memory-bank/`](../memory-bank/) *(key: `plot.md`, `game-design.md`)*
 
 ## Continuous integration & deployment
