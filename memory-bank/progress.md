@@ -19,6 +19,7 @@
 </scope_updates>
 
 <roadmap_index>
+
 MVP Steps:
 - [MVP] Step 1: Initialize the Project (Phase 1: Project Setup and Core Infrastructure) — Completed
 - [MVP] Step 2: Structure the Project Files (Phase 1: Project Setup and Core Infrastructure) — Completed
@@ -52,8 +53,6 @@ MVP Steps:
 - [MVP] Step 19.4: Stealth Mode Foundations (Engagement Model + Feedback) (Phase 6: Visual and Navigation Upgrades) — Pending
 - [MVP] Step 19.5: Surveillance Camera System (Curfew Enforcement) (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 19.55: Adaptive NPC FSM Behaviors (Phase 6: Visual and Navigation Upgrades) — Completed
-- [MVP] Step 19.6: Implement Witness Memory & Regional Heat (Phase 6: Visual and Navigation Upgrades) — Completed
-- [MVP] Step 19.7: Street-Tension Director (Phase 6: Visual and Navigation Upgrades) — Pending
 - [MVP] Step 19.8: Establish Atlas-Driven Noir Lighting Pipeline (Phase 6: Visual and Navigation Upgrades) — Pending
 - [MVP] Step 20: Redesign Downtown Grid & Building Layout (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 20.5: Streamable World Parcel Infrastructure (Phase 6: Visual and Navigation Upgrades) — Pending
@@ -66,46 +65,47 @@ MVP Steps:
 - [MVP] Step 24.1: XP and Leveling Foundation (Phase 7: Character Progression and Inventory) — Completed
 - [MVP] Step 24.2: Skill Tree System with Combat Branch (Phase 7: Character Progression and Inventory) — Completed
 - [MVP] Step 24.3: Perk Selection System with Capstone Perks (Phase 7: Character Progression and Inventory) — Completed
-- [MVP] Step 24.4: Rumor Cabinet Intel Perk Branch (Phase 7: Character Progression and Inventory) — Pending
 - [MVP] Step 24.5: Stamina System - Core Resource Pool (MVP) (Phase 7: Character Progression and Inventory) — Completed
 - [MVP] Step 24.6: Paranoia System — Player Fear Resource (MVP) (Phase 7: Character Progression and Inventory) — Completed
 - [MVP] Step 25: Expand Inventory System with Equipment and Durability (Phase 7: Character Progression and Inventory) — Completed
 - [MVP] Step 25.5: Integrate Equipment Effects with Combat and Movement (Phase 7: Character Progression and Inventory) — Completed
 - [MVP] Step 26: Advanced Combat Foundations (Phase 7: Character Progression and Inventory) — Completed
-- [MVP] Step 26.2: Overwatch Mode and Targeted Shots (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 26.3: Area-of-Effect Attacks and Combat Consumables (Phase 7: Character Progression and Inventory) — Pending
 - [MVP] Step 26.4: AutoBattle Mode & Tactical Automation (Phase 7: Character Progression and Inventory) — Completed
-- [MVP] Step 29: Implement Faction Reputation System with Three Core Factions (Phase 7: Character Progression and Inventory) — Completed
-- [MVP] Step 29.2: Establish Trust/Fear Ethics Layer (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 29.5: Implement Localized Witness Reputation Propagation (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 29.6: Gossip Heat Rumor Propagation (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 29.7: Dynamic District Uprisings & Resistance Simulation (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 29.8: Compile World-State Variable Atlas (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 30.1: Basic Crafting System (Ammo and Medical Supplies) (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 30.2: Weapon Modification System (Phase 7: Character Progression and Inventory) — Pending
-- [MVP] Step 31: Industrial Wasteland Zone (Deferred to Post-MVP) (Phase 8: World Expansion) — Pending
-- [MVP] Step 31.5: Seasonal Narrative Arc Episodes (Phase 8: World Expansion) — Pending
 - [MVP] Step 32.1: Implement Unit Test Suite (70%+ Code Coverage) (Phase 10: Testing, Polish, and Release) — Completed
-- [MVP] Step 32.2: Create Integration Test Scenarios (E2E Testing) (Phase 10: Testing, Polish, and Release) — Pending
-- [MVP] Step 33: Expand Save Functionality (Phase 10: Testing, Polish, and Release) — Pending
-- [MVP] Step 34: Polish the UI (Phase 10: Testing, Polish, and Release) — Pending
-- [MVP] Step 34.7: Create In-Game Help System and External Documentation (Phase 10: Testing, Polish, and Release) — Pending
-- [MVP] Step 34.8: Implement WebGL Context Loss Recovery (Phase 10: Testing, Polish, and Release) — Pending
-- [MVP] Step 34.9: Document SpectorJS Profiling Workflow (Phase 10: Testing, Polish, and Release) — Pending
 - [MVP] Step 35: Surface Level & Objective HUD (Phase 10: Testing, Polish, and Release) — Completed
 - [MVP] Step 35.2: Level Objective Progression Flow (Phase 10: Testing, Polish, and Release) — Completed
 - [MVP] Step 35.5: Implement George AI Assistant Overlay (Phase 10: Testing, Polish, and Release) — Completed
-- [MVP] Step 35.7: Generate Narrative Ledger Epilogue (Phase 10: Testing, Polish, and Release) — Pending
 
 Post-MVP Steps:
+- [Post-MVP] Step 19.6: Implement Witness Memory & Regional Heat (Phase 6: Visual and Navigation Upgrades) — Completed
+- [Post-MVP] Step 19.7: Street-Tension Director (Phase 6: Visual and Navigation Upgrades) — Pending
+- [Post-MVP] Step 24.4: Rumor Cabinet Intel Perk Branch (Phase 7: Character Progression and Inventory) — Pending
 - [Post-MVP] Step 26.1: Directional Cover and Flanking Mechanics (Phase 9: Optional Expansions (POST-MVP)) — Pending
-- [Post-MVP] Step 31: Build Industrial Wasteland Zone with Concrete Specifications (Phase 9: Optional Expansions (POST-MVP)) — Pending
-- [Post-MVP] Step 40.2: LLM-driven Narrative Orchestrator (PANGeA-style) (Phase 9: Optional Expansions (POST-MVP)) — Pending
-- [Post-MVP] Step 40.5: Dynamic Black Market Economy & Smuggling Missions (Phase 9: Optional Expansions (POST-MVP)) — Pending
+- [Post-MVP] Step 26.2: Overwatch Mode and Targeted Shots (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 26.3: Area-of-Effect Attacks and Combat Consumables (Phase 7: Character Progression and Inventory) — Pending
 - [Post-MVP] Step 26.4: Advanced Stamina - Day/Night, Fatigue & Environmental Systems (Phase 9: Optional Expansions (POST-MVP)) — Completed
 - [Post-MVP] Step 27.1: Vehicle Acquisition and Storage (Motorcycle Only, Basic Trunk) (Phase 9: Optional Expansions (POST-MVP)) — Pending
 - [Post-MVP] Step 27.2: Vehicle Travel Movement (Fuel Consumption, 3x Movement Speed) (Phase 9: Optional Expansions (POST-MVP)) — Pending
 - [Post-MVP] Step 28.1: Hunger and Thirst Meters (Optional Survival Mode Toggle) (Phase 9: Optional Expansions (POST-MVP)) — Pending
+- [Post-MVP] Step 29: Implement Faction Reputation System with Three Core Factions (Phase 7: Character Progression and Inventory) — Completed
+- [Post-MVP] Step 29.2: Establish Trust/Fear Ethics Layer (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 29.5: Implement Localized Witness Reputation Propagation (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 29.6: Gossip Heat Rumor Propagation (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 29.7: Dynamic District Uprisings & Resistance Simulation (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 29.8: Compile World-State Variable Atlas (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 30.1: Basic Crafting System (Ammo and Medical Supplies) (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 30.2: Weapon Modification System (Phase 7: Character Progression and Inventory) — Pending
+- [Post-MVP] Step 31: Build Industrial Wasteland Zone with Concrete Specifications (Phase 9: Optional Expansions (POST-MVP)) — Pending
+- [Post-MVP] Step 31.5: Seasonal Narrative Arc Episodes (Phase 8: World Expansion) — Pending
+- [Post-MVP] Step 32.2: Create Integration Test Scenarios (E2E Testing) (Phase 10: Testing, Polish, and Release) — Pending
+- [Post-MVP] Step 33: Expand Save Functionality (Phase 10: Testing, Polish, and Release) — Pending
+- [Post-MVP] Step 34: Polish the UI (Phase 10: Testing, Polish, and Release) — Pending
+- [Post-MVP] Step 34.7: Create In-Game Help System and External Documentation (Phase 10: Testing, Polish, and Release) — Pending
+- [Post-MVP] Step 34.8: Implement WebGL Context Loss Recovery (Phase 10: Testing, Polish, and Release) — Pending
+- [Post-MVP] Step 34.9: Document SpectorJS Profiling Workflow (Phase 10: Testing, Polish, and Release) — Pending
+- [Post-MVP] Step 35.7: Generate Narrative Ledger Epilogue (Phase 10: Testing, Polish, and Release) — Pending
+- [Post-MVP] Step 40.2: LLM-driven Narrative Orchestrator (PANGeA-style) (Phase 9: Optional Expansions (POST-MVP)) — Pending
+- [Post-MVP] Step 40.5: Dynamic Black Market Economy & Smuggling Missions (Phase 9: Optional Expansions (POST-MVP)) — Pending
 
 Additional Completed Work (not listed as roadmap steps):
 - Progress entry 108
@@ -122,6 +122,7 @@ Additional Completed Work (not listed as roadmap steps):
 </roadmap_index>
 
 <mvp_plan>
+
 # Implementation Plan for "The Getaway" (Base Game)
 
 <workflow_reminder>
@@ -1036,60 +1037,7 @@ Replace the brittle guard/hostile decision flow with a deterministic-yet-varied 
 </test>
 </step>
 
-<step id="19.6">
-<step_metadata>
-  <number>19.6</number>
-  <title>Implement Witness Memory & Regional Heat</title>
-  <phase>Phase 6: Visual and Navigation Upgrades</phase>
-</step_metadata>
 
-<instructions>
-Model NPC suspicion as decaying eyewitness memory that aggregates into zone heat instead of binary wanted flags.
-</instructions>
-
-<details>
-- **Suspicion Module**: Stand up `src/game/systems/suspicion/` with `WitnessMemory` models, decay/reinforce helpers, and pruning thresholds (`certainty < 0.05`). Expose utilities for half-life tuned decay, reinforcement payloads, and serialization.
-- **Guard Perception Hooks**: When Step 19 vision cones or Step 19.5 surveillance calls flag the player, emit `WitnessMemory` entries tagged by observer, recognition channel (`face | outfit | vehicle`), certainty score, and `lastSeenAt` game time. Reinforcement events (repeat sighting, guard briefings, poster scans) reset decay timers and boost certainty.
-- **Regional Heat Aggregation**: Extend `worldSlice` (or dedicated `suspicionSlice`) with per-zone memory registries, selectors for `selectHeatByZone`, and derived alert tiers (calm, tracking, crackdown) keyed to the sum of top-K memories × proximity factors. Route heat thresholds into existing alert escalation instead of binary `isWanted`.
-- **Dampeners & Disguises**: Introduce modifiers sourced from disguise items, lighting conditions, distance, and player stance so stealth actions reduce certainty ceilings; intimidation/bribery actions can mark memories as `suppressed`.
-- **UI & Debugging**: Surface aggregate heat and the top suspect memories to George’s debug tab or a dev-only overlay for tuning. Provide logging hooks so designers can inspect decay rates live.
-- **Persistence & Performance**: Ensure memories pause decay when `worldSlice.time.isFrozen`, cull expired entries to avoid list bloat, and persist minimal witness snapshots in save data with version guards.
-</details>
-
-<test>
-- Unit test decay and reinforcement helpers with multiple half-life configurations to confirm certainty halves over time and clamps within [0,1].
-- Simulate guard sightings in a headless test scene: confirm memories spawn, reinforce on repeat sightings, decay after lying low, and drop once certainty < 0.05.
-- Drive region heat above configured tiers via scripted sightings and verify guard AI escalates responses, then allow time to pass and ensure heat cools naturally without manual resets.
-- Toggle disguises/lighting modifiers in integration tests to confirm certainty gains shrink appropriately and suppressed memories stop contributing to heat.
-</test>
-</step>
-
-<step id="19.7">
-<step_metadata>
-  <number>19.7</number>
-  <title>Street-Tension Director</title>
-  <phase>Phase 6: Visual and Navigation Upgrades</phase>
-</step_metadata>
-
-<instructions>
-Introduce a pacing director that reads suspicion pressure, recent encounters, and player stress to modulate patrol density, encounter frequency, and ambient presentation.
-</instructions>
-
-<details>
-- **Director State Machine**: Create `src/game/systems/director/` with a `DirectorState` (`pressure`, `respite`, `noise`, `intensityTier`) derived from witness heat (Step 19.6), alert flags, and elapsed downtime. Persist state in `worldSlice` (or a dedicated slice) and expose selectors for HUD/debug consumers.
-- **Signal Inputs**: Listen for guard alerts, combat outcomes, alarm triggers, and resource telemetry (ammo/medkit thresholds) so the director detects stress spikes or recovery streaks. Provide an action for George Assistant (Step 16.9) to request respite that temporarily caps pressure gain.
-- **Dials & Outputs**: Map director tiers to tunable knobs: patrol spawn cadence, roaming route variance, spontaneous street encounter probability, ambient VFX/SFX intensity, and merchant caution dialogue. Apply adjustments via existing spawners/controllers rather than bespoke logic.
-- **Integration Hooks**: Update `GameController` (or the scene orchestrator) to tick the director each world step, lerp knob deltas over configurable windows, and dispatch Redux actions so UI/audio react declaratively. Author per-district profiles under `src/content/director/directorProfiles.ts`.
-- **Debug & Overrides**: Add dev-only inspector controls to freeze tiers, tweak thresholds, and log transitions. Emit telemetry events so balancing sessions can review escalation/cooldown timelines.
-</details>
-
-<test>
-- Unit test director reducers/helpers to confirm pressure/respite accumulation, tier transitions, and cooldown behaviour across multiple profiles.
-- Script repeated alerts in a headless simulation to push the director into crackdown, then grant downtime and verify it cools back to calm while patrol density and ambient audio follow suit.
-- Disable the director profile and confirm baseline spawn logic remains unchanged (regression guard).
-- Trigger the George respite request and ensure the director honours the cooldown window without blocking future escalations.
-</test>
-</step>
 
 <step id="19.8">
 <step_metadata>
@@ -1549,38 +1497,6 @@ Reach level 2 and verify perk selection modal appears automatically. View availa
 </test>
 </step>
 
-<step id="24.4">
-<step_metadata>
-  <number>24.4</number>
-  <title>Rumor Cabinet Intel Perk Branch</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 24.3 completed (perk selection infrastructure)
-- Step 19.6 completed (witness memory & regional heat supplies telemetry)
-</prerequisites>
-
-<instructions>
-Add an Intel-focused perk branch—“Rumor Cabinet”—that lets players reshape rumor spread, witness decay, and information control through specialized perks.
-</instructions>
-
-<details>
-- **Content Definitions**: Extend `src/content/perks.ts` with a new `intel` (or `rumorCabinet`) category containing at least five perks: Whistle-Friendly, Folk Hero, Shadow Broker, Panic Whisper, and False Lead. Each defines level/attribute/skill prerequisites (e.g., high Speech, Stealth, or Intelligence), effect payloads, and mutually exclusive choices where appropriate.
-- **Effect Plumbing**: Update the perk evaluation layer (`src/game/systems/perks/` or equivalent) to expose hooks consumed by the rumor/suspicion systems—e.g., modifiers for rumor TTL/decay, share fan-out, confidence multipliers, and access to “plant rumor” social actions at bars/markets. Ensure effects stack predictably with existing modifiers from disguises or faction standing.
-- **Redux & Selectors**: Add derived selectors (`selectRumorPerkModifiers`) that aggregate active Intel perks and feed them into gossip propagation (Step 29.6) and witness decay (Step 19.6). Persist any new perk runtime state (e.g., Shadow Broker cooldowns) in `playerSlice`.
-- **UI/UX Updates**: Update `PerkSelectionPanel.tsx` to surface the Intel category with bespoke iconography and copy referencing the Thought Cabinet inspiration. Include tooltips that explain how each perk manipulates rumor mechanics and call out any faction biases (e.g., Folk Hero stronger in worker districts).
-- **New Actions**: Unlock contextual “plant rumor”/“suppress rumor” interactions in applicable social hubs (bars, markets, safehouses) once Shadow Broker (or similar) is learned. Stub dialogue hooks so Step 16.9 George prompts reflect available Intel maneuvers.
-- **Documentation**: Note the new perk branch and data flow in `memory-bank/game-design.md` (Rumor systems) and `memory-bank/architecture.md` (perks-to-gossip integration) during implementation.
-</details>
-
-<test>
-- Unit test perk modifiers to ensure Intel perks adjust rumor TTL, decay, and spread multipliers according to spec and clamp within safe bounds.
-- Integration test gossip propagation with and without Intel perks: confirm Whistle-Friendly speeds rumor spread for player-sourced tips, while Folk Hero biases positive rumors in worker districts and dampens elite neighborhoods.
-- Verify Shadow Broker unlocks the “plant rumor” interaction in bar dialogue once prerequisites are met and enforces any cooldowns.
-- Run regression on non-Intel perks to confirm existing combat/utility perks still evaluate correctly and UI category navigation remains accessible.
-</test>
-</step>
 
 <step id="24.5">
 <step_metadata>
@@ -1975,118 +1891,7 @@ Refactor combat state and systems to support directional cover, queued reactions
 </test>
 </step>
 
-<step id="26.2">
-<step_metadata>
-  <number>26.2</number>
-  <title>Overwatch Mode and Targeted Shots</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
 
-<instructions>
-Add overwatch mode for reaction shots and targeted shot system for precise tactical choices.
-</instructions>
-
-<details>
-- **Implement Overwatch Mode** in `src/game/combat/overwatchSystem.ts`:
-  - New combat action: "Enter Overwatch" - costs 0 AP but requires 2+ AP remaining
-  - Reserves remaining AP for reaction shots during enemy turns
-  - When enemy moves within line of sight and weapon range: automatically trigger attack
-  - Each reaction shot costs normal AP (2 AP for rifle, 1 AP for pistol)
-  - Overwatch ends when: AP depleted, turn ends, or player cancels
-  - Visual indicator: character sprite shows "OVERWATCH" badge, cone of fire displayed
-- **Add overwatch UI**:
-  - New combat button: "Overwatch Mode" (hotkey: O)
-  - Shows reserved AP count and potential targets in range
-  - Red cone overlay showing covered area during overwatch
-  - Toast notification: "Overwatch triggered! Engaging enemy"
-- **Implement Targeted Shots** in `src/game/combat/targetedShots.ts`:
-  - New targeting interface: right-click enemy to open body part selector
-  - Four body parts: Head, Torso, Arms, Legs
-  - Each part has: hit chance modifier, AP cost modifier, special effect
-  - **Head**: -30% hit chance, +3 AP cost, 2x critical chance, max damage on crit
-  - **Torso**: normal hit chance, normal AP cost, no special effect (standard shot)
-  - **Arms**: -10% hit chance, +1 AP cost, 25% chance to disarm (enemy drops weapon, loses 1 turn picking up)
-  - **Legs**: -15% hit chance, +1 AP cost, reduces target movement by 50% for 2 turns (crippled)
-- **Display targeted shot UI**:
-  - Body part diagram overlay when right-clicking enemy
-  - Show: hit chance %, AP cost, special effect description
-  - Highlight available body parts (gray out if insufficient AP)
-  - Confirm selection to execute targeted shot
-- **Add skill requirements**:
-  - Targeted shots require minimum weapon skill (Small Guns 25, Energy Weapons 30, etc.)
-  - Below threshold: targeted shots unavailable, only torso shots possible
-  - Display skill requirement warning if player attempts targeted shot without skill
-- **Wire into combat log**: "You shoot Raider in the leg for 8 damage! Raider's movement crippled."
-</details>
-
-<accessibility>
-- Overwatch mode keyboard accessible (O key to toggle)
-- Targeted shot body part selector keyboard navigable (Arrow keys + Enter)
-- Screen reader announces reaction shots: "Overwatch reaction shot! Targeting enemy"
-</accessibility>
-
-<test>
-Enter combat with 6 AP. Activate overwatch mode and verify 6 AP reserved, character shows OVERWATCH indicator. Move enemy within line of sight during enemy turn and verify automatic reaction shot fires. Confirm AP depletes with each reaction shot until exhausted. Right-click enemy and verify body part selector appears. Attempt head shot and verify -30% hit chance, +3 AP cost displayed. Execute head shot and verify increased critical chance. Shoot enemy in leg and verify movement speed reduced by 50% for 2 turns (enemy moves half as far). Shoot enemy in arm and verify 25% disarm chance, if triggered enemy drops weapon and loses turn. Attempt targeted shot with low weapon skill (<25) and verify prevention with skill requirement warning. Cancel overwatch mode and verify AP returns for manual use.
-</test>
-</step>
-
-<step id="26.3">
-<step_metadata>
-  <number>26.3</number>
-  <title>Area-of-Effect Attacks and Combat Consumables</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<instructions>
-Add AoE explosion system and combat consumable mechanics for tactical variety.
-</instructions>
-
-<details>
-- **Implement AoE Explosion System** in `src/game/combat/aoeSystem.ts`:
-  - Grenades/explosives affect all units within blast radius (3-tile radius default)
-  - Damage calculation: `damage = baseDamage * (1 - distance / radius)` (center takes full damage, edge takes partial)
-  - Include friendly fire: player grenades can damage player, enemy grenades can damage enemies
-  - Cover provides damage reduction: 50% reduction if behind cover from explosion center
-  - Walls block explosions (no damage through walls)
-- **Add grenade throwing mechanics**:
-  - Throwing action: select grenade from inventory, click target tile
-  - Show blast radius preview (red circle) before throwing
-  - AP cost: 3 AP to throw
-  - Accuracy based on Explosives skill: `hitTile = targetTile + randomOffset(inversely proportional to skill)`
-  - Low skill can cause misthrows landing off-target
-- **Define grenade types** in item database:
-  - **Frag Grenade**: 3-tile radius, 20-30 damage, no special effects
-  - **Molotov Cocktail**: 2-tile radius, 10-15 damage + 5 damage/turn for 3 turns (fire DoT), creates fire terrain
-  - **Smoke Grenade**: 4-tile radius, no damage, creates obscuring smoke for 3 turns (blocks line of sight, +50% miss chance through smoke)
-  - **EMP Grenade**: 3-tile radius, 5 damage, disables electronic enemies for 2 turns, disrupts energy weapons
-  - **Flashbang**: 3-tile radius, 2 damage, stuns all units for 1 turn (lose next turn)
-- **Implement Combat Consumables**:
-  - **Medkit** (hotkey or inventory use): 4 AP, heals 30 HP instantly, can use in combat
-  - **Stim Pack** (combat drug): 2 AP, +2 AP for next 2 turns, then -1 AP for 1 turn (withdrawal)
-  - **Combat Drug "Fury"**: 3 AP, +20% damage, -10% accuracy for 3 turns, addiction risk
-  - **Antidote**: 2 AP, removes poison/status effects immediately
-  - **Adrenaline Shot**: 3 AP, instantly recover 3 AP (can exceed max AP for 1 turn), then -2 AP next turn
-- **Wire consumables into combat UI**:
-  - Hotbar slots 1-5 at bottom of combat screen
-  - Drag consumables from inventory to hotbar for quick access
-  - Press number key to use assigned consumable
-  - Show AP cost and cooldown timers
-- **Update enemy AI**:
-  - Enemies throw grenades at clustered players (2+ units in 3-tile radius)
-  - Enemies use medkits when below 30% HP
-  - Enemies throw smoke grenades when retreating
-</details>
-
-<error_handling>
-- Prevent grenade throws outside valid range (8 tiles)
-- Validate consumable use (can't use medkit at full HP)
-- Handle edge cases: grenade lands in wall (explodes at last valid tile)
-</error_handling>
-
-<test>
-Equip frag grenade and throw at clustered enemies (2+ units within 3 tiles). Verify blast radius preview shows before throwing. Confirm all units in radius take damage scaled by distance. Position player behind cover from explosion center and verify 50% damage reduction. Throw grenade near wall and verify explosion doesn't penetrate. Use low Explosives skill and verify grenade lands off-target sometimes. Throw smoke grenade and verify obscuring smoke blocks line of sight for 3 turns. Throw EMP grenade at robot and verify 2-turn disable. Use medkit mid-combat and verify 30 HP heal with 4 AP cost. Use stim pack and verify +2 AP for 2 turns, then -1 AP withdrawal. Assign consumables to hotbar and use number keys to quick-use. Watch enemy AI throw grenade at clustered players and use medkit when injured.
-</test>
-</step>
 
 <step id="26.4">
 <step_metadata>
@@ -2122,397 +1927,16 @@ Allow players to hand tactical control to an AutoBattle agent that resolves turn
 </test>
 </step>
 
-<step id="29">
-<step_metadata>
-  <number>29</number>
-  <title>Implement Faction Reputation System with Three Core Factions</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
 
-<instructions>
-Build a concrete faction reputation system with three defined factions (Resistance, CorpSec, Scavengers) and numerical thresholds that drive gameplay consequences.
-</instructions>
 
-<details>
-- **Define three core factions** in `src/game/systems/factions.ts`:
-  - **The Resistance**: Anti-regime freedom fighters operating from hidden cells. Offer stealth gear, hacking tools, intelligence on CorpSec movements. Allied with player by default (starts neutral-positive).
-  - **CorpSec (Corporate Security)**: Regime enforcement arm. Control checkpoints, patrol Downtown, enforce curfew. Hostile to Resistance. Offer heavy weapons, armor, credits for turning in dissidents.
-  - **Scavengers**: Opportunistic survivors controlling black markets in Slums. Neutral third party. Offer rare items, vehicle parts, crafting materials at varying prices based on reputation.
-- **Implement numerical reputation scale** (-100 to +100 per faction):
-  - **Reputation thresholds and effects**:
-    - **<-60 (Hostile)**: Faction attacks on sight, sends hit squads, blocks access to faction areas. NPCs refuse dialogue.
-    - **-60 to -20 (Unfriendly)**: Faction suspicious, prices +50%, no quests offered, guards follow player. Some dialogue locked.
-    - **-19 to +19 (Neutral)**: Standard interactions, normal prices, basic quests available.
-    - **+20 to +59 (Friendly)**: Discounts (-25%), access to restricted areas, faction backup in nearby combat, special quests unlocked.
-    - **+60 to +100 (Allied)**: Best equipment available, faction safe houses accessible, leadership/influence quests, faction will aid in final mission.
-- **Define reputation-changing actions**:
-  - **Resistance**: +10 for rescuing civilians, +15 for sabotaging CorpSec, +20 for completing Resistance quests. -20 for betraying Resistance members, -30 for turning in Resistance contacts to CorpSec.
-  - **CorpSec**: +10 for reporting crimes, +15 for eliminating Resistance members, +20 for completing CorpSec contracts. -20 for attacking CorpSec patrols, -30 for sabotaging checkpoints.
-  - **Scavengers**: +5 for trading (cumulative), +15 for completing salvage contracts, +10 for sharing discovered loot locations. -15 for stealing from Scavenger caches, -20 for killing Scavenger merchants.
-- **Implement rival faction mechanics**:
-  - Gaining reputation with Resistance decreases CorpSec reputation (and vice versa) at 50% rate
-  - Scavengers remain independent (reputation not affected by Resistance/CorpSec actions)
-  - Reaching Allied (+60) with one side automatically sets rival to Hostile (<-60)
-- **Build FactionReputationPanel.tsx** in `src/components/ui`:
-  - Display all three factions with reputation bars (-100 to +100)
-  - Color-code thresholds: red (Hostile), orange (Unfriendly), gray (Neutral), green (Friendly), gold (Allied)
-  - Show current standing label and next threshold
-  - List active effects for each faction (e.g., "Resistance: Friendly - 25% discount at safe houses, backup available")
-- **Integrate into gameplay**:
-  - NPCs check player faction reputation before offering quests or services
-  - Faction-aligned NPCs (Resistance operatives, CorpSec guards, Scavenger traders) have different dialogues based on standing
-  - Dialogue options tagged with faction requirements: "[Resistance Allied] Ask for intel on CorpSec HQ"
-  - Faction areas (Resistance safe houses, CorpSec HQ, Scavenger markets) have access restrictions based on reputation
-- **Add reputation change notifications**: Toast notifications showing reputation shifts: "+15 Resistance reputation: Civilian rescued", "-20 CorpSec reputation: Patrol eliminated"
-- **Wire into ending system**: Final mission outcome influenced by faction allegiances. Allied factions provide support (reinforcements, equipment, intelligence).
-</details>
 
-<accessibility>
-- Faction reputation bars keyboard accessible with clear ARIA labels
-- Screen reader announces reputation changes: "Resistance reputation increased to 45, now Friendly status"
-- Color-coding supplemented with icons for colorblind accessibility
-</accessibility>
 
-<test>
-Complete Resistance quest and verify +20 Resistance reputation, -10 CorpSec reputation (50% penalty). Verify toast notification appears. Check FactionReputationPanel shows updated values with correct color-coding. Reach Friendly (+20) with Resistance and verify discount applies at Resistance safe house, special quests unlock. Attack CorpSec patrol and verify reputation drops to Hostile (<-60). Confirm CorpSec guards now attack on sight, send hit squads. Trade repeatedly with Scavengers and verify cumulative +5 reputation per transaction. Reach Allied (+60) with Resistance and verify CorpSec automatically becomes Hostile. Attempt to enter CorpSec HQ with Hostile reputation and verify access denied. Check dialogue options show/hide based on faction standing. Complete game and verify Allied factions provide support in final mission.
-</test>
-</step>
 
-<step id="29.2">
-<step_metadata>
-  <number>29.2</number>
-  <title>Establish Trust/Fear Ethics Layer</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
 
-<instructions>
-Create a lightweight ethics model that augments faction reputation by tracking trust and fear scores per faction/location, logging contextual action records, and surfacing immediate systemic effects (pricing, encounters, dialogue tone) without yet implementing full witness propagation.
-</instructions>
-
-<details>
-- **Ethics service module** (`src/game/systems/ethics/ethicsService.ts`): Define `EthicsProfile` with `trust` (-100..100) and `fear` (0..100) axes per faction and active location cell. Provide helpers to apply deltas, clamp ranges, decay values, and broadcast updates.
-- **Redux integration** (`src/store/ethicsSlice.ts`): Persist trust/fear state, last three `ActionRecord` entries, and computed modifiers (price multiplier, encounter weight, dialogue mood). Expose selectors wired into UI/components.
-- **Action capture**: Emit `ActionRecord` objects (`{ actor, verb, target, locationId, tags: string[], witnesses: string[], timestamp }`) from existing combat/quest/economy reducers. Seed core tags: `scarcity_high`, `aid_given`, `threat_displayed`, `resource_hoarding`, `lawless_zone`.
-- **Contextual adjustments**: Map tags to trust/fear deltas with SPECIAL-aware scaling (e.g., Charisma > 6 boosts trust gains by 10%, Strength > 7 increases fear impact). Convert existing barter pricing and encounter generation to consult combined faction reputation + trust/fear modifiers.
-- **Rumor hooks**: When actions exceed configured thresholds, enqueue a simplified rumor payload (`src/game/systems/rumors/simpleRumorQueue.ts`) with faction/location scope for Step 29.5 to expand. Include accuracy defaults and spread timers but keep propagation local.
-- **Developer HUD**: Add dev-only overlay (`EthicsDebugPanel`) showing current trust/fear per faction, recent action tags, and resulting modifiers to support balancing sessions.
-</details>
-
-<prerequisites>
-- Step 29 (Implement Faction Reputation System with Three Core Factions)
-</prerequisites>
-
-<test>
-Trigger representative actions: donate water during `scarcity_high`, extort a vendor, and fire warning shots in a neutral zone. Verify trust/fear meters update independently of base reputation, barter prices and encounter rolls reflect new modifiers, rumors are queued for qualifying acts, and the debug overlay lists the latest three action records with correct tag-derived deltas.
-</test>
-</step>
-
-<step id="29.5">
-<step_metadata>
-  <number>29.5</number>
-  <title>Implement Localized Witness Reputation Propagation</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<instructions>
-Layer a witness-and-gossip reputation network on top of the faction standings so notoriety spreads through observers and their close contacts rather than globally.
-</instructions>
-
-<details>
-- **Event capture pipeline** (`src/game/systems/reputation/events.ts`): Emit structured `ReputationEvent` payloads whenever the player performs a notable act (combat finisher, theft, rescue) with tags for trait deltas (heroic, cruel, sneaky, competent) and intensity.
-- **Witness sampling service** (`src/game/systems/reputation/witnessService.ts`): Query nearby NPCs within the active map cell, evaluate line of sight, distance falloff, lighting, disguise, and noise to produce a `visibilityScore`; discard witnesses below threshold τ.
-- **Interpretation model** (`src/game/systems/reputation/interpretation.ts`): Combine each witness’s faction values, personal biases, and event tags to derive trait adjustments and confidence. Persist `WitnessRecord` entries keyed by event.
-- **Reputation scopes** (`src/store/reputationSlice.ts`): Track layered reputation buckets for (a) individual witnesses, (b) their faction, and (c) the local neighborhood cell. Apply weighted deltas using confidence to adjust `ReputationProfile` traits (heroic, cruel, sneaky, intimidating, competent) with decay timestamps.
-- **Propagation graph** (`src/game/systems/reputation/propagationService.ts`): Maintain bounded gossip edges between NPC social links. Each tick, spend limited "gossip energy" to advance rumors with latency falloff and strength decay. Prevent cross-cell spread unless events exceed intensity threshold.
-- **NPC reactions integration**: Update dialogue controllers, shop pricing hooks, guard AI alertness, and quest availability checks to query scoped reputation rather than global faction standing when determining responses.
-- **Debug overlays**: Add a developer-only heatmap toggle and NPC inspector panel showing top perceived traits, confidence, and rumor sources for troubleshooting.
-</details>
-
-<prerequisites>
-- Step 29 (Implement Faction Reputation System with Three Core Factions)
-- Step 23.5 (Dynamic NPC Scheduling) for routine-aware witness sampling
-</prerequisites>
-
-<test>
-Trigger three contrasting events in the Slums: rescue civilians (heroic), intimidate a ganger (scary), and pickpocket a vendor (sneaky). Verify only NPCs within line of sight update immediately, nearby contacts learn over time, and Downtown NPCs remain unaware. Check discounts apply only with witnesses and their friends, guards in the same cell escalate hostility, and dialogue lines reference observed deeds with confidence qualifiers. Advance time and confirm scores decay without reinforcement.
-</test>
-</step>
-
-<step id="29.6">
-<step_metadata>
-  <number>29.6</number>
-  <title>Gossip Heat Rumor Propagation</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 19.6 completed (witness memory & regional heat)
-- Step 29.5 completed (localized witness reputation propagation)
-</prerequisites>
-
-<instructions>
-Implement a lightweight rumor propagation layer that fans out short-lived gossip flags across social graphs, influences regional heat, and exposes player counterplay via safehouses, disguises, and Intel perks.
-</instructions>
-
-<details>
-- **Rumor Model**: Define `Rumor` contracts in `src/game/systems/rumors/gossipHeat.ts` with `{ rumorId, topic, sentiment, sourceFaction, originCell, confidence, ttl, decayRate, lastSharedAt, plantedByPlayer? }`. Persist per-NPC rumor buffers with tight caps (e.g., max 5 active rumors).
-- **Propagation Tick**: Each world tick (or configurable cadence), eligible NPCs share up to two rumors to neighbors sampled from the social graph (Step 29.5). Decrease `ttl`/`confidence` on send, drop rumors when `ttl <= 0` or confidence falls below threshold. Apply faction bias weights (e.g., CorpSec forwards negative player rumors faster).
-- **Heat Integration**: Feed rumor sentiment into the heat system (Step 19.6) by raising or lowering zone pressure proportional to aggregated rumor confidence, ensuring direct eyewitness reports still override gossip. Surface rumor-driven modifiers so the Street-Tension Director (Step 19.7) can react to rising chatter even without new sightings.
-- **Player Counterplay**: Hook safehouse interactions and bribery/disguise actions into rumor buffers—safehouses purge or flag `plantedByPlayer` rumors for decay, bribes reduce confidence for specific factions, disguises slow rumor acceptance outside their origin cell.
-- **Intel Perk Hooks**: Integrate `selectRumorPerkModifiers` from Step 24.4 so perks like Whistle-Friendly, Folk Hero, and Shadow Broker adjust decay, fan-out, or unlock “plant rumor” actions. Respect cooldowns and prevent stacking exploits.
-- **UX Touchpoints**: Add an optional “Ask Around” prompt (HUD or dialogue) that surfaces the top three rumors in the current block with confidence icons, reinforcing diegetic feedback. Expose dev-only logging/visualization to inspect rumor spread for tuning.
-</details>
-
-<test>
-- Unit test rumor decay and propagation helpers to confirm TTL, confidence, and fan-out obey configured caps and faction biases.
-- Simulate a run where a negative rumor originates in Slums and ensure it spreads to adjacent cells over several ticks, raising local heat, while distant districts remain unaffected until contacts connect.
-- Verify safehouse usage clears or dampens rumors as specified and that disguised travel slows uptake in new zones.
-- Acquire Intel perks and confirm their effects (e.g., Whistle-Friendly accelerates player-planted rumors, Folk Hero boosts positive sentiment in worker districts) without breaking baseline propagation.
-</test>
-</step>
-
-<step id="29.7">
-<step_metadata>
-  <number>29.7</number>
-  <title>Dynamic District Uprisings & Resistance Simulation</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 29.5 completed (localized witness reputation propagation supplies neighborhood notoriety)
-- Step 29.6 completed (gossip heat propagation exposes cross-district sentiment)
-- Step 16.9 completed (George assistant ambient feed ready to broadcast citywide events)
-</prerequisites>
-
-<instructions>
-Stand up a systemic uprising simulation that tracks morale, supplies, and corporate pressure per district, allowing uprisings to ignite, escalate, or be crushed based on player and systemic actions. Ensure each stage drives tangible gameplay changes—patrol patterns, vendor inventory, quest hooks—and that George, signage, and NPCs surface the shifting resistance state.
-</instructions>
-
-<details>
-- Extend `worldSlice` with `districtState` records `{ morale, supply, securityPresence, uprisingStage, pendingEvents }` plus selectors summarizing pressure trends, liberation odds, and countdown timers. Persist state to saves and expose dev tooling for inspection.
-- Author `uprisingDirector.ts` in `src/game/world/directors/` that ticks each in-game hour. It should read witness heat (Step 29.5), gossip sentiment (Step 29.6), faction reputation deltas, resource shipments, and recent mission outcomes to adjust district metrics. Apply designer-tunable thresholds to transition stages: Calm → Tension → Spark → Siege → Liberation or Crackdown.
-- When stages change, enqueue systemic responses: patrol spawn tables, curfew intensity, and surveillance loadouts shift; vendors adjust stock/discounts; safehouses grant temporary buffs or go dark; random encounter tables unlock escort/sabotage opportunities. Emit structured events consumed by George, signage packs, and quest generators.
-- Seed authoring data in `src/content/world/uprisings.ts` describing per-district modifiers (e.g., corp stronghold vs. worker slum), escalation pacing, morale boosts for key story beats, and narrative flavor text for each stage.
-- Provide player counterplay hooks: sabotage missions reduce securityPresence, supply raids boost morale, propaganda runs raise supply while risking crackdown. Ensure Intel perks from Step 24.4 interact (e.g., reveal impending crackdowns, unlock negotiation options).
-- Document the director flow and authoring expectations in `memory-bank/architecture.md` (HOW) and note tonal guidelines for uprising messaging in `memory-bank/plot.md` (WHAT) during implementation.
-</details>
-
-<test>
-- Scripted scenario: intentionally raise morale and drop security to trigger Spark, verify George announces it, signage swaps, and patrol density changes. Continue actions to reach Liberation and confirm safehouses upgrade perks while corp presence retreats.
-- Stress test: allow corp pressure to outweigh morale leading to Crackdown; ensure curfew escalates, vendors restrict access, and NPC dialogue reflects fear. Confirm the simulation cools back to Tension when players counteract pressure.
-- Multi-district regression: run parallel simulations in Downtown and Slums to confirm events remain scoped; George should interleave updates without duplication, and stage timers respect per-district cooldowns.
-- Persistence check: save mid-Siege, reload, and confirm director resumes correctly with queued events intact and timers continuing from the saved state.
-</test>
-</step>
-<step id="29.8">
-<step_metadata>
-  <number>29.8</number>
-  <title>Compile World-State Variable Atlas</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 19.6 completed (witness memory & regional heat scaffolds localized notoriety)
-- Step 29 completed (core faction reputation system online)
-- Step 29.5 completed (localized witness reputation propagation feeding district sentiment)
-</prerequisites>
-
-<instructions>
-Create a centralized atlas that inventories every persistent world-state variable, its owner system, ranges, and downstream consumers so quests, AI, and narrative logic stay synchronized.
-</instructions>
-
-<details>
-- Audit Redux slices (`worldSlice`, `playerSlice`, `questsSlice`, `factionsSlice`, `reputationSlice`, etc.) and catalog each persistent variable that gates content or drives systemic reactions (e.g., `curfewLevel`, `supplyScarcity`, `corpSecAlert`, `resistanceIntel`, `districtHeat`).
-- Implement `src/game/state/stateAtlas.ts` exporting strongly typed descriptors `{ key, slice, datatype, range, description, consumers[] }` alongside helpers for retrieving current values plus normalized percentages.
-- Add an automated validation script (`yarn atlas:verify`) that diff-checks live Redux state keys against the atlas, emitting actionable errors when a slice introduces a new variable without documentation or range metadata.
-- Extend `memory-bank/game-design.md` with an XML-tagged appendix mirroring the atlas for designers, and update `memory-bank/architecture.md` to map each variable to its data flow, persistence requirements, and key listeners.
-- Generate machine-readable output (`memory-bank/exports/state-atlas.json`) during the validation script so tooling, analytics, and narrative planners can ingest the canonical sheet.
-</details>
-
-<test>
-- Add unit tests for `stateAtlas.ts` ensuring descriptors cover all registered keys, consumer arrays reference implemented systems, and range metadata matches runtime bounds.
-- Run `yarn atlas:verify` against mocked state snapshots to confirm it fails when variables lack atlas entries or when range docs fall out of sync.
-- Trigger gameplay scenarios (curfew escalation, faction swing, blackout chain) and verify the exported `state-atlas.json` reflects updated values/timestamps, demonstrating the atlas stays wired to live data.
-</test>
-</step>
-
-<step id="30.1">
-<step_metadata>
-  <number>30.1</number>
-  <title>Basic Crafting System (Ammo and Medical Supplies)</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<instructions>
-Implement foundational crafting system for ammunition and medical supplies with resource gathering and recipe management.
-</instructions>
-
-<details>
-- **Create resource system** in `src/game/systems/crafting.ts`:
-  - Define 5 base resource types: **Metal Scrap** (common), **Electronic Parts** (uncommon), **Chemical Compounds** (uncommon), **Textile Fiber** (common), **Bio Materials** (rare)
-  - Resources obtained from: looting containers (random drops), scavenging defeated enemies/robots (specific drops), dismantling items (break down unwanted gear for components)
-  - Add resources to inventory as stackable items (max stack: 99)
-- **Define core recipe structure** in `src/content/recipes/`:
-  - Recipe interface: `{ id, name, category, inputs: [{resourceId, quantity}], outputs: [{itemId, quantity}], skillRequired, stationRequired, craftTime }`
-  - **Ammunition recipes** (craftable from inventory, no station required):
-    - **9mm Ammo** (×10): 2 Metal Scrap, 1 Chemical Compound. No skill required. Craft time: 5 seconds.
-    - **Shotgun Shells** (×5): 3 Metal Scrap, 2 Chemical Compound. Science 15 required. Craft time: 8 seconds.
-    - **Energy Cells** (×5): 2 Electronic Parts, 1 Chemical Compound. Science 25 required. Craft time: 10 seconds.
-  - **Medical supplies recipes** (craftable from inventory):
-    - **Bandage** (×2): 2 Textile Fiber. No skill required. Craft time: 3 seconds.
-    - **Medkit**: 3 Textile Fiber, 2 Bio Materials, 1 Chemical Compound. Medicine 20 required. Craft time: 15 seconds.
-    - **Stim Pack**: 2 Chemical Compound, 1 Bio Material. Medicine 30 required. Craft time: 12 seconds.
-    - **Anti-Rad Meds**: 3 Chemical Compound, 1 Electronic Parts (for dispenser). Science 35 required. Craft time: 20 seconds.
-- **Build CraftingPanel.tsx** in `src/components/ui`:
-  - Tabbed interface: Ammunition, Medical, Tools (future), Explosives (future)
-  - Left side: list of known recipes (filtered by tab)
-  - Right side: selected recipe details (description, required materials with "have/need" counts, skill requirement, output preview)
-  - Highlight craftable recipes in green (have all materials and skill)
-  - Gray out unavailable recipes (missing materials or skill)
-  - "Craft" button (disabled if requirements not met)
-  - Show crafting progress bar when crafting (blocks other actions for craft time duration)
-- **Implement crafting execution**:
-  - Click "Craft" button: validate materials/skill, deduct resources from inventory, start craft timer
-  - After craft time elapses: add output items to inventory, play sound effect, show toast: "Crafted: 10× 9mm Ammo"
-  - Pass in-game time equal to craft time (time advances during crafting)
-- **Add recipe discovery**:
-  - Player starts with basic recipes: Bandage, 9mm Ammo
-  - Discover new recipes by: reading skill books (loot), reaching skill thresholds (Medicine 20 unlocks Medkit recipe), talking to NPC trainers
-  - Display "New Recipe Learned!" notification when discovered
-- **Implement resource scavenging**:
-  - Add "Scavenge" interaction to containers, debris, corpses
-  - Random resource drops based on location type (Slums: more Textile/Metal, Downtown: more Electronics)
-  - Enemy-specific drops: robots drop Electronic Parts, humans drop Bio Materials/Textiles
-</details>
-
-<performance>
-- Debounce crafting button clicks to prevent double-crafting
-- Batch recipe filtering calculations, don't recalculate every frame
-</performance>
-
-<test>
-Loot containers and defeat enemies to gather resources (Metal Scrap, Electronic Parts, etc.). Open CraftingPanel and verify known recipes display with material requirements. Attempt to craft 9mm Ammo with insufficient materials and verify button disabled. Gather required materials and craft successfully, confirm resources deducted and ammo added to inventory. Try to craft Stim Pack without Medicine 30 skill and verify grayed out with skill requirement warning. Read skill book and verify new recipe appears with "New Recipe Learned!" notification. Craft Medkit and verify 15-second craft time elapses with progress bar. Dismantle unwanted weapon and confirm resources recovered. Scavenge container in Slums vs Downtown and verify different resource drop rates.
-</test>
-</step>
-
-<step id="30.2">
-<step_metadata>
-  <number>30.2</number>
-  <title>Weapon Modification System</title>
-  <phase>Phase 7: Character Progression and Inventory</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 30.1 completed (crafting system and resources exist)
-- Equipment system from Step 25 exists (weapons have modification slots)
-</prerequisites>
-
-<instructions>
-Implement weapon modification system allowing players to craft and attach mods that enhance weapon performance.
-</instructions>
-
-<details>
-- **Define weapon mod structure** in `src/content/items/weaponMods.ts`:
-  - Each weapon has 2-3 mod slots: **Barrel**, **Magazine**, **Optics**
-  - Mods are inventory items that can be attached/detached from compatible weapons
-  - Mods provide stat bonuses: damage, accuracy, capacity, special properties
-- **Create weapon mod recipes** (require Workbench station):
-  - **Reflex Sight** (Optics): 2 Electronic Parts, 1 Metal Scrap. Engineering 15. Craft time: 20s. Effect: +10% accuracy.
-  - **Extended Magazine** (Magazine): 3 Metal Scrap, 1 Electronic Parts. Engineering 20. Craft time: 25s. Effect: +50% magazine capacity.
-  - **Suppressor** (Barrel): 4 Metal Scrap, 1 Textile Fiber. Engineering 25. Craft time: 30s. Effect: Silenced (no alert), -5% damage.
-  - **Long Barrel** (Barrel): 3 Metal Scrap. Engineering 15. Craft time: 15s. Effect: +15% damage, -5% accuracy.
-  - **Laser Sight** (Optics): 3 Electronic Parts. Engineering 30. Craft time: 35s. Effect: +15% accuracy, +5% crit chance.
-  - **Armor-Piercing Barrel** (Barrel): 5 Metal Scrap, 2 Chemical Compound. Engineering 35. Craft time: 40s. Effect: Ignore 50% target armor.
-- **Implement mod attachment system**:
-  - In InventoryPanel, right-click weapon → "Modify Weapon"
-  - Opens WeaponModificationPanel showing weapon's 3 mod slots
-  - Drag-and-drop compatible mods from inventory to slots
-  - Display stat changes preview (green +damage, +accuracy)
-  - "Apply" button confirms changes, mods become attached to weapon
-  - Detaching mod returns it to inventory (free action)
-- **Wire mods into combat calculations**:
-  - When calculating weapon stats (damage, accuracy, capacity), include attached mod bonuses
-  - Suppressor mod: attacks don't trigger enemy alerts
-  - Armor-piercing mod: reduce target armor rating before damage calculation
-  - Extended magazine: increase ammo capacity (e.g., 10 rounds → 15 rounds)
-- **Add mod compatibility**:
-  - Not all mods fit all weapons (can't put Long Barrel on pistol, only rifles/shotguns)
-  - Check weapon type before allowing mod attachment
-  - Display compatibility warning: "This mod is not compatible with pistols"
-- **Create Workbench locations**:
-  - Resistance safe houses have workbenches
-  - Scavenger market has workbench (fee required if reputation <Friendly)
-  - Industrial Wasteland has abandoned workshop (free, but dangerous to reach)
-- **Build crafting station UI**:
-  - When near workbench, "Use Workbench" interaction appears
-  - Opens CraftingPanel filtered to Weapon Mods tab
-  - Show only recipes requiring workbench
-  - Cannot craft without being at workbench
-</details>
-
-<accessibility>
-- Weapon mod slots keyboard navigable (Tab to cycle, Enter to attach/detach)
-- Screen reader describes mod effects: "Reflex Sight attached, accuracy increased by 10 percent"
-- Visual preview of stat changes with clear +/- indicators
-</accessibility>
-
-<test>
-Gather resources and reach Engineering 15 skill. Travel to Resistance safe house and interact with workbench. Open crafting panel and verify Weapon Mods tab shows available recipes. Craft Reflex Sight and confirm mod added to inventory. Right-click weapon and select "Modify Weapon", verify WeaponModificationPanel opens with 3 slots. Drag Reflex Sight to Optics slot and confirm +10% accuracy preview appears. Apply mod and confirm stat bonus active in character sheet. Enter combat and verify improved accuracy. Craft Suppressor and attach to weapon, verify attacks no longer alert nearby enemies. Attempt to attach Long Barrel to pistol and verify compatibility warning. Craft Extended Magazine, attach to rifle, and verify magazine capacity increases from 10 to 15 rounds. Detach mod and confirm it returns to inventory. Try to craft weapon mod without workbench and verify prevention.
-</test>
-</step>
 </phase>
 
 <phase id="8" name="World Expansion">
-<step id="31">
-<step_metadata>
-  <number>31</number>
-  <title>Industrial Wasteland Zone (Deferred to Post-MVP)</title>
-  <phase>Phase 8: World Expansion</phase>
-</step_metadata>
 
-<instructions>
-This step was moved out of the MVP build. Refer to the Post-MVP section in this file for the full Industrial Wasteland scope, milestone tests, and authoring guidance.
-</instructions>
-
-<notes>
-- Preserve dependency references in other steps, but execute the zone build only when tackling the post-MVP roadmap.
-- Keep the associated Linear issue in the PostMVP project; update its status when planning the expansion.
-</notes>
-</step>
-
-<step id="31.5">
-<step_metadata>
-  <number>31.5</number>
-  <title>Seasonal Narrative Arc Episodes</title>
-  <phase>Phase 8: World Expansion</phase>
-</step_metadata>
-
-<prerequisites>
-- Step 16.9 completed (George assistant ambient feed)
-- Step 29.7 completed (Dynamic District Uprisings & Resistance Simulation)
-- Step 33 completed (save system resilience)
-</prerequisites>
-
-<instructions>
-Create a seasonal episode framework that schedules limited-time citywide arcs. Each episode layers bespoke ambient dressing, missions, and rewards on top of the uprising/heat systems so returning players see fresh stakes without fragmenting saves.
-</instructions>
-
-<details>
-- Extend `worldSlice` with a `seasonState` record storing `currentEpisodeId`, phase progression, timestamps, and active modifiers. Provide selectors and persistence hooks so mid-episode saves restore safely.
-- Add `seasonDirector.ts` in `src/game/world/directors/` that loads episode configs from `src/content/seasons/<episodeId>.ts`, ticks phases (`Prelude`, `Escalation`, `Climax`, `Aftermath`), and dispatches structured events for George, signage, quest generators, and ambient triggers.
-- Author baseline episode templates (e.g., CorpSec Crackdown, Resistance Festival, Blackout Amnesty) defining prop swaps, lighting presets, patrol modifiers, vendor adjustments, limited-time missions, and reward tables. Ensure localization keys and narration blurbs live alongside content.
-- Update George assistant with a “Season Briefing” tab describing the active episode, remaining time, and recommended actions. Mirror high-level summaries in the quest log/planning board and broadcast milestone changes through ambient systems.
-- Provide player agency: episodic missions, donation drives, or sabotage tasks that influence episode outcomes and tie back into uprising metrics. Rewards should include cosmetics, schematics, and faction perks that persist post-episode.
-- Document the episode authoring workflow in `memory-bank/architecture.md` (director flow, save considerations) and record tone/style rules per episode type in `memory-bank/plot.md`.
-</details>
-
-<test>
-- Fast-forward through an episode in a dev harness; confirm each phase activates the correct ambient assets, missions, and George briefings, even across reloads.
-- Trigger liberation and crackdown scenarios during an episode to ensure modifiers stack cleanly with uprising effects and revert when the episode ends.
-- Accept and complete limited-time missions; verify rewards grant persistent perks/schematics and that failure paths adjust future phase modifiers.
-- Save/quit in each episode phase; on reload ensure `seasonDirector` resumes timers, pending events, and UI with no duplication or desync.
-</test>
-</step>
 </phase>
 
 <phase id="10" name="Testing, Polish, and Release">
@@ -2633,6 +2057,740 @@ Run `yarn test --coverage` and verify all 6 test files execute successfully. Che
 </test>
 </step>
 
+
+
+
+
+
+
+<step id="35">
+<step_metadata>
+  <number>35</number>
+  <title>Surface Level & Objective HUD</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Display the current level metadata and mission objectives directly in the game overlay with integration for all zones.
+</instructions>
+
+<details>
+- Extend `MapArea` definitions with `level` numbers and objective lists for all zones (Level 0 for Slums, Level 1 for Downtown, Level 2 for Industrial Wasteland).
+- Render a `LevelIndicator` panel in the HUD that mirrors the day/night widget placement, listing active tasks without blocking gameplay.
+- Show zone-specific information: current zone name, danger level, environmental hazards present, and active quests for that area.
+- Ensure all map entities respect their building boundaries so overlays and sprites do not intersect structures.
+- Add minimap or zone overview showing key locations, vehicle position if applicable, and discovered points of interest.
+</details>
+
+<test>
+Load each level (Slums, Downtown, Industrial Wasteland) and verify the panel shows the correct level number, zone name, and objectives. Confirm environmental hazard warnings appear in Industrial Wasteland. Verify NPCs/items appear outside building footprints. Test that zone transitions update the HUD information correctly. Check that quest objectives for the current zone are highlighted.
+</test>
+</step>
+
+<step id="35.2">
+<step_metadata>
+  <number>35.2</number>
+  <title>Level Objective Progression Flow</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Tie the HUD objectives state to formal mission progression so completed objectives cross out, trigger a Mission Accomplished celebration, and advance the campaign to the next level when confirmed.
+</instructions>
+
+<details>
+- Extend mission data in `worldSlice` (or dedicated mission slice) to mark objectives as primary vs side, persist quest IDs, and expose an `isComplete` flag once all child quests resolve.
+- Update Level & Objectives panel to animate cross-outs and show completion checkboxes while leaving side quests in an optional section that never blocks main progression.
+- Dispatch a `missionAccomplished` action when every primary objective completes. Surface a confirmation modal bannering rewards, allow players to defer the transition to finish side quests, and fire an advancement event that loads the next level when accepted.
+- Wire George assistant to the same selectors and mission-complete event so its guidance line, celebration copy, and defer/continue prompts stay synchronized with the Level & Objectives panel.
+- Inform auxiliary systems (assistant, minimap focus, save checkpoints) by broadcasting mission completion through a shared event so they refresh guidance without polling quest internals.
+</details>
+
+<prerequisites>
+- Step 35 (Surface Level & Objective HUD)
+</prerequisites>
+
+<test>
+Complete all quests inside a level's primary objectives and verify each line crosses out in the HUD with a checked state. Confirm the Mission Accomplished prompt appears, offers defer and continue options, and that choosing continue loads the next level with fresh objectives. Ensure optional side quests remain visible and can still be finished after the banner appears until the player confirms advancement. Attempt to progress before all objectives are complete and confirm the confirmation is blocked.
+</test>
+</step>
+
+<step id="35.5">
+<step_metadata>
+  <number>35.5</number>
+  <title>Implement George AI Assistant Overlay</title>
+  <phase>Phase 10: Testing, Polish, and Release</phase>
+</step_metadata>
+
+<instructions>
+Deliver the George AI assistant overlay that anchors to the Level 0 objectives hub, providing contextual guidance, adaptive banter, and a lightweight dialogue interface.
+</instructions>
+
+<details>
+- Build a `GeorgeAssistant` React component that nests inside the Level 0 objectives HUD container without obscuring existing mission data.
+- Connect the assistant to Redux selectors for current objective queue, active quests, karma, faction reputation, and player personality flags (derived from dialogue choices/background traits).
+- Implement hint generation rules: surface top-priority main quest hints by default, optionally rotate in relevant side quest or dynamic event prompts when player intent matches (use existing tagging on quests/events).
+- Add a collapsible conversation widget (keyboard shortcut `G` and clickable entry point) offering quick options like "What should I do?", "How are we doing?", and a rotating banter hook. Responses should pull tone variants keyed to the player’s personality alignment (sarcastic, earnest, ruthless, etc.).
+- Author initial dialogue lines following plot bible tone guidelines; include JSON/script entries with references to source guideline IDs for later expansion.
+- Queue assistant interjections tied to major state changes (quest completion, reputation swing thresholds, entering hostile territory). Ensure timings respect cooldowns to avoid chat spam.
+</details>
+
+<test>
+Launch the HUD and confirm George appears within the Level 0 objectives area without overlapping other controls. Trigger `G` and verify conversation options render, can be navigated via mouse and keyboard, and dispatch responses matching the player’s current personality alignment. Change karma/reputation values and confirm George updates commentary tone within two subsequent interactions. Complete a quest and enter a hostile zone to ensure contextual alerts fire once, respect cooldowns, and reference the correct objectives. Toggle the overlay collapsed/expanded state and confirm persistence across scene reloads.
+</test>
+</step>
+</phase>
+
+<summary>
+## Summary
+
+This plan now outlines **57 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
+
+<phase_structure>
+- **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
+- **Phase 7 (Steps 22.1-26.4)**: Character progression, inventory, and core combat foundations - CORE MVP (14 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 24.5/24.6, 25/25.5, 26, 26.4)
+- **Phase 8 (Steps 31, 31.5)**: World expansion beats deferred to Post-MVP.
+- **Phase 9 (Post-MVP Optional Expansions)**: Deferred MVP systems (reputation/witness/gossip, street-tension director, advanced combat expansions, crafting/mods, and heavy polish/testing/save/epilogue) plus optional expansions (directional cover, advanced stamina, vehicles, survival mode) - POST-MVP, deferred to v1.1+.
+- **Phase 10 (MVP Release Prep)**: Final MVP deliverables (4 steps: 32.1, 35, 35.2, 35.5).
+</phase_structure>
+
+<focus_areas>
+- **Command & Atmosphere**: Resistance command hub UI, neon isometric presentation, and curfew pressure loops.
+- **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
+- **Hazard Integration**: Environment matrix tying smog, surveillance, radiation, and curfew states into AI, faction economies, and travel safety.
+- **Combat & Navigation**: Turn-based encounters with cover awareness, guard perception loops, click-to-move traversal, and readable path previews.
+- **Character Progression**: Modular character creation flow, existing playerStats.ts integration, XP/leveling foundation, skill tree system, and perk selection with capstones.
+- **Equipment & Inventory**: Expanded inventory system building on existing interfaces, equipment effects, durability mechanics, and weight penalties.
+- **Advanced Combat Systems (Post-MVP)**: Directional cover and flanking, overwatch/targeted shots, AoE attacks, and combat consumables deferred beyond MVP.
+- **Reputation & Influence (Post-MVP)**: Faction reputation, trust/fear ethics, and witness/gossip propagation deferred.
+- **Crafting & Upgrades (Post-MVP)**: Basic crafting for ammo/medical supplies and weapon mods deferred.
+- **Expanded World**: Downtown/Slums enhancements remain core; Industrial Wasteland zone migrated to the post-MVP roadmap.
+- **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
+- **Testing & Quality**: Unit test suite (70% coverage target) in MVP; integration test scenarios deferred.
+- **Documentation & Support (Post-MVP)**: In-game help system, state atlas exports, narrative ledger epilogue, and external documentation deferred.
+- **Stability & Polish (Post-MVP)**: Multi-slot save system, WebGL context loss recovery, SpectorJS profiling playbook, and full UI polish deferred.
+</focus_areas>
+
+<key_improvements>
+This revised plan addresses critical quality issues identified in the analysis:
+
+**Step Granularity**: Complex steps split into focused substeps:
+- Step 22 → 22.1 (UI shell), 22.2 (attributes - after 23), 22.3 (backgrounds - after 24.3)
+- Step 24 → 24.1 (XP/leveling), 24.2 (skill trees), 24.3 (perk selection)
+- Step 26 → 26.1 (flanking, now Post-MVP), 26.2 (overwatch/targeted shots), 26.3 (AoE/consumables)
+- Step 30 → 30.1 (basic crafting), 30.2 (weapon mods)
+- Step 32 → 32.1 (unit tests), 32.2 (integration tests)
+
+**Bridge Steps Added**:
+- Step 23.5: Wire equipment stats to combat formulas
+- Step 25.5: Integrate equipment effects with combat and movement
+
+**Prerequisite Dependencies**: Steps now acknowledge existing implementations and specify integration points with proper ordering.
+
+**Scope Management**: Ambitious features deferred to Phase 9 (POST-MVP):
+- Reputation/witness/gossip/rumor heat systems and trust/fear ethics
+- Street-Tension Director
+- Advanced combat expansions (overwatch/targeted shots, AoE/consumables)
+- Crafting & weapon mods (data retained, runtime/UI deferred)
+- Heavy polish/docs/E2E/save expansion items, narrative ledger epilogue
+- Step 27.1: Vehicle systems simplified to motorcycle-only
+- Step 28.1: Survival mechanics reduced to hunger/thirst only
+- Clear warnings: "⚠️ POST-MVP - Defer to v1.1+"
+
+**Concrete Specifications**: Vague descriptions replaced with formulas, thresholds, and examples:
+- XP formula: `xpRequired = 100 * level * (1 + level * 0.15)`
+- AP formula: `6 + floor((agility-5)*0.5)`
+- Faction thresholds: <-60 Hostile, -60 to -20 Unfriendly, etc.
+  - Industrial Wasteland scope documented in the Post-MVP section below for the post-release expansion
+
+**Quality Assurance**: New steps for comprehensive testing and accessibility:
+- Step 34.7: In-game help system and external documentation
+
+**System Transparency**: Simulation bookkeeping steps make systemic consequences observable and maintainable:
+- Step 16.11: Hazard-to-system integration matrix aligns environmental threats with AI, faction pressure, and travel loops.
+- Step 29.8: World-state variable atlas catalogs persistent flags for designers, tooling, and validation scripts.
+- Step 35.7: Narrative ledger epilogue records player choices and world outcomes for coherent endings and regression tracking.
+</key_improvements>
+
+Each step includes concrete validation targets to keep development measurable. The architecture prioritizes modularity and scalability, drawing inspiration from Fallout 2 while focusing on a maintainable modern web stack. Iterative playtesting complements automated checks to preserve feel and performance.
+
+The resulting foundation positions the project for a solid v1.0 release with a clear roadmap for future additions in v1.1+ (vehicles, expanded survival, additional zones, expanded faction conflicts).
+</summary>
+</mvp_plan>
+
+<post_mvp_plan>
+
+# Post-MVP Roadmap for "The Getaway"
+
+This section catalogs Phase 9 optional expansions that were split out of the MVP section above. Step numbering is preserved to keep roadmap references intact, including Step 31 (Industrial Wasteland) which was moved here from the MVP scope.
+
+<scope_update date="2026-01-18">
+- Deferred from MVP scope: storylets/dialogue complications, reputation/witness/gossip/rumor heat systems, street-tension director, seasonal episodes, advanced combat expansions (overwatch/targeted shots, AoE/consumables), crafting & weapon mods, and major polish/docs/E2E/save expansion items.
+- Keep step numbering intact; corresponding Linear issues were moved to PostMVP Backlog for sequencing.
+</scope_update>
+
+<phase id="MVP-deferred" name="Deferred MVP Steps (Post-MVP)">
+<step id="19.6">
+<step_metadata>
+  <number>19.6</number>
+  <title>Implement Witness Memory & Regional Heat</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<instructions>
+Model NPC suspicion as decaying eyewitness memory that aggregates into zone heat instead of binary wanted flags.
+</instructions>
+
+<details>
+- **Suspicion Module**: Stand up `src/game/systems/suspicion/` with `WitnessMemory` models, decay/reinforce helpers, and pruning thresholds (`certainty < 0.05`). Expose utilities for half-life tuned decay, reinforcement payloads, and serialization.
+- **Guard Perception Hooks**: When Step 19 vision cones or Step 19.5 surveillance calls flag the player, emit `WitnessMemory` entries tagged by observer, recognition channel (`face | outfit | vehicle`), certainty score, and `lastSeenAt` game time. Reinforcement events (repeat sighting, guard briefings, poster scans) reset decay timers and boost certainty.
+- **Regional Heat Aggregation**: Extend `worldSlice` (or dedicated `suspicionSlice`) with per-zone memory registries, selectors for `selectHeatByZone`, and derived alert tiers (calm, tracking, crackdown) keyed to the sum of top-K memories × proximity factors. Route heat thresholds into existing alert escalation instead of binary `isWanted`.
+- **Dampeners & Disguises**: Introduce modifiers sourced from disguise items, lighting conditions, distance, and player stance so stealth actions reduce certainty ceilings; intimidation/bribery actions can mark memories as `suppressed`.
+- **UI & Debugging**: Surface aggregate heat and the top suspect memories to George’s debug tab or a dev-only overlay for tuning. Provide logging hooks so designers can inspect decay rates live.
+- **Persistence & Performance**: Ensure memories pause decay when `worldSlice.time.isFrozen`, cull expired entries to avoid list bloat, and persist minimal witness snapshots in save data with version guards.
+</details>
+
+<test>
+- Unit test decay and reinforcement helpers with multiple half-life configurations to confirm certainty halves over time and clamps within [0,1].
+- Simulate guard sightings in a headless test scene: confirm memories spawn, reinforce on repeat sightings, decay after lying low, and drop once certainty < 0.05.
+- Drive region heat above configured tiers via scripted sightings and verify guard AI escalates responses, then allow time to pass and ensure heat cools naturally without manual resets.
+- Toggle disguises/lighting modifiers in integration tests to confirm certainty gains shrink appropriately and suppressed memories stop contributing to heat.
+</test>
+</step>
+<step id="19.7">
+<step_metadata>
+  <number>19.7</number>
+  <title>Street-Tension Director</title>
+  <phase>Phase 6: Visual and Navigation Upgrades</phase>
+</step_metadata>
+
+<instructions>
+Introduce a pacing director that reads suspicion pressure, recent encounters, and player stress to modulate patrol density, encounter frequency, and ambient presentation.
+</instructions>
+
+<details>
+- **Director State Machine**: Create `src/game/systems/director/` with a `DirectorState` (`pressure`, `respite`, `noise`, `intensityTier`) derived from witness heat (Step 19.6), alert flags, and elapsed downtime. Persist state in `worldSlice` (or a dedicated slice) and expose selectors for HUD/debug consumers.
+- **Signal Inputs**: Listen for guard alerts, combat outcomes, alarm triggers, and resource telemetry (ammo/medkit thresholds) so the director detects stress spikes or recovery streaks. Provide an action for George Assistant (Step 16.9) to request respite that temporarily caps pressure gain.
+- **Dials & Outputs**: Map director tiers to tunable knobs: patrol spawn cadence, roaming route variance, spontaneous street encounter probability, ambient VFX/SFX intensity, and merchant caution dialogue. Apply adjustments via existing spawners/controllers rather than bespoke logic.
+- **Integration Hooks**: Update `GameController` (or the scene orchestrator) to tick the director each world step, lerp knob deltas over configurable windows, and dispatch Redux actions so UI/audio react declaratively. Author per-district profiles under `src/content/director/directorProfiles.ts`.
+- **Debug & Overrides**: Add dev-only inspector controls to freeze tiers, tweak thresholds, and log transitions. Emit telemetry events so balancing sessions can review escalation/cooldown timelines.
+</details>
+
+<test>
+- Unit test director reducers/helpers to confirm pressure/respite accumulation, tier transitions, and cooldown behaviour across multiple profiles.
+- Script repeated alerts in a headless simulation to push the director into crackdown, then grant downtime and verify it cools back to calm while patrol density and ambient audio follow suit.
+- Disable the director profile and confirm baseline spawn logic remains unchanged (regression guard).
+- Trigger the George respite request and ensure the director honours the cooldown window without blocking future escalations.
+</test>
+</step>
+<step id="24.4">
+<step_metadata>
+  <number>24.4</number>
+  <title>Rumor Cabinet Intel Perk Branch</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 24.3 completed (perk selection infrastructure)
+- Step 19.6 completed (witness memory & regional heat supplies telemetry)
+</prerequisites>
+
+<instructions>
+Add an Intel-focused perk branch—“Rumor Cabinet”—that lets players reshape rumor spread, witness decay, and information control through specialized perks.
+</instructions>
+
+<details>
+- **Content Definitions**: Extend `src/content/perks.ts` with a new `intel` (or `rumorCabinet`) category containing at least five perks: Whistle-Friendly, Folk Hero, Shadow Broker, Panic Whisper, and False Lead. Each defines level/attribute/skill prerequisites (e.g., high Speech, Stealth, or Intelligence), effect payloads, and mutually exclusive choices where appropriate.
+- **Effect Plumbing**: Update the perk evaluation layer (`src/game/systems/perks/` or equivalent) to expose hooks consumed by the rumor/suspicion systems—e.g., modifiers for rumor TTL/decay, share fan-out, confidence multipliers, and access to “plant rumor” social actions at bars/markets. Ensure effects stack predictably with existing modifiers from disguises or faction standing.
+- **Redux & Selectors**: Add derived selectors (`selectRumorPerkModifiers`) that aggregate active Intel perks and feed them into gossip propagation (Step 29.6) and witness decay (Step 19.6). Persist any new perk runtime state (e.g., Shadow Broker cooldowns) in `playerSlice`.
+- **UI/UX Updates**: Update `PerkSelectionPanel.tsx` to surface the Intel category with bespoke iconography and copy referencing the Thought Cabinet inspiration. Include tooltips that explain how each perk manipulates rumor mechanics and call out any faction biases (e.g., Folk Hero stronger in worker districts).
+- **New Actions**: Unlock contextual “plant rumor”/“suppress rumor” interactions in applicable social hubs (bars, markets, safehouses) once Shadow Broker (or similar) is learned. Stub dialogue hooks so Step 16.9 George prompts reflect available Intel maneuvers.
+- **Documentation**: Note the new perk branch and data flow in `memory-bank/game-design.md` (Rumor systems) and `memory-bank/architecture.md` (perks-to-gossip integration) during implementation.
+</details>
+
+<test>
+- Unit test perk modifiers to ensure Intel perks adjust rumor TTL, decay, and spread multipliers according to spec and clamp within safe bounds.
+- Integration test gossip propagation with and without Intel perks: confirm Whistle-Friendly speeds rumor spread for player-sourced tips, while Folk Hero biases positive rumors in worker districts and dampens elite neighborhoods.
+- Verify Shadow Broker unlocks the “plant rumor” interaction in bar dialogue once prerequisites are met and enforces any cooldowns.
+- Run regression on non-Intel perks to confirm existing combat/utility perks still evaluate correctly and UI category navigation remains accessible.
+</test>
+</step>
+<step id="26.2">
+<step_metadata>
+  <number>26.2</number>
+  <title>Overwatch Mode and Targeted Shots</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Add overwatch mode for reaction shots and targeted shot system for precise tactical choices.
+</instructions>
+
+<details>
+- **Implement Overwatch Mode** in `src/game/combat/overwatchSystem.ts`:
+  - New combat action: "Enter Overwatch" - costs 0 AP but requires 2+ AP remaining
+  - Reserves remaining AP for reaction shots during enemy turns
+  - When enemy moves within line of sight and weapon range: automatically trigger attack
+  - Each reaction shot costs normal AP (2 AP for rifle, 1 AP for pistol)
+  - Overwatch ends when: AP depleted, turn ends, or player cancels
+  - Visual indicator: character sprite shows "OVERWATCH" badge, cone of fire displayed
+- **Add overwatch UI**:
+  - New combat button: "Overwatch Mode" (hotkey: O)
+  - Shows reserved AP count and potential targets in range
+  - Red cone overlay showing covered area during overwatch
+  - Toast notification: "Overwatch triggered! Engaging enemy"
+- **Implement Targeted Shots** in `src/game/combat/targetedShots.ts`:
+  - New targeting interface: right-click enemy to open body part selector
+  - Four body parts: Head, Torso, Arms, Legs
+  - Each part has: hit chance modifier, AP cost modifier, special effect
+  - **Head**: -30% hit chance, +3 AP cost, 2x critical chance, max damage on crit
+  - **Torso**: normal hit chance, normal AP cost, no special effect (standard shot)
+  - **Arms**: -10% hit chance, +1 AP cost, 25% chance to disarm (enemy drops weapon, loses 1 turn picking up)
+  - **Legs**: -15% hit chance, +1 AP cost, reduces target movement by 50% for 2 turns (crippled)
+- **Display targeted shot UI**:
+  - Body part diagram overlay when right-clicking enemy
+  - Show: hit chance %, AP cost, special effect description
+  - Highlight available body parts (gray out if insufficient AP)
+  - Confirm selection to execute targeted shot
+- **Add skill requirements**:
+  - Targeted shots require minimum weapon skill (Small Guns 25, Energy Weapons 30, etc.)
+  - Below threshold: targeted shots unavailable, only torso shots possible
+  - Display skill requirement warning if player attempts targeted shot without skill
+- **Wire into combat log**: "You shoot Raider in the leg for 8 damage! Raider's movement crippled."
+</details>
+
+<accessibility>
+- Overwatch mode keyboard accessible (O key to toggle)
+- Targeted shot body part selector keyboard navigable (Arrow keys + Enter)
+- Screen reader announces reaction shots: "Overwatch reaction shot! Targeting enemy"
+</accessibility>
+
+<test>
+Enter combat with 6 AP. Activate overwatch mode and verify 6 AP reserved, character shows OVERWATCH indicator. Move enemy within line of sight during enemy turn and verify automatic reaction shot fires. Confirm AP depletes with each reaction shot until exhausted. Right-click enemy and verify body part selector appears. Attempt head shot and verify -30% hit chance, +3 AP cost displayed. Execute head shot and verify increased critical chance. Shoot enemy in leg and verify movement speed reduced by 50% for 2 turns (enemy moves half as far). Shoot enemy in arm and verify 25% disarm chance, if triggered enemy drops weapon and loses turn. Attempt targeted shot with low weapon skill (<25) and verify prevention with skill requirement warning. Cancel overwatch mode and verify AP returns for manual use.
+</test>
+</step>
+<step id="26.3">
+<step_metadata>
+  <number>26.3</number>
+  <title>Area-of-Effect Attacks and Combat Consumables</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Add AoE explosion system and combat consumable mechanics for tactical variety.
+</instructions>
+
+<details>
+- **Implement AoE Explosion System** in `src/game/combat/aoeSystem.ts`:
+  - Grenades/explosives affect all units within blast radius (3-tile radius default)
+  - Damage calculation: `damage = baseDamage * (1 - distance / radius)` (center takes full damage, edge takes partial)
+  - Include friendly fire: player grenades can damage player, enemy grenades can damage enemies
+  - Cover provides damage reduction: 50% reduction if behind cover from explosion center
+  - Walls block explosions (no damage through walls)
+- **Add grenade throwing mechanics**:
+  - Throwing action: select grenade from inventory, click target tile
+  - Show blast radius preview (red circle) before throwing
+  - AP cost: 3 AP to throw
+  - Accuracy based on Explosives skill: `hitTile = targetTile + randomOffset(inversely proportional to skill)`
+  - Low skill can cause misthrows landing off-target
+- **Define grenade types** in item database:
+  - **Frag Grenade**: 3-tile radius, 20-30 damage, no special effects
+  - **Molotov Cocktail**: 2-tile radius, 10-15 damage + 5 damage/turn for 3 turns (fire DoT), creates fire terrain
+  - **Smoke Grenade**: 4-tile radius, no damage, creates obscuring smoke for 3 turns (blocks line of sight, +50% miss chance through smoke)
+  - **EMP Grenade**: 3-tile radius, 5 damage, disables electronic enemies for 2 turns, disrupts energy weapons
+  - **Flashbang**: 3-tile radius, 2 damage, stuns all units for 1 turn (lose next turn)
+- **Implement Combat Consumables**:
+  - **Medkit** (hotkey or inventory use): 4 AP, heals 30 HP instantly, can use in combat
+  - **Stim Pack** (combat drug): 2 AP, +2 AP for next 2 turns, then -1 AP for 1 turn (withdrawal)
+  - **Combat Drug "Fury"**: 3 AP, +20% damage, -10% accuracy for 3 turns, addiction risk
+  - **Antidote**: 2 AP, removes poison/status effects immediately
+  - **Adrenaline Shot**: 3 AP, instantly recover 3 AP (can exceed max AP for 1 turn), then -2 AP next turn
+- **Wire consumables into combat UI**:
+  - Hotbar slots 1-5 at bottom of combat screen
+  - Drag consumables from inventory to hotbar for quick access
+  - Press number key to use assigned consumable
+  - Show AP cost and cooldown timers
+- **Update enemy AI**:
+  - Enemies throw grenades at clustered players (2+ units in 3-tile radius)
+  - Enemies use medkits when below 30% HP
+  - Enemies throw smoke grenades when retreating
+</details>
+
+<error_handling>
+- Prevent grenade throws outside valid range (8 tiles)
+- Validate consumable use (can't use medkit at full HP)
+- Handle edge cases: grenade lands in wall (explodes at last valid tile)
+</error_handling>
+
+<test>
+Equip frag grenade and throw at clustered enemies (2+ units within 3 tiles). Verify blast radius preview shows before throwing. Confirm all units in radius take damage scaled by distance. Position player behind cover from explosion center and verify 50% damage reduction. Throw grenade near wall and verify explosion doesn't penetrate. Use low Explosives skill and verify grenade lands off-target sometimes. Throw smoke grenade and verify obscuring smoke blocks line of sight for 3 turns. Throw EMP grenade at robot and verify 2-turn disable. Use medkit mid-combat and verify 30 HP heal with 4 AP cost. Use stim pack and verify +2 AP for 2 turns, then -1 AP withdrawal. Assign consumables to hotbar and use number keys to quick-use. Watch enemy AI throw grenade at clustered players and use medkit when injured.
+</test>
+</step>
+<step id="29">
+<step_metadata>
+  <number>29</number>
+  <title>Implement Faction Reputation System with Three Core Factions</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Build a concrete faction reputation system with three defined factions (Resistance, CorpSec, Scavengers) and numerical thresholds that drive gameplay consequences.
+</instructions>
+
+<details>
+- **Define three core factions** in `src/game/systems/factions.ts`:
+  - **The Resistance**: Anti-regime freedom fighters operating from hidden cells. Offer stealth gear, hacking tools, intelligence on CorpSec movements. Allied with player by default (starts neutral-positive).
+  - **CorpSec (Corporate Security)**: Regime enforcement arm. Control checkpoints, patrol Downtown, enforce curfew. Hostile to Resistance. Offer heavy weapons, armor, credits for turning in dissidents.
+  - **Scavengers**: Opportunistic survivors controlling black markets in Slums. Neutral third party. Offer rare items, vehicle parts, crafting materials at varying prices based on reputation.
+- **Implement numerical reputation scale** (-100 to +100 per faction):
+  - **Reputation thresholds and effects**:
+    - **<-60 (Hostile)**: Faction attacks on sight, sends hit squads, blocks access to faction areas. NPCs refuse dialogue.
+    - **-60 to -20 (Unfriendly)**: Faction suspicious, prices +50%, no quests offered, guards follow player. Some dialogue locked.
+    - **-19 to +19 (Neutral)**: Standard interactions, normal prices, basic quests available.
+    - **+20 to +59 (Friendly)**: Discounts (-25%), access to restricted areas, faction backup in nearby combat, special quests unlocked.
+    - **+60 to +100 (Allied)**: Best equipment available, faction safe houses accessible, leadership/influence quests, faction will aid in final mission.
+- **Define reputation-changing actions**:
+  - **Resistance**: +10 for rescuing civilians, +15 for sabotaging CorpSec, +20 for completing Resistance quests. -20 for betraying Resistance members, -30 for turning in Resistance contacts to CorpSec.
+  - **CorpSec**: +10 for reporting crimes, +15 for eliminating Resistance members, +20 for completing CorpSec contracts. -20 for attacking CorpSec patrols, -30 for sabotaging checkpoints.
+  - **Scavengers**: +5 for trading (cumulative), +15 for completing salvage contracts, +10 for sharing discovered loot locations. -15 for stealing from Scavenger caches, -20 for killing Scavenger merchants.
+- **Implement rival faction mechanics**:
+  - Gaining reputation with Resistance decreases CorpSec reputation (and vice versa) at 50% rate
+  - Scavengers remain independent (reputation not affected by Resistance/CorpSec actions)
+  - Reaching Allied (+60) with one side automatically sets rival to Hostile (<-60)
+- **Build FactionReputationPanel.tsx** in `src/components/ui`:
+  - Display all three factions with reputation bars (-100 to +100)
+  - Color-code thresholds: red (Hostile), orange (Unfriendly), gray (Neutral), green (Friendly), gold (Allied)
+  - Show current standing label and next threshold
+  - List active effects for each faction (e.g., "Resistance: Friendly - 25% discount at safe houses, backup available")
+- **Integrate into gameplay**:
+  - NPCs check player faction reputation before offering quests or services
+  - Faction-aligned NPCs (Resistance operatives, CorpSec guards, Scavenger traders) have different dialogues based on standing
+  - Dialogue options tagged with faction requirements: "[Resistance Allied] Ask for intel on CorpSec HQ"
+  - Faction areas (Resistance safe houses, CorpSec HQ, Scavenger markets) have access restrictions based on reputation
+- **Add reputation change notifications**: Toast notifications showing reputation shifts: "+15 Resistance reputation: Civilian rescued", "-20 CorpSec reputation: Patrol eliminated"
+- **Wire into ending system**: Final mission outcome influenced by faction allegiances. Allied factions provide support (reinforcements, equipment, intelligence).
+</details>
+
+<accessibility>
+- Faction reputation bars keyboard accessible with clear ARIA labels
+- Screen reader announces reputation changes: "Resistance reputation increased to 45, now Friendly status"
+- Color-coding supplemented with icons for colorblind accessibility
+</accessibility>
+
+<test>
+Complete Resistance quest and verify +20 Resistance reputation, -10 CorpSec reputation (50% penalty). Verify toast notification appears. Check FactionReputationPanel shows updated values with correct color-coding. Reach Friendly (+20) with Resistance and verify discount applies at Resistance safe house, special quests unlock. Attack CorpSec patrol and verify reputation drops to Hostile (<-60). Confirm CorpSec guards now attack on sight, send hit squads. Trade repeatedly with Scavengers and verify cumulative +5 reputation per transaction. Reach Allied (+60) with Resistance and verify CorpSec automatically becomes Hostile. Attempt to enter CorpSec HQ with Hostile reputation and verify access denied. Check dialogue options show/hide based on faction standing. Complete game and verify Allied factions provide support in final mission.
+</test>
+</step>
+<step id="29.2">
+<step_metadata>
+  <number>29.2</number>
+  <title>Establish Trust/Fear Ethics Layer</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Create a lightweight ethics model that augments faction reputation by tracking trust and fear scores per faction/location, logging contextual action records, and surfacing immediate systemic effects (pricing, encounters, dialogue tone) without yet implementing full witness propagation.
+</instructions>
+
+<details>
+- **Ethics service module** (`src/game/systems/ethics/ethicsService.ts`): Define `EthicsProfile` with `trust` (-100..100) and `fear` (0..100) axes per faction and active location cell. Provide helpers to apply deltas, clamp ranges, decay values, and broadcast updates.
+- **Redux integration** (`src/store/ethicsSlice.ts`): Persist trust/fear state, last three `ActionRecord` entries, and computed modifiers (price multiplier, encounter weight, dialogue mood). Expose selectors wired into UI/components.
+- **Action capture**: Emit `ActionRecord` objects (`{ actor, verb, target, locationId, tags: string[], witnesses: string[], timestamp }`) from existing combat/quest/economy reducers. Seed core tags: `scarcity_high`, `aid_given`, `threat_displayed`, `resource_hoarding`, `lawless_zone`.
+- **Contextual adjustments**: Map tags to trust/fear deltas with SPECIAL-aware scaling (e.g., Charisma > 6 boosts trust gains by 10%, Strength > 7 increases fear impact). Convert existing barter pricing and encounter generation to consult combined faction reputation + trust/fear modifiers.
+- **Rumor hooks**: When actions exceed configured thresholds, enqueue a simplified rumor payload (`src/game/systems/rumors/simpleRumorQueue.ts`) with faction/location scope for Step 29.5 to expand. Include accuracy defaults and spread timers but keep propagation local.
+- **Developer HUD**: Add dev-only overlay (`EthicsDebugPanel`) showing current trust/fear per faction, recent action tags, and resulting modifiers to support balancing sessions.
+</details>
+
+<prerequisites>
+- Step 29 (Implement Faction Reputation System with Three Core Factions)
+</prerequisites>
+
+<test>
+Trigger representative actions: donate water during `scarcity_high`, extort a vendor, and fire warning shots in a neutral zone. Verify trust/fear meters update independently of base reputation, barter prices and encounter rolls reflect new modifiers, rumors are queued for qualifying acts, and the debug overlay lists the latest three action records with correct tag-derived deltas.
+</test>
+</step>
+<step id="29.5">
+<step_metadata>
+  <number>29.5</number>
+  <title>Implement Localized Witness Reputation Propagation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Layer a witness-and-gossip reputation network on top of the faction standings so notoriety spreads through observers and their close contacts rather than globally.
+</instructions>
+
+<details>
+- **Event capture pipeline** (`src/game/systems/reputation/events.ts`): Emit structured `ReputationEvent` payloads whenever the player performs a notable act (combat finisher, theft, rescue) with tags for trait deltas (heroic, cruel, sneaky, competent) and intensity.
+- **Witness sampling service** (`src/game/systems/reputation/witnessService.ts`): Query nearby NPCs within the active map cell, evaluate line of sight, distance falloff, lighting, disguise, and noise to produce a `visibilityScore`; discard witnesses below threshold τ.
+- **Interpretation model** (`src/game/systems/reputation/interpretation.ts`): Combine each witness’s faction values, personal biases, and event tags to derive trait adjustments and confidence. Persist `WitnessRecord` entries keyed by event.
+- **Reputation scopes** (`src/store/reputationSlice.ts`): Track layered reputation buckets for (a) individual witnesses, (b) their faction, and (c) the local neighborhood cell. Apply weighted deltas using confidence to adjust `ReputationProfile` traits (heroic, cruel, sneaky, intimidating, competent) with decay timestamps.
+- **Propagation graph** (`src/game/systems/reputation/propagationService.ts`): Maintain bounded gossip edges between NPC social links. Each tick, spend limited "gossip energy" to advance rumors with latency falloff and strength decay. Prevent cross-cell spread unless events exceed intensity threshold.
+- **NPC reactions integration**: Update dialogue controllers, shop pricing hooks, guard AI alertness, and quest availability checks to query scoped reputation rather than global faction standing when determining responses.
+- **Debug overlays**: Add a developer-only heatmap toggle and NPC inspector panel showing top perceived traits, confidence, and rumor sources for troubleshooting.
+</details>
+
+<prerequisites>
+- Step 29 (Implement Faction Reputation System with Three Core Factions)
+- Step 23.5 (Dynamic NPC Scheduling) for routine-aware witness sampling
+</prerequisites>
+
+<test>
+Trigger three contrasting events in the Slums: rescue civilians (heroic), intimidate a ganger (scary), and pickpocket a vendor (sneaky). Verify only NPCs within line of sight update immediately, nearby contacts learn over time, and Downtown NPCs remain unaware. Check discounts apply only with witnesses and their friends, guards in the same cell escalate hostility, and dialogue lines reference observed deeds with confidence qualifiers. Advance time and confirm scores decay without reinforcement.
+</test>
+</step>
+<step id="29.6">
+<step_metadata>
+  <number>29.6</number>
+  <title>Gossip Heat Rumor Propagation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19.6 completed (witness memory & regional heat)
+- Step 29.5 completed (localized witness reputation propagation)
+</prerequisites>
+
+<instructions>
+Implement a lightweight rumor propagation layer that fans out short-lived gossip flags across social graphs, influences regional heat, and exposes player counterplay via safehouses, disguises, and Intel perks.
+</instructions>
+
+<details>
+- **Rumor Model**: Define `Rumor` contracts in `src/game/systems/rumors/gossipHeat.ts` with `{ rumorId, topic, sentiment, sourceFaction, originCell, confidence, ttl, decayRate, lastSharedAt, plantedByPlayer? }`. Persist per-NPC rumor buffers with tight caps (e.g., max 5 active rumors).
+- **Propagation Tick**: Each world tick (or configurable cadence), eligible NPCs share up to two rumors to neighbors sampled from the social graph (Step 29.5). Decrease `ttl`/`confidence` on send, drop rumors when `ttl <= 0` or confidence falls below threshold. Apply faction bias weights (e.g., CorpSec forwards negative player rumors faster).
+- **Heat Integration**: Feed rumor sentiment into the heat system (Step 19.6) by raising or lowering zone pressure proportional to aggregated rumor confidence, ensuring direct eyewitness reports still override gossip. Surface rumor-driven modifiers so the Street-Tension Director (Step 19.7) can react to rising chatter even without new sightings.
+- **Player Counterplay**: Hook safehouse interactions and bribery/disguise actions into rumor buffers—safehouses purge or flag `plantedByPlayer` rumors for decay, bribes reduce confidence for specific factions, disguises slow rumor acceptance outside their origin cell.
+- **Intel Perk Hooks**: Integrate `selectRumorPerkModifiers` from Step 24.4 so perks like Whistle-Friendly, Folk Hero, and Shadow Broker adjust decay, fan-out, or unlock “plant rumor” actions. Respect cooldowns and prevent stacking exploits.
+- **UX Touchpoints**: Add an optional “Ask Around” prompt (HUD or dialogue) that surfaces the top three rumors in the current block with confidence icons, reinforcing diegetic feedback. Expose dev-only logging/visualization to inspect rumor spread for tuning.
+</details>
+
+<test>
+- Unit test rumor decay and propagation helpers to confirm TTL, confidence, and fan-out obey configured caps and faction biases.
+- Simulate a run where a negative rumor originates in Slums and ensure it spreads to adjacent cells over several ticks, raising local heat, while distant districts remain unaffected until contacts connect.
+- Verify safehouse usage clears or dampens rumors as specified and that disguised travel slows uptake in new zones.
+- Acquire Intel perks and confirm their effects (e.g., Whistle-Friendly accelerates player-planted rumors, Folk Hero boosts positive sentiment in worker districts) without breaking baseline propagation.
+</test>
+</step>
+<step id="29.7">
+<step_metadata>
+  <number>29.7</number>
+  <title>Dynamic District Uprisings & Resistance Simulation</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 29.5 completed (localized witness reputation propagation supplies neighborhood notoriety)
+- Step 29.6 completed (gossip heat propagation exposes cross-district sentiment)
+- Step 16.9 completed (George assistant ambient feed ready to broadcast citywide events)
+</prerequisites>
+
+<instructions>
+Stand up a systemic uprising simulation that tracks morale, supplies, and corporate pressure per district, allowing uprisings to ignite, escalate, or be crushed based on player and systemic actions. Ensure each stage drives tangible gameplay changes—patrol patterns, vendor inventory, quest hooks—and that George, signage, and NPCs surface the shifting resistance state.
+</instructions>
+
+<details>
+- Extend `worldSlice` with `districtState` records `{ morale, supply, securityPresence, uprisingStage, pendingEvents }` plus selectors summarizing pressure trends, liberation odds, and countdown timers. Persist state to saves and expose dev tooling for inspection.
+- Author `uprisingDirector.ts` in `src/game/world/directors/` that ticks each in-game hour. It should read witness heat (Step 29.5), gossip sentiment (Step 29.6), faction reputation deltas, resource shipments, and recent mission outcomes to adjust district metrics. Apply designer-tunable thresholds to transition stages: Calm → Tension → Spark → Siege → Liberation or Crackdown.
+- When stages change, enqueue systemic responses: patrol spawn tables, curfew intensity, and surveillance loadouts shift; vendors adjust stock/discounts; safehouses grant temporary buffs or go dark; random encounter tables unlock escort/sabotage opportunities. Emit structured events consumed by George, signage packs, and quest generators.
+- Seed authoring data in `src/content/world/uprisings.ts` describing per-district modifiers (e.g., corp stronghold vs. worker slum), escalation pacing, morale boosts for key story beats, and narrative flavor text for each stage.
+- Provide player counterplay hooks: sabotage missions reduce securityPresence, supply raids boost morale, propaganda runs raise supply while risking crackdown. Ensure Intel perks from Step 24.4 interact (e.g., reveal impending crackdowns, unlock negotiation options).
+- Document the director flow and authoring expectations in `memory-bank/architecture.md` (HOW) and note tonal guidelines for uprising messaging in `memory-bank/plot.md` (WHAT) during implementation.
+</details>
+
+<test>
+- Scripted scenario: intentionally raise morale and drop security to trigger Spark, verify George announces it, signage swaps, and patrol density changes. Continue actions to reach Liberation and confirm safehouses upgrade perks while corp presence retreats.
+- Stress test: allow corp pressure to outweigh morale leading to Crackdown; ensure curfew escalates, vendors restrict access, and NPC dialogue reflects fear. Confirm the simulation cools back to Tension when players counteract pressure.
+- Multi-district regression: run parallel simulations in Downtown and Slums to confirm events remain scoped; George should interleave updates without duplication, and stage timers respect per-district cooldowns.
+- Persistence check: save mid-Siege, reload, and confirm director resumes correctly with queued events intact and timers continuing from the saved state.
+</test>
+</step>
+<step id="29.8">
+<step_metadata>
+  <number>29.8</number>
+  <title>Compile World-State Variable Atlas</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 19.6 completed (witness memory & regional heat scaffolds localized notoriety)
+- Step 29 completed (core faction reputation system online)
+- Step 29.5 completed (localized witness reputation propagation feeding district sentiment)
+</prerequisites>
+
+<instructions>
+Create a centralized atlas that inventories every persistent world-state variable, its owner system, ranges, and downstream consumers so quests, AI, and narrative logic stay synchronized.
+</instructions>
+
+<details>
+- Audit Redux slices (`worldSlice`, `playerSlice`, `questsSlice`, `factionsSlice`, `reputationSlice`, etc.) and catalog each persistent variable that gates content or drives systemic reactions (e.g., `curfewLevel`, `supplyScarcity`, `corpSecAlert`, `resistanceIntel`, `districtHeat`).
+- Implement `src/game/state/stateAtlas.ts` exporting strongly typed descriptors `{ key, slice, datatype, range, description, consumers[] }` alongside helpers for retrieving current values plus normalized percentages.
+- Add an automated validation script (`yarn atlas:verify`) that diff-checks live Redux state keys against the atlas, emitting actionable errors when a slice introduces a new variable without documentation or range metadata.
+- Extend `memory-bank/game-design.md` with an XML-tagged appendix mirroring the atlas for designers, and update `memory-bank/architecture.md` to map each variable to its data flow, persistence requirements, and key listeners.
+- Generate machine-readable output (`memory-bank/exports/state-atlas.json`) during the validation script so tooling, analytics, and narrative planners can ingest the canonical sheet.
+</details>
+
+<test>
+- Add unit tests for `stateAtlas.ts` ensuring descriptors cover all registered keys, consumer arrays reference implemented systems, and range metadata matches runtime bounds.
+- Run `yarn atlas:verify` against mocked state snapshots to confirm it fails when variables lack atlas entries or when range docs fall out of sync.
+- Trigger gameplay scenarios (curfew escalation, faction swing, blackout chain) and verify the exported `state-atlas.json` reflects updated values/timestamps, demonstrating the atlas stays wired to live data.
+</test>
+</step>
+<step id="30.1">
+<step_metadata>
+  <number>30.1</number>
+  <title>Basic Crafting System (Ammo and Medical Supplies)</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<instructions>
+Implement foundational crafting system for ammunition and medical supplies with resource gathering and recipe management.
+</instructions>
+
+<details>
+- **Create resource system** in `src/game/systems/crafting.ts`:
+  - Define 5 base resource types: **Metal Scrap** (common), **Electronic Parts** (uncommon), **Chemical Compounds** (uncommon), **Textile Fiber** (common), **Bio Materials** (rare)
+  - Resources obtained from: looting containers (random drops), scavenging defeated enemies/robots (specific drops), dismantling items (break down unwanted gear for components)
+  - Add resources to inventory as stackable items (max stack: 99)
+- **Define core recipe structure** in `src/content/recipes/`:
+  - Recipe interface: `{ id, name, category, inputs: [{resourceId, quantity}], outputs: [{itemId, quantity}], skillRequired, stationRequired, craftTime }`
+  - **Ammunition recipes** (craftable from inventory, no station required):
+    - **9mm Ammo** (×10): 2 Metal Scrap, 1 Chemical Compound. No skill required. Craft time: 5 seconds.
+    - **Shotgun Shells** (×5): 3 Metal Scrap, 2 Chemical Compound. Science 15 required. Craft time: 8 seconds.
+    - **Energy Cells** (×5): 2 Electronic Parts, 1 Chemical Compound. Science 25 required. Craft time: 10 seconds.
+  - **Medical supplies recipes** (craftable from inventory):
+    - **Bandage** (×2): 2 Textile Fiber. No skill required. Craft time: 3 seconds.
+    - **Medkit**: 3 Textile Fiber, 2 Bio Materials, 1 Chemical Compound. Medicine 20 required. Craft time: 15 seconds.
+    - **Stim Pack**: 2 Chemical Compound, 1 Bio Material. Medicine 30 required. Craft time: 12 seconds.
+    - **Anti-Rad Meds**: 3 Chemical Compound, 1 Electronic Parts (for dispenser). Science 35 required. Craft time: 20 seconds.
+- **Build CraftingPanel.tsx** in `src/components/ui`:
+  - Tabbed interface: Ammunition, Medical, Tools (future), Explosives (future)
+  - Left side: list of known recipes (filtered by tab)
+  - Right side: selected recipe details (description, required materials with "have/need" counts, skill requirement, output preview)
+  - Highlight craftable recipes in green (have all materials and skill)
+  - Gray out unavailable recipes (missing materials or skill)
+  - "Craft" button (disabled if requirements not met)
+  - Show crafting progress bar when crafting (blocks other actions for craft time duration)
+- **Implement crafting execution**:
+  - Click "Craft" button: validate materials/skill, deduct resources from inventory, start craft timer
+  - After craft time elapses: add output items to inventory, play sound effect, show toast: "Crafted: 10× 9mm Ammo"
+  - Pass in-game time equal to craft time (time advances during crafting)
+- **Add recipe discovery**:
+  - Player starts with basic recipes: Bandage, 9mm Ammo
+  - Discover new recipes by: reading skill books (loot), reaching skill thresholds (Medicine 20 unlocks Medkit recipe), talking to NPC trainers
+  - Display "New Recipe Learned!" notification when discovered
+- **Implement resource scavenging**:
+  - Add "Scavenge" interaction to containers, debris, corpses
+  - Random resource drops based on location type (Slums: more Textile/Metal, Downtown: more Electronics)
+  - Enemy-specific drops: robots drop Electronic Parts, humans drop Bio Materials/Textiles
+</details>
+
+<performance>
+- Debounce crafting button clicks to prevent double-crafting
+- Batch recipe filtering calculations, don't recalculate every frame
+</performance>
+
+<test>
+Loot containers and defeat enemies to gather resources (Metal Scrap, Electronic Parts, etc.). Open CraftingPanel and verify known recipes display with material requirements. Attempt to craft 9mm Ammo with insufficient materials and verify button disabled. Gather required materials and craft successfully, confirm resources deducted and ammo added to inventory. Try to craft Stim Pack without Medicine 30 skill and verify grayed out with skill requirement warning. Read skill book and verify new recipe appears with "New Recipe Learned!" notification. Craft Medkit and verify 15-second craft time elapses with progress bar. Dismantle unwanted weapon and confirm resources recovered. Scavenge container in Slums vs Downtown and verify different resource drop rates.
+</test>
+</step>
+<step id="30.2">
+<step_metadata>
+  <number>30.2</number>
+  <title>Weapon Modification System</title>
+  <phase>Phase 7: Character Progression and Inventory</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 30.1 completed (crafting system and resources exist)
+- Equipment system from Step 25 exists (weapons have modification slots)
+</prerequisites>
+
+<instructions>
+Implement weapon modification system allowing players to craft and attach mods that enhance weapon performance.
+</instructions>
+
+<details>
+- **Define weapon mod structure** in `src/content/items/weaponMods.ts`:
+  - Each weapon has 2-3 mod slots: **Barrel**, **Magazine**, **Optics**
+  - Mods are inventory items that can be attached/detached from compatible weapons
+  - Mods provide stat bonuses: damage, accuracy, capacity, special properties
+- **Create weapon mod recipes** (require Workbench station):
+  - **Reflex Sight** (Optics): 2 Electronic Parts, 1 Metal Scrap. Engineering 15. Craft time: 20s. Effect: +10% accuracy.
+  - **Extended Magazine** (Magazine): 3 Metal Scrap, 1 Electronic Parts. Engineering 20. Craft time: 25s. Effect: +50% magazine capacity.
+  - **Suppressor** (Barrel): 4 Metal Scrap, 1 Textile Fiber. Engineering 25. Craft time: 30s. Effect: Silenced (no alert), -5% damage.
+  - **Long Barrel** (Barrel): 3 Metal Scrap. Engineering 15. Craft time: 15s. Effect: +15% damage, -5% accuracy.
+  - **Laser Sight** (Optics): 3 Electronic Parts. Engineering 30. Craft time: 35s. Effect: +15% accuracy, +5% crit chance.
+  - **Armor-Piercing Barrel** (Barrel): 5 Metal Scrap, 2 Chemical Compound. Engineering 35. Craft time: 40s. Effect: Ignore 50% target armor.
+- **Implement mod attachment system**:
+  - In InventoryPanel, right-click weapon → "Modify Weapon"
+  - Opens WeaponModificationPanel showing weapon's 3 mod slots
+  - Drag-and-drop compatible mods from inventory to slots
+  - Display stat changes preview (green +damage, +accuracy)
+  - "Apply" button confirms changes, mods become attached to weapon
+  - Detaching mod returns it to inventory (free action)
+- **Wire mods into combat calculations**:
+  - When calculating weapon stats (damage, accuracy, capacity), include attached mod bonuses
+  - Suppressor mod: attacks don't trigger enemy alerts
+  - Armor-piercing mod: reduce target armor rating before damage calculation
+  - Extended magazine: increase ammo capacity (e.g., 10 rounds → 15 rounds)
+- **Add mod compatibility**:
+  - Not all mods fit all weapons (can't put Long Barrel on pistol, only rifles/shotguns)
+  - Check weapon type before allowing mod attachment
+  - Display compatibility warning: "This mod is not compatible with pistols"
+- **Create Workbench locations**:
+  - Resistance safe houses have workbenches
+  - Scavenger market has workbench (fee required if reputation <Friendly)
+  - Industrial Wasteland has abandoned workshop (free, but dangerous to reach)
+- **Build crafting station UI**:
+  - When near workbench, "Use Workbench" interaction appears
+  - Opens CraftingPanel filtered to Weapon Mods tab
+  - Show only recipes requiring workbench
+  - Cannot craft without being at workbench
+</details>
+
+<accessibility>
+- Weapon mod slots keyboard navigable (Tab to cycle, Enter to attach/detach)
+- Screen reader describes mod effects: "Reflex Sight attached, accuracy increased by 10 percent"
+- Visual preview of stat changes with clear +/- indicators
+</accessibility>
+
+<test>
+Gather resources and reach Engineering 15 skill. Travel to Resistance safe house and interact with workbench. Open crafting panel and verify Weapon Mods tab shows available recipes. Craft Reflex Sight and confirm mod added to inventory. Right-click weapon and select "Modify Weapon", verify WeaponModificationPanel opens with 3 slots. Drag Reflex Sight to Optics slot and confirm +10% accuracy preview appears. Apply mod and confirm stat bonus active in character sheet. Enter combat and verify improved accuracy. Craft Suppressor and attach to weapon, verify attacks no longer alert nearby enemies. Attempt to attach Long Barrel to pistol and verify compatibility warning. Craft Extended Magazine, attach to rifle, and verify magazine capacity increases from 10 to 15 rounds. Detach mod and confirm it returns to inventory. Try to craft weapon mod without workbench and verify prevention.
+</test>
+</step>
+<step id="31.5">
+<step_metadata>
+  <number>31.5</number>
+  <title>Seasonal Narrative Arc Episodes</title>
+  <phase>Phase 8: World Expansion</phase>
+</step_metadata>
+
+<prerequisites>
+- Step 16.9 completed (George assistant ambient feed)
+- Step 29.7 completed (Dynamic District Uprisings & Resistance Simulation)
+- Step 33 completed (save system resilience)
+</prerequisites>
+
+<instructions>
+Create a seasonal episode framework that schedules limited-time citywide arcs. Each episode layers bespoke ambient dressing, missions, and rewards on top of the uprising/heat systems so returning players see fresh stakes without fragmenting saves.
+</instructions>
+
+<details>
+- Extend `worldSlice` with a `seasonState` record storing `currentEpisodeId`, phase progression, timestamps, and active modifiers. Provide selectors and persistence hooks so mid-episode saves restore safely.
+- Add `seasonDirector.ts` in `src/game/world/directors/` that loads episode configs from `src/content/seasons/<episodeId>.ts`, ticks phases (`Prelude`, `Escalation`, `Climax`, `Aftermath`), and dispatches structured events for George, signage, quest generators, and ambient triggers.
+- Author baseline episode templates (e.g., CorpSec Crackdown, Resistance Festival, Blackout Amnesty) defining prop swaps, lighting presets, patrol modifiers, vendor adjustments, limited-time missions, and reward tables. Ensure localization keys and narration blurbs live alongside content.
+- Update George assistant with a “Season Briefing” tab describing the active episode, remaining time, and recommended actions. Mirror high-level summaries in the quest log/planning board and broadcast milestone changes through ambient systems.
+- Provide player agency: episodic missions, donation drives, or sabotage tasks that influence episode outcomes and tie back into uprising metrics. Rewards should include cosmetics, schematics, and faction perks that persist post-episode.
+- Document the episode authoring workflow in `memory-bank/architecture.md` (director flow, save considerations) and record tone/style rules per episode type in `memory-bank/plot.md`.
+</details>
+
+<test>
+- Fast-forward through an episode in a dev harness; confirm each phase activates the correct ambient assets, missions, and George briefings, even across reloads.
+- Trigger liberation and crackdown scenarios during an episode to ensure modifiers stack cleanly with uprising effects and revert when the episode ends.
+- Accept and complete limited-time missions; verify rewards grant persistent perks/schematics and that failure paths adjust future phase modifiers.
+- Save/quit in each episode phase; on reload ensure `seasonDirector` resumes timers, pending events, and UI with no duplication or desync.
+</test>
+</step>
 <step id="32.2">
 <step_metadata>
   <number>32.2</number>
@@ -2748,7 +2906,6 @@ Implement end-to-end (E2E) integration tests using Playwright or Cypress to veri
 Run `yarn test:e2e` and verify all 20-30 tests execute successfully. Verify character creation flow tests cover name input, SPECIAL allocation, skill tagging, background selection. Verify combat tests cover attacking, movement, cover, reloading, enemy defeat. Verify quest tests cover accepting, completing objectives, choosing rewards, branching paths. Verify dialogue tests cover skill checks (success/failure), karma checks, combat transition. Verify inventory tests cover equipping, unequipping, picking up, dropping, weight limits. Verify zone transition tests cover movement between zones, state persistence. Verify progression tests cover XP gain, level-up, skill allocation, perk selection. Verify crafting tests cover material gathering, recipe selection, crafting execution, insufficient materials. Run tests in headless mode (`--headless`) and verify all pass. Intentionally break a feature (e.g., disable weapon equipping) and verify corresponding E2E test fails. Check CI/CD pipeline and confirm E2E tests run automatically on PR.
 </test>
 </step>
-
 <step id="33">
 <step_metadata>
   <number>33</number>
@@ -2772,7 +2929,6 @@ Upgrade the single-slot persistence into a full multi-slot save manager with com
 Create several saves at different progression points (early game, mid-game with vehicle, late game with multiple factions). Reload each save and confirm all state restores correctly: character stats, inventory contents, quest progress, faction standings, karma level, survival meters, and vehicle condition. Delete a save and verify it's removed. Test auto-save by completing a quest and confirming a new auto-save appears. Load an auto-save and verify full state restoration.
 </test>
 </step>
-
 <step id="34">
 <step_metadata>
   <number>34</number>
@@ -2798,7 +2954,6 @@ Enhance the user interface for clarity, thematic consistency, and usability acro
 Open each UI element (character sheet, inventory, crafting, vehicle management, karma/reputation screen, quest log, dialogue system). Ensure they look cohesive with consistent styling. Hover over various elements and confirm tooltips appear with helpful information. Test keyboard shortcuts work correctly. Verify animations are smooth. Check UI responsiveness at different browser window sizes.
 </test>
 </step>
-
 <step id="34.7">
 <step_metadata>
   <number>34.7</number>
@@ -2970,7 +3125,6 @@ Build a comprehensive in-game help system and update external documentation (REA
 Press F1 and verify HelpPanel modal opens with 8 tabs. Click through each tab (Combat, Character, Inventory, Quests, World, Crafting, Factions, Controls) and verify content is present and readable. Use search box to search "skill check" and verify Combat and Quests tabs highlighted. Close help with F1, ESC, or X button and verify modal closes. Open character creation screen and verify "?" icon present near SPECIAL stats. Click "?" icon and verify HelpPanel opens to Character Development tab. Open crafting panel and verify "?" icon present, click and verify opens to Crafting tab. Check README.md and verify installation instructions (yarn install, yarn dev), build instructions (yarn build), and test instructions (yarn test) are present. Check ARCHITECTURE.md exists and verify system architecture overview, core systems descriptions, and file organization sections present. Check CONTRIBUTING.md exists and verify code style guide, git workflow, and PR process documented. Verify all help content accurate (no outdated information from earlier development). Test help system with keyboard only (Tab to navigate tabs, Enter to select, ESC to close) and verify accessible.
 </test>
 </step>
-
 <step id="34.8">
 <step_metadata>
   <number>34.8</number>
@@ -2998,7 +3152,6 @@ Add robust WebGL context loss handling so Phaser scenes pause gracefully, rebuil
 - Repeat the test on Chrome and Firefox to ensure cross-browser stability.
 </test>
 </step>
-
 <step id="34.9">
 <step_metadata>
   <number>34.9</number>
@@ -3023,83 +3176,6 @@ Create a repeatable WebGL profiling guide using SpectorJS so developers can diag
 - Follow the new playbook to capture a SpectorJS frame in a busy downtown scene and confirm every step produces the expected screenshots/logs.
 - Validate that another developer can repeat the process using only the documentation and share an exported capture linked to a sample issue.
 - Verify the memory bank reference resolves correctly and that the docs build (if applicable) without broken links.
-</test>
-</step>
-
-<step id="35">
-<step_metadata>
-  <number>35</number>
-  <title>Surface Level & Objective HUD</title>
-  <phase>Phase 10: Testing, Polish, and Release</phase>
-</step_metadata>
-
-<instructions>
-Display the current level metadata and mission objectives directly in the game overlay with integration for all zones.
-</instructions>
-
-<details>
-- Extend `MapArea` definitions with `level` numbers and objective lists for all zones (Level 0 for Slums, Level 1 for Downtown, Level 2 for Industrial Wasteland).
-- Render a `LevelIndicator` panel in the HUD that mirrors the day/night widget placement, listing active tasks without blocking gameplay.
-- Show zone-specific information: current zone name, danger level, environmental hazards present, and active quests for that area.
-- Ensure all map entities respect their building boundaries so overlays and sprites do not intersect structures.
-- Add minimap or zone overview showing key locations, vehicle position if applicable, and discovered points of interest.
-</details>
-
-<test>
-Load each level (Slums, Downtown, Industrial Wasteland) and verify the panel shows the correct level number, zone name, and objectives. Confirm environmental hazard warnings appear in Industrial Wasteland. Verify NPCs/items appear outside building footprints. Test that zone transitions update the HUD information correctly. Check that quest objectives for the current zone are highlighted.
-</test>
-</step>
-
-<step id="35.2">
-<step_metadata>
-  <number>35.2</number>
-  <title>Level Objective Progression Flow</title>
-  <phase>Phase 10: Testing, Polish, and Release</phase>
-</step_metadata>
-
-<instructions>
-Tie the HUD objectives state to formal mission progression so completed objectives cross out, trigger a Mission Accomplished celebration, and advance the campaign to the next level when confirmed.
-</instructions>
-
-<details>
-- Extend mission data in `worldSlice` (or dedicated mission slice) to mark objectives as primary vs side, persist quest IDs, and expose an `isComplete` flag once all child quests resolve.
-- Update Level & Objectives panel to animate cross-outs and show completion checkboxes while leaving side quests in an optional section that never blocks main progression.
-- Dispatch a `missionAccomplished` action when every primary objective completes. Surface a confirmation modal bannering rewards, allow players to defer the transition to finish side quests, and fire an advancement event that loads the next level when accepted.
-- Wire George assistant to the same selectors and mission-complete event so its guidance line, celebration copy, and defer/continue prompts stay synchronized with the Level & Objectives panel.
-- Inform auxiliary systems (assistant, minimap focus, save checkpoints) by broadcasting mission completion through a shared event so they refresh guidance without polling quest internals.
-</details>
-
-<prerequisites>
-- Step 35 (Surface Level & Objective HUD)
-</prerequisites>
-
-<test>
-Complete all quests inside a level's primary objectives and verify each line crosses out in the HUD with a checked state. Confirm the Mission Accomplished prompt appears, offers defer and continue options, and that choosing continue loads the next level with fresh objectives. Ensure optional side quests remain visible and can still be finished after the banner appears until the player confirms advancement. Attempt to progress before all objectives are complete and confirm the confirmation is blocked.
-</test>
-</step>
-
-<step id="35.5">
-<step_metadata>
-  <number>35.5</number>
-  <title>Implement George AI Assistant Overlay</title>
-  <phase>Phase 10: Testing, Polish, and Release</phase>
-</step_metadata>
-
-<instructions>
-Deliver the George AI assistant overlay that anchors to the Level 0 objectives hub, providing contextual guidance, adaptive banter, and a lightweight dialogue interface.
-</instructions>
-
-<details>
-- Build a `GeorgeAssistant` React component that nests inside the Level 0 objectives HUD container without obscuring existing mission data.
-- Connect the assistant to Redux selectors for current objective queue, active quests, karma, faction reputation, and player personality flags (derived from dialogue choices/background traits).
-- Implement hint generation rules: surface top-priority main quest hints by default, optionally rotate in relevant side quest or dynamic event prompts when player intent matches (use existing tagging on quests/events).
-- Add a collapsible conversation widget (keyboard shortcut `G` and clickable entry point) offering quick options like "What should I do?", "How are we doing?", and a rotating banter hook. Responses should pull tone variants keyed to the player’s personality alignment (sarcastic, earnest, ruthless, etc.).
-- Author initial dialogue lines following plot bible tone guidelines; include JSON/script entries with references to source guideline IDs for later expansion.
-- Queue assistant interjections tied to major state changes (quest completion, reputation swing thresholds, entering hostile territory). Ensure timings respect cooldowns to avoid chat spam.
-</details>
-
-<test>
-Launch the HUD and confirm George appears within the Level 0 objectives area without overlapping other controls. Trigger `G` and verify conversation options render, can be navigated via mouse and keyboard, and dispatch responses matching the player’s current personality alignment. Change karma/reputation values and confirm George updates commentary tone within two subsequent interactions. Complete a quest and enter a hostile zone to ensure contextual alerts fire once, respect cooldowns, and reference the correct objectives. Toggle the overlay collapsed/expanded state and confirm persistence across scene reloads.
 </test>
 </step>
 <step id="35.7">
@@ -3134,88 +3210,6 @@ Deliver an end-of-campaign narrative ledger that summarizes the player’s key d
 </test>
 </step>
 </phase>
-
-<summary>
-## Summary
-
-This plan now outlines **57 implementable steps** organized into **10 phases** to build "The Getaway." The structure separates core MVP features (Phases 1-8) from optional expansions (Phase 9) and final polish (Phase 10).
-
-<phase_structure>
-- **Phases 1-6 (Steps 1-21)**: Foundation, combat, exploration, narrative, and visual systems - COMPLETED (21 steps)
-- **Phase 7 (Steps 22.1-30.2)**: Character progression, inventory, advanced combat, reputation, and crafting systems - CORE MVP (22 steps: 22.1/22.2/22.3, 23/23.5, 24.1/24.2/24.3, 25/25.5, 26, 26.2/26.3/26.4, 29/29.5/29.6/29.7/29.8, 30.1/30.2; Post-MVP Step 26.1 covers directional cover and flanking)
-- **Phase 8 (Step 31 deferred, Step 31.5)**: Seasonal narrative arc framework remains in MVP; Industrial Wasteland zone moves to Post-MVP scope.
-- **Phase 9 (Post-MVP Optional Expansions)**: See the Post-MVP section below for Steps 26.1 (directional cover & flanking), 26.4 (advanced stamina systems), 27.1, 27.2, and 28.1 covering deferred tactical, travel, and survival enhancements - POST-MVP, deferred to v1.1+.
-- **Phase 10 (Steps 32.1-35.7)**: Testing, polish, and documentation - FINAL RELEASE PREP (11 steps: 32.1/32.2, 33, 34, 34.7, 34.8, 34.9, 35, 35.2, 35.5, 35.7)
-</phase_structure>
-
-<focus_areas>
-- **Command & Atmosphere**: Resistance command hub UI, neon isometric presentation, and curfew pressure loops.
-- **Living World & Narrative**: NPC routines, branching dialogue with skill checks, and quest scaffolding tied into Redux.
-- **Hazard Integration**: Environment matrix tying smog, surveillance, radiation, and curfew states into AI, faction economies, and travel safety.
-- **Combat & Navigation**: Turn-based encounters with cover awareness, guard perception loops, click-to-move traversal, and readable path previews.
-- **Character Progression**: Modular character creation flow, existing playerStats.ts integration, XP/leveling foundation, skill tree system, and perk selection with capstones.
-- **Equipment & Inventory**: Expanded inventory system building on existing interfaces, equipment effects, durability mechanics, and weight penalties.
-- **Advanced Combat Systems**: Directional cover and flanking, overwatch mode, targeted shots, area-of-effect attacks, and combat consumables for deeper tactical gameplay.
-- **Reputation & Influence**: Concrete faction system (Resistance, CorpSec, Scavengers) with numerical thresholds and gameplay consequences.
-- **Crafting & Upgrades**: Basic crafting for ammo and medical supplies, weapon modification system with concrete recipes.
-- **Expanded World**: Downtown/Slums enhancements remain core; Industrial Wasteland zone migrated to the post-MVP roadmap.
-- **Optional Expansions (Phase 9)**: Vehicle systems (motorcycle-only, simplified) and optional survival mode (hunger/thirst only) - marked for v1.1+ deferral.
-- **Testing & Quality**: Unit test suite (70% coverage target) and integration test scenarios.
-- **Documentation & Support**: In-game help system, state atlas exports, narrative ledger epilogue, and external documentation updates.
-- **Stability & Polish**: Multi-slot save system with auto-save, comprehensive playtests, WebGL context loss recovery, SpectorJS profiling playbook, and UI refinement across all systems.
-</focus_areas>
-
-<key_improvements>
-This revised plan addresses critical quality issues identified in the analysis:
-
-**Step Granularity**: Complex steps split into focused substeps:
-- Step 22 → 22.1 (UI shell), 22.2 (attributes - after 23), 22.3 (backgrounds - after 24.3)
-- Step 24 → 24.1 (XP/leveling), 24.2 (skill trees), 24.3 (perk selection)
-- Step 26 → 26.1 (flanking, now Post-MVP), 26.2 (overwatch/targeted shots), 26.3 (AoE/consumables)
-- Step 30 → 30.1 (basic crafting), 30.2 (weapon mods)
-- Step 32 → 32.1 (unit tests), 32.2 (integration tests)
-
-**Bridge Steps Added**:
-- Step 23.5: Wire equipment stats to combat formulas
-- Step 25.5: Integrate equipment effects with combat and movement
-
-**Prerequisite Dependencies**: Steps now acknowledge existing implementations and specify integration points with proper ordering.
-
-**Scope Management**: Ambitious features deferred to Phase 9 (POST-MVP):
-- Step 27.1: Vehicle systems simplified to motorcycle-only
-- Step 28.1: Survival mechanics reduced to hunger/thirst only
-- Clear warnings: "⚠️ POST-MVP - Defer to v1.1+"
-
-**Concrete Specifications**: Vague descriptions replaced with formulas, thresholds, and examples:
-- XP formula: `xpRequired = 100 * level * (1 + level * 0.15)`
-- AP formula: `6 + floor((agility-5)*0.5)`
-- Faction thresholds: <-60 Hostile, -60 to -20 Unfriendly, etc.
-  - Industrial Wasteland scope documented in the Post-MVP section below for the post-release expansion
-
-**Quality Assurance**: New steps for comprehensive testing and accessibility:
-- Step 34.7: In-game help system and external documentation
-
-**System Transparency**: Simulation bookkeeping steps make systemic consequences observable and maintainable:
-- Step 16.11: Hazard-to-system integration matrix aligns environmental threats with AI, faction pressure, and travel loops.
-- Step 29.8: World-state variable atlas catalogs persistent flags for designers, tooling, and validation scripts.
-- Step 35.7: Narrative ledger epilogue records player choices and world outcomes for coherent endings and regression tracking.
-</key_improvements>
-
-Each step includes concrete validation targets to keep development measurable. The architecture prioritizes modularity and scalability, drawing inspiration from Fallout 2 while focusing on a maintainable modern web stack. Iterative playtesting complements automated checks to preserve feel and performance.
-
-The resulting foundation positions the project for a solid v1.0 release with a clear roadmap for future additions in v1.1+ (vehicles, expanded survival, additional zones, expanded faction conflicts).
-</summary>
-</mvp_plan>
-
-<post_mvp_plan>
-# Post-MVP Roadmap for "The Getaway"
-
-This section catalogs Phase 9 optional expansions that were split out of the MVP section above. Step numbering is preserved to keep roadmap references intact, including Step 31 (Industrial Wasteland) which was moved here from the MVP scope.
-
-<scope_update date="2026-01-18">
-- Deferred from MVP scope: storylets/dialogue complications, reputation/witness/gossip/rumor heat systems, street-tension director, seasonal episodes, advanced combat expansions (overwatch/targeted shots, AoE/consumables), crafting & weapon mods, and major polish/docs/E2E/save expansion items.
-- Keep step numbering intact; corresponding Linear issues were moved to PostMVP Backlog for sequencing.
-</scope_update>
 
 <phase id="9" name="Optional Expansions (POST-MVP)">
 <step id="26.1">
