@@ -107,8 +107,8 @@ export const scatterScenicProps = (
 
       const districtKindOrder =
         profile.district === 'downtown'
-          ? (['billboard', 'streetLight', 'barricade', 'debris'] as ScenicPropKind[])
-          : (['barricade', 'debris', 'streetLight', 'billboard'] as ScenicPropKind[]);
+          ? (['streetLight', 'billboard', 'billboard', 'barricade', 'debris'] as ScenicPropKind[])
+          : (['barricade', 'debris', 'debris', 'streetLight', 'billboard'] as ScenicPropKind[]);
       const kind = districtKindOrder[(seed + i) % districtKindOrder.length];
       placements.push({
         id: `${building.id}:${placed}`,
@@ -117,6 +117,29 @@ export const scatterScenicProps = (
         tintHex: profile.accentHex,
       });
       reserve(candidate);
+      placed += 1;
+
+      const clustered = profile.propDensity === 'high' || (profile.propDensity === 'medium' && kind === 'debris');
+      if (!clustered || placed >= target) {
+        continue;
+      }
+
+      const candidateIndex = (i + seed + placed * 3) % candidates.length;
+      const clusterCandidate = candidates[candidateIndex];
+      if (!clusterCandidate || !isWalkablePlacement(mapArea, clusterCandidate)) {
+        continue;
+      }
+      if (isDoorPosition(buildings, clusterCandidate) || isNearDoor(clusterCandidate) || !isFree(clusterCandidate)) {
+        continue;
+      }
+
+      placements.push({
+        id: `${building.id}:${placed}:cluster`,
+        kind: kind === 'streetLight' ? 'billboard' : kind,
+        position: clusterCandidate,
+        tintHex: profile.glowHex,
+      });
+      reserve(clusterCandidate);
       placed += 1;
     }
   });

@@ -15,13 +15,19 @@ import {
   PlayerScreenPositionDetail,
 } from '../events';
 import { IsoObjectFactory, CharacterToken } from '../utils/IsoObjectFactory';
-import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, IsoMetrics } from '../utils/iso';
+import {
+  getIsoMetrics as computeIsoMetrics,
+  toPixel as isoToPixel,
+  getDiamondPoints as isoDiamondPoints,
+  adjustColor,
+  IsoMetrics,
+} from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
 import { resolveCardinalDirection } from '../combat/combatSystem';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { miniMapService } from '../services/miniMapService';
 import CameraSprite from '../objects/CameraSprite';
-import { DepthManager, DepthBias, DepthLayers, syncDepthPoint } from '../utils/depth';
+import { DepthManager, DepthBias, DepthLayers, computeDepth, syncDepthPoint } from '../utils/depth';
 import type { DepthResolvableGameObject } from '../utils/depth';
 import type { BuildingVisualProfile, VisualTheme } from '../visual/contracts';
 import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../visual/theme/noirVectorTheme';
@@ -81,6 +87,7 @@ export class MainScene extends Phaser.Scene {
   private coverDebugGraphics?: Phaser.GameObjects.Graphics;
   private currentMapArea: MapArea | null = null;
   private buildingLabels: Phaser.GameObjects.Container[] = [];
+  private buildingMassings: Phaser.GameObjects.Container[] = [];
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   private dayNightOverlay!: Phaser.GameObjects.Rectangle;
@@ -147,23 +154,29 @@ export class MainScene extends Phaser.Scene {
     if (this.currentMapArea?.buildings) {
       const nextProfiles: Record<string, BuildingVisualProfile> = {};
       this.currentMapArea.buildings.forEach((building) => {
+        const resolvedFallback = resolveBuildingVisualProfile(
+          building.district as BuildingVisualProfile['district'],
+          building.signageStyle as BuildingVisualProfile['signageStyle'],
+          building.propDensity
+        );
         nextProfiles[building.id] = building.visualProfile
           ? {
               district: (building.district === 'downtown' ? 'downtown' : 'slums'),
-              signageStyle: (building.signageStyle as BuildingVisualProfile['signageStyle']) ?? 'slums_neon',
-              propDensity: building.propDensity ?? 'medium',
-              facadePattern: building.visualProfile.facadePattern,
-              accentHex: building.visualProfile.accentHex,
-              glowHex: building.visualProfile.glowHex,
-              signagePrimaryHex: building.visualProfile.signagePrimaryHex,
-              signageSecondaryHex: building.visualProfile.signageSecondaryHex,
-              backdropHex: building.visualProfile.backdropHex,
+              signageStyle: (building.signageStyle as BuildingVisualProfile['signageStyle']) ?? resolvedFallback.signageStyle,
+              propDensity: building.propDensity ?? resolvedFallback.propDensity,
+              facadePattern: building.visualProfile.facadePattern ?? resolvedFallback.facadePattern,
+              lotPattern: building.visualProfile.lotPattern ?? resolvedFallback.lotPattern,
+              massingStyle: building.visualProfile.massingStyle ?? resolvedFallback.massingStyle,
+              massingHeight: building.visualProfile.massingHeight ?? resolvedFallback.massingHeight,
+              accentHex: building.visualProfile.accentHex ?? resolvedFallback.accentHex,
+              glowHex: building.visualProfile.glowHex ?? resolvedFallback.glowHex,
+              trimHex: building.visualProfile.trimHex ?? resolvedFallback.trimHex,
+              atmosphereHex: building.visualProfile.atmosphereHex ?? resolvedFallback.atmosphereHex,
+              signagePrimaryHex: building.visualProfile.signagePrimaryHex ?? resolvedFallback.signagePrimaryHex,
+              signageSecondaryHex: building.visualProfile.signageSecondaryHex ?? resolvedFallback.signageSecondaryHex,
+              backdropHex: building.visualProfile.backdropHex ?? resolvedFallback.backdropHex,
             }
-          : resolveBuildingVisualProfile(
-              building.district as BuildingVisualProfile['district'],
-              building.signageStyle as BuildingVisualProfile['signageStyle'],
-              building.propDensity
-            );
+          : resolvedFallback;
       });
       this.buildingVisualProfiles = nextProfiles;
     } else {
@@ -266,7 +279,7 @@ export class MainScene extends Phaser.Scene {
       const pixelPos = this.calculatePixelPosition(this.playerInitialPosition.x, this.playerInitialPosition.y);
       const playerName = store.getState().player.data.name ?? 'Operative';
       this.playerNameLabel = this.createCharacterNameLabel(playerName, 0x38bdf8, 14);
-      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6, 18);
+      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
 
       this.enablePlayerCameraFollow();
     } else {
@@ -331,6 +344,10 @@ export class MainScene extends Phaser.Scene {
         data.indicator = undefined;
       }
     });
+    this.buildingLabels.forEach((label) => label.destroy(true));
+    this.buildingLabels = [];
+    this.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.buildingMassings = [];
 
     if (this.coverDebugGraphics) {
       this.coverDebugGraphics.destroy();
@@ -605,6 +622,7 @@ export class MainScene extends Phaser.Scene {
 
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
+    this.drawBuildingMasses();
     this.drawBuildingLabels();
     this.renderStaticProps();
     this.renderVisionCones();
@@ -697,7 +715,7 @@ export class MainScene extends Phaser.Scene {
     this.dispatchPlayerScreenPosition();
     if (this.playerNameLabel) {
       const metrics = this.getIsoMetrics();
-      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6, 18);
+      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
     }
 
     if (hasPlayerMoved) {
@@ -815,7 +833,7 @@ export class MainScene extends Phaser.Scene {
         healthBar.setVisible(false);
 
         const nameLabel = this.createCharacterNameLabel(enemy.name ?? 'Hostile', 0xef4444);
-        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45, 14);
+        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
         this.enemySprites.set(enemy.id, {
           token,
@@ -843,7 +861,7 @@ export class MainScene extends Phaser.Scene {
         this.isoFactory!.positionCharacterToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
       }
       existingSpriteData.markedForRemoval = false;
-      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45, 14);
+      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
       this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
     }
@@ -923,7 +941,7 @@ export class MainScene extends Phaser.Scene {
             );
 
         const nameLabel = this.createCharacterNameLabel(npc.name ?? 'Civilian', npc.isInteractive ? 0x22d3ee : 0x94a3b8);
-        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35, 12);
+        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
 
         const npcData: NpcSpriteData = {
           token,
@@ -942,7 +960,7 @@ export class MainScene extends Phaser.Scene {
         this.isoFactory!.positionCharacterToken(existingSpriteData.token, npc.position.x, npc.position.y);
       }
       existingSpriteData.markedForRemoval = false;
-      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35, 12);
+      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
       this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
     }
 
@@ -1134,6 +1152,10 @@ export class MainScene extends Phaser.Scene {
     });
     this.npcSprites.clear();
     this.destroyCameraSprites();
+    this.buildingLabels.forEach((label) => label.destroy(true));
+    this.buildingLabels = [];
+    this.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.buildingMassings = [];
     if (this.playerToken) {
       this.playerToken.container.destroy(true);
       this.playerToken = undefined;
@@ -1159,15 +1181,86 @@ export class MainScene extends Phaser.Scene {
     this.mapGraphics.clear();
 
     const { tileWidth, tileHeight } = this.getIsoMetrics();
+    const buildingFootprintTiles = new Set<string>();
+    this.currentMapArea?.buildings?.forEach((building) => {
+      for (let y = building.footprint.from.y; y <= building.footprint.to.y; y += 1) {
+        for (let x = building.footprint.from.x; x <= building.footprint.to.x; x += 1) {
+          buildingFootprintTiles.add(`${x}:${y}`);
+        }
+      }
+    });
 
     for (let y = 0; y < tiles.length; y++) {
       for (let x = 0; x < tiles[0].length; x++) {
         const tile = tiles[y][x];
         const center = this.calculatePixelPosition(x, y);
+        const isBuildingFootprint = buildingFootprintTiles.has(`${x}:${y}`);
+        const groundOnly =
+          isBuildingFootprint &&
+          (tile.type === TileType.WALL || tile.type === TileType.COVER || tile.type === TileType.DOOR);
 
-        this.renderTile(tile, center, tileWidth, tileHeight, x, y);
+        this.renderTile(tile, center, tileWidth, tileHeight, x, y, groundOnly);
       }
     }
+  }
+
+  private drawBuildingMasses(): void {
+    this.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.buildingMassings = [];
+
+    if (!this.currentMapArea?.buildings?.length || !this.buildingPainter) {
+      return;
+    }
+
+    this.ensureVisualPipeline();
+    const buildingPainter = this.buildingPainter;
+    if (!buildingPainter) {
+      return;
+    }
+    const { tileWidth, tileHeight } = this.getIsoMetrics();
+
+    this.currentMapArea.buildings.forEach((building) => {
+      const profile =
+        this.buildingVisualProfiles[building.id] ??
+        resolveBuildingVisualProfile(
+          building.district as BuildingVisualProfile['district'],
+          building.signageStyle as BuildingVisualProfile['signageStyle'],
+          building.propDensity
+        );
+
+      const widthTiles = building.footprint.to.x - building.footprint.from.x + 1;
+      const depthTiles = building.footprint.to.y - building.footprint.from.y + 1;
+      const northWest = this.calculatePixelPosition(building.footprint.from.x, building.footprint.from.y);
+      const northEast = this.calculatePixelPosition(building.footprint.to.x, building.footprint.from.y);
+      const southEast = this.calculatePixelPosition(building.footprint.to.x, building.footprint.to.y);
+      const southWest = this.calculatePixelPosition(building.footprint.from.x, building.footprint.to.y);
+      const footprint = {
+        top: new Phaser.Geom.Point(northWest.x, northWest.y - tileHeight * 0.5),
+        right: new Phaser.Geom.Point(northEast.x + tileWidth * 0.5, northEast.y),
+        bottom: new Phaser.Geom.Point(southEast.x, southEast.y + tileHeight * 0.5),
+        left: new Phaser.Geom.Point(southWest.x - tileWidth * 0.5, southWest.y),
+      };
+      const pixelCenter = {
+        x: (footprint.top.x + footprint.right.x + footprint.bottom.x + footprint.left.x) / 4,
+        y: (footprint.top.y + footprint.right.y + footprint.bottom.y + footprint.left.y) / 4,
+      };
+
+      const mass = buildingPainter.createMassing(building, profile, {
+        center: pixelCenter,
+        tileHeight,
+        widthTiles,
+        depthTiles,
+        footprint,
+      });
+      mass.setScrollFactor(1);
+      this.syncDepth(
+        mass,
+        footprint.bottom.x,
+        footprint.bottom.y,
+        DepthBias.PROP_TALL + Math.round(profile.massingHeight * 12)
+      );
+      this.buildingMassings.push(mass);
+    });
   }
 
   private drawBuildingLabels(): void {
@@ -1193,11 +1286,12 @@ export class MainScene extends Phaser.Scene {
       const centerX = (building.footprint.from.x + building.footprint.to.x) / 2;
       const anchorY = Math.min(building.footprint.from.y, building.door.y) - 0.4;
       const pixel = this.calculatePixelPosition(centerX, anchorY);
+      const labelHeight = tileHeight * (0.8 + profile.massingHeight * 0.18);
       const container = this.buildingPainter
-        ? this.buildingPainter.createLabel(building, pixel, tileHeight, profile)
+        ? this.buildingPainter.createLabel(building, pixel, labelHeight, profile)
         : this.add.container(pixel.x, pixel.y - tileHeight * 0.2);
-      container.setDepth(DepthLayers.MAP_BASE + 50);
       container.setScrollFactor(1);
+      this.syncDepth(container, pixel.x, pixel.y, DepthBias.FLOATING_UI + 20);
       this.buildingLabels.push(container);
     });
   }
@@ -1208,7 +1302,8 @@ export class MainScene extends Phaser.Scene {
     tileWidth: number,
     tileHeight: number,
     gridX: number,
-    gridY: number
+    gridY: number,
+    groundOnly: boolean = false
   ): void {
     this.ensureVisualPipeline();
     this.tilePainter?.drawTile(tile, {
@@ -1217,6 +1312,7 @@ export class MainScene extends Phaser.Scene {
       tileHeight,
       gridX,
       gridY,
+      groundOnly,
     });
   }
 
@@ -1240,11 +1336,10 @@ export class MainScene extends Phaser.Scene {
     label: Phaser.GameObjects.Text,
     pixelX: number,
     pixelY: number,
-    verticalOffset: number,
-    depthBoost: number
+    verticalOffset: number
   ): void {
     label.setPosition(pixelX, pixelY - verticalOffset);
-    this.syncDepth(label, pixelX, pixelY, DepthBias.FLOATING_UI + depthBoost);
+    label.setDepth(computeDepth(pixelX, pixelY, DepthBias.OVERLAY));
   }
 
   private colorToHex(color: number): string {
@@ -1737,12 +1832,17 @@ export class MainScene extends Phaser.Scene {
     const originX = bounds.minX - margin;
     const originY = bounds.minY - margin;
 
+    const profiles = Object.values(this.buildingVisualProfiles);
+    const downtownCount = profiles.filter((profile) => profile.district === 'downtown').length;
+    const districtWeight = profiles.length > 0 ? downtownCount / profiles.length : 0.5;
+    const skylineSplit = 0.26 + districtWeight * 0.5;
+
     this.backdropGraphics.clear();
     this.backdropGraphics.fillGradientStyle(
-      0x05070f,
-      0x0a1423,
-      0x0d1321,
-      0x17213a,
+      districtWeight >= 0.5 ? 0x061027 : 0x140b11,
+      districtWeight >= 0.5 ? 0x0b1c3d : 0x251320,
+      districtWeight >= 0.5 ? 0x1a1024 : 0x2a110f,
+      districtWeight >= 0.5 ? 0x091e30 : 0x242134,
       1,
       1,
       1,
@@ -1750,23 +1850,49 @@ export class MainScene extends Phaser.Scene {
     );
     this.backdropGraphics.fillRect(originX, originY, width, height);
 
-    const horizonY = originY + height * 0.28;
-    this.backdropGraphics.fillStyle(0x1c314d, 0.22);
-    this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.06, height * 0.5);
+    const skylineBaseY = originY + height * 0.52;
+    const skylineColumns = 28;
+    const downtownColor = 0x123458;
+    const slumsColor = 0x3f1f20;
 
-    this.backdropGraphics.fillStyle(0x070b12, 0.5);
-    this.backdropGraphics.fillRect(originX, originY + height * 0.62, width, height * 0.55);
+    for (let column = 0; column < skylineColumns; column += 1) {
+      const normalized = column / skylineColumns;
+      const x = originX + normalized * width;
+      const widthScale = 0.68 + (((column * 13) % 7) * 0.08);
+      const segmentWidth = (width / skylineColumns) * widthScale;
+      const variant = ((column * 29) % 11) / 11;
+      const towerHeight = height * (0.12 + variant * 0.28) * (normalized < skylineSplit ? 1.12 : 0.78);
+      const tintMix = normalized < skylineSplit ? 0.78 : 0.26;
+      const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(slumsColor),
+        Phaser.Display.Color.ValueToColor(downtownColor),
+        1,
+        tintMix
+      );
+      const tintColor = Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b);
+      this.backdropGraphics.fillStyle(tintColor, 0.33 + variant * 0.12);
+      this.backdropGraphics.fillRect(x, skylineBaseY - towerHeight, segmentWidth, towerHeight);
+      this.backdropGraphics.fillStyle(adjustColor(tintColor, 0.12), 0.17);
+      this.backdropGraphics.fillRect(x + segmentWidth * 0.72, skylineBaseY - towerHeight, segmentWidth * 0.16, towerHeight);
+    }
 
-    for (let i = 0; i < 4; i++) {
-      const alpha = 0.18 - i * 0.03;
+    const horizonY = originY + height * 0.35;
+    this.backdropGraphics.fillStyle(districtWeight >= 0.5 ? 0x1d3b63 : 0x442427, 0.22);
+    this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
+
+    this.backdropGraphics.fillStyle(0x070b12, 0.56);
+    this.backdropGraphics.fillRect(originX, originY + height * 0.6, width, height * 0.6);
+
+    for (let ring = 0; ring < 5; ring += 1) {
+      const alpha = 0.2 - ring * 0.03;
       if (alpha <= 0) {
         continue;
       }
-      const factor = 1.2 + i * 0.25;
-      this.backdropGraphics.lineStyle(2, 0x132034, alpha);
+      const factor = 1.18 + ring * 0.27;
+      this.backdropGraphics.lineStyle(2, districtWeight >= 0.5 ? 0x1d4875 : 0x5a2c3e, alpha);
       this.backdropGraphics.strokeEllipse(
         originX + width / 2,
-        originY + height * 0.78,
+        originY + height * 0.81,
         width * factor,
         height * 0.46 * factor
       );
@@ -1876,6 +2002,7 @@ export class MainScene extends Phaser.Scene {
     this.renderStaticProps();
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
+    this.drawBuildingMasses();
     this.drawBuildingLabels();
     this.clearPathPreview();
 

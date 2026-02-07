@@ -9,6 +9,7 @@ interface TileContext {
   tileHeight: number;
   gridX: number;
   gridY: number;
+  groundOnly?: boolean;
 }
 
 interface ElevationProfile {
@@ -24,11 +25,16 @@ export class TilePainter {
   ) {}
 
   public drawTile(tile: MapTile, context: TileContext): void {
-    const baseColor = this.getTileBaseColor(tile, context.gridX, context.gridY);
+    const tileForGround = context.groundOnly ? { ...tile, type: TileType.FLOOR } : tile;
+    const baseColor = this.getTileBaseColor(tileForGround, context.gridX, context.gridY);
     const variationSeed = ((((context.gridX * 13) ^ (context.gridY * 9)) % 9) - 4) * 0.01;
     const modulatedBase = adjustColor(baseColor, variationSeed);
 
-    this.drawGround(tile, context, modulatedBase);
+    this.drawGround(tileForGround, context, modulatedBase);
+
+    if (context.groundOnly) {
+      return;
+    }
 
     switch (tile.type) {
       case TileType.COVER:
@@ -51,10 +57,13 @@ export class TilePainter {
 
   public drawGround(tile: MapTile, context: TileContext, baseColor: number): void {
     const points = this.getPoints(context.center.x, context.center.y, context.tileWidth, context.tileHeight);
-    const highlight = adjustColor(baseColor, 0.18);
-    const shadow = adjustColor(baseColor, -0.2);
+    const macroSeed = Math.floor(context.gridX / 4) ^ Math.floor(context.gridY / 4);
+    const macroShift = ((macroSeed % 5) - 2) * 0.03;
+    const modulated = adjustColor(baseColor, macroShift);
+    const highlight = adjustColor(modulated, 0.2);
+    const shadow = adjustColor(modulated, -0.22);
 
-    this.graphics.fillStyle(baseColor, 1);
+    this.graphics.fillStyle(modulated, 1);
     this.graphics.fillPoints(points, true);
 
     const [top, right, bottom, left] = points;
@@ -68,11 +77,21 @@ export class TilePainter {
     this.graphics.fillPoints([bottom, right, center], true);
     this.graphics.fillPoints([bottom, center, left], true);
 
-    this.graphics.lineStyle(1, adjustColor(baseColor, -0.3), 0.42);
+    this.graphics.lineStyle(1, adjustColor(modulated, -0.3), 0.42);
     this.graphics.strokePoints(points, true);
 
-    if (tile.type === TileType.FLOOR && (context.gridX + context.gridY) % 4 === 0) {
-      this.graphics.lineStyle(0.8, 0x38bdf8, 0.08);
+    if (tile.type === TileType.FLOOR) {
+      const lotAxis = context.gridX % 5 === 0 || context.gridY % 5 === 0;
+      if (lotAxis) {
+        this.graphics.lineStyle(1.1, 0x67e8f9, 0.12);
+        this.graphics.strokePoints([top, center, bottom], false);
+        this.graphics.strokePoints([left, center, right], false);
+      } else if ((context.gridX + context.gridY) % 4 === 0) {
+        this.graphics.lineStyle(0.85, 0x38bdf8, 0.08);
+        this.graphics.strokePoints(points, true);
+      }
+    } else if (tile.type === TileType.COVER || tile.type === TileType.WALL) {
+      this.graphics.lineStyle(0.9, 0xf8fafc, 0.08);
       this.graphics.strokePoints(points, true);
     }
   }
@@ -103,7 +122,7 @@ export class TilePainter {
   }
 
   public drawWallVolume(_tile: MapTile, context: TileContext, baseColor: number): void {
-    const elevation = this.getElevationProfile(1, context.tileWidth, context.tileHeight);
+    const elevation = this.getElevationProfile(1.2, context.tileWidth, context.tileHeight);
     const basePoints = this.getPoints(context.center.x, context.center.y, context.tileWidth, context.tileHeight);
     const topPoints = this.getPoints(
       context.center.x,
@@ -115,17 +134,25 @@ export class TilePainter {
     const rightFace = [basePoints[1], basePoints[2], topPoints[2], topPoints[1]];
     const frontFace = [basePoints[2], basePoints[3], topPoints[3], topPoints[2]];
 
-    this.graphics.fillStyle(adjustColor(baseColor, -0.24), 1);
+    this.graphics.fillStyle(adjustColor(baseColor, -0.28), 1);
     this.graphics.fillPoints(frontFace, true);
-    this.graphics.fillStyle(adjustColor(baseColor, -0.14), 1);
+    this.graphics.fillStyle(adjustColor(baseColor, -0.16), 1);
     this.graphics.fillPoints(rightFace, true);
 
     const topColor = adjustColor(baseColor, 0.18);
     this.graphics.fillStyle(topColor, 1);
     this.graphics.fillPoints(topPoints, true);
 
-    this.graphics.lineStyle(1.2, 0x22d3ee, 0.22);
+    this.graphics.lineStyle(1.2, 0x22d3ee, 0.18);
     this.graphics.strokePoints(topPoints, true);
+
+    const [baseTop, baseRight, baseBottom, baseLeft] = basePoints;
+    const [topTop, topRight, topBottom, topLeft] = topPoints;
+    this.graphics.lineStyle(1, 0x7dd3fc, 0.2);
+    this.graphics.strokePoints([baseLeft, topLeft], false);
+    this.graphics.strokePoints([baseBottom, topBottom], false);
+    this.graphics.strokePoints([baseRight, topRight], false);
+    this.graphics.strokePoints([baseTop, topTop], false);
   }
 
   public drawDoorPortal(_tile: MapTile, context: TileContext, baseColor: number): void {

@@ -125,15 +125,16 @@
     <summary>
       Level 0 now uses an assetless noir-vector rendering foundation. Tiles, buildings, characters, and environmental props
       are generated procedurally so production sprite work can be layered in later without rewriting scene logic.
+      The conceptual-overhaul follow-up adds skyline composition, district-specific building massing, lot grammar, and silhouette-v2 character rigs.
     </summary>
     <modules>
-      <module file="the-getaway/src/game/visual/contracts.ts">Defines `VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, and `VisualQualityPreset` contracts.</module>
-      <module file="the-getaway/src/game/visual/theme/noirVectorTheme.ts">Resolves district/entity palettes and quality budgets (`performance`, `balanced`, `cinematic`).</module>
-      <module file="the-getaway/src/game/visual/world/TilePainter.ts">Owns Level 0 tile rendering (`drawGround`, `drawCover`, `drawWallVolume`, `drawDoorPortal`, `drawHazardVariant`).</module>
-      <module file="the-getaway/src/game/visual/world/BuildingPainter.ts">Renders consistent building signage/label chrome from `BuildingVisualProfile`.</module>
-      <module file="the-getaway/src/game/visual/world/DistrictComposer.ts">Applies deterministic facade-pattern composition from district metadata.</module>
-      <module file="the-getaway/src/game/visual/world/PropScatter.ts">Deterministically scatters scenic props while respecting walkability, door buffers, and protected tiles.</module>
-      <module file="the-getaway/src/game/visual/entities/CharacterRigFactory.ts">Builds role-specific procedural rigs for player/friendly/hostile/interactive characters.</module>
+      <module file="the-getaway/src/game/visual/contracts.ts">Defines `VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, and `VisualQualityPreset` contracts, including lot/massing grammar fields for district identity.</module>
+      <module file="the-getaway/src/game/visual/theme/noirVectorTheme.ts">Resolves district/entity palettes and quality budgets (`performance`, `balanced`, `cinematic`) with hard downtown-vs-slums defaults.</module>
+      <module file="the-getaway/src/game/visual/world/TilePainter.ts">Owns Level 0 tile rendering (`drawGround`, `drawCover`, `drawWallVolume`, `drawDoorPortal`, `drawHazardVariant`) and lot seam repetition breaking.</module>
+      <module file="the-getaway/src/game/visual/world/BuildingPainter.ts">Renders district-specific lot slabs, building massing prisms, facade grammar, and signage chrome from `BuildingVisualProfile`.</module>
+      <module file="the-getaway/src/game/visual/world/DistrictComposer.ts">Applies deterministic facade/lot/massing composition and seeded accent shifts from district metadata.</module>
+      <module file="the-getaway/src/game/visual/world/PropScatter.ts">Deterministically scatters scenic props with district-aware clustering while respecting walkability, door buffers, and protected tiles.</module>
+      <module file="the-getaway/src/game/visual/entities/CharacterRigFactory.ts">Builds silhouette-v2 procedural rigs (player/friendly/hostile/interactive) with role cues and movement direction hints.</module>
     </modules>
     <preset_budgets>
       <preset id="performance" decor_per_building="2" animated_hazards="false" label_density="reduced" notes="Prioritise frame pacing and readability." />

@@ -603,8 +603,13 @@ export interface MapBuildingDefinition {
   workbench?: WorkbenchSpec;
   visualProfile?: {
     facadePattern: 'solid' | 'ribbed' | 'banded' | 'chevron';
+    lotPattern: 'plaza' | 'service' | 'market';
+    massingStyle: 'spire' | 'block' | 'stacked';
+    massingHeight: number;
     accentHex: string;
     glowHex: string;
+    trimHex: string;
+    atmosphereHex: string;
     signagePrimaryHex: string;
     signageSecondaryHex: string;
     backdropHex: string;

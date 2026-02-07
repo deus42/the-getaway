@@ -267,8 +267,13 @@ const createCityArea = (
     visualProfile: visualComposition.profilesByBuildingId[building.id]
       ? {
           facadePattern: visualComposition.profilesByBuildingId[building.id].facadePattern,
+          lotPattern: visualComposition.profilesByBuildingId[building.id].lotPattern,
+          massingStyle: visualComposition.profilesByBuildingId[building.id].massingStyle,
+          massingHeight: visualComposition.profilesByBuildingId[building.id].massingHeight,
           accentHex: visualComposition.profilesByBuildingId[building.id].accentHex,
           glowHex: visualComposition.profilesByBuildingId[building.id].glowHex,
+          trimHex: visualComposition.profilesByBuildingId[building.id].trimHex,
+          atmosphereHex: visualComposition.profilesByBuildingId[building.id].atmosphereHex,
           signagePrimaryHex: visualComposition.profilesByBuildingId[building.id].signagePrimaryHex,
           signageSecondaryHex: visualComposition.profilesByBuildingId[building.id].signageSecondaryHex,
           backdropHex: visualComposition.profilesByBuildingId[building.id].backdropHex,

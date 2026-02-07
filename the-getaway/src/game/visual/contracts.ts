@@ -42,8 +42,13 @@ export interface BuildingVisualProfile {
   readonly signageStyle: BuildingSignageStyle;
   readonly propDensity: PropDensityTier;
   readonly facadePattern: 'solid' | 'ribbed' | 'banded' | 'chevron';
+  readonly lotPattern: 'plaza' | 'service' | 'market';
+  readonly massingStyle: 'spire' | 'block' | 'stacked';
+  readonly massingHeight: number;
   readonly accentHex: string;
   readonly glowHex: string;
+  readonly trimHex: string;
+  readonly atmosphereHex: string;
   readonly signagePrimaryHex: string;
   readonly signageSecondaryHex: string;
   readonly backdropHex: string;
