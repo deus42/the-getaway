@@ -86,6 +86,24 @@ flowchart LR
 </technical_flow>
 </architecture_section>
 
+<architecture_section id="level0_visual_revamp_pipeline" category="rendering_systems">
+<design_principles>
+- Treat Level 0 visuals as a composable pipeline (theme contracts -> world painters -> entity rigs -> scenic props) so art swaps do not require gameplay rewrites.
+- Keep gameplay topology authoritative in map data; visual layers may style and dress tiles but must not alter collision semantics or door connectivity.
+- Use deterministic composition for district look/prop scatter so QA can reproduce scene layout exactly for a given map seed/content set.
+</design_principles>
+
+<technical_flow>
+1. <code_location>the-getaway/src/game/visual/contracts.ts</code_location> defines shared render contracts (`VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`) consumed by scene-level render helpers.
+2. <code_location>the-getaway/src/game/visual/theme/noirVectorTheme.ts</code_location> resolves quality budgets and district/entity palettes; `createNoirVectorTheme` and `resolveBuildingVisualProfile` provide deterministic defaults.
+3. <code_location>the-getaway/src/game/visual/world/DistrictComposer.ts</code_location> composes facade patterns and visual profiles from building metadata, then <code_location>the-getaway/src/game/world/worldMap.ts</code_location> injects those profiles into `MapBuildingDefinition.visualProfile`.
+4. <code_location>the-getaway/src/game/scenes/MainScene.ts</code_location> now delegates world rendering to <code_location>the-getaway/src/game/visual/world/TilePainter.ts</code_location> and <code_location>the-getaway/src/game/visual/world/BuildingPainter.ts</code_location>, replacing ad-hoc tile branches with painter contracts.
+5. <code_location>the-getaway/src/game/visual/world/PropScatter.ts</code_location> generates deterministic prop placements that avoid door tiles/door buffers and protected interactive tiles, then `MainScene.renderStaticProps` instantiates vector props via `IsoObjectFactory`.
+6. <code_location>the-getaway/src/game/visual/entities/CharacterRigFactory.ts</code_location> supplies role-specific procedural rigs integrated into player/NPC/enemy update flows in `MainScene` while preserving nameplates, health bars, and combat indicators.
+7. <code_location>the-getaway/src/components/GameCanvas.tsx</code_location>, <code_location>the-getaway/src/game/settings/visualSettings.ts</code_location>, and <code_location>the-getaway/src/store/settingsSlice.ts</code_location> coordinate smooth-vector renderer defaults and quality-preset-aware FX budgets (`performance | balanced | cinematic`).
+</technical_flow>
+</architecture_section>
+
 <architecture_section id="narrative_resource_hierarchy" category="content_pipeline">
 <design_principles>
 - Standardise narrative data around stable resource keys (`levels.*`, `missions.*`, `quests.*`, `npcs.*`) so structural definitions stay immutable and language-agnostic.

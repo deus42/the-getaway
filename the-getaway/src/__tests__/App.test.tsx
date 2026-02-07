@@ -137,13 +137,11 @@ describe("App component", () => {
 
     fireEvent.mouseEnter(menuButton);
     expect(menuButton.style.transform).toBe('translateY(-2px)');
-    expect(menuButton.style.boxShadow).toBe('0 20px 42px rgba(15, 23, 42, 0.55)');
-    expect(menuButton.style.borderColor).toBe('rgba(148, 163, 184, 0.55)');
+    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow-hover)');
 
     fireEvent.mouseLeave(menuButton);
     expect(menuButton.style.transform).toBe('translateY(0)');
-    expect(menuButton.style.boxShadow).toBe('0 12px 32px rgba(15, 23, 42, 0.45)');
-    expect(menuButton.style.borderColor).toBe('rgba(148, 163, 184, 0.35)');
+    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow)');
 
     const levelInfoToggle = screen.getByRole('button', { name: /slums/i });
     const widthBeforeToggle = menuButton.style.width;
@@ -151,12 +149,10 @@ describe("App component", () => {
     await waitFor(() => expect(menuButton.style.width).toBe(widthBeforeToggle));
 
     fireEvent.focus(menuButton);
-    expect(menuButton.style.boxShadow).toBe('0 0 0 2px rgba(59, 130, 246, 0.35), 0 18px 42px rgba(15, 23, 42, 0.55)');
-    expect(menuButton.style.borderColor).toBe('rgba(59, 130, 246, 0.7)');
+    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow-focus)');
 
     fireEvent.blur(menuButton);
-    expect(menuButton.style.boxShadow).toBe('0 12px 32px rgba(15, 23, 42, 0.45)');
-    expect(menuButton.style.borderColor).toBe('rgba(148, 163, 184, 0.35)');
+    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow)');
 
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(await screen.findByTestId('game-menu')).toBeInTheDocument();

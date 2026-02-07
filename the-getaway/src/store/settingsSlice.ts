@@ -4,12 +4,14 @@ import {
   AutoBattleProfileId,
   DEFAULT_AUTO_BATTLE_PROFILE_ID,
 } from '../game/combat/automation/autoBattleProfiles';
+import { VisualQualityPreset } from '../game/visual/contracts';
 
 export interface SettingsState {
   locale: Locale;
   testMode: boolean;
   autoBattleEnabled: boolean;
   autoBattleProfile: AutoBattleProfileId;
+  visualQualityPreset: VisualQualityPreset;
   lightsEnabled: boolean;
   autoStealthEnabled: boolean;
   reputationSystemsEnabled: boolean;
@@ -20,6 +22,7 @@ const initialState: SettingsState = {
   testMode: false,
   autoBattleEnabled: false,
   autoBattleProfile: DEFAULT_AUTO_BATTLE_PROFILE_ID,
+  visualQualityPreset: 'balanced',
   lightsEnabled: false,
   autoStealthEnabled: false,
   reputationSystemsEnabled: false,
@@ -41,6 +44,9 @@ const settingsSlice = createSlice({
     setAutoBattleProfile: (state, action: PayloadAction<AutoBattleProfileId>) => {
       state.autoBattleProfile = action.payload;
     },
+    setVisualQualityPreset: (state, action: PayloadAction<VisualQualityPreset>) => {
+      state.visualQualityPreset = action.payload;
+    },
     setLightsEnabled: (state, action: PayloadAction<boolean>) => {
       state.lightsEnabled = action.payload;
     },
@@ -58,6 +64,7 @@ export const {
   setTestMode,
   setAutoBattleEnabled,
   setAutoBattleProfile,
+  setVisualQualityPreset,
   setLightsEnabled,
   setAutoStealthEnabled,
   setReputationSystemsEnabled,

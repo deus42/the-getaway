@@ -82,6 +82,21 @@
 
   --hud-glow-primary: var(--color-neon-cyan-glow);
   --hud-glow-secondary: var(--color-neon-magenta-glow);
+  --hud-stage-background:
+    radial-gradient(circle at 18% -12%, rgba(34, 211, 238, 0.14), transparent 52%),
+    radial-gradient(circle at 82% 6%, rgba(244, 114, 182, 0.1), transparent 46%),
+    linear-gradient(128deg, rgba(6, 10, 20, 0.92), rgba(12, 20, 38, 0.96));
+  --hud-command-button-bg: linear-gradient(145deg, rgba(10, 16, 30, 0.95), rgba(12, 20, 36, 0.84));
+  --hud-command-button-border: 1px solid rgba(103, 232, 249, 0.36);
+  --hud-command-button-border-rest: rgba(103, 232, 249, 0.36);
+  --hud-command-button-border-hover: rgba(125, 211, 252, 0.64);
+  --hud-command-button-border-focus: rgba(56, 189, 248, 0.7);
+  --hud-command-button-shadow: 0 12px 32px rgba(8, 15, 29, 0.5);
+  --hud-command-button-shadow-hover: 0 20px 42px rgba(8, 15, 29, 0.62);
+  --hud-command-button-shadow-focus: 0 0 0 2px rgba(56, 189, 248, 0.35), 0 18px 42px rgba(8, 15, 29, 0.62);
+  --hud-command-button-text: #e2e8f0;
+  --hud-command-button-text-hover: #f8fafc;
+  --hud-command-button-text-muted: rgba(148, 163, 184, 0.78);
 }
 
 :root,

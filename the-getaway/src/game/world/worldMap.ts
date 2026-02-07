@@ -4,6 +4,7 @@ import { Locale } from '../../content/locales';
 import { getLevel0Content } from '../../content/levels/level0';
 import { CoverSpotDefinition, LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { getZoneMetadata } from '../../content/zones';
+import { composeBuildingVisualProfiles } from '../visual/world/DistrictComposer';
 import {
   createBasicMapArea,
   addWalls,
@@ -248,18 +249,31 @@ const createCityArea = (
   }, withCover);
 
   const withDistrictDecor = applyDistrictDecorations(withCoverProfiles);
+  const visualComposition = composeBuildingVisualProfiles(buildings);
 
   const buildingSummaries: MapBuildingDefinition[] = buildings.map((building) => ({
     id: building.id,
     name: building.name,
     signageStyle: building.signageStyle,
     district: building.district,
+    propDensity: building.propDensity,
+    encounterProfile: building.encounterProfile,
     workbench: building.workbench,
     footprint: {
       from: { ...building.footprint.from },
       to: { ...building.footprint.to },
     },
     door: { ...building.door },
+    visualProfile: visualComposition.profilesByBuildingId[building.id]
+      ? {
+          facadePattern: visualComposition.profilesByBuildingId[building.id].facadePattern,
+          accentHex: visualComposition.profilesByBuildingId[building.id].accentHex,
+          glowHex: visualComposition.profilesByBuildingId[building.id].glowHex,
+          signagePrimaryHex: visualComposition.profilesByBuildingId[building.id].signagePrimaryHex,
+          signageSecondaryHex: visualComposition.profilesByBuildingId[building.id].signageSecondaryHex,
+          backdropHex: visualComposition.profilesByBuildingId[building.id].backdropHex,
+        }
+      : undefined,
   }));
 
   withDistrictDecor.buildings = buildingSummaries;

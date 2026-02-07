@@ -104,7 +104,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
       type: Phaser.AUTO,
       width: parentWidth > 0 ? parentWidth : 800,
       height: parentHeight > 0 ? parentHeight : 600,
-      backgroundColor: "#1a1a1a",
+      backgroundColor: "#05070d",
       parent: gameContainerRef.current,
       scene: [BootScene, MainScene],
       scale: {
@@ -114,9 +114,9 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
         height: parentHeight > 0 ? parentHeight : 600,
       },
       render: {
-        antialias: false,
-        pixelArt: true,
-        roundPixels: true,
+        antialias: true,
+        pixelArt: false,
+        roundPixels: false,
         transparent: false,
         powerPreference: "high-performance",
       },
@@ -127,8 +127,8 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
           debug: false,
         },
       },
-      pixelArt: true,
-      roundPixels: true,
+      pixelArt: false,
+      roundPixels: false,
       transparent: false,
     };
 
@@ -244,10 +244,11 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
 
   const testMode = useSelector((state: RootState) => state.settings.testMode);
   const lightsEnabled = useSelector((state: RootState) => state.settings.lightsEnabled);
+  const visualQualityPreset = useSelector((state: RootState) => state.settings.visualQualityPreset);
 
   useEffect(() => {
-    updateVisualSettings({ lightsEnabled });
-  }, [lightsEnabled]);
+    updateVisualSettings({ lightsEnabled, qualityPreset: visualQualityPreset });
+  }, [lightsEnabled, visualQualityPreset]);
 
   useEffect(() => {
     if (!gameInstanceRef.current) {
@@ -271,7 +272,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
         position: "relative",
         width: "100%",
         height: "100%",
-        backgroundColor: "#1a1a1a",
+        backgroundColor: "var(--color-gunmetal-900)",
         overflow: "hidden",
         display: "flex",
         justifyContent: "center",
@@ -292,7 +293,7 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#1a1a1a",
+          backgroundColor: "var(--color-gunmetal-900)",
           minWidth: "400px",
           minHeight: "300px",
           pointerEvents: "auto",

@@ -121,4 +121,29 @@
       <item>Rebuild the SpectorJS walkthrough previously drafted (MVP Step 34.9) once the profiling playbook is reinstated in Post-MVP scope.</item>
     </future_work>
   </tooling>
+  <level0_revamp_foundation date="2026-02-07">
+    <summary>
+      Level 0 now uses an assetless noir-vector rendering foundation. Tiles, buildings, characters, and environmental props
+      are generated procedurally so production sprite work can be layered in later without rewriting scene logic.
+    </summary>
+    <modules>
+      <module file="the-getaway/src/game/visual/contracts.ts">Defines `VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, and `VisualQualityPreset` contracts.</module>
+      <module file="the-getaway/src/game/visual/theme/noirVectorTheme.ts">Resolves district/entity palettes and quality budgets (`performance`, `balanced`, `cinematic`).</module>
+      <module file="the-getaway/src/game/visual/world/TilePainter.ts">Owns Level 0 tile rendering (`drawGround`, `drawCover`, `drawWallVolume`, `drawDoorPortal`, `drawHazardVariant`).</module>
+      <module file="the-getaway/src/game/visual/world/BuildingPainter.ts">Renders consistent building signage/label chrome from `BuildingVisualProfile`.</module>
+      <module file="the-getaway/src/game/visual/world/DistrictComposer.ts">Applies deterministic facade-pattern composition from district metadata.</module>
+      <module file="the-getaway/src/game/visual/world/PropScatter.ts">Deterministically scatters scenic props while respecting walkability, door buffers, and protected tiles.</module>
+      <module file="the-getaway/src/game/visual/entities/CharacterRigFactory.ts">Builds role-specific procedural rigs for player/friendly/hostile/interactive characters.</module>
+    </modules>
+    <preset_budgets>
+      <preset id="performance" decor_per_building="2" animated_hazards="false" label_density="reduced" notes="Prioritise frame pacing and readability." />
+      <preset id="balanced" decor_per_building="4" animated_hazards="true" label_density="standard" notes="Default production target for Level 0." />
+      <preset id="cinematic" decor_per_building="6" animated_hazards="true" label_density="high" notes="Highest scene density; retain fallback toggles." />
+    </preset_budgets>
+    <fallback_policy>
+      <item>Canvas and WebGL both render the vector kit; no sprite dependency is required for baseline readability.</item>
+      <item>Lighting and post FX are budget-gated by quality preset so expensive effects can be downshifted without visual breakage.</item>
+      <item>Entity/building contracts remain stable to support future sprite swap-in behind the same render hooks.</item>
+    </fallback_policy>
+  </level0_revamp_foundation>
 </graphics_guide>

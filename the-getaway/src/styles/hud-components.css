@@ -6,8 +6,7 @@
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background:
-      radial-gradient(circle at top, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.95));
+    background: var(--hud-stage-background);
     color: var(--color-hud-text);
     font-family: var(--font-mono);
   }
@@ -16,10 +15,7 @@
     position: absolute;
     inset: 0;
     display: flex;
-    background:
-      radial-gradient(circle at 20% -10%, rgba(56, 189, 248, 0.12), transparent 55%),
-      radial-gradient(circle at 85% 0%, rgba(244, 114, 182, 0.08), transparent 45%),
-      linear-gradient(120deg, rgba(9, 13, 24, 0.8), rgba(14, 21, 38, 0.92));
+    background: var(--hud-stage-background);
   }
 
   .hud-menu-backdrop {
