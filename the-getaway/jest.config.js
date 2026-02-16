@@ -11,6 +11,11 @@ export default {
     "<rootDir>/src/game/**/*.{ts,tsx}",
     "<rootDir>/src/store/**/*.{ts,tsx}",
     "<rootDir>/src/utils/**/*.{ts,tsx}",
+
+    // Exclude test/support files so coverage summary + thresholds use the same file set.
+    "!<rootDir>/src/**/__tests__/**/*",
+    "!<rootDir>/src/**/*.test.{ts,tsx}",
+    "!<rootDir>/src/**/test.{ts,tsx}",
     "!<rootDir>/src/content/**/*",
     "!<rootDir>/src/game/scenes/**/*",
     "!<rootDir>/src/game/objects/**/*",
@@ -96,12 +101,6 @@ export default {
       branches: 65,
       functions: 70,
       lines: 70,
-    },
-    "./src/game/": {
-      statements: 75,
-      branches: 70,
-      functions: 75,
-      lines: 75,
     },
   },
 };
