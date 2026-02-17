@@ -38,6 +38,7 @@ jobs:
       sanitized-branch: ${{ steps.pages.outputs.sanitized_branch }}
       branch: ${{ steps.pages.outputs.branch }}
       gh-pages-exists: ${{ steps.ghpages.outputs.exists }}
+      needs-prod-seed: ${{ steps.seedcheck.outputs.needs_prod_seed }}
     defaults:
       run:
         working-directory: the-getaway
@@ -111,6 +112,29 @@ jobs:
             echo "exists=false" >> "${GITHUB_OUTPUT}"
           fi
 
+      - name: Determine whether production seeding is required (previews)
+        id: seedcheck
+        if: github.event_name != 'pull_request' && steps.pages.outputs.branch != 'main'
+        working-directory: .
+        env:
+          GH_PAGES_EXISTS: ${{ steps.ghpages.outputs.exists }}
+        run: |
+          set -euo pipefail
+
+          # We need to seed the root production content if either:
+          # - `gh-pages` doesn't exist yet, or
+          # - it exists but doesn't contain the production root (index.html)
+          NEEDS_PROD_SEED="true"
+
+          if [ "${GH_PAGES_EXISTS}" = "true" ]; then
+            git fetch origin gh-pages --depth=1
+            if git cat-file -e origin/gh-pages:index.html 2>/dev/null; then
+              NEEDS_PROD_SEED="false"
+            fi
+          fi
+
+          echo "needs_prod_seed=${NEEDS_PROD_SEED}" >> "${GITHUB_OUTPUT}"
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
@@ -133,9 +157,10 @@ jobs:
         run: yarn build
 
       - name: Bootstrap production build (main) for first preview deploy
-        # If `gh-pages` doesn't exist yet and we're deploying a preview, we need to seed the
-        # root production content so the first preview publish doesn't wipe https://.../the-getaway/.
-        if: github.event_name != 'pull_request' && steps.pages.outputs.branch != 'main' && steps.ghpages.outputs.exists != 'true'
+        # If `gh-pages` doesn't exist yet (or it exists but is missing production root files)
+        # and we're deploying a preview, we need to seed the root production content so the
+        # preview publish doesn't wipe https://.../the-getaway/.
+        if: github.event_name != 'pull_request' && steps.pages.outputs.branch != 'main' && steps.seedcheck.outputs.needs_prod_seed == 'true'
         working-directory: .
         run: |
           set -euo pipefail
@@ -163,7 +188,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload production dist artifact (bootstrap only)
-        if: github.event_name != 'pull_request' && steps.pages.outputs.branch != 'main' && steps.ghpages.outputs.exists != 'true'
+        if: github.event_name != 'pull_request' && steps.pages.outputs.branch != 'main' && steps.seedcheck.outputs.needs_prod_seed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: dist-prod
@@ -184,6 +209,7 @@ jobs:
       DEPLOY_URL: ${{ needs.build.outputs.deploy-url }}
       PAGES_BASE: ${{ needs.build.outputs.pages-base }}
       GH_PAGES_EXISTS: ${{ needs.build.outputs.gh-pages-exists }}
+      NEEDS_PROD_SEED: ${{ needs.build.outputs.needs-prod-seed }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -208,7 +234,7 @@ jobs:
           path: the-getaway/dist
 
       - name: Download production dist artifact (bootstrap only)
-        if: env.DEPLOY_DIR != '.' && env.GH_PAGES_EXISTS != 'true'
+        if: env.DEPLOY_DIR != '.' && env.NEEDS_PROD_SEED == 'true'
         uses: actions/download-artifact@v4
         with:
           name: dist-prod
@@ -249,9 +275,9 @@ jobs:
           else
             # Preview deploy: update only previews/<sanitized-branch>/.
 
-            # If this is the first ever preview deploy (no gh-pages yet), seed the prod root
-            # with the latest `main` build first so we don't wipe the live production site.
-            if [ "${GH_PAGES_EXISTS}" != "true" ]; then
+            # If `gh-pages` is missing production root content, seed the prod root with the
+            # latest `main` build first so we don't wipe https://.../the-getaway/.
+            if [ "${NEEDS_PROD_SEED}" = "true" ]; then
               rsync -av --delete --exclude 'previews/' --exclude '.nojekyll' the-getaway/dist-prod/ site/
             fi
 
