@@ -211,7 +211,12 @@ jobs:
       GH_PAGES_EXISTS: ${{ needs.build.outputs.gh-pages-exists }}
       NEEDS_PROD_SEED: ${{ needs.build.outputs.needs-prod-seed }}
     environment:
-      name: github-pages
+      # NOTE: The built-in `github-pages` environment can be protected to only allow
+      # deployments from certain branches (often just `main`).
+      #
+      # To allow per-branch preview deploys without changing repo settings, we deploy
+      # previews to a separate environment name.
+      name: ${{ needs.build.outputs.branch == 'main' && 'github-pages' || format('preview-{0}', needs.build.outputs.sanitized-branch) }}
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Announce deployment target
