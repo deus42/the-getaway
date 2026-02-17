@@ -108,7 +108,12 @@ jobs:
       DEPLOY_SUBPATH: ${{ needs.build.outputs.deploy-subpath }}
       SOURCE_BRANCH: ${{ needs.build.outputs.source-branch }}
     environment:
-      name: github-pages
+      # NOTE: The built-in `github-pages` environment can be protected to only allow
+      # deployments from certain branches (often just `main`).
+      #
+      # To allow per-branch preview deploys without changing repo settings, we deploy
+      # previews to a separate environment name.
+      name: ${{ needs.build.outputs.branch == 'main' && 'github-pages' || format('preview-{0}', needs.build.outputs.sanitized-branch) }}
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout repository
