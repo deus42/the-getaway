@@ -1,9 +1,17 @@
 name: CI and GitHub Pages
 
+# Production:   https://deus42.github.io/the-getaway/
+# Previews:     https://deus42.github.io/the-getaway/previews/<sanitized-branch>/
+#
+# NOTE: GitHub Pages deploys replace the entire site on each publish. To avoid preview deploys
+# wiping the production root (and other previews), we maintain a `gh-pages` content branch as the
+# canonical "published site" tree. Each deploy updates only its destination subdirectory,
+# commits/pushes `gh-pages`, then uploads that full tree as the Pages artifact.
+
 on:
   push:
-    branches:
-      - main
+    branches-ignore:
+      - gh-pages
   pull_request:
     branches:
       - main
@@ -23,6 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       app-version: ${{ steps.version_check.outputs.version }}
+      pages-base: ${{ steps.pages.outputs.base }}
+      deploy-dir: ${{ steps.pages.outputs.deploy_dir }}
+      deploy-url: ${{ steps.pages.outputs.deploy_url }}
+      sanitized-branch: ${{ steps.pages.outputs.sanitized_branch }}
+      branch: ${{ steps.pages.outputs.branch }}
     defaults:
       run:
         working-directory: the-getaway
@@ -39,6 +52,45 @@ jobs:
 
       - name: Enable Corepack
         run: corepack enable
+
+      - name: Compute Pages base path + deploy directory
+        id: pages
+        run: |
+          set -euo pipefail
+
+          REPO="${GITHUB_REPOSITORY#*/}"
+
+          # `pull_request` events use refs like `123/merge`; for CI-only runs we default to prod base.
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            BRANCH="${GITHUB_HEAD_REF:-pr}"
+            BASE="/${REPO}/"
+            DEPLOY_DIR="."
+            DEPLOY_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO}/"
+            SANITIZED_BRANCH=""
+          else
+            BRANCH="${GITHUB_REF_NAME}"
+            SANITIZED_BRANCH="$(echo "${BRANCH}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-+//; s/-+$//')"
+
+            if [ -z "${SANITIZED_BRANCH}" ]; then
+              SANITIZED_BRANCH="branch"
+            fi
+
+            if [ "${BRANCH}" = "main" ]; then
+              BASE="/${REPO}/"
+              DEPLOY_DIR="."
+              DEPLOY_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO}/"
+            else
+              BASE="/${REPO}/previews/${SANITIZED_BRANCH}/"
+              DEPLOY_DIR="previews/${SANITIZED_BRANCH}"
+              DEPLOY_URL="https://${GITHUB_REPOSITORY_OWNER}.github.io/${REPO}/${DEPLOY_DIR}/"
+            fi
+          fi
+
+          echo "branch=${BRANCH}" >> "${GITHUB_OUTPUT}"
+          echo "sanitized_branch=${SANITIZED_BRANCH}" >> "${GITHUB_OUTPUT}"
+          echo "base=${BASE}" >> "${GITHUB_OUTPUT}"
+          echo "deploy_dir=${DEPLOY_DIR}" >> "${GITHUB_OUTPUT}"
+          echo "deploy_url=${DEPLOY_URL}" >> "${GITHUB_OUTPUT}"
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -57,27 +109,125 @@ jobs:
         run: yarn test --runInBand
 
       - name: Build
+        env:
+          VITE_BASE: ${{ steps.pages.outputs.base }}
         run: yarn build
 
-      - name: Upload Pages artifact
+      - name: Upload dist artifact
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: dist
           path: the-getaway/dist
+          if-no-files-found: error
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name != 'pull_request'
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     env:
       APP_VERSION: ${{ needs.build.outputs.app-version }}
+      DEPLOY_DIR: ${{ needs.build.outputs.deploy-dir }}
+      DEPLOY_URL: ${{ needs.build.outputs.deploy-url }}
+      PAGES_BASE: ${{ needs.build.outputs.pages-base }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Announce release version
-        run: echo "Deploying The Getaway version $APP_VERSION"
+      - name: Announce deployment target
+        run: |
+          echo "Deploying The Getaway version ${APP_VERSION}"
+          echo "Base path: ${PAGES_BASE}"
+          echo "Target directory: ${DEPLOY_DIR}"
+          echo "Expected URL: ${DEPLOY_URL}"
+
+      - name: Checkout repository (for git + worktree)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: the-getaway/dist
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Prepare gh-pages worktree
+        run: |
+          set -euo pipefail
+
+          # Fetch if it exists; this repo may not have a gh-pages branch yet.
+          git fetch origin gh-pages || true
+
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add -B gh-pages site origin/gh-pages
+          else
+            # Initialize gh-pages as an orphan branch.
+            git worktree add --detach site
+            cd site
+            git checkout --orphan gh-pages
+            git rm -rf . || true
+            echo "" > .nojekyll
+            git add .nojekyll
+            git commit -m "Initialize gh-pages"
+            cd ..
+          fi
+
+      - name: Sync build output into published site tree
+        run: |
+          set -euo pipefail
+
+          if [ "${DEPLOY_DIR}" = "." ]; then
+            # Production deploy: update root while preserving all previews/.
+            rsync -av --delete --exclude 'previews/' --exclude '.nojekyll' the-getaway/dist/ site/
+          else
+            # Preview deploy: update only previews/<sanitized-branch>/.
+            mkdir -p "site/${DEPLOY_DIR}"
+            rsync -av --delete the-getaway/dist/ "site/${DEPLOY_DIR}/"
+          fi
+
+          # Always ensure this exists at the site root.
+          touch site/.nojekyll
+
+      - name: Commit and push gh-pages
+        run: |
+          set -euo pipefail
+          cd site
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No site changes to publish."
+          else
+            git commit -m "Deploy ${GITHUB_SHA} to ${DEPLOY_DIR}"
+            git push origin gh-pages
+          fi
+
+      - name: Upload Pages artifact (full site tree)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Write playtest link to job summary
+        run: |
+          {
+            echo "## GitHub Pages deployment"
+            echo
+            echo "- **URL:** ${DEPLOY_URL}"
+            echo "- **Base:** ${PAGES_BASE}"
+            echo "- **Destination:** ${DEPLOY_DIR}"
+          } >> "${GITHUB_STEP_SUMMARY}"
