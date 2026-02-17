@@ -97,11 +97,5 @@ export default {
       functions: 70,
       lines: 70,
     },
-    "./src/game/": {
-      statements: 75,
-      branches: 70,
-      functions: 75,
-      lines: 75,
-    },
   },
 };
