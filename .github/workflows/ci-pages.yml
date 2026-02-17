@@ -3,10 +3,11 @@ name: CI and GitHub Pages
 # Production:   https://deus42.github.io/the-getaway/
 # Previews:     https://deus42.github.io/the-getaway/previews/<sanitized-branch>/
 #
-# NOTE: GitHub Pages deploys replace the entire site on each publish. To avoid preview deploys
-# wiping the production root (and other previews), we maintain a `gh-pages` content branch as the
-# canonical "published site" tree. Each deploy updates only its destination subdirectory,
-# commits/pushes `gh-pages`, then uploads that full tree as the Pages artifact.
+# NOTE: GitHub Pages publishes a single site and each publish replaces the whole content.
+# To prevent a preview publish from wiping production (and other previews), we maintain a
+# `gh-pages` content branch as the canonical "published site" tree. Each deploy updates only
+# its destination subdirectory, commits/pushes `gh-pages`, then uploads that full tree as the
+# Pages artifact.
 
 on:
   push:
@@ -36,12 +37,15 @@ jobs:
       deploy-url: ${{ steps.pages.outputs.deploy_url }}
       sanitized-branch: ${{ steps.pages.outputs.sanitized_branch }}
       branch: ${{ steps.pages.outputs.branch }}
+      gh-pages-exists: ${{ steps.ghpages.outputs.exists }}
     defaults:
       run:
         working-directory: the-getaway
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -69,8 +73,12 @@ jobs:
             SANITIZED_BRANCH=""
           else
             BRANCH="${GITHUB_REF_NAME}"
-            SANITIZED_BRANCH="$(echo "${BRANCH}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-+//; s/-+$//')"
 
+            # Sanitization:
+            # - lowercase
+            # - replace non [a-z0-9] with '-'
+            # - trim '-' ends
+            SANITIZED_BRANCH="$(echo "${BRANCH}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-+//; s/-+$//')"
             if [ -z "${SANITIZED_BRANCH}" ]; then
               SANITIZED_BRANCH="branch"
             fi
@@ -91,6 +99,17 @@ jobs:
           echo "base=${BASE}" >> "${GITHUB_OUTPUT}"
           echo "deploy_dir=${DEPLOY_DIR}" >> "${GITHUB_OUTPUT}"
           echo "deploy_url=${DEPLOY_URL}" >> "${GITHUB_OUTPUT}"
+
+      - name: Check if gh-pages exists
+        id: ghpages
+        working-directory: .
+        run: |
+          set -euo pipefail
+          if git ls-remote --exit-code --heads origin gh-pages > /dev/null 2>&1; then
+            echo "exists=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "exists=false" >> "${GITHUB_OUTPUT}"
+          fi
 
       - name: Install dependencies
         run: yarn install --frozen-lockfile
@@ -113,12 +132,42 @@ jobs:
           VITE_BASE: ${{ steps.pages.outputs.base }}
         run: yarn build
 
+      - name: Bootstrap production build (main) for first preview deploy
+        # If `gh-pages` doesn't exist yet and we're deploying a preview, we need to seed the
+        # root production content so the first preview publish doesn't wipe https://.../the-getaway/.
+        if: github.event_name != 'pull_request' && steps.pages.outputs.branch != 'main' && steps.ghpages.outputs.exists != 'true'
+        working-directory: .
+        run: |
+          set -euo pipefail
+
+          REPO="${GITHUB_REPOSITORY#*/}"
+          PROD_BASE="/${REPO}/"
+
+          git fetch origin main --depth=1
+
+          # Create a worktree for origin/main.
+          git worktree add --force __main origin/main
+
+          # Reuse the already-installed dependencies from the current worktree.
+          rm -rf __main/the-getaway/node_modules
+          ln -s "${GITHUB_WORKSPACE}/the-getaway/node_modules" "${GITHUB_WORKSPACE}/__main/the-getaway/node_modules"
+
+          (cd __main/the-getaway && VITE_BASE="${PROD_BASE}" yarn build)
+
       - name: Upload dist artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: the-getaway/dist
+          if-no-files-found: error
+
+      - name: Upload production dist artifact (bootstrap only)
+        if: github.event_name != 'pull_request' && steps.pages.outputs.branch != 'main' && steps.ghpages.outputs.exists != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-prod
+          path: __main/the-getaway/dist
           if-no-files-found: error
 
   deploy:
@@ -134,6 +183,7 @@ jobs:
       DEPLOY_DIR: ${{ needs.build.outputs.deploy-dir }}
       DEPLOY_URL: ${{ needs.build.outputs.deploy-url }}
       PAGES_BASE: ${{ needs.build.outputs.pages-base }}
+      GH_PAGES_EXISTS: ${{ needs.build.outputs.gh-pages-exists }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -157,6 +207,13 @@ jobs:
           name: dist
           path: the-getaway/dist
 
+      - name: Download production dist artifact (bootstrap only)
+        if: env.DEPLOY_DIR != '.' && env.GH_PAGES_EXISTS != 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: dist-prod
+          path: the-getaway/dist-prod
+
       - name: Configure git identity
         run: |
           git config user.name "github-actions[bot]"
@@ -166,7 +223,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Fetch if it exists; this repo may not have a gh-pages branch yet.
           git fetch origin gh-pages || true
 
           if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
@@ -192,11 +248,17 @@ jobs:
             rsync -av --delete --exclude 'previews/' --exclude '.nojekyll' the-getaway/dist/ site/
           else
             # Preview deploy: update only previews/<sanitized-branch>/.
+
+            # If this is the first ever preview deploy (no gh-pages yet), seed the prod root
+            # with the latest `main` build first so we don't wipe the live production site.
+            if [ "${GH_PAGES_EXISTS}" != "true" ]; then
+              rsync -av --delete --exclude 'previews/' --exclude '.nojekyll' the-getaway/dist-prod/ site/
+            fi
+
             mkdir -p "site/${DEPLOY_DIR}"
             rsync -av --delete the-getaway/dist/ "site/${DEPLOY_DIR}/"
           fi
 
-          # Always ensure this exists at the site root.
           touch site/.nojekyll
 
       - name: Commit and push gh-pages
