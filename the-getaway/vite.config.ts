@@ -1,10 +1,33 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const normalizeBase = (input: string): string => {
+  const trimmed = input.trim();
+  if (!trimmed) return '/';
+
+  let base = trimmed;
+
+  if (!base.startsWith('/')) {
+    base = `/${base}`;
+  }
+
+  if (!base.endsWith('/')) {
+    base = `${base}/`;
+  }
+
+  // Avoid accidental double slashes when callers concatenate paths.
+  base = base.replace(/\/{2,}/g, '/');
+
+  return base;
+};
+
+const explicitBase = process.env.VITE_BASE ?? process.env.BASE_PATH;
+
 const repository = process.env.GITHUB_REPOSITORY;
 const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 const repoName = repository?.split('/')[1];
-const base = isGitHubActions && repoName ? `/${repoName}/` : '/';
+const defaultBase = isGitHubActions && repoName ? `/${repoName}/` : '/';
+const base = explicitBase ? normalizeBase(explicitBase) : defaultBase;
 
 // https://vite.dev/config/
 export default defineConfig({
