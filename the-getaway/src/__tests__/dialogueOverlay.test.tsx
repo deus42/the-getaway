@@ -2,7 +2,11 @@ import { fireEvent, render, screen, act } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import DialogueOverlay from '../components/ui/DialogueOverlay';
 import { store, resetGame } from '../store';
-import { startDialogue } from '../store/questsSlice';
+import {
+  startDialogue,
+  startQuest,
+  updateObjectiveCounter,
+} from '../store/questsSlice';
 import { updateSkill } from '../store/playerSlice';
 
 describe('DialogueOverlay', () => {
@@ -91,6 +95,56 @@ describe('DialogueOverlay', () => {
     fireEvent.click(optionButton);
 
     expect(screen.getByText(/Inventory is thinner than curfew soup/i)).toBeInTheDocument();
+  });
+
+  it('locks quest completion dialogue until required objectives are complete', () => {
+    render(
+      <Provider store={store}>
+        <DialogueOverlay />
+      </Provider>
+    );
+
+    act(() => {
+      store.dispatch(startQuest('quest_market_cache'));
+      store.dispatch(startDialogue({ dialogueId: 'npc_lira_vendor', nodeId: 'intro' }));
+    });
+
+    let completionOption = screen.getByRole('button', {
+      name: /Cache is back in rebel hands\./i,
+    });
+
+    expect(completionOption).toHaveStyle('pointer-events: none');
+
+    fireEvent.click(completionOption);
+    expect(
+      store
+        .getState()
+        .quests.quests.find((quest) => quest.id === 'quest_market_cache')
+        ?.isCompleted
+    ).toBe(false);
+
+    act(() => {
+      store.dispatch(
+        updateObjectiveCounter({
+          questId: 'quest_market_cache',
+          objectiveId: 'recover-keycard',
+          count: 1,
+        })
+      );
+    });
+
+    completionOption = screen.getByRole('button', {
+      name: /Cache is back in rebel hands\./i,
+    });
+    expect(completionOption).toHaveStyle('pointer-events: auto');
+
+    fireEvent.click(completionOption);
+    expect(
+      store
+        .getState()
+        .quests.quests.find((quest) => quest.id === 'quest_market_cache')
+        ?.isCompleted
+    ).toBe(true);
   });
 
   it('allows selecting a dialogue option with number keys', () => {

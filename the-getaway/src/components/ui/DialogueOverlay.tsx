@@ -37,7 +37,8 @@ type QuestLockReason =
   | "alreadyCompleted"
   | "alreadyActive"
   | "notActive"
-  | "objectiveCompleted";
+  | "objectiveCompleted"
+  | "objectivesIncomplete";
 
 const ROLE_TEMPLATE_PATTERN = /^\[roleTemplate:([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\]$/i;
 const FALLBACK_FACTION_REPUTATION: Record<FactionId, number> = {
@@ -182,6 +183,13 @@ const DialogueOverlay: React.FC = () => {
           {
             const quest = quests.find((entry) => entry.id === questId);
             if (quest && quest.isActive && !quest.isCompleted) {
+              const objectivesIncomplete = quest.objectives.some(
+                (objective) =>
+                  objective.type !== "talk" && !objective.isCompleted
+              );
+              if (objectivesIncomplete) {
+                break;
+              }
               dispatch(completeQuest(questId));
               awardQuestRewards(questId);
               dispatch(addLogMessage(logStrings.questCompleted(quest.name)));
@@ -344,6 +352,14 @@ const DialogueOverlay: React.FC = () => {
         }
         if (!quest.isActive) {
           return "notActive";
+        }
+        if (
+          quest.objectives.some(
+            (objective) =>
+              objective.type !== "talk" && !objective.isCompleted
+          )
+        ) {
+          return "objectivesIncomplete";
         }
         break;
       case "update":

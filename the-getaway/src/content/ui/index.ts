@@ -280,6 +280,7 @@ interface DialogueOverlayStrings {
     alreadyActive: string;
     notActive: string;
     objectiveCompleted: string;
+    objectivesIncomplete: string;
   };
   requiresSkill: (requirement: string) => string;
   checkSkill: (requirement: string) => string;
@@ -845,6 +846,7 @@ const STRINGS: Record<Locale, UIStrings> = {
         alreadyActive: 'Quest already in progress',
         notActive: 'Quest not active',
         objectiveCompleted: 'Objective already complete',
+        objectivesIncomplete: 'Complete required objectives first',
       },
       requiresSkill: (requirement) => `Requires ${requirement}`,
       checkSkill: (requirement) => `Check ${requirement}`,
@@ -1617,6 +1619,7 @@ const STRINGS: Record<Locale, UIStrings> = {
         alreadyActive: 'Завдання вже виконується',
         notActive: 'Завдання не активоване',
         objectiveCompleted: 'Ціль уже виконана',
+        objectivesIncomplete: 'Спершу виконайте необхідні цілі',
       },
       requiresSkill: (requirement) => `Потрібно: ${requirement}`,
       checkSkill: (requirement) => `Перевірка: ${requirement}`,

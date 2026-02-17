@@ -16,6 +16,7 @@ import {
   regenerateStamina,
   setMovementProfile,
   setStealthState,
+  addItem,
 } from "../store/playerSlice";
 import {
   updateEnemy,
@@ -30,6 +31,7 @@ import {
   setEngagementMode,
   setMapArea,
   setWorkbenchStatus,
+  removeItemFromMap,
   type WorkbenchStatus,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
@@ -72,7 +74,11 @@ import {
   MINIMAP_PATH_PREVIEW_EVENT,
   MiniMapPathPreviewDetail,
 } from "../game/events";
-import { startDialogue, endDialogue } from "../store/questsSlice";
+import {
+  startDialogue,
+  endDialogue,
+  updateObjectiveCounter,
+} from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
 import { getUIStrings } from "../content/ui";
 import {
@@ -259,6 +265,7 @@ const GameController: React.FC = () => {
   const currentMapArea = useSelector(
     (state: RootState) => state.world.currentMapArea
   );
+  const mapItems = currentMapArea?.entities.items;
   const mapAreaId = currentMapArea?.id;
   const mapAreaIsInterior = currentMapArea?.isInterior ?? false;
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
@@ -277,6 +284,7 @@ const GameController: React.FC = () => {
     (state: RootState) => state.world.mapConnections
   );
   const worldState = useSelector((state: RootState) => state.world);
+  const quests = useSelector((state: RootState) => state.quests.quests);
   const dialogues = useSelector((state: RootState) => state.quests.dialogues);
   const activeDialogueId = useSelector(selectActiveDialogueId);
   const locale = useSelector((state: RootState) => state.settings.locale);
@@ -556,6 +564,61 @@ const GameController: React.FC = () => {
   useEffect(() => {
     mapAreaRef.current = currentMapArea ?? null;
   }, [currentMapArea]);
+
+  useEffect(() => {
+    if (!mapItems || mapItems.length === 0) {
+      return;
+    }
+
+    const itemsAtPlayerPosition = mapItems.filter(
+      (item) =>
+        item.position?.x === player.position.x &&
+        item.position?.y === player.position.y
+    );
+
+    itemsAtPlayerPosition.forEach((item) => {
+      if (!item.isQuestItem) {
+        return;
+      }
+
+      const matchingQuest = quests.find(
+        (quest) =>
+          quest.isActive &&
+          !quest.isCompleted &&
+          quest.objectives.some(
+            (objective) =>
+              objective.type === "collect" &&
+              !objective.isCompleted &&
+              objective.target === item.name
+          )
+      );
+
+      if (!matchingQuest) {
+        return;
+      }
+
+      const matchingObjective = matchingQuest.objectives.find(
+        (objective) =>
+          objective.type === "collect" &&
+          !objective.isCompleted &&
+          objective.target === item.name
+      );
+
+      if (!matchingObjective) {
+        return;
+      }
+
+      dispatch(addItem(item));
+      dispatch(removeItemFromMap(item.id));
+      dispatch(
+        updateObjectiveCounter({
+          questId: matchingQuest.id,
+          objectiveId: matchingObjective.id,
+          count: item.stackable ? item.quantity ?? 1 : 1,
+        })
+      );
+    });
+  }, [dispatch, mapItems, player.position, quests]);
 
   // Stealth engagement management
   useEffect(() => {

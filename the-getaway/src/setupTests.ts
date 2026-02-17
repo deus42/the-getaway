@@ -1,3 +1,7 @@
+if (!process.env.NODE_ENV || process.env.NODE_ENV === 'production') {
+  process.env.NODE_ENV = 'test';
+}
+
 import '@testing-library/jest-dom';
 
 // Polyfill scrollIntoView for jsdom environment
