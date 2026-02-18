@@ -13,6 +13,7 @@ import { level0UkrainianContent } from './locales/uk';
 import { buildQuestsForLevel } from '../../quests/builders';
 
 const LEVEL_RESOURCE_KEY = 'levels.slums_command_grid';
+const ROAD_WIDENING_INSET_TILES = 4;
 
 interface Level0Content {
   dialogues: Dialogue[];
@@ -112,6 +113,36 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
   return sanitized;
 };
 
+const insetBuildingFootprint = (
+  building: LevelBuildingDefinition,
+  insetTiles: number
+): LevelBuildingDefinition => {
+  const next = cloneBuildingDefinition(building);
+  const width = next.footprint.to.x - next.footprint.from.x + 1;
+  const height = next.footprint.to.y - next.footprint.from.y + 1;
+
+  // Preserve usable block size while widening roads between blocks.
+  const insetX = Math.min(insetTiles, Math.max(0, Math.floor((width - 6) / 2)));
+  const insetY = Math.min(insetTiles, Math.max(0, Math.floor((height - 6) / 2)));
+
+  if (insetX <= 0 && insetY <= 0) {
+    return next;
+  }
+
+  next.footprint = {
+    from: {
+      x: next.footprint.from.x + insetX,
+      y: next.footprint.from.y + insetY,
+    },
+    to: {
+      x: next.footprint.to.x - insetX,
+      y: next.footprint.to.y - insetY,
+    },
+  };
+
+  return next;
+};
+
 const cloneCoverSpot = (spot: CoverSpotDefinition): CoverSpotDefinition => ({
   position: clonePosition(spot.position),
   profile: cloneCoverProfile(spot.profile),
@@ -124,9 +155,10 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const quests = buildQuestsForLevel(locale, LEVEL_RESOURCE_KEY);
   const npcBlueprints = source.npcBlueprints.map(cloneNPCBlueprint);
   const itemBlueprints = source.itemBlueprints.map(cloneItemBlueprint);
-  const buildingDefinitions = source.buildingDefinitions.map((definition) =>
-    moveDoorToPerimeter(definition)
-  );
+  const buildingDefinitions = source.buildingDefinitions.map((definition) => {
+    const widenedRoadLayout = insetBuildingFootprint(definition, ROAD_WIDENING_INSET_TILES);
+    return moveDoorToPerimeter(widenedRoadLayout);
+  });
 
   const slumsCover = source.coverSpots.slums.map(cloneCoverSpot);
   const downtownCover = source.coverSpots.downtown.map(cloneCoverSpot);

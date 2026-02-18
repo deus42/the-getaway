@@ -8,6 +8,12 @@ export interface Position {
   y: number;
 }
 
+export interface EntityVisualHook {
+  silhouetteId?: string;
+  accentHex?: string;
+  styleVariant?: string;
+}
+
 export type CardinalDirection = 'north' | 'east' | 'south' | 'west';
 
 export type CoverLevel = 'none' | 'half' | 'full';
@@ -154,6 +160,7 @@ export interface Player extends Entity {
   activeWeaponSlot?: 'primaryWeapon' | 'secondaryWeapon' | 'meleeWeapon';
   perkRuntime: PerkRuntimeState;
   encumbrance: EncumbranceState;
+  visualProfile?: EntityVisualHook;
 }
 
 // Alert state for enemies with perception
@@ -298,6 +305,7 @@ export interface Enemy extends Entity {
   aiCooldowns?: Partial<Record<EnemyAiState, number>>;
   aiPersonalitySeed?: number;
   aiTelemetry?: EnemyAiTelemetry;
+  visualProfile?: EntityVisualHook;
 }
 
 // NPC specific attributes
@@ -314,6 +322,7 @@ export interface NPC extends Entity {
     sourceId?: string;
     updatedAt?: number;
   };
+  visualProfile?: EntityVisualHook;
 }
 
 // Player skills
@@ -589,5 +598,20 @@ export interface MapBuildingDefinition {
   door: Position;
   signageStyle?: string;
   district?: string;
+  propDensity?: 'low' | 'medium' | 'high';
+  encounterProfile?: string;
   workbench?: WorkbenchSpec;
+  visualProfile?: {
+    facadePattern: 'solid' | 'ribbed' | 'banded' | 'chevron';
+    lotPattern: 'plaza' | 'service' | 'market';
+    massingStyle: 'spire' | 'block' | 'stacked';
+    massingHeight: number;
+    accentHex: string;
+    glowHex: string;
+    trimHex: string;
+    atmosphereHex: string;
+    signagePrimaryHex: string;
+    signageSecondaryHex: string;
+    backdropHex: string;
+  };
 }

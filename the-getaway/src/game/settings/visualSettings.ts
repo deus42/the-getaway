@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import type { VisualQualityPreset } from '../visual/contracts';
 
 export interface BloomSettings {
   enabled: boolean;
@@ -27,13 +28,23 @@ export interface ColorMatrixSettings {
 }
 
 export interface VisualFxSettings {
+  qualityPreset: VisualQualityPreset;
   lightsEnabled: boolean;
   bloom: BloomSettings;
   vignette: VignetteSettings;
   colorMatrix: ColorMatrixSettings;
 }
 
+export interface VisualFxSettingsUpdate {
+  qualityPreset?: VisualQualityPreset;
+  lightsEnabled?: boolean;
+  bloom?: Partial<BloomSettings>;
+  vignette?: Partial<VignetteSettings>;
+  colorMatrix?: Partial<ColorMatrixSettings>;
+}
+
 const defaultVisualSettings: VisualFxSettings = Object.freeze({
+  qualityPreset: 'balanced',
   lightsEnabled: false,
   bloom: {
     enabled: false,
@@ -61,6 +72,7 @@ const defaultVisualSettings: VisualFxSettings = Object.freeze({
 });
 
 let currentSettings: VisualFxSettings = {
+  qualityPreset: defaultVisualSettings.qualityPreset,
   lightsEnabled: defaultVisualSettings.lightsEnabled,
   bloom: { ...defaultVisualSettings.bloom },
   vignette: { ...defaultVisualSettings.vignette },
@@ -76,6 +88,7 @@ const notify = (): void => {
 };
 
 export const getVisualSettings = (): VisualFxSettings => ({
+  qualityPreset: currentSettings.qualityPreset,
   lightsEnabled: currentSettings.lightsEnabled,
   bloom: { ...currentSettings.bloom },
   vignette: { ...currentSettings.vignette },
@@ -84,6 +97,7 @@ export const getVisualSettings = (): VisualFxSettings => ({
 
 export const resetVisualSettings = (): void => {
   currentSettings = {
+    qualityPreset: defaultVisualSettings.qualityPreset,
     lightsEnabled: defaultVisualSettings.lightsEnabled,
     bloom: { ...defaultVisualSettings.bloom },
     vignette: { ...defaultVisualSettings.vignette },
@@ -92,14 +106,41 @@ export const resetVisualSettings = (): void => {
   notify();
 };
 
-export const updateVisualSettings = (partial: Partial<VisualFxSettings>): void => {
+export const updateVisualSettings = (partial: VisualFxSettingsUpdate): void => {
   currentSettings = {
+    qualityPreset: partial.qualityPreset ?? currentSettings.qualityPreset,
     lightsEnabled: partial.lightsEnabled ?? currentSettings.lightsEnabled,
     bloom: { ...currentSettings.bloom, ...(partial.bloom ?? {}) },
     vignette: { ...currentSettings.vignette, ...(partial.vignette ?? {}) },
     colorMatrix: { ...currentSettings.colorMatrix, ...(partial.colorMatrix ?? {}) },
   };
   notify();
+};
+
+export const getVisualFxBudgetForPreset = (
+  preset: VisualQualityPreset
+): { bloomStrengthCap: number; vignetteCap: number; colorMatrixEnabled: boolean } => {
+  if (preset === 'performance') {
+    return {
+      bloomStrengthCap: 0.18,
+      vignetteCap: 0.22,
+      colorMatrixEnabled: false,
+    };
+  }
+
+  if (preset === 'cinematic') {
+    return {
+      bloomStrengthCap: 0.48,
+      vignetteCap: 0.44,
+      colorMatrixEnabled: true,
+    };
+  }
+
+  return {
+    bloomStrengthCap: 0.32,
+    vignetteCap: 0.34,
+    colorMatrixEnabled: true,
+  };
 };
 
 export const subscribeToVisualSettings = (listener: VisualSettingsListener): (() => void) => {

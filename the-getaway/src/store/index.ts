@@ -247,6 +247,21 @@ const migrateSurveillanceState = (state?: Partial<SurveillanceState> | null): Su
   };
 };
 
+const migrateSettingsState = (
+  state?: Partial<CombinedState['settings']> | null
+): CombinedState['settings'] => {
+  const base = settingsReducer(undefined, { type: '@@INIT' } as AnyAction);
+  if (!state) {
+    return base;
+  }
+
+  return {
+    ...base,
+    ...state,
+    visualQualityPreset: state.visualQualityPreset ?? base.visualQualityPreset,
+  };
+};
+
 const loadState = (): PersistedState | undefined => {
   if (!isBrowser) {
     return undefined;
@@ -291,6 +306,7 @@ const migratePersistedState = (state?: PersistedState): PersistedState | undefin
     world: migrateWorldState(state.world),
     surveillance: migrateSurveillanceState(state.surveillance),
     reputation: migrateReputationState(state.reputation),
+    settings: migrateSettingsState(state.settings),
   };
 };
 

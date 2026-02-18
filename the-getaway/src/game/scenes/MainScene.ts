@@ -15,41 +15,33 @@ import {
   PlayerScreenPositionDetail,
 } from '../events';
 import { IsoObjectFactory, CharacterToken } from '../utils/IsoObjectFactory';
-import { getIsoMetrics as computeIsoMetrics, toPixel as isoToPixel, getDiamondPoints as isoDiamondPoints, adjustColor as isoAdjustColor, IsoMetrics } from '../utils/iso';
+import {
+  getIsoMetrics as computeIsoMetrics,
+  toPixel as isoToPixel,
+  getDiamondPoints as isoDiamondPoints,
+  adjustColor,
+  IsoMetrics,
+} from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
 import { resolveCardinalDirection } from '../combat/combatSystem';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
 import { miniMapService } from '../services/miniMapService';
 import CameraSprite from '../objects/CameraSprite';
-import { DepthManager, DepthBias, DepthLayers, syncDepthPoint } from '../utils/depth';
+import { DepthManager, DepthBias, DepthLayers, computeDepth, syncDepthPoint } from '../utils/depth';
 import type { DepthResolvableGameObject } from '../utils/depth';
+import type { BuildingVisualProfile, VisualTheme } from '../visual/contracts';
+import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../visual/theme/noirVectorTheme';
+import { TilePainter } from '../visual/world/TilePainter';
+import { BuildingPainter } from '../visual/world/BuildingPainter';
+import { CharacterRigFactory } from '../visual/entities/CharacterRigFactory';
+import { scatterScenicProps } from '../visual/world/PropScatter';
 import {
   bindCameraToVisualSettings,
+  getVisualFxBudgetForPreset,
   subscribeToVisualSettings,
   updateVisualSettings,
   type VisualFxSettings,
 } from '../settings/visualSettings';
-
-const SIGNAGE_PALETTES: Record<
-  string,
-  { primary: string; secondary: string; glow: string; bg: string }
-> = {
-  slums_neon: { primary: '#6ff2ff', secondary: '#9c8cff', glow: 'rgba(111, 242, 255, 0.8)', bg: '#0b1220' },
-  slums_scrap: { primary: '#f97316', secondary: '#fb923c', glow: 'rgba(249, 115, 22, 0.7)', bg: '#190f08' },
-  corp_holo: { primary: '#9beafe', secondary: '#67e8f9', glow: 'rgba(103, 232, 249, 0.85)', bg: '#0d1b2a' },
-  corp_brass: { primary: '#f3ca75', secondary: '#f9e2af', glow: 'rgba(243, 202, 117, 0.8)', bg: '#1a140a' },
-  default: { primary: '#8cf7ff', secondary: '#c084fc', glow: 'rgba(140, 247, 255, 0.82)', bg: '#0d1420' },
-};
-
-const TILE_BASE_COLORS: Record<TileType | 'DEFAULT', { even: number; odd: number }> = {
-  [TileType.WALL]: { even: 0x353a4d, odd: 0x2d3244 },
-  [TileType.COVER]: { even: 0x26363c, odd: 0x202f33 },
-  [TileType.WATER]: { even: 0x16405a, odd: 0x12364d },
-  [TileType.TRAP]: { even: 0x462342, odd: 0x3b1c37 },
-  [TileType.DOOR]: { even: 0x2a2622, odd: 0x221e1b },
-  [TileType.FLOOR]: { even: 0x1e2432, odd: 0x232838 },
-  DEFAULT: { even: 0x1e2432, odd: 0x232838 },
-};
 
 const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
 const MIN_CAMERA_ZOOM = 0.6;
@@ -59,12 +51,6 @@ const CAMERA_FOLLOW_LERP = 0.08;
 const COMBAT_ZOOM_MULTIPLIER = 1.28;
 const COMBAT_ZOOM_MIN_DELTA = 0.22;
 const CAMERA_ZOOM_TWEEN_MS = 340;
-
-interface ElevationProfile {
-  heightOffset: number;
-  topWidth: number;
-  topHeight: number;
-}
 
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
@@ -88,6 +74,11 @@ export class MainScene extends Phaser.Scene {
   private backdropGraphics!: Phaser.GameObjects.Graphics;
   private pathGraphics!: Phaser.GameObjects.Graphics;
   private visionConeGraphics!: Phaser.GameObjects.Graphics;
+  private visualTheme!: VisualTheme;
+  private tilePainter?: TilePainter;
+  private buildingPainter?: BuildingPainter;
+  private characterRigFactory?: CharacterRigFactory;
+  private buildingVisualProfiles: Record<string, BuildingVisualProfile> = {};
   private playerToken?: CharacterToken;
   private playerNameLabel?: Phaser.GameObjects.Text;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
@@ -96,6 +87,7 @@ export class MainScene extends Phaser.Scene {
   private coverDebugGraphics?: Phaser.GameObjects.Graphics;
   private currentMapArea: MapArea | null = null;
   private buildingLabels: Phaser.GameObjects.Container[] = [];
+  private buildingMassings: Phaser.GameObjects.Container[] = [];
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   private dayNightOverlay!: Phaser.GameObjects.Rectangle;
@@ -116,7 +108,6 @@ export class MainScene extends Phaser.Scene {
   private baselineCameraZoom = 1;
   private cameraZoomTween: Phaser.Tweens.Tween | null = null;
   private lightsFeatureEnabled = false;
-  private demoLamp?: Phaser.GameObjects.Image;
   private demoLampGrid?: Position;
   private demoPointLight?: Phaser.GameObjects.PointLight;
   private readonly lightingAmbientColor = 0x0f172a;
@@ -139,6 +130,58 @@ export class MainScene extends Phaser.Scene {
 
   constructor() {
     super({ key: 'MainScene' });
+  }
+
+  private ensureVisualPipeline(): void {
+    const preset = store.getState().settings.visualQualityPreset;
+    const themeChanged = !this.visualTheme || this.visualTheme.preset !== preset;
+    if (!this.visualTheme || this.visualTheme.preset !== preset) {
+      this.visualTheme = createNoirVectorTheme(preset);
+    }
+
+    if (this.mapGraphics && (!this.tilePainter || themeChanged)) {
+      this.tilePainter = new TilePainter(this.mapGraphics, this.visualTheme);
+    }
+
+    if (!this.buildingPainter || themeChanged) {
+      this.buildingPainter = new BuildingPainter(this, this.visualTheme);
+    }
+
+    if (this.isoFactory && (!this.characterRigFactory || themeChanged)) {
+      this.characterRigFactory = new CharacterRigFactory(this.isoFactory, this.visualTheme);
+    }
+
+    if (this.currentMapArea?.buildings) {
+      const nextProfiles: Record<string, BuildingVisualProfile> = {};
+      this.currentMapArea.buildings.forEach((building) => {
+        const resolvedFallback = resolveBuildingVisualProfile(
+          building.district as BuildingVisualProfile['district'],
+          building.signageStyle as BuildingVisualProfile['signageStyle'],
+          building.propDensity
+        );
+        nextProfiles[building.id] = building.visualProfile
+          ? {
+              district: (building.district === 'downtown' ? 'downtown' : 'slums'),
+              signageStyle: (building.signageStyle as BuildingVisualProfile['signageStyle']) ?? resolvedFallback.signageStyle,
+              propDensity: building.propDensity ?? resolvedFallback.propDensity,
+              facadePattern: building.visualProfile.facadePattern ?? resolvedFallback.facadePattern,
+              lotPattern: building.visualProfile.lotPattern ?? resolvedFallback.lotPattern,
+              massingStyle: building.visualProfile.massingStyle ?? resolvedFallback.massingStyle,
+              massingHeight: building.visualProfile.massingHeight ?? resolvedFallback.massingHeight,
+              accentHex: building.visualProfile.accentHex ?? resolvedFallback.accentHex,
+              glowHex: building.visualProfile.glowHex ?? resolvedFallback.glowHex,
+              trimHex: building.visualProfile.trimHex ?? resolvedFallback.trimHex,
+              atmosphereHex: building.visualProfile.atmosphereHex ?? resolvedFallback.atmosphereHex,
+              signagePrimaryHex: building.visualProfile.signagePrimaryHex ?? resolvedFallback.signagePrimaryHex,
+              signageSecondaryHex: building.visualProfile.signageSecondaryHex ?? resolvedFallback.signageSecondaryHex,
+              backdropHex: building.visualProfile.backdropHex ?? resolvedFallback.backdropHex,
+            }
+          : resolvedFallback;
+      });
+      this.buildingVisualProfiles = nextProfiles;
+    } else {
+      this.buildingVisualProfiles = {};
+    }
   }
 
   private registerStaticDepth(target: Phaser.GameObjects.GameObject, depth: number): void {
@@ -185,9 +228,11 @@ export class MainScene extends Phaser.Scene {
     this.registerStaticDepth(this.coverDebugGraphics, DepthLayers.COVER_DEBUG);
     this.coverDebugGraphics.setVisible(false);
 
+    this.ensureVisualPipeline();
+
     // Initial setup of camera and map
     this.setupCameraAndMap();
-    this.cameras.main.setRoundPixels(true);
+    this.cameras.main.setRoundPixels(false);
     this.disposeVisualSettings = bindCameraToVisualSettings(this.cameras.main);
     this.disposeLightingSettings = subscribeToVisualSettings((settings) => {
       this.applyLightingSettings(settings);
@@ -217,22 +262,24 @@ export class MainScene extends Phaser.Scene {
     // Setup player token
     if (this.playerInitialPosition) {
       this.ensureIsoFactory();
-      const token = this.isoFactory!.createCharacterToken(this.playerInitialPosition.x, this.playerInitialPosition.y, {
-        baseColor: 0x0f172a,
-        outlineColor: 0x2563eb,
-        primaryColor: 0x2563eb,
-        accentColor: 0x7dd3fc,
-        glowColor: 0x38bdf8,
-        columnHeight: 1.5,
-        depthOffset: 10,
-      });
+      const token = this.characterRigFactory
+        ? this.characterRigFactory.createToken(
+            'player',
+            this.playerInitialPosition.x,
+            this.playerInitialPosition.y
+          )
+        : this.isoFactory!.createCharacterToken(
+            this.playerInitialPosition.x,
+            this.playerInitialPosition.y,
+            this.visualTheme.entityProfiles.player
+          );
       this.playerToken = token;
 
       const metrics = this.getIsoMetrics();
       const pixelPos = this.calculatePixelPosition(this.playerInitialPosition.x, this.playerInitialPosition.y);
       const playerName = store.getState().player.data.name ?? 'Operative';
       this.playerNameLabel = this.createCharacterNameLabel(playerName, 0x38bdf8, 14);
-      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6, 18);
+      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
 
       this.enablePlayerCameraFollow();
     } else {
@@ -297,6 +344,10 @@ export class MainScene extends Phaser.Scene {
         data.indicator = undefined;
       }
     });
+    this.buildingLabels.forEach((label) => label.destroy(true));
+    this.buildingLabels = [];
+    this.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.buildingMassings = [];
 
     if (this.coverDebugGraphics) {
       this.coverDebugGraphics.destroy();
@@ -390,6 +441,9 @@ export class MainScene extends Phaser.Scene {
     }
 
     this.isoFactory.setIsoOrigin(this.isoOriginX, this.isoOriginY);
+    if (this.visualTheme) {
+      this.characterRigFactory = new CharacterRigFactory(this.isoFactory, this.visualTheme);
+    }
   }
 
   private renderStaticProps(): void {
@@ -397,13 +451,13 @@ export class MainScene extends Phaser.Scene {
       this.staticPropGroup.clear(true, true);
     }
 
-    this.demoLamp = undefined;
     this.demoLampGrid = undefined;
     this.destroyDemoPointLight();
 
     if (!this.isoFactory || !this.currentMapArea) {
       return;
     }
+    this.ensureVisualPipeline();
 
     if (!this.staticPropGroup) {
       this.staticPropGroup = this.add.group();
@@ -415,8 +469,81 @@ export class MainScene extends Phaser.Scene {
       this.staticPropGroup?.add(prop);
     };
 
-    // All decorative building props removed - clean map with only NPC and item highlights
     const interactiveNpcs = (this.currentMapArea.entities.npcs ?? []).filter((npc) => npc.isInteractive);
+    const itemMarkers = (this.currentMapArea.entities.items ?? []).filter(
+      (item): item is Item & { position: Position } => Boolean(item.position)
+    );
+    const protectedTiles: Position[] = [
+      ...interactiveNpcs.map((npc) => ({ ...npc.position })),
+      ...itemMarkers.map((item) => ({ ...item.position })),
+    ];
+    if (this.playerInitialPosition) {
+      protectedTiles.push({ ...this.playerInitialPosition });
+    }
+
+    const hashId = (value: string): number => {
+      let out = 0;
+      for (let i = 0; i < value.length; i += 1) {
+        out = ((out << 5) - out + value.charCodeAt(i)) >>> 0;
+      }
+      return out;
+    };
+
+    const scenicPlacements = scatterScenicProps(
+      this.currentMapArea,
+      this.currentMapArea.buildings ?? [],
+      this.buildingVisualProfiles,
+      this.visualTheme,
+      protectedTiles
+    );
+
+    scenicPlacements.forEach((placement) => {
+      const tint = Phaser.Display.Color.HexStringToColor(placement.tintHex).color;
+      const seed = hashId(placement.id);
+      switch (placement.kind) {
+        case 'barricade':
+          addProp(
+            this.isoFactory!.createBarricade(placement.position.x, placement.position.y, {
+              tint,
+              height: this.visualTheme.preset === 'performance' ? 0.9 : 1.05,
+              widthScale: 0.9,
+            })
+          );
+          break;
+        case 'streetLight':
+          addProp(
+            this.isoFactory!.createStreetLight(placement.position.x, placement.position.y, {
+              glowColor: tint,
+              glowAlpha: this.visualTheme.preset === 'performance' ? 0.12 : 0.2,
+              height: this.visualTheme.preset === 'cinematic' ? 1.25 : 1.1,
+            })
+          );
+          if (!this.demoLampGrid) {
+            this.demoLampGrid = { ...placement.position };
+          }
+          break;
+        case 'billboard':
+          addProp(
+            this.isoFactory!.createBillboard(placement.position.x, placement.position.y, {
+              glowColor: tint,
+              widthScale: this.visualTheme.preset === 'performance' ? 0.78 : 0.92,
+              heightScale: this.visualTheme.preset === 'cinematic' ? 1.2 : 1.05,
+            })
+          );
+          break;
+        case 'debris':
+          addProp(
+            this.isoFactory!.createCrate(placement.position.x, placement.position.y, {
+              tint,
+              scale: 0.36 + (seed % 4) * 0.06,
+              height: 0.45 + ((seed >> 2) % 3) * 0.08,
+              alpha: 0.88,
+            })
+          );
+          break;
+      }
+    });
+
     interactiveNpcs.forEach((npc) => {
       addProp(
         this.isoFactory!.createPulsingHighlight(npc.position.x, npc.position.y, {
@@ -432,10 +559,6 @@ export class MainScene extends Phaser.Scene {
         })
       );
     });
-
-    const itemMarkers = (this.currentMapArea.entities.items ?? []).filter(
-      (item): item is Item & { position: Position } => Boolean(item.position)
-    );
 
     itemMarkers.forEach((item) => {
       const color = item.isQuestItem ? 0xfacc15 : 0x10b981;
@@ -455,50 +578,54 @@ export class MainScene extends Phaser.Scene {
       );
     });
 
-    if (
-      this.currentMapArea.isInterior &&
-      this.currentMapArea.displayName?.includes('Waterfront Commons')
-    ) {
-      const width = this.currentMapArea.width ?? DEFAULT_TILE_SIZE;
-      const height = this.currentMapArea.height ?? DEFAULT_TILE_SIZE;
-      const lampGridX = Math.min(width - 3, Math.max(2, Math.floor(width / 2)));
-      const lampGridY = Math.min(height - 3, Math.max(2, Math.floor(height / 3)));
-      const targetTile = this.currentMapArea.tiles[lampGridY]?.[lampGridX];
-
-      if (targetTile?.isWalkable) {
-        const lampPosition = { x: lampGridX, y: lampGridY };
-        const lampSprite = this.isoFactory!.createSpriteProp(
-          lampPosition.x,
-          lampPosition.y,
-          'lamp_slim_a',
-          {
-            normalTextureKey: 'lamp_slim_a_n',
-            depthBias: DepthBias.PROP_TALL + 12,
-            origin: { x: 0.5, y: 0.82 },
-          }
-        );
-        this.isoFactory!.applyLightingToSprite(lampSprite, this.lightsFeatureEnabled);
-        this.demoLamp = lampSprite;
-        this.demoLampGrid = { ...lampPosition };
-        addProp(lampSprite);
-        this.rebuildLightingDemoLight();
-      }
+    if (this.lightsFeatureEnabled) {
+      this.rebuildLightingDemoLight();
     }
   }
 
   private applyLightingSettings(settings: VisualFxSettings): void {
-    if (settings.lightsEnabled && !this.hasLightPipelineSupport()) {
+    const previousPreset = this.visualTheme?.preset;
+    if (!this.visualTheme || previousPreset !== settings.qualityPreset) {
+      this.ensureVisualPipeline();
+      this.refreshVisualLayers();
+    }
+
+    const budget = getVisualFxBudgetForPreset(settings.qualityPreset);
+    const lightsRequested = settings.lightsEnabled && settings.qualityPreset !== 'performance';
+
+    if (lightsRequested && !this.hasLightPipelineSupport()) {
       console.warn('[MainScene] Light2D not supported by current renderer; disabling lighting toggle.');
       store.dispatch(setLightsEnabled(false));
       updateVisualSettings({ lightsEnabled: false });
       this.disableLighting(true);
       return;
     }
-    if (settings.lightsEnabled) {
+    if (lightsRequested) {
       this.enableLighting();
     } else {
       this.disableLighting();
     }
+
+    if (!budget.colorMatrixEnabled && settings.colorMatrix.enabled) {
+      updateVisualSettings({
+        colorMatrix: {
+          enabled: false,
+        },
+      });
+    }
+  }
+
+  private refreshVisualLayers(): void {
+    if (!this.currentMapArea) {
+      return;
+    }
+
+    this.drawBackdrop();
+    this.drawMap(this.currentMapArea.tiles);
+    this.drawBuildingMasses();
+    this.drawBuildingLabels();
+    this.renderStaticProps();
+    this.renderVisionCones();
   }
 
   private hasLightPipelineSupport(): boolean {
@@ -509,26 +636,22 @@ export class MainScene extends Phaser.Scene {
     if (!this.hasLightPipelineSupport()) {
       console.warn('[MainScene] WebGL renderer unavailable; Light2D disabled.');
       this.lightsFeatureEnabled = false;
-      this.isoFactory?.applyLightingToSprite(this.demoLamp, false);
       store.dispatch(setLightsEnabled(false));
       updateVisualSettings({ lightsEnabled: false });
       return;
     }
     if (this.lightsFeatureEnabled) {
       this.rebuildLightingDemoLight();
-      this.isoFactory?.applyLightingToSprite(this.demoLamp, true);
       return;
     }
     this.lights.enable().setAmbientColor(this.lightingAmbientColor);
     this.lightsFeatureEnabled = true;
-    this.isoFactory?.applyLightingToSprite(this.demoLamp, true);
     this.rebuildLightingDemoLight();
   }
 
   private disableLighting(force = false): void {
     if (!this.lightsFeatureEnabled && !force) {
       this.destroyDemoPointLight();
-      this.isoFactory?.applyLightingToSprite(this.demoLamp, false);
       return;
     }
     this.destroyDemoPointLight();
@@ -540,7 +663,6 @@ export class MainScene extends Phaser.Scene {
       this.lights.disable();
     }
     this.lightsFeatureEnabled = false;
-    this.isoFactory?.applyLightingToSprite(this.demoLamp, false);
   }
 
   private rebuildLightingDemoLight(): void {
@@ -583,13 +705,17 @@ export class MainScene extends Phaser.Scene {
       this.lastPlayerGridPosition.y !== position.y;
 
     this.ensureIsoFactory();
-    this.isoFactory!.positionCharacterToken(this.playerToken, position.x, position.y);
+    if (this.characterRigFactory) {
+      this.characterRigFactory.positionToken(this.playerToken, position.x, position.y);
+    } else {
+      this.isoFactory!.positionCharacterToken(this.playerToken, position.x, position.y);
+    }
 
     const pixelPos = this.calculatePixelPosition(position.x, position.y);
     this.dispatchPlayerScreenPosition();
     if (this.playerNameLabel) {
       const metrics = this.getIsoMetrics();
-      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6, 18);
+      this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
     }
 
     if (hasPlayerMoved) {
@@ -673,7 +799,7 @@ export class MainScene extends Phaser.Scene {
     this.dispatchPlayerScreenPosition();
   }
 
-  private updateEnemies(enemies: Enemy[]) {
+  private updateEnemies(enemies: Enemy[]): void {
     if (!this.mapGraphics || !this.sys.isActive()) {
       return;
     }
@@ -695,21 +821,19 @@ export class MainScene extends Phaser.Scene {
           continue;
         }
 
-        const token = this.isoFactory!.createCharacterToken(enemy.position.x, enemy.position.y, {
-          baseColor: 0x1e1b2f,
-          outlineColor: 0x7f1d1d,
-          primaryColor: 0xef4444,
-          accentColor: 0xf97316,
-          glowColor: 0xfb7185,
-          columnHeight: 1.3,
-          depthOffset: 8,
-        });
+        const token = this.characterRigFactory
+          ? this.characterRigFactory.createToken('hostileNpc', enemy.position.x, enemy.position.y)
+          : this.isoFactory!.createCharacterToken(
+              enemy.position.x,
+              enemy.position.y,
+              this.visualTheme.entityProfiles.hostileNpc
+            );
 
         const healthBar = this.add.graphics();
         healthBar.setVisible(false);
 
         const nameLabel = this.createCharacterNameLabel(enemy.name ?? 'Hostile', 0xef4444);
-        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45, 14);
+        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
         this.enemySprites.set(enemy.id, {
           token,
@@ -731,9 +855,13 @@ export class MainScene extends Phaser.Scene {
         continue;
       }
 
-      this.isoFactory!.positionCharacterToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
+      if (this.characterRigFactory) {
+        this.characterRigFactory.positionToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
+      } else {
+        this.isoFactory!.positionCharacterToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
+      }
       existingSpriteData.markedForRemoval = false;
-      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45, 14);
+      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
       this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
     }
@@ -803,18 +931,17 @@ export class MainScene extends Phaser.Scene {
       const pixelPos = this.calculatePixelPosition(npc.position.x, npc.position.y);
 
       if (!existingSpriteData) {
-        const token = this.isoFactory!.createCharacterToken(npc.position.x, npc.position.y, {
-          baseColor: 0x142027,
-          outlineColor: npc.isInteractive ? 0x0ea5e9 : 0x4b5563,
-          primaryColor: npc.isInteractive ? 0x22d3ee : 0x94a3b8,
-          accentColor: npc.isInteractive ? 0x38bdf8 : 0xcbd5f5,
-          glowColor: npc.isInteractive ? 0x22d3ee : 0x64748b,
-          columnHeight: 1.15,
-          depthOffset: 7,
-        });
+        const role = npc.isInteractive ? 'interactiveNpc' : 'friendlyNpc';
+        const token = this.characterRigFactory
+          ? this.characterRigFactory.createToken(role, npc.position.x, npc.position.y)
+          : this.isoFactory!.createCharacterToken(
+              npc.position.x,
+              npc.position.y,
+              this.visualTheme.entityProfiles[role]
+            );
 
         const nameLabel = this.createCharacterNameLabel(npc.name ?? 'Civilian', npc.isInteractive ? 0x22d3ee : 0x94a3b8);
-        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35, 12);
+        this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
 
         const npcData: NpcSpriteData = {
           token,
@@ -827,9 +954,13 @@ export class MainScene extends Phaser.Scene {
         continue;
       }
 
-      this.isoFactory!.positionCharacterToken(existingSpriteData.token, npc.position.x, npc.position.y);
+      if (this.characterRigFactory) {
+        this.characterRigFactory.positionToken(existingSpriteData.token, npc.position.x, npc.position.y);
+      } else {
+        this.isoFactory!.positionCharacterToken(existingSpriteData.token, npc.position.x, npc.position.y);
+      }
       existingSpriteData.markedForRemoval = false;
-      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35, 12);
+      this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
       this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
     }
 
@@ -1021,6 +1152,10 @@ export class MainScene extends Phaser.Scene {
     });
     this.npcSprites.clear();
     this.destroyCameraSprites();
+    this.buildingLabels.forEach((label) => label.destroy(true));
+    this.buildingLabels = [];
+    this.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.buildingMassings = [];
     if (this.playerToken) {
       this.playerToken.container.destroy(true);
       this.playerToken = undefined;
@@ -1042,18 +1177,90 @@ export class MainScene extends Phaser.Scene {
   private drawMap(tiles: MapTile[][]) {
     if (!this.mapGraphics) return;
     
+    this.ensureVisualPipeline();
     this.mapGraphics.clear();
 
     const { tileWidth, tileHeight } = this.getIsoMetrics();
+    const buildingFootprintTiles = new Set<string>();
+    this.currentMapArea?.buildings?.forEach((building) => {
+      for (let y = building.footprint.from.y; y <= building.footprint.to.y; y += 1) {
+        for (let x = building.footprint.from.x; x <= building.footprint.to.x; x += 1) {
+          buildingFootprintTiles.add(`${x}:${y}`);
+        }
+      }
+    });
 
     for (let y = 0; y < tiles.length; y++) {
       for (let x = 0; x < tiles[0].length; x++) {
         const tile = tiles[y][x];
         const center = this.calculatePixelPosition(x, y);
+        const isBuildingFootprint = buildingFootprintTiles.has(`${x}:${y}`);
+        const groundOnly =
+          isBuildingFootprint &&
+          (tile.type === TileType.WALL || tile.type === TileType.COVER || tile.type === TileType.DOOR);
 
-        this.renderTile(tile, center, tileWidth, tileHeight, x, y);
+        this.renderTile(tile, center, tileWidth, tileHeight, x, y, groundOnly);
       }
     }
+  }
+
+  private drawBuildingMasses(): void {
+    this.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.buildingMassings = [];
+
+    if (!this.currentMapArea?.buildings?.length || !this.buildingPainter) {
+      return;
+    }
+
+    this.ensureVisualPipeline();
+    const buildingPainter = this.buildingPainter;
+    if (!buildingPainter) {
+      return;
+    }
+    const { tileWidth, tileHeight } = this.getIsoMetrics();
+
+    this.currentMapArea.buildings.forEach((building) => {
+      const profile =
+        this.buildingVisualProfiles[building.id] ??
+        resolveBuildingVisualProfile(
+          building.district as BuildingVisualProfile['district'],
+          building.signageStyle as BuildingVisualProfile['signageStyle'],
+          building.propDensity
+        );
+
+      const widthTiles = building.footprint.to.x - building.footprint.from.x + 1;
+      const depthTiles = building.footprint.to.y - building.footprint.from.y + 1;
+      const northWest = this.calculatePixelPosition(building.footprint.from.x, building.footprint.from.y);
+      const northEast = this.calculatePixelPosition(building.footprint.to.x, building.footprint.from.y);
+      const southEast = this.calculatePixelPosition(building.footprint.to.x, building.footprint.to.y);
+      const southWest = this.calculatePixelPosition(building.footprint.from.x, building.footprint.to.y);
+      const footprint = {
+        top: new Phaser.Geom.Point(northWest.x, northWest.y - tileHeight * 0.5),
+        right: new Phaser.Geom.Point(northEast.x + tileWidth * 0.5, northEast.y),
+        bottom: new Phaser.Geom.Point(southEast.x, southEast.y + tileHeight * 0.5),
+        left: new Phaser.Geom.Point(southWest.x - tileWidth * 0.5, southWest.y),
+      };
+      const pixelCenter = {
+        x: (footprint.top.x + footprint.right.x + footprint.bottom.x + footprint.left.x) / 4,
+        y: (footprint.top.y + footprint.right.y + footprint.bottom.y + footprint.left.y) / 4,
+      };
+
+      const mass = buildingPainter.createMassing(building, profile, {
+        center: pixelCenter,
+        tileHeight,
+        widthTiles,
+        depthTiles,
+        footprint,
+      });
+      mass.setScrollFactor(1);
+      this.syncDepth(
+        mass,
+        footprint.bottom.x,
+        footprint.bottom.y,
+        DepthBias.PROP_TALL + Math.round(profile.massingHeight * 12)
+      );
+      this.buildingMassings.push(mass);
+    });
   }
 
   private drawBuildingLabels(): void {
@@ -1064,55 +1271,27 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
+    this.ensureVisualPipeline();
+
     const { tileHeight } = this.getIsoMetrics();
 
-    const signageForStyle = (style?: string) =>
-      SIGNAGE_PALETTES[style ?? ''] ?? SIGNAGE_PALETTES.default;
-
     this.currentMapArea.buildings.forEach((building) => {
-      const palette = signageForStyle(building.signageStyle);
+      const profile =
+        this.buildingVisualProfiles[building.id] ??
+        resolveBuildingVisualProfile(
+          building.district as BuildingVisualProfile['district'],
+          building.signageStyle as BuildingVisualProfile['signageStyle'],
+          building.propDensity
+        );
       const centerX = (building.footprint.from.x + building.footprint.to.x) / 2;
       const anchorY = Math.min(building.footprint.from.y, building.door.y) - 0.4;
       const pixel = this.calculatePixelPosition(centerX, anchorY);
-      const container = this.add.container(pixel.x, pixel.y - tileHeight * 0.2);
-
-      const text = this.add.text(0, 0, building.name, {
-        fontFamily: '"Share Tech Mono", "IBM Plex Mono", monospace',
-        fontSize: '14px',
-        color: palette.primary,
-        stroke: palette.secondary,
-        strokeThickness: 2,
-        align: 'center',
-      });
-      text.setOrigin(0.5);
-      text.setShadow(0, 0, palette.glow, 12, true, true);
-
-      const paddingX = 16;
-      const paddingY = 10;
-      const bg = this.add.rectangle(
-        0,
-        0,
-        text.width + paddingX,
-        text.height + paddingY,
-        Phaser.Display.Color.HexStringToColor(palette.bg).color,
-        0.62
-      );
-      bg.setStrokeStyle(1.5, Phaser.Display.Color.HexStringToColor(palette.secondary).color, 0.9);
-      bg.setOrigin(0.5);
-
-      const accent = this.add.rectangle(
-        0,
-        -text.height * 0.5 - paddingY * 0.05,
-        Math.max(32, text.width * 0.7),
-        2,
-        Phaser.Display.Color.HexStringToColor(palette.secondary).color,
-        0.9
-      );
-      accent.setOrigin(0.5);
-
-      container.add([bg, accent, text]);
-      container.setDepth(DepthLayers.MAP_BASE + 50);
+      const labelHeight = tileHeight * (0.8 + profile.massingHeight * 0.18);
+      const container = this.buildingPainter
+        ? this.buildingPainter.createLabel(building, pixel, labelHeight, profile)
+        : this.add.container(pixel.x, pixel.y - tileHeight * 0.2);
       container.setScrollFactor(1);
+      this.syncDepth(container, pixel.x, pixel.y, DepthBias.FLOATING_UI + 20);
       this.buildingLabels.push(container);
     });
   }
@@ -1123,454 +1302,18 @@ export class MainScene extends Phaser.Scene {
     tileWidth: number,
     tileHeight: number,
     gridX: number,
-    gridY: number
+    gridY: number,
+    groundOnly: boolean = false
   ): void {
-    const baseColor = this.getTileBaseColor(tile, gridX, gridY);
-    const variationSeed = ((((gridX * 11) ^ (gridY * 7)) % 7) - 3) * 0.012;
-    const modulatedBase = this.adjustColor(baseColor, variationSeed);
-    const highlightColor = this.adjustColor(modulatedBase, 0.16);
-    const shadowColor = this.adjustColor(modulatedBase, -0.18);
-
-    const tilePoints = this.getDiamondPoints(center.x, center.y, tileWidth, tileHeight);
-
-    const elevation = this.getTileElevation(tile.type);
-    const profile = this.getElevationProfile(elevation, tileWidth, tileHeight);
-
-    this.renderTileShadow(center, tileWidth, tileHeight, modulatedBase, elevation);
-
-    this.mapGraphics.fillStyle(modulatedBase, 1);
-    this.mapGraphics.fillPoints(tilePoints, true);
-
-    let capPoints: Phaser.Geom.Point[] | null = null;
-
-    if (elevation > 0) {
-      capPoints = this.renderElevationPrism(
-        tilePoints,
-        center,
-        tileWidth,
-        tileHeight,
-        modulatedBase,
-        elevation,
-        profile
-      );
-    } else {
-      this.renderFlatTileHighlights(center, tilePoints, highlightColor, shadowColor, tileWidth, tileHeight);
-    }
-
-    switch (tile.type) {
-      case TileType.COVER:
-        if (capPoints) {
-          this.renderCoverDetails(capPoints, tilePoints, modulatedBase, profile);
-        }
-        break;
-      case TileType.WALL:
-        if (capPoints) {
-          this.renderWallDetails(capPoints, tilePoints, modulatedBase, profile);
-        }
-        break;
-      case TileType.WATER:
-        this.renderWaterTile(center, tileWidth, tileHeight, modulatedBase);
-        break;
-      case TileType.TRAP:
-        this.renderTrapTile(center, tileWidth, tileHeight, modulatedBase);
-        break;
-      case TileType.DOOR:
-        this.drawDoorTile(center.x, center.y);
-        break;
-      case TileType.FLOOR:
-        // Cyberpunk scan line grid - subtle data grid aesthetic
-        if (gridX % 4 === 0 || gridY % 4 === 0) {
-          this.mapGraphics.lineStyle(0.8, 0x1e40af, 0.08);
-          this.mapGraphics.strokePoints(tilePoints, true);
-        }
-        break;
-      default:
-        break;
-    }
-
-    const outlineColor = this.adjustColor(modulatedBase, elevation > 0 ? -0.22 : -0.3);
-    const outlineAlpha = elevation > 0 ? 0.55 : 0.35;
-    this.mapGraphics.lineStyle(1, outlineColor, outlineAlpha);
-    this.mapGraphics.strokePoints(tilePoints, true);
-
-    if (capPoints) {
-      const capOutline = this.adjustColor(modulatedBase, -0.12);
-      this.mapGraphics.lineStyle(1, capOutline, 0.6);
-      this.mapGraphics.strokePoints(capPoints, true);
-    }
-  }
-
-  private renderTileShadow(
-    center: { x: number; y: number },
-    tileWidth: number,
-    tileHeight: number,
-    baseColor: number,
-    elevation: number
-  ): void {
-    const widthScale = elevation > 0 ? 1.08 + Math.min(0.22, elevation * 0.2) : 1.03;
-    const heightScale = elevation > 0 ? 1.14 + Math.min(0.34, elevation * 0.24) : 1.1;
-    const offsetScale = elevation > 0 ? 0.82 + Math.min(0.28, elevation * 0.18) : 0.78;
-    const alpha = elevation > 0 ? 0.42 + Math.min(0.2, elevation * 0.18) : 0.28;
-
-    const shadowPoints = this.getDiamondPoints(
-      center.x + tileWidth * 0.08,
-      center.y + tileHeight * offsetScale,
-      tileWidth * widthScale,
-      tileHeight * heightScale
-    );
-
-    this.mapGraphics.fillStyle(this.adjustColor(baseColor, -0.42), alpha);
-    this.mapGraphics.fillPoints(shadowPoints, true);
-  }
-
-  private renderFlatTileHighlights(
-    center: { x: number; y: number },
-    _tilePoints: Phaser.Geom.Point[],
-    highlightColor: number,
-    shadowColor: number,
-    tileWidth: number,
-    tileHeight: number
-  ): void {
-    const halfWidth = tileWidth / 2;
-    const halfHeight = tileHeight / 2;
-
-    const topPoint = new Phaser.Geom.Point(center.x, center.y - halfHeight);
-    const rightPoint = new Phaser.Geom.Point(center.x + halfWidth, center.y);
-    const leftPoint = new Phaser.Geom.Point(center.x - halfWidth, center.y);
-    const bottomPoint = new Phaser.Geom.Point(center.x, center.y + halfHeight);
-    const centerPoint = new Phaser.Geom.Point(center.x, center.y);
-
-    this.mapGraphics.fillStyle(highlightColor, 0.45);
-    this.mapGraphics.fillPoints([topPoint, rightPoint, centerPoint], true);
-    this.mapGraphics.fillPoints([topPoint, centerPoint, leftPoint], true);
-
-    this.mapGraphics.fillStyle(shadowColor, 0.38);
-    this.mapGraphics.fillPoints([bottomPoint, centerPoint, rightPoint], true);
-    this.mapGraphics.fillPoints([bottomPoint, leftPoint, centerPoint], true);
-  }
-
-  private renderElevationPrism(
-    basePoints: Phaser.Geom.Point[],
-    center: { x: number; y: number },
-    _tileWidth: number,
-    _tileHeight: number,
-    baseColor: number,
-    elevation: number,
-    profile: ElevationProfile
-  ): Phaser.Geom.Point[] {
-    const topPoints = this.getDiamondPoints(
-      center.x,
-      center.y - profile.heightOffset,
-      profile.topWidth,
-      profile.topHeight
-    );
-
-    const rightFace = [basePoints[1], basePoints[2], topPoints[2], topPoints[1]];
-    const frontFace = [basePoints[2], basePoints[3], topPoints[3], topPoints[2]];
-
-    const rightTint = this.adjustColor(baseColor, -0.12 - elevation * 0.08);
-    const frontTint = this.adjustColor(baseColor, -0.22 - elevation * 0.1);
-
-    this.mapGraphics.fillStyle(frontTint, 0.95);
-    this.mapGraphics.fillPoints(frontFace, true);
-
-    this.mapGraphics.fillStyle(rightTint, 0.98);
-    this.mapGraphics.fillPoints(rightFace, true);
-
-    const capColor = this.adjustColor(baseColor, 0.12 + elevation * 0.08);
-    this.mapGraphics.fillStyle(capColor, 1);
-    this.mapGraphics.fillPoints(topPoints, true);
-
-    return topPoints;
-  }
-
-  private renderWallDetails(
-    capPoints: Phaser.Geom.Point[],
-    basePoints: Phaser.Geom.Point[],
-    baseColor: number,
-    profile: ElevationProfile
-  ): void {
-    const bandTopLeft = this.lerpPoint(capPoints[3], basePoints[3], 0.28);
-    const bandTopRight = this.lerpPoint(capPoints[2], basePoints[2], 0.28);
-    const bandBottomRight = this.lerpPoint(capPoints[2], basePoints[2], 0.72);
-    const bandBottomLeft = this.lerpPoint(capPoints[3], basePoints[3], 0.72);
-
-    this.mapGraphics.fillStyle(0x38bdf8, 0.32);
-    this.mapGraphics.fillPoints(
-      [bandTopLeft, bandTopRight, bandBottomRight, bandBottomLeft],
-      true
-    );
-
-    const sillInset = 0.86;
-    const sillLeft = this.lerpPoint(capPoints[3], basePoints[3], sillInset);
-    const sillRight = this.lerpPoint(capPoints[2], basePoints[2], sillInset);
-    const sillThickness = profile.topHeight * 0.18;
-
-    const sillPoints = [
-      new Phaser.Geom.Point(sillLeft.x, sillLeft.y),
-      new Phaser.Geom.Point(sillRight.x, sillRight.y),
-      new Phaser.Geom.Point(sillRight.x, sillRight.y + sillThickness),
-      new Phaser.Geom.Point(sillLeft.x, sillLeft.y + sillThickness),
-    ];
-
-    this.mapGraphics.fillStyle(this.adjustColor(baseColor, -0.35), 0.85);
-    this.mapGraphics.fillPoints(sillPoints, true);
-
-    const glow = [
-      this.lerpPoint(capPoints[3], basePoints[3], 0.08),
-      this.lerpPoint(capPoints[2], basePoints[2], 0.08),
-      this.lerpPoint(capPoints[2], basePoints[2], 0.16),
-      this.lerpPoint(capPoints[3], basePoints[3], 0.16),
-    ];
-
-    this.mapGraphics.fillStyle(0x60a5fa, 0.22);
-    this.mapGraphics.fillPoints(glow, true);
-  }
-
-  private renderCoverDetails(
-    capPoints: Phaser.Geom.Point[],
-    basePoints: Phaser.Geom.Point[],
-    baseColor: number,
-    profile: ElevationProfile
-  ): void {
-    const topPlate = this.getDiamondPoints(
-      (capPoints[0].x + capPoints[2].x) / 2,
-      (capPoints[0].y + capPoints[2].y) / 2,
-      profile.topWidth * 0.7,
-      profile.topHeight * 0.55
-    );
-
-    this.mapGraphics.fillStyle(this.adjustColor(baseColor, 0.28), 0.85);
-    this.mapGraphics.fillPoints(topPlate, true);
-
-    const frontLip = [
-      this.lerpPoint(capPoints[3], basePoints[3], 0.35),
-      this.lerpPoint(capPoints[2], basePoints[2], 0.35),
-      this.lerpPoint(capPoints[2], basePoints[2], 0.58),
-      this.lerpPoint(capPoints[3], basePoints[3], 0.58),
-    ];
-
-    this.mapGraphics.fillStyle(this.adjustColor(baseColor, -0.08), 0.78);
-    this.mapGraphics.fillPoints(frontLip, true);
-
-    // Hazard stripes - diagonal yellow/black pattern on front face
-    const stripeCount = 3;
-    const stripeSpacing = (frontLip[1].x - frontLip[0].x) / (stripeCount * 2);
-
-    this.mapGraphics.lineStyle(1.8, 0xfbbf24, 0.45);
-    for (let i = 0; i < stripeCount; i++) {
-      const offset = i * stripeSpacing * 2;
-      const x1 = frontLip[0].x + offset;
-      const x2 = frontLip[0].x + offset + stripeSpacing * 0.7;
-      const y1 = frontLip[0].y + (frontLip[2].y - frontLip[0].y) * 0.15;
-      const y2 = frontLip[2].y - (frontLip[2].y - frontLip[0].y) * 0.15;
-
-      this.mapGraphics.lineBetween(x1, y1, x2, y2);
-    }
-
-    const braceLeftTop = this.lerpPoint(capPoints[3], basePoints[3], 0.45);
-    const braceLeftBottom = this.lerpPoint(capPoints[3], basePoints[3], 0.86);
-    const braceRightTop = this.lerpPoint(capPoints[2], basePoints[2], 0.45);
-    const braceRightBottom = this.lerpPoint(capPoints[2], basePoints[2], 0.86);
-
-    this.mapGraphics.lineStyle(1.4, this.adjustColor(baseColor, -0.2), 0.7);
-    this.mapGraphics.lineBetween(braceLeftTop.x, braceLeftTop.y, braceLeftBottom.x, braceLeftBottom.y);
-    this.mapGraphics.lineBetween(braceRightTop.x, braceRightTop.y, braceRightBottom.x, braceRightBottom.y);
-  }
-
-  private renderWaterTile(
-    center: { x: number; y: number },
-    tileWidth: number,
-    tileHeight: number,
-    baseColor: number
-  ): void {
-    // Animated shimmer effect
-    const time = this.time.now;
-    const shimmerCycle = 2000; // 2 second cycle
-    const shimmerPhase = (time % shimmerCycle) / shimmerCycle;
-    const shimmerIntensity = 0.5 + 0.5 * Math.sin(shimmerPhase * Math.PI * 2);
-
-    const sheenColor = this.adjustColor(baseColor, 0.3);
-    const sheenAlpha = 0.2 + 0.12 * shimmerIntensity;
-
-    this.mapGraphics.fillStyle(sheenColor, sheenAlpha);
-    this.mapGraphics.fillPoints(
-      this.getDiamondPoints(center.x, center.y - tileHeight * 0.06, tileWidth * 0.6, tileHeight * 0.5),
-      true
-    );
-
-    // Subtle cyan glow underneath - cyberpunk contaminated water
-    this.mapGraphics.fillStyle(0x06b6d4, 0.08 + 0.06 * shimmerIntensity);
-    this.mapGraphics.fillPoints(
-      this.getDiamondPoints(center.x, center.y, tileWidth * 0.45, tileHeight * 0.4),
-      true
-    );
-
-    const rippleAlpha = 0.35 + 0.15 * shimmerIntensity;
-    this.mapGraphics.lineStyle(1, this.adjustColor(sheenColor, 0.25), rippleAlpha);
-    for (let ripple = 0; ripple < 2; ripple++) {
-      const scale = 0.82 - ripple * 0.22;
-      const ripplePoints = this.getDiamondPoints(center.x, center.y, tileWidth * scale, tileHeight * scale);
-      this.mapGraphics.strokePoints(ripplePoints, true);
-    }
-  }
-
-  private renderTrapTile(
-    center: { x: number; y: number },
-    tileWidth: number,
-    tileHeight: number,
-    baseColor: number
-  ): void {
-    // Animated pulsing effect - breathes to indicate danger
-    const time = this.time.now;
-    const pulseCycle = 1500; // 1.5 second cycle
-    const pulsePhase = (time % pulseCycle) / pulseCycle;
-    const pulseIntensity = 0.5 + 0.5 * Math.sin(pulsePhase * Math.PI * 2);
-
-    const pulseColor = this.adjustColor(baseColor, 0.6);
-    const baseAlpha = 0.15 + 0.12 * pulseIntensity;
-
-    this.mapGraphics.fillStyle(pulseColor, baseAlpha);
-    this.mapGraphics.fillPoints(
-      this.getDiamondPoints(center.x, center.y, tileWidth * 0.58, tileHeight * 0.6),
-      true
-    );
-
-    const crossAlpha = 0.1 + 0.08 * pulseIntensity;
-    this.mapGraphics.fillStyle(pulseColor, crossAlpha);
-    this.mapGraphics.fillPoints(
-      this.getDiamondPoints(center.x, center.y, tileWidth * 0.3, tileHeight * 0.96),
-      true
-    );
-    this.mapGraphics.fillPoints(
-      this.getDiamondPoints(center.x, center.y, tileWidth * 0.96, tileHeight * 0.3),
-      true
-    );
-
-    const outlineAlpha = 0.65 + 0.2 * pulseIntensity;
-    this.mapGraphics.lineStyle(1.2, this.adjustColor(pulseColor, 0.35), outlineAlpha);
-    this.mapGraphics.strokePoints(
-      this.getDiamondPoints(center.x, center.y, tileWidth * 0.82, tileHeight * 0.32),
-      true
-    );
-  }
-
-  private drawDoorTile(centerX: number, centerY: number): void {
-    if (!this.mapGraphics) {
-      return;
-    }
-
-    const { tileWidth, tileHeight } = this.getIsoMetrics();
-    const basePoints = this.getDiamondPoints(centerX, centerY, tileWidth, tileHeight);
-
-    const wallElevation = this.getTileElevation(TileType.WALL);
-    const profile = this.getElevationProfile(wallElevation, tileWidth, tileHeight);
-    const capPoints = this.getDiamondPoints(
-      centerX,
-      centerY - profile.heightOffset,
-      profile.topWidth,
-      profile.topHeight
-    );
-
-    const frontTopLeft = capPoints[3];
-    const frontTopRight = capPoints[2];
-    const frontBottomLeft = basePoints[3];
-    const frontBottomRight = basePoints[2];
-
-    const frameTopLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.15);
-    const frameTopRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.15);
-    const frameBottomRight = this.lerpPoint(frontTopRight, frontBottomRight, 0.88);
-    const frameBottomLeft = this.lerpPoint(frontTopLeft, frontBottomLeft, 0.88);
-
-    // Outer frame - dark metallic
-    this.mapGraphics.fillStyle(0x1a1f2e, 0.98);
-    this.mapGraphics.fillPoints([frameTopLeft, frameTopRight, frameBottomRight, frameBottomLeft], true);
-
-    // Frame highlights - cyberpunk edge lighting
-    this.mapGraphics.lineStyle(1.8, 0x38bdf8, 0.65);
-    this.mapGraphics.strokePoints([frameTopLeft, frameTopRight], false);
-    this.mapGraphics.lineStyle(1.2, 0x1e40af, 0.45);
-    this.mapGraphics.strokePoints([frameBottomLeft, frameBottomRight], false);
-
-    // Door panel with gradient effect
-    const panelInset = 0.18;
-    const panelTopLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, panelInset);
-    const panelTopRight = this.lerpPoint(frameTopRight, frameBottomRight, panelInset);
-    const panelBottomRight = this.lerpPoint(frameTopRight, frameBottomRight, 1 - panelInset * 0.4);
-    const panelBottomLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, 1 - panelInset * 0.4);
-
-    // Main panel - dark with slight transparency for depth
-    this.mapGraphics.fillStyle(0x0f172a, 0.85);
-    this.mapGraphics.fillPoints([panelTopLeft, panelTopRight, panelBottomRight, panelBottomLeft], true);
-
-    // Panel highlight overlay - creates glass/holographic effect
-    const highlightTopLeft = this.lerpPoint(panelTopLeft, panelBottomLeft, 0.05);
-    const highlightTopRight = this.lerpPoint(panelTopRight, panelBottomRight, 0.05);
-    const highlightBottomRight = this.lerpPoint(panelTopRight, panelBottomRight, 0.35);
-    const highlightBottomLeft = this.lerpPoint(panelTopLeft, panelBottomLeft, 0.35);
-
-    this.mapGraphics.fillStyle(0x38bdf8, 0.12);
-    this.mapGraphics.fillPoints([highlightTopLeft, highlightTopRight, highlightBottomRight, highlightBottomLeft], true);
-
-    // Access panel indicator - small cyan accent
-    const indicatorTop = this.lerpPoint(panelTopLeft, panelTopRight, 0.78);
-    const indicatorBottom = this.lerpPoint(
-      this.lerpPoint(panelTopLeft, panelBottomLeft, 0.28),
-      this.lerpPoint(panelTopRight, panelBottomRight, 0.28),
-      0.78
-    );
-    const indicatorHeight = Math.abs(indicatorBottom.y - indicatorTop.y);
-    const indicatorWidth = indicatorHeight * 0.4;
-
-    this.mapGraphics.fillStyle(0x06b6d4, 0.9);
-    this.mapGraphics.fillRect(
-      indicatorTop.x - indicatorWidth / 2,
-      indicatorTop.y,
-      indicatorWidth,
-      indicatorHeight
-    );
-
-    // Glowing accent line
-    this.mapGraphics.lineStyle(0.8, 0x22d3ee, 0.7);
-    this.mapGraphics.strokePoints([panelTopLeft, panelTopRight], false);
-  }
-
-  private getTileElevation(type: TileType): number {
-    switch (type) {
-      case TileType.WALL:
-        return 1;
-      case TileType.COVER:
-        return 0.45;
-      default:
-        return 0;
-    }
-  }
-
-  private getElevationProfile(elevation: number, tileWidth: number, tileHeight: number): ElevationProfile {
-    if (elevation <= 0) {
-      return {
-        heightOffset: tileHeight * 0.38,
-        topWidth: tileWidth,
-        topHeight: tileHeight,
-      };
-    }
-
-    const heightOffset = tileHeight * (0.48 + elevation * 0.78);
-    const widthScale = Math.max(0.7, 1 - elevation * 0.08);
-    const heightScale = Math.max(0.62, 1 - elevation * 0.1);
-
-    return {
-      heightOffset,
-      topWidth: tileWidth * widthScale,
-      topHeight: tileHeight * heightScale,
-    };
-  }
-
-  private lerpPoint(a: Phaser.Geom.Point, b: Phaser.Geom.Point, t: number): Phaser.Geom.Point {
-    return new Phaser.Geom.Point(
-      Phaser.Math.Linear(a.x, b.x, t),
-      Phaser.Math.Linear(a.y, b.y, t)
-    );
+    this.ensureVisualPipeline();
+    this.tilePainter?.drawTile(tile, {
+      center,
+      tileWidth,
+      tileHeight,
+      gridX,
+      gridY,
+      groundOnly,
+    });
   }
 
   private createCharacterNameLabel(name: string, accentColor: number, fontSize: number = 12): Phaser.GameObjects.Text {
@@ -1593,25 +1336,14 @@ export class MainScene extends Phaser.Scene {
     label: Phaser.GameObjects.Text,
     pixelX: number,
     pixelY: number,
-    verticalOffset: number,
-    depthBoost: number
+    verticalOffset: number
   ): void {
     label.setPosition(pixelX, pixelY - verticalOffset);
-    this.syncDepth(label, pixelX, pixelY, DepthBias.FLOATING_UI + depthBoost);
+    label.setDepth(computeDepth(pixelX, pixelY, DepthBias.OVERLAY));
   }
 
   private colorToHex(color: number): string {
     return `#${color.toString(16).padStart(6, '0')}`;
-  }
-
-  private getTileBaseColor(tile: MapTile, gridX: number, gridY: number): number {
-    const checker = (gridX + gridY) % 2 === 0;
-    const palette = TILE_BASE_COLORS[tile.type] ?? TILE_BASE_COLORS.DEFAULT;
-    return checker ? palette.even : palette.odd;
-  }
-
-  private adjustColor(color: number, factor: number): number {
-    return isoAdjustColor(color, factor);
   }
 
   private calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number } {
@@ -2100,12 +1832,17 @@ export class MainScene extends Phaser.Scene {
     const originX = bounds.minX - margin;
     const originY = bounds.minY - margin;
 
+    const profiles = Object.values(this.buildingVisualProfiles);
+    const downtownCount = profiles.filter((profile) => profile.district === 'downtown').length;
+    const districtWeight = profiles.length > 0 ? downtownCount / profiles.length : 0.5;
+    const skylineSplit = 0.26 + districtWeight * 0.5;
+
     this.backdropGraphics.clear();
     this.backdropGraphics.fillGradientStyle(
-      0x05070f,
-      0x0a1423,
-      0x0d1321,
-      0x17213a,
+      districtWeight >= 0.5 ? 0x061027 : 0x140b11,
+      districtWeight >= 0.5 ? 0x0b1c3d : 0x251320,
+      districtWeight >= 0.5 ? 0x1a1024 : 0x2a110f,
+      districtWeight >= 0.5 ? 0x091e30 : 0x242134,
       1,
       1,
       1,
@@ -2113,23 +1850,49 @@ export class MainScene extends Phaser.Scene {
     );
     this.backdropGraphics.fillRect(originX, originY, width, height);
 
-    const horizonY = originY + height * 0.28;
-    this.backdropGraphics.fillStyle(0x1c314d, 0.22);
-    this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.06, height * 0.5);
+    const skylineBaseY = originY + height * 0.52;
+    const skylineColumns = 28;
+    const downtownColor = 0x123458;
+    const slumsColor = 0x3f1f20;
 
-    this.backdropGraphics.fillStyle(0x070b12, 0.5);
-    this.backdropGraphics.fillRect(originX, originY + height * 0.62, width, height * 0.55);
+    for (let column = 0; column < skylineColumns; column += 1) {
+      const normalized = column / skylineColumns;
+      const x = originX + normalized * width;
+      const widthScale = 0.68 + (((column * 13) % 7) * 0.08);
+      const segmentWidth = (width / skylineColumns) * widthScale;
+      const variant = ((column * 29) % 11) / 11;
+      const towerHeight = height * (0.12 + variant * 0.28) * (normalized < skylineSplit ? 1.12 : 0.78);
+      const tintMix = normalized < skylineSplit ? 0.78 : 0.26;
+      const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(slumsColor),
+        Phaser.Display.Color.ValueToColor(downtownColor),
+        1,
+        tintMix
+      );
+      const tintColor = Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b);
+      this.backdropGraphics.fillStyle(tintColor, 0.33 + variant * 0.12);
+      this.backdropGraphics.fillRect(x, skylineBaseY - towerHeight, segmentWidth, towerHeight);
+      this.backdropGraphics.fillStyle(adjustColor(tintColor, 0.12), 0.17);
+      this.backdropGraphics.fillRect(x + segmentWidth * 0.72, skylineBaseY - towerHeight, segmentWidth * 0.16, towerHeight);
+    }
 
-    for (let i = 0; i < 4; i++) {
-      const alpha = 0.18 - i * 0.03;
+    const horizonY = originY + height * 0.35;
+    this.backdropGraphics.fillStyle(districtWeight >= 0.5 ? 0x1d3b63 : 0x442427, 0.22);
+    this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
+
+    this.backdropGraphics.fillStyle(0x070b12, 0.56);
+    this.backdropGraphics.fillRect(originX, originY + height * 0.6, width, height * 0.6);
+
+    for (let ring = 0; ring < 5; ring += 1) {
+      const alpha = 0.2 - ring * 0.03;
       if (alpha <= 0) {
         continue;
       }
-      const factor = 1.2 + i * 0.25;
-      this.backdropGraphics.lineStyle(2, 0x132034, alpha);
+      const factor = 1.18 + ring * 0.27;
+      this.backdropGraphics.lineStyle(2, districtWeight >= 0.5 ? 0x1d4875 : 0x5a2c3e, alpha);
       this.backdropGraphics.strokeEllipse(
         originX + width / 2,
-        originY + height * 0.78,
+        originY + height * 0.81,
         width * factor,
         height * 0.46 * factor
       );
@@ -2179,6 +1942,7 @@ export class MainScene extends Phaser.Scene {
     this.isoOriginX = (height - 1) * halfTileWidth;
     this.isoOriginY = tileHeight; // lift map slightly so the top diamond is visible
     this.ensureIsoFactory();
+    this.ensureVisualPipeline();
 
     const isoWidth = (width + height) * halfTileWidth;
     const isoHeight = (width + height) * halfTileHeight;
@@ -2238,6 +2002,7 @@ export class MainScene extends Phaser.Scene {
     this.renderStaticProps();
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
+    this.drawBuildingMasses();
     this.drawBuildingLabels();
     this.clearPathPreview();
 

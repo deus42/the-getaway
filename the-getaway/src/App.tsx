@@ -56,9 +56,9 @@ const layoutShellStyle: CSSProperties = {
   height: "100vh",
   overflow: "hidden",
   position: "relative",
-  backgroundColor: "#0f172a",
-  color: "#e2e8f0",
-  fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+  backgroundColor: "var(--color-gunmetal-900)",
+  color: "var(--color-hud-text)",
+  fontFamily: "var(--font-mono)",
 };
 
 const mainStageStyle: CSSProperties = {
@@ -68,7 +68,7 @@ const mainStageStyle: CSSProperties = {
   right: 0,
   bottom: 0,
   display: "flex",
-  background: "radial-gradient(circle at top, rgba(30, 41, 59, 0.72), rgba(15, 23, 42, 0.95))",
+  background: "var(--hud-stage-background)",
 };
 
 const DEFAULT_DOCK_MIN_HEIGHT = 260;
@@ -128,11 +128,11 @@ const menuPanelButtonStyle: CSSProperties = {
   padding: "0.7rem 0.9rem",
   boxSizing: "border-box",
   borderRadius: "14px",
-  border: "1px solid rgba(148, 163, 184, 0.35)",
-  background: "linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.84))",
-  boxShadow: "0 12px 32px rgba(15, 23, 42, 0.45)",
-  color: "#e2e8f0",
-  fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
+  border: "var(--hud-command-button-border)",
+  background: "var(--hud-command-button-bg)",
+  boxShadow: "var(--hud-command-button-shadow)",
+  color: "var(--hud-command-button-text)",
+  fontFamily: "var(--font-mono)",
   fontSize: "0.7rem",
   letterSpacing: "0.14em",
   textTransform: "uppercase",
@@ -150,7 +150,7 @@ const menuPanelLabelStyle: CSSProperties = {
 const menuPanelGlyphStyle: CSSProperties = {
   fontSize: "0.62rem",
   letterSpacing: "0.24em",
-  color: "rgba(148, 163, 184, 0.7)",
+  color: "var(--hud-command-button-text-muted)",
   textTransform: "uppercase",
 };
 
@@ -299,23 +299,23 @@ const CommandShell: React.FC<CommandShellProps> = ({
             title={uiStrings.shell.menuButton}
             onMouseEnter={(event) => {
               event.currentTarget.style.transform = 'translateY(-2px)';
-              event.currentTarget.style.boxShadow = '0 20px 42px rgba(15, 23, 42, 0.55)';
-              event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.55)';
-              event.currentTarget.style.color = '#f8fafc';
+              event.currentTarget.style.boxShadow = 'var(--hud-command-button-shadow-hover)';
+              event.currentTarget.style.borderColor = 'var(--hud-command-button-border-hover)';
+              event.currentTarget.style.color = 'var(--hud-command-button-text-hover)';
             }}
             onMouseLeave={(event) => {
               event.currentTarget.style.transform = 'translateY(0)';
-              event.currentTarget.style.boxShadow = '0 12px 32px rgba(15, 23, 42, 0.45)';
-              event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
-              event.currentTarget.style.color = '#e2e8f0';
+              event.currentTarget.style.boxShadow = 'var(--hud-command-button-shadow)';
+              event.currentTarget.style.borderColor = 'var(--hud-command-button-border-rest)';
+              event.currentTarget.style.color = 'var(--hud-command-button-text)';
             }}
             onFocus={(event) => {
-              event.currentTarget.style.boxShadow = '0 0 0 2px rgba(59, 130, 246, 0.35), 0 18px 42px rgba(15, 23, 42, 0.55)';
-              event.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.7)';
+              event.currentTarget.style.boxShadow = 'var(--hud-command-button-shadow-focus)';
+              event.currentTarget.style.borderColor = 'var(--hud-command-button-border-focus)';
             }}
             onBlur={(event) => {
-              event.currentTarget.style.boxShadow = '0 12px 32px rgba(15, 23, 42, 0.45)';
-              event.currentTarget.style.borderColor = 'rgba(148, 163, 184, 0.35)';
+              event.currentTarget.style.boxShadow = 'var(--hud-command-button-shadow)';
+              event.currentTarget.style.borderColor = 'var(--hud-command-button-border-rest)';
             }}
           >
             <span style={menuPanelLabelStyle}>{uiStrings.shell.menuButton}</span>
