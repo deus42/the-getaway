@@ -19,10 +19,21 @@ interface ElevationProfile {
 }
 
 export class TilePainter {
+  private wetReflectionAlpha: number;
+  private emissiveIntensity: number;
+
   constructor(
     private readonly graphics: Phaser.GameObjects.Graphics,
     private readonly theme: VisualTheme
-  ) {}
+  ) {
+    this.wetReflectionAlpha = theme.qualityBudget.wetReflectionAlpha;
+    this.emissiveIntensity = 0.35;
+  }
+
+  public setAtmosphereProfile(atmosphere: { wetReflectionAlpha: number; emissiveIntensity: number }): void {
+    this.wetReflectionAlpha = Phaser.Math.Clamp(atmosphere.wetReflectionAlpha, 0, 0.4);
+    this.emissiveIntensity = Phaser.Math.Clamp(atmosphere.emissiveIntensity, 0, 1);
+  }
 
   public drawTile(tile: MapTile, context: TileContext): void {
     const tileForGround = context.groundOnly ? { ...tile, type: TileType.FLOOR } : tile;
@@ -90,6 +101,8 @@ export class TilePainter {
         this.graphics.lineStyle(0.85, 0x38bdf8, 0.08);
         this.graphics.strokePoints(points, true);
       }
+
+      this.drawRoadReflection(tile, context, points);
     } else if (tile.type === TileType.COVER || tile.type === TileType.WALL) {
       this.graphics.lineStyle(0.9, 0xf8fafc, 0.08);
       this.graphics.strokePoints(points, true);
@@ -240,5 +253,43 @@ export class TilePainter {
 
   private getPoints(centerX: number, centerY: number, width: number, height: number): Phaser.Geom.Point[] {
     return getDiamondPoints(centerX, centerY, width, height).map((point) => new Phaser.Geom.Point(point.x, point.y));
+  }
+
+  private drawRoadReflection(
+    tile: MapTile,
+    context: TileContext,
+    points: Phaser.Geom.Point[]
+  ): void {
+    if (!tile.isWalkable || this.wetReflectionAlpha <= 0.01) {
+      return;
+    }
+
+    const [top, right, bottom, left] = points;
+    const seamOffset = (((context.gridX * 11 + context.gridY * 17) % 9) - 4) * 0.04;
+    const intensity = Phaser.Math.Clamp(
+      this.wetReflectionAlpha * (0.7 + this.emissiveIntensity * 0.65),
+      0.03,
+      0.28
+    );
+    const coolReflection = adjustColor(0x67e8f9, -0.12 + seamOffset);
+    const warmReflection = adjustColor(0xfb923c, -0.25 + seamOffset * 0.7);
+
+    this.graphics.lineStyle(1, coolReflection, intensity);
+    this.graphics.strokePoints(
+      [
+        this.lerpPoint(left, top, 0.3),
+        this.lerpPoint(bottom, right, 0.3),
+      ],
+      false
+    );
+
+    this.graphics.lineStyle(0.8, warmReflection, intensity * 0.6);
+    this.graphics.strokePoints(
+      [
+        this.lerpPoint(top, right, 0.55),
+        this.lerpPoint(left, bottom, 0.55),
+      ],
+      false
+    );
   }
 }
