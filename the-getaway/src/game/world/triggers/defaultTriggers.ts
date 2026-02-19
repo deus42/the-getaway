@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 import {
   getRumorRotationsForGangHeat,
   getNoteDefinitionsForFlag,
@@ -18,11 +17,9 @@ import {
   applyEnvironmentWeather,
   applyEnvironmentSignage,
   registerEnvironmentalNote,
-  addItemToMap,
 } from '../../../store/worldSlice';
 import { addLogMessage } from '../../../store/logSlice';
 import { getSystemStrings } from '../../../content/system';
-import { Item } from '../../interfaces/types';
 import { BlackoutTier, GangHeatLevel, SupplyScarcityLevel } from '../../interfaces/environment';
 import { RootState } from '../../../store';
 
@@ -239,19 +236,6 @@ const createSignageTriggers = (): EnvironmentalTrigger[] => {
   return [...blackoutTriggers, ...supplyTriggers];
 };
 
-const findNotePosition = (state: RootState, definition: EnvironmentalNoteDefinition) => {
-  if (definition.position) {
-    return definition.position;
-  }
-
-  const playerPosition = state.player.data.position;
-
-  return {
-    x: Math.max(0, playerPosition.x),
-    y: Math.max(0, playerPosition.y - 1),
-  };
-};
-
 const createNoteTriggers = (): EnvironmentalTrigger[] => {
   const SCARCITY_VALUES: SupplyScarcityLevel[] = ['norm', 'tight', 'rationed'];
   const HEAT_VALUES: GangHeatLevel[] = ['low', 'med', 'high'];
@@ -286,8 +270,6 @@ const createNoteTriggers = (): EnvironmentalTrigger[] => {
         },
         fire: ({ dispatch, getState, now }) => {
           const state = getState();
-
-          const position = findNotePosition(state, definition);
           const areaId = state.world.currentMapArea.id;
           const locale = state.settings.locale;
           const logStrings = getSystemStrings(locale).logs;
@@ -300,23 +282,6 @@ const createNoteTriggers = (): EnvironmentalTrigger[] => {
               lines: [...definition.lines],
               storyFunction: definition.storyFunction,
               spawnedAt: now,
-            })
-          );
-
-          const noteItem: Item = {
-            id: `env-note-item::${definition.id}::${uuidv4()}`,
-            name: 'Found Note',
-            description: definition.lines.join(' / '),
-            weight: 0,
-            value: 0,
-            isQuestItem: false,
-            stackable: false,
-          };
-
-          dispatch(
-            addItemToMap({
-              item: noteItem,
-              position,
             })
           );
 

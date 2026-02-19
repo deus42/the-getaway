@@ -10,6 +10,7 @@ export const MINIMAP_PATH_PREVIEW_EVENT = 'minimapPathPreview';
 export const MINIMAP_OBJECTIVE_FOCUS_EVENT = 'minimapObjectiveFocus';
 export const PLAYER_SCREEN_POSITION_EVENT = 'playerScreenPositionUpdate';
 export const DAMAGE_NUMBER_EVENT = 'damageNumber';
+export const PICKUP_STATE_SYNC_EVENT = 'pickupStateSync';
 
 
 export interface TileClickDetail {
@@ -144,6 +145,12 @@ export interface DamageNumberDetail {
   position: Position;
   isCritical: boolean;
   targetId: string;
+}
+
+export interface PickupStateSyncDetail {
+  areaId: string;
+  itemId?: string;
+  position?: Position;
 }
 
 export type TileTypeGrid = MapTile[][];

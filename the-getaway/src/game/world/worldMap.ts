@@ -53,6 +53,20 @@ const isStreet = (y: number) => {
 
 const isCityBoulevard = (x: number, y: number) => isAvenue(x) || isStreet(y);
 
+const isInsideBuildingFootprint = (
+  position: Position,
+  buildings: LevelBuildingDefinition[] | MapBuildingDefinition[]
+): boolean =>
+  buildings.some((building) => {
+    const { from, to } = building.footprint;
+    return (
+      position.x >= from.x &&
+      position.x <= to.x &&
+      position.y >= from.y &&
+      position.y <= to.y
+    );
+  });
+
 
 const createInteriorArea = (
   name: string,
@@ -289,7 +303,11 @@ const createCityArea = (
       return false;
     }
 
-    return tile.isWalkable && tile.type !== TileType.DOOR && tile.type !== TileType.WALL;
+    if (!tile.isWalkable || tile.type === TileType.DOOR || tile.type === TileType.WALL) {
+      return false;
+    }
+
+    return !isInsideBuildingFootprint(position, buildings);
   };
 
   const resolveOpenPosition = (seed: Position): Position | null => {

@@ -49,6 +49,7 @@ const mapObjective = (
   isCompleted: false,
   type: structure.type,
   target: resolveTargetLabel(structure.targetResourceKey, bundle),
+  targetResourceKey: structure.targetResourceKey,
   count: structure.count,
   currentCount: 0,
 });
