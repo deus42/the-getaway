@@ -1,6 +1,6 @@
 # Post-MVP: Survival Mechanics (full system)
 
-Moved out of memory-bank/game-design.md to keep the MVP doc focused.
+Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
 <mechanic name="survival_mechanics">
 <balance_values system="survival">

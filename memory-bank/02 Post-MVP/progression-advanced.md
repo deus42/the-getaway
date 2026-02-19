@@ -1,6 +1,6 @@
 # Post-MVP: Progression / Karma / Reputation
 
-Moved out of memory-bank/game-design.md to keep the MVP doc focused.
+Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
 
 <mechanic name="character_creation">

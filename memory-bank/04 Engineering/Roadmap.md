@@ -126,7 +126,7 @@ Additional Completed Work (not listed as roadmap steps):
 # Implementation Plan for "The Getaway" (Base Game)
 
 <workflow_reminder>
-- After completing any roadmap step, record it in `memory-bank/progress.md` with matching step metadata before continuing.
+- After completing any roadmap step, record it in `memory-bank/04 Engineering/Roadmap.md` with matching step metadata before continuing.
 - Keep the corresponding Linear issue in sync: move it to `In Progress` while implementing, add a completion comment with validation commands, then mark it `Done`.
 </workflow_reminder>
 
@@ -578,7 +578,7 @@ Establish a canonical Level → Mission → Quest content hierarchy backed by st
 - Move localization into shared `src/content/locales/{lang}/` bundles keyed by these resource identifiers (e.g., `levels`, `missions`, `quests`, `npcs` maps) so strings are maintained centrally and imported via lookup helpers.
 - Update aggregate registries (`src/content/levels/index.ts`, `src/content/missions.ts`, `src/content/quests.ts`) to compose the hierarchy, enforcing that missions register under their level key, quests declare a valid `missionKey` or `null`, and NPC registries store owning `levelKey`/`missionKey` pairs.
 - Introduce a validation utility (`src/game/narrative/validateContent.ts`) to assert key format compliance, resolve cross-references, and confirm locale entries exist for every registered resource key.
-- Document the hierarchy and authoring workflow in `memory-bank/architecture.md`, covering how to add new levels, missions, quests, NPCs, assets, and localization entries using the standardized keys.
+- Document the hierarchy and authoring workflow in `memory-bank/04 Engineering/Architecture.md`, covering how to add new levels, missions, quests, NPCs, assets, and localization entries using the standardized keys.
 </details>
 
 <test>
@@ -609,7 +609,7 @@ Build a tooling pipeline that converts short narrative prompts into 2D tilemap b
 - Extend the map generation pipeline (`worldGenerationPipeline.ts`) to accept `GeneratedSceneDefinition` payloads: generate base terrain first, then apply prop placements and depth sorting based on rule outputs.
 - Store generated scenes under `src/content/levels/{levelId}/missions/{missionId}/generatedScenes/` and register them via resource keys so missions can reference auto-generated layouts.
 - Provide a CLI script `scripts/generate-scene-from-story.ts` that orchestrates extraction, invokes relation rules, writes the resulting scene JSON, and reports validation issues for missing assets or collisions.
-- Document the workflow in `memory-bank/architecture.md`, covering how writers supply prompts, review triples, and integrate generated tilemaps.
+- Document the workflow in `memory-bank/04 Engineering/Architecture.md`, covering how writers supply prompts, review triples, and integrate generated tilemaps.
 </details>
 
 <test>
@@ -641,7 +641,7 @@ Implement a lightweight environmental trigger framework that reacts to world-sta
 - Create content tables (TS/JSON) under `src/content/environment/` for rumor rotations, notes, signage variants, and weather/power presets, each keyed by flag/value with one-line story function metadata.
 - Wire NPC bark updates, ambient weather toggles, signage swaps, and collectible notes into existing entity managers (NPC dialogue hooks, weather service, poster/sign registries, map item spawners) so triggers mutate live state.
 - Ensure triggers de-duplicate via `once` or cooldown tracking and log events to the HUD/action log for debugging.
-- Document the authoring workflow in `memory-bank/architecture.md`, covering flag additions, trigger registration, and content authoring, and reference tone rules from `memory-bank/plot.md`.
+- Document the authoring workflow in `memory-bank/04 Engineering/Architecture.md`, covering flag additions, trigger registration, and content authoring, and reference tone rules from `memory-bank/03 Lore/Plot Bible.md`.
 </details>
 
 <test>
@@ -673,7 +673,7 @@ Promote George to the sole narrator for environmental changes by piping ambient 
 - Add a dedicated “Ambient Feed” tab in George’s console plus dock highlights so the latest world change surfaces even when the panel is collapsed.
 - Remove the standalone HUD ambient ticker and migrate zone hazard/danger copy so George announces changes (“Zone danger elevated to Hazardous”, “New graffiti campaign spotted”) following the straight-faced absurdity tone.
 - Update localization to cover the new callouts and ensure assistant personality/tone controls apply to ambient chatter.
-- Document the assistant-driven ambient workflow in `memory-bank/architecture.md` and note the HUD change in `memory-bank/progress.md`.
+- Document the assistant-driven ambient workflow in `memory-bank/04 Engineering/Architecture.md` and note the HUD change in `memory-bank/04 Engineering/Roadmap.md`.
 </details>
 
 <test>
@@ -692,7 +692,7 @@ Promote George to the sole narrator for environmental changes by piping ambient 
 <prerequisites>
 - Step 16 completed (dialogue and quest threads seeded in Redux)
 - Step 16.5 completed (storylet framework routes modular narrative beats)
-- Review `memory-bank/plot.md` voice guidelines to align tone axes
+- Review `memory-bank/03 Lore/Plot Bible.md` voice guidelines to align tone axes
 </prerequisites>
 
 <instructions>
@@ -706,7 +706,7 @@ Design a reusable tone-tagging pipeline that keeps the game’s authorial “voi
 - **Templates & Palettes**: Define micro-templates (`templates.ts`) and trait-weighted synonym palettes (`palettes.ts`) that map style traits to concrete phrasing choices (e.g., deadpan prefers fragments, surreal adds unexpected imagery). Track lightweight motifs with counters keyed per character.
 - **Runtime Mixer**: Implement `dialogueToneMixer.ts` that blends author, persona, and scene vectors (e.g., 0.4/0.4/0.2 weighting), clamps conflicting traits (terse vs. sentence length), selects a compatible template, chooses palette variants via weighted sampling, and applies persona tics/motifs.
 - **Integration Layer**: Update `DialogueManager` (or dedicated helper) so dialogue nodes can reference style hints and request generated lines while preserving existing handcrafted copy as fallback. Provide deterministic seeds for regression tests and content tooling.
-- **Documentation**: Capture the system architecture in `memory-bank/architecture.md` and refresh `memory-bank/game-design.md` with the narrative “voice” axis definitions and blending rules. Note tooling expectations in `memory-bank/progress.md` once implemented.
+- **Documentation**: Capture the system architecture in `memory-bank/04 Engineering/Architecture.md` and refresh `memory-bank/01 MVP/Game Design.md` with the narrative “voice” axis definitions and blending rules. Note tooling expectations in `memory-bank/04 Engineering/Roadmap.md` once implemented.
 </details>
 
 <test>
@@ -737,7 +737,7 @@ Codify how district hazards propagate into AI behavior, faction pressure, and tr
 - Populate `environmentMatrix` so each hazard lists AI modifiers (sight cones, chase persistence, weapon loadouts), faction economy effects (shop markup, patrol strength, safe house availability), and travel risks (stamina drain, vehicle reliability, encounter tables). Provide numeric weights or script hooks that downstream systems can consume.
 - Extend `worldSlice` selectors (or create `selectEffectiveEnvironmentImpacts`) to fuse live hazard flags with the matrix, emitting derived summaries for AI planners, encounter generation, and navigation warnings.
 - Wire existing systems to the selectors: adjust NPC schedule weights, faction reinforcement budgeting, and travel advisory overlays to read matrix outputs instead of ad-hoc constants.
-- Document the matrix in `memory-bank/game-design.md` (worldbuilding section) and summarize the data flow in `memory-bank/architecture.md`, including guidance for adding new hazards.
+- Document the matrix in `memory-bank/01 MVP/Game Design.md` (worldbuilding section) and summarize the data flow in `memory-bank/04 Engineering/Architecture.md`, including guidance for adding new hazards.
 </details>
 
 <test>
@@ -767,7 +767,7 @@ Author reusable dialogue templates for systemic NPC roles so merchants, guards, 
 - Add template metadata for gating (reputation thresholds, faction alignment, time-of-day, hazard context) so the dialogue mixer can filter candidates before sampling.
 - Implement a `resolveRoleDialogueTemplate` helper in `src/game/narrative/dialogueTone/templateResolver.ts` that merges role metadata with the tone mixer output, fills placeholder tokens (item of the day, faction slang), and returns deterministic seeds for localization/testing.
 - Expose role templates to the dialogue system by updating `DialogueManager` (or quest dialogue nodes) to allow `[roleTemplate:merchant.default_greeting]` references alongside existing handcrafted keys.
-- Document authoring guidance in `memory-bank/game-design.md` (narrative systems section) and log the new tooling in `memory-bank/progress.md` once implemented.
+- Document authoring guidance in `memory-bank/01 MVP/Game Design.md` (narrative systems section) and log the new tooling in `memory-bank/04 Engineering/Roadmap.md` once implemented.
 </details>
 
 <test>
@@ -844,7 +844,7 @@ Unify draw-order determinism and camera-wide post-processing so every scene rend
 - Add a `DepthManager` (or equivalent service) that registers dynamic game objects from `MainScene` and performs a single pre-update pass each frame to assign depth via `computeDepth`, removing ad-hoc `setDepth` calls from factories and entity classes. Provide override hooks for objects that must pin to reserved bands (e.g., day/night overlay, path previews).
 - Refactor `IsoObjectFactory`, `CameraSprite`, combat markers, and other render helpers to rely on the centralized manager for depth, keeping any remaining offsets in one `DepthBiasConfig`.
 - Move default visual FX (bloom, vignette, color grading) onto the primary camera with toggles exposed through `src/game/settings/visualSettings.ts`, and ensure object-level FX are limited to unique cases.
-- Author `memory-bank/graphics.md` that captures the depth rule, bias bands, camera FX order, and guidelines for introducing new FX or overlays. Link to this doc from `memory-bank/architecture.md` once implemented.
+- Author `memory-bank/03 Lore/Art Direction.md` that captures the depth rule, bias bands, camera FX order, and guidelines for introducing new FX or overlays. Link to this doc from `memory-bank/04 Engineering/Architecture.md` once implemented.
 </details>
 
 <test>
@@ -1026,7 +1026,7 @@ Replace the brittle guard/hostile decision flow with a deterministic-yet-varied 
 - **Seeded Personalities**: Introduce a deterministic RNG helper (`src/game/ai/fsm/random.ts`) that seeds from NPC id so replays remain stable. Expose optional entropy injection for director-driven variance (Step 19.7).
 - **Action Hooks**: Map each state to action callbacks (`NpcStateHandlers`) that drive existing movement/pathfinding, cover seeking, pursuit, or flee routes via injected services. Panic transitions should set flee burst duration and respect cooldown windows before the next panic roll.
 - **Integration**: Thread the FSM controller through guard/patrol entity classes, reading perception data from Step 19 vision cones and Step 19.5 surveillance pings, and emitting telemetry (state transitions, utility adjustments) for debugging overlays.
-- **Configuration Surface**: Provide archetype configs in `src/content/ai/guardArchetypes.ts` where designers can tune base weights, modifiers, and cooldowns. Document authoring workflow in `memory-bank/architecture.md` when implemented.
+- **Configuration Surface**: Provide archetype configs in `src/content/ai/guardArchetypes.ts` where designers can tune base weights, modifiers, and cooldowns. Document authoring workflow in `memory-bank/04 Engineering/Architecture.md` when implemented.
 </details>
 
 <test>
@@ -1064,7 +1064,7 @@ Replace key procedural `Graphics` primitives with atlas-driven sprites and enabl
 - Update `MainScene.drawMap` to prefer sprite frames when `spriteFrame` is defined, maintain depth sorting via `setDepth(pixelY)`, and batch static layers into `Phaser.GameObjects.Layer` or `RenderTexture` for fewer draw calls.
 - Enable the Light2D system once sprite assets exist: call `this.lights.enable().setAmbientColor(0x16202a)` in `MainScene.create`, register rim, sodium, and emergency lights keyed to world triggers, and gate light creation behind a feature flag until the atlas rollout is complete.
 - Add camera post FX helpers (`camera.postFX.addBloom`, `addColorMatrix`) with noir-friendly defaults, but expose tunable settings in `src/game/settings/visualSettings.ts` for QA to adjust brightness/contrast per district.
-- Document asset naming (e.g., `district_propName_variant_v###.png`), normal-map conventions, and Light2D integration steps in `memory-bank/architecture.md`, linking back to the painterly noir guidance in `memory-bank/game-design.md`.
+- Document asset naming (e.g., `district_propName_variant_v###.png`), normal-map conventions, and Light2D integration steps in `memory-bank/04 Engineering/Architecture.md`, linking back to the painterly noir guidance in `memory-bank/01 MVP/Game Design.md`.
 </details>
 
 <test>
@@ -1120,7 +1120,7 @@ Introduce an on-demand parcel streaming layer so large districts can load and un
 - Update pathfinding/grid systems to stitch parcel edges seamlessly—cache nav meshes per parcel, and rebuild adjacency when new chunks load. Include fallbacks when requested tiles belong to unloaded parcels (auto-request or return safe alternative).
 - Thread streaming events through `GameController`/Phaser scenes so entities spawn/despawn cleanly, loot persists, and lighting/FX layers rehydrate with minimal churn.
 - Extend save/load routines to serialize parcel cache metadata (loaded set, seed data) so reloads resume without full world regeneration.
-- Document the streaming architecture and authoring expectations in `memory-bank/architecture.md`, covering parcel sizing guidelines and performance targets.
+- Document the streaming architecture and authoring expectations in `memory-bank/04 Engineering/Architecture.md`, covering parcel sizing guidelines and performance targets.
 </details>
 
 <test>
@@ -2305,7 +2305,7 @@ Add an Intel-focused perk branch—“Rumor Cabinet”—that lets players resha
 - **Redux & Selectors**: Add derived selectors (`selectRumorPerkModifiers`) that aggregate active Intel perks and feed them into gossip propagation (Step 29.6) and witness decay (Step 19.6). Persist any new perk runtime state (e.g., Shadow Broker cooldowns) in `playerSlice`.
 - **UI/UX Updates**: Update `PerkSelectionPanel.tsx` to surface the Intel category with bespoke iconography and copy referencing the Thought Cabinet inspiration. Include tooltips that explain how each perk manipulates rumor mechanics and call out any faction biases (e.g., Folk Hero stronger in worker districts).
 - **New Actions**: Unlock contextual “plant rumor”/“suppress rumor” interactions in applicable social hubs (bars, markets, safehouses) once Shadow Broker (or similar) is learned. Stub dialogue hooks so Step 16.9 George prompts reflect available Intel maneuvers.
-- **Documentation**: Note the new perk branch and data flow in `memory-bank/game-design.md` (Rumor systems) and `memory-bank/architecture.md` (perks-to-gossip integration) during implementation.
+- **Documentation**: Note the new perk branch and data flow in `memory-bank/01 MVP/Game Design.md` (Rumor systems) and `memory-bank/04 Engineering/Architecture.md` (perks-to-gossip integration) during implementation.
 </details>
 
 <test>
@@ -2594,7 +2594,7 @@ Stand up a systemic uprising simulation that tracks morale, supplies, and corpor
 - When stages change, enqueue systemic responses: patrol spawn tables, curfew intensity, and surveillance loadouts shift; vendors adjust stock/discounts; safehouses grant temporary buffs or go dark; random encounter tables unlock escort/sabotage opportunities. Emit structured events consumed by George, signage packs, and quest generators.
 - Seed authoring data in `src/content/world/uprisings.ts` describing per-district modifiers (e.g., corp stronghold vs. worker slum), escalation pacing, morale boosts for key story beats, and narrative flavor text for each stage.
 - Provide player counterplay hooks: sabotage missions reduce securityPresence, supply raids boost morale, propaganda runs raise supply while risking crackdown. Ensure Intel perks from Step 24.4 interact (e.g., reveal impending crackdowns, unlock negotiation options).
-- Document the director flow and authoring expectations in `memory-bank/architecture.md` (HOW) and note tonal guidelines for uprising messaging in `memory-bank/plot.md` (WHAT) during implementation.
+- Document the director flow and authoring expectations in `memory-bank/04 Engineering/Architecture.md` (HOW) and note tonal guidelines for uprising messaging in `memory-bank/03 Lore/Plot Bible.md` (WHAT) during implementation.
 </details>
 
 <test>
@@ -2625,7 +2625,7 @@ Create a centralized atlas that inventories every persistent world-state variabl
 - Audit Redux slices (`worldSlice`, `playerSlice`, `questsSlice`, `factionsSlice`, `reputationSlice`, etc.) and catalog each persistent variable that gates content or drives systemic reactions (e.g., `curfewLevel`, `supplyScarcity`, `corpSecAlert`, `resistanceIntel`, `districtHeat`).
 - Implement `src/game/state/stateAtlas.ts` exporting strongly typed descriptors `{ key, slice, datatype, range, description, consumers[] }` alongside helpers for retrieving current values plus normalized percentages.
 - Add an automated validation script (`yarn atlas:verify`) that diff-checks live Redux state keys against the atlas, emitting actionable errors when a slice introduces a new variable without documentation or range metadata.
-- Extend `memory-bank/game-design.md` with an XML-tagged appendix mirroring the atlas for designers, and update `memory-bank/architecture.md` to map each variable to its data flow, persistence requirements, and key listeners.
+- Extend `memory-bank/01 MVP/Game Design.md` with an XML-tagged appendix mirroring the atlas for designers, and update `memory-bank/04 Engineering/Architecture.md` to map each variable to its data flow, persistence requirements, and key listeners.
 - Generate machine-readable output (`memory-bank/exports/state-atlas.json`) during the validation script so tooling, analytics, and narrative planners can ingest the canonical sheet.
 </details>
 
@@ -2781,7 +2781,7 @@ Create a seasonal episode framework that schedules limited-time citywide arcs. E
 - Author baseline episode templates (e.g., CorpSec Crackdown, Resistance Festival, Blackout Amnesty) defining prop swaps, lighting presets, patrol modifiers, vendor adjustments, limited-time missions, and reward tables. Ensure localization keys and narration blurbs live alongside content.
 - Update George assistant with a “Season Briefing” tab describing the active episode, remaining time, and recommended actions. Mirror high-level summaries in the quest log/planning board and broadcast milestone changes through ambient systems.
 - Provide player agency: episodic missions, donation drives, or sabotage tasks that influence episode outcomes and tie back into uprising metrics. Rewards should include cosmetics, schematics, and faction perks that persist post-episode.
-- Document the episode authoring workflow in `memory-bank/architecture.md` (director flow, save considerations) and record tone/style rules per episode type in `memory-bank/plot.md`.
+- Document the episode authoring workflow in `memory-bank/04 Engineering/Architecture.md` (director flow, save considerations) and record tone/style rules per episode type in `memory-bank/03 Lore/Plot Bible.md`.
 </details>
 
 <test>
@@ -3168,7 +3168,7 @@ Create a repeatable WebGL profiling guide using SpectorJS so developers can diag
 - Document capture triage: sorting by program/texture, spotting redundant binds, identifying excessive draw calls, and correlating them with Phaser objects (sprites, graphics, pipelines).
 - Include a checklist for perf regressions: verify batching, texture atlas usage, shader complexity, and overdraw from large `Graphics` fills.
 - Describe how to export captures and attach them to bug reports for cross-team review.
-- Reference the guide from `memory-bank/architecture.md` under the rendering/diagnostics section so team members know where to find it.
+- Reference the guide from `memory-bank/04 Engineering/Architecture.md` under the rendering/diagnostics section so team members know where to find it.
 - Add an action item to integrate the profiling checklist into milestone playtests (e.g., run SpectorJS once per release candidate).
 </details>
 
@@ -3198,9 +3198,9 @@ Deliver an end-of-campaign narrative ledger that summarizes the player’s key d
 <details>
 - Implement `buildNarrativeLedger` in `src/game/narrative/ledger/ledgerBuilder.ts` to collate core variables: karma track, faction reputation, trust/fear axes, district uprising outcomes, signature quest resolutions, companion status, vehicle condition, and standout rumors/actions.
 - Create a `NarrativeLedgerPanel` React component surfaced during the Mission Accomplished banner (Step 35.2) and accessible from the pause menu post-credits. Present sections with short prose summaries plus bullet callouts, and include an export/share option for QA or community sharing.
-- Author copy templates under `src/content/ledger/` that map ledger facts to tone-appropriate blurbs, citing references to `memory-bank/plot.md` for consistency. Provide localization IDs for each template.
+- Author copy templates under `src/content/ledger/` that map ledger facts to tone-appropriate blurbs, citing references to `memory-bank/03 Lore/Plot Bible.md` for consistency. Provide localization IDs for each template.
 - Persist the generated ledger snapshot into campaign saves so post-game free roam or epilogue slides reuse the same decisions without recomputation. Store a hash/timestamp to detect stale ledgers when reloading older saves.
-- Document ledger data sources and authoring rules in `memory-bank/game-design.md` (narrative systems appendix) and summarize the technical pipeline in `memory-bank/architecture.md`. Log completion in `memory-bank/progress.md`.
+- Document ledger data sources and authoring rules in `memory-bank/01 MVP/Game Design.md` (narrative systems appendix) and summarize the technical pipeline in `memory-bank/04 Engineering/Architecture.md`. Log completion in `memory-bank/04 Engineering/Roadmap.md`.
 </details>
 
 <test>
@@ -3348,12 +3348,12 @@ Integrate a guardrailed LLM service that generates adaptive NPC dialogue and enc
 </instructions>
 
 <details>
-- Draft designer rule packs (`memory-bank/plot.md`, `memory-bank/game-design.md`) into machine-readable “Game Rules” fed to the service (allowed topics, banned actions, tone, fail conditions).
+- Draft designer rule packs (`memory-bank/03 Lore/Plot Bible.md`, `memory-bank/01 MVP/Game Design.md`) into machine-readable “Game Rules” fed to the service (allowed topics, banned actions, tone, fail conditions).
 - Stand up a Node-based narrative service (`services/narrative/`) with REST endpoints for session init, player turn submission, validator feedback, and memory updates. Wire it to an embeddings-backed memory store (e.g., vector DB or bespoke cosine matcher) for short- and long-term recall per playthrough.
 - Implement validation pipeline: rule checks, content filters, and structural validators (quest state alignment) that loop until responses meet constraints or escalate errors.
 - Generate NPC profiles using Big Five traits and faction metadata; persist them so repeated encounters stay consistent. Provide hooks so designers can seed fixed archetypes before runtime variation kicks in.
 - Bridge Phaser/React client to the narrative service via a lightweight HTTP client, handling conversational state, streaming outputs, and fallbacks when service is unavailable.
-- Document the workflow in `memory-bank/architecture.md` and add a companion `memory-bank/narrative-ai.md` outlining prompt schemas, validation stages, and operational safeguards.
+- Document the workflow in `memory-bank/04 Engineering/Architecture.md` and add a companion `memory-bank/narrative-ai.md` outlining prompt schemas, validation stages, and operational safeguards.
 </details>
 
 <test>
@@ -3388,7 +3388,7 @@ Introduce a reactive black-market economy that mirrors citywide scarcity and enf
 - Build merchant UI expansions (`BlackMarketPanel.tsx`) showing fluctuating prices, scarcity badges, and risk indicators (e.g., high surveillance, undercover stings). Support bulk trades, haggle rolls, and intel-based forecasts.
 - Create contract templates in `src/content/economy/contracts.ts` (e.g., deliver meds during crackdown, smuggle hacked chips past CorpSec) with branching outcomes that adjust reputation and economy metrics. Integrate contract selection into safehouses/contacts.
 - Implement risk mechanics: covert runs roll against patrol density; failure triggers ambush encounters or confiscation. Allow equipment/perks to mitigate risk (e.g., forged permits, stealth vehicles).
-- Update `memory-bank/game-design.md` with economy formulas (WHAT) and `memory-bank/architecture.md` with data flow and director integration (HOW) when implemented.
+- Update `memory-bank/01 MVP/Game Design.md` with economy formulas (WHAT) and `memory-bank/04 Engineering/Architecture.md` with data flow and director integration (HOW) when implemented.
 </details>
 
 <test>
@@ -3815,7 +3815,7 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 1. Added a persistent engagement model (`worldSlice.engagementMode`) plus stealth state fields on the player (`movementProfile`, `stealthModeEnabled`, `stealthCooldownExpiresAt`) with Redux helpers and selectors.
 2. Reworked `GameController` to drive the `X` stealth toggle, enforce cooldowns, auto-drop during combat/dialogue, and inject movement-noise awareness into guard perception.
 3. Updated surveillance, suspicion, and HUD layers to consume movement/stealth data, including the new Stealth indicator wafer and localisation updates; removed all crouch-era references.
-4. Documented the new stealth model in `memory-bank/game-design.md` and `memory-bank/architecture.md`.
+4. Documented the new stealth model in `memory-bank/01 MVP/Game Design.md` and `memory-bank/04 Engineering/Architecture.md`.
 </tasks>
 
 <implementation>
@@ -3826,8 +3826,8 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 - <code_location>the-getaway/src/store/selectors/engagementSelectors.ts</code_location>
 - <code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
 - <code_location>the-getaway/src/game/systems/suspicion/observationBuilders.ts</code_location>
-- <code_location>memory-bank/game-design.md</code_location>
-- <code_location>memory-bank/architecture.md</code_location>
+- <code_location>memory-bank/01 MVP/Game Design.md</code_location>
+- <code_location>memory-bank/04 Engineering/Architecture.md</code_location>
 </implementation>
 
 <validation>
@@ -3858,13 +3858,13 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 - <code_location>the-getaway/src/components/ui/GameMenu.tsx</code_location> introduces a local `activeView` state to swap between landing and settings layouts, adds a dedicated Settings button beside the primary CTAs, and compacts the settings panel with a bottom-return control plus the unified AutoBattle mode selector.
 - <code_location>the-getaway/src/content/ui/index.ts</code_location> provides localisation entries for the new settings controls and guidance copy.
 - <code_location>the-getaway/src/__tests__/GameMenu.test.tsx</code_location> verifies the landing focus and ensures the settings panel opens and closes as expected.
-- Documentation update in <code_location>memory-bank/architecture.md</code_location> records the split-menu architecture for future HUD work.
+- Documentation update in <code_location>memory-bank/04 Engineering/Architecture.md</code_location> records the split-menu architecture for future HUD work.
 </implementation>
 
 <code_reference file="the-getaway/src/components/ui/GameMenu.tsx" />
 <code_reference file="the-getaway/src/content/ui/index.ts" />
 <code_reference file="the-getaway/src/__tests__/GameMenu.test.tsx" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn test --runTestsByPath src/__tests__/GameMenu.test.tsx --runInBand`
@@ -3894,7 +3894,7 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 </implementation>
 
 <code_reference file="the-getaway/src/components/ui/MiniMap.tsx" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - Level 0 manual playtest (see QA script in task summary) covering resize, click-to-center, drag pan, and scroll-wheel zoom interactions.
@@ -3919,13 +3919,13 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 <implementation>
 - <code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location> now computes wall bounds once per state update, translates/scales that crop so it occupies the full tactical lane, maps pointer coordinates back to the original grid, and exposes a dev-only overlay toggle (wired through `App.tsx` test mode) that draws the 8-pt grid and icon wrappers.
 - <code_location>the-getaway/src/styles/hud-components.css</code_location> refits `.mini-map-panel`, `.mini-map-canvas`, and the new `.mini-map-dev-toggle` to the shared HUD tokens (spacing, radii, borders) so the panel matches the rest of the bottom dock.
-- <code_location>the-getaway/src/App.tsx</code_location> passes the test-mode flag into `MiniMap`, letting QA flip the overlay without leaking the control into production sessions, and `memory-bank/architecture.md` records the cropping/overlay workflow.
+- <code_location>the-getaway/src/App.tsx</code_location> passes the test-mode flag into `MiniMap`, letting QA flip the overlay without leaking the control into production sessions, and `memory-bank/04 Engineering/Architecture.md` records the cropping/overlay workflow.
 </implementation>
 
 <code_reference file="the-getaway/src/components/ui/MiniMap.tsx" />
 <code_reference file="the-getaway/src/styles/hud-components.css" />
 <code_reference file="the-getaway/src/App.tsx" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn lint`
@@ -4004,7 +4004,7 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 <code_reference file="the-getaway/src/components/debug/GameDebugInspector.tsx" />
 <code_reference file="the-getaway/src/components/GameCanvas.tsx" />
 <code_reference file="the-getaway/src/content/ui/index.ts" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn lint`
@@ -4083,8 +4083,8 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 <code_reference file="the-getaway/src/content/dialogueTemplates/roles/gangScout.ts" />
 <code_reference file="the-getaway/src/content/dialogueTemplates/roles/safehouseHandler.ts" />
 <code_reference file="the-getaway/src/components/ui/DialogueOverlay.tsx" />
-<code_reference file="memory-bank/game-design.md" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/01 MVP/Game Design.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn test --runTestsByPath src/game/narrative/dialogueTone/__tests__/templateResolver.test.ts --runInBand`
@@ -4125,8 +4125,8 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 <code_reference file="the-getaway/src/components/GameController.tsx" />
 <code_reference file="the-getaway/src/__tests__/autoBattlePlanner.test.ts" />
 <code_reference file="the-getaway/src/content/ui/index.ts" />
-<code_reference file="memory-bank/architecture.md" />
-<code_reference file="memory-bank/game-design.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
+<code_reference file="memory-bank/01 MVP/Game Design.md" />
 
 <validation>
 - `yarn test --runTestsByPath src/__tests__/autoBattlePlanner.test.ts --runInBand`
@@ -4177,8 +4177,8 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 <code_reference file="the-getaway/src/components/ui/DialogueOverlay.tsx" />
 <code_reference file="the-getaway/src/content/levels/level0/locales/en.ts" />
 <code_reference file="the-getaway/src/content/levels/level0/locales/uk.ts" />
-<code_reference file="memory-bank/game-design.md" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/01 MVP/Game Design.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn test --runTestsByPath src/game/narrative/dialogueTone/__tests__/dialogueToneMixer.test.ts --runInBand`
@@ -4203,7 +4203,7 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 
 <tasks>
 1. Introduced serialisable environment state (`world.environment`) with narrative flags, rumor/signage/weather snapshots, and NPC ambient profiles threaded through the existing alert/curfew reducers.
-2. Authored environment content tables (rumors, notes, signage, weather) plus selectors so ambient copy stays data-driven and consistent with the tone set in `memory-bank/plot.md`.
+2. Authored environment content tables (rumors, notes, signage, weather) plus selectors so ambient copy stays data-driven and consistent with the tone set in `memory-bank/03 Lore/Plot Bible.md`.
 3. Shipped a reusable trigger registry and default trigger pack that rotates barfly gossip, toggles weather/sirens, swaps propaganda signage, and seeds collectible notes when flags flip.
 4. Wired GameController to tick the registry each frame and added focused Jest coverage to confirm rumors, signage, and notes respond to flag changes.
 </tasks>
@@ -4230,7 +4230,7 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 </validation>
 
 <notes>
-- Rumor copy, signage quips, and notes follow the straight-faced absurdity guidelines from `memory-bank/plot.md`, keeping punchlines in the final line for easy future audits.
+- Rumor copy, signage quips, and notes follow the straight-faced absurdity guidelines from `memory-bank/03 Lore/Plot Bible.md`, keeping punchlines in the final line for easy future audits.
 - Registry exposes a reset hook for tests; production code only registers once to prevent duplicate swaps when React remounts controllers.
 </notes>
 </step>
@@ -4861,7 +4861,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 1. Added `computeDepth`, `DepthBias`, `DepthLayers`, and a scene-scoped `DepthManager` so isometric objects share a single ordering pipeline.
 2. Refactored `IsoObjectFactory` and `MainScene` to register dynamic props, characters, highlights, and HUD overlays through the depth manager instead of local `setDepth` calls.
 3. Introduced `visualSettings.ts` with bloom/vignette/color matrix defaults and bound `MainScene` to the shared camera FX toggles.
-4. Authored `memory-bank/graphics.md`, updated the architecture guide, and added Jest coverage for the new depth utilities.
+4. Authored `memory-bank/03 Lore/Art Direction.md`, updated the architecture guide, and added Jest coverage for the new depth utilities.
 </tasks>
 
 <implementation>
@@ -4876,8 +4876,8 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 <code_reference file="the-getaway/src/game/scenes/MainScene.ts" />
 <code_reference file="the-getaway/src/game/settings/visualSettings.ts" />
 <code_reference file="the-getaway/src/game/utils/__tests__/depth.test.ts" />
-<code_reference file="memory-bank/graphics.md" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/03 Lore/Art Direction.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn test --runTestsByPath src/game/utils/__tests__/depth.test.ts --runInBand`
@@ -4930,7 +4930,7 @@ Extended building metadata, additional NPC dialogues, cover spots, and loot defi
 3. Moved every exterior door onto walkable street tiles, away from the building footprint, and guaranteed unique doorway coordinates.
 4. Refined building label rendering in `MainScene` with word wrapping, subtle shadows, and depth ordering tied to tile height.
 5. Updated both English and Ukrainian locale payloads to match the new block list and door coordinates.
-6. Recorded the grid and parcel rules in `/memory-bank/architecture.md`.
+6. Recorded the grid and parcel rules in `/memory-bank/04 Engineering/Architecture.md`.
 </tasks>
 
 <implementation>
@@ -5004,7 +5004,7 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 2. Authored guard archetype configs under `src/content/ai/guardArchetypes.ts`, capturing tuned weights, cooldowns, and utility modifiers that persist on each enemy entity.
 3. Rebuilt `determineEnemyMove` around the FSM controller, wiring telemetry persistence, cooldown snapshots, and guard rails that coerce attacks/search/cover fallbacks when stochastic picks would otherwise idle.
 4. Extended enemy schema/world bootstrap/GameController turn loop to hydrate FSM snapshots and expose telemetry to debugging overlays.
-5. Refreshed combat/automation/perception tests, introduced focused FSM unit coverage, and documented the new AI pipeline in `memory-bank/architecture.md`.
+5. Refreshed combat/automation/perception tests, introduced focused FSM unit coverage, and documented the new AI pipeline in `memory-bank/04 Engineering/Architecture.md`.
 </tasks>
 
 <implementation>
@@ -5026,7 +5026,7 @@ Reauthored `buildingDefinitions` to the 16-parcel model with single street-facin
 <code_reference file="the-getaway/src/__tests__/autoBattlePlanner.test.ts" />
 <code_reference file="the-getaway/src/__tests__/perceptionManager.test.ts" />
 <code_reference file="the-getaway/src/__tests__/perks.test.ts" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn test --runTestsByPath src/game/ai/fsm/__tests__/controller.test.ts src/__tests__/combat.test.ts src/__tests__/autoBattlePlanner.test.ts src/__tests__/perceptionManager.test.ts src/__tests__/perks.test.ts --runInBand`
@@ -5994,7 +5994,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 <code_reference file="the-getaway/src/content/quests/builders.ts" />
 <code_reference file="the-getaway/src/game/narrative/validateContent.ts" />
 <code_reference file="the-getaway/src/content/locales/en/index.ts" />
-<code_reference file="memory-bank/architecture.md" />
+<code_reference file="memory-bank/04 Engineering/Architecture.md" />
 
 <validation>
 - `yarn test narrativeValidation.test.ts --watch=false`
@@ -6098,7 +6098,7 @@ Comprehensive test coverage: perk definitions (8 perks, categories, capstones), 
 - <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location>
 - <code_location>the-getaway/src/App.tsx</code_location>
 - <code_location>the-getaway/src/content/ui/index.ts</code_location>
-- <code_location>memory-bank/architecture.md</code_location>
+- <code_location>memory-bank/04 Engineering/Architecture.md</code_location>
 </implementation>
 
 <validation>

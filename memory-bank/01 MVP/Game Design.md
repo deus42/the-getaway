@@ -1,4 +1,4 @@
-The Getaway - Game Design Document
+# The Getaway — Game Design
 
 <source_of_truth>
 - This file is the single authoritative design for The Getaway.
@@ -35,8 +35,9 @@ Chat → Doc sync highlights (what changed in this document):
 
 <document_map date="2026-02-19">
 Document Map
-- MVP-first design (this file): `memory-bank/game-design.md`
-- Deferred systems (Post-MVP folder index): `memory-bank/post-mvp/README.md`
+- Vault home: [[00 Home]]
+- MVP index: [[01 MVP/00 Index]]
+- Deferred systems: [[02 Post-MVP/00 Index|Post-MVP Index]]
 </document_map>
 
 <game_overview>
@@ -89,18 +90,18 @@ Signage, UI Diegesis & Lighting Motifs
 
 Reference Sheets & Production Workflow
 	•	Produce a one-page style sheet per district outlining palette swatches, texture callouts, signage exemplars, and “do/don’t” mini-comparisons.
-	•	Each sheet should cite relevant narrative beats from `memory-bank/plot.md` so faction tone and environmental storytelling stay aligned.
-	•	Store sheets under `the-getaway/src/assets/style-guides/` (or equivalent) with versioned filenames (`districtName_style_v###.mdx/png`) and log updates in `memory-bank/progress.md` when districts evolve.
+	•	Each sheet should cite relevant narrative beats from `memory-bank/03 Lore/Plot Bible.md` so faction tone and environmental storytelling stay aligned.
+	•	Store sheets under `the-getaway/src/assets/style-guides/` (or equivalent) with versioned filenames (`districtName_style_v###.mdx/png`) and log updates in `memory-bank/04 Engineering/Roadmap.md` when districts evolve.
 	•	All outsourced or generated art must reference the applicable sheet to ensure external collaborators hit the noir constraints without guesswork.
 	•	Maintain a reusable SDXL prompt library in `/art/prompts/` (tiles, props, characters). Every brief must reiterate “painterly brush grain, clean albedo, no baked shadows” so runtime lights, not renders, supply depth.
 	•	Export atlas-ready sprites at 2:1 ratios (64×32 base tiles, 128px hero props). Place diffuse PNGs in `public/atlases/` with matching JSON (`props.json`) and keep normal maps in `public/normals/` using the `_n` suffix (`lamp_slim_a` → `lamp_slim_a_n`).
 	•	Verify normals in Level 0 by enabling the Game Menu lighting toggle (pipes into `visualSettings.lightsEnabled`) then stepping into Waterfront Commons: the indoor validation lamp + point light exposes inverted green channels immediately.
 </game_system>
 
-<narrative_alignment document="memory-bank/plot.md">
+<narrative_alignment document="memory-bank/03 Lore/Plot Bible.md">
 Narrative Alignment & Tone Reference
 
-All quest text, dialogue, ambient barks, and narrative UI copy must align with the plot bible’s XML directives in `memory-bank/plot.md`.
+All quest text, dialogue, ambient barks, and narrative UI copy must align with the plot bible’s XML directives in `memory-bank/03 Lore/Plot Bible.md`.
 	•	Consult `<tone_and_dialogue>` for faction voice, dialogue formatting, and the `<writing_guidelines>` list before drafting new lines or localizations.
 	•	Use the narrative pillars and alternate outcomes described under `<narrative_structure>` to anchor quest stakes and branching logic.
 	•	Document in change logs which plot bible sections guided the update (e.g., Guideline 4 for satire, Relationship web for character dynamics) so future passes can trace intent.
@@ -112,25 +113,25 @@ Designers should treat the plot bible as the authoritative “what” for story 
 <mechanic name="living_world_ai">
 Living World Ai (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/world-simulation.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/world-simulation.md.</implementation_status>
 </mechanic>
 
 <mechanic name="trust_fear_ethics">
 Trust Fear Ethics (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/reputation-systems.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/reputation-systems.md.</implementation_status>
 </mechanic>
 
 <mechanic name="localized_reputation_network">
 Localized Reputation Network (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/reputation-systems.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/reputation-systems.md.</implementation_status>
 </mechanic>
 
 <mechanic name="witness_memory_heat">
 Witness Memory Heat (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/reputation-systems.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/reputation-systems.md.</implementation_status>
 </mechanic>
 
 <mechanic name="ai_assistant">
@@ -155,9 +156,9 @@ George’s dialogue adheres to the tonal guidelines in the plot bible: darkly fu
 Turn-Based Combat System
 
 <mechanic name="combat_overview">
-Combat Overview (MVP-minimal)
+Combat Overview (MVP scope)
 
-<implementation_status>⚠️ MVP-minimal. Combat exists in MVP, but the design focus is stealth + quests; the full combat spec is in `memory-bank/post-mvp/combat-advanced.md`.</implementation_status>
+<implementation_status>✅ MVP scope. Combat exists in the MVP, but it should primarily appear as escalation from detection or as a scripted quest beat. The full combat expansion spec is in `memory-bank/02 Post-MVP/combat-advanced.md`.</implementation_status>
 
 MVP intent:
 	•	Combat is turn-based on a grid and typically triggers as escalation from detection (or a scripted quest beat).
@@ -173,7 +174,7 @@ Encounters are resolved on a grid map that corresponds to the environment (stree
 	•	The grid can be hexagonal or square; this will be determined in development (hex grids allow movement in six directions, whereas square grids align with orthogonal map layouts).
 	•	Terrain affects movement: moving through difficult terrain like rubble, shallow water, or climbing through a window costs more movement points/AP. Open ground is easy to traverse, while obstacles block movement completely.
 	•	Movement is important not just for closing distance or escaping, but for tactical positioning (flanking enemies, reaching cover, etc.). Players will often need to balance using a turn to move versus using it to attack or use an ability.
-	•	(Post-MVP) Vehicle-on-grid rules are deferred (see `memory-bank/post-mvp/vehicles.md`).
+	•	(Post-MVP) Vehicle-on-grid rules are deferred (see `memory-bank/02 Post-MVP/vehicles.md`).
 </mechanic>
 
 <mechanic name="action_points">
@@ -195,7 +196,7 @@ The AP system means characters with higher agility or certain perks get more don
 <balance_values system="stamina">
 Pressure & Recovery (MVP)
 
-<implementation_status>⚠️ PARTIAL - MVP uses Paranoia as the primary pressure resource; full stamina spec moved to memory-bank/post-mvp/stamina-system.md.</implementation_status>
+<implementation_status>⚠️ PARTIAL - MVP uses Paranoia as the primary pressure resource; full stamina spec moved to memory-bank/02 Post-MVP/stamina-system.md.</implementation_status>
 
 Paranoia - Player Stress Resource (MVP - Step 24.6)
 Paranoia replaces stamina on the HUD for MVP and tracks the player’s psychological load from corporate policing, surveillance, and night movement. The system is tiered (Calm → Uneasy → On Edge → Panicked → Breakdown) and feeds both stealth/detection pressure and (when combat happens) lightweight combat modifiers.
@@ -240,19 +241,19 @@ Stealth is now a primary player-driven mode that complements Combat and Dialogue
 <mechanic name="cover_line_of_sight">
 Cover Line Of Sight (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/combat-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/combat-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="special_abilities">
 Special Abilities (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/combat-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/combat-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="autobattle_mode">
 AutoBattle (MVP optional)
 
-<implementation_status>⚠️ MVP optional convenience. Full behaviour profiles + planner spec live in `memory-bank/post-mvp/combat-advanced.md`.</implementation_status>
+<implementation_status>⚠️ MVP optional convenience. Full behaviour profiles + planner spec live in `memory-bank/02 Post-MVP/combat-advanced.md`.</implementation_status>
 
 MVP intent:
 	•	Expose a simple toggle to let players auto-resolve easy fights.
@@ -262,7 +263,7 @@ MVP intent:
 <mechanic name="vehicles_in_combat">
 Vehicles In Combat (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/vehicles.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/vehicles.md.</implementation_status>
 </mechanic>
 </game_system>
 
@@ -272,25 +273,25 @@ Exploration & Open-World Elements
 <mechanic name="persistent_world">
 Persistent World (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/world-simulation.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/world-simulation.md.</implementation_status>
 </mechanic>
 
 <mechanic name="exploration_travel">
 Exploration Travel (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/world-simulation.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/world-simulation.md.</implementation_status>
 </mechanic>
 
 <mechanic name="dynamic_npc_factions">
 Dynamic Npc Factions (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/world-simulation.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/world-simulation.md.</implementation_status>
 </mechanic>
 
 <mechanic name="random_encounters">
 Random Encounters (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/world-simulation.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/world-simulation.md.</implementation_status>
 </mechanic>
 
 <mechanic name="day_night_cycle">
@@ -311,7 +312,7 @@ The day-night cycle encourages players to think about when they do things, not j
 <mechanic name="vehicles_exploration">
 Vehicles Exploration (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/vehicles.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/vehicles.md.</implementation_status>
 </mechanic>
 </game_system>
 
@@ -334,7 +335,7 @@ Overall, the story structure is designed for branching and convergence: there ar
 <mechanic name="procedural_storylets">
 Procedural Storylets (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/storylets.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/storylets.md.</implementation_status>
 </mechanic>
 
 <mechanic name="dialogue_system">
@@ -354,19 +355,19 @@ The dialogue system is essentially the narrative engine of the game, driving sto
 <mechanic name="tone_preserving_dialogue">
 Tone Preserving Dialogue (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/narrative-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/narrative-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="role_based_dialogue_templates">
 Role Based Dialogue Templates (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/narrative-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/narrative-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="choices_consequences">
-Choices & Consequences (MVP-minimal)
+Choices & Consequences (MVP scope)
 
-<implementation_status>⚠️ MVP-minimal. Full branching/long-tail consequence framework lives in `memory-bank/post-mvp/narrative-advanced.md`.</implementation_status>
+<implementation_status>✅ MVP scope. Consequences in MVP are immediate and legible (quest-state changes + scene outcomes). Long-tail/procedural consequence frameworks live in `memory-bank/02 Post-MVP/narrative-advanced.md`.</implementation_status>
 
 MVP policy:
 	•	Consequences are primarily quest-state changes + immediate scene outcomes.
@@ -374,9 +375,9 @@ MVP policy:
 </mechanic>
 
 <mechanic name="quest_drivers">
-Quest Drivers (MVP-minimal)
+Quest Drivers (MVP scope)
 
-<implementation_status>⚠️ MVP-minimal. Advanced/procedural quest-driving rules live in `memory-bank/post-mvp/narrative-advanced.md`.</implementation_status>
+<implementation_status>✅ MVP scope. Quest-driving is deterministic and debuggable (simple triggers + clear state). Advanced/procedural quest drivers live in `memory-bank/02 Post-MVP/narrative-advanced.md`.</implementation_status>
 
 MVP intent:
 	•	Hand-authored quests, triggered by simple conditions (dialogue choice, stepping on tile, pickup collected, flag set).
@@ -386,7 +387,7 @@ MVP intent:
 <mechanic name="multiple_endings">
 Multiple Endings (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/narrative-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/narrative-advanced.md.</implementation_status>
 </mechanic>
 </game_system>
 
@@ -396,13 +397,13 @@ Quest Design
 <mechanic name="quest_variety">
 Quest Variety (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/narrative-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/narrative-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="faction_quests">
 Faction Quests (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/narrative-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/narrative-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="level_objective_structure">
@@ -437,13 +438,13 @@ Side Quests & Optional Tasks
 <mechanic name="karma_system">
 Karma System (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/progression-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/progression-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="reputation_system">
 Reputation System (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/progression-advanced.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/progression-advanced.md.</implementation_status>
 </mechanic>
 
 <mechanic name="quest_structure">
@@ -472,9 +473,9 @@ The quest structure and journal are about player guidance and memory. With so mu
 Game Systems & Progression
 
 <mechanic name="character_creation">
-Character Creation & Progression (MVP-minimal)
+Character Creation & Progression (MVP scope)
 
-<implementation_status>⚠️ MVP-minimal. Full progression, perks, and deep skill-tree design lives in `memory-bank/post-mvp/progression-advanced.md`.</implementation_status>
+<implementation_status>✅ MVP scope. MVP supports a real character build (background + starting attributes, and enough progression to matter in Level 0). Deep perk economies / large trees live in `memory-bank/02 Post-MVP/progression-advanced.md`.</implementation_status>
 
 MVP intent:
 	•	Character creation sets: portrait/appearance (lightweight), background, and starting SPECIAL/attributes.
@@ -483,9 +484,9 @@ MVP intent:
 
 <mechanic name="equipment_inventory">
 <balance_values system="equipment">
-Equipment & Inventory (MVP-minimal)
+Equipment & Inventory (MVP scope)
 
-<implementation_status>⚠️ MVP-minimal. Full equipment/inventory economy moved to memory-bank/post-mvp/equipment-inventory.md.</implementation_status>
+<implementation_status>✅ MVP scope. MVP includes inventory + quest pickups + a small consumable set; deep economy/micromanagement lives in `memory-bank/02 Post-MVP/equipment-inventory.md`.</implementation_status>
 
 MVP intent:
 	•	Keep inventory friction low in Level 0.
@@ -498,20 +499,20 @@ MVP intent:
 <mechanic name="crafting_upgrades">
 Crafting Upgrades (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/crafting-upgrades.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/crafting-upgrades.md.</implementation_status>
 </mechanic>
 
 <mechanic name="weapon_mods">
 Weapon Mods (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/weapon-mods.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/weapon-mods.md.</implementation_status>
 </mechanic>
 
 <mechanic name="survival_mechanics">
 <balance_values system="survival">
 Survival Mechanics (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP. Full hunger/thirst/fatigue survival loop moved to memory-bank/post-mvp/survival-mechanics.md.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP. Full hunger/thirst/fatigue survival loop moved to memory-bank/02 Post-MVP/survival-mechanics.md.</implementation_status>
 
 MVP policy:
 	•	No hunger/thirst meters.

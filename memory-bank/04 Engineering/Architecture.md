@@ -147,7 +147,7 @@ flowchart LR
 <architecture_section id="environment_story_triggers" category="narrative_systems">
 <design_principles>
 - Keep environment reactivity declarative: world-facing flags live under `world.environment.flags` and drive all swaps through a trigger registry rather than ad-hoc conditionals.
-- Favour data tables over inline copy so rumors, signage, and notes remain tone-consistent with `memory-bank/plot.md` and can scale through content-only additions.
+- Favour data tables over inline copy so rumors, signage, and notes remain tone-consistent with `memory-bank/03 Lore/Plot Bible.md` and can scale through content-only additions.
 - Ensure triggers are idempotent and observable—every swap records the source ID and timestamp so reducers, HUD, and QA tooling can diff the current ambient state.
 - Throttle weather shifts to once per recorded time-of-day so ambient logs surface meaningful beats instead of oscillating between severity presets.
 </design_principles>
@@ -293,7 +293,7 @@ flowchart LR
 - Accessibility is baseline: ensure concise `aria-label`s or `role="status"` convey implied text and reserve tooltips for modal/popup contexts only.
 </design_principles>
 <pattern name="HudPanelChecklist">
-- Pre-flight every panel by checking duplication, interaction count, and source-of-truth alignment, then log architectural/design impacts here and in `memory-bank/game-design.md` when mechanics shift.
+- Pre-flight every panel by checking duplication, interaction count, and source-of-truth alignment, then log architectural/design impacts here and in `memory-bank/01 MVP/Game Design.md` when mechanics shift.
 - Panels share the console visual language—gunmetal base, cyan edge lines, layered scanlines/particle sweeps—to maintain the painterly noir HUD identity.
 </pattern>
 <pattern name="HudLayoutStateMachine">
@@ -1445,7 +1445,7 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 - Ensure every imported or custom-rendered sprite bakes in the same light direction and contrast so mixed asset packs still feel cohesive.
 
 ### Layering & Depth Perception
-- Depth ordering flows through `DepthManager` (`src/game/utils/depth.ts`). Register dynamic objects via `syncDepthPoint` so `computeDepth` + `DepthBias` constants decide stacking. Avoid calling `setDepth` manually—full bias bands live in `memory-bank/graphics.md`.
+- Depth ordering flows through `DepthManager` (`src/game/utils/depth.ts`). Register dynamic objects via `syncDepthPoint` so `computeDepth` + `DepthBias` constants decide stacking. Avoid calling `setDepth` manually—full bias bands live in `memory-bank/03 Lore/Art Direction.md`.
 - Reserve overlay and diagnostic layers by using the exported `DepthLayers` constants (path previews, day/night tint, debug wedges) so systemic effects never fight entity ordering.
 - Reinforce depth by slightly scaling down props placed "farther back" (higher y) and reducing their saturation/brightness while increasing contrast on foreground items.
 - Use subtle atmospheric effects—soft tints, fog sprites, or gradient overlays—to imply distance without adding real 3-D geometry.

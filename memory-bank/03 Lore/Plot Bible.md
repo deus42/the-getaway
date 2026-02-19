@@ -1,3 +1,6 @@
+# Plot Bible
+
+```xml
 <plot_bible title="The Getaway">
   <setting_snapshot year="2036" region="United States">
     <climate>Subtropical storms hammer the Atlantic coast; seawalls and pumps fail weekly.</climate>
@@ -169,3 +172,4 @@
 
   <usage>Use this plot bible to align missions, cinematics, and dialogue. New narrative beats must reinforce Operation Cold Iron, escalate faction stakes, or deepen the player’s connection to dismantling Harrow’s regime.</usage>
 </plot_bible>
+```

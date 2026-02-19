@@ -1,3 +1,6 @@
+# Art Direction / Graphics Guide
+
+```xml
 <graphics_guide>
   <depth_pipeline>
     <summary>
@@ -70,7 +73,7 @@
     <item>Sync every movable object (tokens, bars, HUD overlays) via `syncDepthPoint` after updating pixel coordinates.</item>
     <item>Reserve `DepthLayers` for overlays that must remain fixed regardless of camera motion.</item>
     <item>Bind the main camera with `bindCameraToVisualSettings` so bloom/vignette/color grading stay in sync with global settings.</item>
-    <item>Document new bias bands or FX presets in this guide and cross-link from `memory-bank/architecture.md` when architecture changes reference them.</item>
+    <item>Document new bias bands or FX presets in this guide and cross-link from `memory-bank/04 Engineering/Architecture.md` when architecture changes reference them.</item>
   </integration_checklist>
   <asset_authoring>
     <summary>
@@ -156,3 +159,4 @@
     </fallback_policy>
   </level0_revamp_foundation>
 </graphics_guide>
+```
