@@ -2,15 +2,15 @@ name: CI and GitHub Pages
 
 on:
   push:
-    branches:
-      - main
+    branches-ignore:
+      - gh-pages
   pull_request:
     branches:
       - main
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -23,12 +23,43 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       app-version: ${{ steps.version_check.outputs.version }}
+      deploy-subpath: ${{ steps.branch_context.outputs.deploy_subpath }}
+      sanitized-branch: ${{ steps.branch_context.outputs.sanitized_branch }}
+      source-branch: ${{ steps.branch_context.outputs.source_branch }}
+      vite-base: ${{ steps.branch_context.outputs.vite_base }}
     defaults:
       run:
         working-directory: the-getaway
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Derive branch deploy context
+        id: branch_context
+        run: |
+          set -euo pipefail
+
+          SOURCE_BRANCH="${GITHUB_REF_NAME}"
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            SOURCE_BRANCH="${GITHUB_HEAD_REF}"
+          fi
+
+          SANITIZED_BRANCH="$(echo "${SOURCE_BRANCH}" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g; s/^-+//; s/-+$//')"
+          if [ -z "${SANITIZED_BRANCH}" ]; then
+            SANITIZED_BRANCH="preview"
+          fi
+
+          DEPLOY_SUBPATH='.'
+          VITE_BASE='/the-getaway/'
+          if [ "${SOURCE_BRANCH}" != 'main' ]; then
+            DEPLOY_SUBPATH="previews/${SANITIZED_BRANCH}"
+            VITE_BASE="/the-getaway/${DEPLOY_SUBPATH}/"
+          fi
+
+          echo "source_branch=${SOURCE_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "sanitized_branch=${SANITIZED_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "deploy_subpath=${DEPLOY_SUBPATH}" >> "$GITHUB_OUTPUT"
+          echo "vite_base=${VITE_BASE}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -47,8 +78,8 @@ jobs:
         id: version_check
         run: |
           VERSION=$(node ./scripts/check-version.mjs)
-          echo "APP_VERSION=$VERSION" >> $GITHUB_ENV
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Lint
         run: yarn lint
@@ -57,12 +88,15 @@ jobs:
         run: yarn test --runInBand
 
       - name: Build
+        env:
+          VITE_BASE: ${{ steps.branch_context.outputs.vite_base }}
         run: yarn build
 
-      - name: Upload Pages artifact
+      - name: Upload dist artifact
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
+          name: pages-dist
           path: the-getaway/dist
 
   deploy:
@@ -71,12 +105,74 @@ jobs:
     if: github.event_name != 'pull_request'
     env:
       APP_VERSION: ${{ needs.build.outputs.app-version }}
+      DEPLOY_SUBPATH: ${{ needs.build.outputs.deploy-subpath }}
+      SOURCE_BRANCH: ${{ needs.build.outputs.source-branch }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: pages-dist
+          path: dist
+
+      - name: Prepare gh-pages worktree
+        run: |
+          set -euo pipefail
+
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git fetch origin gh-pages:gh-pages
+            git worktree add site gh-pages
+          else
+            git worktree add --detach site
+            cd site
+            git checkout --orphan gh-pages
+            find . -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+            cd ..
+          fi
+
+      - name: Sync build output into gh-pages content
+        run: |
+          set -euo pipefail
+
+          if [ "${DEPLOY_SUBPATH}" = '.' ]; then
+            rsync -a --delete --exclude '.git' --exclude 'previews' dist/ site/
+          else
+            mkdir -p "site/${DEPLOY_SUBPATH}"
+            rsync -a --delete --exclude '.git' dist/ "site/${DEPLOY_SUBPATH}/"
+          fi
+
+          touch site/.nojekyll
+
+      - name: Commit and push gh-pages content
+        run: |
+          set -euo pipefail
+
+          cd site
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo 'No content changes to commit.'
+          else
+            git commit -m "chore: deploy ${SOURCE_BRANCH} (${GITHUB_SHA::7})"
+            git push origin gh-pages
+          fi
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
       - name: Announce release version
-        run: echo "Deploying The Getaway version $APP_VERSION"
+        run: echo "Deploying The Getaway version ${APP_VERSION}"
 
       - name: Deploy to GitHub Pages
         id: deployment

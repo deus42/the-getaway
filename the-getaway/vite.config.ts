@@ -4,7 +4,21 @@ import react from '@vitejs/plugin-react';
 const repository = process.env.GITHUB_REPOSITORY;
 const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
 const repoName = repository?.split('/')[1];
-const base = isGitHubActions && repoName ? `/${repoName}/` : '/';
+
+const normalizeBasePath = (basePath: string): string => {
+  const trimmedBasePath = basePath.trim();
+
+  if (!trimmedBasePath || trimmedBasePath === '/') {
+    return '/';
+  }
+
+  const normalizedSegment = trimmedBasePath.replace(/^\/+|\/+$/g, '');
+  return `/${normalizedSegment}/`;
+};
+
+const envBasePath = process.env.VITE_BASE ?? process.env.BASE_PATH;
+const fallbackBasePath = isGitHubActions && repoName ? `/${repoName}/` : '/';
+const base = normalizeBasePath(envBasePath ?? fallbackBasePath);
 
 // https://vite.dev/config/
 export default defineConfig({
