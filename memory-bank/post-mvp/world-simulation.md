@@ -1,0 +1,74 @@
+# Post-MVP: Living World / Simulation
+
+Moved out of memory-bank/game-design.md to keep the MVP doc focused.
+
+
+<mechanic name="living_world_ai">
+Living World & AI
+
+The game world is persistent and simulated, meaning changes endure and NPCs behave autonomously to create a living world:
+	•	AI-Driven NPC Behavior: Civilians, traders, and faction members go about daily routines independently of the player. For example, a merchant might travel between markets each day, or a gang patrol might roam their territory looking for intruders.
+	•	Dynamic Interactions: NPCs and factions interact with each other. Rival faction members might fight if they cross paths, or guards might chase criminals in the streets. These skirmishes can occur whether or not the player is there to witness them.
+	•	Procedural Events: Random events happen throughout the city to keep the world unpredictable. The player might stumble upon a mugging in progress, a street protest, a building on fire, or an overturned supply truck. They can choose to get involved or ignore these events, and their actions (or inaction) can have ripple effects.
+	•	Responsive World State: The world reacts to major events or player actions. If the player causes a power outage in a district, that area might fall into chaos with looting and more crime until power is restored. If a gang leader is taken out, that gang’s presence noticeably diminishes, and other factions may move into their turf.
+	•	Day/Night Behavior: Tied to the day-night cycle, NPC behavior changes over time (e.g., at night, law-abiding citizens stay home while gangs and predators become more active). Shops open and close at certain hours. Some quests or events are only available at a particular time of day.
+
+These systems ensure the city feels alive and immersive. The player is one part of a larger ecosystem, and the world can surprise them with new developments during their journey.
+</mechanic>
+
+
+<mechanic name="persistent_world">
+Persistent Open World
+
+Outside of combat, The Getaway is an open-world experience where the city is explored through fast, turn-based-under-the-hood movement and interactions (grid steps + queued actions), presented to feel near-real-time. The world is persistent, meaning it remembers the state of things as you leave them:
+	•	If the player clears an enemy hideout, that location remains cleared. New occupants might move in much later (or not at all), but it won’t simply respawn identical enemies when you return. The results of your actions are lasting.
+	•	Changes caused by quests or player actions (blowing up a bridge, making peace between two gangs, etc.) have lasting effects on the game world. These are not reset, underscoring that the player’s decisions have impact. For example, if you negotiate a truce between factions, you’ll see those factions peacefully coexisting in areas where they used to fight.
+	•	Time is continuously tracked. A day-night cycle progresses as the player explores (for example, one in-game hour might pass every few minutes of real time, adjustable for gameplay pacing). If you start a journey in the morning, it might be evening by the time you arrive at your destination, with corresponding changes in NPC behavior and visibility.
+	•	The open world is populated by many locations: city streets, markets, faction bases, secret hideouts, abandoned buildings, underground sewers, etc. Players can enter many structures or at least interact with them (hacking a door lock to enter a warehouse, climbing through a window of a skyscraper, etc.), making exploration rewarding and full of discovery.
+	•	The design supports backtracking and free travel. There is no fixed linear progression through areas; you can roam almost anywhere you dare. Some areas may be extremely dangerous for a low-level character, serving as soft barriers (you can go there, but expect a tough fight or environmental hazard). But if you’re clever or sneaky, you might still explore these areas early and get high-tier loot or information.
+
+Persistence means the world state evolves over the entire playthrough. Enemies don't magically reset, and earlier actions can remove or alter content later. This makes the player feel genuine impact and also requires them to live with their decisions (no easy re-dos of quests unless they reload a save).
+</mechanic>
+
+
+<mechanic name="exploration_travel">
+Exploration and Travel
+
+Traversing the city is a core part of gameplay, with an emphasis on player freedom and risk-reward during travel:
+	•	On Foot Exploration: When walking through the city, players can move at their own pace, sneaking or running as needed. On foot, the player can discover hidden paths (like climbing a fire escape to a rooftop for a shortcut or sniper position) or slip through narrow alleyways that vehicles can’t access. Foot travel is slower and potentially more dangerous (you might get cornered or ambushed easily), but allows thorough exploration to find loot and secrets.
+		•	(Post-MVP) Vehicle Travel: Players can use vehicles they’ve acquired to move faster through the world. Driving a car or riding a motorcycle lets you cover ground quickly and can help outrun threats. However, vehicles make noise and are conspicuous, possibly increasing the chance of drawing attention or triggering certain encounters (roadblocks, ambushes). MVP does not require vehicles; treat this as optional Post-MVP expansion.
+		•	Navigation & Map: The game provides a map of the city that updates as you discover new locations. Key places (faction HQs, safehouses, major landmarks) get marked. The player can set waypoints to guide travel. However, the map starts mostly blank or with minimal info, encouraging exploration to fill it in. There may be in-game maps or informants that can add markers for you (e.g., buying a city guide or obtaining a faction’s intel might reveal the locations of all their safehouses).
+		•	Points of Interest: The world is designed with points of interest scattered throughout to make exploration engaging. This includes things like: stashes of supplies tucked away in ruined buildings, unique NPCs who might appear in certain areas (like a mysterious trader in an alley), environmental storytelling elements (e.g., graffiti that hints at a nearby hideout, or a trail of blood leading to a hidden scene).
+		•	Hazard Integration Matrix: District hazards (smog density, radiation pockets, surveillance saturation) combine with live environment flags (curfew tier, blackout status, gang heat) through a shared matrix. The resulting weights modulate NPC routines, corp reinforcement cadence, merchant availability, and feed the travel-advisory HUD banner so route planning reflects systemic risk instead of static danger labels.
+		•	Safe Zones and Resting: Scattered around the world are safer areas (like neutral zones or player-established safehouses) where combat is unlikely. Here the player can rest to heal and pass time, manage inventory, or converse with NPCs without immediate threats. These spots serve as hubs in the open world and checkpoints for the player’s progress. For example, a friendly bar might be a place to get rumors and hire help, and it remains off-limits for fighting by mutual agreement of factions.
+
+Exploration is about balancing curiosity with caution. Venturing into unknown territory can yield great rewards (resources, new quests, allies) but also risks dangerous encounters or overextending your supplies. The player must gauge when to travel, what to bring, and how to get there – on foot quietly or loudly in a vehicle.
+</mechanic>
+
+
+<mechanic name="dynamic_npc_factions">
+Dynamic NPC Behavior & Factions
+
+The world is inhabited by various NPCs with their own agendas, making the city feel alive beyond the player's direct interactions:
+	•	Factions and Territories: Key factions control specific neighborhoods or resources. For example, a paramilitary police force might enforce order in the Downtown Core, while a gang controls the slums’ black market, and an underground resistance operates in the industrial ruins. These territories are visibly marked by faction graffiti, flags, or patrolling NPCs. If the player trespasses in a hostile faction’s area, they might be confronted or attacked unless they have a disguise or a good reputation with that faction.
+	•	AI Schedules and Activities: NPCs have daily cycles and tasks. Shopkeepers open their stalls in the morning and go home at night. Gang members might collect “taxes” or harass locals in the afternoon, then retreat to hideouts later. Security forces could enforce a curfew after dark in wealthier districts. These patterns create predictable windows for the player (e.g., it might be easier to infiltrate a compound at night when some guards are off-duty, but harder to move through the streets due to curfew patrols).
+	•	Faction Conflicts: Factions will sometimes engage in conflicts with each other without player involvement. The player might come across a battle already in progress between two rival groups. These fights are driven by the simulation (for instance, if a gang tries to push into police territory). The outcome might be determined by the game’s AI if the player doesn’t intervene, potentially shifting control of that area. The player can choose to join a side or avoid the conflict; whatever they do (or don’t do) can influence which faction gains the upper hand.
+	•	Reaction to Player: NPCs react dynamically to the player’s status and behavior. If the player has a high reputation with a faction, members of that faction will greet them warmly, allow them into secure areas, or even assist in fights. If the player is infamous for violence (very low karma), civilians might flee at the sight of them or refuse to talk, and some may attempt to attack or report the player to authorities. On the other hand, being known as a hero (high karma) might cause desperate NPCs to approach the player for help or thank them for past deeds. Also, carrying weapons openly or driving a loud vehicle through a quiet zone can change NPC behavior (guards might go on alert, civilians hide).
+	•	Economy and Ecology: The city’s “ecosystem” responds to events. For example, if the player disrupts the supply of drugs in the slums (by completing a quest), drug prices might skyrocket on the black market and gang violence could spike as they fight over remaining stock. If a major gang is eliminated, the crime rate in their former territory might drop, making it safer for merchants and travelers. Wildlife or rogue robots in the outskirts might multiply if left unchecked, making journeys there more dangerous until the player or a faction deals with them.
+
+The combination of these behaviors means the city feels like a living system. The player can influence it heavily, but even if they try to lay low, things will still happen around them. This creates opportunities for the player to react to the world's changes, not just the world reacting to the player.
+</mechanic>
+
+
+<mechanic name="random_encounters">
+Random Encounters & Events
+
+As players roam the city or travel between areas, random encounters and dynamic events keep the experience engaging and unpredictable:
+	•	Random Encounters: These are unscripted scenarios the player can run into, especially in less secure or unoccupied areas. Examples include: a bandit ambush in a deserted street, a mutated creature emerging in the wasteland outskirts, a panicked stranger asking for help with pursuers, or stumbling upon a cache of supplies guarded by traps. Encounters can be combat-oriented or narrative. Some encounters might offer ways to avoid combat or resolve them creatively (e.g., negotiate with the bandits, or use a high stealth skill to sneak around the creature).
+	•	Dynamic Events: These are larger-scale or time-based occurrences that can happen based on triggers or world state. For instance, a sudden sandstorm or acid rain might sweep through the city, forcing the player to find shelter and temporarily changing visibility and NPC behavior. A city-wide alert could be triggered by a storyline event (like a prison break or an assassin on the loose), causing more checkpoints and police presence until it’s resolved. These events often present temporary challenges or opportunities (higher danger but maybe particular quests or loot available only during the event).
+	•	Encounter Frequency & Variation: The likelihood of certain events depends on location, time, and player status. At night in the slums, the chance of encountering a mugger or gang lookout is high, whereas in the daytime you might more likely run into pickpockets or protesters. In faction-controlled zones, “random” encounters might actually be patrols or checkpoints relevant to that faction. If the player is driving, encounters might take the form of vehicular ambushes or roadblocks, whereas on foot they might be more small-scale. The system will have a variety of encounters so they don’t repeat too often, and some may only happen once per game (unique events) to keep things interesting.
+	•	Mini-Quests and Choices: Many encounters present a quick one-off decision or mini-quest. For example, finding an injured person on the road could lead to a choice: help them (use medicine or carry them to safety), rob them, or ignore them. Each choice might have consequences (helping could improve karma and maybe that person rewards you later; robbing could give immediate loot but hurt karma; ignoring could mean they die and you feel the narrative weight of that). Another example: coming across two factions in a standoff – you could help one side, try to mediate, or just slip away, and whichever side you help will remember that.
+	•	World State Changes: Certain random events, once they occur, can permanently affect something in the world. If a building burns down due to an event, it might remain a ruin for the rest of the game (perhaps accessible as a new area with its own loot or dangers). If a group of refugees appears looking for a home (as an event), they might settle in an area and create a new minor faction or trading post if the player helps them. Random events thus contribute to the evolving narrative of the city.
+
+Random encounters ensure no two playthroughs are exactly alike and encourage players to stay alert and adaptive. They make traveling more than just moving from point A to B – the journey itself can become its own story.
+</mechanic>

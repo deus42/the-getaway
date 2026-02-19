@@ -10,3 +10,8 @@ This folder contains systems intentionally deferred from the MVP vertical slice.
 - survival-mechanics.md
 - reputation-systems.md
 - storylets.md
+- world-simulation.md
+- combat-advanced.md
+- narrative-advanced.md
+- progression-advanced.md
+- stamina-system.md
