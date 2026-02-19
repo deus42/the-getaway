@@ -34,7 +34,12 @@ import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../visual/t
 import { TilePainter } from '../visual/world/TilePainter';
 import { BuildingPainter } from '../visual/world/BuildingPainter';
 import { CharacterRigFactory } from '../visual/entities/CharacterRigFactory';
-import { scatterScenicProps } from '../visual/world/PropScatter';
+import { AtmosphereDirector, type AtmosphereProfile } from '../visual/world/AtmosphereDirector';
+import {
+  OcclusionReadabilityController,
+  type OcclusionEntityHandle,
+  type OcclusionMassHandle,
+} from '../visual/world/OcclusionReadabilityController';
 import {
   bindCameraToVisualSettings,
   getVisualFxBudgetForPreset,
@@ -67,6 +72,8 @@ interface NpcSpriteData {
   markedForRemoval: boolean;
 }
 
+type BuildingMassingEntry = OcclusionMassHandle;
+
 export class MainScene extends Phaser.Scene {
   private tileSize: number = DEFAULT_TILE_SIZE;
   private depthManager!: DepthManager;
@@ -78,6 +85,10 @@ export class MainScene extends Phaser.Scene {
   private tilePainter?: TilePainter;
   private buildingPainter?: BuildingPainter;
   private characterRigFactory?: CharacterRigFactory;
+  private atmosphereDirector?: AtmosphereDirector;
+  private occlusionReadabilityController?: OcclusionReadabilityController;
+  private currentAtmosphereProfile?: AtmosphereProfile;
+  private lastAtmosphereRedrawBucket = -1;
   private buildingVisualProfiles: Record<string, BuildingVisualProfile> = {};
   private playerToken?: CharacterToken;
   private playerNameLabel?: Phaser.GameObjects.Text;
@@ -88,6 +99,7 @@ export class MainScene extends Phaser.Scene {
   private currentMapArea: MapArea | null = null;
   private buildingLabels: Phaser.GameObjects.Container[] = [];
   private buildingMassings: Phaser.GameObjects.Container[] = [];
+  private buildingMassingEntries: BuildingMassingEntry[] = [];
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   private dayNightOverlay!: Phaser.GameObjects.Rectangle;
@@ -145,6 +157,15 @@ export class MainScene extends Phaser.Scene {
 
     if (!this.buildingPainter || themeChanged) {
       this.buildingPainter = new BuildingPainter(this, this.visualTheme);
+    }
+
+    if (!this.atmosphereDirector || themeChanged) {
+      this.atmosphereDirector = new AtmosphereDirector(this.visualTheme);
+      this.lastAtmosphereRedrawBucket = -1;
+    }
+
+    if (!this.occlusionReadabilityController || themeChanged) {
+      this.occlusionReadabilityController = new OcclusionReadabilityController();
     }
 
     if (this.isoFactory && (!this.characterRigFactory || themeChanged)) {
@@ -244,6 +265,10 @@ export class MainScene extends Phaser.Scene {
     this.currentGameTime = worldState.currentTime;
     this.timeDispatchAccumulator = 0;
     this.inCombat = worldState.inCombat;
+    this.lastAtmosphereRedrawBucket = Math.floor(this.currentGameTime / 5);
+    this.currentAtmosphereProfile = undefined;
+    this.drawBackdrop();
+    this.drawMap(this.currentMapArea.tiles);
     this.initializeDayNightOverlay();
     this.updateDayNightOverlay();
     this.curfewActive = worldState.curfewActive;
@@ -348,6 +373,8 @@ export class MainScene extends Phaser.Scene {
     this.buildingLabels = [];
     this.buildingMassings.forEach((mass) => mass.destroy(true));
     this.buildingMassings = [];
+    this.buildingMassingEntries = [];
+    this.currentAtmosphereProfile = undefined;
 
     if (this.coverDebugGraphics) {
       this.coverDebugGraphics.destroy();
@@ -417,6 +444,8 @@ export class MainScene extends Phaser.Scene {
       });
       this.npcSprites.clear();
       this.destroyCameraSprites();
+      this.currentAtmosphereProfile = undefined;
+      this.lastAtmosphereRedrawBucket = -1;
       this.setupCameraAndMap();
       this.clearPathPreview();
       this.enablePlayerCameraFollow();
@@ -473,77 +502,7 @@ export class MainScene extends Phaser.Scene {
     const itemMarkers = (this.currentMapArea.entities.items ?? []).filter(
       (item): item is Item & { position: Position } => Boolean(item.position)
     );
-    const protectedTiles: Position[] = [
-      ...interactiveNpcs.map((npc) => ({ ...npc.position })),
-      ...itemMarkers.map((item) => ({ ...item.position })),
-    ];
-    if (this.playerInitialPosition) {
-      protectedTiles.push({ ...this.playerInitialPosition });
-    }
-
-    const hashId = (value: string): number => {
-      let out = 0;
-      for (let i = 0; i < value.length; i += 1) {
-        out = ((out << 5) - out + value.charCodeAt(i)) >>> 0;
-      }
-      return out;
-    };
-
-    const scenicPlacements = scatterScenicProps(
-      this.currentMapArea,
-      this.currentMapArea.buildings ?? [],
-      this.buildingVisualProfiles,
-      this.visualTheme,
-      protectedTiles
-    );
-
-    scenicPlacements.forEach((placement) => {
-      const tint = Phaser.Display.Color.HexStringToColor(placement.tintHex).color;
-      const seed = hashId(placement.id);
-      switch (placement.kind) {
-        case 'barricade':
-          addProp(
-            this.isoFactory!.createBarricade(placement.position.x, placement.position.y, {
-              tint,
-              height: this.visualTheme.preset === 'performance' ? 0.9 : 1.05,
-              widthScale: 0.9,
-            })
-          );
-          break;
-        case 'streetLight':
-          addProp(
-            this.isoFactory!.createStreetLight(placement.position.x, placement.position.y, {
-              glowColor: tint,
-              glowAlpha: this.visualTheme.preset === 'performance' ? 0.12 : 0.2,
-              height: this.visualTheme.preset === 'cinematic' ? 1.25 : 1.1,
-            })
-          );
-          if (!this.demoLampGrid) {
-            this.demoLampGrid = { ...placement.position };
-          }
-          break;
-        case 'billboard':
-          addProp(
-            this.isoFactory!.createBillboard(placement.position.x, placement.position.y, {
-              glowColor: tint,
-              widthScale: this.visualTheme.preset === 'performance' ? 0.78 : 0.92,
-              heightScale: this.visualTheme.preset === 'cinematic' ? 1.2 : 1.05,
-            })
-          );
-          break;
-        case 'debris':
-          addProp(
-            this.isoFactory!.createCrate(placement.position.x, placement.position.y, {
-              tint,
-              scale: 0.36 + (seed % 4) * 0.06,
-              height: 0.45 + ((seed >> 2) % 3) * 0.08,
-              alpha: 0.88,
-            })
-          );
-          break;
-      }
-    });
-
+    const isoMetrics = this.getIsoMetrics();
     interactiveNpcs.forEach((npc) => {
       addProp(
         this.isoFactory!.createPulsingHighlight(npc.position.x, npc.position.y, {
@@ -561,21 +520,40 @@ export class MainScene extends Phaser.Scene {
     });
 
     itemMarkers.forEach((item) => {
-      const color = item.isQuestItem ? 0xfacc15 : 0x10b981;
-      const pulseColor = item.isQuestItem ? 0xfff3bf : 0x6ee7b7;
+      const color = item.isQuestItem ? 0xfacc15 : 0x22d3ee;
+      const pulseColor = item.isQuestItem ? 0xfff3bf : 0x7dd3fc;
+      const pixel = this.calculatePixelPosition(item.position.x, item.position.y);
       addProp(
         this.isoFactory!.createPulsingHighlight(item.position.x, item.position.y, {
           color,
-          alpha: 0.18,
+          alpha: item.isQuestItem ? 0.24 : 0.22,
           pulseColor,
-          pulseAlpha: { from: 0.28, to: 0.06 },
-          pulseScale: item.isQuestItem ? 1.25 : 1.18,
-          widthScale: 0.62,
-          heightScale: 0.62,
+          pulseAlpha: { from: item.isQuestItem ? 0.34 : 0.3, to: 0.08 },
+          pulseScale: item.isQuestItem ? 1.28 : 1.22,
+          widthScale: 0.72,
+          heightScale: 0.72,
           depthOffset: 8,
-          duration: item.isQuestItem ? 1250 : 1450,
+          duration: item.isQuestItem ? 1150 : 1300,
         })
       );
+
+      const itemLabel = this.add.text(
+        pixel.x,
+        pixel.y - isoMetrics.tileHeight * 0.7,
+        item.isQuestItem ? 'QUEST ITEM' : 'PICKUP',
+        {
+          fontFamily: 'Orbitron, "DM Sans", sans-serif',
+          fontSize: '10px',
+          fontStyle: '700',
+          color: item.isQuestItem ? '#fde68a' : '#dbeafe',
+          align: 'center',
+        }
+      );
+      itemLabel.setOrigin(0.5, 1);
+      itemLabel.setStroke(item.isQuestItem ? '#f59e0b' : '#0284c7', 1.1);
+      itemLabel.setShadow(0, 0, item.isQuestItem ? '#f59e0b' : '#38bdf8', 8, true, true);
+      this.syncDepth(itemLabel, pixel.x, pixel.y, DepthBias.FLOATING_UI + 14);
+      addProp(itemLabel);
     });
 
     if (this.lightsFeatureEnabled) {
@@ -620,12 +598,14 @@ export class MainScene extends Phaser.Scene {
       return;
     }
 
+    this.currentAtmosphereProfile = undefined;
     this.drawBackdrop();
     this.drawMap(this.currentMapArea.tiles);
     this.drawBuildingMasses();
     this.drawBuildingLabels();
     this.renderStaticProps();
     this.renderVisionCones();
+    this.applyOcclusionReadability();
   }
 
   private hasLightPipelineSupport(): boolean {
@@ -1156,6 +1136,8 @@ export class MainScene extends Phaser.Scene {
     this.buildingLabels = [];
     this.buildingMassings.forEach((mass) => mass.destroy(true));
     this.buildingMassings = [];
+    this.buildingMassingEntries = [];
+    this.currentAtmosphereProfile = undefined;
     if (this.playerToken) {
       this.playerToken.container.destroy(true);
       this.playerToken = undefined;
@@ -1178,6 +1160,11 @@ export class MainScene extends Phaser.Scene {
     if (!this.mapGraphics) return;
     
     this.ensureVisualPipeline();
+    const atmosphere = this.resolveAtmosphereProfile();
+    this.tilePainter?.setAtmosphereProfile({
+      wetReflectionAlpha: atmosphere.wetReflectionAlpha,
+      emissiveIntensity: atmosphere.emissiveIntensity,
+    });
     this.mapGraphics.clear();
 
     const { tileWidth, tileHeight } = this.getIsoMetrics();
@@ -1194,8 +1181,10 @@ export class MainScene extends Phaser.Scene {
       for (let x = 0; x < tiles[0].length; x++) {
         const tile = tiles[y][x];
         const center = this.calculatePixelPosition(x, y);
+        const hideCoverVolume = this.currentMapArea?.zoneId?.startsWith('downtown_checkpoint') && tile.type === TileType.COVER;
         const isBuildingFootprint = buildingFootprintTiles.has(`${x}:${y}`);
         const groundOnly =
+          hideCoverVolume ||
           isBuildingFootprint &&
           (tile.type === TileType.WALL || tile.type === TileType.COVER || tile.type === TileType.DOOR);
 
@@ -1207,6 +1196,7 @@ export class MainScene extends Phaser.Scene {
   private drawBuildingMasses(): void {
     this.buildingMassings.forEach((mass) => mass.destroy(true));
     this.buildingMassings = [];
+    this.buildingMassingEntries = [];
 
     if (!this.currentMapArea?.buildings?.length || !this.buildingPainter) {
       return;
@@ -1260,6 +1250,28 @@ export class MainScene extends Phaser.Scene {
         DepthBias.PROP_TALL + Math.round(profile.massingHeight * 12)
       );
       this.buildingMassings.push(mass);
+
+      const districtHeightBoost = profile.district === 'downtown' ? 0.78 : 0.7;
+      const massingHeight = tileHeight * Math.max(0.58, profile.massingHeight * districtHeightBoost);
+      const boundsMinX = Math.min(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
+      const boundsMaxX = Math.max(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
+      const boundsMinY = Math.min(
+        footprint.top.y - massingHeight,
+        footprint.right.y - massingHeight,
+        footprint.bottom.y - massingHeight,
+        footprint.left.y - massingHeight
+      );
+      const boundsMaxY = Math.max(footprint.top.y, footprint.right.y, footprint.bottom.y, footprint.left.y);
+      this.buildingMassingEntries.push({
+        id: building.id,
+        container: mass,
+        bounds: new Phaser.Geom.Rectangle(
+          boundsMinX,
+          boundsMinY,
+          Math.max(1, boundsMaxX - boundsMinX),
+          Math.max(1, boundsMaxY - boundsMinY)
+        ),
+      });
     });
   }
 
@@ -1820,6 +1832,86 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
+  private resolveDistrictWeight(): number {
+    const profiles = Object.values(this.buildingVisualProfiles);
+    if (!profiles.length) {
+      return 0.5;
+    }
+
+    const downtownCount = profiles.filter((profile) => profile.district === 'downtown').length;
+    return downtownCount / profiles.length;
+  }
+
+  private resolveAtmosphereProfile(baseOverlayRgba?: string): AtmosphereProfile {
+    this.ensureVisualPipeline();
+    if (!this.atmosphereDirector) {
+      throw new Error('AtmosphereDirector is not initialized.');
+    }
+
+    const profile = this.atmosphereDirector.resolveAtmosphereProfile({
+      districtWeight: this.resolveDistrictWeight(),
+      timeSeconds: this.currentGameTime,
+      baseOverlayRgba,
+    });
+
+    const presetCaps = getVisualFxBudgetForPreset(this.visualTheme.preset);
+    this.currentAtmosphereProfile = {
+      ...profile,
+      fogBands: profile.fogBands.slice(0, presetCaps.maxFogBands),
+      emissiveIntensity: Phaser.Math.Clamp(profile.emissiveIntensity, 0, 1),
+      wetReflectionAlpha: Phaser.Math.Clamp(profile.wetReflectionAlpha, 0, presetCaps.wetReflectionAlpha),
+    };
+
+    return this.currentAtmosphereProfile;
+  }
+
+  private applyOcclusionReadability(): void {
+    if (!this.occlusionReadabilityController || !this.buildingMassingEntries.length) {
+      return;
+    }
+
+    const entities: OcclusionEntityHandle[] = [];
+    if (this.playerToken) {
+      entities.push({
+        id: 'player',
+        pixelX: this.playerToken.container.x,
+        pixelY: this.playerToken.container.y,
+        token: this.playerToken,
+        nameLabel: this.playerNameLabel,
+      });
+    }
+
+    this.enemySprites.forEach((enemyData, enemyId) => {
+      entities.push({
+        id: enemyId,
+        pixelX: enemyData.token.container.x,
+        pixelY: enemyData.token.container.y,
+        token: enemyData.token,
+        nameLabel: enemyData.nameLabel,
+        healthBar: enemyData.healthBar,
+      });
+    });
+
+    this.npcSprites.forEach((npcData, npcId) => {
+      entities.push({
+        id: npcId,
+        pixelX: npcData.token.container.x,
+        pixelY: npcData.token.container.y,
+        token: npcData.token,
+        nameLabel: npcData.nameLabel,
+        indicator: npcData.indicator,
+      });
+    });
+
+    const profile = this.currentAtmosphereProfile ?? this.resolveAtmosphereProfile();
+    this.occlusionReadabilityController.applyOcclusionReadability({
+      masses: this.buildingMassingEntries,
+      entities,
+      occlusionFadeFloor: this.visualTheme.qualityBudget.occlusionFadeFloor,
+      emissiveIntensity: profile.emissiveIntensity,
+    });
+  }
+
   private drawBackdrop(): void {
     if (!this.backdropGraphics || !this.currentMapArea) {
       return;
@@ -1832,17 +1924,15 @@ export class MainScene extends Phaser.Scene {
     const originX = bounds.minX - margin;
     const originY = bounds.minY - margin;
 
-    const profiles = Object.values(this.buildingVisualProfiles);
-    const downtownCount = profiles.filter((profile) => profile.district === 'downtown').length;
-    const districtWeight = profiles.length > 0 ? downtownCount / profiles.length : 0.5;
-    const skylineSplit = 0.26 + districtWeight * 0.5;
+    const atmosphere = this.resolveAtmosphereProfile();
+    const skylineSplit = atmosphere.skylineSplit;
 
     this.backdropGraphics.clear();
     this.backdropGraphics.fillGradientStyle(
-      districtWeight >= 0.5 ? 0x061027 : 0x140b11,
-      districtWeight >= 0.5 ? 0x0b1c3d : 0x251320,
-      districtWeight >= 0.5 ? 0x1a1024 : 0x2a110f,
-      districtWeight >= 0.5 ? 0x091e30 : 0x242134,
+      atmosphere.gradientTopLeft,
+      atmosphere.gradientTopRight,
+      atmosphere.gradientBottomLeft,
+      atmosphere.gradientBottomRight,
       1,
       1,
       1,
@@ -1851,9 +1941,9 @@ export class MainScene extends Phaser.Scene {
     this.backdropGraphics.fillRect(originX, originY, width, height);
 
     const skylineBaseY = originY + height * 0.52;
-    const skylineColumns = 28;
-    const downtownColor = 0x123458;
-    const slumsColor = 0x3f1f20;
+    const skylineColumns = atmosphere.skylineColumns;
+    const downtownColor = atmosphere.skylineDowntownColor;
+    const slumsColor = atmosphere.skylineSlumsColor;
 
     for (let column = 0; column < skylineColumns; column += 1) {
       const normalized = column / skylineColumns;
@@ -1870,33 +1960,35 @@ export class MainScene extends Phaser.Scene {
         tintMix
       );
       const tintColor = Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b);
-      this.backdropGraphics.fillStyle(tintColor, 0.33 + variant * 0.12);
+      this.backdropGraphics.fillStyle(
+        tintColor,
+        atmosphere.skylineAlphaBase + variant * atmosphere.skylineAlphaVariance
+      );
       this.backdropGraphics.fillRect(x, skylineBaseY - towerHeight, segmentWidth, towerHeight);
-      this.backdropGraphics.fillStyle(adjustColor(tintColor, 0.12), 0.17);
+      this.backdropGraphics.fillStyle(adjustColor(tintColor, 0.12), 0.14 + atmosphere.emissiveIntensity * 0.1);
       this.backdropGraphics.fillRect(x + segmentWidth * 0.72, skylineBaseY - towerHeight, segmentWidth * 0.16, towerHeight);
     }
 
     const horizonY = originY + height * 0.35;
-    this.backdropGraphics.fillStyle(districtWeight >= 0.5 ? 0x1d3b63 : 0x442427, 0.22);
+    this.backdropGraphics.fillStyle(atmosphere.horizonGlowColor, atmosphere.horizonGlowAlpha);
     this.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
 
-    this.backdropGraphics.fillStyle(0x070b12, 0.56);
+    this.backdropGraphics.fillStyle(atmosphere.lowerHazeColor, atmosphere.lowerHazeAlpha);
     this.backdropGraphics.fillRect(originX, originY + height * 0.6, width, height * 0.6);
 
-    for (let ring = 0; ring < 5; ring += 1) {
-      const alpha = 0.2 - ring * 0.03;
+    atmosphere.fogBands.forEach((band) => {
+      const alpha = band.alpha;
       if (alpha <= 0) {
-        continue;
+        return;
       }
-      const factor = 1.18 + ring * 0.27;
-      this.backdropGraphics.lineStyle(2, districtWeight >= 0.5 ? 0x1d4875 : 0x5a2c3e, alpha);
+      this.backdropGraphics.lineStyle(2, band.color, alpha);
       this.backdropGraphics.strokeEllipse(
         originX + width / 2,
-        originY + height * 0.81,
-        width * factor,
-        height * 0.46 * factor
+        originY + height * band.yFactor,
+        width * band.widthFactor,
+        height * band.heightFactor
       );
-    }
+    });
   }
 
   private computeIsoBounds(): { minX: number; maxX: number; minY: number; maxY: number } {
@@ -2161,14 +2253,9 @@ export class MainScene extends Phaser.Scene {
   private updateDayNightOverlay(): void {
     if (!this.dayNightOverlay) return;
 
-    const overlayColor = getDayNightOverlayColor(this.currentGameTime, DEFAULT_DAY_NIGHT_CONFIG);
-    const match = overlayColor.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([0-9.]+)\)/);
-
-    if (match) {
-      const [, r, g, b, a] = match;
-      const color = Phaser.Display.Color.GetColor(Number(r), Number(g), Number(b));
-      this.dayNightOverlay.setFillStyle(color, Number(a));
-    }
+    const baseOverlay = getDayNightOverlayColor(this.currentGameTime, DEFAULT_DAY_NIGHT_CONFIG);
+    const atmosphere = this.resolveAtmosphereProfile(baseOverlay);
+    this.dayNightOverlay.setFillStyle(atmosphere.overlayColor, atmosphere.overlayAlpha);
   }
 
   public update(_time: number, delta: number): void {
@@ -2180,7 +2267,15 @@ export class MainScene extends Phaser.Scene {
     this.currentGameTime += deltaSeconds;
     this.timeDispatchAccumulator += deltaSeconds;
 
+    const atmosphereBucket = Math.floor(this.currentGameTime / 5);
+    if (atmosphereBucket !== this.lastAtmosphereRedrawBucket && this.currentMapArea) {
+      this.lastAtmosphereRedrawBucket = atmosphereBucket;
+      this.drawBackdrop();
+      this.drawMap(this.currentMapArea.tiles);
+    }
+
     this.updateDayNightOverlay();
+    this.applyOcclusionReadability();
 
     if (this.timeDispatchAccumulator >= 0.5) {
       const elapsedSeconds = this.timeDispatchAccumulator;

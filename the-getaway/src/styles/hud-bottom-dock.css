@@ -26,13 +26,21 @@
 }
 
 .hud-bottom-dock[data-hud-layout='combat'] {
-  --hud-dock-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-  gap: var(--hud-space-4);
-  height: clamp(220px, var(--bottom-panel-height, 260px), 280px);
+  --hud-dock-columns:
+    minmax(0, 1.2fr)
+    minmax(0, 1fr)
+    minmax(0, 0.95fr)
+    minmax(0, 1.05fr);
+  gap: var(--hud-space-3);
+  height: clamp(240px, var(--bottom-panel-height, 260px), 300px);
 }
 
 .hud-bottom-dock[data-hud-layout='stealth'] {
-  --hud-dock-columns: minmax(0, 1.4fr) minmax(0, 0.95fr) minmax(0, 0.85fr);
+  --hud-dock-columns:
+    minmax(0, 1.25fr)
+    minmax(0, 1fr)
+    minmax(0, 0.95fr)
+    minmax(0, 1.05fr);
 }
 
 .hud-bottom-lane {

@@ -43,6 +43,16 @@ export interface VisualFxSettingsUpdate {
   colorMatrix?: Partial<ColorMatrixSettings>;
 }
 
+export interface VisualPresetCaps {
+  bloomStrengthCap: number;
+  vignetteCap: number;
+  colorMatrixEnabled: boolean;
+  maxFogBands: number;
+  maxEmissiveZones: number;
+  wetReflectionAlpha: number;
+  occlusionFadeFloor: number;
+}
+
 const defaultVisualSettings: VisualFxSettings = Object.freeze({
   qualityPreset: 'balanced',
   lightsEnabled: false,
@@ -117,14 +127,16 @@ export const updateVisualSettings = (partial: VisualFxSettingsUpdate): void => {
   notify();
 };
 
-export const getVisualFxBudgetForPreset = (
-  preset: VisualQualityPreset
-): { bloomStrengthCap: number; vignetteCap: number; colorMatrixEnabled: boolean } => {
+export const getVisualPresetCaps = (preset: VisualQualityPreset): VisualPresetCaps => {
   if (preset === 'performance') {
     return {
       bloomStrengthCap: 0.18,
       vignetteCap: 0.22,
       colorMatrixEnabled: false,
+      maxFogBands: 2,
+      maxEmissiveZones: 6,
+      wetReflectionAlpha: 0.08,
+      occlusionFadeFloor: 0.56,
     };
   }
 
@@ -133,6 +145,10 @@ export const getVisualFxBudgetForPreset = (
       bloomStrengthCap: 0.48,
       vignetteCap: 0.44,
       colorMatrixEnabled: true,
+      maxFogBands: 6,
+      maxEmissiveZones: 14,
+      wetReflectionAlpha: 0.2,
+      occlusionFadeFloor: 0.38,
     };
   }
 
@@ -140,7 +156,15 @@ export const getVisualFxBudgetForPreset = (
     bloomStrengthCap: 0.32,
     vignetteCap: 0.34,
     colorMatrixEnabled: true,
+    maxFogBands: 4,
+    maxEmissiveZones: 10,
+    wetReflectionAlpha: 0.14,
+    occlusionFadeFloor: 0.48,
   };
+};
+
+export const getVisualFxBudgetForPreset = (preset: VisualQualityPreset): VisualPresetCaps => {
+  return getVisualPresetCaps(preset);
 };
 
 export const subscribeToVisualSettings = (listener: VisualSettingsListener): (() => void) => {

@@ -133,14 +133,22 @@
       <module file="the-getaway/src/game/visual/world/TilePainter.ts">Owns Level 0 tile rendering (`drawGround`, `drawCover`, `drawWallVolume`, `drawDoorPortal`, `drawHazardVariant`) and lot seam repetition breaking.</module>
       <module file="the-getaway/src/game/visual/world/BuildingPainter.ts">Renders district-specific lot slabs, building massing prisms, facade grammar, and signage chrome from `BuildingVisualProfile`.</module>
       <module file="the-getaway/src/game/visual/world/DistrictComposer.ts">Applies deterministic facade/lot/massing composition and seeded accent shifts from district metadata.</module>
+      <module file="the-getaway/src/game/visual/world/AtmosphereDirector.ts">Resolves deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection, overlay tint) from district mix + time + quality preset.</module>
+      <module file="the-getaway/src/game/visual/world/OcclusionReadabilityController.ts">Applies per-frame readability compensation by fading nearby building masses and boosting token halos/nameplate clarity when entities overlap heavy geometry.</module>
       <module file="the-getaway/src/game/visual/world/PropScatter.ts">Deterministically scatters scenic props with district-aware clustering while respecting walkability, door buffers, and protected tiles.</module>
       <module file="the-getaway/src/game/visual/entities/CharacterRigFactory.ts">Builds silhouette-v2 procedural rigs (player/friendly/hostile/interactive) with role cues and movement direction hints.</module>
     </modules>
     <preset_budgets>
-      <preset id="performance" decor_per_building="2" animated_hazards="false" label_density="reduced" notes="Prioritise frame pacing and readability." />
-      <preset id="balanced" decor_per_building="4" animated_hazards="true" label_density="standard" notes="Default production target for Level 0." />
-      <preset id="cinematic" decor_per_building="6" animated_hazards="true" label_density="high" notes="Highest scene density; retain fallback toggles." />
+      <preset id="performance" decor_per_building="2" animated_hazards="false" label_density="reduced" fog_bands="2" emissive_zones="6" wet_reflection_alpha="0.08" occlusion_fade_floor="0.56" notes="Prioritise frame pacing and readability." />
+      <preset id="balanced" decor_per_building="4" animated_hazards="true" label_density="standard" fog_bands="4" emissive_zones="10" wet_reflection_alpha="0.14" occlusion_fade_floor="0.48" notes="Default production target for Level 0." />
+      <preset id="cinematic" decor_per_building="6" animated_hazards="true" label_density="high" fog_bands="6" emissive_zones="14" wet_reflection_alpha="0.2" occlusion_fade_floor="0.38" notes="Highest scene density; retain fallback toggles." />
     </preset_budgets>
+    <atmosphere_grammar>
+      <item>Backdrop gradients, skyline tint, fog-band count, and horizon haze are resolved by `AtmosphereDirector` from district mix and current world time.</item>
+      <item>Day/night overlay color now inherits the same profile output so atmosphere and visibility tint stay coherent during time transitions.</item>
+      <item>Tile wet-surface streaks are rendered only on walkable road-like floor diamonds and clamped by preset wet-reflection budget.</item>
+      <item>Occlusion readability pass never changes collision/pathing; it only adjusts visual alpha/halo emphasis around dense massing overlap.</item>
+    </atmosphere_grammar>
     <fallback_policy>
       <item>Canvas and WebGL both render the vector kit; no sprite dependency is required for baseline readability.</item>
       <item>Lighting and post FX are budget-gated by quality preset so expensive effects can be downshifted without visual breakage.</item>

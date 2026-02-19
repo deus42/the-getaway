@@ -22,6 +22,10 @@ export interface VisualQualityBudget {
   readonly maxAmbientGlows: number;
   readonly enableAnimatedHazards: boolean;
   readonly enableHighDensityLabels: boolean;
+  readonly maxFogBands: number;
+  readonly maxEmissiveZones: number;
+  readonly wetReflectionAlpha: number;
+  readonly occlusionFadeFloor: number;
 }
 
 export interface EntityVisualProfile {
