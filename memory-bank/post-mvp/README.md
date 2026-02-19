@@ -8,3 +8,5 @@ This folder contains systems intentionally deferred from the MVP vertical slice.
 - weapon-mods.md
 - equipment-inventory.md
 - survival-mechanics.md
+- reputation-systems.md
+- storylets.md
