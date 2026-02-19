@@ -9,6 +9,19 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
 - Primary scripts (run from `the-getaway/`): `yarn dev`, `yarn build`, `yarn preview`, `yarn lint`, `yarn test`, `yarn test:watch`.
 - Use Yarn for all package scripts and installs.
 
+## Docs (Obsidian Vault)
+The `memory-bank/` folder is an Obsidian vault (Markdown-only) and is the canonical project documentation.
+
+Start here:
+- Vault home: `memory-bank/00 Home.md`
+
+Key docs:
+- MVP design hub: `memory-bank/01 MVP/Game Design.md`
+- Roadmap + progress log: `memory-bank/04 Engineering/Roadmap.md`
+- Architecture (HOW): `memory-bank/04 Engineering/Architecture.md`
+- Lore (WHAT/tone): `memory-bank/03 Lore/Plot Bible.md`
+- Post-MVP index: `memory-bank/02 Post-MVP/00 Index.md`
+
 ## 2. Pre-Task Checklist (Mandatory)
 1. **Check Linear first**  
    - Use the MCP Linear integration to query the backlog; all Linear lookups must go through MCP commands.  
@@ -22,7 +35,7 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
    - Keep the issue in `In Progress` (or `In Review` if that state exists) until the user signs off; do not self-certify completion.  
    - After committing with approval, use MCP to update the issue state before ending the task.
 2. **Confirm task scope**  
-   - Read the Linear issue, `memory-bank/progress.md`, and related memory bank docs (`game-design.md`, `architecture.md`, `plot.md`).  
+   - Read the Linear issue, `memory-bank/04 Engineering/Roadmap.md`, and related memory bank docs (`01 MVP/Game Design.md`, `04 Engineering/Architecture.md`, `03 Lore/Plot Bible.md`).  
    - Note prerequisites, validation steps, documentation requirements, and any linked roadmap references.
 3. **Update Linear status**  
    - Move the issue to `In Progress` only when you start implementation and keep status synchronized while coding.  
@@ -63,7 +76,7 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
 - When reviewing or comparing local changes, always diff against the current HEAD commit (the workspace baseline); do not compare against older commits unless the user explicitly requests a different ref.  
 - Keep the Linear issue state aligned with reality (e.g., pause → `Todo`, active work → `In Progress`).  
 - Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
-- Maintain a per-task notes file. Before drafting your plan for a Linear issue, create or open a notes file at `progress/<Linear-key>.md` (for example, `progress/GET-117.md`). Use this file to record the Initial Ask, your implementation plan, key decisions, tasks executed, and the Level 0 validation script. Read and update this file whenever you resume work on the task to refresh context and mitigate context rot. These notes are separate from `memory-bank/progress.md` and should focus on actionable summaries rather than internal chain-of-thought.  
+- Maintain a per-task notes file. Before drafting your plan for a Linear issue, create or open a notes file at `progress/<Linear-key>.md` (for example, `progress/GET-117.md`). Use this file to record the Initial Ask, your implementation plan, key decisions, tasks executed, and the Level 0 validation script. Read and update this file whenever you resume work on the task to refresh context and mitigate context rot. These notes are separate from `memory-bank/04 Engineering/Roadmap.md` and should focus on actionable summaries rather than internal chain-of-thought.  
 - When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
 - Reference the active Linear key (for example, `GET-9`) in every commit message so Git ↔ Linear linking stays automatic.
 - **Session workflow (mandatory):**
@@ -79,17 +92,17 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
   - Record executed commands in PR summaries, progress logs, or issue comments.
   - Each time an implementation or follow-up fix lands, produce a concise QA playtest script (typically 3–6 steps) that can be run in Level 0 to verify the change; include the script in the task summary or review response.
 - **Documentation updates**
-  - Update `memory-bank/architecture.md` whenever architectural patterns, game systems, or data flow change.  
-  - Update `memory-bank/game-design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  
-  - After finishing a feature roadmap step, log it in `memory-bank/progress.md` (progress log section) using the XML structure; skip improvements and bug fixes.  
-  - Mirror scope changes in `memory-bank/progress.md` only when the plan itself evolves (never mark completion inside the plan section).  
-  - Reference the Post-MVP section in `memory-bank/progress.md` when deferring work beyond MVP.
+  - Update `memory-bank/04 Engineering/Architecture.md` whenever architectural patterns, game systems, or data flow change.  
+  - Update `memory-bank/01 MVP/Game Design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  
+  - After finishing a feature roadmap step, log it in `memory-bank/04 Engineering/Roadmap.md` (progress log section) using Markdown; skip improvements and bug fixes.  
+  - Mirror scope changes in `memory-bank/04 Engineering/Roadmap.md` only when the plan itself evolves (never mark completion inside the plan section).  
+  - When deferring work beyond MVP, add a note to `memory-bank/04 Engineering/Roadmap.md` and file details under `memory-bank/02 Post-MVP/` (see `memory-bank/02 Post-MVP/00 Index.md`).
 - **Linear sync**
   - Ensure every roadmap step has a corresponding Linear issue under the correct project.  
   - When work completes, add a comment to the Linear issue summarizing tasks performed, validation, and key code references.  
   - Move the issue to `Done` immediately after the implementation, docs, and validation are complete.
 - **Narrative work**
-  - When adding or editing dialogue/quests, align tone with `memory-bank/plot.md` and cite the referenced section in change summaries.
+  - When adding or editing dialogue/quests, align tone with `memory-bank/03 Lore/Plot Bible.md` and cite the referenced section in change summaries.
 - **Finalize before commits**
 - Confirm implementation soundness before committing; do not request merges until tests, docs, and issues are aligned.
 - Commit message format (all issue types):  
@@ -118,12 +131,12 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
   - `architecture.md` = code patterns, modules, data flow (HOW).  
   - Never mix the two; sync both whenever implementation deviates from plan.
 - **Progress tracking**  
-- `memory-bank/progress.md` records completed feature steps only (with XML tags) in its progress log section; do not log improvements or bug fixes there.  
-  - The plan sections inside `memory-bank/progress.md` list scope; edit only to change requirements or ordering.  
+- `memory-bank/04 Engineering/Roadmap.md` records completed feature steps only (Markdown) in its progress log section; do not log improvements or bug fixes there.  
+  - The plan sections inside `memory-bank/04 Engineering/Roadmap.md` list scope; edit only to change requirements or ordering.  
 - Log each completed feature roadmap step in the progress log with matching step IDs and summary details.
 - **Narrative work**  
-  - When adding or editing dialogue/quests, align tone with `memory-bank/plot.md` and cite the referenced section in change summaries.  
-  - Review the Post-MVP section in `memory-bank/progress.md` for deferred narrative beats.
+  - When adding or editing dialogue/quests, align tone with `memory-bank/03 Lore/Plot Bible.md` and cite the referenced section in change summaries.  
+  - Review deferred narrative beats under `memory-bank/02 Post-MVP/` (see `memory-bank/02 Post-MVP/00 Index.md`).
 
 ## 7. Commit & PR Guidelines
 - Use imperative messages (`feat:`, `fix:`, etc. acceptable).  
@@ -161,14 +174,14 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 - Large assets belong in `public/` and should be optimized.
 
 ## 10. Roadmap & Memory Bank Reference
-- The implementation roadmap lives in `memory-bank/progress.md` (MVP + Post-MVP sections). Keep numbering intact and update the plan sections only when scope changes.
-- Treat `memory-bank/progress.md` as the authoritative scope document—do not record completion status inside the plan sections.
+- The implementation roadmap lives in `memory-bank/04 Engineering/Roadmap.md` (MVP + Post-MVP sections). Keep numbering intact and update the plan sections only when scope changes.
+- Treat `memory-bank/04 Engineering/Roadmap.md` as the authoritative scope document—do not record completion status inside the plan sections.
 - Mirror completed feature work in the progress log; each milestone should reference the matching step number and appear in chronological order, and skip logging improvements or bug fixes.
 - Cross-check plan vs. progress before merging large features so documentation and code stay in sync.
-- `memory-bank/plot.md` folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
-- `memory-bank/game-design.md` documents the agreed toolchain and gameplay pillars; align new systems with it or log deviations.
-- `memory-bank/architecture.md` must reflect current code structure. Update it alongside architectural changes so docs never drift.
-- The Post-MVP section in `memory-bank/progress.md` captures deferred optional expansions (advanced stamina, vehicle systems, survival mode); consult it when planning post-MVP work.
+- `memory-bank/03 Lore/Plot Bible.md` folds in the story overview—review it whenever narrative beats, quests, or factions are touched.
+- `memory-bank/01 MVP/Game Design.md` documents the agreed toolchain and gameplay pillars; align new systems with it or log deviations.
+- `memory-bank/04 Engineering/Architecture.md` must reflect current code structure. Update it alongside architectural changes so docs never drift.
+- Post-MVP specs live under `memory-bank/02 Post-MVP/` (see `memory-bank/02 Post-MVP/00 Index.md`); consult those notes when planning post-MVP work so MVP docs stay clean.
 
 ## 11. Linear Workflow Callouts
 - Use the Linear “MVP” and “PostMVP” projects as the live task index; review them before picking up work so you don’t have to rescan the full plan/progress set each time.
@@ -284,7 +297,7 @@ To mitigate context rot and preserve a detailed record for every Linear ticket, 
 - Begin with a short “Session Reminders” block spelling out the re-read loop (re-open AGENTS.md, review the notes, refresh the plan, run validation, post the Linear comment) so context rot can’t skip these steps.
 - When starting a new session and a notes file already exists, ask the requester whether to continue from the current notes or start fresh; if they choose “start fresh,” rewrite the file (retaining only the new ask and plan) before proceeding.
 
-At the start of each task, open or create its notes file and log the current context. After each significant step or decision, append a concise entry so future sessions stay grounded. These notes complement `memory-bank/progress.md`, remain local-only (the `progress/` folder is `.gitignore`’d), and focus on actionable summaries rather than internal chain-of-thought. Use the notes as the source of truth for the mandatory Linear issue comment you must post before closing the ticket.
+At the start of each task, open or create its notes file and log the current context. After each significant step or decision, append a concise entry so future sessions stay grounded. These notes complement `memory-bank/04 Engineering/Roadmap.md`, remain local-only (the `progress/` folder is `.gitignore`’d), and focus on actionable summaries rather than internal chain-of-thought. Use the notes as the source of truth for the mandatory Linear issue comment you must post before closing the ticket.
 
 ### Sample Linear Issue Prompt
 
