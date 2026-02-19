@@ -2,10 +2,9 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-<mechanic name="crafting_upgrades">
 Crafting & Upgrades (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - Deep crafting is out of the vertical-slice scope. MVP may include only lightweight scripted quest pickups/consumables, not a full crafting economy.</implementation_status>
+**Status:** ❌ DEFERRED FOR MVP - Deep crafting is out of the vertical-slice scope. MVP may include only lightweight scripted quest pickups/consumables, not a full crafting economy.
 
 Crafting allows players to create or improve items using resources gathered, adding a layer of strategy and self-sufficiency:
 	•	Resource Gathering: As the player explores, they find raw materials. This could be explicit scavenging (clicking a scrap pile to get scrap metal) or as loot from containers/enemies (electronics from a destroyed robot, herbs from a garden, chemicals in an abandoned lab). We might categorize resources in broad types to keep it simple (e.g., “Metal Parts”, “Electronic Components”, “Chemicals”, “Textiles”, etc.). Higher crafting skills might allow extracting more components from the same source (a perk could be “Scrapper: get 50% more materials from looting machinery”).
@@ -29,4 +28,3 @@ Crafting allows players to create or improve items using resources gathered, add
 	•	Encouraging Crafting: To encourage engagement, we’ll integrate crafting into some quests (like NPC asks for a crafted item, or you need to craft a makeshift bomb to open a sealed door if you didn’t bring one). Additionally, crafted gear could have slight advantages (a crafted medkit might heal a bit more than a found one, because you tailored it to your needs, etc.). This makes the system rewarding rather than optional fluff.
 
 Crafting and upgrades serve players who enjoy planning and optimization. It fits the survival theme (make do with what you find) and adds another layer of progression (improving equipment, not just stats). It's entirely possible to play with minimal crafting (buying what you need or using found items), but those who invest in it will find themselves better equipped and possibly saving resources by recycling and creating what they need.
-</mechanic>

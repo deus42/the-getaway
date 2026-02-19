@@ -2,10 +2,9 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
+## Balance values (stamina)
 
-<mechanic name="stamina_system">
-<balance_values system="stamina">
-<implementation_status>⚠️ PARTIAL - MVP in Step 24.5, Advanced features in Step 26.4</implementation_status>
+**Status:** ⚠️ PARTIAL - MVP in Step 24.5, Advanced features in Step 26.4
 
 Stamina - Sustained Effort Resource
 
@@ -96,6 +95,3 @@ Paranoia replaces stamina on the HUD for MVP and tracks the player’s psycholog
 		•	Consumables diversify stress relief loops (CalmTabs, Nicotine packs) and hook into loot economies
 		•	Safehouses provide tangible psychological relief in addition to logistical reset
 	•	Debugging: dev inspectors expose current value, tier, stimuli breakdowns, and allow future balancing without guessing hidden math
-
-</balance_values>
-</mechanic>

@@ -5,10 +5,8 @@ type: companion
 
 # George (AI Companion)
 
-<mechanic name="ai_assistant">
 AI Assistant & Player Guidance
 
-<character name="George">
 AI Companion
 
 An omnipresent AI assistant ("George") accompanies the player from the start. George exists as an overlay in the Level-0 Objectives area of the HUD and serves several key functions:
@@ -19,5 +17,3 @@ An omnipresent AI assistant ("George") accompanies the player from the start. Ge
 	•	**Diegetic Implementation:** George is diegetic: an AI chip implanted in the protagonist’s device. This lets it integrate into the world’s tech-noir aesthetic while justifying its narrative commentary. Upgrades or bugs to George can form the basis of quests.
 
 George’s dialogue adheres to the tonal guidelines in the plot bible: darkly funny, surreal, and morally nuanced. Designers should log references to relevant plot bible directives (e.g., Tone Guideline 4 for satire) when writing George’s lines to ensure consistency.
-</character>
-</mechanic>

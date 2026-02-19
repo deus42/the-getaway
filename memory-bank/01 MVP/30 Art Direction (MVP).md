@@ -5,7 +5,6 @@ type: art
 
 # Art Direction (MVP)
 
-<game_system id="art_direction" status="partial">
 Painterly Noir Art Direction
 
 The Getaway’s visual identity leans into a painterly noir aesthetic—thick atmospheric mood, imperfect brushwork, and deliberate grime that mirrors the city’s moral rot.
@@ -28,12 +27,11 @@ Signage, UI Diegesis & Lighting Motifs
 
 Reference Sheets & Production Workflow
 	•	Produce a one-page style sheet per district outlining palette swatches, texture callouts, signage exemplars, and “do/don’t” mini-comparisons.
-	•	Each sheet should cite relevant narrative beats from `memory-bank/03 Lore/Plot Bible.md` so faction tone and environmental storytelling stay aligned.
-	•	Store sheets under `the-getaway/src/assets/style-guides/` (or equivalent) with versioned filenames (`districtName_style_v###.mdx/png`) and log updates in `memory-bank/04 Engineering/Roadmap.md` when districts evolve.
+	•	Each sheet should cite relevant narrative beats from [[03 Lore/Plot Bible]] so faction tone and environmental storytelling stay aligned.
+	•	Store sheets under `the-getaway/src/assets/style-guides/` (or equivalent) with versioned filenames (`districtName_style_v###.mdx/png`) and log updates in [[04 Engineering/Roadmap]] when districts evolve.
 	•	All outsourced or generated art must reference the applicable sheet to ensure external collaborators hit the noir constraints without guesswork.
 	•	Maintain a reusable SDXL prompt library in `/art/prompts/` (tiles, props, characters). Every brief must reiterate “painterly brush grain, clean albedo, no baked shadows” so runtime lights, not renders, supply depth.
 	•	Export atlas-ready sprites at 2:1 ratios (64×32 base tiles, 128px hero props). Place diffuse PNGs in `public/atlases/` with matching JSON (`props.json`) and keep normal maps in `public/normals/` using the `_n` suffix (`lamp_slim_a` → `lamp_slim_a_n`).
 	•	Verify normals in Level 0 by enabling the Game Menu lighting toggle (pipes into `visualSettings.lightsEnabled`) then stepping into Waterfront Commons: the indoor validation lamp + point light exposes inverted green channels immediately.
-</game_system>
 
 See also: [[03 Lore/Art Direction]]

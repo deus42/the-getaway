@@ -6,7 +6,6 @@ tags: [day-night]
 
 # Day-Night Cycle
 
-<mechanic name="day_night_cycle">
 Day-Night Cycle Effects
 
 The 24-hour day-night cycle is not just cosmetic; it has significant gameplay implications:
@@ -19,4 +18,3 @@ The 24-hour day-night cycle is not just cosmetic; it has significant gameplay im
 	•	HUD Readout: The top-right wafer communicates only `DAY` or `NIGHT`, pairing the tag with a muted progress bar for the active half of the cycle. Curfew shifts the wafer accent toward deep crimson without introducing extra copy; travel advisories and hazard cues remain exclusive to George’s rolling feed and history log.
 
 The day-night cycle encourages players to think about when they do things, not just how. It adds a rhythm to gameplay – perhaps a cycle of planning in safe areas by day and executing risky moves at night, or vice versa depending on the player's approach.
-</mechanic>

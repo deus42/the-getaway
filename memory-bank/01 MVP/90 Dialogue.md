@@ -6,7 +6,6 @@ tags: [dialogue]
 
 # Dialogue
 
-<mechanic name="dialogue_system">
 Dialogue System
 
 Dialogue is a crucial tool for storytelling, delivered in a text-driven format reminiscent of classic RPGs:
@@ -18,14 +17,11 @@ Dialogue is a crucial tool for storytelling, delivered in a text-driven format r
 	•	Dialogue Interface & Logs: The dialogue interface will likely show the name or portrait of the character speaking and the text of their dialogue. The player’s selected response is usually shown as well. We will include a dialogue history log that players can scroll if they need to review what was said (useful for remembering clues or instructions given mid-conversation). Dialogue sequences can be exited or returned to if appropriate (some NPCs allow you to come back and ask more questions later). Important decisions in dialogue will usually prompt the player with a confirmation if they lead to a big irreversible change (“Are you sure you want to insult the warlord? This will make his faction hostile.”).
 
 The dialogue system is essentially the narrative engine of the game, driving story progression, quest initiation/completion, and delivering the rich story we plan. It's designed to handle complex branching while giving the player clarity and meaningful choices.
-</mechanic>
 
-<mechanic name="choices_consequences">
 Choices & Consequences (MVP scope)
 
-<implementation_status>✅ MVP scope. Consequences in MVP are immediate and legible (quest-state changes + scene outcomes). Long-tail/procedural consequence frameworks live in `memory-bank/02 Post-MVP/narrative-advanced.md`.</implementation_status>
+**Status:** ✅ MVP scope. Consequences in MVP are immediate and legible (quest-state changes + scene outcomes). Long-tail/procedural consequence frameworks live in [[02 Post-MVP/narrative-advanced]].
 
 MVP policy:
 	•	Consequences are primarily quest-state changes + immediate scene outcomes.
 	•	Avoid global karma/reputation propagation for MVP (those systems are Post-MVP).
-</mechanic>

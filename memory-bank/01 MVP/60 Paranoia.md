@@ -6,11 +6,11 @@ tags: [paranoia]
 
 # Paranoia
 
-<mechanic name="stamina_system">
-<balance_values system="stamina">
+## Balance values (stamina)
+
 Pressure & Recovery (MVP)
 
-<implementation_status>⚠️ PARTIAL - MVP uses Paranoia as the primary pressure resource; full stamina spec moved to memory-bank/02 Post-MVP/stamina-system.md.</implementation_status>
+**Status:** ⚠️ PARTIAL - MVP uses Paranoia as the primary pressure resource; full stamina spec moved to [[02 Post-MVP/stamina-system]].
 
 Paranoia - Player Stress Resource (MVP - Step 24.6)
 Paranoia replaces stamina on the HUD for MVP and tracks the player’s psychological load from corporate policing, surveillance, and night movement. The system is tiered (Calm → Uneasy → On Edge → Panicked → Breakdown) and feeds both stealth/detection pressure and (when combat happens) lightweight combat modifiers.
@@ -32,6 +32,3 @@ Paranoia replaces stamina on the HUD for MVP and tracks the player’s psycholog
 		•	Consumables diversify stress relief loops (CalmTabs, Nicotine packs) and hook into loot economies
 		•	Safehouses provide tangible psychological relief in addition to logistical reset
 	•	Debugging: dev inspectors expose current value, tier, stimuli breakdowns, and allow future balancing without guessing hidden math
-
-</balance_values>
-</mechanic>

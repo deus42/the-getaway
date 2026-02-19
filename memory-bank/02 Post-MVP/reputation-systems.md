@@ -2,10 +2,9 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-<mechanic name="trust_fear_ethics">
 Trust/Fear Ethics Layer (MVP - Step 29.2)
 
-<implementation_status>❌ DEFERRED FOR MVP - Trust/Fear ethics are disabled alongside reputation/witness systems; resume Post-MVP.</implementation_status>
+**Status:** ❌ DEFERRED FOR MVP - Trust/Fear ethics are disabled alongside reputation/witness systems; resume Post-MVP.
 
 Moral perception in The Getaway leans into survival pragmatism rather than binary good/evil. Each faction and neighborhood cell maintains a lightweight `EthicsProfile` with two axes:
 	•	**Trust (-100..100)** — Measures whether locals believe the player will protect their interests. Positive trust unlocks safer routes, better prices, and candid intel.
@@ -40,12 +39,10 @@ Moral perception in The Getaway leans into survival pragmatism rather than binar
 	•	Designers can tweak tag-to-delta tables via JSON without code changes, encouraging rapid iteration on ethical nuance.
 
 This layer ensures the world reacts to scarcity-driven ethics immediately while leaving room for the deeper witness gossip network to evolve those reactions into long-term, subjective reputations.
-</mechanic>
 
-<mechanic name="localized_reputation_network">
 Localized Reputation & Gossip System
 
-<implementation_status>❌ DEFERRED FOR MVP - Localized reputation/gossip propagation is disabled; resume Post-MVP.</implementation_status>
+**Status:** ❌ DEFERRED FOR MVP - Localized reputation/gossip propagation is disabled; resume Post-MVP.
 
 The city remembers what it actually sees. Instead of a single global meter, reputation propagates through witnesses and their social webs so fame and infamy feel rooted in specific places and crews.
 
@@ -77,12 +74,10 @@ The city remembers what it actually sees. Instead of a single global meter, repu
         •       **Sandbox Controls**: Designers can scrub decay rates, propagation caps, and thresholds live to feel how fast stories travel.
 
 This system reinforces stealth, intimidation, and altruism builds by rewarding intentional play in front of the right audience while keeping the city’s reaction plausibly fragmented.
-</mechanic>
 
-<mechanic name="witness_memory_heat">
 Witness Memory & Regional Heat
 
-<implementation_status>❌ DEFERRED FOR MVP - Witness memory & regional heat are disabled; resume Post-MVP.</implementation_status>
+**Status:** ❌ DEFERRED FOR MVP - Witness memory & regional heat are disabled; resume Post-MVP.
 
 Binary "wanted" flags flatten stealth play. Instead, eyewitnesses retain fuzzy memories that cool over time unless refreshed, and nearby security forces read the hottest memories to decide how aggressively they respond.
 
@@ -112,4 +107,3 @@ certainty_w(t) = certainty_w(t0) * 0.5 ^ ((t - t0) / half_life)
 	•	The current implementation ships a developer-only Suspicion Inspector overlay that displays the active zone’s heat tier and top witnesses for quick tuning passes.
 
 This mechanic grounds stealth tension in human memory—witnesses forget, rumors blur, and thoughtful downtime matters—while dovetailing with the localized reputation network for longer-term social consequences.
-</mechanic>

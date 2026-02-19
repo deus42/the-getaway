@@ -2,8 +2,6 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-
-<mechanic name="character_creation">
 Character Creation & Progression
 
 Character Creation: At the start of the game, the player creates their protagonist. They may be able to customize:
@@ -26,11 +24,9 @@ Progression System:
 	•	Late Game Progression: As players approach the endgame, they should feel significantly more powerful than at start, but not invincible. Enemies scale in difficulty to some extent (later areas have tougher foes), though not necessarily level-scaling every foe – rather, the world has high-level dangers you learn to handle. The progression should allow players to specialize deeply or diversify, but there’s a trade-off: a specialist is superb in their field (like unbeatable in small arms combat) but weak in others (poor at hacking or speech), whereas a generalist can handle many situations but isn’t the absolute best at any, which is also viable.
 
 The goal is that character progression feels rewarding and lets the player define their approach to the game. Every level is a chance to refine your character concept, unlock new abilities that change how you play, and react to the challenges you've been facing (e.g., "I need more hacking to get past those security doors, better level that up next time").
-</mechanic>
 
+### Rule: morality
 
-<mechanic name="karma_system">
-<rule type="morality">
 Karma System (Morality)
 
 Parallel to faction reputation, the game tracks the player's overall karma or morality based on their actions. This Karma system influences the narrative tone and some game mechanics:
@@ -46,12 +42,9 @@ Parallel to faction reputation, the game tracks the player's overall karma or mo
 	•	Player Agency with Karma: The game doesn’t label any path as the “wrong” way – karma is not a score to maximize unless the player chooses to role-play that way. We want both high and low (and neutral) karma playthroughs to be viable and interesting. The system’s goal is to provide feedback and consequences, not to punish the player for being “bad” or “good.” There will be pros and cons at both ends, encouraging the player to consider morality as part of their strategy and storytelling rather than just min-maxing for advantage.
 
 In short, Karma adds a layer of personal morality to the game's feedback loop. While faction reputation deals with external alliances, karma reflects the kind of person the player character is in this world, and the game world responds in kind.
-</rule>
-</mechanic>
 
+### Rule: faction_relations
 
-<mechanic name="reputation_system">
-<rule type="faction_relations">
 Reputation System
 
 Reputation tracks the player's standing with specific factions (and possibly notable sub-groups or communities) and is distinct from karma:
@@ -72,5 +65,3 @@ Reputation tracks the player's standing with specific factions (and possibly not
 	•	Feedback: As with karma, the game will give feedback on rep changes. Finishing a quest might show “+15 reputation with The Resistance” and perhaps “-10 with Corporate Security”. If you cross a threshold (like going from Neutral to Friendly), an NPC might reach out (an emissary says “Our leader wishes to thank you for your help…”) or you get a new dialogue (“You’ve proven yourself a friend to us. We welcome you in our camp.”). Similarly, hitting Hostile triggers a warning or immediate change in world behavior. The quest journal or a faction menu can remind players what their current standing allows (“Allied: You can request equipment drops from this faction” or “Hostile: Do not enter their main base unless prepared for a fight”).
 
 The reputation system ensures that the player's actions have clear and varied impacts on their relationships in the world. It adds a strategic component: you might decide not to do a tempting quest for Faction A because you don't want to anger Faction B you've been working with. Or you might deliberately betray a faction at the end of their quest line for a big reward, knowing full well it'll make them enemies. It's all about choices and consequences, quantified in a way players can monitor and react to.
-</rule>
-</mechanic>

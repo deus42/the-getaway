@@ -5,16 +5,12 @@ type: setting
 
 # Setting & Worldbuilding
 
-<game_system id="setting_worldbuilding" status="partial">
 Setting & Worldbuilding
 
-<world_setting name="dystopian_city">
 Dystopian City Setting
 
 The game takes place in a sprawling dystopian metropolis in the near-future. The city is in decline, characterized by crumbling infrastructure and high-tech enclaves existing side by side. Society has fractured into rival factions controlling different districts, from lawless slums to fortified corporate zones. The atmosphere is gritty and oppressive, with neon-lit streets, polluted air, and constant tension in the environment.
-</world_setting>
 
-<world_structure name="zones_biomes">
 Distinct Zones & Biomes
 
 The city is divided into several zones, each acting as a distinct "biome" with its own environment, hazards, and gameplay impacts:
@@ -24,6 +20,5 @@ The city is divided into several zones, each acting as a distinct "biome" with i
 	•	Outskirts (Deadlands): The crumbling city edges that blend into a wasteland. Fewer people live here, but environmental dangers are greater (pockets of radiation, wild creatures, unstable ruins). The outskirts often serve as risky travel routes between city sectors and hide secret caches or wandering nomads.
 
 Each zone offers unique resources, enemies, and quests. Transitioning between zones may require planning and equipment adjustments, reinforcing the feeling of entering a different world or biome within the city.
-</world_structure>
 
 See also: [[03 Lore/Plot Bible]]

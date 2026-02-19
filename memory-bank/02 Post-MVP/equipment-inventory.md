@@ -2,8 +2,8 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-<mechanic name="equipment_inventory">
-<balance_values system="equipment">
+## Balance values (equipment)
+
 Equipment & Inventory Management
 
 Loot and gear are central to progression and survival, so managing equipment is a key gameplay element:
@@ -48,5 +48,3 @@ Loot and gear are central to progression and survival, so managing equipment is 
 	•	Loot Generation: Enemies drop items appropriate to them (their weapons, a bit of ammo, maybe some random loot like dog tags or faction insignia). Stashes and containers have loot seeded by location (a med cabinet has meds, an armory has ammo, etc.). Rare unique items are placed in key locations or given as quest rewards rather than random chance, so completionists can aim for them.
 
 All these systems make inventory and equipment a game within the game – optimizing your loadout, seeking out better gear, and ensuring you have what you need when far from safety is crucial. It adds realism (scarcity of resources in a dystopia) and gives a constant sense of progression as you amass better tools to survive.
-</balance_values>
-</mechanic>

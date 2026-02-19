@@ -2,8 +2,6 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-
-<mechanic name="tone_preserving_dialogue">
 Tone-Preserving Procedural Dialogue
 
 The tone mixer keeps emergent dialogue aligned with the agreed voice pillars while giving designers replayable variation:
@@ -14,10 +12,7 @@ The tone mixer keeps emergent dialogue aligned with the agreed voice pillars whi
 	•	Motif Hygiene: Each persona owns a lightweight motif counter. Selecting a motif-tagged line bumps the counter, reducing its weight on the next pull while the manager decays counters every time the persona speaks so imagery can return after a breather.
 	•	Deterministic Seeds: Dialogue nodes provide a `seedKey` that, combined with `(dialogueId, nodeId)`, guarantees the same prose in UI, tests, and localisation tooling while preserving `node.text` as the fallback.
 	•	Content Authoring: Author fingerprints live in `content/dialogueTone/authors.ts`, personas in `personas.ts`, scene hints in `scenes.ts`, and template/palette definitions in `templates.ts` / `palettes.ts`. Locale bundles opt in via `toneDefaults` / `tone` metadata so translators see both the generated output and the underlying fallback line.
-</mechanic>
 
-
-<mechanic name="role_based_dialogue_templates">
 Role-Based Procedural Dialogue Templates
 
 Systemic NPC roles now draw from reusable dialogue families so ambient encounters stay coherent with the city’s fiction while reflecting moment-to-moment context:
@@ -27,10 +22,7 @@ Systemic NPC roles now draw from reusable dialogue families so ambient encounter
 	•	Deterministic Output: `resolveRoleDialogueTemplate` seeds selection with `(dialogueId, nodeId)` plus optional overrides, ensuring the same NPC delivers the same line for a given conversation while still allowing variability across runs.
 	•	Tone Integration: Template authors may supply `toneOverrides` (preferred persona/template/scene) so the tone mixer keeps the cadence consistent with the intended speaker while still leveraging palette/motif blending.
 	•	Authoring Flow: Narrative data opts into a systemic line by storing `[roleTemplate:merchant.default_greeting]` (or similar) in the dialogue node. The DialogueOverlay resolves the template, merges tone overrides, and forwards the enriched node to the mixer so handcrafted and systemic content share the same UI path.
-</mechanic>
 
-
-<mechanic name="choices_consequences">
 Choices & Consequences
 
 Throughout the game, players will face decisions that have meaningful consequences on the story and world. We ensure that choices are not just cosmetic – they lead to different outcomes, some immediately visible and others that unfold later:
@@ -41,10 +33,7 @@ Throughout the game, players will face decisions that have meaningful consequenc
 	•	Feedback on Choices: To make consequences clear, the game will often provide feedback. NPC dialogue or in-game news broadcasts might talk about what you did (“After the water supply was poisoned, citizens are falling ill…”). Faction reputation changes are shown immediately. Major branches will usually be telegraphed (“If you do this, there’s no going back”). And the quest log will update to reflect the outcomes (“You chose to arm the rebels; the Corporate faction will remember this.”). We want players to feel the weight of decisions without being blind-sided by outcomes that seem random.
 
 In essence, The Getaway treats player choices as a core mechanic, just as important as combat or exploration. The world's story is the sum of what the player decides to do (or not do), providing a personalized narrative experience.
-</mechanic>
 
-
-<mechanic name="quest_drivers">
 Faction, Character, and Event-Driven Quests
 
 The storytelling is delivered via quests, which can be categorized by their narrative drivers:
@@ -55,10 +44,7 @@ The storytelling is delivered via quests, which can be categorized by their narr
 	•	Optional vs Main Quests: Faction quests could be considered “main” quests in the sense that pursuing at least one faction’s storyline is necessary to reach an ending. Character-driven quests are mostly optional but enrich the story and can influence the final outcome (for example, having a certain ally on your side might change an ending scene). Event-driven quests are often missable if you’re not in the right place at the right time, but they ensure the world never feels static. The quest journal will mark which ones are critical and which are optional, but we expect players to naturally gravitate towards the faction stories they care about as their main narrative.
 
 By mixing these quest types, the game achieves a narrative that feels both expansive (many things happening in the city) and centered on the player's journey (since you decide which quests to follow and which causes to support). It's a balance of faction politics, personal stories, and emergent events that together tell the full story of The Getaway.
-</mechanic>
 
-
-<mechanic name="multiple_endings">
 Multiple Endings & Open-Ended Play
 
 The culmination of the narrative is represented by multiple possible endings, and the game acknowledges the player's journey through a variety of outcomes:
@@ -75,10 +61,7 @@ The culmination of the narrative is represented by multiple possible endings, an
 	•	Replayability: The game is designed for high replay value due to the branching content. Players are encouraged to replay making different major choices: support a different faction, make opposite moral choices, play with a different character build which might open new dialogue options (like high tech vs high charisma). To facilitate this, we might allow skipping already seen dialogues or a New Game+ with some carried-over benefits (maybe retain character stats or a special item to make a second run faster). The multiple endings are a reward for replay, showing drastically different outcomes for the city.
 
 In summary, The Getaway doesn't have one "true" ending – it has many, reflecting the complex interplay of the player's decisions throughout the game. The ending serves as the ultimate feedback on the player's impact on the world, and ideally, each ending feels like a natural result of the player's journey, providing closure (or intentional lack thereof) to the story they crafted.
-</mechanic>
 
-
-<mechanic name="quest_variety">
 Quest Variety
 
 To keep gameplay engaging, The Getaway uses a mix of handcrafted quests and procedural (dynamically generated) tasks:
@@ -94,10 +77,7 @@ To keep gameplay engaging, The Getaway uses a mix of handcrafted quests and proc
 	•	Balancing with Story: Handcrafted quests will generally yield bigger story developments and significant rewards (rare items, big rep changes). Procedural quests give modest rewards and help with grinding or world immersion. Players who just follow the main quests will get a complete story, but those who engage with procedural quests will find the world feels more alive and will be better prepared (via extra XP and gear) for tough challenges. The game design will avoid requiring grinding procedural quests; they are there for fun and depth, not as filler that must be done.
 
 By combining handcrafted and procedural content, The Getaway provides both a curated narrative experience and an endless stream of small-scale activities. This keeps the game world feeling busy and gives players flexibility to pursue their own priorities (be it story, character improvement, or just exploration for its own sake).
-</mechanic>
 
-
-<mechanic name="faction_quests">
 Faction-Based Quests & World Impact
 
 Faction quests are a major component of the game and directly influence the balance of power in the world:
@@ -109,4 +89,3 @@ Faction quests are a major component of the game and directly influence the bala
 	•	Faction Quest Rewards: Aside from story outcomes, completing faction quests yields tangible rewards. This could be unique equipment (a special weapon or armor emblazoned with the faction’s insignia), access to services (like being able to call for backup from that faction in combat, or use their safehouses), and of course, high reputation with that faction. Eventually, if you go deep enough, the faction might essentially treat you as one of their own or even offer you leadership. In some endings, the player can effectively lead a faction to rule the city, which is an ultimate “reward” in narrative terms.
 
 Faction quests ensure that the game's political landscape is an integral part of the gameplay. By choosing which faction quests to pursue, the player is actively choosing winners and losers in the city, and they get to see the results of those choices play out in real time. This gives a strategic layer to questing: it's not just about experience points, but about sculpting the world's power structure.
-</mechanic>

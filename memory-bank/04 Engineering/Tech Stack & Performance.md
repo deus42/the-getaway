@@ -5,10 +5,8 @@ type: tech
 
 # Tech Stack & Performance
 
-<game_system id="technology_development" status="partial">
 Technology & Development Focus
 
-<development_approach name="single_player">
 Single-Player Focus
 
 The Getaway is designed as a deep single-player experience with no multiplayer or online components in the initial scope. This focus has several implications:
@@ -21,10 +19,8 @@ The Getaway is designed as a deep single-player experience with no multiplayer o
 	•	Save System: Single-player focus allows robust save/load functionality. The player can have multiple save files, manual saves, quicksaves, etc., which in a multiplayer context would be restricted. We should implement an easy save system (maybe even an auto-save at key points) so players can experiment with different choices and have fallback points. This supports the branching narrative aspect, letting curious players explore alternate outcomes by reloading if they desire.
 
 In summary, committing to single-player lets us maximize depth and immersion without multiplayer compromises. The player will feel like the sole central force in the city's story, which aligns perfectly with the narrative design.
-</development_approach>
 
-<technical_stack name="browser_platform">
-<implementation_status>⚠️ PARTIAL</implementation_status>
+**Status:** ⚠️ PARTIAL
 Platform & Engine (Browser-Based Deployment)
 
 The game will be delivered via web browsers, leveraging modern web technology to reach players instantly without installation. Here's our plan for the tech stack and engine considerations:
@@ -54,9 +50,7 @@ The game will be delivered via web browsers, leveraging modern web technology to
 	•	Testing in Browsers: We’ll set up a local dev environment (using something like webpack or parcel to bundle our TS code and serve it) to test the game in a browser as we build. We’ll use debug tools (like showing collision grids, AI state debug overlays) that we can toggle during development. Browser dev tools will be crucial for profiling memory and CPU usage.
 
 By using a browser-based stack, we tap into a wide accessibility (anyone with a browser can play, across OS platforms, possibly even tablets). We just have to carefully manage performance and asset size to fit the constraints of web games. The chosen technology (TypeScript + Phaser or similar) is conducive to iterative development and AI-assisted coding, because many patterns and boilerplate can be generated or filled in by AI given clear descriptions (like classes for inventory items, functions for turn calculations, etc., all of which are fairly standard to code once outlined in design).
-</technical_stack>
 
-<technical_approach name="performance">
 Performance Considerations
 
 Running an open-world, turn-based simulation in a browser means we must optimize for performance from the start:
@@ -80,9 +74,7 @@ Running an open-world, turn-based simulation in a browser means we must optimize
 	•	Continuous Optimization: As we add features, we will regularly test performance to catch issues early. For example, when adding dynamic NPC schedules, test with dozens of NPCs active. When adding deferred large systems (e.g., vehicles Post-MVP), test fast traversal across sectors to see if loading keeps up.
 
 In summary, our strategy is to optimize smartly: update what needs updating, render what needs rendering, and no more. By controlling scope (single-player, 2D view) and using the power of WebGL and multi-threading (web workers), we anticipate being able to create a rich open world that runs smoothly in a browser environment.
-</technical_approach>
 
-<technical_approach name="development_tools">
 Technical Stack & Tools
 
 To manage development efficiently and integrate AI-assisted coding, we outline our tools and practices:
@@ -108,9 +100,7 @@ To manage development efficiently and integrate AI-assisted coding, we outline o
 	•	Deployment & Updates: For hosting, a simple static file server or itch.io upload might suffice. We just need to ensure versioning doesn’t break saves. We could embed a version number in save data and write upgrade logic if needed (e.g., if we add a new stat in a patch, handle older saves missing it). AI can assist by analyzing differences between versions and suggesting migration code.
 
 By planning our development tooling and workflow, we set ourselves up to efficiently build the game and maintain high code quality. The use of AI is a force-multiplier but not a replacement for thoughtful design and testing. This design document itself will guide the AI in generating code aligned with the intended features, essentially translating the high-level descriptions into actual game mechanics.
-</technical_approach>
 
-<technical_approach name="future_proofing">
 Future-Proofing & Scalability
 
 We aim to write code and design systems that are robust and extensible, so the project can grow or be adapted beyond the initial release:
@@ -125,5 +115,3 @@ We aim to write code and design systems that are robust and extensible, so the p
 	•	Testing for Edge Cases: As content grows, edge cases multiply (e.g., what if the player becomes hated by all factions before a certain main quest? Does the game still have a path forward?). We should use a combination of automated tests and scenario testing to cover unusual but possible states. This also ties into save system – ensure saves from any point can be loaded and the game can progress to an ending without getting stuck, even if some content was skipped or some NPCs died. Designing quests with multiple fail-safes or fallbacks (like if an NPC is dead, allow quest completion via a note or alternate NPC) is part of this robustness.
 
 By focusing on future-proofing, we hope The Getaway can be a platform for storytelling and gameplay that lasts beyond the initial content. Whether through official expansions or community mods or just the flexibility to patch and improve, the game's design and code should accommodate growth and change without breaking down. In essence, we treat this not just as a one-off game but as a living project that can evolve.
-</technical_approach>
-</game_system>

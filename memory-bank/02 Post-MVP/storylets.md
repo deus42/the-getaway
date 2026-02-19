@@ -2,10 +2,9 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-<mechanic name="procedural_storylets">
 Procedural Storylets (“Library of Plays”)
 
-<implementation_status>❌ DEFERRED FOR MVP - Storylets removed from MVP scope; revisit Post-MVP.</implementation_status>
+**Status:** ❌ DEFERRED FOR MVP - Storylets removed from MVP scope; revisit Post-MVP.
 
 To keep emergent runs feeling authored, the campaign adopts a three-layer storylet framework inspired by Wildermyth’s “Library of Plays” approach:
 	•	Villain Plot Spine: Each campaign arc defines explicit Act I / II / III beats (setup, escalation, finale). These beats act as the narrative spine that anchors randomization to a destination. The spine tracks active antagonist goals, required locations, and milestone quests that must land to keep the story coherent.
@@ -23,4 +22,3 @@ Testing expectations:
 	•	Simulate multiple campaign states to confirm the engine casts roles without leaving gaps or repeating recently played vignettes.
 	•	Verify localization stubs exist for every branch/variant line and that placeholders insert correct pronouns/names.
 	•	Confirm mechanical consequences (injury flags, reputation shifts, temporary buffs) propagate to the corresponding systems and decay/resolve as scripted.
-</mechanic>

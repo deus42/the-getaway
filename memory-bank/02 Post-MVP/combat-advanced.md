@@ -2,17 +2,12 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-
-<mechanic name="combat_overview">
 Combat Overview
 
 Combat in The Getaway is turn-based and takes place on a grid, offering tactical depth in each encounter. When combat is triggered (for example, an enemy spots the player or a hostile encounter is initiated via a quest), the game transitions from real-time exploration to a turn-based combat mode. The battlefield is divided into tiles (squares or hexes), much like classic games such as Fallout 2 or Heroes of Might & Magic 3. Each participant – player characters, allies, enemies, and even vehicles – takes turns according to an initiative order determined by their stats or situational factors.
 
 This turn-based approach allows players to carefully plan moves, use cover, and coordinate attacks. It slows the pace during combat so that positioning and strategy matter more than reflexes. Outside of combat, the game returns to real-time exploration seamlessly.
-</mechanic>
 
-
-<mechanic name="cover_line_of_sight">
 Cover & Line-of-Sight
 
 The combat system emphasizes using cover and line-of-sight for tactical advantage, similar to modern tactical RPGs:
@@ -24,10 +19,7 @@ The combat system emphasizes using cover and line-of-sight for tactical advantag
 	•	Overwatch & Reactions: A character can choose to spend their turn going into Overwatch mode (using any remaining AP). In overwatch, if an enemy moves within a character’s line-of-sight during the enemy’s turn, the character will automatically use reserved AP to take a shot at that enemy. This mechanic allows defensive play and area denial, and it interacts with cover (e.g., running between two covered spots could trigger enemy overwatch fire if you cross an open gap). Enemies can use overwatch too, so the player must be cautious when advancing.
 
 Using cover effectively and managing sight-lines is crucial. Rushing in without cover will usually result in quick defeat, whereas clever use of the environment allows a smaller force to take on larger groups successfully.
-</mechanic>
 
-
-<mechanic name="special_abilities">
 Special Abilities & Tactical Options
 
 Characters and enemies have more than just basic attacks, adding depth and variety to combat:
@@ -39,10 +31,7 @@ Characters and enemies have more than just basic attacks, adding depth and varie
 	•	Consumables: During combat, the player can use consumable items for tactical gains. Examples include medkits or syringes to heal or grant temporary stat boosts (like an adrenaline shot to increase AP), combat drugs that enhance speed or strength at a cost, or gadgets like an EMP device that can disable robotic enemies and electronic defenses for a short time.
 
 These varied options ensure combat doesn't feel repetitive. The player can approach encounters in different ways: one fight might involve sniping and traps, another could be resolved by hacking a security robot to turn on its masters, and another might see the player use brute force with heavy weapons. Tactical creativity is rewarded.
-</mechanic>
 
-
-<mechanic name="autobattle_mode">
 AutoBattle Mode & Behaviour Profiles
 
 AutoBattle lets players temporarily hand tactical control to combat AI so fights can flow like a modern autochess round while still respecting The Getaway’s AP economy and cover rules.
@@ -54,4 +43,3 @@ AutoBattle lets players temporarily hand tactical control to combat AI so fights
 	•	Transparency & Debugging: Combat logs annotate automation decisions (“AutoBattle (Balanced) → Move to cover (Gain cover)”), and the HUD badge tracks Engaged/Paused/Standby states with the last decision summary. Designers can inspect the persisted decision payload in `autoBattleSlice` for deeper tuning without stepping through code.
 
 This optional layer gives newcomers and grinders a low-friction way to enjoy turn phases while retaining deep tactical control the moment they toggle back to manual play.
-</mechanic>

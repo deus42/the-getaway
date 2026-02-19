@@ -5,18 +5,15 @@ type: combat
 
 # Combat
 
-<mechanic name="combat_overview">
 Combat Overview (MVP scope)
 
-<implementation_status>✅ MVP scope. Combat exists in the MVP, but it should primarily appear as escalation from detection or as a scripted quest beat. The full combat expansion spec is in `memory-bank/02 Post-MVP/combat-advanced.md`.</implementation_status>
+**Status:** ✅ MVP scope. Combat exists in the MVP, but it should primarily appear as escalation from detection or as a scripted quest beat. The full combat expansion spec is in [[02 Post-MVP/combat-advanced]].
 
 MVP intent:
 	•	Combat is turn-based on a grid and typically triggers as escalation from detection (or a scripted quest beat).
 	•	Required: enter/exit combat, AP-driven turns, basic attack, basic damage/HP, and clear combat logging.
 	•	Nice-to-have: AutoBattle as a convenience toggle (see full spec in the Post-MVP doc).
-</mechanic>
 
-<mechanic name="grid_movement">
 Grid and Movement
 
 Encounters are resolved on a grid map that corresponds to the environment (streets, building interiors, etc.), enabling spatial tactics:
@@ -24,11 +21,10 @@ Encounters are resolved on a grid map that corresponds to the environment (stree
 	•	The grid can be hexagonal or square; this will be determined in development (hex grids allow movement in six directions, whereas square grids align with orthogonal map layouts).
 	•	Terrain affects movement: moving through difficult terrain like rubble, shallow water, or climbing through a window costs more movement points/AP. Open ground is easy to traverse, while obstacles block movement completely.
 	•	Movement is important not just for closing distance or escaping, but for tactical positioning (flanking enemies, reaching cover, etc.). Players will often need to balance using a turn to move versus using it to attack or use an ability.
-	•	(Post-MVP) Vehicle-on-grid rules are deferred (see `memory-bank/02 Post-MVP/vehicles.md`).
-</mechanic>
+	•	(Post-MVP) Vehicle-on-grid rules are deferred (see [[02 Post-MVP/vehicles]]).
 
-<mechanic name="action_points">
-<balance_values system="action_points">
+## Balance values (action_points)
+
 Action Points & Turn Actions
 
 Each character in combat has a pool of Action Points (AP) to spend on actions during their turn. This AP system is inspired by games like Fallout:
@@ -39,35 +35,25 @@ Each character in combat has a pool of Action Points (AP) to spend on actions du
 	•	Action Economy: If a character doesn't use all their AP in a turn, they may have options for those leftover points. In The Getaway, a character can go into an Overwatch mode or defensive stance with unused AP. Overwatch means any remaining AP will be used to take reaction shots during the enemy's turn if a target appears (see Cover & LoS below). Alternatively, we could allow a small carry-over of unused AP to the next turn (subject to a limit) to encourage strategic passing of actions.
 
 The AP system means characters with higher agility or certain perks get more done each turn, allowing for build variety. Players must budget AP each turn, creating a constant tactical puzzle of movement versus attacking versus using abilities.
-</balance_values>
-</mechanic>
 
-<mechanic name="autobattle_mode">
 AutoBattle (MVP optional)
 
-<implementation_status>⚠️ MVP optional convenience. Full behaviour profiles + planner spec live in `memory-bank/02 Post-MVP/combat-advanced.md`.</implementation_status>
+**Status:** ⚠️ MVP optional convenience. Full behaviour profiles + planner spec live in [[02 Post-MVP/combat-advanced]].
 
 MVP intent:
 	•	Expose a simple toggle to let players auto-resolve easy fights.
 	•	Never let automation burn story beats (pause on dialogue prompts / end-of-combat / etc.).
-</mechanic>
 
 ## Deferred combat expansions
 
-<mechanic name="cover_line_of_sight">
 Cover Line Of Sight (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/combat-advanced.md.</implementation_status>
-</mechanic>
+**Status:** ❌ DEFERRED FOR MVP - see [[02 Post-MVP/combat-advanced]].
 
-<mechanic name="special_abilities">
 Special Abilities (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/combat-advanced.md.</implementation_status>
-</mechanic>
+**Status:** ❌ DEFERRED FOR MVP - see [[02 Post-MVP/combat-advanced]].
 
-<mechanic name="vehicles_in_combat">
 Vehicles In Combat (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/02 Post-MVP/vehicles.md.</implementation_status>
-</mechanic>
+**Status:** ❌ DEFERRED FOR MVP - see [[02 Post-MVP/vehicles]].

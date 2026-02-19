@@ -2,8 +2,8 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-<mechanic name="survival_mechanics">
-<balance_values system="survival">
+## Balance values (survival)
+
 Survival Mechanics
 
 Survival elements ensure the player must manage more than just enemies – the environment and basic needs are challenges too, enhancing immersion and difficulty:
@@ -20,5 +20,3 @@ Survival elements ensure the player must manage more than just enemies – the e
 	•	Integration with Other Systems: The survival needs tie into the economy (need to buy or find food/water), exploration (seek safe places to rest, find water sources), and faction interactions (maybe only certain factions have access to clean water or safe camps, giving incentive to befriend them). It also adds weight to vehicle travel; in a car, you can carry more supplies and potentially have a place to rest (sleeping in the car might be possible, albeit less effective than a bed).
 
 Survival mechanics add realism and tension. They ensure that even without enemies around, the player is planning and managing resources. It turns the game partially into a survival RPG without overwhelming the core tactical/quest gameplay, as long as we balance it to be engaging rather than tedious. The constant need to eat, drink, and rest in a dangerous city can create memorable emergent moments (e.g., desperately searching for food while injured and only encountering threats). It makes the dystopian world more than a backdrop – it's something to endure and overcome.
-</balance_values>
-</mechanic>

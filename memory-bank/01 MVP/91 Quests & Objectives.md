@@ -6,46 +6,41 @@ tags: [quests]
 
 # Quests & Objectives
 
-<mechanic name="quest_drivers">
 Quest Drivers (MVP scope)
 
-<implementation_status>✅ MVP scope. Quest-driving is deterministic and debuggable (simple triggers + clear state). Advanced/procedural quest drivers live in `memory-bank/02 Post-MVP/narrative-advanced.md`.</implementation_status>
+**Status:** ✅ MVP scope. Quest-driving is deterministic and debuggable (simple triggers + clear state). Advanced/procedural quest drivers live in [[02 Post-MVP/narrative-advanced]].
 
 MVP intent:
 	•	Hand-authored quests, triggered by simple conditions (dialogue choice, stepping on tile, pickup collected, flag set).
 	•	Keep logic transparent and debuggable in the quest log / action log.
-</mechanic>
 
-<mechanic name="level_objective_structure">
-<rule type="structure">
+### Rule: structure
+
 Level Progression & Objective Hierarchy
 
 - The campaign advances through discrete levels (Level 0: Slums, Level 1: Downtown, Level 2: Industrial Wasteland, and future tiers). Each level ships with a curated list of primary objectives that embody the main mission beats for that space.
 - Every primary objective is composed of one or more quests. Quests define the atomic interactions (dialogue, combat encounters, searches) that flip the underlying state flags. Objectives are therefore collections that resolve to complete when all child quests reach a terminal state (complete or failed when permitted).
 - Objectives include structured metadata: display label, summary copy, gating requirements, and an ordered quest ID list. This enables the HUD panel and quest log to render consistent sequencing and partial progress regardless of how the player reached the current level.
-</rule>
 
-<rule type="completion_feedback">
+### Rule: completion_feedback
+
 Objective Completion & Level Advancement
 
 - The HUD Level & Objectives panel mirrors the quest log: active objectives render with an inline checkbox and will be crossed out visually once the associated quest set reports completion. Partial progress lines remain normal weight so players can scan outstanding tasks quickly.
 - When all primary objectives for the current level are complete, the UI announces "Mission Accomplished" and hands control to the level advancement funnel. Progression offers a continue prompt, then loads post-mission dialogue, rewards, or the world transition for the next level. Side content remains available until the player confirms the transition.
 - Objective state changes emit Redux events so auxiliary systems (assistant hints, minimap focus, George overlay) can react immediately without polling bespoke quest state.
 - George assistant consumes the same selectors that drive the panel, promoting the top-priority active objective as its default guidance line and celebrating once the level transition modal confirms the mission wrap.
-</rule>
 
-<rule type="side_content">
+### Rule: side_content
+
 Side Quests & Optional Tasks
 
 - Side quests coexist alongside primary objectives but are tagged as optional. They inherit the same quest atom structure yet render in a dedicated subsection of the HUD panel so they never block level completion.
 - Completing or abandoning side quests has no effect on the Mission Accomplished gate; however, they can grant bonuses, reputation shifts, or alternate dialogue in the next level's intro sequences to reward thorough players.
 - Optional quest metadata includes recommended level and originating faction so the assistant and logbook can surface the most relevant detours without overwhelming the player during critical objectives.
-</rule>
 
-<implementation_status>⚠️ PARTIAL - HUD scaffold exists; objective gating and mission celebration flow targeted for Step 35.2.</implementation_status>
-</mechanic>
+**Status:** ⚠️ PARTIAL - HUD scaffold exists; objective gating and mission celebration flow targeted for Step 35.2.
 
-<mechanic name="quest_structure">
 Quest Structure & Journal
 
 Managing the variety of quests requires clear structure and player tools to keep track of objectives and progression:
@@ -64,4 +59,3 @@ Managing the variety of quests requires clear structure and player tools to keep
 	•	Dialogue Integration: The quest log often echoes information from dialogues (like if an NPC said “Meet me in two days at location X,” the log will have that note). This reduces the chance of players forgetting verbal instructions.
 
 The quest structure and journal are about player guidance and memory. With so much freedom and branching, it's vital that players have a reliable way to recall what they're supposed to do and what's happening in the world. A well-maintained quest log ensures players can take a break from the game and come back without being lost, and it lets them juggle multiple quests at once in a manageable way.
-</mechanic>

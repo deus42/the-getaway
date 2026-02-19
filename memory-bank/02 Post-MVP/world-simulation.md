@@ -2,8 +2,6 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-
-<mechanic name="living_world_ai">
 Living World & AI
 
 The game world is persistent and simulated, meaning changes endure and NPCs behave autonomously to create a living world:
@@ -14,10 +12,7 @@ The game world is persistent and simulated, meaning changes endure and NPCs beha
 	•	Day/Night Behavior: Tied to the day-night cycle, NPC behavior changes over time (e.g., at night, law-abiding citizens stay home while gangs and predators become more active). Shops open and close at certain hours. Some quests or events are only available at a particular time of day.
 
 These systems ensure the city feels alive and immersive. The player is one part of a larger ecosystem, and the world can surprise them with new developments during their journey.
-</mechanic>
 
-
-<mechanic name="persistent_world">
 Persistent Open World
 
 Outside of combat, The Getaway is an open-world experience where the city is explored through fast, turn-based-under-the-hood movement and interactions (grid steps + queued actions), presented to feel near-real-time. The world is persistent, meaning it remembers the state of things as you leave them:
@@ -28,10 +23,7 @@ Outside of combat, The Getaway is an open-world experience where the city is exp
 	•	The design supports backtracking and free travel. There is no fixed linear progression through areas; you can roam almost anywhere you dare. Some areas may be extremely dangerous for a low-level character, serving as soft barriers (you can go there, but expect a tough fight or environmental hazard). But if you’re clever or sneaky, you might still explore these areas early and get high-tier loot or information.
 
 Persistence means the world state evolves over the entire playthrough. Enemies don't magically reset, and earlier actions can remove or alter content later. This makes the player feel genuine impact and also requires them to live with their decisions (no easy re-dos of quests unless they reload a save).
-</mechanic>
 
-
-<mechanic name="exploration_travel">
 Exploration and Travel
 
 Traversing the city is a core part of gameplay, with an emphasis on player freedom and risk-reward during travel:
@@ -43,10 +35,7 @@ Traversing the city is a core part of gameplay, with an emphasis on player freed
 		•	Safe Zones and Resting: Scattered around the world are safer areas (like neutral zones or player-established safehouses) where combat is unlikely. Here the player can rest to heal and pass time, manage inventory, or converse with NPCs without immediate threats. These spots serve as hubs in the open world and checkpoints for the player’s progress. For example, a friendly bar might be a place to get rumors and hire help, and it remains off-limits for fighting by mutual agreement of factions.
 
 Exploration is about balancing curiosity with caution. Venturing into unknown territory can yield great rewards (resources, new quests, allies) but also risks dangerous encounters or overextending your supplies. The player must gauge when to travel, what to bring, and how to get there – on foot quietly or loudly in a vehicle.
-</mechanic>
 
-
-<mechanic name="dynamic_npc_factions">
 Dynamic NPC Behavior & Factions
 
 The world is inhabited by various NPCs with their own agendas, making the city feel alive beyond the player's direct interactions:
@@ -57,10 +46,7 @@ The world is inhabited by various NPCs with their own agendas, making the city f
 	•	Economy and Ecology: The city’s “ecosystem” responds to events. For example, if the player disrupts the supply of drugs in the slums (by completing a quest), drug prices might skyrocket on the black market and gang violence could spike as they fight over remaining stock. If a major gang is eliminated, the crime rate in their former territory might drop, making it safer for merchants and travelers. Wildlife or rogue robots in the outskirts might multiply if left unchecked, making journeys there more dangerous until the player or a faction deals with them.
 
 The combination of these behaviors means the city feels like a living system. The player can influence it heavily, but even if they try to lay low, things will still happen around them. This creates opportunities for the player to react to the world's changes, not just the world reacting to the player.
-</mechanic>
 
-
-<mechanic name="random_encounters">
 Random Encounters & Events
 
 As players roam the city or travel between areas, random encounters and dynamic events keep the experience engaging and unpredictable:
@@ -71,4 +57,3 @@ As players roam the city or travel between areas, random encounters and dynamic 
 	•	World State Changes: Certain random events, once they occur, can permanently affect something in the world. If a building burns down due to an event, it might remain a ruin for the rest of the game (perhaps accessible as a new area with its own loot or dangers). If a group of refugees appears looking for a home (as an event), they might settle in an area and create a new minor faction or trading post if the player helps them. Random events thus contribute to the evolving narrative of the city.
 
 Random encounters ensure no two playthroughs are exactly alike and encourage players to stay alert and adaptive. They make traveling more than just moving from point A to B – the journey itself can become its own story.
-</mechanic>

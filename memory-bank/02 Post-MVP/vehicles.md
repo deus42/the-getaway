@@ -2,10 +2,9 @@
 
 Moved out of memory-bank/01 MVP/Game Design.md to keep the MVP doc focused.
 
-<mechanic name="vehicles_in_combat">
 Integration of Vehicles (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.</implementation_status>
+**Status:** ❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.
 
 Vehicles add an extra dimension to both exploration and combat in The Getaway:
 	•	Combat Entry with Vehicles: If a combat encounter triggers while the player is using a vehicle (e.g., driving through hostile territory and getting ambushed), the vehicle is present on the combat grid. The player can choose to fight from the vehicle or disembark. (If Post-MVP ever adds companions, they may also start mounted, but MVP assumes a single protagonist.)
@@ -17,12 +16,10 @@ Vehicles add an extra dimension to both exploration and combat in The Getaway:
 	•	Balancing Vehicles: While vehicles provide advantages (speed, protection, firepower), the game will balance encounters so they’re not unbeatable tanks. Enemies may have anti-vehicle weapons (like EMP grenades to stall an engine, or heavy arms like rocket launchers). Some combat scenarios (tight indoor spaces, rooftops) simply won’t allow vehicles, forcing the player to proceed on foot. Also, fuel considerations (see Survival mechanics) might mean the player saves vehicle use for when it’s really needed.
 
 By integrating vehicles, combat scenarios become more diverse. One fight might be a tense on-foot shootout in a claustrophobic warehouse, and the next could be a running battle where the player drives their truck through barricades while exchanging fire with a gang. It gives the player more tactical choices and a sense of continuity between exploration and combat.
-</mechanic>
 
-<mechanic name="vehicles_exploration">
 Vehicles in Exploration (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.</implementation_status>
+**Status:** ❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.
 
 Vehicles are not just for combat; they are essential tools for open-world traversal and tie into multiple gameplay systems:
 	•	Acquisition: The player may acquire vehicles through quests, purchase, or theft. Early in the game, they might start on foot, then get a basic vehicle (like a beat-up car or bike) by helping a mechanic or stealing one from enemies. As the game progresses, better vehicles become available (e.g., an armored truck or a high-speed bike). Each vehicle type has its own advantages (speed, durability, storage space).
@@ -34,4 +31,3 @@ Vehicles are not just for combat; they are essential tools for open-world traver
 	•	Alternate Transportation: Besides personal vehicles, the city might have remnants of public transit or other travel means. For example, maybe an old subway system can be reactivated or used for fast travel between certain points (if the player clears it of monsters or repairs the generators). Or perhaps there’s a train that runs occasionally between districts that the player can hitch a ride on (safe but on a schedule and fixed route). These alternatives can add flavor and options but are not as flexible as having your own ride.
 
 By incorporating vehicles into exploration, the game offers players flexibility in how they experience the open world. You can cruise through danger zones quickly or go on foot to stealthily scavenge, and each choice has its own set of consequences and gameplay implications. Vehicles also serve as a form of player progression – acquiring a better vehicle feels like a significant milestone and opens up new possibilities (much like getting a ship in a space game or a horse in a medieval RPG).
-</mechanic>

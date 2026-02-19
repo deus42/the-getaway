@@ -6,7 +6,6 @@ tags: [stealth]
 
 # Stealth
 
-<mechanic name="stealth_mode">
 Stealth Mode (MVP Toggle)
 
 Stealth is now a primary player-driven mode that complements Combat and Dialogue:
@@ -19,5 +18,4 @@ Stealth is now a primary player-driven mode that complements Combat and Dialogue
 	•	HUD Feedback: A new Stealth indicator sits beside the camera wafer—Hidden (cool tone), Exposed (amber), Compromised (red), Standby (neutral). The badge reports detection %, cooldown status, or availability notes (combat/dialogue blockers).
 	•	Controls & Persistence: Player data now stores `stealthModeEnabled`, `stealthCooldownExpiresAt`, and a `movementProfile` union (`silent | normal | sprint`) so saves and subsystems receive consistent engagement context.
 
-<implementation_status>✅ IMPLEMENTED</implementation_status>
-</mechanic>
+**Status:** ✅ IMPLEMENTED
