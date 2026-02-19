@@ -34,7 +34,6 @@ import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../visual/t
 import { TilePainter } from '../visual/world/TilePainter';
 import { BuildingPainter } from '../visual/world/BuildingPainter';
 import { CharacterRigFactory } from '../visual/entities/CharacterRigFactory';
-import { scatterScenicProps } from '../visual/world/PropScatter';
 import { AtmosphereDirector, type AtmosphereProfile } from '../visual/world/AtmosphereDirector';
 import {
   OcclusionReadabilityController,
@@ -503,77 +502,7 @@ export class MainScene extends Phaser.Scene {
     const itemMarkers = (this.currentMapArea.entities.items ?? []).filter(
       (item): item is Item & { position: Position } => Boolean(item.position)
     );
-    const protectedTiles: Position[] = [
-      ...interactiveNpcs.map((npc) => ({ ...npc.position })),
-      ...itemMarkers.map((item) => ({ ...item.position })),
-    ];
-    if (this.playerInitialPosition) {
-      protectedTiles.push({ ...this.playerInitialPosition });
-    }
-
-    const hashId = (value: string): number => {
-      let out = 0;
-      for (let i = 0; i < value.length; i += 1) {
-        out = ((out << 5) - out + value.charCodeAt(i)) >>> 0;
-      }
-      return out;
-    };
-
-    const scenicPlacements = scatterScenicProps(
-      this.currentMapArea,
-      this.currentMapArea.buildings ?? [],
-      this.buildingVisualProfiles,
-      this.visualTheme,
-      protectedTiles
-    );
-
-    scenicPlacements.forEach((placement) => {
-      const tint = Phaser.Display.Color.HexStringToColor(placement.tintHex).color;
-      const seed = hashId(placement.id);
-      switch (placement.kind) {
-        case 'barricade':
-          addProp(
-            this.isoFactory!.createBarricade(placement.position.x, placement.position.y, {
-              tint,
-              height: this.visualTheme.preset === 'performance' ? 0.9 : 1.05,
-              widthScale: 0.9,
-            })
-          );
-          break;
-        case 'streetLight':
-          addProp(
-            this.isoFactory!.createStreetLight(placement.position.x, placement.position.y, {
-              glowColor: tint,
-              glowAlpha: this.visualTheme.preset === 'performance' ? 0.12 : 0.2,
-              height: this.visualTheme.preset === 'cinematic' ? 1.25 : 1.1,
-            })
-          );
-          if (!this.demoLampGrid) {
-            this.demoLampGrid = { ...placement.position };
-          }
-          break;
-        case 'billboard':
-          addProp(
-            this.isoFactory!.createBillboard(placement.position.x, placement.position.y, {
-              glowColor: tint,
-              widthScale: this.visualTheme.preset === 'performance' ? 0.78 : 0.92,
-              heightScale: this.visualTheme.preset === 'cinematic' ? 1.2 : 1.05,
-            })
-          );
-          break;
-        case 'debris':
-          addProp(
-            this.isoFactory!.createCrate(placement.position.x, placement.position.y, {
-              tint,
-              scale: 0.36 + (seed % 4) * 0.06,
-              height: 0.45 + ((seed >> 2) % 3) * 0.08,
-              alpha: 0.88,
-            })
-          );
-          break;
-      }
-    });
-
+    const isoMetrics = this.getIsoMetrics();
     interactiveNpcs.forEach((npc) => {
       addProp(
         this.isoFactory!.createPulsingHighlight(npc.position.x, npc.position.y, {
@@ -591,21 +520,40 @@ export class MainScene extends Phaser.Scene {
     });
 
     itemMarkers.forEach((item) => {
-      const color = item.isQuestItem ? 0xfacc15 : 0x10b981;
-      const pulseColor = item.isQuestItem ? 0xfff3bf : 0x6ee7b7;
+      const color = item.isQuestItem ? 0xfacc15 : 0x22d3ee;
+      const pulseColor = item.isQuestItem ? 0xfff3bf : 0x7dd3fc;
+      const pixel = this.calculatePixelPosition(item.position.x, item.position.y);
       addProp(
         this.isoFactory!.createPulsingHighlight(item.position.x, item.position.y, {
           color,
-          alpha: 0.18,
+          alpha: item.isQuestItem ? 0.24 : 0.22,
           pulseColor,
-          pulseAlpha: { from: 0.28, to: 0.06 },
-          pulseScale: item.isQuestItem ? 1.25 : 1.18,
-          widthScale: 0.62,
-          heightScale: 0.62,
+          pulseAlpha: { from: item.isQuestItem ? 0.34 : 0.3, to: 0.08 },
+          pulseScale: item.isQuestItem ? 1.28 : 1.22,
+          widthScale: 0.72,
+          heightScale: 0.72,
           depthOffset: 8,
-          duration: item.isQuestItem ? 1250 : 1450,
+          duration: item.isQuestItem ? 1150 : 1300,
         })
       );
+
+      const itemLabel = this.add.text(
+        pixel.x,
+        pixel.y - isoMetrics.tileHeight * 0.7,
+        item.isQuestItem ? 'QUEST ITEM' : 'PICKUP',
+        {
+          fontFamily: 'Orbitron, "DM Sans", sans-serif',
+          fontSize: '10px',
+          fontStyle: '700',
+          color: item.isQuestItem ? '#fde68a' : '#dbeafe',
+          align: 'center',
+        }
+      );
+      itemLabel.setOrigin(0.5, 1);
+      itemLabel.setStroke(item.isQuestItem ? '#f59e0b' : '#0284c7', 1.1);
+      itemLabel.setShadow(0, 0, item.isQuestItem ? '#f59e0b' : '#38bdf8', 8, true, true);
+      this.syncDepth(itemLabel, pixel.x, pixel.y, DepthBias.FLOATING_UI + 14);
+      addProp(itemLabel);
     });
 
     if (this.lightsFeatureEnabled) {
@@ -1233,8 +1181,10 @@ export class MainScene extends Phaser.Scene {
       for (let x = 0; x < tiles[0].length; x++) {
         const tile = tiles[y][x];
         const center = this.calculatePixelPosition(x, y);
+        const hideCoverVolume = this.currentMapArea?.zoneId?.startsWith('downtown_checkpoint') && tile.type === TileType.COVER;
         const isBuildingFootprint = buildingFootprintTiles.has(`${x}:${y}`);
         const groundOnly =
+          hideCoverVolume ||
           isBuildingFootprint &&
           (tile.type === TileType.WALL || tile.type === TileType.COVER || tile.type === TileType.DOOR);
 
