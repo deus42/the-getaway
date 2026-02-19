@@ -20,6 +20,7 @@ import {
   DialogueOption,
   FactionId,
   Item,
+  Quest,
   SkillId,
 } from "../../game/interfaces/types";
 import { dialogueToneManager } from "../../game/narrative/dialogueTone/dialogueToneManager";
@@ -46,6 +47,11 @@ const FALLBACK_FACTION_REPUTATION: Record<FactionId, number> = {
   corpsec: 0,
   scavengers: 0,
 };
+
+const hasPendingNonTalkObjectives = (quest: Quest): boolean =>
+  quest.objectives.some(
+    (objective) => objective.type !== "talk" && !objective.isCompleted
+  );
 
 const parseRoleTemplateReference = (
   text: string | null | undefined
@@ -183,11 +189,7 @@ const DialogueOverlay: React.FC = () => {
           {
             const quest = quests.find((entry) => entry.id === questId);
             if (quest && quest.isActive && !quest.isCompleted) {
-              const objectivesIncomplete = quest.objectives.some(
-                (objective) =>
-                  objective.type !== "talk" && !objective.isCompleted
-              );
-              if (objectivesIncomplete) {
+              if (hasPendingNonTalkObjectives(quest)) {
                 break;
               }
               dispatch(completeQuest(questId));
@@ -353,12 +355,7 @@ const DialogueOverlay: React.FC = () => {
         if (!quest.isActive) {
           return "notActive";
         }
-        if (
-          quest.objectives.some(
-            (objective) =>
-              objective.type !== "talk" && !objective.isCompleted
-          )
-        ) {
+        if (hasPendingNonTalkObjectives(quest)) {
           return "objectivesIncomplete";
         }
         break;
@@ -379,6 +376,38 @@ const DialogueOverlay: React.FC = () => {
     return null;
   }, [quests]);
 
+  const isQuestOptionVisible = useCallback((option: DialogueOption): boolean => {
+    if (!option.questEffect) {
+      return true;
+    }
+
+    const quest = quests.find((entry) => entry.id === option.questEffect?.questId);
+    if (!quest) {
+      return false;
+    }
+
+    switch (option.questEffect.effect) {
+      case "start":
+        return !quest.isActive && !quest.isCompleted;
+      case "complete":
+        return quest.isActive && !quest.isCompleted && !hasPendingNonTalkObjectives(quest);
+      case "update":
+        if (!quest.isActive || quest.isCompleted) {
+          return false;
+        }
+        if (!option.questEffect.objectiveId) {
+          return true;
+        }
+        return !quest.objectives.some(
+          (objective) =>
+            objective.id === option.questEffect?.objectiveId &&
+            objective.isCompleted
+        );
+      default:
+        return true;
+    }
+  }, [quests]);
+
   const isOptionLocked = useCallback((option: DialogueOption) => {
     const questLock = getQuestLockReason(option);
     if (questLock) {
@@ -391,6 +420,14 @@ const DialogueOverlay: React.FC = () => {
 
     return !checkSkillRequirement(player, option);
   }, [getQuestLockReason, player]);
+
+  const visibleOptions = useMemo(() => {
+    if (!currentNode) {
+      return [];
+    }
+
+    return currentNode.options.filter(isQuestOptionVisible);
+  }, [currentNode, isQuestOptionVisible]);
 
   const handleOptionSelect = useCallback((option: DialogueOption) => {
     if (isOptionLocked(option)) {
@@ -435,7 +472,7 @@ const DialogueOverlay: React.FC = () => {
       }
 
       const optionIndex = digit - 1;
-      const option = currentNode.options[optionIndex];
+      const option = visibleOptions[optionIndex];
       if (!option) {
         return;
       }
@@ -453,7 +490,7 @@ const DialogueOverlay: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown, listenerOptions);
     };
-  }, [currentNode, handleOptionSelect]);
+  }, [currentNode, handleOptionSelect, visibleOptions]);
 
   if (!dialogueId || !dialogue || !currentNode) {
     return null;
@@ -522,7 +559,7 @@ const DialogueOverlay: React.FC = () => {
             gap: "0.75rem",
           }}
         >
-          {currentNode?.options.map((option, index) => {
+          {visibleOptions.map((option, index) => {
             const locked = isOptionLocked(option);
             const requirementLabel = option.skillCheck
               ? `${resolveSkillName(

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
-import { MapArea, Enemy, NPC, Position, Item, AlertLevel } from '../game/interfaces/types';
+import { MapArea, Enemy, NPC, Position, Item, AlertLevel, TileType } from '../game/interfaces/types';
 import {
   EnvironmentFlags,
   EnvironmentState,
@@ -71,6 +71,17 @@ const createInitialEnvironmentState = (): EnvironmentState => ({
   rumorSets: {},
   notes: [],
 });
+
+const isPositionInsideBuildingFootprint = (area: MapArea, position: Position): boolean =>
+  (area.buildings ?? []).some((building) => {
+    const { from, to } = building.footprint;
+    return (
+      position.x >= from.x &&
+      position.x <= to.x &&
+      position.y >= from.y &&
+      position.y <= to.y
+    );
+  });
 
 const buildEnemy = (name: string): Enemy => ({
   id: uuidv4(),
@@ -491,6 +502,19 @@ export const worldSlice = createSlice({
 
     addItemToMap: (state, action: PayloadAction<{ item: Item; position: Position }>) => {
       const { item, position } = action.payload;
+      const tile = state.currentMapArea.tiles[position.y]?.[position.x];
+      if (!tile) {
+        return;
+      }
+
+      if (!tile.isWalkable || tile.type === TileType.DOOR || tile.type === TileType.WALL) {
+        return;
+      }
+
+      if (isPositionInsideBuildingFootprint(state.currentMapArea, position)) {
+        return;
+      }
+
       const itemWithPosition = {
         ...item,
         position,
@@ -503,6 +527,28 @@ export const worldSlice = createSlice({
       state.currentMapArea.entities.items = state.currentMapArea.entities.items.filter(
         (item) => item.id !== itemId
       );
+    },
+
+    removeItemInstanceFromMap: (
+      state,
+      action: PayloadAction<{ id?: string; position?: Position; name?: string }>
+    ) => {
+      const { id, position, name } = action.payload;
+      const before = state.currentMapArea.entities.items;
+      const filtered = before.filter((item) => {
+        const matchesId = Boolean(id && item.id === id);
+        const matchesPositionName = Boolean(
+          position &&
+            item.position?.x === position.x &&
+            item.position?.y === position.y &&
+            (!name || item.name === name)
+        );
+        return !(matchesId || matchesPositionName);
+      });
+
+      if (filtered.length !== before.length) {
+        state.currentMapArea.entities.items = filtered;
+      }
     },
 
     applyLocaleToWorld: (_state, action: PayloadAction<Locale>) => {
@@ -580,6 +626,7 @@ export const {
   removeNPC,
   addItemToMap,
   removeItemFromMap,
+  removeItemInstanceFromMap,
   applyLocaleToWorld,
   setGlobalAlertLevel,
   scheduleReinforcements,

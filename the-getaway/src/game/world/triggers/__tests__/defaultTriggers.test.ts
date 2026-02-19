@@ -83,7 +83,7 @@ describe('default environmental triggers', () => {
     ).toContain('brownout');
   });
 
-  it('spawns environmental note items on scarcity changes', () => {
+  it('registers environmental notes without spawning map items', () => {
     const store = createTestStore();
 
     ensureDefaultEnvironmentalTriggersRegistered();
@@ -98,7 +98,7 @@ describe('default environmental triggers', () => {
     const noteItem = state.world.currentMapArea.entities.items.find((item) =>
       item.id.startsWith('env-note-item::')
     );
-    expect(noteItem).toBeDefined();
+    expect(noteItem).toBeUndefined();
   });
 
   it('updates weather once per time of day and respects severity overrides', () => {

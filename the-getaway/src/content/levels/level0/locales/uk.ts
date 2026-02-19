@@ -13,54 +13,6 @@ const corporateKeycardUk = {
   description: 'Пропуск, поцуплений у топ-менеджера корпорації.',
 };
 
-const holoLensUk = {
-  ...getItemPrototype('misc_holo_projector_lens'),
-  name: 'Призма голографа',
-  description: 'Лінза з корпоративного голографічного борда. Дозволяє підмінювати ідентифікатори патрулів.',
-};
-
-const repairKitUk = {
-  ...getItemPrototype('consumable_basic_repair_kit'),
-  name: 'Ремкомплект',
-  description: 'Смола, нанонитки та герметик для екстреного ремонту зброї чи броні.',
-};
-
-const corpsecPistolUk = {
-  ...getItemPrototype('weapon_corpsec_service_pistol'),
-  name: 'Службовий пістолет КорпСеку',
-  description: 'Стандартна зброя загонів безпеки: надійна, точна й болісно нагадує про службу на їхньому боці.',
-};
-
-const layeredJacketUk = {
-  ...getItemPrototype('armor_layered_leather_jacket'),
-  name: 'Багатошарова шкіряна куртка',
-  description: 'Посилена шкіра з прихованими пластинами — додає живучості без зайвої ваги.',
-};
-
-const fieldMedkitUk = {
-  ...getItemPrototype('consumable_field_medkit'),
-  name: 'Польова аптечка',
-  description: 'Комплект коагулянтів і синт-ниток для швидкої стабілізації поранень.',
-};
-
-const empChargeUk = {
-  ...getItemPrototype('misc_emp_charge'),
-  name: 'Імпульсний заряд',
-  description: 'Одноразовий пристрій, що глушить камери та дрони різким електромагнітним спалахом.',
-};
-
-const customDeckUk = {
-  ...getItemPrototype('misc_custom_deck'),
-  name: 'Кастомний дек',
-  description: 'Портативна злам-панель з модифікованою прошивкою та світними клавішами.',
-};
-
-const lockpickSetUk = {
-  ...getItemPrototype('misc_lockpick_set'),
-  name: 'Набір відмичок',
-  description: 'Ручна збірка відмичок у тканинному футлярі для дверей і тайників.',
-};
-
 const transitTokenUk = {
   ...getItemPrototype('misc_transit_tokens'),
   name: 'Трамвайний жетон',
@@ -728,16 +680,8 @@ export const level0UkrainianContent: Level0LocaleContent = {
     },
   ],
   itemBlueprints: [
-    corpsecPistolUk,
-    layeredJacketUk,
-    fieldMedkitUk,
-    repairKitUk,
-    empChargeUk,
-    customDeckUk,
-    lockpickSetUk,
-    encryptedDatapadUk,
     corporateKeycardUk,
-    holoLensUk,
+    encryptedDatapadUk,
     transitTokenUk,
     transitTokenUk,
     transitTokenUk,

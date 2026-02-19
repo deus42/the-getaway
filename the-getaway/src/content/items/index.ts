@@ -268,6 +268,7 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     isQuestItem: false,
   }),
   misc_encrypted_datapad: questItemPrototype({
+    resourceKey: 'items.encrypted_datapad',
     name: 'Encrypted Datapad',
     description: 'Contains black market manifests guarded by Lira.',
     weight: 1,
@@ -275,6 +276,7 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     isQuestItem: true,
   }),
   misc_corporate_keycard: questItemPrototype({
+    resourceKey: 'items.corporate_keycard',
     name: 'Corporate Keycard',
     description: 'Security clearance stolen from a tower executive.',
     weight: 0.2,
@@ -282,6 +284,7 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     isQuestItem: true,
   }),
   misc_holo_projector_lens: questItemPrototype({
+    resourceKey: 'items.holo_projector_lens',
     name: 'Holo Projector Lens',
     description: 'A prismatic lens ripped from a corporate holo-billboard. Can spoof patrol IDs when paired with the right codec.',
     weight: 0.3,
@@ -289,6 +292,7 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     isQuestItem: false,
   }),
   misc_transit_tokens: questItemPrototype({
+    resourceKey: 'items.transit_tokens',
     name: 'Transit Token',
     description: 'Stamped brass fare token for the Downtown tram grid. Runners stash these to bypass curfew checkpoints.',
     weight: 0.12,
@@ -299,6 +303,7 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     maxStack: 10,
   }),
   misc_abandoned_medkit: questItemPrototype({
+    resourceKey: 'items.abandoned_medkit',
     name: 'Abandoned Medkit',
     description: 'Dust-choked field kit left behind during a sweep. Stocked just enough to stabilize wounded couriers.',
     weight: 1.4,
@@ -307,6 +312,7 @@ const ITEM_CATALOG: Record<ItemDefinitionId, ItemPrototype> = {
     stackable: false,
   }),
   misc_saboteur_charge_kit: questItemPrototype({
+    resourceKey: 'items.saboteur_charge_kit',
     name: 'Saboteur Charge Kit',
     description: 'Compact shaped charges and signal dampers tuned to overload surveillance relays.',
     weight: 1.1,

@@ -432,6 +432,34 @@ describe('worldSlice', () => {
       const items = store.getState().world.currentMapArea.entities.items;
       expect(items.find((i) => i.id === item.id)).toBeUndefined();
     });
+
+    it('does not add item on building footprint', () => {
+      const store = createTestStore();
+      const mapArea = createTestMapArea();
+      mapArea.buildings = [
+        {
+          id: 'building-1',
+          name: 'Test Building',
+          footprint: { from: { x: 8, y: 8 }, to: { x: 12, y: 12 } },
+          door: { x: 10, y: 13 },
+        },
+      ];
+      store.dispatch(setMapArea(mapArea));
+
+      const item: Item = {
+        id: uuidv4(),
+        name: 'Blocked Item',
+        description: 'Should not spawn inside building footprint',
+        weight: 1,
+        value: 1,
+        isQuestItem: false,
+      };
+
+      store.dispatch(addItemToMap({ item, position: { x: 10, y: 10 } }));
+
+      const items = store.getState().world.currentMapArea.entities.items;
+      expect(items.find((entry) => entry.id === item.id)).toBeUndefined();
+    });
   });
 
   describe('alert and reinforcements', () => {

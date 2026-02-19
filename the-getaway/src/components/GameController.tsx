@@ -31,7 +31,7 @@ import {
   setEngagementMode,
   setMapArea,
   setWorkbenchStatus,
-  removeItemFromMap,
+  removeItemInstanceFromMap,
   type WorkbenchStatus,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
@@ -49,6 +49,8 @@ import {
 import {
   Enemy,
   Player,
+  Quest,
+  QuestObjective,
   Position,
   MapArea,
   TileType,
@@ -73,6 +75,8 @@ import {
   PATH_PREVIEW_EVENT,
   MINIMAP_PATH_PREVIEW_EVENT,
   MiniMapPathPreviewDetail,
+  PICKUP_STATE_SYNC_EVENT,
+  PickupStateSyncDetail,
 } from "../game/events";
 import {
   startDialogue,
@@ -127,6 +131,7 @@ import {
   createParanoiaRuntime,
 } from "../game/systems/paranoia";
 import { PARANOIA_CONFIG } from "../content/paranoia/paranoiaConfig";
+import { resolvePickupObjectName } from "../game/utils/itemDisplay";
 import GameDebugInspector from "./debug/GameDebugInspector";
 import { setAutoBattleEnabled } from "../store/settingsSlice";
 import AutoBattleController from "../game/combat/automation/AutoBattleController";
@@ -189,6 +194,33 @@ const countParanoiaConsumables = (
     },
     { calmTabs: 0, cigarettes: 0 }
   );
+
+const getItemPickupQuantity = (item: Item): number =>
+  item.stackable ? Math.max(1, item.quantity ?? 1) : 1;
+
+const objectiveMatchesItem = (objective: QuestObjective, item: Item): boolean => {
+  if (objective.type !== 'collect' || objective.isCompleted) {
+    return false;
+  }
+
+  if (objective.targetResourceKey && item.resourceKey) {
+    return objective.targetResourceKey === item.resourceKey;
+  }
+
+  return objective.target === item.name;
+};
+
+const collectObjectiveInventoryCount = (
+  objective: QuestObjective,
+  items: Item[]
+): number =>
+  items.reduce((total, item) => {
+    if (!objectiveMatchesItem(objective, item)) {
+      return total;
+    }
+
+    return total + getItemPickupQuantity(item);
+  }, 0);
 
 const WORKBENCH_PROXIMITY_MARGIN = 1.5;
 
@@ -286,6 +318,13 @@ const GameController: React.FC = () => {
   const worldState = useSelector((state: RootState) => state.world);
   const quests = useSelector((state: RootState) => state.quests.quests);
   const dialogues = useSelector((state: RootState) => state.quests.dialogues);
+  const questActivationSignature = useMemo(
+    () =>
+      quests
+        .map((quest) => `${quest.id}:${quest.isActive ? 1 : 0}:${quest.isCompleted ? 1 : 0}`)
+        .join('|'),
+    [quests]
+  );
   const activeDialogueId = useSelector(selectActiveDialogueId);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const autoBattleEnabled = useSelector(
@@ -372,9 +411,11 @@ const GameController: React.FC = () => {
   const timeOfDayRef = useRef(timeOfDay);
   const activeDialogueIdRef = useRef<string | null>(activeDialogueId);
   const overlayEnabledRef = useRef(overlayEnabled);
+  const worldCurrentTimeRef = useRef(worldCurrentTime);
   const previousSurveillanceAreaId = useRef<string | null>(null);
   const pendingSurveillanceTeardownRef = useRef<number | null>(null);
   const previousEnemiesRef = useRef<Map<string, Enemy>>(new Map());
+  const questsRef = useRef<Quest[]>(quests);
   const autoBattleControllerRef = useRef<AutoBattleController | null>(null);
   const paranoiaRuntimeRef = useRef(createParanoiaRuntime());
   const paranoiaTierRef = useRef(paranoiaTier);
@@ -562,6 +603,10 @@ const GameController: React.FC = () => {
   }, [activeDialogueId]);
 
   useEffect(() => {
+    questsRef.current = quests;
+  }, [quests]);
+
+  useEffect(() => {
     mapAreaRef.current = currentMapArea ?? null;
   }, [currentMapArea]);
 
@@ -576,49 +621,103 @@ const GameController: React.FC = () => {
         item.position?.y === player.position.y
     );
 
+    if (itemsAtPlayerPosition.length === 0) {
+      return;
+    }
+
+    const activeQuests = questsRef.current.filter((quest) => quest.isActive && !quest.isCompleted);
+
     itemsAtPlayerPosition.forEach((item) => {
-      if (!item.isQuestItem) {
-        return;
-      }
-
-      const matchingQuest = quests.find(
-        (quest) =>
-          quest.isActive &&
-          !quest.isCompleted &&
-          quest.objectives.some(
-            (objective) =>
-              objective.type === "collect" &&
-              !objective.isCompleted &&
-              objective.target === item.name
-          )
-      );
-
-      if (!matchingQuest) {
-        return;
-      }
-
-      const matchingObjective = matchingQuest.objectives.find(
-        (objective) =>
-          objective.type === "collect" &&
-          !objective.isCompleted &&
-          objective.target === item.name
-      );
-
-      if (!matchingObjective) {
-        return;
-      }
-
+      const pickupCount = getItemPickupQuantity(item);
+      const pickupLabel = resolvePickupObjectName(item);
       dispatch(addItem(item));
-      dispatch(removeItemFromMap(item.id));
       dispatch(
-        updateObjectiveCounter({
-          questId: matchingQuest.id,
-          objectiveId: matchingObjective.id,
-          count: item.stackable ? item.quantity ?? 1 : 1,
+        removeItemInstanceFromMap({
+          id: item.id,
+          position: item.position,
+          name: item.name,
         })
       );
+      window.dispatchEvent(
+        new CustomEvent<PickupStateSyncDetail>(PICKUP_STATE_SYNC_EVENT, {
+          detail: {
+            areaId: currentMapArea.id,
+            itemId: item.id,
+            position: item.position,
+          },
+        })
+      );
+      dispatch(
+        addFloatingNumber({
+          id: uuidv4(),
+          value: pickupCount,
+          gridX: item.position?.x ?? player.position.x,
+          gridY: item.position?.y ?? player.position.y,
+          type: 'pickup',
+          label: pickupLabel,
+        })
+      );
+      dispatch(addLogMessage(logStrings.itemPickedUp(pickupLabel, pickupCount)));
+
+      activeQuests.forEach((quest) => {
+        quest.objectives.forEach((objective) => {
+          if (!objectiveMatchesItem(objective, item)) {
+            return;
+          }
+
+          dispatch(
+            updateObjectiveCounter({
+              questId: quest.id,
+              objectiveId: objective.id,
+              count: pickupCount,
+            })
+          );
+        });
+      });
     });
-  }, [dispatch, mapItems, player.position, quests]);
+  }, [dispatch, mapItems, player.position, logStrings, currentMapArea?.id]);
+
+  useEffect(() => {
+    const activeQuests = questsRef.current.filter((quest) => quest.isActive && !quest.isCompleted);
+    if (activeQuests.length === 0) {
+      return;
+    }
+
+    const inventoryItems = player.inventory.items ?? [];
+    if (inventoryItems.length === 0) {
+      return;
+    }
+
+    activeQuests.forEach((quest) => {
+      quest.objectives.forEach((objective) => {
+        if (objective.type !== 'collect' || objective.isCompleted) {
+          return;
+        }
+
+        const inventoryCount = collectObjectiveInventoryCount(objective, inventoryItems);
+        if (inventoryCount <= 0) {
+          return;
+        }
+
+        const targetCount = objective.count ?? 1;
+        const currentCount = objective.currentCount ?? 0;
+        const desiredCount = Math.min(inventoryCount, targetCount);
+        const increment = desiredCount - currentCount;
+
+        if (increment <= 0) {
+          return;
+        }
+
+        dispatch(
+          updateObjectiveCounter({
+            questId: quest.id,
+            objectiveId: objective.id,
+            count: increment,
+          })
+        );
+      });
+    });
+  }, [dispatch, player.inventory.items, questActivationSignature]);
 
   // Stealth engagement management
   useEffect(() => {
@@ -645,39 +744,36 @@ const GameController: React.FC = () => {
       dispatch(setStealthState({ enabled: false, cooldownExpiresAt: null }));
     }
 
+    let nextEngagementMode: "none" | "stealth" | "combat" | "dialog" = "none";
+
     if (inCombat) {
+      nextEngagementMode = "combat";
       if (playerState?.stealthModeEnabled) {
         disableStealth(true);
         dispatch(addLogMessage(logStrings.stealthCompromised));
       }
-      dispatch(setEngagementMode("combat"));
-      return;
-    }
-
-    if (activeDialogueIdRef.current) {
+    } else if (activeDialogueIdRef.current) {
+      nextEngagementMode = "dialog";
       if (playerState?.stealthModeEnabled) {
         disableStealth(false);
       }
-      dispatch(setEngagementMode("dialog"));
-      return;
-    }
-
-    if (playerState?.stealthModeEnabled) {
+    } else if (playerState?.stealthModeEnabled) {
       if (guardCompromised || cameraAlarmed) {
         disableStealth(true);
-        dispatch(setEngagementMode("none"));
         dispatch(addLogMessage(logStrings.stealthCompromised));
-        return;
+      } else {
+        nextEngagementMode = "stealth";
       }
+    }
 
-      dispatch(setEngagementMode("stealth"));
-    } else {
-      dispatch(setEngagementMode("none"));
+    if (engagementMode !== nextEngagementMode) {
+      dispatch(setEngagementMode(nextEngagementMode));
     }
   }, [
     activeDialogueId,
     disableStealth,
     dispatch,
+    engagementMode,
     enemies,
     inCombat,
     logStrings,
@@ -776,6 +872,10 @@ const GameController: React.FC = () => {
   useEffect(() => {
     overlayEnabledRef.current = overlayEnabled;
   }, [overlayEnabled]);
+
+  useEffect(() => {
+    worldCurrentTimeRef.current = worldCurrentTime;
+  }, [worldCurrentTime]);
 
   useEffect(() => {
     if (!autoBattleControllerRef.current) {
@@ -2125,7 +2225,7 @@ const GameController: React.FC = () => {
 
     if (!inCombat || isPlayerTurn || enemies.length === 0) {
       cancelPendingEnemyAction();
-      if (!inCombat || isPlayerTurn) {
+      if ((!inCombat || isPlayerTurn) && currentEnemyTurnIndex !== 0) {
         setCurrentEnemyTurnIndex(0);
       }
       return;
@@ -2227,7 +2327,7 @@ const GameController: React.FC = () => {
           enemies,
           coverPositions,
           currentMapArea.entities.npcs,
-          worldCurrentTime
+          worldCurrentTimeRef.current
         );
         actionResult = result;
         log.debug(
@@ -2323,7 +2423,6 @@ const GameController: React.FC = () => {
     dispatch,
     player,
     currentMapArea,
-    worldCurrentTime,
     cancelPendingEnemyAction,
     log,
   ]);

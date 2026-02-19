@@ -10,6 +10,8 @@ import {
   TILE_CLICK_EVENT,
   PATH_PREVIEW_EVENT,
   PLAYER_SCREEN_POSITION_EVENT,
+  PICKUP_STATE_SYNC_EVENT,
+  PickupStateSyncDetail,
   PathPreviewDetail,
   ViewportUpdateDetail,
   PlayerScreenPositionDetail,
@@ -47,6 +49,7 @@ import {
   updateVisualSettings,
   type VisualFxSettings,
 } from '../settings/visualSettings';
+import { resolvePickupObjectName } from '../utils/itemDisplay';
 
 const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
 const MIN_CAMERA_ZOOM = 0.6;
@@ -123,12 +126,26 @@ export class MainScene extends Phaser.Scene {
   private demoLampGrid?: Position;
   private demoPointLight?: Phaser.GameObjects.PointLight;
   private readonly lightingAmbientColor = 0x0f172a;
+  private lastItemMarkerSignature = '';
   private hasInitialZoomApplied = false;
   private userAdjustedZoom = false;
   private pendingCameraRestore = false;
   private preCombatZoom: number | null = null;
   private preCombatUserAdjusted = false;
   private pendingRestoreUserAdjusted: boolean | null = null;
+  private handlePickupStateSync = (event: Event) => {
+    const customEvent = event as CustomEvent<PickupStateSyncDetail>;
+    if (!this.sys.isActive() || !this.currentMapArea) {
+      return;
+    }
+
+    if (customEvent.detail?.areaId && customEvent.detail.areaId !== this.currentMapArea.id) {
+      return;
+    }
+
+    this.currentMapArea = store.getState().world.currentMapArea;
+    this.renderStaticProps();
+  };
   private handleVisibilityChange = () => {
     if (!this.sys.isActive()) return;
     if (document.visibilityState === 'visible') {
@@ -277,6 +294,7 @@ export class MainScene extends Phaser.Scene {
     this.scale.on('resize', this.handleResize, this);
     document.addEventListener('visibilitychange', this.handleVisibilityChange);
     window.addEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    window.addEventListener(PICKUP_STATE_SYNC_EVENT, this.handlePickupStateSync as EventListener);
     miniMapService.initialize(this);
 
     if (this.input) {
@@ -346,6 +364,7 @@ export class MainScene extends Phaser.Scene {
     }
     this.scale.off('resize', this.handleResize, this);
     window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
+    window.removeEventListener(PICKUP_STATE_SYNC_EVENT, this.handlePickupStateSync as EventListener);
     miniMapService.shutdown();
     document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     this.stopCameraZoomTween();
@@ -451,6 +470,13 @@ export class MainScene extends Phaser.Scene {
       this.enablePlayerCameraFollow();
     }
 
+    const previousItemMarkerSignature = this.lastItemMarkerSignature;
+    this.currentMapArea = worldState.currentMapArea;
+    const nextItemMarkerSignature = this.getItemMarkerSignature(this.currentMapArea);
+    if (previousItemMarkerSignature !== nextItemMarkerSignature) {
+      this.renderStaticProps();
+    }
+
     if (this.curfewActive !== worldState.curfewActive) {
       this.curfewActive = worldState.curfewActive;
     }
@@ -523,6 +549,7 @@ export class MainScene extends Phaser.Scene {
       const color = item.isQuestItem ? 0xfacc15 : 0x22d3ee;
       const pulseColor = item.isQuestItem ? 0xfff3bf : 0x7dd3fc;
       const pixel = this.calculatePixelPosition(item.position.x, item.position.y);
+      const itemLabelName = resolvePickupObjectName(item);
       addProp(
         this.isoFactory!.createPulsingHighlight(item.position.x, item.position.y, {
           color,
@@ -540,7 +567,7 @@ export class MainScene extends Phaser.Scene {
       const itemLabel = this.add.text(
         pixel.x,
         pixel.y - isoMetrics.tileHeight * 0.7,
-        item.isQuestItem ? 'QUEST ITEM' : 'PICKUP',
+        itemLabelName,
         {
           fontFamily: 'Orbitron, "DM Sans", sans-serif',
           fontSize: '10px',
@@ -559,6 +586,27 @@ export class MainScene extends Phaser.Scene {
     if (this.lightsFeatureEnabled) {
       this.rebuildLightingDemoLight();
     }
+
+    this.lastItemMarkerSignature = this.getItemMarkerSignature(this.currentMapArea);
+  }
+
+  private getItemMarkerSignature(area: MapArea | null): string {
+    if (!area) {
+      return '';
+    }
+
+    const markers = (area.entities.items ?? []).filter(
+      (item): item is Item & { position: Position } => Boolean(item.position)
+    );
+
+    if (markers.length === 0) {
+      return '';
+    }
+
+    return markers
+      .map((item) => `${item.id ?? item.name}@${item.position.x},${item.position.y}`)
+      .sort()
+      .join('|');
   }
 
   private applyLightingSettings(settings: VisualFxSettings): void {

@@ -5,7 +5,8 @@ export interface FloatingNumberData {
   value: number;
   gridX: number;
   gridY: number;
-  type: 'damage' | 'heal' | 'crit' | 'miss' | 'block';
+  type: 'damage' | 'heal' | 'crit' | 'miss' | 'block' | 'pickup';
+  label?: string;
 }
 
 export interface HitFlashData {

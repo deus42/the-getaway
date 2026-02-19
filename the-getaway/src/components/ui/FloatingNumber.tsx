@@ -7,11 +7,19 @@ export interface FloatingNumberProps {
   value: number;
   gridX: number;
   gridY: number;
-  type: 'damage' | 'heal' | 'crit' | 'miss' | 'block';
+  type: 'damage' | 'heal' | 'crit' | 'miss' | 'block' | 'pickup';
+  label?: string;
   onComplete?: () => void;
 }
 
-const FloatingNumber: React.FC<FloatingNumberProps> = ({ value, gridX, gridY, type, onComplete }) => {
+const FloatingNumber: React.FC<FloatingNumberProps> = ({
+  value,
+  gridX,
+  gridY,
+  type,
+  label,
+  onComplete,
+}) => {
   const [visible, setVisible] = useState(true);
   const [screenPos, setScreenPos] = useState<{ x: number; y: number } | null>(null);
   const lastDetailRef = useRef<PlayerScreenPositionDetail | null>(null);
@@ -126,6 +134,13 @@ const FloatingNumber: React.FC<FloatingNumberProps> = ({ value, gridX, gridY, ty
           prefix: '',
           scale: 1,
         };
+      case 'pickup':
+        return {
+          color: '#22d3ee',
+          glow: 'rgba(34, 211, 238, 0.85)',
+          prefix: '+',
+          scale: 1.05,
+        };
       default:
         return {
           color: '#ffffff',
@@ -137,7 +152,14 @@ const FloatingNumber: React.FC<FloatingNumberProps> = ({ value, gridX, gridY, ty
   };
 
   const styles = getTypeStyles();
-  const displayText = type === 'miss' ? 'MISS' : type === 'block' ? 'BLOCK' : `${styles.prefix}${value}`;
+  const displayText =
+    type === 'miss'
+      ? 'MISS'
+      : type === 'block'
+      ? 'BLOCK'
+      : type === 'pickup'
+      ? `PICKED UP: ${value > 1 ? `${value}x ` : ''}${label ?? (value === 1 ? 'ITEM' : 'ITEMS')}`
+      : `${styles.prefix}${value}`;
 
   const containerStyle: React.CSSProperties = {
     position: 'fixed',

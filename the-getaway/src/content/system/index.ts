@@ -38,6 +38,7 @@ export interface LogStrings {
   rewardExperience: (amount: number, questName: string) => string;
   rewardCredits: (amount: number, questName: string) => string;
   rewardItem: (itemName: string, questName: string) => string;
+  itemPickedUp: (itemName: string, quantity: number) => string;
   alertSuspicious: string;
   alertInvestigating: string;
   alertAlarmed: string;
@@ -109,6 +110,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       rewardExperience: (amount, questName) => `+${amount} XP from ${questName}.`,
       rewardCredits: (amount, questName) => `+₿${amount} credits secured from ${questName}.`,
       rewardItem: (itemName, questName) => `Received ${itemName} from ${questName}.`,
+      itemPickedUp: (itemName, quantity) =>
+        quantity > 1
+          ? `Picked up ${quantity}x ${itemName}.`
+          : `Picked up ${itemName}.`,
       alertSuspicious: 'Guard patrol notices something off—stay cautious.',
       alertInvestigating: 'Patrol is actively searching the area. Get to cover!',
       alertAlarmed: 'ALERT! Enemy has locked onto your position!',
@@ -176,6 +181,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       rewardExperience: (amount, questName) => `+${amount} од. досвіду за ${questName}.`,
       rewardCredits: (amount, questName) => `+₿${amount} кредитів за ${questName}.`,
       rewardItem: (itemName, questName) => `Отримано ${itemName} від ${questName}.`,
+      itemPickedUp: (itemName, quantity) =>
+        quantity > 1
+          ? `Підібрано ${quantity}× ${itemName}.`
+          : `Підібрано ${itemName}.`,
       alertSuspicious: 'Патруль помічає щось підозріле — будьте обережні.',
       alertInvestigating: 'Патруль активно обшукує зону. Сховайтеся!',
       alertAlarmed: 'ТРИВОГА! Ворог засік вашу позицію!',

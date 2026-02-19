@@ -362,6 +362,7 @@ export interface WeaponModAttachment {
 export interface Item {
   id: string;
   definitionId?: string;
+  resourceKey?: string;
   name: string;
   description: string;
   weight: number;
@@ -450,6 +451,7 @@ export interface QuestObjective {
   isCompleted: boolean;
   type: 'collect' | 'talk' | 'kill' | 'explore';
   target: string;
+  targetResourceKey?: string;
   count?: number;
   currentCount?: number;
 }

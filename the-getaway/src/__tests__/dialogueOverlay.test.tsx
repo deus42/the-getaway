@@ -109,13 +109,12 @@ describe('DialogueOverlay', () => {
       store.dispatch(startDialogue({ dialogueId: 'npc_lira_vendor', nodeId: 'intro' }));
     });
 
-    let completionOption = screen.getByRole('button', {
-      name: /Cache is back in rebel hands\./i,
-    });
+    expect(
+      screen.queryByRole('button', {
+        name: /Cache is back in rebel hands\./i,
+      })
+    ).toBeNull();
 
-    expect(completionOption).toHaveStyle('pointer-events: none');
-
-    fireEvent.click(completionOption);
     expect(
       store
         .getState()
@@ -133,7 +132,7 @@ describe('DialogueOverlay', () => {
       );
     });
 
-    completionOption = screen.getByRole('button', {
+    const completionOption = screen.getByRole('button', {
       name: /Cache is back in rebel hands\./i,
     });
     expect(completionOption).toHaveStyle('pointer-events: auto');
