@@ -18,6 +18,8 @@ Core loop:
 
 Non-goals for MVP (explicitly Post-MVP / optional):
 - Vehicles (combat + exploration)
+- Survival micromanagement (hunger/thirst/fatigue)
+- Deep inventory economy (ammo weight, contraband tiers, vendor simulation)
 - Deep crafting / weapon mod meta
 - Party companions (beyond George)
 - Full witness/reputation gossip propagation (keep stubs/dev-only where needed)
@@ -439,7 +441,7 @@ This optional layer gives newcomers and grinders a low-friction way to enjoy tur
 <mechanic name="vehicles_in_combat">
 Vehicles In Combat (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - moved to <post_mvp_appendix/> at end of this file.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/vehicles.md.</implementation_status>
 </mechanic>
 </game_system>
 
@@ -517,7 +519,7 @@ The day-night cycle encourages players to think about when they do things, not j
 <mechanic name="vehicles_exploration">
 Vehicles Exploration (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - moved to <post_mvp_appendix/> at end of this file.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/vehicles.md.</implementation_status>
 </mechanic>
 </game_system>
 
@@ -806,83 +808,40 @@ The goal is that character progression feels rewarding and lets the player defin
 
 <mechanic name="equipment_inventory">
 <balance_values system="equipment">
-Equipment & Inventory Management
+Equipment & Inventory (MVP-minimal)
 
-Loot and gear are central to progression and survival, so managing equipment is a key gameplay element:
-	•	Inventory System: The player’s inventory has a capacity limit, likely governed by weight (or a simplified slot system). We will show an encumbrance meter or total weight vs. carry capacity. Items are categorized (weapons, armor, ammo, consumables, materials, quest items) for easy sorting. The interface might be a grid or list; for a PC/browser game, a list with icons and weight values is clear. The player can typically carry a few weapons, a set of armor, some outfit pieces, and a moderate amount of supplies before getting encumbered. Backpacks or gear can increase capacity, or the player can invest in the Strength attribute or a “Pack Rat” perk to carry more.
-	•	Weapons: There is a variety of weapons reflecting the dystopian setting. Categories include:
-	•	Melee: knives, bats, crowbars, swords, electrified prods – quiet and no ammo needed, but puts you in harm’s way.
-	•	Pistols & SMGs: sidearms with quick draw times, short range, use light ammo.
-	•	Shotguns: high close-range damage, spread can hit multiple targets, slower to reload.
-	•	Rifles: includes assault rifles and sniper rifles – good range and damage, but often higher AP cost to shoot.
-	•	Heavy Weapons: like machine guns, rocket launchers, flamethrowers – high damage and area effect, often rare and heavy, with scarce ammo.
-	•	Energy Weapons: if setting permits (laser rifles, plasma guns) – require technical skill to use effectively, can have special effects (like melting armor).
-	•	Thrown/Explosives: grenades, Molotovs, knives, mines – one-time use items that cause AoE or status effects.
-	•	Each weapon has stats: damage, accuracy, critical chance, range, ammo type, magazine size, AP cost, and any special properties (armor penetration, chance to stun, noise level if stealth matters). The player will find or buy better weapons as they progress, or modify existing ones (see Crafting & Upgrades). Weapon choice can complement a build (snipers for stealth builds, big guns for strength builds, etc.).
-	•	Armor & Clothing: Protects the player and possibly gives bonuses:
-	•	Armor might cover body parts or be a single suit. A simple system might have just an outfit slot and maybe a helmet slot. A complex one might allow mixing (helmet, torso, legs, etc.).
-	•	Light armor (leather jacket, vest) offers modest protection but allows high mobility (no penalty to stealth or AP).
-	•	Heavy armor (riot gear, combat armor) greatly reduces incoming damage but might reduce agility, increase noise, and be rarer.
-	•	Special gear (hazmat suit for radiation, stealth suit that gives camo bonus, faction uniforms for disguise) exist for specific purposes.
-	•	Armor has durability that can degrade under fire, requiring repair. It might also have a stat for how much it slows the character if heavy.
-	•	Gadgets & Tools: Inventory also includes usable devices like:
-	•	Lockpicks/keycards for doors.
-	•	Hacking modules for electronic locks or computer terminals.
-	•	Binoculars or scopes for scouting.
-	•	First aid kits, bandages for healing injuries.
-	•	Stimulants or drugs that boost stats temporarily (with potential side effects).
-	•	These often don’t take space like big items but are consumed on use or have limited uses.
-	•	Consumables:
-	•	Health items: medkits (heals a chunk of HP), painkillers (reduce pain/injury penalties), adrenaline (boost AP briefly).
-	•	Food & water: needed for survival, also can heal small amounts or provide buffs (e.g., a full meal might slowly regen health for a while).
-	•	Batteries/Fuel: to power certain gear or vehicles.
-	•	Ammo: various calibers for guns, arrows/bolts if we have crossbows, etc. Ammo has weight, so hoarding too much can encumber you. Part of strategy is managing ammo supply.
-	•	Crafting Materials: Scrap metal, electronic parts, chemicals, fabric, etc. used in crafting. We might mark these as non-weight or separate if too burdensome, or give them small weights so players consider whether to collect junk. Alternatively, allow infinite weight for crafting materials but require visiting crafting stations to use them, to simplify inventory tetris.
-	•	Trading and Economy:
-	•	The game uses a currency (perhaps old world money or a barter system, depending on lore). Vendors are located in safe zones or wandering traders.
-	•	Each vendor has limited inventory that refreshes periodically. They have buying prices (usually lower than selling) and selling prices.
-	•	Barter skill or charisma can improve prices. With high skill, the player might get 20% more for items sold and pay 20% less for purchases, for example.
-	•	Some items are contraband and only available on black markets (e.g., energy weapons or military gear might only be sold by secretive traders, requiring certain quests or rep to access).
-	•	The player can sell almost anything, but broken items sell for less or not at all until repaired.
-	•	Shops might have more money in wealthy districts and almost none in poor areas, affecting how much loot you can liquidate easily.
-	•	Inventory Management Gameplay: We want players to make choices about what to carry. For example, if you plan a stealth mission, maybe bring silenced weapons and leave the rocket launcher at home. On a long trip, dedicate space to extra ammo, food, and medical supplies, which means you might leave some alternate weapons behind. The vehicle trunk or stash storage in a safehouse can hold overflow, so inventory management is about prepping for the next outing and then dealing with what you pick up.
-	•	User-Friendly Features: Quick-swap for weapons (hotkeys to switch between primary, secondary, melee maybe). A “use item” menu for healing or buff items during combat (costing AP). The ability to sort by weight/value to drop junk quickly if overloaded. Possibly a junk flag to mark items you only intend to sell, so you can sell all junk in one click at vendors.
-	•	Loot Generation: Enemies drop items appropriate to them (their weapons, a bit of ammo, maybe some random loot like dog tags or faction insignia). Stashes and containers have loot seeded by location (a med cabinet has meds, an armory has ammo, etc.). Rare unique items are placed in key locations or given as quest rewards rather than random chance, so completionists can aim for them.
+<implementation_status>⚠️ MVP-minimal. Full equipment/inventory economy moved to memory-bank/post-mvp/equipment-inventory.md.</implementation_status>
 
-All these systems make inventory and equipment a game within the game – optimizing your loadout, seeking out better gear, and ensuring you have what you need when far from safety is crucial. It adds realism (scarcity of resources in a dystopia) and gives a constant sense of progression as you amass better tools to survive.
+MVP intent:
+	•	Keep inventory friction low in Level 0.
+	•	Support quest pickups + a small set of consumables (HP heal, paranoia relief).
+	•	Avoid ammo micromanagement, contraband tiers, vendor refresh simulation, and deep encumbrance penalties in MVP.
+	•	If any carry limit exists, make it generous and non-punishing.
 </balance_values>
 </mechanic>
 
 <mechanic name="crafting_upgrades">
 Crafting Upgrades (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - moved to <post_mvp_appendix/> at end of this file.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/crafting-upgrades.md.</implementation_status>
 </mechanic>
 
 <mechanic name="weapon_mods">
 Weapon Mods (Post-MVP)
 
-<implementation_status>❌ DEFERRED FOR MVP - moved to <post_mvp_appendix/> at end of this file.</implementation_status>
+<implementation_status>❌ DEFERRED FOR MVP - see memory-bank/post-mvp/weapon-mods.md.</implementation_status>
 </mechanic>
 
 <mechanic name="survival_mechanics">
 <balance_values system="survival">
-Survival Mechanics
+Survival Mechanics (Post-MVP)
 
-Survival elements ensure the player must manage more than just enemies – the environment and basic needs are challenges too, enhancing immersion and difficulty:
-	•	Hunger (Food): The player character needs to eat periodically to maintain peak performance. We’ll have a hunger meter or a simple counter that increases over time. For example, a character might need to eat two meals per day. If the player goes too long without food, they incur penalties: lowered strength (representing weakness), slower health regeneration if any, and eventually health loss if starving. Eating food reduces hunger and can even give small buffs (a well-fed bonus like slightly faster healing or a boost to morale that could tie into stamina). Different foods fill different amounts and have trade-offs: canned food is heavy but non-perishable; fresh food is lighter and more nutritious but can spoil after a day or two if not used (spoilage could be simulated simply by a timer or left out for realism). The player can hunt animals in the outskirts or scavenge for food in houses (old world packaged foods, etc.), and purchase in settlements. High survival skill might help identify edible wild plants or get more meat from animals.
-	•	Thirst (Water): If included, thirst would work similarly: need water at least once a day, more often if doing strenuous activities or in hot zones. Water sources in the city might be contaminated, requiring purification (boiling, tablets). If thirst is too micromanage-y, we might fold it into hunger (like assume meals include water) or make it a less frequent concern.
-	•	Fatigue (Sleep): The character needs rest. We track fatigue or exhaustion as a meter that fills as the player remains active (especially after combat, long travel, carrying heavy loads). If fatigue goes high, the character’s effectiveness drops: aim gets shaky, maximum AP might reduce (hard to concentrate when very tired), and maybe dialogues reflect the character’s exhaustion. To reduce fatigue, the player must sleep. They can sleep in safe beds (at safehouses, camps) for full recovery, or do shorter rests (like 1-hour naps) for partial recovery if a safe spot is available. Sleeping advances time, which could mean missing some timed events or encountering night/day as a result. If the player tries to push without sleep, at extreme fatigue levels we could induce hallucinations or random fainting (though that might frustrate, so a gentler cap is better: e.g., after 24 hours no sleep, you’re at maximum fatigue penalty but still playable).
-	•	Injuries & Medical Treatment: Beyond the HP bar, specific injuries can occur. For instance, taking a lot of damage from a fall could break a leg (movement penalty until treated), or certain enemies might inflict bleeding (lose HP over time until bandaged) or poison (requires antidote). These conditions require medical supplies or a doctor NPC to cure. We might implement a simple system: normal healing items cure HP but not severe injuries, which need a “doctor’s bag” or hospital visit. Survival/medical skill helps self-treat injuries in the field (like craft a splint).
-	•	Radiation & Toxins: In a dystopian city, there could be irradiated zones or chemical spills. Exposure might raise a radiation meter which, if high, reduces max health or causes sickness until cured with anti-rad medicine. Similarly, toxic gas in some areas might require a gas mask; without it, you take damage or stat debuffs. This encourages carrying the right gear when exploring unknown areas.
-	•	Weather/Environmental Hazards: Dynamic weather like acid rain could harm the player if caught outside (slowly reducing health or armor condition) unless they find cover or wear protective clothing. Extremely hot conditions (maybe in industrial fires) or cold (if any climate variation) could accelerate hunger/thirst or fatigue. While the city is mostly temperate, if there’s an outskirts desert or a flooded zone, each might have unique survival considerations (dehydration risk in desert, need a boat or risk drowning in flooded zones).
-	•	Disease: Possibly, the player can catch illnesses from contaminated food, water, or enemy attacks (mutant rats might give disease). These could impose stat penalties that persist until cured. Antibiotics or rest could cure diseases. This adds another reason to keep your supplies and base clean, and maybe to do quests that improve living conditions (a quest could be to fix a water purifier for a settlement – helping them and giving you a safe water source).
-	•	Stress/Mental State: We might not simulate mental health deeply, but one could imagine a morale system (especially if the game ever adds party companions). For MVP, this is represented primarily by Paranoia and lightweight narrative tone shifts.
-	•	User Interface & Feedback: Survival meters (if used) will be visible but not overly intrusive. Perhaps small icons: a fork/knife for hunger, a water drop for thirst, a zzz for fatigue, changing color as they get dire. Tooltips or status screen show exact values and effects. When hungry or tired, the game might occasionally prompt in text (“Your stomach rumbles” or “You feel very tired.”).
-	•	Difficulty Tuning: We might allow players to adjust how demanding the survival elements are. On an easier setting, hunger/thirst could be very slow to matter, and fatigue less punishing. On hardcore mode, you might need to eat every few hours, and starvation can kill you quickly. This customization ensures players who want the full survival experience get it, and those who want to focus on story can tone it down.
-	•	Integration with Other Systems: The survival needs tie into the economy (need to buy or find food/water), exploration (seek safe places to rest, find water sources), and faction interactions (maybe only certain factions have access to clean water or safe camps, giving incentive to befriend them). It also adds weight to vehicle travel; in a car, you can carry more supplies and potentially have a place to rest (sleeping in the car might be possible, albeit less effective than a bed).
+<implementation_status>❌ DEFERRED FOR MVP. Full hunger/thirst/fatigue survival loop moved to memory-bank/post-mvp/survival-mechanics.md.</implementation_status>
 
-Survival mechanics add realism and tension. They ensure that even without enemies around, the player is planning and managing resources. It turns the game partially into a survival RPG without overwhelming the core tactical/quest gameplay, as long as we balance it to be engaging rather than tedious. The constant need to eat, drink, and rest in a dangerous city can create memorable emergent moments (e.g., desperately searching for food while injured and only encountering threats). It makes the dystopian world more than a backdrop – it's something to endure and overcome.
+MVP policy:
+	•	No hunger/thirst meters.
+	•	Rest is a narrative/time-skip tool in safe contexts only.
+	•	Pressure is represented by Paranoia (see Paranoia mechanic).
 </balance_values>
 </mechanic>
 </game_system>
@@ -1019,99 +978,3 @@ On the development side, we've committed to a robust single-player experience de
 
 With this document as a foundation, the next steps are to iteratively build and test each system, frequently referring back to these design specifications. AI-assisted development will help accelerate coding, but careful human oversight will ensure the game meets the design goals and provides a compelling experience. The Getaway aims to immerse players in a challenging yet rewarding journey through a post-apocalyptic city where every decision matters, every ally or enemy is remembered, and survival is earned through strategy, wit, and sometimes sheer audacity. This design document will guide the team (and our AI helpers) in delivering a game that is both technically sound and richly imaginative, serving as a strong blueprint for development moving forward.
 </conclusion>
-
-<post_mvp_appendix>
-Post-MVP Appendix (deeper systems kept for future)
-
-
-
-<!-- moved: vehicles_in_combat -->
-<mechanic name="vehicles_in_combat">
-Integration of Vehicles (Post-MVP)
-
-<implementation_status>❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.</implementation_status>
-
-Vehicles add an extra dimension to both exploration and combat in The Getaway:
-	•	Combat Entry with Vehicles: If a combat encounter triggers while the player is using a vehicle (e.g., driving through hostile territory and getting ambushed), the vehicle is present on the combat grid. The player can choose to fight from the vehicle or disembark. (If Post-MVP ever adds companions, they may also start mounted, but MVP assumes a single protagonist.)
-	•	Vehicle as Unit: A vehicle in combat is treated like a large unit. It has its own stats: health (durability), possibly armor, and maybe separate components (tires that can be shot out, an engine that can be damaged, etc.). Enemies can target the vehicle, and some may prioritize disabling it to remove the player’s mobility.
-	•	Movement & Ramming: The player can spend AP to move the vehicle on their turn. Vehicles can cover more ground per AP than characters, but are limited by terrain (they can’t go indoors or through very rough terrain on the grid). A vehicle can also be used as a weapon: ramming an enemy with a car can deal massive damage or outright kill weaker foes. Ramming might have a chance to knock the vehicle off course or cause some self-damage, balancing its power.
-	•	Mounted Weapons: Certain vehicles might be equipped with mounted weapons like a turret or plow. For example, an armored car could have a roof-mounted machine gun that the player can operate (and Post-MVP companions could operate as well). Using a mounted weapon costs AP from whoever is controlling it. These weapons often have a wide firing arc and high damage output, turning the vehicle into a formidable combat asset.
-	•	Mobile Cover & Transport: A vehicle provides mobile cover. Characters can hide behind a vehicle to shield themselves from gunfire. They can also use the vehicle to reposition quickly on the battlefield – driving to a safer spot or evacuating allies. Getting in or out of a vehicle during combat costs some AP, so players need to time entry/exit carefully (for instance, diving into the car when under heavy fire, or jumping out before the vehicle becomes a death trap).
-	•	Damage and Repairs: Vehicles can be damaged or even destroyed in combat. If a vehicle’s health drops to zero, it might become wrecked and non-functional, or potentially explode if it’s that type of vehicle (causing area damage). The player will then need to survive on foot and later repair or replace the vehicle. Repairing a vehicle can be a post-combat task or even an action by a mechanically-inclined character during combat (using AP to jury-rig fix a few HP).
-	•	Balancing Vehicles: While vehicles provide advantages (speed, protection, firepower), the game will balance encounters so they’re not unbeatable tanks. Enemies may have anti-vehicle weapons (like EMP grenades to stall an engine, or heavy arms like rocket launchers). Some combat scenarios (tight indoor spaces, rooftops) simply won’t allow vehicles, forcing the player to proceed on foot. Also, fuel considerations (see Survival mechanics) might mean the player saves vehicle use for when it’s really needed.
-
-By integrating vehicles, combat scenarios become more diverse. One fight might be a tense on-foot shootout in a claustrophobic warehouse, and the next could be a running battle where the player drives their truck through barricades while exchanging fire with a gang. It gives the player more tactical choices and a sense of continuity between exploration and combat.
-</mechanic>
-
-
-<!-- moved: vehicles_exploration -->
-<mechanic name="vehicles_exploration">
-Vehicles in Exploration (Post-MVP)
-
-<implementation_status>❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.</implementation_status>
-
-Vehicles are not just for combat; they are essential tools for open-world traversal and tie into multiple gameplay systems:
-	•	Acquisition: The player may acquire vehicles through quests, purchase, or theft. Early in the game, they might start on foot, then get a basic vehicle (like a beat-up car or bike) by helping a mechanic or stealing one from enemies. As the game progresses, better vehicles become available (e.g., an armored truck or a high-speed bike). Each vehicle type has its own advantages (speed, durability, storage space).
-	•	Travel & Overworld Map: Driving reduces travel time significantly. If the game features any sort of world map or distance simulation, vehicles lower the chance of encounters because you spend less time exposed. However, they might have specific encounter types (like roadblocks or car chases) that you wouldn’t get on foot. The player can typically drive on roads or open areas; attempting to go off-road in a city environment might mean crashing or getting stuck (we can keep some realistic limitations to avoid trivializing navigation puzzles).
-	•	Fuel Management: Most vehicles require fuel (gasoline, diesel, or maybe battery charge for electric ones). Fuel is a resource found in the world or bought from certain traders (or stolen from fuel depots). This acts as a limiting factor on vehicle use; the player must consider how far they can go and carry spare fuel if going on a long trip across the city or outskirts. Running out of fuel in a hostile area could leave the player stranded until they find more, which adds an element of survival strategy.
-	•	Storage & Inventory: Vehicles have trunks or storage compartments. The player can stash extra weapons, ammo, or loot in the vehicle rather than carrying it all on their person. This encourages using the vehicle as a mobile base when exploring far from a safehouse. However, accessing the trunk might be unsafe during combat (you’d need to be at the vehicle and spend time), so it’s more for before/after combat planning. If a vehicle is lost or stolen, any items in it would be temporarily lost too (the player might have to retrieve the vehicle or catch the thieves to get their stuff back).
-	•	Upgrades & Customization: Players can upgrade vehicles at garages or by using their Mechanics skill. Upgrades include better engines (faster travel and acceleration), reinforced bumpers (more damage when ramming and less damage to the vehicle), armor plating (higher durability and resistance to gunfire), spikes or blades on wheels (to discourage melee attackers from approaching), improved storage capacity, better headlights (for night travel), and mounted weapons. Cosmetic customization (paint jobs, decals) might also be available for personalization, though primarily aesthetic.
-	•	Vehicle Damage & Theft: In the open world, vehicles can be damaged by rough driving or attacks. If you drive through a firefight, stray bullets might hit your car. Repairing a vehicle requires tools and parts, which the player can carry or find at a workshop. If you leave your vehicle unattended in a dangerous area, NPC thieves might attempt to steal it or strip it for parts. The player could invest in anti-theft upgrades (like an alarm or steering lock) to mitigate this. There could even be a dynamic where if your car is stolen, you get a quest or map marker to get it back from a chop-shop.
-	•	Alternate Transportation: Besides personal vehicles, the city might have remnants of public transit or other travel means. For example, maybe an old subway system can be reactivated or used for fast travel between certain points (if the player clears it of monsters or repairs the generators). Or perhaps there’s a train that runs occasionally between districts that the player can hitch a ride on (safe but on a schedule and fixed route). These alternatives can add flavor and options but are not as flexible as having your own ride.
-
-By incorporating vehicles into exploration, the game offers players flexibility in how they experience the open world. You can cruise through danger zones quickly or go on foot to stealthily scavenge, and each choice has its own set of consequences and gameplay implications. Vehicles also serve as a form of player progression – acquiring a better vehicle feels like a significant milestone and opens up new possibilities (much like getting a ship in a space game or a horse in a medieval RPG).
-</mechanic>
-
-
-<!-- moved: crafting_upgrades -->
-<mechanic name="crafting_upgrades">
-Crafting & Upgrades (Post-MVP)
-
-<implementation_status>❌ DEFERRED FOR MVP - Deep crafting is out of the vertical-slice scope. MVP may include only lightweight scripted quest pickups/consumables, not a full crafting economy.</implementation_status>
-
-Crafting allows players to create or improve items using resources gathered, adding a layer of strategy and self-sufficiency:
-	•	Resource Gathering: As the player explores, they find raw materials. This could be explicit scavenging (clicking a scrap pile to get scrap metal) or as loot from containers/enemies (electronics from a destroyed robot, herbs from a garden, chemicals in an abandoned lab). We might categorize resources in broad types to keep it simple (e.g., “Metal Parts”, “Electronic Components”, “Chemicals”, “Textiles”, etc.). Higher crafting skills might allow extracting more components from the same source (a perk could be “Scrapper: get 50% more materials from looting machinery”).
-	•	Crafting Stations vs Field Crafting: Some basic crafting (like making a bandage from cloth) could be done anytime from the inventory menu. More advanced recipes might require being at a workbench, chemistry station, or garage. Safehouses and certain friendly locations would have these stations. We might allow a portable toolkit item that lets you craft certain things in the field with a penalty or slower speed.
-	•	Crafting Recipes: Players start with a set of simple recipes (like how to cook raw meat to not get sick, or crafting a lockpick from scrap metal). Additional recipes are learned through: leveling up crafting-related skills, reading in-game manuals (loot or buy a “Mechanics Monthly” magazine to learn a couple of new weapon mods), or being taught by NPCs (“I can show you how to mix a potent explosive”). We could also allow experimentation: if a player tries a reasonable combination of items, the game might allow discovery of a recipe (“You’ve combined chemical A and B… you discovered how to make a basic grenade”). However, to keep it user-friendly, most recipes will be explicitly given rather than pure trial-and-error.
-	•	Categories of Craftable Items:
-	•	Ammunition: e.g., craft arrows, bullets (using casings + powder + scrap metal for bullets, energy cells from batteries, etc.). This will be important if shops are few or to make special ammo types (incendiary rounds, EMP grenades).
-	•	Medical Supplies: craft bandages from cloth, herbal remedies from plants, stimulants or antidotes by combining chemicals. Possibly craft a drug to temporarily boost combat ability at cost of later fatigue.
-	•	Food & Drink: cook raw meat (prevent disease), purify water via filters or boiling, brew coffee for fatigue reduction, etc. Survival skills improve yield (like getting more portions out of ingredients).
-	•	Weapon Upgrades/Mods: build a scope for a rifle (needs glass and metal), a suppressor (needs engineering skill and metal), extended magazine, or even jerry-rig a basic firearm. Maybe convert one weapon type to another (sawn-off shotgun from a shotgun, etc.).
-	•	Explosives & Tools: make grenades, molotovs (bottle + alcohol + cloth), mines (using some electronics + explosive), EMP devices (electronics + rare components), lockpicks, hacking spikes (disposable tools to hack easier).
-	•	Armor & Gear: reinforce armor (sew kevlar into a jacket if you have kevlar plates), craft makeshift armor from scrap (not very effective but better than nothing), upgrade a backpack for more capacity, or craft utility items like a climbing rope/grappling hook.
-	•	Vehicle Mods: at a garage, use scrap and parts to upgrade vehicles (armor plating, better engine parts, spiked bumpers as mentioned). Also craft repair kits or refuel using combined chemicals if gasoline is scarce (like making biofuel).
-	•	Upgrade Mechanics: Upgrading typically means taking an existing weapon/armor and improving it. We might have a quality level system (e.g., Pistol I, II, III or Common/Uncommon/Rare quality). The player can bring materials to improve a pistol’s damage or reduce its AP cost via tuning. Each upgrade requires increasingly advanced parts or skills. This system gives a way to keep a favorite weapon viable longer rather than discarding it when new ones drop. However, there will be limits (a basic revolver won’t ever outdo a top-tier plasma gun, but you can make that revolver pretty decent if you sink resources into it).
-	•	Crafting Skill Influence: The character’s crafting-related skills (like Engineering, Chemistry, etc.) could impose limits or affect success:
-	•	Some recipes require a certain skill level to even appear or be used.
-	•	Perhaps a chance of failure for complex crafts if skill is just at the threshold (fail could waste some materials).
-	•	Higher skill might let you craft faster or yield more output (e.g., make 10 bullets instead of 5 per batch).
-	•	Economy and Crafting: Crafting gives an alternate economy. If merchants don’t sell what you need, you can craft it. It also provides a money-making avenue: craft items from cheap components and sell the product at profit (we have to watch that for balance). Possibly some high-tier gear can only be crafted, not bought, giving crafters a unique edge.
-	•	User Interface: A crafting menu lists known recipes, highlighting which ones you have materials for. Selecting a recipe shows required ingredients and outputs. The player confirms to craft, time passes (maybe a few in-game minutes to hours depending on complexity). Some items might be crafted near-instantly (bandage a wound), others could take in-game time (manufacturing ammo might take an hour). We decide if the time factor is needed or if it’s simplified.
-	•	Encouraging Crafting: To encourage engagement, we’ll integrate crafting into some quests (like NPC asks for a crafted item, or you need to craft a makeshift bomb to open a sealed door if you didn’t bring one). Additionally, crafted gear could have slight advantages (a crafted medkit might heal a bit more than a found one, because you tailored it to your needs, etc.). This makes the system rewarding rather than optional fluff.
-
-Crafting and upgrades serve players who enjoy planning and optimization. It fits the survival theme (make do with what you find) and adds another layer of progression (improving equipment, not just stats). It's entirely possible to play with minimal crafting (buying what you need or using found items), but those who invest in it will find themselves better equipped and possibly saving resources by recycling and creating what they need.
-</mechanic>
-
-
-<!-- moved: weapon_mods -->
-<mechanic name="weapon_mods">
-Weapon Modifications (Post-MVP)
-
-<implementation_status>❌ DEFERRED FOR MVP - Weapon mod meta is out of the vertical-slice scope.</implementation_status>
-
-- WHAT: Attach modular upgrades to firearms (slots: Barrel, Magazine, Optics) to tune accuracy, damage, magazine size, and stealth/armor-pierce behaviours. Mods are inventory items that can be attached/detached freely.
-- Allowed slots/types: Pistols/SMGs/Rifles share barrel/magazine/optics slots; shotguns/rifles accept long/armor-piercing barrels; melee has no slots. Weapon definitions declare `weaponType` and slot availability.
-- Recipes (Workbench-only, Engineering-gated):
-  - Reflex Sight (Optics, Eng 15): +10% accuracy. Cost: 2 Electronic Parts, 1 Metal Scrap.
-  - Extended Magazine (Magazine, Eng 20): +50% magazine capacity. Cost: 3 Metal Scrap, 1 Electronic Parts.
-  - Suppressor (Barrel, Eng 25): Silenced shots, -5% damage. Cost: 4 Metal Scrap, 1 Textile Fiber.
-  - Long Barrel (Barrel, Eng 15, rifles/shotguns only): +15% damage, -5% accuracy. Cost: 3 Metal Scrap.
-  - Laser Sight (Optics, Eng 30): +15% accuracy, +5% crit. Cost: 3 Electronic Parts.
-  - Armor-Piercing Barrel (Barrel, Eng 35, rifles/shotguns only): Ignore 50% armor. Cost: 5 Metal Scrap, 2 Chemical Compound.
-- Where: Craftable only when near a workbench; Workbench availability gates the weapon-mod crafting tab. Locations: Resistance safehouse workbench (free), scavenger market bench (fee applies when Scavenger standing < Friendly), industrial workshop (free, in dangerous zone). Craft time tracked in content; UI blocks craft when requirements fail.
-- Behaviour: Mods update combat stats immediately (hit chance, damage multipliers, crit bonus, armor-pierce factor, silenced noise). Detaching returns the mod to inventory; compatibility warnings prevent slot/type mismatches.
-- UX: Inventory “Modify” flow supports right-click entry + drag-and-drop into slots, shows per-slot choices with stat previews and compatibility warnings; crafting overlay lists recipes/resources/skill gates and only enables Craft when both Engineering and materials meet requirements and a workbench is present (fee surfaced when applicable).
-</mechanic>
-
-</post_mvp_appendix>
