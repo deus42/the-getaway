@@ -1,9 +1,40 @@
 The Getaway - Game Design Document
 
+<source_of_truth>
+- This file is the single authoritative design for The Getaway.
+- MVP = the playable vertical slice currently being built and playtested in code (Level 0).
+- Anything marked ❌ DEFERRED is not required for MVP and must not block shipping.
+- Chat/design alignment last synced: 2026-02-19.
+</source_of_truth>
+
+<mvp_slice_spine date="2026-02-19">
+MVP Slice Spine (Day/Dialogue ↔ Night/Stealth, Paranoia as the core resource)
+
+Core loop:
+- DAY: simplified Disco-style dialogue + planning + low-risk errands. Primary goal is progress via quests and social navigation.
+- NIGHT: Commandos-inspired stealth under curfew pressure. Primary goal is infiltration, retrieval, and escape.
+- PARANOIA: the main pressure resource. It rises from surveillance/curfew exposure and falls via safety/daylight/rest.
+- COMBAT: exists mainly as escalation/fail-state of detection (and as an option when the player chooses violence). AutoBattle keeps it low-friction.
+
+Non-goals for MVP (explicitly Post-MVP / optional):
+- Vehicles (combat + exploration)
+- Deep crafting / weapon mod meta
+- Party companions (beyond George)
+- Full witness/reputation gossip propagation (keep stubs/dev-only where needed)
+</mvp_slice_spine>
+
+<alignment_report date="2026-02-19">
+Chat → Doc sync highlights (what changed in this document):
+- Re-centered scope to a mini-RPG vertical slice.
+- Clarified exploration as turn-based under the hood (not real-time free-roam).
+- Normalized terminology to single protagonist (avoid “squad/party/crew” unless explicitly future scope).
+- Marked Vehicles + Crafting/Weapon-Mod depth as Post-MVP so they don’t leak into MVP requirements.
+</alignment_report>
+
 <game_overview>
 Game Overview
 
-The Getaway is a single-player, open-world tactical RPG set in a dystopian city. The game combines turn-based grid combat with exploration in a living, persistent world. Players navigate a city divided into distinct zones and biomes, each with unique challenges and factions. Through branching narrative and dynamic events, player choices shape the story and the game world. This design document outlines the core features, mechanics, and systems that define The Getaway.
+The Getaway is a single-player tactical stealth RPG built as a mini-RPG vertical slice: DAY leans on simplified Disco-style dialogue/quests and planning, while NIGHT leans on Commandos-inspired stealth under curfew pressure. The game is turn-based under the hood (movement, actions, and combat), but presented to feel near-real-time in exploration. Paranoia is the primary pressure resource that ties systems together (stealth exposure, world pressure, recovery loops). Combat exists mainly as escalation/fail-state of detection (and as an option when the player chooses violence), with AutoBattle keeping resolution low-friction. This document captures the MVP slice first, and explicitly marks Post-MVP expansion systems as deferred.
 </game_overview>
 
 <game_system id="setting_worldbuilding" status="partial">
@@ -89,8 +120,8 @@ Trust/Fear Ethics Layer (MVP - Step 29.2)
 <implementation_status>❌ DEFERRED FOR MVP - Trust/Fear ethics are disabled alongside reputation/witness systems; resume Post-MVP.</implementation_status>
 
 Moral perception in The Getaway leans into survival pragmatism rather than binary good/evil. Each faction and neighborhood cell maintains a lightweight `EthicsProfile` with two axes:
-	•	**Trust (-100..100)** — Measures whether locals believe the crew will protect their interests. Positive trust unlocks safer routes, better prices, and candid intel.
-	•	**Fear (0..100)** — Captures how dangerous or volatile the crew appears. Elevated fear intimidates holdouts, deters harassment, and increases checkpoint scrutiny.
+	•	**Trust (-100..100)** — Measures whether locals believe the player will protect their interests. Positive trust unlocks safer routes, better prices, and candid intel.
+	•	**Fear (0..100)** — Captures how dangerous or volatile the player appears. Elevated fear intimidates holdouts, deters harassment, and increases checkpoint scrutiny.
 
 **Action Records & Context Tags**
 	•	Player-facing systems (combat, quests, barter, exploration choices) emit `ActionRecord` payloads: `{ actor, verb, target, locationId, tags[], witnesses[], timestamp }`.
@@ -109,7 +140,7 @@ Moral perception in The Getaway leans into survival pragmatism rather than binar
 	•	**Soft Locks**: Low trust may gate official clinics, but high fear opens clandestine routes (night market with riskier odds instead of hard failure).
 
 **Decay & Maintenance**
-	•	Trust decays slowly toward neutral when the crew ignores a faction or cell (−2 per in-game day). Fear evaporates faster (−5 per day) unless reinforced.
+	•	Trust decays slowly toward neutral when the player ignores a faction or cell (−2 per in-game day). Fear evaporates faster (−5 per day) unless reinforced.
 	•	Specific events (festivals, ceasefires, curfews) can temporarily freeze decay or spike thresholds, tying ethics flow into world scheduling.
 
 **Rumor Seed**
@@ -256,7 +287,7 @@ The AP system means characters with higher agility or certain perks get more don
 
 Stamina - Sustained Effort Resource
 
-Stamina is a third core resource (alongside Health and AP) that represents physical exertion outside of moment-to-moment combat. Where AP governs tactical turns, stamina measures how long the crew can sprint, climb, and hustle through hostile zones before needing a break.
+Stamina is a third core resource (alongside Health and AP) that represents physical exertion outside of moment-to-moment combat. Where AP governs tactical turns, stamina measures how long the player can sprint, climb, and hustle through hostile zones before needing a break.
 
 **Core Stamina Pool (MVP - Step 24.5):**
 	•	Base Stamina: 50 + (Endurance × 5)
@@ -285,9 +316,9 @@ When stamina drops below 30%, the character becomes exhausted:
 
 **Tactical Implications:**
 	•	AP defines tactical turns; stamina shapes mission pacing and route planning
-	•	Extended sprints or forced entries push the squad toward exhaustion before firefights begin
+	•	Extended sprints or forced entries push the player toward exhaustion before firefights begin
 	•	Rest stops become strategic choices—risks of ambush vs benefits of restored stamina
-	•	High Endurance builds excel at long infiltration runs; low Endurance teams must plan shorter bursts and lean on equipment
+	•	High Endurance builds excel at long infiltration runs; low Endurance builds must plan shorter bursts and lean on equipment
 	•	Consumables and perks that mitigate fatigue are valuable for marathon operations or curfew runs
 
 **Advanced Stamina Features (POST-MVP - Step 26.4):**
@@ -301,7 +332,7 @@ These extend stamina into survival and environmental storytelling without reintr
 	•	Circadian Fatigue:
 		○	Track hours awake; after 8 hours, max stamina drops 10% per additional hour
 		○	Safehouse sleep resets fatigue; stimulants delay penalties but cause a heavier crash later
-		○	Pulling an all-nighter (16+ hours) locks the squad into Exhausted state until a full rest
+		○	Pulling an all-nighter (16+ hours) locks the player into Exhausted state until a full rest
 
 	•	Environmental Effects:
 		○	Industrial smog: -2 stamina per tick while exposed
@@ -324,7 +355,7 @@ These extend stamina into survival and environmental storytelling without reintr
 Stamina reinforces the campaign’s push-and-pull between daring infiltration and safehouse reprieves. By keeping combat purely AP-driven, we avoid double bookkeeping during firefights while still rewarding players who plan routes, manage encumbrance, and schedule rest. Advanced hooks let designers layer time pressure, environmental hazards, and survival challenges without overwhelming the core tactical experience.
 
 Paranoia - Player Stress Resource (MVP - Step 24.6)
-Paranoia replaces stamina on the HUD for MVP and tracks the crew’s psychological load from corporate policing, surveillance, and night movement. The system is tiered (Calm → Uneasy → On Edge → Panicked → Breakdown) and feeds both combat modifiers and world directors.
+Paranoia replaces stamina on the HUD for MVP and tracks the player’s psychological load from corporate policing, surveillance, and night movement. The system is tiered (Calm → Uneasy → On Edge → Panicked → Breakdown) and feeds both stealth/detection pressure and (when combat happens) lightweight combat modifiers.
 	•	Scale: 0–100 with tier thresholds at 25/50/75/90
 	•	Tiers apply lightweight penalties: Uneasy (-5% ranged accuracy), On Edge (-10% accuracy, +10% enemy detection weight), Panicked (-15% accuracy, +20% detection, camera hacking disabled), Breakdown (-25% accuracy, +30% detection, periodic recovery stall)
 	•	Stimuli (positive pressure): active camera proximity/cone exposure, guard line of sight or pursuit, regional heat multiplier (Step 19.6), curfew entry spike, nighttime drift, low health spike/sustain, hazard overlays (smog/blackout), exhaustion events, and future Street-Tension Director cues
@@ -394,11 +425,11 @@ These varied options ensure combat doesn't feel repetitive. The player can appro
 <mechanic name="autobattle_mode">
 AutoBattle Mode & Behaviour Profiles
 
-AutoBattle lets players temporarily hand tactical control to the squad’s AI so fights can flow like a modern autochess round while still respecting The Getaway’s AP economy and cover rules.
+AutoBattle lets players temporarily hand tactical control to combat AI so fights can flow like a modern autochess round while still respecting The Getaway’s AP economy and cover rules.
 	•	Automation Toggle: A dedicated AutoBattle toggle lives in the settings menu, pause/options shell, and combat HUD (button plus `Shift+A`). When enabled, the preference persists per save, so grinders can clear easier encounters hands-off yet still opt for manual play in tough missions.
 	•	Behaviour Profiles: Players select Aggressive, Balanced, or Defensive profiles that weight priorities differently—Aggressive spends consumables and closes distance, Balanced values positive expected damage vs. incoming risk, Defensive hoards AP for overwatch, healing, and fortified cover. Profiles can be swapped mid-encounter to react to changing board states.
 	•	HUD Quick Toggle: The combat overlay keeps AutoBattle to a single enable/disable button; behaviour presets stay in the Game Menu so the slim widget never overwhelms the battlefield.
-	•	Autochess-style Planner: Each AutoBattle step now scores candidate attacks and reposition moves via expected damage, cover gain, distance deltas, and AP reserve penalties tuned per profile. The top-scoring option triggers whenever the squad still has AP, mirroring the “plan → resolve” cadence of autochess rather than scripted rotations.
+	•	Autochess-style Planner: Each AutoBattle step now scores candidate attacks and reposition moves via expected damage, cover gain, distance deltas, and AP reserve penalties tuned per profile. The top-scoring option triggers whenever the player still has AP available in the active turn, mirroring the “plan → resolve” cadence of autochess rather than scripted rotations.
 	•	Player Agency & Fail-Safes: Manual input (movement keys, attack hotkeys, HUD clicks) instantly pauses automation and flips the toggle off. The controller also halts when dialogue prompts appear, combat ends, or AP drops below the configured reserve so the AI never overruns a story beat or burns the last action point unintentionally.
 	•	Transparency & Debugging: Combat logs annotate automation decisions (“AutoBattle (Balanced) → Move to cover (Gain cover)”), and the HUD badge tracks Engaged/Paused/Standby states with the last decision summary. Designers can inspect the persisted decision payload in `autoBattleSlice` for deeper tuning without stepping through code.
 
@@ -406,13 +437,15 @@ This optional layer gives newcomers and grinders a low-friction way to enjoy tur
 </mechanic>
 
 <mechanic name="vehicles_in_combat">
-Integration of Vehicles
+Integration of Vehicles (Post-MVP)
+
+<implementation_status>❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.</implementation_status>
 
 Vehicles add an extra dimension to both exploration and combat in The Getaway:
-	•	Combat Entry with Vehicles: If a combat encounter triggers while the player is using a vehicle (e.g., driving through hostile territory and getting ambushed), the vehicle is present on the combat grid. The player can choose to fight from the vehicle or disembark. Allies can also be in the vehicle, providing a mobile fighting platform at the start of combat.
+	•	Combat Entry with Vehicles: If a combat encounter triggers while the player is using a vehicle (e.g., driving through hostile territory and getting ambushed), the vehicle is present on the combat grid. The player can choose to fight from the vehicle or disembark. (If Post-MVP ever adds companions, they may also start mounted, but MVP assumes a single protagonist.)
 	•	Vehicle as Unit: A vehicle in combat is treated like a large unit. It has its own stats: health (durability), possibly armor, and maybe separate components (tires that can be shot out, an engine that can be damaged, etc.). Enemies can target the vehicle, and some may prioritize disabling it to remove the player’s mobility.
 	•	Movement & Ramming: The player can spend AP to move the vehicle on their turn. Vehicles can cover more ground per AP than characters, but are limited by terrain (they can’t go indoors or through very rough terrain on the grid). A vehicle can also be used as a weapon: ramming an enemy with a car can deal massive damage or outright kill weaker foes. Ramming might have a chance to knock the vehicle off course or cause some self-damage, balancing its power.
-	•	Mounted Weapons: Certain vehicles might be equipped with mounted weapons like a turret or plow. For example, an armored car could have a roof-mounted machine gun that a companion can operate. Using a mounted weapon costs AP from whoever is controlling it (possibly a companion or the player if they switch to that role). These weapons often have a wide firing arc and high damage output, turning the vehicle into a formidable combat asset.
+	•	Mounted Weapons: Certain vehicles might be equipped with mounted weapons like a turret or plow. For example, an armored car could have a roof-mounted machine gun that the player can operate (and Post-MVP companions could operate as well). Using a mounted weapon costs AP from whoever is controlling it. These weapons often have a wide firing arc and high damage output, turning the vehicle into a formidable combat asset.
 	•	Mobile Cover & Transport: A vehicle provides mobile cover. Characters can hide behind a vehicle to shield themselves from gunfire. They can also use the vehicle to reposition quickly on the battlefield – driving to a safer spot or evacuating allies. Getting in or out of a vehicle during combat costs some AP, so players need to time entry/exit carefully (for instance, diving into the car when under heavy fire, or jumping out before the vehicle becomes a death trap).
 	•	Damage and Repairs: Vehicles can be damaged or even destroyed in combat. If a vehicle’s health drops to zero, it might become wrecked and non-functional, or potentially explode if it’s that type of vehicle (causing area damage). The player will then need to survive on foot and later repair or replace the vehicle. Repairing a vehicle can be a post-combat task or even an action by a mechanically-inclined character during combat (using AP to jury-rig fix a few HP).
 	•	Balancing Vehicles: While vehicles provide advantages (speed, protection, firepower), the game will balance encounters so they’re not unbeatable tanks. Enemies may have anti-vehicle weapons (like EMP grenades to stall an engine, or heavy arms like rocket launchers). Some combat scenarios (tight indoor spaces, rooftops) simply won’t allow vehicles, forcing the player to proceed on foot. Also, fuel considerations (see Survival mechanics) might mean the player saves vehicle use for when it’s really needed.
@@ -427,7 +460,7 @@ Exploration & Open-World Elements
 <mechanic name="persistent_world">
 Persistent Open World
 
-Outside of combat, The Getaway is an open-world experience where the city can be freely explored in real-time. The world is persistent, meaning it remembers the state of things as you leave them:
+Outside of combat, The Getaway is an open-world experience where the city is explored through fast, turn-based-under-the-hood movement and interactions (grid steps + queued actions), presented to feel near-real-time. The world is persistent, meaning it remembers the state of things as you leave them:
 	•	If the player clears an enemy hideout, that location remains cleared. New occupants might move in much later (or not at all), but it won’t simply respawn identical enemies when you return. The results of your actions are lasting.
 	•	Changes caused by quests or player actions (blowing up a bridge, making peace between two gangs, etc.) have lasting effects on the game world. These are not reset, underscoring that the player’s decisions have impact. For example, if you negotiate a truce between factions, you’ll see those factions peacefully coexisting in areas where they used to fight.
 	•	Time is continuously tracked. A day-night cycle progresses as the player explores (for example, one in-game hour might pass every few minutes of real time, adjustable for gameplay pacing). If you start a journey in the morning, it might be evening by the time you arrive at your destination, with corresponding changes in NPC behavior and visibility.
@@ -442,7 +475,7 @@ Exploration and Travel
 
 Traversing the city is a core part of gameplay, with an emphasis on player freedom and risk-reward during travel:
 	•	On Foot Exploration: When walking through the city, players can move at their own pace, sneaking or running as needed. On foot, the player can discover hidden paths (like climbing a fire escape to a rooftop for a shortcut or sniper position) or slip through narrow alleyways that vehicles can’t access. Foot travel is slower and potentially more dangerous (you might get cornered or ambushed easily), but allows thorough exploration to find loot and secrets.
-		•	Vehicle Travel: Players can use vehicles they’ve acquired to move faster through the world. Driving a car or riding a motorcycle lets you cover ground quickly and can help outrun threats. However, vehicles make noise and are conspicuous, possibly increasing the chance of drawing attention or triggering certain encounters (roadblocks, ambushes). The game might implement a limited fast-travel system using vehicles for long distances – for example, once you have driven to a safehouse in another district, you can fast-travel there later via an in-game explanation (like your character drives there off-screen).
+		•	(Post-MVP) Vehicle Travel: Players can use vehicles they’ve acquired to move faster through the world. Driving a car or riding a motorcycle lets you cover ground quickly and can help outrun threats. However, vehicles make noise and are conspicuous, possibly increasing the chance of drawing attention or triggering certain encounters (roadblocks, ambushes). MVP does not require vehicles; treat this as optional Post-MVP expansion.
 		•	Navigation & Map: The game provides a map of the city that updates as you discover new locations. Key places (faction HQs, safehouses, major landmarks) get marked. The player can set waypoints to guide travel. However, the map starts mostly blank or with minimal info, encouraging exploration to fill it in. There may be in-game maps or informants that can add markers for you (e.g., buying a city guide or obtaining a faction’s intel might reveal the locations of all their safehouses).
 		•	Points of Interest: The world is designed with points of interest scattered throughout to make exploration engaging. This includes things like: stashes of supplies tucked away in ruined buildings, unique NPCs who might appear in certain areas (like a mysterious trader in an alley), environmental storytelling elements (e.g., graffiti that hints at a nearby hideout, or a trail of blood leading to a hidden scene).
 		•	Hazard Integration Matrix: District hazards (smog density, radiation pockets, surveillance saturation) combine with live environment flags (curfew tier, blackout status, gang heat) through a shared matrix. The resulting weights modulate NPC routines, corp reinforcement cadence, merchant availability, and feed the travel-advisory HUD banner so route planning reflects systemic risk instead of static danger labels.
@@ -493,7 +526,9 @@ The day-night cycle encourages players to think about when they do things, not j
 </mechanic>
 
 <mechanic name="vehicles_exploration">
-Vehicles in Exploration
+Vehicles in Exploration (Post-MVP)
+
+<implementation_status>❌ DEFERRED FOR MVP - Vehicles are out of the vertical-slice scope. Revisit Post-MVP.</implementation_status>
 
 Vehicles are not just for combat; they are essential tools for open-world traversal and tie into multiple gameplay systems:
 	•	Acquisition: The player may acquire vehicles through quests, purchase, or theft. Early in the game, they might start on foot, then get a basic vehicle (like a beat-up car or bike) by helping a mechanic or stealing one from enemies. As the game progresses, better vehicles become available (e.g., an armored truck or a high-speed bike). Each vehicle type has its own advantages (speed, durability, storage space).
@@ -536,13 +571,13 @@ To keep emergent runs feeling authored, the campaign adopts a three-layer storyl
 
 Design requirements:
 	•	Write storylets with explicit preconditions, cooldowns, and completion tags so they can’t repeat too frequently or clash with the campaign spine.
-	•	Cast roles dynamically using the current party roster and companion bench; fall back to archetype NPCs if mandatory roles are missing.
+	•	Cast roles dynamically using an available cast list (player + key NPCs); fall back to archetype NPCs if mandatory roles are missing. (Post-MVP may add companions; MVP assumes solo.)
 	•	Surface required traits/tags directly in content definitions (e.g., `needsTrait: ["stealth_specialist"]`) to keep authoring declarative and data-driven.
 	•	Ensure outcomes cleanly route back into gameplay systems: redux reducers update quest state, relationship meters, or apply status effects; UI panels render the resulting comic/dialogue with placeholders swapped for the assigned characters.
 	•	Allow designer-authored weighting so certain plays prefer early/late arc placement or specific zones, keeping tone aligned with the villain plot.
 
 Testing expectations:
-	•	Simulate multiple party compositions and campaign states to confirm the engine casts roles without leaving gaps or repeating recently played vignettes.
+	•	Simulate multiple campaign states to confirm the engine casts roles without leaving gaps or repeating recently played vignettes.
 	•	Verify localization stubs exist for every branch/variant line and that placeholders insert correct pronouns/names.
 	•	Confirm mechanical consequences (injury flags, reputation shifts, temporary buffs) propagate to the corresponding systems and decay/resolve as scripted.
 </mechanic>
@@ -841,7 +876,9 @@ All these systems make inventory and equipment a game within the game – optimi
 </mechanic>
 
 <mechanic name="crafting_upgrades">
-Crafting & Upgrades
+Crafting & Upgrades (Post-MVP)
+
+<implementation_status>❌ DEFERRED FOR MVP - Deep crafting is out of the vertical-slice scope. MVP may include only lightweight scripted quest pickups/consumables, not a full crafting economy.</implementation_status>
 
 Crafting allows players to create or improve items using resources gathered, adding a layer of strategy and self-sufficiency:
 	•	Resource Gathering: As the player explores, they find raw materials. This could be explicit scavenging (clicking a scrap pile to get scrap metal) or as loot from containers/enemies (electronics from a destroyed robot, herbs from a garden, chemicals in an abandoned lab). We might categorize resources in broad types to keep it simple (e.g., “Metal Parts”, “Electronic Components”, “Chemicals”, “Textiles”, etc.). Higher crafting skills might allow extracting more components from the same source (a perk could be “Scrapper: get 50% more materials from looting machinery”).
@@ -868,7 +905,9 @@ Crafting and upgrades serve players who enjoy planning and optimization. It fits
 </mechanic>
 
 <mechanic name="weapon_mods">
-Weapon Modifications (Phase 7 Step 30.2)
+Weapon Modifications (Post-MVP)
+
+<implementation_status>❌ DEFERRED FOR MVP - Weapon mod meta is out of the vertical-slice scope.</implementation_status>
 
 - WHAT: Attach modular upgrades to firearms (slots: Barrel, Magazine, Optics) to tune accuracy, damage, magazine size, and stealth/armor-pierce behaviours. Mods are inventory items that can be attached/detached freely.
 - Allowed slots/types: Pistols/SMGs/Rifles share barrel/magazine/optics slots; shotguns/rifles accept long/armor-piercing barrels; melee has no slots. Weapon definitions declare `weaponType` and slot availability.
@@ -896,7 +935,7 @@ Survival elements ensure the player must manage more than just enemies – the e
 	•	Radiation & Toxins: In a dystopian city, there could be irradiated zones or chemical spills. Exposure might raise a radiation meter which, if high, reduces max health or causes sickness until cured with anti-rad medicine. Similarly, toxic gas in some areas might require a gas mask; without it, you take damage or stat debuffs. This encourages carrying the right gear when exploring unknown areas.
 	•	Weather/Environmental Hazards: Dynamic weather like acid rain could harm the player if caught outside (slowly reducing health or armor condition) unless they find cover or wear protective clothing. Extremely hot conditions (maybe in industrial fires) or cold (if any climate variation) could accelerate hunger/thirst or fatigue. While the city is mostly temperate, if there’s an outskirts desert or a flooded zone, each might have unique survival considerations (dehydration risk in desert, need a boat or risk drowning in flooded zones).
 	•	Disease: Possibly, the player can catch illnesses from contaminated food, water, or enemy attacks (mutant rats might give disease). These could impose stat penalties that persist until cured. Antibiotics or rest could cure diseases. This adds another reason to keep your supplies and base clean, and maybe to do quests that improve living conditions (a quest could be to fix a water purifier for a settlement – helping them and giving you a safe water source).
-	•	Stress/Mental State: We might not simulate mental health deeply, but one could imagine a morale system (especially if managing a crew). For now, likely out of scope, or represented by karma (guilt vs pride) indirectly.
+	•	Stress/Mental State: We might not simulate mental health deeply, but one could imagine a morale system (especially if the game ever adds party companions). For MVP, this is represented primarily by Paranoia and lightweight narrative tone shifts.
 	•	User Interface & Feedback: Survival meters (if used) will be visible but not overly intrusive. Perhaps small icons: a fork/knife for hunger, a water drop for thirst, a zzz for fatigue, changing color as they get dire. Tooltips or status screen show exact values and effects. When hungry or tired, the game might occasionally prompt in text (“Your stomach rumbles” or “You feel very tired.”).
 	•	Difficulty Tuning: We might allow players to adjust how demanding the survival elements are. On an easier setting, hunger/thirst could be very slow to matter, and fatigue less punishing. On hardcore mode, you might need to eat every few hours, and starvation can kill you quickly. This customization ensures players who want the full survival experience get it, and those who want to focus on story can tone it down.
 	•	Integration with Other Systems: The survival needs tie into the economy (need to buy or find food/water), exploration (seek safe places to rest, find water sources), and faction interactions (maybe only certain factions have access to clean water or safe camps, giving incentive to befriend them). It also adds weight to vehicle travel; in a car, you can carry more supplies and potentially have a place to rest (sleeping in the car might be possible, albeit less effective than a bed).
