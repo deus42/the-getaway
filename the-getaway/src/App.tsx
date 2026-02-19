@@ -179,8 +179,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
   const zoneId = useSelector((state: RootState) => state.world.currentMapArea?.zoneId ?? null);
   const isCombatLayout = hudLayoutPreset === 'combat';
   const isStealthLayout = hudLayoutPreset === 'stealth';
-  const showGeorgeLane = !isCombatLayout;
-  const showOpsLane = hudLayoutPreset === 'exploration';
 
   const [questExpanded, setQuestExpanded] = useState(false);
   const [rendererMeta, setRendererMeta] = useState<{ label?: string; detail?: string } | null>(null);
@@ -201,12 +199,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
     }
     setQuestExpanded(false);
   }, [inCombat]);
-
-  useEffect(() => {
-    if (!showOpsLane) {
-      setQuestExpanded(false);
-    }
-  }, [showOpsLane]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
@@ -374,47 +366,43 @@ const CommandShell: React.FC<CommandShellProps> = ({
           </div>
         </div>
 
-        {showGeorgeLane && (
-          <div className="hud-bottom-lane hud-bottom-lane--george">
-            <div className="hud-bottom-lane-card">
-              <div className="hud-bottom-card-surface">
-                <GeorgeAssistant />
-              </div>
+        <div className="hud-bottom-lane hud-bottom-lane--george">
+          <div className="hud-bottom-lane-card">
+            <div className="hud-bottom-card-surface">
+              <GeorgeAssistant />
             </div>
           </div>
-        )}
+        </div>
 
-        {showOpsLane && (
-          <div className="hud-bottom-lane hud-bottom-lane--ops">
-            <div className="hud-bottom-lane-card">
-              <div className="hud-bottom-card-surface">
-                <div className="hud-bottom-quests">
-                  <OpsBriefingsPanel />
-                </div>
-                <div className="hud-bottom-control-row">
-                  <button
-                    type="button"
-                    className="hud-bottom-toggle"
-                    onClick={handleToggleQuest}
-                    aria-expanded={questExpanded}
-                    aria-controls="command-objective-overlay"
-                  >
-                    {questToggleLabel}
-                  </button>
-                </div>
+        <div className="hud-bottom-lane hud-bottom-lane--ops">
+          <div className="hud-bottom-lane-card">
+            <div className="hud-bottom-card-surface">
+              <div className="hud-bottom-quests">
+                <OpsBriefingsPanel />
               </div>
-            </div>
-            <div
-              id="command-objective-overlay"
-              className="hud-bottom-overlay"
-              data-expanded={questExpanded}
-            >
-              <div className="hud-bottom-overlay__scroll">
-                <OpsBriefingsPanel showCompleted />
+              <div className="hud-bottom-control-row">
+                <button
+                  type="button"
+                  className="hud-bottom-toggle"
+                  onClick={handleToggleQuest}
+                  aria-expanded={questExpanded}
+                  aria-controls="command-objective-overlay"
+                >
+                  {questToggleLabel}
+                </button>
               </div>
             </div>
           </div>
-        )}
+          <div
+            id="command-objective-overlay"
+            className="hud-bottom-overlay"
+            data-expanded={questExpanded}
+          >
+            <div className="hud-bottom-overlay__scroll">
+              <OpsBriefingsPanel showCompleted />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
