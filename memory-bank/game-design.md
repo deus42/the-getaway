@@ -30,8 +30,14 @@ Chat → Doc sync highlights (what changed in this document):
 - Re-centered scope to a mini-RPG vertical slice.
 - Clarified exploration as turn-based under the hood (not real-time free-roam).
 - Normalized terminology to single protagonist (avoid “squad/party/crew” unless explicitly future scope).
-- Marked Vehicles + Crafting/Weapon-Mod depth as Post-MVP so they don’t leak into MVP requirements.
+- Marked Vehicles + Survival + Deep Inventory Economy + Crafting/Weapon-Mod depth as Post-MVP so they don’t leak into MVP requirements.
 </alignment_report>
+
+<document_map date="2026-02-19">
+Document Map
+- MVP-first design (this file): `memory-bank/game-design.md`
+- Deferred systems (Post-MVP folder index): `memory-bank/post-mvp/README.md`
+</document_map>
 
 <game_overview>
 Game Overview
@@ -167,7 +173,7 @@ Encounters are resolved on a grid map that corresponds to the environment (stree
 	•	The grid can be hexagonal or square; this will be determined in development (hex grids allow movement in six directions, whereas square grids align with orthogonal map layouts).
 	•	Terrain affects movement: moving through difficult terrain like rubble, shallow water, or climbing through a window costs more movement points/AP. Open ground is easy to traverse, while obstacles block movement completely.
 	•	Movement is important not just for closing distance or escaping, but for tactical positioning (flanking enemies, reaching cover, etc.). Players will often need to balance using a turn to move versus using it to attack or use an ability.
-	•	If combat starts while the player is in a vehicle, the vehicle will appear on the grid and can move as a unit with its own movement rules (e.g., a car might move several tiles in a straight line but have a wide turning radius on the grid).
+	•	(Post-MVP) Vehicle-on-grid rules are deferred (see `memory-bank/post-mvp/vehicles.md`).
 </mechanic>
 
 <mechanic name="action_points">
@@ -587,7 +593,7 @@ Running an open-world, turn-based simulation in a browser means we must optimize
 	•	Allow a “low detail mode” that reduces draw distance (if applicable in city view), lowers NPC counts, disables shadows, etc.
 	•	If WebGL isn’t available (rare these days), allow Canvas rendering with simplified visuals (no shaders, etc.).
 	•	Ensure the game can still run at 30 FPS without logic breaking (tie logic updates to real time, not frames, for consistency).
-	•	Continuous Optimization: As we add features, we will regularly test performance to catch issues early. For example, when adding the dynamic NPC schedules, test with dozens of NPCs active. When adding vehicles, test driving fast across sectors to see if loading keeps up.
+	•	Continuous Optimization: As we add features, we will regularly test performance to catch issues early. For example, when adding dynamic NPC schedules, test with dozens of NPCs active. When adding deferred large systems (e.g., vehicles Post-MVP), test fast traversal across sectors to see if loading keeps up.
 
 In summary, our strategy is to optimize smartly: update what needs updating, render what needs rendering, and no more. By controlling scope (single-player, 2D view) and using the power of WebGL and multi-threading (web workers), we anticipate being able to create a rich open world that runs smoothly in a browser environment.
 </technical_approach>
