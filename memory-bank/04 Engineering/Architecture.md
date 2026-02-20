@@ -60,15 +60,19 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
 - **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
 
-<architecture_section id="high_level_overview" category="summary">
-<design_principles>
+## High Level Overview
+> Category: summary  
+> ID: high_level_overview
+
+### Design principles
+
 - Phaser scenes own simulation and rendering while React manages HUD overlays that subscribe to Redux selectors.
 - Redux Toolkit slices centralise world, player, and quest data so both runtimes consume a single state graph.
 - Persistence hydrates from `localStorage` with schema guards and version tags to keep older saves compatible.
-- Content remains immutable under `src/content/levels/<level-id>/locales/{en,uk}.ts`, cloned into runtime stores before mutation.
-</design_principles>
+- Content remains immutable under `src/content/levels/{level-id}/locales/{en,uk}.ts`, cloned into runtime stores before mutation.
 
-<technical_flow>
+### Technical flow
+
 1. `GameCanvas` boots Phaser scenes, wiring scene lifecycle hooks into Redux dispatchers and DOM CustomEvents.
 2. Bridge services in `src/game/services/*` proxy Phaser events to React HUD listeners while React components dispatch Redux actions that Phaser systems observe.
 3. Persistence helpers serialise whitelisted slices with version metadata and rehydrate on boot, invoking migrators when the stored version lags.
@@ -83,228 +87,252 @@ flowchart LR
   Content[(Locales + Level Data)] --> Phaser
   LocalStorage[(localStorage)] <--> Redux
 ```
-</technical_flow>
-</architecture_section>
 
-<architecture_section id="level0_visual_revamp_pipeline" category="rendering_systems">
-<design_principles>
+## Level0 Visual Revamp Pipeline
+> Category: rendering_systems  
+> ID: level0_visual_revamp_pipeline
+
+### Design principles
+
 - Treat Level 0 visuals as a composable pipeline (theme contracts -> world painters -> entity rigs -> scenic props) so art swaps do not require gameplay rewrites.
 - Keep gameplay topology authoritative in map data; visual layers may style and dress tiles but must not alter collision semantics or door connectivity.
 - Use deterministic composition for district look/prop scatter so QA can reproduce scene layout exactly for a given map seed/content set.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/game/visual/contracts.ts</code_location> defines shared render contracts (`VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`) including district lot/massing fields (`lotPattern`, `massingStyle`, `massingHeight`, `trimHex`, `atmosphereHex`).
-2. <code_location>the-getaway/src/game/visual/theme/noirVectorTheme.ts</code_location> resolves quality budgets and district/entity palettes; `createNoirVectorTheme` and `resolveBuildingVisualProfile` provide deterministic defaults.
-3. <code_location>the-getaway/src/game/visual/world/DistrictComposer.ts</code_location> composes deterministic district grammar (facade/lot/massing selection + seeded color shifts), then <code_location>the-getaway/src/game/world/worldMap.ts</code_location> injects those profiles into `MapBuildingDefinition.visualProfile`.
-4. <code_location>the-getaway/src/game/scenes/MainScene.ts</code_location> delegates world rendering to <code_location>the-getaway/src/game/visual/world/TilePainter.ts</code_location> and <code_location>the-getaway/src/game/visual/world/BuildingPainter.ts</code_location>, and now renders dedicated building-massing layers (`drawBuildingMasses`) plus skyline-composition backdrops.
-5. <code_location>the-getaway/src/game/visual/world/AtmosphereDirector.ts</code_location> resolves deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection alpha, overlay tint/alpha) from district mix, world time, and preset budget caps.
-6. <code_location>the-getaway/src/game/visual/world/OcclusionReadabilityController.ts</code_location> applies visual-only readability compensation (building alpha fade + token/label emphasis) when entities overlap heavy massing bounds, then restores prior-frame baselines so boosts remain transient.
-7. <code_location>the-getaway/src/game/visual/world/PropScatter.ts</code_location> generates deterministic prop placements that avoid door tiles/door buffers/protected interactive tiles and applies district-aware clustering for denser composition without blocking routes.
-8. <code_location>the-getaway/src/game/visual/entities/CharacterRigFactory.ts</code_location> supplies silhouette-v2 procedural rigs with role-specific overlays and motion cues integrated into player/NPC/enemy update flows in `MainScene` while preserving nameplates, health bars, and combat indicators.
-9. <code_location>the-getaway/src/components/GameCanvas.tsx</code_location>, <code_location>the-getaway/src/game/settings/visualSettings.ts</code_location>, and <code_location>the-getaway/src/store/settingsSlice.ts</code_location> coordinate smooth-vector renderer defaults and quality-preset-aware FX budgets (`performance | balanced | cinematic`), including shared fog/emissive/wet-reflection/occlusion caps consumed by scene render systems.
-</technical_flow>
-</architecture_section>
+### Technical flow
 
-<architecture_section id="narrative_resource_hierarchy" category="content_pipeline">
-<design_principles>
+1. `the-getaway/src/game/visual/contracts.ts` defines shared render contracts (`VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`) including district lot/massing fields (`lotPattern`, `massingStyle`, `massingHeight`, `trimHex`, `atmosphereHex`).
+2. `the-getaway/src/game/visual/theme/noirVectorTheme.ts` resolves quality budgets and district/entity palettes; `createNoirVectorTheme` and `resolveBuildingVisualProfile` provide deterministic defaults.
+3. `the-getaway/src/game/visual/world/DistrictComposer.ts` composes deterministic district grammar (facade/lot/massing selection + seeded color shifts), then `the-getaway/src/game/world/worldMap.ts` injects those profiles into `MapBuildingDefinition.visualProfile`.
+4. `the-getaway/src/game/scenes/MainScene.ts` delegates world rendering to `the-getaway/src/game/visual/world/TilePainter.ts` and `the-getaway/src/game/visual/world/BuildingPainter.ts`, and now renders dedicated building-massing layers (`drawBuildingMasses`) plus skyline-composition backdrops.
+5. `the-getaway/src/game/visual/world/AtmosphereDirector.ts` resolves deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection alpha, overlay tint/alpha) from district mix + world time + preset budgets.
+6. `the-getaway/src/game/visual/world/OcclusionReadabilityController.ts` applies visual-only readability compensation (building alpha fade + token/label emphasis) when entities overlap heavy massing bounds, restoring prior-frame baselines so boosts remain transient.
+7. `the-getaway/src/game/visual/world/PropScatter.ts` generates deterministic prop placements that avoid door tiles/door buffers/protected interactive tiles and applies district-aware clustering for denser composition without blocking routes.
+8. `the-getaway/src/game/visual/entities/CharacterRigFactory.ts` supplies silhouette-v2 procedural rigs with role-specific overlays and motion cues integrated into player/NPC/enemy update flows in `MainScene` while preserving nameplates, health bars, and combat indicators.
+9. `the-getaway/src/components/GameCanvas.tsx`, `the-getaway/src/game/settings/visualSettings.ts`, and `the-getaway/src/store/settingsSlice.ts` coordinate smooth-vector renderer defaults and quality-preset-aware FX budgets (`performance | balanced | cinematic`), including shared fog/emissive/wet-reflection/occlusion caps consumed by scene render systems.
+
+## Narrative Resource Hierarchy
+> Category: content_pipeline  
+> ID: narrative_resource_hierarchy
+
+### Design principles
+
 - Standardise narrative data around stable resource keys (`levels.*`, `missions.*`, `quests.*`, `npcs.*`) so structural definitions stay immutable and language-agnostic.
 - Keep localisation bundles separate from structural content, letting writers update copy without touching TypeScript modules.
 - Validate cross-references (level ↔ mission ↔ quest ↔ NPC) automatically so regressions surface during CI/testing instead of in gameplay.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/game/narrative/structureTypes.ts</code_location> introduces canonical interfaces plus locale bundle contracts for levels, missions, quests, and NPC registrations.
+### Technical flow
+
+1. `the-getaway/src/game/narrative/structureTypes.ts` introduces canonical interfaces plus locale bundle contracts for levels, missions, quests, and NPC registrations.
 2. Structural definitions live under `src/content/levels/*/levelDefinition.ts`, `src/content/missions/**/missionDefinition.ts`, and `src/content/quests/**/questDefinition.ts`, with registries in `src/content/levels/index.ts`, `src/content/missions/index.ts`, and `src/content/quests/index.ts`.
-3. Localised strings consolidate into `src/content/locales/<locale>/{levels,missions,quests,npcs}.ts`, aggregated via <code_location>the-getaway/src/content/locales/index.ts</code_location>.
+3. Localised strings consolidate into `src/content/locales/{locale}/{levels,missions,quests,npcs}.ts`, aggregated via `the-getaway/src/content/locales/index.ts`.
 4. Runtime loaders (`src/content/missions.ts`, `src/content/levels/level0/index.ts`, and `src/content/quests/builders.ts`) merge structural data with locale bundles to emit `MissionLevelDefinition` and `Quest` instances for Redux slices.
-5. <code_location>the-getaway/src/game/narrative/validateContent.ts</code_location> walks the hierarchy, confirming every reference resolves and every resource key has locale coverage; a Jest spec (`src/__tests__/narrativeValidation.test.ts`) keeps the check wired into the suite.
-</technical_flow>
+5. `the-getaway/src/game/narrative/validateContent.ts` walks the hierarchy, confirming every reference resolves and every resource key has locale coverage; a Jest spec (`src/__tests__/narrativeValidation.test.ts`) keeps the check wired into the suite.
 
-<pattern name="ResourceKeyLifecycle">
+### Pattern: ResourceKeyLifecycle
+
 - Authors add or modify structural content via the definition modules, wire resource keys into locale bundles, and register associated NPCs in `src/content/npcs/index.ts`.
 - Validation runs as part of the test suite, blocking commits that forget locale copy or miswire cross-resource keys.
 - UI and Redux consumers never read raw locale files; instead they call the derived builders so future content (additional locales or metadata) continues to flow through the same pipeline.
-</pattern>
-</architecture_section>
 
-<architecture_section id="narrative_scene_generation" category="world_generation">
-<design_principles>
+## Narrative Scene Generation
+> Category: world_generation  
+> ID: narrative_scene_generation
+
+### Design principles
+
 - Keep `(subject, relation, object)` triples as the single interface between narrative prompts and spatial generation, allowing either heuristic extraction or manual authoring to feed the same tooling.
 - Resolve placement requests through existing grid utilities (`isPositionWalkable`, `findNearestWalkablePosition`) so generated props honour collision layers and cover metadata.
 - Feed telemetry (collisions, missing assets) back into scene metadata so the CLI and future dashboards can surface author-facing diagnostics.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/game/narrative/tripleExtraction.ts</code_location> tokenises mission copy, matches supported relations (`near`, `inside`, `left_of`, etc.), and emits ordered `SceneMoment` bundles; manual fallback bundles run through the same validators.
-2. <code_location>the-getaway/src/game/world/generation/relationRules.ts</code_location> translates relations into placement strategies (directional offsets, adjacency searches, interior resolution) while guarding against occupied or non-walkable tiles.
-3. <code_location>the-getaway/src/game/world/generation/worldGenerationPipeline.ts</code_location> instantiates a `MapArea`, seeds manual placements, resolves anchors, applies computed props, and annotates tiles (cover vs blocking) before recording any pipeline issues.
-4. <code_location>the-getaway/scripts/generate-scene-from-story.ts</code_location> orchestrates extraction + generation, writing validated JSON under <code>src/content/levels/{level}/missions/{mission}/generatedScenes</code> and reporting validation errors in the CLI output.
-5. <code_location>the-getaway/src/content/scenes/generatedScenes.ts</code_location> indexes emitted scene definitions so mission records (e.g., `level0RecoverCacheMission`) can reference `generatedSceneKeys` without manual filesystem lookups.
-</technical_flow>
-</architecture_section>
+### Technical flow
 
-<architecture_section id="environment_story_triggers" category="narrative_systems">
-<design_principles>
+1. `the-getaway/src/game/narrative/tripleExtraction.ts` tokenises mission copy, matches supported relations (`near`, `inside`, `left_of`, etc.), and emits ordered `SceneMoment` bundles; manual fallback bundles run through the same validators.
+2. `the-getaway/src/game/world/generation/relationRules.ts` translates relations into placement strategies (directional offsets, adjacency searches, interior resolution) while guarding against occupied or non-walkable tiles.
+3. `the-getaway/src/game/world/generation/worldGenerationPipeline.ts` instantiates a `MapArea`, seeds manual placements, resolves anchors, applies computed props, and annotates tiles (cover vs blocking) before recording any pipeline issues.
+4. `the-getaway/scripts/generate-scene-from-story.ts` orchestrates extraction + generation, writing validated JSON under `src/content/levels/{level}/missions/{mission}/generatedScenes` and reporting validation errors in the CLI output.
+5. `the-getaway/src/content/scenes/generatedScenes.ts` indexes emitted scene definitions so mission records (e.g., `level0RecoverCacheMission`) can reference `generatedSceneKeys` without manual filesystem lookups.
+
+## Environment Story Triggers
+> Category: narrative_systems  
+> ID: environment_story_triggers
+
+### Design principles
+
 - Keep environment reactivity declarative: world-facing flags live under `world.environment.flags` and drive all swaps through a trigger registry rather than ad-hoc conditionals.
-- Favour data tables over inline copy so rumors, signage, and notes remain tone-consistent with `memory-bank/plot.md` and can scale through content-only additions.
+- Favour data tables over inline copy so rumors, signage, and notes remain tone-consistent with [[03 Lore/Plot Bible]] and can scale through content-only additions.
 - Ensure triggers are idempotent and observable—every swap records the source ID and timestamp so reducers, HUD, and QA tooling can diff the current ambient state.
 - Throttle weather shifts to once per recorded time-of-day so ambient logs surface meaningful beats instead of oscillating between severity presets.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/game/interfaces/environment.ts</code_location> defines flag enums (`gangHeat`, `curfewLevel`, `supplyScarcity`, `blackoutTier`) plus serialized snapshots for rumors, signage, weather, and spawned notes.
-2. <code_location>the-getaway/src/store/worldSlice.ts</code_location> seeds the environment state, exposes reducers (`setEnvironmentFlags`, `applyEnvironmentSignage`, `applyEnvironmentRumorSet`, `registerEnvironmentalNote`, `setNpcAmbientProfile`), and maps existing systems to the new flags (curfew to `curfewLevel`, alert level to `gangHeat`/`supplyScarcity`, reinforcements to blackout tiers).
-3. <code_location>the-getaway/src/content/environment/</code_location> holds trigger tables (`rumors.ts`, `notes.ts`, `signage.ts`, `weather.ts`) with one-liner metadata so writers can add swaps without touching logic.
-4. <code_location>the-getaway/src/game/world/triggers/triggerRegistry.ts</code_location> maintains registered triggers with cooldown/once semantics; <code_location>the-getaway/src/game/world/triggers/defaultTriggers.ts</code_location> now derives weather via a single daily updater that records the active `TimeOfDay`, preferring gang-heat overrides until curfew level 3 and logging at most one shift per phase, while keeping the remaining rumor, signage, and note triggers unchanged. A test-only reset helper exposes clean registration for specs.
-5. <code_location>the-getaway/src/components/GameController.tsx</code_location> initialises the registry and ticks triggers each animation frame, feeding the Redux dispatch/getState pair so triggers stay in sync with the active scene.
-6. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> surfaces memoised selectors for flags, signage variants, rumor sets, weather snapshots (including last `TimeOfDay`), and spawned notes for HUD consumers.
-7. <code_location>the-getaway/src/game/world/environment/environmentMatrix.ts</code_location> codifies the hazard-to-system matrix: `resolveEnvironmentalFactors` folds zone hazards and environment flags into canonical factors, while `combineSystemImpacts` emits aggregated behaviour/faction/travel weights. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> exposes `selectEnvironmentSystemImpacts`, driving <code_location>the-getaway/src/components/GameController.tsx</code_location> (NPC routine pacing + reinforcement delays) and <code_location>the-getaway/src/components/ui/DayNightIndicator.tsx</code_location> (travel advisory overlay).
-8. <code_location>the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts</code_location> drives the reducers through the registry, asserting rumor rotations, signage swaps, note spawns, and the daily weather gate when flags or time phases shift.
-</technical_flow>
-</architecture_section>
+### Technical flow
 
-<architecture_section id="weapon_mod_system" category="equipment_systems">
-<design_principles>
+1. `the-getaway/src/game/interfaces/environment.ts` defines flag enums (`gangHeat`, `curfewLevel`, `supplyScarcity`, `blackoutTier`) plus serialized snapshots for rumors, signage, weather, and spawned notes.
+2. `the-getaway/src/store/worldSlice.ts` seeds the environment state, exposes reducers (`setEnvironmentFlags`, `applyEnvironmentSignage`, `applyEnvironmentRumorSet`, `registerEnvironmentalNote`, `setNpcAmbientProfile`), and maps existing systems to the new flags (curfew to `curfewLevel`, alert level to `gangHeat`/`supplyScarcity`, reinforcements to blackout tiers).
+3. `the-getaway/src/content/environment/` holds trigger tables (`rumors.ts`, `notes.ts`, `signage.ts`, `weather.ts`) with one-liner metadata so writers can add swaps without touching logic.
+4. `the-getaway/src/game/world/triggers/triggerRegistry.ts` maintains registered triggers with cooldown/once semantics; `the-getaway/src/game/world/triggers/defaultTriggers.ts` now derives weather via a single daily updater that records the active `TimeOfDay`, preferring gang-heat overrides until curfew level 3 and logging at most one shift per phase, while keeping the remaining rumor, signage, and note triggers unchanged. A test-only reset helper exposes clean registration for specs.
+5. `the-getaway/src/components/GameController.tsx` initialises the registry and ticks triggers each animation frame, feeding the Redux dispatch/getState pair so triggers stay in sync with the active scene.
+6. `the-getaway/src/store/selectors/worldSelectors.ts` surfaces memoised selectors for flags, signage variants, rumor sets, weather snapshots (including last `TimeOfDay`), and spawned notes for HUD consumers.
+7. `the-getaway/src/game/world/environment/environmentMatrix.ts` codifies the hazard-to-system matrix: `resolveEnvironmentalFactors` folds zone hazards and environment flags into canonical factors, while `combineSystemImpacts` emits aggregated behaviour/faction/travel weights. `the-getaway/src/store/selectors/worldSelectors.ts` exposes `selectEnvironmentSystemImpacts`, driving `the-getaway/src/components/GameController.tsx` (NPC routine pacing + reinforcement delays) and `the-getaway/src/components/ui/DayNightIndicator.tsx` (travel advisory overlay).
+8. `the-getaway/src/game/world/triggers/__tests__/defaultTriggers.test.ts` drives the reducers through the registry, asserting rumor rotations, signage swaps, note spawns, and the daily weather gate when flags or time phases shift.
+
+## Weapon Mod System
+> Category: equipment_systems  
+> ID: weapon_mod_system
+
+### Design principles
+
 - Keep attachments data-driven: weapons expose type/slots/accuracy/magazine metadata; mods declare slot, compatible weapon types, and effects so attachment logic stays declarative.
 - Centralise effect math so combat reads a single aggregated modifier bundle (hit, damage, crit, armor-pierce, silenced, magazine capacity) instead of scattered conditionals.
 - Gate crafting behind proximity-aware workbench status (safehouse, scavenger market with fee if standing < Friendly, industrial workshop) plus Engineering skill and resource costs; keep UI selection local to the inventory and allow drag/drop when possible.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/game/interfaces/types.ts</code_location> extends weapons with `weaponType`, `modSlots`, `attachedMods`, `accuracy`, `magazineSize`, `currentMagazine`, and typed mod IDs/slots; instantiated items now retain `definitionId` so crafting can tally stackable resources.
-2. <code_location>the-getaway/src/content/items/weaponMods.ts</code_location> defines mod payloads (slots, compat, effects, workbench + Engineering requirements) with item prototypes and resource items in <code_location>the-getaway/src/content/items/index.ts</code_location>.
-3. <code_location>the-getaway/src/game/systems/weaponMods.ts</code_location> aggregates attachment effects and validates compatibility; <code_location>the-getaway/src/game/combat/combatSystem.ts</code_location> folds the aggregated effects into hit chance, damage, crit, armor-pierce, silenced handling, and magazine tracking.
-4. Inventory reducers (<code_location>the-getaway/src/store/playerSlice.ts</code_location>) attach/detach mods, clamp magazine capacity to modded limits, deep-clone attachments on move, and craft mods via `craftWeaponMod` (Engineering gate + workbench status + optional market fee + resource spend → mod instantiation).
-5. World gating: <code_location>the-getaway/src/store/worldSlice.ts</code_location> tracks `workbenchStatus` (proximity + location type/fee) and is refreshed each tick by <code_location>the-getaway/src/components/GameController.tsx</code_location>.
-6. UI: <code_location>the-getaway/src/components/ui/PlayerInventoryPanel.tsx</code_location> hosts the “Modify” overlay (right-click entry, drag/drop slot selection, stat preview) and a workbench crafting overlay listing recipes, requirements, and resources; crafting dispatches `craftWeaponMod` with any required fee.
-</technical_flow>
-</architecture_section>
+### Technical flow
 
-<architecture_section id="command_shell_layout" category="ui_shell">
-<design_principles>
+1. `the-getaway/src/game/interfaces/types.ts` extends weapons with `weaponType`, `modSlots`, `attachedMods`, `accuracy`, `magazineSize`, `currentMagazine`, and typed mod IDs/slots; instantiated items now retain `definitionId` so crafting can tally stackable resources.
+2. `the-getaway/src/content/items/weaponMods.ts` defines mod payloads (slots, compat, effects, workbench + Engineering requirements) with item prototypes and resource items in `the-getaway/src/content/items/index.ts`.
+3. `the-getaway/src/game/systems/weaponMods.ts` aggregates attachment effects and validates compatibility; `the-getaway/src/game/combat/combatSystem.ts` folds the aggregated effects into hit chance, damage, crit, armor-pierce, silenced handling, and magazine tracking.
+4. Inventory reducers (`the-getaway/src/store/playerSlice.ts`) attach/detach mods, clamp magazine capacity to modded limits, deep-clone attachments on move, and craft mods via `craftWeaponMod` (Engineering gate + workbench status + optional market fee + resource spend → mod instantiation).
+5. World gating: `the-getaway/src/store/worldSlice.ts` tracks `workbenchStatus` (proximity + location type/fee) and is refreshed each tick by `the-getaway/src/components/GameController.tsx`.
+6. UI: `the-getaway/src/components/ui/PlayerInventoryPanel.tsx` hosts the “Modify” overlay (right-click entry, drag/drop slot selection, stat preview) and a workbench crafting overlay listing recipes, requirements, and resources; crafting dispatches `craftWeaponMod` with any required fee.
+
+## Command Shell Layout
+> Category: ui_shell  
+> ID: command_shell_layout
+
+### Design principles
+
 - Maintain the three-column command shell while letting each sidebar collapse without removing it from the flex context so the world view can immediately claim the freed space.
 - Anchor interactive toggles to the sidebar rails instead of the overall stage to keep them flush with panel edges and out of the top-right HUD stack.
 - Surface live sidebar measurements through CSS custom properties so auxiliary overlays can reference actual widths when positioning future elements.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/App.tsx</code_location> wraps the left and right panels in rail containers that own the `flex-basis` sizing (`min(26rem, 24vw)`), easing between their expanded width and `0px` via a cubic-bezier transition, and expose `--sidebar-width` / `--sidebar-last-width` variables sourced from `ResizeObserver` readings.
+### Technical flow
+
+1. `the-getaway/src/App.tsx` wraps the left and right panels in rail containers that own the `flex-basis` sizing (`min(26rem, 24vw)`), easing between their expanded width and `0px` via a cubic-bezier transition, and expose `--sidebar-width` / `--sidebar-last-width` variables sourced from `ResizeObserver` readings.
 2. Collapsing a panel drives the rail basis to `0px` while the panel stays mounted with `visibility: hidden`, `pointer-events: none`, and `max-width: 0px`, ensuring ResizeObserver retains the last visible width for smooth reopening.
 3. Toggle buttons now live inside each rail, positioned with `calc(100% - 1.1rem)` (left) and `-1.1rem` (right) offsets plus a clamped vertical anchor (`clamp(6rem, 50%, calc(100% - 6rem))`) so they never overlap the menu, level, or day/night overlays; the stage exports `--left-sidebar-width` / `--right-sidebar-width` and their `--*-last-width` counterparts for downstream layout logic.
-4. <code_location>the-getaway/src/components/GameCanvas.tsx</code_location> subscribes to the center column via `ResizeObserver`, debounces updates (~40 ms), caches the last applied canvas size, and only calls `game.scale.resize` when dimensions change so the Phaser world stretches instantly during rail transitions without black-frame flicker.
-5. Combat transitions trigger a snapshot/ref restore loop in <code_location>the-getaway/src/App.tsx</code_location>, collapsing both sidebars on battle start to prioritise the playfield and restoring the pre-combat layout once `world.inCombat` drops back to false.
-</technical_flow>
-</architecture_section>
+4. `the-getaway/src/components/GameCanvas.tsx` subscribes to the center column via `ResizeObserver`, debounces updates (~40 ms), caches the last applied canvas size, and only calls `game.scale.resize` when dimensions change so the Phaser world stretches instantly during rail transitions without black-frame flicker.
+5. Combat transitions trigger a snapshot/ref restore loop in `the-getaway/src/App.tsx`, collapsing both sidebars on battle start to prioritise the playfield and restoring the pre-combat layout once `world.inCombat` drops back to false.
 
-<architecture_section id="george_assistant_overlay" category="hud_ai">
-<design_principles>
+## George Assistant Overlay
+> Category: hud_ai  
+> ID: george_assistant_overlay
+
+### Design principles
+
 - Keep George docked to the left Pip-Boy rail so guidance lives alongside other command UI without occluding the playfield.
 - Source hints and tone entirely from Redux selectors and content tables, ensuring HUD logic stays declarative and dialogue copy remains data-driven for localisation.
 - Respect player agency with a collapsible conversation shell, keyboard shortcut, and cooldown-gated interjections so the assistant never spams the log or steals focus during combat.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> subscribes to `selectObjectiveQueue`, `selectMissionProgress`, `selectNextPrimaryObjective`, `selectPlayerKarma`, `selectPlayerFactionReputation`, and `selectPlayerPersonalityProfile`, renders the center-aligned console dock with CSS tokens, and binds the global `G` shortcut alongside pointer interaction.
-2. <code_location>the-getaway/src/App.tsx</code_location> positions the level card and the George console within the same HUD layer while keeping the console centered along the top edge.
-3. <code_location>the-getaway/src/game/systems/georgeAssistant.ts</code_location> consolidates intelligence by formatting primary/secondary hints, karma summaries, and conversation payloads, pulling tone-specific templates from <code_location>the-getaway/src/content/assistants/george.ts</code_location>.
+### Technical flow
+
+1. `the-getaway/src/components/ui/GeorgeAssistant.tsx` subscribes to `selectObjectiveQueue`, `selectMissionProgress`, `selectNextPrimaryObjective`, `selectPlayerKarma`, `selectPlayerFactionReputation`, and `selectPlayerPersonalityProfile`, renders the center-aligned console dock with CSS tokens, and binds the global `G` shortcut alongside pointer interaction.
+2. `the-getaway/src/App.tsx` positions the level card and the George console within the same HUD layer while keeping the console centered along the top edge.
+3. `the-getaway/src/game/systems/georgeAssistant.ts` consolidates intelligence by formatting primary/secondary hints, karma summaries, and conversation payloads, pulling tone-specific templates from `the-getaway/src/content/assistants/george.ts`.
 4. Interjection hooks cache quest completion sets, faction deltas, mission-complete signals (`missionAccomplished`), and hostile-state transitions; when thresholds are crossed the assistant queues a guideline-tagged line, throttled by `INTERJECTION_COOLDOWN_MS` so alerts surface once and then cool off.
-5. <code_location>the-getaway/src/store/selectors/worldSelectors.ts</code_location> delivers a memoised `selectAmbientWorldSnapshot` bundling environment flags, rumor/signage/weather snapshots, and zone hazard metadata; <code_location>the-getaway/src/game/systems/georgeAssistant.ts</code_location> diff-checks successive snapshots via `GeorgeAmbientTracker`, enforcing per-category cooldowns before returning structured ambient events.
-6. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> merges mission guidance, ambient events, and interjections into a single notification stream, highlights the dock when unseen entries queue up, and promotes the freshest line into the collapsed ticker so world changes surface even with the console closed while the Level Indicator remains lightweight.
-7. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> now embeds the global event log (`LogPanel`) inside the same console column, eliminating the detached overlay and keeping chatter/history visible without the extra toggle.
+5. `the-getaway/src/store/selectors/worldSelectors.ts` delivers a memoised `selectAmbientWorldSnapshot` bundling environment flags, rumor/signage/weather snapshots, and zone hazard metadata; `the-getaway/src/game/systems/georgeAssistant.ts` diff-checks successive snapshots via `GeorgeAmbientTracker`, enforcing per-category cooldowns before returning structured ambient events.
+6. `the-getaway/src/components/ui/GeorgeAssistant.tsx` merges mission guidance, ambient events, and interjections into a single notification stream, highlights the dock when unseen entries queue up, and promotes the freshest line into the collapsed ticker so world changes surface even with the console closed while the Level Indicator remains lightweight.
+7. `the-getaway/src/components/ui/GeorgeAssistant.tsx` now embeds the global event log (`LogPanel`) inside the same console column, eliminating the detached overlay and keeping chatter/history visible without the extra toggle.
 8. The Ask George input switched to a controlled prompt field with a send affordance; each submit appends the player’s line to the feed and immediately emits a placeholder banter response (via `pickBanterLine`/ambient strings) so UX stays responsive until the upstream AI hook is wired.
 9. Feed throughput now routes through a throttled queue that clamps every line to 140 glyphs and dispatches one bubble per second, while log ingestion categorises entries into battle/dialogue/stealth/broadcast lanes so HUD styling stays meaningful when combat, stealth, and banter updates intermingle.
-</technical_flow>
 
-<pattern name="ObjectiveSync">
+### Pattern: ObjectiveSync
+
 - George assistant treats the Level Objectives selector set as source of truth, mirroring cross-out state and surfacing the highest-priority incomplete objective as the default guidance line.
 - Mission-complete dispatches route through the same event contract as the Level Objectives panel, allowing George to deliver celebration copy only after the HUD updates.
-</pattern>
-</architecture_section>
 
-<architecture_section id="noir_hud_style_system" category="ui_theming">
-<design_principles>
+## Noir Hud Style System
+> Category: ui_theming  
+> ID: noir_hud_style_system
+
+### Design principles
+
 - Keep every HUD surface on the same gunmetal + neon palette by sourcing colours exclusively from shared CSS variables instead of local hex values.
 - Treat typography and spacing as part of the design language: headings use the display stack while body text stays on the readable sans family.
 - Support cinematic lighting shifts (day/night/curfew) with data-attribute driven overrides so React and Phaser layers stay in sync.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/styles/hud-theme.css</code_location> defines palette, typography, spacing, and sizing tokens with `@theme static` and registers reusable component styles (e.g. `.hud-panel`). The file exports neon cyan/magenta highlights, gunmetal surfaces, focus shadows, and dimension tokens such as `--size-hud-ribbon-height` and `--size-hud-sidebar-width`.
-2. <code_location>the-getaway/src/styles/hudTokens.ts</code_location> mirrors the CSS variables inside TypeScript, exposing helpers for 8-pt spacing, radii, typography, icon sizing (24×24 wrappers / 20×20 live areas), and the 2px stroke weight so UI components can stay on the same rhythm even when they rely on inline styles.
+### Technical flow
+
+1. `the-getaway/src/styles/hud-theme.css` defines palette, typography, spacing, and sizing tokens with `@theme static` and registers reusable component styles (e.g. `.hud-panel`). The file exports neon cyan/magenta highlights, gunmetal surfaces, focus shadows, and dimension tokens such as `--size-hud-ribbon-height` and `--size-hud-sidebar-width`.
+2. `the-getaway/src/styles/hudTokens.ts` mirrors the CSS variables inside TypeScript, exposing helpers for 8-pt spacing, radii, typography, icon sizing (24×24 wrappers / 20×20 live areas), and the 2px stroke weight so UI components can stay on the same rhythm even when they rely on inline styles.
 3. Theme overrides live behind `data-theme` (`day`, `dark`, `night`) and `data-curfew` / `data-alert` attributes, enabling day/night shifts and curfew accent swaps without touching component code. HUD consumers read the same CSS variables regardless of framework layer.
-4. <code_location>the-getaway/src/index.css</code_location> imports the theme, applies the noir gradients to the body background, and resets anchors/buttons to use shared variables so global chrome reflects the unified styling out of the box.
+4. `the-getaway/src/index.css` imports the theme, applies the noir gradients to the body background, and resets anchors/buttons to use shared variables so global chrome reflects the unified styling out of the box.
 5. Tailwind consumes these tokens via variable-backed utilities (`rounded-hud`, `shadow-hud`, `h-[hud-ribbon]`, etc.) allowing React components to mix utility classes with bespoke CSS while keeping the palette declarative.
 6. Implementation teams must run a full surface sweep when touching HUD styling: replace ad-hoc colours, shadows, and font stacks with the shared tokens to avoid regressing the noir identity. Any new HUD component should default to `.hud-panel` or document why it diverges.
-</technical_flow>
 
-<code_location>the-getaway/tailwind.config.js</code_location>
-<code_location>the-getaway/src/styles/hud-theme.css</code_location>
-<code_location>the-getaway/src/styles/hud-components.css</code_location>
-<code_location>the-getaway/src/index.css</code_location>
+`the-getaway/tailwind.config.js`
+`the-getaway/src/styles/hud-theme.css`
+`the-getaway/src/styles/hud-components.css`
+`the-getaway/src/index.css`
 
-<maintenance_notes date="2026-04-28">
 - Before shipping HUD changes, run `yarn build` or Tailwind CLI to confirm the trimmed colour palette and variable-backed utilities compile without pulling in the default spectrum.
 - Designers requested a holistic styling pass; when implementing this roadmap step ensure linked panels (minimap, George console, mission overlays, modals) are audited for outdated tokens and refit as needed.
 - GameMenu, CommandShell ribbon, OpsBriefingsPanel, and PlayerSummaryPanel now rely on `hud-components.css` primitives; George Assistant, Level Indicator, and auxiliary HUD overlays still need migration to the shared token classes.
 - The MiniMap column now consumes `mini-map-panel` styles + the TS token helpers; extend `hudTokens.ts` instead of sprinkling ad-hoc paddings or icon sizes whenever the HUD needs new spacing or icon primitives.
 - `MiniMap.tsx` trims its render bounds to the outer wall rectangle exposed by `MiniMapRenderState.tiles`, translating and scaling that crop so the interior fills the HUD lane while pointer math remains in world coordinates; HUD QA now relies on separate tooling for grid/icon validation, so the runtime overlay has been removed entirely to keep the panel clean.
-- <code_location>the-getaway/src/components/ui/GameMenu.tsx</code_location> now stages a landing CTA view with a dedicated Settings button and swaps to a compact secondary panel via local `activeView` state, keeping Start/Resume isolated while routing locale/surveillance/lighting controls and the unified AutoBattle mode selector (Manual/Balanced/Aggressive/Defensive) through the condensed layout.
-- Shared HUD icon primitives live in <code_location>the-getaway/src/components/ui/icons</code_location>; components such as `LogPanel` import `CombatIcon`,`DialogueIcon`, etc. so iconography stays consistent and local emoji fallbacks are no longer needed.
-</maintenance_notes>
-</architecture_section>
+- `the-getaway/src/components/ui/GameMenu.tsx` now stages a landing CTA view with a dedicated Settings button and swaps to a compact secondary panel via local `activeView` state, keeping Start/Resume isolated while routing locale/surveillance/lighting controls and the unified AutoBattle mode selector (Manual/Balanced/Aggressive/Defensive) through the condensed layout.
+- Shared HUD icon primitives live in `the-getaway/src/components/ui/icons`; components such as `LogPanel` import `CombatIcon`,`DialogueIcon`, etc. so iconography stays consistent and local emoji fallbacks are no longer needed.
 
-<architecture_section id="level_objectives_panel" category="hud_systems">
-<design_principles>
+## Level Objectives Panel
+> Category: hud_systems  
+> ID: level_objectives_panel
+
+### Design principles
+
 - Keep the level card and objectives list anchored to the top-center HUD rail so mission metadata is always visible without crowding the playfield.
 - Drive all content from structured selectors (`selectMissionProgress`, `selectPrimaryObjectives`, `selectSideObjectives`) so the React panel remains declarative and mirrors Redux truth without local bookkeeping.
 - Treat mission completion as a formal state transition that can be observed by cinematics, reward flows, and save-game checkpoints rather than ad-hoc UI toggles.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/components/ui/LevelIndicator.tsx</code_location> renders the level badge plus two ordered lists: primary objectives and optional side quests. Each entry receives `isComplete` from selector output and toggles a `objective-item--complete` class that applies the cross-out/checkbox styling.
-2. <code_location>the-getaway/src/store/selectors/missionSelectors.ts</code_location> resolves mission progress by combining objective definitions with quest completion state, exposing memoised primary/side arrays, `allPrimaryComplete`, and helper selectors for HUD/assistant consumers.
-3. <code_location>the-getaway/src/store/missionSlice.ts</code_location> stores the manifest, tracks `pendingAdvance`, and flips `missionAccomplished()` when selectors report that all primary objectives are complete.
-4. <code_location>the-getaway/src/game/systems/missionProgression.ts</code_location> exports DOM event helpers used by HUD components to broadcast mission completion and level advance requests to Phaser scenes and the assistant.
+### Technical flow
+
+1. `the-getaway/src/components/ui/LevelIndicator.tsx` renders the level badge plus two ordered lists: primary objectives and optional side quests. Each entry receives `isComplete` from selector output and toggles a `objective-item--complete` class that applies the cross-out/checkbox styling.
+2. `the-getaway/src/store/selectors/missionSelectors.ts` resolves mission progress by combining objective definitions with quest completion state, exposing memoised primary/side arrays, `allPrimaryComplete`, and helper selectors for HUD/assistant consumers.
+3. `the-getaway/src/store/missionSlice.ts` stores the manifest, tracks `pendingAdvance`, and flips `missionAccomplished()` when selectors report that all primary objectives are complete.
+4. `the-getaway/src/game/systems/missionProgression.ts` exports DOM event helpers used by HUD components to broadcast mission completion and level advance requests to Phaser scenes and the assistant.
 5. Confirmation flows call `advanceToNextLevel()` which increments `currentLevel`, hydrates the next level's objective bundles, and resets the panel lists while leaving incomplete side quests in the log until dismissed.
-6. <code_location>the-getaway/src/components/system/MissionProgressionManager.tsx</code_location> watches mission selectors, dispatches `missionAccomplished` once per completion, and emits `MISSION_ACCOMPLISHED` DOM events for HUD consumers.
-7. <code_location>the-getaway/src/components/ui/MissionCompletionOverlay.tsx</code_location> shows the Mission Accomplished modal, allows deferral, presents a mission-ready toast, and fires `LEVEL_ADVANCE_REQUESTED` via `emitLevelAdvanceRequestedEvent` when the player opts to continue.
-</technical_flow>
+6. `the-getaway/src/components/system/MissionProgressionManager.tsx` watches mission selectors, dispatches `missionAccomplished` once per completion, and emits `MISSION_ACCOMPLISHED` DOM events for HUD consumers.
+7. `the-getaway/src/components/ui/MissionCompletionOverlay.tsx` shows the Mission Accomplished modal, allows deferral, presents a mission-ready toast, and fires `LEVEL_ADVANCE_REQUESTED` via `emitLevelAdvanceRequestedEvent` when the player opts to continue.
 
-<pattern name="ObjectiveCrossOut">
+### Pattern: ObjectiveCrossOut
+
 - Cross-out effect leverages a `::after` pseudo-element with a 200 ms width transition so objectives animate cleanly when their quests resolve.
 - Checkbox state is purely cosmetic; assistive text announces "Completed" via `aria-live` for screen-reader parity.
-</pattern>
 
-<pattern name="MissionAdvancementContract">
+### Pattern: MissionAdvancementContract
+
 - Redux action contract: `missionAccomplished` → middleware `missionProgressionListener` → `LEVEL_ADVANCE_REQUESTED` custom event for Phaser scenes → `advanceToNextLevel` reducer.
 - The contract ensures George assistant, minimap, and save systems can subscribe to a single signal instead of duplicating mission-complete checks.
 - George listens for the same `LEVEL_ADVANCE_REQUESTED` emit to stage "Mission Accomplished" callouts only after the confirmation modal resolves, keeping guidance synchronized with HUD state.
 - `MISSION_ACCOMPLISHED` DOM events fan out when primary objectives resolve, letting HUD systems celebrate immediately while the toast/overlay keeps player control.
-</pattern>
-</architecture_section>
 
-<architecture_section id="hud_layout_guidelines" category="hud_systems">
-<design_principles>
+## Hud Layout Guidelines
+> Category: hud_systems  
+> ID: hud_layout_guidelines
+
+### Design principles
+
 - Each HUD panel owns a single system; when George, the Level Indicator, or another overlay already presents data, panels reference that source rather than duplicating copy.
 - Overlays default to zero toggles and restrained chrome—introduce controls only when direct interaction is required so the console stays legible at a glance.
 - Presentation layers never recompute mechanics (travel risk, suspicion, stamina); they consume selectors/services that already encapsulate logic.
 - Layouts respond via CSS breakpoints or data attributes to offer compact/expanded treatments instead of branching markup trees.
 - Accessibility is baseline: ensure concise `aria-label`s or `role="status"` convey implied text and reserve tooltips for modal/popup contexts only.
-</design_principles>
-<pattern name="HudPanelChecklist">
-- Pre-flight every panel by checking duplication, interaction count, and source-of-truth alignment, then log architectural/design impacts here and in `memory-bank/game-design.md` when mechanics shift.
+
+### Pattern: HudPanelChecklist
+
+- Pre-flight every panel by checking duplication, interaction count, and source-of-truth alignment, then log architectural/design impacts here and in [[01 MVP/Game Design]] when mechanics shift.
 - Panels share the console visual language—gunmetal base, cyan edge lines, layered scanlines/particle sweeps—to maintain the painterly noir HUD identity.
-</pattern>
-<pattern name="HudLayoutStateMachine">
-- <code_location>the-getaway/src/store/hudLayoutSlice.ts</code_location> stores an optional QA override for layout presets (`exploration | stealth | combat`). The state stays independent of other slices so reset/locale changes do not clobber QA selections.
-- <code_location>the-getaway/src/store/selectors/hudLayoutSelectors.ts</code_location> derives the active preset by combining the override with `world.inCombat`, `world.engagementMode`, zone heat, and surveillance detection telemetry. Combat always wins, stealth engages when the player intentionally toggles stealth or pressure rises above 45%, otherwise the console falls back to exploration.
-- <code_location>the-getaway/src/App.tsx</code_location> injects `data-hud-layout` attributes on the stage + bottom dock and swaps entire HUD lanes (George, Ops Briefings) based on the preset while highlighting the remaining panels via `data-hud-emphasis`.
-- <code_location>the-getaway/src/styles/hud-bottom-dock.css</code_location> reads those attributes to reflow the dock grid (4 columns in exploration, 3 during stealth, 2 in combat) and to accentuate whichever panels are marked as emphasized.
+
+### Pattern: HudLayoutStateMachine
+
+- `the-getaway/src/store/hudLayoutSlice.ts` stores an optional QA override for layout presets (`exploration | stealth | combat`). The state stays independent of other slices so reset/locale changes do not clobber QA selections.
+- `the-getaway/src/store/selectors/hudLayoutSelectors.ts` derives the active preset by combining the override with `world.inCombat`, `world.engagementMode`, zone heat, and surveillance detection telemetry. Combat always wins, stealth engages when the player intentionally toggles stealth or pressure rises above 45%, otherwise the console falls back to exploration.
+- `the-getaway/src/App.tsx` injects `data-hud-layout` attributes on the stage + bottom dock and swaps entire HUD lanes (George, Ops Briefings) based on the preset while highlighting the remaining panels via `data-hud-emphasis`.
+- `the-getaway/src/styles/hud-bottom-dock.css` reads those attributes to reflow the dock grid (4 columns in exploration, 3 during stealth, 2 in combat) and to accentuate whichever panels are marked as emphasized.
 - QA can force any preset through the Game Menu (`HUD Layout Override` select) which dispatches `setHudLayoutOverride` so automated tests or manual sessions can lock layouts without faking combat.
-</pattern>
-<architecture_section id="command_dock_layout" category="hud_systems">
-<design_principles>
+
+## Command Dock Layout
+> Category: hud_systems  
+> ID: command_dock_layout
+
+### Design principles
+
 - Collapse the HUD into a single bottom ribbon split into four compact bands (map, status, comms, objectives) so George stays beside the core HUD cluster while the playfield remains clear and the Quests lane anchors the right edge.
 - Keep the comms lane (George/events toggle) immediately before the Quests lane so the assistant can reference objective context without forcing eye travel across the entire ribbon; overlays continue to slide from their originating lane to avoid stacking conflicts.
 - Clamp the ribbon’s height to the Player Summary lane—`PlayerSummaryPanel` defines the ceiling and all other bands stretch to match so the dock never exceeds the HUD footprint.
@@ -313,216 +341,232 @@ flowchart LR
 - George’s assistant messaging must live exclusively in that chat feed—no inline highlight strings or truncated copy outside the log—so UX updates should never reintroduce marquee or header text.
 - Developer instrumentation remains adjacent to the mission rail—the debug inspector parks beneath the Level indicator and stays collapsed by default so production HUD users never see it.
 - Debug tooling only mounts when `settings.testMode` is true so the inspector toggle and overlays are completely absent in non-developer sessions.
-</design_principles>
-<technical_flow>
-1. <code_location>the-getaway/src/App.tsx</code_location> composes the unified ribbon, measures the Player Summary lane to enforce dock height, manages objective/event overlays, and forwards renderer metadata into the HUD shell.
-2. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> streams the assistant feed inline, trims the log to the latest entries, and promotes the freshest line into the ribbon headline without a marquee.
-3. <code_location>the-getaway/src/components/ui/OpsBriefingsPanel.tsx</code_location> supports a compact inline variant for active objectives and a full variant for completed archives, sharing selector logic across both.
-4. <code_location>the-getaway/src/components/ui/LogPanel.tsx</code_location> renders the expanded event history tray, while <code_location>the-getaway/src/components/debug/GameDebugInspector.tsx</code_location> houses renderer and suspicion diagnostics under the mission rail.
-5. <code_location>the-getaway/src/components/GameCanvas.tsx</code_location> emits renderer info through an optional callback so HUD overlays never depend on the in-canvas debug badge.
-</technical_flow>
-</architecture_section>
 
-<architecture_section id="storylet_framework" category="narrative_systems">
-<design_principles>
+### Technical flow
+
+1. `the-getaway/src/App.tsx` composes the unified ribbon, measures the Player Summary lane to enforce dock height, manages objective/event overlays, and forwards renderer metadata into the HUD shell.
+2. `the-getaway/src/components/ui/GeorgeAssistant.tsx` streams the assistant feed inline, trims the log to the latest entries, and promotes the freshest line into the ribbon headline without a marquee.
+3. `the-getaway/src/components/ui/OpsBriefingsPanel.tsx` supports a compact inline variant for active objectives and a full variant for completed archives, sharing selector logic across both.
+4. `the-getaway/src/components/ui/LogPanel.tsx` renders the expanded event history tray, while `the-getaway/src/components/debug/GameDebugInspector.tsx` houses renderer and suspicion diagnostics under the mission rail.
+5. `the-getaway/src/components/GameCanvas.tsx` emits renderer info through an optional callback so HUD overlays never depend on the in-canvas debug badge.
+
+## Storylet Framework
+> Category: narrative_systems  
+> ID: storylet_framework
+
+### Design principles
+
 - Keep story-driven vignettes fully data-driven so designers can add new plays by extending a registry and localization files without touching reducers.
 - Evaluate eligibility with a pure engine that inspects state snapshots (actors, triggers, cooldowns) to keep Redux mutations isolated to a single slice.
 - Surface resolved storylets through a queue abstractions so UI layers can render comic/dialogue panels asynchronously while side effects (logs, faction deltas, personality shifts) apply immediately.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/game/quests/storylets/storyletTypes.ts</code_location> defines the canonical structures for plays, roles, triggers, branches, outcomes, and runtime bookkeeping used across the system.
-2. <code_location>the-getaway/src/game/quests/storylets/storyletRegistry.ts</code_location> enumerates act-aligned plays (ambush, rest, omen) with cooldown windows, role definitions, and branch metadata that reference localized keys.
-3. <code_location>the-getaway/src/game/quests/storylets/storyletEngine.ts</code_location> assembles an actor pool (player, contacts, nearby NPCs), scores eligible plays against the incoming trigger, casts roles, resolves branch conditions, and returns a `StoryletResolution`.
-4. <code_location>the-getaway/src/content/storylets/index.ts</code_location> plus locale files (`en.ts`, `uk.ts`) supply titles, synopses, narrative text, and log copy keyed to each outcome/variant.
-5. <code_location>the-getaway/src/store/storyletSlice.ts</code_location> hosts the runtime slice/thunk: it snapshots state, calls the engine, applies outcome effects (log messages, faction deltas, personality adjustments, health changes), and enqueues resolved storylets for UI consumption.
-6. <code_location>the-getaway/src/components/system/MissionProgressionManager.tsx</code_location> fires a mission-completion trigger, while <code_location>the-getaway/src/components/GameController.tsx</code_location> raises campfire-rest and curfew-ambush triggers so the system reacts to exploration and combat beats.
-</technical_flow>
+### Technical flow
 
-<pattern name="StoryletTriggering">
+1. `the-getaway/src/game/quests/storylets/storyletTypes.ts` defines the canonical structures for plays, roles, triggers, branches, outcomes, and runtime bookkeeping used across the system.
+2. `the-getaway/src/game/quests/storylets/storyletRegistry.ts` enumerates act-aligned plays (ambush, rest, omen) with cooldown windows, role definitions, and branch metadata that reference localized keys.
+3. `the-getaway/src/game/quests/storylets/storyletEngine.ts` assembles an actor pool (player, contacts, nearby NPCs), scores eligible plays against the incoming trigger, casts roles, resolves branch conditions, and returns a `StoryletResolution`.
+4. `the-getaway/src/content/storylets/index.ts` plus locale files (`en.ts`, `uk.ts`) supply titles, synopses, narrative text, and log copy keyed to each outcome/variant.
+5. `the-getaway/src/store/storyletSlice.ts` hosts the runtime slice/thunk: it snapshots state, calls the engine, applies outcome effects (log messages, faction deltas, personality adjustments, health changes), and enqueues resolved storylets for UI consumption.
+6. `the-getaway/src/components/system/MissionProgressionManager.tsx` fires a mission-completion trigger, while `the-getaway/src/components/GameController.tsx` raises campfire-rest and curfew-ambush triggers so the system reacts to exploration and combat beats.
+
+### Pattern: StoryletTriggering
+
 - Trigger payloads carry semantic tags (`resistance`, `rest`, `corpsec`, `injury`) so the engine can filter plays and match variance without peeking into Redux internals.
 - Cooldowns are enforced both globally and per-location via `storylets.entries` and `lastSeenByLocation`, preventing repeat vignettes from spamming the player while still allowing act progression to surface fresh content.
 - Queue entries persist localization keys alongside rendered text, letting future UI layers rehydrate narrative panels in the current locale while maintaining audit trails for what fired when.
-</pattern>
-</architecture_section>
 
-<architecture_section id="level_up_flow" category="progression_ui">
+## Level Up Flow
+> Category: progression_ui  
+> ID: level_up_flow
+
 ##### Level-Up Flow Orchestration
 
-<design_principles>
+### Design principles
+
 - Surface level advancement as a guided, multi-step funnel so players can review rewards, select perks, and allocate points without leaving the flow.
 - Avoid dead-ends: if no perks remain or none are currently eligible, allow the player to continue while preserving outstanding selections for later.
 - Keep Redux as the single source of truth for pending perk selections, attribute/skill points, and level-up events while the UI orchestrates presentation.
-</design_principles>
 
-<technical_flow>
-1. <code_location>src/App.tsx</code_location> listens for `pendingLevelUpEvents`. When a `LevelUpModal` is dismissed it inspects `player.data` to decide whether to open the perk selector or point allocation panel first, skipping the character screen entirely during the guided sequence.
-2. <code_location>src/components/ui/LevelUpModal.tsx</code_location> presents the promotion banner with reward cards (skill points, attribute points, perk picks, and recovery) plus next-step guidance before the flow begins.
-3. <code_location>src/components/ui/PerkSelectionPanel.tsx</code_location> now distinguishes between “have pending picks” and “have eligible picks”, allowing players to continue if every perk is already owned or temporarily locked while still showing requirement callouts.
-4. <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location> handles attribute and skill point spending with enforced completion before returning control. When the panel closes, `App` re-checks Redux; if perk picks remain and new perks are now eligible, the selection panel reopens.
-5. A new reducer, <code_location>src/store/playerSlice.ts</code_location> → `clearPendingPerkSelections`, zeroes out pending perk tokens only when no unowned perks remain, preventing players from getting stuck at high levels.
-6. Each level grants one manual SPECIAL point (tracked in `player.attributePoints`), surfaced through <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location> so players choose their own boosts without automatic allocation.
-</technical_flow>
-</architecture_section>
+### Technical flow
 
-<architecture_section id="minimap_controller" category="ui_systems">
+1. `src/App.tsx` listens for `pendingLevelUpEvents`. When a `LevelUpModal` is dismissed it inspects `player.data` to decide whether to open the perk selector or point allocation panel first, skipping the character screen entirely during the guided sequence.
+2. `src/components/ui/LevelUpModal.tsx` presents the promotion banner with reward cards (skill points, attribute points, perk picks, and recovery) plus next-step guidance before the flow begins.
+3. `src/components/ui/PerkSelectionPanel.tsx` now distinguishes between “have pending picks” and “have eligible picks”, allowing players to continue if every perk is already owned or temporarily locked while still showing requirement callouts.
+4. `src/components/ui/LevelUpPointAllocationPanel.tsx` handles attribute and skill point spending with enforced completion before returning control. When the panel closes, `App` re-checks Redux; if perk picks remain and new perks are now eligible, the selection panel reopens.
+5. A new reducer, `src/store/playerSlice.ts` → `clearPendingPerkSelections`, zeroes out pending perk tokens only when no unowned perks remain, preventing players from getting stuck at high levels.
+6. Each level grants one manual SPECIAL point (tracked in `player.attributePoints`), surfaced through `src/components/ui/LevelUpPointAllocationPanel.tsx` so players choose their own boosts without automatic allocation.
+
+## Minimap Controller
+> Category: ui_systems  
+> ID: minimap_controller
+
 ### Mini-Map Controller & Rendering Stack
 
-<design_principles>
+### Design principles
+
 - Derive all minimap state once per frame from Redux selectors and camera viewport, then fan out through a pure render pipeline.
 - Cache tiles/overlays/entities separately so zooming, panning, or entity updates only redraw the necessary layers.
 - Keep UI presentation declarative: React renders canvases from `MiniMapRenderState`, while `MiniMapController` owns transforms and dirty-flag logic.
-</design_principles>
 
-<technical_flow>
-1. <code_location>src/game/controllers/MiniMapController.ts</code_location> ingests the active `MapArea`, viewport, and path preview to produce a `MiniMapRenderState` with tile/entity/objective signatures and `dirtyLayers` flags.
-2. <code_location>src/game/services/miniMapService.ts</code_location> subscribes to Redux, throttles broadcasts with `requestAnimationFrame`, and dispatches `MINIMAP_STATE_EVENT` snapshots plus zoom updates.
-3. <code_location>src/components/ui/MiniMap.tsx</code_location> stacks five canvases (tiles, overlays, entities, path, viewport). Each canvas only redraws when its matching dirty flag flips, keeping zoom/drag interactions responsive.
-4. Shift-drag emits `MINIMAP_PATH_PREVIEW_EVENT`; <code_location>GameController.tsx</code_location> resolves the path via `findPath`, dispatching `PATH_PREVIEW_EVENT` so both Phaser and the minimap display the queued route.
+### Technical flow
+
+1. `src/game/controllers/MiniMapController.ts` ingests the active `MapArea`, viewport, and path preview to produce a `MiniMapRenderState` with tile/entity/objective signatures and `dirtyLayers` flags.
+2. `src/game/services/miniMapService.ts` subscribes to Redux, throttles broadcasts with `requestAnimationFrame`, and dispatches `MINIMAP_STATE_EVENT` snapshots plus zoom updates.
+3. `src/components/ui/MiniMap.tsx` stacks five canvases (tiles, overlays, entities, path, viewport). Each canvas only redraws when its matching dirty flag flips, keeping zoom/drag interactions responsive.
+4. Shift-drag emits `MINIMAP_PATH_PREVIEW_EVENT`; `GameController.tsx` resolves the path via `findPath`, dispatching `PATH_PREVIEW_EVENT` so both Phaser and the minimap display the queued route.
 5. Legend clicks post `MINIMAP_OBJECTIVE_FOCUS_EVENT`, which `miniMapService` proxies to `MainScene.focusCameraOnGridPosition`, keeping map navigation consistent with core camera controls.
-</technical_flow>
 
-<pattern name="Layered Rendering">
+### Pattern: Layered Rendering
+
 - Tiles render into a dedicated canvas using cached gradients; overlays add curfew tint + neon border; entities/objectives draw glowing shapes; paths animate via a dashed canvas; viewport reticle sits topmost.
 - High-contrast mode swaps tile palette, while auto-rotate rotates the canvas stack around the center and the pointer math in `MiniMap.tsx` compensates so drag targets remain accurate.
 - Keyboard arrow keys nudge the camera by emitting viewport focus events, matching accessibility expectations and enabling keyboard-only navigation.
-</pattern>
 
-<pattern name="Event Contract">
+### Pattern: Event Contract
+
 - `MINIMAP_STATE_EVENT` → React HUD updates (tiles/entities/path/viewport).
 - `MINIMAP_ZOOM_EVENT` → syncs slider + button states on the HUD.
 - `MINIMAP_PATH_PREVIEW_EVENT` → GameController pathfinding for Shift-drag waypoints.
 - `MINIMAP_OBJECTIVE_FOCUS_EVENT` → camera snap-to-objective for legend shortcuts.
-</pattern>
-</architecture_section>
 
-<architecture_section id="surveillance_network" category="gameplay_systems">
-<design_principles>
+## Surveillance Network
+> Category: gameplay_systems  
+> ID: surveillance_network
+
+### Design principles
+
 - Author surveillance configuration outside runtime logic so curfew coverage can scale with new zones.
 - Keep camera alert state in Redux to synchronize Phaser rendering, HUD, and minimap overlays.
 - Treat observation cones as optional guidance: players explicitly toggle them so the base render stays uncluttered.
-</design_principles>
 
-<technical_flow>
+### Technical flow
+
 1. `src/content/cameraConfigs.ts` declares static, motion, and drone camera blueprints per zone; `cameraTypes.ts` converts them into runtime state with sweep metadata.
 2. `surveillanceSlice` stores zone cameras, HUD metrics, overlay toggles, and curfew banner visibility so React components can subscribe to a single source of truth.
 3. `GameController` loads zone surveillance on area transitions, throttles crouch movement, and drives `updateSurveillance` every frame while binding `Tab`/`C` hotkeys through `setOverlayEnabled` and `setCrouching`.
 4. `game/systems/surveillance/cameraSystem.ts` advances sweeps/patrols, applies stealth + crouch modifiers, locks camera orientation on the player while they remain inside the active cone with line-of-sight and immediately releases the lock (accelerating decay) once the target escapes, raises network alerts, schedules reinforcements, and snapshots HUD values for the slice.
 5. `MainScene` listens to store changes and instantiates `CameraSprite` containers that animate LEDs and cones, respecting the overlay flag on each update.
 6. React HUD layers stack the day/night wafer above the minimal camera wafer (`CameraDetectionHUD.tsx`) in the top-right rail, surfacing the SPY ACTIVITY/suspicious/alarmed intent label, styled exposure bar, and network underline while the Game Menu hosts the overlay toggle (Tab shortcut still mapped in `GameController`) and `CurfewWarning.tsx` handles curfew activations as `MiniMap.tsx` renders camera glyphs with alert-state colors.
-</technical_flow>
 
-<code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
-<code_location>the-getaway/src/game/objects/CameraSprite.ts</code_location>
-<code_location>the-getaway/src/store/surveillanceSlice.ts</code_location>
-<code_location>the-getaway/src/components/GameController.tsx</code_location>
-<code_location>the-getaway/src/components/ui/CameraDetectionHUD.tsx</code_location>
-<code_location>the-getaway/src/components/ui/CurfewWarning.tsx</code_location>
-<code_location>the-getaway/src/components/ui/MiniMap.tsx</code_location>
-</architecture_section>
+`the-getaway/src/game/systems/surveillance/cameraSystem.ts`
+`the-getaway/src/game/objects/CameraSprite.ts`
+`the-getaway/src/store/surveillanceSlice.ts`
+`the-getaway/src/components/GameController.tsx`
+`the-getaway/src/components/ui/CameraDetectionHUD.tsx`
+`the-getaway/src/components/ui/CurfewWarning.tsx`
+`the-getaway/src/components/ui/MiniMap.tsx`
 
-<architecture_section id="engagement_modes" category="hud_and_state">
-<design_principles>
+## Engagement Modes
+> Category: hud_and_state  
+> ID: engagement_modes
+
+### Design principles
+
 - Maintain a single source of truth for the player's engagement state so HUD, gameplay systems, and AI react consistently.
 - Keep stealth toggles deterministic: player intent drives entry/exit while combat, dialogue, or alarms can forcibly override with a cool-down.
 - Surface system state through lightweight selectors so UI layers stay declarative and memo-friendly.
-</design_principles>
 
-<technical_flow>
+### Technical flow
+
 1. `worldSlice.engagementMode` tracks `'none' | 'stealth' | 'combat' | 'dialog'`, mirroring combat/quest reducers while allowing `GameController` to set stealth manually.
 2. `playerSlice` now persists `movementProfile`, `stealthModeEnabled`, and `stealthCooldownExpiresAt`; helper reducers (`setMovementProfile`, `setStealthState`) keep runtime systems decoupled from React specifics.
 3. `selectStealthAvailability` in `store/selectors/engagementSelectors.ts` exposes eligibility/cooldown metadata that both HUD and controllers consume.
 4. `GameController` handles toggle input (`X`), enforces cooldowns, auto-drops stealth during combat/dialogue, and applies noise-based alert bumps to nearby guards when the player moves loudly.
 5. `StealthIndicator.tsx` reads engagement + surveillance telemetry, rendering the Hidden/Exposed/Compromised/Standby wafer with localisation-aware copy and state-driven styling.
 6. Surveillance and suspicion pipelines use `player.movementProfile` + `stealthModeEnabled` (replacing crouch) to scale camera range, detection gain, disguise multipliers, and witness posture modifiers.
-</technical_flow>
 
-<code_location>the-getaway/src/store/worldSlice.ts</code_location>
-<code_location>the-getaway/src/store/playerSlice.ts</code_location>
-<code_location>the-getaway/src/store/selectors/engagementSelectors.ts</code_location>
-<code_location>the-getaway/src/components/GameController.tsx</code_location>
-<code_location>the-getaway/src/components/ui/StealthIndicator.tsx</code_location>
-<code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>
-<code_location>the-getaway/src/game/systems/suspicion/observationBuilders.ts</code_location>
-</architecture_section>
+`the-getaway/src/store/worldSlice.ts`
+`the-getaway/src/store/playerSlice.ts`
+`the-getaway/src/store/selectors/engagementSelectors.ts`
+`the-getaway/src/components/GameController.tsx`
+`the-getaway/src/components/ui/StealthIndicator.tsx`
+`the-getaway/src/game/systems/surveillance/cameraSystem.ts`
+`the-getaway/src/game/systems/suspicion/observationBuilders.ts`
 
-<architecture_section id="witness_memory_heat" category="gameplay_systems">
-<design_principles>
+## Witness Memory Heat
+> Category: gameplay_systems  
+> ID: witness_memory_heat
+
+### Design principles
+
 - MVP status: disabled; gated by `settings.reputationSystemsEnabled` so witness/heat updates and HUD telemetry remain off until Post-MVP.
 - Model suspicion as decaying eyewitness memory so stealth pressure emerges from elapsed time and behaviour rather than scripted cooldowns.
 - Keep per-witness data local to observers while exposing aggregated heat via memoised selectors that HUD, AI, and content systems can share.
 - Synchronise decay with world time controls (pause, cutscenes, dialogue) to avoid double ticks or skipped updates during freezes.
-</design_principles>
 
-<technical_flow>
- 1. <code_location>the-getaway/src/game/systems/suspicion/witnessMemory.ts</code_location> defines the `WitnessMemory` model plus `decayWitnessMemory`, `reinforceWitnessMemory`, and pruning helpers parameterised by half-life and certainty floor.
- 2. <code_location>the-getaway/src/game/systems/suspicion/observationBuilders.ts</code_location> assembles guard and camera observations, applying distance, lighting, disguise, and posture dampeners before forwarding structured payloads.
- 3. <code_location>the-getaway/src/store/suspicionSlice.ts</code_location> stores zone memories, derives heat tiers via the aggregation helpers, exposes selectors, and handles suppression/decay while pausing when dialogues freeze the world.
- 4. <code_location>the-getaway/src/components/GameController.tsx</code_location>, <code_location>the-getaway/src/game/combat/perceptionManager.ts</code_location>, <code_location>the-getaway/src/game/systems/surveillance/cameraSystem.ts</code_location>, and <code_location>the-getaway/src/game/scenes/MainScene.ts</code_location> emit observations and schedule decay ticks directly from guard vision, surveillance loops, and world time pulses.
- 5. <code_location>the-getaway/src/components/debug/SuspicionInspector.tsx</code_location> renders a dev-only overlay listing current heat and leading witnesses; <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> can reference the same selectors when exposing suspicion telemetry diegetically.
-</technical_flow>
+### Technical flow
 
-<pattern name="WitnessDecayScheduler">
+ 1. `the-getaway/src/game/systems/suspicion/witnessMemory.ts` defines the `WitnessMemory` model plus `decayWitnessMemory`, `reinforceWitnessMemory`, and pruning helpers parameterised by half-life and certainty floor.
+ 2. `the-getaway/src/game/systems/suspicion/observationBuilders.ts` assembles guard and camera observations, applying distance, lighting, disguise, and posture dampeners before forwarding structured payloads.
+ 3. `the-getaway/src/store/suspicionSlice.ts` stores zone memories, derives heat tiers via the aggregation helpers, exposes selectors, and handles suppression/decay while pausing when dialogues freeze the world.
+ 4. `the-getaway/src/components/GameController.tsx`, `the-getaway/src/game/combat/perceptionManager.ts`, `the-getaway/src/game/systems/surveillance/cameraSystem.ts`, and `the-getaway/src/game/scenes/MainScene.ts` emit observations and schedule decay ticks directly from guard vision, surveillance loops, and world time pulses.
+ 5. `the-getaway/src/components/debug/SuspicionInspector.tsx` renders a dev-only overlay listing current heat and leading witnesses; `the-getaway/src/components/ui/GeorgeAssistant.tsx` can reference the same selectors when exposing suspicion telemetry diegetically.
+
+### Pattern: WitnessDecayScheduler
+
 - `GameController` advances suspicion ticks alongside world time pulses, skipping decay when `time.isFrozen` (menus, dialogue) and clamping certainty within [0,1].
 - Memories below the configured floor (default 0.05) are pruned immediately; suppressed memories remain stored but excluded from aggregation until reactivated.
 - Save/load serialises witness snapshots `{ witnessId, recognitionChannel, certainty, lastSeenAt, halfLife, reported, suppressed }` with schema version guards.
-</pattern>
 
-<pattern name="HeatTierThresholds">
+### Pattern: HeatTierThresholds
+
 - Zone heat tiers map to enumerated guard states (`calm`, `tracking`, `crackdown`) so AI, HUD, and quests share a single source of truth instead of hard-coded floats.
 - Aggregation sums the top-K certainty scores (default 5) multiplied by proximity and report multipliers, preventing dozens of faint memories from dwarfing primary witnesses.
 - Designers override half-life and tier thresholds per district via `src/content/suspicion/heatProfiles.ts` to support paranoid corporate sectors versus sleepy outskirts without code edits.
-</pattern>
-</architecture_section>
 
-<architecture_section id="localized_reputation_network" category="gameplay_systems">
-<design_principles>
+## Localized Reputation Network
+> Category: gameplay_systems  
+> ID: localized_reputation_network
+
+### Design principles
+
 - MVP status: disabled; gated by `settings.reputationSystemsEnabled` so reputation/gossip propagation is paused until Post-MVP.
 - Scope notoriety updates to the smallest meaningful audience first (witness → faction → neighborhood) so systemic reactions stay believable and performant.
 - Keep event sensing, witness evaluation, interpretation, propagation, and reaction decoupled through message contracts to minimize feedback loops between UI, AI, and data layers.
 - Budget rumor spread and decay inside the system itself so designers tweak pacing without touching consuming systems.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/game/systems/reputation/events.ts</code_location> exposes `emitReputationEvent` which game actions call with trait tags, intensity, and location metadata. Events fan out through an in-memory queue managed by `reputationSystem`.
-2. <code_location>the-getaway/src/game/systems/reputation/witnessService.ts</code_location> samples NPCs from the active `MapCell`, computes `visibilityScore = los * distanceFalloff * lighting * disguise * noise`, and yields `WitnessCandidate` objects. Candidates below threshold τ are flagged as rumor-only observers.
-3. <code_location>the-getaway/src/game/systems/reputation/interpretation.ts</code_location> merges candidate data with faction value tables and personal bias traits to generate `WitnessRecord` entries containing trait deltas, confidence, and perceived alignment. Records persist to <code_location>the-getaway/src/store/reputationSlice.ts</code_location> for auditing.
-4. <code_location>the-getaway/src/store/reputationSlice.ts</code_location> maintains layered `ReputationProfile` maps keyed by witness ID, faction ID, and `cellId`. Reducers apply weighted deltas, schedule decay ticks, and expose selectors for scoped lookups (e.g., `selectCellReputation(cellId, trait)`).
-5. <code_location>the-getaway/src/game/systems/reputation/propagationService.ts</code_location> advances bounded gossip edges once per heartbeat using NPC social graphs pulled from `npcDirectory`. Each edge stores strength, latency, and remaining gossip energy to cap daily rumor spread.
+### Technical flow
+
+1. `the-getaway/src/game/systems/reputation/events.ts` exposes `emitReputationEvent` which game actions call with trait tags, intensity, and location metadata. Events fan out through an in-memory queue managed by `reputationSystem`.
+2. `the-getaway/src/game/systems/reputation/witnessService.ts` samples NPCs from the active `MapCell`, computes `visibilityScore = los * distanceFalloff * lighting * disguise * noise`, and yields `WitnessCandidate` objects. Candidates below threshold τ are flagged as rumor-only observers.
+3. `the-getaway/src/game/systems/reputation/interpretation.ts` merges candidate data with faction value tables and personal bias traits to generate `WitnessRecord` entries containing trait deltas, confidence, and perceived alignment. Records persist to `the-getaway/src/store/reputationSlice.ts` for auditing.
+4. `the-getaway/src/store/reputationSlice.ts` maintains layered `ReputationProfile` maps keyed by witness ID, faction ID, and `cellId`. Reducers apply weighted deltas, schedule decay ticks, and expose selectors for scoped lookups (e.g., `selectCellReputation(cellId, trait)`).
+5. `the-getaway/src/game/systems/reputation/propagationService.ts` advances bounded gossip edges once per heartbeat using NPC social graphs pulled from `npcDirectory`. Each edge stores strength, latency, and remaining gossip energy to cap daily rumor spread.
 6. Consumers pull scoped data through selectors: `DialogueController` adjusts available lines, `PricingService` modifies price multipliers, `GuardAIController` escalates alertness, and `QuestGatingService` unlocks/locks missions based on the relevant audience’s perception.
-7. Developer tooling lives in <code_location>the-getaway/src/debug/reputationInspector.tsx</code_location> and <code_location>the-getaway/src/debug/reputationHeatmapLayer.tsx</code_location>, rendering overlays that visualize trait intensity by cell and witness breakdowns for tuning.
-</technical_flow>
+7. Developer tooling lives in `the-getaway/src/debug/reputationInspector.tsx` and `the-getaway/src/debug/reputationHeatmapLayer.tsx`, rendering overlays that visualize trait intensity by cell and witness breakdowns for tuning.
 
-<pattern name="RumorPropagationBudget">
+### Pattern: RumorPropagationBudget
+
 - Each NPC carries a `gossipEnergy` counter replenished daily; propagation edges consume energy per hop, enforcing slow spread without bespoke timers in consumers.
 - Latency offsets ensure rumors resolve after a delay rather than instantly applying deltas, enabling designers to stage delayed reactions.
 - Intensity gates allow catastrophic events to bypass normal caps by flagging `allowCrossCell` when thresholds exceed configured bounds.
-</pattern>
 
-<pattern name="ScopedReputationLookup">
+### Pattern: ScopedReputationLookup
+
 - Selector priority order: direct witness override → social graph aggregate → faction aggregate → cell aggregate → fallback to global faction standing (Step 29).
 - Each selector returns both score and confidence so UI and AI can present uncertain reactions (“I heard…” vs “I saw…”).
 - Hooks expose subscription APIs for React HUD (discount banners, dialogue hints) without leaking Redux internals into Phaser systems.
-</pattern>
-</architecture_section>
 
-<architecture_section id="autobattle_system" category="combat_systems">
-<design_principles>
+## Autobattle System
+> Category: combat_systems  
+> ID: autobattle_system
+
+### Design principles
+
 - Treat AutoBattle as an assist layer, not a replacement—manual input must pre-empt automation instantly without desyncing turn order or AP bookkeeping.
 - Reuse existing combat primitives (`ReactionQueue`, `combatSystem` actions, selectors) so automated turns travel through the same reducers and telemetry that manual play already exercises.
 - Keep heuristics deterministic per profile seed to support replay/debug parity while allowing designers to tweak weight tables without code changes.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/store/settingsSlice.ts</code_location> stores `autoBattleEnabled` and `autoBattleProfile`, persisting via the existing localStorage hydrator. Reducers expose `setAutoBattleEnabled`/`setAutoBattleProfile`; selectors feed both the HUD toggle and planner configuration.
-2. <code_location>the-getaway/src/game/combat/automation/autoBattleProfiles.ts</code_location> defines the Aggressive, Balanced, and Defensive weight tables—covering attack bias, AP reserve thresholds, panic triggers, and consumable aggression—that parameterise the planner.
-3. <code_location>the-getaway/src/game/combat/automation/autoBattlePlanner.ts</code_location> evaluates the combat snapshot, scoring candidate attacks and reposition moves via expected damage, cover gain, distance deltas, and reserve penalties. It returns the highest-score action or a safe hold position fallback when no positive play exists.
-4. <code_location>the-getaway/src/game/combat/automation/AutoBattleController.ts</code_location> runs inside `GameController`, invoking the planner when the player turn is active. It dispatches `movePlayer`, `executeAttack`, and `switchTurn` actions directly, records telemetry (`recordAutoBattleDecision`), and logs via `logSlice`, while honouring fail-safes (dialogue prompts, depleted AP, manual overrides).
-5. <code_location>the-getaway/src/store/autoBattleSlice.ts</code_location> tracks runtime status (`idle`/`running`/`paused`), pause reasons, and the last planner decision so the HUD and debug overlays reflect automation state in real time.
-6. <code_location>the-getaway/src/components/ui/CombatControlWidget.tsx</code_location> renders the compact combat overlay that merges the turn indicator, AP readout, foe counter, and AutoBattle toggle. It mirrors the `Shift+A` hotkey while leaving behaviour profile management in the Game Menu.
-7. <code_location>the-getaway/src/components/GameController.tsx</code_location> wires controller updates, hotkeys, and manual input detection—calling `notifyManualOverride` on the automation controller—to guarantee automation releases instantly when the player acts, dialogue opens, or objectives interrupt the turn.
-</technical_flow>
-</architecture_section>
+### Technical flow
+
+1. `the-getaway/src/store/settingsSlice.ts` stores `autoBattleEnabled` and `autoBattleProfile`, persisting via the existing localStorage hydrator. Reducers expose `setAutoBattleEnabled`/`setAutoBattleProfile`; selectors feed both the HUD toggle and planner configuration.
+2. `the-getaway/src/game/combat/automation/autoBattleProfiles.ts` defines the Aggressive, Balanced, and Defensive weight tables—covering attack bias, AP reserve thresholds, panic triggers, and consumable aggression—that parameterise the planner.
+3. `the-getaway/src/game/combat/automation/autoBattlePlanner.ts` evaluates the combat snapshot, scoring candidate attacks and reposition moves via expected damage, cover gain, distance deltas, and reserve penalties. It returns the highest-score action or a safe hold position fallback when no positive play exists.
+4. `the-getaway/src/game/combat/automation/AutoBattleController.ts` runs inside `GameController`, invoking the planner when the player turn is active. It dispatches `movePlayer`, `executeAttack`, and `switchTurn` actions directly, records telemetry (`recordAutoBattleDecision`), and logs via `logSlice`, while honouring fail-safes (dialogue prompts, depleted AP, manual overrides).
+5. `the-getaway/src/store/autoBattleSlice.ts` tracks runtime status (`idle`/`running`/`paused`), pause reasons, and the last planner decision so the HUD and debug overlays reflect automation state in real time.
+6. `the-getaway/src/components/ui/CombatControlWidget.tsx` renders the compact combat overlay that merges the turn indicator, AP readout, foe counter, and AutoBattle toggle. It mirrors the `Shift+A` hotkey while leaving behaviour profile management in the Game Menu.
+7. `the-getaway/src/components/GameController.tsx` wires controller updates, hotkeys, and manual input detection—calling `notifyManualOverride` on the automation controller—to guarantee automation releases instantly when the player acts, dialogue opens, or objectives interrupt the turn.
+
 ### `/the-getaway/src/content`
 
 Authorial data that defines the playable world, separated from runtime systems so levels can be versioned and reviewed independently.
@@ -576,10 +620,14 @@ Manages the game world and environment:
 - **`pathfinding.ts`**: Breadth-first pathfinder supporting enemy avoidance and reserved tiles used by both player click-to-move and NPC routines.
 - **`worldMap.ts`**: Generates large districts, interior connections, and seeds NPCs, enemies, and items with routines and dialogue IDs.
 
-<architecture_section id="world_map_grid_pattern" category="world_generation">
+## World Map Grid Pattern
+> Category: world_generation  
+> ID: world_map_grid_pattern
+
 ##### World Map Grid Pattern
 
-<pattern name="Manhattan Grid System">
+### Pattern: Manhattan Grid System
+
 The world map uses a **Manhattan-style grid system** inspired by urban planning principles:
 
 **Core Pattern:**
@@ -587,9 +635,9 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - Buildings occupy rectangular footprints within blocks, separated by navigable streets
 - Door tiles exist in street space (outside building footprints) to create clear separation between structure and navigation
 - Each building connects bidirectionally to a procedurally generated interior space
-</pattern>
 
-<design_principles>
+### Design principles
+
 **Key Design Principles:**
 - **Geometric Clarity**: All buildings are axis-aligned rectangles; no irregular shapes or overlapping footprints
 - **Single-Parcel Blocks**: Each of the 16 Downtown blocks maps to one named parcel to keep overlays and doorways uncluttered
@@ -597,107 +645,109 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - **Unique Positioning**: No two buildings share the same door coordinate
 - **Parcel Signage**: Rooftop marquees were removed to keep skylines readable; exterior labeling now relies on environmental cues and quest UI copy
 - **Spawn Sanitization**: Blueprint positions snap to the nearest walkable street tile during world generation so nothing spawns atop a roofline
-</design_principles>
-<pattern name="Elevation Profiles & Facades">
+
+### Pattern: Elevation Profiles & Facades
+
 - `getTileElevation` and `getElevationProfile` convert tile metadata into height offsets so walls extrude into full prisms while cover uses half-height braces.
 - `renderElevationPrism` draws right/front faces with tuned shadows, then caps the roof plane; `renderWallDetails` layers neon bands and ledges, and `renderCoverDetails` adds lips plus bracing lines for tactical readability.
 - Door tiles stay flat at ground level but `drawDoorTile` projects a doorway panel onto the extruded facade using the same interpolation helpers, keeping entries visually aligned with building volumes.
 - `drawBuildingLabels` now only clears previously spawned containers; marquee-style signage was retired to declutter the outdoor view.
-</pattern>
-<pattern name="Character Tokens & Labels">
+
+### Pattern: Character Tokens & Labels
+
 - `IsoObjectFactory.createCharacterToken` builds reusable player/NPC/enemy markers composed of a halo, base diamond, extruded column, and beacon cap with configurable palettes.
 - `positionCharacterToken` and `createCharacterNameLabel` coordinate container depth and neon nameplates so tokens stay legible from any camera offset.
 - Character overlays (health bars, combat indicators, name labels) update alongside tokens, preserving 2.5-D depth sorting while surfacing combat data.
-</pattern>
 
-<pattern name="District Dressing">
+### Pattern: District Dressing
+
 - Building definitions carry `district`, `signageStyle`, `propDensity`, and `encounterProfile` hints (see `level0/locales/*`).
 - `worldMap.applyDistrictDecorations` clones street tiles and promotes slum doors into scrap cover clusters while downtown doors gain planter-style cover to shape chokepoints.
 - `IsoObjectFactory` now exposes `createBarricade`, `createStreetLight`, and `createBillboard` so scene code can spawn bespoke dressing without duplicating geometry math.
 - `MainScene.renderStaticProps` reads district metadata to place props/highlights; `signageStyle` remains in content for future styling hooks but no longer drives neon marquees.
 - Item blueprints receive explicit street coordinates; `MainScene` highlights both loot and interactive NPC tiles for readability.
-</pattern>
 
-<technical_flow>
+### Technical flow
+
 **Technical Flow:**
-1. <code_location>worldMap.ts</code_location> defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions
-2. Building definitions in <code_location>locale files</code_location> specify footprint bounds, door position, and interior dimensions
+1. `worldMap.ts` defines avenue/street boundaries via `isAvenue()` and `isStreet()` functions
+2. Building definitions in `locale files` specify footprint bounds, door position, and interior dimensions
 3. `applyDistrictDecorations()` promotes door-adjacent tiles into district-specific cover and queues item spawn seeds before interiors are linked
 4. `applyBuildingConnections()` converts footprint tiles to walls, then explicitly marks door tiles as walkable
-5. <code_location>MainScene</code_location> renders building name labels using building definitions passed from <code_location>BootScene</code_location>
+5. `MainScene` renders building name labels using building definitions passed from `BootScene`
 6. Bidirectional connections enable seamless indoor/outdoor transitions
-</technical_flow>
-</architecture_section>
 
-<architecture_section id="skill-tree-system" category="progression">
+## Skill-Tree-System
+> Category: progression  
+> ID: skill-tree-system
+
 ## Skill Tree System
 
-<design_principles>
+### Design principles
+
 - Keep branch metadata declarative so designers can extend trees without touching reducers or combat formulas.
 - Share the same math helpers between UI previews and runtime logic to avoid divergence.
 - Preserve tag behaviour (+10 increments, symmetric refunds) wherever skill points are spent.
 - Route dialogue/world gating through a single helper so XP investments have visible payoffs beyond combat.
-</design_principles>
 
-<pattern name="Skill Data Definitions">
-- <code_location>src/content/skills.ts</code_location> defines Combat/Tech/Survival/Social branches with increments, descriptions, and stub markers for future specialisations.
-- <code_location>src/game/interfaces/types.ts</code_location> introduces `SkillId`, `SkillBranchId`, `Player.skillTraining`, and `Weapon.skillType`, wiring the skill tree into player state and equipment definitions.
-- <code_location>src/game/interfaces/player.ts</code_location> seeds zeroed training values while `playerSlice.createFreshPlayer` deep clones them so per-run changes never mutate defaults.
-</pattern>
+### Pattern: Skill Data Definitions
 
-<pattern name="Allocation Flow">
-- <code_location>src/store/playerSlice.ts</code_location> exposes `allocateSkillPointToSkill` / `refundSkillPointFromSkill`, using `getSkillDefinition` to determine increments and max caps; tagged skills simply swap to the +10 increment.
-- <code_location>src/components/ui/SkillTreePanel.tsx</code_location> renders the tabbed UI, dispatches those actions, and pulls effect previews from <code_location>src/game/systems/skillTree.ts</code_location> while announcing updates via `aria-live` for screen readers.
-- <code_location>src/components/ui/CharacterScreen.tsx</code_location> wraps the panel in a modal overlay (���� toggled by the HUD button or `C`) so detailed allocation lives off the main HUD while reusing `PlayerStatusPanel` and `PlayerStatsPanel` within the same layout.
-- Regression tests in <code_location>src/__tests__/playerSlice.test.ts</code_location> and <code_location>src/__tests__/SkillTreePanel.test.tsx</code_location> lock down spend/refund behaviour and UI wiring.
-</pattern>
+- `src/content/skills.ts` defines Combat/Tech/Survival/Social branches with increments, descriptions, and stub markers for future specialisations.
+- `src/game/interfaces/types.ts` introduces `SkillId`, `SkillBranchId`, `Player.skillTraining`, and `Weapon.skillType`, wiring the skill tree into player state and equipment definitions.
+- `src/game/interfaces/player.ts` seeds zeroed training values while `playerSlice.createFreshPlayer` deep clones them so per-run changes never mutate defaults.
 
-<pattern name="Runtime Integrations">
-- <code_location>src/game/combat/combatSystem.ts</code_location> now resolves a weapon's `skillType`, folds skill bonuses into hit chance, melee damage, and energy crit chance, and recognises `Weapon.skillType` on starting gear.
-- <code_location>src/game/systems/skillTree.ts</code_location> centralises hit/damage/crit/radius math so combat and UI stay synchronised.
-- <code_location>src/game/quests/dialogueSystem.ts</code_location> honours `skillCheck.domain === 'skill'`, checking `player.skillTraining` for thresholds like `[Hacking 50]` while still applying charisma dialogue bonuses for attribute checks.
-- <code_location>src/components/ui/DialogueOverlay.tsx</code_location> delegates locking to `checkSkillRequirement` and resolves skill names through `getSkillDefinition` so the HUD mirrors backend gating.
-- <code_location>src/game/world/grid.ts</code_location> enforces optional `MapTile.skillRequirement`, preventing players from entering locked tiles until their training crosses the defined threshold.
-</pattern>
+### Pattern: Allocation Flow
 
-</architecture_section>
+- `src/store/playerSlice.ts` exposes `allocateSkillPointToSkill` / `refundSkillPointFromSkill`, using `getSkillDefinition` to determine increments and max caps; tagged skills simply swap to the +10 increment.
+- `src/components/ui/SkillTreePanel.tsx` renders the tabbed UI, dispatches those actions, and pulls effect previews from `src/game/systems/skillTree.ts` while announcing updates via `aria-live` for screen readers.
+- `src/components/ui/CharacterScreen.tsx` wraps the panel in a modal overlay (���� toggled by the HUD button or `C`) so detailed allocation lives off the main HUD while reusing `PlayerStatusPanel` and `PlayerStatsPanel` within the same layout.
+- Regression tests in `src/__tests__/playerSlice.test.ts` and `src/__tests__/SkillTreePanel.test.tsx` lock down spend/refund behaviour and UI wiring.
 
-<architecture_section id="faction_reputation_system" category="progression">
+### Pattern: Runtime Integrations
+
+- `src/game/combat/combatSystem.ts` now resolves a weapon's `skillType`, folds skill bonuses into hit chance, melee damage, and energy crit chance, and recognises `Weapon.skillType` on starting gear.
+- `src/game/systems/skillTree.ts` centralises hit/damage/crit/radius math so combat and UI stay synchronised.
+- `src/game/quests/dialogueSystem.ts` honours `skillCheck.domain === 'skill'`, checking `player.skillTraining` for thresholds like `[Hacking 50]` while still applying charisma dialogue bonuses for attribute checks.
+- `src/components/ui/DialogueOverlay.tsx` delegates locking to `checkSkillRequirement` and resolves skill names through `getSkillDefinition` so the HUD mirrors backend gating.
+- `src/game/world/grid.ts` enforces optional `MapTile.skillRequirement`, preventing players from entering locked tiles until their training crosses the defined threshold.
+
+## Faction Reputation System
+> Category: progression  
+> ID: faction_reputation_system
+
 ## Faction Reputation System
 
-<design_principles>
+### Design principles
+
 - MVP status: disabled; gated by `settings.reputationSystemsEnabled`, hiding HUD panels and gating logic until Post-MVP.
 - Keep faction definitions declarative so content updates never require reducer rewrites.
 - Treat rival penalties and allied hostilities as systemic rules living in one helper so Redux, UI, and content stay in sync.
 - Surface every reputation change through a dedicated event queue so HUD, toast, and accessibility layers consume a single source of truth.
-</design_principles>
 
-<pattern name="Faction Definitions & Math">
-- <code_location>the-getaway/src/game/systems/factions.ts</code_location> enumerates Resistance/CorpSec/Scavengers metadata, standing thresholds, and defaults, and exports helpers to clamp values, derive standings, and localise standing labels.
+### Pattern: Faction Definitions & Math
+
+- `the-getaway/src/game/systems/factions.ts` enumerates Resistance/CorpSec/Scavengers metadata, standing thresholds, and defaults, and exports helpers to clamp values, derive standings, and localise standing labels.
 - Rival logic lives in `applyFactionDelta`, applying the 50% cross-faction penalty and forcing the opposing faction to at least Hostile (-70) when a side reaches Allied (≥60).
 - `resolveReputationAction` maps roadmap actions (sabotage, reporting crimes, trading, etc.) to faction deltas so quests and events can request adjustments without hardcoding numbers.
-</pattern>
 
-<pattern name="State Management & Events">
-- <code_location>the-getaway/src/store/playerSlice.ts</code_location> introduces `pendingFactionEvents` plus reducers `adjustFactionReputation`, `setFactionReputation`, and `consumeFactionReputationEvents`; each update records deltas, rival impacts, and standing changes with timestamps for downstream consumers.
+### Pattern: State Management & Events
+
+- `the-getaway/src/store/playerSlice.ts` introduces `pendingFactionEvents` plus reducers `adjustFactionReputation`, `setFactionReputation`, and `consumeFactionReputationEvents`; each update records deltas, rival impacts, and standing changes with timestamps for downstream consumers.
 - Background seeding now clones default faction standings from the metadata and clamps background adjustments via `clampFactionReputation`.
-- Selectors in <code_location>the-getaway/src/store/selectors/factionSelectors.ts</code_location> expose structured standing summaries (value, localised standing, effects, next thresholds) so UI components stay presentation-only.
-</pattern>
+- Selectors in `the-getaway/src/store/selectors/factionSelectors.ts` expose structured standing summaries (value, localised standing, effects, next thresholds) so UI components stay presentation-only.
 
-<pattern name="UI & Feedback Loop">
-- <code_location>the-getaway/src/components/ui/FactionReputationPanel.tsx</code_location> renders the character-screen panel with colour-coded bars, standing badges, and effect summaries, pulling copy from `UIStrings.factionPanel` and selector data.
-- <code_location>the-getaway/src/components/system/FactionReputationManager.tsx</code_location> watches the pending event queue, pushes log lines, and raises toast notifications with rival notes and standing shifts before clearing the queue.
-- <code_location>the-getaway/src/App.tsx</code_location> mounts both the mission manager and the new faction manager so HUD feedback persists regardless of scene.
-</pattern>
+### Pattern: UI & Feedback Loop
 
-<pattern name="Gameplay Gating">
-- <code_location>the-getaway/src/game/quests/dialogueSystem.ts</code_location> now honours `DialogueOption.factionRequirement`, blocking dialogue paths unless reputation or standing thresholds are met.
-- <code_location>the-getaway/src/game/interfaces/types.ts</code_location> extends `DialogueOption`, `MapArea`, and `Player` definitions with faction-aware metadata and requirements.
-- <code_location>the-getaway/src/components/GameController.tsx</code_location> evaluates `MapArea.factionRequirement` before changing scenes, logging `factionAccessDenied` when the player lacks the required standing or raw reputation.
-- <code_location>the-getaway/src/content/system/index.ts</code_location> supplies the new localisation strings so denial messages and toast summaries respect the active locale.
-</pattern>
+- `the-getaway/src/components/ui/FactionReputationPanel.tsx` renders the character-screen panel with colour-coded bars, standing badges, and effect summaries, pulling copy from `UIStrings.factionPanel` and selector data.
+- `the-getaway/src/components/system/FactionReputationManager.tsx` watches the pending event queue, pushes log lines, and raises toast notifications with rival notes and standing shifts before clearing the queue.
+- `the-getaway/src/App.tsx` mounts both the mission manager and the new faction manager so HUD feedback persists regardless of scene.
 
-</architecture_section>
+### Pattern: Gameplay Gating
+
+- `the-getaway/src/game/quests/dialogueSystem.ts` now honours `DialogueOption.factionRequirement`, blocking dialogue paths unless reputation or standing thresholds are met.
+- `the-getaway/src/game/interfaces/types.ts` extends `DialogueOption`, `MapArea`, and `Player` definitions with faction-aware metadata and requirements.
+- `the-getaway/src/components/GameController.tsx` evaluates `MapArea.factionRequirement` before changing scenes, logging `factionAccessDenied` when the player lacks the required standing or raw reputation.
+- `the-getaway/src/content/system/index.ts` supplies the new localisation strings so denial messages and toast summaries respect the active locale.
 
 #### `/the-getaway/src/game/quests`
 
@@ -717,23 +767,25 @@ Quest and dialogue systems:
   - Dialogue navigation and branching conversations
   - Helper functions for creating common dialogue patterns
 
-<architecture_section id="dialogue_tone_pipeline" category="narrative_systems">
-<design_principles>
+## Dialogue Tone Pipeline
+> Category: narrative_systems  
+> ID: dialogue_tone_pipeline
+
+### Design principles
+
 - Procedural dialogue lines stay anchored to the plot bible influences (dry wit, surreal melancholy) and remain locale agnostic by sampling from data-driven templates.
 - Persona, author, and scene vectors blend deterministically so regenerated lines are reproducible during tests or localisation review; fallback copy remains intact if tone configs are missing or explicitly opt out.
 - Motif counters live per persona to prevent repeating signature imagery in adjacent lines while decaying across conversations so motifs can resurface over longer arcs.
 - Role template resolution keeps systemic NPC chatter grounded in live world state (hazards, curfew levels, faction reputations) while sharing the same tone pipeline as handcrafted scenes.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/content/dialogueTone/index.ts</code_location> composes the tone library by merging author fingerprints, persona baselines, scene hints, micro-templates, and synonym palettes. Entries encode trait weighting, motif tags (`motif.streetlight`, `motif.compass`, `motif.rain_hum`, `motif.glowsticks`), and optional lexicon overrides.
-2. <code_location>the-getaway/src/game/narrative/dialogueTone/dialogueToneMixer.ts</code_location> blends author/persona/scene vectors with normalised weights, clamps conflicts (e.g., fragment preference on templates that forbid fragments), selects compatible templates, and samples palettes via seeded RNG so identical `(dialogueId, nodeId, seedKey)` inputs yield identical prose.
-3. <code_location>the-getaway/src/game/narrative/dialogueTone/dialogueToneManager.ts</code_location> wraps the mixer with caching and persona-scoped motif tracking. It merges dialogue-level defaults with node overrides, resolves seed keys, and memoises results so repeated React renders do not mutate motif state or reshuffle generated text.
-4. <code_location>the-getaway/src/game/narrative/dialogueTone/templateResolver.ts</code_location> loads role template families from <code_location>the-getaway/src/content/dialogueTemplates/roles/</code_location>, evaluates gating (faction standing, curfew level, blackout tier, hazard keywords, perk ownership), seeds a deterministic RNG, resolves tokens, and returns tone overrides plus resolved text for `[roleTemplate:role.key]` references.
-5. <code_location>the-getaway/src/components/ui/DialogueOverlay.tsx</code_location> detects role template markers, builds a `RoleDialogueContext` from Redux (player perks, faction reputation, world hazards/time of day), calls the resolver, merges tone overrides onto the node, and forwards the enriched request to the tone manager before rendering the generated line or role-specific fallback.
-6. Locale bundles such as <code_location>the-getaway/src/content/levels/level0/locales/en.ts</code_location> opt in node-by-node. Archivist Naila now routes intro/mission/complete beats through the mixer, blending the Vonnegut-Brautigan author fingerprint with the Amara persona while retaining translated fallback text.
-</technical_flow>
-</architecture_section>
+### Technical flow
+
+1. `the-getaway/src/content/dialogueTone/index.ts` composes the tone library by merging author fingerprints, persona baselines, scene hints, micro-templates, and synonym palettes. Entries encode trait weighting, motif tags (`motif.streetlight`, `motif.compass`, `motif.rain_hum`, `motif.glowsticks`), and optional lexicon overrides.
+2. `the-getaway/src/game/narrative/dialogueTone/dialogueToneMixer.ts` blends author/persona/scene vectors with normalised weights, clamps conflicts (e.g., fragment preference on templates that forbid fragments), selects compatible templates, and samples palettes via seeded RNG so identical `(dialogueId, nodeId, seedKey)` inputs yield identical prose.
+3. `the-getaway/src/game/narrative/dialogueTone/dialogueToneManager.ts` wraps the mixer with caching and persona-scoped motif tracking. It merges dialogue-level defaults with node overrides, resolves seed keys, and memoises results so repeated React renders do not mutate motif state or reshuffle generated text.
+4. `the-getaway/src/game/narrative/dialogueTone/templateResolver.ts` loads role template families from `the-getaway/src/content/dialogueTemplates/roles/`, evaluates gating (faction standing, curfew level, blackout tier, hazard keywords, perk ownership), seeds a deterministic RNG, resolves tokens, and returns tone overrides plus resolved text for `[roleTemplate:role.key]` references.
+5. `the-getaway/src/components/ui/DialogueOverlay.tsx` detects role template markers, builds a `RoleDialogueContext` from Redux (player perks, faction reputation, world hazards/time of day), calls the resolver, merges tone overrides onto the node, and forwards the enriched request to the tone manager before rendering the generated line or role-specific fallback.
+6. Locale bundles such as `the-getaway/src/content/levels/level0/locales/en.ts` opt in node-by-node. Archivist Naila now routes intro/mission/complete beats through the mixer, blending the Vonnegut-Brautigan author fingerprint with the Amara persona while retaining translated fallback text.
 
 #### `/the-getaway/src/game/inventory`
 
@@ -829,10 +881,10 @@ CSS and styling resources:
 
 `SkillTreePanel.tsx` exposes the progression UI for character skills:
 1. Renders Combat, Tech, Survival, and Social branches with an accessible tablist (arrow keys rotate branches, tab cycles controls).
-2. Surfaces available skill points, tag indicators, and branch blurbs sourced from <code_location>src/content/skills.ts</code_location>.
+2. Surfaces available skill points, tag indicators, and branch blurbs sourced from `src/content/skills.ts`.
 3. Provides increment/decrement controls that dispatch `allocateSkillPointToSkill` and `refundSkillPointFromSkill`, honoring tag bonuses (+10 per spend) vs. standard (+5) increments.
 4. Announces value changes via an `aria-live` region so screen readers receive updates like “Small Guns increased to 45, hit chance bonus now +22.5%”.
-5. Mirrors combat formulas by calling <code_location>src/game/systems/skillTree.ts</code_location> to show real-time effect summaries (hit chance, crit bonus, melee damage, explosive radius).
+5. Mirrors combat formulas by calling `src/game/systems/skillTree.ts` to show real-time effect summaries (hit chance, crit bonus, melee damage, explosive radius).
 
 ### Redux Store
 
@@ -843,22 +895,28 @@ The Redux store serves as the central state management system, with:
 - Local storage persistence (`store/index.ts`) so the command hub menu can resume prior sessions.
 - `worldSlice` coordinates map directories, time-of-day/curfew state, NPC/enemy collections, and exposes helpers (`updateNPC`, `updateEnemy`, `setMapArea`) used by controllers and scenes.
 
-<architecture_section id="data_flow" category="state_management">
+## Data Flow
+> Category: state_management  
+> ID: data_flow
+
 ## Data Flow
 
-<pattern name="Unidirectional Data Flow">
+### Pattern: Unidirectional Data Flow
+
 1. User interactions (keyboard, mouse) are captured by React or directly by Phaser
-2. Game logic in the <code_location>/src/game</code_location> modules processes these inputs
+2. Game logic in the `/src/game` modules processes these inputs
 3. State changes are dispatched to the Redux store
 4. UI components react to state changes and update accordingly
-5. The game rendering is handled by Phaser through the <code_location>GameCanvas</code_location> component
-</pattern>
-</architecture_section>
+5. The game rendering is handled by Phaser through the `GameCanvas` component
 
-<architecture_section id="implementation_patterns" category="code_standards">
+## Implementation Patterns
+> Category: code_standards  
+> ID: implementation_patterns
+
 ## Implementation Patterns
 
-<pattern name="Immutability">
+### Pattern: Immutability
+
 ### Immutability
 
 All state updates are performed immutably using object spreads and function returns rather than direct mutation. This enables:
@@ -866,7 +924,7 @@ All state updates are performed immutably using object spreads and function retu
 - Easy undo/redo functionality in the future
 - Better performance through reference equality checks
 
-Example from <code_location>combat/combatSystem.ts</code_location>:
+Example from `combat/combatSystem.ts`:
 ```typescript
 // Execute a move
 export const executeMove = (
@@ -881,18 +939,18 @@ export const executeMove = (
   };
 };
 ```
-</pattern>
 
-<pattern name="Type Safety">
+### Pattern: Type Safety
+
 ### Type Safety
 
 Strong typing is used throughout the codebase to prevent runtime errors and provide better developer experience:
 - All function parameters and return types are explicitly typed
 - Unions and intersections are used to model complex relationships
 - Generic types are employed where appropriate for reusability
-</pattern>
 
-<pattern name="Pure Functions">
+### Pattern: Pure Functions
+
 ### Pure Functions
 
 Most game logic is implemented as pure functions that:
@@ -900,9 +958,9 @@ Most game logic is implemented as pure functions that:
 - Don't rely on external state outside their parameters
 - Are easy to test in isolation
 - Can be composed to create more complex behaviors
-</pattern>
 
-<pattern name="React Component Structure">
+### Pattern: React Component Structure
+
 ### React Component Structure
 
 React components follow a consistent pattern:
@@ -910,55 +968,57 @@ React components follow a consistent pattern:
 - Props are explicitly typed
 - Side effects are managed with useEffect
 - Component responsibilities are clearly defined and focused
-</pattern>
-</architecture_section>
 
-<architecture_section id="player_stats_profile" category="character_progression">
-<pattern name="S.P.E.C.I.A.L Attribute Profile">
+## Player Stats Profile
+> Category: character_progression  
+> ID: player_stats_profile
+
+### Pattern: S.P.E.C.I.A.L Attribute Profile
+
 The player attribute system follows a Fallout-inspired S.P.E.C.I.A.L spread that flows from immutable definitions into UI rendering.
 
-<design_principles>
-- Keep stat metadata (abbreviations, min/max ranges, focus tags) centralised in <code_location>src/game/interfaces/playerStats.ts</code_location> so that gameplay systems and UI share a single source of truth.
-- Represent stat values inside Redux as plain numbers on the `skills` object (<code_location>playerSlice.ts</code_location>) to keep persistence lightweight while helper utilities compute presentation data on demand.
-- Treat locale-sensitive strings (labels, descriptions, focus badges) as content data in <code_location>src/content/ui/index.ts</code_location>; UI components never bake in raw text.
-</design_principles>
+### Design principles
 
-<technical_flow>
-1. <code_location>buildPlayerStatProfile()</code_location> converts the Redux `skills` payload into range-clamped entries with normalised percentages.
-2. <code_location>PlayerStatsPanel.tsx</code_location> derives labels/descriptions from the locale bundle, renders stat cards with progress bars, and surfaces focus tags for quick readability.
+- Keep stat metadata (abbreviations, min/max ranges, focus tags) centralised in `src/game/interfaces/playerStats.ts` so that gameplay systems and UI share a single source of truth.
+- Represent stat values inside Redux as plain numbers on the `skills` object (`playerSlice.ts`) to keep persistence lightweight while helper utilities compute presentation data on demand.
+- Treat locale-sensitive strings (labels, descriptions, focus badges) as content data in `src/content/ui/index.ts`; UI components never bake in raw text.
+
+### Technical flow
+
+1. `buildPlayerStatProfile()` converts the Redux `skills` payload into range-clamped entries with normalised percentages.
+2. `PlayerStatsPanel.tsx` derives labels/descriptions from the locale bundle, renders stat cards with progress bars, and surfaces focus tags for quick readability.
 3. Card gradients are keyed off stat focus values, giving the HUD a consistent neon aesthetic while keeping styling data-driven.
-</technical_flow>
 
-<code_location>src/game/interfaces/playerStats.ts</code_location>
-<code_location>src/components/ui/PlayerStatsPanel.tsx</code_location>
-<code_location>src/content/ui/index.ts</code_location>
-</pattern>
-</architecture_section>
+`src/game/interfaces/playerStats.ts`
+`src/components/ui/PlayerStatsPanel.tsx`
+`src/content/ui/index.ts`
 
-<architecture_section id="character_creation_flow" category="character_progression">
-<pattern name="Three-Step Character Creation Wizard">
-The onboarding flow lives entirely in <code_location>src/components/ui/CharacterCreationScreen.tsx</code_location> and stages player setup before any Redux mutations occur.
+## Character Creation Flow
+> Category: character_progression  
+> ID: character_creation_flow
 
-<design_principles>
+### Pattern: Three-Step Character Creation Wizard
+
+The onboarding flow lives entirely in `src/components/ui/CharacterCreationScreen.tsx` and stages player setup before any Redux mutations occur.
+
+### Design principles
+
 - Keep identity, attribute, and background selections in local React state until the user confirms, preventing half-built payloads from leaking into persistence.
-- Drive mechanical previews (derived stats, tooltips, warnings) off shared helpers like <code_location>src/game/systems/statCalculations.ts</code_location> so UI mirrors combat/dialogue math.
-- Source authorial metadata from <code_location>src/content/backgrounds.ts</code_location> to keep narrative blurbs, perks, and loadouts editable without touching component logic.
-</design_principles>
+- Drive mechanical previews (derived stats, tooltips, warnings) off shared helpers like `src/game/systems/statCalculations.ts` so UI mirrors combat/dialogue math.
+- Source authorial metadata from `src/content/backgrounds.ts` to keep narrative blurbs, perks, and loadouts editable without touching component logic.
 
-<technical_flow>
+### Technical flow
+
 1. Step 1 captures `name` + `visualPreset`; the wizard exposes randomize/cancel affordances and validates length + allowed glyphs.
 2. Step 2 manages SPECIAL values in local state, enforces the point-buy budget, and streams live derived stats via `calculateDerivedStats`.
 3. Step 3 renders background cards generated from `BACKGROUNDS`, tagging each with `data-testid` for deterministic tests and ARIA labels for accessibility.
-4. On confirmation the component emits `CharacterCreationData` with name, preset, attributes, and `backgroundId` to <code_location>src/App.tsx</code_location>.
-5. `App` dispatches `initializeCharacter` in <code_location>src/store/playerSlice.ts</code_location>, which clamps attributes, applies derived stats, seeds faction reputation, grants perks, and equips loadout items using inventory factories.
-</technical_flow>
+4. On confirmation the component emits `CharacterCreationData` with name, preset, attributes, and `backgroundId` to `src/App.tsx`.
+5. `App` dispatches `initializeCharacter` in `src/store/playerSlice.ts`, which clamps attributes, applies derived stats, seeds faction reputation, grants perks, and equips loadout items using inventory factories.
 
-<code_location>src/components/ui/CharacterCreationScreen.tsx</code_location>
-<code_location>src/content/backgrounds.ts</code_location>
-<code_location>src/store/playerSlice.ts</code_location>
-<code_location>src/__tests__/backgroundInitialization.test.ts</code_location>
-</pattern>
-</architecture_section>
+`src/components/ui/CharacterCreationScreen.tsx`
+`src/content/backgrounds.ts`
+`src/store/playerSlice.ts`
+`src/__tests__/backgroundInitialization.test.ts`
 
 ## Testing Strategy
 
@@ -1255,28 +1315,32 @@ The combat system is thoroughly tested with:
 
 This combat architecture provides a foundation for tactical gameplay and can be extended with additional features like different weapon types, special abilities, and more complex enemy behaviors.
 
-<architecture_section id="stamina_system" category="resource_management">
+## Stamina System
+> Category: resource_management  
+> ID: stamina_system
+
 ## Stamina System
 
-<design_principles>
+### Design principles
+
 - Keep action points focused on tactical turns; use stamina strictly for exploration pressure
 - Derive stamina capacity from Endurance so the attribute has visible moment-to-moment impact
 - Surface fatigue state prominently in UI so players know when to rest or change pace
 - Centralize stamina constants/helpers in a shared module to avoid magic numbers across slices and components
-</design_principles>
 
-<pattern name="Core Stamina Resource (MVP - Step 24.5)">
+### Pattern: Core Stamina Resource (MVP - Step 24.5)
+
 ### State Management
-- Extend `Player` interface in <code_location>src/game/interfaces/types.ts</code_location> with `stamina`, `maxStamina`, and `isExhausted` fields.
-- Redux logic in <code_location>src/store/playerSlice.ts</code_location>:
+- Extend `Player` interface in `src/game/interfaces/types.ts` with `stamina`, `maxStamina`, and `isExhausted` fields.
+- Redux logic in `src/store/playerSlice.ts`:
   - Helper utilities `ensureStaminaFields()` and `updateStaminaCapacity()` keep values clamped and ratios preserved.
   - Reducers `consumeStamina(amount)`, `regenerateStamina(amount?)`, and `updateMaxStamina()` manage the resource without tying it to combat turns.
   - `addExperience` and `levelUp` now restore stamina to full when a level is gained.
   - `spendAttributePoint('endurance')` and other attribute mutations recalculate stamina capacity alongside HP/AP.
-- Shared constants live in <code_location>src/game/systems/stamina.ts</code_location> (`STAMINA_COSTS`, `STAMINA_REGEN_OUT_OF_COMBAT`, thresholds, helpers).
+- Shared constants live in `src/game/systems/stamina.ts` (`STAMINA_COSTS`, `STAMINA_REGEN_OUT_OF_COMBAT`, thresholds, helpers).
 
 ### Overworld Integration
-- <code_location>src/components/GameController.tsx</code_location> introduces `attemptMovementStamina()`:
+- `src/components/GameController.tsx` introduces `attemptMovementStamina()`:
   - Shift+movement triggers a sprint cost (`STAMINA_COSTS.sprintTile`).
   - Encumbrance at ≥80% capacity adds a 1-point drain per tile.
   - Combat ignores stamina entirely—movement and attacks remain AP-driven.
@@ -1285,19 +1349,18 @@ This combat architecture provides a foundation for tactical gameplay and can be 
 - Additional interactions (lockpicking, climbing) will hook into the same reducers in future steps.
 
 ### Derived Stats
-- <code_location>src/game/systems/statCalculations.ts</code_location> exports `maxStamina` as part of `DerivedStats`, computed as `50 + endurance * 5`.
+- `src/game/systems/statCalculations.ts` exports `maxStamina` as part of `DerivedStats`, computed as `50 + endurance * 5`.
 - All attribute updates reuse this calculation so stamina capacity stays in sync with Endurance changes.
 
 ### UI Components
-- <code_location>src/components/ui/PlayerSummaryPanel.tsx</code_location> shows a green stamina bar with a "Fatigued" badge when `isExhausted` is true.
-- <code_location>src/components/ui/PlayerStatsPanel.tsx</code_location> lists "Max Stamina" alongside other derived metrics.
-- <code_location>src/components/ui/LevelUpPointAllocationPanel.tsx</code_location> highlights stamina gains when boosting Endurance (`Max Stamina: {player.maxStamina} (+5 per point)`).
-</pattern>
-</pattern>
+- `src/components/ui/PlayerSummaryPanel.tsx` shows a green stamina bar with a "Fatigued" badge when `isExhausted` is true.
+- `src/components/ui/PlayerStatsPanel.tsx` lists "Max Stamina" alongside other derived metrics.
+- `src/components/ui/LevelUpPointAllocationPanel.tsx` highlights stamina gains when boosting Endurance (`Max Stamina: {player.maxStamina} (+5 per point)`).
 
-<pattern name="Advanced Stamina Features (POST-MVP - Step 26.4)">
+### Pattern: Advanced Stamina Features (POST-MVP - Step 26.4)
+
 ### Time-of-Day Integration
-- <code_location>src/store/worldSlice.ts</code_location>:
+- `src/store/worldSlice.ts`:
   - Subscribe to `timeOfDay` changes (morning/day/evening/night)
   - Dispatch `applyTimeOfDayStaminaModifier()` on time transitions
   - Night (10PM-6AM): Multiply stamina costs by 1.25, reduce regen by 2
@@ -1312,22 +1375,22 @@ This combat architecture provides a foundation for tactical gameplay and can be 
     fatigueLevel: number; // 0-100, calculated from hoursAwake
   }
   ```
-- <code_location>src/store/playerSlice.ts</code_location>:
+- `src/store/playerSlice.ts`:
   - `incrementFatigue(hoursElapsed)`: Increase `hoursAwake`, recalculate `fatigueLevel`
   - After 8 hours: `maxStamina *= (1 - (hoursAwake - 8) * 0.1)`
   - `resetFatigue()`: Set `hoursAwake = 0`, restore `maxStamina` to base
 
 ### Environmental Effects
-- <code_location>src/game/world/grid.ts</code_location>:
+- `src/game/world/grid.ts`:
   - Extend `MapTile` interface with `staminaDrain?: number` and `staminaCostMultiplier?: number`
   - Industrial tiles: `staminaDrain: 2` (passive drain per turn)
   - Rough terrain tiles: `staminaCostMultiplier: 2` (double movement cost)
-- <code_location>src/store/worldSlice.ts</code_location>:
+- `src/store/worldSlice.ts`:
   - Track active weather events (heat wave, toxic fog) with stamina modifiers
   - Apply global stamina cost multipliers during active events
 
 ### Rest & Recovery
-- <code_location>src/game/world/rest.ts</code_location>:
+- `src/game/world/rest.ts`:
   ```typescript
   export interface RestOption {
     id: 'quickRest' | 'fullSleep' | 'catnap';
@@ -1339,21 +1402,21 @@ This combat architecture provides a foundation for tactical gameplay and can be 
 
   export function executeRest(option: RestOption, location: 'safehouse' | 'wilderness'): RestResult;
   ```
-- <code_location>src/components/ui/RestMenuPanel.tsx</code_location>:
+- `src/components/ui/RestMenuPanel.tsx`:
   - Display rest options with time cost and stamina preview
   - Show warning if using Sleeping Bag (encounter risk)
   - Update world time and trigger fatigue reset on completion
 
 ### Advanced Perks
-- <code_location>src/content/perks.ts</code_location>:
+- `src/content/perks.ts`:
   - Conditioning (reduces all stamina costs by skill level * 0.5%)
   - Second Wind (auto-restore 40 stamina when < 10, once per combat)
   - Battle Trance (ignore costs for 3 turns, then crash)
   - Iron Lungs (+25% stamina regen)
 - Runtime checks in combat system and perk activation handlers
-</pattern>
 
-<technical_flow>
+### Technical flow
+
 **MVP Flow (Step 24.5):**
 1. Player presses movement key or clicks a path.
 2. `GameController` determines sprint state (Shift) and encumbrance drain, then calls `consumeStamina` when costs exist.
@@ -1365,15 +1428,13 @@ This combat architecture provides a foundation for tactical gameplay and can be 
 1. Time-of-day or environmental events adjust cost multipliers before movement.
 2. Rest menu interactions call `regenerateStamina` with large values and reset exhaustion flags.
 3. Perks (Conditioning, Second Wind, Iron Lungs) modify costs or regen rates via shared helpers.
-</technical_flow>
 
-<code_location>src/game/systems/stamina.ts</code_location>
-<code_location>src/store/playerSlice.ts</code_location>
-<code_location>src/game/systems/statCalculations.ts</code_location>
-<code_location>src/components/ui/PlayerSummaryPanel.tsx</code_location>
-<code_location>src/components/ui/CircadianFatigueTracker.tsx</code_location>
-<code_location>src/game/world/rest.ts</code_location>
-</architecture_section>
+`src/game/systems/stamina.ts`
+`src/store/playerSlice.ts`
+`src/game/systems/statCalculations.ts`
+`src/components/ui/PlayerSummaryPanel.tsx`
+`src/components/ui/CircadianFatigueTracker.tsx`
+`src/game/world/rest.ts`
 
 ## Grid Rendering System
 
@@ -1428,24 +1489,28 @@ The grid system handles screen resizing through several mechanisms:
 
 This rendering approach ensures the game grid maintains consistent visual quality across different screen sizes and resizing operations, providing a solid foundation for the tactical grid-based gameplay.
 
-<architecture_section id="isometric_rendering" category="graphics">
+## Isometric Rendering
+> Category: graphics  
+> ID: isometric_rendering
+
 ## Isometric 2.5-D Graphics Guidelines
 
-<pattern name="2:1 Isometric Projection">
+### Pattern: 2:1 Isometric Projection
+
 ### Grid & Projection Fundamentals
-- Maintain a strict 2:1 isometric projection: every tile (e.g., 64×32 px) must be twice as wide as it is tall so that the diamond grid rendered by <code_location>MainScene.renderTile</code_location> stays aligned.
+- Maintain a strict 2:1 isometric projection: every tile (e.g., 64×32 px) must be twice as wide as it is tall so that the diamond grid rendered by `MainScene.renderTile` stays aligned.
 - Pixel art diagonals should follow a "two-step" pattern (two pixels across, one pixel down). Perfect 30° lines often look jagged; the two-step approach gives smoother edges while respecting the projection.
 - All map tiles, props, UI overlays, and collision footprints should honour this ratio to keep depth sorting predictable across the entire scene.
-</pattern>
 
-<design_principles>
+### Design principles
+
 ### Shading & Lighting
 - Shade objects with three tonal values: light on the top plane, mid-tone on the light-facing side, and dark on the shadow side. This sells the illusion of a single baked light source (we currently imply light from the upper-left).
 - When painting texture overlays (metal grain, fabric weave, decals), keep them on a separate layer and multiply blend them over the base shading so the underlying gradient remains visible.
 - Ensure every imported or custom-rendered sprite bakes in the same light direction and contrast so mixed asset packs still feel cohesive.
 
 ### Layering & Depth Perception
-- Depth ordering flows through `DepthManager` (`src/game/utils/depth.ts`). Register dynamic objects via `syncDepthPoint` so `computeDepth` + `DepthBias` constants decide stacking. Avoid calling `setDepth` manually—full bias bands live in `memory-bank/graphics.md`.
+- Depth ordering flows through `DepthManager` (`src/game/utils/depth.ts`). Register dynamic objects via `syncDepthPoint` so `computeDepth` + `DepthBias` constants decide stacking. Avoid calling `setDepth` manually—full bias bands live in [[03 Lore/Art Direction]].
 - Reserve overlay and diagnostic layers by using the exported `DepthLayers` constants (path previews, day/night tint, debug wedges) so systemic effects never fight entity ordering.
 - Reinforce depth by slightly scaling down props placed "farther back" (higher y) and reducing their saturation/brightness while increasing contrast on foreground items.
 - Use subtle atmospheric effects—soft tints, fog sprites, or gradient overlays—to imply distance without adding real 3-D geometry.
@@ -1456,22 +1521,22 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 - Introduce micro-details (cracks, chipped corners, moss streaks, grime passes) so repeated tiles still feel organic.
 
 ### Building Complex Objects from Primitives
-- Reuse the primitives already in <code_location>MainScene</code_location>: diamonds, prisms, ellipses, and accent polygons. Functions such as `renderTile` and `drawDoorTile` illustrate how to layer frames, panels, glows, and handles—treat them as blueprints for crates, consoles, or machinery.
+- Reuse the primitives already in `MainScene`: diamonds, prisms, ellipses, and accent polygons. Functions such as `renderTile` and `drawDoorTile` illustrate how to layer frames, panels, glows, and handles—treat them as blueprints for crates, consoles, or machinery.
 - Create helper functions (e.g., `drawCrate`, `drawBarrel`) that call a shared shading routine and use `adjustColor` to compute highlight/shadow variants automatically.
-</design_principles>
 
-<pattern name="Isometric Utilities & Factory">
+### Pattern: Isometric Utilities & Factory
+
 ## Reusable Isometric Utilities & Object Factory
 
 ### Coordinate & Metric Helpers
-- Extract `getIsoMetrics`, `calculatePixelPosition`, and `getDiamondPoints` from <code_location>MainScene.ts</code_location> into <code_location>src/game/utils/iso.ts</code_location>. Export them as `getIsoMetrics()`, `toPixel(gridX, gridY)`, and `getDiamondPoints(centerX, centerY, width, height)` so any scene or factory can place assets accurately on the diamond grid.
+- Extract `getIsoMetrics`, `calculatePixelPosition`, and `getDiamondPoints` from `MainScene.ts` into `src/game/utils/iso.ts`. Export them as `getIsoMetrics()`, `toPixel(gridX, gridY)`, and `getDiamondPoints(centerX, centerY, width, height)` so any scene or factory can place assets accurately on the diamond grid.
 - Import these helpers wherever you spawn props, draw UI outlines, or calculate interaction hotspots to guarantee alignment without duplicating math.
 
 ### Colour Manipulation
 - Move `adjustColor` into the same utility module. Document the convention: positive factors lighten towards white while negative factors darken towards black. Centralising the helper ensures shading stays consistent across tiles, props, and UI highlights.
 
 ### Object Factory Pattern
-- Implement an <code_location>IsoObjectFactory</code_location> (class or module) exposing methods like `createFloor(x, y, type)`, `createWall(x, y, palette)`, `createCrate(x, y)`, or `createTree(x, y)`.
+- Implement an `IsoObjectFactory` (class or module) exposing methods like `createFloor(x, y, type)`, `createWall(x, y, palette)`, `createCrate(x, y)`, or `createTree(x, y)`.
 - Each factory method should:
   - Convert grid coordinates to pixels with `toPixel`.
   - Generate base geometry via `getDiamondPoints` (or ellipses/polygons for round objects).
@@ -1479,7 +1544,8 @@ This rendering approach ensures the game grid maintains consistent visual qualit
   - Return a `Phaser.GameObjects.Graphics` or `Container` ready to add to a scene, leaving Redux state untouched.
 - Keep factory functions stateless and testable; they should only build visuals, not mutate gameplay state.
 
-<pattern name="AtlasLightingPipeline">
+### Pattern: AtlasLightingPipeline
+
 ### Atlas + Light2D Integration
 - Runtime assets now ship as texture atlases under `public/atlases/`. `BootScene.preload` calls `this.load.atlas('props', 'atlases/props.png', 'atlases/props.json')` and loads matching normal maps (e.g., `lamp_slim_a_n`) from `public/normals/`.
 - `IsoObjectFactory.createSpriteProp` instantiates atlas frames as `Phaser.GameObjects.Image` instances, records their grid coordinates, applies depth through `DepthManager`, and, when a normal map key is passed, switches the image to the `Light2D` pipeline and binds the normal map via `setNormalTexture`.
@@ -1487,30 +1553,29 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 - A demo prop (`lamp_slim_a`) renders inside the Level 0 **Waterfront Commons** interior; when lights are enabled a `PointLight` is positioned nearby so the indoor scene showcases normal-map orientation and depth sorting without disturbing exterior overlays.
 - When the renderer falls back to Canvas the toggle auto-disables (Redux + visual settings) and sprites stay on the default pipeline, preventing black-screen failures on unsupported GPUs.
 - Future props or tiles should follow the same path: add PNG + JSON frames to the atlas, load corresponding normal textures if runtime lighting is required, then spawn them through the factory so depth and lighting stay centralised.
-</pattern>
-</pattern>
-</architecture_section>
 
-<architecture_section id="paranoia_system" category="player_systems">
-<design_principles>
+## Paranoia System
+> Category: player_systems  
+> ID: paranoia_system
+
+### Design principles
+
 - Track psychological pressure in a dedicated slice so tactical systems, directors, and HUD components can observe paranoia without mutating the core player reducer.
 - Keep weights and tier thresholds data-driven (`src/content/paranoia/paranoiaConfig.ts`) to allow live tuning per district and difficulty pass.
 - Reuse existing world signals (camera runtime, guard alerts, heat aggregation, hazard matrix) inside the controller loop to avoid bespoke event buses.
 - Surface paranoia in the HUD/George UI and provide debug overlays so balancing sessions have immediate feedback on spikes, relief, and attribute multipliers.
-</design_principles>
 
-<technical_flow>
-1. <code_location>the-getaway/src/store/paranoiaSlice.ts</code_location> defines `ParanoiaState` (value, tier, respite windows, decay boosts, cooldown ledger) and exposes reducers for tick decay, stimuli deltas, relief application, and snapshot logging. The slice is registered and migrated alongside player/suspicion state in <code_location>the-getaway/src/store/index.ts</code_location>.
-2. <code_location>the-getaway/src/content/paranoia/paranoiaConfig.ts</code_location> holds tier thresholds, baseline decay, per-source weights, respite caps, and relief constants shared by UI copy, consumables, George actions, and the Street-Tension director.
-3. <code_location>the-getaway/src/game/systems/paranoia/stimuli.ts</code_location> evaluates per-frame stimuli (camera proximity/cone/alarm spikes, guard LOS/pursuit, regional heat, hazards, curfew/night drift, HP panic) and returns gain/loss breakdowns with SPECIAL multipliers and luck-based spike mitigation.
-4. <code_location>the-getaway/src/components/GameController.tsx</code_location> owns a paranoia runtime ref, calls `evaluateParanoiaStimuli` each RAF tick, dispatches `tickParanoia` (passive decay) and `applyParanoiaStimuli` (net deltas), adjusts guard perception via `resolveParanoiaDetectionMultiplier`, and listens for CalmTabs/Nicotine consumption to trigger relief and decay boosts.
-5. <code_location>the-getaway/src/components/ui/PlayerSummaryPanel.tsx</code_location> swaps the stamina bar for a paranoia meter (tier-coloured `AnimatedStatBar`) while still surfacing the fatigue badge when the player enters exhaustion.
-6. <code_location>the-getaway/src/components/ui/GeorgeAssistant.tsx</code_location> adds a cooldown-gated “Reassure” action that applies paranoia relief and a short respite window, with copy localised in the new `georgeStrings.reassure` block.
-7. <code_location>the-getaway/src/components/debug/ParanoiaInspector.tsx</code_location> renders dev-only telemetry for current value, tier, and the latest gain/loss/spike breakdown.
-8. <code_location>the-getaway/src/content/items/index.ts</code_location> introduces CalmTabs and Nicotine packs tagged with `paranoia:*`, letting the controller detect consumption without new Redux plumbing.
-9. <code_location>the-getaway/src/store/__tests__/paranoiaSlice.test.ts</code_location> locks in regression coverage for decay, respite capping, and relief cooldown behaviour.
-</technical_flow>
-</architecture_section>
+### Technical flow
+
+1. `the-getaway/src/store/paranoiaSlice.ts` defines `ParanoiaState` (value, tier, respite windows, decay boosts, cooldown ledger) and exposes reducers for tick decay, stimuli deltas, relief application, and snapshot logging. The slice is registered and migrated alongside player/suspicion state in `the-getaway/src/store/index.ts`.
+2. `the-getaway/src/content/paranoia/paranoiaConfig.ts` holds tier thresholds, baseline decay, per-source weights, respite caps, and relief constants shared by UI copy, consumables, George actions, and the Street-Tension director.
+3. `the-getaway/src/game/systems/paranoia/stimuli.ts` evaluates per-frame stimuli (camera proximity/cone/alarm spikes, guard LOS/pursuit, regional heat, hazards, curfew/night drift, HP panic) and returns gain/loss breakdowns with SPECIAL multipliers and luck-based spike mitigation.
+4. `the-getaway/src/components/GameController.tsx` owns a paranoia runtime ref, calls `evaluateParanoiaStimuli` each RAF tick, dispatches `tickParanoia` (passive decay) and `applyParanoiaStimuli` (net deltas), adjusts guard perception via `resolveParanoiaDetectionMultiplier`, and listens for CalmTabs/Nicotine consumption to trigger relief and decay boosts.
+5. `the-getaway/src/components/ui/PlayerSummaryPanel.tsx` swaps the stamina bar for a paranoia meter (tier-coloured `AnimatedStatBar`) while still surfacing the fatigue badge when the player enters exhaustion.
+6. `the-getaway/src/components/ui/GeorgeAssistant.tsx` adds a cooldown-gated “Reassure” action that applies paranoia relief and a short respite window, with copy localised in the new `georgeStrings.reassure` block.
+7. `the-getaway/src/components/debug/ParanoiaInspector.tsx` renders dev-only telemetry for current value, tier, and the latest gain/loss/spike breakdown.
+8. `the-getaway/src/content/items/index.ts` introduces CalmTabs and Nicotine packs tagged with `paranoia:*`, letting the controller detect consumption without new Redux plumbing.
+9. `the-getaway/src/store/__tests__/paranoiaSlice.test.ts` locks in regression coverage for decay, respite capping, and relief cooldown behaviour.
 
 ## Recommended Libraries & Tools
 - **phaser3-plugin-isometric** – Adds isometric projection helpers, isoSprites with x/y/z coordinates, and simple 3-D physics when you need vertical stacking or z-based collisions.
@@ -1528,53 +1593,57 @@ This rendering approach ensures the game grid maintains consistent visual qualit
 
 Record licence and attribution requirements for every imported pack in `/src/assets/README.md` (or a dedicated manifesto) before distribution.
 
-<architecture_section id="inventory_durability_system" category="inventory">
+## Inventory Durability System
+> Category: inventory  
+> ID: inventory_durability_system
+
 ##### Inventory Durability & Encumbrance System
 
-<design_principles>
+### Design principles
+
 - Centralise mutating logic inside Redux reducers so React components stay declarative.
 - Keep encumbrance as a derived signal: recompute from inventory weight rather than persisting redundant values.
 - Surface durability changes through combat events so HUD logging and reducers react without tight coupling.
-</design_principles>
 
-<technical_flow>
-1. <code_location>src/store/playerSlice.ts</code_location> adds `equipItem`, `unequipItem`, `repairItem`, `splitStack`, and `assignHotbarSlot` reducers. Each validates payloads, clones nested structures, and finishes by calling `refreshInventoryMetrics`.
-2. `refreshInventoryMetrics` recalculates carried weight, normalises the five-slot hotbar, and feeds those numbers to <code_location>src/game/inventory/encumbrance.ts</code_location>, which maps weight ratios to encumbrance levels, AP multipliers, and optional warning copy.
-3. <code_location>src/game/combat/combatSystem.ts</code_location> now multiplies weapon/armor effectiveness by durability modifiers, decays durability after every attack, and emits structured combat events (`weaponDamaged`, `armorBroken`, etc.).
-4. <code_location>src/components/GameController.tsx</code_location> watches encumbrance warnings and combat events, logging them through `logSlice` and halting queued movement when the player is immobile.
-5. <code_location>src/store/playerSlice.ts</code_location> also exposes `useInventoryItem`, consuming stackable consumables, updating health/AP/stat effects, normalising hotbar slots when items vanish, and rerunning `refreshInventoryMetrics` so UI panels stay in sync.
-6. Weapon/armor trait tags live in <code_location>src/game/systems/equipmentTags.ts</code_location>; two-handed locking and trait-aware combat adjustments (armor-piercing, hollow-point, silenced, energy) are enforced by <code_location>src/store/playerSlice.ts</code_location> and <code_location>src/game/combat/combatSystem.ts</code_location> to keep behaviour declarative.
-</technical_flow>
+### Technical flow
 
-<code_location>src/store/playerSlice.ts</code_location>
-<code_location>src/game/inventory/encumbrance.ts</code_location>
-<code_location>src/game/combat/combatSystem.ts</code_location>
-<code_location>src/components/GameController.tsx</code_location>
-<code_location>src/components/ui/PlayerInventoryPanel.tsx</code_location>
-</architecture_section>
+1. `src/store/playerSlice.ts` adds `equipItem`, `unequipItem`, `repairItem`, `splitStack`, and `assignHotbarSlot` reducers. Each validates payloads, clones nested structures, and finishes by calling `refreshInventoryMetrics`.
+2. `refreshInventoryMetrics` recalculates carried weight, normalises the five-slot hotbar, and feeds those numbers to `src/game/inventory/encumbrance.ts`, which maps weight ratios to encumbrance levels, AP multipliers, and optional warning copy.
+3. `src/game/combat/combatSystem.ts` now multiplies weapon/armor effectiveness by durability modifiers, decays durability after every attack, and emits structured combat events (`weaponDamaged`, `armorBroken`, etc.).
+4. `src/components/GameController.tsx` watches encumbrance warnings and combat events, logging them through `logSlice` and halting queued movement when the player is immobile.
+5. `src/store/playerSlice.ts` also exposes `useInventoryItem`, consuming stackable consumables, updating health/AP/stat effects, normalising hotbar slots when items vanish, and rerunning `refreshInventoryMetrics` so UI panels stay in sync.
+6. Weapon/armor trait tags live in `src/game/systems/equipmentTags.ts`; two-handed locking and trait-aware combat adjustments (armor-piercing, hollow-point, silenced, energy) are enforced by `src/store/playerSlice.ts` and `src/game/combat/combatSystem.ts` to keep behaviour declarative.
 
-<architecture_section id="inventory_item_catalog" category="inventory">
+`src/store/playerSlice.ts`
+`src/game/inventory/encumbrance.ts`
+`src/game/combat/combatSystem.ts`
+`src/components/GameController.tsx`
+`src/components/ui/PlayerInventoryPanel.tsx`
+
+## Inventory Item Catalog
+> Category: inventory  
+> ID: inventory_item_catalog
+
 ##### Item Catalog & Save Sanitization
 
-<design_principles>
+### Design principles
+
 - Centralise item blueprints so UI/content stay in sync with mechanics.
 - Instantiate fresh item instances for runtime state; never pass catalog prototypes directly into reducers.
 - Normalise legacy save payloads on load so durability, equip slots, and stack metadata conform to the latest expectations.
-</design_principles>
 
-<technical_flow>
-1. <code_location>src/content/items/index.ts</code_location> defines weapon/armor/consumable prototypes and exports `instantiateItem` to clone them with fresh UUIDs, overriding durability or stack counts when needed.
-2. Background loadouts now rely on catalog identifiers; <code_location>src/content/backgrounds.ts</code_location> stores `type="catalog"` entries so starting gear benefits from shared definitions (including the baseline repair kit consumable).
-3. <code_location>src/store/playerSlice.ts</code_location> introduces `sanitizeItemForPlayer` + `deepClone` utilities invoked from `setPlayerData` and `refreshInventoryMetrics` to backfill equip slots, clamp durability, and enforce stack metadata when hydrating persisted state.
+### Technical flow
+
+1. `src/content/items/index.ts` defines weapon/armor/consumable prototypes and exports `instantiateItem` to clone them with fresh UUIDs, overriding durability or stack counts when needed.
+2. Background loadouts now rely on catalog identifiers; `src/content/backgrounds.ts` stores `type="catalog"` entries so starting gear benefits from shared definitions (including the baseline repair kit consumable).
+3. `src/store/playerSlice.ts` introduces `sanitizeItemForPlayer` + `deepClone` utilities invoked from `setPlayerData` and `refreshInventoryMetrics` to backfill equip slots, clamp durability, and enforce stack metadata when hydrating persisted state.
 4. `repairItemInternal` synchronises `equipped` and `equippedSlots` after durability updates so perk/stack consumers read the same instance; repair consumables now resolve targets via `selectRepairTarget` and fold into the existing reducer pipeline.
-5. For localStorage migrations, <code_location>scripts/migrate-save-durability.mjs</code_location> rewrites JSON blobs, ensuring hotbars reach capacity, equip slots populate correctly, and weight/encumbrance fields recompute before deserialisation.
-</technical_flow>
+5. For localStorage migrations, `scripts/migrate-save-durability.mjs` rewrites JSON blobs, ensuring hotbars reach capacity, equip slots populate correctly, and weight/encumbrance fields recompute before deserialisation.
 
-<code_location>src/content/items/index.ts</code_location>
-<code_location>src/content/backgrounds.ts</code_location>
-<code_location>src/store/playerSlice.ts</code_location>
-<code_location>scripts/migrate-save-durability.mjs</code_location>
-</architecture_section>
+`src/content/items/index.ts`
+`src/content/backgrounds.ts`
+`src/store/playerSlice.ts`
+`scripts/migrate-save-durability.mjs`
 
 ## Integration with Current Architecture
 - **State & Rendering Separation** – Keep isometric drawing confined to Phaser scenes (`MainScene` and any descendant scenes). Game logic, AI, and progress live in Redux slices; scenes should only read from selectors and render the resulting state.
