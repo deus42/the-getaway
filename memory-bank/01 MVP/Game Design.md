@@ -19,6 +19,9 @@ This is the MVP design hub. Detailed systems are split into notes for Obsidian g
 - [[92 Character & Progression]]
 - [[93 Inventory (MVP)]]
 
+## MVP readiness
+- [[95 MVP Readiness Checklist]]
+
 ## Engineering references
 - [[04 Engineering/Tech Stack & Performance]]
 

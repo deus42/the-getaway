@@ -46,6 +46,10 @@ Key docs:
    - Ensure each `progress/<Linear-key>.md` starts with a “Session Reminders” block highlighting this per-ask logging requirement; glance at that block every time you open the file.  
    - If a progress file already exists when you start a new session, explicitly ask the requester whether to continue from the existing notes or start fresh; if they prefer a fresh start, rewrite the file (preserving only the new Ask Log) before planning.
 
+5. **Update MVP readiness after every task**
+   - After finishing any gameplay/UX task (feature or fix), update: `memory-bank/01 MVP/95 MVP Readiness Checklist.md`.
+   - In your handoff message, always include a short “MVP Readiness Summary” snippet (what got checked/what risk changed).
+
 Do not begin coding until this checklist is complete.
 
 ## 3. Implementation Workflow

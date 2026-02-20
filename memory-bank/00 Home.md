@@ -8,6 +8,7 @@ vault: getaway-memory-bank
 ## Now (MVP)
 - [[01 MVP/00 Index|MVP Index]]
 - [[01 MVP/Game Design|Game Design (MVP source of truth)]]
+- [[01 MVP/95 MVP Readiness Checklist|MVP Readiness Checklist]]
 - [[04 Engineering/Roadmap|Roadmap / Progress]]
 
 ## Reference

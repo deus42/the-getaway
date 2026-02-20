@@ -24,6 +24,9 @@ Authoritative: [[Game Design]]
 - [[92 Character & Progression]]
 - [[93 Inventory (MVP)]]
 
+## MVP readiness
+- [[95 MVP Readiness Checklist]]
+
 ## What counts as MVP
 - Anything not explicitly marked Post-MVP / Deferred in the docs.
 - Level 0 vertical slice: day (dialogue/quests) ↔ night (stealth) + paranoia as pressure.
