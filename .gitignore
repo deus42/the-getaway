@@ -91,6 +91,9 @@ $RECYCLE.BIN/
 # Cursor
 .cursor/ 
 
+# Obsidian
+.obsidian/
+
 # Context Portal output
 .portal/
 context_portal/
