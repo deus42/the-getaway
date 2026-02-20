@@ -95,3 +95,7 @@ $RECYCLE.BIN/
 .portal/
 context_portal/
 .conport-venv/
+
+# Local automation and capture artifacts
+.playwright-cli/
+output/

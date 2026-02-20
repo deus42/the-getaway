@@ -28,30 +28,29 @@ interface EntityBaseVisualState {
   haloAlpha: number;
   beaconAlpha: number;
   nameAlpha: number;
+  nameScaleX: number;
+  nameScaleY: number;
   healthAlpha: number;
   indicatorAlpha: number;
 }
 
 const ENTITY_OVERLAP_PADDING = 20;
+const NAMEPLATE_MIN_SCALE = 1.06;
 
 export class OcclusionReadabilityController {
-  private readonly baseMassAlpha = new WeakMap<Phaser.GameObjects.Container, number>();
-  private readonly baseEntityVisuals = new WeakMap<Phaser.GameObjects.Container, EntityBaseVisualState>();
+  private readonly previousFrameMassAlpha = new WeakMap<Phaser.GameObjects.Container, number>();
+  private readonly previousFrameEntityVisuals = new WeakMap<Phaser.GameObjects.Container, EntityBaseVisualState>();
 
   public applyOcclusionReadability(state: OcclusionReadabilityState): void {
     const fadeFloor = Phaser.Math.Clamp(state.occlusionFadeFloor, 0.2, 0.9);
     const readabilityBoost = Phaser.Math.Clamp(0.14 + state.emissiveIntensity * 0.3, 0.12, 0.5);
 
-    state.masses.forEach((mass) => {
-      if (!this.baseMassAlpha.has(mass.container)) {
-        this.baseMassAlpha.set(mass.container, mass.container.alpha);
-      }
-      const base = this.baseMassAlpha.get(mass.container) ?? 1;
-      mass.container.setAlpha(base);
-    });
+    this.restorePreviousFrameState(state);
 
-    state.entities.forEach((entity) => {
-      this.restoreEntityBaseState(entity);
+    state.masses.forEach((mass) => {
+      if (!this.previousFrameMassAlpha.has(mass.container)) {
+        this.previousFrameMassAlpha.set(mass.container, mass.container.alpha);
+      }
     });
 
     state.masses.forEach((mass) => {
@@ -67,17 +66,35 @@ export class OcclusionReadabilityController {
         return;
       }
 
-      const baseMassAlpha = this.baseMassAlpha.get(mass.container) ?? 1;
-      mass.container.setAlpha(Math.min(baseMassAlpha, fadeFloor));
+      if (!this.previousFrameMassAlpha.has(mass.container)) {
+        this.previousFrameMassAlpha.set(mass.container, mass.container.alpha);
+      }
+      mass.container.setAlpha(Math.min(mass.container.alpha, fadeFloor));
 
       overlapping.forEach((entity) => {
+        const container = entity.token.container;
+        if (!this.previousFrameEntityVisuals.has(container)) {
+          this.previousFrameEntityVisuals.set(container, {
+            haloAlpha: entity.token.halo.alpha,
+            beaconAlpha: entity.token.beacon.alpha,
+            nameAlpha: entity.nameLabel?.alpha ?? 1,
+            nameScaleX: entity.nameLabel?.scaleX ?? 1,
+            nameScaleY: entity.nameLabel?.scaleY ?? 1,
+            healthAlpha: entity.healthBar?.alpha ?? 1,
+            indicatorAlpha: entity.indicator?.alpha ?? 1,
+          });
+        }
+
         const token = entity.token;
         token.halo.setAlpha(Math.max(token.halo.alpha, 0.28 + readabilityBoost));
         token.beacon.setAlpha(Math.max(token.beacon.alpha, 0.36 + readabilityBoost * 0.75));
 
         if (entity.nameLabel) {
           entity.nameLabel.setAlpha(1);
-          entity.nameLabel.setScale(1.08);
+          entity.nameLabel.setScale(
+            Math.max(entity.nameLabel.scaleX, NAMEPLATE_MIN_SCALE),
+            Math.max(entity.nameLabel.scaleY, NAMEPLATE_MIN_SCALE)
+          );
         }
 
         if (entity.healthBar && entity.healthBar.visible) {
@@ -91,19 +108,23 @@ export class OcclusionReadabilityController {
     });
   }
 
+  private restorePreviousFrameState(state: OcclusionReadabilityState): void {
+    state.masses.forEach((mass) => {
+      const previousAlpha = this.previousFrameMassAlpha.get(mass.container);
+      if (typeof previousAlpha === 'number') {
+        mass.container.setAlpha(previousAlpha);
+      }
+      this.previousFrameMassAlpha.delete(mass.container);
+    });
+
+    state.entities.forEach((entity) => {
+      this.restoreEntityBaseState(entity);
+    });
+  }
+
   private restoreEntityBaseState(entity: OcclusionEntityHandle): void {
     const container = entity.token.container;
-    if (!this.baseEntityVisuals.has(container)) {
-      this.baseEntityVisuals.set(container, {
-        haloAlpha: entity.token.halo.alpha,
-        beaconAlpha: entity.token.beacon.alpha,
-        nameAlpha: entity.nameLabel?.alpha ?? 1,
-        healthAlpha: entity.healthBar?.alpha ?? 1,
-        indicatorAlpha: entity.indicator?.alpha ?? 1,
-      });
-    }
-
-    const base = this.baseEntityVisuals.get(container);
+    const base = this.previousFrameEntityVisuals.get(container);
     if (!base) {
       return;
     }
@@ -113,7 +134,7 @@ export class OcclusionReadabilityController {
 
     if (entity.nameLabel) {
       entity.nameLabel.setAlpha(base.nameAlpha);
-      entity.nameLabel.setScale(1);
+      entity.nameLabel.setScale(base.nameScaleX, base.nameScaleY);
     }
 
     if (entity.healthBar) {
@@ -123,5 +144,7 @@ export class OcclusionReadabilityController {
     if (entity.indicator) {
       entity.indicator.setAlpha(base.indicatorAlpha);
     }
+
+    this.previousFrameEntityVisuals.delete(container);
   }
 }

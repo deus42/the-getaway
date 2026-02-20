@@ -148,6 +148,7 @@
       <item>Day/night overlay color now inherits the same profile output so atmosphere and visibility tint stay coherent during time transitions.</item>
       <item>Tile wet-surface streaks are rendered only on walkable road-like floor diamonds and clamped by preset wet-reflection budget.</item>
       <item>Occlusion readability pass never changes collision/pathing; it only adjusts visual alpha/halo emphasis around dense massing overlap.</item>
+      <item>`OcclusionReadabilityController` restores previous-frame alpha/scale baselines before applying overlap boosts so temporary readability emphasis never becomes a sticky visual mutation.</item>
     </atmosphere_grammar>
     <fallback_policy>
       <item>Canvas and WebGL both render the vector kit; no sprite dependency is required for baseline readability.</item>
