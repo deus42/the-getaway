@@ -728,7 +728,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
     },
     {
       id: 'block_2_1',
-      name: 'Житловий ряд',
+      name: 'Емпайр-Стейт-Білдінг',
       footprint: { from: { x: 4, y: 22 }, to: { x: 23, y: 43 } },
       door: { x: 13, y: 44 },
       interior: { width: 18, height: 14 },

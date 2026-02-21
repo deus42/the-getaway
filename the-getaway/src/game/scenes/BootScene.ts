@@ -10,6 +10,7 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     this.load.atlas('props', 'atlases/props.png', 'atlases/props.json');
+    this.load.atlas('esb', 'atlases/esb_iso_trim_pad.png', 'atlases/esb_iso_trim_pad.json');
     this.load.image('lamp_slim_a_n', 'normals/lamp_slim_a_n.png');
   }
 

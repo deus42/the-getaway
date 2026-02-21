@@ -1301,6 +1301,24 @@ export class MainScene extends Phaser.Scene {
 
       const districtHeightBoost = profile.district === 'downtown' ? 0.78 : 0.7;
       const massingHeight = tileHeight * Math.max(0.58, profile.massingHeight * districtHeightBoost);
+
+      // For landmark sprite overrides, use actual rendered bounds so occlusion readability works.
+      if (building.id === 'block_2_1') {
+        const rawBounds = mass.getBounds();
+        const pad = 18;
+        this.buildingMassingEntries.push({
+          id: building.id,
+          container: mass,
+          bounds: new Phaser.Geom.Rectangle(
+            rawBounds.x - pad,
+            rawBounds.y - pad,
+            Math.max(1, rawBounds.width + pad * 2),
+            Math.max(1, rawBounds.height + pad * 2)
+          ),
+        });
+        return;
+      }
+
       const boundsMinX = Math.min(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
       const boundsMaxX = Math.max(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
       const boundsMinY = Math.min(

@@ -698,7 +698,7 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
     {
       id: 'block_2_1',
-      name: 'Residency Row',
+      name: 'Empire State Building',
       footprint: { from: { x: 4, y: 22 }, to: { x: 23, y: 43 } },
       door: { x: 13, y: 44 },
       interior: { width: 18, height: 14 },

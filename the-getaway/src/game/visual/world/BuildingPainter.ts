@@ -25,20 +25,43 @@ interface DiamondPoints {
   left: Phaser.Geom.Point;
 }
 
+const ESB_BUILDING_ID = 'block_2_1';
+const ESB_ATLAS_KEY = 'esb';
+const ESB_FRAME_KEY = 'esb_iso';
+
 export class BuildingPainter {
   constructor(private readonly scene: Phaser.Scene, private readonly theme: VisualTheme) {}
 
   public createMassing(
-    _building: MapBuildingDefinition,
+    building: MapBuildingDefinition,
     profile: BuildingVisualProfile,
     metrics: BuildingMassingMetrics
   ): Phaser.GameObjects.Container {
     const container = this.scene.add.container(metrics.center.x, metrics.center.y);
+
+    const base = this.toLocal(metrics.center, metrics.footprint);
+
+    // PoC landmark override: swap one Level 0 building slot for an ESB sprite.
+    if (building.id === ESB_BUILDING_ID && this.scene.textures.exists(ESB_ATLAS_KEY)) {
+      const sprite = this.scene.add.image(base.bottom.x, base.bottom.y, ESB_ATLAS_KEY, ESB_FRAME_KEY);
+      sprite.setOrigin(0.5, 1);
+
+      // Scale the sprite to feel like a landmark but still sit within the Level 0 composition.
+      // (Height-based scaling is more stable than footprint-width scaling because Level 0 blocks can be very wide.)
+      const targetHeight = metrics.tileHeight * (14 + profile.massingHeight * 2.2);
+      sprite.setScale(targetHeight / Math.max(1, sprite.height));
+
+      // Slight alpha lift so it reads through atmospheric overlays.
+      sprite.setAlpha(0.98);
+
+      container.add(sprite);
+      return container;
+    }
+
     const shadowLayer = this.scene.add.graphics();
     const bodyLayer = this.scene.add.graphics();
     const detailLayer = this.scene.add.graphics();
 
-    const base = this.toLocal(metrics.center, metrics.footprint);
     const span = metrics.widthTiles + metrics.depthTiles;
     const districtHeightBoost = profile.district === 'downtown' ? 0.78 : 0.7;
     const massingHeight = metrics.tileHeight * Math.max(0.58, profile.massingHeight * districtHeightBoost);
