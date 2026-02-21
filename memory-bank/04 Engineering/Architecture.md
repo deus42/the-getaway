@@ -110,6 +110,30 @@ flowchart LR
 8. `the-getaway/src/game/visual/entities/CharacterRigFactory.ts` supplies silhouette-v2 procedural rigs with role-specific overlays and motion cues integrated into player/NPC/enemy update flows in `MainScene` while preserving nameplates, health bars, and combat indicators.
 9. `the-getaway/src/components/GameCanvas.tsx`, `the-getaway/src/game/settings/visualSettings.ts`, and `the-getaway/src/store/settingsSlice.ts` coordinate smooth-vector renderer defaults and quality-preset-aware FX budgets (`performance | balanced | cinematic`), including shared fog/emissive/wet-reflection/occlusion caps consumed by scene render systems.
 
+## MainScene Module Runtime
+> Category: scene_architecture  
+> ID: main_scene_module_runtime
+
+### Design principles
+
+- Keep `MainScene` focused on orchestration and compatibility, while extracted modules own bounded responsibilities.
+- Standardize scene lifecycle hooks (`init`, `onCreate`, `onStateChange`, `onResize`, `onUpdate`, `onShutdown`) so future extraction can proceed incrementally without behavior drift.
+- Centralize listener/resource cleanup through a shared disposable primitive to reduce leak risk during scene restarts and hot state changes.
+
+### Technical flow
+
+1. `the-getaway/src/game/scenes/main/SceneModule.ts` defines the lifecycle contract consumed by all scene modules.
+2. `the-getaway/src/game/scenes/main/SceneContext.ts` builds module context (`scene`, typed `getState`/`dispatch`, listener bridge helpers, shared disposables).
+3. `the-getaway/src/game/runtime/resources/DisposableBag.ts` provides LIFO teardown, idempotent `dispose()`, and immediate execution for post-dispose registrations.
+4. `the-getaway/src/game/scenes/main/SceneModuleRegistry.ts` registers modules in deterministic order and fans out create/state/resize/update/shutdown events (reverse shutdown order).
+5. `the-getaway/src/game/scenes/MainScene.ts` initializes registry + context once per scene create, forwards lifecycle events to the registry, and keeps public scene APIs stable while delegating extracted behavior.
+6. Initial extraction modules live in `the-getaway/src/game/scenes/main/modules/`:
+   - `DayNightOverlayModule.ts` (overlay init/resize/update/zoom application)
+   - `MinimapBridgeModule.ts` (minimap init/shutdown + viewport updates)
+   - `InputModule.ts` (tile click, path preview, pickup sync listener wiring)
+   - `CameraModule.ts` (camera follow/bounds/zoom/resize orchestration)
+7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
+
 ## Narrative Resource Hierarchy
 > Category: content_pipeline  
 > ID: narrative_resource_hierarchy

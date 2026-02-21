@@ -1,19 +1,12 @@
 import Phaser from 'phaser';
 import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel, Item, SurveillanceZoneState } from '../interfaces/types';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
-import { store } from '../../store';
+import { RootState, store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
 import { applySuspicionDecay } from '../../store/suspicionSlice';
 import { setLightsEnabled } from '../../store/settingsSlice';
-import { DEFAULT_DAY_NIGHT_CONFIG, getDayNightOverlayColor } from '../world/dayNightCycle';
 import {
-  TILE_CLICK_EVENT,
-  PATH_PREVIEW_EVENT,
   PLAYER_SCREEN_POSITION_EVENT,
-  PICKUP_STATE_SYNC_EVENT,
-  PickupStateSyncDetail,
-  PathPreviewDetail,
-  ViewportUpdateDetail,
   PlayerScreenPositionDetail,
 } from '../events';
 import { IsoObjectFactory, CharacterToken } from '../utils/IsoObjectFactory';
@@ -25,9 +18,7 @@ import {
   IsoMetrics,
 } from '../utils/iso';
 import { getVisionConeTiles } from '../combat/perception';
-import { resolveCardinalDirection } from '../combat/combatSystem';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
-import { miniMapService } from '../services/miniMapService';
 import CameraSprite from '../objects/CameraSprite';
 import { DepthManager, DepthBias, DepthLayers, computeDepth, syncDepthPoint } from '../utils/depth';
 import type { DepthResolvableGameObject } from '../utils/depth';
@@ -50,15 +41,13 @@ import {
   type VisualFxSettings,
 } from '../settings/visualSettings';
 import { resolvePickupObjectName } from '../utils/itemDisplay';
-
-const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
-const MIN_CAMERA_ZOOM = 0.6;
-const MAX_CAMERA_ZOOM = 2.3;
-const CAMERA_BOUND_PADDING_TILES = 6;
-const CAMERA_FOLLOW_LERP = 0.08;
-const COMBAT_ZOOM_MULTIPLIER = 1.28;
-const COMBAT_ZOOM_MIN_DELTA = 0.22;
-const CAMERA_ZOOM_TWEEN_MS = 340;
+import { DisposableBag } from '../runtime/resources/DisposableBag';
+import { createSceneContext } from './main/SceneContext';
+import { SceneModuleRegistry } from './main/SceneModuleRegistry';
+import { CameraModule } from './main/modules/CameraModule';
+import { DayNightOverlayModule } from './main/modules/DayNightOverlayModule';
+import { InputModule } from './main/modules/InputModule';
+import { MinimapBridgeModule } from './main/modules/MinimapBridgeModule';
 
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
@@ -105,7 +94,7 @@ export class MainScene extends Phaser.Scene {
   private buildingMassingEntries: BuildingMassingEntry[] = [];
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
-  private dayNightOverlay!: Phaser.GameObjects.Rectangle;
+  public dayNightOverlay!: Phaser.GameObjects.Rectangle;
   private curfewActive = false;
   private currentGameTime = 0;
   private timeDispatchAccumulator = 0;
@@ -120,45 +109,52 @@ export class MainScene extends Phaser.Scene {
   private disposeVisualSettings?: () => void;
   private disposeLightingSettings?: () => void;
   private lastPlayerScreenDetail?: PlayerScreenPositionDetail;
-  private baselineCameraZoom = 1;
-  private cameraZoomTween: Phaser.Tweens.Tween | null = null;
+  public baselineCameraZoom = 1;
+  public cameraZoomTween: Phaser.Tweens.Tween | null = null;
   private lightsFeatureEnabled = false;
   private demoLampGrid?: Position;
   private demoPointLight?: Phaser.GameObjects.PointLight;
   private readonly lightingAmbientColor = 0x0f172a;
   private lastItemMarkerSignature = '';
-  private hasInitialZoomApplied = false;
-  private userAdjustedZoom = false;
-  private pendingCameraRestore = false;
-  private preCombatZoom: number | null = null;
-  private preCombatUserAdjusted = false;
-  private pendingRestoreUserAdjusted: boolean | null = null;
-  private handlePickupStateSync = (event: Event) => {
-    const customEvent = event as CustomEvent<PickupStateSyncDetail>;
-    if (!this.sys.isActive() || !this.currentMapArea) {
-      return;
-    }
-
-    if (customEvent.detail?.areaId && customEvent.detail.areaId !== this.currentMapArea.id) {
-      return;
-    }
-
-    this.currentMapArea = store.getState().world.currentMapArea;
-    this.renderStaticProps();
-  };
-  private handleVisibilityChange = () => {
-    if (!this.sys.isActive()) return;
-    if (document.visibilityState === 'visible') {
-      this.resizeDayNightOverlay();
-      this.updateDayNightOverlay();
-      if (this.dayNightOverlay) {
-        this.dayNightOverlay.setVisible(true);
-      }
-    }
-  };
+  public hasInitialZoomApplied = false;
+  public userAdjustedZoom = false;
+  public pendingCameraRestore = false;
+  public preCombatZoom: number | null = null;
+  public preCombatUserAdjusted = false;
+  public pendingRestoreUserAdjusted: boolean | null = null;
+  private moduleDisposables = new DisposableBag();
+  private sceneModuleRegistry?: SceneModuleRegistry<MainScene>;
+  private readonly dayNightOverlayModule = new DayNightOverlayModule(this);
+  private readonly minimapBridgeModule = new MinimapBridgeModule(this);
+  private readonly inputModule = new InputModule(this);
+  private readonly cameraModule = new CameraModule(this);
+  private lastStoreSnapshot: RootState = store.getState();
 
   constructor() {
     super({ key: 'MainScene' });
+  }
+
+  private initializeSceneModules(): void {
+    this.moduleDisposables.dispose();
+    this.moduleDisposables = new DisposableBag();
+
+    const context = createSceneContext(
+      this,
+      {
+        getState: () => store.getState(),
+        dispatch: store.dispatch,
+      },
+      this.moduleDisposables
+    );
+
+    this.sceneModuleRegistry = new SceneModuleRegistry(context);
+    this.sceneModuleRegistry.register(this.dayNightOverlayModule);
+    this.sceneModuleRegistry.register(this.minimapBridgeModule);
+    this.sceneModuleRegistry.register(this.inputModule);
+    this.sceneModuleRegistry.register(this.cameraModule);
+    this.sceneModuleRegistry.onCreate();
+    context.listenScale('resize', this.handleResize, this);
+    this.lastStoreSnapshot = store.getState();
   }
 
   private ensureVisualPipeline(): void {
@@ -289,18 +285,7 @@ export class MainScene extends Phaser.Scene {
     this.initializeDayNightOverlay();
     this.updateDayNightOverlay();
     this.curfewActive = worldState.curfewActive;
-
-    // Listen for resize events
-    this.scale.on('resize', this.handleResize, this);
-    document.addEventListener('visibilitychange', this.handleVisibilityChange);
-    window.addEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
-    window.addEventListener(PICKUP_STATE_SYNC_EVENT, this.handlePickupStateSync as EventListener);
-    miniMapService.initialize(this);
-
-    if (this.input) {
-      this.input.on('pointerdown', this.handlePointerDown, this);
-      this.input.on('wheel', this.handleWheel);
-    }
+    this.initializeSceneModules();
     
     // Setup player token
     if (this.playerInitialPosition) {
@@ -358,17 +343,15 @@ export class MainScene extends Phaser.Scene {
   }
 
   private cleanupScene(): void {
-    if (this.input) {
-      this.input.off('pointerdown', this.handlePointerDown, this);
-      this.input.off('wheel', this.handleWheel);
-    }
-    this.scale.off('resize', this.handleResize, this);
-    window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
-    window.removeEventListener(PICKUP_STATE_SYNC_EVENT, this.handlePickupStateSync as EventListener);
-    miniMapService.shutdown();
-    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
+    this.sceneModuleRegistry?.onShutdown();
+    this.sceneModuleRegistry = undefined;
+    this.moduleDisposables.dispose();
     this.stopCameraZoomTween();
 
+    if (this.disposeVisualSettings) {
+      this.disposeVisualSettings();
+      this.disposeVisualSettings = undefined;
+    }
     if (this.disposeLightingSettings) {
       this.disposeLightingSettings();
       this.disposeLightingSettings = undefined;
@@ -406,6 +389,9 @@ export class MainScene extends Phaser.Scene {
     if (!this.sys.isActive() || !this.currentMapArea) return;
 
     const newState = store.getState();
+    const previousState = this.lastStoreSnapshot;
+    this.sceneModuleRegistry?.onStateChange(previousState, newState);
+    this.lastStoreSnapshot = newState;
     const playerState = newState.player.data;
     const worldState = newState.world;
     const currentEnemies = worldState.currentMapArea.entities.enemies;
@@ -803,28 +789,11 @@ export class MainScene extends Phaser.Scene {
   }
 
   private enablePlayerCameraFollow(): void {
-    if (!this.playerToken || !this.sys.isActive()) {
-      return;
-    }
-
-    const camera = this.cameras.main;
-    if (!this.isCameraFollowingPlayer) {
-      camera.startFollow(this.playerToken.container, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
-    }
-    camera.setDeadzone(Math.max(120, this.scale.width * 0.22), Math.max(160, this.scale.height * 0.28));
-    this.isCameraFollowingPlayer = true;
-    this.recenterCameraOnPlayer();
-    this.dispatchPlayerScreenPosition();
+    this.cameraModule.enablePlayerCameraFollow();
   }
 
-  private recenterCameraOnPlayer(): void {
-    if (!this.playerToken || !this.sys.isActive()) {
-      return;
-    }
-
-    const camera = this.cameras.main;
-    camera.centerOn(this.playerToken.container.x, this.playerToken.container.y);
-    this.dispatchPlayerScreenPosition();
+  public recenterCameraOnPlayer(): void {
+    this.cameraModule.recenterCameraOnPlayer();
   }
 
   private updateEnemies(enemies: Enemy[]): void {
@@ -1156,14 +1125,8 @@ export class MainScene extends Phaser.Scene {
   }
 
   public shutdown(): void {
-    if (this.disposeVisualSettings) {
-      this.disposeVisualSettings();
-      this.disposeVisualSettings = undefined;
-    }
-    if (this.unsubscribe) {
-      this.unsubscribe();
-      this.unsubscribe = null;
-    }
+    this.cleanupScene();
+
     this.enemySprites.forEach((data) => {
       data.token.container.destroy(true);
       data.healthBar.destroy();
@@ -1180,6 +1143,7 @@ export class MainScene extends Phaser.Scene {
     });
     this.npcSprites.clear();
     this.destroyCameraSprites();
+    this.stopCameraZoomTween();
     this.buildingLabels.forEach((label) => label.destroy(true));
     this.buildingLabels = [];
     this.buildingMassings.forEach((mass) => mass.destroy(true));
@@ -1196,12 +1160,6 @@ export class MainScene extends Phaser.Scene {
       this.playerNameLabel = undefined;
     }
     this.destroyPlayerVitalsIndicator();
-    this.scale.off('resize', this.handleResize, this);
-    document.removeEventListener('visibilitychange', this.handleVisibilityChange);
-    window.removeEventListener(PATH_PREVIEW_EVENT, this.handlePathPreview as EventListener);
-    if (this.input) {
-      this.input.off('pointerdown', this.handlePointerDown, this);
-    }
   }
 
   private drawMap(tiles: MapTile[][]) {
@@ -1465,7 +1423,7 @@ export class MainScene extends Phaser.Scene {
     return computeIsoMetrics(this.tileSize);
   }
 
-  private getDiamondPoints(
+  public getDiamondPoints(
     centerX: number,
     centerY: number,
     width: number,
@@ -1474,7 +1432,7 @@ export class MainScene extends Phaser.Scene {
     return isoDiamondPoints(centerX, centerY, width, height).map((point) => new Phaser.Geom.Point(point.x, point.y));
   }
 
-  private worldToGrid(worldX: number, worldY: number): Position | null {
+  public worldToGrid(worldX: number, worldY: number): Position | null {
     const { halfTileWidth, halfTileHeight } = this.getIsoMetrics();
 
     const relativeX = worldX - this.isoOriginX;
@@ -1493,7 +1451,7 @@ export class MainScene extends Phaser.Scene {
     return { x: roundedX, y: roundedY };
   }
 
-  private worldToGridContinuous(worldX: number, worldY: number): { x: number; y: number } | null {
+  public worldToGridContinuous(worldX: number, worldY: number): { x: number; y: number } | null {
     const { halfTileWidth, halfTileHeight } = this.getIsoMetrics();
 
     const relativeX = worldX - this.isoOriginX;
@@ -1509,375 +1467,24 @@ export class MainScene extends Phaser.Scene {
     return { x: gridX, y: gridY };
   }
 
-  private handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    if (!this.currentMapArea || !this.sys.isActive()) {
-      return;
-    }
-
-    if (!pointer.leftButtonDown()) {
-      return;
-    }
-
-    const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-    const gridPosition = this.worldToGrid(worldPoint.x, worldPoint.y);
-
-    if (!gridPosition) {
-      return;
-    }
-
-
-    const { x, y } = gridPosition;
-
-    if (
-      x < 0 ||
-      y < 0 ||
-      x >= this.currentMapArea.width ||
-      y >= this.currentMapArea.height
-    ) {
-      return;
-    }
-
-    const tile = this.currentMapArea.tiles[y][x];
-
-    if (!tile.isWalkable && tile.type !== TileType.DOOR) {
-      return;
-    }
-
-    window.dispatchEvent(
-      new CustomEvent(TILE_CLICK_EVENT, {
-        detail: {
-          position: gridPosition,
-          areaId: this.currentMapArea.id,
-        },
-      })
-    );
+  public clampCameraToBounds(camera: Phaser.Cameras.Scene2D.Camera): void {
+    this.cameraModule.clampCameraToBounds(camera);
   }
 
-  private handleWheel = (
-    pointer: Phaser.Input.Pointer,
-    _gameObjects: Phaser.GameObjects.GameObject[],
-    _deltaX: number,
-    deltaY: number
-  ): void => {
-    if (!this.sys.isActive()) {
-      return;
-    }
-
-    const camera = this.cameras.main;
-    const zoomMultiplier = deltaY > 0 ? 0.82 : 1.18;
-    const currentZoom = camera.zoom;
-    const targetZoom = Phaser.Math.Clamp(
-      currentZoom * zoomMultiplier,
-      MIN_CAMERA_ZOOM,
-      MAX_CAMERA_ZOOM
-    );
-
-    if (Math.abs(targetZoom - currentZoom) < 0.0005) {
-      return;
-    }
-
-    if (!this.inCombat) {
-      this.userAdjustedZoom = true;
-    }
-
-    this.stopCameraZoomTween();
-
-    let worldPointBefore: Phaser.Math.Vector2 | null = null;
-
-    if (!this.isCameraFollowingPlayer) {
-      worldPointBefore = camera.getWorldPoint(pointer.x, pointer.y);
-    }
-
-    camera.setZoom(targetZoom);
-
-    if (this.isCameraFollowingPlayer) {
-      camera.setDeadzone(
-        Math.max(120, this.scale.width * 0.22),
-        Math.max(160, this.scale.height * 0.28)
-      );
-      this.recenterCameraOnPlayer();
-    } else {
-      const worldPointAfter = camera.getWorldPoint(pointer.x, pointer.y);
-      const deltaWorldX = (worldPointBefore?.x ?? 0) - worldPointAfter.x;
-      const deltaWorldY = (worldPointBefore?.y ?? 0) - worldPointAfter.y;
-      camera.scrollX += deltaWorldX;
-      camera.scrollY += deltaWorldY;
-      this.clampCameraToBounds(camera);
-    }
-
-    this.applyOverlayZoom();
-    this.emitViewportUpdate();
-
-    if (!this.inCombat) {
-      this.baselineCameraZoom = targetZoom;
-    }
-  };
-
-  private clampCameraToBounds(camera: Phaser.Cameras.Scene2D.Camera): void {
-    const bounds = camera.getBounds();
-
-    if (!bounds) {
-      return;
-    }
-
-    const viewWidth = camera.width / camera.zoom;
-    const viewHeight = camera.height / camera.zoom;
-    const minX = bounds.x;
-    const maxX = bounds.x + Math.max(0, bounds.width - viewWidth);
-    const minY = bounds.y;
-    const maxY = bounds.y + Math.max(0, bounds.height - viewHeight);
-
-    camera.scrollX = Phaser.Math.Clamp(camera.scrollX, minX, maxX);
-    camera.scrollY = Phaser.Math.Clamp(camera.scrollY, minY, maxY);
+  public clampCameraCenterTarget(targetX: number, targetY: number): { x: number; y: number } {
+    return this.cameraModule.clampCameraCenterTarget(targetX, targetY);
   }
-
-  private clampCameraCenterTarget(targetX: number, targetY: number): { x: number; y: number } {
-    const camera = this.cameras.main;
-    const bounds = camera.getBounds();
-
-    if (!bounds) {
-      return { x: targetX, y: targetY };
-    }
-
-    const viewWidth = camera.worldView.width;
-    const viewHeight = camera.worldView.height;
-    const halfWidth = viewWidth / 2;
-    const halfHeight = viewHeight / 2;
-
-    const minX = bounds.x + halfWidth;
-    const maxX = bounds.x + Math.max(halfWidth, bounds.width - halfWidth);
-    const minY = bounds.y + halfHeight;
-    const maxY = bounds.y + Math.max(halfHeight, bounds.height - halfHeight);
-
-    const clampedX = Phaser.Math.Clamp(targetX, minX, Math.max(minX, maxX));
-    const clampedY = Phaser.Math.Clamp(targetY, minY, Math.max(minY, maxY));
-
-    return { x: clampedX, y: clampedY };
-  }
-
-  private handlePathPreview = (event: Event): void => {
-    if (!this.sys.isActive()) {
-      return;
-    }
-
-    const customEvent = event as CustomEvent<PathPreviewDetail>;
-    const detail = customEvent.detail;
-
-    if (!detail) {
-      this.clearPathPreview();
-      return;
-    }
-
-    if (!this.currentMapArea || detail.areaId !== this.currentMapArea.id) {
-      this.clearPathPreview();
-      return;
-    }
-
-    this.pathGraphics.clear();
-
-    if (!detail.path || detail.path.length === 0) {
-      return;
-    }
-
-    const { tileWidth, tileHeight } = this.getIsoMetrics();
-
-    // Color-code path by length/cost - green (cheap) to red (expensive)
-    const pathLength = detail.path.length;
-
-    detail.path.forEach((position, index) => {
-      const center = this.calculatePixelPosition(position.x, position.y);
-      const scale = index === detail.path.length - 1 ? 0.8 : 0.55;
-      const points = this.getDiamondPoints(
-        center.x,
-        center.y,
-        tileWidth * scale,
-        tileHeight * scale
-      );
-
-      let color: number;
-      let alpha: number;
-
-      if (index === detail.path.length - 1) {
-        // Destination marker - bright yellow
-        color = 0xffc857;
-        alpha = 0.5;
-      } else {
-        // Path steps - color by total cost
-        // Green (1-3 steps), Yellow (4-6), Orange (7-9), Red (10+)
-        if (pathLength <= 3) {
-          color = 0x34d399; // Green - low cost
-          alpha = 0.32;
-        } else if (pathLength <= 6) {
-          color = 0xfbbf24; // Yellow - medium cost
-          alpha = 0.35;
-        } else if (pathLength <= 9) {
-          color = 0xfb923c; // Orange - high cost
-          alpha = 0.38;
-        } else {
-          color = 0xf87171; // Red - very high cost
-          alpha = 0.4;
-        }
-      }
-
-      this.pathGraphics.fillStyle(color, alpha);
-      this.pathGraphics.fillPoints(points, true);
-    });
-
-    const destination = detail.path[detail.path.length - 1];
-    this.renderCoverPreview(destination);
-  };
 
   private clearPathPreview(): void {
-    if (this.pathGraphics) {
-      this.pathGraphics.clear();
-    }
-    this.renderCoverPreview();
+    this.inputModule.clearPathPreview();
   }
 
-  private renderCoverPreview(position?: Position): void {
-    if (!this.coverDebugGraphics) {
-      return;
-    }
-
-    this.coverDebugGraphics.clear();
-
-    if (!position || !this.currentMapArea) {
-      this.coverDebugGraphics.setVisible(false);
-      return;
-    }
-
-    const reference = this.lastPlayerGridPosition ?? this.playerInitialPosition;
-    if (!reference) {
-      this.coverDebugGraphics.setVisible(false);
-      return;
-    }
-
-    const tile = this.currentMapArea.tiles[position.y]?.[position.x];
-    if (!tile?.cover) {
-      this.coverDebugGraphics.setVisible(false);
-      return;
-    }
-
-    const incomingDirection = resolveCardinalDirection(position, reference);
-    const coverLevel = tile.cover[incomingDirection];
-
-    if (!coverLevel || coverLevel === 'none') {
-      this.coverDebugGraphics.setVisible(false);
-      return;
-    }
-
-    const { tileWidth, tileHeight } = this.getIsoMetrics();
-    const center = this.calculatePixelPosition(position.x, position.y);
-    const points = this.getDiamondPoints(center.x, center.y, tileWidth * 0.7, tileHeight * 0.7);
-    const [top, right, bottom, left] = points;
-
-    const color = coverLevel === 'full' ? 0x38bdf8 : 0xfbbf24;
-    const alpha = coverLevel === 'full' ? 0.35 : 0.25;
-
-    this.coverDebugGraphics.fillStyle(color, alpha);
-    switch (incomingDirection) {
-      case 'north':
-        this.coverDebugGraphics.fillTriangle(top.x, top.y, right.x, right.y, left.x, left.y);
-        break;
-      case 'south':
-        this.coverDebugGraphics.fillTriangle(bottom.x, bottom.y, right.x, right.y, left.x, left.y);
-        break;
-      case 'east':
-        this.coverDebugGraphics.fillTriangle(right.x, right.y, top.x, top.y, bottom.x, bottom.y);
-        break;
-      case 'west':
-        this.coverDebugGraphics.fillTriangle(left.x, left.y, bottom.x, bottom.y, top.x, top.y);
-        break;
-    }
-
-    this.coverDebugGraphics.fillCircle(center.x, center.y, tileHeight * 0.08);
-    this.coverDebugGraphics.setVisible(true);
-  }
-
-  private emitViewportUpdate(): void {
-    if (!this.currentMapArea || !this.sys.isActive()) {
-      return;
-    }
-
-    const camera = this.cameras.main;
-
-    const view = camera.worldView;
-    const topLeft = this.worldToGridContinuous(view.x, view.y);
-    const topRight = this.worldToGridContinuous(view.x + view.width, view.y);
-    const bottomLeft = this.worldToGridContinuous(view.x, view.y + view.height);
-    const bottomRight = this.worldToGridContinuous(view.x + view.width, view.y + view.height);
-
-    if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
-      return;
-    }
-
-    const centerX = (topLeft.x + topRight.x + bottomLeft.x + bottomRight.x) / 4;
-    const centerY = (topLeft.y + topRight.y + bottomLeft.y + bottomRight.y) / 4;
-
-    const horizontalEdges = [
-      Math.abs(topRight.x - topLeft.x),
-      Math.abs(bottomRight.x - bottomLeft.x),
-    ].filter((value) => Number.isFinite(value));
-
-    const verticalEdges = [
-      Math.abs(bottomLeft.y - topLeft.y),
-      Math.abs(bottomRight.y - topRight.y),
-    ].filter((value) => Number.isFinite(value));
-
-    const edgeWidth = horizontalEdges.length
-      ? horizontalEdges.reduce((acc, value) => acc + value, 0) / horizontalEdges.length
-      : 0;
-    const edgeHeight = verticalEdges.length
-      ? verticalEdges.reduce((acc, value) => acc + value, 0) / verticalEdges.length
-      : 0;
-
-    const width = Math.max(0.0001, edgeWidth);
-    const height = Math.max(0.0001, edgeHeight);
-
-    const detail: ViewportUpdateDetail = {
-      x: centerX - width / 2,
-      y: centerY - height / 2,
-      width,
-      height,
-    };
-
-    miniMapService.updateViewport({
-      ...detail,
-      zoom: camera.zoom,
-    });
+  public emitViewportUpdate(): void {
+    this.minimapBridgeModule.emitViewportUpdate();
   }
 
   public focusCameraOnGridPosition(gridX: number, gridY: number, animate = true): void {
-    if (!this.sys.isActive() || !this.currentMapArea) {
-      return;
-    }
-
-    const metrics = this.getIsoMetrics();
-    const pixelPos = this.calculatePixelPosition(gridX, gridY);
-    const desiredX = pixelPos.x;
-    const desiredY = pixelPos.y + metrics.halfTileHeight;
-    const { x: targetX, y: targetY } = this.clampCameraCenterTarget(desiredX, desiredY);
-    const camera = this.cameras.main;
-
-    this.isCameraFollowingPlayer = false;
-    camera.stopFollow();
-
-    const finalize = () => {
-      this.clampCameraToBounds(camera);
-      this.emitViewportUpdate();
-    };
-
-    if (animate) {
-      camera.pan(targetX, targetY, 300, 'Sine.easeInOut', false, (_cam, progress) => {
-        this.emitViewportUpdate();
-        if (progress === 1) {
-          finalize();
-        }
-      });
-    } else {
-      camera.centerOn(targetX, targetY);
-      finalize();
-    }
+    this.cameraModule.focusCameraOnGridPosition(gridX, gridY, animate);
   }
 
   private resolveDistrictWeight(): number {
@@ -2061,255 +1668,52 @@ export class MainScene extends Phaser.Scene {
   }
 
   // Handler for resize events from Phaser - simplify to prevent flickering
-  private handleResize(): void {
-    // Simple resize without debouncing to avoid blinking
-    if (this.sys.isActive() && this.currentMapArea) {
-      this.setupCameraAndMap();
-      this.enablePlayerCameraFollow();
-      this.resizeDayNightOverlay();
-    }
+  public handleResize(): void {
+    this.sceneModuleRegistry?.onResize();
   }
   
   // Simplified camera setup to be more stable during resize
   private setupCameraAndMap(): void {
-    if (!this.currentMapArea) return;
-    
-    const { width, height } = this.currentMapArea;
-    const { tileHeight, halfTileWidth, halfTileHeight } = this.getIsoMetrics();
-    const canvasWidth = this.scale.width;
-    const canvasHeight = this.scale.height;
-
-    this.isoOriginX = (height - 1) * halfTileWidth;
-    this.isoOriginY = tileHeight; // lift map slightly so the top diamond is visible
-    this.ensureIsoFactory();
-    this.ensureVisualPipeline();
-
-    const isoWidth = (width + height) * halfTileWidth;
-    const isoHeight = (width + height) * halfTileHeight;
-    const zoomX = canvasWidth / isoWidth;
-    const zoomY = canvasHeight / isoHeight;
-    const fitZoom = Math.min(zoomX, zoomY);
-    const desiredZoom = Phaser.Math.Clamp(
-      fitZoom * DEFAULT_FIT_ZOOM_FACTOR,
-      MIN_CAMERA_ZOOM,
-      MAX_CAMERA_ZOOM
-    );
-
-    const camera = this.cameras.main;
-
-    const restoreActive = this.pendingCameraRestore || Boolean(this.cameraZoomTween);
-
-    if (!this.inCombat) {
-      if (!this.hasInitialZoomApplied) {
-        if (!restoreActive) {
-          camera.setZoom(desiredZoom);
-        }
-      } else if (!this.userAdjustedZoom && !restoreActive) {
-        const zoomDelta = Math.abs(camera.zoom - desiredZoom);
-        if (zoomDelta > 0.0008) {
-          this.userAdjustedZoom = false;
-          this.animateCameraZoom(desiredZoom);
-        }
-      }
-    }
-
-    const bounds = this.computeIsoBounds();
-    const padding = this.tileSize * CAMERA_BOUND_PADDING_TILES;
-    camera.setBounds(
-      bounds.minX - padding,
-      bounds.minY - padding,
-      bounds.maxX - bounds.minX + padding * 2,
-      bounds.maxY - bounds.minY + padding * 2
-    );
-
-    const centerX = (width - 1) / 2;
-    const centerY = (height - 1) / 2;
-    const centerPoint = this.calculatePixelPosition(centerX, centerY);
-    const spawnPoint = this.playerInitialPosition
-      ? this.calculatePixelPosition(
-          this.playerInitialPosition.x,
-          this.playerInitialPosition.y
-        )
-      : null;
-    const focusPoint = spawnPoint ?? centerPoint;
-
-    if (!this.isCameraFollowingPlayer) {
-      camera.centerOn(focusPoint.x, focusPoint.y + tileHeight * 0.25);
-    } else {
-      this.recenterCameraOnPlayer();
-    }
-
-    this.renderStaticProps();
-    this.drawBackdrop();
-    this.drawMap(this.currentMapArea.tiles);
-    this.drawBuildingMasses();
-    this.drawBuildingLabels();
-    this.clearPathPreview();
-
-    // Ensure overlay matches latest viewport size after camera adjustments
-    this.resizeDayNightOverlay();
-    this.emitViewportUpdate();
-
-    if (!this.inCombat && !restoreActive) {
-      this.baselineCameraZoom = camera.zoom;
-    }
-    this.hasInitialZoomApplied = true;
+    this.cameraModule.setupCameraAndMap();
   }
 
   private initializeDayNightOverlay(): void {
-    const width = this.scale.width;
-    const height = this.scale.height;
-
-    this.dayNightOverlay = this.add.rectangle(0, 0, width, height, 0x000000, 0);
-    this.dayNightOverlay.setOrigin(0.5, 0.5);
-    this.dayNightOverlay.setScrollFactor(0);
-    this.registerStaticDepth(this.dayNightOverlay, DepthLayers.DAY_NIGHT_OVERLAY);
-    this.dayNightOverlay.setBlendMode(Phaser.BlendModes.MULTIPLY);
-    this.dayNightOverlay.setSize(width, height);
-    this.dayNightOverlay.setDisplaySize(width, height);
-    this.applyOverlayZoom();
+    this.dayNightOverlayModule.initializeDayNightOverlay();
   }
 
-  private applyOverlayZoom(): void {
-    if (!this.dayNightOverlay) return;
-    const zoom = this.cameras.main.zoom || 1;
-    const inverseZoom = 1 / zoom;
-    this.dayNightOverlay.setScale(inverseZoom, inverseZoom);
-    const centerX = this.scale.width / 2;
-    const centerY = this.scale.height / 2;
-    this.dayNightOverlay.setPosition(centerX, centerY);
+  public applyOverlayZoom(): void {
+    this.dayNightOverlayModule.applyOverlayZoom();
   }
 
   private stopCameraZoomTween(): void {
-    if (this.cameraZoomTween) {
-      this.cameraZoomTween.remove();
-      this.cameraZoomTween = null;
-      if (this.pendingCameraRestore) {
-        this.pendingCameraRestore = false;
-        if (this.pendingRestoreUserAdjusted !== null) {
-          this.userAdjustedZoom = this.pendingRestoreUserAdjusted;
-        }
-        this.preCombatZoom = null;
-        this.preCombatUserAdjusted = false;
-        this.pendingRestoreUserAdjusted = null;
-      }
-    }
+    this.cameraModule.stopCameraZoomTween();
   }
 
-  private animateCameraZoom(targetZoom: number): void {
-    if (!this.sys.isActive()) return;
-    const camera = this.cameras.main;
-    if (!camera) {
-      return;
-    }
-
-    const clampedTarget = Phaser.Math.Clamp(targetZoom, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
-    const currentZoom = camera.zoom;
-
-    this.stopCameraZoomTween();
-
-    if (Math.abs(currentZoom - clampedTarget) < 0.0005) {
-      camera.setZoom(clampedTarget);
-      this.applyOverlayZoom();
-      this.emitViewportUpdate();
-      if (!this.inCombat) {
-        this.baselineCameraZoom = camera.zoom;
-      }
-      if (this.pendingCameraRestore) {
-        this.pendingCameraRestore = false;
-        if (this.pendingRestoreUserAdjusted !== null) {
-          this.userAdjustedZoom = this.pendingRestoreUserAdjusted;
-        }
-        this.preCombatZoom = null;
-        this.preCombatUserAdjusted = false;
-        this.pendingRestoreUserAdjusted = null;
-      }
-      return;
-    }
-
-    this.cameraZoomTween = this.tweens.add({
-      targets: camera,
-      zoom: clampedTarget,
-      duration: CAMERA_ZOOM_TWEEN_MS,
-      ease: 'Sine.easeInOut',
-      onUpdate: () => {
-        this.applyOverlayZoom();
-        this.emitViewportUpdate();
-      },
-      onComplete: () => {
-        this.cameraZoomTween = null;
-        if (!this.inCombat) {
-          this.baselineCameraZoom = camera.zoom;
-        }
-        if (this.pendingCameraRestore) {
-          this.pendingCameraRestore = false;
-          if (this.pendingRestoreUserAdjusted !== null) {
-            this.userAdjustedZoom = this.pendingRestoreUserAdjusted;
-          }
-          this.preCombatZoom = null;
-          this.preCombatUserAdjusted = false;
-          this.pendingRestoreUserAdjusted = null;
-        }
-      },
-    });
+  public animateCameraZoom(targetZoom: number): void {
+    this.cameraModule.animateCameraZoom(targetZoom);
   }
 
   private zoomCameraForCombat(): void {
-    const camera = this.cameras.main;
-    if (!camera) {
-      return;
-    }
-
-    // Capture the exploration zoom so we can restore it later
-    this.pendingCameraRestore = false;
-    const explorationZoom = camera.zoom;
-    if (this.preCombatZoom === null) {
-      this.preCombatZoom = explorationZoom;
-      this.preCombatUserAdjusted = this.userAdjustedZoom;
-    }
-    this.baselineCameraZoom = explorationZoom;
-    const targetZoom = Math.min(
-      MAX_CAMERA_ZOOM,
-      Math.max(explorationZoom * COMBAT_ZOOM_MULTIPLIER, explorationZoom + COMBAT_ZOOM_MIN_DELTA)
-    );
-    this.userAdjustedZoom = false;
-    this.animateCameraZoom(targetZoom);
+    this.cameraModule.zoomCameraForCombat();
   }
 
   private restoreCameraAfterCombat(): void {
-    const camera = this.cameras.main;
-    if (!camera) {
-      return;
-    }
-
-    const targetZoom = this.preCombatZoom ?? this.baselineCameraZoom ?? camera.zoom;
-    this.pendingRestoreUserAdjusted = this.preCombatUserAdjusted;
-    this.userAdjustedZoom = true;
-    this.pendingCameraRestore = true;
-    this.animateCameraZoom(targetZoom);
+    this.cameraModule.restoreCameraAfterCombat();
   }
 
-  private resizeDayNightOverlay(): void {
-    if (!this.dayNightOverlay) return;
-    const width = this.scale.width;
-    const height = this.scale.height;
-    this.dayNightOverlay.setSize(width, height);
-    this.dayNightOverlay.setDisplaySize(width, height);
-    this.applyOverlayZoom();
+  public resizeDayNightOverlay(): void {
+    this.dayNightOverlayModule.resizeDayNightOverlay();
   }
 
   private updateDayNightOverlay(): void {
-    if (!this.dayNightOverlay) return;
-
-    const baseOverlay = getDayNightOverlayColor(this.currentGameTime, DEFAULT_DAY_NIGHT_CONFIG);
-    const atmosphere = this.resolveAtmosphereProfile(baseOverlay);
-    this.dayNightOverlay.setFillStyle(atmosphere.overlayColor, atmosphere.overlayAlpha);
+    this.dayNightOverlayModule.updateDayNightOverlay();
   }
 
   public update(_time: number, delta: number): void {
     if (!this.sys.isActive()) {
       return;
     }
+    this.sceneModuleRegistry?.onUpdate(_time, delta);
 
     const deltaSeconds = delta / 1000;
     this.currentGameTime += deltaSeconds;

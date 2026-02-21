@@ -133,4 +133,4 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
-- YYYY-MM-DD — 
+- 2026-02-20 — GET-137 phase 1 scene-architecture extraction landed (MainScene module runtime, lifecycle registry, disposable cleanup). No gameplay checklist boxes changed; risk shifted toward follow-up extraction/validation in later phases.
