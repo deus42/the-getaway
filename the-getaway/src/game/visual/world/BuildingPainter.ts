@@ -29,6 +29,49 @@ const ESB_BUILDING_ID = 'block_2_1';
 const ESB_ATLAS_KEY = 'esb';
 const ESB_FRAME_KEY = 'esb_iso';
 
+type EsbTuning = {
+  heightTiles: number;
+  scale: number;
+  rotateDeg: number;
+  offsetX: number;
+  offsetY: number;
+};
+
+const parseNumber = (value: string | null, fallback: number): number => {
+  if (value === null) {
+    return fallback;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const resolveEsbTuning = (): EsbTuning => {
+  const defaults: EsbTuning = {
+    // Make the ESB feel like a true landmark relative to the 1-tile player.
+    heightTiles: 34,
+    // Additional multiplier applied on top of height-based scaling.
+    scale: 1.35,
+    // Small rotation tweak can help align the sprite's base with our isometric grid.
+    rotateDeg: 0,
+    offsetX: 0,
+    offsetY: 0,
+  };
+
+  if (typeof window === 'undefined') {
+    return defaults;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  return {
+    heightTiles: Math.max(1, parseNumber(params.get('esbHeightTiles'), defaults.heightTiles)),
+    scale: Math.max(0.05, parseNumber(params.get('esbScale'), defaults.scale)),
+    rotateDeg: parseNumber(params.get('esbRot'), defaults.rotateDeg),
+    offsetX: parseNumber(params.get('esbOffX'), defaults.offsetX),
+    offsetY: parseNumber(params.get('esbOffY'), defaults.offsetY),
+  };
+};
+
 export class BuildingPainter {
   constructor(private readonly scene: Phaser.Scene, private readonly theme: VisualTheme) {}
 
@@ -43,13 +86,25 @@ export class BuildingPainter {
 
     // PoC landmark override: swap one Level 0 building slot for an ESB sprite.
     if (building.id === ESB_BUILDING_ID && this.scene.textures.exists(ESB_ATLAS_KEY)) {
-      const sprite = this.scene.add.image(base.bottom.x, base.bottom.y, ESB_ATLAS_KEY, ESB_FRAME_KEY);
+      const tuning = resolveEsbTuning();
+
+      const sprite = this.scene.add.image(
+        base.bottom.x + tuning.offsetX,
+        base.bottom.y + tuning.offsetY,
+        ESB_ATLAS_KEY,
+        ESB_FRAME_KEY
+      );
       sprite.setOrigin(0.5, 1);
 
-      // Scale the sprite to feel like a landmark but still sit within the Level 0 composition.
-      // (Height-based scaling is more stable than footprint-width scaling because Level 0 blocks can be very wide.)
-      const targetHeight = metrics.tileHeight * (14 + profile.massingHeight * 2.2);
-      sprite.setScale(targetHeight / Math.max(1, sprite.height));
+      // Height-based scaling is more stable than footprint-width scaling because Level 0 blocks can be very wide.
+      // Target height is expressed in tiles so it stays consistent across resolutions.
+      const targetHeight = metrics.tileHeight * tuning.heightTiles;
+      const baseScale = targetHeight / Math.max(1, sprite.height);
+      sprite.setScale(baseScale * tuning.scale);
+
+      if (tuning.rotateDeg) {
+        sprite.setRotation(Phaser.Math.DegToRad(tuning.rotateDeg));
+      }
 
       // Slight alpha lift so it reads through atmospheric overlays.
       sprite.setAlpha(0.98);
