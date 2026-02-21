@@ -325,6 +325,15 @@ export class MainScene extends Phaser.Scene {
       this.positionCharacterLabel(this.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
 
       this.enablePlayerCameraFollow();
+
+      // PoC convenience: `?poc=esb` will auto-focus the camera on the ESB landmark slot.
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('poc') === 'esb') {
+          this.cameras.main.setZoom(1.05);
+          this.focusCameraOnGridPosition(14, 33, false);
+        }
+      }
     } else {
       console.error('[MainScene] playerInitialPosition is null');
     }

@@ -493,6 +493,33 @@ function AppShell() {
     setHasSavedGame(hasPersistedGame());
   }, [showMenu, gameStarted]);
 
+  // PoC convenience: allow loading straight into a fresh Level 0 run for quick visual review.
+  // Usage: add `?poc=esb` to the URL.
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('poc') !== 'esb') {
+      return;
+    }
+
+    if (gameStarted || showCharacterCreation) {
+      return;
+    }
+
+    // Kick straight into the game with a default character.
+    const pocData: CharacterCreationData = {
+      name: 'POC',
+      attributes: DEFAULT_SKILLS,
+      backgroundId: 'corpsec_defector',
+      visualPreset: 'default',
+    };
+
+    handleCharacterCreationComplete(pocData);
+  }, [gameStarted, showCharacterCreation]);
+
   useEffect(() => {
     if (!gameStarted) {
       return;
