@@ -1738,15 +1738,20 @@ const GameController: React.FC = () => {
     );
 
     if (connection) {
-      if (curfewActive && tile.type === TileType.DOOR) {
+      const targetArea = mapDirectory[connection.toAreaId];
+
+      if (
+        curfewActive &&
+        tile.type === TileType.DOOR &&
+        targetArea &&
+        !targetArea.isInterior
+      ) {
         dispatch(addLogMessage(logStrings.checkpointSealed));
         setQueuedPath([]);
         setPendingNpcInteractionId(null);
         setPendingEnemyEngagementId(null);
         return;
       }
-
-      const targetArea = mapDirectory[connection.toAreaId];
 
       if (targetArea) {
         if (reputationSystemsEnabled && targetArea.factionRequirement) {
@@ -1811,6 +1816,17 @@ const GameController: React.FC = () => {
         }
         dispatch(setMapArea(targetArea));
         dispatch(movePlayer(connection.toPosition));
+
+        if (targetArea.isInterior) {
+          dispatch(
+            triggerStorylet({
+              type: "campfireRest",
+              locationId: targetArea.id,
+            })
+          );
+          dispatch(addLogMessage(logStrings.slipInsideStructure));
+          setCurfewAlertState("clear");
+        }
       } else {
         log.warn(`Missing target area in state for ${connection.toAreaId}`);
       }
