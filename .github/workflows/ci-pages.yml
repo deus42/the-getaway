@@ -167,33 +167,33 @@ jobs:
             exit 1
           fi
 
-          TARGET_DIR="site/${DEPLOY_SUBPATH}" \
+          export TARGET_DIR="site/${DEPLOY_SUBPATH}"
           python3 - <<'PY'
-import os
-import re
-from pathlib import Path
+          import os
+          import re
+          from pathlib import Path
 
-target = Path(os.environ["TARGET_DIR"]).resolve()
-index = target / "index.html"
-text = index.read_text(encoding="utf-8", errors="ignore")
+          target = Path(os.environ["TARGET_DIR"]).resolve()
+          index = target / "index.html"
+          text = index.read_text(encoding="utf-8", errors="ignore")
 
-# Extract any assets referenced in src/href attributes.
-paths = set(re.findall(r'assets/[^"\']+', text))
+          # Extract any assets referenced in src/href attributes.
+          paths = set(re.findall(r"assets/[^\"']+", text))
 
-missing = []
-for rel in sorted(paths):
-    p = target / rel
-    if not p.exists():
-        missing.append(rel)
+          missing = []
+          for rel in sorted(paths):
+              p = target / rel
+              if not p.exists():
+                  missing.append(rel)
 
-if missing:
-    print("ERROR: index.html references missing assets:")
-    for m in missing:
-        print(" -", m)
-    raise SystemExit(2)
+          if missing:
+              print("ERROR: index.html references missing assets:")
+              for m in missing:
+                  print(" -", m)
+              raise SystemExit(2)
 
-print(f"OK: validated {len(paths)} asset references in {index}")
-PY
+          print(f"OK: validated {len(paths)} asset references in {index}")
+          PY
 
       - name: Commit and push gh-pages content
         run: |
