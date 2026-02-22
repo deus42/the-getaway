@@ -103,7 +103,7 @@ flowchart LR
 1. `the-getaway/src/game/visual/contracts.ts` defines shared render contracts (`VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`) including district lot/massing fields (`lotPattern`, `massingStyle`, `massingHeight`, `trimHex`, `atmosphereHex`).
 2. `the-getaway/src/game/visual/theme/noirVectorTheme.ts` resolves quality budgets and district/entity palettes; `createNoirVectorTheme` and `resolveBuildingVisualProfile` provide deterministic defaults.
 3. `the-getaway/src/game/visual/world/DistrictComposer.ts` composes deterministic district grammar (facade/lot/massing selection + seeded color shifts), then `the-getaway/src/game/world/worldMap.ts` injects those profiles into `MapBuildingDefinition.visualProfile`.
-4. `the-getaway/src/game/scenes/MainScene.ts` delegates world rendering to `the-getaway/src/game/visual/world/TilePainter.ts` and `the-getaway/src/game/visual/world/BuildingPainter.ts`, and now renders dedicated building-massing layers (`drawBuildingMasses`) plus skyline-composition backdrops.
+4. `the-getaway/src/game/scenes/MainScene.ts` delegates world rendering orchestration to `the-getaway/src/game/scenes/main/modules/WorldRenderModule.ts`, which drives `the-getaway/src/game/visual/world/TilePainter.ts` and `the-getaway/src/game/visual/world/BuildingPainter.ts` while rendering dedicated building-massing layers (`drawBuildingMasses`) plus skyline-composition backdrops.
 5. `the-getaway/src/game/visual/world/AtmosphereDirector.ts` resolves deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection alpha, overlay tint/alpha) from district mix + world time + preset budgets.
 6. `the-getaway/src/game/visual/world/OcclusionReadabilityController.ts` applies visual-only readability compensation (building alpha fade + token/label emphasis) when entities overlap heavy massing bounds, restoring prior-frame baselines so boosts remain transient.
 7. `the-getaway/src/game/visual/world/PropScatter.ts` generates deterministic prop placements that avoid door tiles/door buffers/protected interactive tiles and applies district-aware clustering for denser composition without blocking routes.
@@ -131,9 +131,11 @@ flowchart LR
    - `DayNightOverlayModule.ts` (overlay init/resize/update/zoom application)
    - `MinimapBridgeModule.ts` (minimap init/shutdown + viewport updates)
    - `SurveillanceRenderModule.ts` (vision-cone rendering + surveillance camera sprite lifecycle/cleanup)
+   - `WorldRenderModule.ts` (backdrop/map redraw cadence, atmosphere profile resolution, occlusion + building massing/label rendering, lighting pipeline)
+   - `EntityRenderModule.ts` (player/enemy/NPC token + label updates, combat bars/indicators, player screen-position dispatch)
    - `InputModule.ts` (tile click, path preview, pickup sync listener wiring)
    - `CameraModule.ts` (camera follow/bounds/zoom/resize orchestration)
-7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
+7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/WorldRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/EntityRenderModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
 
 ## Narrative Resource Hierarchy
 > Category: content_pipeline  
