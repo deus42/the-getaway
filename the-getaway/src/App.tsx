@@ -511,8 +511,10 @@ function AppShell() {
     }
 
     // Kick straight into the game with a default character.
+    const params = new URLSearchParams(window.location.search);
+
     const pocData: CharacterCreationData = {
-      name: 'POC',
+      name: params.get('pocName') ?? 'Deus',
       attributes: DEFAULT_SKILLS,
       backgroundId: 'corpsec_defector',
       visualPreset: 'default',

@@ -1328,21 +1328,34 @@ export class MainScene extends Phaser.Scene {
         this.syncDepth(entrance, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW);
         this.buildingMassings.push(entrance);
 
-        // Optional neon via Phaser Light2D (point lights). This is intentionally subtle.
-        if (this.lightsFeatureEnabled) {
-          const entranceLight = this.add.pointlight(doorPixel.x, doorPixel.y - tileHeight * 0.6, 0xffb35c, this.tileSize * 2.4, 0.55);
-          entranceLight.setScrollFactor(1);
-          this.syncDepth(entranceLight, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW - 2);
-          this.buildingMassings.push(entranceLight);
+        // Neon mood (fake emissive): additive glows + a small "billboard" near the entrance.
+        // (Avoid Phaser PointLight here: it reads like a headlight and easily blows out the palette.)
+        const neon = this.add.graphics();
+        neon.setBlendMode(Phaser.BlendModes.ADD);
 
-          const bounds = mass.getBounds();
-          const spireX = bounds.centerX;
-          const spireY = bounds.y + this.tileSize * 0.75;
-          const spireLight = this.add.pointlight(spireX, spireY, 0x39d5ff, this.tileSize * 7.5, 0.25);
-          spireLight.setScrollFactor(1);
-          this.registerStaticDepth(spireLight, DepthLayers.MAP_BASE + 1);
-          this.buildingMassings.push(spireLight);
-        }
+        // Warm door halo
+        neon.fillStyle(0xffb35c, 0.09);
+        neon.fillCircle(0, 0, tileHeight * 1.25);
+        neon.fillStyle(0xff7a18, 0.06);
+        neon.fillCircle(0, 0, tileHeight * 0.85);
+
+        // Cyan/magenta edge accent (thin, Art Deco-ish)
+        neon.lineStyle(2, 0x39d5ff, 0.10);
+        neon.strokeRoundedRect(-12, -24, 24, 40, 6);
+        neon.lineStyle(1, 0xc14bff, 0.07);
+        neon.strokeRoundedRect(-15, -27, 30, 46, 8);
+
+        entrance.add(neon);
+
+        // Subtle pulse
+        this.tweens.add({
+          targets: neon,
+          alpha: { from: 0.9, to: 1.0 },
+          duration: 2400,
+          yoyo: true,
+          repeat: -1,
+          ease: 'Sine.easeInOut',
+        });
 
         return;
       }

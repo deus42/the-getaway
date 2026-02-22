@@ -103,14 +103,13 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
   const minX = hasHorizontalBuffer ? from.x + 1 : from.x;
   const maxX = hasHorizontalBuffer ? to.x - 1 : to.x;
 
-  let clampedX = Math.min(Math.max(originalDoor.x, minX), maxX);
+  const clampedX = Math.min(Math.max(originalDoor.x, minX), maxX);
 
-  // ESB PoC: force the entrance to the right side of the block to match the landmark render.
+  // ESB PoC: force the entrance to the *east/right* edge of the block to match the landmark render.
   if (sanitized.id === 'block_2_1') {
-    clampedX = maxX;
     sanitized.door = {
-      x: clampedX,
-      y: Math.floor((from.y + to.y) / 2),
+      x: to.x,
+      y: Math.max(from.y + 1, to.y - 2),
     };
     return sanitized;
   }
@@ -166,7 +165,9 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const npcBlueprints = source.npcBlueprints.map(cloneNPCBlueprint);
   const itemBlueprints = source.itemBlueprints.map(cloneItemBlueprint);
   const buildingDefinitions = source.buildingDefinitions.map((definition) => {
-    const widenedRoadLayout = insetBuildingFootprint(definition, ROAD_WIDENING_INSET_TILES);
+    // ESB PoC: keep a much larger footprint (less road widening) so the landmark base reads correctly.
+    const inset = definition.id === 'block_2_1' ? 0 : ROAD_WIDENING_INSET_TILES;
+    const widenedRoadLayout = insetBuildingFootprint(definition, inset);
     return moveDoorToPerimeter(widenedRoadLayout);
   });
 
