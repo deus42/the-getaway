@@ -510,9 +510,16 @@ function AppShell() {
       return;
     }
 
-    // Kick straight into the game with a default character.
-    const params = new URLSearchParams(window.location.search);
+    // Force a fresh run so we don't reuse an old persisted world.
+    try {
+      window.localStorage.removeItem(PERSISTED_STATE_KEY);
+    } catch {
+      // ignore
+    }
+    setHasSavedGame(false);
+    setShowMenu(false);
 
+    // Kick straight into the game with a default character.
     const pocData: CharacterCreationData = {
       name: params.get('pocName') ?? 'Deus',
       attributes: DEFAULT_SKILLS,
