@@ -39,6 +39,7 @@ import { DayNightOverlayModule } from './main/modules/DayNightOverlayModule';
 import { EntityRenderModule } from './main/modules/EntityRenderModule';
 import { InputModule } from './main/modules/InputModule';
 import { MinimapBridgeModule } from './main/modules/MinimapBridgeModule';
+import { StateSyncModule } from './main/modules/StateSyncModule';
 import { SurveillanceRenderModule } from './main/modules/SurveillanceRenderModule';
 import { WorldRenderModule } from './main/modules/WorldRenderModule';
 
@@ -87,14 +88,14 @@ export class MainScene extends Phaser.Scene {
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;
   public dayNightOverlay!: Phaser.GameObjects.Rectangle;
-  private curfewActive = false;
+  public curfewActive = false;
   private currentGameTime = 0;
   private timeDispatchAccumulator = 0;
   private isoOriginX = 0;
   private isoOriginY = 0;
   public isCameraFollowingPlayer = false;
   public lastPlayerGridPosition: Position | null = null;
-  private inCombat = false;
+  public inCombat = false;
   public playerVitalsIndicator?: Phaser.GameObjects.Graphics;
   private isoFactory?: IsoObjectFactory;
   public staticPropGroup?: Phaser.GameObjects.Group;
@@ -107,7 +108,7 @@ export class MainScene extends Phaser.Scene {
   public demoLampGrid?: Position;
   public demoPointLight?: Phaser.GameObjects.PointLight;
   public readonly lightingAmbientColor = 0x0f172a;
-  private lastItemMarkerSignature = '';
+  public lastItemMarkerSignature = '';
   public hasInitialZoomApplied = false;
   public userAdjustedZoom = false;
   public pendingCameraRestore = false;
@@ -121,6 +122,7 @@ export class MainScene extends Phaser.Scene {
   private readonly inputModule = new InputModule(this);
   private readonly cameraModule = new CameraModule(this);
   private readonly entityRenderModule = new EntityRenderModule(this);
+  private readonly stateSyncModule = new StateSyncModule(this);
   private readonly surveillanceRenderModule = new SurveillanceRenderModule(this);
   private readonly worldRenderModule = new WorldRenderModule(this);
   private lastStoreSnapshot: RootState = store.getState();
@@ -148,6 +150,7 @@ export class MainScene extends Phaser.Scene {
     this.sceneModuleRegistry.register(this.surveillanceRenderModule);
     this.sceneModuleRegistry.register(this.worldRenderModule);
     this.sceneModuleRegistry.register(this.entityRenderModule);
+    this.sceneModuleRegistry.register(this.stateSyncModule);
     this.sceneModuleRegistry.register(this.inputModule);
     this.sceneModuleRegistry.register(this.cameraModule);
     this.sceneModuleRegistry.onCreate();
@@ -323,96 +326,12 @@ export class MainScene extends Phaser.Scene {
   }
 
   private handleStateChange(): void {
-    // This handles updates AFTER the initial one from setTimeout
     if (!this.sys.isActive() || !this.currentMapArea) return;
 
     const newState = store.getState();
     const previousState = this.lastStoreSnapshot;
     this.sceneModuleRegistry?.onStateChange(previousState, newState);
     this.lastStoreSnapshot = newState;
-    const playerState = newState.player.data;
-    const worldState = newState.world;
-    const currentEnemies = worldState.currentMapArea.entities.enemies;
-
-    const previousCombatState = this.inCombat;
-    this.inCombat = worldState.inCombat;
-
-    if (this.inCombat && !previousCombatState) {
-      this.zoomCameraForCombat();
-    }
-
-    if (!this.inCombat && previousCombatState) {
-      this.restoreCameraAfterCombat();
-      this.destroyPlayerVitalsIndicator();
-      this.enemySprites.forEach((data) => {
-        data.healthBar.clear();
-        data.healthBar.setVisible(false);
-      });
-      this.npcSprites.forEach((data) => {
-        if (data.indicator) {
-          data.indicator.destroy();
-          data.indicator = undefined;
-        }
-      });
-    }
-
-    // Sync local time cache with store updates (e.g., external adjustments)
-    this.currentGameTime = worldState.currentTime;
-    this.updateDayNightOverlay();
-
-    if (!worldState.currentMapArea || !this.currentMapArea) {
-      return;
-    }
-
-    if (this.currentMapArea.id !== worldState.currentMapArea.id) {
-      this.hasInitialZoomApplied = false;
-      this.userAdjustedZoom = false;
-      this.preCombatZoom = null;
-      this.preCombatUserAdjusted = false;
-      this.pendingRestoreUserAdjusted = null;
-      this.currentMapArea = worldState.currentMapArea;
-      // clear existing enemy sprites
-      this.enemySprites.forEach((data) => {
-        data.token.container.destroy(true);
-        data.healthBar.destroy();
-        data.nameLabel.destroy();
-      });
-      this.enemySprites.clear();
-      this.npcSprites.forEach((data) => {
-        data.token.container.destroy(true);
-        data.nameLabel.destroy();
-        if (data.indicator) {
-          data.indicator.destroy();
-        }
-      });
-      this.npcSprites.clear();
-      this.destroyCameraSprites();
-      this.currentAtmosphereProfile = undefined;
-      this.lastAtmosphereRedrawBucket = -1;
-      this.setupCameraAndMap();
-      this.clearPathPreview();
-      this.enablePlayerCameraFollow();
-    }
-
-    const previousItemMarkerSignature = this.lastItemMarkerSignature;
-    this.currentMapArea = worldState.currentMapArea;
-    const nextItemMarkerSignature = this.getItemMarkerSignature(this.currentMapArea);
-    if (previousItemMarkerSignature !== nextItemMarkerSignature) {
-      this.renderStaticProps();
-    }
-
-    if (this.curfewActive !== worldState.curfewActive) {
-      this.curfewActive = worldState.curfewActive;
-    }
-
-    this.updatePlayerPosition(playerState.position);
-    this.updatePlayerVitalsIndicator(playerState.position, playerState.health, playerState.maxHealth);
-    this.updateEnemies(currentEnemies);
-    this.updateNpcs(worldState.currentMapArea.entities.npcs);
-    this.renderVisionCones();
-    const zoneState = newState.surveillance?.zones?.[this.currentMapArea.id];
-    const overlayEnabled = newState.surveillance?.hud?.overlayEnabled ?? false;
-    this.updateSurveillanceCameras(zoneState, overlayEnabled);
   }
   private ensureIsoFactory(): void {
     if (!this.isoFactory) {
@@ -425,11 +344,11 @@ export class MainScene extends Phaser.Scene {
     }
   }
 
-  private renderStaticProps(): void {
+  public renderStaticProps(): void {
     this.worldRenderModule.renderStaticProps();
   }
 
-  private getItemMarkerSignature(area: MapArea | null): string {
+  public getItemMarkerSignature(area: MapArea | null): string {
     return this.worldRenderModule.getItemMarkerSignature(area);
   }
 
@@ -441,11 +360,11 @@ export class MainScene extends Phaser.Scene {
     this.worldRenderModule.disableLighting(force);
   }
   
-  private updatePlayerPosition(position: Position): void {
+  public updatePlayerPosition(position: Position): void {
     this.entityRenderModule.updatePlayerPosition(position);
   }
 
-  private updatePlayerVitalsIndicator(position: Position, health: number, maxHealth: number): void {
+  public updatePlayerVitalsIndicator(position: Position, health: number, maxHealth: number): void {
     this.entityRenderModule.updatePlayerVitalsIndicator(position, health, maxHealth);
   }
 
@@ -604,7 +523,7 @@ export class MainScene extends Phaser.Scene {
     return this.cameraModule.clampCameraCenterTarget(targetX, targetY);
   }
 
-  private clearPathPreview(): void {
+  public clearPathPreview(): void {
     this.inputModule.clearPathPreview();
   }
 
@@ -658,11 +577,11 @@ export class MainScene extends Phaser.Scene {
     this.cameraModule.animateCameraZoom(targetZoom);
   }
 
-  private zoomCameraForCombat(): void {
+  public zoomCameraForCombat(): void {
     this.cameraModule.zoomCameraForCombat();
   }
 
-  private restoreCameraAfterCombat(): void {
+  public restoreCameraAfterCombat(): void {
     this.cameraModule.restoreCameraAfterCombat();
   }
 

@@ -133,9 +133,10 @@ flowchart LR
    - `SurveillanceRenderModule.ts` (vision-cone rendering + surveillance camera sprite lifecycle/cleanup)
    - `WorldRenderModule.ts` (backdrop/map redraw cadence, atmosphere profile resolution, occlusion + building massing/label rendering, lighting pipeline)
    - `EntityRenderModule.ts` (player/enemy/NPC token + label updates, combat bars/indicators, player screen-position dispatch)
+   - `StateSyncModule.ts` (Redux state-change orchestration for combat transitions, map swaps, entity refresh, and surveillance overlay sync)
    - `InputModule.ts` (tile click, path preview, pickup sync listener wiring)
    - `CameraModule.ts` (camera follow/bounds/zoom/resize orchestration)
-7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/WorldRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/EntityRenderModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
+7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/WorldRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/EntityRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/StateSyncModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
 
 ## Narrative Resource Hierarchy
 > Category: content_pipeline  
