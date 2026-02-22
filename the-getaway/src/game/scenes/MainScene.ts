@@ -1301,10 +1301,33 @@ export class MainScene extends Phaser.Scene {
       });
       mass.setScrollFactor(1);
 
-      // ESB PoC: treat as a skyline landmark (purely visual, no occlusion/readability interference).
+      // ESB PoC: skyline landmark (no occlusion/readability interference), but still rendered *above* the map base.
+      // Use a low bias so it stays behind props/characters.
       if (building.id === 'block_2_1') {
-        this.registerStaticDepth(mass, DepthLayers.BACKDROP);
+        this.syncDepth(mass, footprint.bottom.x, footprint.bottom.y, DepthBias.TILE_OVERLAY);
         this.buildingMassings.push(mass);
+
+        // Add a player-scale entrance marker at the door tile (warm portal glow).
+        const doorPixel = this.calculatePixelPosition(building.door.x, building.door.y);
+        const entrance = this.add.container(doorPixel.x, doorPixel.y);
+        entrance.setScrollFactor(1);
+
+        const glow = this.add.graphics();
+        glow.fillStyle(0xffb35c, 0.22);
+        glow.fillCircle(0, 0, tileHeight * 0.9);
+        glow.fillStyle(0xff7a18, 0.18);
+        glow.fillCircle(0, 0, tileHeight * 0.55);
+
+        const frame = this.add.graphics();
+        frame.lineStyle(2, 0x39d5ff, 0.55);
+        frame.strokeRoundedRect(-10, -20, 20, 32, 4);
+        frame.lineStyle(1, 0xffffff, 0.15);
+        frame.strokeRoundedRect(-12, -22, 24, 36, 6);
+
+        entrance.add([glow, frame]);
+        this.syncDepth(entrance, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW);
+
+        this.buildingMassings.push(entrance);
         return;
       }
 
