@@ -1301,10 +1301,10 @@ export class MainScene extends Phaser.Scene {
       });
       mass.setScrollFactor(1);
 
-      // ESB PoC: skyline landmark (no occlusion/readability interference), but still rendered *above* the map base.
-      // Use a low bias so it stays behind props/characters.
+      // ESB PoC: skyline landmark (no occlusion/readability interference).
+      // Keep it always behind characters/props (so NPCs never get hidden), but above the map base.
       if (building.id === 'block_2_1') {
-        this.syncDepth(mass, footprint.bottom.x, footprint.bottom.y, DepthBias.TILE_OVERLAY);
+        this.registerStaticDepth(mass, DepthLayers.MAP_BASE + 1);
         this.buildingMassings.push(mass);
 
         // Add a player-scale entrance marker at the door tile (warm portal glow).
@@ -1326,8 +1326,24 @@ export class MainScene extends Phaser.Scene {
 
         entrance.add([glow, frame]);
         this.syncDepth(entrance, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW);
-
         this.buildingMassings.push(entrance);
+
+        // Optional neon via Phaser Light2D (point lights). This is intentionally subtle.
+        if (this.lightsFeatureEnabled) {
+          const entranceLight = this.add.pointlight(doorPixel.x, doorPixel.y - tileHeight * 0.6, 0xffb35c, this.tileSize * 2.4, 0.55);
+          entranceLight.setScrollFactor(1);
+          this.syncDepth(entranceLight, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW - 2);
+          this.buildingMassings.push(entranceLight);
+
+          const bounds = mass.getBounds();
+          const spireX = bounds.centerX;
+          const spireY = bounds.y + this.tileSize * 0.75;
+          const spireLight = this.add.pointlight(spireX, spireY, 0x39d5ff, this.tileSize * 7.5, 0.25);
+          spireLight.setScrollFactor(1);
+          this.registerStaticDepth(spireLight, DepthLayers.MAP_BASE + 1);
+          this.buildingMassings.push(spireLight);
+        }
+
         return;
       }
 

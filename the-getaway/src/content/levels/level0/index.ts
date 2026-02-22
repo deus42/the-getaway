@@ -103,7 +103,12 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
   const minX = hasHorizontalBuffer ? from.x + 1 : from.x;
   const maxX = hasHorizontalBuffer ? to.x - 1 : to.x;
 
-  const clampedX = Math.min(Math.max(originalDoor.x, minX), maxX);
+  let clampedX = Math.min(Math.max(originalDoor.x, minX), maxX);
+
+  // ESB PoC: force the entrance to the right side of the block to match the landmark render.
+  if (sanitized.id === 'block_2_1') {
+    clampedX = maxX;
+  }
 
   sanitized.door = {
     x: clampedX,
