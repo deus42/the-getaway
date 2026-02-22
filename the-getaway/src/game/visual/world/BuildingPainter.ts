@@ -30,7 +30,11 @@ const ESB_ATLAS_KEY = 'esb';
 const ESB_FRAME_KEY = 'esb_iso';
 
 type EsbTuning = {
+  // target height expressed in tiles
   heightTiles: number;
+  // target base width expressed in tiles (approx screen width target)
+  baseTiles: number;
+  // extra multiplier applied after sizing
   scale: number;
   rotateDeg: number;
   offsetX: number;
@@ -49,9 +53,11 @@ const parseNumber = (value: string | null, fallback: number): number => {
 const resolveEsbTuning = (): EsbTuning => {
   const defaults: EsbTuning = {
     // Make the ESB feel like a true landmark relative to the 1-tile player.
-    heightTiles: 34,
-    // Additional multiplier applied on top of height-based scaling.
-    scale: 1.35,
+    heightTiles: 48,
+    // Make the ground/base read as a much larger footprint (roughly 2× vs earlier PoC).
+    baseTiles: 18,
+    // Additional multiplier applied on top of size-based scaling.
+    scale: 1.1,
     // Small rotation tweak can help align the sprite's base with our isometric grid.
     rotateDeg: 0,
     offsetX: 0,
@@ -65,6 +71,7 @@ const resolveEsbTuning = (): EsbTuning => {
   const params = new URLSearchParams(window.location.search);
   return {
     heightTiles: Math.max(1, parseNumber(params.get('esbHeightTiles'), defaults.heightTiles)),
+    baseTiles: Math.max(1, parseNumber(params.get('esbBaseTiles'), defaults.baseTiles)),
     scale: Math.max(0.05, parseNumber(params.get('esbScale'), defaults.scale)),
     rotateDeg: parseNumber(params.get('esbRot'), defaults.rotateDeg),
     offsetX: parseNumber(params.get('esbOffX'), defaults.offsetX),
@@ -96,10 +103,15 @@ export class BuildingPainter {
       );
       sprite.setOrigin(0.5, 1);
 
-      // Height-based scaling is more stable than footprint-width scaling because Level 0 blocks can be very wide.
-      // Target height is expressed in tiles so it stays consistent across resolutions.
+      // Size the sprite so its *base* matches the building footprint.
+      // Footprint left↔right distance corresponds to the visible base width on our 2:1 iso grid.
       const targetHeight = metrics.tileHeight * tuning.heightTiles;
-      const baseScale = targetHeight / Math.max(1, sprite.height);
+      const footprintWidth = Phaser.Math.Distance.Between(base.left.x, base.left.y, base.right.x, base.right.y);
+
+      const scaleForHeight = targetHeight / Math.max(1, sprite.height);
+      const scaleForFootprint = footprintWidth / Math.max(1, sprite.width);
+      const baseScale = Math.max(scaleForHeight, scaleForFootprint);
+
       sprite.setScale(baseScale * tuning.scale);
 
       if (tuning.rotateDeg) {

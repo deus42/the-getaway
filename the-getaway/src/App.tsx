@@ -17,7 +17,7 @@ import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
 import StealthIndicator from "./components/ui/StealthIndicator";
 import CurfewWarning from "./components/ui/CurfewWarning";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
-import { setLightsEnabled, setVisualQualityPreset } from "./store/settingsSlice";
+// (PoC) ESB neon uses additive emissive; no Light2D forcing here.
 import { selectHudLayoutPreset } from "./store/selectors/hudLayoutSelectors";
 import { HudLayoutPreset } from "./store/hudLayoutSlice";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
@@ -527,12 +527,7 @@ function AppShell() {
       visualPreset: 'default',
     };
 
-    // Ensure Light2D is enabled for the ESB neon PoC (unless user explicitly disabled it later).
-    const currentPreset = store.getState().settings.visualQualityPreset;
-    if (currentPreset === 'performance') {
-      store.dispatch(setVisualQualityPreset('balanced'));
-    }
-    store.dispatch(setLightsEnabled(true));
+    // Keep lights settings as-is; ESB PoC neon is implemented as additive emissive graphics.
 
     handleCharacterCreationComplete(pocData);
   }, [gameStarted, showCharacterCreation]);

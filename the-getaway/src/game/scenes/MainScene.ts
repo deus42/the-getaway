@@ -1312,46 +1312,57 @@ export class MainScene extends Phaser.Scene {
         const entrance = this.add.container(doorPixel.x, doorPixel.y);
         entrance.setScrollFactor(1);
 
-        const glow = this.add.graphics();
-        glow.fillStyle(0xffb35c, 0.22);
-        glow.fillCircle(0, 0, tileHeight * 0.9);
-        glow.fillStyle(0xff7a18, 0.18);
-        glow.fillCircle(0, 0, tileHeight * 0.55);
-
-        const frame = this.add.graphics();
-        frame.lineStyle(2, 0x39d5ff, 0.55);
-        frame.strokeRoundedRect(-10, -20, 20, 32, 4);
-        frame.lineStyle(1, 0xffffff, 0.15);
-        frame.strokeRoundedRect(-12, -22, 24, 36, 6);
-
-        entrance.add([glow, frame]);
-        this.syncDepth(entrance, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW);
-        this.buildingMassings.push(entrance);
+        // Debug readout (PoC): helps validate door placement/footprint without guessing.
+        if (typeof window !== 'undefined') {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get('pocDebug') === '1') {
+            const debugText = this.add.text(0, -tileHeight * 1.6, `door ${building.door.x},${building.door.y}`, {
+              fontFamily: 'monospace',
+              fontSize: '10px',
+              color: '#39d5ff',
+              stroke: '#000000',
+              strokeThickness: 3,
+            });
+            debugText.setOrigin(0.5, 1);
+            entrance.add(debugText);
+          }
+        }
 
         // Neon mood (fake emissive): additive glows + a small "billboard" near the entrance.
         // (Avoid Phaser PointLight here: it reads like a headlight and easily blows out the palette.)
+
         const neon = this.add.graphics();
         neon.setBlendMode(Phaser.BlendModes.ADD);
 
-        // Warm door halo
-        neon.fillStyle(0xffb35c, 0.09);
-        neon.fillCircle(0, 0, tileHeight * 1.25);
-        neon.fillStyle(0xff7a18, 0.06);
-        neon.fillCircle(0, 0, tileHeight * 0.85);
+        // Warm door halo (subtle)
+        neon.fillStyle(0xffb35c, 0.06);
+        neon.fillCircle(0, 0, tileHeight * 1.1);
+        neon.fillStyle(0xff7a18, 0.04);
+        neon.fillCircle(0, 0, tileHeight * 0.75);
 
-        // Cyan/magenta edge accent (thin, Art Deco-ish)
-        neon.lineStyle(2, 0x39d5ff, 0.10);
-        neon.strokeRoundedRect(-12, -24, 24, 40, 6);
-        neon.lineStyle(1, 0xc14bff, 0.07);
-        neon.strokeRoundedRect(-15, -27, 30, 46, 8);
+        // Thin Art-Deco frame hint
+        neon.lineStyle(2, 0x39d5ff, 0.09);
+        neon.strokeRoundedRect(-10, -18, 20, 30, 4);
+        neon.lineStyle(1, 0xc14bff, 0.06);
+        neon.strokeRoundedRect(-13, -21, 26, 36, 6);
+
+        // Billboard-style neon sign to sell the vibe (keep it subtle)
+        neon.fillStyle(0x39d5ff, 0.025);
+        neon.fillRoundedRect(tileHeight * 1.0, -tileHeight * 1.25, tileHeight * 2.4, tileHeight * 0.85, 6);
+        neon.lineStyle(2, 0x39d5ff, 0.08);
+        neon.strokeRoundedRect(tileHeight * 1.0, -tileHeight * 1.25, tileHeight * 2.4, tileHeight * 0.85, 6);
+        neon.lineStyle(1, 0xffb35c, 0.05);
+        neon.strokeRoundedRect(tileHeight * 1.05, -tileHeight * 1.2, tileHeight * 2.3, tileHeight * 0.75, 6);
 
         entrance.add(neon);
+        this.syncDepth(entrance, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW);
+        this.buildingMassings.push(entrance);
 
         // Subtle pulse
         this.tweens.add({
           targets: neon,
-          alpha: { from: 0.9, to: 1.0 },
-          duration: 2400,
+          alpha: { from: 0.85, to: 1.0 },
+          duration: 2800,
           yoyo: true,
           repeat: -1,
           ease: 'Sine.easeInOut',
