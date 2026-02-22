@@ -52,9 +52,10 @@ import {
 import { resolvePickupObjectName } from '../utils/itemDisplay';
 
 const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
-const MIN_CAMERA_ZOOM = 0.6;
+const MIN_CAMERA_ZOOM = 0.35;
 const MAX_CAMERA_ZOOM = 2.3;
-const CAMERA_BOUND_PADDING_TILES = 6;
+// Extra padding so you can zoom out and still frame tall skyline landmarks near the map edge.
+const CAMERA_BOUND_PADDING_TILES = 14;
 const CAMERA_FOLLOW_LERP = 0.08;
 const COMBAT_ZOOM_MULTIPLIER = 1.28;
 const COMBAT_ZOOM_MIN_DELTA = 0.22;
@@ -330,8 +331,14 @@ export class MainScene extends Phaser.Scene {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         if (params.get('poc') === 'esb') {
-          this.cameras.main.setZoom(1.05);
-          this.focusCameraOnGridPosition(14, 33, false);
+          const esb = this.currentMapArea?.buildings?.find((b) => b.id === 'block_2_1');
+          if (esb) {
+            const centerX = (esb.footprint.from.x + esb.footprint.to.x) / 2;
+            const centerY = (esb.footprint.from.y + esb.footprint.to.y) / 2;
+            this.focusCameraOnGridPosition(centerX, centerY, false);
+          } else {
+            this.focusCameraOnGridPosition(14, 33, false);
+          }
         }
       }
     } else {

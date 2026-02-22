@@ -210,10 +210,10 @@ const createCityArea = (
   };
   const walls: Position[] = [];
 
-  const addBlock = (x1: number, y1: number, x2: number, y2: number) => {
+  const addBlock = (x1: number, y1: number, x2: number, y2: number, allowBoulevard = false) => {
     for (let y = y1; y <= y2; y++) {
       for (let x = x1; x <= x2; x++) {
-        if (!isCityBoulevard(x, y)) {
+        if (allowBoulevard || !isCityBoulevard(x, y)) {
           walls.push({ x, y });
         }
       }
@@ -225,7 +225,9 @@ const createCityArea = (
       building.footprint.from.x,
       building.footprint.from.y,
       building.footprint.to.x,
-      building.footprint.to.y
+      building.footprint.to.y,
+      // ESB PoC: block even boulevards so the footprint matches the landmark base.
+      building.id === 'block_2_1'
     );
   });
 
