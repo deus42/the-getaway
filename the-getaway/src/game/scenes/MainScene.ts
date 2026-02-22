@@ -101,7 +101,7 @@ export class MainScene extends Phaser.Scene {
   private coverDebugGraphics?: Phaser.GameObjects.Graphics;
   private currentMapArea: MapArea | null = null;
   private buildingLabels: Phaser.GameObjects.Container[] = [];
-  private buildingMassings: Phaser.GameObjects.Container[] = [];
+  private buildingMassings: Phaser.GameObjects.GameObject[] = [];
   private buildingMassingEntries: BuildingMassingEntry[] = [];
   private unsubscribe: (() => void) | null = null;
   private playerInitialPosition?: Position;

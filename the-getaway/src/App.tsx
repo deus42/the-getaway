@@ -17,6 +17,7 @@ import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
 import StealthIndicator from "./components/ui/StealthIndicator";
 import CurfewWarning from "./components/ui/CurfewWarning";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
+import { setLightsEnabled, setVisualQualityPreset } from "./store/settingsSlice";
 import { selectHudLayoutPreset } from "./store/selectors/hudLayoutSelectors";
 import { HudLayoutPreset } from "./store/hudLayoutSlice";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
@@ -516,6 +517,13 @@ function AppShell() {
       backgroundId: 'corpsec_defector',
       visualPreset: 'default',
     };
+
+    // Ensure Light2D is enabled for the ESB neon PoC (unless user explicitly disabled it later).
+    const currentPreset = store.getState().settings.visualQualityPreset;
+    if (currentPreset === 'performance') {
+      store.dispatch(setVisualQualityPreset('balanced'));
+    }
+    store.dispatch(setLightsEnabled(true));
 
     handleCharacterCreationComplete(pocData);
   }, [gameStarted, showCharacterCreation]);

@@ -108,6 +108,11 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
   // ESB PoC: force the entrance to the right side of the block to match the landmark render.
   if (sanitized.id === 'block_2_1') {
     clampedX = maxX;
+    sanitized.door = {
+      x: clampedX,
+      y: Math.floor((from.y + to.y) / 2),
+    };
+    return sanitized;
   }
 
   sanitized.door = {
