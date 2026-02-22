@@ -157,35 +157,7 @@ jobs:
       - name: Validate deployed preview assets
         run: |
           set -euo pipefail
-
-          TARGET_DIR="site/${DEPLOY_SUBPATH}"
-          INDEX_FILE="${TARGET_DIR}/index.html"
-
-          if [ ! -f "${INDEX_FILE}" ]; then
-            echo "Missing ${INDEX_FILE}"
-            exit 1
-          fi
-
-          TARGET_DIR="${TARGET_DIR}" node - <<'NODE'
-          const fs = require('fs');
-          const path = require('path');
-
-          const targetDir = process.env.TARGET_DIR;
-          const indexPath = path.join(targetDir, 'index.html');
-          const html = fs.readFileSync(indexPath, 'utf8');
-
-          const re = /assets\/[^"']+/g;
-          const refs = Array.from(new Set(html.match(re) || []));
-          const missing = refs.filter((rel) => !fs.existsSync(path.join(targetDir, rel)));
-
-          if (missing.length) {
-            console.error('ERROR: index.html references missing assets:');
-            for (const m of missing) console.error(' - ' + m);
-            process.exit(2);
-          }
-
-          console.log(`OK: validated ${refs.length} asset references in ${indexPath}`);
-          NODE
+          TARGET_DIR="site/${DEPLOY_SUBPATH}" node scripts/validate-preview-assets.mjs
 
       - name: Commit and push gh-pages content
         run: |
