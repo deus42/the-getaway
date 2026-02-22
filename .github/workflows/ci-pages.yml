@@ -167,11 +167,13 @@ jobs:
             exit 1
           fi
 
+          TARGET_DIR="site/${DEPLOY_SUBPATH}" \
           python3 - <<'PY'
+import os
 import re
 from pathlib import Path
 
-target = Path("site") / Path("${DEPLOY_SUBPATH}")
+target = Path(os.environ["TARGET_DIR"]).resolve()
 index = target / "index.html"
 text = index.read_text(encoding="utf-8", errors="ignore")
 
