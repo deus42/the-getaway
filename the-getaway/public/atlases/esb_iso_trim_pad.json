@@ -1,18 +1,18 @@
 {
   "frames": {
     "esb_iso": {
-      "frame": { "x": 0, "y": 0, "w": 316, "h": 841 },
+      "frame": { "x": 0, "y": 0, "w": 2048, "h": 2048 },
       "rotated": false,
       "trimmed": false,
-      "spriteSourceSize": { "x": 0, "y": 0, "w": 316, "h": 841 },
-      "sourceSize": { "w": 316, "h": 841 }
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 2048, "h": 2048 },
+      "sourceSize": { "w": 2048, "h": 2048 }
     }
   },
   "meta": {
-    "app": "chatgpt",
+    "app": "blender",
     "version": "1.0",
     "image": "esb_iso_trim_pad.png",
-    "size": { "w": 316, "h": 841 },
+    "size": { "w": 2048, "h": 2048 },
     "scale": "1"
   }
 }
