@@ -154,7 +154,6 @@ jobs:
           fi
 
           touch site/.nojekyll
-
       - name: Validate deployed preview assets
         run: |
           set -euo pipefail
@@ -167,33 +166,26 @@ jobs:
             exit 1
           fi
 
-          export TARGET_DIR="site/${DEPLOY_SUBPATH}"
-          python3 - <<'PY'
-          import os
-          import re
-          from pathlib import Path
+          TARGET_DIR="${TARGET_DIR}" node - <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
 
-          target = Path(os.environ["TARGET_DIR"]).resolve()
-          index = target / "index.html"
-          text = index.read_text(encoding="utf-8", errors="ignore")
+          const targetDir = process.env.TARGET_DIR;
+          const indexPath = path.join(targetDir, 'index.html');
+          const html = fs.readFileSync(indexPath, 'utf8');
 
-          # Extract any assets referenced in src/href attributes.
-          paths = set(re.findall(r"assets/[^\"']+", text))
+          const re = /assets\/[^"']+/g;
+          const refs = Array.from(new Set(html.match(re) || []));
+          const missing = refs.filter((rel) => !fs.existsSync(path.join(targetDir, rel)));
 
-          missing = []
-          for rel in sorted(paths):
-              p = target / rel
-              if not p.exists():
-                  missing.append(rel)
+          if (missing.length) {
+            console.error('ERROR: index.html references missing assets:');
+            for (const m of missing) console.error(' - ' + m);
+            process.exit(2);
+          }
 
-          if missing:
-              print("ERROR: index.html references missing assets:")
-              for m in missing:
-                  print(" -", m)
-              raise SystemExit(2)
-
-          print(f"OK: validated {len(paths)} asset references in {index}")
-          PY
+          console.log(`OK: validated ${refs.length} asset references in ${indexPath}`);
+          NODE
 
       - name: Commit and push gh-pages content
         run: |
