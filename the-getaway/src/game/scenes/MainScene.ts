@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { MapArea, TileType, Position, Enemy, MapTile, NPC, AlertLevel, Item, SurveillanceZoneState } from '../interfaces/types';
+import { MapArea, TileType, Position, Enemy, MapTile, NPC, Item, SurveillanceZoneState } from '../interfaces/types';
 import { DEFAULT_TILE_SIZE } from '../world/grid';
 import { RootState, store } from '../../store';
 import { updateGameTime as updateGameTimeAction } from '../../store/worldSlice';
@@ -17,9 +17,7 @@ import {
   adjustColor,
   IsoMetrics,
 } from '../utils/iso';
-import { getVisionConeTiles } from '../combat/perception';
 import { LevelBuildingDefinition } from '../../content/levels/level0/types';
-import CameraSprite from '../objects/CameraSprite';
 import { DepthManager, DepthBias, DepthLayers, computeDepth, syncDepthPoint } from '../utils/depth';
 import type { DepthResolvableGameObject } from '../utils/depth';
 import type { BuildingVisualProfile, VisualTheme } from '../visual/contracts';
@@ -48,6 +46,7 @@ import { CameraModule } from './main/modules/CameraModule';
 import { DayNightOverlayModule } from './main/modules/DayNightOverlayModule';
 import { InputModule } from './main/modules/InputModule';
 import { MinimapBridgeModule } from './main/modules/MinimapBridgeModule';
+import { SurveillanceRenderModule } from './main/modules/SurveillanceRenderModule';
 
 // Tracks enemy marker geometry alongside its floating health label
 interface EnemySpriteData {
@@ -86,7 +85,6 @@ export class MainScene extends Phaser.Scene {
   private playerNameLabel?: Phaser.GameObjects.Text;
   private enemySprites: Map<string, EnemySpriteData> = new Map();
   private npcSprites: Map<string, NpcSpriteData> = new Map();
-  private cameraSprites: Map<string, CameraSprite> = new Map();
   private coverDebugGraphics?: Phaser.GameObjects.Graphics;
   private currentMapArea: MapArea | null = null;
   private buildingLabels: Phaser.GameObjects.Container[] = [];
@@ -128,6 +126,7 @@ export class MainScene extends Phaser.Scene {
   private readonly minimapBridgeModule = new MinimapBridgeModule(this);
   private readonly inputModule = new InputModule(this);
   private readonly cameraModule = new CameraModule(this);
+  private readonly surveillanceRenderModule = new SurveillanceRenderModule(this);
   private lastStoreSnapshot: RootState = store.getState();
 
   constructor() {
@@ -150,6 +149,7 @@ export class MainScene extends Phaser.Scene {
     this.sceneModuleRegistry = new SceneModuleRegistry(context);
     this.sceneModuleRegistry.register(this.dayNightOverlayModule);
     this.sceneModuleRegistry.register(this.minimapBridgeModule);
+    this.sceneModuleRegistry.register(this.surveillanceRenderModule);
     this.sceneModuleRegistry.register(this.inputModule);
     this.sceneModuleRegistry.register(this.cameraModule);
     this.sceneModuleRegistry.onCreate();
@@ -336,10 +336,7 @@ export class MainScene extends Phaser.Scene {
   }
 
   private destroyCameraSprites(): void {
-    this.cameraSprites.forEach((sprite) => {
-      sprite.destroy(true);
-    });
-    this.cameraSprites.clear();
+    this.surveillanceRenderModule.clearCameraSprites();
   }
 
   private cleanupScene(): void {
@@ -1012,116 +1009,11 @@ export class MainScene extends Phaser.Scene {
   }
 
   private renderVisionCones(): void {
-    if (!this.currentMapArea || !this.visionConeGraphics) {
-      return;
-    }
-
-    this.visionConeGraphics.clear();
-
-    const enemies = this.currentMapArea.entities.enemies;
-    const metrics = this.getIsoMetrics();
-
-    enemies.forEach((enemy) => {
-      if (!enemy.visionCone || enemy.health <= 0) {
-        return;
-      }
-
-      // Get all tiles in vision cone
-      const visionTiles = getVisionConeTiles(
-        enemy.position,
-        enemy.visionCone,
-        this.currentMapArea!
-      );
-
-      if (visionTiles.length === 0) {
-        return;
-      }
-
-      // Determine color based on alert level
-      let coneColor = 0xffff00; // Yellow for idle/suspicious
-      let coneAlpha = 0.1;
-
-      switch (enemy.alertLevel) {
-        case AlertLevel.SUSPICIOUS:
-          coneColor = 0xffaa00;
-          coneAlpha = 0.15;
-          break;
-        case AlertLevel.INVESTIGATING:
-          coneColor = 0xff6600;
-          coneAlpha = 0.2;
-          break;
-        case AlertLevel.ALARMED:
-          coneColor = 0xff0000;
-          coneAlpha = 0.25;
-          break;
-        default:
-          coneColor = 0xffff00;
-          coneAlpha = 0.1;
-      }
-
-      // Draw vision cone tiles
-      this.visionConeGraphics.fillStyle(coneColor, coneAlpha);
-
-      visionTiles.forEach((tile) => {
-        const pixelPos = this.calculatePixelPosition(tile.x, tile.y);
-
-        // Draw isometric diamond for each tile
-        const points = [
-          pixelPos.x, pixelPos.y - metrics.tileHeight / 2,  // top
-          pixelPos.x + metrics.tileWidth / 2, pixelPos.y,    // right
-          pixelPos.x, pixelPos.y + metrics.tileHeight / 2,  // bottom
-          pixelPos.x - metrics.tileWidth / 2, pixelPos.y,    // left
-        ];
-
-        this.visionConeGraphics.fillPoints(points, true);
-      });
-    });
+    this.surveillanceRenderModule.renderVisionCones();
   }
 
   private updateSurveillanceCameras(zone?: SurveillanceZoneState, overlayEnabled: boolean = false): void {
-    if (!zone || !this.currentMapArea) {
-      if (this.cameraSprites.size > 0) {
-        this.destroyCameraSprites();
-      }
-      return;
-    }
-
-    const remainingIds = new Set(this.cameraSprites.keys());
-    const metrics = this.getIsoMetrics();
-
-    Object.values(zone.cameras).forEach((camera) => {
-      remainingIds.delete(camera.id);
-      const pixelPos = this.calculatePixelPosition(camera.position.x, camera.position.y);
-      let sprite = this.cameraSprites.get(camera.id);
-
-      if (!sprite) {
-        sprite = new CameraSprite(this, pixelPos.x, pixelPos.y, {
-          tileSize: this.tileSize,
-          rangeTiles: camera.range,
-          fieldOfView: camera.fieldOfView,
-          initialDirection: camera.currentDirection,
-        });
-        this.cameraSprites.set(camera.id, sprite);
-      } else {
-        sprite.setPosition(pixelPos.x, pixelPos.y);
-        sprite.setRangeTiles(camera.range);
-      }
-
-      const depthBias = DepthBias.PROP_TALL + Math.round(metrics.tileHeight * 0.5);
-      this.syncDepth(sprite, pixelPos.x, pixelPos.y, depthBias);
-      sprite.setOverlayVisible(overlayEnabled);
-      sprite.setActiveState(camera.isActive);
-      sprite.setAlertState(camera.alertState);
-      sprite.setDirection(camera.currentDirection);
-    });
-
-    remainingIds.forEach((cameraId) => {
-      const sprite = this.cameraSprites.get(cameraId);
-      if (sprite) {
-        sprite.destroy(true);
-      }
-      this.cameraSprites.delete(cameraId);
-    });
+    this.surveillanceRenderModule.updateSurveillanceCameras(zone, overlayEnabled);
   }
 
   public shutdown(): void {

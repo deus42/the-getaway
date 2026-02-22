@@ -130,9 +130,10 @@ flowchart LR
 6. Initial extraction modules live in `the-getaway/src/game/scenes/main/modules/`:
    - `DayNightOverlayModule.ts` (overlay init/resize/update/zoom application)
    - `MinimapBridgeModule.ts` (minimap init/shutdown + viewport updates)
+   - `SurveillanceRenderModule.ts` (vision-cone rendering + surveillance camera sprite lifecycle/cleanup)
    - `InputModule.ts` (tile click, path preview, pickup sync listener wiring)
    - `CameraModule.ts` (camera follow/bounds/zoom/resize orchestration)
-7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
+7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
 
 ## Narrative Resource Hierarchy
 > Category: content_pipeline  

@@ -10,11 +10,15 @@ type MainSceneDayNightInternals = {
   cameras: Phaser.Cameras.Scene2D.CameraManager;
   scale: Phaser.Scale.ScaleManager;
   sys: Phaser.Scenes.Systems;
+  inCombat: boolean;
   dayNightOverlay?: Phaser.GameObjects.Rectangle;
   currentGameTime: number;
   registerStaticDepth(target: Phaser.GameObjects.GameObject, depth: number): void;
   resolveAtmosphereProfile(baseOverlayRgba?: string): { overlayColor: number; overlayAlpha: number };
 };
+
+const COMBAT_OVERLAY_ALPHA_CAP = 0.28;
+const COMBAT_OVERLAY_COLOR = 0xffffff;
 
 export class DayNightOverlayModule implements SceneModule<MainScene> {
   readonly key = 'dayNightOverlay';
@@ -79,7 +83,11 @@ export class DayNightOverlayModule implements SceneModule<MainScene> {
 
     const baseOverlay = getDayNightOverlayColor(scene.currentGameTime, DEFAULT_DAY_NIGHT_CONFIG);
     const atmosphere = scene.resolveAtmosphereProfile(baseOverlay);
-    scene.dayNightOverlay.setFillStyle(atmosphere.overlayColor, atmosphere.overlayAlpha);
+    const overlayAlpha = scene.inCombat
+      ? Math.min(atmosphere.overlayAlpha, COMBAT_OVERLAY_ALPHA_CAP)
+      : atmosphere.overlayAlpha;
+    const overlayColor = scene.inCombat ? COMBAT_OVERLAY_COLOR : atmosphere.overlayColor;
+    scene.dayNightOverlay.setFillStyle(overlayColor, overlayAlpha);
   }
 
   private readonly handleVisibilityChange = (): void => {
