@@ -103,12 +103,46 @@ flowchart LR
 1. `the-getaway/src/game/visual/contracts.ts` defines shared render contracts (`VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`) including district lot/massing fields (`lotPattern`, `massingStyle`, `massingHeight`, `trimHex`, `atmosphereHex`).
 2. `the-getaway/src/game/visual/theme/noirVectorTheme.ts` resolves quality budgets and district/entity palettes; `createNoirVectorTheme` and `resolveBuildingVisualProfile` provide deterministic defaults.
 3. `the-getaway/src/game/visual/world/DistrictComposer.ts` composes deterministic district grammar (facade/lot/massing selection + seeded color shifts), then `the-getaway/src/game/world/worldMap.ts` injects those profiles into `MapBuildingDefinition.visualProfile`.
-4. `the-getaway/src/game/scenes/MainScene.ts` delegates world rendering to `the-getaway/src/game/visual/world/TilePainter.ts` and `the-getaway/src/game/visual/world/BuildingPainter.ts`, and now renders dedicated building-massing layers (`drawBuildingMasses`) plus skyline-composition backdrops.
+4. `the-getaway/src/game/scenes/MainScene.ts` delegates world rendering orchestration to `the-getaway/src/game/scenes/main/modules/WorldRenderModule.ts`, which drives `the-getaway/src/game/visual/world/TilePainter.ts` and `the-getaway/src/game/visual/world/BuildingPainter.ts` while rendering dedicated building-massing layers (`drawBuildingMasses`) plus skyline-composition backdrops.
 5. `the-getaway/src/game/visual/world/AtmosphereDirector.ts` resolves deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection alpha, overlay tint/alpha) from district mix + world time + preset budgets.
 6. `the-getaway/src/game/visual/world/OcclusionReadabilityController.ts` applies visual-only readability compensation (building alpha fade + token/label emphasis) when entities overlap heavy massing bounds, restoring prior-frame baselines so boosts remain transient.
 7. `the-getaway/src/game/visual/world/PropScatter.ts` generates deterministic prop placements that avoid door tiles/door buffers/protected interactive tiles and applies district-aware clustering for denser composition without blocking routes.
 8. `the-getaway/src/game/visual/entities/CharacterRigFactory.ts` supplies silhouette-v2 procedural rigs with role-specific overlays and motion cues integrated into player/NPC/enemy update flows in `MainScene` while preserving nameplates, health bars, and combat indicators.
 9. `the-getaway/src/components/GameCanvas.tsx`, `the-getaway/src/game/settings/visualSettings.ts`, and `the-getaway/src/store/settingsSlice.ts` coordinate smooth-vector renderer defaults and quality-preset-aware FX budgets (`performance | balanced | cinematic`), including shared fog/emissive/wet-reflection/occlusion caps consumed by scene render systems.
+
+## MainScene Module Runtime
+> Category: scene_architecture  
+> ID: main_scene_module_runtime
+
+### Design principles
+
+- Keep `MainScene` focused on orchestration and compatibility, while extracted modules own bounded responsibilities.
+- Standardize scene lifecycle hooks (`init`, `onCreate`, `onStateChange`, `onResize`, `onUpdate`, `onShutdown`) so future extraction can proceed incrementally without behavior drift.
+- Centralize listener/resource cleanup through a shared disposable primitive to reduce leak risk during scene restarts and hot state changes.
+
+### Technical flow
+
+1. `the-getaway/src/game/scenes/main/SceneModule.ts` defines the lifecycle contract consumed by all scene modules.
+2. `the-getaway/src/game/scenes/main/SceneContext.ts` builds module context (`scene`, typed `getState`/`dispatch`, listener bridge helpers, shared disposables).
+3. `the-getaway/src/game/runtime/resources/DisposableBag.ts` provides LIFO teardown, idempotent `dispose()`, and immediate execution for post-dispose registrations.
+4. `the-getaway/src/game/scenes/main/SceneModuleRegistry.ts` registers modules in deterministic order and fans out create/state/resize/update/shutdown events (reverse shutdown order).
+5. `the-getaway/src/game/scenes/MainScene.ts` initializes registry + context once per scene create, forwards lifecycle events to the registry, and keeps public scene APIs stable while delegating extracted behavior.
+6. Initial extraction modules live in `the-getaway/src/game/scenes/main/modules/`:
+   - `DayNightOverlayModule.ts` (overlay init/resize/update/zoom application)
+   - `MinimapBridgeModule.ts` (minimap init/shutdown + viewport updates)
+   - `SurveillanceRenderModule.ts` (vision-cone rendering + surveillance camera sprite lifecycle/cleanup)
+   - `WorldRenderModule.ts` (backdrop/map redraw cadence, atmosphere profile resolution, occlusion + building massing/label rendering, lighting pipeline)
+   - `EntityRenderModule.ts` (player/enemy/NPC token + label updates, combat bars/indicators, player screen-position dispatch)
+   - `StateSyncModule.ts` (Redux state-change orchestration for combat transitions, map swaps, entity refresh, and surveillance overlay sync)
+   - `ClockModule.ts` (world-time accumulator, dispatch cadence, suspicion-decay tick dispatch, and timed atmosphere redraw signaling)
+   - `InputModule.ts` (tile click, path preview, pickup sync listener wiring)
+   - `CameraModule.ts` (camera follow/bounds/zoom/resize orchestration)
+7. `MainScene.ts` now exposes only compatibility APIs required externally (`focusCameraOnGridPosition`, `worldToGrid`, `worldToGridContinuous`, `emitViewportUpdate`) while module-owned runtime state (camera/entity/world/state-sync/clock) remains inside module instances.
+8. Architecture guardrails are enforced by `the-getaway/scripts/check-scene-architecture.mjs` and chained into `yarn lint`:
+   - fail if `the-getaway/src/game/scenes/MainScene.ts` exceeds 400 lines,
+   - fail if any production file in `the-getaway/src/game/scenes/main/modules/*.ts` contains `as unknown as`,
+   - fail if `MainScene` declares mutable public property fields.
+9. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/ClockModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/WorldRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/EntityRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/StateSyncModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
 
 ## Narrative Resource Hierarchy
 > Category: content_pipeline  

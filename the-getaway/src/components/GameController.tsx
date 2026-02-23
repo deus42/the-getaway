@@ -1844,22 +1844,16 @@ const GameController: React.FC = () => {
       return;
     }
 
-    const delayMs = player.movementProfile === "silent" ? 140 : 0;
+    const delayMs = player.movementProfile === 'silent' ? 140 : 0;
 
-    if (delayMs > 0) {
-      if (movementStepTimeoutRef.current !== null) {
-        return;
-      }
-
-      movementStepTimeoutRef.current = window.setTimeout(() => {
-        movementStepTimeoutRef.current = null;
-        dispatch(movePlayer(nextStep));
-      }, delayMs);
-
+    if (movementStepTimeoutRef.current !== null) {
       return;
     }
 
-    dispatch(movePlayer(nextStep));
+    movementStepTimeoutRef.current = window.setTimeout(() => {
+      movementStepTimeoutRef.current = null;
+      dispatch(movePlayer(nextStep));
+    }, delayMs);
   }, [
     queuedPath,
     player,
