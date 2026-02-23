@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import { MapArea, Position } from '../../../interfaces/types';
-import type { IsoMetrics } from '../../../utils/iso';
 import type { MainScene } from '../../MainScene';
+import type { CameraModulePorts, CameraRuntimeState } from '../contracts/ModulePorts';
+import type { MapArea } from '../../../interfaces/types';
 import { SceneContext } from '../SceneContext';
 import { SceneModule } from '../SceneModule';
 
@@ -14,52 +14,143 @@ const COMBAT_ZOOM_MULTIPLIER = 1.28;
 const COMBAT_ZOOM_MIN_DELTA = 0.22;
 const CAMERA_ZOOM_TWEEN_MS = 340;
 
-type MainSceneCameraInternals = {
-  cameras: Phaser.Cameras.Scene2D.CameraManager;
-  scale: Phaser.Scale.ScaleManager;
-  sys: Phaser.Scenes.Systems;
-  tweens: Phaser.Tweens.TweenManager;
-  currentMapArea: MapArea | null;
-  playerInitialPosition?: Position;
-  playerToken?: { container: Phaser.GameObjects.Container };
-  inCombat: boolean;
-  isCameraFollowingPlayer: boolean;
-  hasInitialZoomApplied: boolean;
-  userAdjustedZoom: boolean;
-  pendingCameraRestore: boolean;
-  preCombatZoom: number | null;
-  preCombatUserAdjusted: boolean;
-  pendingRestoreUserAdjusted: boolean | null;
-  baselineCameraZoom: number;
-  cameraZoomTween: Phaser.Tweens.Tween | null;
-  isoOriginX: number;
-  isoOriginY: number;
-  tileSize: number;
-  currentAtmosphereProfile?: unknown;
-  lastAtmosphereRedrawBucket: number;
-  ensureIsoFactory(): void;
-  ensureVisualPipeline(): void;
-  computeIsoBounds(): { minX: number; maxX: number; minY: number; maxY: number };
-  getIsoMetrics(): IsoMetrics;
-  calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number };
-  renderStaticProps(): void;
-  drawBackdrop(): void;
-  drawMap(tiles: MapArea['tiles']): void;
-  drawBuildingMasses(): void;
-  drawBuildingLabels(): void;
-  clearPathPreview(): void;
-  resizeDayNightOverlay(): void;
-  applyOverlayZoom(): void;
-  emitViewportUpdate(): void;
-  dispatchPlayerScreenPosition(): void;
+const readValue = <T>(target: object, key: string): T | undefined => {
+  return Reflect.get(target, key) as T | undefined;
 };
+
+const readRequiredValue = <T>(target: object, key: string): T => {
+  const value = readValue<T>(target, key);
+  if (value === undefined || value === null) {
+    throw new Error(`[CameraModule] Missing required scene value: ${key}`);
+  }
+  return value;
+};
+
+const readNumber = (target: object, key: string, fallback: number): number => {
+  const value = readValue<unknown>(target, key);
+  return typeof value === 'number' ? value : fallback;
+};
+
+const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[]): TReturn => {
+  const value = readValue<unknown>(target, key);
+  if (typeof value !== 'function') {
+    throw new Error(`[CameraModule] Missing required scene method: ${key}`);
+  }
+
+  return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
+};
+
+const createCameraModulePorts = (scene: MainScene): CameraModulePorts => {
+  return {
+    cameras: readRequiredValue(scene, 'cameras'),
+    scale: readRequiredValue(scene, 'scale'),
+    sys: readRequiredValue(scene, 'sys'),
+    tweens: readRequiredValue(scene, 'tweens'),
+    getCurrentMapArea: () => readValue(scene, 'currentMapArea') ?? null,
+    getPlayerInitialPosition: () => readValue(scene, 'playerInitialPosition'),
+    getPlayerTokenContainer: () => {
+      const token = readValue<{ container?: Phaser.GameObjects.Container }>(scene, 'playerToken');
+      return token?.container;
+    },
+    getTileSize: () => readNumber(scene, 'tileSize', 0),
+    setIsoOrigin: (originX: number, originY: number) => {
+      Reflect.set(scene, 'isoOriginX', originX);
+      Reflect.set(scene, 'isoOriginY', originY);
+    },
+    ensureIsoFactory: () => {
+      callSceneMethod(scene, 'ensureIsoFactory');
+    },
+    ensureVisualPipeline: () => {
+      callSceneMethod(scene, 'ensureVisualPipeline');
+    },
+    getIsoMetrics: () => callSceneMethod(scene, 'getIsoMetrics'),
+    calculatePixelPosition: (gridX: number, gridY: number) => callSceneMethod(scene, 'calculatePixelPosition', gridX, gridY),
+    computeIsoBounds: () => callSceneMethod(scene, 'computeIsoBounds'),
+    renderStaticProps: () => {
+      callSceneMethod(scene, 'renderStaticProps');
+    },
+    drawBackdrop: () => {
+      callSceneMethod(scene, 'drawBackdrop');
+    },
+    drawMap: (tiles: MapArea['tiles']) => {
+      callSceneMethod(scene, 'drawMap', tiles);
+    },
+    drawBuildingMasses: () => {
+      callSceneMethod(scene, 'drawBuildingMasses');
+    },
+    drawBuildingLabels: () => {
+      callSceneMethod(scene, 'drawBuildingLabels');
+    },
+    clearPathPreview: () => {
+      callSceneMethod(scene, 'clearPathPreview');
+    },
+    resizeDayNightOverlay: () => {
+      callSceneMethod(scene, 'resizeDayNightOverlay');
+    },
+    applyOverlayZoom: () => {
+      callSceneMethod(scene, 'applyOverlayZoom');
+    },
+    emitViewportUpdate: () => {
+      callSceneMethod(scene, 'emitViewportUpdate');
+    },
+    dispatchPlayerScreenPosition: () => {
+      callSceneMethod(scene, 'dispatchPlayerScreenPosition');
+    },
+    isInCombat: () => Boolean(readValue(scene, 'inCombat')),
+    readRuntimeState: () => ({
+      isCameraFollowingPlayer: Boolean(readValue(scene, 'isCameraFollowingPlayer')),
+      hasInitialZoomApplied: Boolean(readValue(scene, 'hasInitialZoomApplied')),
+      userAdjustedZoom: Boolean(readValue(scene, 'userAdjustedZoom')),
+      pendingCameraRestore: Boolean(readValue(scene, 'pendingCameraRestore')),
+      preCombatZoom: readValue(scene, 'preCombatZoom') ?? null,
+      preCombatUserAdjusted: Boolean(readValue(scene, 'preCombatUserAdjusted')),
+      pendingRestoreUserAdjusted: readValue(scene, 'pendingRestoreUserAdjusted') ?? null,
+      baselineCameraZoom: readNumber(scene, 'baselineCameraZoom', 1),
+      cameraZoomTween: readValue(scene, 'cameraZoomTween') ?? null,
+    }),
+    writeRuntimeState: (state: CameraRuntimeState) => {
+      Reflect.set(scene, 'isCameraFollowingPlayer', state.isCameraFollowingPlayer);
+      Reflect.set(scene, 'hasInitialZoomApplied', state.hasInitialZoomApplied);
+      Reflect.set(scene, 'userAdjustedZoom', state.userAdjustedZoom);
+      Reflect.set(scene, 'pendingCameraRestore', state.pendingCameraRestore);
+      Reflect.set(scene, 'preCombatZoom', state.preCombatZoom);
+      Reflect.set(scene, 'preCombatUserAdjusted', state.preCombatUserAdjusted);
+      Reflect.set(scene, 'pendingRestoreUserAdjusted', state.pendingRestoreUserAdjusted);
+      Reflect.set(scene, 'baselineCameraZoom', state.baselineCameraZoom);
+      Reflect.set(scene, 'cameraZoomTween', state.cameraZoomTween);
+    },
+  };
+};
+
+const createDefaultRuntimeState = (): CameraRuntimeState => ({
+  isCameraFollowingPlayer: false,
+  hasInitialZoomApplied: false,
+  userAdjustedZoom: false,
+  pendingCameraRestore: false,
+  preCombatZoom: null,
+  preCombatUserAdjusted: false,
+  pendingRestoreUserAdjusted: null,
+  baselineCameraZoom: 1,
+  cameraZoomTween: null,
+});
 
 export class CameraModule implements SceneModule<MainScene> {
   readonly key = 'camera';
 
   private context!: SceneContext<MainScene>;
 
-  constructor(private readonly scene: MainScene) {}
+  private readonly ports: CameraModulePorts;
+
+  private runtimeState: CameraRuntimeState;
+
+  constructor(scene: MainScene, ports?: CameraModulePorts) {
+    this.ports = ports ?? createCameraModulePorts(scene);
+    this.runtimeState = {
+      ...createDefaultRuntimeState(),
+      ...this.ports.readRuntimeState?.(),
+    };
+    this.pushRuntimeStateToPorts();
+  }
 
   init(context: SceneContext<MainScene>): void {
     this.context = context;
@@ -70,60 +161,58 @@ export class CameraModule implements SceneModule<MainScene> {
   }
 
   onResize(): void {
-    const scene = this.getScene();
-    if (scene.sys.isActive() && scene.currentMapArea) {
+    if (this.ports.sys.isActive() && this.ports.getCurrentMapArea()) {
       this.setupCameraAndMap();
       this.enablePlayerCameraFollow();
-      scene.resizeDayNightOverlay();
+      this.ports.resizeDayNightOverlay();
     }
   }
 
+  onShutdown(): void {
+    this.stopCameraZoomTween();
+  }
+
   setupCameraAndMap(): void {
-    const scene = this.getScene();
-    if (!scene.currentMapArea) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea) {
       return;
     }
 
-    const { width, height } = scene.currentMapArea;
-    const { tileHeight, halfTileWidth, halfTileHeight } = scene.getIsoMetrics();
-    const canvasWidth = scene.scale.width;
-    const canvasHeight = scene.scale.height;
+    const { width, height } = currentMapArea;
+    const { tileHeight, halfTileWidth, halfTileHeight } = this.ports.getIsoMetrics();
+    const canvasWidth = this.ports.scale.width;
+    const canvasHeight = this.ports.scale.height;
 
-    scene.isoOriginX = (height - 1) * halfTileWidth;
-    scene.isoOriginY = tileHeight;
-    scene.ensureIsoFactory();
-    scene.ensureVisualPipeline();
+    this.ports.setIsoOrigin((height - 1) * halfTileWidth, tileHeight);
+    this.ports.ensureIsoFactory();
+    this.ports.ensureVisualPipeline();
 
     const isoWidth = (width + height) * halfTileWidth;
     const isoHeight = (width + height) * halfTileHeight;
     const zoomX = canvasWidth / isoWidth;
     const zoomY = canvasHeight / isoHeight;
     const fitZoom = Math.min(zoomX, zoomY);
-    const desiredZoom = Phaser.Math.Clamp(
-      fitZoom * DEFAULT_FIT_ZOOM_FACTOR,
-      MIN_CAMERA_ZOOM,
-      MAX_CAMERA_ZOOM
-    );
+    const desiredZoom = Phaser.Math.Clamp(fitZoom * DEFAULT_FIT_ZOOM_FACTOR, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
 
-    const camera = scene.cameras.main;
-    const restoreActive = scene.pendingCameraRestore || Boolean(scene.cameraZoomTween);
+    const camera = this.ports.cameras.main;
+    const restoreActive = this.runtimeState.pendingCameraRestore || Boolean(this.runtimeState.cameraZoomTween);
 
-    if (!scene.inCombat) {
-      if (!scene.hasInitialZoomApplied) {
+    if (!this.ports.isInCombat()) {
+      if (!this.runtimeState.hasInitialZoomApplied) {
         if (!restoreActive) {
           camera.setZoom(desiredZoom);
         }
-      } else if (!scene.userAdjustedZoom && !restoreActive) {
+      } else if (!this.runtimeState.userAdjustedZoom && !restoreActive) {
         const zoomDelta = Math.abs(camera.zoom - desiredZoom);
         if (zoomDelta > 0.0008) {
-          scene.userAdjustedZoom = false;
+          this.runtimeState.userAdjustedZoom = false;
           this.animateCameraZoom(desiredZoom);
         }
       }
     }
 
-    const bounds = scene.computeIsoBounds();
-    const padding = scene.tileSize * CAMERA_BOUND_PADDING_TILES;
+    const bounds = this.ports.computeIsoBounds();
+    const padding = this.ports.getTileSize() * CAMERA_BOUND_PADDING_TILES;
     camera.setBounds(
       bounds.minX - padding,
       bounds.minY - padding,
@@ -133,58 +222,65 @@ export class CameraModule implements SceneModule<MainScene> {
 
     const centerX = (width - 1) / 2;
     const centerY = (height - 1) / 2;
-    const centerPoint = scene.calculatePixelPosition(centerX, centerY);
-    const spawnPoint = scene.playerInitialPosition
-      ? scene.calculatePixelPosition(scene.playerInitialPosition.x, scene.playerInitialPosition.y)
+    const centerPoint = this.ports.calculatePixelPosition(centerX, centerY);
+    const playerInitialPosition = this.ports.getPlayerInitialPosition();
+    const spawnPoint = playerInitialPosition
+      ? this.ports.calculatePixelPosition(playerInitialPosition.x, playerInitialPosition.y)
       : null;
     const focusPoint = spawnPoint ?? centerPoint;
 
-    if (!scene.isCameraFollowingPlayer) {
+    if (!this.runtimeState.isCameraFollowingPlayer) {
       camera.centerOn(focusPoint.x, focusPoint.y + tileHeight * 0.25);
     } else {
       this.recenterCameraOnPlayer();
     }
 
-    scene.renderStaticProps();
-    scene.drawBackdrop();
-    scene.drawMap(scene.currentMapArea.tiles);
-    scene.drawBuildingMasses();
-    scene.drawBuildingLabels();
-    scene.clearPathPreview();
-    scene.resizeDayNightOverlay();
-    scene.emitViewportUpdate();
+    this.ports.renderStaticProps();
+    this.ports.drawBackdrop();
+    this.ports.drawMap(currentMapArea.tiles);
+    this.ports.drawBuildingMasses();
+    this.ports.drawBuildingLabels();
+    this.ports.clearPathPreview();
+    this.ports.resizeDayNightOverlay();
+    this.ports.emitViewportUpdate();
 
-    if (!scene.inCombat && !restoreActive) {
-      scene.baselineCameraZoom = camera.zoom;
+    if (!this.ports.isInCombat() && !restoreActive) {
+      this.runtimeState.baselineCameraZoom = camera.zoom;
     }
-    scene.hasInitialZoomApplied = true;
+    this.runtimeState.hasInitialZoomApplied = true;
+    this.pushRuntimeStateToPorts();
   }
 
   enablePlayerCameraFollow(): void {
-    const scene = this.getScene();
-    if (!scene.playerToken || !scene.sys.isActive()) {
+    const tokenContainer = this.ports.getPlayerTokenContainer();
+    if (!tokenContainer || !this.ports.sys.isActive()) {
       return;
     }
 
-    const camera = scene.cameras.main;
-    if (!scene.isCameraFollowingPlayer) {
-      camera.startFollow(scene.playerToken.container, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
+    const camera = this.ports.cameras.main;
+    if (!this.runtimeState.isCameraFollowingPlayer) {
+      camera.startFollow(tokenContainer, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     }
-    camera.setDeadzone(Math.max(120, scene.scale.width * 0.22), Math.max(160, scene.scale.height * 0.28));
-    scene.isCameraFollowingPlayer = true;
+    camera.setDeadzone(Math.max(120, this.ports.scale.width * 0.22), Math.max(160, this.ports.scale.height * 0.28));
+    this.runtimeState.isCameraFollowingPlayer = true;
+    this.pushRuntimeStateToPorts();
     this.recenterCameraOnPlayer();
-    scene.dispatchPlayerScreenPosition();
+    this.ports.dispatchPlayerScreenPosition();
   }
 
   recenterCameraOnPlayer(): void {
-    const scene = this.getScene();
-    if (!scene.playerToken || !scene.sys.isActive()) {
+    const tokenContainer = this.ports.getPlayerTokenContainer();
+    if (!tokenContainer || !this.ports.sys.isActive()) {
       return;
     }
 
-    const camera = scene.cameras.main;
-    camera.centerOn(scene.playerToken.container.x, scene.playerToken.container.y);
-    scene.dispatchPlayerScreenPosition();
+    const camera = this.ports.cameras.main;
+    camera.centerOn(tokenContainer.x, tokenContainer.y);
+    this.ports.dispatchPlayerScreenPosition();
+  }
+
+  isFollowingPlayer(): boolean {
+    return this.runtimeState.isCameraFollowingPlayer;
   }
 
   clampCameraToBounds(camera: Phaser.Cameras.Scene2D.Camera): void {
@@ -205,8 +301,7 @@ export class CameraModule implements SceneModule<MainScene> {
   }
 
   clampCameraCenterTarget(targetX: number, targetY: number): { x: number; y: number } {
-    const scene = this.getScene();
-    const camera = scene.cameras.main;
+    const camera = this.ports.cameras.main;
     const bounds = camera.getBounds();
 
     if (!bounds) {
@@ -230,40 +325,33 @@ export class CameraModule implements SceneModule<MainScene> {
   }
 
   focusCameraOnGridPosition(gridX: number, gridY: number, animate = true): void {
-    const scene = this.getScene();
-    if (!scene.sys.isActive() || !scene.currentMapArea) {
+    if (!this.ports.sys.isActive() || !this.ports.getCurrentMapArea()) {
       return;
     }
 
-    const metrics = scene.getIsoMetrics();
-    const pixelPos = scene.calculatePixelPosition(gridX, gridY);
+    const metrics = this.ports.getIsoMetrics();
+    const pixelPos = this.ports.calculatePixelPosition(gridX, gridY);
     const desiredX = pixelPos.x;
     const desiredY = pixelPos.y + metrics.halfTileHeight;
     const { x: targetX, y: targetY } = this.clampCameraCenterTarget(desiredX, desiredY);
-    const camera = scene.cameras.main;
+    const camera = this.ports.cameras.main;
 
-    scene.isCameraFollowingPlayer = false;
+    this.runtimeState.isCameraFollowingPlayer = false;
+    this.pushRuntimeStateToPorts();
     camera.stopFollow();
 
     const finalize = () => {
       this.clampCameraToBounds(camera);
-      scene.emitViewportUpdate();
+      this.ports.emitViewportUpdate();
     };
 
     if (animate) {
-      camera.pan(
-        targetX,
-        targetY,
-        300,
-        'Sine.easeInOut',
-        false,
-        (_cam: Phaser.Cameras.Scene2D.Camera, progress: number) => {
-        scene.emitViewportUpdate();
+      camera.pan(targetX, targetY, 300, 'Sine.easeInOut', false, (_cam, progress) => {
+        this.ports.emitViewportUpdate();
         if (progress === 1) {
           finalize();
         }
-        }
-      );
+      });
     } else {
       camera.centerOn(targetX, targetY);
       finalize();
@@ -271,28 +359,28 @@ export class CameraModule implements SceneModule<MainScene> {
   }
 
   stopCameraZoomTween(): void {
-    const scene = this.getScene();
-    if (scene.cameraZoomTween) {
-      scene.cameraZoomTween.remove();
-      scene.cameraZoomTween = null;
-      if (scene.pendingCameraRestore) {
-        scene.pendingCameraRestore = false;
-        if (scene.pendingRestoreUserAdjusted !== null) {
-          scene.userAdjustedZoom = scene.pendingRestoreUserAdjusted;
+    if (this.runtimeState.cameraZoomTween) {
+      this.runtimeState.cameraZoomTween.remove();
+      this.runtimeState.cameraZoomTween = null;
+      if (this.runtimeState.pendingCameraRestore) {
+        this.runtimeState.pendingCameraRestore = false;
+        if (this.runtimeState.pendingRestoreUserAdjusted !== null) {
+          this.runtimeState.userAdjustedZoom = this.runtimeState.pendingRestoreUserAdjusted;
         }
-        scene.preCombatZoom = null;
-        scene.preCombatUserAdjusted = false;
-        scene.pendingRestoreUserAdjusted = null;
+        this.runtimeState.preCombatZoom = null;
+        this.runtimeState.preCombatUserAdjusted = false;
+        this.runtimeState.pendingRestoreUserAdjusted = null;
       }
+      this.pushRuntimeStateToPorts();
     }
   }
 
   animateCameraZoom(targetZoom: number): void {
-    const scene = this.getScene();
-    if (!scene.sys.isActive()) {
+    if (!this.ports.sys.isActive()) {
       return;
     }
-    const camera = scene.cameras.main;
+
+    const camera = this.ports.cameras.main;
     if (!camera) {
       return;
     }
@@ -304,84 +392,99 @@ export class CameraModule implements SceneModule<MainScene> {
 
     if (Math.abs(currentZoom - clampedTarget) < 0.0005) {
       camera.setZoom(clampedTarget);
-      scene.applyOverlayZoom();
-      scene.emitViewportUpdate();
-      if (!scene.inCombat) {
-        scene.baselineCameraZoom = camera.zoom;
+      this.ports.applyOverlayZoom();
+      this.ports.emitViewportUpdate();
+      if (!this.ports.isInCombat()) {
+        this.runtimeState.baselineCameraZoom = camera.zoom;
       }
-      if (scene.pendingCameraRestore) {
-        scene.pendingCameraRestore = false;
-        if (scene.pendingRestoreUserAdjusted !== null) {
-          scene.userAdjustedZoom = scene.pendingRestoreUserAdjusted;
+      if (this.runtimeState.pendingCameraRestore) {
+        this.runtimeState.pendingCameraRestore = false;
+        if (this.runtimeState.pendingRestoreUserAdjusted !== null) {
+          this.runtimeState.userAdjustedZoom = this.runtimeState.pendingRestoreUserAdjusted;
         }
-        scene.preCombatZoom = null;
-        scene.preCombatUserAdjusted = false;
-        scene.pendingRestoreUserAdjusted = null;
+        this.runtimeState.preCombatZoom = null;
+        this.runtimeState.preCombatUserAdjusted = false;
+        this.runtimeState.pendingRestoreUserAdjusted = null;
       }
+      this.pushRuntimeStateToPorts();
       return;
     }
 
-    scene.cameraZoomTween = scene.tweens.add({
+    this.runtimeState.cameraZoomTween = this.ports.tweens.add({
       targets: camera,
       zoom: clampedTarget,
       duration: CAMERA_ZOOM_TWEEN_MS,
       ease: 'Sine.easeInOut',
       onUpdate: () => {
-        scene.applyOverlayZoom();
-        scene.emitViewportUpdate();
+        this.ports.applyOverlayZoom();
+        this.ports.emitViewportUpdate();
       },
       onComplete: () => {
-        scene.cameraZoomTween = null;
-        if (!scene.inCombat) {
-          scene.baselineCameraZoom = camera.zoom;
+        this.runtimeState.cameraZoomTween = null;
+        if (!this.ports.isInCombat()) {
+          this.runtimeState.baselineCameraZoom = camera.zoom;
         }
-        if (scene.pendingCameraRestore) {
-          scene.pendingCameraRestore = false;
-          if (scene.pendingRestoreUserAdjusted !== null) {
-            scene.userAdjustedZoom = scene.pendingRestoreUserAdjusted;
+        if (this.runtimeState.pendingCameraRestore) {
+          this.runtimeState.pendingCameraRestore = false;
+          if (this.runtimeState.pendingRestoreUserAdjusted !== null) {
+            this.runtimeState.userAdjustedZoom = this.runtimeState.pendingRestoreUserAdjusted;
           }
-          scene.preCombatZoom = null;
-          scene.preCombatUserAdjusted = false;
-          scene.pendingRestoreUserAdjusted = null;
+          this.runtimeState.preCombatZoom = null;
+          this.runtimeState.preCombatUserAdjusted = false;
+          this.runtimeState.pendingRestoreUserAdjusted = null;
         }
+        this.pushRuntimeStateToPorts();
       },
     });
+
+    this.pushRuntimeStateToPorts();
   }
 
   zoomCameraForCombat(): void {
-    const scene = this.getScene();
-    const camera = scene.cameras.main;
+    const camera = this.ports.cameras.main;
     if (!camera) {
       return;
     }
 
-    scene.pendingCameraRestore = false;
+    this.runtimeState.pendingCameraRestore = false;
     const explorationZoom = camera.zoom;
-    if (scene.preCombatZoom === null) {
-      scene.preCombatZoom = explorationZoom;
-      scene.preCombatUserAdjusted = scene.userAdjustedZoom;
+    if (this.runtimeState.preCombatZoom === null) {
+      this.runtimeState.preCombatZoom = explorationZoom;
+      this.runtimeState.preCombatUserAdjusted = this.runtimeState.userAdjustedZoom;
     }
-    scene.baselineCameraZoom = explorationZoom;
+    this.runtimeState.baselineCameraZoom = explorationZoom;
+
     const targetZoom = Math.min(
       MAX_CAMERA_ZOOM,
       Math.max(explorationZoom * COMBAT_ZOOM_MULTIPLIER, explorationZoom + COMBAT_ZOOM_MIN_DELTA)
     );
-    scene.userAdjustedZoom = false;
+    this.runtimeState.userAdjustedZoom = false;
+    this.pushRuntimeStateToPorts();
     this.animateCameraZoom(targetZoom);
   }
 
   restoreCameraAfterCombat(): void {
-    const scene = this.getScene();
-    const camera = scene.cameras.main;
+    const camera = this.ports.cameras.main;
     if (!camera) {
       return;
     }
 
-    const targetZoom = scene.preCombatZoom ?? scene.baselineCameraZoom ?? camera.zoom;
-    scene.pendingRestoreUserAdjusted = scene.preCombatUserAdjusted;
-    scene.userAdjustedZoom = true;
-    scene.pendingCameraRestore = true;
+    const targetZoom = this.runtimeState.preCombatZoom ?? this.runtimeState.baselineCameraZoom ?? camera.zoom;
+    this.runtimeState.pendingRestoreUserAdjusted = this.runtimeState.preCombatUserAdjusted;
+    this.runtimeState.userAdjustedZoom = true;
+    this.runtimeState.pendingCameraRestore = true;
+    this.pushRuntimeStateToPorts();
     this.animateCameraZoom(targetZoom);
+  }
+
+  resetForMapTransition(): void {
+    this.runtimeState.hasInitialZoomApplied = false;
+    this.runtimeState.userAdjustedZoom = false;
+    this.runtimeState.pendingCameraRestore = false;
+    this.runtimeState.preCombatZoom = null;
+    this.runtimeState.preCombatUserAdjusted = false;
+    this.runtimeState.pendingRestoreUserAdjusted = null;
+    this.pushRuntimeStateToPorts();
   }
 
   private readonly handleWheel = (
@@ -390,42 +493,34 @@ export class CameraModule implements SceneModule<MainScene> {
     _deltaX: number,
     deltaY: number
   ): void => {
-    const scene = this.getScene();
-    if (!scene.sys.isActive()) {
+    if (!this.ports.sys.isActive()) {
       return;
     }
 
-    const camera = scene.cameras.main;
+    const camera = this.ports.cameras.main;
     const zoomMultiplier = deltaY > 0 ? 0.82 : 1.18;
     const currentZoom = camera.zoom;
-    const targetZoom = Phaser.Math.Clamp(
-      currentZoom * zoomMultiplier,
-      MIN_CAMERA_ZOOM,
-      MAX_CAMERA_ZOOM
-    );
+    const targetZoom = Phaser.Math.Clamp(currentZoom * zoomMultiplier, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
 
     if (Math.abs(targetZoom - currentZoom) < 0.0005) {
       return;
     }
 
-    if (!scene.inCombat) {
-      scene.userAdjustedZoom = true;
+    if (!this.ports.isInCombat()) {
+      this.runtimeState.userAdjustedZoom = true;
     }
 
     this.stopCameraZoomTween();
 
     let worldPointBefore: Phaser.Math.Vector2 | null = null;
-    if (!scene.isCameraFollowingPlayer) {
+    if (!this.runtimeState.isCameraFollowingPlayer) {
       worldPointBefore = camera.getWorldPoint(pointer.x, pointer.y);
     }
 
     camera.setZoom(targetZoom);
 
-    if (scene.isCameraFollowingPlayer) {
-      camera.setDeadzone(
-        Math.max(120, scene.scale.width * 0.22),
-        Math.max(160, scene.scale.height * 0.28)
-      );
+    if (this.runtimeState.isCameraFollowingPlayer) {
+      camera.setDeadzone(Math.max(120, this.ports.scale.width * 0.22), Math.max(160, this.ports.scale.height * 0.28));
       this.recenterCameraOnPlayer();
     } else {
       const worldPointAfter = camera.getWorldPoint(pointer.x, pointer.y);
@@ -436,15 +531,17 @@ export class CameraModule implements SceneModule<MainScene> {
       this.clampCameraToBounds(camera);
     }
 
-    scene.applyOverlayZoom();
-    scene.emitViewportUpdate();
+    this.ports.applyOverlayZoom();
+    this.ports.emitViewportUpdate();
 
-    if (!scene.inCombat) {
-      scene.baselineCameraZoom = targetZoom;
+    if (!this.ports.isInCombat()) {
+      this.runtimeState.baselineCameraZoom = targetZoom;
     }
+
+    this.pushRuntimeStateToPorts();
   };
 
-  private getScene(): MainSceneCameraInternals {
-    return this.scene as unknown as MainSceneCameraInternals;
+  private pushRuntimeStateToPorts(): void {
+    this.ports.writeRuntimeState?.(this.runtimeState);
   }
 }

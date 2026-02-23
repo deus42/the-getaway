@@ -14,15 +14,19 @@ describe('EntityRenderModule', () => {
 
   it('dispatches player screen position events and deduplicates unchanged payloads', () => {
     const dispatchSpy = jest.spyOn(window, 'dispatchEvent');
-    const module = new EntityRenderModule({
+    const runtimeState: Record<string, unknown> = {
       playerToken: { container: { x: 120, y: 240 } },
-      sys: { isActive: () => true },
-      cameras: {
-        main: {
-          worldView: { x: 20, y: 40 },
-          zoom: 2,
-        },
-      },
+      playerNameLabel: undefined,
+      playerVitalsIndicator: undefined,
+      enemySprites: new Map(),
+      npcSprites: new Map(),
+      lastPlayerGridPosition: null,
+      lastPlayerScreenDetail: undefined,
+    };
+
+    const module = new EntityRenderModule({} as never, {
+      add: {} as never,
+      cameras: { main: { worldView: { x: 20, y: 40 }, zoom: 2 } } as never,
       game: {
         canvas: {
           getBoundingClientRect: () => ({
@@ -32,10 +36,24 @@ describe('EntityRenderModule', () => {
             top: 20,
           }),
         },
+      } as never,
+      scale: { width: 960, height: 540 } as never,
+      sys: { isActive: () => true } as never,
+      hasMapGraphics: () => true,
+      ensureIsoFactory: jest.fn(),
+      getIsoMetrics: () => ({ tileWidth: 64, tileHeight: 32 }),
+      calculatePixelPosition: (x: number, y: number) => ({ x, y }),
+      syncDepth: jest.fn(),
+      enablePlayerCameraFollow: jest.fn(),
+      isInCombat: () => false,
+      isCameraFollowingPlayer: () => true,
+      createCharacterToken: jest.fn() as never,
+      positionCharacterToken: jest.fn(),
+      readRuntimeState: () => runtimeState as never,
+      writeRuntimeState: (nextState) => {
+        Object.assign(runtimeState, nextState);
       },
-      scale: { width: 960, height: 540 },
-      lastPlayerScreenDetail: undefined,
-    } as never);
+    });
 
     module.dispatchPlayerScreenPosition();
     module.dispatchPlayerScreenPosition();

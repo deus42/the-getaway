@@ -2,124 +2,255 @@ import Phaser from 'phaser';
 import { Enemy, NPC, Position } from '../../../interfaces/types';
 import { PLAYER_SCREEN_POSITION_EVENT, PlayerScreenPositionDetail } from '../../../events';
 import { computeDepth, DepthBias } from '../../../utils/depth';
-import type { CharacterToken } from '../../../utils/IsoObjectFactory';
-import type { VisualTheme } from '../../../visual/contracts';
-import type { CharacterRigFactory } from '../../../visual/entities/CharacterRigFactory';
 import type { MainScene } from '../../MainScene';
+import type {
+  EntityRenderModulePorts,
+  EntityRenderRuntimeState,
+} from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
 
-type EnemySpriteRecord = {
-  token: CharacterToken;
-  healthBar: Phaser.GameObjects.Graphics;
-  nameLabel: Phaser.GameObjects.Text;
-  markedForRemoval: boolean;
+const readValue = <T>(target: object, key: string): T | undefined => {
+  return Reflect.get(target, key) as T | undefined;
 };
 
-type NpcSpriteRecord = {
-  token: CharacterToken;
-  indicator?: Phaser.GameObjects.Graphics;
-  nameLabel: Phaser.GameObjects.Text;
-  markedForRemoval: boolean;
+const readRequiredValue = <T>(target: object, key: string): T => {
+  const value = readValue<T>(target, key);
+  if (value === undefined || value === null) {
+    throw new Error(`[EntityRenderModule] Missing required scene value: ${key}`);
+  }
+  return value;
 };
 
-type MainSceneEntityInternals = {
-  add: Phaser.GameObjects.GameObjectFactory;
-  cameras: Phaser.Cameras.Scene2D.CameraManager;
-  game: Phaser.Game;
-  scale: Phaser.Scale.ScaleManager;
-  sys: Phaser.Scenes.Systems;
-  visualTheme: VisualTheme;
-  characterRigFactory?: CharacterRigFactory;
-  playerToken?: CharacterToken;
-  playerNameLabel?: Phaser.GameObjects.Text;
-  playerVitalsIndicator?: Phaser.GameObjects.Graphics;
-  enemySprites: Map<string, EnemySpriteRecord>;
-  npcSprites: Map<string, NpcSpriteRecord>;
-  inCombat: boolean;
-  isCameraFollowingPlayer: boolean;
-  lastPlayerGridPosition: Position | null;
-  lastPlayerScreenDetail?: PlayerScreenPositionDetail;
-  isoFactory?: {
-    positionCharacterToken(token: CharacterToken, gridX: number, gridY: number): void;
-    createCharacterToken(
-      gridX: number,
-      gridY: number,
-      profile: VisualTheme['entityProfiles'][keyof VisualTheme['entityProfiles']]
-    ): CharacterToken;
+const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[]): TReturn => {
+  const value = readValue<unknown>(target, key);
+  if (typeof value !== 'function') {
+    throw new Error(`[EntityRenderModule] Missing required scene method: ${key}`);
+  }
+
+  return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
+};
+
+const createEntityRenderModulePorts = (scene: MainScene): EntityRenderModulePorts => {
+  return {
+    add: readRequiredValue(scene, 'add'),
+    cameras: readRequiredValue(scene, 'cameras'),
+    game: readRequiredValue(scene, 'game'),
+    scale: readRequiredValue(scene, 'scale'),
+    sys: readRequiredValue(scene, 'sys'),
+    hasMapGraphics: () => Boolean(readValue(scene, 'mapGraphics')),
+    ensureIsoFactory: () => {
+      callSceneMethod(scene, 'ensureIsoFactory');
+    },
+    getIsoMetrics: () => callSceneMethod(scene, 'getIsoMetrics'),
+    calculatePixelPosition: (gridX: number, gridY: number) => callSceneMethod(scene, 'calculatePixelPosition', gridX, gridY),
+    syncDepth: (target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number) => {
+      callSceneMethod(scene, 'syncDepth', target, pixelX, pixelY, bias);
+    },
+    enablePlayerCameraFollow: () => {
+      callSceneMethod(scene, 'enablePlayerCameraFollow');
+    },
+    isInCombat: () => Boolean(readValue(scene, 'inCombat')),
+    isCameraFollowingPlayer: () => Boolean(readValue(scene, 'isCameraFollowingPlayer')),
+    createCharacterToken: (role, gridX, gridY) => {
+      const rigFactory = readValue<{
+        createToken: (tokenRole: 'player' | 'hostileNpc' | 'interactiveNpc' | 'friendlyNpc', x: number, y: number) => unknown;
+      }>(scene, 'characterRigFactory');
+      let createdToken: unknown;
+      if (rigFactory) {
+        createdToken = rigFactory.createToken(role, gridX, gridY);
+      } else {
+        const isoFactory = readRequiredValue<{
+          createCharacterToken: (x: number, y: number, profile: unknown) => unknown;
+        }>(scene, 'isoFactory');
+        const visualTheme = readRequiredValue<{ entityProfiles: Record<string, unknown> }>(scene, 'visualTheme');
+        createdToken = isoFactory.createCharacterToken(
+          gridX,
+          gridY,
+          visualTheme.entityProfiles[role]
+        );
+      }
+
+      if (!createdToken) {
+        throw new Error('[EntityRenderModule] Failed to create character token.');
+      }
+      return createdToken as NonNullable<EntityRenderRuntimeState['playerToken']>;
+    },
+    positionCharacterToken: (token, gridX, gridY) => {
+      const rigFactory = readValue<{
+        positionToken: (tokenArg: NonNullable<EntityRenderRuntimeState['playerToken']>, x: number, y: number) => void;
+      }>(scene, 'characterRigFactory');
+      if (rigFactory) {
+        rigFactory.positionToken(token, gridX, gridY);
+        return;
+      }
+
+      const isoFactory = readRequiredValue<{
+        positionCharacterToken: (tokenArg: NonNullable<EntityRenderRuntimeState['playerToken']>, x: number, y: number) => void;
+      }>(scene, 'isoFactory');
+      isoFactory.positionCharacterToken(token, gridX, gridY);
+    },
+    readRuntimeState: () => ({
+      playerToken: readValue(scene, 'playerToken'),
+      playerNameLabel: readValue(scene, 'playerNameLabel'),
+      playerVitalsIndicator: readValue(scene, 'playerVitalsIndicator'),
+      enemySprites: readValue(scene, 'enemySprites') ?? new Map(),
+      npcSprites: readValue(scene, 'npcSprites') ?? new Map(),
+      lastPlayerGridPosition: readValue(scene, 'lastPlayerGridPosition') ?? null,
+      lastPlayerScreenDetail: readValue(scene, 'lastPlayerScreenDetail'),
+    }),
+    writeRuntimeState: (state) => {
+      Reflect.set(scene, 'playerToken', state.playerToken);
+      Reflect.set(scene, 'playerNameLabel', state.playerNameLabel);
+      Reflect.set(scene, 'playerVitalsIndicator', state.playerVitalsIndicator);
+      Reflect.set(scene, 'enemySprites', state.enemySprites);
+      Reflect.set(scene, 'npcSprites', state.npcSprites);
+      Reflect.set(scene, 'lastPlayerGridPosition', state.lastPlayerGridPosition);
+      Reflect.set(scene, 'lastPlayerScreenDetail', state.lastPlayerScreenDetail);
+    },
   };
-  mapGraphics?: Phaser.GameObjects.Graphics;
-  ensureIsoFactory(): void;
-  getIsoMetrics(): { tileWidth: number; tileHeight: number };
-  calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number };
-  syncDepth(target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number): void;
-  enablePlayerCameraFollow(): void;
 };
+
+const createDefaultRuntimeState = (): EntityRenderRuntimeState => ({
+  playerToken: undefined,
+  playerNameLabel: undefined,
+  playerVitalsIndicator: undefined,
+  enemySprites: new Map(),
+  npcSprites: new Map(),
+  lastPlayerGridPosition: null,
+  lastPlayerScreenDetail: undefined,
+});
 
 export class EntityRenderModule implements SceneModule<MainScene> {
   readonly key = 'entityRender';
 
-  constructor(private readonly scene: MainScene) {}
+  private readonly ports: EntityRenderModulePorts;
+
+  private runtimeState: EntityRenderRuntimeState;
+
+  constructor(scene: MainScene, ports?: EntityRenderModulePorts) {
+    this.ports = ports ?? createEntityRenderModulePorts(scene);
+    this.runtimeState = createDefaultRuntimeState();
+    this.pullRuntimeStateFromPorts();
+    this.pushRuntimeStateToPorts();
+  }
 
   init(): void {}
 
+  onUpdate(): void {
+    this.dispatchPlayerScreenPosition();
+  }
+
+  onShutdown(): void {
+    this.pullRuntimeStateFromPorts();
+    this.clearEntities();
+
+    if (this.runtimeState.playerToken) {
+      this.runtimeState.playerToken.container.destroy(true);
+      this.runtimeState.playerToken = undefined;
+    }
+    if (this.runtimeState.playerNameLabel) {
+      this.runtimeState.playerNameLabel.destroy();
+      this.runtimeState.playerNameLabel = undefined;
+    }
+    this.runtimeState.lastPlayerGridPosition = null;
+    this.runtimeState.lastPlayerScreenDetail = undefined;
+    this.destroyPlayerVitalsIndicator();
+    this.pushRuntimeStateToPorts();
+  }
+
+  initializePlayer(position: Position | undefined, playerName: string): boolean {
+    this.pullRuntimeStateFromPorts();
+
+    if (!position) {
+      return false;
+    }
+
+    this.ports.ensureIsoFactory();
+    this.runtimeState.playerToken = this.ports.createCharacterToken('player', position.x, position.y);
+
+    const metrics = this.ports.getIsoMetrics();
+    const pixelPos = this.ports.calculatePixelPosition(position.x, position.y);
+    this.runtimeState.playerNameLabel = this.createCharacterNameLabel(playerName, 0x38bdf8, 14);
+    this.positionCharacterLabel(this.runtimeState.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
+    this.runtimeState.lastPlayerGridPosition = { ...position };
+    this.pushRuntimeStateToPorts();
+    return true;
+  }
+
+  getPlayerTokenContainer(): Phaser.GameObjects.Container | undefined {
+    this.pullRuntimeStateFromPorts();
+    return this.runtimeState.playerToken?.container;
+  }
+
+  getLastPlayerGridPosition(): Position | null {
+    this.pullRuntimeStateFromPorts();
+    return this.runtimeState.lastPlayerGridPosition;
+  }
+
+  getRuntimeStateSnapshot(): EntityRenderRuntimeState {
+    this.pullRuntimeStateFromPorts();
+    return this.runtimeState;
+  }
+
   updatePlayerPosition(position: Position): void {
-    const scene = this.getScene();
-    if (!scene.playerToken) {
+    this.pullRuntimeStateFromPorts();
+
+    if (!this.runtimeState.playerToken) {
       console.warn('[MainScene] Player token not available for position update.');
       return;
     }
 
     const hasPlayerMoved =
-      !scene.lastPlayerGridPosition ||
-      scene.lastPlayerGridPosition.x !== position.x ||
-      scene.lastPlayerGridPosition.y !== position.y;
+      !this.runtimeState.lastPlayerGridPosition ||
+      this.runtimeState.lastPlayerGridPosition.x !== position.x ||
+      this.runtimeState.lastPlayerGridPosition.y !== position.y;
 
-    scene.ensureIsoFactory();
-    if (scene.characterRigFactory) {
-      scene.characterRigFactory.positionToken(scene.playerToken, position.x, position.y);
-    } else {
-      scene.isoFactory!.positionCharacterToken(scene.playerToken, position.x, position.y);
-    }
+    this.ports.ensureIsoFactory();
+    this.ports.positionCharacterToken(this.runtimeState.playerToken, position.x, position.y);
 
-    const pixelPos = scene.calculatePixelPosition(position.x, position.y);
+    const pixelPos = this.ports.calculatePixelPosition(position.x, position.y);
     this.dispatchPlayerScreenPosition();
-    if (scene.playerNameLabel) {
-      const metrics = scene.getIsoMetrics();
-      this.positionCharacterLabel(scene.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
+
+    if (this.runtimeState.playerNameLabel) {
+      const metrics = this.ports.getIsoMetrics();
+      this.positionCharacterLabel(this.runtimeState.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
     }
 
     if (hasPlayerMoved) {
-      scene.lastPlayerGridPosition = { ...position };
-      if (!scene.isCameraFollowingPlayer) {
-        scene.enablePlayerCameraFollow();
+      this.runtimeState.lastPlayerGridPosition = { ...position };
+      if (!this.ports.isCameraFollowingPlayer()) {
+        this.ports.enablePlayerCameraFollow();
       }
     }
+
+    this.pushRuntimeStateToPorts();
   }
 
   updatePlayerVitalsIndicator(position: Position, health: number, maxHealth: number): void {
-    const scene = this.getScene();
-    if (!scene.inCombat) {
+    this.pullRuntimeStateFromPorts();
+
+    if (!this.ports.isInCombat()) {
       this.destroyPlayerVitalsIndicator();
       return;
     }
 
-    if (!scene.playerToken || !scene.sys.isActive()) {
+    if (!this.runtimeState.playerToken || !this.ports.sys.isActive()) {
       return;
     }
 
-    const metrics = scene.getIsoMetrics();
-    const pixelPos = scene.calculatePixelPosition(position.x, position.y);
+    const metrics = this.ports.getIsoMetrics();
+    const pixelPos = this.ports.calculatePixelPosition(position.x, position.y);
     const barWidth = metrics.tileWidth * 0.38;
     const barHeight = Math.max(4, metrics.tileHeight * 0.08);
     const x = pixelPos.x - barWidth / 2;
     const y = pixelPos.y - metrics.tileHeight * 0.7;
     const percent = maxHealth > 0 ? Math.max(0, Math.min(1, health / maxHealth)) : 0;
 
-    if (!scene.playerVitalsIndicator) {
-      scene.playerVitalsIndicator = scene.add.graphics();
+    if (!this.runtimeState.playerVitalsIndicator) {
+      this.runtimeState.playerVitalsIndicator = this.ports.add.graphics();
     }
 
-    const graphics = scene.playerVitalsIndicator;
+    const graphics = this.runtimeState.playerVitalsIndicator;
     graphics.clear();
     graphics.fillStyle(0x0f172a, 0.82);
     graphics.fillRoundedRect(x, y, barWidth, barHeight, Math.min(4, barHeight));
@@ -135,62 +266,59 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       );
     }
 
-    scene.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 9);
+    this.ports.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 9);
+    this.pushRuntimeStateToPorts();
   }
 
   destroyPlayerVitalsIndicator(): void {
-    const scene = this.getScene();
-    if (scene.playerVitalsIndicator) {
-      scene.playerVitalsIndicator.destroy();
-      scene.playerVitalsIndicator = undefined;
+    this.pullRuntimeStateFromPorts();
+
+    if (this.runtimeState.playerVitalsIndicator) {
+      this.runtimeState.playerVitalsIndicator.destroy();
+      this.runtimeState.playerVitalsIndicator = undefined;
+      this.pushRuntimeStateToPorts();
     }
   }
 
   updateEnemies(enemies: Enemy[]): void {
-    const scene = this.getScene();
-    if (!scene.mapGraphics || !scene.sys.isActive()) {
+    this.pullRuntimeStateFromPorts();
+
+    if (!this.ports.hasMapGraphics() || !this.ports.sys.isActive()) {
       return;
     }
 
-    scene.ensureIsoFactory();
+    this.ports.ensureIsoFactory();
 
-    scene.enemySprites.forEach((spriteData) => {
+    this.runtimeState.enemySprites.forEach((spriteData) => {
       spriteData.markedForRemoval = true;
     });
 
-    const metrics = scene.getIsoMetrics();
+    const metrics = this.ports.getIsoMetrics();
 
     for (const enemy of enemies) {
-      const existingSpriteData = scene.enemySprites.get(enemy.id);
-      const pixelPos = scene.calculatePixelPosition(enemy.position.x, enemy.position.y);
+      const existingSpriteData = this.runtimeState.enemySprites.get(enemy.id);
+      const pixelPos = this.ports.calculatePixelPosition(enemy.position.x, enemy.position.y);
 
       if (!existingSpriteData) {
         if (enemy.health <= 0) {
           continue;
         }
 
-        const token = scene.characterRigFactory
-          ? scene.characterRigFactory.createToken('hostileNpc', enemy.position.x, enemy.position.y)
-          : scene.isoFactory!.createCharacterToken(
-              enemy.position.x,
-              enemy.position.y,
-              scene.visualTheme.entityProfiles.hostileNpc
-            );
-
-        const healthBar = scene.add.graphics();
+        const token = this.ports.createCharacterToken('hostileNpc', enemy.position.x, enemy.position.y);
+        const healthBar = this.ports.add.graphics();
         healthBar.setVisible(false);
 
         const nameLabel = this.createCharacterNameLabel(enemy.name ?? 'Hostile', 0xef4444);
         this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
-        scene.enemySprites.set(enemy.id, {
+        this.runtimeState.enemySprites.set(enemy.id, {
           token,
           healthBar,
           nameLabel,
           markedForRemoval: false,
         });
 
-        const createdData = scene.enemySprites.get(enemy.id);
+        const createdData = this.runtimeState.enemySprites.get(enemy.id);
         if (createdData) {
           this.updateEnemyHealthBar(createdData, pixelPos, metrics, enemy);
         }
@@ -203,93 +331,109 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         continue;
       }
 
-      if (scene.characterRigFactory) {
-        scene.characterRigFactory.positionToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
-      } else {
-        scene.isoFactory!.positionCharacterToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
-      }
+      this.ports.positionCharacterToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
       existingSpriteData.markedForRemoval = false;
       this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
       this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
     }
 
-    scene.enemySprites.forEach((spriteData, id) => {
+    this.runtimeState.enemySprites.forEach((spriteData, id) => {
       if (spriteData.markedForRemoval) {
         spriteData.token.container.destroy(true);
         spriteData.healthBar.destroy();
         spriteData.nameLabel.destroy();
-        scene.enemySprites.delete(id);
+        this.runtimeState.enemySprites.delete(id);
       }
     });
+
+    this.pushRuntimeStateToPorts();
   }
 
   updateNpcs(npcs: NPC[]): void {
-    const scene = this.getScene();
-    if (!scene.sys.isActive()) {
+    this.pullRuntimeStateFromPorts();
+
+    if (!this.ports.sys.isActive()) {
       return;
     }
 
-    scene.npcSprites.forEach((spriteData) => {
+    this.runtimeState.npcSprites.forEach((spriteData) => {
       spriteData.markedForRemoval = true;
     });
 
-    scene.ensureIsoFactory();
-    const metrics = scene.getIsoMetrics();
+    this.ports.ensureIsoFactory();
+    const metrics = this.ports.getIsoMetrics();
 
     for (const npc of npcs) {
-      const existingSpriteData = scene.npcSprites.get(npc.id);
-      const pixelPos = scene.calculatePixelPosition(npc.position.x, npc.position.y);
+      const existingSpriteData = this.runtimeState.npcSprites.get(npc.id);
+      const pixelPos = this.ports.calculatePixelPosition(npc.position.x, npc.position.y);
 
       if (!existingSpriteData) {
         const role = npc.isInteractive ? 'interactiveNpc' : 'friendlyNpc';
-        const token = scene.characterRigFactory
-          ? scene.characterRigFactory.createToken(role, npc.position.x, npc.position.y)
-          : scene.isoFactory!.createCharacterToken(
-              npc.position.x,
-              npc.position.y,
-              scene.visualTheme.entityProfiles[role]
-            );
+        const token = this.ports.createCharacterToken(role, npc.position.x, npc.position.y);
 
         const nameLabel = this.createCharacterNameLabel(npc.name ?? 'Civilian', npc.isInteractive ? 0x22d3ee : 0x94a3b8);
         this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
 
-        const npcData: NpcSpriteRecord = {
+        const npcData = {
           token,
           nameLabel,
           markedForRemoval: false,
         };
 
-        scene.npcSprites.set(npc.id, npcData);
+        this.runtimeState.npcSprites.set(npc.id, npcData);
         this.updateNpcCombatIndicator(npcData, pixelPos, metrics, npc);
         continue;
       }
 
-      if (scene.characterRigFactory) {
-        scene.characterRigFactory.positionToken(existingSpriteData.token, npc.position.x, npc.position.y);
-      } else {
-        scene.isoFactory!.positionCharacterToken(existingSpriteData.token, npc.position.x, npc.position.y);
-      }
+      this.ports.positionCharacterToken(existingSpriteData.token, npc.position.x, npc.position.y);
       existingSpriteData.markedForRemoval = false;
       this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
       this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
     }
 
-    scene.npcSprites.forEach((spriteData, id) => {
+    this.runtimeState.npcSprites.forEach((spriteData, id) => {
       if (spriteData.markedForRemoval) {
         spriteData.token.container.destroy(true);
         spriteData.nameLabel.destroy();
         if (spriteData.indicator) {
           spriteData.indicator.destroy();
         }
-        scene.npcSprites.delete(id);
+        this.runtimeState.npcSprites.delete(id);
       }
     });
+
+    this.pushRuntimeStateToPorts();
+  }
+
+  clearForMapTransition(): void {
+    this.pullRuntimeStateFromPorts();
+    this.clearEntities();
+
+    this.runtimeState.lastPlayerScreenDetail = undefined;
+    this.runtimeState.lastPlayerGridPosition = null;
+    this.destroyPlayerVitalsIndicator();
+    this.pushRuntimeStateToPorts();
+  }
+
+  resetCombatIndicators(): void {
+    this.pullRuntimeStateFromPorts();
+    this.destroyPlayerVitalsIndicator();
+    this.runtimeState.enemySprites.forEach((data) => {
+      data.healthBar.clear();
+      data.healthBar.setVisible(false);
+    });
+    this.runtimeState.npcSprites.forEach((data) => {
+      if (data.indicator) {
+        data.indicator.destroy();
+        data.indicator = undefined;
+      }
+    });
+    this.pushRuntimeStateToPorts();
   }
 
   createCharacterNameLabel(name: string, accentColor: number, fontSize: number = 12): Phaser.GameObjects.Text {
-    const scene = this.getScene();
-    const label = scene.add.text(0, 0, name.toUpperCase(), {
+    const label = this.ports.add.text(0, 0, name.toUpperCase(), {
       fontFamily: 'Orbitron, "DM Sans", sans-serif',
       fontSize: `${fontSize}px`,
       fontStyle: '700',
@@ -315,30 +459,31 @@ export class EntityRenderModule implements SceneModule<MainScene> {
   }
 
   dispatchPlayerScreenPosition(): void {
-    const scene = this.getScene();
-    if (!scene.playerToken || !scene.sys.isActive()) {
+    this.pullRuntimeStateFromPorts();
+
+    if (!this.runtimeState.playerToken || !this.ports.sys.isActive()) {
       return;
     }
 
-    const camera = scene.cameras.main;
-    const container = scene.playerToken.container;
+    const camera = this.ports.cameras.main;
+    const container = this.runtimeState.playerToken.container;
 
     const worldX = container.x;
     const worldY = container.y;
     const screenX = (worldX - camera.worldView.x) * camera.zoom;
     const screenY = (worldY - camera.worldView.y) * camera.zoom;
 
-    const rect = scene.game.canvas?.getBoundingClientRect();
-    const displayWidth = rect?.width ?? scene.scale.width;
-    const displayHeight = rect?.height ?? scene.scale.height;
+    const rect = this.ports.game.canvas?.getBoundingClientRect();
+    const displayWidth = rect?.width ?? this.ports.scale.width;
+    const displayHeight = rect?.height ?? this.ports.scale.height;
 
     const detail: PlayerScreenPositionDetail = {
       worldX,
       worldY,
       screenX,
       screenY,
-      canvasWidth: scene.scale.width,
-      canvasHeight: scene.scale.height,
+      canvasWidth: this.ports.scale.width,
+      canvasHeight: this.ports.scale.height,
       canvasDisplayWidth: displayWidth,
       canvasDisplayHeight: displayHeight,
       canvasLeft: rect?.left ?? 0,
@@ -347,7 +492,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       timestamp: typeof performance !== 'undefined' ? performance.now() : Date.now(),
     };
 
-    const last = scene.lastPlayerScreenDetail;
+    const last = this.runtimeState.lastPlayerScreenDetail;
     if (
       last &&
       Math.abs(last.screenX - detail.screenX) < 0.5 &&
@@ -359,7 +504,9 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       return;
     }
 
-    scene.lastPlayerScreenDetail = detail;
+    this.runtimeState.lastPlayerScreenDetail = detail;
+    this.pushRuntimeStateToPorts();
+
     if (typeof window !== 'undefined') {
       window.__getawayPlayerScreenPosition = detail;
       window.dispatchEvent(new CustomEvent(PLAYER_SCREEN_POSITION_EVENT, { detail }));
@@ -367,13 +514,12 @@ export class EntityRenderModule implements SceneModule<MainScene> {
   }
 
   private updateNpcCombatIndicator(
-    data: NpcSpriteRecord,
+    data: NonNullable<EntityRenderRuntimeState['npcSprites']> extends Map<string, infer TValue> ? TValue : never,
     pixelPos: { x: number; y: number },
     metrics: { tileWidth: number; tileHeight: number },
     npc: NPC
   ): void {
-    const scene = this.getScene();
-    if (!scene.inCombat || !npc.isInteractive) {
+    if (!this.ports.isInCombat() || !npc.isInteractive) {
       if (data.indicator) {
         data.indicator.destroy();
         data.indicator = undefined;
@@ -382,7 +528,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
     }
 
     if (!data.indicator) {
-      data.indicator = scene.add.graphics();
+      data.indicator = this.ports.add.graphics();
     }
 
     const graphics = data.indicator;
@@ -402,18 +548,17 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       Math.max(1, barHeight - 2),
       Math.max(2, barHeight - 2)
     );
-    scene.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 6);
+    this.ports.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 6);
   }
 
   private updateEnemyHealthBar(
-    data: EnemySpriteRecord,
+    data: NonNullable<EntityRenderRuntimeState['enemySprites']> extends Map<string, infer TValue> ? TValue : never,
     pixelPos: { x: number; y: number },
     metrics: { tileWidth: number; tileHeight: number },
     enemy: Enemy
   ): void {
-    const scene = this.getScene();
     const graphics = data.healthBar;
-    if (!scene.inCombat) {
+    if (!this.ports.isInCombat()) {
       graphics.clear();
       graphics.setVisible(false);
       return;
@@ -441,14 +586,60 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       );
     }
 
-    scene.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 7);
+    this.ports.syncDepth(graphics, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 7);
+  }
+
+  private pullRuntimeStateFromPorts(): void {
+    const nextState = this.ports.readRuntimeState?.();
+    if (!nextState) {
+      return;
+    }
+
+    if (nextState.playerToken !== undefined) {
+      this.runtimeState.playerToken = nextState.playerToken;
+    }
+    if (nextState.playerNameLabel !== undefined) {
+      this.runtimeState.playerNameLabel = nextState.playerNameLabel;
+    }
+
+    this.runtimeState.playerVitalsIndicator = nextState.playerVitalsIndicator;
+
+    if (nextState.enemySprites) {
+      this.runtimeState.enemySprites = nextState.enemySprites;
+    }
+    if (nextState.npcSprites) {
+      this.runtimeState.npcSprites = nextState.npcSprites;
+    }
+    if (nextState.lastPlayerGridPosition !== undefined) {
+      this.runtimeState.lastPlayerGridPosition = nextState.lastPlayerGridPosition;
+    }
+    this.runtimeState.lastPlayerScreenDetail = nextState.lastPlayerScreenDetail;
+  }
+
+  private pushRuntimeStateToPorts(): void {
+    this.ports.writeRuntimeState?.(this.runtimeState);
+  }
+
+  private clearEntities(): void {
+    this.runtimeState.enemySprites.forEach((data) => {
+      data.token.container.destroy(true);
+      data.healthBar.destroy();
+      data.nameLabel.destroy();
+    });
+    this.runtimeState.enemySprites.clear();
+
+    this.runtimeState.npcSprites.forEach((data) => {
+      data.token.container.destroy(true);
+      data.nameLabel.destroy();
+      if (data.indicator) {
+        data.indicator.destroy();
+        data.indicator = undefined;
+      }
+    });
+    this.runtimeState.npcSprites.clear();
   }
 
   private colorToHex(color: number): string {
     return `#${color.toString(16).padStart(6, '0')}`;
-  }
-
-  private getScene(): MainSceneEntityInternals {
-    return this.scene as unknown as MainSceneEntityInternals;
   }
 }

@@ -1,27 +1,52 @@
 import Phaser from 'phaser';
-import { AlertLevel, MapArea, SurveillanceZoneState } from '../../../interfaces/types';
+import { AlertLevel, SurveillanceZoneState } from '../../../interfaces/types';
 import { getVisionConeTiles } from '../../../combat/perception';
 import { DepthBias } from '../../../utils/depth';
 import CameraSprite from '../../../objects/CameraSprite';
 import type { MainScene } from '../../MainScene';
+import type { SurveillanceRenderModulePorts } from '../contracts/ModulePorts';
 import { SceneContext } from '../SceneContext';
 import { SceneModule } from '../SceneModule';
 
-type MainSceneSurveillanceInternals = {
-  currentMapArea: MapArea | null;
-  visionConeGraphics?: Phaser.GameObjects.Graphics;
-  tileSize: number;
-  getIsoMetrics(): { tileWidth: number; tileHeight: number };
-  calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number };
-  syncDepth(target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number): void;
+const readValue = <T>(target: object, key: string): T | undefined => {
+  return Reflect.get(target, key) as T | undefined;
+};
+
+const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[]): TReturn => {
+  const value = readValue<unknown>(target, key);
+  if (typeof value !== 'function') {
+    throw new Error(`[SurveillanceRenderModule] Missing required scene method: ${key}`);
+  }
+
+  return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
+};
+
+const createSurveillanceRenderModulePorts = (scene: MainScene): SurveillanceRenderModulePorts => {
+  return {
+    getCurrentMapArea: () => readValue(scene, 'currentMapArea') ?? null,
+    getVisionConeGraphics: () => readValue(scene, 'visionConeGraphics'),
+    getTileSize: () => {
+      const value = readValue<unknown>(scene, 'tileSize');
+      return typeof value === 'number' ? value : 0;
+    },
+    getIsoMetrics: () => callSceneMethod(scene, 'getIsoMetrics'),
+    calculatePixelPosition: (gridX: number, gridY: number) => callSceneMethod(scene, 'calculatePixelPosition', gridX, gridY),
+    syncDepth: (target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number) => {
+      callSceneMethod(scene, 'syncDepth', target, pixelX, pixelY, bias);
+    },
+  };
 };
 
 export class SurveillanceRenderModule implements SceneModule<MainScene> {
   readonly key = 'surveillanceRender';
 
-  private cameraSprites: Map<string, CameraSprite> = new Map();
+  private readonly cameraSprites: Map<string, CameraSprite> = new Map();
 
-  constructor(private readonly scene: MainScene) {}
+  private readonly ports: SurveillanceRenderModulePorts;
+
+  constructor(private readonly scene: MainScene, ports?: SurveillanceRenderModulePorts) {
+    this.ports = ports ?? createSurveillanceRenderModulePorts(scene);
+  }
 
   init(_context: SceneContext<MainScene>): void {
     void _context;
@@ -39,28 +64,23 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
   }
 
   renderVisionCones(): void {
-    const scene = this.getScene();
-    if (!scene.currentMapArea || !scene.visionConeGraphics) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    const visionConeGraphics = this.ports.getVisionConeGraphics();
+    if (!currentMapArea || !visionConeGraphics) {
       return;
     }
 
-    const visionConeGraphics = scene.visionConeGraphics;
     visionConeGraphics.clear();
 
-    const enemies = scene.currentMapArea.entities.enemies;
-    const metrics = scene.getIsoMetrics();
+    const enemies = currentMapArea.entities.enemies;
+    const metrics = this.ports.getIsoMetrics();
 
     enemies.forEach((enemy) => {
       if (!enemy.visionCone || enemy.health <= 0) {
         return;
       }
 
-      const visionTiles = getVisionConeTiles(
-        enemy.position,
-        enemy.visionCone,
-        scene.currentMapArea!
-      );
-
+      const visionTiles = getVisionConeTiles(enemy.position, enemy.visionCone, currentMapArea);
       if (visionTiles.length === 0) {
         return;
       }
@@ -89,12 +109,16 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
       visionConeGraphics.fillStyle(coneColor, coneAlpha);
 
       visionTiles.forEach((tile) => {
-        const pixelPos = scene.calculatePixelPosition(tile.x, tile.y);
+        const pixelPos = this.ports.calculatePixelPosition(tile.x, tile.y);
         const points = [
-          pixelPos.x, pixelPos.y - metrics.tileHeight / 2,
-          pixelPos.x + metrics.tileWidth / 2, pixelPos.y,
-          pixelPos.x, pixelPos.y + metrics.tileHeight / 2,
-          pixelPos.x - metrics.tileWidth / 2, pixelPos.y,
+          pixelPos.x,
+          pixelPos.y - metrics.tileHeight / 2,
+          pixelPos.x + metrics.tileWidth / 2,
+          pixelPos.y,
+          pixelPos.x,
+          pixelPos.y + metrics.tileHeight / 2,
+          pixelPos.x - metrics.tileWidth / 2,
+          pixelPos.y,
         ];
 
         visionConeGraphics.fillPoints(points, true);
@@ -103,8 +127,8 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
   }
 
   updateSurveillanceCameras(zone?: SurveillanceZoneState, overlayEnabled = false): void {
-    const scene = this.getScene();
-    if (!zone || !scene.currentMapArea) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!zone || !currentMapArea) {
       if (this.cameraSprites.size > 0) {
         this.clearCameraSprites();
       }
@@ -112,16 +136,16 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
     }
 
     const remainingIds = new Set(this.cameraSprites.keys());
-    const metrics = scene.getIsoMetrics();
+    const metrics = this.ports.getIsoMetrics();
 
     Object.values(zone.cameras).forEach((camera) => {
       remainingIds.delete(camera.id);
-      const pixelPos = scene.calculatePixelPosition(camera.position.x, camera.position.y);
+      const pixelPos = this.ports.calculatePixelPosition(camera.position.x, camera.position.y);
       let sprite = this.cameraSprites.get(camera.id);
 
       if (!sprite) {
         sprite = new CameraSprite(this.scene, pixelPos.x, pixelPos.y, {
-          tileSize: scene.tileSize,
+          tileSize: this.ports.getTileSize(),
           rangeTiles: camera.range,
           fieldOfView: camera.fieldOfView,
           initialDirection: camera.currentDirection,
@@ -133,7 +157,7 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
       }
 
       const depthBias = DepthBias.PROP_TALL + Math.round(metrics.tileHeight * 0.5);
-      scene.syncDepth(sprite, pixelPos.x, pixelPos.y, depthBias);
+      this.ports.syncDepth(sprite, pixelPos.x, pixelPos.y, depthBias);
       sprite.setOverlayVisible(overlayEnabled);
       sprite.setActiveState(camera.isActive);
       sprite.setAlertState(camera.alertState);
@@ -147,9 +171,5 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
       }
       this.cameraSprites.delete(cameraId);
     });
-  }
-
-  private getScene(): MainSceneSurveillanceInternals {
-    return this.scene as unknown as MainSceneSurveillanceInternals;
   }
 }

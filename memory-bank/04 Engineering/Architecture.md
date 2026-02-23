@@ -134,9 +134,15 @@ flowchart LR
    - `WorldRenderModule.ts` (backdrop/map redraw cadence, atmosphere profile resolution, occlusion + building massing/label rendering, lighting pipeline)
    - `EntityRenderModule.ts` (player/enemy/NPC token + label updates, combat bars/indicators, player screen-position dispatch)
    - `StateSyncModule.ts` (Redux state-change orchestration for combat transitions, map swaps, entity refresh, and surveillance overlay sync)
+   - `ClockModule.ts` (world-time accumulator, dispatch cadence, suspicion-decay tick dispatch, and timed atmosphere redraw signaling)
    - `InputModule.ts` (tile click, path preview, pickup sync listener wiring)
    - `CameraModule.ts` (camera follow/bounds/zoom/resize orchestration)
-7. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/WorldRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/EntityRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/StateSyncModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
+7. `MainScene.ts` now exposes only compatibility APIs required externally (`focusCameraOnGridPosition`, `worldToGrid`, `worldToGridContinuous`, `emitViewportUpdate`) while module-owned runtime state (camera/entity/world/state-sync/clock) remains inside module instances.
+8. Architecture guardrails are enforced by `the-getaway/scripts/check-scene-architecture.mjs` and chained into `yarn lint`:
+   - fail if `the-getaway/src/game/scenes/MainScene.ts` exceeds 400 lines,
+   - fail if any production file in `the-getaway/src/game/scenes/main/modules/*.ts` contains `as unknown as`,
+   - fail if `MainScene` declares mutable public property fields.
+9. Contract/runtime behavior is covered by `the-getaway/src/game/scenes/main/__tests__/SceneModuleRegistry.test.ts`, `the-getaway/src/game/scenes/main/__tests__/SceneContext.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/ClockModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/SurveillanceRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/WorldRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/EntityRenderModule.test.ts`, `the-getaway/src/game/scenes/main/modules/__tests__/StateSyncModule.test.ts`, and `the-getaway/src/game/runtime/resources/__tests__/DisposableBag.test.ts`.
 
 ## Narrative Resource Hierarchy
 > Category: content_pipeline  

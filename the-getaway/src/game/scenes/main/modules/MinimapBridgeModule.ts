@@ -1,25 +1,52 @@
-import Phaser from 'phaser';
-import { MapArea } from '../../../interfaces/types';
 import { miniMapService } from '../../../services/miniMapService';
 import { ViewportUpdateDetail } from '../../../events';
 import type { MainScene } from '../../MainScene';
+import type { MinimapBridgeModulePorts } from '../contracts/ModulePorts';
 import { SceneContext } from '../SceneContext';
 import { SceneModule } from '../SceneModule';
 
-type MainSceneMinimapInternals = {
-  cameras: Phaser.Cameras.Scene2D.CameraManager;
-  sys: Phaser.Scenes.Systems;
-  currentMapArea: MapArea | null;
-  worldToGridContinuous(worldX: number, worldY: number): { x: number; y: number } | null;
+const readValue = <T>(target: object, key: string): T | undefined => {
+  return Reflect.get(target, key) as T | undefined;
+};
+
+const readRequiredValue = <T>(target: object, key: string): T => {
+  const value = readValue<T>(target, key);
+  if (value === undefined || value === null) {
+    throw new Error(`[MinimapBridgeModule] Missing required scene value: ${key}`);
+  }
+  return value;
+};
+
+const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[]): TReturn => {
+  const value = readValue<unknown>(target, key);
+  if (typeof value !== 'function') {
+    throw new Error(`[MinimapBridgeModule] Missing required scene method: ${key}`);
+  }
+
+  return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
+};
+
+const createMinimapBridgeModulePorts = (scene: MainScene): MinimapBridgeModulePorts => {
+  return {
+    cameras: readRequiredValue(scene, 'cameras'),
+    sys: readRequiredValue(scene, 'sys'),
+    getCurrentMapArea: () => readValue(scene, 'currentMapArea') ?? null,
+    worldToGridContinuous: (worldX: number, worldY: number) => {
+      return callSceneMethod(scene, 'worldToGridContinuous', worldX, worldY);
+    },
+  };
 };
 
 export class MinimapBridgeModule implements SceneModule<MainScene> {
   readonly key = 'minimapBridge';
 
-  constructor(private readonly scene: MainScene) {}
+  private readonly ports: MinimapBridgeModulePorts;
+
+  constructor(private readonly scene: MainScene, ports?: MinimapBridgeModulePorts) {
+    this.ports = ports ?? createMinimapBridgeModulePorts(scene);
+  }
 
   init(_context: SceneContext<MainScene>): void {
-    // No-op for now: minimap lifecycle only needs create/shutdown hooks.
     void _context;
   }
 
@@ -32,17 +59,17 @@ export class MinimapBridgeModule implements SceneModule<MainScene> {
   }
 
   emitViewportUpdate(): void {
-    const scene = this.getScene();
-    if (!scene.currentMapArea || !scene.sys.isActive()) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea || !this.ports.sys.isActive()) {
       return;
     }
 
-    const camera = scene.cameras.main;
+    const camera = this.ports.cameras.main;
     const view = camera.worldView;
-    const topLeft = scene.worldToGridContinuous(view.x, view.y);
-    const topRight = scene.worldToGridContinuous(view.x + view.width, view.y);
-    const bottomLeft = scene.worldToGridContinuous(view.x, view.y + view.height);
-    const bottomRight = scene.worldToGridContinuous(view.x + view.width, view.y + view.height);
+    const topLeft = this.ports.worldToGridContinuous(view.x, view.y);
+    const topRight = this.ports.worldToGridContinuous(view.x + view.width, view.y);
+    const bottomLeft = this.ports.worldToGridContinuous(view.x, view.y + view.height);
+    const bottomRight = this.ports.worldToGridContinuous(view.x + view.width, view.y + view.height);
 
     if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
       return;
@@ -82,9 +109,5 @@ export class MinimapBridgeModule implements SceneModule<MainScene> {
       ...detail,
       zoom: camera.zoom,
     });
-  }
-
-  private getScene(): MainSceneMinimapInternals {
-    return this.scene as unknown as MainSceneMinimapInternals;
   }
 }

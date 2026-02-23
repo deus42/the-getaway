@@ -4,10 +4,45 @@ jest.mock('phaser', () => ({
 }));
 
 import { WorldRenderModule } from '../WorldRenderModule';
+import type { WorldRenderModulePorts } from '../../contracts/ModulePorts';
+
+const createPorts = (
+  overrides: Partial<WorldRenderModulePorts> = {}
+): WorldRenderModulePorts => {
+  return {
+    add: {} as never,
+    game: { renderer: {} } as never,
+    lights: {
+      enable: () => ({ setAmbientColor: () => undefined }),
+      disable: () => undefined,
+    } as never,
+    mapGraphics: { clear: jest.fn() } as never,
+    getBackdropGraphics: () => undefined,
+    getCurrentMapArea: () => null,
+    getCurrentGameTime: () => 0,
+    getTileSize: () => 64,
+    getIsoFactory: () => undefined,
+    ensureIsoFactory: jest.fn(),
+    getIsoMetrics: () => ({ tileWidth: 64, tileHeight: 32 }),
+    calculatePixelPosition: (x: number, y: number) => ({ x, y }),
+    syncDepth: jest.fn(),
+    renderVisionCones: jest.fn(),
+    getStaticPropGroup: () => undefined,
+    setStaticPropGroup: jest.fn(),
+    getLightsFeatureEnabled: () => false,
+    setLightsFeatureEnabled: jest.fn(),
+    getDemoLampGrid: () => undefined,
+    setDemoLampGrid: jest.fn(),
+    getDemoPointLight: () => undefined,
+    setDemoPointLight: jest.fn(),
+    getLightingAmbientColor: () => 0x0f172a,
+    ...overrides,
+  };
+};
 
 describe('WorldRenderModule', () => {
   it('builds a stable sorted item marker signature', () => {
-    const module = new WorldRenderModule({} as never);
+    const module = new WorldRenderModule({} as never, createPorts());
     const signature = module.getItemMarkerSignature({
       id: 'zone-a',
       name: 'Zone A',
@@ -31,10 +66,16 @@ describe('WorldRenderModule', () => {
   });
 
   it('computes iso bounds from map corners', () => {
-    const module = new WorldRenderModule({
-      currentMapArea: { width: 2, height: 2 },
-      calculatePixelPosition: (x: number, y: number) => ({ x: x * 10, y: y * 20 }),
-    } as never);
+    const module = new WorldRenderModule(
+      {} as never,
+      createPorts({
+        getCurrentMapArea: () => ({ width: 2, height: 2 } as never),
+        calculatePixelPosition: (x: number, y: number) => ({
+          x: x * 10,
+          y: y * 20,
+        }),
+      })
+    );
 
     expect(module.computeIsoBounds()).toEqual({
       minX: 0,

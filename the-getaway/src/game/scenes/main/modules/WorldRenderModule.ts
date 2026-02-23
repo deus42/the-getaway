@@ -1,20 +1,21 @@
 import Phaser from 'phaser';
 import { Item, MapArea, MapTile, Position, TileType } from '../../../interfaces/types';
 import type { MainScene } from '../../MainScene';
+import type {
+  EntityRenderRuntimeState,
+  WorldRenderModulePorts,
+  WorldRenderRuntimeState,
+} from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
 import { DepthBias } from '../../../utils/depth';
 import { adjustColor } from '../../../utils/iso';
 import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../../../visual/theme/noirVectorTheme';
-import type { BuildingVisualProfile, VisualTheme } from '../../../visual/contracts';
+import type { BuildingVisualProfile } from '../../../visual/contracts';
 import { TilePainter } from '../../../visual/world/TilePainter';
 import { BuildingPainter } from '../../../visual/world/BuildingPainter';
 import { CharacterRigFactory } from '../../../visual/entities/CharacterRigFactory';
 import { AtmosphereDirector, type AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
-import {
-  OcclusionEntityHandle,
-  OcclusionMassHandle,
-  OcclusionReadabilityController,
-} from '../../../visual/world/OcclusionReadabilityController';
+import { OcclusionEntityHandle, OcclusionReadabilityController } from '../../../visual/world/OcclusionReadabilityController';
 import {
   getVisualFxBudgetForPreset,
   updateVisualSettings,
@@ -23,110 +24,238 @@ import {
 import { resolvePickupObjectName } from '../../../utils/itemDisplay';
 import { store } from '../../../../store';
 import { setLightsEnabled } from '../../../../store/settingsSlice';
-import type { CharacterToken, IsoObjectFactory } from '../../../utils/IsoObjectFactory';
+import type { CharacterToken } from '../../../utils/IsoObjectFactory';
+import type { EntityVisualRole } from '../../../visual/contracts';
 
-type EnemySpriteRecord = {
-  token: CharacterToken;
-  healthBar: Phaser.GameObjects.Graphics;
-  nameLabel: Phaser.GameObjects.Text;
-  markedForRemoval: boolean;
+const readValue = <T>(target: object, key: string): T | undefined => {
+  return Reflect.get(target, key) as T | undefined;
 };
 
-type NpcSpriteRecord = {
-  token: CharacterToken;
-  indicator?: Phaser.GameObjects.Graphics;
-  nameLabel: Phaser.GameObjects.Text;
-  markedForRemoval: boolean;
+const readRequiredValue = <T>(target: object, key: string): T => {
+  const value = readValue<T>(target, key);
+  if (value === undefined || value === null) {
+    throw new Error(`[WorldRenderModule] Missing required scene value: ${key}`);
+  }
+  return value;
 };
 
-type MainSceneWorldRenderInternals = {
-  add: Phaser.GameObjects.GameObjectFactory;
-  game: Phaser.Game;
-  lights: Phaser.GameObjects.LightsManager;
-  tileSize: number;
-  mapGraphics: Phaser.GameObjects.Graphics;
-  backdropGraphics: Phaser.GameObjects.Graphics;
-  visualTheme: VisualTheme;
-  tilePainter?: TilePainter;
-  buildingPainter?: BuildingPainter;
-  characterRigFactory?: CharacterRigFactory;
-  atmosphereDirector?: AtmosphereDirector;
-  occlusionReadabilityController?: OcclusionReadabilityController;
-  currentAtmosphereProfile?: AtmosphereProfile;
-  lastAtmosphereRedrawBucket: number;
-  buildingVisualProfiles: Record<string, BuildingVisualProfile>;
-  playerToken?: CharacterToken;
-  playerNameLabel?: Phaser.GameObjects.Text;
-  enemySprites: Map<string, EnemySpriteRecord>;
-  npcSprites: Map<string, NpcSpriteRecord>;
-  currentMapArea: MapArea | null;
-  buildingLabels: Phaser.GameObjects.Container[];
-  buildingMassings: Phaser.GameObjects.Container[];
-  buildingMassingEntries: OcclusionMassHandle[];
-  staticPropGroup?: Phaser.GameObjects.Group;
-  lightsFeatureEnabled: boolean;
-  demoLampGrid?: Position;
-  demoPointLight?: Phaser.GameObjects.PointLight;
-  lightingAmbientColor: number;
-  lastItemMarkerSignature: string;
-  currentGameTime: number;
-  isoOriginX: number;
-  isoOriginY: number;
-  isoFactory?: IsoObjectFactory;
-  ensureIsoFactory(): void;
-  getIsoMetrics(): { tileWidth: number; tileHeight: number };
-  calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number };
-  syncDepth(target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number): void;
-  renderVisionCones(): void;
+const readNumber = (target: object, key: string, fallback: number): number => {
+  const value = readValue<unknown>(target, key);
+  return typeof value === 'number' ? value : fallback;
+};
+
+const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[]): TReturn => {
+  const value = readValue<unknown>(target, key);
+  if (typeof value !== 'function') {
+    throw new Error(`[WorldRenderModule] Missing required scene method: ${key}`);
+  }
+
+  return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
+};
+
+const createDefaultRuntimeState = (): WorldRenderRuntimeState => ({
+  visualTheme: createNoirVectorTheme('balanced'),
+  tilePainter: undefined,
+  buildingPainter: undefined,
+  characterRigFactory: undefined,
+  atmosphereDirector: undefined,
+  occlusionReadabilityController: undefined,
+  buildingVisualProfiles: {},
+  buildingLabels: [],
+  buildingMassings: [],
+  buildingMassingEntries: [],
+  currentAtmosphereProfile: undefined,
+  lastAtmosphereRedrawBucket: -1,
+  lastItemMarkerSignature: '',
+});
+
+const createWorldRenderModulePorts = (scene: MainScene): WorldRenderModulePorts => {
+  return {
+    add: readRequiredValue(scene, 'add'),
+    game: readRequiredValue(scene, 'game'),
+    lights: readRequiredValue(scene, 'lights'),
+    mapGraphics: readRequiredValue(scene, 'mapGraphics'),
+    getBackdropGraphics: () => readValue(scene, 'backdropGraphics'),
+    getCurrentMapArea: () => readValue(scene, 'currentMapArea') ?? null,
+    getCurrentGameTime: () => readNumber(scene, 'currentGameTime', 0),
+    getTileSize: () => readNumber(scene, 'tileSize', 0),
+    getIsoFactory: () => readValue(scene, 'isoFactory'),
+    ensureIsoFactory: () => {
+      callSceneMethod(scene, 'ensureIsoFactory');
+    },
+    getIsoMetrics: () => callSceneMethod(scene, 'getIsoMetrics'),
+    calculatePixelPosition: (gridX: number, gridY: number) => callSceneMethod(scene, 'calculatePixelPosition', gridX, gridY),
+    syncDepth: (target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number) => {
+      callSceneMethod(scene, 'syncDepth', target, pixelX, pixelY, bias);
+    },
+    renderVisionCones: () => {
+      callSceneMethod(scene, 'renderVisionCones');
+    },
+    getStaticPropGroup: () => readValue(scene, 'staticPropGroup'),
+    setStaticPropGroup: (group) => {
+      Reflect.set(scene, 'staticPropGroup', group);
+    },
+    getLightsFeatureEnabled: () => Boolean(readValue(scene, 'lightsFeatureEnabled')),
+    setLightsFeatureEnabled: (enabled: boolean) => {
+      Reflect.set(scene, 'lightsFeatureEnabled', enabled);
+    },
+    getDemoLampGrid: () => readValue(scene, 'demoLampGrid'),
+    setDemoLampGrid: (position) => {
+      Reflect.set(scene, 'demoLampGrid', position);
+    },
+    getDemoPointLight: () => readValue(scene, 'demoPointLight'),
+    setDemoPointLight: (light) => {
+      Reflect.set(scene, 'demoPointLight', light);
+    },
+    getLightingAmbientColor: () => readNumber(scene, 'lightingAmbientColor', 0x0f172a),
+    readEntityRuntimeState: () => ({
+      playerToken: readValue(scene, 'playerToken'),
+      playerNameLabel: readValue(scene, 'playerNameLabel'),
+      enemySprites: readValue(scene, 'enemySprites') ?? new Map(),
+      npcSprites: readValue(scene, 'npcSprites') ?? new Map(),
+    }),
+    readRuntimeState: () => ({
+      visualTheme: readValue(scene, 'visualTheme') ?? createNoirVectorTheme('balanced'),
+      tilePainter: readValue(scene, 'tilePainter'),
+      buildingPainter: readValue(scene, 'buildingPainter'),
+      characterRigFactory: readValue(scene, 'characterRigFactory'),
+      atmosphereDirector: readValue(scene, 'atmosphereDirector'),
+      occlusionReadabilityController: readValue(scene, 'occlusionReadabilityController'),
+      buildingVisualProfiles: readValue(scene, 'buildingVisualProfiles') ?? {},
+      buildingLabels: readValue(scene, 'buildingLabels') ?? [],
+      buildingMassings: readValue(scene, 'buildingMassings') ?? [],
+      buildingMassingEntries: readValue(scene, 'buildingMassingEntries') ?? [],
+      currentAtmosphereProfile: readValue(scene, 'currentAtmosphereProfile'),
+      lastAtmosphereRedrawBucket: readNumber(scene, 'lastAtmosphereRedrawBucket', -1),
+      lastItemMarkerSignature: readValue(scene, 'lastItemMarkerSignature') ?? '',
+    }),
+    writeRuntimeState: (state) => {
+      Reflect.set(scene, 'visualTheme', state.visualTheme);
+      Reflect.set(scene, 'tilePainter', state.tilePainter);
+      Reflect.set(scene, 'buildingPainter', state.buildingPainter);
+      Reflect.set(scene, 'characterRigFactory', state.characterRigFactory);
+      Reflect.set(scene, 'atmosphereDirector', state.atmosphereDirector);
+      Reflect.set(scene, 'occlusionReadabilityController', state.occlusionReadabilityController);
+      Reflect.set(scene, 'buildingVisualProfiles', state.buildingVisualProfiles);
+      Reflect.set(scene, 'buildingLabels', state.buildingLabels);
+      Reflect.set(scene, 'buildingMassings', state.buildingMassings);
+      Reflect.set(scene, 'buildingMassingEntries', state.buildingMassingEntries);
+      Reflect.set(scene, 'currentAtmosphereProfile', state.currentAtmosphereProfile);
+      Reflect.set(scene, 'lastAtmosphereRedrawBucket', state.lastAtmosphereRedrawBucket);
+      Reflect.set(scene, 'lastItemMarkerSignature', state.lastItemMarkerSignature);
+    },
+  };
 };
 
 export class WorldRenderModule implements SceneModule<MainScene> {
   readonly key = 'worldRender';
 
-  constructor(private readonly scene: MainScene) {}
+  private readonly ports: WorldRenderModulePorts;
+
+  private runtimeState: WorldRenderRuntimeState;
+
+  constructor(private readonly scene: MainScene, ports?: WorldRenderModulePorts) {
+    this.ports = ports ?? createWorldRenderModulePorts(scene);
+    this.runtimeState = {
+      ...createDefaultRuntimeState(),
+      ...this.ports.readRuntimeState?.(),
+    };
+    this.pushRuntimeStateToPorts();
+  }
 
   init(): void {}
 
+  onShutdown(): void {
+    this.clearForMapTransition();
+    this.disableLighting(true);
+  }
+
+  createCharacterToken(role: EntityVisualRole, gridX: number, gridY: number): CharacterToken {
+    this.ensureVisualPipeline();
+    this.ports.ensureIsoFactory();
+
+    if (this.runtimeState.characterRigFactory) {
+      return this.runtimeState.characterRigFactory.createToken(role, gridX, gridY);
+    }
+
+    const isoFactory = this.ports.getIsoFactory();
+    if (!isoFactory) {
+      throw new Error('[WorldRenderModule] IsoObjectFactory not available while creating character token.');
+    }
+
+    return isoFactory.createCharacterToken(
+      gridX,
+      gridY,
+      this.runtimeState.visualTheme.entityProfiles[role]
+    );
+  }
+
+  positionCharacterToken(token: CharacterToken, gridX: number, gridY: number): void {
+    if (this.runtimeState.characterRigFactory) {
+      this.runtimeState.characterRigFactory.positionToken(token, gridX, gridY);
+      return;
+    }
+
+    const isoFactory = this.ports.getIsoFactory();
+    if (!isoFactory) {
+      throw new Error('[WorldRenderModule] IsoObjectFactory not available while positioning character token.');
+    }
+
+    isoFactory.positionCharacterToken(token, gridX, gridY);
+  }
+
+  getAtmosphereRedrawBucket(): number {
+    return this.runtimeState.lastAtmosphereRedrawBucket;
+  }
+
+  setAtmosphereRedrawBucket(bucket: number): void {
+    this.runtimeState.lastAtmosphereRedrawBucket = bucket;
+    this.pushRuntimeStateToPorts();
+  }
+
   ensureVisualPipeline(): void {
-    const scene = this.getScene();
     const preset = store.getState().settings.visualQualityPreset;
-    const themeChanged = !scene.visualTheme || scene.visualTheme.preset !== preset;
-    if (!scene.visualTheme || scene.visualTheme.preset !== preset) {
-      scene.visualTheme = createNoirVectorTheme(preset);
+    const themeChanged = !this.runtimeState.visualTheme || this.runtimeState.visualTheme.preset !== preset;
+
+    if (!this.runtimeState.visualTheme || this.runtimeState.visualTheme.preset !== preset) {
+      this.runtimeState.visualTheme = createNoirVectorTheme(preset);
     }
 
-    if (scene.mapGraphics && (!scene.tilePainter || themeChanged)) {
-      scene.tilePainter = new TilePainter(scene.mapGraphics, scene.visualTheme);
+    if (this.ports.mapGraphics && (!this.runtimeState.tilePainter || themeChanged)) {
+      this.runtimeState.tilePainter = new TilePainter(this.ports.mapGraphics, this.runtimeState.visualTheme);
     }
 
-    if (!scene.buildingPainter || themeChanged) {
-      scene.buildingPainter = new BuildingPainter(this.scene, scene.visualTheme);
+    if (!this.runtimeState.buildingPainter || themeChanged) {
+      this.runtimeState.buildingPainter = new BuildingPainter(this.scene, this.runtimeState.visualTheme);
     }
 
-    if (!scene.atmosphereDirector || themeChanged) {
-      scene.atmosphereDirector = new AtmosphereDirector(scene.visualTheme);
-      scene.lastAtmosphereRedrawBucket = -1;
+    if (!this.runtimeState.atmosphereDirector || themeChanged) {
+      this.runtimeState.atmosphereDirector = new AtmosphereDirector(this.runtimeState.visualTheme);
+      this.runtimeState.lastAtmosphereRedrawBucket = -1;
     }
 
-    if (!scene.occlusionReadabilityController || themeChanged) {
-      scene.occlusionReadabilityController = new OcclusionReadabilityController();
+    if (!this.runtimeState.occlusionReadabilityController || themeChanged) {
+      this.runtimeState.occlusionReadabilityController = new OcclusionReadabilityController();
     }
 
-    if (scene.isoFactory && (!scene.characterRigFactory || themeChanged)) {
-      scene.characterRigFactory = new CharacterRigFactory(scene.isoFactory, scene.visualTheme);
+    const isoFactory = this.ports.getIsoFactory();
+    if (isoFactory && (!this.runtimeState.characterRigFactory || themeChanged)) {
+      this.runtimeState.characterRigFactory = new CharacterRigFactory(isoFactory, this.runtimeState.visualTheme);
     }
 
-    if (scene.currentMapArea?.buildings) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (currentMapArea?.buildings) {
       const nextProfiles: Record<string, BuildingVisualProfile> = {};
-      scene.currentMapArea.buildings.forEach((building) => {
+      currentMapArea.buildings.forEach((building) => {
         const resolvedFallback = resolveBuildingVisualProfile(
           building.district as BuildingVisualProfile['district'],
           building.signageStyle as BuildingVisualProfile['signageStyle'],
           building.propDensity
         );
+
         nextProfiles[building.id] = building.visualProfile
           ? {
-              district: (building.district === 'downtown' ? 'downtown' : 'slums'),
+              district: building.district === 'downtown' ? 'downtown' : 'slums',
               signageStyle: (building.signageStyle as BuildingVisualProfile['signageStyle']) ?? resolvedFallback.signageStyle,
               propDensity: building.propDensity ?? resolvedFallback.propDensity,
               facadePattern: building.visualProfile.facadePattern ?? resolvedFallback.facadePattern,
@@ -143,44 +272,58 @@ export class WorldRenderModule implements SceneModule<MainScene> {
             }
           : resolvedFallback;
       });
-      scene.buildingVisualProfiles = nextProfiles;
+      this.runtimeState.buildingVisualProfiles = nextProfiles;
     } else {
-      scene.buildingVisualProfiles = {};
+      this.runtimeState.buildingVisualProfiles = {};
     }
+
+    this.pushRuntimeStateToPorts();
   }
 
   renderStaticProps(): void {
-    const scene = this.getScene();
-    if (scene.staticPropGroup) {
-      scene.staticPropGroup.clear(true, true);
+    const staticPropGroup = this.ports.getStaticPropGroup();
+    if (staticPropGroup) {
+      staticPropGroup.clear(true, true);
     }
 
-    scene.demoLampGrid = undefined;
+    this.ports.setDemoLampGrid(undefined);
     this.destroyDemoPointLight();
 
-    if (!scene.isoFactory || !scene.currentMapArea) {
+    if (!this.ports.getIsoFactory() || !this.ports.getCurrentMapArea()) {
       return;
     }
     this.ensureVisualPipeline();
 
-    if (!scene.staticPropGroup) {
-      scene.staticPropGroup = scene.add.group();
+    if (!this.ports.getStaticPropGroup()) {
+      this.ports.setStaticPropGroup(this.ports.add.group());
     }
+
     const addProp = (prop?: Phaser.GameObjects.GameObject | null) => {
       if (!prop) {
         return;
       }
-      scene.staticPropGroup?.add(prop);
+      this.ports.getStaticPropGroup()?.add(prop);
     };
 
-    const interactiveNpcs = (scene.currentMapArea.entities.npcs ?? []).filter((npc) => npc.isInteractive);
-    const itemMarkers = (scene.currentMapArea.entities.items ?? []).filter(
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea) {
+      return;
+    }
+
+    const interactiveNpcs = (currentMapArea.entities.npcs ?? []).filter((npc) => npc.isInteractive);
+    const itemMarkers = (currentMapArea.entities.items ?? []).filter(
       (item): item is Item & { position: Position } => Boolean(item.position)
     );
-    const isoMetrics = scene.getIsoMetrics();
+
+    const isoFactory = this.ports.getIsoFactory();
+    if (!isoFactory) {
+      return;
+    }
+
+    const isoMetrics = this.ports.getIsoMetrics();
     interactiveNpcs.forEach((npc) => {
       addProp(
-        scene.isoFactory!.createPulsingHighlight(npc.position.x, npc.position.y, {
+        isoFactory.createPulsingHighlight(npc.position.x, npc.position.y, {
           color: 0x22d3ee,
           alpha: 0.14,
           pulseColor: 0x7dd3fc,
@@ -197,10 +340,11 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     itemMarkers.forEach((item) => {
       const color = item.isQuestItem ? 0xfacc15 : 0x22d3ee;
       const pulseColor = item.isQuestItem ? 0xfff3bf : 0x7dd3fc;
-      const pixel = scene.calculatePixelPosition(item.position.x, item.position.y);
+      const pixel = this.ports.calculatePixelPosition(item.position.x, item.position.y);
       const itemLabelName = resolvePickupObjectName(item);
+
       addProp(
-        scene.isoFactory!.createPulsingHighlight(item.position.x, item.position.y, {
+        isoFactory.createPulsingHighlight(item.position.x, item.position.y, {
           color,
           alpha: item.isQuestItem ? 0.24 : 0.22,
           pulseColor,
@@ -213,30 +357,26 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         })
       );
 
-      const itemLabel = scene.add.text(
-        pixel.x,
-        pixel.y - isoMetrics.tileHeight * 0.7,
-        itemLabelName,
-        {
-          fontFamily: 'Orbitron, "DM Sans", sans-serif',
-          fontSize: '10px',
-          fontStyle: '700',
-          color: item.isQuestItem ? '#fde68a' : '#dbeafe',
-          align: 'center',
-        }
-      );
+      const itemLabel = this.ports.add.text(pixel.x, pixel.y - isoMetrics.tileHeight * 0.7, itemLabelName, {
+        fontFamily: 'Orbitron, "DM Sans", sans-serif',
+        fontSize: '10px',
+        fontStyle: '700',
+        color: item.isQuestItem ? '#fde68a' : '#dbeafe',
+        align: 'center',
+      });
       itemLabel.setOrigin(0.5, 1);
       itemLabel.setStroke(item.isQuestItem ? '#f59e0b' : '#0284c7', 1.1);
       itemLabel.setShadow(0, 0, item.isQuestItem ? '#f59e0b' : '#38bdf8', 8, true, true);
-      scene.syncDepth(itemLabel, pixel.x, pixel.y, DepthBias.FLOATING_UI + 14);
+      this.ports.syncDepth(itemLabel, pixel.x, pixel.y, DepthBias.FLOATING_UI + 14);
       addProp(itemLabel);
     });
 
-    if (scene.lightsFeatureEnabled) {
+    if (this.ports.getLightsFeatureEnabled()) {
       this.rebuildLightingDemoLight();
     }
 
-    scene.lastItemMarkerSignature = this.getItemMarkerSignature(scene.currentMapArea);
+    this.runtimeState.lastItemMarkerSignature = this.getItemMarkerSignature(currentMapArea);
+    this.pushRuntimeStateToPorts();
   }
 
   getItemMarkerSignature(area: MapArea | null): string {
@@ -259,9 +399,8 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   }
 
   applyLightingSettings(settings: VisualFxSettings): void {
-    const scene = this.getScene();
-    const previousPreset = scene.visualTheme?.preset;
-    if (!scene.visualTheme || previousPreset !== settings.qualityPreset) {
+    const previousPreset = this.runtimeState.visualTheme?.preset;
+    if (!this.runtimeState.visualTheme || previousPreset !== settings.qualityPreset) {
       this.ensureVisualPipeline();
       this.refreshVisualLayers();
     }
@@ -292,38 +431,42 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   }
 
   refreshVisualLayers(): void {
-    const scene = this.getScene();
-    if (!scene.currentMapArea) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea) {
       return;
     }
 
-    scene.currentAtmosphereProfile = undefined;
+    this.runtimeState.currentAtmosphereProfile = undefined;
     this.drawBackdrop();
-    this.drawMap(scene.currentMapArea.tiles);
+    this.drawMap(currentMapArea.tiles);
     this.drawBuildingMasses();
     this.drawBuildingLabels();
     this.renderStaticProps();
-    scene.renderVisionCones();
+    this.ports.renderVisionCones();
     this.applyOcclusionReadability();
+    this.pushRuntimeStateToPorts();
   }
 
   drawMap(tiles: MapTile[][]): void {
-    const scene = this.getScene();
-    if (!scene.mapGraphics) {
+    if (!this.ports.mapGraphics) {
       return;
     }
 
     this.ensureVisualPipeline();
     const atmosphere = this.resolveAtmosphereProfile();
-    scene.tilePainter?.setAtmosphereProfile({
+
+    this.runtimeState.tilePainter?.setAtmosphereProfile({
       wetReflectionAlpha: atmosphere.wetReflectionAlpha,
       emissiveIntensity: atmosphere.emissiveIntensity,
     });
-    scene.mapGraphics.clear();
 
-    const { tileWidth, tileHeight } = scene.getIsoMetrics();
+    this.ports.mapGraphics.clear();
+
+    const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
+    const currentMapArea = this.ports.getCurrentMapArea();
     const buildingFootprintTiles = new Set<string>();
-    scene.currentMapArea?.buildings?.forEach((building) => {
+
+    currentMapArea?.buildings?.forEach((building) => {
       for (let y = building.footprint.from.y; y <= building.footprint.to.y; y += 1) {
         for (let x = building.footprint.from.x; x <= building.footprint.to.x; x += 1) {
           buildingFootprintTiles.add(`${x}:${y}`);
@@ -331,16 +474,15 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       }
     });
 
-    for (let y = 0; y < tiles.length; y++) {
-      for (let x = 0; x < tiles[0].length; x++) {
+    for (let y = 0; y < tiles.length; y += 1) {
+      for (let x = 0; x < tiles[0].length; x += 1) {
         const tile = tiles[y][x];
-        const center = scene.calculatePixelPosition(x, y);
-        const hideCoverVolume = scene.currentMapArea?.zoneId?.startsWith('downtown_checkpoint') && tile.type === TileType.COVER;
+        const center = this.ports.calculatePixelPosition(x, y);
+        const hideCoverVolume = currentMapArea?.zoneId?.startsWith('downtown_checkpoint') && tile.type === TileType.COVER;
         const isBuildingFootprint = buildingFootprintTiles.has(`${x}:${y}`);
         const groundOnly =
           hideCoverVolume ||
-          isBuildingFootprint &&
-          (tile.type === TileType.WALL || tile.type === TileType.COVER || tile.type === TileType.DOOR);
+          (isBuildingFootprint && (tile.type === TileType.WALL || tile.type === TileType.COVER || tile.type === TileType.DOOR));
 
         this.renderTile(tile, center, tileWidth, tileHeight, x, y, groundOnly);
       }
@@ -348,25 +490,28 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   }
 
   drawBuildingMasses(): void {
-    const scene = this.getScene();
-    scene.buildingMassings.forEach((mass) => mass.destroy(true));
-    scene.buildingMassings = [];
-    scene.buildingMassingEntries = [];
+    this.runtimeState.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.runtimeState.buildingMassings = [];
+    this.runtimeState.buildingMassingEntries = [];
 
-    if (!scene.currentMapArea?.buildings?.length || !scene.buildingPainter) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea?.buildings?.length || !this.runtimeState.buildingPainter) {
+      this.pushRuntimeStateToPorts();
       return;
     }
 
     this.ensureVisualPipeline();
-    const buildingPainter = scene.buildingPainter;
+
+    const buildingPainter = this.runtimeState.buildingPainter;
     if (!buildingPainter) {
       return;
     }
-    const { tileWidth, tileHeight } = scene.getIsoMetrics();
 
-    scene.currentMapArea.buildings.forEach((building) => {
+    const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
+
+    currentMapArea.buildings.forEach((building) => {
       const profile =
-        scene.buildingVisualProfiles[building.id] ??
+        this.runtimeState.buildingVisualProfiles[building.id] ??
         resolveBuildingVisualProfile(
           building.district as BuildingVisualProfile['district'],
           building.signageStyle as BuildingVisualProfile['signageStyle'],
@@ -375,10 +520,10 @@ export class WorldRenderModule implements SceneModule<MainScene> {
 
       const widthTiles = building.footprint.to.x - building.footprint.from.x + 1;
       const depthTiles = building.footprint.to.y - building.footprint.from.y + 1;
-      const northWest = scene.calculatePixelPosition(building.footprint.from.x, building.footprint.from.y);
-      const northEast = scene.calculatePixelPosition(building.footprint.to.x, building.footprint.from.y);
-      const southEast = scene.calculatePixelPosition(building.footprint.to.x, building.footprint.to.y);
-      const southWest = scene.calculatePixelPosition(building.footprint.from.x, building.footprint.to.y);
+      const northWest = this.ports.calculatePixelPosition(building.footprint.from.x, building.footprint.from.y);
+      const northEast = this.ports.calculatePixelPosition(building.footprint.to.x, building.footprint.from.y);
+      const southEast = this.ports.calculatePixelPosition(building.footprint.to.x, building.footprint.to.y);
+      const southWest = this.ports.calculatePixelPosition(building.footprint.from.x, building.footprint.to.y);
       const footprint = {
         top: new Phaser.Geom.Point(northWest.x, northWest.y - tileHeight * 0.5),
         right: new Phaser.Geom.Point(northEast.x + tileWidth * 0.5, northEast.y),
@@ -398,13 +543,13 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         footprint,
       });
       mass.setScrollFactor(1);
-      scene.syncDepth(
+      this.ports.syncDepth(
         mass,
         footprint.bottom.x,
         footprint.bottom.y,
         DepthBias.PROP_TALL + Math.round(profile.massingHeight * 12)
       );
-      scene.buildingMassings.push(mass);
+      this.runtimeState.buildingMassings.push(mass);
 
       const districtHeightBoost = profile.district === 'downtown' ? 0.78 : 0.7;
       const massingHeight = tileHeight * Math.max(0.58, profile.massingHeight * districtHeightBoost);
@@ -417,7 +562,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         footprint.left.y - massingHeight
       );
       const boundsMaxY = Math.max(footprint.top.y, footprint.right.y, footprint.bottom.y, footprint.left.y);
-      scene.buildingMassingEntries.push({
+      this.runtimeState.buildingMassingEntries.push({
         id: building.id,
         container: mass,
         bounds: new Phaser.Geom.Rectangle(
@@ -428,84 +573,93 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         ),
       });
     });
+
+    this.pushRuntimeStateToPorts();
   }
 
   drawBuildingLabels(): void {
-    const scene = this.getScene();
-    scene.buildingLabels.forEach((label) => label.destroy(true));
-    scene.buildingLabels = [];
+    this.runtimeState.buildingLabels.forEach((label) => label.destroy(true));
+    this.runtimeState.buildingLabels = [];
 
-    if (!scene.currentMapArea?.buildings || scene.currentMapArea.buildings.length === 0) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea?.buildings || currentMapArea.buildings.length === 0) {
+      this.pushRuntimeStateToPorts();
       return;
     }
 
     this.ensureVisualPipeline();
 
-    const { tileHeight } = scene.getIsoMetrics();
+    const { tileHeight } = this.ports.getIsoMetrics();
 
-    scene.currentMapArea.buildings.forEach((building) => {
+    currentMapArea.buildings.forEach((building) => {
       const profile =
-        scene.buildingVisualProfiles[building.id] ??
+        this.runtimeState.buildingVisualProfiles[building.id] ??
         resolveBuildingVisualProfile(
           building.district as BuildingVisualProfile['district'],
           building.signageStyle as BuildingVisualProfile['signageStyle'],
           building.propDensity
         );
+
       const centerX = (building.footprint.from.x + building.footprint.to.x) / 2;
       const anchorY = Math.min(building.footprint.from.y, building.door.y) - 0.4;
-      const pixel = scene.calculatePixelPosition(centerX, anchorY);
+      const pixel = this.ports.calculatePixelPosition(centerX, anchorY);
       const labelHeight = tileHeight * (0.8 + profile.massingHeight * 0.18);
-      const container = scene.buildingPainter
-        ? scene.buildingPainter.createLabel(building, pixel, labelHeight, profile)
-        : scene.add.container(pixel.x, pixel.y - tileHeight * 0.2);
+      const container = this.runtimeState.buildingPainter
+        ? this.runtimeState.buildingPainter.createLabel(building, pixel, labelHeight, profile)
+        : this.ports.add.container(pixel.x, pixel.y - tileHeight * 0.2);
+
       container.setScrollFactor(1);
-      scene.syncDepth(container, pixel.x, pixel.y, DepthBias.FLOATING_UI + 20);
-      scene.buildingLabels.push(container);
+      this.ports.syncDepth(container, pixel.x, pixel.y, DepthBias.FLOATING_UI + 20);
+      this.runtimeState.buildingLabels.push(container);
     });
+
+    this.pushRuntimeStateToPorts();
   }
 
   resolveAtmosphereProfile(baseOverlayRgba?: string): AtmosphereProfile {
-    const scene = this.getScene();
     this.ensureVisualPipeline();
-    if (!scene.atmosphereDirector) {
+
+    if (!this.runtimeState.atmosphereDirector) {
       throw new Error('AtmosphereDirector is not initialized.');
     }
 
-    const profile = scene.atmosphereDirector.resolveAtmosphereProfile({
+    const profile = this.runtimeState.atmosphereDirector.resolveAtmosphereProfile({
       districtWeight: this.resolveDistrictWeight(),
-      timeSeconds: scene.currentGameTime,
+      timeSeconds: this.ports.getCurrentGameTime(),
       baseOverlayRgba,
     });
 
-    const presetCaps = getVisualFxBudgetForPreset(scene.visualTheme.preset);
-    scene.currentAtmosphereProfile = {
+    const presetCaps = getVisualFxBudgetForPreset(this.runtimeState.visualTheme.preset);
+    this.runtimeState.currentAtmosphereProfile = {
       ...profile,
       fogBands: profile.fogBands.slice(0, presetCaps.maxFogBands),
       emissiveIntensity: Phaser.Math.Clamp(profile.emissiveIntensity, 0, 1),
       wetReflectionAlpha: Phaser.Math.Clamp(profile.wetReflectionAlpha, 0, presetCaps.wetReflectionAlpha),
     };
 
-    return scene.currentAtmosphereProfile;
+    this.pushRuntimeStateToPorts();
+    return this.runtimeState.currentAtmosphereProfile;
   }
 
   applyOcclusionReadability(): void {
-    const scene = this.getScene();
-    if (!scene.occlusionReadabilityController || !scene.buildingMassingEntries.length) {
+    if (!this.runtimeState.occlusionReadabilityController || !this.runtimeState.buildingMassingEntries.length) {
       return;
     }
 
+    const entityState = this.ports.readEntityRuntimeState?.() as Partial<EntityRenderRuntimeState> | undefined;
     const entities: OcclusionEntityHandle[] = [];
-    if (scene.playerToken) {
+
+    if (entityState?.playerToken) {
       entities.push({
         id: 'player',
-        pixelX: scene.playerToken.container.x,
-        pixelY: scene.playerToken.container.y,
-        token: scene.playerToken,
-        nameLabel: scene.playerNameLabel,
+        pixelX: entityState.playerToken.container.x,
+        pixelY: entityState.playerToken.container.y,
+        token: entityState.playerToken,
+        nameLabel: entityState.playerNameLabel,
       });
     }
 
-    scene.enemySprites.forEach((enemyData, enemyId) => {
+    entityState?.enemySprites?.forEach((enemyData, enemyId) => {
       entities.push({
         id: enemyId,
         pixelX: enemyData.token.container.x,
@@ -516,7 +670,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       });
     });
 
-    scene.npcSprites.forEach((npcData, npcId) => {
+    entityState?.npcSprites?.forEach((npcData, npcId) => {
       entities.push({
         id: npcId,
         pixelX: npcData.token.container.x,
@@ -527,23 +681,24 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       });
     });
 
-    const profile = scene.currentAtmosphereProfile ?? this.resolveAtmosphereProfile();
-    scene.occlusionReadabilityController.applyOcclusionReadability({
-      masses: scene.buildingMassingEntries,
+    const profile = this.runtimeState.currentAtmosphereProfile ?? this.resolveAtmosphereProfile();
+    this.runtimeState.occlusionReadabilityController.applyOcclusionReadability({
+      masses: this.runtimeState.buildingMassingEntries,
       entities,
-      occlusionFadeFloor: scene.visualTheme.qualityBudget.occlusionFadeFloor,
+      occlusionFadeFloor: this.runtimeState.visualTheme.qualityBudget.occlusionFadeFloor,
       emissiveIntensity: profile.emissiveIntensity,
     });
   }
 
   drawBackdrop(): void {
-    const scene = this.getScene();
-    if (!scene.backdropGraphics || !scene.currentMapArea) {
+    const backdropGraphics = this.ports.getBackdropGraphics();
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!backdropGraphics || !currentMapArea) {
       return;
     }
 
     const bounds = this.computeIsoBounds();
-    const margin = scene.tileSize * 4;
+    const margin = this.ports.getTileSize() * 4;
     const width = bounds.maxX - bounds.minX + margin * 2;
     const height = bounds.maxY - bounds.minY + margin * 2;
     const originX = bounds.minX - margin;
@@ -552,8 +707,8 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     const atmosphere = this.resolveAtmosphereProfile();
     const skylineSplit = atmosphere.skylineSplit;
 
-    scene.backdropGraphics.clear();
-    scene.backdropGraphics.fillGradientStyle(
+    backdropGraphics.clear();
+    backdropGraphics.fillGradientStyle(
       atmosphere.gradientTopLeft,
       atmosphere.gradientTopRight,
       atmosphere.gradientBottomLeft,
@@ -563,7 +718,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       1,
       1
     );
-    scene.backdropGraphics.fillRect(originX, originY, width, height);
+    backdropGraphics.fillRect(originX, originY, width, height);
 
     const skylineBaseY = originY + height * 0.52;
     const skylineColumns = atmosphere.skylineColumns;
@@ -585,29 +740,25 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         tintMix
       );
       const tintColor = Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b);
-      scene.backdropGraphics.fillStyle(
-        tintColor,
-        atmosphere.skylineAlphaBase + variant * atmosphere.skylineAlphaVariance
-      );
-      scene.backdropGraphics.fillRect(x, skylineBaseY - towerHeight, segmentWidth, towerHeight);
-      scene.backdropGraphics.fillStyle(adjustColor(tintColor, 0.12), 0.14 + atmosphere.emissiveIntensity * 0.1);
-      scene.backdropGraphics.fillRect(x + segmentWidth * 0.72, skylineBaseY - towerHeight, segmentWidth * 0.16, towerHeight);
+      backdropGraphics.fillStyle(tintColor, atmosphere.skylineAlphaBase + variant * atmosphere.skylineAlphaVariance);
+      backdropGraphics.fillRect(x, skylineBaseY - towerHeight, segmentWidth, towerHeight);
+      backdropGraphics.fillStyle(adjustColor(tintColor, 0.12), 0.14 + atmosphere.emissiveIntensity * 0.1);
+      backdropGraphics.fillRect(x + segmentWidth * 0.72, skylineBaseY - towerHeight, segmentWidth * 0.16, towerHeight);
     }
 
     const horizonY = originY + height * 0.35;
-    scene.backdropGraphics.fillStyle(atmosphere.horizonGlowColor, atmosphere.horizonGlowAlpha);
-    scene.backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
+    backdropGraphics.fillStyle(atmosphere.horizonGlowColor, atmosphere.horizonGlowAlpha);
+    backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
 
-    scene.backdropGraphics.fillStyle(atmosphere.lowerHazeColor, atmosphere.lowerHazeAlpha);
-    scene.backdropGraphics.fillRect(originX, originY + height * 0.6, width, height * 0.6);
+    backdropGraphics.fillStyle(atmosphere.lowerHazeColor, atmosphere.lowerHazeAlpha);
+    backdropGraphics.fillRect(originX, originY + height * 0.6, width, height * 0.6);
 
     atmosphere.fogBands.forEach((band) => {
-      const alpha = band.alpha;
-      if (alpha <= 0) {
+      if (band.alpha <= 0) {
         return;
       }
-      scene.backdropGraphics.lineStyle(2, band.color, alpha);
-      scene.backdropGraphics.strokeEllipse(
+      backdropGraphics.lineStyle(2, band.color, band.alpha);
+      backdropGraphics.strokeEllipse(
         originX + width / 2,
         originY + height * band.yFactor,
         width * band.widthFactor,
@@ -617,95 +768,112 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   }
 
   computeIsoBounds(): { minX: number; maxX: number; minY: number; maxY: number } {
-    const scene = this.getScene();
-    if (!scene.currentMapArea) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea) {
       return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
     }
 
-    const { width, height } = scene.currentMapArea;
+    const { width, height } = currentMapArea;
     const corners = [
-      scene.calculatePixelPosition(0, 0),
-      scene.calculatePixelPosition(width - 1, 0),
-      scene.calculatePixelPosition(0, height - 1),
-      scene.calculatePixelPosition(width - 1, height - 1),
+      this.ports.calculatePixelPosition(0, 0),
+      this.ports.calculatePixelPosition(width - 1, 0),
+      this.ports.calculatePixelPosition(0, height - 1),
+      this.ports.calculatePixelPosition(width - 1, height - 1),
     ];
 
-    const minX = Math.min(...corners.map((point) => point.x));
-    const maxX = Math.max(...corners.map((point) => point.x));
-    const minY = Math.min(...corners.map((point) => point.y));
-    const maxY = Math.max(...corners.map((point) => point.y));
-
-    return { minX, maxX, minY, maxY };
+    return {
+      minX: Math.min(...corners.map((point) => point.x)),
+      maxX: Math.max(...corners.map((point) => point.x)),
+      minY: Math.min(...corners.map((point) => point.y)),
+      maxY: Math.max(...corners.map((point) => point.y)),
+    };
   }
 
   hasLightPipelineSupport(): boolean {
-    const scene = this.getScene();
-    return scene.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer;
+    return this.ports.game.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer;
   }
 
   enableLighting(): void {
-    const scene = this.getScene();
     if (!this.hasLightPipelineSupport()) {
       console.warn('[MainScene] WebGL renderer unavailable; Light2D disabled.');
-      scene.lightsFeatureEnabled = false;
+      this.ports.setLightsFeatureEnabled(false);
       store.dispatch(setLightsEnabled(false));
       updateVisualSettings({ lightsEnabled: false });
       return;
     }
-    if (scene.lightsFeatureEnabled) {
+
+    if (this.ports.getLightsFeatureEnabled()) {
       this.rebuildLightingDemoLight();
       return;
     }
-    scene.lights.enable().setAmbientColor(scene.lightingAmbientColor);
-    scene.lightsFeatureEnabled = true;
+
+    this.ports.lights.enable().setAmbientColor(this.ports.getLightingAmbientColor());
+    this.ports.setLightsFeatureEnabled(true);
     this.rebuildLightingDemoLight();
   }
 
   disableLighting(force = false): void {
-    const scene = this.getScene();
-    if (!scene.lightsFeatureEnabled && !force) {
+    if (!this.ports.getLightsFeatureEnabled() && !force) {
       this.destroyDemoPointLight();
       return;
     }
+
     this.destroyDemoPointLight();
+
     if (this.hasLightPipelineSupport()) {
-      const manager = scene.lights as typeof scene.lights & { removeAll?: () => void };
+      const manager = this.ports.lights as typeof this.ports.lights & { removeAll?: () => void };
       if (typeof manager.removeAll === 'function') {
         manager.removeAll();
       }
-      scene.lights.disable();
+      this.ports.lights.disable();
     }
-    scene.lightsFeatureEnabled = false;
+
+    this.ports.setLightsFeatureEnabled(false);
   }
 
   rebuildLightingDemoLight(): void {
-    const scene = this.getScene();
-    if (!scene.lightsFeatureEnabled || !scene.demoLampGrid) {
+    const demoLampGrid = this.ports.getDemoLampGrid();
+    if (!this.ports.getLightsFeatureEnabled() || !demoLampGrid) {
       this.destroyDemoPointLight();
       return;
     }
 
-    const { x, y } = scene.calculatePixelPosition(scene.demoLampGrid.x, scene.demoLampGrid.y);
-    const lightY = y - scene.tileSize * 0.35;
-    const radius = scene.tileSize * 1.6;
+    const { x, y } = this.ports.calculatePixelPosition(demoLampGrid.x, demoLampGrid.y);
+    const lightY = y - this.ports.getTileSize() * 0.35;
+    const radius = this.ports.getTileSize() * 1.6;
     const intensity = 0.4;
 
-    if (!scene.demoPointLight) {
-      scene.demoPointLight = scene.add.pointlight(x, lightY, 0x7dd3fc, radius, intensity);
-      scene.demoPointLight.setScrollFactor(1);
-    } else {
-      scene.demoPointLight.setPosition(x, lightY);
-      scene.demoPointLight.radius = radius;
-      scene.demoPointLight.intensity = intensity;
+    const existingPointLight = this.ports.getDemoPointLight();
+    if (!existingPointLight) {
+      const light = this.ports.add.pointlight(x, lightY, 0x7dd3fc, radius, intensity);
+      light.setScrollFactor(1);
+      this.ports.setDemoPointLight(light);
+      return;
     }
+
+    existingPointLight.setPosition(x, lightY);
+    existingPointLight.radius = radius;
+    existingPointLight.intensity = intensity;
   }
 
   destroyDemoPointLight(): void {
-    const scene = this.getScene();
-    if (scene.demoPointLight) {
-      scene.demoPointLight.destroy();
-      scene.demoPointLight = undefined;
+    const demoPointLight = this.ports.getDemoPointLight();
+    if (demoPointLight) {
+      demoPointLight.destroy();
+      this.ports.setDemoPointLight(undefined);
     }
+  }
+
+  clearForMapTransition(): void {
+    this.runtimeState.buildingLabels.forEach((label) => label.destroy(true));
+    this.runtimeState.buildingLabels = [];
+    this.runtimeState.buildingMassings.forEach((mass) => mass.destroy(true));
+    this.runtimeState.buildingMassings = [];
+    this.runtimeState.buildingMassingEntries = [];
+    this.runtimeState.currentAtmosphereProfile = undefined;
+    this.runtimeState.lastAtmosphereRedrawBucket = -1;
+    this.runtimeState.lastItemMarkerSignature = '';
+    this.pushRuntimeStateToPorts();
   }
 
   private renderTile(
@@ -715,11 +883,10 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     tileHeight: number,
     gridX: number,
     gridY: number,
-    groundOnly: boolean = false
+    groundOnly = false
   ): void {
-    const scene = this.getScene();
     this.ensureVisualPipeline();
-    scene.tilePainter?.drawTile(tile, {
+    this.runtimeState.tilePainter?.drawTile(tile, {
       center,
       tileWidth,
       tileHeight,
@@ -730,8 +897,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   }
 
   private resolveDistrictWeight(): number {
-    const scene = this.getScene();
-    const profiles = Object.values(scene.buildingVisualProfiles);
+    const profiles = Object.values(this.runtimeState.buildingVisualProfiles);
     if (!profiles.length) {
       return 0.5;
     }
@@ -740,7 +906,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     return downtownCount / profiles.length;
   }
 
-  private getScene(): MainSceneWorldRenderInternals {
-    return this.scene as unknown as MainSceneWorldRenderInternals;
+  private pushRuntimeStateToPorts(): void {
+    this.ports.writeRuntimeState?.(this.runtimeState);
   }
 }

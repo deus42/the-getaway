@@ -5,12 +5,22 @@ import { MainScene } from '../../../MainScene';
 
 describe('InputModule', () => {
   it('binds pointerdown handler to module context to avoid getScene runtime errors', () => {
-    const scene = {
-      sys: { isActive: () => true },
-      currentMapArea: null,
-    } as unknown as MainScene;
+    const module = new InputModule({} as MainScene, {
+      cameras: { main: { getWorldPoint: () => ({ x: 0, y: 0 }) } } as never,
+      sys: { isActive: () => true } as never,
+      pathGraphics: { clear: jest.fn() } as never,
+      getCurrentMapArea: () => null,
+      setCurrentMapArea: jest.fn(),
+      getPlayerInitialPosition: () => undefined,
+      getLastPlayerGridPosition: () => null,
+      getCoverDebugGraphics: () => undefined,
+      worldToGrid: () => null,
+      getIsoMetrics: () => ({ tileWidth: 64, tileHeight: 32, halfTileWidth: 32, halfTileHeight: 16 }),
+      calculatePixelPosition: () => ({ x: 0, y: 0 }),
+      getDiamondPoints: () => [],
+      renderStaticProps: jest.fn(),
+    });
 
-    const module = new InputModule(scene);
     const listenWindow = jest.fn();
     const listenInput = jest.fn();
     const context = {

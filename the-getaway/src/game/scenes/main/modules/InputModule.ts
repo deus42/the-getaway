@@ -1,30 +1,61 @@
 import Phaser from 'phaser';
-import { PathPreviewDetail, PICKUP_STATE_SYNC_EVENT, PickupStateSyncDetail, PATH_PREVIEW_EVENT, TILE_CLICK_EVENT } from '../../../events';
-import { TileType, MapArea, Position } from '../../../interfaces/types';
+import {
+  PathPreviewDetail,
+  PICKUP_STATE_SYNC_EVENT,
+  PickupStateSyncDetail,
+  PATH_PREVIEW_EVENT,
+  TILE_CLICK_EVENT,
+} from '../../../events';
+import { TileType } from '../../../interfaces/types';
 import { resolveCardinalDirection } from '../../../combat/combatSystem';
-import type { IsoMetrics } from '../../../utils/iso';
 import type { MainScene } from '../../MainScene';
+import type { InputModulePorts } from '../contracts/ModulePorts';
 import { SceneContext } from '../SceneContext';
 import { SceneModule } from '../SceneModule';
 
-type MainSceneInputInternals = {
-  cameras: Phaser.Cameras.Scene2D.CameraManager;
-  sys: Phaser.Scenes.Systems;
-  currentMapArea: MapArea | null;
-  playerInitialPosition?: Position;
-  lastPlayerGridPosition: Position | null;
-  pathGraphics: Phaser.GameObjects.Graphics;
-  coverDebugGraphics?: Phaser.GameObjects.Graphics;
-  worldToGrid(worldX: number, worldY: number): Position | null;
-  getIsoMetrics(): IsoMetrics;
-  calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number };
-  getDiamondPoints(
-    centerX: number,
-    centerY: number,
-    width: number,
-    height: number
-  ): Phaser.Geom.Point[];
-  renderStaticProps(): void;
+const readValue = <T>(target: object, key: string): T | undefined => {
+  return Reflect.get(target, key) as T | undefined;
+};
+
+const readRequiredValue = <T>(target: object, key: string): T => {
+  const value = readValue<T>(target, key);
+  if (value === undefined || value === null) {
+    throw new Error(`[InputModule] Missing required scene value: ${key}`);
+  }
+  return value;
+};
+
+const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[]): TReturn => {
+  const value = readValue<unknown>(target, key);
+  if (typeof value !== 'function') {
+    throw new Error(`[InputModule] Missing required scene method: ${key}`);
+  }
+
+  return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
+};
+
+const createInputModulePorts = (scene: MainScene): InputModulePorts => {
+  return {
+    cameras: readRequiredValue(scene, 'cameras'),
+    sys: readRequiredValue(scene, 'sys'),
+    pathGraphics: readRequiredValue(scene, 'pathGraphics'),
+    getCurrentMapArea: () => readValue(scene, 'currentMapArea') ?? null,
+    setCurrentMapArea: (area) => {
+      Reflect.set(scene, 'currentMapArea', area);
+    },
+    getPlayerInitialPosition: () => readValue(scene, 'playerInitialPosition'),
+    getLastPlayerGridPosition: () => readValue(scene, 'lastPlayerGridPosition') ?? null,
+    getCoverDebugGraphics: () => readValue(scene, 'coverDebugGraphics'),
+    worldToGrid: (worldX: number, worldY: number) => callSceneMethod(scene, 'worldToGrid', worldX, worldY),
+    getIsoMetrics: () => callSceneMethod(scene, 'getIsoMetrics'),
+    calculatePixelPosition: (gridX: number, gridY: number) => callSceneMethod(scene, 'calculatePixelPosition', gridX, gridY),
+    getDiamondPoints: (centerX: number, centerY: number, width: number, height: number) => {
+      return callSceneMethod(scene, 'getDiamondPoints', centerX, centerY, width, height);
+    },
+    renderStaticProps: () => {
+      callSceneMethod(scene, 'renderStaticProps');
+    },
+  };
 };
 
 export class InputModule implements SceneModule<MainScene> {
@@ -32,7 +63,11 @@ export class InputModule implements SceneModule<MainScene> {
 
   private context!: SceneContext<MainScene>;
 
-  constructor(private readonly scene: MainScene) {}
+  private readonly ports: InputModulePorts;
+
+  constructor(scene: MainScene, ports?: InputModulePorts) {
+    this.ports = ports ?? createInputModulePorts(scene);
+  }
 
   init(context: SceneContext<MainScene>): void {
     this.context = context;
@@ -45,8 +80,8 @@ export class InputModule implements SceneModule<MainScene> {
   }
 
   handlePointerDown(pointer: Phaser.Input.Pointer): void {
-    const scene = this.getScene();
-    if (!scene.currentMapArea || !scene.sys.isActive()) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea || !this.ports.sys.isActive()) {
       return;
     }
 
@@ -54,8 +89,8 @@ export class InputModule implements SceneModule<MainScene> {
       return;
     }
 
-    const worldPoint = scene.cameras.main.getWorldPoint(pointer.x, pointer.y);
-    const gridPosition = scene.worldToGrid(worldPoint.x, worldPoint.y);
+    const worldPoint = this.ports.cameras.main.getWorldPoint(pointer.x, pointer.y);
+    const gridPosition = this.ports.worldToGrid(worldPoint.x, worldPoint.y);
 
     if (!gridPosition) {
       return;
@@ -63,16 +98,11 @@ export class InputModule implements SceneModule<MainScene> {
 
     const { x, y } = gridPosition;
 
-    if (
-      x < 0 ||
-      y < 0 ||
-      x >= scene.currentMapArea.width ||
-      y >= scene.currentMapArea.height
-    ) {
+    if (x < 0 || y < 0 || x >= currentMapArea.width || y >= currentMapArea.height) {
       return;
     }
 
-    const tile = scene.currentMapArea.tiles[y][x];
+    const tile = currentMapArea.tiles[y][x];
     if (!tile.isWalkable && tile.type !== TileType.DOOR) {
       return;
     }
@@ -81,36 +111,35 @@ export class InputModule implements SceneModule<MainScene> {
       new CustomEvent(TILE_CLICK_EVENT, {
         detail: {
           position: gridPosition,
-          areaId: scene.currentMapArea.id,
+          areaId: currentMapArea.id,
         },
       })
     );
   }
 
   clearPathPreview(): void {
-    const scene = this.getScene();
-    scene.pathGraphics?.clear();
+    this.ports.pathGraphics?.clear();
     this.renderCoverPreview();
   }
 
   private readonly handlePickupStateSync = (event: Event) => {
-    const scene = this.getScene();
     const customEvent = event as CustomEvent<PickupStateSyncDetail>;
-    if (!scene.sys.isActive() || !scene.currentMapArea) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+
+    if (!this.ports.sys.isActive() || !currentMapArea) {
       return;
     }
 
-    if (customEvent.detail?.areaId && customEvent.detail.areaId !== scene.currentMapArea.id) {
+    if (customEvent.detail?.areaId && customEvent.detail.areaId !== currentMapArea.id) {
       return;
     }
 
-    scene.currentMapArea = this.context.getState().world.currentMapArea;
-    scene.renderStaticProps();
+    this.ports.setCurrentMapArea(this.context.getState().world.currentMapArea);
+    this.ports.renderStaticProps();
   };
 
   private readonly handlePathPreview = (event: Event): void => {
-    const scene = this.getScene();
-    if (!scene.sys.isActive()) {
+    if (!this.ports.sys.isActive()) {
       return;
     }
 
@@ -122,29 +151,25 @@ export class InputModule implements SceneModule<MainScene> {
       return;
     }
 
-    if (!scene.currentMapArea || detail.areaId !== scene.currentMapArea.id) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea || detail.areaId !== currentMapArea.id) {
       this.clearPathPreview();
       return;
     }
 
-    scene.pathGraphics.clear();
+    this.ports.pathGraphics.clear();
 
     if (!detail.path || detail.path.length === 0) {
       return;
     }
 
-    const { tileWidth, tileHeight } = scene.getIsoMetrics();
+    const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
     const pathLength = detail.path.length;
 
     detail.path.forEach((position, index) => {
-      const center = scene.calculatePixelPosition(position.x, position.y);
+      const center = this.ports.calculatePixelPosition(position.x, position.y);
       const scale = index === detail.path.length - 1 ? 0.8 : 0.55;
-      const points = scene.getDiamondPoints(
-        center.x,
-        center.y,
-        tileWidth * scale,
-        tileHeight * scale
-      );
+      const points = this.ports.getDiamondPoints(center.x, center.y, tileWidth * scale, tileHeight * scale);
 
       let color: number;
       let alpha: number;
@@ -166,75 +191,72 @@ export class InputModule implements SceneModule<MainScene> {
         alpha = 0.4;
       }
 
-      scene.pathGraphics.fillStyle(color, alpha);
-      scene.pathGraphics.fillPoints(points, true);
+      this.ports.pathGraphics.fillStyle(color, alpha);
+      this.ports.pathGraphics.fillPoints(points, true);
     });
 
     const destination = detail.path[detail.path.length - 1];
     this.renderCoverPreview(destination);
   };
 
-  private renderCoverPreview(position?: Position): void {
-    const scene = this.getScene();
-    if (!scene.coverDebugGraphics) {
+  private renderCoverPreview(position?: { x: number; y: number }): void {
+    const coverDebugGraphics = this.ports.getCoverDebugGraphics();
+    if (!coverDebugGraphics) {
       return;
     }
 
-    scene.coverDebugGraphics.clear();
+    coverDebugGraphics.clear();
 
-    if (!position || !scene.currentMapArea) {
-      scene.coverDebugGraphics.setVisible(false);
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!position || !currentMapArea) {
+      coverDebugGraphics.setVisible(false);
       return;
     }
 
-    const reference = scene.lastPlayerGridPosition ?? scene.playerInitialPosition;
+    const reference = this.ports.getLastPlayerGridPosition() ?? this.ports.getPlayerInitialPosition();
     if (!reference) {
-      scene.coverDebugGraphics.setVisible(false);
+      coverDebugGraphics.setVisible(false);
       return;
     }
 
-    const tile = scene.currentMapArea.tiles[position.y]?.[position.x];
+    const tile = currentMapArea.tiles[position.y]?.[position.x];
     if (!tile?.cover) {
-      scene.coverDebugGraphics.setVisible(false);
+      coverDebugGraphics.setVisible(false);
       return;
     }
 
     const incomingDirection = resolveCardinalDirection(position, reference);
     const coverLevel = tile.cover[incomingDirection];
     if (!coverLevel || coverLevel === 'none') {
-      scene.coverDebugGraphics.setVisible(false);
+      coverDebugGraphics.setVisible(false);
       return;
     }
 
-    const { tileWidth, tileHeight } = scene.getIsoMetrics();
-    const center = scene.calculatePixelPosition(position.x, position.y);
-    const points = scene.getDiamondPoints(center.x, center.y, tileWidth * 0.7, tileHeight * 0.7);
+    const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
+    const center = this.ports.calculatePixelPosition(position.x, position.y);
+    const points = this.ports.getDiamondPoints(center.x, center.y, tileWidth * 0.7, tileHeight * 0.7);
     const [top, right, bottom, left] = points;
 
     const color = coverLevel === 'full' ? 0x38bdf8 : 0xfbbf24;
     const alpha = coverLevel === 'full' ? 0.35 : 0.25;
 
-    scene.coverDebugGraphics.fillStyle(color, alpha);
+    coverDebugGraphics.fillStyle(color, alpha);
     switch (incomingDirection) {
       case 'north':
-        scene.coverDebugGraphics.fillTriangle(top.x, top.y, right.x, right.y, left.x, left.y);
+        coverDebugGraphics.fillTriangle(top.x, top.y, right.x, right.y, left.x, left.y);
         break;
       case 'south':
-        scene.coverDebugGraphics.fillTriangle(bottom.x, bottom.y, right.x, right.y, left.x, left.y);
+        coverDebugGraphics.fillTriangle(bottom.x, bottom.y, right.x, right.y, left.x, left.y);
         break;
       case 'east':
-        scene.coverDebugGraphics.fillTriangle(right.x, right.y, top.x, top.y, bottom.x, bottom.y);
+        coverDebugGraphics.fillTriangle(right.x, right.y, top.x, top.y, bottom.x, bottom.y);
         break;
       case 'west':
-        scene.coverDebugGraphics.fillTriangle(left.x, left.y, bottom.x, bottom.y, top.x, top.y);
+        coverDebugGraphics.fillTriangle(left.x, left.y, bottom.x, bottom.y, top.x, top.y);
         break;
     }
 
-    scene.coverDebugGraphics.fillCircle(center.x, center.y, tileHeight * 0.08);
-    scene.coverDebugGraphics.setVisible(true);
-  }
-
-  private getScene(): MainSceneInputInternals {
-    return this.scene as unknown as MainSceneInputInternals;
+    coverDebugGraphics.fillCircle(center.x, center.y, tileHeight * 0.08);
+    coverDebugGraphics.setVisible(true);
   }
 }

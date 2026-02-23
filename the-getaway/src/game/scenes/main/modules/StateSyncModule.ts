@@ -1,69 +1,150 @@
-import Phaser from 'phaser';
 import { RootState } from '../../../../store';
-import { Enemy, MapArea, NPC, Position, SurveillanceZoneState } from '../../../interfaces/types';
-import type { CharacterToken } from '../../../utils/IsoObjectFactory';
-import type { AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
 import type { MainScene } from '../../MainScene';
+import type { StateSyncModulePorts, StateSyncRuntimeState } from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
 
-type EnemySpriteRecord = {
-  token: CharacterToken;
-  healthBar: Phaser.GameObjects.Graphics;
-  nameLabel: Phaser.GameObjects.Text;
-  markedForRemoval: boolean;
+const readValue = <T>(target: object, key: string): T | undefined => {
+  return Reflect.get(target, key) as T | undefined;
 };
 
-type NpcSpriteRecord = {
-  token: CharacterToken;
-  indicator?: Phaser.GameObjects.Graphics;
-  nameLabel: Phaser.GameObjects.Text;
-  markedForRemoval: boolean;
+const readRequiredValue = <T>(target: object, key: string): T => {
+  const value = readValue<T>(target, key);
+  if (value === undefined || value === null) {
+    throw new Error(`[StateSyncModule] Missing required scene value: ${key}`);
+  }
+  return value;
 };
 
-type MainSceneStateInternals = {
-  sys: Phaser.Scenes.Systems;
-  currentMapArea: MapArea | null;
-  inCombat: boolean;
-  currentGameTime: number;
-  curfewActive: boolean;
-  currentAtmosphereProfile?: AtmosphereProfile;
-  lastAtmosphereRedrawBucket: number;
-  hasInitialZoomApplied: boolean;
-  userAdjustedZoom: boolean;
-  preCombatZoom: number | null;
-  preCombatUserAdjusted: boolean;
-  pendingRestoreUserAdjusted: boolean | null;
-  enemySprites: Map<string, EnemySpriteRecord>;
-  npcSprites: Map<string, NpcSpriteRecord>;
-  lastItemMarkerSignature: string;
-  zoomCameraForCombat(): void;
-  restoreCameraAfterCombat(): void;
-  destroyPlayerVitalsIndicator(): void;
-  destroyCameraSprites(): void;
-  setupCameraAndMap(): void;
-  clearPathPreview(): void;
-  enablePlayerCameraFollow(): void;
-  updateDayNightOverlay(): void;
-  getItemMarkerSignature(area: MapArea | null): string;
-  renderStaticProps(): void;
-  updatePlayerPosition(position: Position): void;
-  updatePlayerVitalsIndicator(position: Position, health: number, maxHealth: number): void;
-  updateEnemies(enemies: Enemy[]): void;
-  updateNpcs(npcs: NPC[]): void;
-  renderVisionCones(): void;
-  updateSurveillanceCameras(zone?: SurveillanceZoneState, overlayEnabled?: boolean): void;
+const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[]): TReturn => {
+  const value = readValue<unknown>(target, key);
+  if (typeof value !== 'function') {
+    throw new Error(`[StateSyncModule] Missing required scene method: ${key}`);
+  }
+
+  return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
 };
+
+const createStateSyncModulePorts = (scene: MainScene): StateSyncModulePorts => {
+  return {
+    sys: readRequiredValue(scene, 'sys'),
+    getCurrentMapArea: () => readValue(scene, 'currentMapArea') ?? null,
+    setCurrentMapArea: (area) => {
+      Reflect.set(scene, 'currentMapArea', area);
+    },
+    getItemMarkerSignature: (area) => callSceneMethod(scene, 'getItemMarkerSignature', area),
+    renderStaticProps: () => {
+      callSceneMethod(scene, 'renderStaticProps');
+    },
+    updateDayNightOverlay: () => {
+      callSceneMethod(scene, 'updateDayNightOverlay');
+    },
+    updatePlayerPosition: (position) => {
+      callSceneMethod(scene, 'updatePlayerPosition', position);
+    },
+    updatePlayerVitalsIndicator: (position, health, maxHealth) => {
+      callSceneMethod(scene, 'updatePlayerVitalsIndicator', position, health, maxHealth);
+    },
+    updateEnemies: (enemies) => {
+      callSceneMethod(scene, 'updateEnemies', enemies);
+    },
+    updateNpcs: (npcs) => {
+      callSceneMethod(scene, 'updateNpcs', npcs);
+    },
+    renderVisionCones: () => {
+      callSceneMethod(scene, 'renderVisionCones');
+    },
+    updateSurveillanceCameras: (zone, overlayEnabled) => {
+      callSceneMethod(scene, 'updateSurveillanceCameras', zone, overlayEnabled);
+    },
+    zoomCameraForCombat: () => {
+      callSceneMethod(scene, 'zoomCameraForCombat');
+    },
+    restoreCameraAfterCombat: () => {
+      callSceneMethod(scene, 'restoreCameraAfterCombat');
+    },
+    destroyPlayerVitalsIndicator: () => {
+      callSceneMethod(scene, 'destroyPlayerVitalsIndicator');
+    },
+    destroyCameraSprites: () => {
+      callSceneMethod(scene, 'destroyCameraSprites');
+    },
+    setupCameraAndMap: () => {
+      callSceneMethod(scene, 'setupCameraAndMap');
+    },
+    clearPathPreview: () => {
+      callSceneMethod(scene, 'clearPathPreview');
+    },
+    enablePlayerCameraFollow: () => {
+      callSceneMethod(scene, 'enablePlayerCameraFollow');
+    },
+    resetCameraRuntimeStateForMapTransition: () => {
+      const cameraModule = readValue<{ resetForMapTransition?: () => void }>(scene, 'cameraModule');
+      cameraModule?.resetForMapTransition?.();
+    },
+    clearEntityRuntimeStateForMapTransition: () => {
+      const entityRenderModule = readValue<{ clearForMapTransition?: () => void }>(scene, 'entityRenderModule');
+      entityRenderModule?.clearForMapTransition?.();
+    },
+    clearWorldRuntimeStateForMapTransition: () => {
+      const worldRenderModule = readValue<{ clearForMapTransition?: () => void }>(scene, 'worldRenderModule');
+      worldRenderModule?.clearForMapTransition?.();
+    },
+    resetEntityCombatIndicators: () => {
+      const entityRenderModule = readValue<{ resetCombatIndicators?: () => void }>(scene, 'entityRenderModule');
+      entityRenderModule?.resetCombatIndicators?.();
+    },
+    readRuntimeState: () => {
+      const currentMapArea = readValue<{ id?: string }>(scene, 'currentMapArea');
+      return {
+        curfewActive: Boolean(readValue(scene, 'curfewActive')),
+        inCombat: Boolean(readValue(scene, 'inCombat')),
+        lastMapAreaId: currentMapArea?.id ?? null,
+        isMapTransitionPending: false,
+      };
+    },
+    writeRuntimeState: (state) => {
+      Reflect.set(scene, 'curfewActive', state.curfewActive);
+      Reflect.set(scene, 'inCombat', state.inCombat);
+    },
+  };
+};
+
+const createDefaultRuntimeState = (): StateSyncRuntimeState => ({
+  curfewActive: false,
+  inCombat: false,
+  lastMapAreaId: null,
+  isMapTransitionPending: false,
+});
 
 export class StateSyncModule implements SceneModule<MainScene> {
   readonly key = 'stateSync';
 
-  constructor(private readonly scene: MainScene) {}
+  private readonly ports: StateSyncModulePorts;
+
+  private runtimeState: StateSyncRuntimeState;
+
+  constructor(scene: MainScene, ports?: StateSyncModulePorts) {
+    this.ports = ports ?? createStateSyncModulePorts(scene);
+    this.runtimeState = {
+      ...createDefaultRuntimeState(),
+      ...this.ports.readRuntimeState?.(),
+    };
+    this.pushRuntimeStateToPorts();
+  }
 
   init(): void {}
 
+  isInCombat(): boolean {
+    return this.runtimeState.inCombat;
+  }
+
+  isCurfewActive(): boolean {
+    return this.runtimeState.curfewActive;
+  }
+
   onStateChange(_previousState: RootState, nextState: RootState): void {
-    const scene = this.getScene();
-    if (!scene.sys.isActive() || !scene.currentMapArea) {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!this.ports.sys.isActive() || !currentMapArea) {
       return;
     }
 
@@ -71,88 +152,70 @@ export class StateSyncModule implements SceneModule<MainScene> {
     const worldState = nextState.world;
     const currentEnemies = worldState.currentMapArea.entities.enemies;
 
-    const previousCombatState = scene.inCombat;
-    scene.inCombat = worldState.inCombat;
+    const previousCombatState = this.runtimeState.inCombat;
+    this.runtimeState.inCombat = worldState.inCombat;
 
-    if (scene.inCombat && !previousCombatState) {
-      scene.zoomCameraForCombat();
+    if (this.runtimeState.inCombat && !previousCombatState) {
+      this.ports.zoomCameraForCombat();
     }
 
-    if (!scene.inCombat && previousCombatState) {
-      scene.restoreCameraAfterCombat();
-      scene.destroyPlayerVitalsIndicator();
-      scene.enemySprites.forEach((data) => {
-        data.healthBar.clear();
-        data.healthBar.setVisible(false);
-      });
-      scene.npcSprites.forEach((data) => {
-        if (data.indicator) {
-          data.indicator.destroy();
-          data.indicator = undefined;
-        }
-      });
+    if (!this.runtimeState.inCombat && previousCombatState) {
+      this.ports.restoreCameraAfterCombat();
+      this.ports.destroyPlayerVitalsIndicator();
+      this.ports.resetEntityCombatIndicators?.();
     }
 
-    scene.currentGameTime = worldState.currentTime;
-    scene.updateDayNightOverlay();
+    this.ports.updateDayNightOverlay();
 
-    if (!worldState.currentMapArea || !scene.currentMapArea) {
+    if (!worldState.currentMapArea || !currentMapArea) {
+      this.pushRuntimeStateToPorts();
       return;
     }
 
-    if (scene.currentMapArea.id !== worldState.currentMapArea.id) {
-      scene.hasInitialZoomApplied = false;
-      scene.userAdjustedZoom = false;
-      scene.preCombatZoom = null;
-      scene.preCombatUserAdjusted = false;
-      scene.pendingRestoreUserAdjusted = null;
-      scene.currentMapArea = worldState.currentMapArea;
+    const nextMapArea = worldState.currentMapArea;
+    const previousMapId = this.runtimeState.lastMapAreaId ?? currentMapArea.id;
+    const nextMapId = nextMapArea.id;
 
-      scene.enemySprites.forEach((data) => {
-        data.token.container.destroy(true);
-        data.healthBar.destroy();
-        data.nameLabel.destroy();
-      });
-      scene.enemySprites.clear();
+    this.runtimeState.isMapTransitionPending = previousMapId !== nextMapId;
 
-      scene.npcSprites.forEach((data) => {
-        data.token.container.destroy(true);
-        data.nameLabel.destroy();
-        if (data.indicator) {
-          data.indicator.destroy();
-        }
-      });
-      scene.npcSprites.clear();
-      scene.destroyCameraSprites();
-      scene.currentAtmosphereProfile = undefined;
-      scene.lastAtmosphereRedrawBucket = -1;
-      scene.setupCameraAndMap();
-      scene.clearPathPreview();
-      scene.enablePlayerCameraFollow();
+    if (this.runtimeState.isMapTransitionPending) {
+      this.ports.resetCameraRuntimeStateForMapTransition?.();
+      this.ports.clearEntityRuntimeStateForMapTransition?.();
+      this.ports.clearWorldRuntimeStateForMapTransition?.();
+      this.ports.destroyCameraSprites();
+
+      this.ports.setCurrentMapArea(nextMapArea);
+      this.ports.setupCameraAndMap();
+      this.ports.clearPathPreview();
+      this.ports.enablePlayerCameraFollow();
+
+      this.runtimeState.lastMapAreaId = nextMapId;
+      this.runtimeState.isMapTransitionPending = false;
     }
 
-    const previousItemMarkerSignature = scene.lastItemMarkerSignature;
-    scene.currentMapArea = worldState.currentMapArea;
-    const nextItemMarkerSignature = scene.getItemMarkerSignature(scene.currentMapArea);
+    const previousItemMarkerSignature = this.ports.getItemMarkerSignature(currentMapArea);
+    this.ports.setCurrentMapArea(nextMapArea);
+    const nextItemMarkerSignature = this.ports.getItemMarkerSignature(nextMapArea);
     if (previousItemMarkerSignature !== nextItemMarkerSignature) {
-      scene.renderStaticProps();
+      this.ports.renderStaticProps();
     }
 
-    if (scene.curfewActive !== worldState.curfewActive) {
-      scene.curfewActive = worldState.curfewActive;
-    }
+    this.runtimeState.curfewActive = worldState.curfewActive;
 
-    scene.updatePlayerPosition(playerState.position);
-    scene.updatePlayerVitalsIndicator(playerState.position, playerState.health, playerState.maxHealth);
-    scene.updateEnemies(currentEnemies);
-    scene.updateNpcs(worldState.currentMapArea.entities.npcs);
-    scene.renderVisionCones();
-    const zoneState = nextState.surveillance?.zones?.[scene.currentMapArea.id];
+    this.ports.updatePlayerPosition(playerState.position);
+    this.ports.updatePlayerVitalsIndicator(playerState.position, playerState.health, playerState.maxHealth);
+    this.ports.updateEnemies(currentEnemies);
+    this.ports.updateNpcs(nextMapArea.entities.npcs);
+    this.ports.renderVisionCones();
+    const zoneState = nextState.surveillance?.zones?.[nextMapArea.id];
     const overlayEnabled = nextState.surveillance?.hud?.overlayEnabled ?? false;
-    scene.updateSurveillanceCameras(zoneState, overlayEnabled);
+    this.ports.updateSurveillanceCameras(zoneState, overlayEnabled);
+
+    this.runtimeState.lastMapAreaId = nextMapId;
+    this.pushRuntimeStateToPorts();
   }
 
-  private getScene(): MainSceneStateInternals {
-    return this.scene as unknown as MainSceneStateInternals;
+  private pushRuntimeStateToPorts(): void {
+    this.ports.writeRuntimeState?.(this.runtimeState);
   }
 }

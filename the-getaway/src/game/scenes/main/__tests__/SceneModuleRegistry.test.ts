@@ -9,9 +9,11 @@ const createMockState = (): RootState => {
 
 const createTracingModule = (
   key: string,
-  calls: string[]
+  calls: string[],
+  dependsOn?: readonly string[]
 ): SceneModule => ({
   key,
+  dependsOn,
   init: () => {
     calls.push(`${key}:init`);
   },
@@ -33,14 +35,14 @@ const createTracingModule = (
 });
 
 describe('SceneModuleRegistry', () => {
-  it('runs lifecycle hooks in registration order and shutdown in reverse order', () => {
+  it('runs lifecycle hooks in dependency order and shutdown in reverse order', () => {
     const calls: string[] = [];
     const context = {} as SceneContext;
     const registry = new SceneModuleRegistry(context);
 
-    registry.register(createTracingModule('a', calls));
-    registry.register(createTracingModule('b', calls));
-    registry.register(createTracingModule('c', calls));
+    registry.register(createTracingModule('feature', calls, ['ui']));
+    registry.register(createTracingModule('core', calls));
+    registry.register(createTracingModule('ui', calls, ['core']));
 
     registry.onCreate();
     registry.onStateChange(createMockState(), createMockState());
@@ -49,24 +51,24 @@ describe('SceneModuleRegistry', () => {
     registry.onShutdown();
 
     expect(calls).toEqual([
-      'a:init',
-      'b:init',
-      'c:init',
-      'a:create',
-      'b:create',
-      'c:create',
-      'a:state',
-      'b:state',
-      'c:state',
-      'a:resize',
-      'b:resize',
-      'c:resize',
-      'a:update',
-      'b:update',
-      'c:update',
-      'c:shutdown',
-      'b:shutdown',
-      'a:shutdown',
+      'feature:init',
+      'core:init',
+      'ui:init',
+      'core:create',
+      'ui:create',
+      'feature:create',
+      'core:state',
+      'ui:state',
+      'feature:state',
+      'core:resize',
+      'ui:resize',
+      'feature:resize',
+      'core:update',
+      'ui:update',
+      'feature:update',
+      'feature:shutdown',
+      'ui:shutdown',
+      'core:shutdown',
     ]);
   });
 
@@ -80,5 +82,37 @@ describe('SceneModuleRegistry', () => {
     registry.onShutdown();
 
     expect(calls).toEqual(['only:init', 'only:shutdown']);
+  });
+
+  it('fails fast when registering duplicate module keys', () => {
+    const context = {} as SceneContext;
+    const registry = new SceneModuleRegistry(context);
+    registry.register(createTracingModule('dup', []));
+
+    expect(() => {
+      registry.register(createTracingModule('dup', []));
+    }).toThrow('Duplicate module key');
+  });
+
+  it('fails fast when module dependency is missing', () => {
+    const context = {} as SceneContext;
+    const registry = new SceneModuleRegistry(context);
+    registry.register(createTracingModule('dependent', [], ['missing']));
+
+    expect(() => {
+      registry.onCreate();
+    }).toThrow('depends on missing module');
+  });
+
+  it('fails fast on dependency cycles', () => {
+    const context = {} as SceneContext;
+    const registry = new SceneModuleRegistry(context);
+    registry.register(createTracingModule('a', [], ['c']));
+    registry.register(createTracingModule('b', [], ['a']));
+    registry.register(createTracingModule('c', [], ['b']));
+
+    expect(() => {
+      registry.onCreate();
+    }).toThrow('Dependency cycle detected');
   });
 });
