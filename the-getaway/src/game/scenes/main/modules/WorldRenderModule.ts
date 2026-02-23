@@ -7,7 +7,7 @@ import type {
   WorldRenderRuntimeState,
 } from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
-import { DepthBias, DepthLayers } from '../../../utils/depth';
+import { DepthBias } from '../../../utils/depth';
 import { adjustColor } from '../../../utils/iso';
 import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../../../visual/theme/noirVectorTheme';
 import type { BuildingVisualProfile } from '../../../visual/contracts';
@@ -544,9 +544,15 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       });
       mass.setScrollFactor(1);
 
-      // GET-170 PoC: keep ESB skyline mass behind entities and add a neon entrance marker.
+      // GET-170 PoC: ESB skyline mass + neon entrance marker.
+      // Important: DO NOT keep the ESB in a fixed depth layer, otherwise distant buildings (e.g. block_1_1)
+      // can render on top of it, breaking isometric ordering.
       if (building.id === 'block_2_2') {
-        mass.setDepth(DepthLayers.MAP_BASE + 1);
+        const esbBias = Math.min(
+          DepthBias.CHARACTER_BASE - 1,
+          DepthBias.PROP_TALL + Math.round(profile.massingHeight * 12)
+        );
+        this.ports.syncDepth(mass, footprint.bottom.x, footprint.bottom.y, esbBias);
         this.runtimeState.buildingMassings.push(mass);
 
         const doorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
