@@ -106,7 +106,7 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
   const clampedX = Math.min(Math.max(originalDoor.x, minX), maxX);
 
   // ESB PoC: force the entrance to the east/right + bottom edge so it reads as a street entrance.
-  if (sanitized.id === 'block_2_1') {
+  if (sanitized.id === 'block_2_2') {
     sanitized.door = {
       x: to.x,
       y: to.y + 1,
@@ -166,7 +166,7 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const itemBlueprints = source.itemBlueprints.map(cloneItemBlueprint);
   const buildingDefinitions = source.buildingDefinitions.map((definition) => {
     // ESB PoC: keep a much larger footprint (less road widening) so the landmark base reads correctly.
-    const inset = definition.id === 'block_2_1' ? 0 : ROAD_WIDENING_INSET_TILES;
+    const inset = definition.id === 'block_2_2' ? 0 : ROAD_WIDENING_INSET_TILES;
     const widenedRoadLayout = insetBuildingFootprint(definition, inset);
     return moveDoorToPerimeter(widenedRoadLayout);
   });

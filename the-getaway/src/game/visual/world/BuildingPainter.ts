@@ -25,7 +25,7 @@ interface DiamondPoints {
   left: Phaser.Geom.Point;
 }
 
-const ESB_BUILDING_ID = 'block_2_1';
+const ESB_BUILDING_ID = 'block_2_2';
 const ESB_ATLAS_KEY = 'esb';
 const ESB_FRAME_KEY = 'esb_iso';
 

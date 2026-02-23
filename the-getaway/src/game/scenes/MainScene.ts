@@ -331,7 +331,7 @@ export class MainScene extends Phaser.Scene {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
         if (params.get('poc') === 'esb') {
-          const esb = this.currentMapArea?.buildings?.find((b) => b.id === 'block_2_1');
+          const esb = this.currentMapArea?.buildings?.find((b) => b.id === 'block_2_2');
           if (esb) {
             const centerX = (esb.footprint.from.x + esb.footprint.to.x) / 2;
             const centerY = (esb.footprint.from.y + esb.footprint.to.y) / 2;
@@ -1310,7 +1310,7 @@ export class MainScene extends Phaser.Scene {
 
       // ESB PoC: skyline landmark (no occlusion/readability interference).
       // Keep it always behind characters/props (so NPCs never get hidden), but above the map base.
-      if (building.id === 'block_2_1') {
+      if (building.id === 'block_2_2') {
         this.registerStaticDepth(mass, DepthLayers.MAP_BASE + 1);
         this.buildingMassings.push(mass);
 

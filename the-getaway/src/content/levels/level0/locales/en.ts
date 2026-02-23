@@ -697,7 +697,7 @@ export const level0EnglishContent: Level0LocaleContent = {
       encounterProfile: 'downtown_public_forum',
     },
     {
-      id: 'block_2_1',
+      id: 'block_2_2',
       name: 'Empire State Building',
       footprint: { from: { x: 4, y: 22 }, to: { x: 23, y: 43 } },
       door: { x: 13, y: 44 },
@@ -708,7 +708,7 @@ export const level0EnglishContent: Level0LocaleContent = {
       encounterProfile: 'downtown_residential',
     },
     {
-      id: 'block_2_2',
+      id: 'block_2_1',
       name: 'Market Hub',
       footprint: { from: { x: 27, y: 22 }, to: { x: 59, y: 43 } },
       door: { x: 43, y: 44 },

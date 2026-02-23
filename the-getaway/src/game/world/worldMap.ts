@@ -227,7 +227,7 @@ const createCityArea = (
       building.footprint.to.x,
       building.footprint.to.y,
       // ESB PoC: block even boulevards so the footprint matches the landmark base.
-      building.id === 'block_2_1'
+      building.id === 'block_2_2'
     );
   });
 
