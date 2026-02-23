@@ -146,14 +146,32 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Downloaded artifact layout can differ slightly depending on the Actions version and
+          # upload/download settings. Prefer the expected flat structure (dist/index.html), but
+          # fall back to nested layouts if needed.
+          SRC_DIST_DIR="dist"
+          if [ ! -f "${SRC_DIST_DIR}/index.html" ] && [ -f "dist/the-getaway/dist/index.html" ]; then
+            SRC_DIST_DIR="dist/the-getaway/dist"
+          fi
+          if [ ! -f "${SRC_DIST_DIR}/index.html" ] && [ -f "dist/dist/index.html" ]; then
+            SRC_DIST_DIR="dist/dist"
+          fi
+          if [ ! -f "${SRC_DIST_DIR}/index.html" ]; then
+            echo "ERROR: Could not locate index.html in downloaded dist artifact."
+            echo "dist tree (depth=4):"
+            find dist -maxdepth 4 -type f -print | sed -n '1,200p'
+            exit 2
+          fi
+
           if [ "${DEPLOY_SUBPATH}" = '.' ]; then
-            rsync -a --delete --exclude '.git' --exclude 'previews' dist/ site/
+            rsync -a --delete --exclude '.git' --exclude 'previews' "${SRC_DIST_DIR}/" site/
           else
             mkdir -p "site/${DEPLOY_SUBPATH}"
-            rsync -a --delete --exclude '.git' dist/ "site/${DEPLOY_SUBPATH}/"
+            rsync -a --delete --exclude '.git' "${SRC_DIST_DIR}/" "site/${DEPLOY_SUBPATH}/"
           fi
 
           touch site/.nojekyll
+
       - name: Validate deployed preview assets
         run: |
           set -euo pipefail
