@@ -87,15 +87,68 @@ const GameMenu: React.FC<GameMenuProps> = ({
     dispatch(setOverlayEnabled({ enabled: !surveillanceOverlayEnabled }));
   };
 
-  const handleHudLayoutOverrideSelect = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const nextValue = event.target.value as HudLayoutPreset | 'auto';
-    if (nextValue === 'auto') {
+  const handleHudLayoutOverrideSelect = (nextValue: string) => {
+    const resolvedValue = nextValue as HudLayoutPreset | 'auto';
+    if (resolvedValue === hudLayoutSelectValue) {
+      return;
+    }
+    if (resolvedValue === 'auto') {
       dispatch(setHudLayoutOverride(null));
       return;
     }
-    dispatch(setHudLayoutOverride(nextValue));
+    dispatch(setHudLayoutOverride(resolvedValue));
+  };
+
+  const hudLayoutOptions: Array<{
+    id: 'auto' | HudLayoutPreset;
+    name: string;
+    summary: string;
+  }> = [
+    {
+      id: 'auto',
+      name: strings.menu.hudLayoutOptions.auto,
+      summary: strings.menu.hudLayoutDescription,
+    },
+    {
+      id: 'exploration',
+      name: strings.menu.hudLayoutOptions.exploration,
+      summary: strings.menu.hudLayoutDescription,
+    },
+    {
+      id: 'stealth',
+      name: strings.menu.hudLayoutOptions.stealth,
+      summary: strings.menu.hudLayoutDescription,
+    },
+    {
+      id: 'combat',
+      name: strings.menu.hudLayoutOptions.combat,
+      summary: strings.menu.hudLayoutDescription,
+    },
+  ];
+
+  const selectedHudLayoutCopy =
+    hudLayoutOptions.find((option) => option.id === hudLayoutSelectValue)
+    ?? hudLayoutOptions[0];
+
+  const handleAutoBattleModeChange = (nextMode: string) => {
+    const currentMode = autoBattleEnabled ? autoBattleProfile : "manual";
+    if (nextMode === currentMode) {
+      return;
+    }
+
+    if (nextMode === "manual") {
+      if (autoBattleEnabled) {
+        dispatch(setAutoBattleEnabled(false));
+      }
+      return;
+    }
+
+    if (!autoBattleEnabled) {
+      dispatch(setAutoBattleEnabled(true));
+    }
+    if (nextMode !== autoBattleProfile) {
+      dispatch(setAutoBattleProfile(nextMode as AutoBattleProfileId));
+    }
   };
 
   const autoBattleModeOptions: Array<{
@@ -118,22 +171,6 @@ const GameMenu: React.FC<GameMenuProps> = ({
   const selectedModeCopy =
     autoBattleModeOptions.find((option) => option.id === activeModeId) ?? autoBattleModeOptions[0];
 
-  const handleAutoBattleModeChange = (nextMode: AutoBattleMenuOptionId) => {
-    if (nextMode === "manual") {
-      if (autoBattleEnabled) {
-        dispatch(setAutoBattleEnabled(false));
-      }
-      return;
-    }
-
-    if (!autoBattleEnabled) {
-      dispatch(setAutoBattleEnabled(true));
-    }
-    if (nextMode !== autoBattleProfile) {
-      dispatch(setAutoBattleProfile(nextMode as AutoBattleProfileId));
-    }
-  };
-
   const sectionLabelClass =
     "mb-[0.5rem] block text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-[#94a3b8]";
   const toggleContainerClass =
@@ -142,8 +179,6 @@ const GameMenu: React.FC<GameMenuProps> = ({
     "hud-menu-language-button rounded-[8px] border border-[rgba(148,163,184,0.25)] bg-[rgba(30,41,59,0.5)] px-[0.9rem] py-[0.5rem] text-[0.86rem] font-normal tracking-[0.03em] text-[#94a3b8] transition-all duration-200 hover:border-[rgba(56,189,248,0.4)] hover:text-[#f8fafc] hover:shadow-[0_0_12px_rgba(56,189,248,0.15)]";
   const languageButtonActiveClass =
     "border-2 border-[rgba(56,189,248,0.6)] bg-[rgba(56,189,248,0.15)] font-semibold text-[#e2e8f0] shadow-[0_0_15px_rgba(56,189,248,0.2)]";
-  const selectInputClass =
-    "hud-menu-select w-full appearance-none rounded-[10px] border border-[rgba(148,163,184,0.25)] bg-[rgba(15,23,42,0.65)] px-[0.85rem] py-[0.55rem] text-[0.9rem] text-[#e2e8f0] outline-none transition-all duration-200 focus:border-[rgba(56,189,248,0.55)] focus:shadow-[0_0_0_2px_rgba(56,189,248,0.15)]";
 
   const renderPrimaryActions = () => {
     return (
@@ -176,6 +211,7 @@ const GameMenu: React.FC<GameMenuProps> = ({
   return (
     <div
       data-testid="game-menu"
+      data-controller-focus-ignore="true"
       className="hud-menu-backdrop fixed inset-0 z-[80] flex items-center justify-center bg-[radial-gradient(circle_at_top,rgba(96,165,250,0.15),rgba(17,24,39,0.95))] font-body text-hud-text backdrop-blur-[4px]"
     >
       <div className="hud-menu-modal flex w-[min(520px,92%)] max-h-[90vh] flex-col overflow-y-auto rounded-[18px] border border-[rgba(148,163,184,0.25)] bg-[rgba(15,23,42,0.92)] px-[2.25rem] py-[1.85rem] text-[#f8fafc] shadow-[0_24px_50px_rgba(15,23,42,0.45)]">
@@ -287,6 +323,8 @@ const GameMenu: React.FC<GameMenuProps> = ({
                     options={autoBattleModeOptions}
                     variant="menu"
                     fullWidth
+                    dataFocusIgnore
+                    triggerTestId="menu-autobattle-dropdown"
                   />
                   <div className="text-[0.64rem] text-[#a5b4d5] leading-[1.35]">
                     {selectedModeCopy.summary}
@@ -343,25 +381,18 @@ const GameMenu: React.FC<GameMenuProps> = ({
                   {strings.menu.hudLayoutLabel}
                 </label>
                 <div className="flex flex-col gap-[0.35rem]">
-                  <select
-                    id="hud-layout-select"
-                    className={selectInputClass}
+                  <AutoBattleProfileSelect
+                    triggerId="hud-layout-select"
                     value={hudLayoutSelectValue}
                     onChange={handleHudLayoutOverrideSelect}
-                  >
-                    <option value="auto">{strings.menu.hudLayoutOptions.auto}</option>
-                    <option value="exploration">
-                      {strings.menu.hudLayoutOptions.exploration}
-                    </option>
-                    <option value="stealth">
-                      {strings.menu.hudLayoutOptions.stealth}
-                    </option>
-                    <option value="combat">
-                      {strings.menu.hudLayoutOptions.combat}
-                    </option>
-                  </select>
+                    options={hudLayoutOptions}
+                    variant="menu"
+                    fullWidth
+                    dataFocusIgnore
+                    triggerTestId="menu-hud-layout-dropdown"
+                  />
                   <div className="text-[0.64rem] leading-[1.35] text-[#a5b4d5]">
-                    {strings.menu.hudLayoutDescription}
+                    {selectedHudLayoutCopy.summary}
                   </div>
                 </div>
               </div>

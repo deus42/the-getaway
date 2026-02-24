@@ -159,6 +159,8 @@ export const buildCameraWitnessObservation = ({
   const baseCertainty =
     alertState === CameraAlertState.ALARMED
       ? 0.88
+      : alertState === CameraAlertState.INVESTIGATING
+      ? 0.76
       : alertState === CameraAlertState.SUSPICIOUS
       ? 0.65
       : 0.5;

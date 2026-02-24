@@ -7,27 +7,43 @@ import React, {
   useState,
 } from 'react';
 import type { CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import type { AutoBattleProfileId } from '../../game/combat/automation/autoBattleProfiles';
 
 export type AutoBattleMenuOptionId = AutoBattleProfileId | 'manual';
 
 export interface AutoBattleProfileOption {
-  id: AutoBattleMenuOptionId;
+  id: string;
   name: string;
-  summary: string;
+  summary?: string;
 }
 
 export type AutoBattleProfileSelectVariant = 'hud' | 'menu';
 
 interface AutoBattleProfileSelectProps {
-  value: AutoBattleMenuOptionId;
+  value: string;
   options: AutoBattleProfileOption[];
-  onChange: (next: AutoBattleMenuOptionId) => void;
+  onChange: (next: string) => void;
   variant?: AutoBattleProfileSelectVariant;
   fullWidth?: boolean;
   dataFocusIgnore?: boolean;
   triggerId?: string;
+  triggerTestId?: string;
 }
+
+type DropdownDirection = 'down' | 'up';
+
+interface DropdownPlacement {
+  left: number;
+  top: number;
+  width: number;
+  maxHeight: number;
+  direction: DropdownDirection;
+}
+
+const VIEWPORT_MARGIN = 8;
+const DROPDOWN_OFFSET = 8;
+const MIN_DROPDOWN_HEIGHT = 120;
 
 const palette = {
   borderDefault: 'rgba(56,189,248,0.24)',
@@ -41,9 +57,6 @@ const palette = {
   textPrimary: '#f0f6ff',
   textSubtle: '#8da2c0',
   textMuted: '#6b7a94',
-  accent: 'rgba(56,189,248,0.24)',
-  accentStrong: 'rgba(56,189,248,0.32)',
-  accentSolid: '#38bdf8',
 };
 
 const variantConfig: Record<
@@ -93,16 +106,18 @@ const makeOptionStyle = ({
   config,
   isHighlighted,
   isSelected,
+  hasSummary,
 }: {
   config: (typeof variantConfig)[AutoBattleProfileSelectVariant];
   isHighlighted: boolean;
   isSelected: boolean;
+  hasSummary: boolean;
 }): CSSProperties => ({
   width: '100%',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-start',
-  gap: '0.25rem',
+  gap: hasSummary ? '0.25rem' : 0,
   border: 'none',
   borderRadius: '9px',
   padding: config.optionPadding,
@@ -117,11 +132,37 @@ const makeOptionStyle = ({
   transform: isHighlighted ? 'translateX(4px)' : 'translateX(0)',
 });
 
-const makeOptionSummaryStyle = (config: (typeof variantConfig)[AutoBattleProfileSelectVariant]): CSSProperties => ({
+const makeOptionSummaryStyle = (
+  config: (typeof variantConfig)[AutoBattleProfileSelectVariant]
+): CSSProperties => ({
   fontSize: config.summaryFontSize,
   lineHeight: 1.4,
   color: palette.textMuted,
 });
+
+const estimateOptionHeight = (
+  option: AutoBattleProfileOption,
+  config: (typeof variantConfig)[AutoBattleProfileSelectVariant]
+): number => {
+  const baseHeight = variantConfig.menu === config ? 44 : 40;
+  return option.summary ? baseHeight + 22 : baseHeight;
+};
+
+const estimateDropdownHeight = (
+  options: AutoBattleProfileOption[],
+  config: (typeof variantConfig)[AutoBattleProfileSelectVariant],
+  shouldClampListHeight: boolean
+): number => {
+  const optionsHeight = options.reduce(
+    (sum, option) => sum + estimateOptionHeight(option, config),
+    0
+  );
+  const padding = shouldClampListHeight ? 20 : 16;
+  const rawHeight = optionsHeight + padding;
+  return shouldClampListHeight
+    ? Math.min(config.maxListHeight, rawHeight)
+    : rawHeight;
+};
 
 const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
   value,
@@ -131,6 +172,7 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
   fullWidth = false,
   dataFocusIgnore = false,
   triggerId,
+  triggerTestId,
 }) => {
   const ids = useId();
   const listboxId = `${ids}-autobattle-profiles`;
@@ -147,7 +189,76 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
       0
     )
   );
+  const [dropdownPlacement, setDropdownPlacement] =
+    useState<DropdownPlacement | null>(null);
+
   const shouldClampListHeight = options.length > 4;
+  const estimatedListHeight = useMemo(
+    () => estimateDropdownHeight(options, config, shouldClampListHeight),
+    [options, config, shouldClampListHeight]
+  );
+
+  const syncDropdownPlacement = useCallback(
+    (useMeasuredHeight: boolean = false) => {
+      if (
+        !open ||
+        !triggerRef.current ||
+        typeof window === 'undefined' ||
+        typeof document === 'undefined'
+      ) {
+        return;
+      }
+
+      const triggerRect = triggerRef.current.getBoundingClientRect();
+      const measuredHeight = useMeasuredHeight
+        ? optionsRef.current?.getBoundingClientRect().height
+        : undefined;
+      const desiredHeight = Math.max(
+        MIN_DROPDOWN_HEIGHT,
+        Math.min(config.maxListHeight, measuredHeight ?? estimatedListHeight)
+      );
+
+      const availableBelow = Math.max(
+        0,
+        window.innerHeight - triggerRect.bottom - VIEWPORT_MARGIN
+      );
+      const availableAbove = Math.max(0, triggerRect.top - VIEWPORT_MARGIN);
+      const preferDown =
+        availableBelow >= desiredHeight || availableBelow >= availableAbove;
+      const direction: DropdownDirection = preferDown ? 'down' : 'up';
+      const availableSpace = Math.max(
+        MIN_DROPDOWN_HEIGHT,
+        direction === 'down' ? availableBelow : availableAbove
+      );
+      const maxHeight = Math.min(config.maxListHeight, availableSpace);
+      const finalHeight = Math.min(desiredHeight, maxHeight);
+
+      const top = direction === 'down'
+        ? Math.min(
+            window.innerHeight - VIEWPORT_MARGIN - finalHeight,
+            triggerRect.bottom + DROPDOWN_OFFSET
+          )
+        : Math.max(
+            VIEWPORT_MARGIN,
+            triggerRect.top - finalHeight - DROPDOWN_OFFSET
+          );
+
+      const width = Math.max(triggerRect.width, 180);
+      const left = Math.max(
+        VIEWPORT_MARGIN,
+        Math.min(triggerRect.left, window.innerWidth - width - VIEWPORT_MARGIN)
+      );
+
+      setDropdownPlacement({
+        left,
+        top,
+        width,
+        maxHeight,
+        direction,
+      });
+    },
+    [config.maxListHeight, estimatedListHeight, open]
+  );
 
   useEffect(() => {
     if (!open) {
@@ -156,12 +267,16 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
 
     const handlePointerDown = (event: PointerEvent) => {
       const target = event.target as Node | null;
-      if (!containerRef.current || !target) {
+      if (!target) {
         return;
       }
-      if (!containerRef.current.contains(target)) {
-        setOpen(false);
+      if (containerRef.current?.contains(target)) {
+        return;
       }
+      if (optionsRef.current?.contains(target)) {
+        return;
+      }
+      setOpen(false);
     };
 
     document.addEventListener('pointerdown', handlePointerDown);
@@ -173,14 +288,38 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
 
   useEffect(() => {
     if (!open) {
+      setDropdownPlacement(null);
+      return;
+    }
+
+    syncDropdownPlacement(false);
+
+    const handleViewportChange = () => {
+      syncDropdownPlacement(true);
+    };
+
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('scroll', handleViewportChange, true);
+
+    return () => {
+      window.removeEventListener('resize', handleViewportChange);
+      window.removeEventListener('scroll', handleViewportChange, true);
+    };
+  }, [open, syncDropdownPlacement]);
+
+  useEffect(() => {
+    if (!open) {
       setHighlightedIndex(
         Math.max(
           options.findIndex((option) => option.id === value),
           0
         )
       );
+      return;
     }
-  }, [open, options, value]);
+
+    syncDropdownPlacement(true);
+  }, [open, options, value, syncDropdownPlacement]);
 
   useEffect(() => {
     if (!open) {
@@ -204,10 +343,10 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
   );
 
   const handleSelect = useCallback(
-    (profileId: AutoBattleMenuOptionId) => {
+    (optionId: string) => {
       setOpen(false);
-      if (profileId !== value) {
-        onChange(profileId);
+      if (optionId !== value) {
+        onChange(optionId);
       }
       triggerRef.current?.focus();
     },
@@ -291,10 +430,10 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
   };
 
   const listStyle: CSSProperties = {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    top: 'calc(100% + 0.45rem)',
+    position: 'fixed',
+    left: `${dropdownPlacement?.left ?? -9999}px`,
+    top: `${dropdownPlacement?.top ?? -9999}px`,
+    width: `${dropdownPlacement?.width ?? 0}px`,
     borderRadius: '12px',
     border: `1px solid ${palette.borderHover}`,
     background: palette.listBackground,
@@ -303,14 +442,71 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
     display: 'flex',
     flexDirection: 'column',
     gap: '0.25rem',
-    maxHeight: shouldClampListHeight ? `${config.maxListHeight}px` : undefined,
-    overflowY: shouldClampListHeight ? 'auto' : 'hidden',
-    opacity: open ? 1 : 0,
-    pointerEvents: open ? 'auto' : 'none',
-    transform: open ? 'translateY(0)' : 'translateY(-6px)',
+    maxHeight: `${dropdownPlacement?.maxHeight ?? config.maxListHeight}px`,
+    overflowY: 'auto',
+    opacity: open && dropdownPlacement ? 1 : 0,
+    pointerEvents: open && dropdownPlacement ? 'auto' : 'none',
+    transform:
+      open && dropdownPlacement
+        ? 'translateY(0)'
+        : `translateY(${dropdownPlacement?.direction === 'up' ? '6px' : '-6px'})`,
     transition: 'opacity 0.16s ease, transform 0.18s ease',
-    zIndex: 20,
+    zIndex: 140,
   };
+
+  const listbox = open && dropdownPlacement && typeof document !== 'undefined'
+    ? createPortal(
+        <div
+          ref={optionsRef}
+          id={listboxId}
+          role="listbox"
+          aria-activedescendant={
+            open ? `${listboxId}-${options[highlightedIndex]?.id ?? 'inactive'}` : undefined
+          }
+          style={listStyle}
+          data-open-direction={dropdownPlacement.direction}
+          data-controller-focus-ignore={dataFocusIgnore ? 'true' : undefined}
+        >
+          {options.map((option, index) => {
+            const isSelected = option.id === value;
+            const isHighlighted = index === highlightedIndex;
+            const hasSummary = Boolean(option.summary);
+
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="option"
+                id={`${listboxId}-${option.id}`}
+                data-option-index={index}
+                aria-selected={isSelected}
+                style={makeOptionStyle({
+                  config,
+                  isHighlighted,
+                  isSelected,
+                  hasSummary,
+                })}
+                onMouseEnter={() => setHighlightedIndex(index)}
+                onFocus={() => setHighlightedIndex(index)}
+                onMouseDown={(event) => {
+                  // Keep focus on trigger for consistent keyboard handling
+                  event.preventDefault();
+                }}
+                onClick={() => handleSelect(option.id)}
+              >
+                <span style={{ fontSize: config.optionFontSize, fontWeight: isSelected ? 600 : 500 }}>
+                  {option.name}
+                </span>
+                {hasSummary ? (
+                  <span style={makeOptionSummaryStyle(config)}>{option.summary}</span>
+                ) : null}
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      )
+    : null;
 
   return (
     <div
@@ -328,8 +524,9 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
         style={triggerStyle}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
+        data-testid={triggerTestId}
       >
-        <span>{selectedOption?.name}</span>
+        <span>{selectedOption?.name ?? ''}</span>
         <span
           style={{
             ...arrowStyle,
@@ -340,48 +537,7 @@ const AutoBattleProfileSelect: React.FC<AutoBattleProfileSelectProps> = ({
         </span>
       </button>
 
-      <div
-        ref={optionsRef}
-        id={listboxId}
-        role="listbox"
-        aria-activedescendant={
-          open ? `${listboxId}-${options[highlightedIndex]?.id ?? 'inactive'}` : undefined
-        }
-        style={listStyle}
-      >
-        {options.map((option, index) => {
-          const isSelected = option.id === value;
-          const isHighlighted = index === highlightedIndex;
-
-          return (
-            <button
-              key={option.id}
-              type="button"
-              role="option"
-              id={`${listboxId}-${option.id}`}
-              data-option-index={index}
-              aria-selected={isSelected}
-              style={makeOptionStyle({
-                config,
-                isHighlighted,
-                isSelected,
-              })}
-              onMouseEnter={() => setHighlightedIndex(index)}
-              onFocus={() => setHighlightedIndex(index)}
-              onMouseDown={(event) => {
-                // Keep focus on trigger for consistent keyboard handling
-                event.preventDefault();
-              }}
-              onClick={() => handleSelect(option.id)}
-            >
-              <span style={{ fontSize: config.optionFontSize, fontWeight: isSelected ? 600 : 500 }}>
-                {option.name}
-              </span>
-              <span style={makeOptionSummaryStyle(config)}>{option.summary}</span>
-            </button>
-          );
-        })}
-      </div>
+      {listbox}
     </div>
   );
 };

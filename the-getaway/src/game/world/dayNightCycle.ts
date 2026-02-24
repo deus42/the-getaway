@@ -126,6 +126,12 @@ export interface PhaseTimingInfo {
   phaseProgress: number;
 }
 
+export interface ClockTime24 {
+  totalMinutes: number;
+  hour: number;
+  minute: number;
+}
+
 const buildOrderedPhases = (config: DayNightConfig): PhaseDefinition[] => {
   const phases: PhaseDefinition[] = [
     { phase: 'morning', start: config.morningStartTime },
@@ -135,6 +141,32 @@ const buildOrderedPhases = (config: DayNightConfig): PhaseDefinition[] => {
   ];
 
   return phases.sort((a, b) => a.start - b.start);
+};
+
+export const getClockTime24 = (
+  currentTime: number,
+  config: DayNightConfig = DEFAULT_DAY_NIGHT_CONFIG
+): ClockTime24 => {
+  const cycleDuration = config.cycleDuration;
+  if (!Number.isFinite(currentTime) || cycleDuration <= 0) {
+    return {
+      totalMinutes: 0,
+      hour: 0,
+      minute: 0,
+    };
+  }
+
+  const cycleSeconds = ((currentTime % cycleDuration) + cycleDuration) % cycleDuration;
+  const cycleProgress = cycleSeconds / cycleDuration;
+  const totalMinutes = Math.floor(cycleProgress * 24 * 60) % (24 * 60);
+  const hour = Math.floor(totalMinutes / 60);
+  const minute = totalMinutes % 60;
+
+  return {
+    totalMinutes,
+    hour,
+    minute,
+  };
 };
 
 export const getPhaseTimingInfo = (
@@ -228,8 +260,8 @@ export const isCurfewTime = (
   currentTime: number,
   config: DayNightConfig = DEFAULT_DAY_NIGHT_CONFIG
 ): boolean => {
-  const timeOfDay = getCurrentTimeOfDay(currentTime, config);
-  return timeOfDay === 'night';
+  const { hour } = getClockTime24(currentTime, config);
+  return hour >= 22 || hour < 6;
 };
 
 // Update game time based on real elapsed time

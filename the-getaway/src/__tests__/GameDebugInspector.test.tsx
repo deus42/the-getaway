@@ -89,11 +89,11 @@ const renderWithStore = (options: StoreOptions) => {
 describe('GameDebugInspector gating', () => {
   it('omits the toggle when test mode is disabled', () => {
     renderWithStore({ testMode: false });
-    expect(screen.queryByText(/Show Debug Inspector/i)).toBeNull();
+    expect(screen.queryByText(/Show Debug Panel/i)).toBeNull();
   });
 
   it('renders the toggle when test mode is enabled', () => {
     renderWithStore({ testMode: true });
-    expect(screen.getByText(/Show Debug Inspector/i)).toBeInTheDocument();
+    expect(screen.getByText(/Show Debug Panel/i)).toBeInTheDocument();
   });
 });

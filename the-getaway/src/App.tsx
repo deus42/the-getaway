@@ -13,8 +13,6 @@ import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
 import { XPNotificationManager, XPNotificationData } from "./components/ui/XPNotification";
 import TacticalHUDFrame from "./components/ui/TacticalHUDFrame";
 import CombatFeedbackManager from "./components/ui/CombatFeedbackManager";
-import CameraDetectionHUD from "./components/ui/CameraDetectionHUD";
-import StealthIndicator from "./components/ui/StealthIndicator";
 import CurfewWarning from "./components/ui/CurfewWarning";
 import { PERSISTED_STATE_KEY, resetGame, store, RootState } from "./store";
 // (PoC) ESB neon uses additive emissive; no Light2D forcing here.
@@ -180,7 +178,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
   const uiStrings = getUIStrings(locale);
   const zoneId = useSelector((state: RootState) => state.world.currentMapArea?.zoneId ?? null);
   const isCombatLayout = hudLayoutPreset === 'combat';
-  const isStealthLayout = hudLayoutPreset === 'stealth';
 
   const [questExpanded, setQuestExpanded] = useState(false);
   const [rendererMeta, setRendererMeta] = useState<{ label?: string; detail?: string } | null>(null);
@@ -330,21 +327,12 @@ const CommandShell: React.FC<CommandShellProps> = ({
           <div style={{ pointerEvents: 'auto' }}>
             <DayNightIndicator />
           </div>
-          <div style={{ pointerEvents: 'auto' }}>
-            <StealthIndicator />
-          </div>
-          <div style={{ pointerEvents: 'auto' }}>
-            <CameraDetectionHUD />
-          </div>
         </div>
         <DialogueOverlay />
         <CombatFeedbackManager />
       </div>
       <div className="hud-bottom-dock" data-hud-layout={hudLayoutPreset}>
-        <div
-          className="hud-bottom-lane hud-bottom-lane--map"
-          data-hud-emphasis={isStealthLayout ? 'true' : undefined}
-        >
+        <div className="hud-bottom-lane hud-bottom-lane--map">
           <div className="hud-bottom-lane-card">
             <div className="hud-bottom-card-surface">
               <TacticalPanel className="hud-bottom-map-card" variant="frameless">

@@ -13,6 +13,7 @@ const DEGREE_TO_RAD = Phaser.Math.DEG_TO_RAD;
 const ALERT_COLORS: Record<CameraAlertState, { fill: number; alpha: number }> = {
   [CameraAlertState.IDLE]: { fill: 0x3b82f6, alpha: 0.15 },
   [CameraAlertState.SUSPICIOUS]: { fill: 0xfacc15, alpha: 0.22 },
+  [CameraAlertState.INVESTIGATING]: { fill: 0xf97316, alpha: 0.26 },
   [CameraAlertState.ALARMED]: { fill: 0xef4444, alpha: 0.3 },
   [CameraAlertState.DISABLED]: { fill: 0x64748b, alpha: 0.12 },
 };
@@ -101,7 +102,14 @@ export class CameraSprite extends Phaser.GameObjects.Container {
     this.drawVisionCone(fill);
 
     if (this.isActiveSprite && state !== CameraAlertState.DISABLED) {
-      this.led.setFillStyle(state === CameraAlertState.ALARMED ? 0xff4d4f : 0x22d3ee, 1);
+      const ledColor = state === CameraAlertState.ALARMED
+        ? 0xff4d4f
+        : state === CameraAlertState.INVESTIGATING
+        ? 0xf97316
+        : state === CameraAlertState.SUSPICIOUS
+        ? 0xfacc15
+        : 0x22d3ee;
+      this.led.setFillStyle(ledColor, 1);
     } else if (state === CameraAlertState.DISABLED) {
       this.led.setFillStyle(0x64748b, 0.8);
     }

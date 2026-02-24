@@ -11,6 +11,10 @@ import { addExperience } from "../../store/playerSlice";
 import AnimatedStatBar from "./AnimatedStatBar";
 import { WarningIcon } from "./icons";
 import { selectParanoiaValue } from "../../store/selectors/paranoiaSelectors";
+import {
+  selectStealthHudModel,
+} from "../../store/selectors/engagementSelectors";
+import { requestStealthToggle } from "../../store/worldSlice";
 
 type PlayerSummaryVariant = "default" | "frameless";
 
@@ -34,16 +38,27 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
   const paranoiaValue = useSelector(selectParanoiaValue);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
+  const stealthHudModel = useSelector(selectStealthHudModel);
   const uiStrings = getUIStrings(locale);
+  const stealthStrings = uiStrings.stealthIndicator;
   const background = player.backgroundId
     ? BACKGROUND_MAP[player.backgroundId]
     : undefined;
   const backgroundName =
     background?.name ?? uiStrings.playerStatus.backgroundFallback;
   const roundedParanoia = Math.round(paranoiaValue);
-  const movementLabel =
-    uiStrings.playerStatus.movementBadge[player.movementProfile] ??
-    player.movementProfile.toUpperCase();
+  const stealthToggleLabel = stealthHudModel.isActive
+    ? stealthStrings.stealthToggleOn
+    : stealthStrings.stealthToggleOff;
+  const stealthToggleHint = stealthHudModel.blockedReason === "combat"
+    ? stealthStrings.unavailableReasons.combat
+    : stealthHudModel.blockedReason === "dialogue"
+    ? stealthStrings.unavailableReasons.dialogue
+    : stealthHudModel.blockedReason === "cooldown"
+    ? stealthStrings.cooldown(
+      Math.max(1, stealthHudModel.cooldownSeconds || 1)
+    )
+    : stealthStrings.keyHint;
 
   const handleLevelUp = () => {
     const currentLevel = player.level;
@@ -66,18 +81,28 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
 
   return (
     <div className={mergedClasses} data-testid="player-summary-panel">
-      <div className="flex items-start justify-between gap-[0.75rem]">
+      <div className="flex items-start gap-[0.75rem]">
         <div className="flex min-w-0 flex-1 flex-col gap-[0.2rem]">
           <div className="flex items-center gap-[0.5rem] text-[0.9rem] uppercase tracking-[0.26em] text-[#bfdbfe] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]">
             <span className="truncate">{player.name}</span>
             <span className="inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.18)] px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold tracking-[0.14em] text-[#f8fafc] shadow-[0_10px_20px_-10px_rgba(56,189,248,0.55)]">
               {uiStrings.playerStatus.levelLabel} {player.level}
             </span>
-            {player.movementProfile !== "normal" && (
-              <span className="inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(148,163,184,0.65)] bg-[rgba(148,163,184,0.12)] px-[0.55rem] py-[0.22rem] text-[0.55rem] font-semibold tracking-[0.14em] text-[#e2e8f0] shadow-[0_8px_18px_-12px_rgba(148,163,184,0.55)]">
-                {movementLabel}
-              </span>
-            )}
+          <button
+            type="button"
+            onClick={() => dispatch(requestStealthToggle())}
+            className={[
+              "inline-flex items-center gap-[0.25rem] rounded-[999px] border px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold uppercase tracking-[0.14em] transition-all duration-150",
+              stealthHudModel.isActive
+                ? "border-[rgba(45,212,191,0.65)] bg-[rgba(20,83,74,0.44)] text-[#ccfbf1] shadow-[0_10px_20px_-12px_rgba(20,184,166,0.55)]"
+                : "border-[rgba(148,163,184,0.6)] bg-[rgba(30,41,59,0.45)] text-[#dbeafe] shadow-[0_10px_20px_-12px_rgba(59,130,246,0.35)]",
+            ].join(" ")}
+            data-testid="player-stealth-toggle"
+            aria-pressed={stealthHudModel.isActive}
+            title={stealthToggleHint}
+          >
+            {stealthToggleLabel}
+          </button>
           </div>
           <div className="text-[0.6rem] uppercase tracking-[0.12em] text-[rgba(226,232,240,0.72)]">
             {backgroundName}

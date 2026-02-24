@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { CameraAlertState } from '../../game/interfaces/types';
 import { RootState } from '../../store';
 
-type AlertIntent = 'idle' | 'suspicious' | 'alarmed' | 'disabled';
+type AlertIntent = 'idle' | 'suspicious' | 'investigating' | 'alarmed' | 'disabled';
 
 interface AlertTokens {
   label: string;
@@ -14,6 +14,8 @@ const getAlertTokens = (alertState: CameraAlertState): AlertTokens => {
   switch (alertState) {
     case CameraAlertState.ALARMED:
       return { label: 'ALARMED', intent: 'alarmed' };
+    case CameraAlertState.INVESTIGATING:
+      return { label: 'INVESTIGATING', intent: 'investigating' };
     case CameraAlertState.SUSPICIOUS:
       return { label: 'SUSPICIOUS', intent: 'suspicious' };
     case CameraAlertState.DISABLED:
@@ -63,6 +65,13 @@ const styles = `
     --accent-border: rgba(251, 191, 36, 0.4);
     --accent-shadow: rgba(251, 191, 36, 0.28);
     --accent-spark: rgba(251, 191, 36, 0.6);
+  }
+
+  .camera-wafer[data-alert="investigating"] {
+    --accent: rgba(249, 115, 22, 0.84);
+    --accent-border: rgba(249, 115, 22, 0.42);
+    --accent-shadow: rgba(194, 65, 12, 0.3);
+    --accent-spark: rgba(249, 115, 22, 0.62);
   }
 
   .camera-wafer[data-alert="alarmed"] {
@@ -128,6 +137,10 @@ const styles = `
 
   .camera-wafer[data-alert="suspicious"] .camera-wafer__pulse {
     animation-duration: 1400ms;
+  }
+
+  .camera-wafer[data-alert="investigating"] .camera-wafer__pulse {
+    animation-duration: 1200ms;
   }
 
   .camera-wafer__glyph {
@@ -229,6 +242,15 @@ const styles = `
     pointer-events: none;
   }
 
+  .camera-wafer__status {
+    font-size: 0.52rem;
+    letter-spacing: 0.11em;
+    color: rgba(148, 163, 184, 0.86);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   @media (max-width: 1080px) {
     .camera-wafer {
       min-width: 12rem;
@@ -239,19 +261,36 @@ const styles = `
 
 const CameraDetectionHUD: React.FC = () => {
   const hud = useSelector((state: RootState) => state.surveillance.hud);
-  const zoneHasCameras = useSelector((state: RootState) => {
+  const cameraTelemetry = useSelector((state: RootState) => {
     const areaId = state.world.currentMapArea?.id;
     if (!areaId) {
-      return false;
+      return {
+        totalCount: 0,
+        activeCount: 0,
+        isDaylightPhase: false,
+      };
     }
+
     const zone = state.surveillance.zones[areaId];
-    return zone ? Object.keys(zone.cameras).length > 0 : false;
+    const cameras = zone ? Object.values(zone.cameras) : [];
+    const activeCount = cameras.filter(
+      (camera) =>
+        camera.isActive && camera.alertState !== CameraAlertState.DISABLED
+    ).length;
+    const isDaylightPhase =
+      state.world.timeOfDay === 'morning' || state.world.timeOfDay === 'day';
+
+    return {
+      totalCount: cameras.length,
+      activeCount,
+      isDaylightPhase,
+    };
   });
+  const zoneHasCameras = cameraTelemetry.totalCount > 0;
 
   const shouldDisplay = zoneHasCameras
     || hud.detectionProgress > 0
-    || hud.networkAlertActive
-    || hud.overlayEnabled;
+    || hud.networkAlertActive;
 
   const progress = useMemo(
     () => Math.min(100, Math.max(0, hud.detectionProgress)),
@@ -259,13 +298,22 @@ const CameraDetectionHUD: React.FC = () => {
   );
   const progressPercent = useMemo(() => Math.round(progress), [progress]);
   const alertTokens = useMemo(() => getAlertTokens(hud.alertState), [hud.alertState]);
+  const statusText = !hud.overlayEnabled
+    ? 'Cones hidden'
+    : zoneHasCameras
+    && cameraTelemetry.activeCount === 0
+    && cameraTelemetry.isDaylightPhase
+    ? 'Cameras inactive (daytime)'
+    : zoneHasCameras
+    ? `${cameraTelemetry.activeCount}/${cameraTelemetry.totalCount} active`
+    : 'No active cameras';
 
   const stateLabel = alertTokens.intent === 'idle'
     ? 'spy activity idle state'
     : `${alertTokens.label.toLowerCase()} state`;
   const overlayStateLabel = hud.overlayEnabled ? 'surveillance cones visible' : 'surveillance cones hidden';
   const networkLabel = hud.networkAlertActive ? 'network alert active. ' : '';
-  const ariaLabel = `${stateLabel}. ${networkLabel}Exposure ${progressPercent} percent. ${overlayStateLabel}.`;
+  const ariaLabel = `${stateLabel}. ${networkLabel}Exposure ${progressPercent} percent. ${overlayStateLabel}. ${statusText}.`;
 
   if (!shouldDisplay) {
     return null;
@@ -302,6 +350,7 @@ const CameraDetectionHUD: React.FC = () => {
               />
             </div>
           </div>
+          <div className="camera-wafer__status">{statusText}</div>
         </div>
       </div>
     </>

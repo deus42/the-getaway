@@ -30,6 +30,7 @@ const ENTITY_COLORS: Record<MiniMapEntityDetail["kind"], string> = {
 const CAMERA_COLORS: Record<CameraAlertState, string> = {
   [CameraAlertState.IDLE]: "#38bdf8",
   [CameraAlertState.SUSPICIOUS]: "#fbbf24",
+  [CameraAlertState.INVESTIGATING]: "#f97316",
   [CameraAlertState.ALARMED]: "#ef4444",
   [CameraAlertState.DISABLED]: "#64748b",
 };

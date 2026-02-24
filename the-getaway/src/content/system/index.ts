@@ -42,6 +42,9 @@ export interface LogStrings {
   alertSuspicious: string;
   alertInvestigating: string;
   alertAlarmed: string;
+  cameraAlertSuspicious: string;
+  cameraAlertInvestigating: string;
+  cameraAlertAlarmed: string;
   reinforcementsIncoming: string;
   endingTurn: string;
   notEnoughStamina: (required: number, available: number) => string;
@@ -59,6 +62,7 @@ export interface LogStrings {
   stealthUnavailableCombat: string;
   stealthUnavailableDialogue: string;
   stealthCooldown: (seconds: number) => string;
+  stealthNoiseCue: string;
 }
 
 interface SystemStrings {
@@ -117,6 +121,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       alertSuspicious: 'Guard patrol notices something off—stay cautious.',
       alertInvestigating: 'Patrol is actively searching the area. Get to cover!',
       alertAlarmed: 'ALERT! Enemy has locked onto your position!',
+      cameraAlertSuspicious: 'Camera sweep flagged movement. Keep low and reposition.',
+      cameraAlertInvestigating: 'Camera network is actively tracking your lane.',
+      cameraAlertAlarmed: 'Camera alarm triggered! Security response escalating.',
       reinforcementsIncoming: 'Reinforcements called in—more hostiles incoming!',
       endingTurn: 'Ending your turn...',
       notEnoughStamina: (required, available) =>
@@ -135,6 +142,7 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       stealthUnavailableCombat: "Can't engage stealth mid-combat!",
       stealthUnavailableDialogue: 'Finish the conversation before slipping back into stealth.',
       stealthCooldown: (seconds) => `Stealth recalibrating (${seconds}s).`,
+      stealthNoiseCue: 'Noise spike detected. Sprinting is exposing your position.',
     },
   },
   uk: {
@@ -188,6 +196,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       alertSuspicious: 'Патруль помічає щось підозріле — будьте обережні.',
       alertInvestigating: 'Патруль активно обшукує зону. Сховайтеся!',
       alertAlarmed: 'ТРИВОГА! Ворог засік вашу позицію!',
+      cameraAlertSuspicious: 'Камера зафіксувала рух. Тримайтесь нижче й змініть маршрут.',
+      cameraAlertInvestigating: 'Камерна мережа активно відстежує ваш коридор.',
+      cameraAlertAlarmed: 'Камерна тривога! Охорона посилює відповідь.',
       reinforcementsIncoming: 'Викликано підкріплення — більше ворогів на підході!',
       endingTurn: 'Завершення ходу...',
       notEnoughStamina: (required, available) =>
@@ -206,6 +217,7 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       stealthUnavailableCombat: 'Не можна увійти у стелс під час бою!',
       stealthUnavailableDialogue: 'Спершу завершіть діалог, тоді повертайтесь у стелс.',
       stealthCooldown: (seconds) => `Стелс перезаряджається (${seconds} с).`,
+      stealthNoiseCue: 'Сплеск шуму. Біг видає вашу позицію.',
     },
   },
 };

@@ -140,6 +140,7 @@ interface PlayerStatusStrings {
     normal: string;
     sprint: string;
   };
+  paceLabel: string;
   roundLabel: (round: number) => string;
   yourMove: string;
   enemyAdvance: string;
@@ -205,6 +206,9 @@ interface FactionToastStrings {
 interface StealthIndicatorStrings {
   label: string;
   keyHint: string;
+  compactKeyHint: string;
+  stealthToggleOn: string;
+  stealthToggleOff: string;
   states: {
     hidden: string;
     exposed: string;
@@ -216,6 +220,16 @@ interface StealthIndicatorStrings {
     combat: string;
     dialogue: string;
     cooldown: string;
+  };
+  reasonLabels: {
+    camera: string;
+    vision: string;
+    noise: string;
+  };
+  recoveryHints: {
+    camera: string;
+    vision: string;
+    noise: string;
   };
 }
 
@@ -230,6 +244,7 @@ interface MiniMapStrings {
 }
 
 interface DayNightStrings {
+  clockLabel: string;
   timeOfDay: Record<TimeOfDay, string>;
   phaseLabel: string;
   nextLabel: string;
@@ -560,7 +575,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       lightingToggleDescription: 'Turns on dynamic Light2D rendering for atlas props. Requires WebGL.',
       hudLayoutLabel: 'HUD Layout Override',
       hudLayoutDescription:
-        'Force a specific HUD preset for QA. Auto lets the console adapt to combat or stealth pressure.',
+        'Force a specific HUD preset for QA. Auto keeps exploration layout unless combat is active.',
       hudLayoutOptions: {
         auto: 'Auto',
         exploration: 'Exploration',
@@ -677,6 +692,7 @@ const STRINGS: Record<Locale, UIStrings> = {
         normal: 'Normal',
         sprint: 'Sprinting',
       },
+      paceLabel: 'Pace',
       roundLabel: (round) => `Round ${round}`,
       yourMove: 'Your move',
       enemyAdvance: 'Enemy advance',
@@ -724,7 +740,10 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     stealthIndicator: {
       label: 'Stealth',
-      keyHint: 'Press X to toggle stealth.',
+      keyHint: 'X toggles stealth. Hold Shift while moving to sprint (louder).',
+      compactKeyHint: 'X',
+      stealthToggleOn: 'Stealth On',
+      stealthToggleOff: 'Stealth Off',
       states: {
         hidden: 'Hidden',
         exposed: 'Exposed',
@@ -736,6 +755,16 @@ const STRINGS: Record<Locale, UIStrings> = {
         combat: 'Unavailable during combat.',
         dialogue: 'Finish the conversation to re-enter stealth.',
         cooldown: 'Cooling down before the next stealth attempt.',
+      },
+      reasonLabels: {
+        camera: 'Camera',
+        vision: 'Line of sight',
+        noise: 'Noise',
+      },
+      recoveryHints: {
+        camera: 'leave camera cone',
+        vision: 'break line of sight',
+        noise: 'stop sprinting and create distance',
       },
     },
     factionPanel: {
@@ -782,6 +811,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       noObjectives: 'No objectives visible.',
     },
     dayNight: {
+      clockLabel: 'Clock',
       timeOfDay: {
         morning: 'Morning',
         day: 'Day',
@@ -1330,7 +1360,7 @@ const STRINGS: Record<Locale, UIStrings> = {
         'Активує динамічне Light2D-освітлення для атласних спрайтів (потрібен WebGL).',
       hudLayoutLabel: 'Режим HUD',
       hudLayoutDescription:
-        'Фіксує пресет HUD для QA. «Авто» перемикає розкладку залежно від бою чи стелсу.',
+        'Фіксує пресет HUD для QA. «Авто» тримає режим дослідження, доки не починається бій.',
       hudLayoutOptions: {
         auto: 'Авто',
         exploration: 'Дослідження',
@@ -1450,6 +1480,7 @@ const STRINGS: Record<Locale, UIStrings> = {
         normal: 'Звично',
         sprint: 'Біг',
       },
+      paceLabel: 'Темп',
       roundLabel: (round) => `Раунд ${round}`,
       yourMove: 'Ваш хід',
       enemyAdvance: 'Хід противника',
@@ -1497,7 +1528,10 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     stealthIndicator: {
       label: 'Стелс',
-      keyHint: 'Натисніть X, щоб перемкнути стелс.',
+      keyHint: 'X перемикає стелс. Утримуйте Shift під час руху для бігу (голосніше).',
+      compactKeyHint: 'X',
+      stealthToggleOn: 'Стелс Увімк',
+      stealthToggleOff: 'Стелс Вимк',
       states: {
         hidden: 'Непомітно',
         exposed: 'Під прицілом',
@@ -1509,6 +1543,16 @@ const STRINGS: Record<Locale, UIStrings> = {
         combat: 'Недоступно під час бою.',
         dialogue: 'Завершіть діалог, щоб повернутися у стелс.',
         cooldown: 'Стелс перезаряджається перед повторним запуском.',
+      },
+      reasonLabels: {
+        camera: 'Камера',
+        vision: 'Лінія огляду',
+        noise: 'Шум',
+      },
+      recoveryHints: {
+        camera: 'вийдіть із конуса камери',
+        vision: 'розірвіть лінію огляду',
+        noise: 'припиніть біг і збільште дистанцію',
       },
     },
     factionPanel: {
@@ -1555,6 +1599,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       noObjectives: 'Цілей не виявлено.',
     },
     dayNight: {
+      clockLabel: 'Годинник',
       timeOfDay: {
         morning: 'Ранок',
         day: 'День',

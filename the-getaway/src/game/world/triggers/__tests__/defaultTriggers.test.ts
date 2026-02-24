@@ -127,7 +127,7 @@ describe('default environmental triggers', () => {
     state = store.getState();
     expect(state.world.environment.weather.updatedAt).toBe(3_000);
 
-    store.dispatch(setGameTime(60)); // shift into daylight window
+    store.dispatch(setGameTime(100)); // shift into curfew-off daytime window
     runTriggerTick(store, 5_000);
     state = store.getState();
     expect(state.world.environment.weather.timeOfDay).toBe(state.world.timeOfDay);

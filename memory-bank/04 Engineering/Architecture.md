@@ -54,7 +54,7 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`PlayerInventoryPanel.tsx`**: Full inventory console with filter tabs, encumbrance telemetry, equipment slot grid, hotbar management, and inline equip/repair/use actions that dispatch Redux inventory reducers.
 - **Inventory data model**: `Player.inventory` now tracks `hotbar` slots alongside `items`, and `Player.equippedSlots`/`activeWeaponSlot` mirror the expanded slot framework (primary/secondary/melee weapons, body armor, helmet, accessories). `Player.encumbrance` persists the derived weight ratio so reducers and UI can apply penalties without recomputing totals each frame.
 - **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, and the viewport reticle, now framed inside the shared HUD tokens (`hudTokens.ts`). The panel sticks to the noir chrome while keeping drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles intact.
-- **`DayNightIndicator.tsx`**: Surfaces the current time of day, phase transitions, and curfew countdown in the HUD.
+- **`DayNightIndicator.tsx`**: Surfaces a compact 24-hour digital command clock in the top-right HUD rail, with quantized (low-frequency) display updates for calmer readability.
 - **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
 - **`GeorgeAssistant.tsx`**: React HUD console that anchors top-center, presenting a compact status dock and an expandable chat feed while pulling quest, karma, reputation, and personality data straight from Redux.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
@@ -356,10 +356,10 @@ flowchart LR
 ### Pattern: HudLayoutStateMachine
 
 - `the-getaway/src/store/hudLayoutSlice.ts` stores an optional QA override for layout presets (`exploration | stealth | combat`). The state stays independent of other slices so reset/locale changes do not clobber QA selections.
-- `the-getaway/src/store/selectors/hudLayoutSelectors.ts` derives the active preset by combining the override with `world.inCombat`, `world.engagementMode`, zone heat, and surveillance detection telemetry. Combat always wins, stealth engages when the player intentionally toggles stealth or pressure rises above 45%, otherwise the console falls back to exploration.
-- `the-getaway/src/App.tsx` injects `data-hud-layout` attributes on the stage + bottom dock and swaps entire HUD lanes (George, Ops Briefings) based on the preset while highlighting the remaining panels via `data-hud-emphasis`.
-- `the-getaway/src/styles/hud-bottom-dock.css` reads those attributes to reflow the dock grid (4 columns in exploration, 3 during stealth, 2 in combat) and to accentuate whichever panels are marked as emphasized.
-- QA can force any preset through the Game Menu (`HUD Layout Override` select) which dispatches `setHudLayoutOverride` so automated tests or manual sessions can lock layouts without faking combat.
+- `the-getaway/src/store/selectors/hudLayoutSelectors.ts` now keeps auto mode deterministic: override wins, combat forces `combat`, and all other non-combat play remains `exploration` (no stealth/pressure-triggered auto reflow).
+- `the-getaway/src/App.tsx` injects `data-hud-layout` attributes on the stage + bottom dock and only applies explicit lane emphasis for combat in auto mode so pressing `X` does not reshape the dock.
+- `the-getaway/src/styles/hud-bottom-dock.css` continues to support manual QA presets (`exploration | stealth | combat`) while normal runtime flow only auto-switches to combat.
+- QA can force any preset through the Game Menu (`HUD Layout Override` dropdown) which dispatches `setHudLayoutOverride` so automated tests or manual sessions can lock layouts without faking combat.
 
 ## Command Dock Layout
 > Category: hud_systems  
@@ -477,10 +477,10 @@ flowchart LR
 
 1. `src/content/cameraConfigs.ts` declares static, motion, and drone camera blueprints per zone; `cameraTypes.ts` converts them into runtime state with sweep metadata.
 2. `surveillanceSlice` stores zone cameras, HUD metrics, overlay toggles, and curfew banner visibility so React components can subscribe to a single source of truth.
-3. `GameController` loads zone surveillance on area transitions, throttles crouch movement, and drives `updateSurveillance` every frame while binding `Tab`/`C` hotkeys through `setOverlayEnabled` and `setCrouching`.
-4. `game/systems/surveillance/cameraSystem.ts` advances sweeps/patrols, applies stealth + crouch modifiers, locks camera orientation on the player while they remain inside the active cone with line-of-sight and immediately releases the lock (accelerating decay) once the target escapes, raises network alerts, schedules reinforcements, and snapshots HUD values for the slice.
+3. `GameController` loads zone surveillance on area transitions and drives `updateSurveillance` every frame while binding `Tab` overlay toggles through `setOverlayEnabled`.
+4. `game/systems/surveillance/cameraSystem.ts` advances sweeps/patrols, applies stealth + movement profile modifiers, locks camera orientation on the player while they remain inside the active cone with line-of-sight and immediately releases the lock once the target escapes, raises network alerts, schedules reinforcements, and snapshots HUD values for the slice.
 5. `MainScene` listens to store changes and instantiates `CameraSprite` containers that animate LEDs and cones, respecting the overlay flag on each update.
-6. React HUD layers stack the day/night wafer above the minimal camera wafer (`CameraDetectionHUD.tsx`) in the top-right rail, surfacing the SPY ACTIVITY/suspicious/alarmed intent label, styled exposure bar, and network underline while the Game Menu hosts the overlay toggle (Tab shortcut still mapped in `GameController`) and `CurfewWarning.tsx` handles curfew activations as `MiniMap.tsx` renders camera glyphs with alert-state colors.
+6. React HUD layers keep only a compact 24-hour command clock in the top-right rail to avoid duplicate surveillance messaging; camera readability remains diegetic (cones + world entities), while the Game Menu still hosts the overlay toggle and `CurfewWarning.tsx` handles curfew activations as `MiniMap.tsx` renders camera glyphs with alert-state colors.
 
 `the-getaway/src/game/systems/surveillance/cameraSystem.ts`
 `the-getaway/src/game/objects/CameraSprite.ts`
@@ -497,23 +497,23 @@ flowchart LR
 ### Design principles
 
 - Maintain a single source of truth for the player's engagement state so HUD, gameplay systems, and AI react consistently.
-- Keep stealth toggles deterministic: player intent drives entry/exit while combat, dialogue, or alarms can forcibly override with a cool-down.
+- Keep stealth toggles deterministic: player intent drives entry/exit while combat, dialogue, or confirmed alarm states can forcibly override with a cool-down.
 - Surface system state through lightweight selectors so UI layers stay declarative and memo-friendly.
 
 ### Technical flow
 
-1. `worldSlice.engagementMode` tracks `'none' | 'stealth' | 'combat' | 'dialog'`, mirroring combat/quest reducers while allowing `GameController` to set stealth manually.
+1. `worldSlice.engagementMode` tracks `'none' | 'stealth' | 'combat' | 'dialog'`, and `worldSlice.stealthToggleRequestNonce` carries HUD-issued stealth toggle requests without coupling UI controls directly to gameplay reducers.
 2. `playerSlice` now persists `movementProfile`, `stealthModeEnabled`, and `stealthCooldownExpiresAt`; helper reducers (`setMovementProfile`, `setStealthState`) keep runtime systems decoupled from React specifics.
-3. `selectStealthAvailability` in `store/selectors/engagementSelectors.ts` exposes eligibility/cooldown metadata that both HUD and controllers consume.
-4. `GameController` handles toggle input (`X`), enforces cooldowns, auto-drops stealth during combat/dialogue, and applies noise-based alert bumps to nearby guards when the player moves loudly.
-5. `StealthIndicator.tsx` reads engagement + surveillance telemetry, rendering the Hidden/Exposed/Compromised/Standby wafer with localisation-aware copy and state-driven styling.
-6. Surveillance and suspicion pipelines use `player.movementProfile` + `stealthModeEnabled` (replacing crouch) to scale camera range, detection gain, disguise multipliers, and witness posture modifiers.
+3. `store/selectors/engagementSelectors.ts` now centralizes fairness/readability semantics via `selectStealthReadability`, `selectIsHidden`, and `selectStealthHudModel` (button/state/detail model), plus cooldown eligibility (`selectStealthAvailability`) using epoch timestamps.
+4. `GameController` funnels both keyboard (`X`) and HUD-button requests through a shared `attemptStealthToggle` callback, enforces cooldowns using epoch time, auto-drops stealth during combat/dialogue, only forces stealth break on confirmed `ALARMED` guard/camera states, and syncs movement profile (`silent/normal/sprint`) from live `Shift + movement` input so noise/readability signals remain truthful.
+5. `PlayerSummaryPanel.tsx` hosts a fixed compact stealth control chip in the header (`STEALTH ON/OFF`), inline with existing header controls (for example level badge sizing) with no additional standby/pace strip surfaces.
+6. Surveillance and suspicion pipelines use `player.movementProfile` + `stealthModeEnabled` (replacing crouch) to scale camera range, detection gain, disguise multipliers, and witness posture modifiers; camera escalation now follows `Suspicious -> Investigating -> Alarmed`.
 
 `the-getaway/src/store/worldSlice.ts`
 `the-getaway/src/store/playerSlice.ts`
 `the-getaway/src/store/selectors/engagementSelectors.ts`
 `the-getaway/src/components/GameController.tsx`
-`the-getaway/src/components/ui/StealthIndicator.tsx`
+`the-getaway/src/components/ui/PlayerSummaryPanel.tsx`
 `the-getaway/src/game/systems/surveillance/cameraSystem.ts`
 `the-getaway/src/game/systems/suspicion/observationBuilders.ts`
 

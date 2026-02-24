@@ -340,6 +340,9 @@ const GameController: React.FC = () => {
   const engagementMode = useSelector(
     (state: RootState) => state.world.engagementMode
   );
+  const stealthToggleRequestNonce = useSelector(
+    (state: RootState) => state.world.stealthToggleRequestNonce
+  );
   const autoStealthEnabled = useSelector(
     (state: RootState) => state.settings.autoStealthEnabled
   );
@@ -422,6 +425,8 @@ const GameController: React.FC = () => {
   const paranoiaRuntimeRef = useRef(createParanoiaRuntime());
   const paranoiaTierRef = useRef(paranoiaTier);
   const zoneHeatRef = useRef(zoneHeat);
+  const lastNoiseCueTimestampRef = useRef(0);
+  const lastStealthToggleRequestNonceRef = useRef(stealthToggleRequestNonce);
   const paranoiaConsumableCountsRef = useRef<{
     calmTabs: number;
     cigarettes: number;
@@ -559,6 +564,7 @@ const GameController: React.FC = () => {
 
   const getNow = (): number =>
     typeof performance !== "undefined" ? performance.now() : Date.now();
+  const getEpochNow = (): number => Date.now();
 
   const enableStealth = useCallback(() => {
     dispatch(setStealthState({ enabled: true, cooldownExpiresAt: null }));
@@ -569,7 +575,7 @@ const GameController: React.FC = () => {
 
   const disableStealth = useCallback(
     (applyCooldown: boolean) => {
-      const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+      const now = getEpochNow();
       dispatch(
         setStealthState({
           enabled: false,
@@ -582,6 +588,61 @@ const GameController: React.FC = () => {
       }
     },
     [dispatch]
+  );
+
+  const attemptStealthToggle = useCallback(
+    (source: "keyboard" | "hudButton") => {
+      const currentPlayer = playerRef.current;
+      if (!currentPlayer) {
+        return;
+      }
+
+      log.debug("Stealth toggle requested", { source });
+
+      if (currentPlayer.stealthModeEnabled) {
+        disableStealth(false);
+        dispatch(setEngagementMode("none"));
+        dispatch(addLogMessage(logStrings.stealthDisengaged));
+        return;
+      }
+
+      if (!stealthEligible) {
+        if (inCombat) {
+          dispatch(addLogMessage(logStrings.stealthUnavailableCombat));
+          return;
+        }
+
+        if (activeDialogueIdRef.current) {
+          dispatch(addLogMessage(logStrings.stealthUnavailableDialogue));
+          return;
+        }
+
+        if (stealthOnCooldown && typeof stealthCooldownExpiresAt === "number") {
+          const timestamp = Date.now();
+          const cooldownRemaining = Math.max(0, stealthCooldownExpiresAt - timestamp);
+          if (cooldownRemaining > 0) {
+            const seconds = Math.ceil(cooldownRemaining / 1000);
+            dispatch(addLogMessage(logStrings.stealthCooldown(seconds)));
+          }
+        }
+        return;
+      }
+
+      enableStealth();
+      dispatch(setEngagementMode("stealth"));
+      dispatch(addLogMessage(logStrings.stealthEngaged));
+    },
+    [
+      disableStealth,
+      dispatch,
+      enableStealth,
+      inCombat,
+      log,
+      logStrings,
+      stealthCooldownExpiresAt,
+      stealthEligible,
+      stealthOnCooldown,
+    ]
   );
 
   useEffect(() => {
@@ -730,14 +791,14 @@ const GameController: React.FC = () => {
       const rank = rankAlertLevel(enemy.alertLevel);
       return rank > max ? rank : max;
     }, 0);
-    const guardCompromised = guardAlertRank >= 2;
+    const guardCompromised = guardAlertRank >= 3;
 
     const cameraStates = zoneState ? Object.values(zoneState.cameras) : [];
     const cameraAlarmed = cameraStates.some(
       (camera) => camera.alertState === CameraAlertState.ALARMED
     );
 
-    const now = getNow();
+    const now = getEpochNow();
     if (
       !playerState?.stealthModeEnabled &&
       playerState?.stealthCooldownExpiresAt &&
@@ -932,9 +993,9 @@ const GameController: React.FC = () => {
         return;
       }
 
-      const target = event.target as HTMLElement | null;
+      const target = event.target;
       if (
-        target &&
+        target instanceof Element &&
         (controllerRef.current.contains(target) ||
           target.closest('[data-controller-focus-ignore="true"]'))
       ) {
@@ -1019,6 +1080,14 @@ const GameController: React.FC = () => {
         return;
       }
 
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        target.closest('[data-controller-focus-ignore="true"]')
+      ) {
+        return;
+      }
+
       if (event.key === "Tab") {
         event.preventDefault();
         if (event.repeat) {
@@ -1034,44 +1103,7 @@ const GameController: React.FC = () => {
         }
 
         event.preventDefault();
-        const currentPlayer = playerRef.current;
-        if (!currentPlayer) {
-          return;
-        }
-
-        if (currentPlayer.stealthModeEnabled) {
-          disableStealth(false);
-          dispatch(setEngagementMode("none"));
-          dispatch(addLogMessage(logStrings.stealthDisengaged));
-          return;
-        }
-
-        if (!stealthEligible) {
-          if (inCombat) {
-            dispatch(addLogMessage(logStrings.stealthUnavailableCombat));
-            return;
-          }
-
-          if (activeDialogueIdRef.current) {
-            dispatch(addLogMessage(logStrings.stealthUnavailableDialogue));
-            return;
-          }
-
-          if (stealthOnCooldown && typeof stealthCooldownExpiresAt === "number") {
-            const timestamp =
-              typeof performance !== "undefined" ? performance.now() : Date.now();
-            const cooldownRemaining = Math.max(0, stealthCooldownExpiresAt - timestamp);
-            if (cooldownRemaining > 0) {
-              const seconds = Math.ceil(cooldownRemaining / 1000);
-              dispatch(addLogMessage(logStrings.stealthCooldown(seconds)));
-            }
-          }
-          return;
-        }
-
-        enableStealth();
-        dispatch(setEngagementMode("stealth"));
-        dispatch(addLogMessage(logStrings.stealthEngaged));
+        attemptStealthToggle("keyboard");
       }
     };
 
@@ -1081,14 +1113,18 @@ const GameController: React.FC = () => {
     };
   }, [
     dispatch,
-    disableStealth,
-    enableStealth,
-    inCombat,
-    logStrings,
-    stealthEligible,
-    stealthOnCooldown,
-    stealthCooldownExpiresAt,
+    attemptStealthToggle,
   ]);
+
+  useEffect(() => {
+    if (stealthToggleRequestNonce <= lastStealthToggleRequestNonceRef.current) {
+      lastStealthToggleRequestNonceRef.current = stealthToggleRequestNonce;
+      return;
+    }
+
+    lastStealthToggleRequestNonceRef.current = stealthToggleRequestNonce;
+    attemptStealthToggle("hudButton");
+  }, [attemptStealthToggle, stealthToggleRequestNonce]);
 
   useEffect(() => {
     if (!mapAreaId || typeof window === "undefined") {
@@ -2077,6 +2113,7 @@ const GameController: React.FC = () => {
         detectionMultiplier
       );
 
+    let noiseEscalationTriggered = false;
     if (player.movementProfile !== "silent") {
       const noiseProfile = MOVEMENT_NOISE[player.movementProfile];
       updatedEnemies.forEach((enemyState, index) => {
@@ -2099,6 +2136,7 @@ const GameController: React.FC = () => {
           return;
         }
 
+        const previousLevel = enemyState.alertLevel ?? AlertLevel.IDLE;
         let nextLevel = enemyState.alertLevel ?? AlertLevel.IDLE;
         if (nextProgress >= PERCEPTION_CONFIG.alarmThreshold) {
           nextLevel = AlertLevel.ALARMED;
@@ -2113,7 +2151,22 @@ const GameController: React.FC = () => {
           alertProgress: nextProgress,
           alertLevel: nextLevel,
         };
+
+        if (rankAlertLevel(nextLevel) > rankAlertLevel(previousLevel)) {
+          noiseEscalationTriggered = true;
+        }
       });
+    }
+
+    if (noiseEscalationTriggered) {
+      const noiseCueCooldownMs = 1500;
+      const currentTimestamp = Date.now();
+      if (
+        currentTimestamp - lastNoiseCueTimestampRef.current >= noiseCueCooldownMs
+      ) {
+        dispatch(addLogMessage(logStrings.stealthNoiseCue));
+        lastNoiseCueTimestampRef.current = currentTimestamp;
+      }
     }
 
     // Update enemies with new alert states
@@ -2887,6 +2940,17 @@ const GameController: React.FC = () => {
             candidate.fromPosition.y === newPosition.y
         );
         const isSprinting = !inCombat && event.shiftKey;
+        const desiredMovementProfile = player.stealthModeEnabled
+          ? isSprinting
+            ? "sprint"
+            : "silent"
+          : isSprinting
+          ? "sprint"
+          : "normal";
+
+        if (player.movementProfile !== desiredMovementProfile) {
+          dispatch(setMovementProfile(desiredMovementProfile));
+        }
 
         if (connection) {
           const targetArea = mapDirectory[connection.toAreaId];

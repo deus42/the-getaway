@@ -11,8 +11,8 @@ import {
   makeSelectTopTraitsForScope,
 } from '../../store/selectors/reputationSelectors';
 import { toggleReputationHeatmap, setInspectorTarget, ingestReputationEvent } from '../../store/reputationSlice';
-import { setGameTime, DAY_START_SECONDS, NIGHT_START_SECONDS, MIDDAY_SECONDS } from '../../store/worldSlice';
-import { DEFAULT_DAY_NIGHT_CONFIG } from '../../game/world/dayNightCycle';
+import { setGameTime } from '../../store/worldSlice';
+import { DEFAULT_DAY_NIGHT_CONFIG, getClockTime24 } from '../../game/world/dayNightCycle';
 
 type Props = {
   zoneId: string | null | undefined;
@@ -45,12 +45,15 @@ const formatCycleClock = (seconds: number): string => {
   if (!Number.isFinite(seconds)) {
     return '—';
   }
-  const total = DEFAULT_DAY_NIGHT_CONFIG.cycleDuration;
-  const normalized = ((seconds % total) + total) % total;
-  const minutes = Math.floor(normalized / 60);
-  const secs = Math.floor(normalized % 60);
-  return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const { hour, minute } = getClockTime24(seconds, DEFAULT_DAY_NIGHT_CONFIG);
+  return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
 };
+
+const clockHourToCycleSeconds = (hour: number): number =>
+  Math.floor((hour / 24) * DEFAULT_DAY_NIGHT_CONFIG.cycleDuration);
+
+const DEBUG_DAY_SECONDS = clockHourToCycleSeconds(6);
+const DEBUG_NIGHT_SECONDS = clockHourToCycleSeconds(22);
 
 const sectionTitleStyle: React.CSSProperties = {
   fontSize: '0.64rem',
@@ -217,14 +220,14 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   }, [dispatch, inspectorTargetId, npcs]);
 
   const handleSetDay = useCallback(() => {
-    const target = MIDDAY_SECONDS || DAY_START_SECONDS;
+    const target = DEBUG_DAY_SECONDS;
     dispatch(setGameTime(target));
     setTimeStatus(`Set to day (${formatCycleClock(target)})`);
   }, [dispatch]);
 
   const handleSetNight = useCallback(() => {
-    dispatch(setGameTime(NIGHT_START_SECONDS));
-    setTimeStatus(`Set to night (${formatCycleClock(NIGHT_START_SECONDS)})`);
+    dispatch(setGameTime(DEBUG_NIGHT_SECONDS));
+    setTimeStatus(`Set to night (${formatCycleClock(DEBUG_NIGHT_SECONDS)})`);
   }, [dispatch]);
 
   const inspectorNpc = useMemo(() => npcs.find((npc) => npc.id === inspectorTargetId), [npcs, inspectorTargetId]);
@@ -289,7 +292,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const panelId = 'command-debug-panel';
   const rendererLabel = rendererInfo?.label ?? 'Detecting…';
   const rendererDetail = rendererInfo?.detail ?? 'Negotiating renderer';
-  const buttonCopy = collapsed ? 'Show Debug Inspector' : 'Hide Debug Inspector';
+  const buttonCopy = collapsed ? 'Show Debug Panel' : 'Hide Debug Panel';
 
   const renderSection = (
     key: SectionKey,
@@ -340,7 +343,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
       </button>
 
       {!collapsed && (
-        <div id={panelId} style={panelContainerStyle} role="region" aria-label="Debug Inspector">
+        <div id={panelId} style={panelContainerStyle} role="region" aria-label="Debug Panel">
           {renderSection('renderer', 'Renderer Diagnostics', () => (
             <>
               <div style={metricRowStyle}>

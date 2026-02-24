@@ -38,6 +38,8 @@ import type { LogStrings } from '../../../content/system';
 
 const PROGRESS_GAIN_PER_MS = 100 / 3000; // 0 → 100 over ~3s
 const PROGRESS_DECAY_PER_MS = 100 / 4000; // decay back to idle in ~4s
+const INVESTIGATING_THRESHOLD = 60;
+const ALARMED_THRESHOLD = 100;
 const NETWORK_ALERT_WINDOW_MS = 60000;
 const NETWORK_ALERT_DURATION_MS = 5 * 60 * 1000;
 
@@ -186,7 +188,7 @@ const evaluateDetection = (
       (1 - hackingDampen) *
       movementGainFactor *
       stealthModifier;
-    progress = Math.min(100, progress);
+    progress = Math.min(ALARMED_THRESHOLD, progress);
     lastDetectionTimestamp = timestamp;
   } else {
     const decayRate = previous.trackingPlayer ? PROGRESS_DECAY_PER_MS * 1.8 : PROGRESS_DECAY_PER_MS;
@@ -194,13 +196,9 @@ const evaluateDetection = (
     progress = Math.max(0, progress);
   }
 
-  let state: CameraAlertState = CameraAlertState.IDLE;
-
-  if (progress >= 100) {
-    state = CameraAlertState.ALARMED;
-    progress = 100;
-  } else if (progress > 0) {
-    state = CameraAlertState.SUSPICIOUS;
+  const state = resolveCameraAlertStateFromProgress(progress);
+  if (state === CameraAlertState.ALARMED) {
+    progress = ALARMED_THRESHOLD;
   }
 
   return {
@@ -227,6 +225,40 @@ const shouldTriggerNetworkAlert = (areaId: string): boolean => {
     return false;
   }
   return history.length >= 3;
+};
+
+const getCameraAlertWeight = (state: CameraAlertState): number => {
+  switch (state) {
+    case CameraAlertState.ALARMED:
+      return 4;
+    case CameraAlertState.INVESTIGATING:
+      return 3;
+    case CameraAlertState.SUSPICIOUS:
+      return 2;
+    case CameraAlertState.IDLE:
+      return 1;
+    case CameraAlertState.DISABLED:
+    default:
+      return 0;
+  }
+};
+
+export const resolveCameraAlertStateFromProgress = (
+  progressValue: number
+): CameraAlertState => {
+  if (progressValue >= ALARMED_THRESHOLD) {
+    return CameraAlertState.ALARMED;
+  }
+
+  if (progressValue >= INVESTIGATING_THRESHOLD) {
+    return CameraAlertState.INVESTIGATING;
+  }
+
+  if (progressValue > 0) {
+    return CameraAlertState.SUSPICIOUS;
+  }
+
+  return CameraAlertState.IDLE;
 };
 
 export const initializeZoneSurveillance = (
@@ -382,20 +414,6 @@ export const updateSurveillance = (
     ? false
     : previousPlayerPosition.x !== player.position.x || previousPlayerPosition.y !== player.position.y;
 
-  const getAlertWeight = (state: CameraAlertState): number => {
-    switch (state) {
-      case CameraAlertState.ALARMED:
-        return 3;
-      case CameraAlertState.SUSPICIOUS:
-        return 2;
-      case CameraAlertState.IDLE:
-        return 1;
-      case CameraAlertState.DISABLED:
-      default:
-        return 0;
-    }
-  };
-
   const getProximityRadius = (camera: CameraRuntimeState): number => {
     return camera.type === 'motionSensor'
       ? camera.motionRadius ?? camera.range
@@ -434,7 +452,11 @@ export const updateSurveillance = (
       const shouldLock =
         runtime.isActive
         && detection.detectionActive
-        && (runtime.alertState === CameraAlertState.SUSPICIOUS || runtime.alertState === CameraAlertState.ALARMED);
+        && (
+          runtime.alertState === CameraAlertState.SUSPICIOUS
+          || runtime.alertState === CameraAlertState.INVESTIGATING
+          || runtime.alertState === CameraAlertState.ALARMED
+        );
 
       if (shouldLock) {
         const lockDirection = computeDirectionToPlayer(runtime, player);
@@ -463,7 +485,11 @@ export const updateSurveillance = (
 
     if (
       stateChanged &&
-      (runtime.alertState === CameraAlertState.SUSPICIOUS || runtime.alertState === CameraAlertState.ALARMED)
+      (
+        runtime.alertState === CameraAlertState.SUSPICIOUS
+        || runtime.alertState === CameraAlertState.INVESTIGATING
+        || runtime.alertState === CameraAlertState.ALARMED
+      )
     ) {
       const observation = buildCameraWitnessObservation({
         camera: runtime,
@@ -510,7 +536,7 @@ export const updateSurveillance = (
       activeCameraId = camera.id;
     }
 
-    if (getAlertWeight(runtime.alertState) > getAlertWeight(hudAlertState)) {
+    if (getCameraAlertWeight(runtime.alertState) > getCameraAlertWeight(hudAlertState)) {
       hudAlertState = runtime.alertState;
     }
   });
@@ -549,11 +575,17 @@ export const updateSurveillance = (
     );
 
     if (previous.alertState !== runtime.alertState) {
-      if (runtime.alertState === CameraAlertState.SUSPICIOUS && previous.alertState === CameraAlertState.IDLE) {
-        dispatch(addLogMessage(logStrings.alertSuspicious as string));
-      }
-      if (runtime.alertState === CameraAlertState.ALARMED && previous.alertState !== CameraAlertState.ALARMED) {
-        dispatch(addLogMessage(logStrings.alertAlarmed as string));
+      const previousWeight = getCameraAlertWeight(previous.alertState);
+      const nextWeight = getCameraAlertWeight(runtime.alertState);
+
+      if (nextWeight > previousWeight) {
+        if (runtime.alertState === CameraAlertState.SUSPICIOUS) {
+          dispatch(addLogMessage(logStrings.cameraAlertSuspicious as string));
+        } else if (runtime.alertState === CameraAlertState.INVESTIGATING) {
+          dispatch(addLogMessage(logStrings.cameraAlertInvestigating as string));
+        } else if (runtime.alertState === CameraAlertState.ALARMED) {
+          dispatch(addLogMessage(logStrings.cameraAlertAlarmed as string));
+        }
       }
     }
   });

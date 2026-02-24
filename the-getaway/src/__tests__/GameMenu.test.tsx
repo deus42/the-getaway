@@ -44,4 +44,39 @@ describe('GameMenu', () => {
     expect(screen.queryByTestId('menu-settings-panel')).not.toBeInTheDocument();
     expect(screen.getByTestId('start-new-game')).toBeInTheDocument();
   });
+
+  it('keeps settings panel stable while selecting HUD override option', () => {
+    renderMenu();
+    fireEvent.click(screen.getByTestId('menu-open-settings'));
+
+    const hudTrigger = screen.getByTestId('menu-hud-layout-dropdown');
+    fireEvent.click(hudTrigger);
+    fireEvent.click(screen.getByRole('option', { name: /Stealth/i }));
+
+    expect(store.getState().hudLayout.override).toBe('stealth');
+    expect(screen.getByTestId('menu-settings-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-hud-layout-dropdown')).toHaveTextContent('Stealth');
+
+    fireEvent.click(screen.getByTestId('menu-hud-layout-dropdown'));
+    fireEvent.click(screen.getByRole('option', { name: /^Auto/i }));
+
+    expect(store.getState().hudLayout.override).toBeNull();
+    expect(screen.getByTestId('menu-settings-panel')).toBeInTheDocument();
+    expect(screen.getByTestId('menu-hud-layout-dropdown')).toHaveTextContent('Auto');
+  });
+
+  it('supports keyboard selection for HUD override dropdown', () => {
+    renderMenu();
+    fireEvent.click(screen.getByTestId('menu-open-settings'));
+
+    const hudTrigger = screen.getByTestId('menu-hud-layout-dropdown');
+    hudTrigger.focus();
+
+    fireEvent.keyDown(hudTrigger, { key: 'ArrowDown' });
+    fireEvent.keyDown(hudTrigger, { key: 'Enter' });
+
+    expect(store.getState().hudLayout.override).toBe('exploration');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+    expect(screen.getByTestId('menu-settings-panel')).toBeInTheDocument();
+  });
 });

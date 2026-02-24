@@ -96,28 +96,28 @@ describe('selectHudLayoutPreset', () => {
     expect(selectHudLayoutPreset(state)).toBe('combat');
   });
 
-  it('returns stealth when engagement mode is stealth', () => {
+  it('keeps exploration layout when engagement mode is stealth in auto mode', () => {
     const state = mockState({
       world: {
         inCombat: false,
         engagementMode: 'stealth',
       },
     });
-    expect(selectHudLayoutPreset(state)).toBe('stealth');
+    expect(selectHudLayoutPreset(state)).toBe('exploration');
   });
 
-  it('returns stealth when detection progress is high', () => {
+  it('keeps exploration layout when detection progress is high in auto mode', () => {
     const state = mockState({
       surveillance: {
         hud: {
-          detectionProgress: 50, // > 45 threshold
+          detectionProgress: 90,
         },
       } as RootState['surveillance'],
     });
-    expect(selectHudLayoutPreset(state)).toBe('stealth');
+    expect(selectHudLayoutPreset(state)).toBe('exploration');
   });
 
-  it('returns stealth when zone heat is high', () => {
+  it('keeps exploration layout when zone heat is high in auto mode', () => {
     const hotSuspicion = createSuspicionInitialState();
     hotSuspicion.zones['zone-1'] = {
       zoneId: 'zone-1',
@@ -145,7 +145,7 @@ describe('selectHudLayoutPreset', () => {
         },
       },
     });
-    expect(selectHudLayoutPreset(state)).toBe('stealth');
+    expect(selectHudLayoutPreset(state)).toBe('exploration');
   });
 
   it('prioritizes override over combat', () => {

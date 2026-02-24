@@ -46,6 +46,8 @@ export interface WorldState {
   environment: EnvironmentState;
   /** Engagement mode for HUD and turn semantics */
   engagementMode: 'none' | 'stealth' | 'combat' | 'dialog';
+  /** Incrementing nonce used for UI-driven stealth toggle requests. */
+  stealthToggleRequestNonce: number;
   workbenchAvailable: boolean;
   workbenchStatus: WorkbenchStatus;
 }
@@ -151,6 +153,7 @@ const buildWorldState = (locale: Locale): WorldState => {
     reinforcementsScheduled: false,
     environment: createInitialEnvironmentState(),
     engagementMode: 'none',
+    stealthToggleRequestNonce: 0,
     workbenchAvailable: false,
     workbenchStatus: { available: false, note: 'No workbench nearby' },
   };
@@ -376,6 +379,10 @@ export const worldSlice = createSlice({
 
     setEngagementMode: (state, action: PayloadAction<'none' | 'stealth' | 'combat' | 'dialog'>) => {
       state.engagementMode = action.payload;
+    },
+
+    requestStealthToggle: (state) => {
+      state.stealthToggleRequestNonce += 1;
     },
 
     switchTurn: (state) => {
@@ -632,6 +639,7 @@ export const {
   scheduleReinforcements,
   clearReinforcementsSchedule,
   setEngagementMode,
+  requestStealthToggle,
   setWorkbenchAvailable,
   setWorkbenchStatus,
 } = worldSlice.actions;

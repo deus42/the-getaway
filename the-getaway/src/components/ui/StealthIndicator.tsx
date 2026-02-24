@@ -3,8 +3,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../store";
 import {
   selectActiveDialogueId,
-  selectEngagementMode,
-  selectStealthAvailability,
+  selectStealthReadability,
 } from "../../store/selectors/engagementSelectors";
 import { getUIStrings } from "../../content/ui";
 
@@ -125,66 +124,48 @@ const StealthIndicator: React.FC = () => {
   const uiStrings = useMemo(() => getUIStrings(locale), [locale]);
   const stealthStrings = uiStrings.stealthIndicator;
 
-  const stealthAvailability = useSelector(selectStealthAvailability);
-  const stealthEnabled = stealthAvailability.enabled;
-  const stealthEligible = stealthAvailability.eligible;
-  const cooldownExpiresAt = stealthAvailability.cooldownExpiresAt;
-  const onCooldown = typeof cooldownExpiresAt === "number";
+  const readability = useSelector(selectStealthReadability);
+  const cooldownExpiresAt = readability.cooldownExpiresAt;
+  const onCooldown = readability.onCooldown;
   const cooldownRemaining = onCooldown
     ? Math.max(0, cooldownExpiresAt! - Date.now())
     : 0;
-  const engagementMode = useSelector(selectEngagementMode);
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const activeDialogueId = useSelector(selectActiveDialogueId);
-  const surveillanceHud = useSelector((state: RootState) => state.surveillance.hud);
-  const reputationSystemsEnabled = useSelector(
-    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
-  );
-  const zoneId = useSelector(
-    (state: RootState) => state.world.currentMapArea.zoneId
-  );
-  const zoneHeat = useSelector(
-    (state: RootState) =>
-      reputationSystemsEnabled
-        ? state.suspicion.zones[zoneId]?.heat?.totalHeat ?? 0
-        : 0
-  );
+  const detectionSeverity = Math.max(0, Math.min(100, readability.severity));
+  const stealthActive = readability.stealthActive;
 
-  const detectionProgress = surveillanceHud?.detectionProgress ?? 0;
-  const detectionSeverity = Math.max(
-    Math.round(detectionProgress),
-    Math.round(zoneHeat)
-  );
-  const stealthActive = stealthEnabled && engagementMode === "stealth";
-
-  let indicatorState: "hidden" | "exposed" | "compromised" | "standby" = "standby";
+  let indicatorState = readability.state;
   let supportingText = stealthStrings.keyHint;
 
   if (inCombat) {
     indicatorState = "compromised";
     supportingText = stealthStrings.unavailableReasons.combat;
   } else if (activeDialogueId) {
-    indicatorState = stealthActive ? "exposed" : "standby";
+    indicatorState = stealthActive ? "exposed" : readability.state;
     supportingText = stealthStrings.unavailableReasons.dialogue;
   } else if (stealthActive) {
-    if (detectionSeverity >= 80) {
-      indicatorState = "compromised";
-    } else if (detectionSeverity >= 30) {
-      indicatorState = "exposed";
-    } else {
-      indicatorState = "hidden";
-    }
-    supportingText = `Detection ${Math.max(0, Math.min(100, detectionSeverity))}%`;
+    const reasonLabel = readability.reason === "camera"
+      ? stealthStrings.reasonLabels.camera
+      : readability.reason === "noise"
+      ? stealthStrings.reasonLabels.noise
+      : readability.reason === "vision"
+      ? stealthStrings.reasonLabels.vision
+      : null;
+
+    supportingText = reasonLabel
+      ? `${reasonLabel} · Detection ${detectionSeverity}%`
+      : `Detection ${detectionSeverity}%`;
   } else if (onCooldown && cooldownRemaining > 0) {
     indicatorState = "compromised";
     supportingText = stealthStrings.cooldown(
       Math.max(1, Math.ceil(cooldownRemaining / 1000))
     );
-  } else if (!stealthEligible) {
+  } else if (readability.reason === "cooldown") {
     indicatorState = "compromised";
     supportingText = stealthStrings.unavailableReasons.cooldown;
   } else {
-    indicatorState = "standby";
+    indicatorState = readability.state;
     supportingText = stealthStrings.keyHint;
   }
 

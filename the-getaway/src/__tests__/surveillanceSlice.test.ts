@@ -97,7 +97,7 @@ describe('surveillanceSlice', () => {
     const next = surveillanceReducer(initialState, updateHudState({
       camerasNearby: 3,
       detectionProgress: 42.5,
-      alertState: CameraAlertState.SUSPICIOUS,
+      alertState: CameraAlertState.INVESTIGATING,
       activeCameraId: 'cam-a',
       networkAlertActive: true,
       networkAlertExpiresAt: 9999,
@@ -105,7 +105,7 @@ describe('surveillanceSlice', () => {
 
     expect(next.hud.camerasNearby).toBe(3);
     expect(next.hud.detectionProgress).toBe(42.5);
-    expect(next.hud.alertState).toBe(CameraAlertState.SUSPICIOUS);
+    expect(next.hud.alertState).toBe(CameraAlertState.INVESTIGATING);
     expect(next.hud.activeCameraId).toBe('cam-a');
     expect(next.hud.networkAlertActive).toBe(true);
   });

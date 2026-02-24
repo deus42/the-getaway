@@ -185,6 +185,7 @@ export type SurveillanceActivationPhase = 'morning' | 'day' | 'evening' | 'night
 export enum CameraAlertState {
   IDLE = 'idle',
   SUSPICIOUS = 'suspicious',
+  INVESTIGATING = 'investigating',
   ALARMED = 'alarmed',
   DISABLED = 'disabled',
 }

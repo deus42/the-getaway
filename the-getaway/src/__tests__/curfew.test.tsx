@@ -9,7 +9,7 @@ import { findPath } from '../game/world/pathfinding';
 
 jest.mock('../components/debug/GameDebugInspector', () => () => null);
 
-const NIGHT_TIME_SECONDS = 200;
+const NIGHT_TIME_SECONDS = 280;
 const CORRIDOR_LENGTH = 4; // starting tile plus three moves to the right
 
 const renderController = () =>
