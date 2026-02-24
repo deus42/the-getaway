@@ -1,0 +1,18 @@
+{
+  "frames": {
+    "esb_iso": {
+      "frame": { "x": 0, "y": 0, "w": 696, "h": 1757 },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": { "x": 0, "y": 0, "w": 696, "h": 1757 },
+      "sourceSize": { "w": 696, "h": 1757 }
+    }
+  },
+  "meta": {
+    "app": "blender",
+    "version": "1.0",
+    "image": "esb_iso_trim_pad.png",
+    "size": { "w": 696, "h": 1757 },
+    "scale": "1"
+  }
+}
