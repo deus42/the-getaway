@@ -161,6 +161,8 @@ const panelContainerStyle: React.CSSProperties = {
   zIndex: 5,
 };
 
+const EMPTY_TOP_TRAITS: ReturnType<ReturnType<typeof makeSelectTopTraitsForScope>> = [];
+
 const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const dispatch = useDispatch<AppDispatch>();
   const resolvedZoneId = zoneId ?? 'unknown';
@@ -180,7 +182,9 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const profileSelector = useMemo(() => (inspectorTargetId ? makeSelectProfile(inspectorTargetId) : null), [inspectorTargetId]);
   const traitsSelector = useMemo(() => (inspectorTargetId ? makeSelectTopTraitsForScope(inspectorTargetId, 4) : null), [inspectorTargetId]);
   const selectedProfile = useSelector((state: RootState) => (profileSelector ? profileSelector(state) : null));
-  const topTraits = useSelector((state: RootState) => (traitsSelector ? traitsSelector(state) : []));
+  const topTraits = useSelector((state: RootState) =>
+    traitsSelector ? traitsSelector(state) : EMPTY_TOP_TRAITS
+  );
   type SectionKey = 'renderer' | 'time' | 'suspicion' | 'reputation' | 'paranoia';
   const [sectionCollapsed, setSectionCollapsed] = useState<Record<SectionKey, boolean>>({
     renderer: false,

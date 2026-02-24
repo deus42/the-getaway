@@ -103,5 +103,16 @@ describe('findPath', () => {
     expect(path.length).toBeGreaterThan(0);
     expect(duration).toBeLessThan(50);
   });
-});
 
+  it('returns deterministic routes for repeated equal-cost queries', () => {
+    const area = createMap(8, 8);
+    const start = { x: 1, y: 1 };
+    const goal = { x: 6, y: 4 };
+
+    const first = findPath(start, goal, area, { allowDiagonals: false });
+    const second = findPath(start, goal, area, { allowDiagonals: false });
+
+    expect(first).toEqual(second);
+    expect(first[first.length - 1]).toEqual(goal);
+  });
+});

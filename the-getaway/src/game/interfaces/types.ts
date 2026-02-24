@@ -545,12 +545,18 @@ export enum TileType {
   TRAP = 'trap'
 }
 
+export type TileSurfaceKind = 'lot' | 'road' | 'crosswalk' | 'sidewalk';
+
+export type TileRoadAxis = 'avenue' | 'street' | 'intersection';
+
 // Map tile interface
 export interface MapTile {
   type: TileType;
   position: Position;
   isWalkable: boolean;
   provideCover: boolean;
+  surfaceKind?: TileSurfaceKind;
+  surfaceAxis?: TileRoadAxis;
   cover?: TileCoverProfile;
   skillRequirement?: {
     skill: SkillId;

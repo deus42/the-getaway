@@ -58,7 +58,7 @@ export type WorldRenderRuntimeState = {
   occlusionReadabilityController?: OcclusionReadabilityController;
   buildingVisualProfiles: Record<string, BuildingVisualProfile>;
   buildingLabels: Phaser.GameObjects.Container[];
-  buildingMassings: Phaser.GameObjects.Container[];
+  buildingMassings: Phaser.GameObjects.GameObject[];
   buildingMassingEntries: OcclusionMassHandle[];
   currentAtmosphereProfile?: AtmosphereProfile;
   lastAtmosphereRedrawBucket: number;

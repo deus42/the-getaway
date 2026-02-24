@@ -508,6 +508,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     }
 
     const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
+    const atmosphere = this.runtimeState.currentAtmosphereProfile ?? this.resolveAtmosphereProfile();
 
     currentMapArea.buildings.forEach((building) => {
       const profile =
@@ -541,6 +542,10 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         widthTiles,
         depthTiles,
         footprint,
+        atmosphere: {
+          emissiveIntensity: atmosphere.emissiveIntensity,
+          overlayAlpha: atmosphere.overlayAlpha,
+        },
       });
       mass.setScrollFactor(1);
 
@@ -562,6 +567,20 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         if (typeof window !== 'undefined') {
           const params = new URLSearchParams(window.location.search);
           if (params.get('pocDebug') === '1') {
+            const footprintDebug = this.ports.add.graphics();
+            footprintDebug.lineStyle(2, 0x39d5ff, 0.65);
+            footprintDebug.strokePoints(
+              [footprint.top, footprint.right, footprint.bottom, footprint.left],
+              true
+            );
+            this.ports.syncDepth(
+              footprintDebug,
+              footprint.bottom.x,
+              footprint.bottom.y,
+              DepthBias.FLOATING_UI + 28
+            );
+            this.runtimeState.buildingMassings.push(footprintDebug);
+
             const debugText = this.ports.add.text(0, -tileHeight * 1.6, `door ${building.door.x},${building.door.y}`, {
               fontFamily: 'monospace',
               fontSize: '10px',

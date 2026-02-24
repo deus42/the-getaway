@@ -165,35 +165,54 @@ export class InputModule implements SceneModule<MainScene> {
 
     const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
     const pathLength = detail.path.length;
+    const pixelPath = detail.path.map((position) =>
+      this.ports.calculatePixelPosition(position.x, position.y)
+    );
 
-    detail.path.forEach((position, index) => {
-      const center = this.ports.calculatePixelPosition(position.x, position.y);
-      const scale = index === detail.path.length - 1 ? 0.8 : 0.55;
-      const points = this.ports.getDiamondPoints(center.x, center.y, tileWidth * scale, tileHeight * scale);
+    let coreColor = 0x34d399;
+    if (pathLength > 9) {
+      coreColor = 0xf87171;
+    } else if (pathLength > 6) {
+      coreColor = 0xfb923c;
+    } else if (pathLength > 3) {
+      coreColor = 0xfbbf24;
+    }
 
-      let color: number;
-      let alpha: number;
+    if (pixelPath.length > 1) {
+      this.ports.pathGraphics.lineStyle(5.2, 0x22d3ee, 0.14);
+      this.ports.pathGraphics.beginPath();
+      this.ports.pathGraphics.moveTo(pixelPath[0].x, pixelPath[0].y);
+      pixelPath.slice(1).forEach((point) => {
+        this.ports.pathGraphics.lineTo(point.x, point.y);
+      });
+      this.ports.pathGraphics.strokePath();
 
-      if (index === detail.path.length - 1) {
-        color = 0xffc857;
-        alpha = 0.5;
-      } else if (pathLength <= 3) {
-        color = 0x34d399;
-        alpha = 0.32;
-      } else if (pathLength <= 6) {
-        color = 0xfbbf24;
-        alpha = 0.35;
-      } else if (pathLength <= 9) {
-        color = 0xfb923c;
-        alpha = 0.38;
-      } else {
-        color = 0xf87171;
-        alpha = 0.4;
-      }
+      this.ports.pathGraphics.lineStyle(2.2, coreColor, 0.88);
+      this.ports.pathGraphics.beginPath();
+      this.ports.pathGraphics.moveTo(pixelPath[0].x, pixelPath[0].y);
+      pixelPath.slice(1).forEach((point) => {
+        this.ports.pathGraphics.lineTo(point.x, point.y);
+      });
+      this.ports.pathGraphics.strokePath();
+    }
 
-      this.ports.pathGraphics.fillStyle(color, alpha);
-      this.ports.pathGraphics.fillPoints(points, true);
+    pixelPath.forEach((point, index) => {
+      const isDestination = index === pixelPath.length - 1;
+      this.ports.pathGraphics.fillStyle(isDestination ? 0xffc857 : coreColor, isDestination ? 0.95 : 0.72);
+      this.ports.pathGraphics.fillCircle(point.x, point.y, isDestination ? tileHeight * 0.14 : tileHeight * 0.08);
     });
+
+    const destinationPixel = pixelPath[pixelPath.length - 1];
+    const destinationDiamond = this.ports.getDiamondPoints(
+      destinationPixel.x,
+      destinationPixel.y,
+      tileWidth * 0.72,
+      tileHeight * 0.72
+    );
+    this.ports.pathGraphics.lineStyle(1.6, 0xffe29a, 0.94);
+    this.ports.pathGraphics.strokePoints(destinationDiamond, true);
+    this.ports.pathGraphics.lineStyle(0.9, 0x38bdf8, 0.74);
+    this.ports.pathGraphics.strokeCircle(destinationPixel.x, destinationPixel.y, tileHeight * 0.28);
 
     const destination = detail.path[detail.path.length - 1];
     this.renderCoverPreview(destination);

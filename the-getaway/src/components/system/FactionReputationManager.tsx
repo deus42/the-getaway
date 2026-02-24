@@ -90,7 +90,7 @@ export const FactionReputationManager: React.FC = () => {
     if (!reputationSystemsEnabled) {
       Object.values(timeoutRefs.current).forEach((handle) => window.clearTimeout(handle));
       timeoutRefs.current = {};
-      setToasts([]);
+      setToasts((prev) => (prev.length > 0 ? [] : prev));
       return;
     }
     if (!events.length) {

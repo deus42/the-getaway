@@ -700,10 +700,11 @@ Linger inside and outside patrol vision cones to trigger each alert phase, confi
 
 #### Instructions
 
-Promote Stealth to a first-class engagement mode alongside Combat and Dialog while retiring crouch.
+Deliver MVP stealth engagement readability and fairness while preserving Stealth as a first-class mode alongside Combat and Dialog.
 
 #### Details
 
+- **MVP Scope Guardrail**: Step 19.4 focuses on readable stealth state feedback (`Hidden | Exposed | Compromised`) and fair escalation (`Suspicious -> Investigating -> Alarmed`). Advanced stealth toolkit extras are deferred to Post-MVP (`GET-124`).
 - **Engagement Model**: Extend `worldSlice` with a persistent `engagementMode` union (`combat | stealth | dialog`) plus selectors (`selectEngagementMode`, `selectIsStealthEligible`, `selectIsHidden`) for HUD and systems. Combat mirrors `world.inCombat`, dialog mirrors active conversations, and stealth becomes player-driven but auto-disengages when alarms spike.
 - **Stealth Toggle**: Remove the legacy crouch reducers, inputs, and UI labels. Bind the keyboard `X` key to toggle stealth when eligibility checks pass (not in combat/dialog, cooldown cleared). Persist the flag on the player model (`stealthModeEnabled`) so runtime systems receive the state without React context.
 - **Guard Visibility & Awareness**: Adjust `isPlayerVisible`/`updateEnemyAlert` to scale vision range, cone angle, and alert gain by lighting, blackout flags, stealth skill, paranoia, and a stealth-mode coefficient. Hidden players should delay thresholds, while exposure flips immediately once multipliers exceed limits.
@@ -3203,12 +3204,13 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 
 - Development server renders a placeholder Phaser canvas and the tooling baseline is ready for feature work.
 
-### Step 108: MVP: Stealth Mode v1 (Visibility, Awareness, Noise) and remove crouch (Completed)
+### Step 19.4a: MVP: Stealth Mode v1 baseline (Visibility, Awareness, Noise) and remove crouch (Completed)
 - **Phase:** Phase 9: Optional Expansions (POST-MVP)
 - **Date:** May 21, 2026
 
 #### Tasks
 
+0. Baseline stealth v1 implementation recorded here; the remaining MVP Step 19.4 engagement/feedback/fairness pass is tracked in `GET-144`.
 1. Added a persistent engagement model (`worldSlice.engagementMode`) plus stealth state fields on the player (`movementProfile`, `stealthModeEnabled`, `stealthCooldownExpiresAt`) with Redux helpers and selectors.
 2. Reworked `GameController` to drive the `X` stealth toggle, enforce cooldowns, auto-drop during combat/dialogue, and inject movement-noise awareness into guard perception.
 3. Updated surveillance, suspicion, and HUD layers to consume movement/stealth data, including the new Stealth indicator wafer and localisation updates; removed all crouch-era references.

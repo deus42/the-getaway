@@ -3,6 +3,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../../store';
 import { setAutoBattleEnabled } from '../../store/settingsSlice';
 import { getUIStrings } from '../../content/ui';
+import type { Enemy } from '../../game/interfaces/types';
+
+const EMPTY_ENEMIES: Enemy[] = [];
 
 const widgetStyle: React.CSSProperties = {
   width: 'min(360px, 32vw)',
@@ -264,12 +267,10 @@ const CombatControlWidget: React.FC = () => {
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const isPlayerTurn = useSelector((state: RootState) => state.world.isPlayerTurn);
   const autoBattleEnabled = useSelector((state: RootState) => state.settings.autoBattleEnabled);
-  const playerStats = useSelector((state: RootState) => ({
-    actionPoints: state.player.data.actionPoints,
-    maxActionPoints: state.player.data.maxActionPoints,
-  }));
+  const playerActionPoints = useSelector((state: RootState) => state.player.data.actionPoints);
+  const playerMaxActionPoints = useSelector((state: RootState) => state.player.data.maxActionPoints);
   const enemySnapshots = useSelector(
-    (state: RootState) => state.world.currentMapArea?.entities.enemies ?? []
+    (state: RootState) => state.world.currentMapArea?.entities.enemies ?? EMPTY_ENEMIES
   );
 
   const uiStrings = getUIStrings(locale);
@@ -288,7 +289,7 @@ const CombatControlWidget: React.FC = () => {
   }, [livingEnemies]);
 
   const [displayedActionPoints, setDisplayedActionPoints] = useState<number>(
-    playerStats.actionPoints
+    playerActionPoints
   );
 
   const displayedApRef = useRef(displayedActionPoints);
@@ -299,7 +300,7 @@ const CombatControlWidget: React.FC = () => {
   }, [displayedActionPoints]);
 
   useEffect(() => {
-    const target = playerStats.actionPoints;
+    const target = playerActionPoints;
 
     if (apTweenTimeout.current) {
       window.clearTimeout(apTweenTimeout.current);
@@ -336,7 +337,7 @@ const CombatControlWidget: React.FC = () => {
         apTweenTimeout.current = null;
       }
     };
-  }, [playerStats.actionPoints, inCombat, autoBattleEnabled, autoBattleStatus]);
+  }, [playerActionPoints, inCombat, autoBattleEnabled, autoBattleStatus]);
 
   useEffect(() => {
     return () => {
@@ -350,7 +351,7 @@ const CombatControlWidget: React.FC = () => {
     return null;
   }
 
-  const maxActionPoints = Math.max(0, playerStats.maxActionPoints);
+  const maxActionPoints = Math.max(0, playerMaxActionPoints);
   const apRatio =
     maxActionPoints > 0
       ? Math.max(0, Math.min(1, displayedActionPoints / maxActionPoints))
@@ -392,8 +393,8 @@ const CombatControlWidget: React.FC = () => {
       <div style={playerCardStyle}>
         <div style={apHeaderRowStyle}>
           <span>{uiStrings.playerStatus.actionPointsLabel}</span>
-          <span style={apValue(displayedActionPoints === 0)}>
-            {displayedActionPoints}/{playerStats.maxActionPoints}
+            <span style={apValue(displayedActionPoints === 0)}>
+            {displayedActionPoints}/{playerMaxActionPoints}
           </span>
         </div>
         <div style={apProgressTrack}>

@@ -15,22 +15,29 @@ const DEFAULT_FACTION_REPUTATION: Record<FactionId, number> = {
   corpsec: 0,
   scavengers: 0,
 };
+const EMPTY_FACTION_EVENTS: RootState['player']['pendingFactionEvents'] = [];
+const EMPTY_FACTION_STANDINGS: FactionStandingWithMetadata[] = [];
 
 const selectPlayerFactionMap = (state: RootState) => state.player.data.factionReputation;
-const selectFactionEventsRoot = (state: RootState) => state.player.pendingFactionEvents ?? [];
+const selectFactionEventsRoot = (state: RootState) => state.player.pendingFactionEvents;
 
 export const selectFactionDefinitions = () => getFactionDefinitions();
 
 export const selectFactionReputationMap = createSelector(
   selectPlayerFactionMap,
   selectReputationSystemsEnabled,
-  (map, enabled) => (enabled ? { ...map } : DEFAULT_FACTION_REPUTATION)
+  (map, enabled) => (enabled ? map : DEFAULT_FACTION_REPUTATION)
 );
 
 export const selectPendingFactionEvents = createSelector(
   selectFactionEventsRoot,
   selectReputationSystemsEnabled,
-  (events, enabled) => (enabled ? [...events] : [])
+  (events, enabled) => {
+    if (!enabled || events.length === 0) {
+      return EMPTY_FACTION_EVENTS;
+    }
+    return events;
+  }
 );
 
 export interface FactionStandingWithMetadata {
@@ -70,7 +77,7 @@ export const selectAllFactionStandings = createSelector(
   selectReputationSystemsEnabled,
   (map, enabled) => {
     if (!enabled) {
-      return [];
+      return EMPTY_FACTION_STANDINGS;
     }
 
     const orderedDefinitions = getFactionDefinitions();

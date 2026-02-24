@@ -44,4 +44,16 @@ describe('findPath', () => {
     expect(intermediateSteps.every((step) => step.x !== 3 || step.y !== 0)).toBe(true);
     expect(blockedPath[blockedPath.length - 1]).toEqual(goal);
   });
+
+  it('keeps deterministic ordering for diagonal-capable routes', () => {
+    const area = createMapArea(6, 6);
+    const start: Position = { x: 0, y: 0 };
+    const goal: Position = { x: 4, y: 4 };
+
+    const first = findPath(start, goal, area, { allowDiagonals: true });
+    const second = findPath(start, goal, area, { allowDiagonals: true });
+
+    expect(first).toEqual(second);
+    expect(first[first.length - 1]).toEqual(goal);
+  });
 });

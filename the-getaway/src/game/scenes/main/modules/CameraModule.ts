@@ -5,8 +5,8 @@ import type { MapArea } from '../../../interfaces/types';
 import { SceneContext } from '../SceneContext';
 import { SceneModule } from '../SceneModule';
 
-const DEFAULT_FIT_ZOOM_FACTOR = 1.25;
-const MIN_CAMERA_ZOOM = 0.6;
+const DEFAULT_FIT_ZOOM_FACTOR = 1.12;
+const MIN_CAMERA_ZOOM = 0.38;
 const MAX_CAMERA_ZOOM = 2.3;
 const CAMERA_BOUND_PADDING_TILES = 6;
 const CAMERA_FOLLOW_LERP = 0.08;

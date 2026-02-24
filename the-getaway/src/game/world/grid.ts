@@ -17,7 +17,8 @@ export const createEmptyGrid = (width: number, height: number): MapTile[][] => {
         type: TileType.FLOOR,
         position: { x, y },
         isWalkable: true,
-        provideCover: false
+        provideCover: false,
+        surfaceKind: 'lot',
       };
     }
   }

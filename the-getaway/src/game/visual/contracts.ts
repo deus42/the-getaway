@@ -76,6 +76,16 @@ export interface VisualTheme {
     readonly doorEven: number;
     readonly doorOdd: number;
   };
+  readonly surfacePalettes: {
+    readonly lotEven: number;
+    readonly lotOdd: number;
+    readonly roadEven: number;
+    readonly roadOdd: number;
+    readonly crosswalkEven: number;
+    readonly crosswalkOdd: number;
+    readonly sidewalkEven: number;
+    readonly sidewalkOdd: number;
+  };
   readonly districtDefaults: Record<BuildingDistrict, BuildingVisualProfile>;
   readonly entityProfiles: Record<EntityVisualRole, EntityVisualProfile>;
 }

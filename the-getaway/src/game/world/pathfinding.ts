@@ -12,6 +12,16 @@ interface FindPathOptions {
 
 const serialize = (position: Position): string => `${position.x},${position.y}`;
 
+interface OpenNode {
+  position: Position;
+  parentKey: string | null;
+  direction: { x: number; y: number } | null;
+  g: number;
+  h: number;
+  f: number;
+  turnPenalty: number;
+}
+
 export const findPath = (
   start: Position,
   goal: Position,
@@ -22,7 +32,8 @@ export const findPath = (
     return [];
   }
 
-  const directions = options.allowDiagonals
+  const allowDiagonals = options.allowDiagonals === true;
+  const directions = allowDiagonals
     ? [
         { x: 1, y: 0 },
         { x: -1, y: 0 },
@@ -40,13 +51,6 @@ export const findPath = (
         { x: 0, y: -1 },
       ];
 
-  const visited = new Set<string>();
-  const queue: Array<{ position: Position; path: Position[] }> = [
-    { position: start, path: [] },
-  ];
-
-  visited.add(serialize(start));
-
   const {
     player,
     enemies = [],
@@ -63,11 +67,91 @@ export const findPath = (
     pos.x < mapArea.width &&
     pos.y < mapArea.height;
 
-  while (queue.length > 0) {
-    const current = queue.shift();
+  const heuristic = (from: Position): number => {
+    const dx = Math.abs(goal.x - from.x);
+    const dy = Math.abs(goal.y - from.y);
+    return allowDiagonals ? Math.max(dx, dy) : dx + dy;
+  };
 
+  const compareNodes = (left: OpenNode, right: OpenNode): number => {
+    if (left.f !== right.f) {
+      return left.f - right.f;
+    }
+
+    if (left.h !== right.h) {
+      return left.h - right.h;
+    }
+
+    if (left.turnPenalty !== right.turnPenalty) {
+      return left.turnPenalty - right.turnPenalty;
+    }
+
+    if (left.position.y !== right.position.y) {
+      return left.position.y - right.position.y;
+    }
+
+    return left.position.x - right.position.x;
+  };
+
+  const startKey = serialize(start);
+  const goalKey = serialize(goal);
+  const open = new Map<string, OpenNode>();
+  const closed = new Set<string>();
+  const nodeByKey = new Map<string, OpenNode>();
+
+  const startNode: OpenNode = {
+    position: start,
+    parentKey: null,
+    direction: null,
+    g: 0,
+    h: heuristic(start),
+    f: heuristic(start),
+    turnPenalty: 0,
+  };
+  open.set(startKey, startNode);
+  nodeByKey.set(startKey, startNode);
+
+  const reconstructPath = (): Position[] => {
+    const path: Position[] = [];
+    let cursorKey = goalKey;
+
+    while (cursorKey !== startKey) {
+      const node = nodeByKey.get(cursorKey);
+      if (!node) {
+        return [];
+      }
+      path.push(node.position);
+      if (!node.parentKey) {
+        return [];
+      }
+      cursorKey = node.parentKey;
+    }
+
+    return path.reverse();
+  };
+
+  const pickBestOpenNode = (): OpenNode | null => {
+    let best: OpenNode | null = null;
+    open.forEach((node) => {
+      if (!best || compareNodes(node, best) < 0) {
+        best = node;
+      }
+    });
+    return best;
+  };
+
+  while (open.size > 0) {
+    const current = pickBestOpenNode();
     if (!current) {
       break;
+    }
+
+    const currentKey = serialize(current.position);
+    open.delete(currentKey);
+    closed.add(currentKey);
+
+    if (currentKey === goalKey) {
+      return reconstructPath();
     }
 
     for (const offset of directions) {
@@ -82,7 +166,7 @@ export const findPath = (
 
       const key = serialize(next);
 
-      if (visited.has(key)) {
+      if (closed.has(key)) {
         continue;
       }
 
@@ -127,14 +211,52 @@ export const findPath = (
         }
       }
 
-      const pathToNext = [...current.path, next];
+      const moveDirection = { x: offset.x, y: offset.y };
+      const turnPenalty =
+        current.direction &&
+        (current.direction.x !== moveDirection.x || current.direction.y !== moveDirection.y)
+          ? 0.001
+          : 0;
 
-      if (isGoal) {
-        return pathToNext;
+      const tentativeG = current.g + 1;
+      const tentativeH = heuristic(next);
+      const tentativeF = tentativeG + tentativeH + turnPenalty;
+      const existing = open.get(key);
+
+      if (existing && tentativeG > existing.g) {
+        continue;
       }
 
-      visited.add(key);
-      queue.push({ position: next, path: pathToNext });
+      if (
+        existing &&
+        tentativeG === existing.g &&
+        compareNodes(
+          {
+            ...existing,
+            parentKey: currentKey,
+            direction: moveDirection,
+            g: tentativeG,
+            h: tentativeH,
+            f: tentativeF,
+            turnPenalty,
+          },
+          existing
+        ) >= 0
+      ) {
+        continue;
+      }
+
+      const nextNode: OpenNode = {
+        position: next,
+        parentKey: currentKey,
+        direction: moveDirection,
+        g: tentativeG,
+        h: tentativeH,
+        f: tentativeF,
+        turnPenalty,
+      };
+      open.set(key, nextNode);
+      nodeByKey.set(key, nextNode);
     }
   }
 

@@ -179,6 +179,79 @@ const applyDistrictDecorations = (mapArea: MapArea): MapArea => {
   return mapArea;
 };
 
+const applySurfaceSemantics = (mapArea: MapArea): MapArea => {
+  const tiles: MapArea['tiles'] = mapArea.tiles.map((row) =>
+    row.map((tile) => ({
+      ...tile,
+      surfaceKind: tile.surfaceKind ?? 'lot',
+      surfaceAxis: tile.surfaceAxis,
+    }))
+  );
+
+  for (let y = 0; y < mapArea.height; y += 1) {
+    for (let x = 0; x < mapArea.width; x += 1) {
+      const tile = tiles[y]?.[x];
+      if (!tile) {
+        continue;
+      }
+
+      if (!tile.isWalkable) {
+        tile.surfaceKind = 'lot';
+        continue;
+      }
+
+      const onAvenue = isAvenue(x);
+      const onStreet = isStreet(y);
+      if (onAvenue && onStreet) {
+        tile.surfaceKind = 'crosswalk';
+        tile.surfaceAxis = 'intersection';
+      } else if (onAvenue || onStreet) {
+        tile.surfaceKind = 'road';
+        tile.surfaceAxis = onAvenue ? 'avenue' : 'street';
+      } else {
+        tile.surfaceKind = 'lot';
+      }
+    }
+  }
+
+  const roadOffsets: Position[] = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+
+  for (let y = 0; y < mapArea.height; y += 1) {
+    for (let x = 0; x < mapArea.width; x += 1) {
+      const tile = tiles[y]?.[x];
+      if (!tile || !tile.isWalkable) {
+        continue;
+      }
+
+      if (tile.surfaceKind === 'road' || tile.surfaceKind === 'crosswalk') {
+        continue;
+      }
+
+      const touchesRoad = roadOffsets.some((offset) => {
+        const neighbor = tiles[y + offset.y]?.[x + offset.x];
+        return Boolean(
+          neighbor?.isWalkable &&
+            (neighbor.surfaceKind === 'road' || neighbor.surfaceKind === 'crosswalk')
+        );
+      });
+
+      if (touchesRoad) {
+        tile.surfaceKind = 'sidewalk';
+      }
+    }
+  }
+
+  return {
+    ...mapArea,
+    tiles,
+  };
+};
+
 interface BuildWorldParams {
   locale: Locale;
 }
@@ -210,10 +283,10 @@ const createCityArea = (
   };
   const walls: Position[] = [];
 
-  const addBlock = (x1: number, y1: number, x2: number, y2: number, allowBoulevard = false) => {
+  const addBlock = (x1: number, y1: number, x2: number, y2: number) => {
     for (let y = y1; y <= y2; y++) {
       for (let x = x1; x <= x2; x++) {
-        if (allowBoulevard || !isCityBoulevard(x, y)) {
+        if (!isCityBoulevard(x, y)) {
           walls.push({ x, y });
         }
       }
@@ -225,9 +298,7 @@ const createCityArea = (
       building.footprint.from.x,
       building.footprint.from.y,
       building.footprint.to.x,
-      building.footprint.to.y,
-      // ESB PoC: block even boulevards so the footprint matches the landmark base.
-      building.id === 'block_2_2'
+      building.footprint.to.y
     );
   });
 
@@ -265,6 +336,7 @@ const createCityArea = (
   }, withCover);
 
   const withDistrictDecor = applyDistrictDecorations(withCoverProfiles);
+  const withSurfaceSemantics = applySurfaceSemantics(withDistrictDecor);
   const visualComposition = composeBuildingVisualProfiles(buildings);
 
   const buildingSummaries: MapBuildingDefinition[] = buildings.map((building) => ({
@@ -297,10 +369,10 @@ const createCityArea = (
       : undefined,
   }));
 
-  withDistrictDecor.buildings = buildingSummaries;
+  withSurfaceSemantics.buildings = buildingSummaries;
 
   const isTileOpen = (position: Position): boolean => {
-    const tile = withDistrictDecor.tiles[position.y]?.[position.x];
+    const tile = withSurfaceSemantics.tiles[position.y]?.[position.x];
     if (!tile) {
       return false;
     }
@@ -313,13 +385,13 @@ const createCityArea = (
   };
 
   const resolveOpenPosition = (seed: Position): Position | null => {
-    const nearest = findNearestWalkablePosition(seed, withDistrictDecor) ?? seed;
+    const nearest = findNearestWalkablePosition(seed, withSurfaceSemantics) ?? seed;
 
     if (isTileOpen(nearest)) {
       return nearest;
     }
 
-    const adjacent = getAdjacentWalkablePositions(nearest, withDistrictDecor);
+    const adjacent = getAdjacentWalkablePositions(nearest, withSurfaceSemantics);
     const fallback = adjacent.find((candidate) => isTileOpen(candidate));
     return fallback ?? null;
   };
@@ -331,7 +403,7 @@ const createCityArea = (
       return;
     }
 
-    withDistrictDecor.entities.npcs.push({
+    withSurfaceSemantics.entities.npcs.push({
       ...npcBlueprint,
       id: uuidv4(),
       position,
@@ -345,10 +417,10 @@ const createCityArea = (
   itemBlueprints.forEach((itemBlueprint, index) => {
     const seed = itemSpawnSeeds[index % itemSpawnSeeds.length];
     const position = resolveOpenPosition(seed) ?? seed;
-    withDistrictDecor.entities.items.push({ ...itemBlueprint, id: uuidv4(), position });
+    withSurfaceSemantics.entities.items.push({ ...itemBlueprint, id: uuidv4(), position });
   });
   const { connections, interiors } = applyBuildingConnections(
-    withDistrictDecor,
+    withSurfaceSemantics,
     areaName,
     buildings
   );
@@ -359,7 +431,7 @@ const createCityArea = (
   });
 
   return {
-    area: withDistrictDecor,
+    area: withSurfaceSemantics,
     connections,
     interiorAreas: interiors,
   };

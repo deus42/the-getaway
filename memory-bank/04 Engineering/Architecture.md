@@ -651,7 +651,7 @@ Manages the game world and environment:
   - Visual effects through color overlays
   - Curfew mechanics for gameplay restrictions
   - Time progression based on real elapsed time
-- **`pathfinding.ts`**: Breadth-first pathfinder supporting enemy avoidance and reserved tiles used by both player click-to-move and NPC routines.
+- **`pathfinding.ts`**: Deterministic A* pathfinder with diagonal support, occupied-tile avoidance, and stable tie-break ordering used by both player click-to-move and NPC routines.
 - **`worldMap.ts`**: Generates large districts, interior connections, and seeds NPCs, enemies, and items with routines and dialogue IDs.
 
 ## World Map Grid Pattern
@@ -669,6 +669,7 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 - Buildings occupy rectangular footprints within blocks, separated by navigable streets
 - Door tiles exist in street space (outside building footprints) to create clear separation between structure and navigation
 - Each building connects bidirectionally to a procedurally generated interior space
+- Walkable surface metadata (`surfaceKind`, `surfaceAxis`) now tags roads, intersections, sidewalks, and lots so render layers can style navigation space consistently without changing gameplay rules
 
 ### Design principles
 
@@ -689,7 +690,7 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 
 ### Pattern: Character Tokens & Labels
 
-- `IsoObjectFactory.createCharacterToken` builds reusable player/NPC/enemy markers composed of a halo, base diamond, extruded column, and beacon cap with configurable palettes.
+- `IsoObjectFactory.createCharacterToken` builds reusable player/NPC/enemy silhouette rigs (halo, grounded base, compact torso/head stack, beacon cap) with configurable palettes and role-specific scaling.
 - `positionCharacterToken` and `createCharacterNameLabel` coordinate container depth and neon nameplates so tokens stay legible from any camera offset.
 - Character overlays (health bars, combat indicators, name labels) update alongside tokens, preserving 2.5-D depth sorting while surfacing combat data.
 

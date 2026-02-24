@@ -92,17 +92,7 @@ export class TilePainter {
     this.graphics.strokePoints(points, true);
 
     if (tile.type === TileType.FLOOR) {
-      const lotAxis = context.gridX % 5 === 0 || context.gridY % 5 === 0;
-      if (lotAxis) {
-        this.graphics.lineStyle(1.1, 0x67e8f9, 0.12);
-        this.graphics.strokePoints([top, center, bottom], false);
-        this.graphics.strokePoints([left, center, right], false);
-      } else if ((context.gridX + context.gridY) % 4 === 0) {
-        this.graphics.lineStyle(0.85, 0x38bdf8, 0.08);
-        this.graphics.strokePoints(points, true);
-      }
-
-      this.drawRoadReflection(tile, context, points);
+      this.drawSurfaceTreatments(tile, context, points, modulated);
     } else if (tile.type === TileType.COVER || tile.type === TileType.WALL) {
       this.graphics.lineStyle(0.9, 0xf8fafc, 0.08);
       this.graphics.strokePoints(points, true);
@@ -219,6 +209,7 @@ export class TilePainter {
   private getTileBaseColor(tile: MapTile, gridX: number, gridY: number): number {
     const checker = (gridX + gridY) % 2 === 0;
     const palette = this.theme.tilePalettes;
+    const surfacePalette = this.theme.surfacePalettes;
 
     switch (tile.type) {
       case TileType.WALL:
@@ -232,7 +223,17 @@ export class TilePainter {
       case TileType.DOOR:
         return checker ? palette.doorEven : palette.doorOdd;
       default:
-        return checker ? palette.floorEven : palette.floorOdd;
+        switch (tile.surfaceKind) {
+          case 'road':
+            return checker ? surfacePalette.roadEven : surfacePalette.roadOdd;
+          case 'crosswalk':
+            return checker ? surfacePalette.crosswalkEven : surfacePalette.crosswalkOdd;
+          case 'sidewalk':
+            return checker ? surfacePalette.sidewalkEven : surfacePalette.sidewalkOdd;
+          case 'lot':
+          default:
+            return checker ? surfacePalette.lotEven : surfacePalette.lotOdd;
+        }
     }
   }
 
@@ -258,7 +259,8 @@ export class TilePainter {
   private drawRoadReflection(
     tile: MapTile,
     context: TileContext,
-    points: Phaser.Geom.Point[]
+    points: Phaser.Geom.Point[],
+    intensityMultiplier = 1
   ): void {
     if (!tile.isWalkable || this.wetReflectionAlpha <= 0.01) {
       return;
@@ -267,7 +269,7 @@ export class TilePainter {
     const [top, right, bottom, left] = points;
     const seamOffset = (((context.gridX * 11 + context.gridY * 17) % 9) - 4) * 0.04;
     const intensity = Phaser.Math.Clamp(
-      this.wetReflectionAlpha * (0.7 + this.emissiveIntensity * 0.65),
+      this.wetReflectionAlpha * (0.7 + this.emissiveIntensity * 0.65) * intensityMultiplier,
       0.03,
       0.28
     );
@@ -291,5 +293,64 @@ export class TilePainter {
       ],
       false
     );
+  }
+
+  private drawSurfaceTreatments(
+    tile: MapTile,
+    context: TileContext,
+    points: Phaser.Geom.Point[],
+    modulatedBase: number
+  ): void {
+    const surface = tile.surfaceKind ?? 'lot';
+    const axis = tile.surfaceAxis;
+    const [top, right, bottom, left] = points;
+    const center = new Phaser.Geom.Point(context.center.x, context.center.y);
+
+    if (surface === 'road' || surface === 'crosswalk') {
+      const laneColor = surface === 'crosswalk' ? 0xffc67a : 0xffb35c;
+      this.graphics.lineStyle(1, laneColor, surface === 'crosswalk' ? 0.28 : 0.18);
+
+      if (axis === 'avenue' || axis === 'intersection') {
+        this.graphics.strokePoints([top, center, bottom], false);
+      }
+      if (axis === 'street' || axis === 'intersection') {
+        this.graphics.strokePoints([left, center, right], false);
+      }
+
+      if (surface === 'crosswalk') {
+        const stripeColor = 0xf8fafc;
+        this.graphics.lineStyle(1.15, stripeColor, 0.42);
+        const stripeA = this.lerpPoint(left, top, 0.42);
+        const stripeB = this.lerpPoint(bottom, right, 0.42);
+        const stripeC = this.lerpPoint(left, top, 0.62);
+        const stripeD = this.lerpPoint(bottom, right, 0.62);
+        this.graphics.strokePoints([stripeA, stripeB], false);
+        this.graphics.strokePoints([stripeC, stripeD], false);
+      }
+
+      this.drawRoadReflection(tile, context, points, surface === 'crosswalk' ? 1.1 : 1);
+      return;
+    }
+
+    if (surface === 'sidewalk') {
+      this.graphics.lineStyle(1, adjustColor(modulatedBase, 0.2), 0.24);
+      this.graphics.strokePoints(points, true);
+      this.graphics.lineStyle(0.9, 0x94a3b8, 0.2);
+      this.graphics.strokePoints(
+        [
+          this.lerpPoint(top, right, 0.5),
+          this.lerpPoint(left, bottom, 0.5),
+        ],
+        false
+      );
+      this.drawRoadReflection(tile, context, points, 0.65);
+      return;
+    }
+
+    if ((context.gridX + context.gridY) % 5 === 0) {
+      this.graphics.lineStyle(0.8, 0x67e8f9, 0.06);
+      this.graphics.strokePoints(points, true);
+    }
+    this.drawRoadReflection(tile, context, points, 0.45);
   }
 }

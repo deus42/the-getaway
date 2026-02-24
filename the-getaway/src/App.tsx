@@ -175,6 +175,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
   hudLayoutPreset,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
+  const testMode = useSelector((state: RootState) => state.settings.testMode);
   const inCombat = useSelector((state: RootState) => state.world.inCombat);
   const uiStrings = getUIStrings(locale);
   const zoneId = useSelector((state: RootState) => state.world.currentMapArea?.zoneId ?? null);
@@ -318,7 +319,9 @@ const CommandShell: React.FC<CommandShellProps> = ({
             collapsed={levelPanelCollapsed}
             onToggle={onToggleLevelPanel}
           />
-          <GameDebugInspector zoneId={zoneId} rendererInfo={rendererMeta} />
+          {testMode ? (
+            <GameDebugInspector zoneId={zoneId} rendererInfo={rendererMeta} />
+          ) : null}
         </div>
         <div style={topCenterOverlayStyle}>
           <CombatControlWidget />

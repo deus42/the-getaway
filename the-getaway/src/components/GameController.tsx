@@ -407,6 +407,7 @@ const GameController: React.FC = () => {
     createCurfewStateMachine()
   );
   const reinforcementTimeoutRef = useRef<CurfewTimeoutHandle | null>(null);
+  const initializedPlayerTurnRef = useRef<number | null>(null);
   const globalAlertLevelRef = useRef(globalAlertLevel);
   const timeOfDayRef = useRef(timeOfDay);
   const activeDialogueIdRef = useRef<string | null>(activeDialogueId);
@@ -415,6 +416,7 @@ const GameController: React.FC = () => {
   const previousSurveillanceAreaId = useRef<string | null>(null);
   const pendingSurveillanceTeardownRef = useRef<number | null>(null);
   const previousEnemiesRef = useRef<Map<string, Enemy>>(new Map());
+  const perceptionSignatureRef = useRef<string | null>(null);
   const questsRef = useRef<Quest[]>(quests);
   const autoBattleControllerRef = useRef<AutoBattleController | null>(null);
   const paranoiaRuntimeRef = useRef(createParanoiaRuntime());
@@ -2024,8 +2026,28 @@ const GameController: React.FC = () => {
   // --- Perception Processing ---
   useEffect(() => {
     if (!player || enemies.length === 0 || !currentMapArea) {
+      perceptionSignatureRef.current = null;
       return;
     }
+
+    const perceptionSignature = [
+      currentMapArea.id,
+      `${player.position.x},${player.position.y}`,
+      player.movementProfile,
+      inCombat ? 'combat' : 'field',
+      timeOfDay,
+      enemies
+        .map(
+          (enemy) =>
+            `${enemy.id}:${enemy.health}:${enemy.position.x},${enemy.position.y}:${enemy.facing}:${enemy.visionCone?.direction ?? 'na'}`
+        )
+        .join('|'),
+    ].join('::');
+
+    if (perceptionSignatureRef.current === perceptionSignature) {
+      return;
+    }
+    perceptionSignatureRef.current = perceptionSignature;
 
     // Process perception updates for all enemies
     // Combine paranoia (existing), movement profile, stealth training, and night lighting
@@ -2453,13 +2475,21 @@ const GameController: React.FC = () => {
 
   useEffect(() => {
     if (!inCombat) {
+      initializedPlayerTurnRef.current = null;
       return;
     }
 
-    if (isPlayerTurn) {
-      dispatch(beginPlayerTurn());
+    if (!isPlayerTurn) {
+      return;
     }
-  }, [dispatch, inCombat, isPlayerTurn]);
+
+    if (initializedPlayerTurnRef.current === turnCount) {
+      return;
+    }
+
+    initializedPlayerTurnRef.current = turnCount;
+    dispatch(beginPlayerTurn());
+  }, [dispatch, inCombat, isPlayerTurn, turnCount]);
 
   // --- End Enemy Turn Logic ---
 

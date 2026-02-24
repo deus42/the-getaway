@@ -14,6 +14,9 @@ import { buildQuestsForLevel } from '../../quests/builders';
 
 const LEVEL_RESOURCE_KEY = 'levels.slums_command_grid';
 const ROAD_WIDENING_INSET_TILES = 4;
+const ESB_BUILDING_ID = 'block_2_2';
+const ESB_FOOTPRINT_INSET_X = 9;
+const ESB_FOOTPRINT_INSET_Y = 6;
 
 interface Level0Content {
   dialogues: Dialogue[];
@@ -105,15 +108,6 @@ const moveDoorToPerimeter = (building: LevelBuildingDefinition): LevelBuildingDe
 
   const clampedX = Math.min(Math.max(originalDoor.x, minX), maxX);
 
-  // ESB PoC: force the entrance to the east/right + bottom edge so it reads as a street entrance.
-  if (sanitized.id === 'block_2_2') {
-    sanitized.door = {
-      x: to.x,
-      y: to.y + 1,
-    };
-    return sanitized;
-  }
-
   sanitized.door = {
     x: clampedX,
     y: to.y,
@@ -152,6 +146,36 @@ const insetBuildingFootprint = (
   return next;
 };
 
+const insetBuildingFootprintAxes = (
+  building: LevelBuildingDefinition,
+  insetX: number,
+  insetY: number
+): LevelBuildingDefinition => {
+  const next = cloneBuildingDefinition(building);
+  const width = next.footprint.to.x - next.footprint.from.x + 1;
+  const height = next.footprint.to.y - next.footprint.from.y + 1;
+
+  const clampedX = Math.min(insetX, Math.max(0, Math.floor((width - 8) / 2)));
+  const clampedY = Math.min(insetY, Math.max(0, Math.floor((height - 8) / 2)));
+
+  if (clampedX <= 0 && clampedY <= 0) {
+    return next;
+  }
+
+  next.footprint = {
+    from: {
+      x: next.footprint.from.x + clampedX,
+      y: next.footprint.from.y + clampedY,
+    },
+    to: {
+      x: next.footprint.to.x - clampedX,
+      y: next.footprint.to.y - clampedY,
+    },
+  };
+
+  return next;
+};
+
 const cloneCoverSpot = (spot: CoverSpotDefinition): CoverSpotDefinition => ({
   position: clonePosition(spot.position),
   profile: cloneCoverProfile(spot.profile),
@@ -165,9 +189,10 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const npcBlueprints = source.npcBlueprints.map(cloneNPCBlueprint);
   const itemBlueprints = source.itemBlueprints.map(cloneItemBlueprint);
   const buildingDefinitions = source.buildingDefinitions.map((definition) => {
-    // ESB PoC: keep a much larger footprint (less road widening) so the landmark base reads correctly.
-    const inset = definition.id === 'block_2_2' ? 0 : ROAD_WIDENING_INSET_TILES;
-    const widenedRoadLayout = insetBuildingFootprint(definition, inset);
+    const widenedRoadLayout =
+      definition.id === ESB_BUILDING_ID
+        ? insetBuildingFootprintAxes(definition, ESB_FOOTPRINT_INSET_X, ESB_FOOTPRINT_INSET_Y)
+        : insetBuildingFootprint(definition, ROAD_WIDENING_INSET_TILES);
     return moveDoorToPerimeter(widenedRoadLayout);
   });
 

@@ -459,11 +459,12 @@ export class IsoObjectFactory {
   public createCharacterToken(gridX: number, gridY: number, options: CharacterTokenOptions = {}): CharacterToken {
     const container = this.scene.add.container(0, 0);
     const metrics = getIsoMetrics(this.tileSize);
-    const baseWidth = metrics.tileWidth * (options.widthScale ?? 0.8);
-    const baseHeight = metrics.tileHeight * (options.heightScale ?? 0.5);
+    const widthScale = options.widthScale ?? 0.8;
+    const heightScale = options.heightScale ?? 0.5;
     const columnHeight = metrics.tileHeight * (options.columnHeight ?? 1.4);
-    const topScale = Math.max(0.55, 1 - columnHeight / (metrics.tileHeight * 3));
-    const haloRadius = (options.haloRadius ?? metrics.tileWidth * 0.55);
+    const baseWidth = metrics.tileWidth * widthScale;
+    const baseHeight = metrics.tileHeight * heightScale;
+    const haloRadius = options.haloRadius ?? metrics.tileWidth * 0.55;
 
     const baseColor = options.baseColor ?? 0x111827;
     const outlineColor = options.outlineColor ?? adjustColor(baseColor, 0.25);
@@ -472,36 +473,40 @@ export class IsoObjectFactory {
     const glowColor = options.glowColor ?? primaryColor;
 
     const base = this.scene.add.graphics();
-    const baseDiamond = getDiamondPoints(0, 0, baseWidth, baseHeight).map((point) => new Phaser.Geom.Point(point.x, point.y));
-    base.fillStyle(baseColor, options.alpha ?? 0.92);
+    const baseDiamond = getDiamondPoints(0, 0, baseWidth, baseHeight).map(
+      (point) => new Phaser.Geom.Point(point.x, point.y)
+    );
+    base.fillStyle(baseColor, options.alpha ?? 0.86);
     base.fillPoints(baseDiamond, true);
-    base.lineStyle(1.4, outlineColor, 0.9);
+    base.lineStyle(1.2, outlineColor, 0.72);
     base.strokePoints(baseDiamond, true);
+    base.fillStyle(adjustColor(baseColor, -0.24), 0.8);
+    base.fillEllipse(0, metrics.tileHeight * 0.08, baseWidth * 0.58, baseHeight * 0.52);
 
     const column = this.scene.add.graphics();
-    const topPoints = getDiamondPoints(0, -columnHeight, baseWidth * topScale, baseHeight * topScale).map((point) => new Phaser.Geom.Point(point.x, point.y));
-    const bottomPoints = baseDiamond;
+    const torsoWidth = baseWidth * 0.34;
+    const torsoHeight = columnHeight * 0.9;
+    const torsoTopY = -torsoHeight;
+    const torsoCorner = Math.max(3, torsoWidth * 0.4);
 
-    const rightFace = [bottomPoints[1], bottomPoints[2], topPoints[2], topPoints[1]];
-    const frontFace = [bottomPoints[2], bottomPoints[3], topPoints[3], topPoints[2]];
-
-    column.fillStyle(adjustColor(primaryColor, -0.4), 0.96);
-    column.fillPoints(frontFace, true);
-    column.fillStyle(adjustColor(primaryColor, -0.25), 0.98);
-    column.fillPoints(rightFace, true);
-    column.lineStyle(1.1, adjustColor(primaryColor, 0.1), 0.88);
-    column.strokePoints(frontFace, true);
-    column.strokePoints(rightFace, true);
+    column.fillStyle(adjustColor(primaryColor, -0.28), 0.96);
+    column.fillRoundedRect(-torsoWidth / 2, torsoTopY, torsoWidth, torsoHeight * 0.8, torsoCorner);
+    column.fillStyle(adjustColor(primaryColor, -0.08), 0.95);
+    column.fillCircle(0, torsoTopY + torsoHeight * 0.1, torsoWidth * 0.28);
+    column.lineStyle(1.2, adjustColor(primaryColor, 0.24), 0.9);
+    column.strokeRoundedRect(-torsoWidth / 2, torsoTopY, torsoWidth, torsoHeight * 0.8, torsoCorner);
+    column.lineStyle(1, adjustColor(primaryColor, 0.36), 0.74);
+    column.strokeCircle(0, torsoTopY + torsoHeight * 0.1, torsoWidth * 0.28);
 
     const beacon = this.scene.add.graphics();
-    beacon.fillStyle(accentColor, 0.92);
-    beacon.fillPoints(topPoints, true);
-    beacon.lineStyle(1.2, adjustColor(accentColor, 0.3), 0.95);
-    beacon.strokePoints(topPoints, true);
+    beacon.fillStyle(accentColor, 0.95);
+    beacon.fillTriangle(0, torsoTopY - torsoHeight * 0.18, -3.5, torsoTopY - torsoHeight * 0.01, 3.5, torsoTopY - torsoHeight * 0.01);
+    beacon.lineStyle(1, adjustColor(accentColor, 0.32), 0.9);
+    beacon.strokeTriangle(0, torsoTopY - torsoHeight * 0.18, -3.5, torsoTopY - torsoHeight * 0.01, 3.5, torsoTopY - torsoHeight * 0.01);
 
     const halo = this.scene.add.graphics();
-    halo.fillStyle(glowColor, 0.2);
-    halo.fillEllipse(0, metrics.tileHeight * 0.1, haloRadius, haloRadius * 0.45);
+    halo.fillStyle(glowColor, 0.22);
+    halo.fillEllipse(0, metrics.tileHeight * 0.08, haloRadius, haloRadius * 0.42);
     halo.setBlendMode(Phaser.BlendModes.ADD);
 
     container.add([halo, base, column, beacon]);

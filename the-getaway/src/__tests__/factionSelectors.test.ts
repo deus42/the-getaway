@@ -111,16 +111,16 @@ describe('factionSelectors', () => {
     expect(factionsMock.getFactionDefinitions).toHaveBeenCalled();
   });
 
-  it('clones faction reputation maps and pending events', () => {
+  it('returns faction reputation maps and pending events', () => {
     const state = buildState();
     const reputation = selectFactionReputationMap(state);
     const events = selectPendingFactionEvents(state);
 
     expect(reputation).toEqual({ resistance: 15, corpsec: -30, scavengers: 0 });
-    expect(reputation).not.toBe(state.player.data.factionReputation);
+    expect(reputation).toBe(state.player.data.factionReputation);
     expect(events).toHaveLength(1);
     expect(events[0]).toMatchObject({ factionId: 'corpsec', delta: -10 });
-    expect(events).not.toBe(state.player.pendingFactionEvents);
+    expect(events).toBe(state.player.pendingFactionEvents);
   });
 
   it('provides enriched standing for specific faction', () => {
