@@ -288,6 +288,7 @@ export interface EnemyAiTelemetry {
 
 // Enemy specific attributes
 export interface Enemy extends Entity {
+  resourceKey?: string;
   actionPoints: number;
   maxActionPoints: number;
   damage: number;

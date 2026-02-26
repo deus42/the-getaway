@@ -641,13 +641,13 @@ export const level0UkrainianContent: Level0LocaleContent = {
     },
     {
       name: 'Юно Вогнеборець',
-      position: { x: 32, y: 74 },
+      position: { x: 32, y: 68 },
       health: 18,
       maxHealth: 18,
       routine: [
-        { position: { x: 32, y: 74 }, timeOfDay: 'day', duration: 200 },
-        { position: { x: 28, y: 80 }, timeOfDay: 'evening', duration: 200 },
-        { position: { x: 36, y: 72 }, timeOfDay: 'night', duration: 200 },
+        { position: { x: 32, y: 68 }, timeOfDay: 'day', duration: 200 },
+        { position: { x: 28, y: 66 }, timeOfDay: 'evening', duration: 200 },
+        { position: { x: 36, y: 70 }, timeOfDay: 'night', duration: 200 },
       ],
       dialogueId: 'npc_firebrand_juno',
       isInteractive: true,

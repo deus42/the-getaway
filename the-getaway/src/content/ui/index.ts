@@ -88,6 +88,17 @@ interface QuestLogStrings {
   active: string;
   completed: string;
   empty: string;
+  primaryProgress: string;
+  activeSideQuests: string;
+  availableSideQuests: string;
+  primaryEmpty: string;
+  activeSideEmpty: string;
+  availableSideEmpty: string;
+  completedEmpty: string;
+  primaryInProgress: string;
+  primaryComplete: string;
+  giverLabel: (name: string) => string;
+  giverUnknown: string;
   rewardsHeading: string;
   currencyLabel: (amount: number) => string;
   experienceLabel: (amount: number) => string;
@@ -636,11 +647,22 @@ const STRINGS: Record<Locale, UIStrings> = {
       active: 'Active Quests',
       completed: 'Completed Quests',
       empty: 'No quests tracked. Connect with contacts to unlock new objectives.',
+      primaryProgress: 'Primary Progress',
+      activeSideQuests: 'Active Side Quests',
+      availableSideQuests: 'Available Side Quests',
+      primaryEmpty: 'No primary objectives in this mission track.',
+      activeSideEmpty: 'No side quests active yet.',
+      availableSideEmpty: 'No side quests currently available.',
+      completedEmpty: 'No completed quests yet.',
+      primaryInProgress: 'In Progress',
+      primaryComplete: 'Complete',
+      giverLabel: (name) => `Talk to ${name}`,
+      giverUnknown: 'No contact assigned',
       rewardsHeading: 'Rewards',
       currencyLabel: (amount) => `₿${amount} ${amount === 1 ? 'credit' : 'credits'}`,
       experienceLabel: (amount) => `${amount} XP`,
       supplyFallback: 'Supply',
-  },
+    },
     shell: {
       reconLabel: 'Recon',
       reconTitle: 'Tactical Feed',
@@ -1421,6 +1443,17 @@ const STRINGS: Record<Locale, UIStrings> = {
       active: 'Активні завдання',
       completed: 'Завершені завдання',
       empty: 'Жодного завдання не відстежується. Звʼяжіться з контактами, щоб відкрити нові цілі.',
+      primaryProgress: 'Основний прогрес',
+      activeSideQuests: 'Активні побічні завдання',
+      availableSideQuests: 'Доступні побічні завдання',
+      primaryEmpty: 'У цій місії немає основних цілей.',
+      activeSideEmpty: 'Активних побічних завдань поки немає.',
+      availableSideEmpty: 'Зараз немає доступних побічних завдань.',
+      completedEmpty: 'Завершених завдань ще немає.',
+      primaryInProgress: 'У процесі',
+      primaryComplete: 'Завершено',
+      giverLabel: (name) => `Поговоріть з ${name}`,
+      giverUnknown: 'Контакт не призначений',
       rewardsHeading: 'Нагорода',
       currencyLabel: (amount) => {
         const label = amount === 1 ? 'кредит' : amount >= 2 && amount <= 4 ? 'кредити' : 'кредитів';

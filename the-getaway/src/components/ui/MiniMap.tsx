@@ -380,7 +380,7 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
     const color = ENTITY_COLORS[entity.kind] ?? ENTITY_COLORS.npc;
     const radius = getIconRadius(
       tileScale,
-      entity.kind === "player" ? 0.7 : 0.5
+      entity.kind === "player" ? 0.7 : entity.kind === "npc" ? 0.62 : 0.5
     );
     const x = (entity.x + 0.5) * tileScale;
     const y = (entity.y + 0.5) * tileScale;
@@ -399,7 +399,7 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
       ctx.beginPath();
       ctx.arc(x, y, radius * 0.85, 0, Math.PI * 2);
       ctx.fill();
-      if (entity.kind === "enemy") {
+      if (entity.kind === "enemy" || entity.kind === "npc") {
         ctx.strokeStyle = "rgba(15, 23, 42, 0.85)";
         ctx.lineWidth = getStrokeWidth(scale);
         ctx.stroke();
@@ -416,14 +416,22 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
     ) {
       return;
     }
-    const ring = Math.min(ICON_MAX_RADIUS, Math.max(5, tileScale * 0.55));
+    const isQuestContact = objective.markerKind === "questContact";
+    const ring = Math.min(
+      ICON_MAX_RADIUS,
+      Math.max(isQuestContact ? 6 : 5, tileScale * (isQuestContact ? 0.66 : 0.55))
+    );
     const x = (objective.x + 0.5) * tileScale;
     const y = (objective.y + 0.5) * tileScale;
-    ctx.fillStyle = "rgba(251, 191, 36, 0.2)";
+    ctx.fillStyle = isQuestContact
+      ? "rgba(34, 211, 238, 0.2)"
+      : "rgba(251, 191, 36, 0.2)";
     ctx.beginPath();
     ctx.arc(x, y, ring, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = "rgba(251, 191, 36, 0.95)";
+    ctx.strokeStyle = isQuestContact
+      ? "rgba(34, 211, 238, 0.95)"
+      : "rgba(251, 191, 36, 0.95)";
     ctx.lineWidth = getStrokeWidth(scale);
     ctx.beginPath();
     ctx.arc(x, y, ring * 0.7, 0, Math.PI * 2);

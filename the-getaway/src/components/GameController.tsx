@@ -81,6 +81,7 @@ import {
 import {
   startDialogue,
   endDialogue,
+  startQuest,
   updateObjectiveCounter,
 } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
@@ -105,7 +106,7 @@ import {
   handleTimeOfDayForSurveillance,
   updateSurveillance,
 } from "../game/systems/surveillance/cameraSystem";
-import { setOverlayEnabled } from "../store/surveillanceSlice";
+import { setOverlayEnabled, updateCameraState } from "../store/surveillanceSlice";
 import {
   ingestObservation,
   setSuspicionPaused,
@@ -132,13 +133,14 @@ import {
 } from "../game/systems/paranoia";
 import { PARANOIA_CONFIG } from "../content/paranoia/paranoiaConfig";
 import { resolvePickupObjectName } from "../game/utils/itemDisplay";
-import GameDebugInspector from "./debug/GameDebugInspector";
 import { setAutoBattleEnabled } from "../store/settingsSlice";
 import AutoBattleController from "../game/combat/automation/AutoBattleController";
 import {
   selectStealthAvailability,
   selectActiveDialogueId,
 } from "../store/selectors/engagementSelectors";
+import { DEFAULT_GUARD_ARCHETYPE_ID } from "../content/ai/guardArchetypes";
+import { QUEST_DEFINITION_BY_ID } from "../content/quests";
 import type { ParanoiaTier } from "../game/systems/paranoia/types";
 
 const resolveParanoiaDetectionMultiplier = (tier: ParanoiaTier): number => {
@@ -155,6 +157,8 @@ const resolveParanoiaDetectionMultiplier = (tier: ParanoiaTier): number => {
 };
 
 const STEALTH_COOLDOWN_MS = 4500;
+const CAMERA_SABOTAGE_DISABLE_MS = 120000;
+const DRONE_OBSERVATION_RADIUS = 3;
 
 const rankAlertLevel = (level?: AlertLevel | null): number => {
   switch (level) {
@@ -208,6 +212,64 @@ const objectiveMatchesItem = (objective: QuestObjective, item: Item): boolean =>
   }
 
   return objective.target === item.name;
+};
+
+const objectiveMatchesEnemy = (objective: QuestObjective, enemy: Enemy): boolean => {
+  if (objective.type !== 'kill' || objective.isCompleted) {
+    return false;
+  }
+
+  if (objective.targetResourceKey && enemy.resourceKey) {
+    return objective.targetResourceKey === enemy.resourceKey;
+  }
+
+  if (objective.targetResourceKey === 'enemies.corpsec_guard') {
+    if (enemy.aiProfileId === DEFAULT_GUARD_ARCHETYPE_ID) {
+      return true;
+    }
+
+    const normalizedName = enemy.name.toLowerCase();
+    const guardKeywords = [
+      'corpsec',
+      'curfew patrol',
+      'patrol',
+      'sentinel',
+      'sentry',
+      'guard',
+      'captain',
+      'enforcer',
+      'watchman',
+    ];
+    return guardKeywords.some((keyword) => normalizedName.includes(keyword));
+  }
+
+  if (objective.target) {
+    return enemy.name.toLowerCase() === objective.target.toLowerCase();
+  }
+
+  return false;
+};
+
+const objectiveMatchesCameraSabotage = (objective: QuestObjective): boolean =>
+  objective.type === 'kill' &&
+  !objective.isCompleted &&
+  objective.targetResourceKey === 'devices.surveillance_camera';
+
+const objectiveMatchesDroneRecon = (objective: QuestObjective): boolean =>
+  objective.type === 'explore' &&
+  !objective.isCompleted &&
+  objective.targetResourceKey === 'devices.patrol_drone';
+
+const isSideQuest = (quest: Quest): boolean =>
+  QUEST_DEFINITION_BY_ID[quest.id]?.kind === 'side';
+
+const isQuestProgressTrackable = (quest: Quest): boolean =>
+  !quest.isCompleted && (quest.isActive || isSideQuest(quest));
+
+const distanceBetween = (a: Position, b: Position): number => {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
 };
 
 const collectObjectiveInventoryCount = (
@@ -419,8 +481,13 @@ const GameController: React.FC = () => {
   const previousSurveillanceAreaId = useRef<string | null>(null);
   const pendingSurveillanceTeardownRef = useRef<number | null>(null);
   const previousEnemiesRef = useRef<Map<string, Enemy>>(new Map());
+  const previousEnemyAreaIdRef = useRef<string | null>(mapAreaId ?? null);
   const perceptionSignatureRef = useRef<string | null>(null);
   const questsRef = useRef<Quest[]>(quests);
+  const killObjectiveEnemyLedgerRef = useRef<Set<string>>(new Set());
+  const sabotageObjectiveLedgerRef = useRef<Set<string>>(new Set());
+  const droneObservationLedgerRef = useRef<Set<string>>(new Set());
+  const previousPlayerIdRef = useRef<string>(player.id);
   const autoBattleControllerRef = useRef<AutoBattleController | null>(null);
   const paranoiaRuntimeRef = useRef(createParanoiaRuntime());
   const paranoiaTierRef = useRef(paranoiaTier);
@@ -645,6 +712,15 @@ const GameController: React.FC = () => {
     ]
   );
 
+  const ensureSideQuestProgressTracking = useCallback(
+    (quest: Quest) => {
+      if (!quest.isActive && isSideQuest(quest)) {
+        dispatch(startQuest(quest.id));
+      }
+    },
+    [dispatch]
+  );
+
   useEffect(() => {
     surveillanceZoneRef.current = surveillanceZone;
   }, [surveillanceZone]);
@@ -660,6 +736,17 @@ const GameController: React.FC = () => {
   useEffect(() => {
     playerRef.current = player;
   }, [player]);
+
+  useEffect(() => {
+    if (previousPlayerIdRef.current === player.id) {
+      return;
+    }
+
+    previousPlayerIdRef.current = player.id;
+    killObjectiveEnemyLedgerRef.current.clear();
+    sabotageObjectiveLedgerRef.current.clear();
+    droneObservationLedgerRef.current.clear();
+  }, [player.id]);
 
   useEffect(() => {
     activeDialogueIdRef.current = activeDialogueId;
@@ -688,7 +775,7 @@ const GameController: React.FC = () => {
       return;
     }
 
-    const activeQuests = questsRef.current.filter((quest) => quest.isActive && !quest.isCompleted);
+    const trackableQuests = questsRef.current.filter(isQuestProgressTrackable);
 
     itemsAtPlayerPosition.forEach((item) => {
       const pickupCount = getItemPickupQuantity(item);
@@ -722,12 +809,13 @@ const GameController: React.FC = () => {
       );
       dispatch(addLogMessage(logStrings.itemPickedUp(pickupLabel, pickupCount)));
 
-      activeQuests.forEach((quest) => {
+      trackableQuests.forEach((quest) => {
         quest.objectives.forEach((objective) => {
           if (!objectiveMatchesItem(objective, item)) {
             return;
           }
 
+          ensureSideQuestProgressTracking(quest);
           dispatch(
             updateObjectiveCounter({
               questId: quest.id,
@@ -738,11 +826,18 @@ const GameController: React.FC = () => {
         });
       });
     });
-  }, [dispatch, mapItems, player.position, logStrings, currentMapArea?.id]);
+  }, [
+    dispatch,
+    mapItems,
+    player.position,
+    logStrings,
+    currentMapArea?.id,
+    ensureSideQuestProgressTracking,
+  ]);
 
   useEffect(() => {
-    const activeQuests = questsRef.current.filter((quest) => quest.isActive && !quest.isCompleted);
-    if (activeQuests.length === 0) {
+    const trackableQuests = questsRef.current.filter(isQuestProgressTrackable);
+    if (trackableQuests.length === 0) {
       return;
     }
 
@@ -751,7 +846,7 @@ const GameController: React.FC = () => {
       return;
     }
 
-    activeQuests.forEach((quest) => {
+    trackableQuests.forEach((quest) => {
       quest.objectives.forEach((objective) => {
         if (objective.type !== 'collect' || objective.isCompleted) {
           return;
@@ -771,6 +866,7 @@ const GameController: React.FC = () => {
           return;
         }
 
+        ensureSideQuestProgressTracking(quest);
         dispatch(
           updateObjectiveCounter({
             questId: quest.id,
@@ -780,7 +876,95 @@ const GameController: React.FC = () => {
         );
       });
     });
-  }, [dispatch, player.inventory.items, questActivationSignature]);
+  }, [
+    dispatch,
+    player.inventory.items,
+    questActivationSignature,
+    ensureSideQuestProgressTracking,
+  ]);
+
+  useEffect(() => {
+    if (!curfewActive) {
+      return;
+    }
+
+    const zoneState = surveillanceZoneRef.current ?? surveillanceZone;
+    if (!zoneState) {
+      return;
+    }
+
+    const trackableQuests = questsRef.current.filter(isQuestProgressTrackable);
+    if (trackableQuests.length === 0) {
+      return;
+    }
+
+    const observableDroneCameras = Object.values(zoneState.cameras).filter((camera) => {
+      if (camera.type !== 'drone') {
+        return false;
+      }
+
+      if (!camera.isActive) {
+        return false;
+      }
+
+      if (camera.alertState === CameraAlertState.ALARMED) {
+        return false;
+      }
+
+      return distanceBetween(camera.position, player.position) <= DRONE_OBSERVATION_RADIUS;
+    });
+
+    if (observableDroneCameras.length === 0) {
+      return;
+    }
+
+    const objectiveProgressBuffer = new Map<string, number>();
+
+    trackableQuests.forEach((quest) => {
+      quest.objectives.forEach((objective) => {
+        if (!objectiveMatchesDroneRecon(objective)) {
+          return;
+        }
+
+        observableDroneCameras.forEach((camera) => {
+          const waypointToken = `${camera.id}:${camera.currentWaypointIndex ?? 0}`;
+          const ledgerToken = `${quest.id}:${objective.id}:${waypointToken}`;
+          if (droneObservationLedgerRef.current.has(ledgerToken)) {
+            return;
+          }
+
+          droneObservationLedgerRef.current.add(ledgerToken);
+          ensureSideQuestProgressTracking(quest);
+          dispatch(
+            updateObjectiveCounter({
+              questId: quest.id,
+              objectiveId: objective.id,
+              count: 1,
+            })
+          );
+
+          const objectiveProgressKey = `${quest.id}:${objective.id}`;
+          const previousCount =
+            objectiveProgressBuffer.get(objectiveProgressKey) ??
+            (objective.currentCount ?? 0);
+          const targetCount = objective.count ?? 1;
+          const nextCount = Math.min(previousCount + 1, targetCount);
+          objectiveProgressBuffer.set(objectiveProgressKey, nextCount);
+          dispatch(
+            addLogMessage(logStrings.droneReconWaypointLogged(nextCount, targetCount))
+          );
+        });
+      });
+    });
+  }, [
+    curfewActive,
+    dispatch,
+    logStrings,
+    player.position,
+    surveillanceZone,
+    questActivationSignature,
+    ensureSideQuestProgressTracking,
+  ]);
 
   // Stealth engagement management
   useEffect(() => {
@@ -849,23 +1033,33 @@ const GameController: React.FC = () => {
 
   useEffect(() => {
     if (!currentMapArea) {
+      previousEnemyAreaIdRef.current = null;
       previousEnemiesRef.current = new Map(
         enemies.map((enemy) => [enemy.id, enemy])
       );
       return;
     }
 
-    const currentEnemyMap = new Map(enemies.map((enemy) => [enemy.id, enemy]));
-    if (!reputationSystemsEnabled) {
-      previousEnemiesRef.current = currentEnemyMap;
+    if (previousEnemyAreaIdRef.current !== currentMapArea.id) {
+      previousEnemyAreaIdRef.current = currentMapArea.id;
+      previousEnemiesRef.current = new Map(
+        enemies.map((enemy) => [enemy.id, enemy])
+      );
       return;
     }
 
     const previousEnemies = previousEnemiesRef.current;
+    const currentEnemyMap = new Map(enemies.map((enemy) => [enemy.id, enemy]));
+    const trackableQuests = questsRef.current.filter(isQuestProgressTrackable);
 
-    previousEnemies.forEach((_, enemyId) => {
+    previousEnemies.forEach((previousEnemy, enemyId) => {
       const currentEnemy = currentEnemyMap.get(enemyId);
-      if (!currentEnemy || currentEnemy.health <= 0) {
+      const defeated = previousEnemy.health > 0 && (!currentEnemy || currentEnemy.health <= 0);
+      if (!defeated) {
+        return;
+      }
+
+      if (reputationSystemsEnabled) {
         dispatch(
           purgeWitnessMemories({
             witnessId: enemyId,
@@ -873,10 +1067,40 @@ const GameController: React.FC = () => {
           })
         );
       }
+
+      trackableQuests.forEach((quest) => {
+        quest.objectives.forEach((objective) => {
+          if (!objectiveMatchesEnemy(objective, previousEnemy)) {
+            return;
+          }
+
+          const ledgerToken = `${quest.id}:${objective.id}:${enemyId}`;
+          if (killObjectiveEnemyLedgerRef.current.has(ledgerToken)) {
+            return;
+          }
+
+          killObjectiveEnemyLedgerRef.current.add(ledgerToken);
+          ensureSideQuestProgressTracking(quest);
+          dispatch(
+            updateObjectiveCounter({
+              questId: quest.id,
+              objectiveId: objective.id,
+              count: 1,
+            })
+          );
+        });
+      });
     });
 
+    previousEnemyAreaIdRef.current = currentMapArea.id;
     previousEnemiesRef.current = currentEnemyMap;
-  }, [enemies, currentMapArea, dispatch, reputationSystemsEnabled]);
+  }, [
+    enemies,
+    currentMapArea,
+    dispatch,
+    reputationSystemsEnabled,
+    ensureSideQuestProgressTracking,
+  ]);
 
   useEffect(() => {
     reinforcementsScheduledRef.current = reinforcementsScheduled;
@@ -2247,6 +2471,7 @@ const GameController: React.FC = () => {
 
             const reinforcementEnemy: Enemy = {
               id: uuidv4(),
+              resourceKey: "enemies.corpsec_guard",
               name: logStrings.curfewPatrolName,
               position: { x: player.position.x + 5, y: player.position.y + 2 },
               facing: "west",
@@ -2792,27 +3017,91 @@ const GameController: React.FC = () => {
           return distance <= 1;
         });
 
-        if (!interactiveNpc) {
+        if (interactiveNpc) {
+          const dialogue = dialogues.find(
+            (entry) => entry.id === interactiveNpc.dialogueId
+          );
+
+          if (!dialogue || dialogue.nodes.length === 0) {
+            dispatch(addLogMessage(logStrings.npcNoNewInfo(interactiveNpc.name)));
+            return;
+          }
+
+          const initialNodeId = dialogue.nodes[0].id;
+          dispatch(
+            startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId })
+          );
+          dispatch(
+            addLogMessage(logStrings.npcChannelOpened(interactiveNpc.name))
+          );
+          return;
+        }
+
+        const zoneState = mapAreaId ? surveillanceZoneRef.current ?? surveillanceZone : undefined;
+        const nearbyCamera = zoneState
+          ? Object.values(zoneState.cameras).find((camera) => {
+              return distanceBetween(camera.position, player.position) <= 1.5;
+            })
+          : undefined;
+
+        if (!nearbyCamera || !mapAreaId) {
           dispatch(addLogMessage(logStrings.noFriendlyContact));
           return;
         }
 
-        const dialogue = dialogues.find(
-          (entry) => entry.id === interactiveNpc.dialogueId
-        );
+        const timestamp = Date.now();
+        const alreadyDisabled =
+          typeof nearbyCamera.hackState?.disabledUntil === 'number' &&
+          nearbyCamera.hackState.disabledUntil > timestamp;
 
-        if (!dialogue || dialogue.nodes.length === 0) {
-          dispatch(addLogMessage(logStrings.npcNoNewInfo(interactiveNpc.name)));
+        if (!curfewActive || alreadyDisabled || !nearbyCamera.isActive) {
+          dispatch(addLogMessage(logStrings.cameraSabotageFailed));
           return;
         }
 
-        const initialNodeId = dialogue.nodes[0].id;
         dispatch(
-          startDialogue({ dialogueId: dialogue.id, nodeId: initialNodeId })
+          updateCameraState({
+            areaId: mapAreaId,
+            cameraId: nearbyCamera.id,
+            timestamp,
+            changes: {
+              alertState: CameraAlertState.DISABLED,
+              detectionProgress: 0,
+              trackingPlayer: false,
+              trackingDirection: undefined,
+              lastDetectionTimestamp: undefined,
+              hackState: {
+                ...(nearbyCamera.hackState ?? {}),
+                disabledUntil: timestamp + CAMERA_SABOTAGE_DISABLE_MS,
+              },
+            },
+          })
         );
-        dispatch(
-          addLogMessage(logStrings.npcChannelOpened(interactiveNpc.name))
-        );
+        dispatch(addLogMessage(logStrings.cameraSabotageSuccess));
+
+        const trackableQuests = questsRef.current.filter(isQuestProgressTrackable);
+        trackableQuests.forEach((quest) => {
+          quest.objectives.forEach((objective) => {
+            if (!objectiveMatchesCameraSabotage(objective)) {
+              return;
+            }
+
+            const ledgerToken = `${quest.id}:${objective.id}:${nearbyCamera.id}`;
+            if (sabotageObjectiveLedgerRef.current.has(ledgerToken)) {
+              return;
+            }
+
+            sabotageObjectiveLedgerRef.current.add(ledgerToken);
+            ensureSideQuestProgressTracking(quest);
+            dispatch(
+              updateObjectiveCounter({
+                questId: quest.id,
+                objectiveId: objective.id,
+                count: 1,
+              })
+            );
+          });
+        });
         return;
       }
 
@@ -3008,6 +3297,7 @@ const GameController: React.FC = () => {
             if (spawnPosition) {
               const patrol: Enemy = {
                 id: uuidv4(),
+                resourceKey: "enemies.corpsec_guard",
                 name: logStrings.curfewPatrolName,
                 position: spawnPosition,
                 maxHealth: 30,
@@ -3087,6 +3377,9 @@ const GameController: React.FC = () => {
       activeDialogueId,
       mapConnections,
       dialogues,
+      mapAreaId,
+      surveillanceZone,
+      ensureSideQuestProgressTracking,
       log,
       logStrings,
       attemptMovementStamina,
@@ -3112,7 +3405,6 @@ const GameController: React.FC = () => {
     >
       {/* Remove the combat turn indicator UI from here */}
       {/* {inCombat && ( ... )} */}
-      <GameDebugInspector zoneId={currentMapArea?.zoneId ?? null} />
     </div>
   );
 };

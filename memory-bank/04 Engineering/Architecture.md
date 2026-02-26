@@ -53,12 +53,13 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`PlayerLoadoutPanel.tsx`**: Summarises equipped weapon/armor alongside perk badges inside the character screen.
 - **`PlayerInventoryPanel.tsx`**: Full inventory console with filter tabs, encumbrance telemetry, equipment slot grid, hotbar management, and inline equip/repair/use actions that dispatch Redux inventory reducers.
 - **Inventory data model**: `Player.inventory` now tracks `hotbar` slots alongside `items`, and `Player.equippedSlots`/`activeWeaponSlot` mirror the expanded slot framework (primary/secondary/melee weapons, body armor, helmet, accessories). `Player.encumbrance` persists the derived weight ratio so reducers and UI can apply penalties without recomputing totals each frame.
-- **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, and the viewport reticle, now framed inside the shared HUD tokens (`hudTokens.ts`). The panel sticks to the noir chrome while keeping drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles intact.
+- **`MiniMap.tsx`**: Consumes the layered controller state to render cached tiles, animated waypoint paths, entity/objective markers, and the viewport reticle, now framed inside the shared HUD tokens (`hudTokens.ts`). The panel sticks to the noir chrome while keeping drag/zoom, Shift-waypoint previews, keyboard nudging, and high-contrast/auto-rotate toggles intact; side-quest giver contacts are highlighted via dedicated quest-contact objective rings.
 - **`DayNightIndicator.tsx`**: Surfaces a compact 24-hour digital command clock in the top-right HUD rail, with quantized (low-frequency) display updates for calmer readability.
-- **`LevelIndicator.tsx`**: Floats level metadata and active objectives in the upper-left overlay, pulling data from the current `MapArea`.
+- **`LevelIndicator.tsx`**: Legacy level/objective card component retained in codebase but removed from the player runtime mount path for Level 0 improvement pass GET-171.
+- **`GameDebugInspector.tsx`**: Test-mode debug panel now includes a Mission Snapshot section (level metadata + primary/side objective counters) and is mounted through a single runtime path in `App.tsx`.
 - **`GeorgeAssistant.tsx`**: React HUD console that anchors top-center, presenting a compact status dock and an expandable chat feed while pulling quest, karma, reputation, and personality data straight from Redux.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
-- **`OpsBriefingsPanel.tsx`**: Serves as the quest log, surfacing active objectives with progress counters and listing recently closed missions with their payout summaries.
+- **`OpsBriefingsPanel.tsx`**: Canonical player objective surface for Level 0, driven by `selectOpsBriefingModel` and rendered as Primary Progress + Active Side Quests + Available Side Quests (+ completed overlay).
 
 ## High Level Overview
 > Category: summary  
@@ -310,24 +311,25 @@ flowchart LR
 
 ### Design principles
 
-- Keep the level card and objectives list anchored to the top-center HUD rail so mission metadata is always visible without crowding the playfield.
-- Drive all content from structured selectors (`selectMissionProgress`, `selectPrimaryObjectives`, `selectSideObjectives`) so the React panel remains declarative and mirrors Redux truth without local bookkeeping.
-- Treat mission completion as a formal state transition that can be observed by cinematics, reward flows, and save-game checkpoints rather than ad-hoc UI toggles.
+- Keep a single player-facing mission surface: the bottom-dock Quests panel (`OpsBriefingsPanel`).
+- Keep mission diagnostics in test-mode tooling, not player runtime HUD chrome.
+- Drive player and debug views from shared selectors so objective state cannot drift between surfaces.
 
 ### Technical flow
 
-1. `the-getaway/src/components/ui/LevelIndicator.tsx` renders the level badge plus two ordered lists: primary objectives and optional side quests. Each entry receives `isComplete` from selector output and toggles a `objective-item--complete` class that applies the cross-out/checkbox styling.
-2. `the-getaway/src/store/selectors/missionSelectors.ts` resolves mission progress by combining objective definitions with quest completion state, exposing memoised primary/side arrays, `allPrimaryComplete`, and helper selectors for HUD/assistant consumers.
-3. `the-getaway/src/store/missionSlice.ts` stores the manifest, tracks `pendingAdvance`, and flips `missionAccomplished()` when selectors report that all primary objectives are complete.
-4. `the-getaway/src/game/systems/missionProgression.ts` exports DOM event helpers used by HUD components to broadcast mission completion and level advance requests to Phaser scenes and the assistant.
-5. Confirmation flows call `advanceToNextLevel()` which increments `currentLevel`, hydrates the next level's objective bundles, and resets the panel lists while leaving incomplete side quests in the log until dismissed.
-6. `the-getaway/src/components/system/MissionProgressionManager.tsx` watches mission selectors, dispatches `missionAccomplished` once per completion, and emits `MISSION_ACCOMPLISHED` DOM events for HUD consumers.
-7. `the-getaway/src/components/ui/MissionCompletionOverlay.tsx` shows the Mission Accomplished modal, allows deferral, presents a mission-ready toast, and fires `LEVEL_ADVANCE_REQUESTED` via `emitLevelAdvanceRequestedEvent` when the player opts to continue.
+1. `the-getaway/src/App.tsx` no longer mounts `LevelIndicator` in player runtime and no longer wires the legacy `L` hotkey toggle.
+2. `the-getaway/src/store/selectors/missionSelectors.ts` remains the mission-progress source (`primary`, `side`, `allPrimaryComplete`) for both progression and HUD consumers.
+3. `the-getaway/src/store/selectors/opsBriefingSelectors.ts` builds `selectOpsBriefingModel`, combining mission progress with quest runtime state and quest definitions (`kind`, related NPCs, mission summaries) for a single player-ready view model.
+4. `the-getaway/src/components/ui/OpsBriefingsPanel.tsx` renders `Primary Progress`, `Active Side Quests`, `Available Side Quests`, and completed-history overlay from the selector model.
+5. `the-getaway/src/components/debug/GameDebugInspector.tsx` exposes a test-mode **Mission Snapshot** section (level id/name plus primary/side counters) so objective state remains inspectable after removing the dedicated player level card.
+6. `the-getaway/src/components/GameController.tsx` now owns side-quest progression hooks for kill/device/drone targets (enemy defeat transitions, camera sabotage interaction, and unique drone-waypoint sightings), dispatching `updateObjectiveCounter`; side quests can auto-promote from Available to Active on first valid progress event.
+7. `the-getaway/src/store/questsSlice.ts` (and shared quest-system utility) accepts `explore` objective counter updates so waypoint-based recon objectives progress through the same reducer path as collect/kill counters.
+8. `the-getaway/src/game/controllers/MiniMapController.ts` now composes quest-contact objective markers by merging side-quest definitions (`QUEST_DEFINITION_BY_ID`) with live NPC dialogue IDs, so available/turn-in contacts stay discoverable on-map.
 
-### Pattern: ObjectiveCrossOut
+### Pattern: ObjectiveVisibilityContract
 
-- Cross-out effect leverages a `::after` pseudo-element with a 200 ms width transition so objectives animate cleanly when their quests resolve.
-- Checkbox state is purely cosmetic; assistive text announces "Completed" via `aria-live` for screen-reader parity.
+- Player runtime sees one canonical objective surface (Ops panel), while debug-only mission internals live in the inspector.
+- The same mission/quest selectors back both surfaces, so QA can compare player and debug views without separate logic paths.
 
 ### Pattern: MissionAdvancementContract
 
@@ -373,7 +375,7 @@ flowchart LR
 - Inline views show only current objectives and recent signals; archive states (completed objectives, event history) live in lightweight trays that slide from the same anchor to avoid screen-covering panels.
 - George’s feed is always visible: the chat scrollback captures the last few messages without requiring a toggle or ticker, and the freshest guidance is rendered as the latest chat bubble.
 - George’s assistant messaging must live exclusively in that chat feed—no inline highlight strings or truncated copy outside the log—so UX updates should never reintroduce marquee or header text.
-- Developer instrumentation remains adjacent to the mission rail—the debug inspector parks beneath the Level indicator and stays collapsed by default so production HUD users never see it.
+- Developer instrumentation remains adjacent to the mission rail—the debug inspector sits under the top-left menu control and stays collapsed by default so production HUD users never see it.
 - Debug tooling only mounts when `settings.testMode` is true so the inspector toggle and overlays are completely absent in non-developer sessions.
 
 ### Technical flow

@@ -87,7 +87,7 @@ export const areAllObjectivesCompleted = (quest: Quest): boolean => {
   return quest.objectives.every(objective => objective.isCompleted);
 };
 
-// Update objective count (for collection or kill objectives)
+// Update objective count (for collection, kill, or explore objectives)
 export const updateObjectiveCount = (
   quests: Quest[], 
   questId: string, 
@@ -108,8 +108,8 @@ export const updateObjectiveCount = (
   
   const objective = quests[questIndex].objectives[objectiveIndex];
   
-  // Only update count for collection or kill objectives
-  if (objective.type !== 'collect' && objective.type !== 'kill') {
+  // Only update count for collection, kill, or explore objectives
+  if (objective.type !== 'collect' && objective.type !== 'kill' && objective.type !== 'explore') {
     return quests;
   }
   

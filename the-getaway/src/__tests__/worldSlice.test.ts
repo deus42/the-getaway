@@ -37,6 +37,9 @@ const createTestStore = (preloadedState?: { world: WorldState }) => {
   });
 };
 
+const clockHourToCycleSeconds = (hour: number): number =>
+  Math.floor((hour / 24) * 300);
+
 const createTile = (type: TileType = TileType.FLOOR, overrides: Partial<MapTile> = {}): MapTile => ({
   type,
   position: overrides.position ?? { x: 0, y: 0 },
@@ -179,6 +182,26 @@ describe('worldSlice', () => {
       const world = store.getState().world;
 
       expect(typeof world.curfewActive).toBe('boolean');
+    });
+
+    it('uses 22:00 night start and 06:00 day start for curfew/day-night switch', () => {
+      const store = createTestStore();
+
+      store.dispatch(setGameTime(clockHourToCycleSeconds(21)));
+      expect(store.getState().world.curfewActive).toBe(false);
+      expect(store.getState().world.timeOfDay).toBe('evening');
+
+      store.dispatch(setGameTime(clockHourToCycleSeconds(22)));
+      expect(store.getState().world.curfewActive).toBe(true);
+      expect(store.getState().world.timeOfDay).toBe('night');
+
+      store.dispatch(setGameTime(clockHourToCycleSeconds(5)));
+      expect(store.getState().world.curfewActive).toBe(true);
+      expect(store.getState().world.timeOfDay).toBe('night');
+
+      store.dispatch(setGameTime(clockHourToCycleSeconds(6)));
+      expect(store.getState().world.curfewActive).toBe(false);
+      expect(store.getState().world.timeOfDay).toBe('day');
     });
   });
 

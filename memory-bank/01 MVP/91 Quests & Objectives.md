@@ -39,6 +39,28 @@ Side Quests & Optional Tasks
 - Completing or abandoning side quests has no effect on the Mission Accomplished gate; however, they can grant bonuses, reputation shifts, or alternate dialogue in the next level's intro sequences to reward thorough players.
 - Optional quest metadata includes recommended level and originating faction so the assistant and logbook can surface the most relevant detours without overwhelming the player during critical objectives.
 
+### Rule: player_surface
+
+Canonical Player Objective Surface (Level 0 MVP)
+
+- The player-facing objective UI is the **Quests panel** (`OpsBriefingsPanel`) and is structured as:
+  - **Primary Progress** (mission-level completion state),
+  - **Active Side Quests** (started + not completed),
+  - **Available Side Quests** (visible from start, not yet accepted),
+  - **Completed Quests** (history overlay).
+- The former dedicated Level HUD card is not part of the player runtime path for this pass; objective debugging is provided in test mode via the Debug Panel Mission Snapshot.
+- Available side quests surface giver attribution (`Talk to <NPC>`) and mission summary copy so players can decide what to pull next without opening dialogue first.
+
+### Rule: side_progression_plumbing
+
+Level 0 Side Quest Progression Contracts
+
+- Side-quest progression can begin from the **Available** pool (no hard dialogue prerequisite): on first valid objective progress event, the quest is promoted into Active automatically.
+- Enemy defeat progression updates side-quest `kill` objectives deterministically and counts each enemy id only once per objective.
+- Camera sabotage progression updates `devices.surveillance_camera` objectives when the player presses `E` near a valid active camera (NPC interaction keeps priority when both are available).
+- Drone recon progression updates `devices.patrol_drone` objectives on unique waypoint sightings using `${cameraId}:${currentWaypointIndex}` tokens while the drone is active and not in `ALARMED` state.
+- Surveillance-dependent side objectives are curfew-window tasks (22:00-06:00) and must communicate this explicitly in objective copy/log feedback.
+
 **Status:** ⚠️ PARTIAL - HUD scaffold exists; objective gating and mission celebration flow targeted for Step 35.2.
 
 Quest Structure & Journal

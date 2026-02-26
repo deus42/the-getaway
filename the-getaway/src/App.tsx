@@ -6,7 +6,6 @@ import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
 import DayNightIndicator from "./components/ui/DayNightIndicator";
 import MiniMap from "./components/ui/MiniMap";
 import TacticalPanel from "./components/ui/TacticalPanel";
-import LevelIndicator from "./components/ui/LevelIndicator";
 import GeorgeAssistant from "./components/ui/GeorgeAssistant";
 import DialogueOverlay from "./components/ui/DialogueOverlay";
 import OpsBriefingsPanel from "./components/ui/OpsBriefingsPanel";
@@ -158,8 +157,6 @@ interface CommandShellProps {
   onToggleCharacter: () => void;
   showMenu: boolean;
   characterOpen: boolean;
-  levelPanelCollapsed: boolean;
-  onToggleLevelPanel: () => void;
   hudLayoutPreset: HudLayoutPreset;
 }
 
@@ -168,8 +165,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
   onToggleCharacter,
   showMenu,
   characterOpen,
-  levelPanelCollapsed,
-  onToggleLevelPanel,
   hudLayoutPreset,
 }) => {
   const locale = useSelector((state: RootState) => state.settings.locale);
@@ -312,10 +307,6 @@ const CommandShell: React.FC<CommandShellProps> = ({
             <span style={menuPanelLabelStyle}>{uiStrings.shell.menuButton}</span>
             <span style={menuPanelGlyphStyle}>ESC</span>
           </button>
-          <LevelIndicator
-            collapsed={levelPanelCollapsed}
-            onToggle={onToggleLevelPanel}
-          />
           {testMode ? (
             <GameDebugInspector zoneId={zoneId} rendererInfo={rendererMeta} />
           ) : null}
@@ -438,7 +429,6 @@ function AppShell() {
   const [showPerkSelection, setShowPerkSelection] = useState(false);
   const [levelUpFlowActive, setLevelUpFlowActive] = useState(false);
   const [showPointAllocation, setShowPointAllocation] = useState(false);
-  const [levelPanelCollapsed, setLevelPanelCollapsed] = useState(true);
   const hudLayoutPreset = useSelector(selectHudLayoutPreset);
   const reputationSystemsEnabled = useSelector(
     (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
@@ -542,9 +532,6 @@ function AppShell() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key.toLowerCase() === 'c' && gameStarted && !showMenu && !showCharacterCreation) {
         setShowCharacterScreen((prev) => !prev);
-      }
-      if (event.key.toLowerCase() === 'l' && gameStarted && !showMenu && !showCharacterCreation) {
-        setLevelPanelCollapsed((prev) => !prev);
       }
     };
 
@@ -778,8 +765,6 @@ function AppShell() {
             onToggleCharacter={handleToggleCharacterScreen}
             showMenu={showMenu}
             characterOpen={showCharacterScreen}
-            levelPanelCollapsed={levelPanelCollapsed}
-            onToggleLevelPanel={() => setLevelPanelCollapsed((prev) => !prev)}
             hudLayoutPreset={hudLayoutPreset}
           />
         )}

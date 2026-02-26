@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from '../../store';
 import { selectZoneHeat, selectLeadingWitnessMemories } from '../../store/selectors/suspicionSelectors';
 import { selectParanoiaSnapshot, selectParanoiaState } from '../../store/selectors/paranoiaSelectors';
+import { selectMissionProgress } from '../../store/selectors/missionSelectors';
 import {
   selectReputationHeatmapEnabled,
   selectInspectorTargetId,
@@ -12,7 +13,12 @@ import {
 } from '../../store/selectors/reputationSelectors';
 import { toggleReputationHeatmap, setInspectorTarget, ingestReputationEvent } from '../../store/reputationSlice';
 import { setGameTime } from '../../store/worldSlice';
-import { DEFAULT_DAY_NIGHT_CONFIG, getClockTime24 } from '../../game/world/dayNightCycle';
+import {
+  DEFAULT_DAY_NIGHT_CONFIG,
+  DAY_START_HOUR,
+  NIGHT_START_HOUR,
+  getClockTime24,
+} from '../../game/world/dayNightCycle';
 
 type Props = {
   zoneId: string | null | undefined;
@@ -52,8 +58,8 @@ const formatCycleClock = (seconds: number): string => {
 const clockHourToCycleSeconds = (hour: number): number =>
   Math.floor((hour / 24) * DEFAULT_DAY_NIGHT_CONFIG.cycleDuration);
 
-const DEBUG_DAY_SECONDS = clockHourToCycleSeconds(6);
-const DEBUG_NIGHT_SECONDS = clockHourToCycleSeconds(22);
+const DEBUG_DAY_SECONDS = clockHourToCycleSeconds(DAY_START_HOUR);
+const DEBUG_NIGHT_SECONDS = clockHourToCycleSeconds(NIGHT_START_HOUR);
 
 const sectionTitleStyle: React.CSSProperties = {
   fontSize: '0.64rem',
@@ -188,10 +194,11 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const topTraits = useSelector((state: RootState) =>
     traitsSelector ? traitsSelector(state) : EMPTY_TOP_TRAITS
   );
-  type SectionKey = 'renderer' | 'time' | 'suspicion' | 'reputation' | 'paranoia';
+  type SectionKey = 'renderer' | 'time' | 'mission' | 'suspicion' | 'reputation' | 'paranoia';
   const [sectionCollapsed, setSectionCollapsed] = useState<Record<SectionKey, boolean>>({
     renderer: false,
     time: false,
+    mission: false,
     suspicion: false,
     reputation: false,
     paranoia: false,
@@ -199,6 +206,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const sectionLabels: Record<SectionKey, string> = {
     renderer: 'Renderer diagnostics',
     time: 'Time/lighting debug',
+    mission: 'Mission snapshot',
     suspicion: 'Suspicion snapshot',
     reputation: 'Reputation debug',
     paranoia: 'Paranoia debug',
@@ -237,6 +245,7 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
   const leading = useSelector((state: RootState) => leadingSelector(state));
   const paranoia = useSelector((state: RootState) => selectParanoiaState(state));
   const snapshot = useSelector(selectParanoiaSnapshot);
+  const missionProgress = useSelector(selectMissionProgress);
   const worldTime = useSelector((state: RootState) => state.world.currentTime);
   const worldTimeOfDay = useSelector((state: RootState) => state.world.timeOfDay);
 
@@ -384,6 +393,60 @@ const GameDebugInspector: React.FC<Props> = ({ zoneId, rendererInfo }) => {
               )}
             </>
           ), 'time')}
+
+          {renderSection('mission', 'Mission Snapshot', () => (
+            <>
+              {missionProgress ? (
+                <div style={{ display: 'grid', gap: '0.42rem' }}>
+                  <div style={metricRowStyle}>
+                    <span>Level</span>
+                    <strong>{missionProgress.level} · {missionProgress.name}</strong>
+                  </div>
+                  <div style={{ fontSize: '0.64rem', textTransform: 'uppercase', letterSpacing: '0.16em', color: 'rgba(125, 211, 252, 0.9)' }}>
+                    Primary Objectives
+                  </div>
+                  {missionProgress.primary.length > 0 ? (
+                    <ul style={listStyle}>
+                      {missionProgress.primary.map((objective) => (
+                        <li key={objective.id} style={pillStyle}>
+                          <div style={{ fontSize: '0.7rem', marginBottom: '0.15rem' }}>{objective.label}</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.64rem', opacity: 0.8 }}>
+                            <span>{objective.completedQuests}/{objective.totalQuests}</span>
+                            <span>{objective.isComplete ? 'complete' : 'in progress'}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div style={{ fontSize: '0.68rem', opacity: 0.65 }}>No primary objectives mapped.</div>
+                  )}
+
+                  <div style={{ fontSize: '0.64rem', textTransform: 'uppercase', letterSpacing: '0.16em', color: 'rgba(196, 181, 253, 0.92)' }}>
+                    Side Objectives
+                  </div>
+                  {missionProgress.side.length > 0 ? (
+                    <ul style={listStyle}>
+                      {missionProgress.side.map((objective) => (
+                        <li key={objective.id} style={pillStyle}>
+                          <div style={{ fontSize: '0.7rem', marginBottom: '0.15rem' }}>{objective.label}</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.64rem', opacity: 0.8 }}>
+                            <span>{objective.completedQuests}/{objective.totalQuests}</span>
+                            <span>{objective.isComplete ? 'complete' : 'in progress'}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <div style={{ fontSize: '0.68rem', opacity: 0.65 }}>No side objectives mapped.</div>
+                  )}
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.7rem', opacity: 0.65 }}>
+                  No active mission manifest.
+                </div>
+              )}
+            </>
+          ), 'mission')}
 
           {reputationSystemsEnabled && renderSection('suspicion', `Suspicion Snapshot · ${resolvedZoneId}`, () => (
             <>

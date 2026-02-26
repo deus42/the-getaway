@@ -87,6 +87,7 @@ const isPositionInsideBuildingFootprint = (area: MapArea, position: Position): b
 
 const buildEnemy = (name: string): Enemy => ({
   id: uuidv4(),
+  resourceKey: 'enemies.corpsec_guard',
   name,
   position: { x: 34, y: 24 },
   facing: 'west',

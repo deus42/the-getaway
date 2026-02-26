@@ -63,6 +63,9 @@ export interface LogStrings {
   stealthUnavailableDialogue: string;
   stealthCooldown: (seconds: number) => string;
   stealthNoiseCue: string;
+  cameraSabotageSuccess: string;
+  cameraSabotageFailed: string;
+  droneReconWaypointLogged: (progress: number, total: number) => string;
 }
 
 interface SystemStrings {
@@ -143,6 +146,11 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       stealthUnavailableDialogue: 'Finish the conversation before slipping back into stealth.',
       stealthCooldown: (seconds) => `Stealth recalibrating (${seconds}s).`,
       stealthNoiseCue: 'Noise spike detected. Sprinting is exposing your position.',
+      cameraSabotageSuccess: 'Camera sabotaged. Feed looped for two minutes.',
+      cameraSabotageFailed:
+        'Camera sabotage failed. Move next to an active camera during curfew (22:00-06:00).',
+      droneReconWaypointLogged: (progress, total) =>
+        `Drone route waypoint logged (${progress}/${total}).`,
     },
   },
   uk: {
@@ -218,6 +226,11 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       stealthUnavailableDialogue: 'Спершу завершіть діалог, тоді повертайтесь у стелс.',
       stealthCooldown: (seconds) => `Стелс перезаряджається (${seconds} с).`,
       stealthNoiseCue: 'Сплеск шуму. Біг видає вашу позицію.',
+      cameraSabotageSuccess: 'Камеру зламано. Канал зациклиться на дві хвилини.',
+      cameraSabotageFailed:
+        'Саботаж камери не вдався. Підійдіть впритул до активної камери під час комендантської години (22:00-06:00).',
+      droneReconWaypointLogged: (progress, total) =>
+        `Маршрут дрона зафіксовано (${progress}/${total}).`,
     },
   },
 };

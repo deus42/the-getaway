@@ -69,7 +69,7 @@ describe('selectAmbientWorldSnapshot', () => {
     const store = createTestStore();
 
     store.dispatch(setEnvironmentFlags({ curfewLevel: 2 }));
-    store.dispatch(setGameTime(150));
+    store.dispatch(setGameTime(275));
 
     const preset = getWeatherPresetForCurfewLevel(2);
     const { world } = store.getState();

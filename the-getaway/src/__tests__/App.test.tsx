@@ -123,7 +123,7 @@ describe("App component", () => {
     await waitFor(() => expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument());
   });
 
-  it('renders the HUD menu control with Level Panel styling and interactions', async () => {
+  it('renders the HUD menu control and does not expose legacy level panel toggles', async () => {
     render(<App />);
 
     fireEvent.click(await screen.findByTestId('start-new-game'));
@@ -143,9 +143,10 @@ describe("App component", () => {
     expect(menuButton.style.transform).toBe('translateY(0)');
     expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow)');
 
-    const levelInfoToggle = screen.getByRole('button', { name: /slums/i });
+    const levelInfoToggle = screen.queryByRole('button', { name: /slums/i });
     const widthBeforeToggle = menuButton.style.width;
-    fireEvent.click(levelInfoToggle);
+    expect(levelInfoToggle).toBeNull();
+    fireEvent.keyDown(document, { key: 'l' });
     await waitFor(() => expect(menuButton.style.width).toBe(widthBeforeToggle));
 
     fireEvent.focus(menuButton);

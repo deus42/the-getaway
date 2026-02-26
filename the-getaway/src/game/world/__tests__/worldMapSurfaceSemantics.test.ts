@@ -56,4 +56,24 @@ describe('world map surface semantics', () => {
     const blocked = inBounds.filter(({ x, y }) => !slumsArea.tiles[y]?.[x]?.isWalkable);
     expect(blocked).toEqual([]);
   });
+
+  it('keeps Firebrand Juno inside map bounds so her quest is discoverable', () => {
+    const { slumsArea } = buildWorldResources({ locale: 'en' });
+    const juno = slumsArea.entities.npcs.find(
+      (npc) => npc.dialogueId === 'npc_firebrand_juno'
+    );
+
+    expect(juno).toBeDefined();
+    if (!juno) {
+      return;
+    }
+
+    expect(juno.position.x).toBeGreaterThanOrEqual(0);
+    expect(juno.position.x).toBeLessThan(slumsArea.width);
+    expect(juno.position.y).toBeGreaterThanOrEqual(0);
+    expect(juno.position.y).toBeLessThan(slumsArea.height);
+    expect(slumsArea.tiles[juno.position.y]?.[juno.position.x]?.isWalkable).toBe(
+      true
+    );
+  });
 });

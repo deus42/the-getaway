@@ -1,5 +1,16 @@
 import type { RootState } from '../../store';
-import type { MapArea, Enemy, NPC, Item, Position, CameraRuntimeState } from '../interfaces/types';
+import type {
+  MapArea,
+  Enemy,
+  NPC,
+  Item,
+  Position,
+  CameraRuntimeState,
+  Quest,
+} from '../interfaces/types';
+import type { Locale } from '../../content/locales';
+import { getNarrativeLocaleBundle } from '../../content/locales';
+import { QUEST_DEFINITION_BY_ID } from '../../content/quests';
 import type { MainScene } from '../scenes/MainScene';
 import {
   MiniMapRenderState,
@@ -36,8 +47,17 @@ const createEntitySignature = (enemies: Enemy[], npcs: NPC[], playerId: string |
 
 const createObjectiveSignature = (objectives: MiniMapObjectiveDetail[]): string =>
   objectives
-    .map((objective) => `${objective.id}:${objective.x}:${objective.y}:${objective.status}`)
+    .map(
+      (objective) =>
+        `${objective.id}:${objective.x}:${objective.y}:${objective.status}:${objective.markerKind ?? 'item'}`
+    )
     .join('|');
+
+const npcResourceKeyToDialogueId = (resourceKey: string): string =>
+  `npc_${resourceKey.split('.').slice(1).join('_')}`;
+
+const hasIncompleteTalkObjective = (quest: Quest): boolean =>
+  quest.objectives.some((objective) => objective.type === 'talk' && !objective.isCompleted);
 
 const getDevicePixelRatio = (): number => {
   if (typeof window === 'undefined') {
@@ -205,6 +225,8 @@ export class MiniMapController {
     const enemies = rootState.world.currentMapArea.entities.enemies;
     const npcs = rootState.world.currentMapArea.entities.npcs;
     const items = rootState.world.currentMapArea.entities.items;
+    const quests = rootState.quests.quests;
+    const locale = rootState.settings.locale;
     const surveillanceZone = rootState.surveillance.zones[area.id];
 
     const entitySignature = createEntitySignature(enemies, npcs, player.id, player.position.x, player.position.y);
@@ -234,7 +256,7 @@ export class MiniMapController {
     const normalizedViewport = normalizeMiniMapViewport(baseViewport, area);
     this.viewport = normalizedViewport;
 
-    const objectiveMarkers = this.buildObjectives(items);
+    const objectiveMarkers = this.buildObjectives(items, npcs, quests, locale);
     const objectivesSignature = createObjectiveSignature(objectiveMarkers);
 
     const pathSignature = path && path.length
@@ -348,16 +370,75 @@ export class MiniMapController {
       .join('|');
   }
 
-  private buildObjectives(items: Item[]): MiniMapObjectiveDetail[] {
-    return items
+  private buildObjectives(
+    items: Item[],
+    npcs: NPC[],
+    quests: Quest[],
+    locale: Locale
+  ): MiniMapObjectiveDetail[] {
+    const itemObjectives = items
       .filter((item): item is Item & { position: Position } => Boolean(item.position))
       .map((item) => ({
         id: item.id,
         label: item.name,
         x: item.position!.x,
         y: item.position!.y,
-        status: 'active',
+        status: 'active' as const,
+        markerKind: 'item' as const,
       }));
+
+    const localeBundle = getNarrativeLocaleBundle(locale);
+    const contactObjectives = new Map<string, MiniMapObjectiveDetail>();
+
+    quests.forEach((quest) => {
+      if (quest.isCompleted) {
+        return;
+      }
+
+      const definition = QUEST_DEFINITION_BY_ID[quest.id];
+      if (!definition || definition.kind !== 'side') {
+        return;
+      }
+
+      const shouldHighlightContact =
+        !quest.isActive || hasIncompleteTalkObjective(quest);
+      if (!shouldHighlightContact) {
+        return;
+      }
+
+      const giverKey = definition.relatedNpcKeys?.[0];
+      if (!giverKey) {
+        return;
+      }
+
+      const expectedDialogueId = npcResourceKeyToDialogueId(giverKey);
+      const localizedName = localeBundle.npcs[giverKey]?.name ?? null;
+      const matchingNpc = npcs.find(
+        (npc) =>
+          npc.dialogueId === expectedDialogueId ||
+          (localizedName ? npc.name === localizedName : false)
+      );
+
+      if (!matchingNpc) {
+        return;
+      }
+
+      const markerId = `quest-contact:${matchingNpc.id}`;
+      if (contactObjectives.has(markerId)) {
+        return;
+      }
+
+      contactObjectives.set(markerId, {
+        id: markerId,
+        label: matchingNpc.name,
+        x: matchingNpc.position.x,
+        y: matchingNpc.position.y,
+        status: 'active',
+        markerKind: 'questContact',
+      });
+    });
+
+    return [...itemObjectives, ...contactObjectives.values()];
   }
 
   private resolveDirtyLayers(params: {

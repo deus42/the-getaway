@@ -101,7 +101,7 @@ export const questsSlice = createSlice({
       
       if (quest) {
         const objective = quest.objectives.find(o => o.id === objectiveId);
-        if (objective && (objective.type === 'collect' || objective.type === 'kill')) {
+        if (objective && (objective.type === 'collect' || objective.type === 'kill' || objective.type === 'explore')) {
           // Clamp counter to target count to prevent overflow
           const targetCount = objective.count || 1;
           const newCount = (objective.currentCount || 0) + count;

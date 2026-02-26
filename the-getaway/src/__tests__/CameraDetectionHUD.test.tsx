@@ -51,7 +51,7 @@ describe('CameraDetectionHUD', () => {
 
   it('shows daytime inactive cue when zone cameras exist but none are active', () => {
     act(() => {
-      store.dispatch(setGameTime(45));
+      store.dispatch(setGameTime(90));
     });
     seedSingleCamera({ isActive: false });
 

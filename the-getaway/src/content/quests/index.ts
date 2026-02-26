@@ -48,3 +48,9 @@ export const QUEST_DEFINITION_BY_KEY: Record<QuestResourceKey, QuestDefinition> 
     acc[definition.resourceKey] = definition;
     return acc;
   }, {} as Record<QuestResourceKey, QuestDefinition>);
+
+export const QUEST_DEFINITION_BY_ID: Record<string, QuestDefinition> =
+  definitions.reduce<Record<string, QuestDefinition>>((acc, definition) => {
+    acc[definition.id] = definition;
+    return acc;
+  }, {});

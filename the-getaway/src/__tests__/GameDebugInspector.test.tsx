@@ -1,6 +1,6 @@
 import { Provider } from 'react-redux';
 import { Store, createStore } from 'redux';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import GameDebugInspector from '../components/debug/GameDebugInspector';
 import { store as appStore } from '../store';
 import type { RootState } from '../store';
@@ -95,5 +95,14 @@ describe('GameDebugInspector gating', () => {
   it('renders the toggle when test mode is enabled', () => {
     renderWithStore({ testMode: true });
     expect(screen.getByText(/Show Debug Panel/i)).toBeInTheDocument();
+  });
+
+  it('shows mission snapshot details in debug mode', () => {
+    renderWithStore({ testMode: true });
+    fireEvent.click(screen.getByText(/Show Debug Panel/i));
+
+    expect(screen.getByText(/Mission Snapshot/i)).toBeInTheDocument();
+    expect(screen.getByText(/Primary Objectives/i)).toBeInTheDocument();
+    expect(screen.getByText(/Side Objectives/i)).toBeInTheDocument();
   });
 });

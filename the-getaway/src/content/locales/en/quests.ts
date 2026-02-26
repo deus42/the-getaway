@@ -29,7 +29,8 @@ export const questLocalesEn: QuestLocaleMap = {
     name: 'Camera Blackout',
     description: 'Firebrand Juno wants Downtown surveillance cameras disabled to create movement corridors.',
     objectiveDescriptions: {
-      'sabotage-cameras': 'Destroy 3 surveillance cameras in Downtown.',
+      'sabotage-cameras':
+        'Sabotage 3 active surveillance cameras during curfew (22:00-06:00). Press E while adjacent.',
       'report-juno': 'Report back to Firebrand Juno.',
     },
   },
@@ -37,7 +38,8 @@ export const questLocalesEn: QuestLocaleMap = {
     name: 'Drone Route Surveillance',
     description: 'Kesh needs patrol drone route data to identify security gaps.',
     objectiveDescriptions: {
-      'observe-patrols': 'Observe 3 drone patrol circuits in Downtown without being detected.',
+      'observe-patrols':
+        'During curfew (22:00-06:00), shadow a patrol drone and log 3 unique waypoints.',
       'deliver-intel': 'Deliver the route data to Drone Handler Kesh.',
     },
   },

@@ -1,6 +1,10 @@
 // Time of day options
 export type TimeOfDay = 'morning' | 'day' | 'evening' | 'night';
 
+export const DAY_START_HOUR = 6;
+export const EVENING_START_HOUR = 18;
+export const NIGHT_START_HOUR = 22;
+
 // Day night cycle configuration
 export interface DayNightConfig {
   cycleDuration: number; // Full cycle duration in seconds
@@ -11,14 +15,17 @@ export interface DayNightConfig {
   eveningStartTime: number; // 0-1 representing cycle percentage
 }
 
-// Default day night cycle (5 minutes total, 2.5 min day, 2.5 min night)
+// Default day/night cycle aligned with gameplay boundaries:
+// - Day starts at 06:00
+// - Night starts at 22:00
 export const DEFAULT_DAY_NIGHT_CONFIG: DayNightConfig = {
   cycleDuration: 300, // 5 minutes in seconds
   timeMultiplier: 1,
-  morningStartTime: 0, // Morning starts at 0% of cycle
-  dayStartTime: 0.1, // Day starts at 10% of cycle
-  eveningStartTime: 0.4, // Evening starts at 40% of cycle
-  dayEndTime: 0.5, // Night starts at 50% of cycle
+  // Keep morning/day boundary collapsed so 00:00-05:59 remains night.
+  morningStartTime: DAY_START_HOUR / 24,
+  dayStartTime: DAY_START_HOUR / 24,
+  eveningStartTime: EVENING_START_HOUR / 24,
+  dayEndTime: NIGHT_START_HOUR / 24,
 };
 
 // Get the current time of day
@@ -260,8 +267,19 @@ export const isCurfewTime = (
   currentTime: number,
   config: DayNightConfig = DEFAULT_DAY_NIGHT_CONFIG
 ): boolean => {
-  const { hour } = getClockTime24(currentTime, config);
-  return hour >= 22 || hour < 6;
+  const { totalMinutes } = getClockTime24(currentTime, config);
+  const curfewStartMinutes = Math.floor(config.dayEndTime * 24 * 60);
+  const curfewEndMinutes = Math.floor(config.dayStartTime * 24 * 60);
+
+  if (curfewStartMinutes === curfewEndMinutes) {
+    return false;
+  }
+
+  if (curfewStartMinutes > curfewEndMinutes) {
+    return totalMinutes >= curfewStartMinutes || totalMinutes < curfewEndMinutes;
+  }
+
+  return totalMinutes >= curfewStartMinutes && totalMinutes < curfewEndMinutes;
 };
 
 // Update game time based on real elapsed time

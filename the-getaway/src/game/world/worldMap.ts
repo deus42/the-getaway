@@ -412,7 +412,7 @@ const createCityArea = (
 
   const itemSpawnSeeds = coverSpotsOnWalkableTiles.length
     ? coverSpotsOnWalkableTiles
-    : [{ x: 32, y: 74 }, { x: 84, y: 28 }, { x: 54, y: 64 }];
+    : [{ x: 32, y: 68 }, { x: 84, y: 28 }, { x: 54, y: 64 }];
 
   itemBlueprints.forEach((itemBlueprint, index) => {
     const seed = itemSpawnSeeds[index % itemSpawnSeeds.length];

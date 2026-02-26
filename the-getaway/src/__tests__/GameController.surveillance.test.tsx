@@ -4,9 +4,16 @@ import { act, fireEvent, render, waitFor } from '@testing-library/react';
 import GameController from '../components/GameController';
 import { store, resetGame } from '../store';
 import { initializeZoneSurveillance } from '../game/systems/surveillance/cameraSystem';
-import { setStealthState } from '../store/playerSlice';
-import { requestStealthToggle, setEngagementMode, updateEnemy } from '../store/worldSlice';
-import { AlertLevel } from '../game/interfaces/types';
+import { initializeCharacter, setPlayerData, setStealthState } from '../store/playerSlice';
+import {
+  NIGHT_START_SECONDS,
+  requestStealthToggle,
+  setEngagementMode,
+  setGameTime,
+  updateEnemy,
+} from '../store/worldSlice';
+import { updateCameraState } from '../store/surveillanceSlice';
+import { AlertLevel, CameraAlertState } from '../game/interfaces/types';
 
 jest.mock('../components/debug/GameDebugInspector', () => () => null);
 
@@ -38,6 +45,16 @@ const restoreFrameSpies = (
 ) => {
   rafSpy.mockRestore();
   cancelRafSpy.mockRestore();
+};
+
+const TEST_CHARACTER_SKILLS = {
+  strength: 5,
+  perception: 5,
+  endurance: 5,
+  charisma: 5,
+  intelligence: 5,
+  agility: 5,
+  luck: 5,
 };
 
 const setFirstEnemyAlert = (alertLevel: AlertLevel, alertProgress: number) => {
@@ -242,6 +259,519 @@ describe('GameController surveillance and stealth fairness', () => {
       });
     } finally {
       document.body.removeChild(focusGuard);
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
+
+  test('prioritizes NPC dialogue over camera sabotage when both are in range', async () => {
+    const initialState = store.getState();
+    const { currentMapArea, timeOfDay } = initialState.world;
+
+    initializeZoneSurveillance({
+      area: currentMapArea,
+      timeOfDay,
+      dispatch: store.dispatch,
+      timestamp: Date.now(),
+    });
+
+    const interactiveNpc = currentMapArea.entities.npcs.find(
+      (npc) => npc.isInteractive && Boolean(npc.dialogueId)
+    );
+    expect(interactiveNpc).toBeDefined();
+
+    if (!interactiveNpc) {
+      return;
+    }
+
+    const zone = store.getState().surveillance.zones[currentMapArea.id];
+    const firstCamera = Object.values(zone.cameras)[0];
+    expect(firstCamera).toBeDefined();
+
+    if (!firstCamera) {
+      return;
+    }
+
+    act(() => {
+      store.dispatch(
+        setPlayerData({
+          ...store.getState().player.data,
+          position: {
+            x: interactiveNpc.position.x,
+            y: interactiveNpc.position.y + 1,
+          },
+        })
+      );
+      store.dispatch(
+        updateCameraState({
+          areaId: currentMapArea.id,
+          cameraId: firstCamera.id,
+          timestamp: Date.now(),
+          changes: {
+            position: { ...interactiveNpc.position },
+            isActive: true,
+            alertState: CameraAlertState.IDLE,
+            hackState: {},
+          },
+        })
+      );
+    });
+
+    const { getByTestId, unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      fireEvent.keyDown(getByTestId('game-controller'), { key: 'e', code: 'KeyE' });
+
+      await waitFor(() => {
+        const state = store.getState();
+        expect(state.quests.activeDialogue.dialogueId).toBe(interactiveNpc.dialogueId);
+      });
+
+      const cameraAfter = store.getState().surveillance.zones[currentMapArea.id]?.cameras[firstCamera.id];
+      expect(cameraAfter?.hackState?.disabledUntil).toBeUndefined();
+    } finally {
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
+
+  test('sabotages nearby camera with E and increments sabotage objective progress', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(100_000);
+    store.dispatch(setGameTime(NIGHT_START_SECONDS));
+
+    const initialState = store.getState();
+    const { currentMapArea, timeOfDay } = initialState.world;
+
+    initializeZoneSurveillance({
+      area: currentMapArea,
+      timeOfDay,
+      dispatch: store.dispatch,
+      timestamp: Date.now(),
+    });
+
+    const zone = store.getState().surveillance.zones[currentMapArea.id];
+    const camera = Object.values(zone.cameras)[0];
+    expect(camera).toBeDefined();
+
+    if (!camera) {
+      return;
+    }
+
+    act(() => {
+      store.dispatch(
+        setPlayerData({
+          ...store.getState().player.data,
+          position: { x: 1, y: 1 },
+        })
+      );
+      store.dispatch(
+        updateCameraState({
+          areaId: currentMapArea.id,
+          cameraId: camera.id,
+          timestamp: Date.now(),
+          changes: {
+            position: { x: 2, y: 1 },
+            isActive: true,
+            alertState: CameraAlertState.IDLE,
+            hackState: {},
+          },
+        })
+      );
+    });
+
+    const { getByTestId, unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      fireEvent.keyDown(getByTestId('game-controller'), { key: 'e', code: 'KeyE' });
+
+      await waitFor(() => {
+        const quest = store
+          .getState()
+          .quests.quests.find((entry) => entry.id === 'quest_equipment_sabotage');
+        const sabotageObjective = quest?.objectives.find((objective) => objective.id === 'sabotage-cameras');
+        expect(quest?.isActive).toBe(true);
+        expect(sabotageObjective?.currentCount).toBe(1);
+      });
+
+      const updatedCamera = store.getState().surveillance.zones[currentMapArea.id]?.cameras[camera.id];
+      expect(updatedCamera?.hackState?.disabledUntil).toBe(220_000);
+    } finally {
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
+
+  test('blocks camera sabotage outside curfew window', async () => {
+    store.dispatch(setGameTime(NIGHT_START_SECONDS - 1));
+
+    const initialState = store.getState();
+    const { currentMapArea, timeOfDay } = initialState.world;
+
+    initializeZoneSurveillance({
+      area: currentMapArea,
+      timeOfDay,
+      dispatch: store.dispatch,
+      timestamp: Date.now(),
+    });
+
+    const zone = store.getState().surveillance.zones[currentMapArea.id];
+    const camera = Object.values(zone.cameras)[0];
+    expect(camera).toBeDefined();
+
+    if (!camera) {
+      return;
+    }
+
+    act(() => {
+      store.dispatch(
+        setPlayerData({
+          ...store.getState().player.data,
+          position: { x: 1, y: 1 },
+        })
+      );
+      store.dispatch(
+        updateCameraState({
+          areaId: currentMapArea.id,
+          cameraId: camera.id,
+          timestamp: Date.now(),
+          changes: {
+            position: { x: 2, y: 1 },
+            isActive: true,
+            alertState: CameraAlertState.IDLE,
+            hackState: {},
+          },
+        })
+      );
+    });
+
+    const { getByTestId, unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      fireEvent.keyDown(getByTestId('game-controller'), { key: 'e', code: 'KeyE' });
+
+      await waitFor(() => {
+        const quest = store
+          .getState()
+          .quests.quests.find((entry) => entry.id === 'quest_equipment_sabotage');
+        const sabotageObjective = quest?.objectives.find(
+          (objective) => objective.id === 'sabotage-cameras'
+        );
+        expect(quest?.isActive).toBe(false);
+        expect(sabotageObjective?.currentCount ?? 0).toBe(0);
+      });
+
+      const updatedCamera = store.getState().surveillance.zones[currentMapArea.id]?.cameras[camera.id];
+      expect(updatedCamera?.hackState?.disabledUntil).toBeUndefined();
+    } finally {
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
+
+  test('increments kill objective when a matching enemy is defeated', async () => {
+    const { unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      const enemy = store.getState().world.currentMapArea.entities.enemies[0];
+      expect(enemy).toBeDefined();
+
+      if (!enemy) {
+        return;
+      }
+
+      act(() => {
+        store.dispatch(
+          updateEnemy({
+            ...enemy,
+            health: 0,
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const quest = store
+          .getState()
+          .quests.quests.find((entry) => entry.id === 'quest_combat_patrol');
+        const objective = quest?.objectives.find((entry) => entry.id === 'defeat-corpsec');
+        expect(quest?.isActive).toBe(true);
+        expect(objective?.currentCount).toBe(1);
+      });
+    } finally {
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
+
+  test('counts unique drone waypoint sightings for drone recon objective', async () => {
+    store.dispatch(setGameTime(NIGHT_START_SECONDS));
+    const initialState = store.getState();
+    const { currentMapArea, timeOfDay } = initialState.world;
+
+    initializeZoneSurveillance({
+      area: currentMapArea,
+      timeOfDay,
+      dispatch: store.dispatch,
+      timestamp: Date.now(),
+    });
+
+    const zone = store.getState().surveillance.zones[currentMapArea.id];
+    const drone = Object.values(zone.cameras).find((camera) => camera.type === 'drone');
+    expect(drone).toBeDefined();
+
+    if (!drone) {
+      return;
+    }
+
+    act(() => {
+      store.dispatch(
+        setPlayerData({
+          ...store.getState().player.data,
+          position: { ...drone.position },
+        })
+      );
+      store.dispatch(
+        updateCameraState({
+          areaId: currentMapArea.id,
+          cameraId: drone.id,
+          timestamp: Date.now(),
+          changes: {
+            alertState: CameraAlertState.SUSPICIOUS,
+            currentWaypointIndex: 0,
+          },
+        })
+      );
+    });
+
+    const { unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      await waitFor(() => {
+        const quest = store.getState().quests.quests.find((entry) => entry.id === 'quest_drone_recon');
+        const objective = quest?.objectives.find((entry) => entry.id === 'observe-patrols');
+        expect(quest?.isActive).toBe(true);
+        expect(objective?.currentCount).toBe(1);
+      });
+
+      act(() => {
+        store.dispatch(
+          updateCameraState({
+            areaId: currentMapArea.id,
+            cameraId: drone.id,
+            timestamp: Date.now(),
+            changes: {
+              currentWaypointIndex: 1,
+            },
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const quest = store.getState().quests.quests.find((entry) => entry.id === 'quest_drone_recon');
+        const objective = quest?.objectives.find((entry) => entry.id === 'observe-patrols');
+        expect(objective?.currentCount).toBe(2);
+      });
+
+      act(() => {
+        store.dispatch(
+          updateCameraState({
+            areaId: currentMapArea.id,
+            cameraId: drone.id,
+            timestamp: Date.now(),
+            changes: {
+              currentWaypointIndex: 1,
+            },
+          })
+        );
+      });
+
+      await waitFor(() => {
+        const quest = store.getState().quests.quests.find((entry) => entry.id === 'quest_drone_recon');
+        const objective = quest?.objectives.find((entry) => entry.id === 'observe-patrols');
+        expect(objective?.currentCount).toBe(2);
+      });
+    } finally {
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
+
+  test('does not log drone recon waypoints outside curfew', async () => {
+    store.dispatch(setGameTime(NIGHT_START_SECONDS - 1));
+    const initialState = store.getState();
+    const { currentMapArea, timeOfDay } = initialState.world;
+
+    initializeZoneSurveillance({
+      area: currentMapArea,
+      timeOfDay,
+      dispatch: store.dispatch,
+      timestamp: Date.now(),
+    });
+
+    const zone = store.getState().surveillance.zones[currentMapArea.id];
+    const drone = Object.values(zone.cameras).find((camera) => camera.type === 'drone');
+    expect(drone).toBeDefined();
+
+    if (!drone) {
+      return;
+    }
+
+    act(() => {
+      store.dispatch(
+        setPlayerData({
+          ...store.getState().player.data,
+          position: { ...drone.position },
+        })
+      );
+      store.dispatch(
+        updateCameraState({
+          areaId: currentMapArea.id,
+          cameraId: drone.id,
+          timestamp: Date.now(),
+          changes: {
+            alertState: CameraAlertState.SUSPICIOUS,
+            currentWaypointIndex: 1,
+          },
+        })
+      );
+    });
+
+    const { unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      await waitFor(() => {
+        const quest = store.getState().quests.quests.find((entry) => entry.id === 'quest_drone_recon');
+        const objective = quest?.objectives.find((entry) => entry.id === 'observe-patrols');
+        expect(quest?.isActive).toBe(false);
+        expect(objective?.currentCount ?? 0).toBe(0);
+      });
+    } finally {
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
+
+  test('clears sabotage objective ledger when a new run starts', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(100_000);
+    store.dispatch(setGameTime(NIGHT_START_SECONDS));
+
+    const initialState = store.getState();
+    const { currentMapArea, timeOfDay } = initialState.world;
+
+    initializeZoneSurveillance({
+      area: currentMapArea,
+      timeOfDay,
+      dispatch: store.dispatch,
+      timestamp: Date.now(),
+    });
+
+    const zone = store.getState().surveillance.zones[currentMapArea.id];
+    const firstCamera = Object.values(zone.cameras)[0];
+    expect(firstCamera).toBeDefined();
+
+    if (!firstCamera) {
+      return;
+    }
+
+    act(() => {
+      store.dispatch(
+        setPlayerData({
+          ...store.getState().player.data,
+          position: { x: 1, y: 1 },
+        })
+      );
+      store.dispatch(
+        updateCameraState({
+          areaId: currentMapArea.id,
+          cameraId: firstCamera.id,
+          timestamp: Date.now(),
+          changes: {
+            position: { x: 2, y: 1 },
+            isActive: true,
+            alertState: CameraAlertState.IDLE,
+            hackState: {},
+          },
+        })
+      );
+    });
+
+    const { getByTestId, unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      fireEvent.keyDown(getByTestId('game-controller'), { key: 'e', code: 'KeyE' });
+
+      await waitFor(() => {
+        const quest = store
+          .getState()
+          .quests.quests.find((entry) => entry.id === 'quest_equipment_sabotage');
+        const sabotageObjective = quest?.objectives.find((objective) => objective.id === 'sabotage-cameras');
+        expect(sabotageObjective?.currentCount).toBe(1);
+      });
+
+      act(() => {
+        store.dispatch(resetGame());
+        store.dispatch(
+          initializeCharacter({
+            name: 'Ledger Reset Test',
+            skills: TEST_CHARACTER_SKILLS,
+            backgroundId: 'corpsec_defector',
+            visualPreset: 'default',
+          })
+        );
+        store.dispatch(setGameTime(NIGHT_START_SECONDS));
+      });
+
+      const nextState = store.getState();
+      const { currentMapArea: nextArea, timeOfDay: nextTimeOfDay } = nextState.world;
+      act(() => {
+        initializeZoneSurveillance({
+          area: nextArea,
+          timeOfDay: nextTimeOfDay,
+          dispatch: store.dispatch,
+          timestamp: Date.now(),
+        });
+      });
+
+      const nextZone = store.getState().surveillance.zones[nextArea.id];
+      const nextCamera = Object.values(nextZone.cameras)[0];
+      expect(nextCamera).toBeDefined();
+
+      if (!nextCamera) {
+        return;
+      }
+
+      act(() => {
+        store.dispatch(
+          setPlayerData({
+            ...store.getState().player.data,
+            position: { x: 1, y: 1 },
+          })
+        );
+        store.dispatch(
+          updateCameraState({
+            areaId: nextArea.id,
+            cameraId: nextCamera.id,
+            timestamp: Date.now(),
+            changes: {
+              position: { x: 2, y: 1 },
+              isActive: true,
+              alertState: CameraAlertState.IDLE,
+              hackState: {},
+            },
+          })
+        );
+      });
+
+      fireEvent.keyDown(getByTestId('game-controller'), { key: 'e', code: 'KeyE' });
+
+      await waitFor(() => {
+        const quest = store
+          .getState()
+          .quests.quests.find((entry) => entry.id === 'quest_equipment_sabotage');
+        const sabotageObjective = quest?.objectives.find((objective) => objective.id === 'sabotage-cameras');
+        expect(quest?.isActive).toBe(true);
+        expect(sabotageObjective?.currentCount).toBe(1);
+      });
+    } finally {
       restoreFrameSpies(rafSpy, cancelRafSpy);
       unmount();
     }
