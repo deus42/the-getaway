@@ -1,20 +1,21 @@
-import React, { useCallback, useEffect, useMemo } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../store";
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store';
 import {
   endDialogue,
   setDialogueNode,
   startQuest,
   completeQuest,
   updateObjectiveStatus,
-} from "../../store/questsSlice";
+  claimDialogueReward,
+} from '../../store/questsSlice';
 import {
   addExperience,
   addItem,
   addCredits,
-} from "../../store/playerSlice";
-import { addLogMessage } from "../../store/logSlice";
+} from '../../store/playerSlice';
+import { addLogMessage } from '../../store/logSlice';
 import {
   DialogueNode,
   DialogueOption,
@@ -22,24 +23,29 @@ import {
   Item,
   Quest,
   SkillId,
-} from "../../game/interfaces/types";
-import { dialogueToneManager } from "../../game/narrative/dialogueTone/dialogueToneManager";
-import { getSystemStrings } from "../../content/system";
-import { getUIStrings } from "../../content/ui";
-import { getSkillDefinition } from "../../content/skills";
-import { checkSkillRequirement } from "../../game/quests/dialogueSystem";
-import { resolveRoleDialogueTemplate } from "../../game/narrative/dialogueTone/templateResolver";
-import { DialogueRoleId, RoleDialogueContext } from "../../game/narrative/dialogueTone/roleTemplateTypes";
+} from '../../game/interfaces/types';
+import { dialogueToneManager } from '../../game/narrative/dialogueTone/dialogueToneManager';
+import { getSystemStrings } from '../../content/system';
+import { getUIStrings } from '../../content/ui';
+import { getSkillDefinition } from '../../content/skills';
+import { resolveDialoguePortrait } from '../../content/dialoguePortraits';
+import {
+  resolveDialogueCheckState,
+  resolveDialogueFactionState,
+} from '../../game/quests/dialogueSystem';
+import { resolveRoleDialogueTemplate } from '../../game/narrative/dialogueTone/templateResolver';
+import { DialogueRoleId, RoleDialogueContext } from '../../game/narrative/dialogueTone/roleTemplateTypes';
+import './DialogueOverlay.css';
 
 const fallbackSkillName = (skill: string) =>
   skill.charAt(0).toUpperCase() + skill.slice(1);
 
 type QuestLockReason =
-  | "alreadyCompleted"
-  | "alreadyActive"
-  | "notActive"
-  | "objectiveCompleted"
-  | "objectivesIncomplete";
+  | 'alreadyCompleted'
+  | 'alreadyActive'
+  | 'notActive'
+  | 'objectiveCompleted'
+  | 'objectivesIncomplete';
 
 const ROLE_TEMPLATE_PATTERN = /^\[roleTemplate:([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)\]$/i;
 const FALLBACK_FACTION_REPUTATION: Record<FactionId, number> = {
@@ -50,7 +56,7 @@ const FALLBACK_FACTION_REPUTATION: Record<FactionId, number> = {
 
 const hasPendingNonTalkObjectives = (quest: Quest): boolean =>
   quest.objectives.some(
-    (objective) => objective.type !== "talk" && !objective.isCompleted
+    (objective) => objective.type !== 'talk' && !objective.isCompleted
   );
 
 const parseRoleTemplateReference = (
@@ -71,6 +77,22 @@ const parseRoleTemplateReference = (
   };
 };
 
+const normaliseDisplayValue = (value: number): number => {
+  if (Number.isInteger(value)) {
+    return value;
+  }
+  return Number(value.toFixed(1));
+};
+
+const getDialogueSkillReward = (threshold: number): { xp: number; credits: number } => {
+  return {
+    xp: Math.max(0, threshold * 5),
+    credits: Math.max(0, threshold * 3),
+  };
+};
+
+type OptionMetaTone = 'quest' | 'outcome' | 'lock' | 'unlock' | 'reward' | 'neutral';
+
 const DialogueOverlay: React.FC = () => {
   const dispatch = useDispatch();
   const quests = useSelector((state: RootState) => state.quests.quests);
@@ -83,7 +105,7 @@ const DialogueOverlay: React.FC = () => {
   const { logs: logStrings } = systemStrings;
   const player = useSelector((state: RootState) => state.player.data);
   const world = useSelector((state: RootState) => state.world);
-  const [hoveredOption, setHoveredOption] = React.useState<number | null>(null);
+  const [hoveredOption, setHoveredOption] = useState<number | null>(null);
 
   const resolveSkillName = (skill: string, domain: 'attribute' | 'skill' = 'attribute') => {
     if (domain === 'skill') {
@@ -100,6 +122,15 @@ const DialogueOverlay: React.FC = () => {
     );
   };
 
+  const resolveFactionName = (factionId: FactionId): string => {
+    return uiStrings.playerStatus.factions[factionId] ?? fallbackSkillName(factionId);
+  };
+
+  const resolveStandingLabel = (standing: string): string => {
+    const labels = uiStrings.dialogueOverlay.standingLabels;
+    return labels[standing as keyof typeof labels] ?? fallbackSkillName(standing);
+  };
+
   const awardQuestRewards = useCallback(
     (questId: string) => {
       const quest = quests.find((entry) => entry.id === questId);
@@ -112,7 +143,7 @@ const DialogueOverlay: React.FC = () => {
 
       quest.rewards.forEach((reward) => {
         switch (reward.type) {
-          case "experience":
+          case 'experience':
             if (reward.amount > 0) {
               dispatch(addExperience({ amount: reward.amount, reason: `Quest complete: ${quest.name}` }));
               dispatch(
@@ -123,7 +154,7 @@ const DialogueOverlay: React.FC = () => {
               experienceGranted = true;
             }
             break;
-          case "currency":
+          case 'currency':
             if (reward.amount > 0) {
               dispatch(addCredits(reward.amount));
               dispatch(
@@ -133,7 +164,7 @@ const DialogueOverlay: React.FC = () => {
               );
             }
             break;
-          case "item":
+          case 'item':
             if (reward.id) {
               const quantity = Math.max(1, reward.amount || 1);
               for (let index = 0; index < quantity; index += 1) {
@@ -176,7 +207,7 @@ const DialogueOverlay: React.FC = () => {
 
       const { questId, effect, objectiveId } = option.questEffect;
       switch (effect) {
-        case "start":
+        case 'start':
           {
             const quest = quests.find((entry) => entry.id === questId);
             if (quest && !quest.isActive && !quest.isCompleted) {
@@ -185,7 +216,7 @@ const DialogueOverlay: React.FC = () => {
             }
           }
           break;
-        case "complete":
+        case 'complete':
           {
             const quest = quests.find((entry) => entry.id === questId);
             if (quest && quest.isActive && !quest.isCompleted) {
@@ -198,7 +229,7 @@ const DialogueOverlay: React.FC = () => {
             }
           }
           break;
-        case "update":
+        case 'update':
           if (objectiveId) {
             dispatch(
               updateObjectiveStatus({
@@ -228,7 +259,12 @@ const DialogueOverlay: React.FC = () => {
   const {
     activeDialogue: { dialogueId, currentNodeId },
     dialogues,
+    claimedDialogueRewards,
   } = useSelector((state: RootState) => state.quests);
+
+  const questsById = useMemo(() => {
+    return new Map(quests.map((quest) => [quest.id, quest]));
+  }, [quests]);
 
   const dialogue = useMemo(() => {
     if (!dialogueId) {
@@ -340,32 +376,32 @@ const DialogueOverlay: React.FC = () => {
     }
 
     switch (option.questEffect.effect) {
-      case "start":
+      case 'start':
         if (quest.isCompleted) {
-          return "alreadyCompleted";
+          return 'alreadyCompleted';
         }
         if (quest.isActive) {
-          return "alreadyActive";
+          return 'alreadyActive';
         }
         break;
-      case "complete":
+      case 'complete':
         if (quest.isCompleted) {
-          return "alreadyCompleted";
+          return 'alreadyCompleted';
         }
         if (!quest.isActive) {
-          return "notActive";
+          return 'notActive';
         }
         if (hasPendingNonTalkObjectives(quest)) {
-          return "objectivesIncomplete";
+          return 'objectivesIncomplete';
         }
         break;
-      case "update":
+      case 'update':
         if (option.questEffect.objectiveId) {
           const objective = quest.objectives.find(
             (entry) => entry.id === option.questEffect?.objectiveId
           );
           if (objective?.isCompleted) {
-            return "objectiveCompleted";
+            return 'objectiveCompleted';
           }
         }
         break;
@@ -387,11 +423,11 @@ const DialogueOverlay: React.FC = () => {
     }
 
     switch (option.questEffect.effect) {
-      case "start":
+      case 'start':
         return !quest.isActive && !quest.isCompleted;
-      case "complete":
+      case 'complete':
         return quest.isActive && !quest.isCompleted && !hasPendingNonTalkObjectives(quest);
-      case "update":
+      case 'update':
         if (!quest.isActive || quest.isCompleted) {
           return false;
         }
@@ -408,32 +444,79 @@ const DialogueOverlay: React.FC = () => {
     }
   }, [quests]);
 
+  const getOptionCheckState = useCallback((option: DialogueOption) => {
+    return resolveDialogueCheckState(player, option);
+  }, [player]);
+
+  const getOptionFactionState = useCallback((option: DialogueOption) => {
+    return resolveDialogueFactionState(player, option, reputationSystemsEnabled);
+  }, [player, reputationSystemsEnabled]);
+
   const isOptionLocked = useCallback((option: DialogueOption) => {
     const questLock = getQuestLockReason(option);
     if (questLock) {
       return true;
     }
 
-    if (!option.skillCheck) {
-      return false;
+    const checkState = getOptionCheckState(option);
+    if (checkState && !checkState.isPassed) {
+      return true;
     }
 
-    return !checkSkillRequirement(player, option);
-  }, [getQuestLockReason, player]);
+    const factionState = getOptionFactionState(option);
+    return Boolean(factionState && !factionState.isPassed);
+  }, [getOptionCheckState, getOptionFactionState, getQuestLockReason]);
 
   const visibleOptions = useMemo(() => {
     if (!currentNode) {
       return [];
     }
 
-    return currentNode.options.filter(isQuestOptionVisible);
-  }, [currentNode, isQuestOptionVisible]);
+    return currentNode.options.filter((option) => {
+      if (!isQuestOptionVisible(option)) {
+        return false;
+      }
+
+      const checkState = getOptionCheckState(option);
+      if (checkState && !checkState.isPassed && checkState.visibility === 'hidden') {
+        return false;
+      }
+
+      const factionState = getOptionFactionState(option);
+      if (factionState && !factionState.isPassed && factionState.visibility === 'hidden') {
+        return false;
+      }
+
+      return true;
+    });
+  }, [currentNode, getOptionCheckState, getOptionFactionState, isQuestOptionVisible]);
+
+  const awardDialogueOptionReward = useCallback((option: DialogueOption) => {
+    if (!option.skillCheck || option.questEffect) {
+      return;
+    }
+
+    const claimKey = option.outcomePreview?.rewardClaimKey;
+    if (!claimKey || claimedDialogueRewards?.[claimKey]) {
+      return;
+    }
+
+    const { xp, credits } = getDialogueSkillReward(option.skillCheck.threshold);
+    if (xp > 0) {
+      dispatch(addExperience({ amount: xp, reason: `Dialogue check: ${option.text}` }));
+    }
+    if (credits > 0) {
+      dispatch(addCredits(credits));
+    }
+    dispatch(claimDialogueReward(claimKey));
+  }, [claimedDialogueRewards, dispatch]);
 
   const handleOptionSelect = useCallback((option: DialogueOption) => {
     if (isOptionLocked(option)) {
       return;
     }
 
+    awardDialogueOptionReward(option);
     handleQuestEffect(option);
 
     if (option.nextNodeId) {
@@ -441,7 +524,7 @@ const DialogueOverlay: React.FC = () => {
     } else {
       dispatch(endDialogue());
     }
-  }, [dispatch, handleQuestEffect, isOptionLocked]);
+  }, [awardDialogueOptionReward, dispatch, handleQuestEffect, isOptionLocked]);
 
   useEffect(() => {
     if (!currentNode) {
@@ -497,168 +580,186 @@ const DialogueOverlay: React.FC = () => {
   }
 
   const displayText = toneLine?.text ?? currentNode?.text ?? '...';
+  const fallbackSpeaker = Object.values(dialogue.speakers ?? {})[0];
+  const activeSpeakerId = currentNode.speakerId ?? dialogue.defaultSpeakerId;
+  const speakerProfile = activeSpeakerId
+    ? dialogue.speakers?.[activeSpeakerId] ?? fallbackSpeaker
+    : fallbackSpeaker;
+  const speakerName =
+    speakerProfile?.displayName
+    ?? currentNode.speaker
+    ?? dialogue.npcId
+    ?? uiStrings.dialogueOverlay.speakerFallback;
+  const portrait = resolveDialoguePortrait(speakerProfile?.portraitId, speakerName);
+  const portraitStyle = {
+    '--dialogue-portrait-accent': portrait.accentHex,
+    '--dialogue-portrait-from': portrait.gradientFromHex,
+    '--dialogue-portrait-to': portrait.gradientToHex,
+  } as React.CSSProperties;
 
   return (
-    <div
-      style={{
-        position: "absolute",
-        inset: 0,
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "center",
-        pointerEvents: "none",
-      }}
-    >
-      <div
-        style={{
-          width: "min(620px, 90%)",
-          marginBottom: "calc(var(--bottom-panel-height, 0px) + 2.5rem)",
-          background:
-            "linear-gradient(160deg, rgba(15, 23, 42, 0.94), rgba(15, 23, 42, 0.78))",
-          border: "1px solid rgba(148, 163, 184, 0.35)",
-          borderRadius: "18px",
-          padding: "1.5rem 1.7rem",
-          color: "#e2e8f0",
-          fontFamily: "'DM Sans', 'Inter', sans-serif",
-          boxShadow: "0 28px 48px rgba(15, 23, 42, 0.55)",
-          pointerEvents: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1.2rem",
-        }}
-      >
-        <div>
-          <span
-            style={{
-              display: "block",
-              fontSize: "0.72rem",
-              letterSpacing: "0.28em",
-              textTransform: "uppercase",
-              color: "rgba(148, 163, 184, 0.85)",
-              marginBottom: "0.35rem",
-            }}
-          >
-            {dialogue.npcId}
-          </span>
-          <h2
-            style={{
-              fontSize: "1.28rem",
-              fontWeight: 700,
-              margin: 0,
-              color: "#f8fafc",
-            }}
-          >
-            {displayText}
-          </h2>
-        </div>
-
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.75rem",
-          }}
-        >
-          {visibleOptions.map((option, index) => {
-            const locked = isOptionLocked(option);
-            const requirementLabel = option.skillCheck
-              ? `${resolveSkillName(
-                  option.skillCheck.skill,
-                  option.skillCheck.domain ?? 'attribute'
-                )} ${option.skillCheck.threshold}`
-              : null;
-            const questReason = getQuestLockReason(option);
-            const statusLabel = questReason
-              ? uiStrings.dialogueOverlay.questLocks[questReason]
-              : requirementLabel
-              ? locked
-                ? uiStrings.dialogueOverlay.requiresSkill(requirementLabel)
-                : uiStrings.dialogueOverlay.checkSkill(requirementLabel)
-              : null;
-
-            return (
-            <button
-              key={`${option.text}-${index}`}
-              type="button"
-              onClick={() => handleOptionSelect(option)}
-              onMouseEnter={() => !locked && setHoveredOption(index)}
-              onMouseLeave={() => setHoveredOption(null)}
-              style={{
-                border: locked
-                  ? "1px solid rgba(148, 163, 184, 0.3)"
-                  : hoveredOption === index
-                    ? "1px solid rgba(96, 165, 250, 0.7)"
-                    : "1px solid rgba(96, 165, 250, 0.4)",
-                borderRadius: "12px",
-                padding: "0.85rem 1rem",
-                background:
-                  locked
-                    ? "linear-gradient(135deg, rgba(15, 23, 42, 0.65), rgba(30, 41, 59, 0.75))"
-                    : hoveredOption === index
-                      ? "linear-gradient(135deg, rgba(37, 99, 235, 0.35), rgba(56, 189, 248, 0.3))"
-                      : "linear-gradient(135deg, rgba(37, 99, 235, 0.22), rgba(56, 189, 248, 0.18))",
-                color: locked ? "rgba(148, 163, 184, 0.8)" : "#e2e8f0",
-                fontSize: "0.9rem",
-                textAlign: "left",
-                cursor: locked ? "not-allowed" : "pointer",
-                display: "flex",
-                gap: "0.6rem",
-                alignItems: "center",
-                opacity: locked ? 0.75 : 1,
-                pointerEvents: locked ? "none" : "auto",
-                boxShadow: locked
-                  ? "none"
-                  : hoveredOption === index
-                    ? "0 0 20px rgba(56, 189, 248, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3)"
-                    : "0 0 8px rgba(56, 189, 248, 0.15)",
-                transform: hoveredOption === index && !locked ? "translateY(-2px)" : "translateY(0)",
-                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "1.25rem",
-                  height: "1.25rem",
-                  borderRadius: "50%",
-                  background: locked
-                    ? "rgba(148, 163, 184, 0.25)"
-                    : "rgba(96, 165, 250, 0.35)",
-                  color: locked ? "#cbd5f5" : "#bfdbfe",
-                  fontWeight: 600,
-                  fontSize: "0.75rem",
-                }}
-              >
-                {index + 1}
-              </span>
-              <span style={{ flex: 1 }}>{option.text}</span>
-              {statusLabel && (
-                <span
-                  style={{
-                    fontSize: "0.68rem",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.16em",
-                    color: locked ? "#f87171" : "#5eead4",
-                  }}
-                >
-                  {statusLabel}
+    <div className='dialogue-overlay'>
+      <div className='dialogue-overlay__card'>
+        <div className='dialogue-overlay__header'>
+          <span className='dialogue-overlay__speaker'>{speakerName}</span>
+          <div className='dialogue-overlay__line-row'>
+            <div className='dialogue-overlay__portrait' style={portraitStyle}>
+              {portrait.imagePath ? (
+                <img src={portrait.imagePath} alt={speakerName} className='dialogue-overlay__portrait-image' />
+              ) : (
+                <span className='dialogue-overlay__portrait-initials' aria-hidden='true'>
+                  {portrait.initials}
                 </span>
               )}
-            </button>
+            </div>
+            <h2 className='dialogue-overlay__line'>{displayText}</h2>
+          </div>
+        </div>
+
+        <div className='dialogue-overlay__options'>
+          {visibleOptions.map((option, index) => {
+            const locked = isOptionLocked(option);
+            const checkState = getOptionCheckState(option);
+            const factionState = getOptionFactionState(option);
+            const questReason = getQuestLockReason(option);
+            const rewardClaimKey = option.outcomePreview?.rewardClaimKey;
+            const rewardClaimed = Boolean(
+              rewardClaimKey && claimedDialogueRewards?.[rewardClaimKey]
+            );
+            const metaLines: Array<{ text: string; tone: OptionMetaTone }> = [];
+
+            if (option.questEffect) {
+              const questName =
+                questsById.get(option.questEffect.questId)?.name ?? option.questEffect.questId;
+              metaLines.push({
+                text: uiStrings.dialogueOverlay.questActionLabel(
+                  option.questEffect.effect,
+                  questName
+                ),
+                tone: 'quest',
+              });
+            }
+
+            if (option.outcomePreview?.summary) {
+              metaLines.push({
+                text: option.outcomePreview.summary,
+                tone: 'outcome',
+              });
+            }
+
+            if (option.skillCheck && !option.questEffect && rewardClaimKey) {
+              if (rewardClaimed) {
+                metaLines.push({
+                  text: uiStrings.dialogueOverlay.rewardClaimed,
+                  tone: 'reward',
+                });
+              } else {
+                const reward = getDialogueSkillReward(option.skillCheck.threshold);
+                metaLines.push({
+                  text: uiStrings.dialogueOverlay.rewardPreview(reward.xp, reward.credits),
+                  tone: 'reward',
+                });
+              }
+            }
+
+            if (questReason) {
+              metaLines.push({
+                text: uiStrings.dialogueOverlay.questLocks[questReason],
+                tone: 'lock',
+              });
+            }
+
+            if (checkState && option.skillCheck && !checkState.isPassed) {
+              const delta = Math.max(
+                0,
+                checkState.requiredValue - normaliseDisplayValue(checkState.currentValue)
+              );
+              metaLines.push({
+                text: uiStrings.dialogueOverlay.lockedSkillGap(
+                  resolveSkillName(option.skillCheck.skill, checkState.domain),
+                  normaliseDisplayValue(delta),
+                  normaliseDisplayValue(checkState.currentValue),
+                  checkState.requiredValue
+                ),
+                tone: 'lock',
+              });
+
+              if (option.outcomePreview?.unlocks) {
+                metaLines.push({
+                  text: uiStrings.dialogueOverlay.unlocksLabel(option.outcomePreview.unlocks),
+                  tone: 'unlock',
+                });
+              }
+            }
+
+            if (factionState && !factionState.isPassed) {
+              let required = '';
+              switch (factionState.failedRequirement) {
+                case 'minimumStanding':
+                  required = resolveStandingLabel(factionState.minimumStanding ?? 'neutral');
+                  break;
+                case 'maximumStanding':
+                  required = `≤ ${resolveStandingLabel(factionState.maximumStanding ?? 'allied')}`;
+                  break;
+                case 'minimumReputation':
+                  required = `Rep ${factionState.minimumReputation ?? 0}+`;
+                  break;
+                case 'maximumReputation':
+                  required = `Rep ≤ ${factionState.maximumReputation ?? 0}`;
+                  break;
+                default:
+                  required = resolveStandingLabel(factionState.minimumStanding ?? 'neutral');
+                  break;
+              }
+
+              metaLines.push({
+                text: uiStrings.dialogueOverlay.requiresFactionStanding(
+                  resolveFactionName(factionState.factionId),
+                  required,
+                  resolveStandingLabel(factionState.currentStanding)
+                ),
+                tone: 'lock',
+              });
+            }
+
+            return (
+              <button
+                key={`${option.text}-${index}`}
+                type='button'
+                onClick={() => handleOptionSelect(option)}
+                onMouseEnter={() => !locked && setHoveredOption(index)}
+                onMouseLeave={() => setHoveredOption(null)}
+                className='dialogue-overlay__option'
+                data-locked={locked ? 'true' : 'false'}
+                data-hovered={hoveredOption === index && !locked ? 'true' : 'false'}
+                style={{ pointerEvents: locked ? 'none' : 'auto' }}
+              >
+                <span className='dialogue-overlay__option-index'>
+                  {index + 1}
+                </span>
+                <span className='dialogue-overlay__option-content'>
+                  <span className='dialogue-overlay__option-text'>{option.text}</span>
+                  {metaLines.length > 0 && (
+                    <span className='dialogue-overlay__option-meta'>
+                      {metaLines.map((line, lineIndex) => (
+                        <span
+                          key={`${option.text}-meta-${lineIndex}`}
+                          className='dialogue-overlay__option-status'
+                          data-tone={line.tone}
+                          data-locked={locked ? 'true' : 'false'}
+                        >
+                          {line.text}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                </span>
+              </button>
             );
           })}
         </div>
-        <span
-          style={{
-            fontSize: "0.68rem",
-            color: "rgba(148, 163, 184, 0.7)",
-            textAlign: "right",
-            letterSpacing: "0.22em",
-            textTransform: "uppercase",
-          }}
-        >
+
+        <span className='dialogue-overlay__hint'>
           {uiStrings.dialogueOverlay.escHint}
         </span>
       </div>

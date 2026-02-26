@@ -475,11 +475,20 @@ export interface DialogueToneConfig {
   useGenerated?: boolean;
 }
 
+export interface DialogueSpeakerProfile {
+  id: string;
+  displayName: string;
+  portraitId?: string;
+  role?: 'npc' | 'player' | 'system';
+}
+
 export interface Dialogue {
   id: string;
   npcId: string;
   nodes: DialogueNode[];
   toneDefaults?: DialogueToneConfig;
+  speakers?: Record<string, DialogueSpeakerProfile>;
+  defaultSpeakerId?: string;
 }
 
 // Dialogue node
@@ -488,6 +497,7 @@ export interface DialogueNode {
   text: string;
   options: DialogueOption[];
   speaker?: string;
+  speakerId?: string;
   tone?: DialogueToneConfig;
 }
 
@@ -499,6 +509,7 @@ export interface DialogueOption {
     skill: keyof PlayerSkills | SkillId;
     threshold: number;
     domain?: 'attribute' | 'skill';
+    visibility?: 'locked' | 'hidden';
   };
   factionRequirement?: {
     factionId: FactionId;
@@ -506,6 +517,12 @@ export interface DialogueOption {
     maximumStanding?: FactionStanding;
     minimumReputation?: number;
     maximumReputation?: number;
+    visibility?: 'locked' | 'hidden';
+  };
+  outcomePreview?: {
+    summary: string;
+    unlocks?: string;
+    rewardClaimKey?: string;
   };
   questEffect?: {
     questId: string;

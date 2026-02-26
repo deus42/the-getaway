@@ -47,6 +47,7 @@ MVP Steps:
 - [MVP] Step 16.10: Tone-Preserving Procedural Dialogue System (Phase 5: Narrative and Quest Layer) — Completed
 - [MVP] Step 16.11: Hazard-to-System Integration Matrix (Phase 5: Narrative and Quest Layer) — Completed
 - [MVP] Step 16.12: Role-Based Procedural Dialogue Templates (Phase 5: Narrative and Quest Layer) — Completed
+- [MVP] Step 16.13: Dialogue Speaker Profiles & Portrait Overlay (Phase 5: Narrative and Quest Layer) — Completed
 - [MVP] Step 17: Pivot Rendering to a Neon Isometric Grid (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 18: Click-to-Move Navigation and Path Preview (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 18.5: Centralize Depth Ordering and Camera PostFX Defaults (Phase 6: Visual and Navigation Upgrades) — Completed
@@ -616,6 +617,34 @@ Author reusable dialogue templates for systemic NPC roles so merchants, guards, 
 - Add unit tests for `resolveRoleDialogueTemplate` that verify role gating respects reputation and hazard filters, returns seeded results, and falls back to default copy when requirements fail.
 - Author snapshot tests that render sample role dialogues for contrasting personas (e.g., cautious vs. flamboyant merchant) to confirm tone modulation works with the new templates.
 - Trigger in-game conversations with at least three systemic NPC roles and confirm dialogue pulls from the new template library, honors gating, and reports deterministic IDs for localization.
+
+### Step 16.13: Dialogue Speaker Profiles & Portrait Overlay
+- **Phase:** Phase 5: Narrative and Quest Layer
+
+#### Prerequisites
+
+- Step 16 completed (dialogue + quest threads active in Redux)
+- Step 16.12 completed (template/tone pipeline integrated into dialogue rendering)
+
+#### Instructions
+
+Ship portrait-ready dialogue presentation metadata and a refactored overlay that keeps deterministic skill-check UX readable while preserving branching behavior.
+
+#### Details
+
+- Extend dialogue interfaces with speaker metadata contracts (`speakers`, `defaultSpeakerId`, per-node `speakerId`) plus skill-check visibility hints (`locked`/`hidden`) while preserving backward compatibility.
+- Add a portrait placeholder registry (`src/content/dialoguePortraits.ts`) with deterministic tokens for all interactive Level 0 NPCs and a neutral fallback resolver for unknown IDs.
+- Migrate Level 0 locale dialogue payloads (`en.ts`, `uk.ts`) so every interactive dialogue defines speaker profile metadata and stable portrait IDs.
+- Refactor `DialogueOverlay` to consume speaker/portrait metadata, render a dedicated speaker row, and route check labels through shared deterministic check-state helpers.
+- Keep deterministic threshold checks only (no RNG). Locked-visible remains the default for unmet checks; hidden-mode checks are omitted only when explicitly authored.
+- Move overlay presentation styling into dedicated component CSS (`DialogueOverlay.css`) to keep HUD styling scoped and maintainable.
+- Update docs (`[[01 MVP/90 Dialogue]]`, `[[04 Engineering/Architecture]]`) so design (WHAT) and implementation (HOW) stay aligned.
+
+- **Test:**
+- Launch Level 0 and verify each interactive NPC dialogue shows a speaker name plus portrait placeholder.
+- Validate locked-visible behavior by lowering/raising a required stat (e.g., Charisma) and confirming option lock/unlock messaging updates correctly.
+- Switch locale (EN ↔ UK) and verify speaker labels + portrait placeholders remain stable while text localizes correctly.
+- Confirm keyboard shortcuts (`1-9`, numpad digits, `Esc`) still behave consistently across dialogue navigation.
 
 ### Step 17: Pivot Rendering to a Neon Isometric Grid
 - **Phase:** Phase 6: Visual and Navigation Upgrades
@@ -3463,6 +3492,47 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 - `yarn test --runTestsByPath src/game/narrative/dialogueTone/__tests__/templateResolver.test.ts --runInBand`
 
 - Template resolution now shares deterministic seeds and tone overrides with the procedural mixer, giving systemic NPCs contextual chatter without diverging from localisation-safe pipelines.
+
+### Step 16.13: Dialogue Speaker Profiles & Portrait Overlay (Completed)
+- **Phase:** Phase 5: Narrative and Quest Layer
+- **Date:** February 26, 2026
+
+#### Tasks
+
+1. Extended dialogue data contracts with speaker metadata (`speakers`, `defaultSpeakerId`, `speakerId`) and deterministic skill-check visibility hints (`locked` / `hidden`).
+2. Added a portrait placeholder registry with deterministic fallback resolution and wired all interactive Level 0 NPC dialogues (EN/UK) to stable portrait IDs.
+3. Refactored `DialogueOverlay` into a dedicated CSS-backed presentation surface with explicit speaker rows, portrait placeholders, and check-state labels that include current-vs-required values.
+4. Updated dialogue design/architecture docs plus MVP readiness changelog to capture the new presentation contract and implementation flow.
+
+#### Implementation
+
+- `dialogueSystem.ts` now exposes `resolveDialogueCheckState`, giving one deterministic source for pass/fail status, current value, required threshold, and effective visibility.
+- `DialogueOverlay.tsx` consumes speaker metadata and portrait tokens while preserving quest hooks, keyboard shortcuts, and deterministic locked-visible defaults.
+- `DialogueOverlay.css` owns the dialogue panel visual surface so styling stays component-scoped.
+- `level0` locale dialogue payloads now declare speaker profiles for every interactive NPC across EN and UK bundles.
+
+- `the-getaway/src/game/interfaces/types.ts`
+- `the-getaway/src/game/quests/dialogueSystem.ts`
+- `the-getaway/src/content/dialoguePortraits.ts`
+- `the-getaway/src/content/levels/level0/locales/en.ts`
+- `the-getaway/src/content/levels/level0/locales/uk.ts`
+- `the-getaway/src/components/ui/DialogueOverlay.tsx`
+- `the-getaway/src/components/ui/DialogueOverlay.css`
+- `the-getaway/src/content/ui/index.ts`
+- `memory-bank/01 MVP/90 Dialogue.md`
+- `memory-bank/04 Engineering/Architecture.md`
+- `memory-bank/01 MVP/95 MVP Readiness Checklist.md`
+
+#### Validation
+
+- Level 0 playtest script prepared for requester validation:
+  1. Start Level 0 and open dialogue with Lira; confirm speaker name + portrait placeholder render.
+  2. Lower Charisma below a required threshold; verify option remains visible but locked with requirement/current-value label.
+  3. Raise Charisma to satisfy threshold; verify option unlocks and routes to expected node.
+  4. Switch locale to Ukrainian; re-open Lira/Naila dialogues and confirm localized speaker labels with stable portrait placeholders.
+  5. Talk to all interactive NPCs once; confirm no missing-speaker or portrait fallback regressions.
+  6. Re-test `Esc` and numeric shortcuts (`1-9` and numpad digits) for unchanged dialogue navigation.
+- Automated validation commands (`yarn lint`, `yarn build`, `yarn test`, `yarn test --coverage`) are intentionally deferred until requester accepts in-game behavior.
 
 ### Step 26.4: AutoBattle Mode & Tactical Automation (Completed)
 - **Phase:** Phase 9: Optional Expansions (POST-MVP)

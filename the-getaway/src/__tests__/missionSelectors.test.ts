@@ -13,6 +13,7 @@ const buildState = ({ missions, quests }: { missions: MissionState; quests: Ques
   quests: {
     quests,
     dialogues: [],
+    claimedDialogueRewards: {},
     activeDialogue: { dialogueId: null, currentNodeId: null },
     lastBriefing: { dialogueId: null, nodeId: null },
   },

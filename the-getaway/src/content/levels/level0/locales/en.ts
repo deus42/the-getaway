@@ -6,6 +6,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_lira_vendor',
       npcId: 'Lira the Smuggler',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Lira the Smuggler',
+          portraitId: 'lira_smuggler',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -17,6 +26,11 @@ export const level0EnglishContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'charisma',
                 threshold: 6,
+              },
+              outcomePreview: {
+                summary: 'Extract Lira’s market pulse and reserve locker intel.',
+                unlocks: 'A direct route to her reserve stock and market signal chatter.',
+                rewardClaimKey: 'level0_lira_market_charisma',
               },
               factionRequirement: {
                 factionId: 'scavengers',
@@ -80,6 +94,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_archivist_naila',
       npcId: 'Archivist Naila',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Archivist Naila',
+          portraitId: 'archivist_naila',
+          role: 'npc',
+        },
+      },
       toneDefaults: {
         personaId: 'persona.amara_velez',
         authorId: 'author.vonnegut_brautigan_core',
@@ -157,6 +180,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_courier_brant',
       npcId: 'Courier Brant',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Courier Brant',
+          portraitId: 'courier_brant',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -213,6 +245,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_firebrand_juno',
       npcId: 'Firebrand Juno',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Firebrand Juno',
+          portraitId: 'firebrand_juno',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -228,6 +269,11 @@ export const level0EnglishContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'charisma',
                 threshold: 7,
+              },
+              outcomePreview: {
+                summary: 'Negotiate targeted supply allocation with Juno.',
+                unlocks: 'Juno reveals how she splits explosive gel and field dressings.',
+                rewardClaimKey: 'level0_juno_supplies_charisma',
               },
               factionRequirement: {
                 factionId: 'resistance',
@@ -301,6 +347,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_seraph_warden',
       npcId: 'Seraph Warden',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Seraph Warden',
+          portraitId: 'seraph_warden',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -316,6 +371,11 @@ export const level0EnglishContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'intelligence',
                 threshold: 8,
+              },
+              outcomePreview: {
+                summary: 'Force Seraph into maintenance disclosure.',
+                unlocks: 'A recalibration window and fault-marking protocol details.',
+                rewardClaimKey: 'level0_seraph_maintenance_intelligence',
               },
             },
             {
@@ -349,6 +409,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_drone_handler_kesh',
       npcId: 'Drone Handler Kesh',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Drone Handler Kesh',
+          portraitId: 'drone_handler_kesh',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -429,6 +498,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_medic_yara',
       npcId: 'Medic Yara',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Medic Yara',
+          portraitId: 'medic_yara',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -481,6 +559,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     {
       id: 'npc_captain_reyna',
       npcId: 'Captain Reyna',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Captain Reyna',
+          portraitId: 'captain_reyna',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',

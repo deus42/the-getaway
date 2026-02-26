@@ -59,6 +59,9 @@ Dedicated folder for reusable React UI components, separate from core game logic
 - **`GameDebugInspector.tsx`**: Test-mode debug panel now includes a Mission Snapshot section (level metadata + primary/side objective counters) and is mounted through a single runtime path in `App.tsx`.
 - **`GeorgeAssistant.tsx`**: React HUD console that anchors top-center, presenting a compact status dock and an expandable chat feed while pulling quest, karma, reputation, and personality data straight from Redux.
 - **`DialogueOverlay.tsx`**: Displays branching dialogue with NPCs, presenting options and triggering quest hooks while pausing player input.
+  - Resolves active speaker metadata (`speakers` + `defaultSpeakerId`) to render localized speaker labels and portrait placeholders.
+  - Reads deterministic portrait tokens from `the-getaway/src/content/dialoguePortraits.ts`, with fallback initials/palette when portrait IDs are missing.
+  - Uses shared deterministic check-state helpers to keep locked/hidden option handling consistent with runtime dialogue logic.
 - **`OpsBriefingsPanel.tsx`**: Canonical player objective surface for Level 0, driven by `selectOpsBriefingModel` and rendered as Primary Progress + Active Side Quests + Available Side Quests (+ completed overlay).
 
 ## High Level Overview
@@ -800,6 +803,7 @@ Quest and dialogue systems:
 - **`dialogueSystem.ts`**: Conversation and interaction system:
   - Dialogue tree structure with nodes and options
   - Skill check integration for conditional dialogue paths
+  - Shared `resolveDialogueCheckState` helper returns pass/fail, current value, required threshold, and effective visibility (`locked`/`hidden`) for each option
   - Quest-related dialogue options for starting/completing quests
   - Dialogue navigation and branching conversations
   - Helper functions for creating common dialogue patterns

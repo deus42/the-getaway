@@ -58,6 +58,7 @@ const cloneDialogue = (dialogue: Dialogue): Dialogue => ({
       factionRequirement: option.factionRequirement
         ? { ...option.factionRequirement }
         : undefined,
+      outcomePreview: option.outcomePreview ? { ...option.outcomePreview } : undefined,
     })),
   })),
 });

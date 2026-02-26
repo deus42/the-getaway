@@ -8,10 +8,14 @@ import {
   updateObjectiveCounter,
 } from '../store/questsSlice';
 import { updateSkill } from '../store/playerSlice';
+import { setLocale, setReputationSystemsEnabled } from '../store/settingsSlice';
+import { getUIStrings } from '../content/ui';
 
 describe('DialogueOverlay', () => {
   beforeEach(() => {
     store.dispatch(resetGame());
+    store.dispatch(setLocale('en'));
+    store.dispatch(setReputationSystemsEnabled(false));
   });
 
   it('renders dialogue text and options when active', () => {
@@ -48,6 +52,7 @@ describe('DialogueOverlay', () => {
   });
 
   it('locks options when skill requirements are unmet', () => {
+    const ui = getUIStrings('en');
     render(
       <Provider store={store}>
         <DialogueOverlay />
@@ -67,10 +72,20 @@ describe('DialogueOverlay', () => {
     });
 
     expect(lockedOption).toHaveStyle('pointer-events: none');
-    expect(screen.getByText(/Requires Charisma 6/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(ui.dialogueOverlay.lockedSkillGap('Charisma', 5, 1, 6))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        ui.dialogueOverlay.unlocksLabel(
+          'A direct route to her reserve stock and market signal chatter.'
+        )
+      )
+    ).toBeInTheDocument();
   });
 
   it('unlocks options once the player meets the skill threshold', () => {
+    const ui = getUIStrings('en');
     render(
       <Provider store={store}>
         <DialogueOverlay />
@@ -90,11 +105,96 @@ describe('DialogueOverlay', () => {
     });
 
     expect(optionButton).toHaveStyle('pointer-events: auto');
-    expect(screen.getByText(/Check Charisma 6/i)).toBeInTheDocument();
+    expect(screen.getByText(ui.dialogueOverlay.rewardPreview(30, 18))).toBeInTheDocument();
 
     fireEvent.click(optionButton);
 
     expect(screen.getByText(/Inventory is thinner than curfew soup/i)).toBeInTheDocument();
+  });
+
+  it('shows quest badge with action and quest name for quest-linked options', () => {
+    const ui = getUIStrings('en');
+    render(
+      <Provider store={store}>
+        <DialogueOverlay />
+      </Provider>
+    );
+
+    act(() => {
+      store.dispatch(startDialogue({ dialogueId: 'npc_lira_vendor', nodeId: 'intro' }));
+    });
+
+    const questName =
+      store.getState().quests.quests.find((quest) => quest.id === 'quest_market_cache')?.name ??
+      'quest_market_cache';
+    expect(
+      screen.getByText(ui.dialogueOverlay.questActionLabel('start', questName))
+    ).toBeInTheDocument();
+  });
+
+  it('shows faction lock reasons when reputation requirements are unmet', () => {
+    const ui = getUIStrings('en');
+    render(
+      <Provider store={store}>
+        <DialogueOverlay />
+      </Provider>
+    );
+
+    act(() => {
+      store.dispatch(setReputationSystemsEnabled(true));
+      store.dispatch(updateSkill({ skill: 'charisma', amount: 2 }));
+      store.dispatch(startDialogue({ dialogueId: 'npc_lira_vendor', nodeId: 'intro' }));
+    });
+
+    expect(
+      screen.getByText(
+        ui.dialogueOverlay.requiresFactionStanding(
+          'Scavengers',
+          'Friendly',
+          'Neutral'
+        )
+      )
+    ).toBeInTheDocument();
+  });
+
+  it('grants non-quest skill-check rewards only once per run', () => {
+    const ui = getUIStrings('en');
+    render(
+      <Provider store={store}>
+        <DialogueOverlay />
+      </Provider>
+    );
+
+    act(() => {
+      store.dispatch(updateSkill({ skill: 'charisma', amount: 2 }));
+      store.dispatch(startDialogue({ dialogueId: 'npc_lira_vendor', nodeId: 'intro' }));
+    });
+
+    const before = store.getState().player.data;
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /What’s humming through the market tonight\?/i,
+      })
+    );
+
+    const afterFirst = store.getState().player.data;
+    expect(afterFirst.experience).toBe(before.experience + 30);
+    expect(afterFirst.credits).toBe(before.credits + 18);
+
+    act(() => {
+      store.dispatch(startDialogue({ dialogueId: 'npc_lira_vendor', nodeId: 'intro' }));
+    });
+
+    expect(screen.getByText(ui.dialogueOverlay.rewardClaimed)).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /What’s humming through the market tonight\?/i,
+      })
+    );
+
+    const afterSecond = store.getState().player.data;
+    expect(afterSecond.experience).toBe(afterFirst.experience);
+    expect(afterSecond.credits).toBe(afterFirst.credits);
   });
 
   it('locks quest completion dialogue until required objectives are complete', () => {

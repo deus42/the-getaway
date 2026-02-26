@@ -301,6 +301,14 @@ interface MissionStrings {
 
 interface DialogueOverlayStrings {
   closeButton: string;
+  speakerFallback: string;
+  questActionLabel: (effect: 'start' | 'update' | 'complete', questName: string) => string;
+  lockedSkillGap: (skillName: string, delta: number, currentValue: number, requiredValue: number) => string;
+  unlocksLabel: (unlocks: string) => string;
+  requiresFactionStanding: (factionName: string, required: string, current: string) => string;
+  rewardPreview: (xp: number, credits: number) => string;
+  rewardClaimed: string;
+  standingLabels: Record<'hostile' | 'unfriendly' | 'neutral' | 'friendly' | 'allied', string>;
   questLocks: {
     alreadyCompleted: string;
     alreadyActive: string;
@@ -309,6 +317,7 @@ interface DialogueOverlayStrings {
     objectivesIncomplete: string;
   };
   requiresSkill: (requirement: string) => string;
+  requiresSkillWithCurrent: (requirement: string, currentValue: number) => string;
   checkSkill: (requirement: string) => string;
   escHint: string;
   itemRecoveredDescription: (questName: string) => string;
@@ -893,6 +902,26 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     dialogueOverlay: {
       closeButton: 'Close',
+      speakerFallback: 'Unknown Speaker',
+      questActionLabel: (effect, questName) => {
+        const action =
+          effect === 'start' ? 'Start' : effect === 'update' ? 'Update' : 'Complete';
+        return `QUEST • ${action}: ${questName}`;
+      },
+      lockedSkillGap: (skillName, delta, currentValue, requiredValue) =>
+        `Need +${delta} ${skillName} (${currentValue}/${requiredValue})`,
+      unlocksLabel: (unlocks) => `Unlocks: ${unlocks}`,
+      requiresFactionStanding: (factionName, required, current) =>
+        `Requires ${factionName} standing ${required} (Current ${current})`,
+      rewardPreview: (xp, credits) => `Reward: +${xp} XP • +₿${credits}`,
+      rewardClaimed: 'Reward claimed',
+      standingLabels: {
+        hostile: 'Hostile',
+        unfriendly: 'Unfriendly',
+        neutral: 'Neutral',
+        friendly: 'Friendly',
+        allied: 'Allied',
+      },
       questLocks: {
         alreadyCompleted: 'Quest already completed',
         alreadyActive: 'Quest already in progress',
@@ -901,6 +930,8 @@ const STRINGS: Record<Locale, UIStrings> = {
         objectivesIncomplete: 'Complete required objectives first',
       },
       requiresSkill: (requirement) => `Requires ${requirement}`,
+      requiresSkillWithCurrent: (requirement, currentValue) =>
+        `Requires ${requirement} (Current ${currentValue})`,
       checkSkill: (requirement) => `Check ${requirement}`,
       escHint: 'Press 1-9 to respond, Esc to disengage',
       itemRecoveredDescription: (questName) => `Recovered during ${questName}.`,
@@ -1692,6 +1723,26 @@ const STRINGS: Record<Locale, UIStrings> = {
     },
     dialogueOverlay: {
       closeButton: 'Закрити',
+      speakerFallback: 'Невідомий співрозмовник',
+      questActionLabel: (effect, questName) => {
+        const action =
+          effect === 'start' ? 'Почати' : effect === 'update' ? 'Оновити' : 'Завершити';
+        return `ЗАВДАННЯ • ${action}: ${questName}`;
+      },
+      lockedSkillGap: (skillName, delta, currentValue, requiredValue) =>
+        `Потрібно +${delta} ${skillName} (${currentValue}/${requiredValue})`,
+      unlocksLabel: (unlocks) => `Відкриває: ${unlocks}`,
+      requiresFactionStanding: (factionName, required, current) =>
+        `Потрібен статус ${factionName}: ${required} (Зараз ${current})`,
+      rewardPreview: (xp, credits) => `Нагорода: +${xp} досвіду • +₿${credits}`,
+      rewardClaimed: 'Нагороду вже отримано',
+      standingLabels: {
+        hostile: 'Ворог',
+        unfriendly: 'Недружній',
+        neutral: 'Нейтральний',
+        friendly: 'Союзний',
+        allied: 'Союз',
+      },
       questLocks: {
         alreadyCompleted: 'Завдання вже виконано',
         alreadyActive: 'Завдання вже виконується',
@@ -1700,6 +1751,8 @@ const STRINGS: Record<Locale, UIStrings> = {
         objectivesIncomplete: 'Спершу виконайте необхідні цілі',
       },
       requiresSkill: (requirement) => `Потрібно: ${requirement}`,
+      requiresSkillWithCurrent: (requirement, currentValue) =>
+        `Потрібно: ${requirement} (Зараз ${currentValue})`,
       checkSkill: (requirement) => `Перевірка: ${requirement}`,
       escHint: 'Натисніть 1-9 для вибору, Esc щоб завершити',
       itemRecoveredDescription: (questName) => `Здобуто під час «${questName}».`,

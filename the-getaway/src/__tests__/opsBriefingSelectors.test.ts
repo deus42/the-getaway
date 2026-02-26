@@ -10,7 +10,7 @@ describe('selectOpsBriefingModel', () => {
   it('groups objectives and quests into primary, active side, available side, and completed buckets', () => {
     const baseline = selectOpsBriefingModel(store.getState());
 
-    expect(baseline.primaryObjectives.length).toBeGreaterThan(0);
+    expect(baseline.primaryObjectives).toHaveLength(0);
     expect(baseline.activeSideQuests).toHaveLength(0);
     expect(
       baseline.availableSideQuests.some((quest) => quest.id === 'quest_equipment_sabotage')
@@ -40,6 +40,14 @@ describe('selectOpsBriefingModel', () => {
     ).toBe(false);
 
     store.dispatch(startQuest('quest_market_cache'));
+    model = selectOpsBriefingModel(store.getState());
+    expect(model.primaryObjectives.length).toBeGreaterThan(0);
+    expect(
+      model.primaryObjectives.some((objective) =>
+        objective.questIds.includes('quest_market_cache')
+      )
+    ).toBe(true);
+
     store.dispatch(completeQuest('quest_market_cache'));
     model = selectOpsBriefingModel(store.getState());
     expect(
@@ -47,4 +55,3 @@ describe('selectOpsBriefingModel', () => {
     ).toBe(true);
   });
 });
-

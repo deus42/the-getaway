@@ -20,7 +20,7 @@ import { HudLayoutPreset } from "./store/hudLayoutSlice";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
 import FactionReputationManager from "./components/system/FactionReputationManager";
 import { addLogMessage } from "./store/logSlice";
-import { endDialogue, startQuest } from "./store/questsSlice";
+import { endDialogue } from "./store/questsSlice";
 import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections, removeXPNotification } from "./store/playerSlice";
 import { clearAllFeedback } from "./store/combatFeedbackSlice";
 import { PlayerSkills, Player } from "./game/interfaces/types";
@@ -562,14 +562,6 @@ function AppShell() {
     const state = store.getState();
     const { logs } = getSystemStrings(state.settings.locale);
     store.dispatch(addLogMessage(`${logs.operationStart} - Call sign: ${data.name}`));
-
-    // Auto-start the Level 0 primary quest so the Ops panel doesn't look empty on a fresh run.
-    // (Dialogue options that start this quest will gracefully show as already active.)
-    const primaryQuest = state.quests.quests.find((quest) => quest.id === 'quest_market_cache');
-    if (primaryQuest && !primaryQuest.isActive && !primaryQuest.isCompleted) {
-      store.dispatch(startQuest(primaryQuest.id));
-      store.dispatch(addLogMessage(logs.questAccepted(primaryQuest.name)));
-    }
 
     setShowCharacterCreation(false);
     setGameStarted(true);

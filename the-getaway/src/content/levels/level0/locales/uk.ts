@@ -30,6 +30,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_lira_vendor',
       npcId: 'Ліра-контрабандистка',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Ліра-контрабандистка',
+          portraitId: 'lira_smuggler',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -41,6 +50,11 @@ export const level0UkrainianContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'charisma',
                 threshold: 6,
+              },
+              outcomePreview: {
+                summary: 'Витягнути в Ліри пульс ринку та резервні наводки.',
+                unlocks: 'Прямий вихід до резервного схрону й чуток чорного ринку.',
+                rewardClaimKey: 'level0_lira_market_charisma',
               },
               factionRequirement: {
                 factionId: 'scavengers',
@@ -104,6 +118,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_firebrand_juno',
       npcId: 'Юно Вогнеборець',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Юно Вогнеборець',
+          portraitId: 'firebrand_juno',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -119,6 +142,11 @@ export const level0UkrainianContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'charisma',
                 threshold: 7,
+              },
+              outcomePreview: {
+                summary: 'Укласти з Юно вигідний розподіл припасів.',
+                unlocks: 'Юно розкриє, як ділить вибуховий гель і польові перевʼязки.',
+                rewardClaimKey: 'level0_juno_supplies_charisma',
               },
               factionRequirement: {
                 factionId: 'resistance',
@@ -156,6 +184,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_seraph_warden',
       npcId: 'Сераф-Вартовий',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Сераф-Вартовий',
+          portraitId: 'seraph_warden',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -171,6 +208,11 @@ export const level0UkrainianContent: Level0LocaleContent = {
               skillCheck: {
                 skill: 'intelligence',
                 threshold: 8,
+              },
+              outcomePreview: {
+                summary: 'Продавити Серафа на технічні деталі обслуговування.',
+                unlocks: 'Вікно переналаштування та протокол позначення несправностей.',
+                rewardClaimKey: 'level0_seraph_maintenance_intelligence',
               },
             },
             {
@@ -204,6 +246,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_drone_handler_kesh',
       npcId: 'Кеш — дрон-технік',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Кеш — дрон-технік',
+          portraitId: 'drone_handler_kesh',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -248,6 +299,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_archivist_naila',
       npcId: 'Архіварка Найла',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Архіварка Найла',
+          portraitId: 'archivist_naila',
+          role: 'npc',
+        },
+      },
       toneDefaults: {
         personaId: 'persona.amara_velez',
         authorId: 'author.vonnegut_brautigan_core',
@@ -325,6 +385,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_courier_brant',
       npcId: 'Кур’єр Брант',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Кур’єр Брант',
+          portraitId: 'courier_brant',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -485,6 +554,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_medic_yara',
       npcId: 'Медик Яра',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Медик Яра',
+          portraitId: 'medic_yara',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',
@@ -537,6 +615,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     {
       id: 'npc_captain_reyna',
       npcId: 'Капітан Рейна',
+      defaultSpeakerId: 'npc',
+      speakers: {
+        npc: {
+          id: 'npc',
+          displayName: 'Капітан Рейна',
+          portraitId: 'captain_reyna',
+          role: 'npc',
+        },
+      },
       nodes: [
         {
           id: 'intro',

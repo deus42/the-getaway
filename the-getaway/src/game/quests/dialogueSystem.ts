@@ -1,4 +1,14 @@
-import { Dialogue, DialogueNode, DialogueOption, Player, PlayerSkills, Quest, SkillId } from '../interfaces/types';
+import {
+  Dialogue,
+  DialogueNode,
+  DialogueOption,
+  FactionId,
+  FactionStanding,
+  Player,
+  PlayerSkills,
+  Quest,
+  SkillId,
+} from '../interfaces/types';
 import { v4 as uuidv4 } from 'uuid';
 import { startQuest, updateObjective, completeQuest } from './questSystem';
 import { calculateDerivedStatsWithEquipment, calculateDerivedStats, skillCheckPasses } from '../systems/statCalculations';
@@ -40,67 +50,144 @@ const getPlayerDialogueBonus = (player: Player, skill: keyof PlayerSkills): numb
   }
 };
 
-// Check if a skill check passes
-export const checkSkillRequirement = (player: Player, option: DialogueOption): boolean => {
+type DialogueCheckVisibility = 'locked' | 'hidden';
+type DialogueFactionVisibility = 'locked' | 'hidden';
+
+export interface DialogueCheckState {
+  isPassed: boolean;
+  currentValue: number;
+  requiredValue: number;
+  visibility: DialogueCheckVisibility;
+  domain: 'attribute' | 'skill';
+}
+
+export interface DialogueFactionCheckState {
+  isPassed: boolean;
+  visibility: DialogueFactionVisibility;
+  factionId: FactionId;
+  currentReputation: number;
+  currentStanding: FactionStanding;
+  minimumStanding?: FactionStanding;
+  maximumStanding?: FactionStanding;
+  minimumReputation?: number;
+  maximumReputation?: number;
+  failedRequirement?: 'minimumStanding' | 'maximumStanding' | 'minimumReputation' | 'maximumReputation';
+}
+
+const resolveCheckVisibility = (option: DialogueOption): DialogueCheckVisibility => {
+  return option.skillCheck?.visibility ?? 'locked';
+};
+
+const resolveFactionVisibility = (option: DialogueOption): DialogueFactionVisibility => {
+  return option.factionRequirement?.visibility ?? 'locked';
+};
+
+export const resolveDialogueCheckState = (
+  player: Player,
+  option: DialogueOption
+): DialogueCheckState | null => {
   if (!option.skillCheck) {
-    return true; // No skill check required
+    return null;
   }
 
   const { skill, threshold, domain } = option.skillCheck;
   const checkDomain = domain ?? 'attribute';
+  const visibility = resolveCheckVisibility(option);
 
   if (checkDomain === 'skill') {
     const skillId = skill as SkillId;
     const currentValue = player.skillTraining[skillId] ?? 0;
-    return currentValue >= threshold;
+    return {
+      isPassed: currentValue >= threshold,
+      currentValue,
+      requiredValue: threshold,
+      visibility,
+      domain: checkDomain,
+    };
   }
 
   const attributeKey = skill as keyof PlayerSkills;
   const attributeValue = player.skills[attributeKey];
   const bonus = getPlayerDialogueBonus(player, attributeKey);
+  const currentValue = attributeValue + bonus;
 
-  return skillCheckPasses(attributeValue, threshold, bonus);
+  return {
+    isPassed: skillCheckPasses(attributeValue, threshold, bonus),
+    currentValue,
+    requiredValue: threshold,
+    visibility,
+    domain: checkDomain,
+  };
 };
 
-const checkFactionRequirement = (
+export const resolveDialogueFactionState = (
   player: Player,
   option: DialogueOption,
   reputationSystemsEnabled: boolean = true
-): boolean => {
+): DialogueFactionCheckState | null => {
   if (!reputationSystemsEnabled || !option.factionRequirement) {
-    return true;
+    return null;
   }
 
-  const { factionId, minimumStanding, maximumStanding, minimumReputation, maximumReputation } =
-    option.factionRequirement;
-  const value = player.factionReputation?.[factionId] ?? 0;
-  const standing = getStandingForValue(value);
+  const {
+    factionId,
+    minimumStanding,
+    maximumStanding,
+    minimumReputation,
+    maximumReputation,
+  } = option.factionRequirement;
 
-  if (typeof minimumReputation === 'number' && value < minimumReputation) {
-    return false;
+  const currentReputation = player.factionReputation?.[factionId] ?? 0;
+  const currentStanding = getStandingForValue(currentReputation).id;
+  const visibility = resolveFactionVisibility(option);
+
+  let failedRequirement: DialogueFactionCheckState['failedRequirement'];
+
+  if (typeof minimumReputation === 'number' && currentReputation < minimumReputation) {
+    failedRequirement = 'minimumReputation';
   }
 
-  if (typeof maximumReputation === 'number' && value > maximumReputation) {
-    return false;
+  if (!failedRequirement && typeof maximumReputation === 'number' && currentReputation > maximumReputation) {
+    failedRequirement = 'maximumReputation';
   }
 
-  if (minimumStanding) {
-    const currentRank = getStandingRank(standing.id);
+  if (!failedRequirement && minimumStanding) {
+    const currentRank = getStandingRank(currentStanding);
     const minimumRank = getStandingRank(minimumStanding);
     if (currentRank < minimumRank) {
-      return false;
+      failedRequirement = 'minimumStanding';
     }
   }
 
-  if (maximumStanding) {
-    const currentRank = getStandingRank(standing.id);
+  if (!failedRequirement && maximumStanding) {
+    const currentRank = getStandingRank(currentStanding);
     const maximumRank = getStandingRank(maximumStanding);
     if (currentRank > maximumRank) {
-      return false;
+      failedRequirement = 'maximumStanding';
     }
   }
 
-  return true;
+  return {
+    isPassed: !failedRequirement,
+    visibility,
+    factionId,
+    currentReputation,
+    currentStanding,
+    minimumStanding,
+    maximumStanding,
+    minimumReputation,
+    maximumReputation,
+    failedRequirement,
+  };
+};
+
+// Check if a skill check passes
+export const checkSkillRequirement = (player: Player, option: DialogueOption): boolean => {
+  const checkState = resolveDialogueCheckState(player, option);
+  if (!checkState) {
+    return true;
+  }
+  return checkState.isPassed;
 };
 
 // Filter dialogue options based on player skills
@@ -110,11 +197,17 @@ export const getAvailableOptions = (
   options?: { reputationSystemsEnabled?: boolean }
 ): DialogueOption[] => {
   const reputationEnabled = options?.reputationSystemsEnabled ?? true;
-  return node.options.filter(
-    (option) =>
-      checkSkillRequirement(player, option)
-      && checkFactionRequirement(player, option, reputationEnabled)
-  );
+  return node.options.filter((option) => {
+    const checkState = resolveDialogueCheckState(player, option);
+    if (checkState && !checkState.isPassed) {
+      return false;
+    }
+    const factionState = resolveDialogueFactionState(player, option, reputationEnabled);
+    if (factionState && !factionState.isPassed) {
+      return false;
+    }
+    return true;
+  });
 };
 
 // Select a dialogue option and get next node
@@ -147,10 +240,12 @@ export const selectDialogueOption = (
     return { nextNode: null, player, quests };
   }
   
-  // Check if skill requirement is met
+  // Check if dialogue requirement is met
+  const checkState = resolveDialogueCheckState(player, selectedOption);
+  const factionState = resolveDialogueFactionState(player, selectedOption, reputationEnabled);
   if (
-    !checkSkillRequirement(player, selectedOption)
-    || !checkFactionRequirement(player, selectedOption, reputationEnabled)
+    (checkState ? !checkState.isPassed : false)
+    || (factionState ? !factionState.isPassed : false)
   ) {
     return { nextNode: null, player, quests };
   }

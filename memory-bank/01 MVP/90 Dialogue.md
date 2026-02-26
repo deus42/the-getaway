@@ -18,6 +18,19 @@ Dialogue is a crucial tool for storytelling, delivered in a text-driven format r
 
 The dialogue system is essentially the narrative engine of the game, driving story progression, quest initiation/completion, and delivering the rich story we plan. It's designed to handle complex branching while giving the player clarity and meaningful choices.
 
+MVP Dialogue Presentation Contract
+
+- Speaker profile metadata:
+	- Each interactive dialogue exposes speaker profiles keyed by ID (`speakers`) plus a default active speaker (`defaultSpeakerId`).
+	- The active line resolves to a display name and portrait token so every conversation has clear speaker identity.
+- Portrait placeholders:
+	- MVP uses deterministic portrait placeholders (initials + color token) instead of requiring final character art.
+	- Portrait IDs remain stable so final painted assets can be mapped later without changing dialogue logic.
+- Skill-check visibility:
+	- Skill checks are deterministic threshold checks only in MVP (no dice/chance layer).
+	- Unmet checks default to **locked-visible** so players can read requirements and understand build-dependent paths.
+	- Authoring can optionally mark specific checks as **hidden** when discovery should remain diegetic.
+
 Choices & Consequences (MVP scope)
 
 **Status:** ✅ MVP scope. Consequences in MVP are immediate and legible (quest-state changes + scene outcomes). Long-tail/procedural consequence frameworks live in [[02 Post-MVP/narrative-advanced]].

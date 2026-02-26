@@ -59,6 +59,7 @@ export const selectOpsBriefingModel = createSelector(
   [selectMissionProgress, selectQuestState, selectLocale],
   (missionProgress, quests, locale): OpsBriefingModel => {
     const bundle = getNarrativeLocaleBundle(locale);
+    const questsById = new Map(quests.map((quest) => [quest.id, quest]));
     const sideQuestModels = quests
       .map((quest) => toQuestModel(quest, bundle))
       .filter((quest) => quest.kind === 'side');
@@ -76,8 +77,15 @@ export const selectOpsBriefingModel = createSelector(
       .filter((quest) => quest.isCompleted)
       .sort((a, b) => a.name.localeCompare(b.name));
 
+    const startedPrimaryObjectives = (missionProgress?.primary ?? []).filter((objective) => {
+      return objective.questIds.some((questId) => {
+        const quest = questsById.get(questId);
+        return Boolean(quest && (quest.isActive || quest.isCompleted));
+      });
+    });
+
     return {
-      primaryObjectives: missionProgress?.primary ?? [],
+      primaryObjectives: startedPrimaryObjectives,
       activeSideQuests,
       availableSideQuests,
       completedQuests,

@@ -6,6 +6,7 @@ import { getLevel0Content } from '../content/levels/level0';
 export interface QuestState {
   quests: Quest[];
   dialogues: Dialogue[];
+  claimedDialogueRewards: Record<string, true>;
   activeDialogue: {
     dialogueId: string | null;
     currentNodeId: string | null;
@@ -16,12 +17,18 @@ export interface QuestState {
   };
 }
 
-const buildQuestState = (locale: Locale): QuestState => {
+const buildQuestState = (
+  locale: Locale,
+  options?: {
+    claimedDialogueRewards?: Record<string, true>;
+  }
+): QuestState => {
   const content = getLevel0Content(locale);
 
   return {
     quests: content.quests,
     dialogues: content.dialogues,
+    claimedDialogueRewards: { ...(options?.claimedDialogueRewards ?? {}) },
     activeDialogue: {
       dialogueId: null,
       currentNodeId: null,
@@ -119,6 +126,13 @@ export const questsSlice = createSlice({
     addDialogue: (state, action: PayloadAction<Dialogue>) => {
       state.dialogues.push(action.payload);
     },
+
+    claimDialogueReward: (state, action: PayloadAction<string>) => {
+      if (!state.claimedDialogueRewards) {
+        state.claimedDialogueRewards = {};
+      }
+      state.claimedDialogueRewards[action.payload] = true;
+    },
     
     // Start a dialogue interaction
     startDialogue: (state, action: PayloadAction<{ dialogueId: string; nodeId: string }>) => {
@@ -157,8 +171,10 @@ export const questsSlice = createSlice({
       return buildQuestState(action.payload ?? DEFAULT_LOCALE);
     },
 
-    applyLocaleToQuests: (_state, action: PayloadAction<Locale>) => {
-      return buildQuestState(action.payload);
+    applyLocaleToQuests: (state, action: PayloadAction<Locale>) => {
+      return buildQuestState(action.payload, {
+        claimedDialogueRewards: state.claimedDialogueRewards,
+      });
     },
   }
 });
@@ -171,6 +187,7 @@ export const {
   updateObjectiveStatus,
   updateObjectiveCounter,
   addDialogue,
+  claimDialogueReward,
   startDialogue,
   setDialogueNode,
   endDialogue,

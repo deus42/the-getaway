@@ -4,6 +4,7 @@ import {
   getFirstDialogueNode,
   checkSkillRequirement,
   getAvailableOptions,
+  resolveDialogueFactionState,
   selectDialogueOption,
   createSkillCheckDialogue,
   createQuestGivingDialogue,
@@ -264,7 +265,7 @@ describe('dialogueSystem', () => {
       expect(available).toHaveLength(2);
     });
 
-    it('filters options based on skill checks', () => {
+    it('filters unmet skill check options by default', () => {
       const player = createTestPlayer({
         skills: { ...DEFAULT_SKILLS, charisma: 3 },
       });
@@ -311,7 +312,31 @@ describe('dialogueSystem', () => {
       expect(available).toHaveLength(2);
     });
 
-    it('filters options when faction requirements are not met', () => {
+    it('hides unmet skill checks when visibility is hidden', () => {
+      const player = createTestPlayer({
+        skills: { ...DEFAULT_SKILLS, charisma: 3 },
+      });
+      const node: DialogueNode = {
+        id: uuidv4(),
+        text: 'Hidden checks',
+        speaker: 'NPC',
+        options: [
+          {
+            text: 'Hidden persuade',
+            nextNodeId: null,
+            skillCheck: { skill: 'charisma', threshold: 8, visibility: 'hidden' },
+          },
+          { text: 'Regular option', nextNodeId: null },
+        ],
+      };
+
+      const available = getAvailableOptions(player, node);
+
+      expect(available).toHaveLength(1);
+      expect(available[0].text).toBe('Regular option');
+    });
+
+    it('filters unmet faction requirements by default', () => {
       const player = createTestPlayer();
       const node: DialogueNode = {
         id: uuidv4(),
@@ -341,6 +366,79 @@ describe('dialogueSystem', () => {
 
       expect(available).toHaveLength(1);
       expect(available[0].text).toBe('Scavenger trade');
+    });
+
+    it('hides unmet faction requirements when visibility is hidden', () => {
+      const player = createTestPlayer();
+      const node: DialogueNode = {
+        id: uuidv4(),
+        text: 'Faction hidden gate',
+        speaker: 'NPC',
+        options: [
+          {
+            text: 'Hidden resistance intel',
+            nextNodeId: null,
+            factionRequirement: {
+              factionId: 'resistance',
+              minimumStanding: 'friendly',
+              visibility: 'hidden',
+            },
+          },
+          { text: 'Regular option', nextNodeId: null },
+        ],
+      };
+
+      const available = getAvailableOptions(player, node);
+
+      expect(available).toHaveLength(1);
+      expect(available[0].text).toBe('Regular option');
+    });
+  });
+
+  describe('resolveDialogueFactionState', () => {
+    it('returns failed minimum standing state with locked visibility by default', () => {
+      const player = createTestPlayer();
+      const option: DialogueOption = {
+        text: 'Faction option',
+        nextNodeId: null,
+        factionRequirement: {
+          factionId: 'resistance',
+          minimumStanding: 'friendly',
+        },
+      };
+
+      const state = resolveDialogueFactionState(player, option, true);
+
+      expect(state).toBeTruthy();
+      expect(state?.isPassed).toBe(false);
+      expect(state?.visibility).toBe('locked');
+      expect(state?.failedRequirement).toBe('minimumStanding');
+      expect(state?.currentStanding).toBe('neutral');
+    });
+
+    it('evaluates maximum standing even when minimum standing also exists', () => {
+      const player = createTestPlayer({
+        factionReputation: {
+          ...DEFAULT_PLAYER.factionReputation,
+          resistance: 85,
+        },
+      });
+      const option: DialogueOption = {
+        text: 'Faction range option',
+        nextNodeId: null,
+        factionRequirement: {
+          factionId: 'resistance',
+          minimumStanding: 'neutral',
+          maximumStanding: 'friendly',
+        },
+      };
+
+      const state = resolveDialogueFactionState(player, option, true);
+
+      expect(state).toBeTruthy();
+      expect(state?.isPassed).toBe(false);
+      expect(state?.failedRequirement).toBe('maximumStanding');
+      expect(state?.currentStanding).toBe('allied');
     });
   });
 

@@ -133,6 +133,7 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-02-26 — GET-123 dialogue presentation enhancement landed (speaker metadata contracts, portrait placeholder pipeline, deterministic locked-visible skill-check UX, and overlay CSS extraction). Checklist boxes unchanged pending requester playtest sign-off; dialogue readability/identity risk reduced.
 - 2026-02-20 — GET-137 phase 1 scene-architecture extraction landed (MainScene module runtime, lifecycle registry, disposable cleanup). No gameplay checklist boxes changed; risk shifted toward follow-up extraction/validation in later phases.
 - 2026-02-21 — GET-137 follow-up extraction landed for surveillance rendering lifecycle (`SurveillanceRenderModule`), moving vision-cone/camera sprite ownership out of `MainScene` and validating Level 0 smoke run with 0 console errors. Gameplay checklist boxes unchanged; architecture risk reduced further.
 - 2026-02-22 — GET-137 battle-visibility hardening landed in `DayNightOverlayModule` (neutral combat overlay color + alpha cap) with replayed Level 0 combat smoke validation (`PLAYER TURN` visible, 0 console errors). Gameplay checklist boxes unchanged; combat blackout regression risk reduced.
