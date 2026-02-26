@@ -51,7 +51,7 @@ MVP Steps:
 - [MVP] Step 18: Click-to-Move Navigation and Path Preview (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 18.5: Centralize Depth Ordering and Camera PostFX Defaults (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 19: Implement Guard Perception & Alert States (Phase 6: Visual and Navigation Upgrades) — Completed
-- [MVP] Step 19.4: Stealth Mode Foundations (Engagement Model + Feedback) (Phase 6: Visual and Navigation Upgrades) — Pending
+- [MVP] Step 19.4: Stealth Mode Foundations (Engagement Model + Feedback) (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 19.5: Surveillance Camera System (Curfew Enforcement) (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 19.55: Adaptive NPC FSM Behaviors (Phase 6: Visual and Navigation Upgrades) — Completed
 - [MVP] Step 19.8: Establish Atlas-Driven Noir Lighting Pipeline (Phase 6: Visual and Navigation Upgrades) — Pending
@@ -3223,6 +3223,38 @@ Create new character with "Enable Survival Mode" checked and verify hunger/thirs
 - `yarn test --runTestsByPath src/__tests__/progression.test.ts src/__tests__/perks.test.ts`
 
 - `yarn build` remains blocked by pre-existing type errors in `AutoBattleProfileSelect`; stealth refactor compiles cleanly aside from that upstream issue.
+
+### Step 19.4: Stealth Mode Foundations (Engagement Model + Feedback) (Completed)
+- **Phase:** Phase 6: Visual and Navigation Upgrades
+- **Date:** February 26, 2026
+
+#### Tasks
+
+1. Completed the MVP fairness/readability pass for stealth state communication across controller, selectors, surveillance systems, and UI surfaces tracked under `GET-144`.
+2. Finalized escalation readability around `Suspicious -> Investigating -> Alarmed`, with recoverable `Exposed` states and alarm-gated stealth break/cooldown behavior.
+3. Landed the accepted HUD/control direction for MVP: compact always-available `STEALTH ON/OFF` control in Player HUD, no duplicate top-right stealth/surveillance wafer, and stable bottom HUD layout.
+4. Closed tracking artifacts for Step 19.4 (roadmap/readiness/progress sync) while leaving advanced stealth extras deferred to Post-MVP `GET-124`.
+
+#### Implementation
+
+- `the-getaway/src/components/GameController.tsx`
+- `the-getaway/src/components/ui/PlayerSummaryPanel.tsx`
+- `the-getaway/src/store/selectors/engagementSelectors.ts`
+- `the-getaway/src/game/systems/surveillance/cameraSystem.ts`
+- `the-getaway/src/game/interfaces/types.ts`
+- `the-getaway/src/content/system/index.ts`
+- `the-getaway/src/content/ui/index.ts`
+- `the-getaway/src/__tests__/GameController.surveillance.test.tsx`
+- `the-getaway/src/__tests__/engagementSelectors.test.ts`
+- `the-getaway/src/game/systems/surveillance/__tests__/cameraSystem.test.ts`
+- `the-getaway/src/__tests__/PlayerSummaryPanel.test.tsx`
+
+#### Validation
+
+- `yarn lint`
+- `yarn build`
+- `yarn test`
+- `yarn test --coverage`
 
 ### Step 92: Streamline main menu hierarchy and settings flow (Completed)
 - **Phase:** Phase 9: Optional Expansions (POST-MVP)

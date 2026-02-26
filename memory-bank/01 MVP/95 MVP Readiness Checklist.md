@@ -62,10 +62,10 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 ## C) Stealth / curfew / paranoia experience (signature feel)
 
 **C1. Stealth feels like a first-class path**
-- ☐ Stealth toggle + HUD feedback are clear and responsive
-- ☐ Guard vision + camera cones are readable (player understands why they’re detected)
-- ☐ Noise model is legible (player understands walk vs sprint consequences)
-- ☐ Detection escalation is fair (no “instant fail” unless clearly telegraphed)
+- ☑ Stealth toggle + HUD feedback are clear and responsive
+- ☑ Guard vision + camera cones are readable (player understands why they’re detected)
+- ☑ Noise model is legible (player understands walk vs sprint consequences)
+- ☑ Detection escalation is fair (no “instant fail” unless clearly telegraphed)
 
 **C2. Curfew pressure is tuned**
 - ☐ Curfew creates meaningful tension without soft-locking normal play
@@ -148,5 +148,6 @@ MVP is considered **ready** when:
 - 2026-02-24 — GET-144 day/night HUD pass replaced the phase/icon/progress wafer with a single consistent 24-hour digital clock in the top-right rail (no sun icon, no gradient phase shifting, no horizontal progress bar). Gameplay checklist boxes unchanged pending requester sign-off; top-rail HUD consistency risk reduced.
 - 2026-02-24 — GET-144 day/night timing pass removed digital-colon blinking, throttled top-right clock updates to larger time steps for calmer readability, and aligned curfew activation to world-clock hours 22:00-06:00. Gameplay checklist boxes unchanged pending requester sign-off; temporal readability/curfew-contract risk reduced.
 - 2026-02-24 — GET-144 debug-time alignment pass remapped Debug Inspector presets to 24h expectations (`Set Day` -> 06:00, `Set Night` -> 22:00) and switched inspector time readout to the same clock model as HUD. Gameplay checklist boxes unchanged pending requester sign-off; debug-playtest consistency risk reduced.
+- 2026-02-26 — GET-144 formally closed after requester acceptance + tracking sync (Roadmap Step 19.4 marked complete, C1 stealth readiness checks marked done, and final Linear close-out posted).
 - 2026-02-24 — GET-171 improvement pass removed the player-facing Level HUD runtime mount, moved mission objective diagnostics into Debug Panel Mission Snapshot, made Quests panel canonical (`Primary Progress + Active Side + Available Side`), and wired deterministic Level 0 side-quest progression hooks (enemy kill, camera sabotage, drone waypoint observation). Gameplay checklist boxes unchanged pending requester playtest sign-off; objective clarity/progression reliability risk reduced.
 - 2026-02-24 — GET-171 side-quest clarity follow-up fixed Firebrand Juno spawn bounds, added minimap quest-contact highlights, clarified camera/drone curfew objective copy (22:00-06:00), and enabled side-quest progress auto-promotion from Available to Active on first valid objective event. Gameplay checklist boxes unchanged pending requester sign-off; side-quest discoverability/completion clarity risk reduced.
