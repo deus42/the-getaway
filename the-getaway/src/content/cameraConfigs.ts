@@ -5,7 +5,7 @@ export interface ZoneCameraConfig {
   cameras: CameraDefinition[];
 }
 
-const EVENING_CURFEW_PHASES: CameraDefinition['activationPhases'] = ['evening', 'night'];
+const CURFEW_PHASES: CameraDefinition['activationPhases'] = ['night'];
 
 const zoneCameraConfigs: ZoneCameraConfig[] = [
   {
@@ -17,7 +17,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 28, y: 18 },
         range: 6,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [300, 270, 240],
           cycleDurationMs: 2600,
@@ -29,7 +29,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 18, y: 22 },
         range: 8,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [310, 270, 230],
           cycleDurationMs: 3200,
@@ -41,7 +41,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 52, y: 20 },
         range: 8,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [45, 90, 135],
           cycleDurationMs: 3000,
@@ -53,7 +53,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 36, y: 44 },
         range: 4,
         fieldOfView: 360,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         motionRadius: 4,
       },
       {
@@ -62,7 +62,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 70, y: 16 },
         range: 10,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         patrolPath: {
           waypoints: [
             { x: 70, y: 16 },
@@ -88,7 +88,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 14, y: 12 },
         range: 9,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [315, 270, 225, 180],
           cycleDurationMs: 3600,
@@ -100,7 +100,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 40, y: 10 },
         range: 9,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [0, 45, 90],
           cycleDurationMs: 3600,
@@ -112,7 +112,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 27, y: 26 },
         range: 4,
         fieldOfView: 360,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         motionRadius: 4,
       },
       {
@@ -121,7 +121,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 48, y: 26 },
         range: 4,
         fieldOfView: 360,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         motionRadius: 4,
       },
       {
@@ -130,7 +130,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 56, y: 18 },
         range: 12,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         patrolPath: {
           waypoints: [
             { x: 56, y: 18 },
@@ -151,7 +151,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 32, y: 6 },
         range: 9,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [200, 240, 280],
           cycleDurationMs: 3400,
@@ -168,7 +168,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 12, y: 12 },
         range: 8,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [40, 0, -40],
           cycleDurationMs: 3000,
@@ -180,7 +180,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 26, y: 22 },
         range: 4,
         fieldOfView: 360,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         motionRadius: 4,
       },
       {
@@ -189,7 +189,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 34, y: 14 },
         range: 10,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         patrolPath: {
           waypoints: [
             { x: 34, y: 14 },
@@ -215,7 +215,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 8, y: 32 },
         range: 9,
         fieldOfView: 90,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         sweep: {
           angles: [180, 210, 240],
           cycleDurationMs: 3200,
@@ -227,7 +227,7 @@ const zoneCameraConfigs: ZoneCameraConfig[] = [
         position: { x: 22, y: 40 },
         range: 4,
         fieldOfView: 360,
-        activationPhases: EVENING_CURFEW_PHASES,
+        activationPhases: CURFEW_PHASES,
         motionRadius: 4,
       },
     ],

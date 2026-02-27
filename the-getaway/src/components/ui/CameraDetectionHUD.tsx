@@ -268,6 +268,7 @@ const CameraDetectionHUD: React.FC = () => {
         totalCount: 0,
         activeCount: 0,
         isDaylightPhase: false,
+        curfewActive: false,
       };
     }
 
@@ -284,6 +285,7 @@ const CameraDetectionHUD: React.FC = () => {
       totalCount: cameras.length,
       activeCount,
       isDaylightPhase,
+      curfewActive: state.world.curfewActive,
     };
   });
   const zoneHasCameras = cameraTelemetry.totalCount > 0;
@@ -302,8 +304,8 @@ const CameraDetectionHUD: React.FC = () => {
     ? 'Cones hidden'
     : zoneHasCameras
     && cameraTelemetry.activeCount === 0
-    && cameraTelemetry.isDaylightPhase
-    ? 'Cameras inactive (daytime)'
+    && !cameraTelemetry.curfewActive
+    ? 'Cameras inactive (outside curfew)'
     : zoneHasCameras
     ? `${cameraTelemetry.activeCount}/${cameraTelemetry.totalCount} active`
     : 'No active cameras';

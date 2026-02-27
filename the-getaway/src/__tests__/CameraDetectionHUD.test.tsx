@@ -49,7 +49,7 @@ describe('CameraDetectionHUD', () => {
     store.dispatch(resetGame());
   });
 
-  it('shows daytime inactive cue when zone cameras exist but none are active', () => {
+  it('shows outside-curfew inactive cue when zone cameras exist but none are active', () => {
     act(() => {
       store.dispatch(setGameTime(90));
     });
@@ -61,7 +61,7 @@ describe('CameraDetectionHUD', () => {
       </Provider>
     );
 
-    expect(screen.getByText('Cameras inactive (daytime)')).toBeInTheDocument();
+    expect(screen.getByText('Cameras inactive (outside curfew)')).toBeInTheDocument();
   });
 
   it('shows hidden cue when overlay is disabled', () => {
