@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Captain Reyna portrait</title>
+  <desc id="desc">Female captain portrait with beret and command insignia.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#37290f"/>
+      <stop offset="100%" stop-color="#9a6c19"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="18" fill="url(#bg)"/>
+  <ellipse cx="64" cy="72" rx="29" ry="32" fill="#e9bf98"/>
+  <path d="M28 58c7-18 19-29 35-29 16 0 28 7 37 23-8-3-16-5-25-5-14 0-26 4-47 11z" fill="#7a5a1d"/>
+  <path d="M30 56h56v9H30z" fill="#2e2e2e"/>
+  <circle cx="79" cy="60" r="4" fill="#facc15"/>
+  <ellipse cx="52" cy="72" rx="4" ry="5" fill="#2b1b16"/>
+  <ellipse cx="76" cy="72" rx="4" ry="5" fill="#2b1b16"/>
+  <path d="M46 67c3-2 7-2 10 0" stroke="#5a3429" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M71 67c3-2 7-2 10 0" stroke="#5a3429" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M52 86c7 4 15 4 22 0" stroke="#b84b59" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="64" cy="121" r="30" fill="#3a3224"/>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Medic Yara portrait</title>
+  <desc id="desc">Young female medic portrait with soft facial features, tied hair wrap, and compact medical insignia.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d2a19"/>
+      <stop offset="100%" stop-color="#1f6c3f"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#355f48"/>
+      <stop offset="100%" stop-color="#2a4d3a"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="18" fill="url(#bg)"/>
+
+  <ellipse cx="64" cy="72" rx="28" ry="31" fill="#f5ccb0"/>
+
+  <path d="M33 60c2-18 15-31 31-31 14 0 25 8 32 22-8-4-15-6-23-6-14 0-24 6-40 15z" fill="url(#hair)"/>
+  <path d="M38 52c7-8 15-11 26-11 11 0 20 3 27 10" stroke="#d8e7dd" stroke-width="5" stroke-linecap="round"/>
+  <path d="M36 78c2 13 10 23 28 23" stroke="#2a4d3a" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path d="M92 78c-2 13-10 23-28 23" stroke="#2a4d3a" stroke-width="7" fill="none" stroke-linecap="round"/>
+
+  <ellipse cx="52" cy="71" rx="3.7" ry="4.6" fill="#2b1b16"/>
+  <ellipse cx="76" cy="71" rx="3.7" ry="4.6" fill="#2b1b16"/>
+  <path d="M47 66c3-2 7-2 10 0" stroke="#6a4638" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M71 66c3-2 7-2 10 0" stroke="#6a4638" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M59 76c1 1 3 1 4 0" stroke="#bb8a75" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M52 85c7 5 16 5 23 0" stroke="#ba5f6f" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+
+  <rect x="56" y="90" width="16" height="16" rx="4" fill="#e4efe9"/>
+  <rect x="63" y="93" width="2" height="10" fill="#2f8a4e"/>
+  <rect x="59" y="97" width="10" height="2" fill="#2f8a4e"/>
+
+  <circle cx="64" cy="121" r="30" fill="#1f3b2d"/>
+</svg>
