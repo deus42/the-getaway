@@ -24,9 +24,9 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 - Experience MVP completeness: ☐ 0–100% (target: ≥85%)
 
 **Current biggest risks** (keep to 1–3 bullets):
-- ☐ 
-- ☐ 
-- ☐ 
+- ☐ Final polished hero/NPC sprite art is still pending; current 8-direction sheets are normalized placeholders/manual-polish inputs.
+- ☐ Runtime playtest sign-off is still needed for attack/interact state transitions and vector fallback when a sheet is missing.
+- ☐ Post-acceptance lint/build/test/coverage pass has not run yet for GET-173.
 
 ---
 
@@ -133,6 +133,7 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-03-22 — GET-173 eight-direction sprite pipeline landed for hero presets + Level 0 named interactive NPCs (manifest-driven sheet registry, BootScene preload/animation wiring, sprite-aware rig factory with vector fallback, and normalized placeholder exports/validation). Checklist boxes unchanged pending requester playtest sign-off; character presentation/pipeline risk reduced while final-art risk remains.
 - 2026-02-26 — GET-123 dialogue presentation enhancement landed (speaker metadata contracts, portrait placeholder pipeline, deterministic locked-visible skill-check UX, and overlay CSS extraction). Checklist boxes unchanged pending requester playtest sign-off; dialogue readability/identity risk reduced.
 - 2026-02-20 — GET-137 phase 1 scene-architecture extraction landed (MainScene module runtime, lifecycle registry, disposable cleanup). No gameplay checklist boxes changed; risk shifted toward follow-up extraction/validation in later phases.
 - 2026-02-21 — GET-137 follow-up extraction landed for surveillance rendering lifecycle (`SurveillanceRenderModule`), moving vision-cone/camera sprite ownership out of `MainScene` and validating Level 0 smoke run with 0 console errors. Gameplay checklist boxes unchanged; architecture risk reduced further.

@@ -139,6 +139,11 @@ Future work:
 Summary:
 Level 0 uses an assetless noir-vector rendering foundation. Tiles, buildings, characters, and environmental props are generated procedurally so production sprite work can be layered in later without rewriting scene logic.
 
+2026-03-22 update:
+- Hero appearance presets and Level 0 named interactive NPCs now have a manifest-driven sprite path. Normalized placeholder/manual-polish sheets live under `the-getaway/public/characters/<spriteSetId>/` as 8-direction exports with 4 runtime states: `idle`, `move`, `attack`, `interact`.
+- `BootScene` preloads those sheets and `SpriteCharacterRigFactory` swaps them into the existing `CharacterToken` container contract only when the full matrix is present; missing or invalid sheets still fall back to the noir-vector rigs.
+- This keeps the painterly/isometric target viable while allowing staged sprite adoption without blocking Level 0 playtests on final art delivery.
+
 Modules:
 - `the-getaway/src/game/visual/contracts.ts`: defines `VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`.
 - `the-getaway/src/game/visual/theme/noirVectorTheme.ts`: resolves palettes + budgets (`performance`, `balanced`, `cinematic`).
@@ -167,4 +172,4 @@ Atmosphere grammar:
 Fallback policy:
 - Canvas and WebGL both render the vector kit; no sprite dependency is required for baseline readability.
 - Lighting and post FX are budget-gated by quality preset so expensive effects can be downshifted without breakage.
-- Entity/building contracts remain stable to support future sprite swap-in behind the same render hooks.
+- Entity/building contracts remain stable to support future sprite swap-in behind the same render hooks; the current hero/key-NPC sprite pipeline is the first production use of that contract.

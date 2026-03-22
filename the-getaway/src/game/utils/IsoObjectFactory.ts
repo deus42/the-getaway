@@ -66,6 +66,7 @@ export interface CharacterToken {
   column: Phaser.GameObjects.Graphics;
   beacon: Phaser.GameObjects.Graphics;
   halo: Phaser.GameObjects.Graphics;
+  sprite?: Phaser.GameObjects.Sprite;
   depthOffset: number;
   options: CharacterTokenOptions;
 }

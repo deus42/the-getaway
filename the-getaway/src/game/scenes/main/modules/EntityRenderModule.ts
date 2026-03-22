@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Enemy, NPC, Position } from '../../../interfaces/types';
+import { Enemy, NPC, Player, Position } from '../../../interfaces/types';
 import { PLAYER_SCREEN_POSITION_EVENT, PlayerScreenPositionDetail } from '../../../events';
 import { computeDepth, DepthBias } from '../../../utils/depth';
 import type { MainScene } from '../../MainScene';
@@ -8,6 +8,14 @@ import type {
   EntityRenderRuntimeState,
 } from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
+import { store } from '../../../../store';
+import type { CharacterSpriteDirection } from '../../../../content/characters/spriteManifest';
+import { resolvePlayerSpriteSetId } from '../../../../content/characters/spriteManifest';
+import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
+import {
+  DEFAULT_CHARACTER_SPRITE_FACING,
+  resolveCharacterFacing,
+} from '../../../visual/entities/characterPresentation';
 
 const readValue = <T>(target: object, key: string): T | undefined => {
   return Reflect.get(target, key) as T | undefined;
@@ -51,13 +59,13 @@ const createEntityRenderModulePorts = (scene: MainScene): EntityRenderModulePort
     },
     isInCombat: () => Boolean(readValue(scene, 'inCombat')),
     isCameraFollowingPlayer: () => Boolean(readValue(scene, 'isCameraFollowingPlayer')),
-    createCharacterToken: (role, gridX, gridY) => {
+    createCharacterToken: (descriptor, gridX, gridY) => {
       const rigFactory = readValue<{
-        createToken: (tokenRole: 'player' | 'hostileNpc' | 'interactiveNpc' | 'friendlyNpc', x: number, y: number) => unknown;
+        createToken: (tokenDescriptor: CharacterRenderDescriptor, x: number, y: number) => unknown;
       }>(scene, 'characterRigFactory');
       let createdToken: unknown;
       if (rigFactory) {
-        createdToken = rigFactory.createToken(role, gridX, gridY);
+        createdToken = rigFactory.createToken(descriptor, gridX, gridY);
       } else {
         const isoFactory = readRequiredValue<{
           createCharacterToken: (x: number, y: number, profile: unknown) => unknown;
@@ -66,7 +74,7 @@ const createEntityRenderModulePorts = (scene: MainScene): EntityRenderModulePort
         createdToken = isoFactory.createCharacterToken(
           gridX,
           gridY,
-          visualTheme.entityProfiles[role]
+          visualTheme.entityProfiles[descriptor.role]
         );
       }
 
@@ -75,12 +83,17 @@ const createEntityRenderModulePorts = (scene: MainScene): EntityRenderModulePort
       }
       return createdToken as NonNullable<EntityRenderRuntimeState['playerToken']>;
     },
-    positionCharacterToken: (token, gridX, gridY) => {
+    positionCharacterToken: (token, descriptor, gridX, gridY) => {
       const rigFactory = readValue<{
-        positionToken: (tokenArg: NonNullable<EntityRenderRuntimeState['playerToken']>, x: number, y: number) => void;
+        positionToken: (
+          tokenArg: NonNullable<EntityRenderRuntimeState['playerToken']>,
+          tokenDescriptor: CharacterRenderDescriptor,
+          x: number,
+          y: number
+        ) => void;
       }>(scene, 'characterRigFactory');
       if (rigFactory) {
-        rigFactory.positionToken(token, gridX, gridY);
+        rigFactory.positionToken(token, descriptor, gridX, gridY);
         return;
       }
 
@@ -96,6 +109,7 @@ const createEntityRenderModulePorts = (scene: MainScene): EntityRenderModulePort
       enemySprites: readValue(scene, 'enemySprites') ?? new Map(),
       npcSprites: readValue(scene, 'npcSprites') ?? new Map(),
       lastPlayerGridPosition: readValue(scene, 'lastPlayerGridPosition') ?? null,
+      lastPlayerActionPoints: readValue(scene, 'lastPlayerActionPoints') ?? null,
       lastPlayerScreenDetail: readValue(scene, 'lastPlayerScreenDetail'),
     }),
     writeRuntimeState: (state) => {
@@ -105,6 +119,7 @@ const createEntityRenderModulePorts = (scene: MainScene): EntityRenderModulePort
       Reflect.set(scene, 'enemySprites', state.enemySprites);
       Reflect.set(scene, 'npcSprites', state.npcSprites);
       Reflect.set(scene, 'lastPlayerGridPosition', state.lastPlayerGridPosition);
+      Reflect.set(scene, 'lastPlayerActionPoints', state.lastPlayerActionPoints);
       Reflect.set(scene, 'lastPlayerScreenDetail', state.lastPlayerScreenDetail);
     },
   };
@@ -117,6 +132,7 @@ const createDefaultRuntimeState = (): EntityRenderRuntimeState => ({
   enemySprites: new Map(),
   npcSprites: new Map(),
   lastPlayerGridPosition: null,
+  lastPlayerActionPoints: null,
   lastPlayerScreenDetail: undefined,
 });
 
@@ -153,6 +169,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       this.runtimeState.playerNameLabel = undefined;
     }
     this.runtimeState.lastPlayerGridPosition = null;
+    this.runtimeState.lastPlayerActionPoints = null;
     this.runtimeState.lastPlayerScreenDetail = undefined;
     this.destroyPlayerVitalsIndicator();
     this.pushRuntimeStateToPorts();
@@ -165,14 +182,17 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       return false;
     }
 
+    const player = store.getState().player.data;
+    const descriptor = this.buildPlayerDescriptor(player, false);
     this.ports.ensureIsoFactory();
-    this.runtimeState.playerToken = this.ports.createCharacterToken('player', position.x, position.y);
+    this.runtimeState.playerToken = this.ports.createCharacterToken(descriptor, position.x, position.y);
 
     const metrics = this.ports.getIsoMetrics();
     const pixelPos = this.ports.calculatePixelPosition(position.x, position.y);
     this.runtimeState.playerNameLabel = this.createCharacterNameLabel(playerName, 0x38bdf8, 14);
     this.positionCharacterLabel(this.runtimeState.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
     this.runtimeState.lastPlayerGridPosition = { ...position };
+    this.runtimeState.lastPlayerActionPoints = player.actionPoints;
     this.pushRuntimeStateToPorts();
     return true;
   }
@@ -200,13 +220,20 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       return;
     }
 
+    const player = store.getState().player.data;
     const hasPlayerMoved =
       !this.runtimeState.lastPlayerGridPosition ||
       this.runtimeState.lastPlayerGridPosition.x !== position.x ||
       this.runtimeState.lastPlayerGridPosition.y !== position.y;
+    const attackTriggered =
+      this.ports.isInCombat() &&
+      this.runtimeState.lastPlayerActionPoints !== null &&
+      player.actionPoints < this.runtimeState.lastPlayerActionPoints &&
+      !hasPlayerMoved;
+    const descriptor = this.buildPlayerDescriptor(player, hasPlayerMoved, attackTriggered);
 
     this.ports.ensureIsoFactory();
-    this.ports.positionCharacterToken(this.runtimeState.playerToken, position.x, position.y);
+    this.ports.positionCharacterToken(this.runtimeState.playerToken, descriptor, position.x, position.y);
 
     const pixelPos = this.ports.calculatePixelPosition(position.x, position.y);
     this.dispatchPlayerScreenPosition();
@@ -222,6 +249,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         this.ports.enablePlayerCameraFollow();
       }
     }
+    this.runtimeState.lastPlayerActionPoints = player.actionPoints;
 
     this.pushRuntimeStateToPorts();
   }
@@ -304,7 +332,8 @@ export class EntityRenderModule implements SceneModule<MainScene> {
           continue;
         }
 
-        const token = this.ports.createCharacterToken('hostileNpc', enemy.position.x, enemy.position.y);
+        const descriptor = this.buildEnemyDescriptor(enemy, null, false, false);
+        const token = this.ports.createCharacterToken(descriptor, enemy.position.x, enemy.position.y);
         const healthBar = this.ports.add.graphics();
         healthBar.setVisible(false);
 
@@ -316,6 +345,8 @@ export class EntityRenderModule implements SceneModule<MainScene> {
           healthBar,
           nameLabel,
           markedForRemoval: false,
+          lastGridPosition: { ...enemy.position },
+          lastActionPoints: enemy.actionPoints,
         });
 
         const createdData = this.runtimeState.enemySprites.get(enemy.id);
@@ -331,8 +362,29 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         continue;
       }
 
-      this.ports.positionCharacterToken(existingSpriteData.token, enemy.position.x, enemy.position.y);
+      const hasMoved =
+        existingSpriteData.lastGridPosition.x !== enemy.position.x ||
+        existingSpriteData.lastGridPosition.y !== enemy.position.y;
+      const attackTriggered =
+        this.ports.isInCombat() &&
+        existingSpriteData.lastActionPoints !== null &&
+        enemy.actionPoints < existingSpriteData.lastActionPoints &&
+        !hasMoved &&
+        enemy.aiState === 'attack';
+      const descriptor = this.buildEnemyDescriptor(
+        enemy,
+        existingSpriteData.lastGridPosition,
+        hasMoved,
+        attackTriggered,
+        existingSpriteData.token.container.getData('characterFacing') as
+          | CharacterSpriteDirection
+          | undefined
+      );
+
+      this.ports.positionCharacterToken(existingSpriteData.token, descriptor, enemy.position.x, enemy.position.y);
       existingSpriteData.markedForRemoval = false;
+      existingSpriteData.lastGridPosition = { ...enemy.position };
+      existingSpriteData.lastActionPoints = enemy.actionPoints;
       this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
       this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
@@ -363,14 +415,15 @@ export class EntityRenderModule implements SceneModule<MainScene> {
 
     this.ports.ensureIsoFactory();
     const metrics = this.ports.getIsoMetrics();
+    const activeDialogueId = store.getState().quests.activeDialogue.dialogueId;
 
     for (const npc of npcs) {
       const existingSpriteData = this.runtimeState.npcSprites.get(npc.id);
       const pixelPos = this.ports.calculatePixelPosition(npc.position.x, npc.position.y);
 
       if (!existingSpriteData) {
-        const role = npc.isInteractive ? 'interactiveNpc' : 'friendlyNpc';
-        const token = this.ports.createCharacterToken(role, npc.position.x, npc.position.y);
+        const descriptor = this.buildNpcDescriptor(npc, null, false, activeDialogueId === npc.dialogueId);
+        const token = this.ports.createCharacterToken(descriptor, npc.position.x, npc.position.y);
 
         const nameLabel = this.createCharacterNameLabel(npc.name ?? 'Civilian', npc.isInteractive ? 0x22d3ee : 0x94a3b8);
         this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
@@ -379,6 +432,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
           token,
           nameLabel,
           markedForRemoval: false,
+          lastGridPosition: { ...npc.position },
         };
 
         this.runtimeState.npcSprites.set(npc.id, npcData);
@@ -386,8 +440,22 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         continue;
       }
 
-      this.ports.positionCharacterToken(existingSpriteData.token, npc.position.x, npc.position.y);
+      const hasMoved =
+        existingSpriteData.lastGridPosition.x !== npc.position.x ||
+        existingSpriteData.lastGridPosition.y !== npc.position.y;
+      const descriptor = this.buildNpcDescriptor(
+        npc,
+        existingSpriteData.lastGridPosition,
+        hasMoved,
+        activeDialogueId === npc.dialogueId,
+        existingSpriteData.token.container.getData('characterFacing') as
+          | CharacterSpriteDirection
+          | undefined
+      );
+
+      this.ports.positionCharacterToken(existingSpriteData.token, descriptor, npc.position.x, npc.position.y);
       existingSpriteData.markedForRemoval = false;
+      existingSpriteData.lastGridPosition = { ...npc.position };
       this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
       this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
     }
@@ -412,6 +480,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
 
     this.runtimeState.lastPlayerScreenDetail = undefined;
     this.runtimeState.lastPlayerGridPosition = null;
+    this.runtimeState.lastPlayerActionPoints = null;
     this.destroyPlayerVitalsIndicator();
     this.pushRuntimeStateToPorts();
   }
@@ -613,6 +682,9 @@ export class EntityRenderModule implements SceneModule<MainScene> {
     if (nextState.lastPlayerGridPosition !== undefined) {
       this.runtimeState.lastPlayerGridPosition = nextState.lastPlayerGridPosition;
     }
+    if (nextState.lastPlayerActionPoints !== undefined) {
+      this.runtimeState.lastPlayerActionPoints = nextState.lastPlayerActionPoints;
+    }
     this.runtimeState.lastPlayerScreenDetail = nextState.lastPlayerScreenDetail;
   }
 
@@ -641,5 +713,67 @@ export class EntityRenderModule implements SceneModule<MainScene> {
 
   private colorToHex(color: number): string {
     return `#${color.toString(16).padStart(6, '0')}`;
+  }
+
+  private buildPlayerDescriptor(
+    player: Player,
+    hasMoved: boolean,
+    attackTriggered = false
+  ): CharacterRenderDescriptor {
+    const activeDialogueId = store.getState().quests.activeDialogue.dialogueId;
+    const spriteSetId = player.visualProfile?.spriteSetId ?? resolvePlayerSpriteSetId(player.appearancePreset);
+    const facing = resolveCharacterFacing(
+      this.runtimeState.lastPlayerGridPosition,
+      player.position,
+      player.facing,
+      (this.runtimeState.playerToken?.container.getData('characterFacing') as
+        | CharacterSpriteDirection
+        | undefined) ?? DEFAULT_CHARACTER_SPRITE_FACING
+    );
+
+    return {
+      role: 'player',
+      spriteSetId,
+      animationState: activeDialogueId ? 'interact' : hasMoved ? 'move' : 'idle',
+      facing,
+      attackTriggered,
+      accentHex: player.visualProfile?.accentHex,
+      styleVariant: player.visualProfile?.styleVariant,
+    };
+  }
+
+  private buildEnemyDescriptor(
+    enemy: Enemy,
+    previousPosition: Position | null,
+    hasMoved: boolean,
+    attackTriggered: boolean,
+    previousFacing: CharacterSpriteDirection = DEFAULT_CHARACTER_SPRITE_FACING
+  ): CharacterRenderDescriptor {
+    return {
+      role: 'hostileNpc',
+      spriteSetId: enemy.visualProfile?.spriteSetId,
+      animationState: hasMoved ? 'move' : 'idle',
+      facing: resolveCharacterFacing(previousPosition, enemy.position, enemy.facing, previousFacing),
+      attackTriggered,
+      accentHex: enemy.visualProfile?.accentHex,
+      styleVariant: enemy.visualProfile?.styleVariant,
+    };
+  }
+
+  private buildNpcDescriptor(
+    npc: NPC,
+    previousPosition: Position | null,
+    hasMoved: boolean,
+    isInteracting: boolean,
+    previousFacing: CharacterSpriteDirection = DEFAULT_CHARACTER_SPRITE_FACING
+  ): CharacterRenderDescriptor {
+    return {
+      role: npc.isInteractive ? 'interactiveNpc' : 'friendlyNpc',
+      spriteSetId: npc.visualProfile?.spriteSetId,
+      animationState: isInteracting ? 'interact' : hasMoved ? 'move' : 'idle',
+      facing: resolveCharacterFacing(previousPosition, npc.position, undefined, previousFacing),
+      accentHex: npc.visualProfile?.accentHex,
+      styleVariant: npc.visualProfile?.styleVariant,
+    };
   }
 }

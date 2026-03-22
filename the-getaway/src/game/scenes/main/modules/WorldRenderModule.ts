@@ -13,7 +13,7 @@ import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../../../vi
 import type { BuildingVisualProfile } from '../../../visual/contracts';
 import { TilePainter } from '../../../visual/world/TilePainter';
 import { BuildingPainter } from '../../../visual/world/BuildingPainter';
-import { CharacterRigFactory } from '../../../visual/entities/CharacterRigFactory';
+import { SpriteCharacterRigFactory } from '../../../visual/entities/SpriteCharacterRigFactory';
 import { AtmosphereDirector, type AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
 import { OcclusionEntityHandle, OcclusionReadabilityController } from '../../../visual/world/OcclusionReadabilityController';
 import {
@@ -25,7 +25,7 @@ import { resolvePickupObjectName } from '../../../utils/itemDisplay';
 import { store } from '../../../../store';
 import { setLightsEnabled } from '../../../../store/settingsSlice';
 import type { CharacterToken } from '../../../utils/IsoObjectFactory';
-import type { EntityVisualRole } from '../../../visual/contracts';
+import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
 
 const readValue = <T>(target: object, key: string): T | undefined => {
   return Reflect.get(target, key) as T | undefined;
@@ -170,12 +170,12 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     this.disableLighting(true);
   }
 
-  createCharacterToken(role: EntityVisualRole, gridX: number, gridY: number): CharacterToken {
+  createCharacterToken(descriptor: CharacterRenderDescriptor, gridX: number, gridY: number): CharacterToken {
     this.ensureVisualPipeline();
     this.ports.ensureIsoFactory();
 
     if (this.runtimeState.characterRigFactory) {
-      return this.runtimeState.characterRigFactory.createToken(role, gridX, gridY);
+      return this.runtimeState.characterRigFactory.createToken(descriptor, gridX, gridY);
     }
 
     const isoFactory = this.ports.getIsoFactory();
@@ -186,13 +186,18 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     return isoFactory.createCharacterToken(
       gridX,
       gridY,
-      this.runtimeState.visualTheme.entityProfiles[role]
+      this.runtimeState.visualTheme.entityProfiles[descriptor.role]
     );
   }
 
-  positionCharacterToken(token: CharacterToken, gridX: number, gridY: number): void {
+  positionCharacterToken(
+    token: CharacterToken,
+    descriptor: CharacterRenderDescriptor,
+    gridX: number,
+    gridY: number
+  ): void {
     if (this.runtimeState.characterRigFactory) {
-      this.runtimeState.characterRigFactory.positionToken(token, gridX, gridY);
+      this.runtimeState.characterRigFactory.positionToken(token, descriptor, gridX, gridY);
       return;
     }
 
@@ -240,7 +245,11 @@ export class WorldRenderModule implements SceneModule<MainScene> {
 
     const isoFactory = this.ports.getIsoFactory();
     if (isoFactory && (!this.runtimeState.characterRigFactory || themeChanged)) {
-      this.runtimeState.characterRigFactory = new CharacterRigFactory(isoFactory, this.runtimeState.visualTheme);
+      this.runtimeState.characterRigFactory = new SpriteCharacterRigFactory(
+        this.scene,
+        isoFactory,
+        this.runtimeState.visualTheme
+      );
     }
 
     const currentMapArea = this.ports.getCurrentMapArea();

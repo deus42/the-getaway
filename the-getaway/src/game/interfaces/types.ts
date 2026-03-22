@@ -12,6 +12,7 @@ export interface EntityVisualHook {
   silhouetteId?: string;
   accentHex?: string;
   styleVariant?: string;
+  spriteSetId?: string;
 }
 
 export type CardinalDirection = 'north' | 'east' | 'south' | 'west';

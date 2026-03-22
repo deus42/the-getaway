@@ -70,6 +70,7 @@ const cloneNPCBlueprint = (npc: Omit<NPC, 'id'>): Omit<NPC, 'id'> => ({
     ...step,
     position: clonePosition(step.position),
   })),
+  visualProfile: npc.visualProfile ? { ...npc.visualProfile } : undefined,
 });
 
 const cloneItemBlueprint = (item: Omit<Item, 'id'>): Omit<Item, 'id'> => ({

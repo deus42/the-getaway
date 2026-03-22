@@ -22,6 +22,7 @@ import { MinimapBridgeModule } from './main/modules/MinimapBridgeModule';
 import { StateSyncModule } from './main/modules/StateSyncModule';
 import { SurveillanceRenderModule } from './main/modules/SurveillanceRenderModule';
 import { WorldRenderModule } from './main/modules/WorldRenderModule';
+import type { CharacterRenderDescriptor } from '../visual/entities/characterPresentation';
 export class MainScene extends Phaser.Scene {
   private tileSize = DEFAULT_TILE_SIZE;
   private depthManager!: DepthManager;
@@ -217,8 +218,10 @@ export class MainScene extends Phaser.Scene {
       enablePlayerCameraFollow: () => this.cameraModule.enablePlayerCameraFollow(),
       isInCombat: () => this.stateSyncModule.isInCombat(),
       isCameraFollowingPlayer: () => this.cameraModule.isFollowingPlayer(),
-      createCharacterToken: (role, gridX, gridY) => this.worldRenderModule.createCharacterToken(role, gridX, gridY),
-      positionCharacterToken: (token, gridX, gridY) => this.worldRenderModule.positionCharacterToken(token, gridX, gridY),
+      createCharacterToken: (descriptor: CharacterRenderDescriptor, gridX, gridY) =>
+        this.worldRenderModule.createCharacterToken(descriptor, gridX, gridY),
+      positionCharacterToken: (token, descriptor: CharacterRenderDescriptor, gridX, gridY) =>
+        this.worldRenderModule.positionCharacterToken(token, descriptor, gridX, gridY),
     });
     this.inputModule = new InputModule(this, {
       cameras: this.cameras,

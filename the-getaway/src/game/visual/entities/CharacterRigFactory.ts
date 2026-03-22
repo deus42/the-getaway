@@ -9,7 +9,10 @@ interface RigMotionState {
   cadence: number;
 }
 
-const resolveOptions = (theme: VisualTheme, role: EntityVisualRole): CharacterTokenOptions => {
+export const resolveCharacterTokenOptions = (
+  theme: VisualTheme,
+  role: EntityVisualRole
+): CharacterTokenOptions => {
   const profile = theme.entityProfiles[role];
   return {
     baseColor: profile.baseColor,
@@ -33,7 +36,11 @@ export class CharacterRigFactory {
   ) {}
 
   public createToken(role: EntityVisualRole, gridX: number, gridY: number): CharacterToken {
-    const token = this.isoFactory.createCharacterToken(gridX, gridY, resolveOptions(this.theme, role));
+    const token = this.isoFactory.createCharacterToken(
+      gridX,
+      gridY,
+      resolveCharacterTokenOptions(this.theme, role)
+    );
     this.decorateToken(role, token);
     this.motionByToken.set(token, {
       lastX: gridX,

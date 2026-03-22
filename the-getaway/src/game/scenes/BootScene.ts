@@ -1,4 +1,8 @@
 import Phaser from 'phaser';
+import {
+  preloadCharacterSpriteSheets,
+  registerCharacterSpriteAnimations,
+} from '../visual/entities/characterSpriteAssets';
 import { store } from '../../store';
 import { RootState } from '../../store'; // Import RootState
 import { getLevel0Content } from '../../content/levels/level0';
@@ -12,6 +16,7 @@ export class BootScene extends Phaser.Scene {
     this.load.atlas('props', 'atlases/props.png', 'atlases/props.json');
     this.load.atlas('esb', 'atlases/esb_iso_trim_pad.png', 'atlases/esb_iso_trim_pad.json');
     this.load.image('lamp_slim_a_n', 'normals/lamp_slim_a_n.png');
+    preloadCharacterSpriteSheets(this);
   }
 
   create() {
@@ -27,6 +32,8 @@ export class BootScene extends Phaser.Scene {
       propsTexture.setDataSource(normalSource);
       this.textures.remove('lamp_slim_a_n');
     }
+
+    registerCharacterSpriteAnimations(this);
 
     if (!initialMapArea) {
         console.error('[BootScene] Error: initialMapArea is null or undefined in Redux state!');
