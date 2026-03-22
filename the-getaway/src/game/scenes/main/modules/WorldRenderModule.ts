@@ -27,6 +27,9 @@ import { setLightsEnabled } from '../../../../store/settingsSlice';
 import type { CharacterToken } from '../../../utils/IsoObjectFactory';
 import type { EntityVisualRole } from '../../../visual/contracts';
 
+const ESB_BUILDING_ID = 'block_1_1';
+const ESB_FOOTPRINT_OUTLINE_COLOR = 0xff3030;
+
 const readValue = <T>(target: object, key: string): T | undefined => {
   return Reflect.get(target, key) as T | undefined;
 };
@@ -552,13 +555,29 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       // GET-170 PoC: ESB skyline mass + neon entrance marker.
       // Important: DO NOT keep the ESB in a fixed depth layer, otherwise distant buildings (e.g. block_1_1)
       // can render on top of it, breaking isometric ordering.
-      if (building.id === 'block_2_2') {
-        const esbBias = Math.min(
-          DepthBias.CHARACTER_BASE - 1,
-          DepthBias.PROP_TALL + Math.round(profile.massingHeight * 12)
-        );
-        this.ports.syncDepth(mass, footprint.bottom.x, footprint.bottom.y, esbBias);
+      if (building.id === ESB_BUILDING_ID) {
+        const esbDepthPoint = {
+          x: footprint.top.x,
+          y: footprint.top.y - tileHeight,
+        };
+        const esbBias = DepthBias.PROP_LOW;
+        this.ports.syncDepth(mass, esbDepthPoint.x, esbDepthPoint.y, esbBias);
         this.runtimeState.buildingMassings.push(mass);
+
+        const footprintOutline = this.ports.add.graphics();
+        footprintOutline.setScrollFactor(1);
+        footprintOutline.lineStyle(1, ESB_FOOTPRINT_OUTLINE_COLOR, 0.92);
+        // Keep debug outline identical to collision footprint so rendered zone and
+        // obstacle logic cannot drift apart.
+        const outlinePoints = [footprint.top, footprint.right, footprint.bottom, footprint.left];
+        footprintOutline.strokePoints(outlinePoints, true);
+        this.ports.syncDepth(
+          footprintOutline,
+          esbDepthPoint.x,
+          esbDepthPoint.y,
+          esbBias + 1
+        );
+        this.runtimeState.buildingMassings.push(footprintOutline);
 
         const doorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
         const entrance = this.ports.add.container(doorPixel.x, doorPixel.y);
@@ -570,7 +589,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
             const footprintDebug = this.ports.add.graphics();
             footprintDebug.lineStyle(2, 0x39d5ff, 0.65);
             footprintDebug.strokePoints(
-              [footprint.top, footprint.right, footprint.bottom, footprint.left],
+              outlinePoints,
               true
             );
             this.ports.syncDepth(

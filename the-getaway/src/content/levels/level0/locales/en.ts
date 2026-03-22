@@ -748,14 +748,14 @@ export const level0EnglishContent: Level0LocaleContent = {
   buildingDefinitions: [
     {
       id: 'block_1_1',
-      name: 'Waterfront Commons',
+      name: 'Empire State Building',
       footprint: { from: { x: 4, y: 4 }, to: { x: 23, y: 19 } },
-      door: { x: 13, y: 20 },
-      interior: { width: 20, height: 12 },
+      door: { x: 20, y: 20 },
+      interior: { width: 26, height: 14 },
       district: 'downtown',
       signageStyle: 'corp_brass',
       propDensity: 'medium',
-      encounterProfile: 'downtown_waterfront',
+      encounterProfile: 'downtown_residential',
     },
     {
       id: 'block_1_2',
@@ -797,14 +797,14 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
     {
       id: 'block_2_2',
-      name: 'Empire State Building',
+      name: 'Waterfront Commons',
       footprint: { from: { x: 27, y: 22 }, to: { x: 59, y: 43 } },
       door: { x: 43, y: 44 },
-      interior: { width: 26, height: 14 },
+      interior: { width: 20, height: 12 },
       district: 'downtown',
       signageStyle: 'corp_brass',
       propDensity: 'medium',
-      encounterProfile: 'downtown_residential',
+      encounterProfile: 'downtown_waterfront',
     },
     {
       id: 'block_2_3',

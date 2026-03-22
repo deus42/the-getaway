@@ -6,7 +6,7 @@ import {
   PATH_PREVIEW_EVENT,
   TILE_CLICK_EVENT,
 } from '../../../events';
-import { TileType } from '../../../interfaces/types';
+import { MapArea, Position, TileType } from '../../../interfaces/types';
 import { resolveCardinalDirection } from '../../../combat/combatSystem';
 import type { MainScene } from '../../MainScene';
 import type { InputModulePorts } from '../contracts/ModulePorts';
@@ -90,31 +90,217 @@ export class InputModule implements SceneModule<MainScene> {
     }
 
     const worldPoint = this.ports.cameras.main.getWorldPoint(pointer.x, pointer.y);
-    const gridPosition = this.ports.worldToGrid(worldPoint.x, worldPoint.y);
-
-    if (!gridPosition) {
-      return;
-    }
-
-    const { x, y } = gridPosition;
-
-    if (x < 0 || y < 0 || x >= currentMapArea.width || y >= currentMapArea.height) {
-      return;
-    }
-
-    const tile = currentMapArea.tiles[y][x];
-    if (!tile.isWalkable && tile.type !== TileType.DOOR) {
+    const resolvedPosition = this.resolvePointerTarget(worldPoint, currentMapArea);
+    if (!resolvedPosition) {
       return;
     }
 
     window.dispatchEvent(
       new CustomEvent(TILE_CLICK_EVENT, {
         detail: {
-          position: gridPosition,
+          position: resolvedPosition,
           areaId: currentMapArea.id,
         },
       })
     );
+  }
+
+  private resolvePointerTarget(
+    worldPoint: { x: number; y: number },
+    mapArea: MapArea
+  ): Position | null {
+    const candidates = this.resolvePointerCandidates(worldPoint, mapArea);
+    if (candidates.length === 0) {
+      return null;
+    }
+
+    const selfPosition =
+      this.getCurrentPlayerPosition() ??
+      this.ports.getLastPlayerGridPosition() ??
+      this.ports.getPlayerInitialPosition() ??
+      null;
+    let selfFallback: Position | null = null;
+
+    for (const candidate of candidates) {
+      if (this.isTileTraversable(mapArea, candidate)) {
+        if (!selfPosition || !this.isSamePosition(candidate, selfPosition)) {
+          return candidate;
+        }
+        if (!selfFallback) {
+          selfFallback = candidate;
+        }
+        continue;
+      }
+
+      const resolved = this.findNearestWalkableTarget(candidate, mapArea, selfPosition);
+      if (!resolved) {
+        continue;
+      }
+
+      if (!selfPosition || !this.isSamePosition(resolved, selfPosition)) {
+        return resolved;
+      }
+
+      if (!selfFallback) {
+        selfFallback = resolved;
+      }
+    }
+
+    return selfFallback;
+  }
+
+  private getCurrentPlayerPosition(): Position | null {
+    const playerPosition = this.context.getState().player?.data?.position;
+    if (!playerPosition) {
+      return null;
+    }
+    return {
+      x: playerPosition.x,
+      y: playerPosition.y,
+    };
+  }
+
+  private resolvePointerCandidates(
+    worldPoint: { x: number; y: number },
+    mapArea: MapArea
+  ): Position[] {
+    const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
+    const offsetX = tileWidth * 0.35;
+    const offsetY = tileHeight * 0.35;
+    const sampleOffsets: Array<{ x: number; y: number }> = [
+      { x: 0, y: 0 },
+      { x: offsetX, y: 0 },
+      { x: -offsetX, y: 0 },
+      { x: 0, y: offsetY },
+      { x: 0, y: -offsetY },
+      { x: offsetX, y: offsetY },
+      { x: offsetX, y: -offsetY },
+      { x: -offsetX, y: offsetY },
+      { x: -offsetX, y: -offsetY },
+    ];
+
+    const seen = new Set<string>();
+    const candidates: Position[] = [];
+
+    sampleOffsets.forEach((offset) => {
+      const sample = this.ports.worldToGrid(worldPoint.x + offset.x, worldPoint.y + offset.y);
+      if (!sample) {
+        return;
+      }
+
+      if (
+        sample.x < 0 ||
+        sample.y < 0 ||
+        sample.x >= mapArea.width ||
+        sample.y >= mapArea.height
+      ) {
+        return;
+      }
+
+      const key = `${sample.x}:${sample.y}`;
+      if (seen.has(key)) {
+        return;
+      }
+      seen.add(key);
+      candidates.push(sample);
+    });
+
+    return candidates.sort((left, right) => {
+      const leftWalkable = this.isTileTraversable(mapArea, left);
+      const rightWalkable = this.isTileTraversable(mapArea, right);
+      if (leftWalkable !== rightWalkable) {
+        return leftWalkable ? -1 : 1;
+      }
+
+      const leftPixel = this.ports.calculatePixelPosition(left.x, left.y);
+      const rightPixel = this.ports.calculatePixelPosition(right.x, right.y);
+      const leftDistance = Phaser.Math.Distance.Squared(
+        worldPoint.x,
+        worldPoint.y,
+        leftPixel.x,
+        leftPixel.y
+      );
+      const rightDistance = Phaser.Math.Distance.Squared(
+        worldPoint.x,
+        worldPoint.y,
+        rightPixel.x,
+        rightPixel.y
+      );
+
+      return leftDistance - rightDistance;
+    });
+  }
+
+  private findNearestWalkableTarget(
+    start: Position,
+    mapArea: MapArea,
+    selfPosition: Position | null
+  ): Position | null {
+    const visited = new Set<string>();
+    const queue: Position[] = [start];
+    let selfFallback: Position | null = null;
+
+    const serialize = (position: Position) => `${position.x}:${position.y}`;
+    const directions: Array<{ x: number; y: number }> = [
+      { x: 1, y: 0 },
+      { x: -1, y: 0 },
+      { x: 0, y: 1 },
+      { x: 0, y: -1 },
+    ];
+
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (!current) {
+        break;
+      }
+
+      const currentKey = serialize(current);
+      if (visited.has(currentKey)) {
+        continue;
+      }
+      visited.add(currentKey);
+
+      if (
+        current.x < 0 ||
+        current.y < 0 ||
+        current.x >= mapArea.width ||
+        current.y >= mapArea.height
+      ) {
+        continue;
+      }
+
+      if (this.isTileTraversable(mapArea, current)) {
+        if (!selfPosition || !this.isSamePosition(current, selfPosition)) {
+          return current;
+        }
+
+        if (!selfFallback) {
+          selfFallback = current;
+        }
+      }
+
+      directions.forEach((direction) => {
+        queue.push({
+          x: current.x + direction.x,
+          y: current.y + direction.y,
+        });
+      });
+    }
+
+    return selfFallback;
+  }
+
+  private isTileTraversable(mapArea: MapArea, position: Position): boolean {
+    const tile = mapArea.tiles[position.y]?.[position.x];
+    return Boolean(tile && (tile.isWalkable || tile.type === TileType.DOOR));
+  }
+
+  private isSamePosition(left: Position | null, right: Position | null): boolean {
+    if (!left || !right) {
+      return false;
+    }
+
+    return left.x === right.x && left.y === right.y;
   }
 
   clearPathPreview(): void {

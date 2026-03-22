@@ -14,9 +14,11 @@ import { buildQuestsForLevel } from '../../quests/builders';
 
 const LEVEL_RESOURCE_KEY = 'levels.slums_command_grid';
 const ROAD_WIDENING_INSET_TILES = 4;
-const ESB_BUILDING_ID = 'block_2_2';
-const ESB_FOOTPRINT_INSET_X = 9;
-const ESB_FOOTPRINT_INSET_Y = 6;
+const ESB_BUILDING_ID = 'block_1_1';
+const ESB_FOOTPRINT_INSET_X = 1;
+const ESB_FOOTPRINT_INSET_Y = 1;
+const ESB_MIN_FOOTPRINT_TILES = 6;
+const ESB_DOOR_FACADE_INSET_Y = 2;
 
 interface Level0Content {
   dialogues: Dialogue[];
@@ -150,14 +152,15 @@ const insetBuildingFootprint = (
 const insetBuildingFootprintAxes = (
   building: LevelBuildingDefinition,
   insetX: number,
-  insetY: number
+  insetY: number,
+  minDimension: number = 8
 ): LevelBuildingDefinition => {
   const next = cloneBuildingDefinition(building);
   const width = next.footprint.to.x - next.footprint.from.x + 1;
   const height = next.footprint.to.y - next.footprint.from.y + 1;
 
-  const clampedX = Math.min(insetX, Math.max(0, Math.floor((width - 8) / 2)));
-  const clampedY = Math.min(insetY, Math.max(0, Math.floor((height - 8) / 2)));
+  const clampedX = Math.min(insetX, Math.max(0, Math.floor((width - minDimension) / 2)));
+  const clampedY = Math.min(insetY, Math.max(0, Math.floor((height - minDimension) / 2)));
 
   if (clampedX <= 0 && clampedY <= 0) {
     return next;
@@ -172,6 +175,20 @@ const insetBuildingFootprintAxes = (
       x: next.footprint.to.x - clampedX,
       y: next.footprint.to.y - clampedY,
     },
+  };
+
+  return next;
+};
+
+const alignEsbDoorToFacade = (
+  building: LevelBuildingDefinition
+): LevelBuildingDefinition => {
+  const next = cloneBuildingDefinition(building);
+  const facadeY = Math.max(next.footprint.from.y, next.footprint.to.y - ESB_DOOR_FACADE_INSET_Y);
+
+  next.door = {
+    x: next.footprint.to.x,
+    y: facadeY,
   };
 
   return next;
@@ -192,9 +209,18 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const buildingDefinitions = source.buildingDefinitions.map((definition) => {
     const widenedRoadLayout =
       definition.id === ESB_BUILDING_ID
-        ? insetBuildingFootprintAxes(definition, ESB_FOOTPRINT_INSET_X, ESB_FOOTPRINT_INSET_Y)
+        ? insetBuildingFootprintAxes(
+            definition,
+            ESB_FOOTPRINT_INSET_X,
+            ESB_FOOTPRINT_INSET_Y,
+            ESB_MIN_FOOTPRINT_TILES
+          )
         : insetBuildingFootprint(definition, ROAD_WIDENING_INSET_TILES);
-    return moveDoorToPerimeter(widenedRoadLayout);
+    const perimeterDoorPlacement = moveDoorToPerimeter(widenedRoadLayout);
+    if (definition.id === ESB_BUILDING_ID) {
+      return alignEsbDoorToFacade(perimeterDoorPlacement);
+    }
+    return perimeterDoorPlacement;
   });
 
   const slumsCover = source.coverSpots.slums.map(cloneCoverSpot);

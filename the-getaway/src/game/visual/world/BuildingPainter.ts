@@ -22,6 +22,13 @@ export interface BuildingMassingMetrics {
   };
 }
 
+export interface EsbVisualFootprintLocal {
+  top: { x: number; y: number };
+  right: { x: number; y: number };
+  bottom: { x: number; y: number };
+  left: { x: number; y: number };
+}
+
 interface DiamondPoints {
   top: Phaser.Geom.Point;
   right: Phaser.Geom.Point;
@@ -29,9 +36,25 @@ interface DiamondPoints {
   left: Phaser.Geom.Point;
 }
 
-const ESB_BUILDING_ID = 'block_2_2';
+const ESB_BUILDING_ID = 'block_1_1';
 const ESB_ATLAS_KEY = 'esb';
 const ESB_FRAME_KEY = 'esb_iso';
+const ESB_FRAME_WIDTH_PX = 696;
+const ESB_FRAME_HEIGHT_PX = 1757;
+const ESB_BASE_TIP_X_PX = 433;
+const ESB_BASE_TIP_Y_PX = 1732;
+const ESB_ORIGIN_X = ESB_BASE_TIP_X_PX / ESB_FRAME_WIDTH_PX;
+const ESB_ORIGIN_Y = ESB_BASE_TIP_Y_PX / ESB_FRAME_HEIGHT_PX;
+// Visual lot corners sampled from ESB atlas sidewalk mask.
+const ESB_FOOTPRINT_TOP_X_PX = 89;
+const ESB_FOOTPRINT_TOP_Y_PX = 1494;
+const ESB_FOOTPRINT_RIGHT_X_PX = 577;
+const ESB_FOOTPRINT_RIGHT_Y_PX = 1597;
+const ESB_FOOTPRINT_BOTTOM_X_PX = 407;
+const ESB_FOOTPRINT_BOTTOM_Y_PX = 1682;
+const ESB_FOOTPRINT_LEFT_X_PX = 57;
+const ESB_FOOTPRINT_LEFT_Y_PX = 1510;
+export const ESB_VISUAL_FOOTPRINT_DATA_KEY = 'esbVisualFootprintLocal';
 
 type EsbTuning = {
   // target height expressed in tiles
@@ -105,7 +128,8 @@ export class BuildingPainter {
         ESB_ATLAS_KEY,
         ESB_FRAME_KEY
       );
-      sprite.setOrigin(0.5, 1);
+      // Align ESB to the true rendered footprint tip from the source atlas.
+      sprite.setOrigin(ESB_ORIGIN_X, ESB_ORIGIN_Y);
 
       // Size the sprite so its *base* matches the building footprint.
       // Footprint left↔right distance corresponds to the visible base width on our 2:1 iso grid.
@@ -136,6 +160,27 @@ export class BuildingPainter {
 
       const baseAlpha = Phaser.Math.Clamp(0.9 + emissiveIntensity * 0.09 - overlayAlpha * 0.08, 0.82, 1);
       sprite.setAlpha(baseAlpha);
+
+      const anchorX = base.bottom.x + tuning.offsetX;
+      const anchorY = base.bottom.y + tuning.offsetY;
+      const spriteScale = sprite.scaleX;
+      const buildFootprintPoint = (sourceX: number, sourceY: number): { x: number; y: number } => {
+        const point = new Phaser.Geom.Point(
+          anchorX + (sourceX - ESB_BASE_TIP_X_PX) * spriteScale,
+          anchorY + (sourceY - ESB_BASE_TIP_Y_PX) * spriteScale
+        );
+        if (sprite.rotation !== 0) {
+          Phaser.Math.RotateAround(point, anchorX, anchorY, sprite.rotation);
+        }
+        return { x: point.x, y: point.y };
+      };
+      const visualFootprintLocal: EsbVisualFootprintLocal = {
+        top: buildFootprintPoint(ESB_FOOTPRINT_TOP_X_PX, ESB_FOOTPRINT_TOP_Y_PX),
+        right: buildFootprintPoint(ESB_FOOTPRINT_RIGHT_X_PX, ESB_FOOTPRINT_RIGHT_Y_PX),
+        bottom: buildFootprintPoint(ESB_FOOTPRINT_BOTTOM_X_PX, ESB_FOOTPRINT_BOTTOM_Y_PX),
+        left: buildFootprintPoint(ESB_FOOTPRINT_LEFT_X_PX, ESB_FOOTPRINT_LEFT_Y_PX),
+      };
+      container.setData(ESB_VISUAL_FOOTPRINT_DATA_KEY, visualFootprintLocal);
 
       container.add(sprite);
       return container;

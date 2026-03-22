@@ -96,11 +96,11 @@ export class MainScene extends Phaser.Scene {
     if (playerInitialized) {
       this.cameraModule.enablePlayerCameraFollow();
 
-      // PoC convenience: `?poc=esb` auto-focuses camera on the ESB landmark area.
+      // PoC convenience: `?poc=esb&camera=free` opts into free-camera ESB focus.
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('poc') === 'esb') {
-          const esb = this.currentMapArea?.buildings?.find((building) => building.id === 'block_2_2');
+        if (params.get('poc') === 'esb' && params.get('camera') === 'free') {
+          const esb = this.currentMapArea?.buildings?.find((building) => building.id === 'block_1_1');
           if (esb) {
             const centerX = (esb.footprint.from.x + esb.footprint.to.x) / 2;
             const centerY = (esb.footprint.from.y + esb.footprint.to.y) / 2;

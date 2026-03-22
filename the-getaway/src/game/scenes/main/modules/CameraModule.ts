@@ -9,7 +9,7 @@ const DEFAULT_FIT_ZOOM_FACTOR = 1.12;
 const MIN_CAMERA_ZOOM = 0.38;
 const MAX_CAMERA_ZOOM = 2.3;
 const CAMERA_BOUND_PADDING_TILES = 6;
-const CAMERA_FOLLOW_LERP = 0.08;
+const CAMERA_FOLLOW_LERP = 1;
 const COMBAT_ZOOM_MULTIPLIER = 1.28;
 const COMBAT_ZOOM_MIN_DELTA = 0.22;
 const CAMERA_ZOOM_TWEEN_MS = 340;
@@ -211,14 +211,7 @@ export class CameraModule implements SceneModule<MainScene> {
       }
     }
 
-    const bounds = this.ports.computeIsoBounds();
-    const padding = this.ports.getTileSize() * CAMERA_BOUND_PADDING_TILES;
-    camera.setBounds(
-      bounds.minX - padding,
-      bounds.minY - padding,
-      bounds.maxX - bounds.minX + padding * 2,
-      bounds.maxY - bounds.minY + padding * 2
-    );
+    this.refreshCameraBoundsForZoom(camera);
 
     const centerX = (width - 1) / 2;
     const centerY = (height - 1) / 2;
@@ -230,7 +223,8 @@ export class CameraModule implements SceneModule<MainScene> {
     const focusPoint = spawnPoint ?? centerPoint;
 
     if (!this.runtimeState.isCameraFollowingPlayer) {
-      camera.centerOn(focusPoint.x, focusPoint.y + tileHeight * 0.25);
+      camera.centerOn(focusPoint.x, focusPoint.y);
+      this.clampCameraToBounds(camera);
     } else {
       this.recenterCameraOnPlayer();
     }
@@ -261,7 +255,7 @@ export class CameraModule implements SceneModule<MainScene> {
     if (!this.runtimeState.isCameraFollowingPlayer) {
       camera.startFollow(tokenContainer, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     }
-    camera.setDeadzone(Math.max(120, this.ports.scale.width * 0.22), Math.max(160, this.ports.scale.height * 0.28));
+    camera.setDeadzone(0, 0);
     this.runtimeState.isCameraFollowingPlayer = true;
     this.pushRuntimeStateToPorts();
     this.recenterCameraOnPlayer();
@@ -276,7 +270,49 @@ export class CameraModule implements SceneModule<MainScene> {
 
     const camera = this.ports.cameras.main;
     camera.centerOn(tokenContainer.x, tokenContainer.y);
+    this.clampCameraToBounds(camera);
     this.ports.dispatchPlayerScreenPosition();
+  }
+
+  private refreshCameraBoundsForZoom(camera: Phaser.Cameras.Scene2D.Camera): void {
+    const bounds = this.ports.computeIsoBounds();
+    const basePadding = this.ports.getTileSize() * CAMERA_BOUND_PADDING_TILES;
+    const safeZoom = Math.max(0.0001, camera.zoom);
+    const halfViewWidth = camera.width / (2 * safeZoom);
+    const halfViewHeight = camera.height / (2 * safeZoom);
+    const paddingX = Math.max(basePadding, halfViewWidth + basePadding * 0.35);
+    const paddingY = Math.max(basePadding, halfViewHeight + basePadding * 0.35);
+
+    camera.setBounds(
+      bounds.minX - paddingX,
+      bounds.minY - paddingY,
+      bounds.maxX - bounds.minX + paddingX * 2,
+      bounds.maxY - bounds.minY + paddingY * 2
+    );
+  }
+
+  private alignCameraAfterZoom(
+    camera: Phaser.Cameras.Scene2D.Camera,
+    pointer?: Phaser.Input.Pointer,
+    worldPointBefore?: Phaser.Math.Vector2 | null
+  ): void {
+    this.refreshCameraBoundsForZoom(camera);
+
+    const hasPlayerToken = Boolean(this.ports.getPlayerTokenContainer());
+    if (this.runtimeState.isCameraFollowingPlayer && hasPlayerToken) {
+      this.recenterCameraOnPlayer();
+      return;
+    }
+
+    if (pointer && worldPointBefore) {
+      const worldPointAfter = camera.getWorldPoint(pointer.x, pointer.y);
+      const deltaWorldX = worldPointBefore.x - worldPointAfter.x;
+      const deltaWorldY = worldPointBefore.y - worldPointAfter.y;
+      camera.scrollX += deltaWorldX;
+      camera.scrollY += deltaWorldY;
+    }
+
+    this.clampCameraToBounds(camera);
   }
 
   isFollowingPlayer(): boolean {
@@ -392,6 +428,7 @@ export class CameraModule implements SceneModule<MainScene> {
 
     if (Math.abs(currentZoom - clampedTarget) < 0.0005) {
       camera.setZoom(clampedTarget);
+      this.alignCameraAfterZoom(camera);
       this.ports.applyOverlayZoom();
       this.ports.emitViewportUpdate();
       if (!this.ports.isInCombat()) {
@@ -416,11 +453,13 @@ export class CameraModule implements SceneModule<MainScene> {
       duration: CAMERA_ZOOM_TWEEN_MS,
       ease: 'Sine.easeInOut',
       onUpdate: () => {
+        this.alignCameraAfterZoom(camera);
         this.ports.applyOverlayZoom();
         this.ports.emitViewportUpdate();
       },
       onComplete: () => {
         this.runtimeState.cameraZoomTween = null;
+        this.alignCameraAfterZoom(camera);
         if (!this.ports.isInCombat()) {
           this.runtimeState.baselineCameraZoom = camera.zoom;
         }
@@ -518,18 +557,7 @@ export class CameraModule implements SceneModule<MainScene> {
     }
 
     camera.setZoom(targetZoom);
-
-    if (this.runtimeState.isCameraFollowingPlayer) {
-      camera.setDeadzone(Math.max(120, this.ports.scale.width * 0.22), Math.max(160, this.ports.scale.height * 0.28));
-      this.recenterCameraOnPlayer();
-    } else {
-      const worldPointAfter = camera.getWorldPoint(pointer.x, pointer.y);
-      const deltaWorldX = (worldPointBefore?.x ?? 0) - worldPointAfter.x;
-      const deltaWorldY = (worldPointBefore?.y ?? 0) - worldPointAfter.y;
-      camera.scrollX += deltaWorldX;
-      camera.scrollY += deltaWorldY;
-      this.clampCameraToBounds(camera);
-    }
+    this.alignCameraAfterZoom(camera, pointer, worldPointBefore);
 
     this.ports.applyOverlayZoom();
     this.ports.emitViewportUpdate();

@@ -23,7 +23,7 @@ describe('world map surface semantics', () => {
 
   it('keeps ESB footprint tight while preserving a walkable perimeter ring', () => {
     const { slumsArea } = buildWorldResources({ locale: 'en' });
-    const esb = slumsArea.buildings?.find((building) => building.id === 'block_2_2');
+    const esb = slumsArea.buildings?.find((building) => building.id === 'block_1_1');
     expect(esb).toBeDefined();
     if (!esb) {
       return;
@@ -31,11 +31,10 @@ describe('world map surface semantics', () => {
 
     const width = esb.footprint.to.x - esb.footprint.from.x + 1;
     const height = esb.footprint.to.y - esb.footprint.from.y + 1;
-    expect(width).toBe(15);
-    expect(height).toBe(10);
-    expect(esb.door.y).toBe(esb.footprint.to.y);
-    expect(esb.door.x).toBeGreaterThan(esb.footprint.from.x);
-    expect(esb.door.x).toBeLessThan(esb.footprint.to.x);
+    expect(width).toBe(6);
+    expect(height).toBe(6);
+    expect(esb.door.x).toBe(esb.footprint.to.x);
+    expect(esb.door.y).toBe(esb.footprint.to.y - 2);
 
     const interiorSample = slumsArea.tiles[esb.footprint.from.y + 1]?.[esb.footprint.from.x + 1];
     expect(interiorSample?.isWalkable).toBe(false);
@@ -55,6 +54,19 @@ describe('world map surface semantics', () => {
     );
     const blocked = inBounds.filter(({ x, y }) => !slumsArea.tiles[y]?.[x]?.isWalkable);
     expect(blocked).toEqual([]);
+
+    const rightSideBuffer: Array<{ x: number; y: number }> = [];
+    for (let y = esb.footprint.from.y - 2; y <= esb.footprint.to.y + 2; y += 1) {
+      rightSideBuffer.push({ x: esb.footprint.to.x + 1, y });
+      rightSideBuffer.push({ x: esb.footprint.to.x + 2, y });
+    }
+    const rightSideInBounds = rightSideBuffer.filter(
+      ({ x, y }) => y >= 0 && y < slumsArea.height && x >= 0 && x < slumsArea.width
+    );
+    const rightSideBlocked = rightSideInBounds.filter(
+      ({ x, y }) => !slumsArea.tiles[y]?.[x]?.isWalkable
+    );
+    expect(rightSideBlocked).toEqual([]);
   });
 
   it('keeps Firebrand Juno inside map bounds so her quest is discoverable', () => {

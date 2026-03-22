@@ -38,6 +38,8 @@ export interface MapConnection {
 
 const DOWNTOWN_WIDTH = 96;
 const DOWNTOWN_HEIGHT = 72;
+const ESB_BUILDING_ID = 'block_1_1';
+const ESB_WALKABLE_PADDING_TILES = 2;
 
 // NYC-inspired grid: Avenues (vertical, 3 tiles wide) and Streets (horizontal, 2 tiles wide)
 // Reduced to 3x3 grid by removing 4th row and 4th column
@@ -67,6 +69,88 @@ const isInsideBuildingFootprint = (
     );
   });
 
+const isInsideFootprint = (
+  x: number,
+  y: number,
+  building: LevelBuildingDefinition | MapBuildingDefinition
+): boolean =>
+  x >= building.footprint.from.x &&
+  x <= building.footprint.to.x &&
+  y >= building.footprint.from.y &&
+  y <= building.footprint.to.y;
+
+interface WalkableBounds {
+  fromX: number;
+  toX: number;
+  fromY: number;
+  toY: number;
+}
+
+const resolveBlockBounds = (
+  area: MapArea,
+  seedX: number,
+  seedY: number
+): WalkableBounds => {
+  let fromX = seedX;
+  while (fromX > 1 && !isAvenue(fromX - 1)) {
+    fromX -= 1;
+  }
+
+  let toX = seedX;
+  while (toX < area.width - 2 && !isAvenue(toX + 1)) {
+    toX += 1;
+  }
+
+  let fromY = seedY;
+  while (fromY > 1 && !isStreet(fromY - 1)) {
+    fromY -= 1;
+  }
+
+  let toY = seedY;
+  while (toY < area.height - 2 && !isStreet(toY + 1)) {
+    toY += 1;
+  }
+
+  return { fromX, toX, fromY, toY };
+};
+
+const expandBounds = (
+  bounds: WalkableBounds,
+  padding: number,
+  area: MapArea
+): WalkableBounds => ({
+  fromX: Math.max(1, bounds.fromX - padding),
+  toX: Math.min(area.width - 2, bounds.toX + padding),
+  fromY: Math.max(1, bounds.fromY - padding),
+  toY: Math.min(area.height - 2, bounds.toY + padding),
+});
+
+const ensureOutsideBuildingsWalkable = (
+  area: MapArea,
+  bounds: WalkableBounds,
+  allBuildings: LevelBuildingDefinition[]
+): void => {
+  for (let y = bounds.fromY; y <= bounds.toY; y += 1) {
+    for (let x = bounds.fromX; x <= bounds.toX; x += 1) {
+      const blockedByAnyBuilding = allBuildings.some((building) =>
+        isInsideFootprint(x, y, building)
+      );
+      if (blockedByAnyBuilding) {
+        continue;
+      }
+
+      const tile = area.tiles[y]?.[x];
+      if (!tile) {
+        continue;
+      }
+
+      tile.type = TileType.FLOOR;
+      tile.isWalkable = true;
+      tile.provideCover = false;
+      tile.cover = undefined;
+    }
+  }
+};
 
 const createInteriorArea = (
   name: string,
@@ -303,6 +387,14 @@ const createCityArea = (
   });
 
   const withWalls = addWalls(areaWithMeta, walls);
+  const esbBuilding = buildings.find((building) => building.id === ESB_BUILDING_ID);
+  if (esbBuilding) {
+    const seedX = Math.floor((esbBuilding.footprint.from.x + esbBuilding.footprint.to.x) / 2);
+    const seedY = Math.floor((esbBuilding.footprint.from.y + esbBuilding.footprint.to.y) / 2);
+    const blockBounds = resolveBlockBounds(withWalls, seedX, seedY);
+    const normalizedBounds = expandBounds(blockBounds, ESB_WALKABLE_PADDING_TILES, withWalls);
+    ensureOutsideBuildingsWalkable(withWalls, normalizedBounds, buildings);
+  }
 
   const coverPositions = coverSpots.map((spot) => spot.position);
 
