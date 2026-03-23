@@ -76,66 +76,66 @@
     "move": {
       "north": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       },
       "north-east": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       },
       "east": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       },
       "south-east": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       },
       "south": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       },
       "south-west": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       },
       "west": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       },
       "north-west": {
         "frameFootAnchorsPx": [
+          88,
+          88,
           87,
-          88,
-          88,
-          89
+          88
         ]
       }
     },
@@ -143,7 +143,7 @@
       "north": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]
@@ -151,7 +151,7 @@
       "north-east": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]
@@ -159,7 +159,7 @@
       "east": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]
@@ -167,7 +167,7 @@
       "south-east": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]
@@ -175,7 +175,7 @@
       "south": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]
@@ -183,7 +183,7 @@
       "south-west": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]
@@ -191,7 +191,7 @@
       "west": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]
@@ -199,7 +199,7 @@
       "north-west": {
         "frameFootAnchorsPx": [
           88,
-          89,
+          88,
           88,
           88
         ]

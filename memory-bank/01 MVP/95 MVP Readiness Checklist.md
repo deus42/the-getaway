@@ -133,6 +133,7 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-03-23 — GET-174 sprite beautification pass landed on top of the GET-173 pipeline (generator-driven silhouette/accessory/palette upgrades across all 12 hero/NPC sprite sets, regenerated 8-direction sheets, and preserved the existing runtime contract). Checklist boxes unchanged pending requester verification; final-art polish risk reduced and placeholder-art repetitiveness risk materially lowered.
 - 2026-03-22 — GET-173 eight-direction sprite pipeline landed for hero presets + Level 0 named interactive NPCs (manifest-driven sheet registry, BootScene preload/animation wiring, sprite-aware rig factory with vector fallback, and normalized placeholder exports/validation). Checklist boxes unchanged pending requester playtest sign-off; character presentation/pipeline risk reduced while final-art risk remains.
 - 2026-02-26 — GET-123 dialogue presentation enhancement landed (speaker metadata contracts, portrait placeholder pipeline, deterministic locked-visible skill-check UX, and overlay CSS extraction). Checklist boxes unchanged pending requester playtest sign-off; dialogue readability/identity risk reduced.
 - 2026-02-20 — GET-137 phase 1 scene-architecture extraction landed (MainScene module runtime, lifecycle registry, disposable cleanup). No gameplay checklist boxes changed; risk shifted toward follow-up extraction/validation in later phases.
