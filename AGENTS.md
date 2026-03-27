@@ -8,6 +8,8 @@ This guide defines how Codex agents work inside **The Getaway** repository. Foll
 - Build output: `the-getaway/dist/`; Jest mocks live in `the-getaway/__mocks__/`.
 - Primary scripts (run from `the-getaway/`): `yarn dev`, `yarn build`, `yarn preview`, `yarn lint`, `yarn test`, `yarn test:watch`.
 - Use Yarn for all package scripts and installs.
+- Default working branch: `main`. At task start, switch the shared workspace to `main` and keep implementation + approved commits on `main` unless the requester explicitly asks for a separate branch/worktree.
+- Character presentation default: hero appearance presets and Level 0 named interactive NPCs should use the manifest-driven sprite pipeline (`the-getaway/src/content/characters/spriteManifest.ts`, `the-getaway/public/characters/<spriteSetId>/`, `SpriteCharacterRigFactory`). Keep the noir-vector rigs only as fallback when the sprite matrix is incomplete/invalid or the actor is outside the current sprite rollout.
 
 ## Docs (Obsidian Vault)
 The `memory-bank/` folder is an Obsidian vault (Markdown-only) and is the canonical project documentation.
@@ -25,11 +27,11 @@ Key docs:
 ## 2. Pre-Task Checklist (Mandatory)
 1. **Check Linear first**  
    - Use the MCP Linear integration to query the backlog; all Linear lookups must go through MCP commands.  
-   - Before starting any roadmap step, confirm MCP access is active. When planning or creating a new MVP task, create the Linear issue (or locate it) and set its status to `Todo`. Leave PostMVP/optional work parked in `Backlog`. Only move an issue to `In Progress` once implementation actually begins so status reflects reality.  
+   - Before starting any roadmap step, confirm MCP access is active. When planning or creating a new MVP task, locate the existing Linear issue or ask the requester whether they want a new ticket created. Do not create a new issue silently. When a new issue is approved, set it to `Todo`. Leave PostMVP/optional work parked in `Backlog`. Only move an issue to `In Progress` once implementation actually begins so status reflects reality.  
    - Open the **MVP** (and **PostMVP** when relevant) Linear projects and treat them as the live task index.  
    - Identify the next `Todo` issue assigned to you or that matches the roadmap order. Await explicit handoff before pulling in extra work.  
-   - If the target roadmap step lacks a Linear issue, create one immediately under the MVP project before coding.
-   - For improvement requests, create the Linear ticket first and wait for explicit approval before writing code.
+   - If the target roadmap step lacks a Linear issue, ask the requester whether to create one before coding. Reuse the active ticket when the ask is a direct follow-up and a separate issue would add no value.
+   - For improvement requests, do not create a new Linear ticket until the requester explicitly asks for one or approves creating it.
 2. **Wrap-up discipline**  
    - Only move the active Linear issue to a terminal state (`Done`, `In Review`, etc.) after the implementation, documentation, validation, and commits are finalized **and the requester explicitly confirms the work**.  
    - Keep the issue in `In Progress` (or `In Review` if that state exists) until the user signs off; do not self-certify completion.  
@@ -79,10 +81,13 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
 - Prefer incremental commits; use imperative commit messages (Conventional Commits welcome).  
 - When reviewing or comparing local changes, always diff against the current HEAD commit (the workspace baseline); do not compare against older commits unless the user explicitly requests a different ref.  
 - Keep the Linear issue state aligned with reality (e.g., pause → `Todo`, active work → `In Progress`).  
+- Unless the requester explicitly asks for branch isolation, switch the visible/shared workspace to `main` before implementing. Do not create hidden side branches or worktrees by default.
+- Keep approved commits on `main`; do not implement in one branch/worktree and sync the result into another branch later.
 - Follow TypeScript, React, and Redux best practices; avoid default exports for shared utilities.
 - Maintain a per-task notes file. Before drafting your plan for a Linear issue, create or open a notes file at `progress/<Linear-key>.md` (for example, `progress/GET-117.md`). Use this file to record the Initial Ask, your implementation plan, key decisions, tasks executed, and the Level 0 validation script. Read and update this file whenever you resume work on the task to refresh context and mitigate context rot. These notes are separate from `memory-bank/04 Engineering/Roadmap.md` and should focus on actionable summaries rather than internal chain-of-thought.  
 - When a feature needs hands-on validation, ensure Level 0 contains or is updated with an accessible scenario that exercises the new behavior before closing the task.
 - Reference the active Linear key (for example, `GET-9`) in every commit message so Git ↔ Linear linking stays automatic.
+- When touching hero or named interactive NPC presentation, treat sprite-backed rendering as the default target and preserve vector-rig fallback only for missing/invalid sprite sets or actors that are not yet in the sprite manifest rollout.
 - **Session workflow (mandatory):**
   1. Log the directive in `progress/<Linear-key>.md` with timestamp/Ask/Result placeholders.
   2. Re-read the log + plan, update the plan for the new directive.
@@ -190,7 +195,7 @@ Adhering to this guide keeps roadmap docs, Linear, and the codebase in sync. Fol
 ## 11. Linear Workflow Callouts
 - Use the Linear “MVP” and “PostMVP” projects as the live task index; review them before picking up work so you don’t have to rescan the full plan/progress set each time.
 - Keep Linear issues in sync with roadmap status; update the issue state and descriptions whenever a step is added, started, or completed.
-- Create a Linear issue under the “MVP” project for every roadmap step/task as soon as it is added, and keep the issue status in sync with its completion in the docs.
+- When a roadmap step/task needs a new Linear issue, ask the requester before creating it. If approved, create it under the “MVP” project and keep the issue status in sync with its completion in the docs. Reuse the active issue for direct follow-up asks when that keeps tracking clearer.
 - Leave MVP roadmap issues in `Todo` through the planning phase and only switch to `In Progress` while actively implementing them; keep PostMVP items in `Backlog` until they are formally pulled into scope. Move issues to `Done` immediately after the corresponding implementation, documentation, and validation finish.
 - After finishing a roadmap step (or related Linear task), add an implementation summary comment to the matching Linear issue before moving it to `Done`; include key tasks, validation, and notable code references.
 - **Linear ticket types**: review the ticket type reference below and always apply the matching `Feature`, `Improvement`, or `Bug` label when creating an issue via MCP so downstream automation stays intact; improvements do not replace feature tickets in the roadmap.
@@ -305,7 +310,7 @@ At the start of each task, open or create its notes file and log the current con
 
 ### Sample Linear Issue Prompt
 
-When you start a new roadmap step, create a Linear ticket reminding yourself (or another agent) to set up the notes file. Issue creation prompt example:
+When you start a new roadmap step and the requester approves creating a Linear ticket, use a prompt like this to remind yourself (or another agent) to set up the notes file:
 
 - `MCP: Create a new Linear issue in the "MVP" project.`
 - `Title: Initialize notes file for GET-117`
