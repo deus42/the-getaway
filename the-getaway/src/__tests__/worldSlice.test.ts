@@ -416,6 +416,7 @@ describe('worldSlice', () => {
   describe('item management', () => {
     it('adds item to map at position', () => {
       const store = createTestStore();
+      store.dispatch(setMapArea(createTestMapArea()));
       const item: Item = {
         id: uuidv4(),
         name: 'Test Item',

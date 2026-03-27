@@ -3,6 +3,18 @@ import { InputModule } from '../InputModule';
 import { SceneContext } from '../../SceneContext';
 import { MainScene } from '../../../MainScene';
 
+jest.mock('phaser', () => ({
+  __esModule: true,
+  default: {
+    Math: {
+      Distance: {
+        Squared: (x1: number, y1: number, x2: number, y2: number) =>
+          (x1 - x2) ** 2 + (y1 - y2) ** 2,
+      },
+    },
+  },
+}));
+
 describe('InputModule', () => {
   it('binds pointerdown handler to module context to avoid getScene runtime errors', () => {
     const module = new InputModule({} as MainScene, {
