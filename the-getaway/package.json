@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "node scripts/check-scene-architecture.mjs && eslint .",
     "preview": "vite preview",
+    "sprites:seed-placeholders": "tsx scripts/generate-character-sprite-placeholders.ts",
+    "sprites:validate": "tsx scripts/validate-character-sprites.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "narrative:generate": "tsx scripts/generate-scene-from-story.ts"

@@ -687,6 +687,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_lira_vendor',
       isInteractive: true,
+      visualProfile: {
+        spriteSetId: 'npc_lira_vendor',
+      },
     },
     {
       name: 'Вартовий Орн',
@@ -712,6 +715,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_archivist_naila',
       isInteractive: true,
+      visualProfile: {
+        spriteSetId: 'npc_archivist_naila',
+      },
     },
     {
       name: 'Кур’єр Брант',
@@ -725,6 +731,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_courier_brant',
       isInteractive: true,
+      visualProfile: {
+        spriteSetId: 'npc_courier_brant',
+      },
     },
     {
       name: 'Юно Вогнеборець',
@@ -738,6 +747,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_firebrand_juno',
       isInteractive: true,
+      visualProfile: {
+        spriteSetId: 'npc_firebrand_juno',
+      },
     },
     {
       name: 'Сераф-Вартовий',
@@ -751,6 +763,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_seraph_warden',
       isInteractive: true,
+      visualProfile: {
+        spriteSetId: 'npc_seraph_warden',
+      },
     },
     {
       name: 'Кеш — дрон-технік',
@@ -764,6 +779,9 @@ export const level0UkrainianContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_drone_handler_kesh',
       isInteractive: true,
+      visualProfile: {
+        spriteSetId: 'npc_drone_handler_kesh',
+      },
     },
   ],
   itemBlueprints: [

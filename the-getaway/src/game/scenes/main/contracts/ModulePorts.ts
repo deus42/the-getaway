@@ -4,7 +4,8 @@ import type { PlayerScreenPositionDetail } from '../../../events';
 import type { IsoMetrics } from '../../../utils/iso';
 import type { CharacterToken, IsoObjectFactory } from '../../../utils/IsoObjectFactory';
 import type { BuildingVisualProfile, VisualTheme } from '../../../visual/contracts';
-import type { CharacterRigFactory } from '../../../visual/entities/CharacterRigFactory';
+import type { SpriteCharacterRigFactory } from '../../../visual/entities/SpriteCharacterRigFactory';
+import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
 import type { TilePainter } from '../../../visual/world/TilePainter';
 import type { BuildingPainter } from '../../../visual/world/BuildingPainter';
 import type { AtmosphereDirector, AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
@@ -18,6 +19,8 @@ export type EnemySpriteRecord = {
   healthBar: Phaser.GameObjects.Graphics;
   nameLabel: Phaser.GameObjects.Text;
   markedForRemoval: boolean;
+  lastGridPosition: Position;
+  lastActionPoints: number | null;
 };
 
 export type NpcSpriteRecord = {
@@ -25,6 +28,7 @@ export type NpcSpriteRecord = {
   indicator?: Phaser.GameObjects.Graphics;
   nameLabel: Phaser.GameObjects.Text;
   markedForRemoval: boolean;
+  lastGridPosition: Position;
 };
 
 export type CameraRuntimeState = {
@@ -46,6 +50,7 @@ export type EntityRenderRuntimeState = {
   enemySprites: Map<string, EnemySpriteRecord>;
   npcSprites: Map<string, NpcSpriteRecord>;
   lastPlayerGridPosition: Position | null;
+  lastPlayerActionPoints: number | null;
   lastPlayerScreenDetail?: PlayerScreenPositionDetail;
 };
 
@@ -53,7 +58,7 @@ export type WorldRenderRuntimeState = {
   visualTheme: VisualTheme;
   tilePainter?: TilePainter;
   buildingPainter?: BuildingPainter;
-  characterRigFactory?: CharacterRigFactory;
+  characterRigFactory?: SpriteCharacterRigFactory;
   atmosphereDirector?: AtmosphereDirector;
   occlusionReadabilityController?: OcclusionReadabilityController;
   buildingVisualProfiles: Record<string, BuildingVisualProfile>;
@@ -135,8 +140,8 @@ export type EntityRenderModulePorts = {
   enablePlayerCameraFollow(): void;
   isInCombat(): boolean;
   isCameraFollowingPlayer(): boolean;
-  createCharacterToken(role: 'player' | 'hostileNpc' | 'interactiveNpc' | 'friendlyNpc', gridX: number, gridY: number): CharacterToken;
-  positionCharacterToken(token: CharacterToken, gridX: number, gridY: number): void;
+  createCharacterToken(descriptor: CharacterRenderDescriptor, gridX: number, gridY: number): CharacterToken;
+  positionCharacterToken(token: CharacterToken, descriptor: CharacterRenderDescriptor, gridX: number, gridY: number): void;
   readRuntimeState?(): Partial<EntityRenderRuntimeState>;
   writeRuntimeState?(state: EntityRenderRuntimeState): void;
 };
