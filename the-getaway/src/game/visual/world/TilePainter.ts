@@ -45,7 +45,8 @@ export class TilePainter {
   public drawTile(tile: MapTile, context: TileContext): void {
     const tileForGround = context.groundOnly ? { ...tile, type: TileType.FLOOR } : tile;
     const baseColor = this.getTileBaseColor(tileForGround, context.gridX, context.gridY);
-    const variationSeed = ((((context.gridX * 13) ^ (context.gridY * 9)) % 9) - 4) * 0.01;
+    const variationSeed =
+      ((((Math.floor(context.gridX / 2) * 11) ^ (Math.floor(context.gridY / 2) * 7)) % 7) - 3) * 0.006;
     const modulatedBase = adjustColor(baseColor, variationSeed);
 
     this.drawGround(tileForGround, context, modulatedBase);
@@ -316,50 +317,55 @@ export class TilePainter {
     const isDowntown = district === 'downtown';
     const accentColor = scenic ? this.hexToColor(scenic.accentHex) : 0x9ccfe8;
     const glowColor = scenic ? this.hexToColor(scenic.glowHex) : 0x7acdf0;
+    const zoneRole = scenic?.zoneRole ?? 'plaza';
+    const blockEdgeWeight = scenic?.blockEdgeWeight ?? 0;
+    const landmarkWeight = scenic?.landmarkWeight ?? 0;
+    const distanceToFootprint = scenic?.distanceToFootprint ?? 4;
     const distanceWeight = scenic
       ? Phaser.Math.Clamp(1 - scenic.distanceToDoor / 5, 0, 1)
       : 0;
     const centerPlate = this.createInsetDiamond(points, 0.16);
     const innerPlate = this.createInsetDiamond(points, 0.3);
     const thresholdPlate = this.createInsetDiamond(points, 0.42);
+    const seamPlate = this.createInsetDiamond(points, 0.5);
+    const edgePlate = this.createInsetDiamond(points, 0.08);
 
     if (surface === 'road' || surface === 'crosswalk') {
       const laneColor = isDowntown
         ? (surface === 'crosswalk' ? 0xdce5ee : 0xc5d4df)
         : (surface === 'crosswalk' ? 0xeccfa7 : 0xb88d61);
       const curbColor = isDowntown ? adjustColor(accentColor, 0.12) : adjustColor(0xe0c394, -0.1);
+      const guideAlpha = surface === 'crosswalk'
+        ? (isDowntown ? 0.44 : 0.34)
+        : (isDowntown ? 0.18 : 0.14);
 
-      this.graphics.fillStyle(adjustColor(modulatedBase, isDowntown ? -0.02 : 0.02), isDowntown ? 0.2 : 0.14);
+      this.graphics.fillStyle(
+        adjustColor(modulatedBase, isDowntown ? -0.05 + landmarkWeight * 0.04 : 0.01),
+        isDowntown ? 0.22 : 0.16
+      );
       this.graphics.fillPoints(centerPlate, true);
-      this.graphics.lineStyle(1.05, curbColor, isDowntown ? 0.28 : 0.22);
+      this.graphics.lineStyle(1.04, curbColor, 0.18 + blockEdgeWeight * 0.08 + landmarkWeight * 0.04);
       this.graphics.strokePoints([top, right], false);
       this.graphics.strokePoints([left, bottom], false);
 
-      const drawAxisRails = (
+      const drawAxisGuide = (
         startA: Phaser.Geom.Point,
         endA: Phaser.Geom.Point,
-        startB: Phaser.Geom.Point,
-        endB: Phaser.Geom.Point
       ): void => {
-        this.graphics.lineStyle(1.08, laneColor, surface === 'crosswalk' ? 0.36 : 0.28);
+        this.graphics.lineStyle(1.02, laneColor, guideAlpha);
         this.graphics.strokePoints([startA, this.lerpPoint(startA, endA, 0.5), endA], false);
-        this.graphics.strokePoints([startB, this.lerpPoint(startB, endB, 0.5), endB], false);
       };
 
       if (axis === 'avenue' || axis === 'intersection') {
-        drawAxisRails(
+        drawAxisGuide(
           this.lerpPoint(top, left, 0.18),
-          this.lerpPoint(bottom, right, 0.18),
-          this.lerpPoint(top, right, 0.18),
-          this.lerpPoint(bottom, left, 0.18)
+          this.lerpPoint(bottom, right, 0.18)
         );
       }
       if (axis === 'street' || axis === 'intersection') {
-        drawAxisRails(
+        drawAxisGuide(
           this.lerpPoint(left, top, 0.18),
-          this.lerpPoint(right, bottom, 0.18),
-          this.lerpPoint(left, bottom, 0.18),
-          this.lerpPoint(right, top, 0.18)
+          this.lerpPoint(right, bottom, 0.18)
         );
       }
 
@@ -376,23 +382,13 @@ export class TilePainter {
         });
       }
 
-      if (isDowntown) {
-        this.graphics.lineStyle(0.92, adjustColor(accentColor, 0.12), 0.22);
-        this.graphics.strokePoints(
-          [
-            this.lerpPoint(top, right, 0.3),
-            this.lerpPoint(left, bottom, 0.3),
-          ],
-          false
-        );
-        this.graphics.strokePoints(
-          [
-            this.lerpPoint(top, right, 0.68),
-            this.lerpPoint(left, bottom, 0.68),
-          ],
-          false
-        );
-      } else if ((context.gridX + context.gridY * 2) % 5 === 0) {
+      if (isDowntown && blockEdgeWeight > 0.45) {
+        this.graphics.fillStyle(adjustColor(modulatedBase, 0.08 + landmarkWeight * 0.06), 0.12 + landmarkWeight * 0.06);
+        this.graphics.fillPoints(innerPlate, true);
+        this.graphics.lineStyle(0.92, adjustColor(accentColor, 0.08), 0.12 + landmarkWeight * 0.08);
+        this.graphics.strokePoints([edgePlate[0], edgePlate[1]], false);
+        this.graphics.strokePoints([edgePlate[3], edgePlate[2]], false);
+      } else if (!isDowntown && (context.gridX + context.gridY * 2) % 5 === 0) {
         const patchCenter = this.lerpPoint(top, bottom, 0.6);
         this.graphics.fillStyle(adjustColor(0x1f2937, 0.05), 0.18);
         this.graphics.fillEllipse(patchCenter.x - 2, patchCenter.y + 1, context.tileWidth * 0.22, context.tileHeight * 0.12);
@@ -417,21 +413,19 @@ export class TilePainter {
     }
 
     if (surface === 'sidewalk') {
-      this.graphics.fillStyle(adjustColor(modulatedBase, isDowntown ? 0.05 : 0.02), isDowntown ? 0.2 : 0.16);
+      this.graphics.fillStyle(
+        adjustColor(modulatedBase, isDowntown ? 0.08 + blockEdgeWeight * 0.04 : 0.03),
+        isDowntown ? 0.18 : 0.14
+      );
       this.graphics.fillPoints(centerPlate, true);
-      this.graphics.lineStyle(1, adjustColor(modulatedBase, 0.24), 0.36);
+      this.graphics.lineStyle(1, adjustColor(modulatedBase, 0.26), 0.28);
       this.graphics.strokePoints(points, true);
 
       if (isDowntown) {
-        this.graphics.fillStyle(adjustColor(modulatedBase, 0.12), 0.18);
+        this.graphics.fillStyle(adjustColor(modulatedBase, 0.14 + blockEdgeWeight * 0.04), 0.12 + landmarkWeight * 0.04);
         this.graphics.fillPoints(innerPlate, true);
-        this.graphics.lineStyle(0.95, 0xd7e3ec, 0.22);
-        this.graphics.strokePoints(innerPlate, true);
-        this.graphics.lineStyle(0.9, adjustColor(accentColor, 0.04), 0.2);
-        this.graphics.strokePoints([top, left], false);
-        this.graphics.strokePoints([right, bottom], false);
-        if ((context.gridX + context.gridY) % 3 === 0) {
-          this.graphics.lineStyle(0.82, 0xf2f5f7, 0.14);
+        if ((context.gridX + context.gridY) % 2 === 0) {
+          this.graphics.lineStyle(0.88, 0xe2ebf2, 0.16 + blockEdgeWeight * 0.06);
           this.graphics.strokePoints(
             [
               this.lerpPoint(top, right, 0.5),
@@ -440,11 +434,15 @@ export class TilePainter {
             false
           );
         }
+        if (zoneRole === 'podium' || landmarkWeight > 0.4) {
+          this.graphics.lineStyle(0.96, adjustColor(accentColor, 0.12), 0.18 + landmarkWeight * 0.08);
+          this.graphics.strokePoints(innerPlate, true);
+        }
       } else {
-        this.graphics.lineStyle(0.88, adjustColor(accentColor, -0.08), 0.16);
+        this.graphics.lineStyle(0.84, adjustColor(accentColor, -0.08), 0.12 + blockEdgeWeight * 0.04);
         this.graphics.strokePoints(innerPlate, true);
         if ((context.gridX + context.gridY) % 4 === 0) {
-          this.graphics.lineStyle(0.82, adjustColor(accentColor, -0.12), 0.14);
+          this.graphics.lineStyle(0.8, adjustColor(accentColor, -0.12), 0.12);
           this.graphics.strokePoints(
             [
               this.lerpPoint(top, innerPlate[0], 0.44),
@@ -463,14 +461,15 @@ export class TilePainter {
       return;
     }
 
-    if (scenic?.lotPattern === 'plaza') {
-      this.graphics.fillStyle(adjustColor(modulatedBase, 0.08), isDowntown ? 0.22 : 0.16);
+    if (zoneRole === 'podium' || scenic?.lotPattern === 'plaza') {
+      const podiumLift = zoneRole === 'podium' ? 0.16 + landmarkWeight * 0.08 : 0.1;
+      this.graphics.fillStyle(adjustColor(modulatedBase, podiumLift), isDowntown ? 0.24 : 0.18);
       this.graphics.fillPoints(centerPlate, true);
-      this.graphics.fillStyle(adjustColor(modulatedBase, 0.14), 0.14);
+      this.graphics.fillStyle(adjustColor(modulatedBase, podiumLift + 0.05), 0.16 + blockEdgeWeight * 0.04);
       this.graphics.fillPoints(innerPlate, true);
-      this.graphics.lineStyle(1, isDowntown ? 0xd4e1eb : accentColor, isDowntown ? 0.22 : 0.16);
+      this.graphics.lineStyle(1, isDowntown ? 0xd4e1eb : accentColor, isDowntown ? 0.24 : 0.16);
       this.graphics.strokePoints(innerPlate, true);
-      this.graphics.lineStyle(0.88, adjustColor(accentColor, 0.08), 0.16);
+      this.graphics.lineStyle(0.84, adjustColor(accentColor, 0.08), 0.12 + landmarkWeight * 0.08);
       this.graphics.strokePoints(
         [
           this.lerpPoint(top, right, 0.5),
@@ -478,18 +477,26 @@ export class TilePainter {
         ],
         false
       );
-    } else if (scenic?.lotPattern === 'service') {
-      this.graphics.fillStyle(adjustColor(modulatedBase, 0.03), 0.16);
+      if (zoneRole === 'podium' || landmarkWeight > 0.35) {
+        this.graphics.lineStyle(0.92, adjustColor(accentColor, 0.16), 0.18 + landmarkWeight * 0.06);
+        this.graphics.strokePoints(seamPlate, true);
+      }
+    } else if (zoneRole === 'service_edge' || zoneRole === 'service_yard' || scenic?.lotPattern === 'service') {
+      this.graphics.fillStyle(adjustColor(modulatedBase, 0.04 + blockEdgeWeight * 0.02), 0.14);
       this.graphics.fillPoints(centerPlate, true);
-      this.graphics.lineStyle(0.9, adjustColor(accentColor, -0.04), 0.18);
+      this.graphics.lineStyle(0.88, adjustColor(accentColor, -0.06), 0.14 + blockEdgeWeight * 0.04);
       this.graphics.strokePoints(innerPlate, true);
-      this.graphics.lineStyle(0.8, adjustColor(accentColor, 0.08), 0.14);
+      this.graphics.lineStyle(0.78, adjustColor(accentColor, 0.08), 0.12);
       this.graphics.strokePoints([innerPlate[0], innerPlate[2]], false);
       this.graphics.strokePoints([innerPlate[1], innerPlate[3]], false);
-    } else if (scenic?.lotPattern === 'market') {
-      this.graphics.fillStyle(adjustColor(accentColor, -0.08), 0.12);
+      if (distanceToFootprint <= 1 || zoneRole === 'service_edge') {
+        this.graphics.fillStyle(adjustColor(0x0f172a, 0.06), 0.12);
+        this.graphics.fillPoints(thresholdPlate, true);
+      }
+    } else if (zoneRole === 'market_edge' || zoneRole === 'market_yard' || scenic?.lotPattern === 'market') {
+      this.graphics.fillStyle(adjustColor(accentColor, -0.1), 0.1 + blockEdgeWeight * 0.04);
       this.graphics.fillPoints(innerPlate, true);
-      this.graphics.lineStyle(0.88, glowColor, 0.14);
+      this.graphics.lineStyle(0.84, glowColor, 0.12 + blockEdgeWeight * 0.04);
       this.graphics.strokePoints(
         [
           this.lerpPoint(left, top, 0.34),
@@ -497,7 +504,7 @@ export class TilePainter {
         ],
         false
       );
-      this.graphics.lineStyle(0.82, adjustColor(accentColor, -0.18), 0.14);
+      this.graphics.lineStyle(0.8, adjustColor(accentColor, -0.18), 0.12);
       this.graphics.strokePoints(
         [
           this.lerpPoint(top, right, 0.66),
@@ -511,8 +518,8 @@ export class TilePainter {
       this.drawEntryPocket(innerPlate, glowColor, accentColor, distanceWeight, 1);
     }
 
-    if (isDowntown && (context.gridX + context.gridY) % 5 === 0) {
-      this.graphics.lineStyle(0.8, adjustColor(accentColor, 0.06), 0.12);
+    if (isDowntown && zoneRole === 'podium' && (context.gridX + context.gridY) % 4 === 0) {
+      this.graphics.lineStyle(0.82, adjustColor(accentColor, 0.08), 0.12 + landmarkWeight * 0.04);
       this.graphics.strokePoints(centerPlate, true);
     } else if (!isDowntown && (context.gridX + context.gridY) % 3 === 0) {
       this.graphics.lineStyle(0.84, adjustColor(modulatedBase, 0.18), 0.1);
@@ -521,7 +528,7 @@ export class TilePainter {
           this.lerpPoint(top, right, 0.52),
           this.lerpPoint(left, bottom, 0.52),
         ],
-          false
+        false
       );
     }
     this.drawRoadReflection(tile, context, points, isDowntown ? 0.42 : 0.32);

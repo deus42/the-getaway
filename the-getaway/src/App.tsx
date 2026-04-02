@@ -69,8 +69,8 @@ const mainStageStyle: CSSProperties = {
   background: "var(--hud-stage-background)",
 };
 
-const DEFAULT_DOCK_MIN_HEIGHT = 260;
-const DEFAULT_DOCK_MAX_HEIGHT = 320;
+const DEFAULT_DOCK_MIN_HEIGHT = 228;
+const DEFAULT_DOCK_MAX_HEIGHT = 288;
 
 const centerStageStyle: CSSProperties = {
   flex: "1 1 auto",

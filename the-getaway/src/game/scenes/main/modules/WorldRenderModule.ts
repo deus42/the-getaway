@@ -365,7 +365,6 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       const color = item.isQuestItem ? 0xfacc15 : 0x22d3ee;
       const pulseColor = item.isQuestItem ? 0xfff3bf : 0x7dd3fc;
       const pixel = this.ports.calculatePixelPosition(item.position.x, item.position.y);
-      const itemLabelName = resolvePickupObjectName(item);
 
       addProp(
         isoFactory.createPulsingHighlight(item.position.x, item.position.y, {
@@ -381,6 +380,11 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         })
       );
 
+      if (!item.isQuestItem) {
+        return;
+      }
+
+      const itemLabelName = resolvePickupObjectName(item);
       const itemLabel = this.ports.add.text(pixel.x, pixel.y - isoMetrics.tileHeight * 0.7, itemLabelName, {
         fontFamily: 'Orbitron, "DM Sans", sans-serif',
         fontSize: '10px',
@@ -575,9 +579,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       });
       mass.setScrollFactor(1);
 
-      // GET-170 PoC: ESB skyline mass + neon entrance marker.
-      // Important: DO NOT keep the ESB in a fixed depth layer, otherwise distant buildings (e.g. block_1_1)
-      // can render on top of it, breaking isometric ordering.
+      // Keep the ESB in scene depth ordering, but avoid extra hero-object chrome.
       if (building.id === ESB_BUILDING_ID) {
         const esbDepthPoint = {
           x: footprint.top.x,
@@ -586,19 +588,6 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         const esbBias = DepthBias.PROP_LOW;
         this.ports.syncDepth(mass, esbDepthPoint.x, esbDepthPoint.y, esbBias);
         this.runtimeState.buildingMassings.push(mass);
-        const footprintOutline = this.ports.add.graphics();
-        footprintOutline.lineStyle(1, 0xff3030, 0.92);
-        footprintOutline.strokePoints([footprint.top, footprint.right, footprint.bottom, footprint.left], true);
-        this.ports.syncDepth(
-          footprintOutline,
-          footprint.bottom.x,
-          footprint.bottom.y,
-          DepthBias.FLOATING_UI + 24
-        );
-        this.runtimeState.buildingMassings.push(footprintOutline);
-        const doorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
-        const entrance = this.ports.add.container(doorPixel.x, doorPixel.y);
-        entrance.setScrollFactor(1);
 
         if (typeof window !== 'undefined') {
           const params = new URLSearchParams(window.location.search);
@@ -614,7 +603,8 @@ export class WorldRenderModule implements SceneModule<MainScene> {
             );
             this.runtimeState.buildingMassings.push(footprintDebug);
 
-            const debugText = this.ports.add.text(0, -tileHeight * 1.6, `door ${building.door.x},${building.door.y}`, {
+            const doorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
+            const debugText = this.ports.add.text(doorPixel.x, doorPixel.y - tileHeight * 1.6, `door ${building.door.x},${building.door.y}`, {
               fontFamily: 'monospace',
               fontSize: '10px',
               color: '#39d5ff',
@@ -622,45 +612,10 @@ export class WorldRenderModule implements SceneModule<MainScene> {
               strokeThickness: 3,
             });
             debugText.setOrigin(0.5, 1);
-            entrance.add(debugText);
+            this.ports.syncDepth(debugText, doorPixel.x, doorPixel.y, DepthBias.FLOATING_UI + 30);
+            this.runtimeState.buildingMassings.push(debugText);
           }
         }
-
-        const neon = this.ports.add.graphics();
-        neon.setBlendMode(Phaser.BlendModes.ADD);
-        neon.fillStyle(0xbfd6e8, 0.035);
-        neon.fillEllipse(0, tileHeight * 0.03, tileWidth * 0.72, tileHeight * 0.44);
-        neon.fillStyle(0x79cdee, 0.025);
-        neon.fillEllipse(0, -tileHeight * 0.18, tileWidth * 0.44, tileHeight * 0.26);
-        neon.lineStyle(1.4, 0xaed4e8, 0.14);
-        neon.strokeRoundedRect(-11, -18, 22, 30, 4);
-        neon.lineStyle(1.1, 0x7dc8f0, 0.1);
-        neon.strokeRoundedRect(-15, -22, 30, 38, 6);
-        neon.fillStyle(0x8fd6f8, 0.038);
-        neon.fillRoundedRect(tileHeight * 0.92, -tileHeight * 1.12, tileHeight * 2.2, tileHeight * 0.72, 6);
-        neon.lineStyle(1.6, 0xbfe7ff, 0.14);
-        neon.strokeRoundedRect(tileHeight * 0.92, -tileHeight * 1.12, tileHeight * 2.2, tileHeight * 0.72, 6);
-        neon.lineStyle(1, 0xf4c98c, 0.08);
-        neon.strokePoints(
-          [
-            new Phaser.Geom.Point(tileHeight * 1.05, -tileHeight * 0.58),
-            new Phaser.Geom.Point(tileHeight * 3.02, -tileHeight * 0.58),
-          ],
-          false
-        );
-        entrance.add(neon);
-
-        this.ports.syncDepth(entrance, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW);
-        this.runtimeState.buildingMassings.push(entrance);
-
-        this.scene.tweens.add({
-          targets: neon,
-          alpha: { from: 0.85, to: 1.0 },
-          duration: 2800,
-          yoyo: true,
-          repeat: -1,
-          ease: 'Sine.easeInOut',
-        });
         return;
       }
 
@@ -865,7 +820,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     backdropGraphics.fillRect(originX, originY, width, height);
     this.ports.cameras.main.setBackgroundColor(atmosphere.gradientTopLeft);
 
-    const skylineBaseY = originY + height * 0.44;
+    const skylineBaseY = originY + height * 0.47;
     const skylineColumns = atmosphere.skylineColumns;
     const downtownColor = atmosphere.skylineDowntownColor;
     const slumsColor = atmosphere.skylineSlumsColor;
@@ -876,7 +831,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       const widthScale = 0.68 + (((column * 13) % 7) * 0.08);
       const segmentWidth = (width / skylineColumns) * widthScale;
       const variant = ((column * 29) % 11) / 11;
-      const towerHeight = height * (0.12 + variant * 0.28) * (normalized < skylineSplit ? 1.12 : 0.78);
+      const towerHeight = height * (0.08 + variant * 0.2) * (normalized < skylineSplit ? 1.02 : 0.72);
       const tintMix = normalized < skylineSplit ? 0.78 : 0.26;
       const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
         Phaser.Display.Color.ValueToColor(slumsColor),
@@ -887,18 +842,18 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       const tintColor = Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b);
       backdropGraphics.fillStyle(tintColor, atmosphere.skylineAlphaBase + variant * atmosphere.skylineAlphaVariance);
       backdropGraphics.fillRect(x, skylineBaseY - towerHeight, segmentWidth, towerHeight);
-      backdropGraphics.fillStyle(adjustColor(tintColor, 0.12), 0.14 + atmosphere.emissiveIntensity * 0.1);
+      backdropGraphics.fillStyle(adjustColor(tintColor, 0.08), 0.06 + atmosphere.emissiveIntensity * 0.05);
       backdropGraphics.fillRect(x + segmentWidth * 0.72, skylineBaseY - towerHeight, segmentWidth * 0.16, towerHeight);
     }
 
-    const nearlineBaseY = originY + height * 0.68;
+    const nearlineBaseY = originY + height * 0.71;
     const nearlineColumns = Math.round(skylineColumns * 1.2);
     for (let column = 0; column < nearlineColumns; column += 1) {
       const normalized = column / nearlineColumns;
       const x = originX + normalized * width;
       const segmentWidth = (width / nearlineColumns) * (0.9 + (((column * 7) % 5) * 0.1));
       const heightVariance = ((column * 17) % 9) / 9;
-      const layerHeight = height * (0.06 + heightVariance * 0.12);
+      const layerHeight = height * (0.04 + heightVariance * 0.08);
       const tintMix = normalized < skylineSplit ? 0.7 : 0.34;
       const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
         Phaser.Display.Color.ValueToColor(slumsColor),
@@ -907,18 +862,18 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         tintMix
       );
       const tintColor = Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b);
-      backdropGraphics.fillStyle(tintColor, Math.min(0.34, atmosphere.skylineAlphaBase + 0.08 + heightVariance * 0.06));
+      backdropGraphics.fillStyle(tintColor, Math.min(0.18, atmosphere.skylineAlphaBase + 0.04 + heightVariance * 0.03));
       backdropGraphics.fillRect(x, nearlineBaseY - layerHeight, segmentWidth, layerHeight);
     }
 
-    const horizonY = originY + height * 0.44;
+    const horizonY = originY + height * 0.46;
     backdropGraphics.fillStyle(atmosphere.horizonGlowColor, atmosphere.horizonGlowAlpha);
     backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
 
-    backdropGraphics.fillStyle(adjustColor(atmosphere.gradientTopRight, 0.12), 0.08 + atmosphere.horizonGlowAlpha * 0.28);
+    backdropGraphics.fillStyle(adjustColor(atmosphere.gradientTopRight, 0.08), 0.04 + atmosphere.horizonGlowAlpha * 0.2);
     backdropGraphics.fillEllipse(originX + width * 0.52, originY + height * 0.28, width * 1.18, height * 0.42);
 
-    backdropGraphics.fillStyle(adjustColor(atmosphere.horizonGlowColor, 0.06), 0.08 + atmosphere.emissiveIntensity * 0.12);
+    backdropGraphics.fillStyle(adjustColor(atmosphere.horizonGlowColor, 0.04), 0.04 + atmosphere.emissiveIntensity * 0.08);
     backdropGraphics.fillEllipse(originX + width / 2, originY + height * 0.78, width * 1.2, height * 0.28);
 
     backdropGraphics.fillStyle(atmosphere.lowerHazeColor, atmosphere.lowerHazeAlpha);

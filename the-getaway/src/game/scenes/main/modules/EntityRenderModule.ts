@@ -510,10 +510,9 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       align: 'center',
     });
     label.setOrigin(0.5, 1);
-    label.setStroke(this.colorToHex(accentColor), 1.4);
-    label.setShadow(0, 0, this.colorToHex(accentColor), 8, true, true);
-    label.setBlendMode(Phaser.BlendModes.ADD);
-    label.setAlpha(0.95);
+    label.setStroke(this.colorToHex(accentColor), 1);
+    label.setShadow(0, 0, this.colorToHex(accentColor), 4, true, true);
+    label.setAlpha(0.72);
     return label;
   }
 

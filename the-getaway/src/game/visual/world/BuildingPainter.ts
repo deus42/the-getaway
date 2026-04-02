@@ -119,17 +119,17 @@ export class BuildingPainter {
 
       const emissiveIntensity = Phaser.Math.Clamp(metrics.atmosphere?.emissiveIntensity ?? 0.35, 0, 1);
       const overlayAlpha = Phaser.Math.Clamp(metrics.atmosphere?.overlayAlpha ?? 0.2, 0, 1);
-      const tintBlend = Phaser.Math.Clamp(0.06 + emissiveIntensity * 0.18, 0, 1);
+      const tintBlend = Phaser.Math.Clamp(0.04 + emissiveIntensity * 0.1, 0, 1);
       const tintSource = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0x727983),
-        Phaser.Display.Color.ValueToColor(0x8ca5b7),
+        Phaser.Display.Color.ValueToColor(0x666d78),
+        Phaser.Display.Color.ValueToColor(0x7d8c9b),
         1,
         tintBlend
       );
       const tint = Phaser.Display.Color.GetColor(tintSource.r, tintSource.g, tintSource.b);
       sprite.setTint(tint);
 
-      const baseAlpha = Phaser.Math.Clamp(0.9 + emissiveIntensity * 0.04 - overlayAlpha * 0.08, 0.82, 0.98);
+      const baseAlpha = Phaser.Math.Clamp(0.82 + emissiveIntensity * 0.03 - overlayAlpha * 0.08, 0.74, 0.88);
       sprite.setAlpha(baseAlpha);
 
       container.add(sprite);
@@ -164,15 +164,16 @@ export class BuildingPainter {
 
     const title = this.scene.add.text(0, 0, building.name, {
       fontFamily: 'Orbitron, "DM Sans", sans-serif',
-      fontSize: this.theme.qualityBudget.enableHighDensityLabels ? '13px' : '11px',
+      fontSize: this.theme.qualityBudget.enableHighDensityLabels ? '11px' : '10px',
       fontStyle: '700',
       color: profile.signagePrimaryHex,
       stroke: profile.signageSecondaryHex,
-      strokeThickness: 1.6,
+      strokeThickness: 1,
       align: 'center',
     });
     title.setOrigin(0.5);
-    title.setShadow(0, 0, profile.glowHex, 8, true, true);
+    title.setShadow(0, 0, profile.glowHex, 4, true, true);
+    title.setAlpha(0.72);
 
     const padX = 14;
     const padY = 8;
@@ -182,9 +183,9 @@ export class BuildingPainter {
       title.width + padX,
       title.height + padY,
       this.hexToColor(profile.backdropHex),
-      0.58
+      0.34
     );
-    backdrop.setStrokeStyle(1.1, this.hexToColor(profile.signageSecondaryHex), 0.72);
+    backdrop.setStrokeStyle(0.9, this.hexToColor(profile.signageSecondaryHex), 0.28);
 
     container.add([backdrop, title]);
     return container;

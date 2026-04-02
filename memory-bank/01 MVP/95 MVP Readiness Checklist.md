@@ -25,8 +25,8 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 
 **Current biggest risks** (keep to 1–3 bullets):
 - ☐ Final polished hero/NPC sprite art is still pending; current 8-direction sheets are normalized placeholders/manual-polish inputs.
-- ☐ Requester playtest sign-off is still needed for the combined GET-158/GET-159 Level 0 visual pass (atmosphere/readability baseline plus the surface-first corporate-noir repaint and ESB composition reset).
-- ☐ Post-acceptance lint/build/test/coverage pass has not run yet for GET-158/GET-159.
+- ☐ Street-level authored composition is still weaker than the opening-frame polish; downtown/slums need one more requester-reviewed traversal pass before the visual slice can be considered locked.
+- ☐ The post-acceptance verification block ran clean for lint/build/tests, but total Jest coverage is still 75.92%, below the repository closeout gate of 80%.
 
 ---
 
@@ -133,6 +133,8 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-04-02 — Requester accepted the combined GET-158/GET-159 visual pass after the ESB footprint-read revert. The post-acceptance verification block ran (`yarn lint`, `yarn build`, `yarn test --runInBand`, `yarn test --coverage --runInBand`): lint/build/tests passed, while total Jest coverage landed at 75.92%, so the visual work is committed but the Linear closeout remains blocked on the repo-wide coverage gate.
+- 2026-04-02 — GET-159B composition/surface hierarchy pass landed on top of the reset: ESB PoC footprint/entrance chrome removed from the live path, the tower was further demoted in scale/tint, backdrop skyline weight was reduced, `EnvironmentComposer` now drives zoned block-scale surface context, `TilePainter` now emphasizes road/sidewalk/podium/service separation over per-tile decoration noise, and HUD/nameplate pressure was softened via camera fit + dock sizing/readout tweaks. Checklist boxes remain unchanged pending requester playtest sign-off; opening-frame hierarchy risk is lower, while street-level authored-composition risk remains.
 - 2026-03-28 — GET-159 visual reset replaced the rejected freestanding-clutter look with a surface-first corporate-noir repaint: the generated environment atlas path was removed from the live runtime, atmosphere color now drives the camera background, district identity moved into TilePainter/BuildingPainter material logic, and the ESB was further demoted in scale/contrast. Checklist boxes remain unchanged pending requester playtest sign-off; opening-frame cohesion risk is lower, though ESB dominance is still a watch item.
 - 2026-03-28 — GET-159 Level 0 environment-art pass landed on top of GET-158 (generated `level0Environment` atlas + normal sheet, BootScene preload wiring, deterministic `EnvironmentComposer`/`PropScatter` frontage dressing, stronger district-specific ground treatments, and a further-demoted ESB skyline anchor). Checklist boxes unchanged pending requester playtest sign-off; placeholder-heavy opening-frame risk reduced and district identity is materially stronger.
 - 2026-03-28 — GET-158 playfield atmosphere/readability tuning landed (day/night atmosphere math aligned to the real cycle, brighter/differentiated ground palettes, stronger street-edge/readability treatments, entrance emissive zoning, more assertive occlusion boosts, and ESB landmark de-dominance including removal of the production-visible debug outline). Checklist boxes unchanged pending requester playtest sign-off; Level 0 visual-clarity risk reduced.
