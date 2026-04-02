@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { TileType, type MapTile } from '../../interfaces/types';
 import type { VisualTheme } from '../contracts';
+import type { ScenicTileContext } from './EnvironmentComposer';
 import { adjustColor, getDiamondPoints } from '../../utils/iso';
 
 interface TileContext {
@@ -21,6 +22,7 @@ interface ElevationProfile {
 export class TilePainter {
   private wetReflectionAlpha: number;
   private emissiveIntensity: number;
+  private scenicTileContextByKey: Record<string, ScenicTileContext>;
 
   constructor(
     private readonly graphics: Phaser.GameObjects.Graphics,
@@ -28,11 +30,16 @@ export class TilePainter {
   ) {
     this.wetReflectionAlpha = theme.qualityBudget.wetReflectionAlpha;
     this.emissiveIntensity = 0.35;
+    this.scenicTileContextByKey = {};
   }
 
   public setAtmosphereProfile(atmosphere: { wetReflectionAlpha: number; emissiveIntensity: number }): void {
     this.wetReflectionAlpha = Phaser.Math.Clamp(atmosphere.wetReflectionAlpha, 0, 0.4);
     this.emissiveIntensity = Phaser.Math.Clamp(atmosphere.emissiveIntensity, 0, 1);
+  }
+
+  public setScenicTileContext(contextByKey: Record<string, ScenicTileContext>): void {
+    this.scenicTileContextByKey = contextByKey;
   }
 
   public drawTile(tile: MapTile, context: TileContext): void {
@@ -304,38 +311,166 @@ export class TilePainter {
     const surface = tile.surfaceKind ?? 'lot';
     const axis = tile.surfaceAxis;
     const [top, right, bottom, left] = points;
-    const center = new Phaser.Geom.Point(context.center.x, context.center.y);
+    const scenic = this.scenicTileContextByKey[`${context.gridX}:${context.gridY}`];
+    const district = scenic?.district ?? 'downtown';
+    const isDowntown = district === 'downtown';
+    const accentColor = scenic ? this.hexToColor(scenic.accentHex) : 0x9ccfe8;
+    const glowColor = scenic ? this.hexToColor(scenic.glowHex) : 0x7acdf0;
+    const distanceWeight = scenic
+      ? Phaser.Math.Clamp(1 - scenic.distanceToDoor / 5, 0, 1)
+      : 0;
+    const centerPlate = this.createInsetDiamond(points, 0.16);
+    const innerPlate = this.createInsetDiamond(points, 0.3);
+    const thresholdPlate = this.createInsetDiamond(points, 0.42);
 
     if (surface === 'road' || surface === 'crosswalk') {
-      const laneColor = surface === 'crosswalk' ? 0xffc67a : 0xffb35c;
-      this.graphics.lineStyle(1, laneColor, surface === 'crosswalk' ? 0.28 : 0.18);
+      const laneColor = isDowntown
+        ? (surface === 'crosswalk' ? 0xdce5ee : 0xc5d4df)
+        : (surface === 'crosswalk' ? 0xeccfa7 : 0xb88d61);
+      const curbColor = isDowntown ? adjustColor(accentColor, 0.12) : adjustColor(0xe0c394, -0.1);
+
+      this.graphics.fillStyle(adjustColor(modulatedBase, isDowntown ? -0.02 : 0.02), isDowntown ? 0.2 : 0.14);
+      this.graphics.fillPoints(centerPlate, true);
+      this.graphics.lineStyle(1.05, curbColor, isDowntown ? 0.28 : 0.22);
+      this.graphics.strokePoints([top, right], false);
+      this.graphics.strokePoints([left, bottom], false);
+
+      const drawAxisRails = (
+        startA: Phaser.Geom.Point,
+        endA: Phaser.Geom.Point,
+        startB: Phaser.Geom.Point,
+        endB: Phaser.Geom.Point
+      ): void => {
+        this.graphics.lineStyle(1.08, laneColor, surface === 'crosswalk' ? 0.36 : 0.28);
+        this.graphics.strokePoints([startA, this.lerpPoint(startA, endA, 0.5), endA], false);
+        this.graphics.strokePoints([startB, this.lerpPoint(startB, endB, 0.5), endB], false);
+      };
 
       if (axis === 'avenue' || axis === 'intersection') {
-        this.graphics.strokePoints([top, center, bottom], false);
+        drawAxisRails(
+          this.lerpPoint(top, left, 0.18),
+          this.lerpPoint(bottom, right, 0.18),
+          this.lerpPoint(top, right, 0.18),
+          this.lerpPoint(bottom, left, 0.18)
+        );
       }
       if (axis === 'street' || axis === 'intersection') {
-        this.graphics.strokePoints([left, center, right], false);
+        drawAxisRails(
+          this.lerpPoint(left, top, 0.18),
+          this.lerpPoint(right, bottom, 0.18),
+          this.lerpPoint(left, bottom, 0.18),
+          this.lerpPoint(right, top, 0.18)
+        );
       }
 
       if (surface === 'crosswalk') {
-        const stripeColor = 0xf8fafc;
-        this.graphics.lineStyle(1.15, stripeColor, 0.42);
-        const stripeA = this.lerpPoint(left, top, 0.42);
-        const stripeB = this.lerpPoint(bottom, right, 0.42);
-        const stripeC = this.lerpPoint(left, top, 0.62);
-        const stripeD = this.lerpPoint(bottom, right, 0.62);
-        this.graphics.strokePoints([stripeA, stripeB], false);
-        this.graphics.strokePoints([stripeC, stripeD], false);
+        this.graphics.lineStyle(1.18, 0xf6f8fa, isDowntown ? 0.46 : 0.34);
+        [0.28, 0.5, 0.72].forEach((offset) => {
+          this.graphics.strokePoints(
+            [
+              this.lerpPoint(left, top, offset),
+              this.lerpPoint(bottom, right, offset),
+            ],
+            false
+          );
+        });
       }
 
-      this.drawRoadReflection(tile, context, points, surface === 'crosswalk' ? 1.1 : 1);
+      if (isDowntown) {
+        this.graphics.lineStyle(0.92, adjustColor(accentColor, 0.12), 0.22);
+        this.graphics.strokePoints(
+          [
+            this.lerpPoint(top, right, 0.3),
+            this.lerpPoint(left, bottom, 0.3),
+          ],
+          false
+        );
+        this.graphics.strokePoints(
+          [
+            this.lerpPoint(top, right, 0.68),
+            this.lerpPoint(left, bottom, 0.68),
+          ],
+          false
+        );
+      } else if ((context.gridX + context.gridY * 2) % 5 === 0) {
+        const patchCenter = this.lerpPoint(top, bottom, 0.6);
+        this.graphics.fillStyle(adjustColor(0x1f2937, 0.05), 0.18);
+        this.graphics.fillEllipse(patchCenter.x - 2, patchCenter.y + 1, context.tileWidth * 0.22, context.tileHeight * 0.12);
+        this.graphics.fillStyle(adjustColor(accentColor, -0.18), 0.12);
+        this.graphics.fillEllipse(patchCenter.x + 4, patchCenter.y, context.tileWidth * 0.12, context.tileHeight * 0.06);
+        this.graphics.lineStyle(0.82, adjustColor(laneColor, -0.12), 0.14);
+        this.graphics.strokePoints(
+          [
+            this.lerpPoint(top, innerPlate[0], 0.52),
+            this.lerpPoint(left, innerPlate[3], 0.54),
+          ],
+          false
+        );
+      }
+
+      if (scenic?.nearEntrance) {
+        this.drawEntryPocket(thresholdPlate, glowColor, accentColor, distanceWeight, surface === 'crosswalk' ? 1.06 : 1);
+      }
+
+      this.drawRoadReflection(tile, context, points, surface === 'crosswalk' ? 1.08 : isDowntown ? 0.94 : 0.82);
       return;
     }
 
     if (surface === 'sidewalk') {
-      this.graphics.lineStyle(1, adjustColor(modulatedBase, 0.2), 0.24);
+      this.graphics.fillStyle(adjustColor(modulatedBase, isDowntown ? 0.05 : 0.02), isDowntown ? 0.2 : 0.16);
+      this.graphics.fillPoints(centerPlate, true);
+      this.graphics.lineStyle(1, adjustColor(modulatedBase, 0.24), 0.36);
       this.graphics.strokePoints(points, true);
-      this.graphics.lineStyle(0.9, 0x94a3b8, 0.2);
+
+      if (isDowntown) {
+        this.graphics.fillStyle(adjustColor(modulatedBase, 0.12), 0.18);
+        this.graphics.fillPoints(innerPlate, true);
+        this.graphics.lineStyle(0.95, 0xd7e3ec, 0.22);
+        this.graphics.strokePoints(innerPlate, true);
+        this.graphics.lineStyle(0.9, adjustColor(accentColor, 0.04), 0.2);
+        this.graphics.strokePoints([top, left], false);
+        this.graphics.strokePoints([right, bottom], false);
+        if ((context.gridX + context.gridY) % 3 === 0) {
+          this.graphics.lineStyle(0.82, 0xf2f5f7, 0.14);
+          this.graphics.strokePoints(
+            [
+              this.lerpPoint(top, right, 0.5),
+              this.lerpPoint(left, bottom, 0.5),
+            ],
+            false
+          );
+        }
+      } else {
+        this.graphics.lineStyle(0.88, adjustColor(accentColor, -0.08), 0.16);
+        this.graphics.strokePoints(innerPlate, true);
+        if ((context.gridX + context.gridY) % 4 === 0) {
+          this.graphics.lineStyle(0.82, adjustColor(accentColor, -0.12), 0.14);
+          this.graphics.strokePoints(
+            [
+              this.lerpPoint(top, innerPlate[0], 0.44),
+              this.lerpPoint(left, innerPlate[3], 0.44),
+            ],
+            false
+          );
+        }
+      }
+
+      if (scenic?.nearEntrance) {
+        this.drawEntryPocket(innerPlate, glowColor, accentColor, distanceWeight, 1.12);
+      }
+
+      this.drawRoadReflection(tile, context, points, isDowntown ? 0.72 : 0.58);
+      return;
+    }
+
+    if (scenic?.lotPattern === 'plaza') {
+      this.graphics.fillStyle(adjustColor(modulatedBase, 0.08), isDowntown ? 0.22 : 0.16);
+      this.graphics.fillPoints(centerPlate, true);
+      this.graphics.fillStyle(adjustColor(modulatedBase, 0.14), 0.14);
+      this.graphics.fillPoints(innerPlate, true);
+      this.graphics.lineStyle(1, isDowntown ? 0xd4e1eb : accentColor, isDowntown ? 0.22 : 0.16);
+      this.graphics.strokePoints(innerPlate, true);
+      this.graphics.lineStyle(0.88, adjustColor(accentColor, 0.08), 0.16);
       this.graphics.strokePoints(
         [
           this.lerpPoint(top, right, 0.5),
@@ -343,14 +478,86 @@ export class TilePainter {
         ],
         false
       );
-      this.drawRoadReflection(tile, context, points, 0.65);
-      return;
+    } else if (scenic?.lotPattern === 'service') {
+      this.graphics.fillStyle(adjustColor(modulatedBase, 0.03), 0.16);
+      this.graphics.fillPoints(centerPlate, true);
+      this.graphics.lineStyle(0.9, adjustColor(accentColor, -0.04), 0.18);
+      this.graphics.strokePoints(innerPlate, true);
+      this.graphics.lineStyle(0.8, adjustColor(accentColor, 0.08), 0.14);
+      this.graphics.strokePoints([innerPlate[0], innerPlate[2]], false);
+      this.graphics.strokePoints([innerPlate[1], innerPlate[3]], false);
+    } else if (scenic?.lotPattern === 'market') {
+      this.graphics.fillStyle(adjustColor(accentColor, -0.08), 0.12);
+      this.graphics.fillPoints(innerPlate, true);
+      this.graphics.lineStyle(0.88, glowColor, 0.14);
+      this.graphics.strokePoints(
+        [
+          this.lerpPoint(left, top, 0.34),
+          this.lerpPoint(bottom, right, 0.34),
+        ],
+        false
+      );
+      this.graphics.lineStyle(0.82, adjustColor(accentColor, -0.18), 0.14);
+      this.graphics.strokePoints(
+        [
+          this.lerpPoint(top, right, 0.66),
+          this.lerpPoint(left, bottom, 0.66),
+        ],
+        false
+      );
     }
 
-    if ((context.gridX + context.gridY) % 5 === 0) {
-      this.graphics.lineStyle(0.8, 0x67e8f9, 0.06);
-      this.graphics.strokePoints(points, true);
+    if (scenic?.nearEntrance) {
+      this.drawEntryPocket(innerPlate, glowColor, accentColor, distanceWeight, 1);
     }
-    this.drawRoadReflection(tile, context, points, 0.45);
+
+    if (isDowntown && (context.gridX + context.gridY) % 5 === 0) {
+      this.graphics.lineStyle(0.8, adjustColor(accentColor, 0.06), 0.12);
+      this.graphics.strokePoints(centerPlate, true);
+    } else if (!isDowntown && (context.gridX + context.gridY) % 3 === 0) {
+      this.graphics.lineStyle(0.84, adjustColor(modulatedBase, 0.18), 0.1);
+      this.graphics.strokePoints(
+        [
+          this.lerpPoint(top, right, 0.52),
+          this.lerpPoint(left, bottom, 0.52),
+        ],
+          false
+      );
+    }
+    this.drawRoadReflection(tile, context, points, isDowntown ? 0.42 : 0.32);
+  }
+
+  private createInsetDiamond(points: Phaser.Geom.Point[], inset: number): Phaser.Geom.Point[] {
+    const center = new Phaser.Geom.Point(
+      (points[0].x + points[1].x + points[2].x + points[3].x) / 4,
+      (points[0].y + points[1].y + points[2].y + points[3].y) / 4
+    );
+
+    return points.map((point) => this.lerpPoint(point, center, inset));
+  }
+
+  private drawEntryPocket(
+    points: Phaser.Geom.Point[],
+    glowColor: number,
+    accentColor: number,
+    distanceWeight: number,
+    intensity = 1
+  ): void {
+    const alpha = Phaser.Math.Clamp(
+      (0.08 + this.emissiveIntensity * 0.1 + distanceWeight * 0.08) * intensity,
+      0.08,
+      0.26
+    );
+    this.graphics.fillStyle(glowColor, alpha * 0.44);
+    this.graphics.fillPoints(points, true);
+    this.graphics.lineStyle(1.06, accentColor, alpha);
+    this.graphics.strokePoints([points[0], points[1]], false);
+    this.graphics.strokePoints([points[3], points[2]], false);
+    this.graphics.lineStyle(0.78, adjustColor(glowColor, 0.12), alpha * 0.72);
+    this.graphics.strokePoints([points[0], points[2]], false);
+  }
+
+  private hexToColor(value: string): number {
+    return Phaser.Display.Color.HexStringToColor(value).color;
   }
 }

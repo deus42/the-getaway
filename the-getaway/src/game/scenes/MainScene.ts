@@ -180,6 +180,7 @@ export class MainScene extends Phaser.Scene {
     });
     this.worldRenderModule = new WorldRenderModule(this, {
       add: this.add,
+      cameras: this.cameras,
       game: this.game,
       lights: this.lights,
       mapGraphics: this.mapGraphics,

@@ -11,6 +11,7 @@ const createPorts = (
 ): WorldRenderModulePorts => {
   return {
     add: {} as never,
+    cameras: { main: { setBackgroundColor: jest.fn() } } as never,
     game: { renderer: {} } as never,
     lights: {
       enable: () => ({ setAmbientColor: () => undefined }),

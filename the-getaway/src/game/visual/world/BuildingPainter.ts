@@ -22,13 +22,6 @@ export interface BuildingMassingMetrics {
   };
 }
 
-export interface EsbVisualFootprintLocal {
-  top: { x: number; y: number };
-  right: { x: number; y: number };
-  bottom: { x: number; y: number };
-  left: { x: number; y: number };
-}
-
 interface DiamondPoints {
   top: Phaser.Geom.Point;
   right: Phaser.Geom.Point;
@@ -45,23 +38,9 @@ const ESB_BASE_TIP_X_PX = 433;
 const ESB_BASE_TIP_Y_PX = 1732;
 const ESB_ORIGIN_X = ESB_BASE_TIP_X_PX / ESB_FRAME_WIDTH_PX;
 const ESB_ORIGIN_Y = ESB_BASE_TIP_Y_PX / ESB_FRAME_HEIGHT_PX;
-// Visual lot corners sampled from ESB atlas sidewalk mask.
-const ESB_FOOTPRINT_TOP_X_PX = 89;
-const ESB_FOOTPRINT_TOP_Y_PX = 1494;
-const ESB_FOOTPRINT_RIGHT_X_PX = 577;
-const ESB_FOOTPRINT_RIGHT_Y_PX = 1597;
-const ESB_FOOTPRINT_BOTTOM_X_PX = 407;
-const ESB_FOOTPRINT_BOTTOM_Y_PX = 1682;
-const ESB_FOOTPRINT_LEFT_X_PX = 57;
-const ESB_FOOTPRINT_LEFT_Y_PX = 1510;
-export const ESB_VISUAL_FOOTPRINT_DATA_KEY = 'esbVisualFootprintLocal';
-
 type EsbTuning = {
-  // target height expressed in tiles
   heightTiles: number;
-  // target base width expressed in tiles (approx screen width target)
   baseTiles: number;
-  // extra multiplier applied after sizing
   scale: number;
   rotateDeg: number;
   offsetX: number;
@@ -79,13 +58,9 @@ const parseNumber = (value: string | null, fallback: number): number => {
 
 const resolveEsbTuning = (): EsbTuning => {
   const defaults: EsbTuning = {
-    // Make the ESB feel like a true landmark relative to the 1-tile player.
     heightTiles: 48,
-    // Make the ground/base read as a much larger footprint (roughly 2× vs earlier PoC).
     baseTiles: 18,
-    // Additional multiplier applied on top of size-based scaling.
-    scale: 1.1,
-    // Small rotation tweak can help align the sprite's base with our isometric grid.
+    scale: 0.92,
     rotateDeg: 0,
     offsetX: 0,
     offsetY: 0,
@@ -121,7 +96,6 @@ export class BuildingPainter {
     // PoC landmark override: swap one Level 0 building slot for an ESB sprite.
     if (building.id === ESB_BUILDING_ID && this.scene.textures.exists(ESB_ATLAS_KEY)) {
       const tuning = resolveEsbTuning();
-
       const sprite = this.scene.add.image(
         base.bottom.x + tuning.offsetX,
         base.bottom.y + tuning.offsetY,
@@ -131,56 +105,32 @@ export class BuildingPainter {
       // Align ESB to the true rendered footprint tip from the source atlas.
       sprite.setOrigin(ESB_ORIGIN_X, ESB_ORIGIN_Y);
 
-      // Size the sprite so its *base* matches the building footprint.
-      // Footprint left↔right distance corresponds to the visible base width on our 2:1 iso grid.
       const targetHeight = metrics.tileHeight * tuning.heightTiles;
       const footprintWidth = Phaser.Math.Distance.Between(base.left.x, base.left.y, base.right.x, base.right.y);
-
       const scaleForHeight = targetHeight / Math.max(1, sprite.height);
-      const scaleForFootprint = footprintWidth / Math.max(1, sprite.width);
+      const scaleForFootprint = (footprintWidth / Math.max(1, sprite.width)) * (tuning.baseTiles / 18);
       const baseScale = Math.max(scaleForHeight, scaleForFootprint);
 
       sprite.setScale(baseScale * tuning.scale);
 
-      if (tuning.rotateDeg) {
+      if (tuning.rotateDeg !== 0) {
         sprite.setRotation(Phaser.Math.DegToRad(tuning.rotateDeg));
       }
 
       const emissiveIntensity = Phaser.Math.Clamp(metrics.atmosphere?.emissiveIntensity ?? 0.35, 0, 1);
       const overlayAlpha = Phaser.Math.Clamp(metrics.atmosphere?.overlayAlpha ?? 0.2, 0, 1);
-      const tintBlend = Phaser.Math.Clamp(0.28 + emissiveIntensity * 0.58, 0, 1);
+      const tintBlend = Phaser.Math.Clamp(0.06 + emissiveIntensity * 0.18, 0, 1);
       const tintSource = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0xead6c2),
-        Phaser.Display.Color.ValueToColor(0xbddfff),
+        Phaser.Display.Color.ValueToColor(0x727983),
+        Phaser.Display.Color.ValueToColor(0x8ca5b7),
         1,
         tintBlend
       );
       const tint = Phaser.Display.Color.GetColor(tintSource.r, tintSource.g, tintSource.b);
       sprite.setTint(tint);
 
-      const baseAlpha = Phaser.Math.Clamp(0.9 + emissiveIntensity * 0.09 - overlayAlpha * 0.08, 0.82, 1);
+      const baseAlpha = Phaser.Math.Clamp(0.9 + emissiveIntensity * 0.04 - overlayAlpha * 0.08, 0.82, 0.98);
       sprite.setAlpha(baseAlpha);
-
-      const anchorX = base.bottom.x + tuning.offsetX;
-      const anchorY = base.bottom.y + tuning.offsetY;
-      const spriteScale = sprite.scaleX;
-      const buildFootprintPoint = (sourceX: number, sourceY: number): { x: number; y: number } => {
-        const point = new Phaser.Geom.Point(
-          anchorX + (sourceX - ESB_BASE_TIP_X_PX) * spriteScale,
-          anchorY + (sourceY - ESB_BASE_TIP_Y_PX) * spriteScale
-        );
-        if (sprite.rotation !== 0) {
-          Phaser.Math.RotateAround(point, anchorX, anchorY, sprite.rotation);
-        }
-        return { x: point.x, y: point.y };
-      };
-      const visualFootprintLocal: EsbVisualFootprintLocal = {
-        top: buildFootprintPoint(ESB_FOOTPRINT_TOP_X_PX, ESB_FOOTPRINT_TOP_Y_PX),
-        right: buildFootprintPoint(ESB_FOOTPRINT_RIGHT_X_PX, ESB_FOOTPRINT_RIGHT_Y_PX),
-        bottom: buildFootprintPoint(ESB_FOOTPRINT_BOTTOM_X_PX, ESB_FOOTPRINT_BOTTOM_Y_PX),
-        left: buildFootprintPoint(ESB_FOOTPRINT_LEFT_X_PX, ESB_FOOTPRINT_LEFT_Y_PX),
-      };
-      container.setData(ESB_VISUAL_FOOTPRINT_DATA_KEY, visualFootprintLocal);
 
       container.add(sprite);
       return container;
@@ -257,22 +207,23 @@ export class BuildingPainter {
     const leftFace = [base.left, base.top, roof.top, roof.left];
 
     const faceBase = this.hexToColor(profile.backdropHex);
-    const rightColor = adjustColor(faceBase, -0.06);
-    const frontColor = adjustColor(faceBase, -0.13);
-    const leftColor = adjustColor(faceBase, -0.1);
-    const roofColor = adjustColor(faceBase, 0.03);
+    const rightColor = adjustColor(faceBase, profile.district === 'downtown' ? -0.04 : -0.08);
+    const frontColor = adjustColor(faceBase, profile.district === 'downtown' ? -0.09 : -0.14);
+    const leftColor = adjustColor(faceBase, profile.district === 'downtown' ? -0.07 : -0.1);
+    const roofColor = adjustColor(faceBase, profile.district === 'downtown' ? 0.08 : 0.04);
 
-    bodyLayer.fillStyle(leftColor, 0.72);
+    bodyLayer.fillStyle(leftColor, profile.district === 'downtown' ? 0.78 : 0.72);
     bodyLayer.fillPoints(leftFace, true);
-    bodyLayer.fillStyle(rightColor, 0.74);
+    bodyLayer.fillStyle(rightColor, profile.district === 'downtown' ? 0.8 : 0.74);
     bodyLayer.fillPoints(rightFace, true);
-    bodyLayer.fillStyle(frontColor, 0.78);
+    bodyLayer.fillStyle(frontColor, profile.district === 'downtown' ? 0.84 : 0.78);
     bodyLayer.fillPoints(frontFace, true);
-    bodyLayer.fillStyle(roofColor, 0.8);
+    bodyLayer.fillStyle(roofColor, profile.district === 'downtown' ? 0.86 : 0.8);
     bodyLayer.fillPoints([roof.top, roof.right, roof.bottom, roof.left], true);
 
-    bodyLayer.lineStyle(1.2, this.hexToColor(profile.trimHex), 0.24);
+    bodyLayer.lineStyle(1.2, this.hexToColor(profile.trimHex), profile.district === 'downtown' ? 0.28 : 0.22);
     bodyLayer.strokePoints([roof.top, roof.right, roof.bottom, roof.left], true);
+    this.drawPodiumBand(bodyLayer, profile, frontFace, rightFace);
 
     detailLayer.lineStyle(1, this.hexToColor(profile.trimHex), 0.16);
     detailLayer.strokePoints([base.bottom, roof.bottom], false);
@@ -291,17 +242,21 @@ export class BuildingPainter {
     const frontFace = [base.bottom, base.left, roof.left, roof.bottom] as const;
 
     if (profile.district === 'downtown') {
-      const columns = Math.max(4, Math.min(10, Math.floor(span * 0.8)));
-      const rows = Math.max(3, Math.min(8, Math.floor(profile.massingHeight * 1.7)));
+      const columns = Math.max(3, Math.min(7, Math.floor(span * 0.55)));
+      const rows = Math.max(2, Math.min(5, Math.floor(profile.massingHeight * 1.15)));
       const windowColor = this.hexToColor(profile.signageSecondaryHex);
-      this.drawFaceGrid(graphics, frontFace, columns, rows, windowColor, 0.2);
-      this.drawFaceGrid(graphics, rightFace, columns, rows, windowColor, 0.16);
+      this.drawCorporateBands(graphics, profile, frontFace, rightFace);
+      this.drawFaceGrid(graphics, frontFace, columns, rows, windowColor, 0.12);
+      this.drawFaceGrid(graphics, rightFace, columns, rows, windowColor, 0.08);
       graphics.lineStyle(1, this.hexToColor(profile.signagePrimaryHex), 0.36);
       graphics.strokePoints([roof.left, roof.bottom, roof.right], false);
+      this.drawDowntownRoofCrown(graphics, profile, roof);
+      this.drawFacadeSignPanel(graphics, profile, rightFace, frontFace, span);
       return;
     }
 
     const stripeColor = this.hexToColor(profile.accentHex);
+    this.drawRepairBand(graphics, profile, frontFace, rightFace);
     graphics.lineStyle(1, stripeColor, 0.2);
     const seamFrontLeft = this.lerpPoint(frontFace[0], frontFace[3], 0.44);
     const seamFrontRight = this.lerpPoint(frontFace[1], frontFace[2], 0.44);
@@ -309,6 +264,171 @@ export class BuildingPainter {
     const seamRightTop = this.lerpPoint(rightFace[0], rightFace[3], 0.36);
     const seamRightBottom = this.lerpPoint(rightFace[1], rightFace[2], 0.36);
     graphics.strokePoints([seamRightTop, seamRightBottom], false);
+    this.drawSlumsRoofAddons(graphics, profile, roof);
+    this.drawFacadeSignPanel(graphics, profile, frontFace, rightFace, span);
+  }
+
+  private drawPodiumBand(
+    graphics: Phaser.GameObjects.Graphics,
+    profile: BuildingVisualProfile,
+    frontFace: Phaser.Geom.Point[],
+    rightFace: Phaser.Geom.Point[]
+  ): void {
+    const frontBand = [
+      this.lerpPoint(frontFace[0], frontFace[3], 0.58),
+      this.lerpPoint(frontFace[1], frontFace[2], 0.58),
+      this.lerpPoint(frontFace[1], frontFace[2], 0.82),
+      this.lerpPoint(frontFace[0], frontFace[3], 0.82),
+    ];
+    const rightBand = [
+      this.lerpPoint(rightFace[0], rightFace[3], 0.56),
+      this.lerpPoint(rightFace[1], rightFace[2], 0.56),
+      this.lerpPoint(rightFace[1], rightFace[2], 0.8),
+      this.lerpPoint(rightFace[0], rightFace[3], 0.8),
+    ];
+
+    graphics.fillStyle(this.hexToColor(profile.atmosphereHex), profile.district === 'downtown' ? 0.26 : 0.22);
+    graphics.fillPoints(frontBand, true);
+    graphics.fillPoints(rightBand, true);
+    graphics.lineStyle(1, this.hexToColor(profile.trimHex), profile.district === 'downtown' ? 0.2 : 0.16);
+    graphics.strokePoints([frontBand[0], frontBand[1]], false);
+    graphics.strokePoints([rightBand[0], rightBand[1]], false);
+  }
+
+  private drawCorporateBands(
+    graphics: Phaser.GameObjects.Graphics,
+    profile: BuildingVisualProfile,
+    frontFace: readonly [Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point],
+    rightFace: readonly [Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point]
+  ): void {
+    const frontBand = [
+      this.lerpPoint(frontFace[0], frontFace[3], 0.32),
+      this.lerpPoint(frontFace[1], frontFace[2], 0.32),
+      this.lerpPoint(frontFace[1], frontFace[2], 0.48),
+      this.lerpPoint(frontFace[0], frontFace[3], 0.48),
+    ];
+    const rightBand = [
+      this.lerpPoint(rightFace[0], rightFace[3], 0.28),
+      this.lerpPoint(rightFace[1], rightFace[2], 0.28),
+      this.lerpPoint(rightFace[1], rightFace[2], 0.44),
+      this.lerpPoint(rightFace[0], rightFace[3], 0.44),
+    ];
+
+    graphics.fillStyle(this.hexToColor(profile.atmosphereHex), 0.22);
+    graphics.fillPoints(frontBand, true);
+    graphics.fillPoints(rightBand, true);
+    graphics.lineStyle(1.05, this.hexToColor(profile.signageSecondaryHex), 0.16);
+    graphics.strokePoints([frontBand[0], frontBand[1]], false);
+    graphics.strokePoints([rightBand[0], rightBand[1]], false);
+  }
+
+  private drawRepairBand(
+    graphics: Phaser.GameObjects.Graphics,
+    profile: BuildingVisualProfile,
+    frontFace: readonly [Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point],
+    rightFace: readonly [Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point]
+  ): void {
+    const frontPatch = [
+      this.lerpPoint(frontFace[0], frontFace[3], 0.62),
+      this.lerpPoint(frontFace[1], frontFace[2], 0.62),
+      this.lerpPoint(frontFace[1], frontFace[2], 0.8),
+      this.lerpPoint(frontFace[0], frontFace[3], 0.8),
+    ];
+    const rightPatch = [
+      this.lerpPoint(rightFace[0], rightFace[3], 0.56),
+      this.lerpPoint(rightFace[1], rightFace[2], 0.56),
+      this.lerpPoint(rightFace[1], rightFace[2], 0.76),
+      this.lerpPoint(rightFace[0], rightFace[3], 0.76),
+    ];
+
+    graphics.fillStyle(this.hexToColor(profile.atmosphereHex), 0.22);
+    graphics.fillPoints(frontPatch, true);
+    graphics.fillPoints(rightPatch, true);
+    graphics.lineStyle(0.9, this.hexToColor(profile.trimHex), 0.16);
+    graphics.strokePoints([frontPatch[0], frontPatch[2]], false);
+    graphics.strokePoints([rightPatch[0], rightPatch[2]], false);
+  }
+
+  private drawDowntownRoofCrown(
+    graphics: Phaser.GameObjects.Graphics,
+    profile: BuildingVisualProfile,
+    roof: DiamondPoints
+  ): void {
+    const crown = [
+      this.lerpPoint(roof.left, roof.top, 0.26),
+      this.lerpPoint(roof.top, roof.right, 0.26),
+      this.lerpPoint(roof.right, roof.bottom, 0.26),
+      this.lerpPoint(roof.bottom, roof.left, 0.26),
+    ];
+
+    graphics.fillStyle(this.hexToColor(profile.backdropHex), 0.3);
+    graphics.fillPoints(crown, true);
+    graphics.lineStyle(1.1, this.hexToColor(profile.signagePrimaryHex), 0.3);
+    graphics.strokePoints(crown, true);
+
+    const beacon = [
+      this.lerpPoint(crown[0], crown[1], 0.5),
+      this.lerpPoint(crown[1], crown[2], 0.5),
+      this.lerpPoint(crown[2], crown[3], 0.5),
+      this.lerpPoint(crown[3], crown[0], 0.5),
+    ];
+    graphics.fillStyle(this.hexToColor(profile.signageSecondaryHex), 0.12);
+    graphics.fillPoints(beacon, true);
+  }
+
+  private drawSlumsRoofAddons(
+    graphics: Phaser.GameObjects.Graphics,
+    profile: BuildingVisualProfile,
+    roof: DiamondPoints
+  ): void {
+    const addon = [
+      this.lerpPoint(roof.left, roof.top, 0.2),
+      this.lerpPoint(roof.top, roof.right, 0.42),
+      this.lerpPoint(roof.right, roof.bottom, 0.54),
+      this.lerpPoint(roof.bottom, roof.left, 0.34),
+    ];
+    graphics.fillStyle(this.hexToColor(profile.atmosphereHex), 0.34);
+    graphics.fillPoints(addon, true);
+    graphics.lineStyle(1, this.hexToColor(profile.trimHex), 0.22);
+    graphics.strokePoints(addon, true);
+
+    const ventLineStart = this.lerpPoint(addon[0], addon[3], 0.46);
+    const ventLineEnd = this.lerpPoint(addon[1], addon[2], 0.46);
+    graphics.lineStyle(0.9, this.hexToColor(profile.glowHex), 0.18);
+    graphics.strokePoints([ventLineStart, ventLineEnd], false);
+  }
+
+  private drawFacadeSignPanel(
+    graphics: Phaser.GameObjects.Graphics,
+    profile: BuildingVisualProfile,
+    primaryFace: readonly [Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point],
+    secondaryFace: readonly [Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point, Phaser.Geom.Point],
+    span: number
+  ): void {
+    const heightScale = span > 30 ? 0.3 : 0.36;
+    const widthScale = profile.district === 'downtown' ? 0.52 : 0.46;
+    const panel = [
+      this.lerpPoint(primaryFace[0], primaryFace[3], heightScale),
+      this.lerpPoint(primaryFace[0], primaryFace[1], widthScale),
+      this.lerpPoint(primaryFace[1], primaryFace[2], heightScale + 0.06),
+      this.lerpPoint(primaryFace[3], primaryFace[2], widthScale),
+    ];
+    graphics.fillStyle(this.hexToColor(profile.backdropHex), profile.district === 'downtown' ? 0.34 : 0.28);
+    graphics.fillPoints(panel, true);
+    graphics.lineStyle(1.1, this.hexToColor(profile.signagePrimaryHex), 0.32);
+    graphics.strokePoints(panel, true);
+
+    const stripeStart = this.lerpPoint(panel[0], panel[3], 0.5);
+    const stripeEnd = this.lerpPoint(panel[1], panel[2], 0.5);
+    graphics.lineStyle(1, this.hexToColor(profile.signageSecondaryHex), 0.24);
+    graphics.strokePoints([stripeStart, stripeEnd], false);
+
+    if (profile.district === 'slums') {
+      const hangerStart = this.lerpPoint(secondaryFace[0], secondaryFace[3], 0.24);
+      const hangerEnd = this.lerpPoint(secondaryFace[1], secondaryFace[2], 0.24);
+      graphics.lineStyle(0.9, this.hexToColor(profile.trimHex), 0.16);
+      graphics.strokePoints([hangerStart, hangerEnd], false);
+    }
   }
 
   private drawFaceGrid(

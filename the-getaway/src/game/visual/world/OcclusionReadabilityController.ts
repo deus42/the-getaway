@@ -34,7 +34,7 @@ interface EntityBaseVisualState {
   indicatorAlpha: number;
 }
 
-const ENTITY_OVERLAP_PADDING = 20;
+const ENTITY_OVERLAP_PADDING = 26;
 const NAMEPLATE_MIN_SCALE = 1.06;
 
 export class OcclusionReadabilityController {
@@ -43,7 +43,7 @@ export class OcclusionReadabilityController {
 
   public applyOcclusionReadability(state: OcclusionReadabilityState): void {
     const fadeFloor = Phaser.Math.Clamp(state.occlusionFadeFloor, 0.2, 0.9);
-    const readabilityBoost = Phaser.Math.Clamp(0.14 + state.emissiveIntensity * 0.3, 0.12, 0.5);
+    const readabilityBoost = Phaser.Math.Clamp(0.18 + state.emissiveIntensity * 0.34, 0.16, 0.56);
 
     this.restorePreviousFrameState(state);
 

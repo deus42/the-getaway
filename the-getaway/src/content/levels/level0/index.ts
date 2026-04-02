@@ -15,9 +15,12 @@ import { buildQuestsForLevel } from '../../quests/builders';
 const LEVEL_RESOURCE_KEY = 'levels.slums_command_grid';
 const ROAD_WIDENING_INSET_TILES = 4;
 const ESB_BUILDING_ID = 'block_1_1';
-const ESB_FOOTPRINT_INSET_X = 1;
-const ESB_FOOTPRINT_INSET_Y = 1;
+const ESB_FOOTPRINT_INSET_X = 0;
+const ESB_FOOTPRINT_INSET_Y = 0;
 const ESB_MIN_FOOTPRINT_TILES = 6;
+const ESB_FOOTPRINT_TRIM_LEFT_TILES = 1;
+const ESB_FOOTPRINT_TRIM_FAR_TILES = 10;
+const ESB_FOOTPRINT_TRIM_RIGHT_TILES = 8;
 const ESB_DOOR_FACADE_INSET_Y = 2;
 
 interface Level0Content {
@@ -195,6 +198,28 @@ const alignEsbDoorToFacade = (
   return next;
 };
 
+const trimEsbFootprintToVisibleBase = (
+  building: LevelBuildingDefinition
+): LevelBuildingDefinition => {
+  const next = cloneBuildingDefinition(building);
+  const maxFromX = Math.min(next.footprint.to.x, next.footprint.from.x + ESB_FOOTPRINT_TRIM_LEFT_TILES);
+  const maxFromY = Math.min(next.footprint.to.y, next.footprint.from.y + ESB_FOOTPRINT_TRIM_FAR_TILES);
+  const minToX = Math.max(maxFromX, next.footprint.to.x - ESB_FOOTPRINT_TRIM_RIGHT_TILES);
+
+  next.footprint = {
+    from: {
+      x: maxFromX,
+      y: maxFromY,
+    },
+    to: {
+      x: minToX,
+      y: next.footprint.to.y,
+    },
+  };
+
+  return next;
+};
+
 const cloneCoverSpot = (spot: CoverSpotDefinition): CoverSpotDefinition => ({
   position: clonePosition(spot.position),
   profile: cloneCoverProfile(spot.profile),
@@ -219,7 +244,7 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
         : insetBuildingFootprint(definition, ROAD_WIDENING_INSET_TILES);
     const perimeterDoorPlacement = moveDoorToPerimeter(widenedRoadLayout);
     if (definition.id === ESB_BUILDING_ID) {
-      return alignEsbDoorToFacade(perimeterDoorPlacement);
+      return alignEsbDoorToFacade(trimEsbFootprintToVisibleBase(perimeterDoorPlacement));
     }
     return perimeterDoorPlacement;
   });

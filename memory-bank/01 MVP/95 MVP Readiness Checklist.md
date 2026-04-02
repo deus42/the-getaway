@@ -25,8 +25,8 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 
 **Current biggest risks** (keep to 1–3 bullets):
 - ☐ Final polished hero/NPC sprite art is still pending; current 8-direction sheets are normalized placeholders/manual-polish inputs.
-- ☐ Runtime playtest sign-off is still needed for attack/interact state transitions and vector fallback when a sheet is missing.
-- ☐ Post-acceptance lint/build/test/coverage pass has not run yet for GET-173.
+- ☐ Requester playtest sign-off is still needed for the combined GET-158/GET-159 Level 0 visual pass (atmosphere/readability baseline plus the surface-first corporate-noir repaint and ESB composition reset).
+- ☐ Post-acceptance lint/build/test/coverage pass has not run yet for GET-158/GET-159.
 
 ---
 
@@ -133,6 +133,9 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-03-28 — GET-159 visual reset replaced the rejected freestanding-clutter look with a surface-first corporate-noir repaint: the generated environment atlas path was removed from the live runtime, atmosphere color now drives the camera background, district identity moved into TilePainter/BuildingPainter material logic, and the ESB was further demoted in scale/contrast. Checklist boxes remain unchanged pending requester playtest sign-off; opening-frame cohesion risk is lower, though ESB dominance is still a watch item.
+- 2026-03-28 — GET-159 Level 0 environment-art pass landed on top of GET-158 (generated `level0Environment` atlas + normal sheet, BootScene preload wiring, deterministic `EnvironmentComposer`/`PropScatter` frontage dressing, stronger district-specific ground treatments, and a further-demoted ESB skyline anchor). Checklist boxes unchanged pending requester playtest sign-off; placeholder-heavy opening-frame risk reduced and district identity is materially stronger.
+- 2026-03-28 — GET-158 playfield atmosphere/readability tuning landed (day/night atmosphere math aligned to the real cycle, brighter/differentiated ground palettes, stronger street-edge/readability treatments, entrance emissive zoning, more assertive occlusion boosts, and ESB landmark de-dominance including removal of the production-visible debug outline). Checklist boxes unchanged pending requester playtest sign-off; Level 0 visual-clarity risk reduced.
 - 2026-03-23 — GET-174 sprite beautification pass landed on top of the GET-173 pipeline (generator-driven silhouette/accessory/palette upgrades across all 12 hero/NPC sprite sets, regenerated 8-direction sheets, and preserved the existing runtime contract). Checklist boxes unchanged pending requester verification; final-art polish risk reduced and placeholder-art repetitiveness risk materially lowered.
 - 2026-03-22 — GET-173 eight-direction sprite pipeline landed for hero presets + Level 0 named interactive NPCs (manifest-driven sheet registry, BootScene preload/animation wiring, sprite-aware rig factory with vector fallback, and normalized placeholder exports/validation). Checklist boxes unchanged pending requester playtest sign-off; character presentation/pipeline risk reduced while final-art risk remains.
 - 2026-02-26 — GET-123 dialogue presentation enhancement landed (speaker metadata contracts, portrait placeholder pipeline, deterministic locked-visible skill-check UX, and overlay CSS extraction). Checklist boxes unchanged pending requester playtest sign-off; dialogue readability/identity risk reduced.

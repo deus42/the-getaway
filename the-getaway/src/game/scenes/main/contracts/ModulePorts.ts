@@ -8,6 +8,7 @@ import type { SpriteCharacterRigFactory } from '../../../visual/entities/SpriteC
 import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
 import type { TilePainter } from '../../../visual/world/TilePainter';
 import type { BuildingPainter } from '../../../visual/world/BuildingPainter';
+import type { EnvironmentCompositionResult } from '../../../visual/world/EnvironmentComposer';
 import type { AtmosphereDirector, AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
 import type {
   OcclusionMassHandle,
@@ -65,6 +66,7 @@ export type WorldRenderRuntimeState = {
   buildingLabels: Phaser.GameObjects.Container[];
   buildingMassings: Phaser.GameObjects.GameObject[];
   buildingMassingEntries: OcclusionMassHandle[];
+  environmentComposition?: EnvironmentCompositionResult;
   currentAtmosphereProfile?: AtmosphereProfile;
   lastAtmosphereRedrawBucket: number;
   lastItemMarkerSignature: string;
@@ -208,6 +210,7 @@ export type SurveillanceRenderModulePorts = {
 
 export type WorldRenderModulePorts = {
   add: Phaser.GameObjects.GameObjectFactory;
+  cameras: Phaser.Cameras.Scene2D.CameraManager;
   game: Phaser.Game;
   lights: Phaser.GameObjects.LightsManager;
   mapGraphics: Phaser.GameObjects.Graphics;

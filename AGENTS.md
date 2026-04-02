@@ -100,6 +100,16 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
   - Default commands: `yarn lint`, targeted `yarn test` runs, or full suites when coverage is expected.  
   - Record executed commands in PR summaries, progress logs, or issue comments.
   - Each time an implementation or follow-up fix lands, produce a concise QA playtest script (typically 3–6 steps) that can be run in Level 0 to verify the change; include the script in the task summary or review response.
+- **Building Positioning Workflow (mandatory for landmark/footprint work)**
+  - Treat building placement as a measured workflow, not an open-ended tuning loop. Before changing any building after the first pass, save a baseline in `progress/<Linear-key>.md` that includes: the current constants, the screenshot path used for comparison, and explicit edge-by-edge mismatch notes.
+  - Isolate variables. In any single pass, change exactly one of the following unless the requester explicitly asks for a mixed tradeoff:
+    - footprint geometry
+    - render scale/origin/offset
+    - door anchor
+    - depth/opacity/readability
+  - Do not combine sprite-fit tuning and footprint tuning in the same pass by default. If both look wrong, pick the source-of-truth problem first, save a baseline, and adjust one class of variable at a time.
+  - After one measured rectangular/parallelogram fit pass, compare the mismatch against the runbook rubric in `memory-bank/04 Engineering/Building Positioning Runbook.md`. If the art still misses by more than the allowed tolerance, stop trim-chasing and switch the implementation plan to a custom polygon or multi-region footprint.
+  - When a pass moves the wrong edge or reopens a previously correct edge, revert to the saved baseline before attempting the next correction.
 - **Documentation updates**
   - Update `memory-bank/04 Engineering/Architecture.md` whenever architectural patterns, game systems, or data flow change.  
   - Update `memory-bank/01 MVP/Game Design.md` for gameplay rules, balance numbers, or narrative WHAT decisions.  

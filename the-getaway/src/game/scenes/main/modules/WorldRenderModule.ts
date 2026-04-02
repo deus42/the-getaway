@@ -13,6 +13,7 @@ import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../../../vi
 import type { BuildingVisualProfile } from '../../../visual/contracts';
 import { TilePainter } from '../../../visual/world/TilePainter';
 import { BuildingPainter } from '../../../visual/world/BuildingPainter';
+import { composeEnvironmentArt } from '../../../visual/world/EnvironmentComposer';
 import { SpriteCharacterRigFactory } from '../../../visual/entities/SpriteCharacterRigFactory';
 import { AtmosphereDirector, type AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
 import { OcclusionEntityHandle, OcclusionReadabilityController } from '../../../visual/world/OcclusionReadabilityController';
@@ -28,7 +29,9 @@ import type { CharacterToken } from '../../../utils/IsoObjectFactory';
 import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
 
 const ESB_BUILDING_ID = 'block_1_1';
-const ESB_FOOTPRINT_OUTLINE_COLOR = 0xff3030;
+const hexStringToColor = (value: string): number => {
+  return Number.parseInt(value.replace('#', ''), 16);
+};
 
 const readValue = <T>(target: object, key: string): T | undefined => {
   return Reflect.get(target, key) as T | undefined;
@@ -67,6 +70,7 @@ const createDefaultRuntimeState = (): WorldRenderRuntimeState => ({
   buildingLabels: [],
   buildingMassings: [],
   buildingMassingEntries: [],
+  environmentComposition: undefined,
   currentAtmosphereProfile: undefined,
   lastAtmosphereRedrawBucket: -1,
   lastItemMarkerSignature: '',
@@ -75,6 +79,7 @@ const createDefaultRuntimeState = (): WorldRenderRuntimeState => ({
 const createWorldRenderModulePorts = (scene: MainScene): WorldRenderModulePorts => {
   return {
     add: readRequiredValue(scene, 'add'),
+    cameras: readRequiredValue(scene, 'cameras'),
     game: readRequiredValue(scene, 'game'),
     lights: readRequiredValue(scene, 'lights'),
     mapGraphics: readRequiredValue(scene, 'mapGraphics'),
@@ -128,6 +133,7 @@ const createWorldRenderModulePorts = (scene: MainScene): WorldRenderModulePorts 
       buildingLabels: readValue(scene, 'buildingLabels') ?? [],
       buildingMassings: readValue(scene, 'buildingMassings') ?? [],
       buildingMassingEntries: readValue(scene, 'buildingMassingEntries') ?? [],
+      environmentComposition: readValue(scene, 'environmentComposition'),
       currentAtmosphereProfile: readValue(scene, 'currentAtmosphereProfile'),
       lastAtmosphereRedrawBucket: readNumber(scene, 'lastAtmosphereRedrawBucket', -1),
       lastItemMarkerSignature: readValue(scene, 'lastItemMarkerSignature') ?? '',
@@ -143,6 +149,7 @@ const createWorldRenderModulePorts = (scene: MainScene): WorldRenderModulePorts 
       Reflect.set(scene, 'buildingLabels', state.buildingLabels);
       Reflect.set(scene, 'buildingMassings', state.buildingMassings);
       Reflect.set(scene, 'buildingMassingEntries', state.buildingMassingEntries);
+      Reflect.set(scene, 'environmentComposition', state.environmentComposition);
       Reflect.set(scene, 'currentAtmosphereProfile', state.currentAtmosphereProfile);
       Reflect.set(scene, 'lastAtmosphereRedrawBucket', state.lastAtmosphereRedrawBucket);
       Reflect.set(scene, 'lastItemMarkerSignature', state.lastItemMarkerSignature);
@@ -289,6 +296,8 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       this.runtimeState.buildingVisualProfiles = {};
     }
 
+    this.runtimeState.environmentComposition = undefined;
+
     this.pushRuntimeStateToPorts();
   }
 
@@ -333,6 +342,9 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     }
 
     const isoMetrics = this.ports.getIsoMetrics();
+    const environmentComposition = this.resolveEnvironmentComposition();
+    this.ports.setDemoLampGrid(environmentComposition.preferredLampGrid);
+
     interactiveNpcs.forEach((npc) => {
       addProp(
         isoFactory.createPulsingHighlight(npc.position.x, npc.position.y, {
@@ -471,6 +483,8 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       wetReflectionAlpha: atmosphere.wetReflectionAlpha,
       emissiveIntensity: atmosphere.emissiveIntensity,
     });
+    const environmentComposition = this.resolveEnvironmentComposition();
+    this.runtimeState.tilePainter?.setScenicTileContext(environmentComposition.scenicTileContextByKey);
 
     this.ports.mapGraphics.clear();
 
@@ -572,22 +586,16 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         const esbBias = DepthBias.PROP_LOW;
         this.ports.syncDepth(mass, esbDepthPoint.x, esbDepthPoint.y, esbBias);
         this.runtimeState.buildingMassings.push(mass);
-
         const footprintOutline = this.ports.add.graphics();
-        footprintOutline.setScrollFactor(1);
-        footprintOutline.lineStyle(1, ESB_FOOTPRINT_OUTLINE_COLOR, 0.92);
-        // Keep debug outline identical to collision footprint so rendered zone and
-        // obstacle logic cannot drift apart.
-        const outlinePoints = [footprint.top, footprint.right, footprint.bottom, footprint.left];
-        footprintOutline.strokePoints(outlinePoints, true);
+        footprintOutline.lineStyle(1, 0xff3030, 0.92);
+        footprintOutline.strokePoints([footprint.top, footprint.right, footprint.bottom, footprint.left], true);
         this.ports.syncDepth(
           footprintOutline,
-          esbDepthPoint.x,
-          esbDepthPoint.y,
-          esbBias + 1
+          footprint.bottom.x,
+          footprint.bottom.y,
+          DepthBias.FLOATING_UI + 24
         );
         this.runtimeState.buildingMassings.push(footprintOutline);
-
         const doorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
         const entrance = this.ports.add.container(doorPixel.x, doorPixel.y);
         entrance.setScrollFactor(1);
@@ -597,10 +605,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
           if (params.get('pocDebug') === '1') {
             const footprintDebug = this.ports.add.graphics();
             footprintDebug.lineStyle(2, 0x39d5ff, 0.65);
-            footprintDebug.strokePoints(
-              outlinePoints,
-              true
-            );
+            footprintDebug.strokePoints([footprint.top, footprint.right, footprint.bottom, footprint.left], true);
             this.ports.syncDepth(
               footprintDebug,
               footprint.bottom.x,
@@ -623,20 +628,26 @@ export class WorldRenderModule implements SceneModule<MainScene> {
 
         const neon = this.ports.add.graphics();
         neon.setBlendMode(Phaser.BlendModes.ADD);
-        neon.fillStyle(0xffb35c, 0.06);
-        neon.fillCircle(0, 0, tileHeight * 1.1);
-        neon.fillStyle(0xff7a18, 0.04);
-        neon.fillCircle(0, 0, tileHeight * 0.75);
-        neon.lineStyle(2, 0x39d5ff, 0.09);
-        neon.strokeRoundedRect(-10, -18, 20, 30, 4);
-        neon.lineStyle(1, 0xc14bff, 0.06);
-        neon.strokeRoundedRect(-13, -21, 26, 36, 6);
-        neon.fillStyle(0x39d5ff, 0.025);
-        neon.fillRoundedRect(tileHeight * 1.0, -tileHeight * 1.25, tileHeight * 2.4, tileHeight * 0.85, 6);
-        neon.lineStyle(2, 0x39d5ff, 0.08);
-        neon.strokeRoundedRect(tileHeight * 1.0, -tileHeight * 1.25, tileHeight * 2.4, tileHeight * 0.85, 6);
-        neon.lineStyle(1, 0xffb35c, 0.05);
-        neon.strokeRoundedRect(tileHeight * 1.05, -tileHeight * 1.2, tileHeight * 2.3, tileHeight * 0.75, 6);
+        neon.fillStyle(0xbfd6e8, 0.035);
+        neon.fillEllipse(0, tileHeight * 0.03, tileWidth * 0.72, tileHeight * 0.44);
+        neon.fillStyle(0x79cdee, 0.025);
+        neon.fillEllipse(0, -tileHeight * 0.18, tileWidth * 0.44, tileHeight * 0.26);
+        neon.lineStyle(1.4, 0xaed4e8, 0.14);
+        neon.strokeRoundedRect(-11, -18, 22, 30, 4);
+        neon.lineStyle(1.1, 0x7dc8f0, 0.1);
+        neon.strokeRoundedRect(-15, -22, 30, 38, 6);
+        neon.fillStyle(0x8fd6f8, 0.038);
+        neon.fillRoundedRect(tileHeight * 0.92, -tileHeight * 1.12, tileHeight * 2.2, tileHeight * 0.72, 6);
+        neon.lineStyle(1.6, 0xbfe7ff, 0.14);
+        neon.strokeRoundedRect(tileHeight * 0.92, -tileHeight * 1.12, tileHeight * 2.2, tileHeight * 0.72, 6);
+        neon.lineStyle(1, 0xf4c98c, 0.08);
+        neon.strokePoints(
+          [
+            new Phaser.Geom.Point(tileHeight * 1.05, -tileHeight * 0.58),
+            new Phaser.Geom.Point(tileHeight * 3.02, -tileHeight * 0.58),
+          ],
+          false
+        );
         entrance.add(neon);
 
         this.ports.syncDepth(entrance, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW);
@@ -660,6 +671,26 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         DepthBias.PROP_TALL + Math.round(profile.massingHeight * 12)
       );
       this.runtimeState.buildingMassings.push(mass);
+
+      const doorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
+      const entranceGlow = this.ports.add.graphics();
+      entranceGlow.setScrollFactor(1);
+      entranceGlow.setBlendMode(Phaser.BlendModes.ADD);
+
+      const entranceGlowColor = hexStringToColor(profile.signagePrimaryHex);
+      const entranceGlowAlpha = Phaser.Math.Clamp(0.03 + atmosphere.emissiveIntensity * 0.06, 0.04, 0.1);
+      entranceGlow.fillStyle(entranceGlowColor, entranceGlowAlpha);
+      entranceGlow.fillEllipse(doorPixel.x, doorPixel.y + tileHeight * 0.08, tileWidth * 0.7, tileHeight * 0.5);
+      entranceGlow.lineStyle(1.2, entranceGlowColor, entranceGlowAlpha * 1.35);
+      entranceGlow.strokeRoundedRect(
+        doorPixel.x - tileWidth * 0.14,
+        doorPixel.y - tileHeight * 0.66,
+        tileWidth * 0.28,
+        tileHeight * 0.8,
+        4
+      );
+      this.ports.syncDepth(entranceGlow, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW + 2);
+      this.runtimeState.buildingMassings.push(entranceGlow);
 
       const districtHeightBoost = profile.district === 'downtown' ? 0.78 : 0.7;
       const massingHeight = tileHeight * Math.max(0.58, profile.massingHeight * districtHeightBoost);
@@ -808,11 +839,14 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     }
 
     const bounds = this.computeIsoBounds();
-    const margin = this.ports.getTileSize() * 4;
-    const width = bounds.maxX - bounds.minX + margin * 2;
-    const height = bounds.maxY - bounds.minY + margin * 2;
-    const originX = bounds.minX - margin;
-    const originY = bounds.minY - margin;
+    const tileSize = this.ports.getTileSize();
+    const horizontalMargin = tileSize * 8;
+    const topMargin = tileSize * 18;
+    const bottomMargin = tileSize * 10;
+    const width = bounds.maxX - bounds.minX + horizontalMargin * 2;
+    const height = bounds.maxY - bounds.minY + topMargin + bottomMargin;
+    const originX = bounds.minX - horizontalMargin;
+    const originY = bounds.minY - topMargin;
 
     const atmosphere = this.resolveAtmosphereProfile();
     const skylineSplit = atmosphere.skylineSplit;
@@ -829,8 +863,9 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       1
     );
     backdropGraphics.fillRect(originX, originY, width, height);
+    this.ports.cameras.main.setBackgroundColor(atmosphere.gradientTopLeft);
 
-    const skylineBaseY = originY + height * 0.52;
+    const skylineBaseY = originY + height * 0.44;
     const skylineColumns = atmosphere.skylineColumns;
     const downtownColor = atmosphere.skylineDowntownColor;
     const slumsColor = atmosphere.skylineSlumsColor;
@@ -856,12 +891,38 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       backdropGraphics.fillRect(x + segmentWidth * 0.72, skylineBaseY - towerHeight, segmentWidth * 0.16, towerHeight);
     }
 
-    const horizonY = originY + height * 0.35;
+    const nearlineBaseY = originY + height * 0.68;
+    const nearlineColumns = Math.round(skylineColumns * 1.2);
+    for (let column = 0; column < nearlineColumns; column += 1) {
+      const normalized = column / nearlineColumns;
+      const x = originX + normalized * width;
+      const segmentWidth = (width / nearlineColumns) * (0.9 + (((column * 7) % 5) * 0.1));
+      const heightVariance = ((column * 17) % 9) / 9;
+      const layerHeight = height * (0.06 + heightVariance * 0.12);
+      const tintMix = normalized < skylineSplit ? 0.7 : 0.34;
+      const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(slumsColor),
+        Phaser.Display.Color.ValueToColor(downtownColor),
+        1,
+        tintMix
+      );
+      const tintColor = Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b);
+      backdropGraphics.fillStyle(tintColor, Math.min(0.34, atmosphere.skylineAlphaBase + 0.08 + heightVariance * 0.06));
+      backdropGraphics.fillRect(x, nearlineBaseY - layerHeight, segmentWidth, layerHeight);
+    }
+
+    const horizonY = originY + height * 0.44;
     backdropGraphics.fillStyle(atmosphere.horizonGlowColor, atmosphere.horizonGlowAlpha);
     backdropGraphics.fillEllipse(originX + width / 2, horizonY, width * 1.08, height * 0.52);
 
+    backdropGraphics.fillStyle(adjustColor(atmosphere.gradientTopRight, 0.12), 0.08 + atmosphere.horizonGlowAlpha * 0.28);
+    backdropGraphics.fillEllipse(originX + width * 0.52, originY + height * 0.28, width * 1.18, height * 0.42);
+
+    backdropGraphics.fillStyle(adjustColor(atmosphere.horizonGlowColor, 0.06), 0.08 + atmosphere.emissiveIntensity * 0.12);
+    backdropGraphics.fillEllipse(originX + width / 2, originY + height * 0.78, width * 1.2, height * 0.28);
+
     backdropGraphics.fillStyle(atmosphere.lowerHazeColor, atmosphere.lowerHazeAlpha);
-    backdropGraphics.fillRect(originX, originY + height * 0.6, width, height * 0.6);
+    backdropGraphics.fillRect(originX, originY + height * 0.5, width, height * 0.7);
 
     atmosphere.fogBands.forEach((band) => {
       if (band.alpha <= 0) {
@@ -980,6 +1041,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     this.runtimeState.buildingMassings.forEach((mass) => mass.destroy(true));
     this.runtimeState.buildingMassings = [];
     this.runtimeState.buildingMassingEntries = [];
+    this.runtimeState.environmentComposition = undefined;
     this.runtimeState.currentAtmosphereProfile = undefined;
     this.runtimeState.lastAtmosphereRedrawBucket = -1;
     this.runtimeState.lastItemMarkerSignature = '';
@@ -1004,6 +1066,31 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       gridY,
       groundOnly,
     });
+  }
+
+  private resolveEnvironmentComposition() {
+    if (this.runtimeState.environmentComposition) {
+      return this.runtimeState.environmentComposition;
+    }
+
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea?.buildings?.length) {
+      const emptyComposition = {
+        scenicTileContextByKey: {},
+        preferredLampGrid: undefined,
+      };
+      this.runtimeState.environmentComposition = emptyComposition;
+      return emptyComposition;
+    }
+
+    const composition = composeEnvironmentArt(
+      currentMapArea,
+      currentMapArea.buildings,
+      this.runtimeState.buildingVisualProfiles,
+      this.runtimeState.visualTheme
+    );
+    this.runtimeState.environmentComposition = composition;
+    return composition;
   }
 
   private resolveDistrictWeight(): number {

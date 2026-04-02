@@ -107,15 +107,18 @@ flowchart LR
 1. `the-getaway/src/game/visual/contracts.ts` defines shared render contracts (`VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`) including district lot/massing fields (`lotPattern`, `massingStyle`, `massingHeight`, `trimHex`, `atmosphereHex`).
 2. `the-getaway/src/game/visual/theme/noirVectorTheme.ts` resolves quality budgets and district/entity palettes; `createNoirVectorTheme` and `resolveBuildingVisualProfile` provide deterministic defaults.
 3. `the-getaway/src/game/visual/world/DistrictComposer.ts` composes deterministic district grammar (facade/lot/massing selection + seeded color shifts), then `the-getaway/src/game/world/worldMap.ts` injects those profiles into `MapBuildingDefinition.visualProfile`.
-4. `the-getaway/src/game/scenes/MainScene.ts` delegates world rendering orchestration to `the-getaway/src/game/scenes/main/modules/WorldRenderModule.ts`, which drives `the-getaway/src/game/visual/world/TilePainter.ts` and `the-getaway/src/game/visual/world/BuildingPainter.ts` while rendering dedicated building-massing layers (`drawBuildingMasses`) plus skyline-composition backdrops.
-5. `the-getaway/src/game/visual/world/AtmosphereDirector.ts` resolves deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection alpha, overlay tint/alpha) from district mix + world time + preset budgets.
-6. `the-getaway/src/game/visual/world/OcclusionReadabilityController.ts` applies visual-only readability compensation (building alpha fade + token/label emphasis) when entities overlap heavy massing bounds, restoring prior-frame baselines so boosts remain transient.
-7. `the-getaway/src/game/visual/world/PropScatter.ts` generates deterministic prop placements that avoid door tiles/door buffers/protected interactive tiles and applies district-aware clustering for denser composition without blocking routes.
-8. `the-getaway/src/content/characters/spriteManifest.ts` is now the runtime source of truth for shipped character sheets: it defines `spriteSetId`, ownership (`hero` appearance presets or Level 0 NPC dialogue IDs), the required 8-direction x 4-state matrix, frame size, FPS, origin, world scale, and fallback palette metadata. Placeholder/manual-polish exports live under `the-getaway/public/characters/<spriteSetId>/`.
-9. `the-getaway/src/game/visual/entities/characterSpriteAssets.ts` lets `BootScene` preload every normalized sheet and registers deterministic animation keys (`<spriteSetId>:<state>:<direction>`). Only sets with a fully loaded matrix are considered sprite-ready at runtime.
-10. `the-getaway/src/game/visual/entities/SpriteCharacterRigFactory.ts` sits behind `WorldRenderModule` and preserves `CharacterToken` compatibility while swapping sprite-backed hero/key-NPC tokens into the existing depth, nameplate, health bar, combat-indicator, and occlusion-readability pipeline. Incomplete sets fall back to `CharacterRigFactory.ts` automatically.
-11. `the-getaway/src/game/scenes/main/modules/EntityRenderModule.ts` now builds descriptor-driven presentation requests (role + `spriteSetId` + base animation state + facing + attack pulse) so hero and named interactive NPCs can resolve `idle`, `move`, `attack`, and `interact` states while cardinal-first gameplay continues to map into authored 8-direction sheets.
-12. `the-getaway/src/components/GameCanvas.tsx`, `the-getaway/src/game/settings/visualSettings.ts`, and `the-getaway/src/store/settingsSlice.ts` coordinate smooth-vector renderer defaults and quality-preset-aware FX budgets (`performance | balanced | cinematic`), including shared fog/emissive/wet-reflection/occlusion caps consumed by scene render systems.
+4. The rejected generated-clutter path (`level0Environment` atlas + `PropScatter`) is no longer part of the live runtime render loop. The files may remain locally for reference, but Level 0 beauty passes now target surface/material composition rather than freestanding prop spam.
+5. `the-getaway/src/game/scenes/BootScene.ts` only preloads the shared prop atlas (`props`) and ESB atlas for the live Level 0 path; the discarded generated environment atlas is no longer wired into scene boot.
+6. `the-getaway/src/game/scenes/MainScene.ts` delegates world rendering orchestration to `the-getaway/src/game/scenes/main/modules/WorldRenderModule.ts`, which now resolves surface context from `EnvironmentComposer`, feeds that context into `the-getaway/src/game/visual/world/TilePainter.ts`, updates the camera clear color from the atmosphere profile, and renders building masses/skyline composition without freestanding generated clutter.
+7. `the-getaway/src/game/visual/world/AtmosphereDirector.ts` resolves deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection alpha, overlay tint/alpha) from district mix + world time + preset budgets, with daytime lift and skyline haze tuned to support a cleaner corporate-noir read.
+8. `the-getaway/src/game/visual/world/OcclusionReadabilityController.ts` applies visual-only readability compensation (building alpha fade + token/label emphasis) when entities overlap heavy massing bounds, restoring prior-frame baselines so boosts remain transient.
+9. `the-getaway/src/game/visual/world/EnvironmentComposer.ts` now derives only per-tile district/surface context plus a lighting anchor from Level 0 building metadata (`district`, `signageStyle`, `propDensity`, footprint, door); it no longer returns freestanding scenic prop placements.
+10. `the-getaway/src/game/visual/world/TilePainter.ts` and `the-getaway/src/game/visual/world/BuildingPainter.ts` are the primary beauty levers for GET-159 reset work: curb rhythm, slab seams, plaza/service/market ground motifs, entry light pockets, podium bands, quieter facade grids, and district-specific repair language.
+11. `the-getaway/src/content/characters/spriteManifest.ts` is now the runtime source of truth for shipped character sheets: it defines `spriteSetId`, ownership (`hero` appearance presets or Level 0 NPC dialogue IDs), the required 8-direction x 4-state matrix, frame size, FPS, origin, world scale, and fallback palette metadata. Placeholder/manual-polish exports live under `the-getaway/public/characters/<spriteSetId>/`.
+12. `the-getaway/src/game/visual/entities/characterSpriteAssets.ts` lets `BootScene` preload every normalized sheet and registers deterministic animation keys (`<spriteSetId>:<state>:<direction>`). Only sets with a fully loaded matrix are considered sprite-ready at runtime.
+13. `the-getaway/src/game/visual/entities/SpriteCharacterRigFactory.ts` sits behind `WorldRenderModule` and preserves `CharacterToken` compatibility while swapping sprite-backed hero/key-NPC tokens into the existing depth, nameplate, health bar, combat-indicator, and occlusion-readability pipeline. Incomplete sets fall back to `CharacterRigFactory.ts` automatically.
+14. `the-getaway/src/game/scenes/main/modules/EntityRenderModule.ts` now builds descriptor-driven presentation requests (role + `spriteSetId` + base animation state + facing + attack pulse) so hero and named interactive NPCs can resolve `idle`, `move`, `attack`, and `interact` states while cardinal-first gameplay continues to map into authored 8-direction sheets.
+15. `the-getaway/src/components/GameCanvas.tsx`, `the-getaway/src/game/settings/visualSettings.ts`, and `the-getaway/src/store/settingsSlice.ts` coordinate smooth-vector renderer defaults and quality-preset-aware FX budgets (`performance | balanced | cinematic`), including shared fog/emissive/wet-reflection/occlusion caps consumed by scene render systems.
 
 ## MainScene Module Runtime
 > Category: scene_architecture  
@@ -674,7 +677,7 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 
 **Core Pattern:**
 - Wide vertical avenues and horizontal streets create a regular city block grid
-- Buildings occupy rectangular footprints within blocks, separated by navigable streets
+- Standard parcels occupy rectangular/parallelogram footprints within blocks, separated by navigable streets
 - Door tiles exist in street space (outside building footprints) to create clear separation between structure and navigation
 - Each building connects bidirectionally to a procedurally generated interior space
 - Walkable surface metadata (`surfaceKind`, `surfaceAxis`) now tags roads, intersections, sidewalks, and lots so render layers can style navigation space consistently without changing gameplay rules
@@ -682,12 +685,31 @@ The world map uses a **Manhattan-style grid system** inspired by urban planning 
 ### Design principles
 
 **Key Design Principles:**
-- **Geometric Clarity**: All buildings are axis-aligned rectangles; no irregular shapes or overlapping footprints
+- **Default Geometric Clarity**: Standard parcels should use a single axis-aligned rectangular/parallelogram footprint whenever the visible base is close enough to that model
+- **Measured Exceptions**: Landmark art that still misses by more than the runbook tolerance after one measured rectangular fit pass must escalate to either a rectangular collision + custom visual debug polygon or a multi-region/custom polygon footprint
 - **Single-Parcel Blocks**: Each of the 16 Downtown blocks maps to one named parcel to keep overlays and doorways uncluttered
 - **Street-Door Separation**: Doors must be positioned in street tiles adjacent to buildings, never on the building edge itself
 - **Unique Positioning**: No two buildings share the same door coordinate
 - **Parcel Signage**: Rooftop marquees were removed to keep skylines readable; exterior labeling now relies on environmental cues and quest UI copy
 - **Spawn Sanitization**: Blueprint positions snap to the nearest walkable street tile during world generation so nothing spawns atop a roofline
+
+### Pattern: Building Positioning & Footprint Fit
+
+- Building positioning follows a hierarchy of truth:
+  1. collision footprint
+  2. debug outline
+  3. render anchor/origin
+  4. door anchor
+  5. readability fade/depth
+- The default debug outline should mirror the gameplay footprint exactly. If review needs a closer art match while gameplay stays rectangular, use a custom visual debug polygon rather than retuning collision blindly.
+- The default fit mode is a single tile-aligned rectangle/parallelogram. This is a convenience model, not a universal truth for landmark art.
+- If a building remains outside the accepted visual tolerance after one measured rectangular pass, do not keep trim-chasing. Change fit mode to either:
+  - rectangular collision + custom visual debug polygon, or
+  - multi-region/custom polygon footprint
+- Save a baseline before any second pass: current constants, screenshot path, and edge-by-edge mismatch notes. Future adjustments must compare against that saved baseline instead of memory.
+- Variable isolation is mandatory during fit work: a pass may change footprint geometry, render scale/origin/offset, door anchor, or readability/depth, but not multiple classes at once unless the requested tradeoff explicitly requires it.
+- GET-172 (Empire State Building) is the reference lesson: irregular landmark art cannot always be represented accurately by one integer-tile parallelogram. Once the mismatch falls into small sloped-edge residuals, continued trim tuning has diminishing returns and should trigger an escalation decision rather than open-ended retries.
+- The step-by-step operator procedure, tolerance rubric, and troubleshooting matrix live in `memory-bank/04 Engineering/Building Positioning Runbook.md`.
 
 ### Pattern: Elevation Profiles & Facades
 
