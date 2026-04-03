@@ -164,10 +164,13 @@ jobs:
           fi
 
           if [ "${DEPLOY_SUBPATH}" = '.' ]; then
-            rsync -a --delete --exclude '.git' --exclude 'previews' "${SRC_DIST_DIR}/" site/
+            find site -mindepth 1 -maxdepth 1 ! -name '.git' ! -name 'previews' -exec rm -rf {} +
+            rsync -a --exclude '.git' --exclude 'previews' "${SRC_DIST_DIR}/" site/
+            echo "VALIDATE_TARGET=site" >> "$GITHUB_ENV"
           else
             mkdir -p "site/${DEPLOY_SUBPATH}"
             rsync -a --delete --exclude '.git' "${SRC_DIST_DIR}/" "site/${DEPLOY_SUBPATH}/"
+            echo "VALIDATE_TARGET=site/${DEPLOY_SUBPATH}" >> "$GITHUB_ENV"
           fi
 
           touch site/.nojekyll
@@ -175,7 +178,7 @@ jobs:
       - name: Validate deployed preview assets
         run: |
           set -euo pipefail
-          TARGET_DIR="site/${DEPLOY_SUBPATH}" node scripts/validate-preview-assets.mjs
+          TARGET_DIR="${VALIDATE_TARGET}" node scripts/validate-preview-assets.mjs
 
       - name: Commit and push gh-pages content
         run: |
