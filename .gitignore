@@ -102,3 +102,8 @@ context_portal/
 # Local automation and capture artifacts
 .playwright-cli/
 output/
+
+# Local agent and knowledge-tool artifacts
+.codex/
+memory-bank/.smart-env/
+memory-bank/copilot/
