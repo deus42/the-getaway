@@ -1,0 +1,275 @@
+{
+  "frameWidth": 64,
+  "frameHeight": 96,
+  "origin": {
+    "x": 0.5,
+    "y": 0.92
+  },
+  "footAnchorTolerancePx": 2,
+  "states": {
+    "idle": {
+      "north": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "north-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "north-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      }
+    },
+    "move": {
+      "north": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      },
+      "north-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      },
+      "east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      },
+      "south-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      },
+      "south": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      },
+      "south-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      },
+      "west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      },
+      "north-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          87,
+          88
+        ]
+      }
+    },
+    "attack": {
+      "north": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "north-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "north-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      }
+    },
+    "interact": {
+      "north": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "north-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south-east": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "south-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      },
+      "north-west": {
+        "frameFootAnchorsPx": [
+          88,
+          88,
+          88,
+          88
+        ]
+      }
+    }
+  }
+}

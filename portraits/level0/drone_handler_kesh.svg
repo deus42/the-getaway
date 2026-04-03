@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Drone Handler Kesh portrait</title>
+  <desc id="desc">Male drone technician portrait with headset and light stubble.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1c1442"/>
+      <stop offset="100%" stop-color="#5a2f96"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="18" fill="url(#bg)"/>
+  <path d="M35 58h58v31c0 12-9 21-21 21H56c-12 0-21-9-21-21z" fill="#f0c8a8"/>
+  <path d="M33 57c4-18 17-30 33-30 14 0 25 7 33 22-8-4-16-6-25-6-16 0-28 8-41 14z" fill="#6d3ab5"/>
+  <rect x="31" y="63" width="8" height="22" rx="4" fill="#8b9ac3"/>
+  <rect x="89" y="63" width="8" height="22" rx="4" fill="#8b9ac3"/>
+  <path d="M39 68c9-14 41-14 50 0" stroke="#8b9ac3" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <ellipse cx="52" cy="72" rx="4" ry="5" fill="#2b1b16"/>
+  <ellipse cx="76" cy="72" rx="4" ry="5" fill="#2b1b16"/>
+  <path d="M52 86c8 4 16 4 24 0" stroke="#8a4f3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M50 90h28v3" stroke="#5a3a2e" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="64" cy="121" r="30" fill="#2a2246"/>
+</svg>

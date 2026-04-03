@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Firebrand Juno portrait</title>
+  <desc id="desc">Female firebrand portrait with high ponytail and tactical goggles.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2d0d0f"/>
+      <stop offset="100%" stop-color="#8d131e"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="18" fill="url(#bg)"/>
+  <ellipse cx="64" cy="72" rx="29" ry="32" fill="#f0c39a"/>
+  <path d="M31 64c2-18 17-33 33-33 14 0 26 8 34 22-9-5-17-8-26-8-12 0-24 7-41 19z" fill="#d6403d"/>
+  <path d="M89 34c8 8 10 17 7 28" stroke="#c92f35" stroke-width="7" stroke-linecap="round"/>
+  <rect x="41" y="63" width="19" height="11" rx="5" fill="#811d1d" stroke="#f87171" stroke-width="2"/>
+  <rect x="68" y="63" width="19" height="11" rx="5" fill="#811d1d" stroke="#f87171" stroke-width="2"/>
+  <line x1="60" y1="68" x2="68" y2="68" stroke="#f87171" stroke-width="2"/>
+  <ellipse cx="50" cy="70" rx="3" ry="4" fill="#2b1b16"/>
+  <ellipse cx="77" cy="70" rx="3" ry="4" fill="#2b1b16"/>
+  <path d="M52 86c7 3 16 3 23 0" stroke="#8a4f3a" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="64" cy="121" r="30" fill="#35212a"/>
+</svg>

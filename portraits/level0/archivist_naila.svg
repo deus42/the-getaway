@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Archivist Naila portrait</title>
+  <desc id="desc">Female archivist portrait with bun hairstyle and crystal glasses.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c1d34"/>
+      <stop offset="100%" stop-color="#0f5f8f"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="18" fill="url(#bg)"/>
+  <ellipse cx="64" cy="72" rx="29" ry="32" fill="#f3d0b4"/>
+  <circle cx="86" cy="40" r="10" fill="#314975"/>
+  <path d="M30 64c1-20 16-35 34-35 18 0 31 12 36 31-8-9-18-14-33-14-13 0-24 6-37 18z" fill="#30436b"/>
+  <rect x="43" y="65" width="16" height="10" rx="2" fill="none" stroke="#7ad9ff" stroke-width="2"/>
+  <rect x="69" y="65" width="16" height="10" rx="2" fill="none" stroke="#7ad9ff" stroke-width="2"/>
+  <line x1="59" y1="70" x2="69" y2="70" stroke="#7ad9ff" stroke-width="2"/>
+  <ellipse cx="51" cy="71" rx="3" ry="4" fill="#2b1b16"/>
+  <ellipse cx="77" cy="71" rx="3" ry="4" fill="#2b1b16"/>
+  <path d="M53 86c6 4 15 4 21 0" stroke="#8a5b47" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <circle cx="45" cy="77" r="2.2" fill="#dce7ff"/>
+  <circle cx="83" cy="77" r="2.2" fill="#dce7ff"/>
+  <circle cx="64" cy="121" r="30" fill="#1f2e45"/>
+</svg>
