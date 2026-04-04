@@ -10,6 +10,12 @@ jest.mock("../components/GameCanvas", () => {
   };
 });
 
+jest.mock("../components/ui/MiniMap", () => {
+  return function MockedMiniMap() {
+    return <div data-testid="mini-map">Mini Map Mock</div>;
+  };
+});
+
 jest.mock("../components/debug/GameDebugInspector", () => () => null);
 
 describe("App component", () => {

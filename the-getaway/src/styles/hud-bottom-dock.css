@@ -14,9 +14,9 @@
   box-shadow: 0 -14px 30px rgba(8, 12, 24, 0.24);
   pointer-events: auto;
   z-index: 6;
-  height: var(--bottom-panel-height, 228px);
-  min-height: 228px;
-  max-height: 288px;
+  height: var(--bottom-panel-height, 244px);
+  min-height: 244px;
+  max-height: 304px;
   border-top-left-radius: 28px;
   border-top-right-radius: 28px;
   border: 1px solid rgba(18, 28, 48, 0.54);
@@ -32,7 +32,7 @@
     minmax(0, 0.95fr)
     minmax(0, 1.05fr);
   gap: var(--hud-space-3);
-  height: clamp(220px, var(--bottom-panel-height, 228px), 276px);
+  height: clamp(236px, var(--bottom-panel-height, 244px), 304px);
 }
 
 .hud-bottom-dock[data-hud-layout='stealth'] {

@@ -29,6 +29,10 @@ import { getUIStrings } from "./content/ui";
 import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import { createScopedLogger } from "./utils/logger";
+import {
+  DEFAULT_DOCK_MIN_HEIGHT,
+  measureBottomDockHeight,
+} from "./utils/bottomDockSizing";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import CombatControlWidget from "./components/ui/CombatControlWidget";
 import GameDebugInspector from "./components/debug/GameDebugInspector";
@@ -68,9 +72,6 @@ const mainStageStyle: CSSProperties = {
   display: "flex",
   background: "var(--hud-stage-background)",
 };
-
-const DEFAULT_DOCK_MIN_HEIGHT = 228;
-const DEFAULT_DOCK_MAX_HEIGHT = 288;
 
 const centerStageStyle: CSSProperties = {
   flex: "1 1 auto",
@@ -176,8 +177,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
 
   const [questExpanded, setQuestExpanded] = useState(false);
   const [rendererMeta, setRendererMeta] = useState<{ label?: string; detail?: string } | null>(null);
-  const statusLaneRef = useRef<HTMLDivElement | null>(null);
-  const [playerLaneHeight, setPlayerLaneHeight] = useState<number | null>(null);
+  const dockRef = useRef<HTMLDivElement | null>(null);
   const [bottomPanelHeight, setBottomPanelHeight] = useState<number>(DEFAULT_DOCK_MIN_HEIGHT);
 
   useEffect(() => {
@@ -195,50 +195,68 @@ const CommandShell: React.FC<CommandShellProps> = ({
   }, [inCombat]);
 
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof ResizeObserver === 'undefined') {
-      return;
-    }
-    const target = statusLaneRef.current;
-    if (!target) {
-      return;
-    }
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) {
-        return;
-      }
-      const nextHeight = Math.round(entry.contentRect.height);
-      setPlayerLaneHeight((prev) => (prev === nextHeight ? prev : nextHeight));
-    });
-    observer.observe(target);
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    const target = statusLaneRef.current;
-    if (!target) {
-      return;
-    }
-    const initialHeight = Math.round(target.getBoundingClientRect().height);
-    setPlayerLaneHeight((prev) => (prev === initialHeight ? prev : initialHeight));
-  }, []);
-
-  useEffect(() => {
-    if (!playerLaneHeight) {
-      setBottomPanelHeight(DEFAULT_DOCK_MIN_HEIGHT);
-      return;
-    }
     if (typeof window === 'undefined') {
-      setBottomPanelHeight(playerLaneHeight);
       return;
     }
-    const rootFontSize = parseFloat(window.getComputedStyle(document.documentElement).fontSize || '16') || 16;
-    const verticalPadding = rootFontSize * 1.3; // 0.6rem top + 0.7rem bottom
-    const measuredHeight = Math.round(playerLaneHeight + verticalPadding);
-    const boundedHeight = Math.min(Math.max(measuredHeight, DEFAULT_DOCK_MIN_HEIGHT), DEFAULT_DOCK_MAX_HEIGHT);
-    setBottomPanelHeight((prev) => (prev === boundedHeight ? prev : boundedHeight));
-  }, [playerLaneHeight]);
+    const dock = dockRef.current;
+    if (!dock) {
+      return;
+    }
+
+    let frameId: number | null = null;
+
+    const measureDockHeight = () => {
+      const nextHeight = measureBottomDockHeight(dock);
+      setBottomPanelHeight((prev) => (prev === nextHeight ? prev : nextHeight));
+    };
+
+    const scheduleDockMeasure = () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      frameId = window.requestAnimationFrame(() => {
+        frameId = null;
+        measureDockHeight();
+      });
+    };
+
+    scheduleDockMeasure();
+
+    const resizeObserver =
+      typeof ResizeObserver === 'undefined'
+        ? null
+        : new ResizeObserver(() => {
+            scheduleDockMeasure();
+          });
+    resizeObserver?.observe(dock);
+    dock
+      .querySelectorAll<HTMLElement>('.hud-bottom-lane, .hud-bottom-card-surface')
+      .forEach((element) => resizeObserver?.observe(element));
+
+    const mutationObserver =
+      typeof MutationObserver === 'undefined'
+        ? null
+        : new MutationObserver(() => {
+            scheduleDockMeasure();
+          });
+    mutationObserver?.observe(dock, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+    });
+
+    window.addEventListener('resize', scheduleDockMeasure);
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+      window.removeEventListener('resize', scheduleDockMeasure);
+      mutationObserver?.disconnect();
+      resizeObserver?.disconnect();
+    };
+  }, [characterOpen, hudLayoutPreset, questExpanded, showMenu, testMode]);
 
   const handleToggleQuest = () => {
     setQuestExpanded((prev) => !prev);
@@ -322,7 +340,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
         <DialogueOverlay />
         <CombatFeedbackManager />
       </div>
-      <div className="hud-bottom-dock" data-hud-layout={hudLayoutPreset}>
+      <div className="hud-bottom-dock" data-hud-layout={hudLayoutPreset} ref={dockRef}>
         <div className="hud-bottom-lane hud-bottom-lane--map">
           <div className="hud-bottom-lane-card">
             <div className="hud-bottom-card-surface">
@@ -332,12 +350,7 @@ const CommandShell: React.FC<CommandShellProps> = ({
             </div>
           </div>
         </div>
-
-        <div
-          className="hud-bottom-lane hud-bottom-lane--status"
-          ref={statusLaneRef}
-          data-hud-emphasis={isCombatLayout ? 'true' : undefined}
-        >
+        <div className="hud-bottom-lane hud-bottom-lane--status" data-hud-emphasis={isCombatLayout ? 'true' : undefined}>
           <div className="hud-bottom-lane-card">
             <div className="hud-bottom-card-surface">
               <PlayerSummaryPanel
