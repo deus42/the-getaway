@@ -82,6 +82,7 @@ import {
   startDialogue,
   endDialogue,
   startQuest,
+  syncObjectiveCounter,
   updateObjectiveCounter,
 } from "../store/questsSlice";
 import { getSystemStrings } from "../content/system";
@@ -721,6 +722,40 @@ const GameController: React.FC = () => {
     [dispatch]
   );
 
+  const syncCollectObjectivesForInventory = useCallback(
+    (trackableQuests: Quest[], inventoryItems: Item[]) => {
+      trackableQuests.forEach((quest) => {
+        quest.objectives.forEach((objective) => {
+          if (objective.type !== 'collect' || objective.isCompleted) {
+            return;
+          }
+
+          const inventoryCount = collectObjectiveInventoryCount(objective, inventoryItems);
+          if (inventoryCount <= 0) {
+            return;
+          }
+
+          const targetCount = objective.count ?? 1;
+          const desiredCount = Math.min(inventoryCount, targetCount);
+          const currentCount = objective.currentCount ?? 0;
+          if (desiredCount <= currentCount) {
+            return;
+          }
+
+          ensureSideQuestProgressTracking(quest);
+          dispatch(
+            syncObjectiveCounter({
+              questId: quest.id,
+              objectiveId: objective.id,
+              count: desiredCount,
+            })
+          );
+        });
+      });
+    },
+    [dispatch, ensureSideQuestProgressTracking]
+  );
+
   useEffect(() => {
     surveillanceZoneRef.current = surveillanceZone;
   }, [surveillanceZone]);
@@ -776,11 +811,13 @@ const GameController: React.FC = () => {
     }
 
     const trackableQuests = questsRef.current.filter(isQuestProgressTrackable);
+    const stagedInventoryItems = [...(player.inventory.items ?? [])];
 
     itemsAtPlayerPosition.forEach((item) => {
       const pickupCount = getItemPickupQuantity(item);
       const pickupLabel = resolvePickupObjectName(item);
       dispatch(addItem(item));
+      stagedInventoryItems.push(item);
       dispatch(
         removeItemInstanceFromMap({
           id: item.id,
@@ -808,31 +845,16 @@ const GameController: React.FC = () => {
         })
       );
       dispatch(addLogMessage(logStrings.itemPickedUp(pickupLabel, pickupCount)));
-
-      trackableQuests.forEach((quest) => {
-        quest.objectives.forEach((objective) => {
-          if (!objectiveMatchesItem(objective, item)) {
-            return;
-          }
-
-          ensureSideQuestProgressTracking(quest);
-          dispatch(
-            updateObjectiveCounter({
-              questId: quest.id,
-              objectiveId: objective.id,
-              count: pickupCount,
-            })
-          );
-        });
-      });
+      syncCollectObjectivesForInventory(trackableQuests, stagedInventoryItems);
     });
   }, [
     dispatch,
     mapItems,
     player.position,
+    player.inventory.items,
     logStrings,
     currentMapArea?.id,
-    ensureSideQuestProgressTracking,
+    syncCollectObjectivesForInventory,
   ]);
 
   useEffect(() => {
@@ -846,41 +868,11 @@ const GameController: React.FC = () => {
       return;
     }
 
-    trackableQuests.forEach((quest) => {
-      quest.objectives.forEach((objective) => {
-        if (objective.type !== 'collect' || objective.isCompleted) {
-          return;
-        }
-
-        const inventoryCount = collectObjectiveInventoryCount(objective, inventoryItems);
-        if (inventoryCount <= 0) {
-          return;
-        }
-
-        const targetCount = objective.count ?? 1;
-        const currentCount = objective.currentCount ?? 0;
-        const desiredCount = Math.min(inventoryCount, targetCount);
-        const increment = desiredCount - currentCount;
-
-        if (increment <= 0) {
-          return;
-        }
-
-        ensureSideQuestProgressTracking(quest);
-        dispatch(
-          updateObjectiveCounter({
-            questId: quest.id,
-            objectiveId: objective.id,
-            count: increment,
-          })
-        );
-      });
-    });
+    syncCollectObjectivesForInventory(trackableQuests, inventoryItems);
   }, [
-    dispatch,
     player.inventory.items,
     questActivationSignature,
-    ensureSideQuestProgressTracking,
+    syncCollectObjectivesForInventory,
   ]);
 
   useEffect(() => {

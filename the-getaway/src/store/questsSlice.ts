@@ -42,6 +42,28 @@ const buildQuestState = (
 
 const initialState: QuestState = buildQuestState(DEFAULT_LOCALE);
 
+const isCounterObjectiveType = (type: Quest['objectives'][number]['type']): boolean =>
+  type === 'collect' || type === 'kill' || type === 'explore';
+
+const syncObjectiveCountValue = (
+  objective: Quest['objectives'][number],
+  desiredCount: number
+): void => {
+  if (!isCounterObjectiveType(objective.type)) {
+    return;
+  }
+
+  const targetCount = objective.count || 1;
+  const currentCount = objective.currentCount || 0;
+  const clampedCount = Math.min(Math.max(desiredCount, currentCount), targetCount);
+
+  objective.currentCount = clampedCount;
+
+  if (clampedCount >= targetCount) {
+    objective.isCompleted = true;
+  }
+};
+
 export const questsSlice = createSlice({
   name: 'quests',
   initialState,
@@ -108,16 +130,24 @@ export const questsSlice = createSlice({
       
       if (quest) {
         const objective = quest.objectives.find(o => o.id === objectiveId);
-        if (objective && (objective.type === 'collect' || objective.type === 'kill' || objective.type === 'explore')) {
-          // Clamp counter to target count to prevent overflow
-          const targetCount = objective.count || 1;
+        if (objective && isCounterObjectiveType(objective.type)) {
           const newCount = (objective.currentCount || 0) + count;
-          objective.currentCount = Math.min(newCount, targetCount);
+          syncObjectiveCountValue(objective, newCount);
+        }
+      }
+    },
 
-          // Check if objective should be completed
-          if (objective.currentCount >= targetCount) {
-            objective.isCompleted = true;
-          }
+    syncObjectiveCounter: (
+      state,
+      action: PayloadAction<{ questId: string; objectiveId: string; count: number }>
+    ) => {
+      const { questId, objectiveId, count } = action.payload;
+      const quest = state.quests.find((entry) => entry.id === questId);
+
+      if (quest) {
+        const objective = quest.objectives.find((entry) => entry.id === objectiveId);
+        if (objective && objective.type === 'collect') {
+          syncObjectiveCountValue(objective, count);
         }
       }
     },
@@ -186,6 +216,7 @@ export const {
   completeQuest,
   updateObjectiveStatus,
   updateObjectiveCounter,
+  syncObjectiveCounter,
   addDialogue,
   claimDialogueReward,
   startDialogue,

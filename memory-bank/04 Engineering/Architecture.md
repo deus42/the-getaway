@@ -40,7 +40,7 @@ Contains all static assets for the game including:
 
 React components that make up the game's user interface:
 - **`GameCanvas.tsx`**: The main component that integrates Phaser with React. It initializes the Phaser game instance and provides the canvas where the game is rendered.
-- **`GameController.tsx`**: Bridges Redux state with Phaser events, handling player input, combat flow, click-to-move execution, curfew enforcement, NPC routine scheduling, and now prevents stepping onto NPC tiles while auto-pathing to conversation range when you click an NPC.
+- **`GameController.tsx`**: Bridges Redux state with Phaser events, handling player input, combat flow, click-to-move execution, curfew enforcement, NPC routine scheduling, and now prevents stepping onto NPC tiles while auto-pathing to conversation range when you click an NPC. Collect-objective pickup progress is synchronized from staged inventory snapshots so fresh pickups and inventory backfill share one deterministic path.
 
 ### `/the-getaway/src/components/ui`
 
@@ -331,8 +331,8 @@ flowchart LR
 3. `the-getaway/src/store/selectors/opsBriefingSelectors.ts` builds `selectOpsBriefingModel`, combining mission progress with quest runtime state and quest definitions (`kind`, related NPCs, mission summaries) for a single player-ready view model.
 4. `the-getaway/src/components/ui/OpsBriefingsPanel.tsx` renders `Primary Progress`, `Active Side Quests`, `Available Side Quests`, and completed-history overlay from the selector model.
 5. `the-getaway/src/components/debug/GameDebugInspector.tsx` exposes a test-mode **Mission Snapshot** section (level id/name plus primary/side counters) so objective state remains inspectable after removing the dedicated player level card.
-6. `the-getaway/src/components/GameController.tsx` now owns side-quest progression hooks for kill/device/drone targets (enemy defeat transitions, camera sabotage interaction, and unique drone-waypoint sightings), dispatching `updateObjectiveCounter`; side quests can auto-promote from Available to Active on first valid progress event.
-7. `the-getaway/src/store/questsSlice.ts` (and shared quest-system utility) accepts `explore` objective counter updates so waypoint-based recon objectives progress through the same reducer path as collect/kill counters.
+6. `the-getaway/src/components/GameController.tsx` now owns side-quest progression hooks for kill/device/drone targets (enemy defeat transitions, camera sabotage interaction, and unique drone-waypoint sightings), dispatching `updateObjectiveCounter`; side quests can auto-promote from Available to Active on first valid progress event. Collect objectives use a shared inventory-count sync helper instead of incrementing separately on pickup and reconciliation.
+7. `the-getaway/src/store/questsSlice.ts` keeps `updateObjectiveCounter` as the incremental reducer for kill/explore/event-driven progress and exposes `syncObjectiveCounter` for collect-objective inventory synchronization. The sync reducer clamps to the quest target and never decreases already-earned progress, preventing double-counts while preserving backfill for items already in the inventory.
 8. `the-getaway/src/game/controllers/MiniMapController.ts` now composes quest-contact objective markers by merging side-quest definitions (`QUEST_DEFINITION_BY_ID`) with live NPC dialogue IDs, so available/turn-in contacts stay discoverable on-map.
 
 ### Pattern: ObjectiveVisibilityContract
