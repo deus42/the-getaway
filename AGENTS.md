@@ -59,12 +59,13 @@ Do not begin coding until this checklist is complete.
 1. Accept/confirm the roadmap step or Linear ticket, then move the issue to `In Progress`.
 2. Draft a detailed implementation plan and pause for approval or scope corrections before touching code.
 3. Implement once the plan is approved, iterating as needed; defer automated test authoring/execution until the requester accepts the behaviour.
-4. Immediately after implementation, produce a structured Level 0 playtest scenario (step-by-step) that exercises the new behaviour. Do not wait for the user to request it.
-5. Await review; if feedback requires changes, address the notes then regenerate an updated playtest scenario describing the new validation run. Repeat this loop until the requester explicitly accepts the behaviour.
-6. Only after acceptance, add/execute the required automated tests (`yarn lint`, builds, unit/integration suites, coverage) and capture the results for handoff or a dedicated testing agent/session.
-7. Commit only when explicitly instructed to do so and after the acceptance-driven testing pass is complete.
-8. After final approval and commit, **wait for the requester to verify the change**; only then move the Linear issue to the terminal state (`Done` unless otherwise directed).
-9. If verification is still pending, leave the issue in `In Progress` (or `In Review`) so follow-up can occur without reopening states.
+4. Immediately run the post-implementation review loop: rate the work on task-appropriate dimensions, review the diff, fix safe findings automatically, rerun the relevant checks, then rate it again.
+5. Immediately after implementation, produce a structured Level 0 playtest scenario (step-by-step) that exercises the new behaviour. Do not wait for the user to request it.
+6. Await review; if feedback requires changes, address the notes then regenerate an updated playtest scenario describing the new validation run. Repeat this loop until the requester explicitly accepts the behaviour.
+7. Only after acceptance, add/execute the required automated tests (`yarn lint`, builds, unit/integration suites, coverage) and capture the results for handoff or a dedicated testing agent/session.
+8. Commit only when explicitly instructed to do so and after the acceptance-driven testing pass is complete.
+9. After final approval and commit, **wait for the requester to verify the change**; only then move the Linear issue to the terminal state (`Done` unless otherwise directed).
+10. If verification is still pending, leave the issue in `In Progress` (or `In Review`) so follow-up can occur without reopening states.
 
 **Magic words (finish / complete / commit)**  
 When the requester uses any of these terms, treat it as a mandate to finalize the task: (1) ensure automated tests have been written/executed (lint, build, test, coverage) even if they were deferred earlier, (2) create the instructed commit(s) referencing the Linear key, (3) post the Linear issue summary comment, and (4) move the ticket to `Done` only after verification. Ask clarifying questions if any prerequisite (acceptance, test scope, commit message) is unclear before proceeding.
@@ -100,6 +101,7 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
   - Default commands: `yarn lint`, targeted `yarn test` runs, or full suites when coverage is expected.  
   - Record executed commands in PR summaries, progress logs, or issue comments.
   - Each time an implementation or follow-up fix lands, produce a concise QA playtest script (typically 3–6 steps) that can be run in Level 0 to verify the change; include the script in the task summary or review response.
+  - Each implementation pass must also produce an initial rating, concrete review findings, fixes made, and a final rating using the dimensions that make sense for the task, such as correctness, scope discipline, UX, docs, validation, and performance.
 - **Building Positioning Workflow (mandatory for landmark/footprint work)**
   - Treat building placement as a measured workflow, not an open-ended tuning loop. Before changing any building after the first pass, save a baseline in `progress/<Linear-key>.md` that includes: the current constants, the screenshot path used for comparison, and explicit edge-by-edge mismatch notes.
   - Isolate variables. In any single pass, change exactly one of the following unless the requester explicitly asks for a mixed tradeoff:
