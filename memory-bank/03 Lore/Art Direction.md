@@ -148,6 +148,7 @@ Level 0 uses an assetless noir-vector rendering foundation. Tiles, buildings, ch
 - GET-156 adds a constrained atlas-backed environment slice on top of the surface-first reset: road wear, puddles, grates, door canopies, and five core props are referenced through semantic frame IDs in `the-getaway/src/content/environment/atlasFrames.ts`.
 - `WorldRenderModule` places those atlas sprites through `IsoObjectFactory`, so depth ordering, quality-preset caps, and vector fallback remain centralised. Broad generated clutter remains out of scope.
 - `TilePainter` now adds deterministic coordinate-seeded surface wear for cracked asphalt, sidewalk grime, lot seams, and edge distress so screenshots remain stable while the ground read gains material variation.
+- GET-161 starts a character readability pass over the existing sprite pipeline: `SpriteCharacterRigFactory` keeps the manifest/fallback contract but adds a subtle synchronized dark rim and contact shadow to sprite-backed actors so they hold silhouette and feet grounding against the more detailed Level 0 surfaces.
 
 Modules:
 - `the-getaway/src/game/visual/contracts.ts`: defines `VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`.

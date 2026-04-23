@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import {
   type CharacterSpriteDirection,
   CHARACTER_SPRITE_MANIFEST_BY_ID,
+  type CharacterSpritePalette,
   getCharacterSpriteAnimationKey,
   getCharacterSpriteTextureKey,
 } from '../../../content/characters/spriteManifest';
@@ -21,6 +22,71 @@ type SpriteBackedPresentationState = CharacterPresentationState & {
 };
 
 const DEFAULT_ATTACK_LOCK_MS = 420;
+
+type SpriteReadabilityPresentation = {
+  rimAlpha: number;
+  rimScaleMultiplier: number;
+  contactShadowAlpha: number;
+  haloAlpha: number;
+  beaconAlpha: number;
+};
+
+const resolveSpriteReadabilityPresentation = (
+  animationState: CharacterRenderDescriptor['animationState']
+): SpriteReadabilityPresentation => {
+  switch (animationState) {
+    case 'attack':
+      return {
+        rimAlpha: 0.54,
+        rimScaleMultiplier: 1.08,
+        contactShadowAlpha: 0.44,
+        haloAlpha: 0.34,
+        beaconAlpha: 0.28,
+      };
+    case 'interact':
+      return {
+        rimAlpha: 0.5,
+        rimScaleMultiplier: 1.075,
+        contactShadowAlpha: 0.4,
+        haloAlpha: 0.3,
+        beaconAlpha: 0.34,
+      };
+    case 'move':
+      return {
+        rimAlpha: 0.48,
+        rimScaleMultiplier: 1.07,
+        contactShadowAlpha: 0.36,
+        haloAlpha: 0.28,
+        beaconAlpha: 0.2,
+      };
+    case 'idle':
+    default:
+      return {
+        rimAlpha: 0.46,
+        rimScaleMultiplier: 1.065,
+        contactShadowAlpha: 0.38,
+        haloAlpha: 0.24,
+        beaconAlpha: 0.18,
+      };
+  }
+};
+
+const drawSpriteContactShadow = (
+  shadow: Phaser.GameObjects.Graphics,
+  palette: CharacterSpritePalette | undefined,
+  frameWidth: number,
+  worldScale: number
+): void => {
+  const shadowColor = palette?.shadowColor ?? 0x020617;
+  shadow.clear();
+  shadow.fillStyle(shadowColor, 1);
+  shadow.fillEllipse(
+    0,
+    5,
+    frameWidth * worldScale * 0.58,
+    Math.max(7, frameWidth * worldScale * 0.16)
+  );
+};
 
 export const resolveAttackReleasePresentation = (
   presentation: {
@@ -91,13 +157,37 @@ export class SpriteCharacterRigFactory {
     sprite.setOrigin(entry.origin.x, entry.origin.y);
     sprite.setScale(entry.worldScale);
 
-    token.base.setAlpha(0.22);
+    const spriteRim = this.scene.add.sprite(
+      0,
+      0,
+      getCharacterSpriteTextureKey(descriptor.spriteSetId, 'idle', descriptor.facing),
+      0
+    );
+    spriteRim.setOrigin(entry.origin.x, entry.origin.y);
+    spriteRim.setScale(entry.worldScale * 1.065);
+    spriteRim.setTint(entry.fallbackPalette?.shadowColor ?? 0x020617);
+
+    const contactShadow = this.scene.add.graphics();
+    drawSpriteContactShadow(
+      contactShadow,
+      entry.fallbackPalette,
+      entry.frameSize.width,
+      entry.worldScale
+    );
+
+    token.base.setAlpha(0.16);
     token.column.setAlpha(0.01);
     token.beacon.setAlpha(0.18);
 
-    token.container.addAt(sprite, 2);
+    token.container.addAt(contactShadow, 2);
+    token.container.addAt(spriteRim, 3);
+    token.container.addAt(sprite, 4);
     token.sprite = sprite;
+    token.spriteRim = spriteRim;
+    token.spriteContactShadow = contactShadow;
     token.container.setData('spriteBody', sprite);
+    token.container.setData('spriteRim', spriteRim);
+    token.container.setData('spriteContactShadow', contactShadow);
 
     const presentation: SpriteBackedPresentationState = {
       isSpriteBacked: true,
@@ -223,9 +313,18 @@ export class SpriteCharacterRigFactory {
           ? Math.sin(now * 0.01) * 1.5
           : 0;
 
+    const entry = CHARACTER_SPRITE_MANIFEST_BY_ID[spriteSetId];
+    const readability = resolveSpriteReadabilityPresentation(resolvedAnimationState);
+
     sprite.setY(-2 + bobOffset);
-    token.halo.setAlpha(resolvedAnimationState === 'move' ? 0.32 : 0.24);
-    token.beacon.setAlpha(resolvedAnimationState === 'interact' ? 0.38 : 0.18);
+    if (token.spriteRim && entry) {
+      token.spriteRim.setY(-2 + bobOffset);
+      token.spriteRim.setScale(entry.worldScale * readability.rimScaleMultiplier);
+      token.spriteRim.setAlpha(readability.rimAlpha);
+    }
+    token.spriteContactShadow?.setAlpha(readability.contactShadowAlpha);
+    token.halo.setAlpha(readability.haloAlpha);
+    token.beacon.setAlpha(readability.beaconAlpha);
   }
 
   private playSpriteAnimation(
@@ -245,6 +344,17 @@ export class SpriteCharacterRigFactory {
       return;
     }
 
+    this.playAnimationOnSprite(sprite, animationKey, forceRestart);
+    if (token.spriteRim) {
+      this.playAnimationOnSprite(token.spriteRim, animationKey, forceRestart);
+    }
+  }
+
+  private playAnimationOnSprite(
+    sprite: Phaser.GameObjects.Sprite,
+    animationKey: string,
+    forceRestart: boolean
+  ): void {
     const currentAnimationKey = sprite.anims.currentAnim?.key;
     if (forceRestart || currentAnimationKey !== animationKey || !sprite.anims.isPlaying) {
       sprite.play(animationKey, true);
