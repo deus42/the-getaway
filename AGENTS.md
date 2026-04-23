@@ -313,7 +313,7 @@ The memory-bank documentation uses XML tags to improve LLM agent parsing and inf
 - **After:** Update both documents with what changed, log completion in the progress log (features only).
 - Tag XML sections incrementally as they're referenced/updated (not required for all content immediately).
 
-## 15. Task Notes & Per-Task Progress Files
+## 15. Task Notes & Resume / Per-Task Progress Files
 
 To mitigate context rot and preserve a detailed record for every Linear ticket, create a dedicated notes file under a top-level `progress/` folder named after the Linear key (for example, `progress/GET-117.md`). Each notes file should:
 
