@@ -144,6 +144,11 @@ Level 0 uses an assetless noir-vector rendering foundation. Tiles, buildings, ch
 - `BootScene` preloads those sheets and `SpriteCharacterRigFactory` swaps them into the existing `CharacterToken` container contract only when the full matrix is present; missing or invalid sheets still fall back to the noir-vector rigs.
 - This keeps the painterly/isometric target viable while allowing staged sprite adoption without blocking Level 0 playtests on final art delivery.
 
+2026-04-23 update:
+- GET-156 adds a constrained atlas-backed environment slice on top of the surface-first reset: road wear, puddles, grates, door canopies, and five core props are referenced through semantic frame IDs in `the-getaway/src/content/environment/atlasFrames.ts`.
+- `WorldRenderModule` places those atlas sprites through `IsoObjectFactory`, so depth ordering, quality-preset caps, and vector fallback remain centralised. Broad generated clutter remains out of scope.
+- `TilePainter` now adds deterministic coordinate-seeded surface wear for cracked asphalt, sidewalk grime, lot seams, and edge distress so screenshots remain stable while the ground read gains material variation.
+
 Modules:
 - `the-getaway/src/game/visual/contracts.ts`: defines `VisualTheme`, `BuildingVisualProfile`, `EntityVisualProfile`, `VisualQualityPreset`.
 - `the-getaway/src/game/visual/theme/noirVectorTheme.ts`: resolves palettes + budgets (`performance`, `balanced`, `cinematic`).
@@ -152,7 +157,8 @@ Modules:
 - `the-getaway/src/game/visual/world/DistrictComposer.ts`: deterministic facade/lot/massing composition + seeded accent shifts.
 - `the-getaway/src/game/visual/world/AtmosphereDirector.ts`: deterministic atmosphere profiles (gradient, fog bands, emissive intensity, wet reflection, overlay tint).
 - `the-getaway/src/game/visual/world/OcclusionReadabilityController.ts`: per-frame readability compensation (fade nearby masses, boost halos/nameplates).
-- `the-getaway/src/game/visual/world/PropScatter.ts`: deterministic scenic prop scattering (district-aware, respects walkability + buffers).
+- `the-getaway/src/content/environment/atlasFrames.ts`: semantic registry for the constrained Level 0 environment atlas frames and presentation metadata.
+- `the-getaway/src/game/visual/world/PropScatter.ts`: historical generated-clutter helper retained in the tree but not part of the current live Level 0 rendering pass.
 - `the-getaway/src/game/visual/entities/CharacterRigFactory.ts`: silhouette-v2 procedural rigs with role cues + movement direction hints.
 
 Preset budgets:

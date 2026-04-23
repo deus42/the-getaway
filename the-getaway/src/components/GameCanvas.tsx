@@ -100,6 +100,33 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
       setRendererInfo(info);
     };
 
+    let bootSceneStartRequested = false;
+    const ensureBootSceneStarted = () => {
+      const current = gameInstanceRef.current;
+      if (!current || !current.scene) {
+        return;
+      }
+
+      const bootScene = current.scene.getScene('BootScene');
+      if (!bootScene) {
+        return;
+      }
+
+      const bootActive = current.scene.isActive('BootScene');
+      const mainActive = current.scene.isActive('MainScene');
+      if (!bootActive && !mainActive && !bootSceneStartRequested) {
+        bootSceneStartRequested = true;
+        current.scene.start('BootScene');
+      }
+    };
+
+    const scheduleBootSceneStart = () => {
+      ensureBootSceneStarted();
+      window.requestAnimationFrame(ensureBootSceneStarted);
+      window.setTimeout(ensureBootSceneStarted, 120);
+      window.setTimeout(ensureBootSceneStarted, 500);
+    };
+
     const config: Phaser.Types.Core.GameConfig = {
       type: Phaser.AUTO,
       width: parentWidth > 0 ? parentWidth : 800,
@@ -138,11 +165,16 @@ const GameCanvas: React.FC<GameCanvasProps> = ({ onRendererInfo }) => {
       try {
         gameInstanceRef.current = new Phaser.Game(config);
         const game = gameInstanceRef.current;
+        scheduleBootSceneStart();
 
         if (game.isBooted) {
           handleRendererUpdate();
+          scheduleBootSceneStart();
         } else {
-          game.events.once(Phaser.Core.Events.READY, handleRendererUpdate);
+          game.events.once(Phaser.Core.Events.READY, () => {
+            handleRendererUpdate();
+            scheduleBootSceneStart();
+          });
         }
 
         // Context events not available in this Phaser version

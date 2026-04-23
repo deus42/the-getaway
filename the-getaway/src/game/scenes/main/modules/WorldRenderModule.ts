@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Item, MapArea, MapTile, Position, TileType } from '../../../interfaces/types';
+import { Item, MapArea, MapBuildingDefinition, MapTile, Position, TileType } from '../../../interfaces/types';
 import type { MainScene } from '../../MainScene';
 import type {
   EntityRenderRuntimeState,
@@ -13,7 +13,11 @@ import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../../../vi
 import type { BuildingVisualProfile } from '../../../visual/contracts';
 import { TilePainter } from '../../../visual/world/TilePainter';
 import { BuildingPainter } from '../../../visual/world/BuildingPainter';
-import { composeEnvironmentArt } from '../../../visual/world/EnvironmentComposer';
+import {
+  composeEnvironmentArt,
+  type EnvironmentCompositionResult,
+  type ScenicTileContext,
+} from '../../../visual/world/EnvironmentComposer';
 import { SpriteCharacterRigFactory } from '../../../visual/entities/SpriteCharacterRigFactory';
 import { AtmosphereDirector, type AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
 import { OcclusionEntityHandle, OcclusionReadabilityController } from '../../../visual/world/OcclusionReadabilityController';
@@ -25,13 +29,32 @@ import {
 import { resolvePickupObjectName } from '../../../utils/itemDisplay';
 import { store } from '../../../../store';
 import { setLightsEnabled } from '../../../../store/settingsSlice';
-import type { CharacterToken } from '../../../utils/IsoObjectFactory';
+import type { CharacterToken, IsoObjectFactory } from '../../../utils/IsoObjectFactory';
 import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
+import {
+  LEVEL0_ENVIRONMENT_ATLAS_KEY,
+  LEVEL0_ENVIRONMENT_NORMAL_KEY,
+  LEVEL0_ENVIRONMENT_PROP_FRAMES,
+  LEVEL0_ENVIRONMENT_SURFACE_FRAMES,
+  type EnvironmentAtlasFrameDefinition,
+  type Level0EnvironmentPropFrameId,
+  type Level0EnvironmentSurfaceFrameId,
+} from '../../../../content/environment/atlasFrames';
 
 const ESB_BUILDING_ID = 'block_1_1';
+const SURFACE_DECAL_LIMIT_BY_PRESET = {
+  performance: 18,
+  balanced: 34,
+  cinematic: 52,
+} as const;
+
+type StaticPropAdder = (prop?: Phaser.GameObjects.GameObject | null) => void;
+
 const hexStringToColor = (value: string): number => {
   return Number.parseInt(value.replace('#', ''), 16);
 };
+
+const positionKey = (position: Position): string => `${position.x}:${position.y}`;
 
 const readValue = <T>(target: object, key: string): T | undefined => {
   return Reflect.get(target, key) as T | undefined;
@@ -344,6 +367,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     const isoMetrics = this.ports.getIsoMetrics();
     const environmentComposition = this.resolveEnvironmentComposition();
     this.ports.setDemoLampGrid(environmentComposition.preferredLampGrid);
+    this.renderAtlasEnvironmentSlice(currentMapArea, environmentComposition, isoFactory, addProp);
 
     interactiveNpcs.forEach((npc) => {
       addProp(
@@ -1001,6 +1025,292 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     this.runtimeState.lastAtmosphereRedrawBucket = -1;
     this.runtimeState.lastItemMarkerSignature = '';
     this.pushRuntimeStateToPorts();
+  }
+
+  private renderAtlasEnvironmentSlice(
+    currentMapArea: MapArea,
+    environmentComposition: EnvironmentCompositionResult,
+    isoFactory: IsoObjectFactory,
+    addProp: StaticPropAdder
+  ): void {
+    if (!this.scene.textures.exists(LEVEL0_ENVIRONMENT_ATLAS_KEY)) {
+      return;
+    }
+
+    this.renderAtlasSurfaceDecals(currentMapArea, environmentComposition, isoFactory, addProp);
+    this.renderAtlasDoorFacades(currentMapArea, isoFactory, addProp);
+    this.renderAtlasCoreProps(currentMapArea, isoFactory, addProp);
+  }
+
+  private renderAtlasSurfaceDecals(
+    currentMapArea: MapArea,
+    environmentComposition: EnvironmentCompositionResult,
+    isoFactory: IsoObjectFactory,
+    addProp: StaticPropAdder
+  ): void {
+    const decalLimit = SURFACE_DECAL_LIMIT_BY_PRESET[this.runtimeState.visualTheme.preset];
+    let placed = 0;
+
+    for (let y = 0; y < currentMapArea.height && placed < decalLimit; y += 1) {
+      for (let x = 0; x < currentMapArea.width && placed < decalLimit; x += 1) {
+        const tile = currentMapArea.tiles[y]?.[x];
+        const scenic = environmentComposition.scenicTileContextByKey[`${x}:${y}`];
+        const decalId = tile ? this.resolveSurfaceDecalId(tile, x, y, scenic) : null;
+
+        if (!decalId) {
+          continue;
+        }
+
+        const frame = LEVEL0_ENVIRONMENT_SURFACE_FRAMES[decalId];
+        const sprite = this.createAtlasSpriteTile(isoFactory, x, y, frame, `surface:${decalId}`);
+        if (!sprite) {
+          continue;
+        }
+
+        addProp(sprite);
+        placed += 1;
+      }
+    }
+  }
+
+  private renderAtlasDoorFacades(
+    currentMapArea: MapArea,
+    isoFactory: IsoObjectFactory,
+    addProp: StaticPropAdder
+  ): void {
+    const buildings = this.getSortedBuildings(currentMapArea);
+    const facadeLimit = this.runtimeState.visualTheme.preset === 'performance' ? 3 : 6;
+
+    buildings.slice(0, facadeLimit).forEach((building) => {
+      const sprite = this.createAtlasSpriteProp(
+        isoFactory,
+        building.door.x,
+        building.door.y,
+        'entryFacade',
+        DepthBias.PROP_LOW + 18,
+        `entry:${building.id}`
+      );
+      addProp(sprite);
+    });
+  }
+
+  private renderAtlasCoreProps(
+    currentMapArea: MapArea,
+    isoFactory: IsoObjectFactory,
+    addProp: StaticPropAdder
+  ): void {
+    const buildings = this.getSortedBuildings(currentMapArea);
+    if (buildings.length === 0) {
+      return;
+    }
+
+    const occupied = this.collectAtlasPropOccupiedPositions(currentMapArea);
+    const propPlan: Level0EnvironmentPropFrameId[] = ['streetlight', 'sign', 'barrier', 'camera', 'crate'];
+    const plan = this.runtimeState.visualTheme.preset === 'performance'
+      ? propPlan.slice(0, 3)
+      : propPlan;
+
+    plan.forEach((propId, index) => {
+      const building = buildings[index % buildings.length];
+      const position = this.findAtlasPropCandidate(currentMapArea, building, occupied, index);
+      if (!position) {
+        return;
+      }
+
+      occupied.add(positionKey(position));
+      const sprite = this.createAtlasSpriteProp(
+        isoFactory,
+        position.x,
+        position.y,
+        propId,
+        this.resolveAtlasPropDepthBias(propId),
+        `prop:${propId}:${building.id}`
+      );
+      addProp(sprite);
+    });
+  }
+
+  private resolveSurfaceDecalId(
+    tile: MapTile,
+    gridX: number,
+    gridY: number,
+    scenic?: ScenicTileContext
+  ): Level0EnvironmentSurfaceFrameId | null {
+    if (!tile.isWalkable || tile.type !== TileType.FLOOR) {
+      return null;
+    }
+
+    const hash = this.getGridHash(gridX, gridY);
+    const surface = tile.surfaceKind ?? 'lot';
+
+    if (surface === 'road' || surface === 'crosswalk') {
+      if (hash % 19 === 0) {
+        return 'puddle';
+      }
+      if (hash % 7 === 0) {
+        return 'roadWear';
+      }
+      return null;
+    }
+
+    if (surface === 'sidewalk') {
+      return hash % 11 === 0 ? 'grate' : null;
+    }
+
+    if (scenic?.nearEntrance && hash % 3 === 0) {
+      return 'grate';
+    }
+
+    if ((scenic?.zoneRole === 'service_edge' || scenic?.zoneRole === 'service_yard') && hash % 13 === 0) {
+      return 'roadWear';
+    }
+
+    return null;
+  }
+
+  private createAtlasSpriteTile(
+    isoFactory: IsoObjectFactory,
+    gridX: number,
+    gridY: number,
+    frame: EnvironmentAtlasFrameDefinition,
+    debugName: string
+  ): Phaser.GameObjects.Image | null {
+    if (!this.hasLevel0AtlasFrame(frame.frame)) {
+      return null;
+    }
+
+    const sprite = isoFactory.createSpriteTile(gridX, gridY, frame.frame, {
+      textureKey: LEVEL0_ENVIRONMENT_ATLAS_KEY,
+      depthBias: DepthBias.TILE_OVERLAY + 2,
+      origin: frame.origin,
+    });
+    this.applyAtlasSpritePresentation(sprite, frame, debugName);
+    return sprite;
+  }
+
+  private createAtlasSpriteProp(
+    isoFactory: IsoObjectFactory,
+    gridX: number,
+    gridY: number,
+    frameId: Level0EnvironmentPropFrameId,
+    depthBias: number,
+    debugName: string
+  ): Phaser.GameObjects.Image | null {
+    const frame = LEVEL0_ENVIRONMENT_PROP_FRAMES[frameId];
+    if (!this.hasLevel0AtlasFrame(frame.frame)) {
+      return null;
+    }
+
+    const sprite = isoFactory.createSpriteProp(gridX, gridY, frame.frame, {
+      textureKey: LEVEL0_ENVIRONMENT_ATLAS_KEY,
+      normalTextureKey: LEVEL0_ENVIRONMENT_NORMAL_KEY,
+      depthBias,
+      origin: frame.origin,
+    });
+    this.applyAtlasSpritePresentation(sprite, frame, debugName);
+    isoFactory.applyLightingToSprite(sprite, this.ports.getLightsFeatureEnabled());
+    return sprite;
+  }
+
+  private applyAtlasSpritePresentation(
+    sprite: Phaser.GameObjects.Image,
+    frame: EnvironmentAtlasFrameDefinition,
+    debugName: string
+  ): void {
+    sprite.setName(`level0-atlas:${debugName}`);
+    sprite.setScale(frame.scale);
+    sprite.setAlpha(frame.alpha);
+  }
+
+  private hasLevel0AtlasFrame(frame: string): boolean {
+    const texture = this.scene.textures.get(LEVEL0_ENVIRONMENT_ATLAS_KEY);
+    return Boolean(texture?.has(frame));
+  }
+
+  private getSortedBuildings(currentMapArea: MapArea): MapBuildingDefinition[] {
+    return [...(currentMapArea.buildings ?? [])].sort((left, right) => left.id.localeCompare(right.id));
+  }
+
+  private collectAtlasPropOccupiedPositions(currentMapArea: MapArea): Set<string> {
+    const occupied = new Set<string>();
+
+    currentMapArea.buildings?.forEach((building) => occupied.add(positionKey(building.door)));
+    currentMapArea.entities.npcs.forEach((npc) => occupied.add(positionKey(npc.position)));
+    currentMapArea.entities.enemies.forEach((enemy) => occupied.add(positionKey(enemy.position)));
+    currentMapArea.entities.items.forEach((item) => {
+      if (item.position) {
+        occupied.add(positionKey(item.position));
+      }
+    });
+
+    return occupied;
+  }
+
+  private findAtlasPropCandidate(
+    currentMapArea: MapArea,
+    building: MapBuildingDefinition,
+    occupied: Set<string>,
+    salt: number
+  ): Position | null {
+    const candidateOffsets = [
+      { x: 1, y: 0 },
+      { x: 0, y: 1 },
+      { x: -1, y: 0 },
+      { x: 0, y: -1 },
+      { x: 1, y: 1 },
+      { x: -1, y: 1 },
+      { x: 1, y: -1 },
+      { x: -1, y: -1 },
+      { x: 2, y: 0 },
+      { x: 0, y: 2 },
+      { x: -2, y: 0 },
+      { x: 0, y: -2 },
+    ];
+    const rotation = salt % candidateOffsets.length;
+    const rotatedOffsets = [
+      ...candidateOffsets.slice(rotation),
+      ...candidateOffsets.slice(0, rotation),
+    ];
+
+    for (const offset of rotatedOffsets) {
+      const candidate = {
+        x: building.door.x + offset.x,
+        y: building.door.y + offset.y,
+      };
+
+      if (this.canPlaceAtlasProp(currentMapArea, candidate, occupied)) {
+        return candidate;
+      }
+    }
+
+    return null;
+  }
+
+  private canPlaceAtlasProp(currentMapArea: MapArea, position: Position, occupied: Set<string>): boolean {
+    if (
+      position.x < 0 ||
+      position.y < 0 ||
+      position.x >= currentMapArea.width ||
+      position.y >= currentMapArea.height ||
+      occupied.has(positionKey(position))
+    ) {
+      return false;
+    }
+
+    const tile = currentMapArea.tiles[position.y]?.[position.x];
+    return Boolean(tile?.isWalkable);
+  }
+
+  private resolveAtlasPropDepthBias(propId: Level0EnvironmentPropFrameId): number {
+    if (propId === 'crate' || propId === 'barrier') {
+      return DepthBias.PROP_LOW + 14;
+    }
+
+    return DepthBias.PROP_TALL + 18;
+  }
+
+  private getGridHash(gridX: number, gridY: number): number {
+    return Math.abs((gridX * 73856093) ^ (gridY * 19349663));
   }
 
   private renderTile(

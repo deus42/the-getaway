@@ -3,6 +3,13 @@ import {
   preloadCharacterSpriteSheets,
   registerCharacterSpriteAnimations,
 } from '../visual/entities/characterSpriteAssets';
+import {
+  LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
+  LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH,
+  LEVEL0_ENVIRONMENT_ATLAS_KEY,
+  LEVEL0_ENVIRONMENT_NORMAL_KEY,
+  LEVEL0_ENVIRONMENT_NORMAL_PATH,
+} from '../../content/environment/atlasFrames';
 import { store } from '../../store';
 import { RootState } from '../../store'; // Import RootState
 import { getLevel0Content } from '../../content/levels/level0';
@@ -15,7 +22,13 @@ export class BootScene extends Phaser.Scene {
   preload(): void {
     this.load.atlas('props', 'atlases/props.png', 'atlases/props.json');
     this.load.atlas('esb', 'atlases/esb_iso_trim_pad.png', 'atlases/esb_iso_trim_pad.json');
+    this.load.atlas(
+      LEVEL0_ENVIRONMENT_ATLAS_KEY,
+      LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
+      LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH
+    );
     this.load.image('lamp_slim_a_n', 'normals/lamp_slim_a_n.png');
+    this.load.image(LEVEL0_ENVIRONMENT_NORMAL_KEY, LEVEL0_ENVIRONMENT_NORMAL_PATH);
     preloadCharacterSpriteSheets(this);
   }
 
@@ -31,6 +44,18 @@ export class BootScene extends Phaser.Scene {
       const normalSource = normalTexture.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
       propsTexture.setDataSource(normalSource);
       this.textures.remove('lamp_slim_a_n');
+    }
+
+    const level0EnvironmentTexture = this.textures.get(LEVEL0_ENVIRONMENT_ATLAS_KEY);
+    const level0EnvironmentNormal = this.textures.get(LEVEL0_ENVIRONMENT_NORMAL_KEY);
+    if (
+      level0EnvironmentTexture &&
+      level0EnvironmentNormal &&
+      level0EnvironmentTexture.dataSource.length === 0
+    ) {
+      const normalSource = level0EnvironmentNormal.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      level0EnvironmentTexture.setDataSource(normalSource);
+      this.textures.remove(LEVEL0_ENVIRONMENT_NORMAL_KEY);
     }
 
     registerCharacterSpriteAnimations(this);

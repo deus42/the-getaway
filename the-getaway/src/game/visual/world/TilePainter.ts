@@ -329,6 +329,7 @@ export class TilePainter {
     const thresholdPlate = this.createInsetDiamond(points, 0.42);
     const seamPlate = this.createInsetDiamond(points, 0.5);
     const edgePlate = this.createInsetDiamond(points, 0.08);
+    const wearSeed = this.getWearSeed(context.gridX, context.gridY);
 
     if (surface === 'road' || surface === 'crosswalk') {
       const laneColor = isDowntown
@@ -408,6 +409,7 @@ export class TilePainter {
         this.drawEntryPocket(thresholdPlate, glowColor, accentColor, distanceWeight, surface === 'crosswalk' ? 1.06 : 1);
       }
 
+      this.drawRoadWear(points, context, laneColor, wearSeed, surface === 'crosswalk');
       this.drawRoadReflection(tile, context, points, surface === 'crosswalk' ? 1.08 : isDowntown ? 0.94 : 0.82);
       return;
     }
@@ -457,6 +459,7 @@ export class TilePainter {
         this.drawEntryPocket(innerPlate, glowColor, accentColor, distanceWeight, 1.12);
       }
 
+      this.drawSidewalkWear(points, modulatedBase, wearSeed);
       this.drawRoadReflection(tile, context, points, isDowntown ? 0.72 : 0.58);
       return;
     }
@@ -531,6 +534,7 @@ export class TilePainter {
         false
       );
     }
+    this.drawLotWear(points, modulatedBase, wearSeed);
     this.drawRoadReflection(tile, context, points, isDowntown ? 0.42 : 0.32);
   }
 
@@ -562,6 +566,85 @@ export class TilePainter {
     this.graphics.strokePoints([points[3], points[2]], false);
     this.graphics.lineStyle(0.78, adjustColor(glowColor, 0.12), alpha * 0.72);
     this.graphics.strokePoints([points[0], points[2]], false);
+  }
+
+  private drawRoadWear(
+    points: Phaser.Geom.Point[],
+    context: TileContext,
+    laneColor: number,
+    wearSeed: number,
+    isCrosswalk: boolean
+  ): void {
+    if (wearSeed % (isCrosswalk ? 4 : 3) !== 0) {
+      return;
+    }
+
+    const [top, right, bottom, left] = points;
+    const crackAlpha = isCrosswalk ? 0.1 : 0.16;
+    this.graphics.lineStyle(0.72, adjustColor(laneColor, -0.34), crackAlpha);
+    this.graphics.strokePoints(
+      [
+        this.lerpPoint(top, left, 0.36),
+        this.lerpPoint(top, bottom, 0.48),
+        this.lerpPoint(right, bottom, 0.42),
+      ],
+      false
+    );
+
+    if (wearSeed % 5 === 0) {
+      const patchCenter = this.lerpPoint(left, right, 0.5);
+      this.graphics.fillStyle(0x05070a, 0.1);
+      this.graphics.fillEllipse(
+        patchCenter.x + ((wearSeed % 3) - 1) * 3,
+        patchCenter.y + context.tileHeight * 0.05,
+        context.tileWidth * 0.16,
+        context.tileHeight * 0.08
+      );
+    }
+  }
+
+  private drawSidewalkWear(points: Phaser.Geom.Point[], baseColor: number, wearSeed: number): void {
+    if (wearSeed % 4 !== 0) {
+      return;
+    }
+
+    const [top, right, bottom, left] = points;
+    const seamColor = adjustColor(baseColor, wearSeed % 8 === 0 ? 0.22 : -0.16);
+    this.graphics.lineStyle(0.72, seamColor, 0.12);
+    this.graphics.strokePoints(
+      [
+        this.lerpPoint(top, right, 0.34),
+        this.lerpPoint(left, bottom, 0.34),
+      ],
+      false
+    );
+    this.graphics.strokePoints(
+      [
+        this.lerpPoint(top, left, 0.68),
+        this.lerpPoint(right, bottom, 0.68),
+      ],
+      false
+    );
+  }
+
+  private drawLotWear(points: Phaser.Geom.Point[], baseColor: number, wearSeed: number): void {
+    if (wearSeed % 5 !== 0) {
+      return;
+    }
+
+    const [top, right, bottom, left] = points;
+    this.graphics.lineStyle(0.68, adjustColor(baseColor, wearSeed % 10 === 0 ? 0.22 : -0.2), 0.1);
+    this.graphics.strokePoints(
+      [
+        this.lerpPoint(top, right, 0.46),
+        this.lerpPoint(bottom, left, 0.46),
+      ],
+      false
+    );
+  }
+
+  private getWearSeed(gridX: number, gridY: number): number {
+    return Math.abs((gridX * 92837111) ^ (gridY * 689287499));
   }
 
   private hexToColor(value: string): number {

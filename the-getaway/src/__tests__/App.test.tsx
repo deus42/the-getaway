@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, configure, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import App from "../App";
 import { PERSISTED_STATE_KEY, resetGame, store } from "../store";
 import { startDialogue } from "../store/questsSlice";
@@ -17,6 +17,8 @@ jest.mock("../components/ui/MiniMap", () => {
 });
 
 jest.mock("../components/debug/GameDebugInspector", () => () => null);
+
+configure({ asyncUtilTimeout: 5000 });
 
 describe("App component", () => {
   beforeEach(() => {

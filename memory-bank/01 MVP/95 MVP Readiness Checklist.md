@@ -25,8 +25,8 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 
 **Current biggest risks** (keep to 1–3 bullets):
 - ☐ Final polished hero/NPC sprite art is still pending; current 8-direction sheets are normalized placeholders/manual-polish inputs.
-- ☐ Street-level authored composition is still weaker than the opening-frame polish; downtown/slums need one more requester-reviewed traversal pass before the visual slice can be considered locked.
-- ☐ The post-acceptance verification block ran clean for lint/build/tests, but total Jest coverage is still 75.92%, below the repository closeout gate of 80%.
+- ☐ Street-level authored composition is improved by the GET-156 atlas/surface slice but still needs requester-reviewed traversal before the visual slice can be considered locked.
+- ☐ Jest still emits non-blocking console noise from existing Redux middleware timing, selector, and React `act` warnings; the post-acceptance coverage gate is now above 80%.
 
 ---
 
@@ -133,6 +133,7 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-04-23 — GET-156 Level 0 graphics vertical slice implemented a constrained atlas-backed environment pass (`level0Environment` preload + semantic frame registry + depth-managed surface decals/door facades/core props), added deterministic coordinate-seeded ground wear in `TilePainter`, and hardened `GameCanvas` so the dev Phaser runtime does not settle with inactive scenes after StrictMode remount. Post-acceptance verification passed (`yarn lint`, `yarn build`, `yarn test`, `yarn test --coverage`) with coverage at `86.94%` statements / `76.92%` branches / `81.94%` functions / `86.94%` lines; checklist boxes remain unchanged pending requester traversal sign-off, while street-level visual-composition and startup reliability risk are reduced.
 - 2026-04-04 — GET-142 pickup objective determinism hardening landed: collect objectives now sync from staged inventory snapshots via a dedicated collect reducer path, so fresh pickups and quest-activation backfill share one clamped source of truth instead of incrementing from two competing effects. Acceptance playtest plus regression coverage are now complete (`yarn lint`, `yarn build`, `yarn test --runInBand`, `yarn test --coverage --runInBand`), checklist boxes remain unchanged, and B1 objective-state drift risk is reduced.
 - 2026-04-04 — GET-159 follow-up HUD usability fix replaced clipped status-lane-based dock sizing with content-aware bottom-dock measurement, keeping the slimmer shell while restoring full CTA visibility (`Character` button and other lower-dock controls no longer trim in the default Level 0 layout). Checklist boxes remain unchanged pending requester playtest sign-off; lower-dock usability risk reduced.
 - 2026-04-03 — `GET-158` stale-ticket closeout completed after a fresh verification rerun on current `main`: `yarn lint`, `yarn build`, `yarn test --runInBand`, and `yarn test --coverage --runInBand` all passed, with coverage at `75.68%` statements / `67.50%` branches / `75.41%` functions / `75.68%` lines. The original atmosphere/readability work and the accepted `GET-159` follow-up are both now closed in Linear at requester direction; the remaining risk is the repo-wide coverage gate itself, not ticket state drift.
