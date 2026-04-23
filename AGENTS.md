@@ -1,5 +1,12 @@
 # Agent Operating Guide
 
+## Vault Preload
+
+- Before repo-specific work, read `/Users/deus/Projects/Vault-Tec/00 Agent Memory.md`.
+- From that entrypoint, preload `35 Context/Agent Operating System.md`.
+- Then read this repo's Source Project overlay under `90 Admin/Workstream Registry/Source Projects/`.
+- Treat this file as the repo-specific specialization after Vault defaults.
+
 This guide defines how Codex agents work inside **The Getaway** repository. Follow it end-to-end before writing code.
 
 ## 1. Quick Reference
