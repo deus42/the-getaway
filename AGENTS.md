@@ -139,6 +139,26 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
   - Keep the summary imperative and ≤ 72 characters.  
   - Example: `fix(GET-115): prevent autobattle overlay blackout`
 
+## Execution Rules
+- For non-trivial gameplay, UI, or architecture work, bias toward caution over speed. For trivial copy or doc edits, use judgment and keep the loop tight.
+
+### Think Before Coding
+- Surface assumptions about the active Linear issue, roadmap step, playtest target, and design-vs-architecture boundary before implementing.
+- Ask instead of guessing when gameplay intent, UX expectations, or ticket scope is ambiguous.
+- State tradeoffs when a smaller mechanic or UI change is safer than a broader system rewrite.
+
+### Simplicity First
+- Ship the minimum change that satisfies the accepted behavior.
+- Do not add speculative systems, reusable abstractions, or polish passes unless the ticket or requester actually calls for them.
+
+### Surgical Changes
+- Touch only the code, docs, assets, and progress notes directly tied to the active issue.
+- Avoid adjacent refactors or asset churn unless your change makes them stale, broken, or misleading.
+
+### Goal-Driven Execution
+- Turn the ask into explicit proof points: Level 0 playtest steps, acceptance criteria, and post-acceptance automated checks.
+- Do not claim completion until the requested behavior and the required verification loop are both explicit.
+
 ## 4. Coding Standards
 - TypeScript throughout; add explicit types on exported/public APIs.
 - Indentation: 2 spaces, single quotes, trailing semicolons.
