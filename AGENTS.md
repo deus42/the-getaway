@@ -139,8 +139,9 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
   - Keep the summary imperative and ≤ 72 characters.  
   - Example: `fix(GET-115): prevent autobattle overlay blackout`
 
-## Execution Rules
+## Execution Policy
 - For non-trivial gameplay, UI, or architecture work, bias toward caution over speed. For trivial copy or doc edits, use judgment and keep the loop tight.
+- Extract and apply the active policy stack before work starts: platform and developer instructions, Vault OS policies, this repo's `Execution Policy`, `Never Guess Policy`, task-note/resume rules, Linear/workflow rules, validation/review requirements, security boundaries, and project-specific constraints.
 
 ### Never Guess Policy
 - Never invent source contents, command output, validation, file edits, dates, review results, sub-agent results, tool results, or user intent.
