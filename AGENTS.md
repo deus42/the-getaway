@@ -142,6 +142,14 @@ When the requester uses any of these terms, treat it as a mandate to finalize th
 ## Execution Rules
 - For non-trivial gameplay, UI, or architecture work, bias toward caution over speed. For trivial copy or doc edits, use judgment and keep the loop tight.
 
+### Never Guess Policy
+- Never invent source contents, command output, validation, file edits, dates, review results, sub-agent results, tool results, or user intent.
+- Inspect first when repo files, Vault notes, task notes, generated reports, overlays, local docs, or tools can answer.
+- Ask a sharp question when ambiguity changes scope, source-of-truth precedence, generated-vs-human ownership, mutation permission, rollback target, branch/worktree strategy, data source, safety, privacy boundary, validation path, or user preference.
+- For low-risk assumptions, state the assumption, verify it when possible, and record it in the task note when meaningful.
+- Never claim review, sub-agent work, tests, validation, command output, or file edits without tool evidence.
+- Use `skipped`, `not checked`, `unavailable`, or `unknown` when evidence is missing, access is blocked, or a check was not run.
+
 ### Think Before Coding
 - Surface assumptions about the active Linear issue, roadmap step, playtest target, and design-vs-architecture boundary before implementing.
 - Ask instead of guessing when gameplay intent, UX expectations, or ticket scope is ambiguous.
