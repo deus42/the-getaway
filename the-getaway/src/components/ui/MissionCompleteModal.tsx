@@ -25,7 +25,7 @@ const overlayStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: 'rgba(15, 23, 42, 0.86)',
+  background: 'rgba(12, 17, 24, 0.88)',
   backdropFilter: 'blur(6px)',
   zIndex: 20,
   padding: '1.5rem',
@@ -33,12 +33,12 @@ const overlayStyle: React.CSSProperties = {
 
 const shellStyle: React.CSSProperties = {
   width: 'min(520px, 92vw)',
-  borderRadius: '18px',
-  border: '1px solid rgba(94, 234, 212, 0.2)',
-  background: 'linear-gradient(135deg, rgba(6, 15, 28, 0.95), rgba(13, 31, 48, 0.92))',
+  borderRadius: '16px',
+  border: '1px solid rgba(211, 173, 95, 0.34)',
+  background: 'linear-gradient(135deg, rgba(24, 18, 21, 0.97), rgba(13, 31, 38, 0.94))',
   color: '#f8fafc',
   fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-  boxShadow: '0 40px 68px rgba(2, 6, 23, 0.55)',
+  boxShadow: '0 40px 68px rgba(2, 6, 23, 0.58), 0 0 34px rgba(45, 212, 191, 0.12)',
   display: 'flex',
   flexDirection: 'column',
   gap: '1.2rem',
@@ -88,7 +88,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
             style={{
               fontSize: '0.7rem',
               letterSpacing: '0.28em',
-              color: 'rgba(94, 234, 212, 0.75)',
+              color: 'rgba(211, 173, 95, 0.86)',
               textTransform: 'uppercase',
             }}
           >
@@ -98,7 +98,7 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
             style={{
               fontSize: '1.35rem',
               fontWeight: 700,
-              letterSpacing: '0.08em',
+              letterSpacing: '0.02em',
               margin: 0,
             }}
           >
@@ -108,8 +108,8 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
         <section style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
           <div
             style={{
-              border: '1px solid rgba(148, 163, 184, 0.22)',
-              borderRadius: '14px',
+              border: '1px solid rgba(211, 173, 95, 0.24)',
+              borderRadius: '12px',
               padding: '0.9rem 1.1rem',
               background: 'rgba(15, 23, 42, 0.68)',
               display: 'flex',
@@ -154,11 +154,11 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.55), rgba(94, 234, 212, 0.55))',
+                        background: 'linear-gradient(135deg, rgba(211, 173, 95, 0.78), rgba(94, 234, 212, 0.58))',
                         color: '#02111f',
                         fontSize: '0.62rem',
                         fontWeight: 700,
-                        border: '1px solid rgba(94, 234, 212, 0.5)',
+                        border: '1px solid rgba(211, 173, 95, 0.58)',
                       }}
                     >
                       ✓
@@ -221,8 +221,8 @@ const MissionCompleteModal: React.FC<MissionCompleteModalProps> = ({
             onClick={onContinue}
             style={{
               ...buttonBaseStyle,
-              border: '1px solid rgba(94, 234, 212, 0.5)',
-              background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.7), rgba(94, 234, 212, 0.65))',
+              border: '1px solid rgba(211, 173, 95, 0.58)',
+              background: 'linear-gradient(135deg, rgba(211, 173, 95, 0.86), rgba(94, 234, 212, 0.66))',
               color: '#02111f',
               boxShadow: '0 20px 36px rgba(13, 148, 136, 0.35)',
             }}

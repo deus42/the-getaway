@@ -16,7 +16,7 @@ const overlayStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: 'rgba(15, 23, 42, 0.9)',
+  background: 'rgba(13, 10, 15, 0.91)',
   backdropFilter: 'blur(6px)',
   zIndex: 21,
   padding: '1.5rem',
@@ -24,12 +24,12 @@ const overlayStyle: React.CSSProperties = {
 
 const shellStyle: React.CSSProperties = {
   width: 'min(520px, 92vw)',
-  borderRadius: '18px',
-  border: '1px solid rgba(248, 113, 113, 0.32)',
-  background: 'linear-gradient(135deg, rgba(26, 11, 19, 0.96), rgba(15, 23, 42, 0.94))',
+  borderRadius: '16px',
+  border: '1px solid rgba(248, 113, 113, 0.42)',
+  background: 'linear-gradient(135deg, rgba(32, 12, 18, 0.97), rgba(17, 24, 39, 0.95))',
   color: '#f8fafc',
   fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-  boxShadow: '0 40px 68px rgba(2, 6, 23, 0.58)',
+  boxShadow: '0 40px 68px rgba(2, 6, 23, 0.6), 0 0 34px rgba(248, 113, 113, 0.12)',
   display: 'flex',
   flexDirection: 'column',
   gap: '1.2rem',
@@ -38,7 +38,7 @@ const shellStyle: React.CSSProperties = {
 
 const panelStyle: React.CSSProperties = {
   border: '1px solid rgba(148, 163, 184, 0.22)',
-  borderRadius: '14px',
+  borderRadius: '12px',
   padding: '0.9rem 1.1rem',
   background: 'rgba(15, 23, 42, 0.68)',
   display: 'flex',
@@ -98,7 +98,7 @@ const MissionFailureOverlay: React.FC<MissionFailureOverlayProps> = ({ open, onR
             style={{
               fontSize: '1.35rem',
               fontWeight: 700,
-              letterSpacing: '0.08em',
+              letterSpacing: '0.02em',
               margin: 0,
             }}
           >

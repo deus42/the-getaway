@@ -124,10 +124,10 @@ const GeorgeOrbLogo: React.FC<GeorgeOrbLogoProps> = ({ size = 32, className }) =
 
 const clampText = (text: string): string => {
   const normalized = text.replace(/\s+/g, ' ').trim();
-  if (normalized.length <= 140) {
+  if (normalized.length <= 220) {
     return normalized;
   }
-  return `${normalized.slice(0, 137).trimEnd()}…`;
+  return `${normalized.slice(0, 217).trimEnd()}…`;
 };
 
 const GeorgeAssistant: React.FC = () => {
@@ -251,6 +251,7 @@ const GeorgeAssistant: React.FC = () => {
     const missionLines: string[] = [];
     const curfewWindow = uiStrings.dayNight.curfewWindow('22:00', '06:00');
     const guidedStep = getLevel0GuidedStep(quests);
+    let guidanceCategory: FeedCategory = 'operation';
 
     switch (guidedStep.stage) {
       case 'lira-start':
@@ -261,8 +262,10 @@ const GeorgeAssistant: React.FC = () => {
           missionLines.push(georgeStrings.sliceGuidance.waitForNight(curfewWindow));
         } else if (paranoiaValue >= RECOVERY_PARANOIA_THRESHOLD) {
           missionLines.push(georgeStrings.sliceGuidance.recoverAtSafehouse);
+          guidanceCategory = 'status';
         } else {
           missionLines.push(georgeStrings.sliceGuidance.nightRoute);
+          guidanceCategory = 'stealth';
         }
         break;
       case 'lira-return':
@@ -315,12 +318,13 @@ const GeorgeAssistant: React.FC = () => {
     }
     missionSummaryRef.current = message;
     routeFeedEntry({
-      category: 'operation',
-      label: feedLabels.operation,
+      category: guidanceCategory,
+      label: feedLabels[guidanceCategory],
       text: message,
       timestamp: Date.now(),
     });
   }, [
+    feedLabels,
     feedLabels.operation,
     georgeStrings,
     missionProgress,

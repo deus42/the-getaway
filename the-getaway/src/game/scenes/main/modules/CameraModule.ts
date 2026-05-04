@@ -13,6 +13,7 @@ const CAMERA_FOLLOW_LERP = 1;
 const COMBAT_ZOOM_MULTIPLIER = 1.28;
 const COMBAT_ZOOM_MIN_DELTA = 0.22;
 const CAMERA_ZOOM_TWEEN_MS = 340;
+const FOLLOW_START_RECENTER_FRAMES = 4;
 
 const readValue = <T>(target: object, key: string): T | undefined => {
   return Reflect.get(target, key) as T | undefined;
@@ -143,6 +144,8 @@ export class CameraModule implements SceneModule<MainScene> {
 
   private runtimeState: CameraRuntimeState;
 
+  private pendingFollowRecenterFrames = 0;
+
   constructor(scene: MainScene, ports?: CameraModulePorts) {
     this.ports = ports ?? createCameraModulePorts(scene);
     this.runtimeState = {
@@ -166,6 +169,22 @@ export class CameraModule implements SceneModule<MainScene> {
       this.enablePlayerCameraFollow();
       this.ports.resizeDayNightOverlay();
     }
+  }
+
+  onUpdate(): void {
+    if (this.pendingFollowRecenterFrames <= 0 || !this.runtimeState.isCameraFollowingPlayer) {
+      return;
+    }
+
+    const tokenContainer = this.ports.getPlayerTokenContainer();
+    if (!tokenContainer || !this.ports.sys.isActive()) {
+      this.pendingFollowRecenterFrames = 0;
+      return;
+    }
+
+    this.pendingFollowRecenterFrames -= 1;
+    this.recenterCameraOnPlayer();
+    this.ports.emitViewportUpdate();
   }
 
   onShutdown(): void {
@@ -252,11 +271,10 @@ export class CameraModule implements SceneModule<MainScene> {
     }
 
     const camera = this.ports.cameras.main;
-    if (!this.runtimeState.isCameraFollowingPlayer) {
-      camera.startFollow(tokenContainer, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
-    }
+    camera.startFollow(tokenContainer, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     camera.setDeadzone(0, 0);
     this.runtimeState.isCameraFollowingPlayer = true;
+    this.pendingFollowRecenterFrames = FOLLOW_START_RECENTER_FRAMES;
     this.pushRuntimeStateToPorts();
     this.recenterCameraOnPlayer();
     this.ports.dispatchPlayerScreenPosition();
@@ -518,6 +536,10 @@ export class CameraModule implements SceneModule<MainScene> {
   }
 
   resetForMapTransition(): void {
+    const camera = this.ports.cameras.main;
+    camera.stopFollow();
+    this.pendingFollowRecenterFrames = 0;
+    this.runtimeState.isCameraFollowingPlayer = false;
     this.runtimeState.hasInitialZoomApplied = false;
     this.runtimeState.userAdjustedZoom = false;
     this.runtimeState.pendingCameraRestore = false;

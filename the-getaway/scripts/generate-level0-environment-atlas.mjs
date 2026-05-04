@@ -9,7 +9,7 @@ const projectRoot = path.resolve(__dirname, '..');
 
 const cellSize = 128;
 const columns = 4;
-const rows = 3;
+const rows = 4;
 const atlasWidth = cellSize * columns;
 const atlasHeight = cellSize * rows;
 
@@ -26,6 +26,10 @@ const frames = [
   { id: 'puddle_tile', col: 1, row: 2, pivot: { x: 0.5, y: 0.58 } },
   { id: 'grate_tile', col: 2, row: 2, pivot: { x: 0.5, y: 0.58 } },
   { id: 'utility_patch', col: 3, row: 2, pivot: { x: 0.5, y: 0.58 } },
+  { id: 'pickup_keypad', col: 0, row: 3, pivot: { x: 0.5, y: 0.84 } },
+  { id: 'pickup_datapad', col: 1, row: 3, pivot: { x: 0.5, y: 0.84 } },
+  { id: 'pickup_transit_token', col: 2, row: 3, pivot: { x: 0.5, y: 0.82 } },
+  { id: 'pickup_medkit', col: 3, row: 3, pivot: { x: 0.5, y: 0.84 } },
 ];
 
 const atlas = new Uint8Array(atlasWidth * atlasHeight * 4);
@@ -357,6 +361,98 @@ const drawUtilityPatch = (frame) => {
   fillEllipse(atlas, ox + 74, oy + 86, 2.4, 2.4, concrete);
 };
 
+const drawPickupKeypad = (frame) => {
+  fillFrameBackground(frame);
+  const ox = frame.col * cellSize;
+  const oy = frame.row * cellSize;
+  fillDiamond(atlas, ox + 64, oy + 106, 46, 15, rgba('#070b13', 190));
+  fillPolygon(atlas, [
+    { x: ox + 38, y: oy + 60 },
+    { x: ox + 82, y: oy + 50 },
+    { x: ox + 94, y: oy + 82 },
+    { x: ox + 50, y: oy + 94 },
+  ], rgba('#111827', 245));
+  fillPolygon(atlas, [
+    { x: ox + 44, y: oy + 64 },
+    { x: ox + 76, y: oy + 57 },
+    { x: ox + 84, y: oy + 78 },
+    { x: ox + 52, y: oy + 86 },
+  ], rgba('#223047', 245));
+  fillPolygon(atlas, [
+    { x: ox + 49, y: oy + 67 },
+    { x: ox + 68, y: oy + 63 },
+    { x: ox + 72, y: oy + 73 },
+    { x: ox + 53, y: oy + 77 },
+  ], rgba('#52e7ff', 228));
+  fillEllipse(atlas, ox + 62, oy + 70, 18, 8, rgba('#52e7ff', 45));
+  fillRect(atlas, ox + 74, oy + 76, 5, 4, brass);
+  fillRect(atlas, ox + 81, oy + 74, 5, 4, brass);
+  fillRect(atlas, ox + 69, oy + 82, 5, 4, rgba('#fde68a', 230));
+  fillRect(atlas, ox + 77, oy + 80, 5, 4, rgba('#fde68a', 230));
+  drawLine(atlas, ox + 42, oy + 62, ox + 82, oy + 52, rgba('#fde68a', 190), 1.1);
+};
+
+const drawPickupDatapad = (frame) => {
+  fillFrameBackground(frame);
+  const ox = frame.col * cellSize;
+  const oy = frame.row * cellSize;
+  fillDiamond(atlas, ox + 64, oy + 106, 48, 15, rgba('#070b13', 188));
+  fillPolygon(atlas, [
+    { x: ox + 42, y: oy + 56 },
+    { x: ox + 88, y: oy + 48 },
+    { x: ox + 90, y: oy + 88 },
+    { x: ox + 44, y: oy + 96 },
+  ], rgba('#111827', 244));
+  fillPolygon(atlas, [
+    { x: ox + 48, y: oy + 62 },
+    { x: ox + 80, y: oy + 56 },
+    { x: ox + 82, y: oy + 78 },
+    { x: ox + 50, y: oy + 84 },
+  ], rgba('#144a63', 232));
+  drawLine(atlas, ox + 53, oy + 68, ox + 76, oy + 64, cyan, 1.5);
+  drawLine(atlas, ox + 53, oy + 74, ox + 78, oy + 70, rgba('#b7f0ff', 198), 1.2);
+  fillEllipse(atlas, ox + 66, oy + 70, 26, 10, rgba('#52e7ff', 36));
+  fillRect(atlas, ox + 61, oy + 87, 9, 3, concrete);
+};
+
+const drawPickupTransitToken = (frame) => {
+  fillFrameBackground(frame);
+  const ox = frame.col * cellSize;
+  const oy = frame.row * cellSize;
+  fillDiamond(atlas, ox + 64, oy + 106, 46, 14, rgba('#070b13', 180));
+  fillEllipse(atlas, ox + 54, oy + 83, 13, 9, rgba('#6d4f2c', 230));
+  fillEllipse(atlas, ox + 55, oy + 80, 11, 8, rgba('#f1c06f', 235));
+  fillEllipse(atlas, ox + 55, oy + 80, 5, 3, rgba('#7c4a1d', 150));
+  fillEllipse(atlas, ox + 72, oy + 76, 13, 9, rgba('#6d4f2c', 226));
+  fillEllipse(atlas, ox + 73, oy + 73, 11, 8, rgba('#f7d38b', 238));
+  fillEllipse(atlas, ox + 73, oy + 73, 5, 3, rgba('#7c4a1d', 150));
+  fillEllipse(atlas, ox + 64, oy + 88, 13, 9, rgba('#6d4f2c', 220));
+  fillEllipse(atlas, ox + 65, oy + 85, 11, 8, rgba('#e9b85d', 238));
+  drawLine(atlas, ox + 51, oy + 72, ox + 76, oy + 67, rgba('#fff7cc', 120), 1);
+};
+
+const drawPickupMedkit = (frame) => {
+  fillFrameBackground(frame);
+  const ox = frame.col * cellSize;
+  const oy = frame.row * cellSize;
+  fillDiamond(atlas, ox + 64, oy + 106, 48, 15, rgba('#070b13', 184));
+  fillPolygon(atlas, [
+    { x: ox + 38, y: oy + 68 },
+    { x: ox + 82, y: oy + 58 },
+    { x: ox + 92, y: oy + 84 },
+    { x: ox + 48, y: oy + 95 },
+  ], rgba('#243044', 240));
+  fillPolygon(atlas, [
+    { x: ox + 43, y: oy + 70 },
+    { x: ox + 80, y: oy + 62 },
+    { x: ox + 87, y: oy + 80 },
+    { x: ox + 50, y: oy + 89 },
+  ], rgba('#e5e7eb', 225));
+  fillRect(atlas, ox + 62, oy + 67, 7, 19, rgba('#dc2626', 238));
+  fillRect(atlas, ox + 54, oy + 74, 22, 6, rgba('#dc2626', 238));
+  drawLine(atlas, ox + 42, oy + 67, ox + 82, oy + 58, rgba('#93c5fd', 140), 1);
+};
+
 const drawers = {
   street_lamp: drawStreetLamp,
   vending_kiosk: drawVendingKiosk,
@@ -370,6 +466,10 @@ const drawers = {
   puddle_tile: drawPuddleTile,
   grate_tile: drawGrateTile,
   utility_patch: drawUtilityPatch,
+  pickup_keypad: drawPickupKeypad,
+  pickup_datapad: drawPickupDatapad,
+  pickup_transit_token: drawPickupTransitToken,
+  pickup_medkit: drawPickupMedkit,
 };
 
 const encodePng = (buffer, width, height) => {

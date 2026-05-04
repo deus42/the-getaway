@@ -195,6 +195,18 @@
     color: rgba(226, 232, 240, 0.92);
     white-space: pre-wrap;
   }
+.george-chat-bubble--operation {
+    border-color: rgba(211, 173, 95, 0.55);
+    box-shadow: 0 18px 34px rgba(211, 173, 95, 0.2);
+  }
+.george-chat-bubble--operation::before {
+    background: linear-gradient(180deg, rgba(211, 173, 95, 0.92), rgba(45, 212, 191, 0.58));
+  }
+.george-chat-badge--operation {
+    border-color: rgba(211, 173, 95, 0.68);
+    background: rgba(211, 173, 95, 0.18);
+    color: rgba(253, 246, 178, 0.95);
+  }
 .george-chat-bubble--mission {
     border-color: rgba(96, 165, 250, 0.45);
     box-shadow: 0 18px 34px rgba(37, 99, 235, 0.28);

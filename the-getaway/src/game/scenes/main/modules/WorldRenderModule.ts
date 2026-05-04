@@ -1265,13 +1265,13 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   private resolvePickupSpritePresentation(item: Item): PickupSpritePresentation {
     switch (item.resourceKey) {
       case LEVEL0_GUIDED_ITEM_KEYS.keycard:
-        return { frameId: 'sign', tint: 0xfacc15, scale: 0.34, alpha: 0.96 };
+        return { frameId: 'keypad', tint: 0xffffff, scale: 0.56, alpha: 0.98 };
       case LEVEL0_GUIDED_ITEM_KEYS.datapad:
-        return { frameId: 'sign', tint: 0x38bdf8, scale: 0.36, alpha: 0.96 };
+        return { frameId: 'datapad', tint: 0xffffff, scale: 0.54, alpha: 0.96 };
       case LEVEL0_GUIDED_ITEM_KEYS.transitTokens:
-        return { frameId: 'barrier', tint: 0xa78bfa, scale: 0.34, alpha: 0.94 };
+        return { frameId: 'transitToken', tint: 0xffffff, scale: 0.52, alpha: 0.96 };
       case 'items.abandoned_medkit':
-        return { frameId: 'crate', tint: 0xf87171, scale: 0.32, alpha: 0.92 };
+        return { frameId: 'medkit', tint: 0xffffff, scale: 0.5, alpha: 0.95 };
       default:
         return {
           frameId: item.isQuestItem ? 'sign' : 'crate',

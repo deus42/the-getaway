@@ -69,7 +69,7 @@
 ```bash
 cd the-getaway
 yarn install      # first-time setup
-yarn dev          # Vite dev server + Phaser canvas
+yarn dev          # Vite dev server + Phaser canvas on http://localhost:5174
 yarn build        # type-check + production bundle
 yarn lint         # ESLint across the mono-neon codebase
 yarn test         # Jest + Testing Library suites

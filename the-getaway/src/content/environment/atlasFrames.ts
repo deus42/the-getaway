@@ -77,6 +77,30 @@ export const LEVEL0_ENVIRONMENT_PROP_FRAMES = {
     scale: 0.5,
     alpha: 0.84,
   },
+  keypad: {
+    frame: 'pickup_keypad',
+    origin: { x: 0.5, y: 0.84 },
+    scale: 0.54,
+    alpha: 0.96,
+  },
+  datapad: {
+    frame: 'pickup_datapad',
+    origin: { x: 0.5, y: 0.84 },
+    scale: 0.54,
+    alpha: 0.96,
+  },
+  transitToken: {
+    frame: 'pickup_transit_token',
+    origin: { x: 0.5, y: 0.82 },
+    scale: 0.52,
+    alpha: 0.95,
+  },
+  medkit: {
+    frame: 'pickup_medkit',
+    origin: { x: 0.5, y: 0.84 },
+    scale: 0.5,
+    alpha: 0.94,
+  },
 } as const satisfies Record<string, EnvironmentAtlasFrameDefinition>;
 
 export type Level0EnvironmentPropFrameId = keyof typeof LEVEL0_ENVIRONMENT_PROP_FRAMES;

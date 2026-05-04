@@ -9,6 +9,7 @@ A tactical stealth RPG prototype built with Phaser, React, and Redux Toolkit. Th
 yarn install
 # dev
 yarn dev
+# open http://localhost:5174
 # tests
 yarn test
 # build

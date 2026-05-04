@@ -17,3 +17,7 @@ An omnipresent AI assistant ("George") accompanies the player from the start. Ge
 	•	**Diegetic Implementation:** George is diegetic: an AI chip implanted in the protagonist’s device. This lets it integrate into the world’s tech-noir aesthetic while justifying its narrative commentary. Upgrades or bugs to George can form the basis of quests.
 
 George’s dialogue adheres to the tonal guidelines in the plot bible: darkly funny, surreal, and morally nuanced. Designers should log references to relevant plot bible directives (e.g., Tone Guideline 4 for satire) when writing George’s lines to ensure consistency.
+
+## Level 0 Final-Feel Rule
+
+For the GET-139 Level 0 slice, George should behave as a quiet mission guide first and an ambient companion second. His default feed should surface one current beat at a time, use the slice code phrases (`streetlight`, `quiet tide`) sparingly, and shift tone by context: operation guidance in daylight, stealth guidance under curfew, and recovery guidance when paranoia pressure spikes. Optional banter remains available through the prompt path, but the opening route should stay focused on Lira, the cache lane, recovery, Naila, Brant, and recap closure.

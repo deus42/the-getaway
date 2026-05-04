@@ -65,9 +65,13 @@ const DayNightIndicator: React.FC = () => {
       justify-content: center;
       padding: 0.48rem 0.7rem;
       border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: rgba(15, 23, 42, 0.9);
-      box-shadow: 0 0 12px rgba(56, 189, 248, 0.16);
+      border: 1px solid ${curfewActive ? 'rgba(248, 113, 113, 0.5)' : 'rgba(148, 163, 184, 0.25)'};
+      background: ${curfewActive
+        ? 'linear-gradient(145deg, rgba(35, 12, 18, 0.94), rgba(15, 23, 42, 0.9))'
+        : 'rgba(15, 23, 42, 0.9)'};
+      box-shadow: ${curfewActive
+        ? '0 0 18px rgba(248, 113, 113, 0.22), inset 0 0 18px rgba(127, 29, 29, 0.18)'
+        : '0 0 12px rgba(56, 189, 248, 0.16)'};
       color: #e2e8f0;
       font-family: 'DM Mono', 'IBM Plex Mono', monospace;
       font-size: 0.98rem;
@@ -131,7 +135,7 @@ const DayNightIndicator: React.FC = () => {
     }
 
     .day-night-clock__label {
-      color: #93c5fd;
+      color: ${curfewActive ? '#fbbf24' : '#93c5fd'};
       white-space: nowrap;
     }
 
