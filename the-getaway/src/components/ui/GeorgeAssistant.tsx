@@ -11,25 +11,11 @@ import React, {
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import {
-  selectPlayerFactionReputation,
-  selectPlayerPersonalityProfile,
-} from '../../store/selectors/playerSelectors';
-import { selectObjectiveQueue } from '../../store/selectors/questSelectors';
-import {
   selectMissionProgress,
   selectNextPrimaryObjective,
-  selectNextSideObjective,
 } from '../../store/selectors/missionSelectors';
-import { selectAmbientWorldSnapshot } from '../../store/selectors/worldSelectors';
-import {
-  GeorgeAmbientTracker,
-  pickBanterLine,
-  pickInterjectionLine,
-  GeorgeAmbientEvent,
-} from '../../game/systems/georgeAssistant';
-import type { FactionId } from '../../game/interfaces/types';
-import { GeorgeInterjectionTrigger, GeorgeLine } from '../../content/assistants/george';
 import { getUIStrings } from '../../content/ui';
+import { getLevel0GuidedStep } from '../../game/quests/level0GuidedSlice';
 import {
   LEVEL_ADVANCE_REQUESTED_EVENT,
   MISSION_ACCOMPLISHED_EVENT,
@@ -37,17 +23,8 @@ import {
   MissionEventDetail,
 } from '../../game/systems/missionProgression';
 import '../../styles/hud-george.css';
-const INTERJECTION_COOLDOWN_MS = 9000;
-const AMBIENT_BANTER_MIN_MS = 48000;
-const AMBIENT_BANTER_MAX_MS = 96000;
 const FEED_ENTRY_LIMIT = 12;
-
-const FALLBACK_AMBIENT = [
-  'Diagnostics show morale at "manageable"—keep it that way.',
-  'Filed another complaint against the rain. Status: pending since 2034.',
-  'If you spot Theo, remind him the coffee synth still needs a filter.',
-  'Today’s lucky number is 404. Let’s try not to vanish.',
-];
+const RECOVERY_PARANOIA_THRESHOLD = 35;
 
 type FeedCategory =
   | 'operation'
@@ -145,53 +122,12 @@ const GeorgeOrbLogo: React.FC<GeorgeOrbLogoProps> = ({ size = 32, className }) =
   );
 };
 
-const buildQuestReadout = (
-  queue: ReturnType<typeof selectObjectiveQueue>,
-  strings: ReturnType<typeof getUIStrings>['george'],
-  limit?: number
-): string[] => {
-  if (queue.length === 0) {
-    return [strings.questNone];
-  }
-  const slice = typeof limit === 'number' ? queue.slice(0, limit) : queue;
-  const lines = slice.map((entry) => {
-    const countSuffix = entry.objective.count && entry.objective.count > 1
-      ? ` (${entry.objective.currentCount ?? 0}/${entry.objective.count})`
-      : '';
-    return `${entry.questName}: ${entry.objective.description}${countSuffix}`;
-  });
-  if (typeof limit === 'number' && queue.length > limit) {
-    lines.push(strings.questMore);
-  }
-  return lines;
-};
-
 const clampText = (text: string): string => {
   const normalized = text.replace(/\s+/g, ' ').trim();
   if (normalized.length <= 140) {
     return normalized;
   }
   return `${normalized.slice(0, 137).trimEnd()}…`;
-};
-
-const classifyLogMessage = (
-  message: string,
-  labels: Pick<ReturnType<typeof getUIStrings>['george']['feedLabels'], 'battle' | 'dialog' | 'stealth' | 'broadcast'>
-): FeedEntryPayload => {
-  const normalized = message.trim();
-  const text = normalized.length ? normalized : '---';
-  const lower = text.toLowerCase();
-  const includesAny = (keys: string[]) => keys.some((key) => lower.includes(key));
-  if (includesAny(['attack', 'enemy', 'combat', 'battle', 'damage', 'hostile'])) {
-    return { category: 'battle', label: labels.battle, text, timestamp: Date.now() };
-  }
-  if (includesAny(['dialog', 'dialogue', 'whispers', 'says', 'conversation', 'briefing', 'speech'])) {
-    return { category: 'dialog', label: labels.dialog, text, timestamp: Date.now() };
-  }
-  if (includesAny(['stealth', 'hidden', 'sneak', 'shadow', 'camouflage', 'conceal'])) {
-    return { category: 'stealth', label: labels.stealth, text, timestamp: Date.now() };
-  }
-  return { category: 'broadcast', label: labels.broadcast, text, timestamp: Date.now() };
 };
 
 const GeorgeAssistant: React.FC = () => {
@@ -203,43 +139,21 @@ const GeorgeAssistant: React.FC = () => {
     feedLabels,
     levelAdvance: levelAdvanceMessage,
     missionComplete: missionCompleteMessage,
-    promptPlaceholder,
     askPlaceholder,
     askInputLabel,
     sendLabel,
   } = georgeStrings;
 
-  const objectiveQueue = useSelector(selectObjectiveQueue);
   const missionProgress = useSelector(selectMissionProgress);
   const nextPrimaryObjective = useSelector(selectNextPrimaryObjective);
-  const nextSideObjective = useSelector(selectNextSideObjective);
-  const personality = useSelector(selectPlayerPersonalityProfile);
-  const factionReputation = useSelector(selectPlayerFactionReputation) as Record<FactionId, number>;
-  const reputationSystemsEnabled = useSelector(
-    (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
-  );
   const quests = useSelector((state: RootState) => state.quests.quests);
   const world = useSelector((state: RootState) => state.world);
-  const ambientSnapshot = useSelector(selectAmbientWorldSnapshot);
-  const logMessages = useSelector((state: RootState) => state.log.messages);
-
-  const ambientLines = useMemo(
-    () => (georgeStrings.ambient?.length ? georgeStrings.ambient : FALLBACK_AMBIENT),
-    [georgeStrings]
-  );
+  const paranoiaValue = useSelector((state: RootState) => state.paranoia.value);
 
   const [feedEntries, setFeedEntries] = useState<FeedEntry[]>([]);
   const [promptValue, setPromptValue] = useState('');
 
-  const cooldownRef = useRef<number>(0);
-  const pendingInterjectionRef = useRef<GeorgeLine | null>(null);
-  const completedQuestIdsRef = useRef<Set<string>>(new Set());
-  const factionRef = useRef<Record<FactionId, number>>(factionReputation);
-  const alertRef = useRef({ level: world.globalAlertLevel, inCombat: world.inCombat });
-  const ambientTimerRef = useRef<number | null>(null);
-  const ambientTrackerRef = useRef<GeorgeAmbientTracker | null>(null);
   const missionSummaryRef = useRef<string>('');
-  const logIndexRef = useRef<number>(logMessages.length);
   const promptInputRef = useRef<HTMLInputElement | null>(null);
   const maintainFocusRef = useRef(false);
   const queueRef = useRef<FeedEntry[]>([]);
@@ -291,38 +205,6 @@ const GeorgeAssistant: React.FC = () => {
     [enqueueFeedEntry]
   );
 
-  const presentInterjection = useCallback((line: GeorgeLine) => {
-    cooldownRef.current = Date.now() + INTERJECTION_COOLDOWN_MS;
-    pendingInterjectionRef.current = null;
-    routeFeedEntry({
-      category: 'interjection',
-      label: georgeStrings.feedLabels.interjection,
-      text: line.text,
-      timestamp: Date.now(),
-    });
-  }, [georgeStrings.feedLabels.interjection, routeFeedEntry]);
-
-  const queueInterjection = useCallback((trigger: GeorgeInterjectionTrigger) => {
-    const line = pickInterjectionLine(trigger, personality.alignment);
-    if (!line) {
-      return;
-    }
-    const now = Date.now();
-    if (now >= cooldownRef.current) {
-      presentInterjection(line);
-      return;
-    }
-    pendingInterjectionRef.current = line;
-  }, [personality.alignment, presentInterjection]);
-
-  const pickAmbient = useCallback((): GeorgeLine => {
-    if (ambientLines.length && Math.random() < 0.5) {
-      const text = ambientLines[Math.floor(Math.random() * ambientLines.length)];
-      return { text, guidelineRef: 'ambient.line' };
-    }
-    return pickBanterLine(personality.alignment);
-  }, [ambientLines, personality.alignment]);
-
   const handlePromptChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     setPromptValue(event.target.value);
   }, []);
@@ -345,81 +227,71 @@ const GeorgeAssistant: React.FC = () => {
     setPromptValue('');
     promptInputRef.current?.focus();
 
-    const line = pickAmbient();
-    const response = promptPlaceholder(line.text);
+    const response = missionSummaryRef.current || georgeStrings.guidanceIntro;
     enqueueFeedEntry({
       category: 'interjection',
       label: feedLabels.interjection,
       text: response,
       timestamp: Date.now(),
     });
-  }, [enqueueFeedEntry, feedLabels.interjection, feedLabels.player, pickAmbient, promptPlaceholder, promptValue]);
-
-  const scheduleAmbientBanter = useCallback(() => {
-    if (ambientTimerRef.current !== null) {
-      window.clearTimeout(ambientTimerRef.current);
-    }
-    const delay = Math.floor(AMBIENT_BANTER_MIN_MS + Math.random() * (AMBIENT_BANTER_MAX_MS - AMBIENT_BANTER_MIN_MS));
-    ambientTimerRef.current = window.setTimeout(() => {
-      const line = pickAmbient();
-      if (Date.now() >= cooldownRef.current) {
-        presentInterjection(line);
-      } else {
-        pendingInterjectionRef.current = line;
-      }
-      scheduleAmbientBanter();
-    }, delay);
-  }, [pickAmbient, presentInterjection]);
+  }, [enqueueFeedEntry, feedLabels.interjection, feedLabels.player, georgeStrings.guidanceIntro, promptValue]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      const pending = pendingInterjectionRef.current;
-      if (!pending) {
-        return;
-      }
-      if (Date.now() >= cooldownRef.current) {
-        presentInterjection(pending);
-      }
-    }, 400);
-    return () => window.clearInterval(timer);
-  }, [presentInterjection]);
-
-  useEffect(() => {
-    scheduleAmbientBanter();
     return () => {
-      if (ambientTimerRef.current !== null) {
-        window.clearTimeout(ambientTimerRef.current);
-        ambientTimerRef.current = null;
-      }
       if (queueTimerRef.current !== null) {
         window.clearTimeout(queueTimerRef.current);
         queueTimerRef.current = null;
       }
       queueRef.current = [];
     };
-  }, [scheduleAmbientBanter]);
-
-  useEffect(() => {
-    if (logMessages.length <= logIndexRef.current) {
-      logIndexRef.current = logMessages.length;
-      return;
-    }
-    const newMessages = logMessages.slice(logIndexRef.current);
-    newMessages.forEach((message) => {
-      const payload = classifyLogMessage(message, {
-        battle: feedLabels.battle,
-        dialog: feedLabels.dialog,
-        stealth: feedLabels.stealth,
-        broadcast: feedLabels.broadcast,
-      });
-      routeFeedEntry(payload);
-    });
-    logIndexRef.current = logMessages.length;
-  }, [feedLabels.battle, feedLabels.broadcast, feedLabels.dialog, feedLabels.stealth, logMessages, routeFeedEntry]);
+  }, []);
 
   useEffect(() => {
     const levelName = missionProgress?.name ?? georgeStrings.zoneFallback;
     const missionLines: string[] = [];
+    const curfewWindow = uiStrings.dayNight.curfewWindow('22:00', '06:00');
+    const guidedStep = getLevel0GuidedStep(quests);
+
+    switch (guidedStep.stage) {
+      case 'lira-start':
+        missionLines.push(georgeStrings.sliceGuidance.talkToLira);
+        break;
+      case 'lira-keycard':
+        if (!world.curfewActive) {
+          missionLines.push(georgeStrings.sliceGuidance.waitForNight(curfewWindow));
+        } else if (paranoiaValue >= RECOVERY_PARANOIA_THRESHOLD) {
+          missionLines.push(georgeStrings.sliceGuidance.recoverAtSafehouse);
+        } else {
+          missionLines.push(georgeStrings.sliceGuidance.nightRoute);
+        }
+        break;
+      case 'lira-return':
+        missionLines.push(georgeStrings.sliceGuidance.returnToLira);
+        break;
+      case 'naila-start':
+        missionLines.push(georgeStrings.sliceGuidance.talkToNaila);
+        break;
+      case 'naila-datapad':
+        missionLines.push(georgeStrings.sliceGuidance.findDatapad);
+        break;
+      case 'naila-return':
+        missionLines.push(georgeStrings.sliceGuidance.returnToNaila);
+        break;
+      case 'brant-start':
+        missionLines.push(georgeStrings.sliceGuidance.talkToBrant);
+        break;
+      case 'brant-tokens':
+        missionLines.push(georgeStrings.sliceGuidance.findTransitTokens);
+        break;
+      case 'brant-return':
+        missionLines.push(georgeStrings.sliceGuidance.returnToBrant);
+        break;
+      case 'complete':
+        missionLines.push(georgeStrings.sliceGuidance.complete);
+        break;
+      default:
+        break;
+    }
 
     if (missionProgress) {
       if (missionProgress.allPrimaryComplete) {
@@ -430,22 +302,11 @@ const GeorgeAssistant: React.FC = () => {
           : '';
         missionLines.push(georgeStrings.guidancePrimaryObjective(nextPrimaryObjective.label, progress));
       }
-
-      if (nextSideObjective) {
-        missionLines.push(georgeStrings.guidanceSideObjective(nextSideObjective.label));
-      }
     }
 
-    const questLines = buildQuestReadout(objectiveQueue, georgeStrings, 3);
     const segments = [georgeStrings.guidanceIntro];
     if (missionLines.length > 0) {
       segments.push(...missionLines);
-    }
-    if (questLines.length > 0) {
-      if (missionLines.length > 0) {
-        segments.push('');
-      }
-      segments.push(...questLines);
     }
 
     const message = segments.join('\n').trim();
@@ -464,9 +325,11 @@ const GeorgeAssistant: React.FC = () => {
     georgeStrings,
     missionProgress,
     nextPrimaryObjective,
-    nextSideObjective,
-    objectiveQueue,
+    paranoiaValue,
+    quests,
     routeFeedEntry,
+    uiStrings.dayNight,
+    world.curfewActive,
   ]);
 
   const formatTimestamp = useCallback((value: number): string => {
@@ -483,103 +346,6 @@ const GeorgeAssistant: React.FC = () => {
     }
   }, [locale]);
 
-const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): FeedEntryPayload | null => {
-  const ambientFeed = georgeStrings.ambientFeed;
-  const alignment = personality.alignment;
-
-  const buildBroadcast = (text: string): FeedEntryPayload => ({
-    category: 'broadcast',
-    text,
-    label: feedLabels.broadcast,
-    timestamp: event.timestamp,
-  });
-
-  switch (event.category) {
-    case 'rumor': {
-      const line = event.lines.find((entry) => entry && entry.trim().length > 0)?.trim() ?? ambientFeed.fallbacks.rumor;
-      const storyLabel = event.storyFunction
-        ? ambientFeed.storyFunctionLabels[event.storyFunction] ?? event.storyFunction.replace(/-/g, ' ').toUpperCase()
-        : undefined;
-      return buildBroadcast(ambientFeed.formatRumor({ line, storyLabel }, alignment));
-    }
-    case 'signage': {
-      const text = event.text && event.text.trim().length > 0 ? event.text.trim() : ambientFeed.fallbacks.signage;
-      const storyLabel = event.storyFunction
-        ? ambientFeed.storyFunctionLabels[event.storyFunction] ?? event.storyFunction.replace(/-/g, ' ').toUpperCase()
-        : undefined;
-      return buildBroadcast(ambientFeed.formatSignage({ text, storyLabel }, alignment));
-    }
-    case 'weather': {
-      const description = event.description && event.description.trim().length > 0
-        ? event.description.trim()
-        : ambientFeed.fallbacks.weather;
-      const storyLabel = event.storyFunction
-        ? ambientFeed.storyFunctionLabels[event.storyFunction] ?? event.storyFunction.replace(/-/g, ' ').toUpperCase()
-        : undefined;
-      return buildBroadcast(ambientFeed.formatWeather({ description, storyLabel }, alignment));
-    }
-    case 'zoneDanger': {
-      const dangerLevels = uiStrings.levelIndicator.dangerLevels;
-      const dangerLabel = event.dangerRating
-        ? dangerLevels[event.dangerRating] ?? event.dangerRating
-        : ambientFeed.dangerFallback;
-      const previousDangerLabel = event.previousDangerRating
-        ? dangerLevels[event.previousDangerRating] ?? event.previousDangerRating
-        : null;
-      const flagChanges = event.changedFlags.map((change) => ({
-        label: ambientFeed.flagLabels[change.key] ?? change.key,
-        previous: ambientFeed.formatFlagValue(change.key, change.previous),
-        next: ambientFeed.formatFlagValue(change.key, change.next),
-      }));
-      return buildBroadcast(
-        ambientFeed.formatZoneDanger(
-          {
-            zoneName: event.zoneName,
-            dangerLabel,
-            previousDangerLabel,
-            flagChanges,
-          },
-          alignment
-        )
-      );
-    }
-    case 'hazardChange': {
-      const additions = event.added.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
-      const removals = event.removed.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
-      return buildBroadcast(
-        ambientFeed.formatHazards(
-          {
-            zoneName: event.zoneName,
-            additions,
-            removals,
-          },
-          alignment
-        )
-      );
-    }
-    case 'zoneBrief': {
-      const dangerLevels = uiStrings.levelIndicator.dangerLevels;
-      const dangerLabel = event.dangerRating
-        ? dangerLevels[event.dangerRating] ?? event.dangerRating
-        : ambientFeed.dangerFallback;
-      return buildBroadcast(
-        ambientFeed.formatZoneBrief(
-          {
-            zoneName: event.zoneName,
-            summary: event.summary ?? null,
-            dangerLabel,
-            hazards: event.hazards,
-            directives: event.directives,
-          },
-          alignment
-        )
-      );
-    }
-    default:
-      return null;
-  }
-}, [feedLabels.broadcast, georgeStrings.ambientFeed, personality.alignment, uiStrings.levelIndicator.dangerLevels]);
-
   useEffect(() => {
     const handleMissionAccomplished = (event: Event) => {
       const detail = (event as CustomEvent<MissionEventDetail>).detail;
@@ -594,7 +360,6 @@ const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): FeedEntryPay
         text: message,
         timestamp: Date.now(),
       });
-      queueInterjection('questCompleted');
     };
 
     const handleLevelAdvance = (event: Event) => {
@@ -625,100 +390,7 @@ const formatAmbientEvent = useCallback((event: GeorgeAmbientEvent): FeedEntryPay
     levelAdvanceMessage,
     missionCompleteMessage,
     routeFeedEntry,
-    queueInterjection,
   ]);
-
-  useEffect(() => {
-    const completed = new Set(quests.filter((quest) => quest.isCompleted).map((quest) => quest.id));
-    const previous = completedQuestIdsRef.current;
-    const newlyCompleted = Array.from(completed).filter((id) => !previous.has(id));
-    if (newlyCompleted.length > 0) {
-      queueInterjection('questCompleted');
-    }
-    completedQuestIdsRef.current = completed;
-  }, [quests, queueInterjection]);
-
-  useEffect(() => {
-    if (!ambientSnapshot) {
-      return;
-    }
-    if (!ambientTrackerRef.current) {
-      const tracker = new GeorgeAmbientTracker();
-      tracker.prime(ambientSnapshot);
-      ambientTrackerRef.current = tracker;
-
-      const initialEvent: GeorgeAmbientEvent = {
-        category: 'zoneBrief',
-        timestamp: Date.now(),
-        zoneName: ambientSnapshot.zone.zoneName,
-        summary: ambientSnapshot.zone.summary,
-        dangerRating: ambientSnapshot.zone.dangerRating ?? null,
-        hazards: [...ambientSnapshot.zone.hazards],
-        directives: [...ambientSnapshot.zone.directives],
-      };
-      const formatted = formatAmbientEvent(initialEvent);
-      if (formatted) {
-        routeFeedEntry(formatted);
-      }
-      return;
-    }
-
-    const tracker = ambientTrackerRef.current;
-    const events = tracker.collect(ambientSnapshot);
-    if (!events.length) {
-      return;
-    }
-
-    events.forEach((event) => {
-      const formatted = formatAmbientEvent(event);
-      if (!formatted) {
-        return;
-      }
-      routeFeedEntry(formatted);
-    });
-  }, [ambientSnapshot, formatAmbientEvent, routeFeedEntry]);
-
-  useEffect(() => {
-    const previous = factionRef.current;
-    const current = factionReputation;
-    if (!reputationSystemsEnabled) {
-      factionRef.current = current;
-      return;
-    }
-    const factionIds = new Set<FactionId>([
-      ...(Object.keys(current) as FactionId[]),
-      ...(Object.keys(previous) as FactionId[]),
-    ]);
-
-    const positive = Array.from(factionIds).some((factionId) => {
-      const currentValue = current[factionId] ?? 0;
-      const previousValue = previous[factionId] ?? 0;
-      return currentValue - previousValue >= 20;
-    });
-
-    const negative = Array.from(factionIds).some((factionId) => {
-      const currentValue = current[factionId] ?? 0;
-      const previousValue = previous[factionId] ?? 0;
-      return currentValue - previousValue <= -20;
-    });
-
-    if (positive) {
-      queueInterjection('reputationPositive');
-    } else if (negative) {
-      queueInterjection('reputationNegative');
-    }
-
-    factionRef.current = current;
-  }, [factionReputation, queueInterjection, reputationSystemsEnabled]);
-
-  useEffect(() => {
-    const previous = alertRef.current;
-    if ((!previous.inCombat && world.inCombat) ||
-      (previous.level !== 'alarmed' && world.globalAlertLevel === 'alarmed')) {
-      queueInterjection('hostileEntered');
-    }
-    alertRef.current = { level: world.globalAlertLevel, inCombat: world.inCombat };
-  }, [queueInterjection, world.globalAlertLevel, world.inCombat]);
 
   const feedViewRef = useRef<HTMLDivElement | null>(null);
   const handleSendPointerDown = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {

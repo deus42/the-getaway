@@ -27,6 +27,7 @@ export type EnemySpriteRecord = {
 export type NpcSpriteRecord = {
   token: CharacterToken;
   indicator?: Phaser.GameObjects.Graphics;
+  clueLabel?: Phaser.GameObjects.Text;
   nameLabel: Phaser.GameObjects.Text;
   markedForRemoval: boolean;
   lastGridPosition: Position;

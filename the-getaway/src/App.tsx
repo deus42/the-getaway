@@ -34,6 +34,7 @@ import {
   measureBottomDockHeight,
 } from "./utils/bottomDockSizing";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
+import MissionFailureOverlay from "./components/ui/MissionFailureOverlay";
 import CombatControlWidget from "./components/ui/CombatControlWidget";
 import GameDebugInspector from "./components/debug/GameDebugInspector";
 import "./App.css";
@@ -443,6 +444,7 @@ function AppShell() {
   const [levelUpFlowActive, setLevelUpFlowActive] = useState(false);
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const hudLayoutPreset = useSelector(selectHudLayoutPreset);
+  const playerHealth = useSelector((state: RootState) => state.player.data.health);
   const reputationSystemsEnabled = useSelector(
     (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
   );
@@ -584,6 +586,28 @@ function AppShell() {
   const handleCharacterCreationCancel = () => {
     setShowCharacterCreation(false);
     setShowMenu(true);
+  };
+
+  const handleMissionFailureRetry = () => {
+    try {
+      window.localStorage.removeItem(PERSISTED_STATE_KEY);
+    } catch {
+      // Ignore storage failures; resetGame still clears in-memory state.
+    }
+
+    store.dispatch(resetGame());
+    store.dispatch(clearAllFeedback());
+    setLevelUpData(null);
+    setXpNotifications([]);
+    setPendingPerkSelections(0);
+    setShowPerkSelection(false);
+    setShowPointAllocation(false);
+    setLevelUpFlowActive(false);
+    setShowCharacterScreen(false);
+    setHasSavedGame(false);
+    setGameStarted(false);
+    setShowMenu(false);
+    setShowCharacterCreation(true);
   };
 
   const handleContinueGame = () => {
@@ -759,6 +783,9 @@ function AppShell() {
     store.dispatch(removeXPNotification(id));
   };
 
+  const missionFailureOpen =
+    gameStarted && !showMenu && !showCharacterCreation && playerHealth <= 0;
+
   return (
     <>
       <MissionProgressionManager />
@@ -810,6 +837,7 @@ function AppShell() {
         )}
         <CharacterScreen open={showCharacterScreen} onClose={handleCharacterScreenClose} />
         <MissionCompletionOverlay />
+        <MissionFailureOverlay open={missionFailureOpen} onRetry={handleMissionFailureRetry} />
       </Suspense>
       <XPNotificationManager
         notifications={xpNotifications}

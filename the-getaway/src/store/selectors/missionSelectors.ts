@@ -43,6 +43,17 @@ const resolveObjective = (objective: MissionObjectiveDefinition, quests: Quest[]
 const mapResolvedObjectives = (objectives: MissionObjectiveDefinition[], quests: Quest[]): ResolvedMissionObjective[] =>
   objectives.map((objective) => resolveObjective(objective, quests));
 
+const hasStartedQuest = (objective: ResolvedMissionObjective, quests: Quest[]): boolean =>
+  objective.questIds.some((questId) => {
+    const quest = quests.find((entry) => entry.id === questId);
+    return Boolean(
+      quest &&
+        (quest.isActive ||
+          quest.isCompleted ||
+          quest.objectives.some((questObjective) => questObjective.isCompleted))
+    );
+  });
+
 export const selectMissionProgress = createSelector(
   [selectCurrentMissionLevel, selectQuestState],
   (level, quests): MissionProgressSnapshot | null => {
@@ -74,6 +85,21 @@ export const selectMissionProgress = createSelector(
   }
 );
 
+export const selectStartedMissionProgress = createSelector(
+  [selectMissionProgress, selectQuestState],
+  (progress, quests): MissionProgressSnapshot | null => {
+    if (!progress) {
+      return null;
+    }
+
+    return {
+      ...progress,
+      primary: progress.primary.filter((objective) => hasStartedQuest(objective, quests)),
+      side: progress.side.filter((objective) => hasStartedQuest(objective, quests)),
+    };
+  }
+);
+
 export const selectPrimaryObjectives = createSelector(
   selectMissionProgress,
   (progress) => progress?.primary ?? []
@@ -91,6 +117,11 @@ export const selectNextPrimaryObjective = createSelector(
 
 export const selectNextSideObjective = createSelector(
   selectMissionProgress,
+  (progress) => progress?.side.find((objective) => !objective.isComplete) ?? null
+);
+
+export const selectNextStartedSideObjective = createSelector(
+  selectStartedMissionProgress,
   (progress) => progress?.side.find((objective) => !objective.isComplete) ?? null
 );
 

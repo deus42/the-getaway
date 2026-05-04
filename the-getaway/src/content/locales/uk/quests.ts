@@ -3,10 +3,10 @@ import { QuestLocaleMap } from '../../../game/narrative/structureTypes';
 export const questLocalesUk: QuestLocaleMap = {
   'quests.market_cache': {
     name: 'Повернення ринкового тайника',
-    description: 'Ліра хоче повернути конфіскований сховок контрабанди на патрульному маршруті в Центрі.',
+    description: 'Ліра хоче повернути один конфіскований тайник через північно-західний маршрут Центру під час комендантської.',
     objectiveDescriptions: {
-      'recover-keycard': 'Добудьте корпоративну ключ-картку, заховану в Центрі.',
-      'return-to-lira': 'Поверніться до Ліри в нетрях.',
+      'recover-keycard': 'Під час комендантської добудьте корпоративну ключ-картку зі сховища доказів на північному заході Центру.',
+      'return-to-lira': 'Поверніться до Ліри, коли ключ-картку захищено.',
     },
   },
   'quests.datapad_truth': {

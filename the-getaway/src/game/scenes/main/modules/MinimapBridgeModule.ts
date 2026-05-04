@@ -65,11 +65,15 @@ export class MinimapBridgeModule implements SceneModule<MainScene> {
     }
 
     const camera = this.ports.cameras.main;
-    const view = camera.worldView;
-    const topLeft = this.ports.worldToGridContinuous(view.x, view.y);
-    const topRight = this.ports.worldToGridContinuous(view.x + view.width, view.y);
-    const bottomLeft = this.ports.worldToGridContinuous(view.x, view.y + view.height);
-    const bottomRight = this.ports.worldToGridContinuous(view.x + view.width, view.y + view.height);
+    const safeZoom = Math.max(0.0001, camera.zoom);
+    const viewX = camera.scrollX;
+    const viewY = camera.scrollY;
+    const viewWidth = camera.width / safeZoom;
+    const viewHeight = camera.height / safeZoom;
+    const topLeft = this.ports.worldToGridContinuous(viewX, viewY);
+    const topRight = this.ports.worldToGridContinuous(viewX + viewWidth, viewY);
+    const bottomLeft = this.ports.worldToGridContinuous(viewX, viewY + viewHeight);
+    const bottomRight = this.ports.worldToGridContinuous(viewX + viewWidth, viewY + viewHeight);
 
     if (!topLeft || !topRight || !bottomLeft || !bottomRight) {
       return;

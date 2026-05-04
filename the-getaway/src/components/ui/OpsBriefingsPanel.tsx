@@ -97,12 +97,14 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
               <span
                 className='text-[0.62rem] uppercase tracking-[0.16em]'
                 style={{
-                  color: objective.isComplete ? '#86efac' : '#facc15',
+                  color: objective.isComplete ? '#86efac' : objective.isStarted ? '#facc15' : '#93c5fd',
                 }}
               >
                 {objective.isComplete
                   ? uiStrings.questLog.primaryComplete
-                  : uiStrings.questLog.primaryInProgress}
+                  : objective.isStarted
+                    ? uiStrings.questLog.primaryInProgress
+                    : uiStrings.questLog.primaryPending}
               </span>
               <span className='text-[0.66rem] text-[#e2e8f0]'>
                 {objective.completedQuests}/{objective.totalQuests}
@@ -249,6 +251,11 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
     return (
       <div className='flex flex-col gap-3.5 overflow-y-auto pr-1'>
         <section className='flex flex-col gap-2.5'>
+          {renderSectionLabel(uiStrings.questLog.availableSideQuests)}
+          {renderAvailableSideQuests()}
+        </section>
+
+        <section className='flex flex-col gap-2.5'>
           {renderSectionLabel(uiStrings.questLog.completed)}
           {renderCompletedQuests()}
         </section>
@@ -258,8 +265,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
 
   const shouldScroll =
     briefing.primaryObjectives.length +
-      briefing.activeSideQuests.length +
-      briefing.availableSideQuests.length >
+      briefing.activeSideQuests.length >
     4;
 
   return (
@@ -277,11 +283,6 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
       <section className='flex flex-col gap-2.5'>
         {renderSectionLabel(uiStrings.questLog.activeSideQuests)}
         {renderActiveSideQuests()}
-      </section>
-
-      <section className='flex flex-col gap-2.5'>
-        {renderSectionLabel(uiStrings.questLog.availableSideQuests)}
-        {renderAvailableSideQuests()}
       </section>
     </div>
   );

@@ -18,7 +18,7 @@ export const level0EnglishContent: Level0LocaleContent = {
       nodes: [
         {
           id: 'intro',
-          text: 'Lira taps ash into a ration tin shaped like a coyote. "Need gear, gossip, or a miracle? Silver buys silence. Favours keep you breathing past curfew."',
+          text: 'Lira taps ash into a ration tin shaped like a coyote. "Need gear, gossip, or a miracle? Silver buys silence. Favours keep you breathing past curfew. Tonight I need one cache back."',
           options: [
             {
               text: 'What’s humming through the market tonight?',
@@ -38,7 +38,7 @@ export const level0EnglishContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Any shipments vanish like the coyotes Harbour Control promised us?',
+              text: 'Walk me through the cache job.',
               nextNodeId: 'quest',
               questEffect: {
                 questId: 'quest_market_cache',
@@ -71,7 +71,7 @@ export const level0EnglishContent: Level0LocaleContent = {
         },
         {
           id: 'quest',
-          text: '"CorpSec bagged my street cache and called it evidence. Slip into Downtown, liberate the crates, and we’ll toast with reclaimed rainwater."',
+          text: '"CorpSec bagged my street cache and called it evidence. Wait for curfew, cut across the north-west camera lane, lift the keycard from the evidence lockers, then duck into the Transit Node safehouse if your nerves start singing. Bring it back to me before George starts composing your obituary."',
           options: [
             {
               text: 'Consider their evidence misplaced.',
@@ -81,7 +81,7 @@ export const level0EnglishContent: Level0LocaleContent = {
         },
         {
           id: 'quest_complete',
-          text: '"Knew you’d outrun their choirboys. I’m rerouting stock through alleys where the neon farms still glow."',
+          text: '"Knew you’d outrun their choirboys. The cache is moving again, the street gets fed, and CorpSec gets to inventory one very empty locker."',
           options: [
             {
               text: 'Stay unscannable, Lira.',
@@ -650,12 +650,12 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
     {
       name: 'Archivist Naila',
-      position: { x: 28, y: 14 },
+      position: { x: 43, y: 44 },
       health: 14,
       maxHealth: 14,
       routine: [
-        { position: { x: 28, y: 14 }, timeOfDay: 'day', duration: 300 },
-        { position: { x: 32, y: 24 }, timeOfDay: 'evening', duration: 300 },
+        { position: { x: 43, y: 44 }, timeOfDay: 'day', duration: 300 },
+        { position: { x: 48, y: 44 }, timeOfDay: 'evening', duration: 300 },
       ],
       dialogueId: 'npc_archivist_naila',
       isInteractive: true,
@@ -665,13 +665,13 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
     {
       name: 'Courier Brant',
-      position: { x: 14, y: 24 },
+      position: { x: 79, y: 68 },
       health: 16,
       maxHealth: 16,
       routine: [
-        { position: { x: 14, y: 24 }, timeOfDay: 'day', duration: 180 },
-        { position: { x: 10, y: 16 }, timeOfDay: 'evening', duration: 180 },
-        { position: { x: 34, y: 16 }, timeOfDay: 'night', duration: 180 },
+        { position: { x: 79, y: 68 }, timeOfDay: 'day', duration: 180 },
+        { position: { x: 73, y: 68 }, timeOfDay: 'evening', duration: 180 },
+        { position: { x: 85, y: 68 }, timeOfDay: 'night', duration: 180 },
       ],
       dialogueId: 'npc_courier_brant',
       isInteractive: true,
@@ -729,13 +729,13 @@ export const level0EnglishContent: Level0LocaleContent = {
     },
     {
       name: 'Medic Yara',
-      position: { x: 18, y: 32 },
+      position: { x: 76, y: 69 },
       health: 15,
       maxHealth: 15,
       routine: [
-        { position: { x: 18, y: 32 }, timeOfDay: 'day', duration: 240 },
-        { position: { x: 16, y: 28 }, timeOfDay: 'evening', duration: 240 },
-        { position: { x: 20, y: 34 }, timeOfDay: 'night', duration: 240 },
+        { position: { x: 76, y: 69 }, timeOfDay: 'day', duration: 240 },
+        { position: { x: 79, y: 69 }, timeOfDay: 'evening', duration: 240 },
+        { position: { x: 90, y: 69 }, timeOfDay: 'night', duration: 240 },
       ],
       dialogueId: 'npc_medic_yara',
       isInteractive: true,
@@ -768,6 +768,15 @@ export const level0EnglishContent: Level0LocaleContent = {
     getItemPrototype('misc_transit_tokens'),
     getItemPrototype('misc_abandoned_medkit'),
     getItemPrototype('misc_abandoned_medkit'),
+  ],
+  itemPlacements: [
+    { x: 43, y: 21 },
+    { x: 51, y: 44 },
+    { x: 67, y: 68 },
+    { x: 73, y: 68 },
+    { x: 84, y: 68 },
+    { x: 90, y: 69 },
+    { x: 61, y: 69 },
   ],
   buildingDefinitions: [
     {
@@ -946,14 +955,10 @@ export const level0EnglishContent: Level0LocaleContent = {
   world: {
     areaName: 'Slums Command Grid',
     objectives: [
-      'Recover Lira\'s contraband cache from the downtown evidence lockers.',
-      'Decrypt the surveillance manifests Archivist Naila smuggled out.',
-      'Re-establish Brant\'s courier drop routes across the grid before curfew.',
-      'Black out the CorpSec camera grid guarding the barricades.',
-      'Map patrol drone loops and assign safe counter-routes.',
-      'Restock Medic Yara\'s rebel clinic with field medkits.',
-      'Ambush the transit patrol escorting the sweep captain.',
-      'Bait a CorpSec patrol or camera, watch the Suspicion Inspector spike, then break line-of-sight until the heat cools.',
+      'Start with Lira in daylight, accept the cache job, and recover the Corporate Keycard under curfew.',
+      'Follow the next-contact clue to Archivist Naila, recover the encrypted datapad, and return it to her.',
+      'Follow the final clue to Courier Brant, collect the transit tokens, and report back to him.',
+      'Break pressure at the Transit Node safehouse whenever paranoia spikes.',
     ],
     initialEnemyName: 'CorpSec Sweep Captain',
     zoneId: 'downtown_checkpoint',

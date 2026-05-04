@@ -3,10 +3,10 @@ import { QuestLocaleMap } from '../../../game/narrative/structureTypes';
 export const questLocalesEn: QuestLocaleMap = {
   'quests.market_cache': {
     name: 'Market Cache Recovery',
-    description: 'Lira wants her seized smuggler cache liberated from a Downtown patrol route.',
+    description: 'Lira wants one seized cache recovered through the north-west Downtown curfew route.',
     objectiveDescriptions: {
-      'recover-keycard': 'Secure the Corporate Keycard hidden in Downtown.',
-      'return-to-lira': 'Return to Lira in the Slums.',
+      'recover-keycard': 'During curfew, secure the Corporate Keycard from the north-west Downtown evidence lockers.',
+      'return-to-lira': 'Return to Lira after the keycard is secure.',
     },
   },
   'quests.datapad_truth': {

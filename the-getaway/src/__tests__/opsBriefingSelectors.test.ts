@@ -7,10 +7,12 @@ describe('selectOpsBriefingModel', () => {
     store.dispatch(resetGame());
   });
 
-  it('groups objectives and quests into primary, active side, available side, and completed buckets', () => {
+  it('groups the guided primary beat plus side quest buckets at boot', () => {
     const baseline = selectOpsBriefingModel(store.getState());
 
-    expect(baseline.primaryObjectives).toHaveLength(0);
+    expect(baseline.primaryObjectives).toHaveLength(1);
+    expect(baseline.primaryObjectives[0].questIds).toContain('quest_market_cache');
+    expect(baseline.primaryObjectives[0].isStarted).toBe(false);
     expect(baseline.activeSideQuests).toHaveLength(0);
     expect(
       baseline.availableSideQuests.some((quest) => quest.id === 'quest_equipment_sabotage')

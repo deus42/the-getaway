@@ -46,6 +46,7 @@ export interface Level0LocaleContent {
   dialogues: Dialogue[];
   npcBlueprints: Array<Omit<NPC, 'id'>>;
   itemBlueprints: Array<Omit<Item, 'id'>>;
+  itemPlacements?: Position[];
   buildingDefinitions: LevelBuildingDefinition[];
   coverSpots: {
     slums: CoverSpotDefinition[];

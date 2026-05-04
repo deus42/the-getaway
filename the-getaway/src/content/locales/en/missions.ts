@@ -3,7 +3,7 @@ import { MissionLocaleMap } from '../../../game/narrative/structureTypes';
 export const missionLocalesEn: MissionLocaleMap = {
   'missions.level0.recover_cache': {
     label: 'Recover Lira’s Confiscated Cache',
-    summary: 'Slip through Downtown patrols, reclaim the seized crates, and keep Lira’s supply lines alive.',
+    summary: 'Take Lira’s daylight briefing, cross the curfew camera lane, recover the keycard, break pressure at the safehouse, and return for closure.',
   },
   'missions.level0.decrypt_manifests': {
     label: 'Decrypt the Patrol Manifests',

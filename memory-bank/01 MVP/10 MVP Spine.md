@@ -18,6 +18,12 @@ Core loop:
 - PARANOIA: the main pressure resource. It rises from surveillance/curfew exposure and falls via safety/daylight/rest.
 - COMBAT: exists mainly as escalation/fail-state of detection (and as an option when the player chooses violence). AutoBattle keeps it low-friction.
 
+Current Level 0 playable-slice contract:
+- Lira cache is the MVP Level 0 primary run: daylight briefing with Lira, curfew infiltration through the north-west Downtown camera lane, keycard/cache recovery, pressure relief at the Transit Node safehouse, return-to-Lira closure, then Mission Accomplished recap.
+- Archivist Naila, Courier Brant, and the other Level 0 system exercises remain optional operations during the slice; they should not block Level 0 mission completion.
+- The player-facing objective surface should show the active Lira run first and avoid presenting the full systems backlog as required work.
+- A hard-fail run currently means the player reaches 0 health; the fail recap reports run status and pressure, then restarts into a clean Level 0 character-creation path.
+
 Non-goals for MVP (explicitly Post-MVP / optional):
 - Vehicles (combat + exploration)
 - Survival micromanagement (hunger/thirst/fatigue)

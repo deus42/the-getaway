@@ -4,6 +4,9 @@ import {
   registerCharacterSpriteAnimations,
 } from '../visual/entities/characterSpriteAssets';
 import {
+  GET155_PREVIEW_ATLAS_IMAGE_PATH,
+  GET155_PREVIEW_ATLAS_JSON_PATH,
+  GET155_PREVIEW_ATLAS_KEY,
   LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
   LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH,
   LEVEL0_ENVIRONMENT_ATLAS_KEY,
@@ -26,6 +29,11 @@ export class BootScene extends Phaser.Scene {
       LEVEL0_ENVIRONMENT_ATLAS_KEY,
       LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
       LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH
+    );
+    this.load.atlas(
+      GET155_PREVIEW_ATLAS_KEY,
+      GET155_PREVIEW_ATLAS_IMAGE_PATH,
+      GET155_PREVIEW_ATLAS_JSON_PATH
     );
     this.load.image('lamp_slim_a_n', 'normals/lamp_slim_a_n.png');
     this.load.image(LEVEL0_ENVIRONMENT_NORMAL_KEY, LEVEL0_ENVIRONMENT_NORMAL_PATH);

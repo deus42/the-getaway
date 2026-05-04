@@ -1,9 +1,15 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { getNarrativeLocaleBundle } from '../../content/locales';
 import { QUEST_DEFINITION_BY_ID } from '../../content/quests';
+import type { ResolvedMissionObjective } from '../../game/interfaces/missions';
 import { Quest, QuestObjective, QuestReward } from '../../game/interfaces/types';
+import { getLevel0GuidedStep } from '../../game/quests/level0GuidedSlice';
 import { RootState } from '..';
 import { selectMissionProgress } from './missionSelectors';
+
+export interface OpsBriefingPrimaryObjectiveModel extends ResolvedMissionObjective {
+  isStarted: boolean;
+}
 
 export interface OpsBriefingQuestModel {
   id: string;
@@ -19,7 +25,7 @@ export interface OpsBriefingQuestModel {
 }
 
 export interface OpsBriefingModel {
-  primaryObjectives: NonNullable<ReturnType<typeof selectMissionProgress>>['primary'];
+  primaryObjectives: OpsBriefingPrimaryObjectiveModel[];
   activeSideQuests: OpsBriefingQuestModel[];
   availableSideQuests: OpsBriefingQuestModel[];
   completedQuests: OpsBriefingQuestModel[];
@@ -27,6 +33,17 @@ export interface OpsBriefingModel {
 
 const selectQuestState = (state: RootState) => state.quests.quests;
 const selectLocale = (state: RootState) => state.settings.locale;
+
+const hasStartedQuest = (objective: ResolvedMissionObjective, quests: Quest[]): boolean =>
+  objective.questIds.some((questId) => {
+    const quest = quests.find((entry) => entry.id === questId);
+    return Boolean(
+      quest &&
+        (quest.isActive ||
+          quest.isCompleted ||
+          quest.objectives.some((questObjective) => questObjective.isCompleted))
+    );
+  });
 
 const toQuestModel = (
   quest: Quest,
@@ -59,7 +76,6 @@ export const selectOpsBriefingModel = createSelector(
   [selectMissionProgress, selectQuestState, selectLocale],
   (missionProgress, quests, locale): OpsBriefingModel => {
     const bundle = getNarrativeLocaleBundle(locale);
-    const questsById = new Map(quests.map((quest) => [quest.id, quest]));
     const sideQuestModels = quests
       .map((quest) => toQuestModel(quest, bundle))
       .filter((quest) => quest.kind === 'side');
@@ -76,16 +92,21 @@ export const selectOpsBriefingModel = createSelector(
       .map((quest) => toQuestModel(quest, bundle))
       .filter((quest) => quest.isCompleted)
       .sort((a, b) => a.name.localeCompare(b.name));
-
-    const startedPrimaryObjectives = (missionProgress?.primary ?? []).filter((objective) => {
-      return objective.questIds.some((questId) => {
-        const quest = questsById.get(questId);
-        return Boolean(quest && (quest.isActive || quest.isCompleted));
-      });
-    });
+    const guidedStep = getLevel0GuidedStep(quests);
+    const primaryObjectives = (missionProgress?.primary ?? []).map((objective) => ({
+      ...objective,
+      isStarted: hasStartedQuest(objective, quests),
+    }));
+    const visiblePrimaryObjectives = guidedStep.stage === 'complete'
+      ? primaryObjectives
+      : primaryObjectives.filter((objective) =>
+          objective.isComplete ||
+          objective.isStarted ||
+          Boolean(guidedStep.questId && objective.questIds.includes(guidedStep.questId))
+        );
 
     return {
-      primaryObjectives: startedPrimaryObjectives,
+      primaryObjectives: visiblePrimaryObjectives,
       activeSideQuests,
       availableSideQuests,
       completedQuests,

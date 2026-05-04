@@ -21,6 +21,7 @@ Level Progression & Objective Hierarchy
 - The campaign advances through discrete levels (Level 0: Slums, Level 1: Downtown, Level 2: Industrial Wasteland, and future tiers). Each level ships with a curated list of primary objectives that embody the main mission beats for that space.
 - Every primary objective is composed of one or more quests. Quests define the atomic interactions (dialogue, combat encounters, searches) that flip the underlying state flags. Objectives are therefore collections that resolve to complete when all child quests reach a terminal state (complete or failed when permitted).
 - Objectives include structured metadata: display label, summary copy, gating requirements, and an ordered quest ID list. This enables the HUD panel and quest log to render consistent sequencing and partial progress regardless of how the player reached the current level.
+- For the Level 0 MVP playable slice, the primary chain is now guided one-by-one: Lira cache → Naila datapad → Brant courier tokens. The map, George, and over-NPC clues should expose only the current beat so Level 0 plays like a game slice instead of a parallel systems playground.
 
 ### Rule: completion_feedback
 
@@ -30,6 +31,7 @@ Objective Completion & Level Advancement
 - When all primary objectives for the current level are complete, the UI announces "Mission Accomplished" and hands control to the level advancement funnel. Progression offers a continue prompt, then loads post-mission dialogue, rewards, or the world transition for the next level. Side content remains available until the player confirms the transition.
 - Objective state changes emit Redux events so auxiliary systems (assistant hints, minimap focus, George overlay) can react immediately without polling bespoke quest state.
 - George assistant consumes the same selectors that drive the panel, promoting the top-priority active objective as its default guidance line and celebrating once the level transition modal confirms the mission wrap.
+- Mission Accomplished for Level 0 currently means all three guided primary quests are complete: the Lira keycard/cache objective resolves and closes with Lira, the datapad is recovered and returned to Naila, and the transit-token trail is collected and closed with Brant.
 
 ### Rule: side_content
 
@@ -38,18 +40,19 @@ Side Quests & Optional Tasks
 - Side quests coexist alongside primary objectives but are tagged as optional. They inherit the same quest atom structure yet render in a dedicated subsection of the HUD panel so they never block level completion.
 - Completing or abandoning side quests has no effect on the Mission Accomplished gate; however, they can grant bonuses, reputation shifts, or alternate dialogue in the next level's intro sequences to reward thorough players.
 - Optional quest metadata includes recommended level and originating faction so the assistant and logbook can surface the most relevant detours without overwhelming the player during critical objectives.
+- Optional Level 0 quests can still auto-promote from available to active when the player makes valid progress, but George and primary progression must keep the guided Lira → Naila → Brant chain dominant until it closes.
 
 ### Rule: player_surface
 
 Canonical Player Objective Surface (Level 0 MVP)
 
 - The player-facing objective UI is the **Quests panel** (`OpsBriefingsPanel`) and is structured as:
-  - **Primary Progress** (mission-level completion state),
+  - **Primary Progress** (mission-level completion state; in the Level 0 guided chain it shows completed/started beats plus the current next beat, while pre-start objectives render as a briefing prompt, not active progress),
   - **Active Side Quests** (started + not completed),
-  - **Available Side Quests** (visible from start, not yet accepted),
+  - **Available Side Quests** (parked behind the expanded "Show All Quests" overlay, not the default run HUD),
   - **Completed Quests** (history overlay).
 - The former dedicated Level HUD card is not part of the player runtime path for this pass; objective debugging is provided in test mode via the Debug Panel Mission Snapshot.
-- Available side quests surface giver attribution (`Talk to <NPC>`) and mission summary copy so players can decide what to pull next without opening dialogue first.
+- Available side quests surface giver attribution (`Talk to <NPC>`) and mission summary copy in the expanded overlay so players can deliberately pull optional content without competing with the guided Level 0 chain.
 
 ### Rule: side_progression_plumbing
 

@@ -267,6 +267,9 @@ const isSideQuest = (quest: Quest): boolean =>
 const isQuestProgressTrackable = (quest: Quest): boolean =>
   !quest.isCompleted && (quest.isActive || isSideQuest(quest));
 
+const isLiraCacheNightObjective = (quest: Quest, objective: QuestObjective): boolean =>
+  quest.id === 'quest_market_cache' && objective.id === 'recover-keycard';
+
 const distanceBetween = (a: Position, b: Position): number => {
   const dx = a.x - b.x;
   const dy = a.y - b.y;
@@ -730,6 +733,10 @@ const GameController: React.FC = () => {
             return;
           }
 
+          if (isLiraCacheNightObjective(quest, objective) && !curfewActive) {
+            return;
+          }
+
           const inventoryCount = collectObjectiveInventoryCount(objective, inventoryItems);
           if (inventoryCount <= 0) {
             return;
@@ -753,7 +760,7 @@ const GameController: React.FC = () => {
         });
       });
     },
-    [dispatch, ensureSideQuestProgressTracking]
+    [curfewActive, dispatch, ensureSideQuestProgressTracking]
   );
 
   useEffect(() => {
@@ -1998,7 +2005,8 @@ const GameController: React.FC = () => {
         curfewActive &&
         tile.type === TileType.DOOR &&
         targetArea &&
-        !targetArea.isInterior
+        !targetArea.isInterior &&
+        !currentMapArea.isInterior
       ) {
         dispatch(addLogMessage(logStrings.checkpointSealed));
         setQueuedPath([]);
@@ -3240,7 +3248,8 @@ const GameController: React.FC = () => {
             curfewActive &&
             tile.type === TileType.DOOR &&
             targetArea &&
-            !targetArea.isInterior
+            !targetArea.isInterior &&
+            !currentMapArea.isInterior
           ) {
             dispatch(addLogMessage(logStrings.checkpointSealed));
             return;

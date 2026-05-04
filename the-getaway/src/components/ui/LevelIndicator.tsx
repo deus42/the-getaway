@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getUIStrings } from '../../content/ui';
 import {
   selectMissionPendingAdvance,
-  selectMissionProgress,
+  selectStartedMissionProgress,
 } from '../../store/selectors/missionSelectors';
 import { RootState } from '../../store';
 import { showMissionAdvancePrompt } from '../../store/missionSlice';
@@ -27,7 +27,7 @@ const LevelIndicator: React.FC<LevelIndicatorProps> = ({
 }) => {
   const dispatch = useDispatch();
   const locale = useSelector((state: RootState) => state.settings.locale);
-  const missionProgress = useSelector(selectMissionProgress);
+  const missionProgress = useSelector(selectStartedMissionProgress);
   const missionAdvancePending = useSelector(selectMissionPendingAdvance);
   const currentArea = useSelector((state: RootState) => state.world.currentMapArea);
   const uiStrings = getUIStrings(locale);

@@ -3,7 +3,7 @@ import { MissionLocaleMap } from '../../../game/narrative/structureTypes';
 export const missionLocalesUk: MissionLocaleMap = {
   'missions.level0.recover_cache': {
     label: 'Повернути конфіскований сховок Ліри',
-    summary: 'Прослизніть повз патрулі центру, поверніть вилучені ящики та підтримайте лінії постачання Ліри.',
+    summary: 'Пройдіть денний брифінг Ліри, перетніть камерну лінію під час комендантської, заберіть ключ-картку, скиньте тиск у безпечній кімнаті й поверніться до Ліри.',
   },
   'missions.level0.decrypt_manifests': {
     label: 'Розшифрувати патрульні маніфести',

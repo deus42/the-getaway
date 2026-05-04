@@ -8,9 +8,7 @@ import type {
   CameraRuntimeState,
   Quest,
 } from '../interfaces/types';
-import type { Locale } from '../../content/locales';
-import { getNarrativeLocaleBundle } from '../../content/locales';
-import { QUEST_DEFINITION_BY_ID } from '../../content/quests';
+import { getLevel0GuidedStep, isLevel0GuidedItem } from '../quests/level0GuidedSlice';
 import type { MainScene } from '../scenes/MainScene';
 import {
   MiniMapRenderState,
@@ -52,12 +50,6 @@ const createObjectiveSignature = (objectives: MiniMapObjectiveDetail[]): string 
         `${objective.id}:${objective.x}:${objective.y}:${objective.status}:${objective.markerKind ?? 'item'}`
     )
     .join('|');
-
-const npcResourceKeyToDialogueId = (resourceKey: string): string =>
-  `npc_${resourceKey.split('.').slice(1).join('_')}`;
-
-const hasIncompleteTalkObjective = (quest: Quest): boolean =>
-  quest.objectives.some((objective) => objective.type === 'talk' && !objective.isCompleted);
 
 const getDevicePixelRatio = (): number => {
   if (typeof window === 'undefined') {
@@ -226,7 +218,6 @@ export class MiniMapController {
     const npcs = rootState.world.currentMapArea.entities.npcs;
     const items = rootState.world.currentMapArea.entities.items;
     const quests = rootState.quests.quests;
-    const locale = rootState.settings.locale;
     const surveillanceZone = rootState.surveillance.zones[area.id];
 
     const entitySignature = createEntitySignature(enemies, npcs, player.id, player.position.x, player.position.y);
@@ -256,7 +247,7 @@ export class MiniMapController {
     const normalizedViewport = normalizeMiniMapViewport(baseViewport, area);
     this.viewport = normalizedViewport;
 
-    const objectiveMarkers = this.buildObjectives(items, npcs, quests, locale);
+    const objectiveMarkers = this.buildObjectives(items, npcs, quests);
     const objectivesSignature = createObjectiveSignature(objectiveMarkers);
 
     const pathSignature = path && path.length
@@ -373,9 +364,9 @@ export class MiniMapController {
   private buildObjectives(
     items: Item[],
     npcs: NPC[],
-    quests: Quest[],
-    locale: Locale
+    quests: Quest[]
   ): MiniMapObjectiveDetail[] {
+    const guidedStep = getLevel0GuidedStep(quests);
     const itemObjectives = items
       .filter((item): item is Item & { position: Position } => Boolean(item.position))
       .map((item) => ({
@@ -384,59 +375,25 @@ export class MiniMapController {
         x: item.position!.x,
         y: item.position!.y,
         status: 'active' as const,
-        markerKind: 'item' as const,
+        markerKind: isLevel0GuidedItem(item, guidedStep) ? 'guideItem' as const : 'item' as const,
       }));
 
-    const localeBundle = getNarrativeLocaleBundle(locale);
     const contactObjectives = new Map<string, MiniMapObjectiveDetail>();
+    const guidedContact = guidedStep.contactDialogueId
+      ? npcs.find((npc) => npc.dialogueId === guidedStep.contactDialogueId)
+      : undefined;
 
-    quests.forEach((quest) => {
-      if (quest.isCompleted) {
-        return;
-      }
-
-      const definition = QUEST_DEFINITION_BY_ID[quest.id];
-      if (!definition || definition.kind !== 'side') {
-        return;
-      }
-
-      const shouldHighlightContact =
-        !quest.isActive || hasIncompleteTalkObjective(quest);
-      if (!shouldHighlightContact) {
-        return;
-      }
-
-      const giverKey = definition.relatedNpcKeys?.[0];
-      if (!giverKey) {
-        return;
-      }
-
-      const expectedDialogueId = npcResourceKeyToDialogueId(giverKey);
-      const localizedName = localeBundle.npcs[giverKey]?.name ?? null;
-      const matchingNpc = npcs.find(
-        (npc) =>
-          npc.dialogueId === expectedDialogueId ||
-          (localizedName ? npc.name === localizedName : false)
-      );
-
-      if (!matchingNpc) {
-        return;
-      }
-
-      const markerId = `quest-contact:${matchingNpc.id}`;
-      if (contactObjectives.has(markerId)) {
-        return;
-      }
-
+    if (guidedContact) {
+      const markerId = `quest-contact:${guidedContact.id}`;
       contactObjectives.set(markerId, {
         id: markerId,
-        label: matchingNpc.name,
-        x: matchingNpc.position.x,
-        y: matchingNpc.position.y,
+        label: guidedContact.name,
+        x: guidedContact.position.x,
+        y: guidedContact.position.y,
         status: 'active',
-        markerKind: 'questContact',
+        markerKind: 'guideContact',
       });
-    });
+    }
 
     return [...itemObjectives, ...contactObjectives.values()];
   }

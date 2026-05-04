@@ -28,6 +28,7 @@ interface Level0Content {
   quests: Quest[];
   npcBlueprints: Array<Omit<NPC, 'id'>>;
   itemBlueprints: Array<Omit<Item, 'id'>>;
+  itemPlacements: Position[];
   buildingDefinitions: LevelBuildingDefinition[];
   coverSpots: {
     slums: CoverSpotDefinition[];
@@ -232,6 +233,7 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
   const quests = buildQuestsForLevel(locale, LEVEL_RESOURCE_KEY);
   const npcBlueprints = source.npcBlueprints.map(cloneNPCBlueprint);
   const itemBlueprints = source.itemBlueprints.map(cloneItemBlueprint);
+  const itemPlacements = (source.itemPlacements ?? []).map(clonePosition);
   const buildingDefinitions = source.buildingDefinitions.map((definition) => {
     const widenedRoadLayout =
       definition.id === ESB_BUILDING_ID
@@ -258,6 +260,7 @@ export const getLevel0Content = (locale: Locale): Level0Content => {
     quests,
     npcBlueprints,
     itemBlueprints,
+    itemPlacements,
     buildingDefinitions,
     coverSpots: {
       slums: slumsCover,

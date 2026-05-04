@@ -94,7 +94,7 @@ export interface MiniMapObjectiveDetail {
   x: number;
   y: number;
   status: 'active' | 'completed';
-  markerKind?: 'item' | 'questContact';
+  markerKind?: 'item' | 'questContact' | 'guideItem' | 'guideContact';
   distance?: number;
 }
 

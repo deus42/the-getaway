@@ -33,6 +33,7 @@ import {
   resolveDialogueCheckState,
   resolveDialogueFactionState,
 } from '../../game/quests/dialogueSystem';
+import { isLevel0GuidedQuestStartAvailable } from '../../game/quests/level0GuidedSlice';
 import { resolveRoleDialogueTemplate } from '../../game/narrative/dialogueTone/templateResolver';
 import { DialogueRoleId, RoleDialogueContext } from '../../game/narrative/dialogueTone/roleTemplateTypes';
 import './DialogueOverlay.css';
@@ -424,7 +425,11 @@ const DialogueOverlay: React.FC = () => {
 
     switch (option.questEffect.effect) {
       case 'start':
-        return !quest.isActive && !quest.isCompleted;
+        return (
+          !quest.isActive &&
+          !quest.isCompleted &&
+          isLevel0GuidedQuestStartAvailable(quest.id, quests)
+        );
       case 'complete':
         return quest.isActive && !quest.isCompleted && !hasPendingNonTalkObjectives(quest);
       case 'update':

@@ -142,7 +142,7 @@ export class StateSyncModule implements SceneModule<MainScene> {
     return this.runtimeState.curfewActive;
   }
 
-  onStateChange(_previousState: RootState, nextState: RootState): void {
+  onStateChange(previousState: RootState, nextState: RootState): void {
     const currentMapArea = this.ports.getCurrentMapArea();
     if (!this.ports.sys.isActive() || !currentMapArea) {
       return;
@@ -151,6 +151,7 @@ export class StateSyncModule implements SceneModule<MainScene> {
     const playerState = nextState.player.data;
     const worldState = nextState.world;
     const currentEnemies = worldState.currentMapArea.entities.enemies;
+    const playerIdentityChanged = previousState.player.data.id !== playerState.id;
 
     const previousCombatState = this.runtimeState.inCombat;
     this.runtimeState.inCombat = worldState.inCombat;
@@ -175,8 +176,9 @@ export class StateSyncModule implements SceneModule<MainScene> {
     const nextMapArea = worldState.currentMapArea;
     const previousMapId = this.runtimeState.lastMapAreaId ?? currentMapArea.id;
     const nextMapId = nextMapArea.id;
+    const mapTransitionPending = previousMapId !== nextMapId;
 
-    this.runtimeState.isMapTransitionPending = previousMapId !== nextMapId;
+    this.runtimeState.isMapTransitionPending = mapTransitionPending;
 
     if (this.runtimeState.isMapTransitionPending) {
       this.ports.resetCameraRuntimeStateForMapTransition?.();
@@ -203,6 +205,12 @@ export class StateSyncModule implements SceneModule<MainScene> {
     this.runtimeState.curfewActive = worldState.curfewActive;
 
     this.ports.updatePlayerPosition(playerState.position);
+    if (playerIdentityChanged && !mapTransitionPending) {
+      this.ports.resetCameraRuntimeStateForMapTransition?.();
+      this.ports.setupCameraAndMap();
+      this.ports.clearPathPreview();
+      this.ports.enablePlayerCameraFollow();
+    }
     this.ports.updatePlayerVitalsIndicator(playerState.position, playerState.health, playerState.maxHealth);
     this.ports.updateEnemies(currentEnemies);
     this.ports.updateNpcs(nextMapArea.entities.npcs);

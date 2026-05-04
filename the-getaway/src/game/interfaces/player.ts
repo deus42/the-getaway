@@ -63,7 +63,7 @@ export const createDefaultPersonalityProfile = (): PersonalityProfile => ({
 export const DEFAULT_PLAYER: Player = {
   id: uuidv4(),
   name: 'Player',
-  position: { x: 3, y: 1 },
+  position: { x: 24, y: 20 },
   facing: 'south',
   coverOrientation: null,
   suppression: 0,

@@ -1,14 +1,22 @@
 import Phaser from 'phaser';
 import { Enemy, NPC, Player, Position } from '../../../interfaces/types';
-import { PLAYER_SCREEN_POSITION_EVENT, PlayerScreenPositionDetail } from '../../../events';
+import {
+  PLAYER_SCREEN_POSITION_EVENT,
+  TILE_CLICK_EVENT,
+  type PlayerScreenPositionDetail,
+  type TileClickDetail,
+} from '../../../events';
 import { computeDepth, DepthBias } from '../../../utils/depth';
 import type { MainScene } from '../../MainScene';
 import type {
   EntityRenderModulePorts,
   EntityRenderRuntimeState,
+  NpcSpriteRecord,
 } from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
 import { store } from '../../../../store';
+import { getUIStrings } from '../../../../content/ui';
+import { getLevel0GuidedStep, isLevel0GuidedContact } from '../../../quests/level0GuidedSlice';
 import type { CharacterSpriteDirection } from '../../../../content/characters/spriteManifest';
 import { resolvePlayerSpriteSetId } from '../../../../content/characters/spriteManifest';
 import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
@@ -424,6 +432,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       if (!existingSpriteData) {
         const descriptor = this.buildNpcDescriptor(npc, null, false, activeDialogueId === npc.dialogueId);
         const token = this.ports.createCharacterToken(descriptor, npc.position.x, npc.position.y);
+        this.configureNpcInteraction(token.container, npc, metrics);
 
         const nameLabel = this.createCharacterNameLabel(npc.name ?? 'Civilian', npc.isInteractive ? 0x22d3ee : 0x94a3b8);
         this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
@@ -437,6 +446,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
 
         this.runtimeState.npcSprites.set(npc.id, npcData);
         this.updateNpcCombatIndicator(npcData, pixelPos, metrics, npc);
+        this.updateNpcGuideClue(npcData, pixelPos, metrics, npc);
         continue;
       }
 
@@ -454,10 +464,12 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       );
 
       this.ports.positionCharacterToken(existingSpriteData.token, descriptor, npc.position.x, npc.position.y);
+      this.configureNpcInteraction(existingSpriteData.token.container, npc, metrics);
       existingSpriteData.markedForRemoval = false;
       existingSpriteData.lastGridPosition = { ...npc.position };
       this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
       this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
+      this.updateNpcGuideClue(existingSpriteData, pixelPos, metrics, npc);
     }
 
     this.runtimeState.npcSprites.forEach((spriteData, id) => {
@@ -466,6 +478,9 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         spriteData.nameLabel.destroy();
         if (spriteData.indicator) {
           spriteData.indicator.destroy();
+        }
+        if (spriteData.clueLabel) {
+          spriteData.clueLabel.destroy();
         }
         this.runtimeState.npcSprites.delete(id);
       }
@@ -579,6 +594,101 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       window.__getawayPlayerScreenPosition = detail;
       window.dispatchEvent(new CustomEvent(PLAYER_SCREEN_POSITION_EVENT, { detail }));
     }
+  }
+
+  private configureNpcInteraction(
+    container: Phaser.GameObjects.Container,
+    npc: NPC,
+    metrics: { tileWidth: number; tileHeight: number }
+  ): void {
+    container.setData('npcGrid', { ...npc.position });
+
+    if (!npc.isInteractive) {
+      if (container.input) {
+        container.disableInteractive();
+      }
+      return;
+    }
+
+    const hitWidth = Math.max(36, metrics.tileWidth * 0.48);
+    const hitHeight = Math.max(52, metrics.tileHeight * 1.45);
+    container.setSize(hitWidth, hitHeight);
+    container.setInteractive(
+      new Phaser.Geom.Rectangle(-hitWidth / 2, -hitHeight, hitWidth, hitHeight),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    if (container.getData('npcHoverConfigured') === true) {
+      return;
+    }
+
+    container.setData('npcHoverConfigured', true);
+    container.on(Phaser.Input.Events.POINTER_OVER, () => {
+      this.ports.game.canvas.style.cursor = 'pointer';
+    });
+    container.on(Phaser.Input.Events.POINTER_OUT, () => {
+      this.ports.game.canvas.style.cursor = '';
+    });
+    container.on(Phaser.Input.Events.POINTER_UP, () => {
+      const grid = container.getData('npcGrid') as Position | undefined;
+      const areaId = store.getState().world.currentMapArea?.id;
+      if (!grid || !areaId) {
+        return;
+      }
+      const detail: TileClickDetail = {
+        areaId,
+        position: { x: grid.x, y: grid.y },
+      };
+      window.dispatchEvent(new CustomEvent(TILE_CLICK_EVENT, { detail }));
+    });
+  }
+
+  private updateNpcGuideClue(
+    data: NpcSpriteRecord,
+    pixelPos: { x: number; y: number },
+    metrics: { tileWidth: number; tileHeight: number },
+    npc: NPC
+  ): void {
+    const state = store.getState();
+    const guidedStep = getLevel0GuidedStep(state.quests.quests);
+    const shouldShow = npc.isInteractive && isLevel0GuidedContact(npc, guidedStep);
+
+    if (!shouldShow) {
+      if (data.clueLabel) {
+        data.clueLabel.destroy();
+        data.clueLabel = undefined;
+      }
+      return;
+    }
+
+    const guideStrings = getUIStrings(state.settings.locale).level0Guide;
+    const labelText = guidedStep.stage === 'lira-start'
+      ? guideStrings.startHere
+      : guidedStep.stage.endsWith('-return')
+        ? guideStrings.turnIn
+        : guideStrings.nextContact;
+
+    if (!data.clueLabel) {
+      data.clueLabel = this.ports.add.text(0, 0, labelText, {
+        fontFamily: 'Orbitron, "DM Sans", sans-serif',
+        fontSize: '11px',
+        fontStyle: '800',
+        color: '#ecfeff',
+        align: 'center',
+      });
+      data.clueLabel.setOrigin(0.5, 1);
+      data.clueLabel.setStroke('#0891b2', 2);
+      data.clueLabel.setShadow(0, 0, '#22d3ee', 10, true, true);
+      data.clueLabel.setBackgroundColor('rgba(8, 47, 73, 0.72)');
+      data.clueLabel.setPadding(5, 2, 5, 2);
+    } else if (data.clueLabel.text !== labelText) {
+      data.clueLabel.setText(labelText);
+    }
+
+    data.clueLabel.setVisible(true);
+    data.clueLabel.setAlpha(0.96);
+    data.clueLabel.setPosition(pixelPos.x, pixelPos.y - metrics.tileHeight * 1.72);
+    this.ports.syncDepth(data.clueLabel, pixelPos.x, pixelPos.y, DepthBias.FLOATING_UI + 24);
   }
 
   private updateNpcCombatIndicator(
@@ -706,8 +816,13 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         data.indicator.destroy();
         data.indicator = undefined;
       }
+      if (data.clueLabel) {
+        data.clueLabel.destroy();
+        data.clueLabel = undefined;
+      }
     });
     this.runtimeState.npcSprites.clear();
+    this.ports.game.canvas.style.cursor = '';
   }
 
   private colorToHex(color: number): string {

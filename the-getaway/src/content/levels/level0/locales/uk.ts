@@ -42,7 +42,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
       nodes: [
         {
           id: 'intro',
-          text: 'Ліра постукує попелом у консервну бляшанку у формі койота. "Потрібні залізяки, плітки чи маленьке диво? Срібло купує тишу. Послуги лишають легені цілими після комендантської."',
+          text: 'Ліра постукує попелом у консервну бляшанку у формі койота. "Потрібні залізяки, плітки чи маленьке диво? Срібло купує тишу. Послуги лишають легені цілими після комендантської. Сьогодні мені треба повернути один тайник."',
           options: [
             {
               text: 'Що сьогодні гуде на базарі?',
@@ -62,7 +62,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
               },
             },
             {
-              text: 'Поставки теж зникли, як ті койоти, що нам обіцяли?',
+              text: 'Поясни роботу з тайником.',
               nextNodeId: 'quest',
               questEffect: {
                 questId: 'quest_market_cache',
@@ -95,7 +95,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
         },
         {
           id: 'quest',
-          text: '"Корпсек загріб мій тайник і назвав це доказами. Прослизни в Центр, визволь ящики, і вип’ємо очищеної дощівки."',
+          text: '"Корпсек загріб мій тайник і назвав це доказами. Дочекайся комендантської, пройди північно-західною камерною лінією, витягни ключ-картку зі сховища доказів, а якщо нерви заспівають — сховайся в безпечній кімнаті транспортного вузла. Потім принеси все мені, поки Джордж не почав писати некролог."',
           options: [
             {
               text: 'Нехай їхні докази заблукають.',
@@ -105,7 +105,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
         },
         {
           id: 'quest_complete',
-          text: '"Знала, що обженеш їхніх співаків. Перекрою маршрути через провулки з неоновими городами."',
+          text: '"Знала, що обженеш їхніх співаків. Тайник знову рухається, вулиця матиме пайки, а Корпсек рахуватиме дуже порожню шафу доказів."',
           options: [
             {
               text: 'Будь невидимка, Ліро.',
@@ -408,7 +408,7 @@ export const level0UkrainianContent: Level0LocaleContent = {
               },
               factionRequirement: {
                 factionId: 'resistance',
-                minimumStanding: 'friendly',
+                minimumStanding: 'neutral',
               },
             },
             {
@@ -706,12 +706,12 @@ export const level0UkrainianContent: Level0LocaleContent = {
     },
     {
       name: 'Архіварка Найла',
-      position: { x: 28, y: 14 },
+      position: { x: 43, y: 44 },
       health: 14,
       maxHealth: 14,
       routine: [
-        { position: { x: 28, y: 14 }, timeOfDay: 'day', duration: 300 },
-        { position: { x: 32, y: 24 }, timeOfDay: 'evening', duration: 300 },
+        { position: { x: 43, y: 44 }, timeOfDay: 'day', duration: 300 },
+        { position: { x: 48, y: 44 }, timeOfDay: 'evening', duration: 300 },
       ],
       dialogueId: 'npc_archivist_naila',
       isInteractive: true,
@@ -721,13 +721,13 @@ export const level0UkrainianContent: Level0LocaleContent = {
     },
     {
       name: 'Кур’єр Брант',
-      position: { x: 14, y: 24 },
+      position: { x: 79, y: 68 },
       health: 16,
       maxHealth: 16,
       routine: [
-        { position: { x: 14, y: 24 }, timeOfDay: 'day', duration: 180 },
-        { position: { x: 10, y: 16 }, timeOfDay: 'evening', duration: 180 },
-        { position: { x: 34, y: 16 }, timeOfDay: 'night', duration: 180 },
+        { position: { x: 79, y: 68 }, timeOfDay: 'day', duration: 180 },
+        { position: { x: 73, y: 68 }, timeOfDay: 'evening', duration: 180 },
+        { position: { x: 85, y: 68 }, timeOfDay: 'night', duration: 180 },
       ],
       dialogueId: 'npc_courier_brant',
       isInteractive: true,
@@ -792,6 +792,15 @@ export const level0UkrainianContent: Level0LocaleContent = {
     transitTokenUk,
     abandonedMedkitUk,
     abandonedMedkitUk,
+  ],
+  itemPlacements: [
+    { x: 43, y: 21 },
+    { x: 51, y: 44 },
+    { x: 67, y: 68 },
+    { x: 73, y: 68 },
+    { x: 84, y: 68 },
+    { x: 90, y: 69 },
+    { x: 61, y: 69 },
   ],
   buildingDefinitions: [
     {
@@ -970,14 +979,10 @@ export const level0UkrainianContent: Level0LocaleContent = {
   world: {
     areaName: 'Командна сітка Нетрищ',
     objectives: [
-      'Поверніть контрабандний сховок Ліри з центрових камер зберігання доказів.',
-      'Розшифруйте наглядові маніфести, які Архіварка Найла винесла потайки.',
-      'Відновіть кур\'єрські маршрути Бранта по сітці Нетрищ до початку комендантської години.',
-      'Заглушіть мережу камер КорпСеку, що охороняє барикади.',
-      'Картуйте петлі патрульних дронів і призначте безпечні обхідні стежки.',
-      'Поповніть критичні запаси клініки Медика Яри польовими аптечками.',
-      'Влаштуйте засідку на транзитний патруль, що супроводжує капітана зачисток.',
-      'Спровокуйте патруль або камеру КорпСеку, відстежте сплеск індикатора підозри й розірвіть лінію огляду, доки жар не згасне.',
+      'Почніть із Ліри вдень, прийміть роботу з тайником і заберіть корпоративну ключ-картку під час комендантської.',
+      'Ідіть за підказкою до архіварки Найли, заберіть зашифрований дата-пад і поверніть його їй.',
+      'Ідіть за фінальною підказкою до курʼєра Бранта, зберіть транспортні жетони й відзвітуйте йому.',
+      'Скидайте тиск у безпечній кімнаті Транзитного вузла, коли параноя підскакує.',
     ],
     initialEnemyName: 'Капітан зачисток КорпСеку',
     zoneId: 'downtown_checkpoint',

@@ -3,6 +3,11 @@ import { MapArea, Position, TileType, NPC, Item, MapBuildingDefinition } from '.
 import { Locale } from '../../content/locales';
 import { getLevel0Content } from '../../content/levels/level0';
 import { CoverSpotDefinition, LevelBuildingDefinition } from '../../content/levels/level0/types';
+import {
+  GET155_LEVEL0_ANCHOR_BUILDING_ID,
+  resolveGet155Level0Placements,
+  type Get155Level0Placement,
+} from '../../content/environment/get155Level0Slice';
 import { getZoneMetadata } from '../../content/zones';
 import { composeBuildingVisualProfiles } from '../visual/world/DistrictComposer';
 import {
@@ -228,14 +233,20 @@ const applyBuildingConnections = (
     doorTile.type = TileType.DOOR;
     doorTile.isWalkable = true;
 
-    const interiorSpec = createInteriorArea(`${settlementName} :: ${building.name}`, building.interior.width, building.interior.height, {
+    const isSafehouse = building.workbench?.type === 'safehouse';
+    const interiorName = isSafehouse
+      ? `${settlementName} :: ${building.name} Safehouse`
+      : `${settlementName} :: ${building.name}`;
+    const interiorSpec = createInteriorArea(interiorName, building.interior.width, building.interior.height, {
       level: hostArea.level ?? 0,
-      zoneId: `${hostArea.zoneId}::interior`,
+      zoneId: isSafehouse ? 'resistance_safehouse' : `${hostArea.zoneId}::interior`,
       factionRequirement: building.factionRequirement,
-      displayName: `${settlementName} :: ${building.name}`,
-      summary: hostArea.summary,
-      dangerRating: hostArea.dangerRating,
-      hazards: hostArea.hazards,
+      displayName: interiorName,
+      summary: isSafehouse
+        ? 'Resistance safehouse interior: a quiet recovery point off the curfew route.'
+        : hostArea.summary,
+      dangerRating: isSafehouse ? 'low' : hostArea.dangerRating,
+      hazards: isSafehouse ? [] : hostArea.hazards,
     });
 
     interiors.push(interiorSpec.area);
@@ -336,6 +347,41 @@ const applySurfaceSemantics = (mapArea: MapArea): MapArea => {
   };
 };
 
+const applyGet155CollisionFootprints = (
+  mapArea: MapArea,
+  placements: readonly Get155Level0Placement[]
+): MapArea => {
+  if (placements.length === 0) {
+    return mapArea;
+  }
+
+  const tiles: MapArea['tiles'] = mapArea.tiles.map((row) =>
+    row.map((tile) => ({ ...tile }))
+  );
+
+  placements.forEach((placement) => {
+    placement.collisionTiles.forEach((position) => {
+      const tile = tiles[position.y]?.[position.x];
+      if (!tile || tile.type === TileType.DOOR) {
+        return;
+      }
+
+      tiles[position.y][position.x] = {
+        ...tile,
+        type: TileType.FLOOR,
+        isWalkable: false,
+        provideCover: false,
+        cover: undefined,
+      };
+    });
+  });
+
+  return {
+    ...mapArea,
+    tiles,
+  };
+};
+
 interface BuildWorldParams {
   locale: Locale;
 }
@@ -347,7 +393,8 @@ const createCityArea = (
   buildings: LevelBuildingDefinition[],
   coverSpots: CoverSpotDefinition[],
   npcBlueprints: NPCBlueprint[],
-  itemBlueprints: ItemBlueprint[]
+  itemBlueprints: ItemBlueprint[],
+  itemPlacements: Position[] = []
 ): GeneratedArea => {
   const area = createBasicMapArea(areaName, DOWNTOWN_WIDTH, DOWNTOWN_HEIGHT, {
     level: 0,
@@ -429,6 +476,13 @@ const createCityArea = (
 
   const withDistrictDecor = applyDistrictDecorations(withCoverProfiles);
   const withSurfaceSemantics = applySurfaceSemantics(withDistrictDecor);
+  const get155Placements = resolveGet155Level0Placements(
+    buildings.find((building) => building.id === GET155_LEVEL0_ANCHOR_BUILDING_ID)
+  );
+  const withGet155CollisionFootprints = applyGet155CollisionFootprints(
+    withSurfaceSemantics,
+    get155Placements
+  );
   const visualComposition = composeBuildingVisualProfiles(buildings);
 
   const buildingSummaries: MapBuildingDefinition[] = buildings.map((building) => ({
@@ -461,10 +515,10 @@ const createCityArea = (
       : undefined,
   }));
 
-  withSurfaceSemantics.buildings = buildingSummaries;
+  withGet155CollisionFootprints.buildings = buildingSummaries;
 
   const isTileOpen = (position: Position): boolean => {
-    const tile = withSurfaceSemantics.tiles[position.y]?.[position.x];
+    const tile = withGet155CollisionFootprints.tiles[position.y]?.[position.x];
     if (!tile) {
       return false;
     }
@@ -477,13 +531,13 @@ const createCityArea = (
   };
 
   const resolveOpenPosition = (seed: Position): Position | null => {
-    const nearest = findNearestWalkablePosition(seed, withSurfaceSemantics) ?? seed;
+    const nearest = findNearestWalkablePosition(seed, withGet155CollisionFootprints) ?? seed;
 
     if (isTileOpen(nearest)) {
       return nearest;
     }
 
-    const adjacent = getAdjacentWalkablePositions(nearest, withSurfaceSemantics);
+    const adjacent = getAdjacentWalkablePositions(nearest, withGet155CollisionFootprints);
     const fallback = adjacent.find((candidate) => isTileOpen(candidate));
     return fallback ?? null;
   };
@@ -495,24 +549,26 @@ const createCityArea = (
       return;
     }
 
-    withSurfaceSemantics.entities.npcs.push({
+    withGet155CollisionFootprints.entities.npcs.push({
       ...npcBlueprint,
       id: uuidv4(),
       position,
     });
   });
 
-  const itemSpawnSeeds = coverSpotsOnWalkableTiles.length
-    ? coverSpotsOnWalkableTiles
-    : [{ x: 32, y: 68 }, { x: 84, y: 28 }, { x: 54, y: 64 }];
+  const itemSpawnSeeds = itemPlacements.length
+    ? itemPlacements
+    : coverSpotsOnWalkableTiles.length
+      ? coverSpotsOnWalkableTiles
+      : [{ x: 32, y: 68 }, { x: 84, y: 28 }, { x: 54, y: 64 }];
 
   itemBlueprints.forEach((itemBlueprint, index) => {
     const seed = itemSpawnSeeds[index % itemSpawnSeeds.length];
     const position = resolveOpenPosition(seed) ?? seed;
-    withSurfaceSemantics.entities.items.push({ ...itemBlueprint, id: uuidv4(), position });
+    withGet155CollisionFootprints.entities.items.push({ ...itemBlueprint, id: uuidv4(), position });
   });
   const { connections, interiors } = applyBuildingConnections(
-    withSurfaceSemantics,
+    withGet155CollisionFootprints,
     areaName,
     buildings
   );
@@ -523,7 +579,7 @@ const createCityArea = (
   });
 
   return {
-    area: withSurfaceSemantics,
+    area: withGet155CollisionFootprints,
     connections,
     interiorAreas: interiors,
   };
@@ -545,7 +601,8 @@ export const buildWorldResources = ({ locale }: BuildWorldParams): BuiltWorldRes
     content.buildingDefinitions,
     content.coverSpots.all,
     content.npcBlueprints,
-    content.itemBlueprints
+    content.itemBlueprints,
+    content.itemPlacements
   );
 
   const slumsArea = cityResult.area;

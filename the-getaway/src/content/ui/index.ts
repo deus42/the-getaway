@@ -95,6 +95,7 @@ interface QuestLogStrings {
   activeSideEmpty: string;
   availableSideEmpty: string;
   completedEmpty: string;
+  primaryPending: string;
   primaryInProgress: string;
   primaryComplete: string;
   giverLabel: (name: string) => string;
@@ -264,6 +265,7 @@ interface DayNightStrings {
   progressLabel: string;
   curfewEnforced: string;
   safeToTravel: string;
+  curfewWindow: (start: string, end: string) => string;
   travelAdvisory: {
     label: string;
     levels: Record<TravelAdvisoryLevel, string>;
@@ -297,6 +299,16 @@ interface MissionStrings {
   deferCta: string;
   deferHint: string;
   sideReminder: string;
+  failedTitle: string;
+  failedSubtitle: (levelName: string) => string;
+  failedSummaryLabel: string;
+  failedNoObjective: string;
+  failedClearedPrefix: string;
+  failedRemainingPrefix: string;
+  failedPressureLabel: string;
+  failedPressureSummary: (params: { tier: string; value: number }) => string;
+  failedRetryHint: string;
+  retryCta: string;
 }
 
 interface DialogueOverlayStrings {
@@ -508,6 +520,20 @@ interface GeorgeStrings {
   guidancePrimaryObjective: (label: string, progress?: string) => string;
   guidanceSideObjective: (label: string) => string;
   guidanceProgress: (completed: number, total: number) => string;
+  sliceGuidance: {
+    talkToLira: string;
+    waitForNight: (curfewWindow: string) => string;
+    nightRoute: string;
+    recoverAtSafehouse: string;
+    returnToLira: string;
+    talkToNaila: string;
+    findDatapad: string;
+    returnToNaila: string;
+    talkToBrant: string;
+    findTransitTokens: string;
+    returnToBrant: string;
+    complete: string;
+  };
   missionComplete: (name: string) => string;
   zoneFallback: string;
   ambientFeed: {
@@ -548,6 +574,12 @@ interface GeorgeStrings {
   };
 }
 
+interface Level0GuideStrings {
+  startHere: string;
+  nextContact: string;
+  turnIn: string;
+}
+
 interface UIStrings {
   menu: MenuStrings;
   autoBattle: AutoBattleStrings;
@@ -572,6 +604,7 @@ interface UIStrings {
   skillTreePanel: SkillTreePanelStrings;
   playerStatsPanel: PlayerStatsPanelStrings;
   george: GeorgeStrings;
+  level0Guide: Level0GuideStrings;
   mission: MissionStrings;
 }
 
@@ -659,10 +692,11 @@ const STRINGS: Record<Locale, UIStrings> = {
       primaryProgress: 'Primary Progress',
       activeSideQuests: 'Active Side Quests',
       availableSideQuests: 'Available Side Quests',
-      primaryEmpty: 'No primary objectives in this mission track.',
+      primaryEmpty: 'Talk to Lira to start the cache run.',
       activeSideEmpty: 'No side quests active yet.',
       availableSideEmpty: 'No side quests currently available.',
       completedEmpty: 'No completed quests yet.',
+      primaryPending: 'Brief contact',
       primaryInProgress: 'In Progress',
       primaryComplete: 'Complete',
       giverLabel: (name) => `Talk to ${name}`,
@@ -856,6 +890,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       progressLabel: 'PROGRESS',
       curfewEnforced: 'CURFEW ENFORCED',
       safeToTravel: 'SAFE TO TRAVEL',
+      curfewWindow: (start, end) => `NIGHT/CURFEW ${start}-${end}`,
       travelAdvisory: {
         label: 'TRAVEL ADVISORY',
         levels: {
@@ -980,6 +1015,21 @@ const STRINGS: Record<Locale, UIStrings> = {
       guidancePrimaryObjective: (label, progress = '') => `• Primary: ${label}${progress}`,
       guidanceSideObjective: (label) => `• Optional: ${label}`,
       guidanceProgress: (completed, total) => ` (${completed}/${total})`,
+      sliceGuidance: {
+        talkToLira: '• Slice: Talk to Lira first; she starts the cache run.',
+        waitForNight: (curfewWindow) => `• Slice: Wait for ${curfewWindow}; the keycard route only counts under curfew.`,
+        nightRoute:
+          '• Slice: Curfew is live. Move north-west to the lockers, cross one camera lane, then recover at Transit Node if pressure spikes.',
+        recoverAtSafehouse: '• Recovery: Pressure is climbing. Duck into the Transit Node safehouse before pushing the cache route.',
+        returnToLira: '• Closure: Keycard secured. Return to Lira to finish the run.',
+        talkToNaila: '• Slice: Lira cache closed. Follow the map clue to Archivist Naila for the datapad brief.',
+        findDatapad: '• Slice: Recover the encrypted datapad on the marked corridor, then bring it back to Naila.',
+        returnToNaila: '• Closure: Datapad secured. Return to Naila before the patrol math goes cold.',
+        talkToBrant: '• Slice: Naila’s window is open. Follow the map clue to Courier Brant.',
+        findTransitTokens: '• Slice: Sweep the marked transit-token trail, then report back to Brant.',
+        returnToBrant: '• Closure: Tokens recovered. Return to Brant to close the Level 0 chain.',
+        complete: '• Slice: Lira, Naila, and Brant are closed; recap should be ready.',
+      },
       missionComplete: (name) => `Mission secured in ${name}. Awaiting redeploy.`,
       zoneFallback: 'current zone',
       feedLabels: {
@@ -1165,6 +1215,11 @@ const STRINGS: Record<Locale, UIStrings> = {
         cooldown: (seconds: number) => `Recharging (${seconds}s)`,
       },
     },
+    level0Guide: {
+      startHere: 'START HERE',
+      nextContact: 'NEXT CONTACT',
+      turnIn: 'TURN IN',
+    },
     mission: {
       accomplishedTitle: 'Mission Accomplished',
       accomplishedSubtitle: (levelName: string) => `Primary objectives cleared for ${levelName}.`,
@@ -1173,6 +1228,17 @@ const STRINGS: Record<Locale, UIStrings> = {
       deferCta: 'Stay in Level',
       deferHint: 'You can remain in this district to finish optional operations or resupply before deploying.',
       sideReminder: 'Optional operations remaining:',
+      failedTitle: 'Mission Failed',
+      failedSubtitle: (levelName: string) => `${levelName} run collapsed before closure.`,
+      failedSummaryLabel: 'Run status:',
+      failedNoObjective: 'No primary objective was started.',
+      failedClearedPrefix: 'Cleared',
+      failedRemainingPrefix: 'Remaining',
+      failedPressureLabel: 'Pressure at collapse:',
+      failedPressureSummary: ({ tier, value }: { tier: string; value: number }) =>
+        `Paranoia ${value}/100 (${tier}). Recover earlier through the Transit Node safehouse or break camera line-of-sight before reattempting.`,
+      failedRetryHint: 'Restart returns to character creation with a clean Level 0 state.',
+      retryCta: 'Restart Level 0',
     },
     skills: {
       strength: 'Strength',
@@ -1477,10 +1543,11 @@ const STRINGS: Record<Locale, UIStrings> = {
       primaryProgress: 'Основний прогрес',
       activeSideQuests: 'Активні побічні завдання',
       availableSideQuests: 'Доступні побічні завдання',
-      primaryEmpty: 'У цій місії немає основних цілей.',
+      primaryEmpty: 'Поговоріть із Лірою, щоб почати рейд до схованки.',
       activeSideEmpty: 'Активних побічних завдань поки немає.',
       availableSideEmpty: 'Зараз немає доступних побічних завдань.',
       completedEmpty: 'Завершених завдань ще немає.',
+      primaryPending: 'Брифінг контакту',
       primaryInProgress: 'У процесі',
       primaryComplete: 'Завершено',
       giverLabel: (name) => `Поговоріть з ${name}`,
@@ -1677,6 +1744,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       progressLabel: 'ПРОГРЕС',
       curfewEnforced: 'КОМЕНДАНТСЬКА ДІЄ',
       safeToTravel: 'РУХ БЕЗПЕЧНИЙ',
+      curfewWindow: (start, end) => `НІЧ/КОМЕНДАНТСЬКА ${start}-${end}`,
       travelAdvisory: {
         label: 'ПОПЕРЕДЖЕННЯ РУХУ',
         levels: {
@@ -1804,6 +1872,21 @@ const STRINGS: Record<Locale, UIStrings> = {
       guidancePrimaryObjective: (label, progress = '') => `• Основна: ${label}${progress}`,
       guidanceSideObjective: (label) => `• Побічна: ${label}`,
       guidanceProgress: (completed, total) => ` (${completed}/${total})`,
+      sliceGuidance: {
+        talkToLira: '• Зріз: спершу поговоріть із Лірою; вона запускає рейд до схованки.',
+        waitForNight: (curfewWindow) => `• Зріз: дочекайтесь ${curfewWindow}; маршрут за ключ-карткою зараховується під час комендантської.`,
+        nightRoute:
+          '• Зріз: комендантська діє. Рухайтесь на північний захід до сховища, пройдіть одну камеру й відновіться у Транзитному вузлі за потреби.',
+        recoverAtSafehouse: '• Відновлення: тиск зростає. Зайдіть у сховок Транзитного вузла перед продовженням маршруту.',
+        returnToLira: '• Завершення: ключ-картку здобуто. Поверніться до Ліри, щоб закрити рейд.',
+        talkToNaila: '• Зріз: схованку Ліри закрито. Ідіть за мапою до архіварки Найли по брифінг щодо дата-пада.',
+        findDatapad: '• Зріз: заберіть зашифрований дата-пад на позначеному коридорі й поверніть його Найлі.',
+        returnToNaila: '• Завершення: дата-пад здобуто. Поверніться до Найли, доки патрулі не змінили схему.',
+        talkToBrant: '• Зріз: вікно Найли відкрито. Ідіть за мапою до курʼєра Бранта.',
+        findTransitTokens: '• Зріз: зберіть позначений ланцюг транспортних жетонів і відзвітуйте Бранту.',
+        returnToBrant: '• Завершення: жетони зібрано. Поверніться до Бранта, щоб закрити ланцюг Рівня 0.',
+        complete: '• Зріз: Ліру, Найлу й Бранта закрито; підсумок має бути готовий.',
+      },
       missionComplete: (name) => `Операцію в ${name} завершено. Чекаю на нове розгортання.`,
       zoneFallback: 'поточна зона',
       feedLabels: {
@@ -1989,6 +2072,11 @@ const STRINGS: Record<Locale, UIStrings> = {
         cooldown: (seconds: number) => `Перезарядка (${seconds}с)`,
       },
     },
+    level0Guide: {
+      startHere: 'ПОЧАТОК',
+      nextContact: 'НАСТУПНИЙ КОНТАКТ',
+      turnIn: 'ЗДАТИ',
+    },
     mission: {
       accomplishedTitle: 'Місію виконано',
       accomplishedSubtitle: (levelName: string) => `Основні цілі для «${levelName}» виконані.`,
@@ -1997,6 +2085,17 @@ const STRINGS: Record<Locale, UIStrings> = {
       deferCta: 'Залишитися у секторі',
       deferHint: 'Можна залишитися, щоб завершити побічні операції або поповнити ресурси.',
       sideReminder: 'Незавершені побічні операції:',
+      failedTitle: 'Місію провалено',
+      failedSubtitle: (levelName: string) => `Забіг у «${levelName}» зірвався до завершення.`,
+      failedSummaryLabel: 'Стан забігу:',
+      failedNoObjective: 'Основну ціль не було розпочато.',
+      failedClearedPrefix: 'Виконано',
+      failedRemainingPrefix: 'Залишилось',
+      failedPressureLabel: 'Тиск на момент зриву:',
+      failedPressureSummary: ({ tier, value }: { tier: string; value: number }) =>
+        `Параноя ${value}/100 (${tier}). Наступного разу відновіться у сховку Transit Node або розірвіть лінію огляду камер раніше.`,
+      failedRetryHint: 'Перезапуск повертає до створення персонажа з чистим станом Level 0.',
+      retryCta: 'Перезапустити Level 0',
     },
     skills: {
       strength: 'Сила',

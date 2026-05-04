@@ -417,25 +417,50 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
       return;
     }
     const isQuestContact = objective.markerKind === "questContact";
+    const isGuideContact = objective.markerKind === "guideContact";
+    const isGuideItem = objective.markerKind === "guideItem";
+    const isContact = isQuestContact || isGuideContact;
+    const isGuided = isGuideContact || isGuideItem;
     const ring = Math.min(
       ICON_MAX_RADIUS,
-      Math.max(isQuestContact ? 6 : 5, tileScale * (isQuestContact ? 0.66 : 0.55))
+      Math.max(isContact ? 6 : 5, tileScale * (isContact ? 0.72 : 0.6))
     );
     const x = (objective.x + 0.5) * tileScale;
     const y = (objective.y + 0.5) * tileScale;
-    ctx.fillStyle = isQuestContact
-      ? "rgba(34, 211, 238, 0.2)"
-      : "rgba(251, 191, 36, 0.2)";
+    const fillColor = isGuideContact
+      ? "rgba(56, 189, 248, 0.34)"
+      : isGuideItem
+        ? "rgba(250, 204, 21, 0.36)"
+        : isQuestContact
+          ? "rgba(34, 211, 238, 0.2)"
+          : "rgba(251, 191, 36, 0.2)";
+    const strokeColor = isGuideContact
+      ? "rgba(56, 189, 248, 1)"
+      : isGuideItem
+        ? "rgba(250, 204, 21, 1)"
+        : isQuestContact
+          ? "rgba(34, 211, 238, 0.95)"
+          : "rgba(251, 191, 36, 0.95)";
+    ctx.fillStyle = fillColor;
     ctx.beginPath();
     ctx.arc(x, y, ring, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = isQuestContact
-      ? "rgba(34, 211, 238, 0.95)"
-      : "rgba(251, 191, 36, 0.95)";
-    ctx.lineWidth = getStrokeWidth(scale);
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = getStrokeWidth(scale) * (isGuided ? 1.45 : 1);
     ctx.beginPath();
     ctx.arc(x, y, ring * 0.7, 0, Math.PI * 2);
     ctx.stroke();
+    if (isGuided) {
+      ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+      ctx.beginPath();
+      ctx.arc(x, y, ring * 0.42, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = isGuideContact ? "#67e8f9" : "#fde68a";
+      ctx.font = `${Math.max(8, Math.round(ring * 0.85))}px Orbitron, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("!", x, y + 0.5);
+    }
   });
 
   cameras.forEach((camera: MiniMapCameraDetail) => {

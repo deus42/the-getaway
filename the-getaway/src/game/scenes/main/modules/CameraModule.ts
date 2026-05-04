@@ -260,6 +260,7 @@ export class CameraModule implements SceneModule<MainScene> {
     this.pushRuntimeStateToPorts();
     this.recenterCameraOnPlayer();
     this.ports.dispatchPlayerScreenPosition();
+    this.ports.emitViewportUpdate();
   }
 
   recenterCameraOnPlayer(): void {

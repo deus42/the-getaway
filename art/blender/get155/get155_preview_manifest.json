@@ -1,0 +1,96 @@
+{
+  "ticket": "GET-155",
+  "purpose": "Blender-to-Phaser validation slice for noir isometric source art.",
+  "sourceBlend": "art/blender/get155/get155_iso_noir_template.blend",
+  "atlas": {
+    "image": "the-getaway/public/atlases/get155_preview.png",
+    "json": "the-getaway/public/atlases/get155_preview.json"
+  },
+  "camera": {
+    "type": "ORTHO",
+    "rotationDegrees": {
+      "x": 60.0,
+      "y": 0.0,
+      "z": 45.0
+    },
+    "transparentBackground": true,
+    "outputFormat": "PNG RGBA"
+  },
+  "render": {
+    "engine": "Eevee",
+    "colorManagement": "Filmic / High Contrast",
+    "atlasSize": {
+      "w": 1024,
+      "h": 512
+    }
+  },
+  "lights": [
+    "cool upper-left area key",
+    "low blue fill",
+    "cyan rim",
+    "warm neon rim",
+    "emissive cyan/warm materials"
+  ],
+  "frames": {
+    "building_art_deco_a": {
+      "render": "art/blender/get155/renders/building_art_deco_a.png",
+      "atlasFrame": {
+        "x": 0,
+        "y": 0,
+        "w": 512,
+        "h": 512
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 0.94
+      },
+      "scale": 0.3,
+      "gridAnchor": "base_center"
+    },
+    "prop_crate_a": {
+      "render": "art/blender/get155/renders/prop_crate_a.png",
+      "atlasFrame": {
+        "x": 512,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 0.88
+      },
+      "scale": 0.48,
+      "gridAnchor": "base_center"
+    },
+    "prop_streetlight_a": {
+      "render": "art/blender/get155/renders/prop_streetlight_a.png",
+      "atlasFrame": {
+        "x": 768,
+        "y": 0,
+        "w": 256,
+        "h": 256
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 0.91
+      },
+      "scale": 0.6,
+      "gridAnchor": "pole_base"
+    },
+    "prop_neon_sign_a": {
+      "render": "art/blender/get155/renders/prop_neon_sign_a.png",
+      "atlasFrame": {
+        "x": 512,
+        "y": 256,
+        "w": 256,
+        "h": 256
+      },
+      "origin": {
+        "x": 0.5,
+        "y": 0.9
+      },
+      "scale": 0.55,
+      "gridAnchor": "post_base"
+    }
+  }
+}

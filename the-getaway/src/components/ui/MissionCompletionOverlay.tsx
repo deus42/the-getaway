@@ -6,6 +6,7 @@ import {
   selectMissionCelebrationAcknowledged,
   selectMissionPendingAdvance,
   selectMissionProgress,
+  selectStartedMissionProgress,
 } from '../../store/selectors/missionSelectors';
 import {
   advanceToNextLevel,
@@ -19,6 +20,7 @@ const MissionCompletionOverlay: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const locale = useSelector((state: RootState) => state.settings.locale);
   const missionProgress = useSelector(selectMissionProgress);
+  const startedMissionProgress = useSelector(selectStartedMissionProgress);
   const missionState = useSelector((state: RootState) => state.missions);
   const pendingAdvance = useSelector(selectMissionPendingAdvance);
   const celebrationAcknowledged = useSelector(selectMissionCelebrationAcknowledged);
@@ -57,8 +59,8 @@ const MissionCompletionOverlay: React.FC = () => {
       open={modalOpen}
       levelName={missionProgress?.name ?? 'Current Sector'}
       missionStrings={uiStrings.mission}
-      primaryObjectives={missionProgress?.primary ?? []}
-      sideObjectives={missionProgress?.side ?? []}
+      primaryObjectives={startedMissionProgress?.primary ?? missionProgress?.primary ?? []}
+      sideObjectives={startedMissionProgress?.side ?? []}
       onContinue={handleContinue}
       onDefer={handleDefer}
     />

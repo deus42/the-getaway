@@ -3,6 +3,9 @@ export const LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH = 'atlases/level0_environment.p
 export const LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH = 'atlases/level0_environment.json';
 export const LEVEL0_ENVIRONMENT_NORMAL_KEY = 'level0EnvironmentNormal';
 export const LEVEL0_ENVIRONMENT_NORMAL_PATH = 'normals/level0_environment_n.png';
+export const GET155_PREVIEW_ATLAS_KEY = 'get155Preview';
+export const GET155_PREVIEW_ATLAS_IMAGE_PATH = 'atlases/get155_preview.png';
+export const GET155_PREVIEW_ATLAS_JSON_PATH = 'atlases/get155_preview.json';
 
 export interface EnvironmentAtlasFrameDefinition {
   readonly frame: string;
@@ -77,3 +80,32 @@ export const LEVEL0_ENVIRONMENT_PROP_FRAMES = {
 } as const satisfies Record<string, EnvironmentAtlasFrameDefinition>;
 
 export type Level0EnvironmentPropFrameId = keyof typeof LEVEL0_ENVIRONMENT_PROP_FRAMES;
+
+export const GET155_PREVIEW_PROP_FRAMES = {
+  buildingArtDeco: {
+    frame: 'building_art_deco_a',
+    origin: { x: 0.5, y: 0.94 },
+    scale: 0.3,
+    alpha: 0.92,
+  },
+  crate: {
+    frame: 'prop_crate_a',
+    origin: { x: 0.5, y: 0.88 },
+    scale: 0.48,
+    alpha: 0.92,
+  },
+  streetlight: {
+    frame: 'prop_streetlight_a',
+    origin: { x: 0.5, y: 0.91 },
+    scale: 0.6,
+    alpha: 0.94,
+  },
+  neonSign: {
+    frame: 'prop_neon_sign_a',
+    origin: { x: 0.5, y: 0.9 },
+    scale: 0.55,
+    alpha: 0.92,
+  },
+} as const satisfies Record<string, EnvironmentAtlasFrameDefinition>;
+
+export type Get155PreviewFrameId = keyof typeof GET155_PREVIEW_PROP_FRAMES;

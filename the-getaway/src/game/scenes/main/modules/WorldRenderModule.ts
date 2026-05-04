@@ -29,17 +29,25 @@ import {
 import { resolvePickupObjectName } from '../../../utils/itemDisplay';
 import { store } from '../../../../store';
 import { setLightsEnabled } from '../../../../store/settingsSlice';
+import { LEVEL0_GUIDED_ITEM_KEYS } from '../../../quests/level0GuidedSlice';
 import type { CharacterToken, IsoObjectFactory } from '../../../utils/IsoObjectFactory';
 import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
 import {
+  GET155_PREVIEW_ATLAS_KEY,
+  GET155_PREVIEW_PROP_FRAMES,
   LEVEL0_ENVIRONMENT_ATLAS_KEY,
   LEVEL0_ENVIRONMENT_NORMAL_KEY,
   LEVEL0_ENVIRONMENT_PROP_FRAMES,
   LEVEL0_ENVIRONMENT_SURFACE_FRAMES,
   type EnvironmentAtlasFrameDefinition,
+  type Get155PreviewFrameId,
   type Level0EnvironmentPropFrameId,
   type Level0EnvironmentSurfaceFrameId,
 } from '../../../../content/environment/atlasFrames';
+import {
+  GET155_LEVEL0_ANCHOR_BUILDING_ID,
+  resolveGet155Level0Placements,
+} from '../../../../content/environment/get155Level0Slice';
 
 const ESB_BUILDING_ID = 'block_1_1';
 const SURFACE_DECAL_LIMIT_BY_PRESET = {
@@ -49,6 +57,13 @@ const SURFACE_DECAL_LIMIT_BY_PRESET = {
 } as const;
 
 type StaticPropAdder = (prop?: Phaser.GameObjects.GameObject | null) => void;
+
+type PickupSpritePresentation = {
+  frameId: Level0EnvironmentPropFrameId;
+  tint: number;
+  scale: number;
+  alpha: number;
+};
 
 const hexStringToColor = (value: string): number => {
   return Number.parseInt(value.replace('#', ''), 16);
@@ -389,6 +404,8 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       const color = item.isQuestItem ? 0xfacc15 : 0x22d3ee;
       const pulseColor = item.isQuestItem ? 0xfff3bf : 0x7dd3fc;
       const pixel = this.ports.calculatePixelPosition(item.position.x, item.position.y);
+
+      addProp(this.createPickupSpriteProp(isoFactory, item));
 
       addProp(
         isoFactory.createPulsingHighlight(item.position.x, item.position.y, {
@@ -1033,13 +1050,13 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     isoFactory: IsoObjectFactory,
     addProp: StaticPropAdder
   ): void {
-    if (!this.scene.textures.exists(LEVEL0_ENVIRONMENT_ATLAS_KEY)) {
-      return;
+    if (this.scene.textures.exists(LEVEL0_ENVIRONMENT_ATLAS_KEY)) {
+      this.renderAtlasSurfaceDecals(currentMapArea, environmentComposition, isoFactory, addProp);
+      this.renderAtlasDoorFacades(currentMapArea, isoFactory, addProp);
+      this.renderAtlasCoreProps(currentMapArea, isoFactory, addProp);
     }
 
-    this.renderAtlasSurfaceDecals(currentMapArea, environmentComposition, isoFactory, addProp);
-    this.renderAtlasDoorFacades(currentMapArea, isoFactory, addProp);
-    this.renderAtlasCoreProps(currentMapArea, isoFactory, addProp);
+    this.renderGet155PreviewSlice(currentMapArea, isoFactory, addProp);
   }
 
   private renderAtlasSurfaceDecals(
@@ -1130,6 +1147,34 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     });
   }
 
+  private renderGet155PreviewSlice(
+    currentMapArea: MapArea,
+    isoFactory: IsoObjectFactory,
+    addProp: StaticPropAdder
+  ): void {
+    if (!this.scene.textures.exists(GET155_PREVIEW_ATLAS_KEY)) {
+      return;
+    }
+
+    const buildings = this.getSortedBuildings(currentMapArea);
+    const anchorBuilding = buildings.find((building) => building.id === GET155_LEVEL0_ANCHOR_BUILDING_ID);
+    if (!anchorBuilding) {
+      return;
+    }
+
+    resolveGet155Level0Placements(anchorBuilding).forEach((placement) => {
+      const sprite = this.createGet155PreviewSprite(
+        isoFactory,
+        placement.anchor.x,
+        placement.anchor.y,
+        placement.frameId,
+        this.resolveGet155PreviewDepthBias(placement.frameId),
+        `level0:${placement.frameId}:${anchorBuilding.id}`
+      );
+      addProp(sprite);
+    });
+  }
+
   private resolveSurfaceDecalId(
     tile: MapTile,
     gridX: number,
@@ -1188,6 +1233,55 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     return sprite;
   }
 
+  private createPickupSpriteProp(
+    isoFactory: IsoObjectFactory,
+    item: Item & { position: Position }
+  ): Phaser.GameObjects.Image | null {
+    const presentation = this.resolvePickupSpritePresentation(item);
+    const sprite = this.createAtlasSpriteProp(
+      isoFactory,
+      item.position.x,
+      item.position.y,
+      presentation.frameId,
+      DepthBias.PROP_LOW + 6,
+      `pickup:${item.id}`
+    );
+
+    if (!sprite) {
+      return null;
+    }
+
+    const pixel = this.ports.calculatePixelPosition(item.position.x, item.position.y);
+    sprite.setName(`level0-pickup:${item.id}`);
+    sprite.setTint(presentation.tint);
+    sprite.setScale(presentation.scale);
+    sprite.setAlpha(presentation.alpha);
+    sprite.setY(sprite.y - this.ports.getIsoMetrics().tileHeight * 0.08);
+    this.ports.syncDepth(sprite, pixel.x, pixel.y, DepthBias.PROP_LOW + 6);
+
+    return sprite;
+  }
+
+  private resolvePickupSpritePresentation(item: Item): PickupSpritePresentation {
+    switch (item.resourceKey) {
+      case LEVEL0_GUIDED_ITEM_KEYS.keycard:
+        return { frameId: 'sign', tint: 0xfacc15, scale: 0.34, alpha: 0.96 };
+      case LEVEL0_GUIDED_ITEM_KEYS.datapad:
+        return { frameId: 'sign', tint: 0x38bdf8, scale: 0.36, alpha: 0.96 };
+      case LEVEL0_GUIDED_ITEM_KEYS.transitTokens:
+        return { frameId: 'barrier', tint: 0xa78bfa, scale: 0.34, alpha: 0.94 };
+      case 'items.abandoned_medkit':
+        return { frameId: 'crate', tint: 0xf87171, scale: 0.32, alpha: 0.92 };
+      default:
+        return {
+          frameId: item.isQuestItem ? 'sign' : 'crate',
+          tint: item.isQuestItem ? 0xfde68a : 0x7dd3fc,
+          scale: 0.32,
+          alpha: 0.9,
+        };
+    }
+  }
+
   private createAtlasSpriteProp(
     isoFactory: IsoObjectFactory,
     gridX: number,
@@ -1212,6 +1306,29 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     return sprite;
   }
 
+  private createGet155PreviewSprite(
+    isoFactory: IsoObjectFactory,
+    gridX: number,
+    gridY: number,
+    frameId: Get155PreviewFrameId,
+    depthBias: number,
+    debugName: string
+  ): Phaser.GameObjects.Image | null {
+    const frame = GET155_PREVIEW_PROP_FRAMES[frameId];
+    if (!this.hasGet155PreviewAtlasFrame(frame.frame)) {
+      return null;
+    }
+
+    const sprite = isoFactory.createSpriteProp(gridX, gridY, frame.frame, {
+      textureKey: GET155_PREVIEW_ATLAS_KEY,
+      depthBias,
+      origin: frame.origin,
+    });
+    this.applyAtlasSpritePresentation(sprite, frame, debugName);
+    sprite.setName(`get155-preview:${debugName}`);
+    return sprite;
+  }
+
   private applyAtlasSpritePresentation(
     sprite: Phaser.GameObjects.Image,
     frame: EnvironmentAtlasFrameDefinition,
@@ -1224,6 +1341,11 @@ export class WorldRenderModule implements SceneModule<MainScene> {
 
   private hasLevel0AtlasFrame(frame: string): boolean {
     const texture = this.scene.textures.get(LEVEL0_ENVIRONMENT_ATLAS_KEY);
+    return Boolean(texture?.has(frame));
+  }
+
+  private hasGet155PreviewAtlasFrame(frame: string): boolean {
+    const texture = this.scene.textures.get(GET155_PREVIEW_ATLAS_KEY);
     return Boolean(texture?.has(frame));
   }
 
@@ -1304,6 +1426,18 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   private resolveAtlasPropDepthBias(propId: Level0EnvironmentPropFrameId): number {
     if (propId === 'crate' || propId === 'barrier') {
       return DepthBias.PROP_LOW + 14;
+    }
+
+    return DepthBias.PROP_TALL + 18;
+  }
+
+  private resolveGet155PreviewDepthBias(frameId: Get155PreviewFrameId): number {
+    if (frameId === 'crate') {
+      return DepthBias.PROP_LOW + 16;
+    }
+
+    if (frameId === 'buildingArtDeco') {
+      return DepthBias.PROP_TALL + 26;
     }
 
     return DepthBias.PROP_TALL + 18;

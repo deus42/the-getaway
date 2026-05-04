@@ -24,9 +24,9 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 - Experience MVP completeness: ☐ 0–100% (target: ≥85%)
 
 **Current biggest risks** (keep to 1–3 bullets):
+- ☐ Guided three-quest Level 0 behavior needs requester playtest acceptance before the post-acceptance lint/build/test/coverage gates run.
 - ☐ Final polished hero/NPC sprite art is still pending; current 8-direction sheets are normalized placeholders/manual-polish inputs.
-- ☐ Street-level authored composition is improved by the GET-156 atlas/surface slice but still needs requester-reviewed traversal before the visual slice can be considered locked.
-- ☐ Jest still emits non-blocking console noise from existing Redux middleware timing, selector, and React `act` warnings; the post-acceptance coverage gate is now above 80%.
+- ☐ Final environment art direction still requires visual acceptance; GET-155 proves the Blender-to-Phaser pipe, not the final production asset set.
 
 ---
 
@@ -39,19 +39,19 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 - ☐ The run has a clear closure: Mission Complete / Fail (with recap)
 
 **A2. “What do I do next?” is always clear**
-- ☐ The top-priority objective is always visible (HUD + George guidance)
-- ☐ Quest log reflects current state (no stale or contradictory objectives)
-- ☐ Player can recover from mistakes (clear reset path / reattempt loop)
+- ☑ The top-priority objective is always visible (HUD + George guidance)
+- ☑ Quest log reflects current state (no stale or contradictory objectives)
+- ☑ Player can recover from mistakes (clear reset path / reattempt loop)
 
 ---
 
 ## B) Quest + objectives reliability (high priority)
 
 **B1. Objective state correctness**
-- ☐ Objective completion is gated correctly (no premature completion)
+- ☑ Objective completion is gated correctly (no premature completion)
 - ☐ Collect/pickup objectives increment deterministically (no double count, no missed count)
 - ☐ Objectives update immediately after the triggering action (pickup/dialogue/flag)
-- ☐ Mission Accomplished triggers only when all primary objectives are complete
+- ☑ Mission Accomplished triggers only when all primary objectives are complete
 
 **B2. QA/debuggability**
 - ☐ Action log clearly shows quest/objective state transitions
@@ -68,13 +68,13 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 - ☑ Detection escalation is fair (no “instant fail” unless clearly telegraphed)
 
 **C2. Curfew pressure is tuned**
-- ☐ Curfew creates meaningful tension without soft-locking normal play
-- ☐ Cameras meaningfully matter (avoid being cosmetic)
-- ☐ “Night rules” are communicated (through UI, George, and/or a short prompt)
+- ☑ Curfew creates meaningful tension without soft-locking normal play
+- ☑ Cameras meaningfully matter (avoid being cosmetic)
+- ☑ “Night rules” are communicated (through UI, George, and/or a short prompt)
 
 **C3. Paranoia is the core pressure resource**
-- ☐ Paranoia rises from surveillance/curfew exposure in a predictable way
-- ☐ Paranoia decreases through safe/day/rest loops in a predictable way
+- ☑ Paranoia rises from surveillance/curfew exposure in a predictable way
+- ☑ Paranoia decreases through safe/day/rest loops in a predictable way
 - ☐ Paranoia tiers have noticeable, not-annoying impact (tune penalties)
 
 ---
@@ -133,6 +133,11 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-05-04 — GET-139 startup camera/scroller fix keeps Level 0 centered on the player before first movement. Same-map New Game restarts now reset/re-follow the camera when the player identity changes, camera follow emits an immediate viewport update, and the minimap viewport/scroller derives from current camera scroll/zoom instead of stale pre-render `worldView` data. Browser smoke covered fresh New Game and active-scene Menu → Start New Game restarts with no warn/error console entries; requester playtest and post-acceptance automated gates remain pending.
+- 2026-05-04 — GET-139 three-quest guided-slice pass changed Level 0 from a Lira-only primary run into a one-by-one Lira → Naila → Brant primary chain. George now stays quiet and emits only route/mission guidance, the Primary Progress HUD shows the current/completed guided beat instead of all three at boot, Naila and Brant sit on the authored path, map markers and over-NPC labels identify the current contact/turn-in, interactive NPC hover uses a pointer cursor, and pickups now render as Level 0 atlas-backed sprite props with stronger object presentation. Requester playtest and post-acceptance automated gates remain pending.
+- 2026-05-02 — GET-139 guidance follow-up made Level 0 start as a guided Lira-cache slice instead of an open systems playground: the player now starts beside Lira, non-slice NPCs and optional pickups are pushed away from the opening route, the Corporate Keycard is authored on the north-west cache lane, the default Quests HUD shows Primary + Active Side only, pre-start primary state says `Brief Lira`, George emits slice-stage guidance, and the top-right clock now shows phase, next phase, and the 22:00-06:00 night/curfew window. Browser smoke reached New Game → Character Creation → Level 0 via Dev Skip and verified the visible guidance surfaces with no warn/error console entries; requester playtest and post-acceptance automated gates remain pending.
+- 2026-05-02 — GET-139 Lira-cache playable slice implementation narrowed Level 0 primary progression to the Lira cache run, reclassified Naila/Brant as optional side operations, focused the player objective surfaces on started work, gated the Lira keycard objective to curfew, connected the Transit Node interior to safehouse paranoia relief, fixed curfew building-exit soft-locking, and added the health-at-zero Mission Failed recap/restart path. Checklist boxes updated for implemented objective clarity/gating, curfew/camera communication, and recovery-loop readiness; manual requester playtest and post-acceptance automated gates remain pending.
+- 2026-04-24 — GET-155 Blender source-art validation slice implemented a script-generated noir isometric template (`art/blender/get155/get155_iso_noir_template.blend`), four primitive preview renders, a committed `get155_preview` atlas/manifest, and a normal Level 0 placement path using existing BootScene preload, semantic atlas registry, `IsoObjectFactory.createSpriteProp`, and depth sorting. Follow-up embedded the building/props into the Level 0 map with shared collision-footprint anchors and non-walkable floor tiles so pathing routes around them. Checklist boxes remain unchanged pending requester visual acceptance; final environment art direction remains the primary residual risk.
 - 2026-04-23 — GET-161 character readability pass started after GET-156 closeout: sprite-backed actors now keep the manifest-driven animation/fallback contract while gaining a synchronized dark rim and contact shadow inside the existing `CharacterToken` container. Checklist boxes remain unchanged pending Level 0 visual validation; final-art polish risk remains, but gameplay-zoom sprite grounding/readability risk is reduced.
 - 2026-04-23 — GET-156 Level 0 graphics vertical slice implemented a constrained atlas-backed environment pass (`level0Environment` preload + semantic frame registry + depth-managed surface decals/door facades/core props), added deterministic coordinate-seeded ground wear in `TilePainter`, and hardened `GameCanvas` so the dev Phaser runtime does not settle with inactive scenes after StrictMode remount. Post-acceptance verification passed (`yarn lint`, `yarn build`, `yarn test`, `yarn test --coverage`) with coverage at `86.94%` statements / `76.92%` branches / `81.94%` functions / `86.94%` lines; checklist boxes remain unchanged pending requester traversal sign-off, while street-level visual-composition and startup reliability risk are reduced.
 - 2026-04-04 — GET-142 pickup objective determinism hardening landed: collect objectives now sync from staged inventory snapshots via a dedicated collect reducer path, so fresh pickups and quest-activation backfill share one clamped source of truth instead of incrementing from two competing effects. Acceptance playtest plus regression coverage are now complete (`yarn lint`, `yarn build`, `yarn test --runInBand`, `yarn test --coverage --runInBand`), checklist boxes remain unchanged, and B1 objective-state drift risk is reduced.

@@ -21,23 +21,24 @@ describe('OpsBriefingsPanel', () => {
     store.dispatch(resetGame());
   });
 
-  it('renders primary progress, active side quests, and available side quests', () => {
+  it('renders the guided primary beat and active side section at boot', () => {
     renderPanel();
 
     expect(screen.getByText(questLogStrings.primaryProgress)).toBeInTheDocument();
     expect(screen.getByText(questLogStrings.activeSideQuests)).toBeInTheDocument();
-    expect(screen.getByText(questLogStrings.availableSideQuests)).toBeInTheDocument();
-    expect(screen.getByText('Camera Blackout')).toBeInTheDocument();
-    expect(screen.getByText('Drone Route Surveillance')).toBeInTheDocument();
-    expect(screen.getByText(/Talk to Firebrand Juno/i)).toBeInTheDocument();
+    expect(screen.queryByText(questLogStrings.availableSideQuests)).not.toBeInTheDocument();
+    expect(screen.getByText('Recover Lira’s Confiscated Cache')).toBeInTheDocument();
+    expect(screen.queryByText('Camera Blackout')).not.toBeInTheDocument();
+    expect(screen.queryByText('Drone Route Surveillance')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Talk to Firebrand Juno/i)).not.toBeInTheDocument();
     expect(
-      screen.getByText(/shadow a patrol drone and log 3 unique waypoints/i)
-    ).toBeInTheDocument();
+      screen.queryByText(/shadow a patrol drone and log 3 unique waypoints/i)
+    ).not.toBeInTheDocument();
   });
 
   it('moves a side quest from available to active after quest start', () => {
     renderPanel();
-    expect(screen.getByText(questLogStrings.giverLabel('Firebrand Juno'))).toBeInTheDocument();
+    expect(screen.queryByText(questLogStrings.giverLabel('Firebrand Juno'))).not.toBeInTheDocument();
 
     act(() => {
       store.dispatch(startQuest('quest_equipment_sabotage'));
