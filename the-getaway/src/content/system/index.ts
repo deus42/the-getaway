@@ -16,6 +16,9 @@ export interface LogStrings {
   combatOver: string;
   notEnoughAp: string;
   enemyOutOfRange: string;
+  combatClickRequiresTarget: string;
+  combatAdvanceToRange: (enemyName: string) => string;
+  combatAdvanceToObjective: (itemName: string) => string;
   hitEnemy: (enemyName: string, damage: number) => string;
   missedEnemy: (enemyName: string) => string;
   allEnemiesDefeated: string;
@@ -35,6 +38,9 @@ export interface LogStrings {
   questAccepted: (questName: string) => string;
   questCompleted: (questName: string) => string;
   objectiveUpdated: (objectiveDescription: string, questName: string) => string;
+  cacheKeycardSecured: string;
+  paranoiaSpike: (tier: string) => string;
+  paranoiaRecovery: (tier: string) => string;
   rewardExperience: (amount: number, questName: string) => string;
   rewardCredits: (amount: number, questName: string) => string;
   rewardItem: (itemName: string, questName: string) => string;
@@ -93,6 +99,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       combatOver: 'Combat Over!',
       notEnoughAp: 'Not enough AP to attack!',
       enemyOutOfRange: 'Enemy out of range!',
+      combatClickRequiresTarget: 'Combat click needs a hostile target. Pick an enemy, end turn, or reposition with keys.',
+      combatAdvanceToRange: (enemyName) => `Advancing toward ${enemyName}. One AP spent to close the angle.`,
+      combatAdvanceToObjective: (itemName) => `Pressure route: moving toward ${itemName}. One AP spent to keep the objective alive.`,
       hitEnemy: (enemyName, damage) => `You hit ${enemyName} for ${damage} damage.`,
       missedEnemy: (enemyName) => `You missed ${enemyName}.`,
       allEnemiesDefeated: 'All enemies defeated!',
@@ -114,6 +123,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       questCompleted: (questName) => `Quest completed: ${questName}.`,
       objectiveUpdated: (objectiveDescription, questName) =>
         `Objective updated: ${objectiveDescription} (${questName}).`,
+      cacheKeycardSecured:
+        'Corporate Keycard secured. George reroutes you back to Lira through the recovery lane.',
+      paranoiaSpike: (tier) => `Pressure spike: paranoia is now ${tier.replace(/_/g, ' ')}. Break line-of-sight or hit the Transit Node safehouse.`,
+      paranoiaRecovery: (tier) => `Recovery registered: paranoia settled to ${tier.replace(/_/g, ' ')}. Resume the route cleanly.`,
       rewardExperience: (amount, questName) => `+${amount} XP from ${questName}.`,
       rewardCredits: (amount, questName) => `+₿${amount} credits secured from ${questName}.`,
       rewardItem: (itemName, questName) => `Received ${itemName} from ${questName}.`,
@@ -173,6 +186,9 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       combatOver: 'Бій завершено!',
       notEnoughAp: 'Недостатньо ОД для атаки!',
       enemyOutOfRange: 'Ціль поза досяжністю!',
+      combatClickRequiresTarget: 'У бою треба обрати ворожу ціль. Натисніть ворога, завершіть хід або змініть позицію клавішами.',
+      combatAdvanceToRange: (enemyName) => `Рухаємось до ${enemyName}. Витрачено 1 ОД, щоб скоротити дистанцію.`,
+      combatAdvanceToObjective: (itemName) => `Маршрут під тиском: рух до ${itemName}. Витрачено 1 ОД, щоб втримати ціль.`,
       hitEnemy: (enemyName, damage) => `Ви вражаєте ${enemyName} на ${damage} шкоди.`,
       missedEnemy: (enemyName) => `Ви промахнулися по ${enemyName}.`,
       allEnemiesDefeated: 'Усі вороги знешкоджені!',
@@ -194,6 +210,10 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       questCompleted: (questName) => `Завдання виконано: ${questName}.`,
       objectiveUpdated: (objectiveDescription, questName) =>
         `Ціль оновлено: ${objectiveDescription} (${questName}).`,
+      cacheKeycardSecured:
+        'Корпоративну ключ-картку здобуто. Джордж веде вас назад до Ліри через маршрут відновлення.',
+      paranoiaSpike: (tier) => `Сплеск тиску: параноя тепер ${tier.replace(/_/g, ' ')}. Розірвіть лінію огляду або зайдіть у Transit Node.`,
+      paranoiaRecovery: (tier) => `Відновлення зафіксовано: параноя спала до ${tier.replace(/_/g, ' ')}. Можна продовжувати маршрут.`,
       rewardExperience: (amount, questName) => `+${amount} од. досвіду за ${questName}.`,
       rewardCredits: (amount, questName) => `+₿${amount} кредитів за ${questName}.`,
       rewardItem: (itemName, questName) => `Отримано ${itemName} від ${questName}.`,

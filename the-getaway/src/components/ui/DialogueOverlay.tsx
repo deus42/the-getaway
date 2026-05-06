@@ -29,6 +29,7 @@ import { getSystemStrings } from '../../content/system';
 import { getUIStrings } from '../../content/ui';
 import { getSkillDefinition } from '../../content/skills';
 import { resolveDialoguePortrait } from '../../content/dialoguePortraits';
+import { instantiateItemByResourceKey } from '../../content/items';
 import {
   resolveDialogueCheckState,
   resolveDialogueFactionState,
@@ -36,6 +37,7 @@ import {
 import { isLevel0GuidedQuestStartAvailable } from '../../game/quests/level0GuidedSlice';
 import { resolveRoleDialogueTemplate } from '../../game/narrative/dialogueTone/templateResolver';
 import { DialogueRoleId, RoleDialogueContext } from '../../game/narrative/dialogueTone/roleTemplateTypes';
+import { GETAWAY_AGENT_DIALOGUE_OPTION_EVENT } from '../../game/playtest/agentBridge';
 import './DialogueOverlay.css';
 
 const fallbackSkillName = (skill: string) =>
@@ -168,6 +170,18 @@ const DialogueOverlay: React.FC = () => {
           case 'item':
             if (reward.id) {
               const quantity = Math.max(1, reward.amount || 1);
+              const itemFromCatalog = reward.resourceKey
+                ? instantiateItemByResourceKey(reward.resourceKey, { quantity })
+                : null;
+
+              if (itemFromCatalog) {
+                dispatch(addItem(itemFromCatalog));
+                dispatch(
+                  addLogMessage(logStrings.rewardItem(itemFromCatalog.name, quest.name))
+                );
+                break;
+              }
+
               for (let index = 0; index < quantity; index += 1) {
                 const item: Item = {
                   id: uuidv4(),
@@ -223,6 +237,28 @@ const DialogueOverlay: React.FC = () => {
             if (quest && quest.isActive && !quest.isCompleted) {
               if (hasPendingNonTalkObjectives(quest)) {
                 break;
+              }
+              const talkObjectiveId =
+                objectiveId ??
+                quest.objectives.find(
+                  (objective) => objective.type === 'talk' && !objective.isCompleted
+                )?.id;
+              if (talkObjectiveId) {
+                dispatch(
+                  updateObjectiveStatus({
+                    questId,
+                    objectiveId: talkObjectiveId,
+                    isCompleted: true,
+                  })
+                );
+                const objective = quest.objectives.find((entry) => entry.id === talkObjectiveId);
+                if (objective) {
+                  dispatch(
+                    addLogMessage(
+                      logStrings.objectiveUpdated(objective.description, quest.name)
+                    )
+                  );
+                }
               }
               dispatch(completeQuest(questId));
               awardQuestRewards(questId);
@@ -578,7 +614,45 @@ const DialogueOverlay: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown, listenerOptions);
     };
-  }, [currentNode, handleOptionSelect, visibleOptions]);
+  }, [currentNode, handleOptionSelect, isOptionLocked, isQuestOptionVisible, visibleOptions]);
+
+  useEffect(() => {
+    if (!currentNode) {
+      return undefined;
+    }
+
+    const handleAgentDialogueOption = (event: Event) => {
+      const detail = (event as CustomEvent<{ index?: number; originalIndex?: number }>).detail;
+      const optionIndex = detail?.index;
+      const originalIndex = detail?.originalIndex;
+      if (
+        typeof originalIndex === 'number' &&
+        Number.isInteger(originalIndex)
+      ) {
+        const originalOption = currentNode.options[originalIndex];
+        if (originalOption && isQuestOptionVisible(originalOption) && !isOptionLocked(originalOption)) {
+          handleOptionSelect(originalOption);
+        }
+        return;
+      }
+
+      if (typeof optionIndex !== 'number' || !Number.isInteger(optionIndex)) {
+        return;
+      }
+
+      const option = visibleOptions[optionIndex];
+      if (!option) {
+        return;
+      }
+
+      handleOptionSelect(option);
+    };
+
+    window.addEventListener(GETAWAY_AGENT_DIALOGUE_OPTION_EVENT, handleAgentDialogueOption);
+    return () => {
+      window.removeEventListener(GETAWAY_AGENT_DIALOGUE_OPTION_EVENT, handleAgentDialogueOption);
+    };
+  }, [currentNode, handleOptionSelect, isOptionLocked, isQuestOptionVisible, visibleOptions]);
 
   if (!dialogueId || !dialogue || !currentNode) {
     return null;

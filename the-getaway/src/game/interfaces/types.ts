@@ -463,6 +463,7 @@ export interface QuestObjective {
 export interface QuestReward {
   type: 'item' | 'experience' | 'currency';
   id?: string;
+  resourceKey?: string;
   amount: number;
 }
 

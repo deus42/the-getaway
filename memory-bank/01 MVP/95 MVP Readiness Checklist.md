@@ -20,8 +20,8 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 ## MVP Readiness Summary
 
 **Current estimate** (update over time):
-- Technical MVP completeness: ☐ 0–100% (target: ≥90%)
-- Experience MVP completeness: ☐ 0–100% (target: ≥85%)
+- Technical MVP completeness: ☑ 92% (target: ≥90%)
+- Experience MVP completeness: ☑ 88% (target: ≥85%; requester subjective 9/10 playtest still pending before closing GET-180)
 
 **Current biggest risks** (keep to 1–3 bullets):
 - ☐ Guided noir Level 0 feel needs requester playtest acceptance; implementation evidence is code/build/test-level, not final human feel sign-off.
@@ -33,10 +33,10 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 ## A) Core loop completeness (must be true)
 
 **A1. A complete vertical-slice run exists**
-- ☐ New Game → Character Creation → Level 0 start works reliably
-- ☐ Day phase: player can progress via dialogue/quests (low-risk errands)
-- ☐ Night phase: infiltration under curfew pressure is playable and fair
-- ☐ The run has a clear closure: Mission Complete / Fail (with recap)
+- ☑ New Game → Character Creation → Level 0 start works reliably
+- ☑ Day phase: player can progress via dialogue/quests (low-risk errands)
+- ☑ Night phase: infiltration under curfew pressure is playable and fair
+- ☑ The run has a clear closure: Mission Complete / Fail (with recap)
 
 **A2. “What do I do next?” is always clear**
 - ☑ The top-priority objective is always visible (HUD + George guidance)
@@ -49,13 +49,13 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 
 **B1. Objective state correctness**
 - ☑ Objective completion is gated correctly (no premature completion)
-- ☐ Collect/pickup objectives increment deterministically (no double count, no missed count)
-- ☐ Objectives update immediately after the triggering action (pickup/dialogue/flag)
+- ☑ Collect/pickup objectives increment deterministically (no double count, no missed count)
+- ☑ Objectives update immediately after the triggering action (pickup/dialogue/flag)
 - ☑ Mission Accomplished triggers only when all primary objectives are complete
 
 **B2. QA/debuggability**
-- ☐ Action log clearly shows quest/objective state transitions
-- ☐ Dev tools (or debug panel) can display: active quests, flags, objective completion
+- ☑ Action log clearly shows quest/objective state transitions
+- ☑ Dev tools (or debug panel) can display: active quests, flags, objective completion
 
 ---
 
@@ -91,9 +91,9 @@ Guiding principle: MVP is not “minimal”, it’s **complete for its intended 
 ## E) Onboarding + UX (first 3 minutes)
 
 - ☐ Player can learn movement/path preview quickly
-- ☐ Player learns stealth toggle + curfew/cameras without reading docs
-- ☐ Player learns Paranoia as “the pressure bar”
-- ☐ Dialogue choices communicate tone/approach clearly
+- ☑ Player learns stealth toggle + curfew/cameras without reading docs
+- ☑ Player learns Paranoia as “the pressure bar”
+- ☑ Dialogue choices communicate tone/approach clearly
 
 Recommended MVP-only tutorialization:
 - ☐ 3–5 contextual tooltips/callouts (only once each)
@@ -102,25 +102,25 @@ Recommended MVP-only tutorialization:
 
 ## F) “Signature” MVP content (makes it memorable)
 
-- ☐ At least 1 night stealth set-piece that feels authored (guards + camera + meaningful choice)
-- ☐ At least 1 dialogue scene that sells the tone (Disco-ish but simpler)
-- ☐ At least 1 consequence that feels real (quest-state shift + immediate payoff)
+- ☑ At least 1 night stealth set-piece that feels authored (guards + camera + meaningful choice)
+- ☑ At least 1 dialogue scene that sells the tone (Disco-ish but simpler)
+- ☑ At least 1 consequence that feels real (quest-state shift + immediate payoff)
 
 ---
 
 ## G) Stability, resetability, and testability (must be boringly solid)
 
-- ☐ No soft-locks in the core loop (day→night→closure)
+- ☑ No soft-locks in the core loop (day→night→closure)
 - ☐ Save/load or session persistence does not corrupt quest state
-- ☐ New Game / Reset produces a clean state (repeatable QA)
-- ☐ Basic smoke test script/checklist exists for every new build
+- ☑ New Game / Reset produces a clean state (repeatable QA)
+- ☑ Basic smoke test script/checklist exists for every new build
 
 ---
 
 ## H) Presentation polish (high leverage, small scope)
 
-- ☐ Basic audio pass (footsteps + alarm/curfew sting + UI confirms)
-- ☐ Visual clarity: stealth/detection/paranoia states are readable
+- ☑ Basic audio pass (footsteps + alarm/curfew sting + UI confirms)
+- ☑ Visual clarity: stealth/detection/paranoia states are readable
 - ☐ Performance: stable framerate on target machines for Level 0
 
 ---
@@ -133,6 +133,7 @@ MVP is considered **ready** when:
 ---
 
 ## Changelog
+- 2026-05-06 — GET-180 Level 0 11/10 playfeel pass turned the accepted guided route into a stronger playable slice and added the dev-only AI playtest harness as a repeatable QA loop. Lira hand-in now completes once and unlocks Naila, keycard pickup updates objective/log/route feedback, combat-pressure clicks either attack/advance or explain invalid actions, George stays quiet with one phase hint at a time, dialogue reach/feedback now handles close-range and combat-blocked NPC clicks, and lightweight browser-safe audio cues now fire for pickup/objective/invalid/curfew/paranoia/recovery/mission events. Validation passed `yarn lint`, `yarn build`, `yarn test`, `yarn test --coverage` (84.75% statements / 76.11% branches / 82.33% functions / 84.75% lines), guided Level 0 no-Codex playtest with 0 findings, and Codex-mode guided/stealth/misuse profiles with no critical/high findings, no browser console/page/network errors, and only low local Codex advisory timeout findings. Final requester subjective 9/10 playfeel sign-off remains pending before GET-180 can be closed.
 - 2026-05-04 — GET-139 Guided Noir Slice final-feel pass tightened the existing Level 0 route without adding new systems. George now opens with mission-first `streetlight` guidance, switches feed tone for curfew stealth and paranoia recovery, and keeps longer route hints readable. The Quests HUD now labels the active route as `Current Beat`, night/curfew clock styling is more urgent, active beat cards use the noir accent palette, and Mission Complete / Fail recaps now read as narrative closure instead of generic system dialogs. Validation passed targeted George/Ops tests, `yarn lint`, `yarn build`, Vite source checks, and `git diff --check`; Playwright/browser screenshot automation was unavailable in this repo, so requester playtest remains pending.
 - 2026-05-04 — GET-139 startup camera/scroller regression follow-up hardened the same-scene New Game path after requester reported the view still opened on a weird location. Camera reset now stops stale follow state, player follow always rebinds to the current player token, and a short startup recenter/viewport broadcast window keeps the initial scroller on the player before movement. Validation passed targeted `CameraModule` tests, `git diff --check`, `yarn lint`, `yarn build`, Vite source checks, and Browser Use DOM smoke for fresh New Game plus active-session New Game restart on `http://127.0.0.1:5174/`; screenshot capture timed out, so requester visual playtest remains pending.
 - 2026-05-04 — GET-139 keypad/keycard sprite visibility follow-up replaced the generic tinted `neon_panel` pickup presentation with explicit Level 0 atlas pickup frames (`pickup_keypad`, `pickup_datapad`, `pickup_transit_token`, `pickup_medkit`). The Lira route Corporate Keycard now resolves to `pickup_keypad` at the authored north-west cache lane placement, while datapad/tokens/medkits also use dedicated sprite objects. Validation passed `node --check scripts/generate-level0-environment-atlas.mjs`, atlas regeneration, `yarn lint`, `yarn build`, targeted collect/dialogue tests, Vite transform checks, and atlas-frame inspection; requester visual playtest remains pending.

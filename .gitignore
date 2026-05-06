@@ -103,6 +103,7 @@ context_portal/
 .playwright-cli/
 output/
 tmp/
+reports/ai-playtests/
 
 # Local agent and knowledge-tool artifacts
 .codex/

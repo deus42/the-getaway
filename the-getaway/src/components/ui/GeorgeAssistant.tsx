@@ -296,7 +296,8 @@ const GeorgeAssistant: React.FC = () => {
         break;
     }
 
-    if (missionProgress) {
+    const shouldAppendMissionProgress = guidedStep.stage === 'complete';
+    if (missionProgress && shouldAppendMissionProgress) {
       if (missionProgress.allPrimaryComplete) {
         missionLines.push(georgeStrings.guidancePrimaryComplete(levelName));
       } else if (nextPrimaryObjective) {

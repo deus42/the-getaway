@@ -27,6 +27,9 @@ export default defineConfig({
   server: {
     port: 5174,
     strictPort: true,
+    watch: {
+      ignored: ['**/reports/ai-playtests/**', '../reports/ai-playtests/**'],
+    },
   },
   preview: {
     port: 4174,

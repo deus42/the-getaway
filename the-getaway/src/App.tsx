@@ -1,5 +1,5 @@
 import { Provider, useSelector } from "react-redux";
-import { CSSProperties, useEffect, useRef, useState, lazy, Suspense } from "react";
+import { CSSProperties, useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
@@ -37,6 +37,12 @@ import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import MissionFailureOverlay from "./components/ui/MissionFailureOverlay";
 import CombatControlWidget from "./components/ui/CombatControlWidget";
 import GameDebugInspector from "./components/debug/GameDebugInspector";
+import {
+  GETAWAY_AGENT_START_LEVEL0_EVENT,
+  installGetawayAgentBridge,
+  shouldEnableGetawayAgentBridge,
+} from "./game/playtest/agentBridge";
+import { primeLevel0AudioCues } from "./game/feedback/audioCues";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -426,6 +432,14 @@ const getSelectablePerks = (player: Player) =>
     .map((definition) => evaluatePerkAvailability(player, definition))
     .filter((availability) => availability.canSelect);
 
+const buildAgentCharacterData = (name: string): CharacterCreationData => ({
+  name,
+  attributes: DEFAULT_SKILLS,
+  backgroundId: 'corpsec_defector',
+  visualPreset: 'default',
+});
+const AGENT_LEVEL0_SESSION_KEY = 'getaway.agent.level0.started';
+
 function AppShell() {
   const [gameStarted, setGameStarted] = useState(false);
   const [showMenu, setShowMenu] = useState(true);
@@ -448,10 +462,19 @@ function AppShell() {
   const reputationSystemsEnabled = useSelector(
     (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
   );
+  const agentLevel0StartedRef = useRef(false);
 
   useEffect(() => {
     log.debug('Component mounted');
     log.debug('Store state:', store.getState());
+    primeLevel0AudioCues();
+  }, []);
+
+  useEffect(() => {
+    return installGetawayAgentBridge({
+      store,
+      nodeEnv: process.env.NODE_ENV,
+    });
   }, []);
 
   useEffect(() => {
@@ -490,6 +513,30 @@ function AppShell() {
     setHasSavedGame(hasPersistedGame());
   }, [showMenu, gameStarted]);
 
+  const handleCharacterCreationComplete = useCallback((data: CharacterCreationData) => {
+    store.dispatch(resetGame());
+
+    const attributes: PlayerSkills = data.attributes ?? DEFAULT_SKILLS;
+    const backgroundId = data.backgroundId ?? 'corpsec_defector';
+
+    store.dispatch(
+      initializeCharacter({
+        name: data.name,
+        skills: attributes,
+        backgroundId,
+        visualPreset: data.visualPreset,
+      })
+    );
+
+    const state = store.getState();
+    const { logs } = getSystemStrings(state.settings.locale);
+    store.dispatch(addLogMessage(`${logs.operationStart} - Call sign: ${data.name}`));
+
+    setShowCharacterCreation(false);
+    setGameStarted(true);
+    setHasSavedGame(true);
+  }, []);
+
   // PoC convenience: allow loading straight into a fresh Level 0 run for quick visual review.
   // Usage: add `?poc=esb` to the URL.
   useEffect(() => {
@@ -526,7 +573,7 @@ function AppShell() {
     // Keep lights settings as-is; ESB PoC neon is implemented as additive emissive graphics.
 
     handleCharacterCreationComplete(pocData);
-  }, [gameStarted, showCharacterCreation]);
+  }, [gameStarted, handleCharacterCreationComplete, showCharacterCreation]);
 
   useEffect(() => {
     if (!gameStarted) {
@@ -559,29 +606,82 @@ function AppShell() {
     setShowCharacterCreation(true);
   };
 
-  const handleCharacterCreationComplete = (data: CharacterCreationData) => {
-    store.dispatch(resetGame());
+  const startAgentLevel0 = useCallback((name: string) => {
+    try {
+      window.localStorage.removeItem(PERSISTED_STATE_KEY);
+    } catch {
+      // Ignore storage failures; resetGame still clears in-memory state.
+    }
 
-    const attributes: PlayerSkills = data.attributes ?? DEFAULT_SKILLS;
-    const backgroundId = data.backgroundId ?? 'corpsec_defector';
+    try {
+      window.sessionStorage.setItem(AGENT_LEVEL0_SESSION_KEY, '1');
+    } catch {
+      // Ignore session storage failures; the in-memory guard still prevents duplicate starts.
+    }
 
-    store.dispatch(
-      initializeCharacter({
-        name: data.name,
-        skills: attributes,
-        backgroundId,
-        visualPreset: data.visualPreset,
-      })
-    );
-
-    const state = store.getState();
-    const { logs } = getSystemStrings(state.settings.locale);
-    store.dispatch(addLogMessage(`${logs.operationStart} - Call sign: ${data.name}`));
-
+    store.dispatch(clearAllFeedback());
+    setLevelUpData(null);
+    setXpNotifications([]);
+    setPendingPerkSelections(0);
+    setShowPerkSelection(false);
+    setShowPointAllocation(false);
+    setLevelUpFlowActive(false);
+    setShowCharacterScreen(false);
+    setHasSavedGame(false);
+    setShowMenu(false);
     setShowCharacterCreation(false);
-    setGameStarted(true);
-    setHasSavedGame(true);
-  };
+    handleCharacterCreationComplete(buildAgentCharacterData(name));
+  }, [handleCharacterCreationComplete]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (
+      !shouldEnableGetawayAgentBridge(window.location.search, process.env.NODE_ENV) ||
+      params.get('agentStart') !== 'level0'
+    ) {
+      return undefined;
+    }
+
+    let agentAlreadyStartedInSession = false;
+    try {
+      agentAlreadyStartedInSession =
+        window.sessionStorage.getItem(AGENT_LEVEL0_SESSION_KEY) === '1';
+    } catch {
+      agentAlreadyStartedInSession = false;
+    }
+
+    if (agentAlreadyStartedInSession) {
+      agentLevel0StartedRef.current = true;
+      return undefined;
+    }
+
+    if (!gameStarted && !showCharacterCreation && !agentLevel0StartedRef.current) {
+      agentLevel0StartedRef.current = true;
+      startAgentLevel0(params.get('agentName') ?? 'Agent');
+    }
+
+    return undefined;
+  }, [gameStarted, showCharacterCreation, startAgentLevel0]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const handleAgentStart = (event: Event) => {
+      const detail = (event as CustomEvent<{ name?: string }>).detail;
+      startAgentLevel0(detail?.name ?? 'Agent');
+    };
+
+    window.addEventListener(GETAWAY_AGENT_START_LEVEL0_EVENT, handleAgentStart);
+    return () => {
+      window.removeEventListener(GETAWAY_AGENT_START_LEVEL0_EVENT, handleAgentStart);
+    };
+  }, [startAgentLevel0]);
 
   const handleCharacterCreationCancel = () => {
     setShowCharacterCreation(false);

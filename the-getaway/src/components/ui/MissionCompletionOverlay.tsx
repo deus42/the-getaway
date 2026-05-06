@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getUIStrings } from '../../content/ui';
 import MissionCompleteModal from './MissionCompleteModal';
@@ -15,6 +15,7 @@ import {
 import { emitLevelAdvanceRequestedEvent } from '../../game/systems/missionProgression';
 import { AppDispatch, RootState } from '../../store';
 import { setCurrentMapAreaZoneMetadata } from '../../store/worldSlice';
+import { playLevel0FeedbackCue } from '../../game/feedback/audioCues';
 
 const MissionCompletionOverlay: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -27,6 +28,19 @@ const MissionCompletionOverlay: React.FC = () => {
   const uiStrings = getUIStrings(locale);
 
   const modalOpen = pendingAdvance && !celebrationAcknowledged;
+  const playedCueRef = useRef(false);
+
+  useEffect(() => {
+    if (!modalOpen) {
+      playedCueRef.current = false;
+      return;
+    }
+    if (!playedCueRef.current) {
+      playLevel0FeedbackCue('mission');
+      playedCueRef.current = true;
+    }
+  }, [modalOpen]);
+
   const handleContinue = () => {
     if (!missionProgress) {
       return;

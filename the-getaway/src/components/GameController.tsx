@@ -32,6 +32,7 @@ import {
   setMapArea,
   setWorkbenchStatus,
   removeItemInstanceFromMap,
+  removeEnemy,
   type WorkbenchStatus,
 } from "../store/worldSlice";
 import { addLogMessage } from "../store/logSlice";
@@ -136,6 +137,7 @@ import { PARANOIA_CONFIG } from "../content/paranoia/paranoiaConfig";
 import { resolvePickupObjectName } from "../game/utils/itemDisplay";
 import { setAutoBattleEnabled } from "../store/settingsSlice";
 import AutoBattleController from "../game/combat/automation/AutoBattleController";
+import { playLevel0FeedbackCue } from "../game/feedback/audioCues";
 import {
   selectStealthAvailability,
   selectActiveDialogueId,
@@ -157,9 +159,23 @@ const resolveParanoiaDetectionMultiplier = (tier: ParanoiaTier): number => {
   }
 };
 
+const rankParanoiaTier = (tier: ParanoiaTier): number => {
+  switch (tier) {
+    case "on_edge":
+      return 1;
+    case "panicked":
+      return 2;
+    case "breakdown":
+      return 3;
+    default:
+      return 0;
+  }
+};
+
 const STEALTH_COOLDOWN_MS = 4500;
 const CAMERA_SABOTAGE_DISABLE_MS = 120000;
 const DRONE_OBSERVATION_RADIUS = 3;
+const NPC_INTERACTION_RANGE = 2;
 
 const rankAlertLevel = (level?: AlertLevel | null): number => {
   switch (level) {
@@ -251,6 +267,11 @@ const objectiveMatchesEnemy = (objective: QuestObjective, enemy: Enemy): boolean
   return false;
 };
 
+const isCurfewPressureEnemy = (enemy: Enemy): boolean =>
+  enemy.resourceKey === 'enemies.corpsec_guard' ||
+  enemy.name.toLowerCase().includes('curfew patrol') ||
+  enemy.name.toLowerCase().includes('комендант');
+
 const objectiveMatchesCameraSabotage = (objective: QuestObjective): boolean =>
   objective.type === 'kill' &&
   !objective.isCompleted &&
@@ -269,6 +290,12 @@ const isQuestProgressTrackable = (quest: Quest): boolean =>
 
 const isLiraCacheNightObjective = (quest: Quest, objective: QuestObjective): boolean =>
   quest.id === 'quest_market_cache' && objective.id === 'recover-keycard';
+
+const isRecoveryInterior = (area: MapArea): boolean =>
+  area.zoneId === 'resistance_safehouse' ||
+  area.name.toLowerCase().includes('safehouse') ||
+  (area.displayName?.toLowerCase().includes('safehouse') ?? false) ||
+  (area.summary?.toLowerCase().includes('recovery') ?? false);
 
 const distanceBetween = (a: Position, b: Position): number => {
   const dx = a.x - b.x;
@@ -392,6 +419,10 @@ const GameController: React.FC = () => {
     [quests]
   );
   const activeDialogueId = useSelector(selectActiveDialogueId);
+  const activeDialogueNodeId = useSelector(
+    (state: RootState) => state.quests.activeDialogue.currentNodeId
+  );
+  const activeDialogueOpen = Boolean(activeDialogueId && activeDialogueNodeId);
   const locale = useSelector((state: RootState) => state.settings.locale);
   const autoBattleEnabled = useSelector(
     (state: RootState) => state.settings.autoBattleEnabled
@@ -479,7 +510,9 @@ const GameController: React.FC = () => {
   const initializedPlayerTurnRef = useRef<number | null>(null);
   const globalAlertLevelRef = useRef(globalAlertLevel);
   const timeOfDayRef = useRef(timeOfDay);
-  const activeDialogueIdRef = useRef<string | null>(activeDialogueId);
+  const activeDialogueIdRef = useRef<string | null>(
+    activeDialogueOpen ? activeDialogueId : null
+  );
   const overlayEnabledRef = useRef(overlayEnabled);
   const worldCurrentTimeRef = useRef(worldCurrentTime);
   const previousSurveillanceAreaId = useRef<string | null>(null);
@@ -540,7 +573,7 @@ const GameController: React.FC = () => {
         return false;
       }
 
-      if (activeDialogueId === npc.dialogueId) {
+      if (activeDialogueOpen && activeDialogueId === npc.dialogueId) {
         return true;
       }
 
@@ -564,7 +597,7 @@ const GameController: React.FC = () => {
       dispatch(addLogMessage(logStrings.npcChannelOpened(npc.name)));
       return true;
     },
-    [dispatch, dialogues, activeDialogueId, logStrings]
+    [dispatch, dialogues, activeDialogueId, activeDialogueOpen, logStrings]
   );
 
   const attemptMovementStamina = useCallback(
@@ -757,10 +790,37 @@ const GameController: React.FC = () => {
               count: desiredCount,
             })
           );
+          dispatch(addLogMessage(logStrings.objectiveUpdated(objective.description, quest.name)));
+          if (quest.id === 'quest_market_cache' && objective.id === 'recover-keycard') {
+            dispatch(addLogMessage(logStrings.cacheKeycardSecured));
+            mapAreaRef.current?.entities.enemies
+              .filter(isCurfewPressureEnemy)
+              .forEach((enemy) => {
+                previousEnemiesRef.current.delete(enemy.id);
+                dispatch(removeEnemy(enemy.id));
+              });
+            cancelPendingEnemyAction();
+            dispatch(exitCombat());
+            dispatch(resetActionPoints());
+            dispatch(setGlobalAlertLevel(AlertLevel.SUSPICIOUS));
+            previousGlobalAlertLevel.current = AlertLevel.SUSPICIOUS;
+            dispatch(clearReinforcementsSchedule());
+            setCurrentEnemyTurnIndex(0);
+            setPendingEnemyEngagementId(null);
+            setQueuedPath([]);
+            setCurfewAlertState("spawned");
+          }
+          playLevel0FeedbackCue('objective');
         });
       });
     },
-    [curfewActive, dispatch, ensureSideQuestProgressTracking]
+    [
+      cancelPendingEnemyAction,
+      curfewActive,
+      dispatch,
+      ensureSideQuestProgressTracking,
+      logStrings,
+    ]
   );
 
   useEffect(() => {
@@ -768,8 +828,20 @@ const GameController: React.FC = () => {
   }, [surveillanceZone]);
 
   useEffect(() => {
+    const previousTier = paranoiaTierRef.current;
+    if (previousTier !== paranoiaTier) {
+      const previousRank = rankParanoiaTier(previousTier);
+      const nextRank = rankParanoiaTier(paranoiaTier);
+      if (nextRank > previousRank && nextRank > 0) {
+        dispatch(addLogMessage(logStrings.paranoiaSpike(paranoiaTier)));
+        playLevel0FeedbackCue('paranoia');
+      } else if (nextRank < previousRank) {
+        dispatch(addLogMessage(logStrings.paranoiaRecovery(paranoiaTier)));
+        playLevel0FeedbackCue('recovery');
+      }
+    }
     paranoiaTierRef.current = paranoiaTier;
-  }, [paranoiaTier]);
+  }, [dispatch, logStrings, paranoiaTier]);
 
   useEffect(() => {
     zoneHeatRef.current = zoneHeat;
@@ -791,8 +863,8 @@ const GameController: React.FC = () => {
   }, [player.id]);
 
   useEffect(() => {
-    activeDialogueIdRef.current = activeDialogueId;
-  }, [activeDialogueId]);
+    activeDialogueIdRef.current = activeDialogueOpen ? activeDialogueId : null;
+  }, [activeDialogueId, activeDialogueOpen]);
 
   useEffect(() => {
     questsRef.current = quests;
@@ -852,6 +924,7 @@ const GameController: React.FC = () => {
         })
       );
       dispatch(addLogMessage(logStrings.itemPickedUp(pickupLabel, pickupCount)));
+      playLevel0FeedbackCue('pickup');
       syncCollectObjectivesForInventory(trackableQuests, stagedInventoryItems);
     });
   }, [
@@ -1128,6 +1201,8 @@ const GameController: React.FC = () => {
           cooldownMs: PARANOIA_CONFIG.calmTabs.cooldownMs,
         })
       );
+      dispatch(addLogMessage(logStrings.paranoiaRecovery(paranoiaTierRef.current)));
+      playLevel0FeedbackCue('recovery');
     }
 
     if (counts.cigarettes < previous.cigarettes) {
@@ -1144,8 +1219,10 @@ const GameController: React.FC = () => {
           timestamp,
         })
       );
+      dispatch(addLogMessage(logStrings.paranoiaRecovery(paranoiaTierRef.current)));
+      playLevel0FeedbackCue('recovery');
     }
-  }, [player.inventory.items, dispatch]);
+  }, [player.inventory.items, dispatch, logStrings]);
 
   useEffect(() => {
     globalAlertLevelRef.current = globalAlertLevel;
@@ -1535,10 +1612,6 @@ const GameController: React.FC = () => {
         return;
       }
 
-      if (inCombat) {
-        return;
-      }
-
       const target = detail.position;
 
       setPendingNpcInteractionId(null);
@@ -1557,6 +1630,7 @@ const GameController: React.FC = () => {
       if (npcAtTarget) {
         if (inCombat) {
           dispatch(addLogMessage(logStrings.combatChatterOverrides));
+          playLevel0FeedbackCue('invalid');
           return;
         }
 
@@ -1564,7 +1638,7 @@ const GameController: React.FC = () => {
           Math.abs(npcAtTarget.position.x - player.position.x) +
           Math.abs(npcAtTarget.position.y - player.position.y);
 
-        if (distance <= 1) {
+        if (distance <= NPC_INTERACTION_RANGE) {
           beginDialogueWithNpc(npcAtTarget);
           return;
         }
@@ -1632,6 +1706,10 @@ const GameController: React.FC = () => {
           dispatch(addLogMessage(logStrings.npcBoxedIn(npcAtTarget.name)));
         }
 
+        return;
+      }
+
+      if (inCombat) {
         return;
       }
 
@@ -2087,6 +2165,10 @@ const GameController: React.FC = () => {
             })
           );
           dispatch(addLogMessage(logStrings.slipInsideStructure));
+          if (isRecoveryInterior(targetArea)) {
+            dispatch(addLogMessage(logStrings.paranoiaRecovery(paranoiaTierRef.current)));
+            playLevel0FeedbackCue('recovery');
+          }
           setCurfewAlertState("clear");
         }
       } else {
@@ -2187,7 +2269,7 @@ const GameController: React.FC = () => {
       Math.abs(npc.position.x - player.position.x) +
       Math.abs(npc.position.y - player.position.y);
 
-    if (distance <= 1) {
+    if (distance <= NPC_INTERACTION_RANGE) {
       if (!inCombat) {
         const started = beginDialogueWithNpc(npc);
         setPendingNpcInteractionId(null);
@@ -2280,8 +2362,8 @@ const GameController: React.FC = () => {
     if (!reputationSystemsEnabled) {
       return;
     }
-    dispatch(setSuspicionPaused(Boolean(activeDialogueId)));
-  }, [activeDialogueId, dispatch, reputationSystemsEnabled]);
+    dispatch(setSuspicionPaused(activeDialogueOpen));
+  }, [activeDialogueOpen, dispatch, reputationSystemsEnabled]);
 
   // --- Perception Processing ---
   useEffect(() => {
@@ -2801,6 +2883,7 @@ const GameController: React.FC = () => {
       // Check if player has enough AP
       if (!Number.isFinite(attackCost) || player.actionPoints < attackCost) {
         dispatch(addLogMessage(logStrings.notEnoughAp));
+        playLevel0FeedbackCue('invalid');
         return;
       }
 
@@ -2808,6 +2891,7 @@ const GameController: React.FC = () => {
       const weaponRange = player.equipped.weapon?.range ?? 1;
       if (!isInAttackRange(player.position, enemy.position, weaponRange)) {
         dispatch(addLogMessage(logStrings.enemyOutOfRange));
+        playLevel0FeedbackCue('invalid');
         return;
       }
 
@@ -2898,6 +2982,232 @@ const GameController: React.FC = () => {
     [player, enemies, dispatch, log, logStrings]
   );
 
+  useEffect(() => {
+    const handleCombatTileClick = (event: Event) => {
+      const customEvent = event as CustomEvent<TileClickDetail>;
+      const detail = customEvent.detail;
+
+      if (!inCombat || !detail || !currentMapArea || detail.areaId !== currentMapArea.id) {
+        return;
+      }
+
+      const enemyAtTarget = currentMapArea.entities.enemies.find(
+        (enemy) =>
+          enemy.position.x === detail.position.x &&
+          enemy.position.y === detail.position.y &&
+          enemy.health > 0
+      );
+      const itemAtTarget = currentMapArea.entities.items.find(
+        (item) =>
+          item.position?.x === detail.position.x &&
+          item.position?.y === detail.position.y
+      ) ?? null;
+
+      if (!isPlayerTurn) {
+        dispatch(addLogMessage(logStrings.notYourTurn));
+        playLevel0FeedbackCue('invalid');
+        return;
+      }
+
+      if (player.actionPoints <= 0) {
+        dispatch(addLogMessage(logStrings.actionPointsDepleted));
+        playLevel0FeedbackCue('invalid');
+        return;
+      }
+
+      if (itemAtTarget) {
+        const activeItemObjective = questsRef.current
+          .filter(isQuestProgressTrackable)
+          .map((quest) => quest.objectives.find((objective) => !objective.isCompleted))
+          .find((objective): objective is QuestObjective =>
+            Boolean(objective && objectiveMatchesItem(objective, itemAtTarget))
+          );
+
+        if (activeItemObjective) {
+          const collectCombatObjectiveItem = () => {
+            const pickupCount = getItemPickupQuantity(itemAtTarget);
+            const pickupLabel = resolvePickupObjectName(itemAtTarget);
+            const stagedInventoryItems = [...(player.inventory.items ?? []), itemAtTarget];
+            const itemPosition = itemAtTarget.position ?? detail.position;
+            const trackableQuests = questsRef.current.filter(isQuestProgressTrackable);
+
+            dispatch(addItem(itemAtTarget));
+            dispatch(
+              removeItemInstanceFromMap({
+                id: itemAtTarget.id,
+                position: itemAtTarget.position,
+                name: itemAtTarget.name,
+              })
+            );
+            window.dispatchEvent(
+              new CustomEvent<PickupStateSyncDetail>(PICKUP_STATE_SYNC_EVENT, {
+                detail: {
+                  areaId: currentMapArea.id,
+                  itemId: itemAtTarget.id,
+                  position: itemAtTarget.position,
+                },
+              })
+            );
+            dispatch(
+              addFloatingNumber({
+                id: uuidv4(),
+                value: pickupCount,
+                gridX: itemPosition.x,
+                gridY: itemPosition.y,
+                type: 'pickup',
+                label: pickupLabel,
+              })
+            );
+            dispatch(addLogMessage(logStrings.itemPickedUp(pickupLabel, pickupCount)));
+            playLevel0FeedbackCue('pickup');
+            syncCollectObjectivesForInventory(trackableQuests, stagedInventoryItems);
+            dispatch(updateActionPoints(-1));
+            if (player.actionPoints <= 1) {
+              dispatch(switchTurn());
+            }
+          };
+
+          const distanceToItem =
+            Math.abs(detail.position.x - player.position.x) +
+            Math.abs(detail.position.y - player.position.y);
+
+          if (distanceToItem <= 1) {
+            collectCombatObjectiveItem();
+            return;
+          }
+
+          const pathToObjective = findPath(
+            player.position,
+            itemAtTarget.position ?? detail.position,
+            currentMapArea,
+            {
+              player,
+              enemies,
+              npcs: currentMapArea.entities.npcs,
+            }
+          );
+          const nextStep = pathToObjective[0];
+
+          if (!nextStep) {
+            dispatch(addLogMessage(logStrings.combatClickRequiresTarget));
+            playLevel0FeedbackCue('invalid');
+            return;
+          }
+
+          dispatch(movePlayer(nextStep));
+          const nextDistanceToItem =
+            Math.abs(detail.position.x - nextStep.x) +
+            Math.abs(detail.position.y - nextStep.y);
+          if (nextDistanceToItem <= 1) {
+            collectCombatObjectiveItem();
+            return;
+          }
+
+          dispatch(updateActionPoints(-1));
+          dispatch(addLogMessage(logStrings.combatAdvanceToObjective(resolvePickupObjectName(itemAtTarget))));
+          if (player.actionPoints <= 1) {
+            dispatch(switchTurn());
+          }
+          return;
+        }
+      }
+
+      if (enemyAtTarget) {
+        const weaponRange = player.equipped.weapon?.range ?? 1;
+        if (!isInAttackRange(player.position, enemyAtTarget.position, weaponRange)) {
+          const approachOffsets: Position[] = [
+            { x: 1, y: 0 },
+            { x: -1, y: 0 },
+            { x: 0, y: 1 },
+            { x: 0, y: -1 },
+          ];
+          let selectedPath: Position[] | null = null;
+
+          for (const offset of approachOffsets) {
+            const candidate = {
+              x: enemyAtTarget.position.x + offset.x,
+              y: enemyAtTarget.position.y + offset.y,
+            };
+
+            if (
+              candidate.x < 0 ||
+              candidate.y < 0 ||
+              candidate.x >= currentMapArea.width ||
+              candidate.y >= currentMapArea.height
+            ) {
+              continue;
+            }
+
+            if (
+              !isPositionWalkable(candidate, currentMapArea, player, enemies, {
+                npcs: currentMapArea.entities.npcs,
+              })
+            ) {
+              continue;
+            }
+
+            const pathToCandidate = findPath(
+              player.position,
+              candidate,
+              currentMapArea,
+              {
+                player,
+                enemies,
+                npcs: currentMapArea.entities.npcs,
+              }
+            );
+
+            if (
+              pathToCandidate.length > 0 &&
+              (!selectedPath || pathToCandidate.length < selectedPath.length)
+            ) {
+              selectedPath = pathToCandidate;
+            }
+          }
+
+          const nextStep = selectedPath?.[0];
+          if (!nextStep) {
+            dispatch(addLogMessage(logStrings.enemyOutOfRange));
+            playLevel0FeedbackCue('invalid');
+            return;
+          }
+
+          dispatch(movePlayer(nextStep));
+          dispatch(updateActionPoints(-1));
+          dispatch(addLogMessage(logStrings.combatAdvanceToRange(enemyAtTarget.name)));
+          if (player.actionPoints <= 1) {
+            dispatch(switchTurn());
+          }
+          return;
+        }
+
+        attackEnemy(enemyAtTarget, currentMapArea);
+        return;
+      }
+
+      dispatch(addLogMessage(logStrings.combatClickRequiresTarget));
+      playLevel0FeedbackCue('invalid');
+    };
+
+    window.addEventListener(TILE_CLICK_EVENT, handleCombatTileClick as EventListener);
+    return () => {
+      window.removeEventListener(
+        TILE_CLICK_EVENT,
+        handleCombatTileClick as EventListener
+      );
+    };
+  }, [
+    attackEnemy,
+    currentMapArea,
+    dispatch,
+    enemies,
+    inCombat,
+    isPlayerTurn,
+    logStrings,
+    player,
+    syncCollectObjectivesForInventory,
+  ]);
+
   // Find the closest enemy to a position
   const findClosestEnemy = useCallback(
     (position: Position): Enemy | null => {
@@ -2987,7 +3297,7 @@ const GameController: React.FC = () => {
         dispatch(setAutoBattleEnabled(false));
       }
 
-      if (activeDialogueId) {
+      if (activeDialogueOpen) {
         event.preventDefault();
         event.stopPropagation();
 
@@ -3014,7 +3324,7 @@ const GameController: React.FC = () => {
           const distance =
             Math.abs(npc.position.x - player.position.x) +
             Math.abs(npc.position.y - player.position.y);
-          return distance <= 1;
+          return distance <= NPC_INTERACTION_RANGE;
         });
 
         if (interactiveNpc) {
@@ -3270,6 +3580,10 @@ const GameController: React.FC = () => {
                 })
               );
               dispatch(addLogMessage(logStrings.slipInsideStructure));
+              if (isRecoveryInterior(targetArea)) {
+                dispatch(addLogMessage(logStrings.paranoiaRecovery(paranoiaTierRef.current)));
+                playLevel0FeedbackCue('recovery');
+              }
               setCurfewAlertState("clear");
             }
           } else {
@@ -3291,6 +3605,7 @@ const GameController: React.FC = () => {
         if (curfewActive && !areaIsInterior) {
           if (curfewAlertState === "clear") {
             dispatch(addLogMessage(logStrings.searchlightsWarning));
+            playLevel0FeedbackCue('curfew');
             setCurfewAlertState("warning");
           } else if (curfewAlertState === "warning") {
             const spawnPosition = findPatrolSpawnPosition(newPosition);
@@ -3322,8 +3637,10 @@ const GameController: React.FC = () => {
               if (!inCombat) {
                 dispatch(enterCombat());
                 dispatch(addLogMessage(logStrings.curfewOpenFire));
+                playLevel0FeedbackCue('curfew');
               } else {
                 dispatch(addLogMessage(logStrings.curfewReinforcement));
+                playLevel0FeedbackCue('curfew');
               }
             } else {
               dispatch(addLogMessage(logStrings.curfewFootsteps));
@@ -3375,7 +3692,7 @@ const GameController: React.FC = () => {
       queuedPath,
       setQueuedPath,
       setPendingNpcInteractionId,
-      activeDialogueId,
+      activeDialogueOpen,
       mapConnections,
       dialogues,
       mapAreaId,

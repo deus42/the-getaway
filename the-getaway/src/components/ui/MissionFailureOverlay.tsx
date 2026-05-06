@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { getUIStrings } from '../../content/ui';
 import { RootState } from '../../store';
 import { selectStartedMissionProgress } from '../../store/selectors/missionSelectors';
 import { selectParanoiaTier, selectParanoiaValue } from '../../store/selectors/paranoiaSelectors';
+import { playLevel0FeedbackCue } from '../../game/feedback/audioCues';
 
 interface MissionFailureOverlayProps {
   open: boolean;
@@ -69,6 +70,18 @@ const MissionFailureOverlay: React.FC<MissionFailureOverlayProps> = ({ open, onR
   const paranoiaValue = useSelector(selectParanoiaValue);
   const paranoiaTier = useSelector(selectParanoiaTier);
   const missionStrings = getUIStrings(locale).mission;
+  const playedCueRef = useRef(false);
+
+  useEffect(() => {
+    if (!open) {
+      playedCueRef.current = false;
+      return;
+    }
+    if (!playedCueRef.current) {
+      playLevel0FeedbackCue('invalid');
+      playedCueRef.current = true;
+    }
+  }, [open]);
 
   if (!open) {
     return null;

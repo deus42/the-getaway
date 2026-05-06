@@ -238,11 +238,19 @@ describe('DialogueOverlay', () => {
     expect(completionOption).toHaveStyle('pointer-events: auto');
 
     fireEvent.click(completionOption);
+    const completedQuest = store
+      .getState()
+      .quests.quests.find((quest) => quest.id === 'quest_market_cache');
+
+    expect(completedQuest?.isCompleted).toBe(true);
     expect(
-      store
-        .getState()
-        .quests.quests.find((quest) => quest.id === 'quest_market_cache')
+      completedQuest?.objectives.find((objective) => objective.id === 'return-to-lira')
         ?.isCompleted
+    ).toBe(true);
+    expect(
+      store.getState().player.data.inventory.items.some(
+        (item) => item.resourceKey === 'items.encrypted_datapad'
+      )
     ).toBe(true);
   });
 

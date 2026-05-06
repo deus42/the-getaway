@@ -367,6 +367,23 @@ export const instantiateItem = (
   return item;
 };
 
+export const findItemDefinitionByResourceKey = (
+  resourceKey: string
+): ItemDefinitionId | null => {
+  const match = (Object.keys(ITEM_CATALOG) as ItemDefinitionId[]).find(
+    (definitionId) => ITEM_CATALOG[definitionId].resourceKey === resourceKey
+  );
+  return match ?? null;
+};
+
+export const instantiateItemByResourceKey = (
+  resourceKey: string,
+  options: InstantiateItemOptions = {}
+): Item | null => {
+  const definitionId = findItemDefinitionByResourceKey(resourceKey);
+  return definitionId ? instantiateItem(definitionId, options) : null;
+};
+
 export const listItemDefinitions = (): Array<{ id: ItemDefinitionId; prototype: ItemPrototype }> => {
   return (Object.keys(ITEM_CATALOG) as ItemDefinitionId[]).map((id) => ({
     id,

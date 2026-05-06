@@ -40,7 +40,7 @@ Contains all static assets for the game including:
 
 React components that make up the game's user interface:
 - **`GameCanvas.tsx`**: The main component that integrates Phaser with React. It initializes the Phaser game instance and provides the canvas where the game is rendered.
-- **`GameController.tsx`**: Bridges Redux state with Phaser events, handling player input, combat flow, click-to-move execution, curfew enforcement, NPC routine scheduling, and now prevents stepping onto NPC tiles while auto-pathing to conversation range when you click an NPC. Collect-objective pickup progress is synchronized from staged inventory snapshots so fresh pickups and inventory backfill share one deterministic path.
+- **`GameController.tsx`**: Bridges Redux state with Phaser events, handling player input, combat flow, click-to-move execution, curfew enforcement, NPC routine scheduling, and now prevents stepping onto NPC tiles while auto-pathing to conversation range when you click an NPC. Level 0 dialogue reach accepts close two-tile interactions for named contacts, stale dialogue IDs no longer block reopened conversations, and combat-blocked NPC clicks emit explicit feedback instead of failing silently. Collect-objective pickup progress is synchronized from staged inventory snapshots so fresh pickups and inventory backfill share one deterministic path.
 
 ### `/the-getaway/src/components/ui`
 
@@ -81,6 +81,24 @@ Dedicated folder for reusable React UI components, separate from core game logic
 2. Bridge services in `src/game/services/*` proxy Phaser events to React HUD listeners while React components dispatch Redux actions that Phaser systems observe.
 3. Persistence helpers serialise whitelisted slices with version metadata and rehydrate on boot, invoking migrators when the stored version lags.
 4. Localisation helpers resolve bilingual content for both HUD strings and scene metadata, ensuring English remains the source of truth with Ukrainian kept in lockstep.
+
+## Dev-Only AI Playtest Harness
+> Category: qa_tooling
+> ID: ai_playtest_harness
+
+### Design principles
+
+- Keep AI/browser playtesting development-only: `?agent=1` installs the bridge only outside production builds.
+- Treat generated screenshots/reports as evidence artifacts under ignored `reports/ai-playtests/`; source/tests/docs remain the commit boundary.
+- Keep Codex advisory read-only: it can suggest actions/findings, but it never edits files or creates Linear issues automatically.
+
+### Technical flow
+
+1. `the-getaway/src/game/playtest/agentBridge.ts` exposes a QA-safe browser bridge with redacted snapshots and constrained actions (`startLevel0`, NPC interaction, item collection, tile clicks, dialogue selection, clock/stealth/wait helpers).
+2. `tools/ai-playtester/run.ts` drives Playwright against the bridge with three profiles: `guided-level0`, `stealth-curfew`, and `misuse-regression`. The guided profile keeps the deterministic accepted route authoritative while allowing Codex advisory findings; this prevents route thrash from replacing the slice contract.
+3. `the-getaway/src/game/playtest/reporting.ts` and `reportSchema.ts` normalize Markdown/JSON evidence with finding severity, repro steps, screenshots, and optional Linear payload suggestions. The runner does not create tracker issues.
+4. `the-getaway/vite.config.ts` and `.gitignore` exclude `reports/ai-playtests/` from watch churn and source commits.
+5. The harness is covered by `the-getaway/src/__tests__/agentBridge.test.ts` and `the-getaway/src/__tests__/playtestSchemas.test.ts`.
 
 ```mermaid
 flowchart LR
@@ -1088,6 +1106,38 @@ The onboarding flow lives entirely in `src/components/ui/CharacterCreationScreen
 `src/content/backgrounds.ts`
 `src/store/playerSlice.ts`
 `src/__tests__/backgroundInitialization.test.ts`
+
+## Codex-Powered AI Playtest Agent
+
+The v1 AI playtest agent is a development/test-only QA harness. It uses Playwright as the browser actuator and local Codex CLI auth as the optional reasoning layer; it does not use `OPENAI_API_KEY`, does not mutate Linear, and does not write game files during a playtest run.
+
+### Runtime bridge
+
+- The app installs `window.__getawayAgent` only when the URL contains `?agent=1` and `process.env.NODE_ENV !== 'production'`.
+- Normal player sessions and production builds do not expose the bridge. When the gate is missing or production mode is active, `installGetawayAgentBridge` deletes any stale bridge reference.
+- `src/game/playtest/agentBridge.ts` exposes `snapshot()` plus constrained `dispatch()` actions. Low-level compatibility actions remain (`startLevel0`, `clickTile`, `focusObjective`, `toggleStealth`, `chooseDialogueOption`, `setClock`, `wait`), and expert-gamer semantic actions add safer intent handles: `interactNpc`, `collectItem`, `waitForDialogue`, `waitForObjectiveChange`, and `waitForPlayerIdle`.
+- Bridge action results preserve the original `ok/message/snapshot` shape and add structured QA metadata: `status`, `reason`, `beforeObjectiveId`, `afterObjectiveId`, `stateChanged`, and `evidenceHint`. The runner uses this metadata to distinguish invalid tooling actions from expected gameplay blockers/timeouts.
+- Snapshots are QA-safe summaries over Redux and browser state: player vitals/position, map metadata, objective and mission status, NPC/item/enemy/camera summaries, stealth/curfew/paranoia/suspicion, dialogue options, overlays, and recent logs. Inventory contents and unrestricted store internals are not exposed.
+- `App.tsx` owns the fresh Level 0 boot path for `?agent=1&agentStart=level0&fresh=1`; the bridge only emits a start event so React state and Redux initialization stay on the normal app path.
+- `DialogueOverlay.tsx` listens for the bridge dialogue-option event and reuses the same locked-option handling as keyboard/click input.
+
+### External runner
+
+- `tools/ai-playtester/run.ts` is invoked from `the-getaway/` with `yarn playtest:agent -- --profile guided-level0 --max-steps 120`. The supported profiles are `guided-level0`, `stealth-curfew`, and `misuse-regression`.
+- The runner starts or reuses the Vite dev server on `http://localhost:5174`, clears `localStorage`, opens `/?agent=1&agentStart=level0&fresh=1`, waits for the bridge and canvas, and captures screenshots, browser console/page/network errors, snapshots, action results, and trace metadata.
+- `--no-codex` runs deterministic smoke actions. `--codex` or the default mode invokes `/opt/homebrew/bin/codex exec --ephemeral --cd <repo> --sandbox read-only -c approval_policy="never" --output-schema tools/ai-playtester/schemas/codex-action.schema.json -i <screenshot> --output-last-message <tmp> -`.
+- Codex receives the current snapshot, screenshot, profile goal, guided milestones, and recent trace, and must return strict `getaway_codex_action_v1` JSON. The prompt instructs Codex to prefer semantic actions, wait after interactions, avoid repeated failed hand-ins, and escalate proven blockers instead of thrashing. Playwright remains the only actuator. Codex advisory calls have a bounded timeout and deterministic fallback, so local quota/auth failures become low-severity tooling findings instead of blocking the browser run.
+- Guided Level 0 runs track milestones for Lira start, keycard pickup, Lira hand-in, Naila route, Brant route, and recap. If repeated snapshots prove the Lira hand-in blocker, the runner stops early and emits one high-confidence gameplay finding without modifying gameplay code.
+- Reports are written to `reports/ai-playtests/<run-id>.md` with screenshots under `reports/ai-playtests/<run-id>/`; that directory is ignored/generated evidence. During a run, screenshots are captured in the OS temp directory and copied into `reports/ai-playtests/` only at the end so Vite does not reload on every capture. Each report includes human sections plus an embedded `ai_playtest_findings_v1` JSON block with suggested Linear payloads only. Report findings are normalized by `dedupeKey`, classified as `gameplay`, `tooling`, or `agent-strategy`, and may include merged evidence, `blockingMilestone`, and agent confidence notes.
+
+`src/game/playtest/agentBridge.ts`
+`src/game/playtest/reportSchema.ts`
+`src/game/playtest/reporting.ts`
+`tools/ai-playtester/run.ts`
+`tools/ai-playtester/schemas/codex-action.schema.json`
+`tools/ai-playtester/schemas/ai-playtest-findings-v1.schema.json`
+`src/__tests__/agentBridge.test.ts`
+`src/__tests__/playtestSchemas.test.ts`
 
 ## Testing Strategy
 

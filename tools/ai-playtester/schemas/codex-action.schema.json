@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "getaway_codex_action_v1",
+  "type": "object",
+  "required": ["schema", "action", "rationale", "riskNotes", "candidateFindings"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": { "type": "string", "const": "getaway_codex_action_v1" },
+    "action": {
+      "type": "object",
+      "required": ["type", "name", "id", "role", "position", "index", "phase", "ms", "timeoutMs", "fromId"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "startLevel0",
+            "clickTile",
+            "focusObjective",
+            "interactNpc",
+            "collectItem",
+            "toggleStealth",
+            "chooseDialogueOption",
+            "setClock",
+            "waitForDialogue",
+            "waitForObjectiveChange",
+            "waitForPlayerIdle",
+            "wait"
+          ]
+        },
+        "name": { "type": "string" },
+        "id": { "type": "string" },
+        "role": { "type": "string" },
+        "position": { "$ref": "#/$defs/position" },
+        "index": { "type": "integer", "minimum": 0 },
+        "phase": { "type": "string", "enum": ["day", "night", "midday"] },
+        "ms": { "type": "number", "minimum": 0, "maximum": 5000 },
+        "timeoutMs": { "type": "number", "minimum": 0, "maximum": 10000 },
+        "fromId": { "type": "string" }
+      }
+    },
+    "rationale": { "type": "string" },
+    "riskNotes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "candidateFindings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/finding" }
+    }
+  },
+  "$defs": {
+    "position": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "integer" },
+        "y": { "type": "integer" }
+      }
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "id",
+        "severity",
+        "category",
+        "title",
+        "reproSteps",
+        "expected",
+        "observed",
+        "evidence",
+        "suspectedOwner",
+        "confidence",
+        "dedupeKey",
+        "findingType",
+        "mergedFrom",
+        "blockingMilestone",
+        "agentConfidenceNotes",
+        "linearSuggestion"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "severity": { "enum": ["critical", "high", "medium", "low", "info"] },
+        "category": {
+          "enum": [
+            "progression",
+            "stealth",
+            "combat",
+            "ui",
+            "performance",
+            "accessibility",
+            "stability",
+            "content",
+            "tooling"
+          ]
+        },
+        "title": { "type": "string" },
+        "reproSteps": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "expected": { "type": "string" },
+        "observed": { "type": "string" },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "suspectedOwner": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "dedupeKey": { "type": "string" },
+        "findingType": { "enum": ["gameplay", "tooling", "agent-strategy"] },
+        "mergedFrom": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "blockingMilestone": { "type": "string" },
+        "agentConfidenceNotes": { "type": "string" },
+        "linearSuggestion": {
+          "type": "object",
+          "required": ["title", "description", "label", "priority"],
+          "additionalProperties": false,
+          "properties": {
+            "title": { "type": "string" },
+            "description": { "type": "string" },
+            "label": { "enum": ["Bug", "Improvement", "Feature"] },
+            "priority": { "enum": ["Urgent", "High", "Medium", "Low", "No priority"] }
+          }
+        }
+      }
+    }
+  }
+}

@@ -57,6 +57,7 @@ const mapObjective = (
 const mapReward = (structure: QuestRewardStructure): QuestReward => ({
   type: structure.type,
   id: structure.resourceKey ? formatFallbackLabel(structure.resourceKey) : undefined,
+  resourceKey: structure.resourceKey,
   amount: structure.amount,
 });
 
