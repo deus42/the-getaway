@@ -55,6 +55,20 @@ export interface MapVisualProfile {
     readonly initialFitFactor: number;
     readonly minimumInitialZoom: number;
   };
+  /**
+   * Decorative painted city ring beyond the playable grid (GET-182). When set,
+   * the camera also drops its beyond-map bounds padding so void is never
+   * reachable; the ring absorbs any viewport overhang at minimum zoom.
+   */
+  readonly citySurround?: {
+    readonly ringX: number;
+    readonly ringY: number;
+    readonly prunePadPx: number;
+    readonly seed: number;
+    readonly variantCount: number;
+  };
+  /** 'surround-fade' drops the painted skyline/vignette backdrop in favor of a plain gradient meeting the surround ring. */
+  readonly backdropStyle?: 'skyline-vignette' | 'surround-fade';
 }
 
 export type EntityVisualRole =

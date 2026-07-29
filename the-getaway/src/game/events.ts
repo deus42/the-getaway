@@ -11,6 +11,7 @@ export const MINIMAP_OBJECTIVE_FOCUS_EVENT = 'minimapObjectiveFocus';
 export const PLAYER_SCREEN_POSITION_EVENT = 'playerScreenPositionUpdate';
 export const DAMAGE_NUMBER_EVENT = 'damageNumber';
 export const PICKUP_STATE_SYNC_EVENT = 'pickupStateSync';
+export const HUD_SAFE_AREA_CHANGE_EVENT = 'hudSafeAreaChange';
 
 
 export interface TileClickDetail {
@@ -152,6 +153,10 @@ export interface PickupStateSyncDetail {
   areaId: string;
   itemId?: string;
   position?: Position;
+}
+
+export interface HudSafeAreaChangeDetail {
+  bottomInsetPx: number;
 }
 
 export type TileTypeGrid = MapTile[][];

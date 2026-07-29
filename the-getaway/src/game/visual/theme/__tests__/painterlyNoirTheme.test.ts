@@ -1,13 +1,18 @@
 import { describe, expect, it } from '@jest/globals';
-import { createPainterlyNoirTheme } from '../painterlyNoirTheme';
+import { PAINTERLY_MIN_INITIAL_ZOOM, createPainterlyNoirTheme } from '../painterlyNoirTheme';
 
 describe('painterly noir city composition', () => {
-  it('opens Level 0 at a neighborhood-scale zoom', () => {
+  it('opens Level 0 at the owner-tuned street-tactical zoom', () => {
     const theme = createPainterlyNoirTheme('balanced');
 
-    expect(theme.mapProfile.camera.minimumInitialZoom).toBe(0.8);
+    expect(theme.mapProfile.camera.minimumInitialZoom).toBe(PAINTERLY_MIN_INITIAL_ZOOM);
+    // Guard against accidental regressions to overview-scale openings; the
+    // exact value is owner taste, retuned via ?initialZoom before edits.
+    expect(PAINTERLY_MIN_INITIAL_ZOOM).toBeGreaterThanOrEqual(0.95);
     expect(theme.mapProfile.showBuildingLabels).toBe(false);
     expect(theme.mapProfile.showBoundaryWalls).toBe(false);
+    expect(theme.mapProfile.citySurround).toBeDefined();
+    expect(theme.mapProfile.backdropStyle).toBe('surround-fade');
   });
 
   it('keeps crosswalk pavement dark and uses restrained macro variation', () => {

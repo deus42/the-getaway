@@ -6,6 +6,7 @@ import {
   resolveLevel0BuildingArt,
   type Level0BuildingArtEntry,
 } from '../../../content/environment/level0BuildingArtManifest';
+import { resolvePaintedBuildingTransform } from './paintedBuildingTransform';
 
 export interface BuildingFootprintProjection {
   top: Phaser.Geom.Point;
@@ -28,7 +29,7 @@ export interface BuildingMassingMetrics {
 
 export interface BuildingMassingResult {
   readonly container: Phaser.GameObjects.Container;
-  readonly renderMode: 'painted' | 'legacy-esb' | 'vector';
+  readonly renderMode: 'painted' | 'vector';
   readonly visualHeightPx: number;
 }
 
@@ -38,57 +39,6 @@ interface DiamondPoints {
   bottom: Phaser.Geom.Point;
   left: Phaser.Geom.Point;
 }
-
-const ESB_ATLAS_KEY = 'esb';
-const ESB_FRAME_KEY = 'esb_iso';
-const ESB_FRAME_WIDTH_PX = 696;
-const ESB_FRAME_HEIGHT_PX = 1757;
-const ESB_BASE_TIP_X_PX = 433;
-const ESB_BASE_TIP_Y_PX = 1732;
-const ESB_ORIGIN_X = ESB_BASE_TIP_X_PX / ESB_FRAME_WIDTH_PX;
-const ESB_ORIGIN_Y = ESB_BASE_TIP_Y_PX / ESB_FRAME_HEIGHT_PX;
-type EsbTuning = {
-  heightTiles: number;
-  baseTiles: number;
-  scale: number;
-  rotateDeg: number;
-  offsetX: number;
-  offsetY: number;
-};
-
-const parseNumber = (value: string | null, fallback: number): number => {
-  if (value === null) {
-    return fallback;
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-};
-
-const resolveEsbTuning = (): EsbTuning => {
-  const defaults: EsbTuning = {
-    heightTiles: 48,
-    baseTiles: 18,
-    scale: 0.92,
-    rotateDeg: 0,
-    offsetX: 0,
-    offsetY: 0,
-  };
-
-  if (typeof window === 'undefined') {
-    return defaults;
-  }
-
-  const params = new URLSearchParams(window.location.search);
-  return {
-    heightTiles: Math.max(1, parseNumber(params.get('esbHeightTiles'), defaults.heightTiles)),
-    baseTiles: Math.max(1, parseNumber(params.get('esbBaseTiles'), defaults.baseTiles)),
-    scale: Math.max(0.05, parseNumber(params.get('esbScale'), defaults.scale)),
-    rotateDeg: parseNumber(params.get('esbRot'), defaults.rotateDeg),
-    offsetX: parseNumber(params.get('esbOffX'), defaults.offsetX),
-    offsetY: parseNumber(params.get('esbOffY'), defaults.offsetY),
-  };
-};
 
 export class BuildingPainter {
   constructor(private readonly scene: Phaser.Scene, private readonly theme: VisualTheme) {}
@@ -107,55 +57,6 @@ export class BuildingPainter {
 
     if (paintedArt && this.scene.textures.exists(paintedArt.textureKey)) {
       return this.createPaintedMassing(container, paintedArt, metrics, base);
-    }
-
-    if (
-      resolveLevel0BuildingArt(building.id)?.fallbackProfile.kind === 'legacy-esb-then-vector' &&
-      this.scene.textures.exists(ESB_ATLAS_KEY)
-    ) {
-      const tuning = resolveEsbTuning();
-      const sprite = this.scene.add.image(
-        base.bottom.x + tuning.offsetX,
-        base.bottom.y + tuning.offsetY,
-        ESB_ATLAS_KEY,
-        ESB_FRAME_KEY
-      );
-      // Align ESB to the true rendered footprint tip from the source atlas.
-      sprite.setOrigin(ESB_ORIGIN_X, ESB_ORIGIN_Y);
-
-      const targetHeight = metrics.tileHeight * tuning.heightTiles;
-      const footprintWidth = Phaser.Math.Distance.Between(base.left.x, base.left.y, base.right.x, base.right.y);
-      const scaleForHeight = targetHeight / Math.max(1, sprite.height);
-      const scaleForFootprint = (footprintWidth / Math.max(1, sprite.width)) * (tuning.baseTiles / 18);
-      const baseScale = Math.max(scaleForHeight, scaleForFootprint);
-
-      sprite.setScale(baseScale * tuning.scale);
-
-      if (tuning.rotateDeg !== 0) {
-        sprite.setRotation(Phaser.Math.DegToRad(tuning.rotateDeg));
-      }
-
-      const emissiveIntensity = Phaser.Math.Clamp(metrics.atmosphere?.emissiveIntensity ?? 0.35, 0, 1);
-      const overlayAlpha = Phaser.Math.Clamp(metrics.atmosphere?.overlayAlpha ?? 0.2, 0, 1);
-      const tintBlend = Phaser.Math.Clamp(0.04 + emissiveIntensity * 0.1, 0, 1);
-      const tintSource = Phaser.Display.Color.Interpolate.ColorWithColor(
-        Phaser.Display.Color.ValueToColor(0x666d78),
-        Phaser.Display.Color.ValueToColor(0x7d8c9b),
-        1,
-        tintBlend
-      );
-      const tint = Phaser.Display.Color.GetColor(tintSource.r, tintSource.g, tintSource.b);
-      sprite.setTint(tint);
-
-      const baseAlpha = Phaser.Math.Clamp(0.82 + emissiveIntensity * 0.03 - overlayAlpha * 0.08, 0.74, 0.88);
-      sprite.setAlpha(baseAlpha);
-
-      container.add(sprite);
-      return {
-        container,
-        renderMode: 'legacy-esb',
-        visualHeightPx: sprite.displayHeight,
-      };
     }
 
     const shadowLayer = this.scene.add.graphics();
@@ -186,24 +87,46 @@ export class BuildingPainter {
     metrics: BuildingMassingMetrics,
     base: DiamondPoints
   ): BuildingMassingResult {
-    const footprintWidth = Phaser.Math.Distance.Between(
-      base.left.x,
-      base.left.y,
-      base.right.x,
-      base.right.y
+    const transform = resolvePaintedBuildingTransform({
+      art,
+      footprint: base,
+    });
+    const footprintPlate = this.scene.add.graphics();
+    footprintPlate.fillStyle(this.theme.treatment.surface.charcoal, 0.98);
+    footprintPlate.fillPoints([base.top, base.right, base.bottom, base.left], true);
+    footprintPlate.lineStyle(
+      Math.max(1, this.theme.treatment.outline.width),
+      this.theme.treatment.outline.color,
+      this.theme.treatment.outline.alpha
     );
-    const targetWidth = footprintWidth * art.footprintFit.widthMultiplier;
-    const scale = targetWidth / Math.max(1, art.footprintFit.sourceFootprintWidthPx);
-    const offsetX = art.footprintFit.offsetTiles.x * metrics.tileHeight * 2;
-    const offsetY = art.footprintFit.offsetTiles.y * metrics.tileHeight;
-    const sprite = this.scene.add.image(
-      base.bottom.x + offsetX,
-      base.bottom.y + offsetY,
-      art.textureKey
-    );
+    footprintPlate.strokePoints([base.top, base.right, base.bottom, base.left], true);
 
-    sprite.setOrigin(art.origin.x, art.origin.y);
-    sprite.setScale(scale);
+    const footprintPoints = [base.top, base.right, base.bottom, base.left];
+    const footprintCenter = footprintPoints.reduce(
+      (center, point) => ({
+        x: center.x + point.x / footprintPoints.length,
+        y: center.y + point.y / footprintPoints.length,
+      }),
+      { x: 0, y: 0 }
+    );
+    const inset = footprintPoints.map(
+      (point) =>
+        new Phaser.Geom.Point(
+          footprintCenter.x + (point.x - footprintCenter.x) * 0.94,
+          footprintCenter.y + (point.y - footprintCenter.y) * 0.94
+        )
+    );
+    footprintPlate.lineStyle(
+      1,
+      this.theme.treatment.surface.umber,
+      Math.max(0.18, this.theme.treatment.outline.secondaryAlpha)
+    );
+    footprintPlate.strokePoints(inset, true);
+
+    const sprite = this.scene.add.image(transform.x, transform.y, art.textureKey);
+
+    sprite.setOrigin(transform.origin.x, transform.origin.y);
+    sprite.setScale(transform.scale);
     sprite.setAlpha(0.98);
 
     const emissiveIntensity = Phaser.Math.Clamp(metrics.atmosphere?.emissiveIntensity ?? 0.35, 0, 1);
@@ -217,11 +140,11 @@ export class BuildingPainter {
     );
     sprite.setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b));
 
-    container.add(sprite);
+    container.add([footprintPlate, sprite]);
     return {
       container,
       renderMode: 'painted',
-      visualHeightPx: Math.max(metrics.tileHeight * art.visualHeightTiles, sprite.displayHeight),
+      visualHeightPx: sprite.displayHeight,
     };
   }
 

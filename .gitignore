@@ -72,6 +72,8 @@ debug/
 .npm/
 .eslintcache
 .stylelintcache
+__pycache__/
+*.pyc
 
 # GameDev-specific
 /public/assets/temp/

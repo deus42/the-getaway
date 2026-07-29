@@ -84,7 +84,7 @@ const createEntry = (
   spriteSetId: string,
   owner: CharacterSpriteManifestEntry['owner'],
   fallbackPalette: CharacterSpritePalette,
-  worldScale = 1
+  worldScale = 1.18
 ): CharacterSpriteManifestEntry => ({
   spriteSetId,
   owner,
@@ -105,25 +105,25 @@ export const CHARACTER_SPRITE_MANIFEST: CharacterSpriteManifestEntry[] = [
     'hero_operative',
     { kind: 'hero', appearancePresets: ['operative', 'default'] },
     { accentColor: 0x5b7775, glowColor: 0x50bfd0, shadowColor: 0x0b0d12 },
-    1.08
+    1.27
   ),
   createEntry(
     'hero_survivor',
     { kind: 'hero', appearancePresets: ['survivor'] },
     { accentColor: 0xd99a50, glowColor: 0xd99a50, shadowColor: 0x1b1f24 },
-    1.08
+    1.27
   ),
   createEntry(
     'hero_tech',
     { kind: 'hero', appearancePresets: ['tech'] },
     { accentColor: 0x5b7775, glowColor: 0x50bfd0, shadowColor: 0x0b0d12 },
-    1.08
+    1.27
   ),
   createEntry(
     'hero_scavenger',
     { kind: 'hero', appearancePresets: ['scavenger'] },
     { accentColor: 0x9a7748, glowColor: 0xd99a50, shadowColor: 0x2a201c },
-    1.08
+    1.27
   ),
   createEntry('npc_lira_vendor', { kind: 'npc', dialogueId: 'npc_lira_vendor' }, {
     accentColor: 0xf472b6,
@@ -169,12 +169,12 @@ export const CHARACTER_SPRITE_MANIFEST: CharacterSpriteManifestEntry[] = [
     accentColor: 0xd99a50,
     glowColor: 0xd99a50,
     shadowColor: 0x0b0d12,
-  }, 1.02),
+  }, 1.2),
   createEntry('enemy_corpsec_sweep_captain', { kind: 'enemy', resourceKey: 'enemies.corpsec_guard' }, {
     accentColor: 0x8e4147,
     glowColor: 0xbc4d54,
     shadowColor: 0x0b0d12,
-  }, 1.02),
+  }, 1.2),
 ];
 
 export const CHARACTER_SPRITE_MANIFEST_BY_ID = CHARACTER_SPRITE_MANIFEST.reduce<

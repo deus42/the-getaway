@@ -12,6 +12,8 @@ export const IconBase = forwardRef<SVGSVGElement, HUDIconProps>(
     <svg
       ref={ref}
       viewBox="0 0 24 24"
+      width={16}
+      height={16}
       className={cx('h-4 w-4 shrink-0 text-current', className)}
       role={title ? role ?? 'img' : 'presentation'}
       aria-hidden={title ? undefined : true}

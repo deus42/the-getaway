@@ -1,7 +1,13 @@
 import {
+  COMPACT_DOCK_BREAKPOINT,
+  COMPACT_DOCK_MAX_HEIGHT,
   DEFAULT_DOCK_MAX_HEIGHT,
   DEFAULT_DOCK_MIN_HEIGHT,
+  observeBottomDockViewportResizes,
   measureBottomDockHeight,
+  readBottomDockInsetPx,
+  resolveBottomDockLayout,
+  resolveCompactDockHeight,
   resolveBottomDockHeight,
 } from '../utils/bottomDockSizing';
 
@@ -42,6 +48,18 @@ const setElementHeights = (
 };
 
 describe('bottomDockSizing', () => {
+  test('switches to a two-row compact layout only below the desktop threshold', () => {
+    expect(resolveBottomDockLayout(1025)).toBe('compact');
+    expect(resolveBottomDockLayout(1280)).toBe('compact');
+    expect(resolveBottomDockLayout(COMPACT_DOCK_BREAKPOINT)).toBe('compact');
+    expect(resolveBottomDockLayout(COMPACT_DOCK_BREAKPOINT + 1)).toBe('desktop');
+  });
+
+  test('caps compact dock height while respecting short landscape viewports', () => {
+    expect(resolveCompactDockHeight(1195)).toBe(COMPACT_DOCK_MAX_HEIGHT);
+    expect(resolveCompactDockHeight(768)).toBe(399);
+  });
+
   test('keeps a compact minimum height when content is short', () => {
     expect(
       resolveBottomDockHeight({
@@ -94,6 +112,71 @@ describe('bottomDockSizing', () => {
       dock.appendChild(lane);
     });
 
-    expect(measureBottomDockHeight(dock)).toBe(245);
+    expect(
+      measureBottomDockHeight(dock, {
+        viewportWidth: 1440,
+        viewportHeight: 900,
+      })
+    ).toBe(245);
+  });
+
+  test('publishes the actual two-row dock rectangle in compact mode', () => {
+    const dock = document.createElement('div');
+    dock.className = 'hud-bottom-dock';
+    dock.getBoundingClientRect = jest.fn(() => createRect(440));
+
+    expect(
+      measureBottomDockHeight(dock, {
+        viewportWidth: 804,
+        viewportHeight: 1195,
+      })
+    ).toBe(440);
+  });
+
+  test('remeasures for visual-viewport resizes as well as window resizes', () => {
+    const windowTarget = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    };
+    const visualViewportTarget = {
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    };
+    const listener = jest.fn();
+
+    const cleanup = observeBottomDockViewportResizes(
+      windowTarget,
+      visualViewportTarget,
+      listener
+    );
+
+    expect(windowTarget.addEventListener).toHaveBeenCalledWith('resize', listener);
+    expect(visualViewportTarget.addEventListener).toHaveBeenCalledWith('resize', listener);
+
+    cleanup();
+
+    expect(windowTarget.removeEventListener).toHaveBeenCalledWith('resize', listener);
+    expect(visualViewportTarget.removeEventListener).toHaveBeenCalledWith('resize', listener);
+  });
+
+  test('reads the rendered dock instead of a stale published CSS value', () => {
+    const dock = document.createElement('div');
+    dock.className = 'hud-bottom-dock';
+    dock.getBoundingClientRect = jest.fn(() => createRect(374.4));
+    document.body.appendChild(dock);
+    document.documentElement.style.setProperty('--bottom-panel-height', '245px');
+
+    expect(readBottomDockInsetPx(document)).toBe(374);
+
+    dock.remove();
+    document.documentElement.style.removeProperty('--bottom-panel-height');
+  });
+
+  test('falls back to the numeric CSS value before the dock mounts', () => {
+    document.documentElement.style.setProperty('--bottom-panel-height', '245px');
+
+    expect(readBottomDockInsetPx(document)).toBe(245);
+
+    document.documentElement.style.removeProperty('--bottom-panel-height');
   });
 });

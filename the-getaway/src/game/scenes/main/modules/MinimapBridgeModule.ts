@@ -1,5 +1,6 @@
 import { miniMapService } from '../../../services/miniMapService';
 import { ViewportUpdateDetail } from '../../../events';
+import { readBottomDockInsetPx } from '../../../../utils/bottomDockSizing';
 import type { MainScene } from '../../MainScene';
 import type { MinimapBridgeModulePorts } from '../contracts/ModulePorts';
 import { SceneContext } from '../SceneContext';
@@ -69,7 +70,10 @@ export class MinimapBridgeModule implements SceneModule<MainScene> {
     const viewX = camera.scrollX;
     const viewY = camera.scrollY;
     const viewWidth = camera.width / safeZoom;
-    const viewHeight = camera.height / safeZoom;
+    // The bottom HUD dock overlays the canvas; the minimap's "what you can
+    // see" rectangle should stop at the dock's top edge (GET-183).
+    const hudInsetPx = this.readHudBottomInsetPx();
+    const viewHeight = Math.max(1, camera.height - hudInsetPx) / safeZoom;
     const topLeft = this.ports.worldToGridContinuous(viewX, viewY);
     const topRight = this.ports.worldToGridContinuous(viewX + viewWidth, viewY);
     const bottomLeft = this.ports.worldToGridContinuous(viewX, viewY + viewHeight);
@@ -113,5 +117,9 @@ export class MinimapBridgeModule implements SceneModule<MainScene> {
       ...detail,
       zoom: camera.zoom,
     });
+  }
+
+  private readHudBottomInsetPx(): number {
+    return readBottomDockInsetPx();
   }
 }

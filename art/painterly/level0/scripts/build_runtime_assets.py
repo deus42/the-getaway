@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import argparse
 import json
+import math
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
@@ -15,6 +17,32 @@ CHARACTER_OUTPUT_ROOT = APP_ROOT / "public" / "characters"
 PORTRAIT_OUTPUT_ROOT = APP_ROOT / "public" / "portraits" / "level0"
 BUILDING_SOURCE = SOURCE_ROOT / "building-block-composites-alpha.png"
 BUILDING_OUTPUT_ROOT = APP_ROOT / "public" / "buildings" / "level0"
+BUILDING_METRICS_PATH = SOURCE_ROOT / "building-export-metrics.json"
+BUILDING_FOOTPRINTS_PATH = SOURCE_ROOT / "level0-building-footprints.json"
+RUNTIME_METRICS_PATH = APP_ROOT / "src" / "content" / "environment" / "level0BuildingArtMetrics.json"
+SURROUND_SOURCE = SOURCE_ROOT / "building-surround-composites-alpha.png"
+SURROUND_OUTPUT_ROOT = BUILDING_OUTPUT_ROOT / "surround"
+SURROUND_METRICS_PATH = SOURCE_ROOT / "surround-export-metrics.json"
+RUNTIME_SURROUND_METRICS_PATH = (
+    APP_ROOT / "src" / "content" / "environment" / "level0SurroundArtMetrics.json"
+)
+
+# Alpha values above this count as opaque content — shared by blob keeping and
+# base-plate registration so both operate on the same silhouette.
+ALPHA_THRESHOLD = 36
+
+# Fraction of the content height (measured up from the south tip) scanned for
+# the base-plate corner row. The plate of a 2:1 iso block always sits in this
+# band; scanning higher would catch roof masses on tall towers.
+BASE_PLATE_SCAN_BAND = 0.40
+
+# The generated civic-center cell contains a dark cyan/purple ground wash at
+# the lower podium. Preserve its architecture and alpha geometry, but fold that
+# non-semantic color cast into the neutral pavement value used by the runtime
+# footprint plate. The validator independently gates future colored washes.
+GROUND_CONTACT_NEUTRALIZE = {"block_2_2"}
+GROUND_CAST_MAX_CHANNEL = 120
+GROUND_CAST_MIN_CHANNEL = 16
 
 ACTORS = (
     "hero_operative",
@@ -88,6 +116,8 @@ BUILDINGS = (
     "block_3_2",
     "block_3_3",
 )
+
+SURROUND_VARIANTS = tuple(f"surround_{index}" for index in range(9))
 
 
 def crop_direction(sheet: Image.Image, column: int, mirror: bool) -> Image.Image:
@@ -235,10 +265,158 @@ def build_portrait(actor_id: str, filename: str) -> None:
     portrait.save(PORTRAIT_OUTPUT_ROOT / filename, optimize=True)
 
 
+def measure_base_plate(image: Image.Image) -> dict[str, float | int]:
+    """Register the painted iso base plate of a padded building composite.
+
+    Returns pixel-space registration used by the runtime manifest to anchor and
+    scale the sprite: the south tip of the silhouette, a stable wide row in the
+    bottom scan band, and the visible span at that row. Aspect is retained as a
+    diagnostic only; Level 0 parcels are non-square projected parallelograms.
+    """
+    alpha = image.getchannel("A")
+    width, height = image.size
+    data = alpha.tobytes()
+
+    row_extents: list[tuple[int, int] | None] = []
+    for y in range(height):
+        row = data[y * width:(y + 1) * width]
+        left = None
+        right = None
+        for x, value in enumerate(row):
+            if value > ALPHA_THRESHOLD:
+                if left is None:
+                    left = x
+                right = x
+        row_extents.append((left, right) if left is not None else None)
+
+    opaque_rows = [y for y, extent in enumerate(row_extents) if extent is not None]
+    if not opaque_rows:
+        raise ValueError("Cannot measure base plate of a fully transparent image")
+
+    top_y = opaque_rows[0]
+    tip_y = opaque_rows[-1]
+    tip_left, tip_right = row_extents[tip_y]
+    tip_x = (tip_left + tip_right) / 2
+
+    content_height = tip_y - top_y + 1
+    band_start = max(top_y, tip_y - int(content_height * BASE_PLATE_SCAN_BAND))
+    spans = {
+        y: row_extents[y][1] - row_extents[y][0]
+        for y in range(band_start, tip_y + 1)
+        if row_extents[y] is not None
+    }
+    max_span = max(spans.values())
+    # The corner row is where the plate diamond first reaches (near) full width
+    # scanning top-down — compound blocks plateau at max span across the plate
+    # belt, so take the topmost row within 2% of the maximum.
+    corner_y = min(y for y, span in spans.items() if span >= max_span * 0.98)
+
+    left_x, right_x = row_extents[corner_y]
+    width_px = right_x - left_x
+    aspect = width_px / max(1, tip_y - corner_y)
+
+    return {
+        "tipX": round(tip_x, 2),
+        "tipY": tip_y,
+        "cornerY": corner_y,
+        "leftX": left_x,
+        "rightX": right_x,
+        "widthPx": width_px,
+        "aspect": round(aspect, 3),
+    }
+
+
+def centered_runtime_footprint(
+    width_tiles: int,
+    depth_tiles: int,
+    tile_width: float = 64.0,
+) -> tuple[tuple[float, float], ...]:
+    half_width = tile_width / 2
+    half_height = tile_width / 4
+    points = (
+        (0.0, -half_height),
+        (width_tiles * half_width, (width_tiles - 1) * half_height),
+        (
+            (width_tiles - depth_tiles) * half_width,
+            (width_tiles + depth_tiles - 1) * half_height,
+        ),
+        (-depth_tiles * half_width, (depth_tiles - 1) * half_height),
+    )
+    center_x = sum(point[0] for point in points) / len(points)
+    center_y = sum(point[1] for point in points) / len(points)
+    return tuple((x - center_x, y - center_y) for x, y in points)
+
+
+def point_inside_convex_footprint(
+    point: tuple[float, float],
+    footprint: tuple[tuple[float, float], ...],
+) -> bool:
+    orientation = 0
+    for index, start in enumerate(footprint):
+        end = footprint[(index + 1) % len(footprint)]
+        cross = (
+            (end[0] - start[0]) * (point[1] - start[1])
+            - (end[1] - start[1]) * (point[0] - start[0])
+        )
+        if abs(cross) <= 1e-12:
+            continue
+        edge_orientation = 1 if cross > 0 else -1
+        if orientation == 0:
+            orientation = edge_orientation
+        elif edge_orientation != orientation:
+            return False
+    return True
+
+
+def derive_contained_footprint_fill(
+    image: Image.Image,
+    registration: dict[str, object],
+    width_tiles: int,
+    depth_tiles: int,
+) -> float:
+    """Return a 0.01-quantized fill whose visible front base stays in parcel."""
+    footprint = centered_runtime_footprint(width_tiles, depth_tiles)
+    base_center_x = (float(registration["leftX"]) + float(registration["rightX"])) / 2
+    base_center_y = int(registration["cornerY"])
+    alpha = image.getchannel("A")
+    alpha_data = alpha.tobytes()
+    source_points = [
+        (x + 0.5 - base_center_x, y + 0.5 - base_center_y)
+        for y in range(base_center_y, image.height)
+        for x in range(image.width)
+        if alpha_data[y * image.width + x] > ALPHA_THRESHOLD
+    ]
+    if not source_points:
+        raise ValueError("Cannot derive contained fill without a visible base")
+
+    containing_span = min(width_tiles, depth_tiles) * 64.0
+
+    def fits(fill: float) -> bool:
+        scale = containing_span * fill / max(1, image.width)
+        return all(
+            point_inside_convex_footprint((x * scale, y * scale), footprint)
+            for x, y in source_points
+        )
+
+    low = 0.0
+    high = 1.0
+    for _ in range(60):
+        middle = (low + high) / 2
+        if fits(middle):
+            low = middle
+        else:
+            high = middle
+
+    contained_fill = math.floor((low + 1e-9) * 100) / 100
+    if not fits(contained_fill):
+        contained_fill = max(0.0, contained_fill - 0.01)
+    return round(contained_fill, 2)
+
+
 def keep_largest_alpha_component(image: Image.Image) -> Image.Image:
     alpha = image.getchannel("A")
     width, height = image.size
-    occupied = bytearray(1 if value > 36 else 0 for value in alpha.tobytes())
+    occupied = bytearray(1 if value > ALPHA_THRESHOLD else 0 for value in alpha.tobytes())
     visited = bytearray(width * height)
     largest: list[int] = []
 
@@ -277,10 +455,49 @@ def keep_largest_alpha_component(image: Image.Image) -> Image.Image:
     return cleaned
 
 
+def neutralize_ground_contact_color(
+    image: Image.Image,
+    building_id: str,
+    corner_y: int,
+) -> Image.Image:
+    if building_id not in GROUND_CONTACT_NEUTRALIZE:
+        return image
+
+    normalized = image.copy()
+    pixels = normalized.load()
+    for y in range(corner_y, normalized.height):
+        for x in range(normalized.width):
+            red, green, blue, alpha = pixels[x, y]
+            if alpha <= ALPHA_THRESHOLD or max(red, green, blue) >= GROUND_CAST_MAX_CHANNEL:
+                continue
+            purple_cast = (
+                blue > green * 1.25
+                and red > green * 1.12
+                and min(red, blue) > GROUND_CAST_MIN_CHANNEL
+            )
+            cyan_cast = (
+                green > red * 1.22
+                and blue > red * 1.22
+                and min(green, blue) > GROUND_CAST_MIN_CHANNEL
+            )
+            if not purple_cast and not cyan_cast:
+                continue
+
+            luminance = round(red * 0.2126 + green * 0.7152 + blue * 0.0722)
+            pixels[x, y] = (
+                luminance,
+                round(luminance * 0.94),
+                round(luminance * 0.86),
+                alpha,
+            )
+    return normalized
+
+
 def build_buildings() -> None:
     source = Image.open(BUILDING_SOURCE).convert("RGBA")
+    footprint_contract = json.loads(BUILDING_FOOTPRINTS_PATH.read_text(encoding="utf-8"))
     BUILDING_OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
-    metrics: dict[str, dict[str, int]] = {}
+    metrics: dict[str, dict[str, object]] = {}
 
     for index, building_id in enumerate(BUILDINGS):
         column = index % 3
@@ -295,6 +512,9 @@ def build_buildings() -> None:
             raise ValueError(f"Empty building source cell for {building_id}")
 
         building = cell.crop(alpha_bbox)
+        footprint = footprint_contract.get(building_id)
+        if not footprint:
+            raise ValueError(f"Missing runtime footprint contract for {building_id}")
         padding = 6
         output = Image.new(
             "RGBA",
@@ -302,20 +522,96 @@ def build_buildings() -> None:
             (0, 0, 0, 0),
         )
         output.alpha_composite(building, (padding, padding))
+        registration = measure_base_plate(output)
+        output = neutralize_ground_contact_color(
+            output,
+            building_id,
+            int(registration["cornerY"]),
+        )
+        registration["sourceFootprint"] = {
+            "widthTiles": int(footprint["widthTiles"]),
+            "depthTiles": int(footprint["depthTiles"]),
+        }
+        registration["containedFootprintFill"] = derive_contained_footprint_fill(
+            output,
+            registration,
+            int(footprint["widthTiles"]),
+            int(footprint["depthTiles"]),
+        )
         output.save(BUILDING_OUTPUT_ROOT / f"{building_id}.png", optimize=True)
         metrics[building_id] = {
             "width": output.width,
             "height": output.height,
             "sourceFootprintWidthPx": output.width,
+            "basePlate": registration,
         }
 
-    (SOURCE_ROOT / "building-export-metrics.json").write_text(
-        json.dumps(metrics, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    serialized = json.dumps(metrics, indent=2) + "\n"
+    BUILDING_METRICS_PATH.write_text(serialized, encoding="utf-8")
+    # Byte-identical runtime copy so the manifest reads measured registration
+    # instead of hand-copied numbers; the art validator asserts the two match.
+    RUNTIME_METRICS_PATH.write_text(serialized, encoding="utf-8")
 
 
-def main() -> None:
+def build_surround_buildings() -> None:
+    """Slice the generated anonymous 3×3 filler sheet into runtime sprites."""
+    source = Image.open(SURROUND_SOURCE).convert("RGBA")
+    SURROUND_OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
+    metrics: dict[str, dict[str, object]] = {}
+
+    for index, variant_id in enumerate(SURROUND_VARIANTS):
+        column = index % 3
+        row = index // 3
+        left = round(column * source.width / 3)
+        right = round((column + 1) * source.width / 3)
+        top = round(row * source.height / 3)
+        bottom = round((row + 1) * source.height / 3)
+        cell = keep_largest_alpha_component(source.crop((left, top, right, bottom)))
+        alpha_bbox = cell.getchannel("A").getbbox()
+        if alpha_bbox is None:
+            raise ValueError(f"Empty surround source cell for {variant_id}")
+
+        building = cell.crop(alpha_bbox)
+        padding = 4
+        output = Image.new(
+            "RGBA",
+            (building.width + padding * 2, building.height + padding * 2),
+            (0, 0, 0, 0),
+        )
+        output.alpha_composite(building, (padding, padding))
+        output.save(SURROUND_OUTPUT_ROOT / f"{index}.png", optimize=True)
+        metrics[variant_id] = {
+            "width": output.width,
+            "height": output.height,
+            "basePlate": measure_base_plate(output),
+        }
+
+    serialized = json.dumps(metrics, indent=2) + "\n"
+    SURROUND_METRICS_PATH.write_text(serialized, encoding="utf-8")
+    RUNTIME_SURROUND_METRICS_PATH.write_text(serialized, encoding="utf-8")
+
+
+def main(surround_only: bool = False, buildings_only: bool = False) -> None:
+    if surround_only:
+        if not SURROUND_SOURCE.exists():
+            raise FileNotFoundError(f"Missing alpha surround source: {SURROUND_SOURCE}")
+        build_surround_buildings()
+        print(f"Built {len(SURROUND_VARIANTS)} anonymous surround buildings")
+        return
+    if buildings_only:
+        if not BUILDING_SOURCE.exists():
+            raise FileNotFoundError(f"Missing alpha building source: {BUILDING_SOURCE}")
+        if not BUILDING_FOOTPRINTS_PATH.exists():
+            raise FileNotFoundError(
+                f"Missing exported footprint contract: {BUILDING_FOOTPRINTS_PATH}"
+            )
+        build_buildings()
+        print(f"Built {len(BUILDINGS)} registered painterly landmarks")
+        return
+
+    if not SURROUND_SOURCE.exists():
+        raise FileNotFoundError(f"Missing alpha surround source: {SURROUND_SOURCE}")
+
     missing = [actor_id for actor_id in ACTORS if not (TURNAROUND_ROOT / f"{actor_id}.png").exists()]
     if missing:
         raise FileNotFoundError(f"Missing alpha turnarounds: {', '.join(missing)}")
@@ -327,12 +623,26 @@ def main() -> None:
     if not BUILDING_SOURCE.exists():
         raise FileNotFoundError(f"Missing alpha building source: {BUILDING_SOURCE}")
     build_buildings()
+    build_surround_buildings()
 
     print(
         f"Built {len(ACTORS)} painterly sprite sets, "
-        f"{len(PORTRAITS)} portraits, and {len(BUILDINGS)} buildings"
+        f"{len(PORTRAITS)} portraits, {len(BUILDINGS)} landmarks, "
+        f"and {len(SURROUND_VARIANTS)} surround buildings"
     )
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--surround-only",
+        action="store_true",
+        help="slice only the anonymous city-surround sheet",
+    )
+    parser.add_argument(
+        "--buildings-only",
+        action="store_true",
+        help="normalize and export only the nine Level 0 landmark buildings",
+    )
+    args = parser.parse_args()
+    main(surround_only=args.surround_only, buildings_only=args.buildings_only)

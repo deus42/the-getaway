@@ -22,6 +22,7 @@ import { store } from '../../store';
 import { RootState } from '../../store'; // Import RootState
 import { getLevel0Content } from '../../content/levels/level0';
 import { LEVEL0_BUILDING_ART_MANIFEST } from '../../content/environment/level0BuildingArtManifest';
+import { LEVEL0_SURROUND_ART_MANIFEST } from '../../content/environment/level0SurroundArtManifest';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -30,7 +31,6 @@ export class BootScene extends Phaser.Scene {
 
   preload(): void {
     this.load.atlas('props', 'atlases/props.png', 'atlases/props.json');
-    this.load.atlas('esb', 'atlases/esb_iso_trim_pad.png', 'atlases/esb_iso_trim_pad.json');
     this.load.atlas(
       LEVEL0_ENVIRONMENT_ATLAS_KEY,
       LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
@@ -50,6 +50,9 @@ export class BootScene extends Phaser.Scene {
     this.load.image(LEVEL0_ENVIRONMENT_NORMAL_KEY, LEVEL0_ENVIRONMENT_NORMAL_PATH);
     this.load.image(PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY, PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_PATH);
     LEVEL0_BUILDING_ART_MANIFEST.forEach((entry) => {
+      this.load.image(entry.textureKey, entry.imagePath);
+    });
+    LEVEL0_SURROUND_ART_MANIFEST.forEach((entry) => {
       this.load.image(entry.textureKey, entry.imagePath);
     });
     preloadCharacterSpriteSheets(this);

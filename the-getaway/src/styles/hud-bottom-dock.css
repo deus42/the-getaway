@@ -1,3 +1,11 @@
+:root {
+  --bottom-panel-height: clamp(
+    244px,
+    var(--bottom-panel-measured-height, 244px),
+    304px
+  );
+}
+
 .hud-bottom-dock {
   position: absolute;
   left: 0;
@@ -22,7 +30,7 @@
   border: 1px solid rgba(18, 28, 48, 0.54);
   border-bottom: 0;
   overflow: visible;
-  transition: grid-template-columns 0.22s ease, height 0.2s ease;
+  transition: grid-template-columns 0.22s ease;
 }
 
 .hud-bottom-dock[data-hud-layout='combat'] {
@@ -48,6 +56,7 @@
   flex-direction: column;
   gap: var(--hud-space-2);
   min-height: 0;
+  min-width: 0;
   height: 100%;
   flex: 1 1 auto;
   transition: opacity 0.28s ease, transform 0.24s ease;
@@ -56,6 +65,7 @@
 .hud-bottom-lane-card {
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -65,6 +75,7 @@
 .hud-bottom-card-surface {
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--hud-space-1);
@@ -110,7 +121,7 @@
 
 .hud-bottom-lane--george {
   position: relative;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .hud-bottom-lane--ops {
@@ -122,6 +133,7 @@
   min-height: 0;
   max-height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--hud-space-2);
@@ -190,7 +202,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--hud-space-3);
-  max-height: 55vh;
+  max-height: min(
+    55vh,
+    calc(100svh - var(--bottom-panel-height, 244px) - var(--hud-space-5))
+  );
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
@@ -213,4 +228,63 @@
   flex-direction: column;
   gap: var(--hud-space-2);
   padding-right: var(--hud-space-2);
+}
+
+@media (max-width: 1359px) {
+  :root {
+    --bottom-panel-height: min(440px, 52svh);
+  }
+
+  .hud-bottom-dock,
+  .hud-bottom-dock[data-hud-layout='combat'],
+  .hud-bottom-dock[data-hud-layout='stealth'] {
+    --hud-dock-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    height: min(440px, 52svh);
+    min-height: 0;
+    max-height: none;
+    padding: 12px 16px;
+    overflow: visible;
+  }
+
+  .hud-bottom-card-surface {
+    overflow: hidden;
+    padding: 0.32rem 0.5rem;
+  }
+
+  .hud-bottom-lane--status .hud-bottom-card-surface,
+  .hud-bottom-lane--george .hud-bottom-card-surface,
+  .hud-bottom-lane--ops .hud-bottom-card-surface {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .hud-bottom-lane--ops .hud-bottom-overlay {
+    bottom: calc(200% + 20px);
+  }
+
+  .hud-bottom-dock .player-summary {
+    min-width: 0;
+    gap: 0.14rem;
+  }
+
+  .player-summary__identity {
+    flex-wrap: wrap;
+    column-gap: 0.3rem;
+    row-gap: 0.22rem;
+    letter-spacing: 0.18em;
+  }
+
+  .hud-bottom-dock .player-summary__resource {
+    padding: 0.16rem 0.42rem;
+  }
+
+  .hud-bottom-dock .player-summary__character-button {
+    padding: 0.14rem 0.6rem;
+  }
+
+  .hud-bottom-control-row {
+    padding-top: 0.25rem;
+  }
 }

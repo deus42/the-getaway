@@ -93,7 +93,7 @@ const OpsBriefingsPanel: React.FC<OpsBriefingsPanelProps> = ({
                 <p className='hud-ops-text-muted text-[0.68rem] leading-[1.45]'>{objective.summary}</p>
               ) : null}
             </div>
-            <div className='flex min-w-[4.6rem] flex-col items-end gap-1'>
+            <div className='hud-ops-card__status flex min-w-[4.6rem] flex-col items-end gap-1'>
               <span
                 className='text-[0.62rem] uppercase tracking-[0.16em]'
                 style={{

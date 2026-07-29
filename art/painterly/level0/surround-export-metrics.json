@@ -1,0 +1,119 @@
+{
+  "surround_0": {
+    "width": 402,
+    "height": 370,
+    "basePlate": {
+      "tipX": 140.5,
+      "tipY": 365,
+      "cornerY": 221,
+      "leftX": 31,
+      "rightX": 397,
+      "widthPx": 366,
+      "aspect": 2.542
+    }
+  },
+  "surround_1": {
+    "width": 400,
+    "height": 318,
+    "basePlate": {
+      "tipX": 171.5,
+      "tipY": 313,
+      "cornerY": 190,
+      "leftX": 7,
+      "rightX": 386,
+      "widthPx": 379,
+      "aspect": 3.081
+    }
+  },
+  "surround_2": {
+    "width": 396,
+    "height": 365,
+    "basePlate": {
+      "tipX": 162.0,
+      "tipY": 359,
+      "cornerY": 229,
+      "leftX": 10,
+      "rightX": 391,
+      "widthPx": 381,
+      "aspect": 2.931
+    }
+  },
+  "surround_3": {
+    "width": 374,
+    "height": 350,
+    "basePlate": {
+      "tipX": 134.0,
+      "tipY": 345,
+      "cornerY": 222,
+      "leftX": 7,
+      "rightX": 368,
+      "widthPx": 361,
+      "aspect": 2.935
+    }
+  },
+  "surround_4": {
+    "width": 404,
+    "height": 326,
+    "basePlate": {
+      "tipX": 187.0,
+      "tipY": 321,
+      "cornerY": 194,
+      "leftX": 18,
+      "rightX": 399,
+      "widthPx": 381,
+      "aspect": 3.0
+    }
+  },
+  "surround_5": {
+    "width": 378,
+    "height": 340,
+    "basePlate": {
+      "tipX": 164.5,
+      "tipY": 334,
+      "cornerY": 212,
+      "leftX": 4,
+      "rightX": 365,
+      "widthPx": 361,
+      "aspect": 2.959
+    }
+  },
+  "surround_6": {
+    "width": 378,
+    "height": 342,
+    "basePlate": {
+      "tipX": 172.5,
+      "tipY": 337,
+      "cornerY": 204,
+      "leftX": 6,
+      "rightX": 349,
+      "widthPx": 343,
+      "aspect": 2.579
+    }
+  },
+  "surround_7": {
+    "width": 386,
+    "height": 326,
+    "basePlate": {
+      "tipX": 147.5,
+      "tipY": 321,
+      "cornerY": 194,
+      "leftX": 5,
+      "rightX": 381,
+      "widthPx": 376,
+      "aspect": 2.961
+    }
+  },
+  "surround_8": {
+    "width": 392,
+    "height": 343,
+    "basePlate": {
+      "tipX": 153.5,
+      "tipY": 338,
+      "cornerY": 204,
+      "leftX": 4,
+      "rightX": 376,
+      "widthPx": 372,
+      "aspect": 2.776
+    }
+  }
+}

@@ -93,6 +93,12 @@ const PAINTERLY_ENTITIES: Record<EntityVisualRole, EntityVisualProfile> = {
   },
 };
 
+/**
+ * Street-tactical opening framing (GET-183, owner-tuned 2026-07-29). Tune live
+ * with `?initialZoom=` before changing the constant.
+ */
+export const PAINTERLY_MIN_INITIAL_ZOOM = 1.1;
+
 export const createPainterlyNoirTheme = (preset: VisualQualityPreset): VisualTheme => {
   const base = createNoirVectorTheme(preset);
 
@@ -109,8 +115,16 @@ export const createPainterlyNoirTheme = (preset: VisualQualityPreset): VisualThe
       showBoundaryWalls: false,
       camera: {
         initialFitFactor: 1.04,
-        minimumInitialZoom: 0.8,
+        minimumInitialZoom: PAINTERLY_MIN_INITIAL_ZOOM,
       },
+      citySurround: {
+        ringX: 40,
+        ringY: 52,
+        prunePadPx: 768,
+        seed: 7,
+        variantCount: 9,
+      },
+      backdropStyle: 'surround-fade',
     },
     treatment: {
       ink: {

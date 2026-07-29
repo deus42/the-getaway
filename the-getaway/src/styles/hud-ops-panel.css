@@ -27,6 +27,8 @@
     border: 1px solid rgba(94, 234, 212, 0.58);
     font-size: 0.7rem;
     font-weight: 700;
+    line-height: 1;
+    overflow: hidden;
     color: transparent;
     transition: background-color 0.2s ease, color 0.2s ease;
   }
@@ -54,5 +56,11 @@
 
   .hud-ops-empty {
     color: rgba(148, 163, 184, 0.78);
+  }
+
+  @media (max-width: 1024px) {
+    .hud-ops-card__status {
+      min-width: 3.6rem;
+    }
   }
 }

@@ -18,6 +18,8 @@ export const DepthBias = Object.freeze({
 
 export const DepthLayers = Object.freeze({
   BACKDROP: -20,
+  CITY_SURROUND: -12,
+  CITY_SURROUND_STRUCTURES: -11,
   MAP_BASE: -5,
   VISION_OVERLAY: 2,
   PATH_PREVIEW: 4,
@@ -40,11 +42,23 @@ interface DepthPoint {
   y: number;
 }
 
+// Depth packs (screenY, screenX, bias) into one number with strict dominance:
+// a 1px screenY difference always outranks any screenX difference, which
+// always outranks any bias. The offsets keep every field non-negative across
+// the map plus the decorative city surround (screenY ≥ -4096, |screenX| ≤ 8192)
+// so packing stays monotonic — the previous 10-bit x mask wrapped over the
+// ~5000px iso x range and bias could bleed into the next y rank (GET-181).
+const DEPTH_Y_OFFSET = 4096;
+const DEPTH_X_OFFSET = 8192;
+const DEPTH_X_LIMIT = 16383;
+const DEPTH_X_STEP = 2048; // room for bias in [-1023, 1023] shifted by +1024
+const DEPTH_Y_STEP = DEPTH_X_STEP * (DEPTH_X_LIMIT + 1);
+
 export const computeDepth = (screenX: number, screenY: number, bias: number = 0): number => {
-  const baseX = (Math.floor(screenX) & MAX_DEPTH_BIAS) >>> 0;
-  const baseY = Math.floor(screenY);
+  const baseX = Phaser.Math.Clamp(Math.floor(screenX) + DEPTH_X_OFFSET, 0, DEPTH_X_LIMIT);
+  const baseY = Math.floor(screenY) + DEPTH_Y_OFFSET;
   const clampedBias = Phaser.Math.Clamp(Math.floor(bias), -MAX_DEPTH_BIAS, MAX_DEPTH_BIAS);
-  return (baseY << 10) + baseX + clampedBias;
+  return baseY * DEPTH_Y_STEP + baseX * DEPTH_X_STEP + clampedBias + 1024;
 };
 
 export class DepthManager {

@@ -32,6 +32,7 @@ import { createScopedLogger } from "./utils/logger";
 import {
   DEFAULT_DOCK_MIN_HEIGHT,
   measureBottomDockHeight,
+  observeBottomDockViewportResizes,
 } from "./utils/bottomDockSizing";
 import MissionCompletionOverlay from "./components/ui/MissionCompletionOverlay";
 import MissionFailureOverlay from "./components/ui/MissionFailureOverlay";
@@ -44,6 +45,7 @@ import {
 } from "./game/playtest/agentBridge";
 import { primeLevel0AudioCues } from "./game/feedback/audioCues";
 import { isLevel0Exterior } from "./game/visual/theme/mapVisualTheme";
+import { HUD_SAFE_AREA_CHANGE_EVENT } from "./game/events";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -254,13 +256,21 @@ const CommandShell: React.FC<CommandShellProps> = ({
       attributes: true,
     });
 
-    window.addEventListener('resize', scheduleDockMeasure);
+    const stopObservingViewportResizes = observeBottomDockViewportResizes(
+      window,
+      window.visualViewport,
+      scheduleDockMeasure
+    );
+    const fontSet = document.fonts;
+    void fontSet?.ready.then(scheduleDockMeasure);
+    fontSet?.addEventListener('loadingdone', scheduleDockMeasure);
 
     return () => {
       if (frameId !== null) {
         window.cancelAnimationFrame(frameId);
       }
-      window.removeEventListener('resize', scheduleDockMeasure);
+      stopObservingViewportResizes();
+      fontSet?.removeEventListener('loadingdone', scheduleDockMeasure);
       mutationObserver?.disconnect();
       resizeObserver?.disconnect();
     };
@@ -276,17 +286,27 @@ const CommandShell: React.FC<CommandShellProps> = ({
       return undefined;
     }
     if (bottomPanelHeight) {
-      document.documentElement.style.setProperty('--bottom-panel-height', `${bottomPanelHeight}px`);
+      document.documentElement.style.setProperty('--bottom-panel-measured-height', `${bottomPanelHeight}px`);
+      window.dispatchEvent(
+        new CustomEvent(HUD_SAFE_AREA_CHANGE_EVENT, {
+          detail: { bottomInsetPx: bottomPanelHeight },
+        })
+      );
     } else {
-      document.documentElement.style.removeProperty('--bottom-panel-height');
+      document.documentElement.style.removeProperty('--bottom-panel-measured-height');
     }
-
-    return () => {
-      if (typeof document !== 'undefined') {
-        document.documentElement.style.removeProperty('--bottom-panel-height');
-      }
-    };
   }, [bottomPanelHeight]);
+
+  useEffect(() => () => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.style.removeProperty('--bottom-panel-measured-height');
+      window.dispatchEvent(
+        new CustomEvent(HUD_SAFE_AREA_CHANGE_EVENT, {
+          detail: { bottomInsetPx: 0 },
+        })
+      );
+    }
+  }, []);
 
   const menuPanelWidth = '90vw';
   const menuPanelMaxWidth = '240px';

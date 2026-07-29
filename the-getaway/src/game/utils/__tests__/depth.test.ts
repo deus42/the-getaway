@@ -19,6 +19,7 @@ jest.mock('phaser', () => {
 import Phaser from 'phaser';
 import {
   DepthBias,
+  DepthLayers,
   DepthManager,
   DepthResolvableGameObject,
   MAX_DEPTH_BIAS,
@@ -108,6 +109,27 @@ describe('computeDepth', () => {
     const negative = computeDepth(0, 0, -MAX_DEPTH_BIAS * 4);
     expect(maxed - base).toBeLessThanOrEqual(MAX_DEPTH_BIAS);
     expect(base - negative).toBeLessThanOrEqual(MAX_DEPTH_BIAS);
+  });
+
+  it('keeps screenX ordering monotonic across the full iso range', () => {
+    // Level 0 world x spans roughly ±2700px and the city surround extends
+    // further; the previous 10-bit mask wrapped negative and large x values.
+    const xs = [-4300, -2688, -640, -1, 0, 1, 384, 1023, 1024, 2944, 4300];
+    const depths = xs.map((x) => computeDepth(x, 100, 0));
+    for (let i = 1; i < depths.length; i += 1) {
+      expect(depths[i]).toBeGreaterThan(depths[i - 1]);
+    }
+  });
+
+  it('never lets max bias outrank a 1px screenY difference', () => {
+    const nearer = computeDepth(8191, 100, -MAX_DEPTH_BIAS);
+    const farther = computeDepth(-8192, 99, MAX_DEPTH_BIAS);
+    expect(nearer).toBeGreaterThan(farther);
+  });
+
+  it('keeps anonymous surround massing below every playable map layer', () => {
+    expect(DepthLayers.CITY_SURROUND).toBeLessThan(DepthLayers.CITY_SURROUND_STRUCTURES);
+    expect(DepthLayers.CITY_SURROUND_STRUCTURES).toBeLessThan(DepthLayers.MAP_BASE);
   });
 });
 

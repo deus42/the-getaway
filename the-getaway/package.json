@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "node scripts/check-scene-architecture.mjs && eslint .",
+    "lint": "node scripts/check-scene-architecture.mjs && tsx scripts/validate-level0-painterly-art.ts && eslint .",
+    "art:level0:footprints": "tsx scripts/export-level0-building-footprints.ts",
+    "art:level0:build": "yarn art:level0:footprints && uv run --with pillow python ../art/painterly/level0/scripts/build_runtime_assets.py --buildings-only",
     "preview": "vite preview",
     "playtest:agent": "tsx ../tools/ai-playtester/run.ts",
     "graphics:get155": "node scripts/generate-get155-preview-assets.mjs",

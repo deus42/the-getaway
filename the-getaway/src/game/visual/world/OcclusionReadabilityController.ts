@@ -5,6 +5,10 @@ export interface OcclusionMassHandle {
   id: string;
   container: Phaser.GameObjects.Container;
   bounds: Phaser.Geom.Rectangle;
+  /** Projected silhouette used after the cheap bounds rejection. */
+  occlusionPolygon?: ReadonlyArray<{ x: number; y: number }>;
+  /** Higher values paint nearer the camera and win when broad bounds overlap. */
+  occlusionOrder?: number;
 }
 
 export interface OcclusionEntityHandle {
@@ -22,6 +26,10 @@ export interface OcclusionReadabilityState {
   entities: OcclusionEntityHandle[];
   occlusionFadeFloor: number;
   emissiveIntensity: number;
+  cameraZoom?: number;
+  overviewZoomThreshold?: number;
+  focusEntityId?: string;
+  focusEntityIds?: readonly string[];
 }
 
 interface EntityBaseVisualState {
@@ -53,59 +61,104 @@ export class OcclusionReadabilityController {
       }
     });
 
-    state.masses.forEach((mass) => {
-      const expanded = new Phaser.Geom.Rectangle(
-        mass.bounds.x - ENTITY_OVERLAP_PADDING,
-        mass.bounds.y - ENTITY_OVERLAP_PADDING,
-        mass.bounds.width + ENTITY_OVERLAP_PADDING * 2,
-        mass.bounds.height + ENTITY_OVERLAP_PADDING * 2
-      );
+    const requestedFocusIds = state.focusEntityIds ?? [state.focusEntityId ?? 'player'];
+    const focusEntities = requestedFocusIds
+      .map((id) => state.entities.find((entity) => entity.id === id))
+      .filter((entity): entity is OcclusionEntityHandle => Boolean(entity));
+    if (focusEntities.length === 0) {
+      return;
+    }
 
-      const overlapping = state.entities.filter((entity) => expanded.contains(entity.pixelX, entity.pixelY));
-      if (!overlapping.length) {
+    const overviewThreshold = state.overviewZoomThreshold ?? 0.65;
+    if (state.cameraZoom !== undefined && state.cameraZoom <= overviewThreshold) {
+      focusEntities.forEach((entity) => this.boostEntityReadability(entity, readabilityBoost));
+      return;
+    }
+
+    focusEntities.forEach((focusEntity) => {
+      const overlappingMasses = state.masses.filter((mass) =>
+        this.massContainsEntity(mass, focusEntity)
+      );
+      const frontmostMass = overlappingMasses.sort(
+        (left, right) =>
+          (right.occlusionOrder ?? right.container.depth ?? 0) -
+          (left.occlusionOrder ?? left.container.depth ?? 0)
+      )[0];
+      if (!frontmostMass) {
         return;
       }
 
-      if (!this.previousFrameMassAlpha.has(mass.container)) {
-        this.previousFrameMassAlpha.set(mass.container, mass.container.alpha);
-      }
-      mass.container.setAlpha(Math.min(mass.container.alpha, fadeFloor));
-
-      overlapping.forEach((entity) => {
-        const container = entity.token.container;
-        if (!this.previousFrameEntityVisuals.has(container)) {
-          this.previousFrameEntityVisuals.set(container, {
-            haloAlpha: entity.token.halo.alpha,
-            beaconAlpha: entity.token.beacon.alpha,
-            nameAlpha: entity.nameLabel?.alpha ?? 1,
-            nameScaleX: entity.nameLabel?.scaleX ?? 1,
-            nameScaleY: entity.nameLabel?.scaleY ?? 1,
-            healthAlpha: entity.healthBar?.alpha ?? 1,
-            indicatorAlpha: entity.indicator?.alpha ?? 1,
-          });
-        }
-
-        const token = entity.token;
-        token.halo.setAlpha(Math.max(token.halo.alpha, 0.28 + readabilityBoost));
-        token.beacon.setAlpha(Math.max(token.beacon.alpha, 0.36 + readabilityBoost * 0.75));
-
-        if (entity.nameLabel) {
-          entity.nameLabel.setAlpha(1);
-          entity.nameLabel.setScale(
-            Math.max(entity.nameLabel.scaleX, NAMEPLATE_MIN_SCALE),
-            Math.max(entity.nameLabel.scaleY, NAMEPLATE_MIN_SCALE)
-          );
-        }
-
-        if (entity.healthBar && entity.healthBar.visible) {
-          entity.healthBar.setAlpha(Math.max(entity.healthBar.alpha, 0.94));
-        }
-
-        if (entity.indicator && entity.indicator.visible) {
-          entity.indicator.setAlpha(Math.max(entity.indicator.alpha, 0.94));
-        }
-      });
+      frontmostMass.container.setAlpha(Math.min(frontmostMass.container.alpha, fadeFloor));
+      this.boostEntityReadability(focusEntity, readabilityBoost);
     });
+  }
+
+  private massContainsEntity(
+    mass: OcclusionMassHandle,
+    entity: OcclusionEntityHandle
+  ): boolean {
+    const expanded = new Phaser.Geom.Rectangle(
+      mass.bounds.x - ENTITY_OVERLAP_PADDING,
+      mass.bounds.y - ENTITY_OVERLAP_PADDING,
+      mass.bounds.width + ENTITY_OVERLAP_PADDING * 2,
+      mass.bounds.height + ENTITY_OVERLAP_PADDING * 2
+    );
+    if (!expanded.contains(entity.pixelX, entity.pixelY)) {
+      return false;
+    }
+    if (!mass.occlusionPolygon || mass.occlusionPolygon.length < 3) {
+      return true;
+    }
+
+    let inside = false;
+    const polygon = mass.occlusionPolygon;
+    for (let current = 0, previous = polygon.length - 1; current < polygon.length; previous = current++) {
+      const currentPoint = polygon[current];
+      const previousPoint = polygon[previous];
+      const crosses =
+        currentPoint.y > entity.pixelY !== previousPoint.y > entity.pixelY &&
+        entity.pixelX <
+          ((previousPoint.x - currentPoint.x) * (entity.pixelY - currentPoint.y)) /
+            (previousPoint.y - currentPoint.y) +
+            currentPoint.x;
+      if (crosses) inside = !inside;
+    }
+    return inside;
+  }
+
+  private boostEntityReadability(entity: OcclusionEntityHandle, readabilityBoost: number): void {
+    const container = entity.token.container;
+    if (!this.previousFrameEntityVisuals.has(container)) {
+      this.previousFrameEntityVisuals.set(container, {
+        haloAlpha: entity.token.halo.alpha,
+        beaconAlpha: entity.token.beacon.alpha,
+        nameAlpha: entity.nameLabel?.alpha ?? 1,
+        nameScaleX: entity.nameLabel?.scaleX ?? 1,
+        nameScaleY: entity.nameLabel?.scaleY ?? 1,
+        healthAlpha: entity.healthBar?.alpha ?? 1,
+        indicatorAlpha: entity.indicator?.alpha ?? 1,
+      });
+    }
+
+    const token = entity.token;
+    token.halo.setAlpha(Math.max(token.halo.alpha, 0.28 + readabilityBoost));
+    token.beacon.setAlpha(Math.max(token.beacon.alpha, 0.36 + readabilityBoost * 0.75));
+
+    if (entity.nameLabel) {
+      entity.nameLabel.setAlpha(1);
+      entity.nameLabel.setScale(
+        Math.max(entity.nameLabel.scaleX, NAMEPLATE_MIN_SCALE),
+        Math.max(entity.nameLabel.scaleY, NAMEPLATE_MIN_SCALE)
+      );
+    }
+
+    if (entity.healthBar && entity.healthBar.visible) {
+      entity.healthBar.setAlpha(Math.max(entity.healthBar.alpha, 0.94));
+    }
+
+    if (entity.indicator && entity.indicator.visible) {
+      entity.indicator.setAlpha(Math.max(entity.indicator.alpha, 0.94));
+    }
   }
 
   private restorePreviousFrameState(state: OcclusionReadabilityState): void {

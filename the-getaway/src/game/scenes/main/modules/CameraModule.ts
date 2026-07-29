@@ -5,9 +5,47 @@ import type { MapArea } from '../../../interfaces/types';
 import { SceneContext } from '../SceneContext';
 import { SceneModule } from '../SceneModule';
 import { resolveMapVisualProfile } from '../../../visual/theme/mapVisualTheme';
+import { HUD_SAFE_AREA_CHANGE_EVENT } from '../../../events';
+import {
+  COMPACT_DOCK_BREAKPOINT,
+  readBottomDockInsetPx,
+} from '../../../../utils/bottomDockSizing';
 
 const MIN_CAMERA_ZOOM = 0.38;
 const MAX_CAMERA_ZOOM = 2.3;
+
+interface ResponsiveInitialZoomFloorOptions {
+  viewportWidth: number;
+  viewportHeight: number;
+  hudInsetPx: number;
+  configuredFloor: number;
+}
+
+export const resolveResponsiveInitialZoomFloor = ({
+  viewportWidth,
+  viewportHeight,
+  hudInsetPx,
+  configuredFloor,
+}: ResponsiveInitialZoomFloorOptions): number => {
+  const usableHeight = Math.max(1, viewportHeight - hudInsetPx);
+  const compact = viewportWidth <= COMPACT_DOCK_BREAKPOINT;
+  const shortVisibleBand = usableHeight < 620;
+  const responsiveCap = compact ? 1.05 : shortVisibleBand ? 1.06 : 1.1;
+  return Math.min(configuredFloor, responsiveCap);
+};
+
+/** Playtest tuning override for the opening zoom: `?initialZoom=1.15`. */
+const readInitialZoomOverride = (): number | null => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  const raw = new URLSearchParams(window.location.search).get('initialZoom');
+  if (raw === null) {
+    return null;
+  }
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
 const CAMERA_BOUND_PADDING_TILES = 6;
 const CAMERA_FOLLOW_LERP = 1;
 const COMBAT_ZOOM_MULTIPLIER = 1.28;
@@ -161,11 +199,53 @@ export class CameraModule implements SceneModule<MainScene> {
 
   onCreate(): void {
     this.context.listenInput('wheel', this.handleWheel);
+    this.context.listenWindow(HUD_SAFE_AREA_CHANGE_EVENT, this.handleHudSafeAreaChange);
   }
 
   onResize(): void {
     if (this.ports.sys.isActive() && this.ports.getCurrentMapArea()) {
+      // A resize changes the coverage floor. Stop any tween authored against
+      // the previous viewport before recalculating it. Combat and post-combat
+      // targets must then resume; otherwise an orientation change can strand
+      // the camera at an intermediate zoom.
+      const interruptedTween = Boolean(this.runtimeState.cameraZoomTween);
+      const interruptedRestore = interruptedTween && this.runtimeState.pendingCameraRestore;
+      const interruptedCombatZoom =
+        interruptedTween &&
+        !interruptedRestore &&
+        this.ports.isInCombat() &&
+        this.runtimeState.preCombatZoom !== null;
+      const userAdjustedZoom = this.runtimeState.userAdjustedZoom;
+      const restoreSnapshot = {
+        preCombatZoom: this.runtimeState.preCombatZoom,
+        preCombatUserAdjusted: this.runtimeState.preCombatUserAdjusted,
+        pendingRestoreUserAdjusted: this.runtimeState.pendingRestoreUserAdjusted,
+      };
+      const interruptedTargetZoom = interruptedRestore
+        ? this.runtimeState.preCombatZoom ?? this.runtimeState.baselineCameraZoom
+        : interruptedCombatZoom && this.runtimeState.preCombatZoom !== null
+          ? Math.min(
+              MAX_CAMERA_ZOOM,
+              Math.max(
+                this.runtimeState.preCombatZoom * COMBAT_ZOOM_MULTIPLIER,
+                this.runtimeState.preCombatZoom + COMBAT_ZOOM_MIN_DELTA
+              )
+            )
+          : null;
+
+      this.stopCameraZoomTween();
+      this.runtimeState.userAdjustedZoom = userAdjustedZoom;
+      if (interruptedRestore) {
+        this.runtimeState.pendingCameraRestore = true;
+        this.runtimeState.preCombatZoom = restoreSnapshot.preCombatZoom;
+        this.runtimeState.preCombatUserAdjusted = restoreSnapshot.preCombatUserAdjusted;
+        this.runtimeState.pendingRestoreUserAdjusted = restoreSnapshot.pendingRestoreUserAdjusted;
+      }
+      this.pushRuntimeStateToPorts();
       this.setupCameraAndMap();
+      if (interruptedTargetZoom !== null) {
+        this.animateCameraZoom(interruptedTargetZoom);
+      }
       this.enablePlayerCameraFollow();
       this.ports.resizeDayNightOverlay();
     }
@@ -201,6 +281,8 @@ export class CameraModule implements SceneModule<MainScene> {
     const { tileHeight, halfTileWidth, halfTileHeight } = this.ports.getIsoMetrics();
     const canvasWidth = this.ports.scale.width;
     const canvasHeight = this.ports.scale.height;
+    const hudInsetPx = readBottomDockInsetPx();
+    const usableCanvasHeight = Math.max(1, canvasHeight - hudInsetPx);
 
     this.ports.setIsoOrigin((height - 1) * halfTileWidth, tileHeight);
     this.ports.ensureIsoFactory();
@@ -209,19 +291,24 @@ export class CameraModule implements SceneModule<MainScene> {
     const isoWidth = (width + height) * halfTileWidth;
     const isoHeight = (width + height) * halfTileHeight;
     const zoomX = canvasWidth / isoWidth;
-    const zoomY = canvasHeight / isoHeight;
+    const zoomY = usableCanvasHeight / isoHeight;
     const fitZoom = Math.min(zoomX, zoomY);
     const cameraProfile = resolveMapVisualProfile(currentMapArea).camera;
+    const initialZoomOverride = readInitialZoomOverride();
+    const minimumInitialZoom = initialZoomOverride ?? resolveResponsiveInitialZoomFloor({
+      viewportWidth: canvasWidth,
+      viewportHeight: canvasHeight,
+      hudInsetPx,
+      configuredFloor: cameraProfile.minimumInitialZoom,
+    });
+    const camera = this.ports.cameras.main;
+    const minimumZoom = this.computeMinZoom(camera);
     const desiredZoom = Phaser.Math.Clamp(
-      Math.max(
-        fitZoom * cameraProfile.initialFitFactor,
-        cameraProfile.minimumInitialZoom
-      ),
-      MIN_CAMERA_ZOOM,
+      Math.max(fitZoom * cameraProfile.initialFitFactor, minimumInitialZoom),
+      minimumZoom,
       MAX_CAMERA_ZOOM
     );
 
-    const camera = this.ports.cameras.main;
     const restoreActive = this.runtimeState.pendingCameraRestore || Boolean(this.runtimeState.cameraZoomTween);
 
     if (!this.ports.isInCombat()) {
@@ -235,6 +322,19 @@ export class CameraModule implements SceneModule<MainScene> {
           this.runtimeState.userAdjustedZoom = false;
           this.animateCameraZoom(desiredZoom);
         }
+      }
+    }
+
+    // Manual zoom is an intent, not permission to expose space outside the
+    // authored city envelope. Wide resizes may raise the coverage floor, so
+    // clamp only upward and leave userAdjustedZoom untouched.
+    if (camera.zoom < minimumZoom) {
+      camera.setZoom(minimumZoom);
+      if (!this.ports.isInCombat()) {
+        this.runtimeState.baselineCameraZoom = Math.max(
+          this.runtimeState.baselineCameraZoom,
+          minimumZoom
+        );
       }
     }
 
@@ -281,6 +381,9 @@ export class CameraModule implements SceneModule<MainScene> {
     const camera = this.ports.cameras.main;
     camera.startFollow(tokenContainer, false, CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_LERP);
     camera.setDeadzone(0, 0);
+    // Bias the follow center downward so the player sits centered in the band
+    // the bottom HUD dock does not cover (GET-183).
+    camera.setFollowOffset(0, this.hudFollowOffsetY(camera));
     this.runtimeState.isCameraFollowingPlayer = true;
     this.pendingFollowRecenterFrames = FOLLOW_START_RECENTER_FRAMES;
     this.pushRuntimeStateToPorts();
@@ -296,13 +399,61 @@ export class CameraModule implements SceneModule<MainScene> {
     }
 
     const camera = this.ports.cameras.main;
-    camera.centerOn(tokenContainer.x, tokenContainer.y);
+    camera.centerOn(tokenContainer.x, tokenContainer.y - this.hudFollowOffsetY(camera));
     this.clampCameraToBounds(camera);
     this.ports.dispatchPlayerScreenPosition();
   }
 
+  /**
+   * Per-map zoom-out floor: on surround maps the viewport must stay covered by
+   * playable city + surround ring (iso extent + prune pad per side), so the
+   * camera can never letterbox into void. Other maps keep the absolute floor.
+   */
+  private computeMinZoom(camera: Phaser.Cameras.Scene2D.Camera): number {
+    const currentMapArea = this.ports.getCurrentMapArea();
+    if (!currentMapArea) {
+      return MIN_CAMERA_ZOOM;
+    }
+    const surround = resolveMapVisualProfile(currentMapArea).citySurround;
+    if (!surround) {
+      return MIN_CAMERA_ZOOM;
+    }
+
+    const bounds = this.ports.computeIsoBounds();
+    const envelopeWidth = bounds.maxX - bounds.minX + 2 * surround.prunePadPx;
+    const envelopeHeight = bounds.maxY - bounds.minY + 2 * surround.prunePadPx;
+    return Math.max(
+      MIN_CAMERA_ZOOM,
+      camera.width / envelopeWidth,
+      camera.height / envelopeHeight
+    );
+  }
+
+  private hudFollowOffsetY(camera: Phaser.Cameras.Scene2D.Camera): number {
+    return -readBottomDockInsetPx() / (2 * Math.max(0.0001, camera.zoom));
+  }
+
   private refreshCameraBoundsForZoom(camera: Phaser.Cameras.Scene2D.Camera): void {
     const bounds = this.ports.computeIsoBounds();
+    const currentMapArea = this.ports.getCurrentMapArea();
+    const hasCitySurround = Boolean(
+      currentMapArea && resolveMapVisualProfile(currentMapArea).citySurround
+    );
+
+    if (hasCitySurround) {
+      const surround = resolveMapVisualProfile(currentMapArea).citySurround;
+      const padding = surround?.prunePadPx ?? 0;
+      // Use the exact same padded envelope as computeMinZoom. An oversized
+      // minimum-zoom view can then never be clamped against a smaller box.
+      camera.setBounds(
+        bounds.minX - padding,
+        bounds.minY - padding,
+        bounds.maxX - bounds.minX + padding * 2,
+        bounds.maxY - bounds.minY + padding * 2
+      );
+      return;
+    }
+
     const basePadding = this.ports.getTileSize() * CAMERA_BOUND_PADDING_TILES;
     const safeZoom = Math.max(0.0001, camera.zoom);
     const halfViewWidth = camera.width / (2 * safeZoom);
@@ -327,6 +478,8 @@ export class CameraModule implements SceneModule<MainScene> {
 
     const hasPlayerToken = Boolean(this.ports.getPlayerTokenContainer());
     if (this.runtimeState.isCameraFollowingPlayer && hasPlayerToken) {
+      // The HUD follow offset is zoom-dependent — refresh it with the zoom.
+      camera.setFollowOffset(0, this.hudFollowOffsetY(camera));
       this.recenterCameraOnPlayer();
       return;
     }
@@ -448,7 +601,7 @@ export class CameraModule implements SceneModule<MainScene> {
       return;
     }
 
-    const clampedTarget = Phaser.Math.Clamp(targetZoom, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
+    const clampedTarget = Phaser.Math.Clamp(targetZoom, this.computeMinZoom(camera), MAX_CAMERA_ZOOM);
     const currentZoom = camera.zoom;
 
     this.stopCameraZoomTween();
@@ -570,7 +723,11 @@ export class CameraModule implements SceneModule<MainScene> {
     const camera = this.ports.cameras.main;
     const zoomMultiplier = deltaY > 0 ? 0.82 : 1.18;
     const currentZoom = camera.zoom;
-    const targetZoom = Phaser.Math.Clamp(currentZoom * zoomMultiplier, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
+    const targetZoom = Phaser.Math.Clamp(
+      currentZoom * zoomMultiplier,
+      this.computeMinZoom(camera),
+      MAX_CAMERA_ZOOM
+    );
 
     if (Math.abs(targetZoom - currentZoom) < 0.0005) {
       return;
@@ -598,6 +755,21 @@ export class CameraModule implements SceneModule<MainScene> {
     }
 
     this.pushRuntimeStateToPorts();
+  };
+
+  private readonly handleHudSafeAreaChange = (): void => {
+    if (!this.ports.sys.isActive() || !this.ports.getCurrentMapArea()) {
+      return;
+    }
+
+    const camera = this.ports.cameras.main;
+    this.refreshCameraBoundsForZoom(camera);
+    if (this.runtimeState.isCameraFollowingPlayer) {
+      camera.setFollowOffset(0, this.hudFollowOffsetY(camera));
+      this.recenterCameraOnPlayer();
+    }
+    this.ports.dispatchPlayerScreenPosition();
+    this.ports.emitViewportUpdate();
   };
 
   private pushRuntimeStateToPorts(): void {

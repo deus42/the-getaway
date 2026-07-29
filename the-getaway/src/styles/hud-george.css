@@ -3,6 +3,7 @@
     flex-direction: column;
     gap: 0.65rem;
     height: 100%;
+    min-width: 0;
   }
 .george-inline__label {
     font-family: 'DM Mono', 'IBM Plex Mono', monospace;
@@ -16,9 +17,11 @@
     align-items: center;
     gap: 0.65rem;
     padding-top: 0.2rem;
+    min-width: 0;
   }
 .george-input {
     flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: 0.45rem;
@@ -34,6 +37,8 @@
   }
 .george-input__field {
     flex: 1 1 auto;
+    min-width: 0;
+    width: 0;
     background: transparent;
     border: 0;
     outline: none;

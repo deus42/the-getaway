@@ -7,7 +7,10 @@ import type {
   WorldRenderRuntimeState,
 } from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
-import { DepthBias } from '../../../utils/depth';
+import { DepthBias, DepthLayers } from '../../../utils/depth';
+import { planCitySurround } from '../../../visual/world/CitySurroundPlanner';
+import { rankCitySurroundStructures } from '../../../visual/world/CitySurroundDepth';
+import { resolveLevel0SurroundArt } from '../../../../content/environment/level0SurroundArtManifest';
 import { adjustColor } from '../../../utils/iso';
 import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../../../visual/theme/noirVectorTheme';
 import { resolveVisualThemeForMap } from '../../../visual/theme/mapVisualTheme';
@@ -93,6 +96,10 @@ const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[
   return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
 };
 
+// Fixed darkening for surround road bands — slightly deeper than the nearest
+// ground chunks so continued avenues stay legible without reading as playable.
+const MIN_SURROUND_ROAD_DARKEN = 0.22;
+
 const createDefaultRuntimeState = (): WorldRenderRuntimeState => ({
   visualTheme: createNoirVectorTheme('balanced'),
   tilePainter: undefined,
@@ -108,6 +115,8 @@ const createDefaultRuntimeState = (): WorldRenderRuntimeState => ({
   currentAtmosphereProfile: undefined,
   lastAtmosphereRedrawBucket: -1,
   lastItemMarkerSignature: '',
+  citySurroundObjects: [],
+  citySurroundKey: '',
 });
 
 const createWorldRenderModulePorts = (scene: MainScene): WorldRenderModulePorts => {
@@ -171,6 +180,8 @@ const createWorldRenderModulePorts = (scene: MainScene): WorldRenderModulePorts 
       currentAtmosphereProfile: readValue(scene, 'currentAtmosphereProfile'),
       lastAtmosphereRedrawBucket: readNumber(scene, 'lastAtmosphereRedrawBucket', -1),
       lastItemMarkerSignature: readValue(scene, 'lastItemMarkerSignature') ?? '',
+      citySurroundObjects: readValue(scene, 'citySurroundObjects') ?? [],
+      citySurroundKey: readValue(scene, 'citySurroundKey') ?? '',
     }),
     writeRuntimeState: (state) => {
       Reflect.set(scene, 'visualTheme', state.visualTheme);
@@ -187,6 +198,8 @@ const createWorldRenderModulePorts = (scene: MainScene): WorldRenderModulePorts 
       Reflect.set(scene, 'currentAtmosphereProfile', state.currentAtmosphereProfile);
       Reflect.set(scene, 'lastAtmosphereRedrawBucket', state.lastAtmosphereRedrawBucket);
       Reflect.set(scene, 'lastItemMarkerSignature', state.lastItemMarkerSignature);
+      Reflect.set(scene, 'citySurroundObjects', state.citySurroundObjects);
+      Reflect.set(scene, 'citySurroundKey', state.citySurroundKey);
     },
   };
 };
@@ -592,6 +605,10 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     }
 
     this.ensureVisualPipeline();
+    // Every render path (initial CameraModule/MainScene draws and later
+    // refreshes) funnels through drawMap, so the surround hooks in here; the
+    // per-map cache key makes repeat calls free.
+    this.drawCitySurround();
     const atmosphere = this.resolveAtmosphereProfile();
 
     this.runtimeState.tilePainter?.setAtmosphereProfile({
@@ -698,45 +715,32 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       const mass = massing.container;
       mass.setScrollFactor(1);
 
-      // The legacy landmark remains a fallback, but its oversized source art
-      // keeps the historical depth treatment without coupling orchestration to an ID.
-      if (massing.renderMode === 'legacy-esb') {
-        const esbDepthPoint = {
-          x: footprint.top.x,
-          y: footprint.top.y - tileHeight,
-        };
-        const esbBias = DepthBias.PROP_LOW;
-        this.ports.syncDepth(mass, esbDepthPoint.x, esbDepthPoint.y, esbBias);
-        this.runtimeState.buildingMassings.push(mass);
+      if (typeof window !== 'undefined') {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('pocDebug') === '1') {
+          const footprintDebug = this.ports.add.graphics();
+          footprintDebug.lineStyle(2, 0x39d5ff, 0.65);
+          footprintDebug.strokePoints([footprint.top, footprint.right, footprint.bottom, footprint.left], true);
+          this.ports.syncDepth(
+            footprintDebug,
+            footprint.bottom.x,
+            footprint.bottom.y,
+            DepthBias.FLOATING_UI + 28
+          );
+          this.runtimeState.buildingMassings.push(footprintDebug);
 
-        if (typeof window !== 'undefined') {
-          const params = new URLSearchParams(window.location.search);
-          if (params.get('pocDebug') === '1') {
-            const footprintDebug = this.ports.add.graphics();
-            footprintDebug.lineStyle(2, 0x39d5ff, 0.65);
-            footprintDebug.strokePoints([footprint.top, footprint.right, footprint.bottom, footprint.left], true);
-            this.ports.syncDepth(
-              footprintDebug,
-              footprint.bottom.x,
-              footprint.bottom.y,
-              DepthBias.FLOATING_UI + 28
-            );
-            this.runtimeState.buildingMassings.push(footprintDebug);
-
-            const doorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
-            const debugText = this.ports.add.text(doorPixel.x, doorPixel.y - tileHeight * 1.6, `door ${building.door.x},${building.door.y}`, {
-              fontFamily: 'monospace',
-              fontSize: '10px',
-              color: '#39d5ff',
-              stroke: '#000000',
-              strokeThickness: 3,
-            });
-            debugText.setOrigin(0.5, 1);
-            this.ports.syncDepth(debugText, doorPixel.x, doorPixel.y, DepthBias.FLOATING_UI + 30);
-            this.runtimeState.buildingMassings.push(debugText);
-          }
+          const debugDoorPixel = this.ports.calculatePixelPosition(building.door.x, building.door.y);
+          const debugText = this.ports.add.text(debugDoorPixel.x, debugDoorPixel.y - tileHeight * 1.6, `door ${building.door.x},${building.door.y}`, {
+            fontFamily: 'monospace',
+            fontSize: '10px',
+            color: '#39d5ff',
+            stroke: '#000000',
+            strokeThickness: 3,
+          });
+          debugText.setOrigin(0.5, 1);
+          this.ports.syncDepth(debugText, debugDoorPixel.x, debugDoorPixel.y, DepthBias.FLOATING_UI + 30);
+          this.runtimeState.buildingMassings.push(debugText);
         }
-        return;
       }
 
       this.ports.syncDepth(
@@ -768,6 +772,15 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       this.runtimeState.buildingMassings.push(entranceGlow);
 
       const massingHeight = massing.visualHeightPx;
+      const occlusionHeight = massingHeight * 0.92;
+      const occlusionPolygon = [
+        { x: footprint.left.x, y: footprint.left.y },
+        { x: footprint.bottom.x, y: footprint.bottom.y },
+        { x: footprint.right.x, y: footprint.right.y },
+        { x: footprint.right.x, y: footprint.right.y - occlusionHeight },
+        { x: footprint.top.x, y: footprint.top.y - occlusionHeight },
+        { x: footprint.left.x, y: footprint.left.y - occlusionHeight },
+      ];
       const boundsMinX = Math.min(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
       const boundsMaxX = Math.max(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
       const boundsMinY = Math.min(
@@ -780,6 +793,8 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       this.runtimeState.buildingMassingEntries.push({
         id: building.id,
         container: mass,
+        occlusionOrder: footprint.bottom.y,
+        occlusionPolygon,
         bounds: new Phaser.Geom.Rectangle(
           boundsMinX,
           boundsMinY,
@@ -900,19 +915,302 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       });
     });
 
+    const playerEntity = entities.find((entity) => entity.id === 'player');
+    const distanceFromPlayer = (entity: OcclusionEntityHandle): number =>
+      playerEntity
+        ? Math.hypot(entity.pixelX - playerEntity.pixelX, entity.pixelY - playerEntity.pixelY)
+        : Number.POSITIVE_INFINITY;
+    const combatFocus = entities
+      .filter((entity) => entity.healthBar?.visible)
+      .sort((left, right) => distanceFromPlayer(left) - distanceFromPlayer(right))[0];
+    const { tileWidth } = this.ports.getIsoMetrics();
+    const contactFocus = entities
+      .filter(
+        (entity) =>
+          entity.indicator?.visible &&
+          distanceFromPlayer(entity) <= tileWidth * 3
+      )
+      .sort((left, right) => distanceFromPlayer(left) - distanceFromPlayer(right))[0];
+    const focusEntityIds = Array.from(
+      new Set(['player', combatFocus?.id, contactFocus?.id].filter((id): id is string => Boolean(id)))
+    );
+
     const profile = this.runtimeState.currentAtmosphereProfile ?? this.resolveAtmosphereProfile();
     this.runtimeState.occlusionReadabilityController.applyOcclusionReadability({
       masses: this.runtimeState.buildingMassingEntries,
       entities,
       occlusionFadeFloor: this.runtimeState.visualTheme.qualityBudget.occlusionFadeFloor,
       emissiveIntensity: profile.emissiveIntensity,
+      cameraZoom: this.ports.cameras.main.zoom,
+      overviewZoomThreshold: 0.65,
+      focusEntityIds,
     });
+  }
+
+  /**
+   * Builds the decorative city ring beyond the playable grid (GET-182): ground
+   * one continuous ground plate, continued road bands, and anonymous low-detail
+   * city massing. Built once per map/theme and cached; render-only — never
+   * registered for gameplay depth, input, occlusion fades, or the minimap.
+   */
+  drawCitySurround(): void {
+    // Resolve the map's theme before reading surround config — on the first
+    // refresh after a map load the runtime state still holds the default
+    // vector theme until ensureVisualPipeline() swaps it.
+    this.ensureVisualPipeline();
+    const currentMapArea = this.ports.getCurrentMapArea();
+    const surroundConfig = this.runtimeState.visualTheme.mapProfile.citySurround;
+    const cacheKey =
+      currentMapArea && surroundConfig
+        ? `${currentMapArea.id}:${this.runtimeState.visualTheme.id}`
+        : '';
+
+    if (this.runtimeState.citySurroundKey === cacheKey) {
+      return;
+    }
+
+    this.runtimeState.citySurroundObjects.forEach((object) => object.destroy());
+    this.runtimeState.citySurroundObjects = [];
+    this.runtimeState.citySurroundKey = cacheKey;
+
+    if (!currentMapArea || !surroundConfig) {
+      return;
+    }
+
+    const plan = planCitySurround(currentMapArea.width, currentMapArea.height, surroundConfig);
+    const tileWidth = this.ports.getTileSize();
+    const tileHeight = tileWidth / 2;
+    const theme = this.runtimeState.visualTheme;
+    const inkColor = Phaser.Display.Color.ValueToColor(theme.treatment.ink.primary);
+
+    const darkened = (baseColor: number, darken: number): number => {
+      const interpolated = Phaser.Display.Color.Interpolate.ColorWithColor(
+        Phaser.Display.Color.ValueToColor(baseColor),
+        inkColor,
+        100,
+        Math.round(Phaser.Math.Clamp(darken, 0, 1) * 100)
+      );
+      return Phaser.Display.Color.GetColor(interpolated.r, interpolated.g, interpolated.b);
+    };
+
+    const diamondPoints = (
+      fromX: number,
+      fromY: number,
+      toX: number,
+      toY: number
+    ): Phaser.Geom.Point[] => {
+      const northWest = this.ports.calculatePixelPosition(fromX, fromY);
+      const northEast = this.ports.calculatePixelPosition(toX, fromY);
+      const southEast = this.ports.calculatePixelPosition(toX, toY);
+      const southWest = this.ports.calculatePixelPosition(fromX, toY);
+      return [
+        new Phaser.Geom.Point(northWest.x, northWest.y - tileHeight * 0.5),
+        new Phaser.Geom.Point(northEast.x + tileWidth * 0.5, northEast.y),
+        new Phaser.Geom.Point(southEast.x, southEast.y + tileHeight * 0.5),
+        new Phaser.Geom.Point(southWest.x - tileWidth * 0.5, southWest.y),
+      ];
+    };
+
+    const groundGraphics = this.ports.add.graphics();
+    groundGraphics.setScrollFactor(1);
+    groundGraphics.setDepth(DepthLayers.CITY_SURROUND);
+
+    // A single opaque underlay closes both the old chunk-alignment gaps and
+    // fractional-zoom hairlines. The playable map at MAP_BASE paints over the
+    // middle, so this may safely span the full city envelope.
+    const outerFromX = -plan.ringX;
+    const outerFromY = -plan.ringY;
+    const outerToX = currentMapArea.width + plan.ringX - 1;
+    const outerToY = currentMapArea.height + plan.ringY - 1;
+    groundGraphics.fillStyle(darkened(theme.surfacePalettes.lotEven, 0.34), 1);
+    groundGraphics.fillPoints(
+      diamondPoints(outerFromX, outerFromY, outerToX, outerToY),
+      true
+    );
+
+    plan.groundChunks.forEach((chunk) => {
+      groundGraphics.fillStyle(darkened(theme.surfacePalettes.lotEven, chunk.darken), 0.72);
+      groundGraphics.fillPoints(
+        diamondPoints(
+          chunk.gridX,
+          chunk.gridY,
+          chunk.gridX + chunk.sizeTiles - 1,
+          chunk.gridY + chunk.sizeTiles - 1
+        ),
+        true
+      );
+    });
+
+    plan.roadBands.forEach((band) => {
+      groundGraphics.fillStyle(darkened(theme.surfacePalettes.roadEven, MIN_SURROUND_ROAD_DARKEN), 1);
+      groundGraphics.fillPoints(
+        diamondPoints(band.fromX, band.fromY, band.toX - 1, band.toY - 1),
+        true
+      );
+    });
+
+    this.runtimeState.citySurroundObjects.push(groundGraphics);
+
+    const drawAnonymousPrism = (
+      graphics: Phaser.GameObjects.Graphics,
+      base: Phaser.Geom.Point[],
+      heightPx: number,
+      inset: number,
+      variantIndex: number,
+      darken: number
+    ): void => {
+      const centerX = base.reduce((sum, point) => sum + point.x, 0) / base.length;
+      const centerY = base.reduce((sum, point) => sum + point.y, 0) / base.length;
+      const roof = base.map(
+        (point) =>
+          new Phaser.Geom.Point(
+            Phaser.Math.Linear(point.x, centerX, inset),
+            Phaser.Math.Linear(point.y, centerY, inset) - heightPx
+          )
+      );
+      const [, right, bottom, left] = base;
+      const [roofTop, roofRight, roofBottom, roofLeft] = roof;
+      const faceBase = variantIndex % 3 === 0
+        ? theme.treatment.surface.umber
+        : theme.treatment.surface.charcoal;
+      const leftColor = darkened(adjustColor(faceBase, -0.08), darken);
+      const rightColor = darkened(adjustColor(faceBase, -0.16), darken);
+      const roofColor = darkened(adjustColor(faceBase, 0.06), darken);
+
+      graphics.fillStyle(leftColor, 1);
+      graphics.fillPoints([left, bottom, roofBottom, roofLeft], true);
+      graphics.fillStyle(rightColor, 1);
+      graphics.fillPoints([right, bottom, roofBottom, roofRight], true);
+      graphics.fillStyle(roofColor, 1);
+      graphics.fillPoints([roofTop, roofRight, roofBottom, roofLeft], true);
+      graphics.lineStyle(
+        Math.max(0.8, theme.treatment.outline.width * 0.55),
+        theme.treatment.outline.color,
+        0.5
+      );
+      graphics.strokePoints([roofTop, roofRight, roofBottom, roofLeft], true);
+
+      // Sparse practicals make the ring read as inhabited city without turning
+      // it into a second gameplay layer or decorative clutter field.
+      if (variantIndex % 2 === 0) {
+        const windowY = Phaser.Math.Linear(roofBottom.y, bottom.y, 0.52);
+        graphics.lineStyle(1.2, theme.treatment.lighting.practical, 0.34);
+        graphics.lineBetween(
+          Phaser.Math.Linear(roofLeft.x, roofBottom.x, 0.3),
+          windowY,
+          Phaser.Math.Linear(roofLeft.x, roofBottom.x, 0.68),
+          windowY
+        );
+      }
+
+      // A small roof cap varies the silhouette while keeping every structure
+      // anonymous and well below the named landmark scale.
+      if (variantIndex === 1 || variantIndex === 4) {
+        const capBase = roof.map(
+          (point) =>
+            new Phaser.Geom.Point(
+              Phaser.Math.Linear(point.x, centerX, 0.42),
+              Phaser.Math.Linear(point.y, centerY - heightPx, 0.42)
+            )
+        );
+        drawAnonymousPrism(
+          graphics,
+          capBase,
+          heightPx * 0.24,
+          0.08,
+          variantIndex + 1,
+          darken + 0.03
+        );
+      }
+    };
+
+    rankCitySurroundStructures(
+      plan.parcels.map((parcel) => {
+        const base = diamondPoints(
+          parcel.fromX,
+          parcel.fromY,
+          parcel.fromX + parcel.widthTiles - 1,
+          parcel.fromY + parcel.depthTiles - 1
+        );
+        const southTip = base[2];
+        return { item: { parcel, base }, southTip };
+      })
+    ).forEach(({ item: { parcel, base }, depth }) => {
+      const art = resolveLevel0SurroundArt(parcel.variantIndex);
+      if (this.scene.textures.exists(art.textureKey)) {
+        const [, right, bottom, left] = base;
+        const horizontalSpan = Math.abs(right.x - left.x);
+        const sprite = this.ports.add.image(bottom.x, bottom.y, art.textureKey);
+        sprite.setOrigin(art.origin.x, art.origin.y);
+        sprite.setScale((horizontalSpan * 0.94) / Math.max(1, art.basePlateWidthPx));
+        sprite.setAlpha(1);
+        sprite.setTint(darkened(0xffffff, Math.min(0.48, parcel.darken + 0.08)));
+        sprite.setScrollFactor(1);
+        sprite.setDepth(depth);
+        this.runtimeState.citySurroundObjects.push(sprite);
+        return;
+      }
+
+      const parcelGraphics = this.ports.add.graphics();
+      parcelGraphics.setScrollFactor(1);
+      drawAnonymousPrism(
+        parcelGraphics,
+        base,
+        parcel.heightTiles * tileHeight,
+        parcel.roofInset,
+        parcel.variantIndex,
+        parcel.darken
+      );
+      parcelGraphics.setDepth(depth);
+      this.runtimeState.citySurroundObjects.push(parcelGraphics);
+    });
+
+    this.pushRuntimeStateToPorts();
+  }
+
+  /**
+   * Painterly backdrop: a plain atmosphere gradient sized past the surround
+   * ring. The procedural skyline rectangles and ellipse vignettes of the
+   * vector style read as flat cutouts behind real painted surround blocks, so
+   * the surround replaces them entirely (GET-182).
+   */
+  private drawSurroundFadeBackdrop(backdropGraphics: Phaser.GameObjects.Graphics): void {
+    const bounds = this.computeIsoBounds();
+    const tileSize = this.ports.getTileSize();
+    const surroundConfig = this.runtimeState.visualTheme.mapProfile.citySurround;
+    const margin = (surroundConfig?.prunePadPx ?? tileSize * 12) + tileSize * 8;
+
+    const originX = bounds.minX - margin;
+    const originY = bounds.minY - margin;
+    const width = bounds.maxX - bounds.minX + margin * 2;
+    const height = bounds.maxY - bounds.minY + margin * 2;
+
+    const atmosphere = this.resolveAtmosphereProfile();
+    backdropGraphics.clear();
+    backdropGraphics.fillGradientStyle(
+      atmosphere.gradientTopLeft,
+      atmosphere.gradientTopRight,
+      atmosphere.gradientBottomLeft,
+      atmosphere.gradientBottomRight,
+      1,
+      1,
+      1,
+      1
+    );
+    backdropGraphics.fillRect(originX, originY, width, height);
+    this.ports.cameras.main.setBackgroundColor(atmosphere.gradientBottomLeft);
   }
 
   drawBackdrop(): void {
     const backdropGraphics = this.ports.getBackdropGraphics();
     const currentMapArea = this.ports.getCurrentMapArea();
     if (!backdropGraphics || !currentMapArea) {
+      return;
+    }
+
+    this.ensureVisualPipeline();
+    if (this.runtimeState.visualTheme.mapProfile.backdropStyle === 'surround-fade') {
+      this.drawSurroundFadeBackdrop(backdropGraphics);
       return;
     }
 
@@ -1119,6 +1417,9 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     this.runtimeState.buildingMassings.forEach((mass) => mass.destroy(true));
     this.runtimeState.buildingMassings = [];
     this.runtimeState.buildingMassingEntries = [];
+    this.runtimeState.citySurroundObjects.forEach((object) => object.destroy());
+    this.runtimeState.citySurroundObjects = [];
+    this.runtimeState.citySurroundKey = '';
     this.runtimeState.environmentComposition = undefined;
     this.runtimeState.currentAtmosphereProfile = undefined;
     this.runtimeState.lastAtmosphereRedrawBucket = -1;

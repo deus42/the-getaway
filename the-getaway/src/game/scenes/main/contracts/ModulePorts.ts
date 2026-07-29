@@ -71,6 +71,8 @@ export type WorldRenderRuntimeState = {
   currentAtmosphereProfile?: AtmosphereProfile;
   lastAtmosphereRedrawBucket: number;
   lastItemMarkerSignature: string;
+  citySurroundObjects: Phaser.GameObjects.GameObject[];
+  citySurroundKey: string;
 };
 
 export type StateSyncRuntimeState = {
