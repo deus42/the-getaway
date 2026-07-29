@@ -55,6 +55,7 @@ const createInputModulePorts = (scene: MainScene): InputModulePorts => {
     renderStaticProps: () => {
       callSceneMethod(scene, 'renderStaticProps');
     },
+    getVisualTheme: () => readValue(scene, 'visualTheme'),
   };
 };
 
@@ -350,22 +351,31 @@ export class InputModule implements SceneModule<MainScene> {
     }
 
     const { tileWidth, tileHeight } = this.ports.getIsoMetrics();
+    const visualTheme = this.ports.getVisualTheme?.();
+    const painterly = visualTheme?.renderStyle === 'graphic-painterly-noir';
+    const treatment = visualTheme?.treatment;
     const pathLength = detail.path.length;
     const pixelPath = detail.path.map((position) =>
       this.ports.calculatePixelPosition(position.x, position.y)
     );
 
-    let coreColor = 0x34d399;
+    let coreColor = painterly && treatment
+      ? treatment.surface.mutedTeal
+      : 0x34d399;
     if (pathLength > 9) {
-      coreColor = 0xf87171;
+      coreColor = painterly && treatment ? treatment.lighting.threat : 0xf87171;
     } else if (pathLength > 6) {
-      coreColor = 0xfb923c;
+      coreColor = painterly && treatment ? treatment.lighting.practicalShadow : 0xfb923c;
     } else if (pathLength > 3) {
-      coreColor = 0xfbbf24;
+      coreColor = painterly && treatment ? treatment.lighting.practical : 0xfbbf24;
     }
 
     if (pixelPath.length > 1) {
-      this.ports.pathGraphics.lineStyle(5.2, 0x22d3ee, 0.14);
+      this.ports.pathGraphics.lineStyle(
+        painterly ? 4 : 5.2,
+        painterly && treatment ? treatment.lighting.technology : 0x22d3ee,
+        painterly ? 0.08 : 0.14
+      );
       this.ports.pathGraphics.beginPath();
       this.ports.pathGraphics.moveTo(pixelPath[0].x, pixelPath[0].y);
       pixelPath.slice(1).forEach((point) => {
@@ -373,7 +383,7 @@ export class InputModule implements SceneModule<MainScene> {
       });
       this.ports.pathGraphics.strokePath();
 
-      this.ports.pathGraphics.lineStyle(2.2, coreColor, 0.88);
+      this.ports.pathGraphics.lineStyle(painterly ? 1.8 : 2.2, coreColor, painterly ? 0.72 : 0.88);
       this.ports.pathGraphics.beginPath();
       this.ports.pathGraphics.moveTo(pixelPath[0].x, pixelPath[0].y);
       pixelPath.slice(1).forEach((point) => {
@@ -384,7 +394,14 @@ export class InputModule implements SceneModule<MainScene> {
 
     pixelPath.forEach((point, index) => {
       const isDestination = index === pixelPath.length - 1;
-      this.ports.pathGraphics.fillStyle(isDestination ? 0xffc857 : coreColor, isDestination ? 0.95 : 0.72);
+      this.ports.pathGraphics.fillStyle(
+        isDestination && painterly && treatment
+          ? treatment.lighting.practical
+          : isDestination
+            ? 0xffc857
+            : coreColor,
+        isDestination ? (painterly ? 0.82 : 0.95) : (painterly ? 0.58 : 0.72)
+      );
       this.ports.pathGraphics.fillCircle(point.x, point.y, isDestination ? tileHeight * 0.14 : tileHeight * 0.08);
     });
 
@@ -395,9 +412,17 @@ export class InputModule implements SceneModule<MainScene> {
       tileWidth * 0.72,
       tileHeight * 0.72
     );
-    this.ports.pathGraphics.lineStyle(1.6, 0xffe29a, 0.94);
+    this.ports.pathGraphics.lineStyle(
+      painterly ? 1.35 : 1.6,
+      painterly && treatment ? treatment.surface.bone : 0xffe29a,
+      painterly ? 0.78 : 0.94
+    );
     this.ports.pathGraphics.strokePoints(destinationDiamond, true);
-    this.ports.pathGraphics.lineStyle(0.9, 0x38bdf8, 0.74);
+    this.ports.pathGraphics.lineStyle(
+      0.9,
+      painterly && treatment ? treatment.lighting.technology : 0x38bdf8,
+      painterly ? 0.42 : 0.74
+    );
     this.ports.pathGraphics.strokeCircle(destinationPixel.x, destinationPixel.y, tileHeight * 0.28);
 
     const destination = detail.path[detail.path.length - 1];

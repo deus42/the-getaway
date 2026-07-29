@@ -77,22 +77,24 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
     variant === "frameless"
       ? "flex h-full min-h-0 flex-1 flex-col gap-[0.5rem] px-0 py-0 text-[#f8fafc] font-body"
       : "flex flex-col gap-[0.5rem] rounded-[18px] border border-[rgba(59,130,246,0.22)] bg-[linear-gradient(145deg,rgba(8,15,30,0.92),rgba(12,22,42,0.82),rgba(6,12,28,0.92))] px-[0.9rem] py-[0.9rem] text-[#f8fafc] shadow-[0_20px_30px_-20px_rgba(8,12,24,0.5)] backdrop-blur-[14px] font-body";
-  const mergedClasses = className ? `${baseClasses} ${className}` : baseClasses;
+  const mergedClasses = className
+    ? `player-summary ${baseClasses} ${className}`
+    : `player-summary ${baseClasses}`;
 
   return (
     <div className={mergedClasses} data-testid="player-summary-panel">
       <div className="flex items-start gap-[0.75rem]">
         <div className="flex min-w-0 flex-1 flex-col gap-[0.2rem]">
-          <div className="flex items-center gap-[0.5rem] text-[0.9rem] uppercase tracking-[0.26em] text-[#bfdbfe] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]">
+          <div className="player-summary__identity flex items-center gap-[0.5rem] text-[0.9rem] uppercase tracking-[0.26em] text-[#bfdbfe] drop-shadow-[0_0_8px_rgba(56,189,248,0.4)]">
             <span className="truncate">{player.name}</span>
-            <span className="inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.18)] px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold tracking-[0.14em] text-[#f8fafc] shadow-[0_10px_20px_-10px_rgba(56,189,248,0.55)]">
+            <span className="player-summary__badge inline-flex items-center gap-[0.25rem] rounded-[999px] border border-[rgba(56,189,248,0.45)] bg-[rgba(56,189,248,0.18)] px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold tracking-[0.14em] text-[#f8fafc] shadow-[0_10px_20px_-10px_rgba(56,189,248,0.55)]">
               {uiStrings.playerStatus.levelLabel} {player.level}
             </span>
           <button
             type="button"
             onClick={() => dispatch(requestStealthToggle())}
             className={[
-              "inline-flex items-center gap-[0.25rem] rounded-[999px] border px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold uppercase tracking-[0.14em] transition-all duration-150",
+              "player-summary__stealth-toggle inline-flex items-center gap-[0.25rem] rounded-[999px] border px-[0.55rem] py-[0.22rem] text-[0.6rem] font-semibold uppercase tracking-[0.14em] transition-all duration-150",
               stealthHudModel.isActive
                 ? "border-[rgba(45,212,191,0.65)] bg-[rgba(20,83,74,0.44)] text-[#ccfbf1] shadow-[0_10px_20px_-12px_rgba(20,184,166,0.55)]"
                 : "border-[rgba(148,163,184,0.6)] bg-[rgba(30,41,59,0.45)] text-[#dbeafe] shadow-[0_10px_20px_-12px_rgba(59,130,246,0.35)]",
@@ -104,7 +106,7 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
             {stealthToggleLabel}
           </button>
           </div>
-          <div className="text-[0.6rem] uppercase tracking-[0.12em] text-[rgba(226,232,240,0.72)]">
+          <div className="player-summary__background text-[0.6rem] uppercase tracking-[0.12em] text-[rgba(226,232,240,0.72)]">
             {backgroundName}
           </div>
         </div>
@@ -139,32 +141,32 @@ const PlayerSummaryPanel: React.FC<PlayerSummaryPanelProps> = ({
         </span>
       )}
 
-      <div className="grid grid-cols-2 gap-[0.28rem]">
-        <div className="flex min-w-0 flex-col gap-[0.12rem] rounded-[12px] border border-[rgba(248,250,252,0.08)] bg-[linear-gradient(160deg,rgba(14,26,52,0.88),rgba(10,18,34,0.88))] px-[0.5rem] py-[0.45rem] shadow-[0_16px_30px_-20px_rgba(13,148,136,0.6)]">
-          <span className="text-[0.5rem] uppercase tracking-[0.12em] text-[rgba(148,163,184,0.7)]">
+      <div className="player-summary__resources grid grid-cols-2 gap-[0.28rem]">
+        <div className="player-summary__resource flex min-w-0 flex-col gap-[0.12rem] rounded-[12px] border border-[rgba(248,250,252,0.08)] bg-[linear-gradient(160deg,rgba(14,26,52,0.88),rgba(10,18,34,0.88))] px-[0.5rem] py-[0.45rem] shadow-[0_16px_30px_-20px_rgba(13,148,136,0.6)]">
+          <span className="player-summary__resource-label text-[0.5rem] uppercase tracking-[0.12em] text-[rgba(148,163,184,0.7)]">
             {uiStrings.playerStatus.creditsLabel}
           </span>
-          <span className="text-[0.85rem] font-semibold text-[#fbbf24] drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
+          <span className="player-summary__resource-value player-summary__resource-value--credits text-[0.85rem] font-semibold text-[#fbbf24] drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]">
             ₿{player.credits}
           </span>
         </div>
-        <div className="flex min-w-0 flex-col gap-[0.12rem] rounded-[12px] border border-[rgba(248,250,252,0.08)] bg-[linear-gradient(160deg,rgba(14,26,52,0.88),rgba(10,18,34,0.88))] px-[0.5rem] py-[0.45rem] shadow-[0_16px_30px_-20px_rgba(13,148,136,0.6)]">
-          <span className="text-[0.5rem] uppercase tracking-[0.12em] text-[rgba(148,163,184,0.7)]">
+        <div className="player-summary__resource flex min-w-0 flex-col gap-[0.12rem] rounded-[12px] border border-[rgba(248,250,252,0.08)] bg-[linear-gradient(160deg,rgba(14,26,52,0.88),rgba(10,18,34,0.88))] px-[0.5rem] py-[0.45rem] shadow-[0_16px_30px_-20px_rgba(13,148,136,0.6)]">
+          <span className="player-summary__resource-label text-[0.5rem] uppercase tracking-[0.12em] text-[rgba(148,163,184,0.7)]">
             {uiStrings.playerStatus.experienceLabel}
           </span>
-          <span className="text-[0.85rem] font-semibold text-[#38bdf8] drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]">
+          <span className="player-summary__resource-value player-summary__resource-value--xp text-[0.85rem] font-semibold text-[#38bdf8] drop-shadow-[0_0_12px_rgba(56,189,248,0.45)]">
             {formatXPDisplay(player.experience, player.level)}
           </span>
         </div>
       </div>
 
       {onOpenCharacter && showActionButton && (
-        <div className="flex gap-[0.5rem]">
+        <div className="player-summary__actions flex gap-[0.5rem]">
           <button
             type="button"
             onClick={onOpenCharacter}
             className={[
-              "flex-1 rounded-[999px] border px-[0.75rem] py-[0.42rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#e0f2fe] shadow-[0_12px_20px_-18px_rgba(56,189,248,0.45)] transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900",
+              "player-summary__character-button flex-1 rounded-[999px] border px-[0.75rem] py-[0.42rem] text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#e0f2fe] shadow-[0_12px_20px_-18px_rgba(56,189,248,0.45)] transition-transform duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/60 focus-visible:ring-offset-2 focus-visible:ring-offset-gunmetal-900",
               characterOpen
                 ? "border-[rgba(251,191,36,0.9)] bg-[linear-gradient(130deg,rgba(251,191,36,0.6),rgba(249,115,22,0.55))] text-[#fff7e1]"
                 : "border-[rgba(56,189,248,0.55)] bg-[linear-gradient(130deg,rgba(56,189,248,0.48),rgba(14,165,233,0.45))]",

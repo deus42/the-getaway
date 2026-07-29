@@ -31,6 +31,7 @@ const createSurveillanceRenderModulePorts = (scene: MainScene): SurveillanceRend
     },
     getIsoMetrics: () => callSceneMethod(scene, 'getIsoMetrics'),
     calculatePixelPosition: (gridX: number, gridY: number) => callSceneMethod(scene, 'calculatePixelPosition', gridX, gridY),
+    getVisualTheme: () => readValue(scene, 'visualTheme'),
     syncDepth: (target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number) => {
       callSceneMethod(scene, 'syncDepth', target, pixelX, pixelY, bias);
     },
@@ -74,6 +75,9 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
 
     const enemies = currentMapArea.entities.enemies;
     const metrics = this.ports.getIsoMetrics();
+    const visualTheme = this.ports.getVisualTheme?.();
+    const painterly = visualTheme?.renderStyle === 'graphic-painterly-noir';
+    const treatment = visualTheme?.treatment;
 
     enemies.forEach((enemy) => {
       if (!enemy.visionCone || enemy.health <= 0) {
@@ -85,25 +89,25 @@ export class SurveillanceRenderModule implements SceneModule<MainScene> {
         return;
       }
 
-      let coneColor = 0xffff00;
-      let coneAlpha = 0.1;
+      let coneColor = painterly && treatment ? treatment.lighting.practical : 0xffff00;
+      let coneAlpha = painterly ? 0.08 : 0.1;
 
       switch (enemy.alertLevel) {
         case AlertLevel.SUSPICIOUS:
-          coneColor = 0xffaa00;
-          coneAlpha = 0.15;
+          coneColor = painterly && treatment ? treatment.lighting.practical : 0xffaa00;
+          coneAlpha = painterly ? 0.12 : 0.15;
           break;
         case AlertLevel.INVESTIGATING:
-          coneColor = 0xff6600;
-          coneAlpha = 0.2;
+          coneColor = painterly && treatment ? treatment.lighting.practicalShadow : 0xff6600;
+          coneAlpha = painterly ? 0.16 : 0.2;
           break;
         case AlertLevel.ALARMED:
-          coneColor = 0xff0000;
-          coneAlpha = 0.25;
+          coneColor = painterly && treatment ? treatment.lighting.threat : 0xff0000;
+          coneAlpha = painterly ? 0.22 : 0.25;
           break;
         default:
-          coneColor = 0xffff00;
-          coneAlpha = 0.1;
+          coneColor = painterly && treatment ? treatment.lighting.practical : 0xffff00;
+          coneAlpha = painterly ? 0.08 : 0.1;
       }
 
       visionConeGraphics.fillStyle(coneColor, coneAlpha);

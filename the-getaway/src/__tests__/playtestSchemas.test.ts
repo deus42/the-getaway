@@ -76,6 +76,35 @@ describe('AI playtest schemas', () => {
     expect(parsed.findings[0].linearSuggestion.label).toBe('Improvement');
   });
 
+  it('keeps agent-strategy findings schema-valid with a normal report category', () => {
+    const report = buildPlaytestMarkdownReport({
+      runId: 'run-agent-strategy',
+      profile: 'guided-level0',
+      generatedAt: '2026-05-06T00:00:00.000Z',
+      summary: 'Agent strategy finding recorded.',
+      scorecard: {
+        findings: 1,
+        codexMode: 'enabled',
+      },
+      findings: [{
+        ...sampleFinding,
+        id: 'finding-agent-strategy',
+        category: 'tooling',
+        title: 'AI gamer exhausted milestone coverage',
+        findingType: 'agent-strategy',
+        dedupeKey: 'guided-level0:incomplete-milestone-coverage',
+        blockingMilestone: 'keycard-collected',
+      }],
+      screenshots: ['reports/ai-playtests/run-agent-strategy/step-000.png'],
+      trace: [],
+    });
+
+    const parsed = extractFindingsJsonBlock(report);
+    expect(parsed.findings).toHaveLength(1);
+    expect(parsed.findings[0].category).toBe('tooling');
+    expect(parsed.findings[0].findingType).toBe('agent-strategy');
+  });
+
   it('normalizes duplicate Lira hand-in findings into one canonical finding', () => {
     const duplicate: AiPlaytestFinding = {
       ...sampleFinding,

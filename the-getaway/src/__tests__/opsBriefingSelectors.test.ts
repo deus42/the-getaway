@@ -56,4 +56,25 @@ describe('selectOpsBriefingModel', () => {
       model.completedQuests.some((quest) => quest.id === 'quest_market_cache')
     ).toBe(true);
   });
+
+  it('keeps Current Beat focused on the next guided primary after a handoff', () => {
+    store.dispatch(startQuest('quest_market_cache'));
+    store.dispatch(completeQuest('quest_market_cache'));
+
+    let model = selectOpsBriefingModel(store.getState());
+    expect(model.primaryObjectives).toHaveLength(1);
+    expect(model.primaryObjectives[0].questIds).toContain('quest_datapad_truth');
+    expect(model.primaryObjectives[0].questIds).not.toContain('quest_market_cache');
+    expect(
+      model.completedQuests.some((quest) => quest.id === 'quest_market_cache')
+    ).toBe(true);
+
+    store.dispatch(startQuest('quest_datapad_truth'));
+    store.dispatch(completeQuest('quest_datapad_truth'));
+
+    model = selectOpsBriefingModel(store.getState());
+    expect(model.primaryObjectives).toHaveLength(1);
+    expect(model.primaryObjectives[0].questIds).toContain('quest_courier_network');
+    expect(model.primaryObjectives[0].questIds).not.toContain('quest_datapad_truth');
+  });
 });

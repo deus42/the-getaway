@@ -24,6 +24,18 @@ Signage, UI Diegesis & Lighting Motifs
 	•	District signage should riff on period noir typography (condensed sans-serifs, deco ligatures) while integrating glitched neon or flicker passes for lived-in decay.
 	•	Diegetic displays (billboards, kiosks, George’s overlays) glow with cool cyan/teal, contrasted by warmer street lighting to frame interactable spaces.
 	•	Use motivated pools of light (overhead lamps, leaking neon, vehicle headlights) to sculpt scenes and reinforce cover silhouettes in gameplay spaces.
+	•	Level 0 route art must earn its place through gameplay: cover, hazards, cameras, pickups, entrances, safehouses, and active contacts are allowed; ambient prop clusters, route clutter, and decorative beacons are not.
+	•	Long Level 0 travel lanes stay legible through authored surface value masses, walkable/blocked/cover contrast, active objective markers, and the minimap route. Do not compensate for weak composition with repeated freestanding decoration or permanent actor labels.
+
+Level 0 Graphic Painterly-Noir Production Contract (GET-180)
+	•	Outdoor Level 0 is the first production slice for `graphic-painterly-noir`; interiors, other maps, and invalid/missing assets retain the vector presentation as fallback.
+	•	Palette: charcoal, bruised umber, dirty crimson, muted teal, bone, and sodium amber. Technology cyan is scarce and semantic; crimson is reserved for active threats. Authored light direction is consistently upper-left.
+	•	Actors use complete `64×96` eight-direction sheets with four frames each for `idle`, `move`, `attack`, and `interact`. Hero, contact, guard, and hostile references must share silhouette language with their dialogue portraits; runtime scale does not replace correct frame occupancy.
+	•	Named buildings use neutral authored albedo art with footprint-aligned anchors. Day, curfew, alarm, and practical-light shifts come from runtime atmosphere rather than duplicate baked day/night exports.
+	•	Level 0 is composed as nine continuous city compounds, not nine isolated monuments. Each landmark remains the focal identity of its parcel while attached low/mid-rise wings create a street wall inside the same measured footprint; standard parcels use a two-tile pedestrian setback and never consume the authored avenue/street cores.
+	•	Normal gameplay framing presents a local neighborhood rather than the whole tactical board. The painterly view suppresses perimeter wall volumes and permanent building labels, blends the map edge into the surrounding value mass, and reserves the `0.38` overview for deliberate manual zoom-out.
+	•	The HUD preserves its information architecture but uses matte ink panels, angular edges, fine bone/brass rules, restrained shadows, and semantic amber/crimson/cyan/teal accents. Broad cyan bloom, heavy blur, glossy glass, and rounded-card repetition are outside this slice.
+	•	The master board, actor/building references, deterministic normalization scripts, and export notes live under `art/painterly/level0`; runtime assets remain manifest-driven and validator-friendly.
 
 Reference Sheets & Production Workflow
 	•	Produce a one-page style sheet per district outlining palette swatches, texture callouts, signage exemplars, and “do/don’t” mini-comparisons.

@@ -12,10 +12,16 @@ import {
   LEVEL0_ENVIRONMENT_ATLAS_KEY,
   LEVEL0_ENVIRONMENT_NORMAL_KEY,
   LEVEL0_ENVIRONMENT_NORMAL_PATH,
+  PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
+  PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH,
+  PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY,
+  PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY,
+  PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_PATH,
 } from '../../content/environment/atlasFrames';
 import { store } from '../../store';
 import { RootState } from '../../store'; // Import RootState
 import { getLevel0Content } from '../../content/levels/level0';
+import { LEVEL0_BUILDING_ART_MANIFEST } from '../../content/environment/level0BuildingArtManifest';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -31,12 +37,21 @@ export class BootScene extends Phaser.Scene {
       LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH
     );
     this.load.atlas(
+      PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY,
+      PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
+      PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH
+    );
+    this.load.atlas(
       GET155_PREVIEW_ATLAS_KEY,
       GET155_PREVIEW_ATLAS_IMAGE_PATH,
       GET155_PREVIEW_ATLAS_JSON_PATH
     );
     this.load.image('lamp_slim_a_n', 'normals/lamp_slim_a_n.png');
     this.load.image(LEVEL0_ENVIRONMENT_NORMAL_KEY, LEVEL0_ENVIRONMENT_NORMAL_PATH);
+    this.load.image(PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY, PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_PATH);
+    LEVEL0_BUILDING_ART_MANIFEST.forEach((entry) => {
+      this.load.image(entry.textureKey, entry.imagePath);
+    });
     preloadCharacterSpriteSheets(this);
   }
 
@@ -64,6 +79,18 @@ export class BootScene extends Phaser.Scene {
       const normalSource = level0EnvironmentNormal.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
       level0EnvironmentTexture.setDataSource(normalSource);
       this.textures.remove(LEVEL0_ENVIRONMENT_NORMAL_KEY);
+    }
+
+    const painterlyEnvironmentTexture = this.textures.get(PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY);
+    const painterlyEnvironmentNormal = this.textures.get(PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY);
+    if (
+      painterlyEnvironmentTexture &&
+      painterlyEnvironmentNormal &&
+      painterlyEnvironmentTexture.dataSource.length === 0
+    ) {
+      const normalSource = painterlyEnvironmentNormal.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+      painterlyEnvironmentTexture.setDataSource(normalSource);
+      this.textures.remove(PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY);
     }
 
     registerCharacterSpriteAnimations(this);

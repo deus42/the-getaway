@@ -1,4 +1,5 @@
 import { RootState } from '../../../../store';
+import { getLevel0GuidedStep } from '../../../quests/level0GuidedSlice';
 import type { MainScene } from '../../MainScene';
 import type { StateSyncModulePorts, StateSyncRuntimeState } from '../contracts/ModulePorts';
 import { SceneModule } from '../SceneModule';
@@ -22,6 +23,17 @@ const callSceneMethod = <TReturn>(target: object, key: string, ...args: unknown[
   }
 
   return (value as (...methodArgs: unknown[]) => TReturn).apply(target, args);
+};
+
+const getGuidedMarkerSignature = (state: RootState): string => {
+  const step = getLevel0GuidedStep(state.quests?.quests ?? []);
+  return [
+    step.stage,
+    step.questId ?? 'none',
+    step.objectiveId ?? 'none',
+    step.contactDialogueId ?? 'none',
+    step.itemResourceKeys?.join(',') ?? 'none',
+  ].join(':');
 };
 
 const createStateSyncModulePorts = (scene: MainScene): StateSyncModulePorts => {
@@ -196,9 +208,14 @@ export class StateSyncModule implements SceneModule<MainScene> {
     }
 
     const previousItemMarkerSignature = this.ports.getItemMarkerSignature(currentMapArea);
+    const previousGuidedMarkerSignature = getGuidedMarkerSignature(previousState);
     this.ports.setCurrentMapArea(nextMapArea);
     const nextItemMarkerSignature = this.ports.getItemMarkerSignature(nextMapArea);
-    if (previousItemMarkerSignature !== nextItemMarkerSignature) {
+    const nextGuidedMarkerSignature = getGuidedMarkerSignature(nextState);
+    if (
+      previousItemMarkerSignature !== nextItemMarkerSignature ||
+      previousGuidedMarkerSignature !== nextGuidedMarkerSignature
+    ) {
       this.ports.renderStaticProps();
     }
 

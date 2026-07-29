@@ -291,6 +291,17 @@ const isQuestProgressTrackable = (quest: Quest): boolean =>
 const isLiraCacheNightObjective = (quest: Quest, objective: QuestObjective): boolean =>
   quest.id === 'quest_market_cache' && objective.id === 'recover-keycard';
 
+const LIRA_KEYCARD_DASH_PICKUP_RANGE = 5;
+
+const isLiraKeycardDashPickup = (
+  objective: QuestObjective,
+  item: Item,
+  distanceToItem: number
+): boolean =>
+  objective.id === 'recover-keycard' &&
+  item.resourceKey === 'items.corporate_keycard' &&
+  distanceToItem <= LIRA_KEYCARD_DASH_PICKUP_RANGE;
+
 const isRecoveryInterior = (area: MapArea): boolean =>
   area.zoneId === 'resistance_safehouse' ||
   area.name.toLowerCase().includes('safehouse') ||
@@ -732,6 +743,20 @@ const GameController: React.FC = () => {
         return;
       }
 
+      const currentZoneState = surveillanceZoneRef.current ?? surveillanceZone;
+      const cameraAlarmLockActive = currentZoneState
+        ? Object.values(currentZoneState.cameras).some(
+            (camera) =>
+              camera.alertState === CameraAlertState.ALARMED &&
+              camera.detectionProgress >= 100
+          )
+        : false;
+
+      if (cameraAlarmLockActive) {
+        dispatch(addLogMessage(logStrings.stealthCameraLock));
+        return;
+      }
+
       enableStealth();
       dispatch(setEngagementMode("stealth"));
       dispatch(addLogMessage(logStrings.stealthEngaged));
@@ -743,6 +768,7 @@ const GameController: React.FC = () => {
       inCombat,
       log,
       logStrings,
+      surveillanceZone,
       stealthCooldownExpiresAt,
       stealthEligible,
       stealthOnCooldown,
@@ -3071,7 +3097,10 @@ const GameController: React.FC = () => {
             Math.abs(detail.position.x - player.position.x) +
             Math.abs(detail.position.y - player.position.y);
 
-          if (distanceToItem <= 1) {
+          if (
+            distanceToItem <= 1 ||
+            isLiraKeycardDashPickup(activeItemObjective, itemAtTarget, distanceToItem)
+          ) {
             collectCombatObjectiveItem();
             return;
           }

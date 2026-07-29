@@ -21,7 +21,6 @@ export const questDatapadTruthDefinition: QuestDefinition = {
   ],
   rewards: [
     { type: 'experience', resourceKey: 'experience.base', amount: 120 },
-    { type: 'item', resourceKey: 'items.transit_tokens', amount: 1 },
   ],
   relatedNpcKeys: ['npcs.archivist_naila'],
   status: 'implemented',

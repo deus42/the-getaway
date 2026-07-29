@@ -97,6 +97,142 @@
   --hud-command-button-text: #e2e8f0;
   --hud-command-button-text-hover: #f8fafc;
   --hud-command-button-text-muted: rgba(148, 163, 184, 0.78);
+
+  --hud-color-ink: #05070d;
+  --hud-color-surface: rgba(15, 23, 42, 0.92);
+  --hud-color-surface-strong: rgba(8, 15, 30, 0.98);
+  --hud-color-surface-inset: rgba(15, 23, 42, 0.68);
+  --hud-color-overlay: rgba(4, 9, 18, 0.92);
+  --hud-color-rule: rgba(148, 163, 184, 0.28);
+  --hud-color-rule-active: rgba(56, 189, 248, 0.58);
+  --hud-color-practical: #facc15;
+  --hud-color-tech: #38bdf8;
+  --hud-color-threat: #f472b6;
+  --hud-color-success: #34d399;
+  --hud-color-bone: #f8fafc;
+  --hud-color-muted: rgba(226, 232, 240, 0.68);
+  --hud-color-map-floor: #101b32;
+  --hud-color-map-blocked: #1f2937;
+  --hud-color-map-cover: #1d4ed8;
+  --hud-color-map-door: #fbbf24;
+  --hud-color-map-water: #0ea5e9;
+  --hud-color-map-trap: #7c3aed;
+  --hud-color-map-player: #60a5fa;
+  --hud-color-map-enemy: #f87171;
+  --hud-color-map-npc: #34d399;
+  --hud-color-map-objective: #facc15;
+  --hud-color-map-inactive: rgba(148, 163, 184, 0.35);
+  --hud-color-map-outline: rgba(15, 23, 42, 0.85);
+  --hud-color-map-path: rgba(59, 130, 246, 0.7);
+  --hud-color-map-path-muted: rgba(59, 130, 246, 0.12);
+  --hud-color-map-viewport: rgba(148, 163, 184, 0.45);
+  --hud-color-map-cover-overlay: rgba(59, 130, 246, 0.15);
+  --hud-color-map-tech-fill: rgba(56, 189, 248, 0.34);
+  --hud-color-map-practical-fill: rgba(250, 204, 21, 0.36);
+  --hud-color-map-objective-ink: rgba(15, 23, 42, 0.92);
+  --hud-overlay-blur: blur(6px);
+  --hud-combat-panel-bg: linear-gradient(165deg, rgba(10, 17, 32, 0.93), rgba(15, 23, 42, 0.9));
+  --hud-combat-inset-bg: linear-gradient(155deg, rgba(15, 23, 42, 0.92), rgba(30, 41, 59, 0.8));
+  --hud-combat-enemy-bg: linear-gradient(160deg, rgba(17, 24, 39, 0.86), rgba(15, 23, 42, 0.9));
+  --hud-combat-player-turn-bg: linear-gradient(135deg, #38bdf8, #60a5fa);
+  --hud-combat-enemy-turn-bg: linear-gradient(135deg, rgba(248, 113, 113, 0.85), rgba(239, 68, 68, 0.95));
+  --hud-combat-action-fill: linear-gradient(90deg, rgba(96, 165, 250, 0.95), rgba(56, 189, 248, 0.85));
+  --hud-combat-track-bg: rgba(30, 41, 59, 0.78);
+  --hud-combat-toggle-shadow: 0 0 22px rgba(148, 163, 184, 0.22);
+}
+
+:root[data-visual-style='graphic-painterly-noir'] {
+  --color-gunmetal-950: #090a0d;
+  --color-gunmetal-900: #0b0d12;
+  --color-gunmetal-800: #1b1f24;
+  --color-gunmetal-700: #302a28;
+  --color-neon-cyan: #50bfd0;
+  --color-neon-cyan-glow: rgba(80, 191, 208, 0.16);
+  --color-neon-magenta: #8e4147;
+  --color-neon-magenta-glow: rgba(142, 65, 71, 0.18);
+  --color-alert-amber: #d99a50;
+
+  --color-hud-surface: rgba(17, 18, 20, 0.96);
+  --color-hud-surface-muted: rgba(27, 28, 29, 0.9);
+  --color-hud-text: #d5c8b5;
+  --color-hud-text-muted: rgba(213, 200, 181, 0.64);
+  --color-hud-accent: #d99a50;
+  --color-hud-alert: #8e4147;
+
+  --hud-color-ink: #0b0d12;
+  --hud-color-surface: rgba(18, 18, 19, 0.97);
+  --hud-color-surface-strong: rgba(11, 13, 18, 0.985);
+  --hud-color-surface-inset: rgba(29, 27, 27, 0.92);
+  --hud-color-overlay: rgba(9, 10, 13, 0.94);
+  --hud-color-rule: rgba(213, 200, 181, 0.26);
+  --hud-color-rule-active: rgba(217, 154, 80, 0.72);
+  --hud-color-practical: #d99a50;
+  --hud-color-tech: #50bfd0;
+  --hud-color-threat: #8e4147;
+  --hud-color-success: #5b7775;
+  --hud-color-bone: #d5c8b5;
+  --hud-color-muted: rgba(213, 200, 181, 0.62);
+  --hud-color-map-floor: #1f2224;
+  --hud-color-map-blocked: #554d47;
+  --hud-color-map-cover: #5b7775;
+  --hud-color-map-door: #d99a50;
+  --hud-color-map-water: #314b4d;
+  --hud-color-map-trap: #8e4147;
+  --hud-color-map-player: #d5c8b5;
+  --hud-color-map-enemy: #bc4d54;
+  --hud-color-map-npc: #5b7775;
+  --hud-color-map-objective: #d99a50;
+  --hud-color-map-inactive: rgba(109, 102, 94, 0.46);
+  --hud-color-map-outline: rgba(11, 13, 18, 0.9);
+  --hud-color-map-path: rgba(80, 191, 208, 0.68);
+  --hud-color-map-path-muted: rgba(80, 191, 208, 0.12);
+  --hud-color-map-viewport: rgba(213, 200, 181, 0.42);
+  --hud-color-map-cover-overlay: rgba(91, 119, 117, 0.18);
+  --hud-color-map-tech-fill: rgba(80, 191, 208, 0.22);
+  --hud-color-map-practical-fill: rgba(217, 154, 80, 0.28);
+  --hud-color-map-objective-ink: rgba(11, 13, 18, 0.94);
+  --hud-overlay-blur: none;
+  --hud-combat-panel-bg: var(--hud-panel-gradient);
+  --hud-combat-inset-bg: var(--hud-color-surface-inset);
+  --hud-combat-enemy-bg: linear-gradient(110deg, rgba(34, 18, 20, 0.97), rgba(18, 18, 19, 0.97));
+  --hud-combat-player-turn-bg: var(--hud-color-success);
+  --hud-combat-enemy-turn-bg: var(--hud-color-threat);
+  --hud-combat-action-fill: var(--hud-color-tech);
+  --hud-combat-track-bg: rgba(11, 13, 18, 0.86);
+  --hud-combat-toggle-shadow: none;
+
+  --hud-radius-xs: 0px;
+  --hud-radius-sm: 1px;
+  --hud-radius-md: 2px;
+  --hud-radius-lg: 3px;
+  --radius-md: 3px;
+  --radius-pill: 2px;
+
+  --hud-panel-gradient:
+    linear-gradient(105deg, rgba(11, 13, 18, 0.985), rgba(27, 27, 28, 0.96)),
+    repeating-linear-gradient(112deg, transparent 0 28px, rgba(213, 200, 181, 0.018) 28px 30px);
+  --hud-panel-border: 1px solid rgba(213, 200, 181, 0.24);
+  --hud-panel-shadow: 7px 9px 0 rgba(4, 5, 7, 0.42);
+  --hud-panel-blur: none;
+  --shadow-hud: 7px 9px 0 rgba(4, 5, 7, 0.42);
+  --shadow-overlay: 12px 14px 0 rgba(4, 5, 7, 0.54);
+  --shadow-focus: 0 0 0 2px rgba(217, 154, 80, 0.46);
+  --hud-glow-primary: rgba(80, 191, 208, 0.12);
+  --hud-glow-secondary: rgba(142, 65, 71, 0.16);
+  --hud-stage-background:
+    linear-gradient(118deg, rgba(11, 13, 18, 0.96), rgba(38, 31, 28, 0.96));
+  --hud-command-button-bg: linear-gradient(110deg, rgba(18, 18, 19, 0.98), rgba(35, 31, 29, 0.96));
+  --hud-command-button-border: 1px solid rgba(213, 200, 181, 0.32);
+  --hud-command-button-border-rest: rgba(213, 200, 181, 0.32);
+  --hud-command-button-border-hover: rgba(217, 154, 80, 0.72);
+  --hud-command-button-border-focus: rgba(217, 154, 80, 0.86);
+  --hud-command-button-shadow: 4px 5px 0 rgba(4, 5, 7, 0.44);
+  --hud-command-button-shadow-hover: 5px 6px 0 rgba(4, 5, 7, 0.54);
+  --hud-command-button-shadow-focus: 0 0 0 2px rgba(217, 154, 80, 0.34);
+  --hud-command-button-text: #d5c8b5;
+  --hud-command-button-text-hover: #f0e5d3;
+  --hud-command-button-text-muted: rgba(213, 200, 181, 0.56);
+  color-scheme: dark;
 }
 
 :root,

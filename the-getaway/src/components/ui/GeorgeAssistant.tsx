@@ -97,27 +97,27 @@ const GeorgeOrbLogo: React.FC<GeorgeOrbLogoProps> = ({ size = 32, className }) =
     >
       <defs>
         <linearGradient id={bgGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1e293b" stopOpacity={1} />
-          <stop offset="100%" stopColor="#0f172a" stopOpacity={1} />
+          <stop offset="0%" stopColor="var(--hud-color-surface-inset)" stopOpacity={1} />
+          <stop offset="100%" stopColor="var(--hud-color-ink)" stopOpacity={1} />
         </linearGradient>
         <linearGradient id={glowGradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#38bdf8" stopOpacity={1} />
-          <stop offset="100%" stopColor="#0ea5e9" stopOpacity={1} />
+          <stop offset="0%" stopColor="var(--hud-color-tech)" stopOpacity={1} />
+          <stop offset="100%" stopColor="var(--color-neon-cyan)" stopOpacity={1} />
         </linearGradient>
       </defs>
       <circle cx="32" cy="32" r="32" fill={`url(#${bgGradientId})`} />
-      <path d="M32 16 L46 24 L32 32 L18 24 Z" fill="#475569" opacity="0.6" />
+      <path d="M32 16 L46 24 L32 32 L18 24 Z" fill="var(--hud-color-rule)" opacity="0.8" />
       <circle cx="32" cy="32" r="10" fill="none" stroke={`url(#${glowGradientId})`} strokeWidth="2.5" />
       <circle cx="32" cy="32" r="6" fill="none" stroke={`url(#${glowGradientId})`} strokeWidth="1.5" />
-      <line x1="32" y1="22" x2="32" y2="26" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
-      <line x1="32" y1="38" x2="32" y2="42" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
-      <line x1="22" y1="32" x2="26" y2="32" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
-      <line x1="38" y1="32" x2="42" y2="32" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="32" cy="32" r="2" fill="#38bdf8" />
-      <path d="M8 8 L12 8 L12 12" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
-      <path d="M56 8 L52 8 L52 12" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
-      <path d="M8 56 L12 56 L12 52" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
-      <path d="M56 56 L52 56 L52 52" fill="none" stroke="#0ea5e9" strokeWidth="1.5" opacity={0.4} />
+      <line x1="32" y1="22" x2="32" y2="26" stroke="var(--hud-color-tech)" strokeWidth="2" strokeLinecap="round" />
+      <line x1="32" y1="38" x2="32" y2="42" stroke="var(--hud-color-tech)" strokeWidth="2" strokeLinecap="round" />
+      <line x1="22" y1="32" x2="26" y2="32" stroke="var(--hud-color-tech)" strokeWidth="2" strokeLinecap="round" />
+      <line x1="38" y1="32" x2="42" y2="32" stroke="var(--hud-color-tech)" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="32" cy="32" r="2" fill="var(--hud-color-tech)" />
+      <path d="M8 8 L12 8 L12 12" fill="none" stroke="var(--hud-color-tech)" strokeWidth="1.5" opacity={0.4} />
+      <path d="M56 8 L52 8 L52 12" fill="none" stroke="var(--hud-color-tech)" strokeWidth="1.5" opacity={0.4} />
+      <path d="M8 56 L12 56 L12 52" fill="none" stroke="var(--hud-color-tech)" strokeWidth="1.5" opacity={0.4} />
+      <path d="M56 56 L52 56 L52 52" fill="none" stroke="var(--hud-color-tech)" strokeWidth="1.5" opacity={0.4} />
     </svg>
   );
 };

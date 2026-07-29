@@ -32,6 +32,9 @@ Objective Completion & Level Advancement
 - Objective state changes emit Redux events so auxiliary systems (assistant hints, minimap focus, George overlay) can react immediately without polling bespoke quest state.
 - George assistant consumes the same selectors that drive the panel, promoting the top-priority active objective as its default guidance line and celebrating once the level transition modal confirms the mission wrap.
 - Mission Accomplished for Level 0 currently means all three guided primary quests are complete: the Lira keycard/cache objective resolves and closes with Lira, the datapad is recovered and returned to Naila, and the transit-token trail is collected and closed with Brant.
+- Primary quest rewards must not grant the next primary objective item directly. Lira pays credits but does not hand out Naila's encrypted datapad; Naila pays experience but does not hand out Brant's transit tokens. Those objects stay authored world pickups so each contact has a real playable route beat.
+- The Lira keycard lane is a pressure dash, not a required combat clear: during the curfew-gated `recover-keycard` objective, a 5-tile combat-pressure pickup is allowed for `items.corporate_keycard` so the player can snatch the evidence and flee instead of grinding patrol HP.
+- The guided route should be legible in the world itself, but not by scattering decorative props. Current Level 0 guidance comes from the active contact/item marker, the minimap fallback path, and objective feedback. Any future route object must have a clear gameplay role (cover, hazard, pickup, blocker, or named interaction); ambient prop/decal breadcrumbs stay out of the live route until they earn that role.
 
 ### Rule: side_content
 
@@ -47,7 +50,7 @@ Side Quests & Optional Tasks
 Canonical Player Objective Surface (Level 0 MVP)
 
 - The player-facing objective UI is the **Quests panel** (`OpsBriefingsPanel`) and is structured as:
-  - **Primary Progress** (mission-level completion state; in the Level 0 guided chain it shows completed/started beats plus the current next beat, while pre-start objectives render as a briefing prompt, not active progress),
+  - **Current Beat** (the one active or next Level 0 guided primary beat; completed Lira/Naila/Brant beats move to completed history/all-quests so the default ops rail does not keep showing stale work),
   - **Active Side Quests** (started + not completed),
   - **Available Side Quests** (parked behind the expanded "Show All Quests" overlay, not the default run HUD),
   - **Completed Quests** (history overlay).

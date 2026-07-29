@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "playtest:agent": "tsx ../tools/ai-playtester/run.ts",
     "graphics:get155": "node scripts/generate-get155-preview-assets.mjs",
+    "art:level0:validate": "tsx scripts/validate-level0-painterly-art.ts",
     "sprites:seed-placeholders": "tsx scripts/generate-character-sprite-placeholders.ts",
     "sprites:validate": "tsx scripts/validate-character-sprites.ts",
     "test": "jest",

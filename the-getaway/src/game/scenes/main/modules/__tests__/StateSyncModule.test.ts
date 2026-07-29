@@ -1,4 +1,6 @@
 import { RootState } from '../../../../../store';
+import type { Quest } from '../../../../interfaces/types';
+import { LEVEL0_GUIDED_QUEST_IDS } from '../../../../quests/level0GuidedSlice';
 import { StateSyncModule } from '../StateSyncModule';
 import type { StateSyncModulePorts } from '../../contracts/ModulePorts';
 
@@ -34,9 +36,33 @@ const createState = (overrides: Partial<RootState> = {}): RootState => {
         overlayEnabled: false,
       },
     },
+    quests: {
+      quests: [],
+    },
     ...overrides,
   } as unknown as RootState;
 };
+
+const quest = (isActive: boolean): Quest => ({
+  id: LEVEL0_GUIDED_QUEST_IDS.liraCache,
+  name: 'Market Cache Recovery',
+  description: 'Market Cache Recovery',
+  isActive,
+  isCompleted: false,
+  rewards: [],
+  objectives: [
+    {
+      id: 'recover-keycard',
+      description: 'Recover the keycard',
+      isCompleted: false,
+      type: 'collect',
+      target: 'Corporate Keycard',
+      targetResourceKey: 'items.corporate_keycard',
+      count: 1,
+      currentCount: 0,
+    },
+  ],
+});
 
 const createPorts = (
   overrides: Partial<StateSyncModulePorts> = {}
@@ -128,6 +154,22 @@ describe('StateSyncModule', () => {
     expect(ports.setupCameraAndMap).toHaveBeenCalled();
     expect(ports.clearPathPreview).toHaveBeenCalled();
     expect(ports.enablePlayerCameraFollow).toHaveBeenCalled();
+    expect(ports.renderStaticProps).toHaveBeenCalled();
+  });
+
+  it('refreshes static props when the guided Level 0 target changes', () => {
+    const ports = createPorts();
+    const module = new StateSyncModule({} as never, ports);
+
+    module.onStateChange(
+      createState({
+        quests: { quests: [quest(false)] },
+      } as unknown as Partial<RootState>),
+      createState({
+        quests: { quests: [quest(true)] },
+      } as unknown as Partial<RootState>)
+    );
+
     expect(ports.renderStaticProps).toHaveBeenCalled();
   });
 });

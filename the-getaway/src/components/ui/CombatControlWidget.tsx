@@ -11,10 +11,10 @@ const widgetStyle: React.CSSProperties = {
   width: 'min(360px, 32vw)',
   minWidth: '280px',
   padding: '0.85rem 1rem 1.1rem',
-  borderRadius: '16px',
-  background: 'linear-gradient(165deg, rgba(10,17,32,0.93), rgba(15,23,42,0.9))',
-  border: '1px solid rgba(56,189,248,0.28)',
-  boxShadow: '0 18px 36px rgba(15,23,42,0.55)',
+  borderRadius: 'var(--hud-radius-lg)',
+  background: 'var(--hud-combat-panel-bg)',
+  border: '1px solid var(--hud-color-threat)',
+  boxShadow: 'var(--shadow-hud)',
   display: 'flex',
   flexDirection: 'column',
   gap: '0.72rem',
@@ -28,7 +28,7 @@ const headerRowStyle: React.CSSProperties = {
   fontSize: '0.62rem',
   letterSpacing: '0.22em',
   textTransform: 'uppercase',
-  color: '#94a3b8',
+  color: 'var(--hud-color-muted)',
 };
 
 const hostileSummaryStyle: React.CSSProperties = {
@@ -42,12 +42,12 @@ const hostileSummaryStyle: React.CSSProperties = {
 const hostileCountStyle: React.CSSProperties = {
   fontWeight: 700,
   fontSize: '0.78rem',
-  color: '#38bdf8',
+  color: 'var(--hud-color-threat)',
 };
 
 const hostileLabelStyle: React.CSSProperties = {
   opacity: 0.8,
-  color: '#cbd5f5',
+  color: 'var(--hud-color-bone)',
 };
 
 const turnBannerStyle = (playerTurn: boolean): React.CSSProperties => ({
@@ -56,18 +56,16 @@ const turnBannerStyle = (playerTurn: boolean): React.CSSProperties => ({
   alignItems: 'center',
   justifyContent: 'center',
   padding: '0.52rem 1rem',
-  borderRadius: '12px',
+  borderRadius: 'var(--hud-radius-md)',
   fontWeight: 700,
   letterSpacing: '0.22em',
   fontSize: '0.76rem',
   textTransform: 'uppercase',
-  color: playerTurn ? '#0f172a' : '#f8fafc',
+  color: playerTurn ? 'var(--hud-color-ink)' : 'var(--hud-color-bone)',
   background: playerTurn
-    ? 'linear-gradient(135deg, #38bdf8, #60a5fa)'
-    : 'linear-gradient(135deg, rgba(248,113,113,0.85), rgba(239,68,68,0.95))',
-  boxShadow: playerTurn
-    ? '0 0 18px rgba(56,189,248,0.6), 0 14px 24px -10px rgba(56,189,248,0.55)'
-    : '0 0 18px rgba(239,68,68,0.6), 0 14px 24px -10px rgba(239,68,68,0.55)',
+    ? 'var(--hud-combat-player-turn-bg)'
+    : 'var(--hud-combat-enemy-turn-bg)',
+  boxShadow: 'none',
 });
 
 const playerCardStyle: React.CSSProperties = {
@@ -75,10 +73,10 @@ const playerCardStyle: React.CSSProperties = {
   flexDirection: 'column',
   gap: '0.65rem',
   padding: '0.9rem 1rem 0.85rem',
-  borderRadius: '14px',
-  background: 'linear-gradient(155deg, rgba(15,23,42,0.92), rgba(30,41,59,0.8))',
-  border: '1px solid rgba(56,189,248,0.18)',
-  boxShadow: '0 16px 32px rgba(15,23,42,0.45)',
+  borderRadius: 'var(--hud-radius-md)',
+  background: 'var(--hud-combat-inset-bg)',
+  border: '1px solid var(--hud-color-rule)',
+  boxShadow: 'none',
 };
 
 const apHeaderRowStyle: React.CSSProperties = {
@@ -87,24 +85,24 @@ const apHeaderRowStyle: React.CSSProperties = {
   alignItems: 'center',
   fontSize: '0.68rem',
   letterSpacing: '0.16em',
-  color: '#9ca3c6',
+  color: 'var(--hud-color-muted)',
   textTransform: 'uppercase',
 };
 
 const apValue = (exhausted: boolean): React.CSSProperties => ({
   fontSize: '0.98rem',
   fontWeight: 600,
-  color: exhausted ? '#fda4af' : '#f8fafc',
-  textShadow: exhausted ? '0 0 12px rgba(248,113,113,0.45)' : 'none',
+  color: exhausted ? 'var(--hud-color-threat)' : 'var(--hud-color-bone)',
+  textShadow: 'none',
 });
 
 const apProgressTrack: React.CSSProperties = {
   position: 'relative',
   height: '9px',
-  borderRadius: '999px',
-  background: 'linear-gradient(90deg, rgba(30,41,59,0.9), rgba(11,16,28,0.85))',
+  borderRadius: 'var(--radius-pill)',
+  background: 'var(--hud-combat-track-bg)',
   overflow: 'hidden',
-  boxShadow: 'inset 0 0 8px rgba(15,23,42,0.6)',
+  boxShadow: 'none',
 };
 
 const apProgressFill = (ratio: number): React.CSSProperties => ({
@@ -113,36 +111,27 @@ const apProgressFill = (ratio: number): React.CSSProperties => ({
   left: 0,
   height: '100%',
   width: `${Math.max(0, Math.min(1, ratio)) * 100}%`,
-  background: 'linear-gradient(90deg, rgba(96,165,250,0.95), rgba(56,189,248,0.85))',
-  boxShadow: '0 0 16px rgba(56,189,248,0.38)',
+  background: 'var(--hud-combat-action-fill)',
+  boxShadow: 'none',
   transition: 'width 160ms ease-out',
 });
 
 const autoToggleStyle = (status: 'off' | 'running' | 'paused'): React.CSSProperties => {
   const palette = {
     off: {
-      border: 'rgba(148,163,184,0.32)',
-      glow: 'rgba(148,163,184,0.22)',
-      background: 'linear-gradient(135deg, rgba(15,23,42,0.86), rgba(30,41,59,0.78))',
-      label: '#cbd5f5',
-      state: '#94a3b8',
-      dot: '#64748b',
+      border: 'var(--hud-color-rule)',
+      background: 'var(--hud-color-surface-inset)',
+      label: 'var(--hud-color-bone)',
     },
     running: {
-      border: 'rgba(34,197,94,0.55)',
-      glow: 'rgba(34,197,94,0.45)',
-      background: 'linear-gradient(135deg, rgba(22,163,74,0.25), rgba(74,222,128,0.18))',
-      label: '#d1fae5',
-      state: '#86efac',
-      dot: '#34d399',
+      border: 'var(--hud-color-success)',
+      background: 'rgba(91, 119, 117, 0.24)',
+      label: 'var(--hud-color-bone)',
     },
     paused: {
-      border: 'rgba(250,204,21,0.55)',
-      glow: 'rgba(250,204,21,0.38)',
-      background: 'linear-gradient(135deg, rgba(120,53,15,0.28), rgba(217,119,6,0.22))',
-      label: '#fef3c7',
-      state: '#fde68a',
-      dot: '#fbbf24',
+      border: 'var(--hud-color-practical)',
+      background: 'rgba(81, 59, 53, 0.42)',
+      label: 'var(--hud-color-bone)',
     },
   }[status];
 
@@ -152,7 +141,7 @@ const autoToggleStyle = (status: 'off' | 'running' | 'paused'): React.CSSPropert
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '0.52rem 0.9rem',
-    borderRadius: '12px',
+    borderRadius: 'var(--hud-radius-md)',
     border: `1px solid ${palette.border}`,
     background: palette.background,
     color: palette.label,
@@ -161,7 +150,7 @@ const autoToggleStyle = (status: 'off' | 'running' | 'paused'): React.CSSPropert
     letterSpacing: '0.16em',
     textTransform: 'uppercase',
     cursor: 'pointer',
-    boxShadow: `0 0 22px ${palette.glow}`,
+    boxShadow: 'var(--hud-combat-toggle-shadow)',
     transition: 'transform 120ms ease, box-shadow 120ms ease, border-color 160ms ease',
   };
 };
@@ -181,9 +170,9 @@ const autoPrimaryStyle: React.CSSProperties = {
 
 const autoStateStyle = (status: 'off' | 'running' | 'paused'): React.CSSProperties => {
   const colors: Record<typeof status, string> = {
-    off: '#cbd5f5',
-    running: '#bbf7d0',
-    paused: '#fde68a',
+    off: 'var(--hud-color-muted)',
+    running: 'var(--hud-color-success)',
+    paused: 'var(--hud-color-practical)',
   };
   return {
     fontSize: '0.84rem',
@@ -194,15 +183,15 @@ const autoStateStyle = (status: 'off' | 'running' | 'paused'): React.CSSProperti
 
 const statusDot = (status: 'off' | 'running' | 'paused'): React.CSSProperties => {
   const glows: Record<typeof status, { background: string; shadow: string }> = {
-    off: { background: '#64748b', shadow: 'rgba(100,116,139,0.35)' },
-    running: { background: '#34d399', shadow: 'rgba(52,211,153,0.55)' },
-    paused: { background: '#fbbf24', shadow: 'rgba(251,191,36,0.45)' },
+    off: { background: 'var(--hud-color-muted)', shadow: 'transparent' },
+    running: { background: 'var(--hud-color-success)', shadow: 'transparent' },
+    paused: { background: 'var(--hud-color-practical)', shadow: 'transparent' },
   };
 
   return {
     width: '0.6rem',
     height: '0.6rem',
-    borderRadius: '50%',
+    borderRadius: 'var(--radius-pill)',
     background: glows[status].background,
     boxShadow: `0 0 14px ${glows[status].shadow}`,
   };
@@ -213,17 +202,17 @@ const enemyCardStyle: React.CSSProperties = {
   flexDirection: 'column',
   gap: '0.5rem',
   padding: '0.82rem 0.95rem',
-  borderRadius: '14px',
-  background: 'linear-gradient(160deg, rgba(17,24,39,0.86), rgba(15,23,42,0.9))',
-  border: '1px solid rgba(99,102,241,0.22)',
-  boxShadow: '0 16px 32px rgba(15,23,42,0.42)',
+  borderRadius: 'var(--hud-radius-md)',
+  background: 'var(--hud-combat-enemy-bg)',
+  border: '1px solid var(--hud-color-rule)',
+  boxShadow: 'none',
 };
 
 const enemyLabelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: '0.58rem',
   letterSpacing: '0.24em',
-  color: '#808bb2',
+  color: 'var(--hud-color-threat)',
   textTransform: 'uppercase',
 };
 
@@ -233,14 +222,14 @@ const enemyRowStyle: React.CSSProperties = {
   alignItems: 'center',
   gap: '0.6rem',
   fontSize: '0.72rem',
-  color: '#d1dcff',
+  color: 'var(--hud-color-bone)',
 };
 
 const enemyProgressTrack: React.CSSProperties = {
   position: 'relative',
   height: '6px',
-  borderRadius: '999px',
-  background: 'rgba(71,85,105,0.45)',
+  borderRadius: 'var(--radius-pill)',
+  background: 'var(--hud-combat-track-bg)',
   overflow: 'hidden',
 };
 
@@ -248,8 +237,8 @@ const enemyProgressFill = (ratio: number): React.CSSProperties => ({
   position: 'absolute',
   inset: 0,
   width: `${Math.max(0, Math.min(1, ratio)) * 100}%`,
-  background: 'linear-gradient(90deg, rgba(239,68,68,0.85), rgba(248,113,113,0.78))',
-  boxShadow: '0 0 12px rgba(248,113,113,0.32)',
+  background: 'var(--hud-color-threat)',
+  boxShadow: 'none',
   transition: 'width 160ms ease-out',
 });
 
@@ -377,7 +366,7 @@ const CombatControlWidget: React.FC = () => {
   const autoStatus = determineAutoStatus();
 
   return (
-    <div style={widgetStyle} data-testid="combat-control-widget">
+    <div className="combat-control-widget" style={widgetStyle} data-testid="combat-control-widget">
       <div style={headerRowStyle}>
         <span>{uiStrings.turnTracker.heading.toUpperCase()}</span>
         <span style={hostileSummaryStyle}>

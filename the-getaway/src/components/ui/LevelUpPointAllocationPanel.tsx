@@ -287,40 +287,41 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
   ];
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" aria-label="Level Up - Allocate Points">
-      <div style={panelStyle}>
-        <header style={headerStyle}>
-          <h2 style={titleStyle}>Level Up - Allocate Points</h2>
-          <p style={subtitleStyle}>
+    <div className="level-up-allocation" style={overlayStyle} role="dialog" aria-modal="true" aria-label="Level Up - Allocate Points">
+      <div className="level-up-allocation__shell" style={panelStyle}>
+        <header className="level-up-allocation__header" style={headerStyle}>
+          <h2 className="level-up-allocation__title" style={titleStyle}>Level Up - Allocate Points</h2>
+          <p className="level-up-allocation__subtitle" style={subtitleStyle}>
             Spend your points wisely - allocations are permanent
           </p>
         </header>
 
-        <div style={bodyStyle}>
+        <div className="level-up-allocation__body" style={bodyStyle}>
           {/* Attributes Section */}
           {initialAttributePoints > 0 && (
-            <section style={sectionStyle}>
+            <section className="level-up-allocation__section" style={sectionStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <h3 style={sectionHeaderStyle}>Attributes</h3>
-                <span style={pointsRemainingStyle}>
+                <h3 className="level-up-allocation__section-title" style={sectionHeaderStyle}>Attributes</h3>
+                <span className="level-up-allocation__points" style={pointsRemainingStyle}>
                   {tempAttributePoints} {tempAttributePoints === 1 ? 'Point' : 'Points'} Remaining
                 </span>
               </div>
 
               <div style={attributeGridStyle}>
                 {attributeOrder.map((attr) => (
-                  <div key={attr} style={attributeCardStyle}>
+                  <div className="level-up-allocation__card" key={attr} style={attributeCardStyle}>
                     <div style={attributeInfoStyle}>
-                      <div style={attributeNameStyle}>{ATTRIBUTE_INFO[attr].label}</div>
-                      <div style={attributeDescStyle}>{ATTRIBUTE_INFO[attr].description}</div>
+                      <div className="level-up-allocation__name" style={attributeNameStyle}>{ATTRIBUTE_INFO[attr].label}</div>
+                      <div className="level-up-allocation__description" style={attributeDescStyle}>{ATTRIBUTE_INFO[attr].description}</div>
                       {attr === 'endurance' && (
-                        <div style={attributeMetaStyle}>
+                        <div className="level-up-allocation__meta" style={attributeMetaStyle}>
                           Max Stamina: {player.maxStamina} (+5 per point)
                         </div>
                       )}
                     </div>
                     <div style={attributeControlsStyle}>
                       <button
+                        className="level-up-allocation__adjust"
                         onClick={() => handleAttributeDecrease(attr)}
                         disabled={player.skills[attr] <= 1}
                         style={incrementButtonStyle(player.skills[attr] <= 1)}
@@ -328,8 +329,9 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
                       >
                         −
                       </button>
-                      <div style={attributeValueStyle}>{player.skills[attr]}</div>
+                      <div className="level-up-allocation__value" style={attributeValueStyle}>{player.skills[attr]}</div>
                       <button
+                        className="level-up-allocation__adjust"
                         onClick={() => handleAttributeIncrease(attr)}
                         disabled={tempAttributePoints <= 0 || player.skills[attr] >= 10}
                         style={incrementButtonStyle(tempAttributePoints <= 0 || player.skills[attr] >= 10)}
@@ -346,17 +348,17 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
 
           {/* Skills Section */}
           {initialSkillPoints > 0 && (
-            <section style={sectionStyle}>
+            <section className="level-up-allocation__section" style={sectionStyle}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <h3 style={sectionHeaderStyle}>Skills</h3>
-                <span style={pointsRemainingStyle}>
+                <h3 className="level-up-allocation__section-title" style={sectionHeaderStyle}>Skills</h3>
+                <span className="level-up-allocation__points" style={pointsRemainingStyle}>
                   {tempSkillPoints} {tempSkillPoints === 1 ? 'Point' : 'Points'} Remaining
                 </span>
               </div>
 
               {SKILL_BRANCHES.map((branch) => (
                 <div key={branch.id}>
-                  <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  <div className="level-up-allocation__branch" style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {branch.label}
                   </div>
                   <div style={skillGridStyle}>
@@ -369,10 +371,11 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
                       const canIncrease = tempSkillPoints > 0 && currentValue + step <= skill.maxValue;
 
                       return (
-                        <div key={skill.id} style={skillItemStyle}>
-                          <span style={skillNameStyle}>{skill.name}</span>
+                        <div className="level-up-allocation__skill" key={skill.id} style={skillItemStyle}>
+                          <span className="level-up-allocation__skill-name" style={skillNameStyle}>{skill.name}</span>
                           <div style={skillControlsContainerStyle}>
                             <button
+                              className="level-up-allocation__adjust"
                               onClick={() => handleSkillDecrease(skillId, step)}
                               disabled={!canDecrease}
                               style={incrementButtonStyle(!canDecrease)}
@@ -380,8 +383,9 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
                             >
                               −
                             </button>
-                            <span style={skillValueStyle}>{currentValue}</span>
+                            <span className="level-up-allocation__skill-value" style={skillValueStyle}>{currentValue}</span>
                             <button
+                              className="level-up-allocation__adjust"
                               onClick={() => handleSkillIncrease(skillId, step, skill.maxValue)}
                               disabled={!canIncrease}
                               style={incrementButtonStyle(!canIncrease)}
@@ -400,7 +404,7 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
           )}
 
           {!hadInitialPoints && (
-            <div style={{
+            <div className="level-up-allocation__empty" style={{
               textAlign: 'center',
               padding: '2rem',
               color: '#94a3b8',
@@ -411,8 +415,9 @@ const LevelUpPointAllocationPanel: React.FC<LevelUpPointAllocationPanelProps> = 
           )}
         </div>
 
-        <footer style={footerStyle}>
+        <footer className="level-up-allocation__footer" style={footerStyle}>
           <EnhancedButton
+            className="level-up-allocation__continue"
             onClick={onComplete}
             variant="primary"
             size="medium"

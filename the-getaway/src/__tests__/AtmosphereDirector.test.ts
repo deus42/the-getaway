@@ -33,6 +33,7 @@ jest.mock('phaser', () => {
 
 import type { VisualQualityPreset } from '../game/visual/contracts';
 import { createNoirVectorTheme } from '../game/visual/theme/noirVectorTheme';
+import { createPainterlyNoirTheme } from '../game/visual/theme/painterlyNoirTheme';
 import { AtmosphereDirector } from '../game/visual/world/AtmosphereDirector';
 
 const PRESETS: VisualQualityPreset[] = ['performance', 'balanced', 'cinematic'];
@@ -93,5 +94,36 @@ describe('AtmosphereDirector', () => {
 
     expect(withInvalidOverlay.overlayColor).toBe(withNoOverlay.overlayColor);
     expect(withInvalidOverlay.overlayAlpha).toBeCloseTo(withNoOverlay.overlayAlpha, 6);
+  });
+
+  it('keeps the painterly backdrop close to the city edge value mass', () => {
+    const theme = createPainterlyNoirTheme('balanced');
+    const profile = new AtmosphereDirector(theme).resolveAtmosphereProfile({
+      districtWeight: 0.5,
+      timeSeconds: 150,
+    });
+    const lot = theme.surfacePalettes.lotEven;
+    const channels = (color: number) => [
+      (color >> 16) & 0xff,
+      (color >> 8) & 0xff,
+      color & 0xff,
+    ];
+    const lotChannels = channels(lot);
+
+    [
+      profile.gradientTopLeft,
+      profile.gradientTopRight,
+      profile.gradientBottomLeft,
+      profile.gradientBottomRight,
+    ].forEach((color) => {
+      const colorChannels = channels(color);
+      const distance = colorChannels.reduce(
+        (total, channel, index) => total + Math.abs(channel - lotChannels[index]),
+        0
+      );
+
+      expect(Math.max(...colorChannels)).toBeLessThanOrEqual(64);
+      expect(distance).toBeLessThanOrEqual(48);
+    });
   });
 });

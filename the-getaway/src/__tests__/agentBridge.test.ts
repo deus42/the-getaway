@@ -5,12 +5,16 @@ import {
   startQuest,
   updateObjectiveStatus,
 } from '../store/questsSlice';
+import { advanceToNextLevel, missionAccomplished } from '../store/missionSlice';
 import {
+  buildAgentStateSignature,
   buildAgentSnapshot,
   installGetawayAgentBridge,
+  resolveAgentMovementTimeoutMs,
   shouldEnableGetawayAgentBridge,
   validateAgentAction,
 } from '../game/playtest/agentBridge';
+import { setStealthState } from '../store/playerSlice';
 
 describe('getaway agent bridge', () => {
   beforeEach(() => {
@@ -135,6 +139,16 @@ describe('getaway agent bridge', () => {
     expect(validateAgentAction({ type: 'wait', ms: 250 }).ok).toBe(true);
     expect(validateAgentAction({ type: 'interactNpc', role: 'lira' }).ok).toBe(true);
     expect(validateAgentAction({ type: 'collectItem', name: 'keycard' }).ok).toBe(true);
+    expect(validateAgentAction({ type: 'continueMission' }).ok).toBe(true);
+    expect(validateAgentAction({ type: 'advanceMission' }).ok).toBe(true);
+    expect(validateAgentAction({ type: 'triggerMissionFailure' }).ok).toBe(true);
+    expect(validateAgentAction({ type: 'retryMission' }).ok).toBe(true);
+  });
+
+  it('scales semantic movement waits for long NPC routes', () => {
+    expect(resolveAgentMovementTimeoutMs(0)).toBe(6000);
+    expect(resolveAgentMovementTimeoutMs(8)).toBe(9360);
+    expect(resolveAgentMovementTimeoutMs(48)).toBe(22000);
   });
 
   it('returns structured action metadata from bridge dispatches', async () => {
@@ -153,6 +167,101 @@ describe('getaway agent bridge', () => {
     expect(result.afterObjectiveId).toBeDefined();
     expect(result.stateChanged).toBe(false);
     expect(result.evidenceHint).toBe('Fixed wait completed.');
+
+    cleanup();
+  });
+
+  it('treats stealth state as QA-visible action state', () => {
+    const before = buildAgentSnapshot(store.getState());
+
+    store.dispatch(setStealthState({ enabled: true, cooldownExpiresAt: null }));
+
+    const after = buildAgentSnapshot(store.getState());
+    expect(buildAgentStateSignature(before)).not.toBe(buildAgentStateSignature(after));
+  });
+
+  it('reports stealth toggle requests as no-op when no controller handles them', async () => {
+    const cleanup = installGetawayAgentBridge({
+      store,
+      search: '?agent=1',
+      nodeEnv: 'development',
+    });
+
+    const result = await window.__getawayAgent!.dispatch({ type: 'toggleStealth' });
+
+    expect(result.ok).toBe(true);
+    expect(result.status).toBe('no-op');
+    expect(result.stateChanged).toBe(false);
+    expect(result.reason).toBe('Stealth toggle produced no QA-visible state change.');
+
+    cleanup();
+  });
+
+  it('advances pending mission recap through the QA bridge', async () => {
+    store.dispatch(missionAccomplished());
+    const cleanup = installGetawayAgentBridge({
+      store,
+      search: '?agent=1',
+      nodeEnv: 'development',
+    });
+
+    const result = await window.__getawayAgent!.dispatch({ type: 'advanceMission' });
+    const snapshot = window.__getawayAgent!.snapshot();
+
+    expect(result.ok).toBe(true);
+    expect(result.status).toBe('ok');
+    expect(result.reason).toContain('Advanced mission');
+    expect(snapshot.mission.currentLevelIndex).toBe(1);
+    expect(snapshot.mission.pendingAdvance).toBe(false);
+
+    cleanup();
+  });
+
+  it('clicks the live mission completion continue button through the QA bridge', async () => {
+    store.dispatch(missionAccomplished());
+    const continueButton = document.createElement('button');
+    continueButton.dataset.testid = 'mission-complete-continue';
+    continueButton.textContent = 'Next Level';
+    continueButton.addEventListener('click', () => {
+      store.dispatch(advanceToNextLevel());
+    });
+    document.body.appendChild(continueButton);
+
+    const cleanup = installGetawayAgentBridge({
+      store,
+      search: '?agent=1',
+      nodeEnv: 'development',
+    });
+
+    const result = await window.__getawayAgent!.dispatch({ type: 'continueMission' });
+    const snapshot = window.__getawayAgent!.snapshot();
+
+    expect(result.ok).toBe(true);
+    expect(result.status).toBe('ok');
+    expect(result.reason).toBe('Clicked mission completion continue.');
+    expect(result.evidenceHint).toBe('Mission completion continue button was clicked through the live DOM.');
+    expect(snapshot.mission.currentLevelIndex).toBe(1);
+    expect(snapshot.mission.pendingAdvance).toBe(false);
+
+    cleanup();
+    continueButton.remove();
+  });
+
+  it('can trigger mission failure through the QA bridge', async () => {
+    const cleanup = installGetawayAgentBridge({
+      store,
+      search: '?agent=1',
+      nodeEnv: 'development',
+    });
+
+    const result = await window.__getawayAgent!.dispatch({ type: 'triggerMissionFailure' });
+    const snapshot = window.__getawayAgent!.snapshot();
+
+    expect(result.ok).toBe(true);
+    expect(result.status).toBe('ok');
+    expect(result.reason).toContain('Triggered mission failure');
+    expect(snapshot.player.health).toBe(0);
+    expect(snapshot.overlays.missionFailureOpen).toBe(true);
 
     cleanup();
   });

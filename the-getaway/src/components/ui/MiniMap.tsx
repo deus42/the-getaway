@@ -10,31 +10,6 @@ import {
 import { miniMapService } from "../../game/services/miniMapService";
 import { HUD_ICON, HUD_GRID_UNIT } from "../../styles/hudTokens";
 
-const TILE_COLORS: Record<string, string> = {
-  floor: "#101b32",
-  wall: "#1f2937",
-  door: "#fbbf24",
-  cover: "#1d4ed8",
-  water: "#0ea5e9",
-  trap: "#7c3aed",
-  default: "#101b32",
-};
-
-const ENTITY_COLORS: Record<MiniMapEntityDetail["kind"], string> = {
-  player: "#60a5fa",
-  enemy: "#f87171",
-  npc: "#34d399",
-  objective: "#facc15",
-};
-
-const CAMERA_COLORS: Record<CameraAlertState, string> = {
-  [CameraAlertState.IDLE]: "#38bdf8",
-  [CameraAlertState.SUSPICIOUS]: "#fbbf24",
-  [CameraAlertState.INVESTIGATING]: "#f97316",
-  [CameraAlertState.ALARMED]: "#ef4444",
-  [CameraAlertState.DISABLED]: "#64748b",
-};
-
 const ICON_STROKE_WIDTH: number = HUD_ICON.stroke;
 const ICON_MAX_RADIUS: number = HUD_ICON.liveArea / 2;
 const HUD_SURFACE_FALLBACK = "rgba(15, 23, 42, 0.95)";
@@ -60,6 +35,63 @@ const resolveCssVar = (variable: string, fallback: string): string => {
 
 const resolveHudSurfaceColor = (): string =>
   resolveCssVar("--color-hud-surface", HUD_SURFACE_FALLBACK);
+
+interface MiniMapPalette {
+  tiles: Record<string, string>;
+  entities: Record<MiniMapEntityDetail["kind"], string>;
+  cameras: Record<CameraAlertState, string>;
+  inactive: string;
+  outline: string;
+  coverOverlay: string;
+  path: string;
+  pathMuted: string;
+  viewport: string;
+  techFill: string;
+  practicalFill: string;
+  objectiveInk: string;
+  practical: string;
+  tech: string;
+}
+
+const resolveMiniMapPalette = (): MiniMapPalette => {
+  const floor = resolveCssVar("--hud-color-map-floor", "#101b32");
+  return {
+    tiles: {
+      floor,
+      wall: resolveCssVar("--hud-color-map-blocked", "#1f2937"),
+      door: resolveCssVar("--hud-color-map-door", "#fbbf24"),
+      cover: resolveCssVar("--hud-color-map-cover", "#1d4ed8"),
+      water: resolveCssVar("--hud-color-map-water", "#0ea5e9"),
+      trap: resolveCssVar("--hud-color-map-trap", "#7c3aed"),
+      default: floor,
+    },
+    entities: {
+      player: resolveCssVar("--hud-color-map-player", "#60a5fa"),
+      enemy: resolveCssVar("--hud-color-map-enemy", "#f87171"),
+      npc: resolveCssVar("--hud-color-map-npc", "#34d399"),
+      objective: resolveCssVar("--hud-color-map-objective", "#facc15"),
+    },
+    cameras: {
+      [CameraAlertState.IDLE]: resolveCssVar("--hud-color-tech", "#38bdf8"),
+      [CameraAlertState.SUSPICIOUS]: resolveCssVar("--hud-color-practical", "#fbbf24"),
+      [CameraAlertState.INVESTIGATING]: resolveCssVar("--hud-color-practical", "#f97316"),
+      [CameraAlertState.ALARMED]: resolveCssVar("--hud-color-threat", "#ef4444"),
+      [CameraAlertState.DISABLED]: resolveCssVar("--hud-color-map-inactive", "#64748b"),
+    },
+    inactive: resolveCssVar("--hud-color-map-inactive", "rgba(148, 163, 184, 0.35)"),
+    outline: resolveCssVar("--hud-color-map-outline", "rgba(15, 23, 42, 0.85)"),
+    coverOverlay: resolveCssVar("--hud-color-map-cover-overlay", "rgba(59, 130, 246, 0.15)"),
+    path: resolveCssVar("--hud-color-map-path", "rgba(59, 130, 246, 0.7)"),
+    pathMuted: resolveCssVar("--hud-color-map-path-muted", "rgba(59, 130, 246, 0.12)"),
+    viewport: resolveCssVar("--hud-color-map-viewport", "rgba(148, 163, 184, 0.45)"),
+    techFill: resolveCssVar("--hud-color-map-tech-fill", "rgba(56, 189, 248, 0.34)"),
+    practicalFill: resolveCssVar("--hud-color-map-practical-fill", "rgba(250, 204, 21, 0.36)"),
+    objectiveInk: resolveCssVar("--hud-color-map-objective-ink", "rgba(15, 23, 42, 0.92)"),
+    practical: resolveCssVar("--hud-color-practical", "#fbbf24"),
+    tech: resolveCssVar("--hud-color-tech", "#38bdf8"),
+  };
+};
+
 const resolveHudRadius = (): number => {
   const raw = resolveCssVar("--hud-radius-lg", `${HUD_RADIUS_FALLBACK}px`);
   const parsed = Number.parseFloat(raw);
@@ -71,6 +103,7 @@ interface DrawContext {
   state: MiniMapRenderState;
   scale: number;
   crop: CropBounds;
+  palette: MiniMapPalette;
 }
 
 interface ViewportSize {
@@ -326,7 +359,7 @@ const prepareCanvas = (
   return ctx;
 };
 
-const drawTiles = ({ ctx, state, crop }: DrawContext) => {
+const drawTiles = ({ ctx, state, crop, palette }: DrawContext) => {
   const { tiles, tileScale } = state;
   const surfaceColor = resolveHudSurfaceColor();
   ctx.fillStyle = surfaceColor;
@@ -347,11 +380,11 @@ const drawTiles = ({ ctx, state, crop }: DrawContext) => {
       if (!tile) {
         continue;
       }
-      const color = TILE_COLORS[tile.type.toLowerCase()] ?? TILE_COLORS.default;
+      const color = palette.tiles[tile.type.toLowerCase()] ?? palette.tiles.default;
       ctx.fillStyle = color;
       ctx.fillRect(x * tileScale, y * tileScale, tileScale, tileScale);
       if (tile.provideCover) {
-        ctx.fillStyle = "rgba(59, 130, 246, 0.15)";
+        ctx.fillStyle = palette.coverOverlay;
         ctx.fillRect(x * tileScale, y * tileScale, tileScale, tileScale);
       }
     }
@@ -364,7 +397,7 @@ const drawOverlay = ({ ctx, state }: DrawContext) => {
   void state;
 };
 
-const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
+const drawEntities = ({ ctx, state, scale, crop, palette }: DrawContext) => {
   const { tileScale, entities, cameras } = state;
   const objectiveMarkers = state.objectiveMarkers ?? [];
 
@@ -377,7 +410,7 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
     ) {
       return;
     }
-    const color = ENTITY_COLORS[entity.kind] ?? ENTITY_COLORS.npc;
+    const color = palette.entities[entity.kind] ?? palette.entities.npc;
     const radius = getIconRadius(
       tileScale,
       entity.kind === "player" ? 0.7 : entity.kind === "npc" ? 0.62 : 0.5
@@ -395,12 +428,12 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
       ctx.fill();
     } else {
       ctx.fillStyle =
-        entity.status === "inactive" ? "rgba(148, 163, 184, 0.35)" : color;
+        entity.status === "inactive" ? palette.inactive : color;
       ctx.beginPath();
       ctx.arc(x, y, radius * 0.85, 0, Math.PI * 2);
       ctx.fill();
       if (entity.kind === "enemy" || entity.kind === "npc") {
-        ctx.strokeStyle = "rgba(15, 23, 42, 0.85)";
+        ctx.strokeStyle = palette.outline;
         ctx.lineWidth = getStrokeWidth(scale);
         ctx.stroke();
       }
@@ -428,19 +461,19 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
     const x = (objective.x + 0.5) * tileScale;
     const y = (objective.y + 0.5) * tileScale;
     const fillColor = isGuideContact
-      ? "rgba(56, 189, 248, 0.34)"
+      ? palette.techFill
       : isGuideItem
-        ? "rgba(250, 204, 21, 0.36)"
+        ? palette.practicalFill
         : isQuestContact
-          ? "rgba(34, 211, 238, 0.2)"
-          : "rgba(251, 191, 36, 0.2)";
+          ? palette.techFill
+          : palette.practicalFill;
     const strokeColor = isGuideContact
-      ? "rgba(56, 189, 248, 1)"
+      ? palette.tech
       : isGuideItem
-        ? "rgba(250, 204, 21, 1)"
+        ? palette.practical
         : isQuestContact
-          ? "rgba(34, 211, 238, 0.95)"
-          : "rgba(251, 191, 36, 0.95)";
+          ? palette.tech
+          : palette.practical;
     ctx.fillStyle = fillColor;
     ctx.beginPath();
     ctx.arc(x, y, ring, 0, Math.PI * 2);
@@ -451,11 +484,11 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
     ctx.arc(x, y, ring * 0.7, 0, Math.PI * 2);
     ctx.stroke();
     if (isGuided) {
-      ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+      ctx.fillStyle = palette.objectiveInk;
       ctx.beginPath();
       ctx.arc(x, y, ring * 0.42, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = isGuideContact ? "#67e8f9" : "#fde68a";
+      ctx.fillStyle = isGuideContact ? palette.tech : palette.practical;
       ctx.font = `${Math.max(8, Math.round(ring * 0.85))}px Orbitron, sans-serif`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -473,8 +506,8 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
       return;
     }
     const color = camera.isActive
-      ? CAMERA_COLORS[camera.alertState]
-      : CAMERA_COLORS[CameraAlertState.DISABLED];
+      ? palette.cameras[camera.alertState]
+      : palette.cameras[CameraAlertState.DISABLED];
     const radius = getIconRadius(tileScale, 0.5);
     const x = (camera.x + 0.5) * tileScale;
     const y = (camera.y + 0.5) * tileScale;
@@ -487,18 +520,18 @@ const drawEntities = ({ ctx, state, scale, crop }: DrawContext) => {
     ctx.closePath();
     ctx.fill();
     ctx.lineWidth = getStrokeWidth(scale);
-    ctx.strokeStyle = "rgba(15, 23, 42, 0.65)";
+    ctx.strokeStyle = palette.outline;
     ctx.stroke();
     ctx.restore();
   });
 };
 
-const drawPath = ({ ctx, state, scale }: DrawContext) => {
+const drawPath = ({ ctx, state, scale, palette }: DrawContext) => {
   const { path, tileScale } = state;
   if (!path || path.length < 2) {
     return;
   }
-  ctx.strokeStyle = "rgba(59, 130, 246, 0.6)";
+  ctx.strokeStyle = palette.path;
   ctx.lineWidth = getStrokeWidth(scale, ICON_STROKE_WIDTH * 0.95);
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
@@ -519,11 +552,11 @@ const drawPath = ({ ctx, state, scale }: DrawContext) => {
   const goal = path[path.length - 1];
   const goalX = (goal.x + 0.5) * tileScale;
   const goalY = (goal.y + 0.5) * tileScale;
-  ctx.fillStyle = "rgba(59, 130, 246, 0.12)";
+  ctx.fillStyle = palette.pathMuted;
   ctx.beginPath();
   ctx.arc(goalX, goalY, Math.max(4, tileScale * 0.4), 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "rgba(59, 130, 246, 0.7)";
+  ctx.strokeStyle = palette.path;
   ctx.lineWidth = getStrokeWidth(scale);
   ctx.beginPath();
   ctx.arc(goalX, goalY, Math.max(3, tileScale * 0.28), 0, Math.PI * 2);
@@ -531,7 +564,7 @@ const drawPath = ({ ctx, state, scale }: DrawContext) => {
 };
 
 const drawViewport = (
-  { ctx, state, scale }: DrawContext,
+  { ctx, state, scale, palette }: DrawContext,
   fixedSize: ViewportSize
 ) => {
   const { viewport, tileScale } = state;
@@ -557,14 +590,14 @@ const drawViewport = (
 
   ctx.save();
   ctx.lineWidth = getStrokeWidth(scale, ICON_STROKE_WIDTH * 0.85);
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.4)";
+  ctx.strokeStyle = palette.viewport;
   drawRoundedRect(ctx, rectX, rectY, rectWidth, rectHeight, viewportRadius);
   ctx.stroke();
   ctx.restore();
 
   const reticleSize = Math.max(2, tileScale * 0.5);
   ctx.save();
-  ctx.strokeStyle = "rgba(148, 163, 184, 0.5)";
+  ctx.strokeStyle = palette.viewport;
   ctx.lineWidth = getStrokeWidth(scale, ICON_STROKE_WIDTH * 0.75);
   ctx.beginPath();
   ctx.moveTo(centerX - reticleSize, centerY);
@@ -609,7 +642,13 @@ const drawMiniMap = (
   ctx.scale(scale, scale);
   ctx.translate(-crop.minX * state.tileScale, -crop.minY * state.tileScale);
 
-  const drawContext: DrawContext = { ctx, state, scale, crop };
+  const drawContext: DrawContext = {
+    ctx,
+    state,
+    scale,
+    crop,
+    palette: resolveMiniMapPalette(),
+  };
   drawTiles(drawContext);
   drawOverlay(drawContext);
   drawPath(drawContext);

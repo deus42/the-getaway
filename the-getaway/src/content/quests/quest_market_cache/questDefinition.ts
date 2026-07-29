@@ -21,7 +21,6 @@ export const questMarketCacheDefinition: QuestDefinition = {
   ],
   rewards: [
     { type: 'currency', resourceKey: 'currency.credits', amount: 80 },
-    { type: 'item', resourceKey: 'items.encrypted_datapad', amount: 1 },
   ],
   relatedNpcKeys: ['npcs.lira_smuggler'],
   status: 'implemented',

@@ -4,8 +4,8 @@ import type { CameraModulePorts, CameraRuntimeState } from '../contracts/ModuleP
 import type { MapArea } from '../../../interfaces/types';
 import { SceneContext } from '../SceneContext';
 import { SceneModule } from '../SceneModule';
+import { resolveMapVisualProfile } from '../../../visual/theme/mapVisualTheme';
 
-const DEFAULT_FIT_ZOOM_FACTOR = 1.04;
 const MIN_CAMERA_ZOOM = 0.38;
 const MAX_CAMERA_ZOOM = 2.3;
 const CAMERA_BOUND_PADDING_TILES = 6;
@@ -211,7 +211,15 @@ export class CameraModule implements SceneModule<MainScene> {
     const zoomX = canvasWidth / isoWidth;
     const zoomY = canvasHeight / isoHeight;
     const fitZoom = Math.min(zoomX, zoomY);
-    const desiredZoom = Phaser.Math.Clamp(fitZoom * DEFAULT_FIT_ZOOM_FACTOR, MIN_CAMERA_ZOOM, MAX_CAMERA_ZOOM);
+    const cameraProfile = resolveMapVisualProfile(currentMapArea).camera;
+    const desiredZoom = Phaser.Math.Clamp(
+      Math.max(
+        fitZoom * cameraProfile.initialFitFactor,
+        cameraProfile.minimumInitialZoom
+      ),
+      MIN_CAMERA_ZOOM,
+      MAX_CAMERA_ZOOM
+    );
 
     const camera = this.ports.cameras.main;
     const restoreActive = this.runtimeState.pendingCameraRestore || Boolean(this.runtimeState.cameraZoomTween);

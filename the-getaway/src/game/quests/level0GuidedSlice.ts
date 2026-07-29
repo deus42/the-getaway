@@ -38,6 +38,11 @@ export interface Level0GuidedStep {
   itemResourceKeys?: readonly string[];
 }
 
+export type Level0GuidedItemMarkerState = 'current' | 'future' | 'other';
+export type Level0GuidedContactMarkerState = 'current' | 'other';
+
+const LEVEL0_GUIDED_ITEM_RESOURCE_KEYS = Object.values(LEVEL0_GUIDED_ITEM_KEYS);
+
 const findQuest = (quests: Quest[], questId: string): Quest | undefined =>
   quests.find((quest) => quest.id === questId);
 
@@ -162,6 +167,12 @@ export const isLevel0GuidedContact = (
   step: Level0GuidedStep
 ): boolean => Boolean(step.contactDialogueId && npc.dialogueId === step.contactDialogueId);
 
+export const resolveLevel0GuidedContactMarkerState = (
+  npc: Pick<NPC, 'dialogueId'>,
+  step: Level0GuidedStep
+): Level0GuidedContactMarkerState =>
+  isLevel0GuidedContact(npc, step) ? 'current' : 'other';
+
 export const isLevel0GuidedItem = (
   item: Pick<Item, 'resourceKey'>,
   step: Level0GuidedStep
@@ -170,3 +181,20 @@ export const isLevel0GuidedItem = (
     item.resourceKey &&
       step.itemResourceKeys?.some((resourceKey) => resourceKey === item.resourceKey)
   );
+
+export const resolveLevel0GuidedItemMarkerState = (
+  item: Pick<Item, 'resourceKey'>,
+  step: Level0GuidedStep
+): Level0GuidedItemMarkerState => {
+  if (!item.resourceKey) {
+    return 'other';
+  }
+
+  if (isLevel0GuidedItem(item, step)) {
+    return 'current';
+  }
+
+  return LEVEL0_GUIDED_ITEM_RESOURCE_KEYS.some((resourceKey) => resourceKey === item.resourceKey)
+    ? 'future'
+    : 'other';
+};

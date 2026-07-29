@@ -15,16 +15,16 @@ const overlayStyle: CSSProperties = {
 
 const bannerStyle: CSSProperties = {
   padding: '1.8rem 3rem',
-  borderRadius: '18px',
-  background: 'rgba(15, 23, 42, 0.85)',
-  border: '1px solid rgba(248, 250, 252, 0.35)',
-  boxShadow: '0 40px 60px rgba(15, 23, 42, 0.55)',
+  borderRadius: 'var(--hud-radius-lg)',
+  background: 'var(--hud-color-surface-strong)',
+  border: '1px solid var(--hud-color-rule-active)',
+  boxShadow: 'var(--shadow-overlay)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   gap: '0.6rem',
   textAlign: 'center',
-  color: '#f8fafc',
+  color: 'var(--hud-color-bone)',
   letterSpacing: '0.28em',
   textTransform: 'uppercase',
 };
@@ -64,7 +64,7 @@ const CurfewWarning: React.FC = () => {
 
   return (
     <div style={overlayStyle} aria-live="assertive" aria-atomic="true">
-      <div style={bannerStyle} role="alert">
+      <div className="curfew-warning__banner" style={bannerStyle} role="alert">
         <span style={titleStyle}>Curfew Active</span>
         <span style={subtitleStyle}>Surveillance Engaged</span>
       </div>

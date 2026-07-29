@@ -1,5 +1,5 @@
 import { Provider, useSelector } from "react-redux";
-import { CSSProperties, useCallback, useEffect, useRef, useState, lazy, Suspense } from "react";
+import { CSSProperties, useCallback, useEffect, useLayoutEffect, useRef, useState, lazy, Suspense } from "react";
 import GameCanvas from "./components/GameCanvas";
 import GameController from "./components/GameController";
 import PlayerSummaryPanel from "./components/ui/PlayerSummaryPanel";
@@ -43,6 +43,7 @@ import {
   shouldEnableGetawayAgentBridge,
 } from "./game/playtest/agentBridge";
 import { primeLevel0AudioCues } from "./game/feedback/audioCues";
+import { isLevel0Exterior } from "./game/visual/theme/mapVisualTheme";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
@@ -133,7 +134,7 @@ const menuPanelButtonStyle: CSSProperties = {
   gap: "0.5rem",
   padding: "0.7rem 0.9rem",
   boxSizing: "border-box",
-  borderRadius: "14px",
+  borderRadius: "var(--hud-radius-lg)",
   border: "var(--hud-command-button-border)",
   background: "var(--hud-command-button-bg)",
   boxShadow: "var(--hud-command-button-shadow)",
@@ -459,10 +460,26 @@ function AppShell() {
   const [showPointAllocation, setShowPointAllocation] = useState(false);
   const hudLayoutPreset = useSelector(selectHudLayoutPreset);
   const playerHealth = useSelector((state: RootState) => state.player.data.health);
+  const level0PainterlyHud = useSelector((state: RootState) =>
+    isLevel0Exterior(state.world.currentMapArea)
+  );
   const reputationSystemsEnabled = useSelector(
     (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
   );
   const agentLevel0StartedRef = useRef(false);
+
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    if (level0PainterlyHud) {
+      root.dataset.visualStyle = 'graphic-painterly-noir';
+    } else {
+      delete root.dataset.visualStyle;
+    }
+
+    return () => {
+      delete root.dataset.visualStyle;
+    };
+  }, [level0PainterlyHud]);
 
   useEffect(() => {
     log.debug('Component mounted');

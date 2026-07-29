@@ -1,6 +1,13 @@
 import { miniMapService, normalizeMiniMapViewport } from '../game/services/miniMapService';
 import { MiniMapController } from '../game/controllers/MiniMapController';
 import { MINIMAP_VIEWPORT_CLICK_EVENT } from '../game/events';
+import type { Item, NPC, Position, Quest } from '../game/interfaces/types';
+import {
+  LEVEL0_GUIDED_DIALOGUE_IDS,
+  LEVEL0_GUIDED_ITEM_KEYS,
+  LEVEL0_GUIDED_QUEST_IDS,
+} from '../game/quests/level0GuidedSlice';
+import { createBasicMapArea } from '../game/world/grid';
 import { store } from '../store';
 
 const cloneRootState = () => {
@@ -10,6 +17,39 @@ const cloneRootState = () => {
   }
   return JSON.parse(JSON.stringify(snapshot));
 };
+
+const createQuest = (id: string, overrides: Partial<Quest> = {}): Quest => ({
+  id,
+  name: id,
+  description: id,
+  isActive: false,
+  isCompleted: false,
+  objectives: [],
+  rewards: [],
+  ...overrides,
+});
+
+const createNpc = (id: string, dialogueId: string, position: Position): NPC => ({
+  id,
+  name: id,
+  position,
+  health: 10,
+  maxHealth: 10,
+  routine: [],
+  dialogueId,
+  isInteractive: true,
+});
+
+const createItem = (id: string, resourceKey: string, position: Position): Item => ({
+  id,
+  resourceKey,
+  name: id,
+  description: id,
+  weight: 0,
+  value: 0,
+  isQuestItem: true,
+  position,
+});
 
 describe('MiniMapController', () => {
   it('marks all layers dirty on the first compose call and clears thereafter', () => {
@@ -43,6 +83,100 @@ describe('MiniMapController', () => {
       { x: mutated.player.data.position.x + 1, y: mutated.player.data.position.y },
     ]);
     expect(withPath?.dirtyLayers.path).toBe(true);
+  });
+
+  it('draws a persistent guided contact path when no queued path is active', () => {
+    const controller = new MiniMapController();
+    const state = cloneRootState();
+    const area = createBasicMapArea('Level 0 route test', 8, 8);
+    area.id = 'level0-route-test';
+    area.entities.npcs = [
+      createNpc('naila', LEVEL0_GUIDED_DIALOGUE_IDS.naila, { x: 5, y: 2 }),
+    ];
+    area.entities.items = [];
+    state.world.currentMapArea = area;
+    state.player.data.position = { x: 1, y: 2 };
+    state.quests.quests = [
+      createQuest(LEVEL0_GUIDED_QUEST_IDS.liraCache, { isCompleted: true }),
+      createQuest(LEVEL0_GUIDED_QUEST_IDS.datapadTruth, { isActive: false }),
+    ];
+
+    const rendered = controller.compose(state, 1, null);
+
+    expect(rendered?.path?.length).toBeGreaterThan(0);
+    expect(rendered?.path?.[rendered.path.length - 1]).toEqual({ x: 4, y: 2 });
+    expect(rendered?.pathSignature).toContain('4:2');
+  });
+
+  it('draws a persistent guided item path when the current beat is a pickup', () => {
+    const controller = new MiniMapController();
+    const state = cloneRootState();
+    const area = createBasicMapArea('Level 0 keycard route test', 8, 8);
+    area.id = 'level0-keycard-route-test';
+    area.entities.npcs = [];
+    area.entities.items = [
+      createItem('keycard', LEVEL0_GUIDED_ITEM_KEYS.keycard, { x: 5, y: 2 }),
+    ];
+    state.world.currentMapArea = area;
+    state.player.data.position = { x: 1, y: 2 };
+    state.quests.quests = [
+      createQuest(LEVEL0_GUIDED_QUEST_IDS.liraCache, {
+        isActive: true,
+        objectives: [
+          {
+            id: 'recover-keycard',
+            description: 'Recover the keycard',
+            isCompleted: false,
+            type: 'collect',
+            target: 'Corporate Keycard',
+            targetResourceKey: LEVEL0_GUIDED_ITEM_KEYS.keycard,
+          },
+        ],
+      }),
+    ];
+
+    const rendered = controller.compose(state, 1, null);
+
+    expect(rendered?.path?.length).toBeGreaterThan(0);
+    expect(rendered?.path?.[rendered.path.length - 1]).toEqual({ x: 5, y: 2 });
+    expect(rendered?.pathSignature).toContain('5:2');
+  });
+
+  it('keeps explicit queued paths ahead of guided fallback paths', () => {
+    const controller = new MiniMapController();
+    const state = cloneRootState();
+    const area = createBasicMapArea('Level 0 explicit route test', 8, 8);
+    area.id = 'level0-explicit-route-test';
+    area.entities.npcs = [];
+    area.entities.items = [
+      createItem('keycard', LEVEL0_GUIDED_ITEM_KEYS.keycard, { x: 5, y: 2 }),
+    ];
+    state.world.currentMapArea = area;
+    state.player.data.position = { x: 1, y: 2 };
+    state.quests.quests = [
+      createQuest(LEVEL0_GUIDED_QUEST_IDS.liraCache, {
+        isActive: true,
+        objectives: [
+          {
+            id: 'recover-keycard',
+            description: 'Recover the keycard',
+            isCompleted: false,
+            type: 'collect',
+            target: 'Corporate Keycard',
+            targetResourceKey: LEVEL0_GUIDED_ITEM_KEYS.keycard,
+          },
+        ],
+      }),
+    ];
+    const explicitPath = [
+      { x: 1, y: 3 },
+      { x: 2, y: 3 },
+    ];
+
+    const rendered = controller.compose(state, 1, explicitPath);
+
+    expect(rendered?.path).toEqual(explicitPath);
+    expect(rendered?.pathSignature).toBe('1:3|2:3');
   });
 });
 

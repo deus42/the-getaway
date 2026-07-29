@@ -48,9 +48,14 @@ type NpcSpriteOwnership = {
   dialogueId: string;
 };
 
+type EnemySpriteOwnership = {
+  kind: 'enemy';
+  resourceKey: string;
+};
+
 export interface CharacterSpriteManifestEntry {
   spriteSetId: string;
-  owner: HeroSpriteOwnership | NpcSpriteOwnership;
+  owner: HeroSpriteOwnership | NpcSpriteOwnership | EnemySpriteOwnership;
   frameSize: CharacterSpriteFrameSize;
   frameCount: 4;
   stateFps: Record<CharacterSpriteState, number>;
@@ -79,7 +84,7 @@ const createEntry = (
   spriteSetId: string,
   owner: CharacterSpriteManifestEntry['owner'],
   fallbackPalette: CharacterSpritePalette,
-  worldScale = 0.78
+  worldScale = 1
 ): CharacterSpriteManifestEntry => ({
   spriteSetId,
   owner,
@@ -99,26 +104,26 @@ export const CHARACTER_SPRITE_MANIFEST: CharacterSpriteManifestEntry[] = [
   createEntry(
     'hero_operative',
     { kind: 'hero', appearancePresets: ['operative', 'default'] },
-    { accentColor: 0x38bdf8, glowColor: 0x67e8f9, shadowColor: 0x0f172a },
-    0.82
+    { accentColor: 0x5b7775, glowColor: 0x50bfd0, shadowColor: 0x0b0d12 },
+    1.08
   ),
   createEntry(
     'hero_survivor',
     { kind: 'hero', appearancePresets: ['survivor'] },
-    { accentColor: 0xf97316, glowColor: 0xfb923c, shadowColor: 0x1c1917 },
-    0.82
+    { accentColor: 0xd99a50, glowColor: 0xd99a50, shadowColor: 0x1b1f24 },
+    1.08
   ),
   createEntry(
     'hero_tech',
     { kind: 'hero', appearancePresets: ['tech'] },
-    { accentColor: 0x22c55e, glowColor: 0x4ade80, shadowColor: 0x052e16 },
-    0.82
+    { accentColor: 0x5b7775, glowColor: 0x50bfd0, shadowColor: 0x0b0d12 },
+    1.08
   ),
   createEntry(
     'hero_scavenger',
     { kind: 'hero', appearancePresets: ['scavenger'] },
-    { accentColor: 0xeab308, glowColor: 0xfacc15, shadowColor: 0x422006 },
-    0.82
+    { accentColor: 0x9a7748, glowColor: 0xd99a50, shadowColor: 0x2a201c },
+    1.08
   ),
   createEntry('npc_lira_vendor', { kind: 'npc', dialogueId: 'npc_lira_vendor' }, {
     accentColor: 0xf472b6,
@@ -156,10 +161,20 @@ export const CHARACTER_SPRITE_MANIFEST: CharacterSpriteManifestEntry[] = [
     shadowColor: 0x022c22,
   }),
   createEntry('npc_captain_reyna', { kind: 'npc', dialogueId: 'npc_captain_reyna' }, {
-    accentColor: 0xe11d48,
-    glowColor: 0xfb7185,
-    shadowColor: 0x4c0519,
+    accentColor: 0x8e4147,
+    glowColor: 0xbc4d54,
+    shadowColor: 0x2f1518,
   }),
+  createEntry('npc_orn_patrol_sentry', { kind: 'npc', dialogueId: 'npc_guard_orn' }, {
+    accentColor: 0xd99a50,
+    glowColor: 0xd99a50,
+    shadowColor: 0x0b0d12,
+  }, 1.02),
+  createEntry('enemy_corpsec_sweep_captain', { kind: 'enemy', resourceKey: 'enemies.corpsec_guard' }, {
+    accentColor: 0x8e4147,
+    glowColor: 0xbc4d54,
+    shadowColor: 0x0b0d12,
+  }, 1.02),
 ];
 
 export const CHARACTER_SPRITE_MANIFEST_BY_ID = CHARACTER_SPRITE_MANIFEST.reduce<
@@ -216,5 +231,15 @@ export const resolveNpcSpriteSetId = (dialogueId?: string | null): string | unde
 
   return CHARACTER_SPRITE_MANIFEST.find(
     (entry) => entry.owner.kind === 'npc' && entry.owner.dialogueId === dialogueId
+  )?.spriteSetId;
+};
+
+export const resolveEnemySpriteSetId = (resourceKey?: string | null): string | undefined => {
+  if (!resourceKey) {
+    return undefined;
+  }
+
+  return CHARACTER_SPRITE_MANIFEST.find(
+    (entry) => entry.owner.kind === 'enemy' && entry.owner.resourceKey === resourceKey
   )?.spriteSetId;
 };

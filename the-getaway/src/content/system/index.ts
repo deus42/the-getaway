@@ -67,6 +67,7 @@ export interface LogStrings {
   stealthCompromised: string;
   stealthUnavailableCombat: string;
   stealthUnavailableDialogue: string;
+  stealthCameraLock: string;
   stealthCooldown: (seconds: number) => string;
   stealthNoiseCue: string;
   cameraSabotageSuccess: string;
@@ -157,6 +158,8 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       stealthCompromised: 'Stealth blown! Eyes are on you.',
       stealthUnavailableCombat: "Can't engage stealth mid-combat!",
       stealthUnavailableDialogue: 'Finish the conversation before slipping back into stealth.',
+      stealthCameraLock:
+        'Camera lock still has your profile. Break line-of-sight before re-entering stealth.',
       stealthCooldown: (seconds) => `Stealth recalibrating (${seconds}s).`,
       stealthNoiseCue: 'Noise spike detected. Sprinting is exposing your position.',
       cameraSabotageSuccess: 'Camera sabotaged. Feed looped for two minutes.',
@@ -244,6 +247,8 @@ const SYSTEM_STRINGS: Record<Locale, SystemStrings> = {
       stealthCompromised: 'Стелс зірвано! Вас засікли.',
       stealthUnavailableCombat: 'Не можна увійти у стелс під час бою!',
       stealthUnavailableDialogue: 'Спершу завершіть діалог, тоді повертайтесь у стелс.',
+      stealthCameraLock:
+        'Камера досі тримає ваш профіль. Розірвіть лінію огляду перед повторним входом у стелс.',
       stealthCooldown: (seconds) => `Стелс перезаряджається (${seconds} с).`,
       stealthNoiseCue: 'Сплеск шуму. Біг видає вашу позицію.',
       cameraSabotageSuccess: 'Камеру зламано. Канал зациклиться на дві хвилини.',

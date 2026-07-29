@@ -4,8 +4,11 @@ import {
   MIDDAY_SECONDS,
   NIGHT_START_SECONDS,
   requestStealthToggle,
+  setCurrentMapAreaZoneMetadata,
   setGameTime,
 } from '../../store/worldSlice';
+import { advanceToNextLevel } from '../../store/missionSlice';
+import { setHealth } from '../../store/playerSlice';
 import {
   MINIMAP_OBJECTIVE_FOCUS_EVENT,
   TILE_CLICK_EVENT,
@@ -26,6 +29,9 @@ export const GETAWAY_AGENT_DIALOGUE_OPTION_EVENT = 'getawayAgentDialogueOption';
 const QA_SAFE_LOG_LIMIT = 12;
 const QA_SAFE_ENTITY_LIMIT = 30;
 const NPC_INTERACTION_RANGE = 2;
+const MIN_SEMANTIC_MOVE_TIMEOUT_MS = 6_000;
+const MAX_SEMANTIC_MOVE_TIMEOUT_MS = 22_000;
+const SEMANTIC_MOVE_TIMEOUT_PER_TILE_MS = 420;
 
 export interface GetawayAgentStore {
   getState: () => RootState;
@@ -39,6 +45,10 @@ export type GetawayAgentAction =
   | { type: 'interactNpc'; id?: string; role?: string; name?: string }
   | { type: 'collectItem'; id?: string; role?: string; name?: string; position?: Position }
   | { type: 'toggleStealth' }
+  | { type: 'continueMission' }
+  | { type: 'advanceMission' }
+  | { type: 'triggerMissionFailure' }
+  | { type: 'retryMission' }
   | { type: 'chooseDialogueOption'; index: number }
   | { type: 'setClock'; phase: 'day' | 'night' | 'midday' }
   | { type: 'waitForDialogue'; timeoutMs?: number }
@@ -251,6 +261,20 @@ const getBrowserUrl = (): string | null => {
   }
 
   return window.location.href;
+};
+
+export const resolveAgentMovementTimeoutMs = (distance: number): number => {
+  if (!Number.isFinite(distance) || distance <= 0) {
+    return MIN_SEMANTIC_MOVE_TIMEOUT_MS;
+  }
+
+  return Math.max(
+    MIN_SEMANTIC_MOVE_TIMEOUT_MS,
+    Math.min(
+      MAX_SEMANTIC_MOVE_TIMEOUT_MS,
+      MIN_SEMANTIC_MOVE_TIMEOUT_MS + Math.ceil(distance * SEMANTIC_MOVE_TIMEOUT_PER_TILE_MS)
+    )
+  );
 };
 
 const trimList = <T>(entries: T[]): T[] => entries.slice(0, QA_SAFE_ENTITY_LIMIT);
@@ -623,6 +647,10 @@ export const validateAgentAction = (action: unknown): AgentActionValidation => {
         ? { ok: true, message: 'ok' }
         : { ok: false, message: 'collectItem.position must contain integer x and y when provided.' };
     case 'toggleStealth':
+    case 'continueMission':
+    case 'advanceMission':
+    case 'triggerMissionFailure':
+    case 'retryMission':
       return { ok: true, message: 'ok' };
     case 'chooseDialogueOption':
       return isFiniteInteger(candidate.index) && candidate.index >= 0
@@ -702,10 +730,24 @@ const findObjectiveTargetPosition = (state: RootState): Position | null => {
 const getActiveObjectiveId = (snapshot: GetawayAgentSnapshot): string | null =>
   snapshot.objectives.find((objective) => objective.isActive && !objective.isCompleted)?.objectiveId ?? null;
 
-const buildStateSignature = (snapshot: GetawayAgentSnapshot): string =>
+export const buildAgentStateSignature = (snapshot: GetawayAgentSnapshot): string =>
   JSON.stringify({
     position: snapshot.player.position,
+    health: snapshot.player.health,
+    actionPoints: snapshot.player.actionPoints,
+    movementProfile: snapshot.player.movementProfile,
+    stealthModeEnabled: snapshot.player.stealthModeEnabled,
+    stealthCooldownExpiresAt: snapshot.player.stealthCooldownExpiresAt,
     inventoryCount: snapshot.player.inventoryCount,
+    currentTime: snapshot.world.currentTime,
+    timeOfDay: snapshot.world.timeOfDay,
+    curfewActive: snapshot.world.curfewActive,
+    inCombat: snapshot.world.inCombat,
+    isPlayerTurn: snapshot.world.isPlayerTurn,
+    engagementMode: snapshot.world.engagementMode,
+    globalAlertLevel: snapshot.world.globalAlertLevel,
+    paranoiaValue: snapshot.paranoia.value,
+    paranoiaTier: snapshot.paranoia.tier,
     activeObjectiveId: getActiveObjectiveId(snapshot),
     completedObjectiveIds: snapshot.objectives
       .filter((objective) => objective.isCompleted)
@@ -821,7 +863,8 @@ const result = (
   action: GetawayAgentAction['type'] | 'unknown',
   status: GetawayAgentActionStatus,
   reason: string,
-  evidenceHint = reason
+  evidenceHint = reason,
+  stateChangedOverride?: boolean
 ): GetawayAgentActionResult => ({
   ok: status === 'ok' || status === 'no-op',
   action,
@@ -830,10 +873,37 @@ const result = (
   reason,
   beforeObjectiveId: getActiveObjectiveId(beforeSnapshot),
   afterObjectiveId: getActiveObjectiveId(afterSnapshot),
-  stateChanged: buildStateSignature(beforeSnapshot) !== buildStateSignature(afterSnapshot),
+  stateChanged: stateChangedOverride ??
+    buildAgentStateSignature(beforeSnapshot) !== buildAgentStateSignature(afterSnapshot),
   evidenceHint,
   snapshot: afterSnapshot,
 });
+
+const describeBlockedStealthToggle = (snapshot: GetawayAgentSnapshot): string => {
+  if (snapshot.world.inCombat) {
+    return 'Stealth toggle blocked by active combat.';
+  }
+
+  if (snapshot.dialogue.active) {
+    return 'Stealth toggle blocked by active dialogue.';
+  }
+
+  if (
+    snapshot.stealth.cameraAlertState === 'alarmed' &&
+    snapshot.stealth.detectionProgress >= 100
+  ) {
+    return 'Stealth toggle blocked by active camera lock.';
+  }
+
+  if (
+    typeof snapshot.player.stealthCooldownExpiresAt === 'number' &&
+    snapshot.player.stealthCooldownExpiresAt > Date.now()
+  ) {
+    return 'Stealth toggle blocked by recalibration cooldown.';
+  }
+
+  return 'Stealth toggle produced no QA-visible state change.';
+};
 
 const currentResult = (
   state: RootState,
@@ -925,6 +995,9 @@ const dispatchBridgeAction = async (
         return currentResult(state, action.type, 'rejected', 'No matching interactive NPC could be resolved.');
       }
 
+      const startingDistanceToNpc = getManhattanDistance(state.player.data.position, npc.position);
+      const moveTimeoutMs = resolveAgentMovementTimeoutMs(startingDistanceToNpc);
+
       window.dispatchEvent(new CustomEvent<TileClickDetail>(TILE_CLICK_EVENT, {
         detail: {
           areaId: state.world.currentMapArea.id,
@@ -937,7 +1010,7 @@ const dispatchBridgeAction = async (
         const latestNpc = findLatestNpc(currentState, npc);
         return isDialogueOpenForNpc(currentState, latestNpc) ||
           getManhattanDistance(currentState.player.data.position, latestNpc.position) <= NPC_INTERACTION_RANGE;
-      }, 6_000, 100);
+      }, moveTimeoutMs, 100);
 
       let nextState = store.getState();
       let latestNpc = findLatestNpc(nextState, npc);
@@ -979,13 +1052,19 @@ const dispatchBridgeAction = async (
         beforeSnapshot,
         afterSnapshot,
         action.type,
-        distanceToNpc <= NPC_INTERACTION_RANGE ? 'no-op' : 'timeout',
+        distanceToNpc <= NPC_INTERACTION_RANGE
+          ? 'no-op'
+          : distanceToNpc < startingDistanceToNpc
+            ? 'ok'
+            : 'timeout',
         distanceToNpc <= NPC_INTERACTION_RANGE
           ? afterSnapshot.world.inCombat
             ? `Combat pressure blocks NPC ${latestNpc.name} dialogue; resolve the encounter before talking.`
             : `Reached NPC ${latestNpc.name} interaction range, but dialogue did not open yet.`
+          : distanceToNpc < startingDistanceToNpc
+            ? `Moved toward NPC ${latestNpc.name}; distance is now ${distanceToNpc}.`
           : `Timed out moving toward NPC ${latestNpc.name}; distance is ${distanceToNpc}.`,
-        `NPC ${latestNpc.id} target at ${latestNpc.position.x},${latestNpc.position.y}; player distance ${distanceToNpc}.`
+        `NPC ${latestNpc.id} target at ${latestNpc.position.x},${latestNpc.position.y}; player distance ${distanceToNpc}; startDistance=${startingDistanceToNpc}; moveTimeoutMs=${moveTimeoutMs}.`
       );
     }
 
@@ -1005,13 +1084,26 @@ const dispatchBridgeAction = async (
           position: item.position,
         },
       }));
-      await waitFor(250);
+      const beforeObjectiveId = getActiveObjectiveId(beforeSnapshot);
+      await waitUntil(() => {
+        const currentState = store.getState();
+        const currentSnapshot = buildAgentSnapshot(currentState);
+        const latestItem = resolveItemTarget(currentState, action);
+        return getActiveObjectiveId(currentSnapshot) !== beforeObjectiveId || !latestItem?.position;
+      }, 8_000, 100);
+
+      const afterSnapshot = buildAgentSnapshot(store.getState());
+      const afterObjectiveId = getActiveObjectiveId(afterSnapshot);
+      const latestItem = resolveItemTarget(store.getState(), action);
+      const resolved = afterObjectiveId !== beforeObjectiveId || !latestItem?.position;
       return result(
         beforeSnapshot,
-        buildAgentSnapshot(store.getState()),
+        afterSnapshot,
         action.type,
         'ok',
-        `Moved toward collectable item ${item.name}.`,
+        resolved
+          ? `Resolved collectable item ${item.name}.`
+          : `Moved toward collectable item ${item.name}.`,
         `Item ${item.id} targeted at ${item.position.x},${item.position.y}.`
       );
     }
@@ -1019,13 +1111,140 @@ const dispatchBridgeAction = async (
     case 'toggleStealth': {
       store.dispatch(requestStealthToggle());
       await waitFor(100);
+      const afterSnapshot = buildAgentSnapshot(store.getState());
+      const stealthChanged =
+        beforeSnapshot.player.stealthModeEnabled !== afterSnapshot.player.stealthModeEnabled ||
+        beforeSnapshot.player.movementProfile !== afterSnapshot.player.movementProfile ||
+        beforeSnapshot.player.stealthCooldownExpiresAt !== afterSnapshot.player.stealthCooldownExpiresAt ||
+        beforeSnapshot.world.engagementMode !== afterSnapshot.world.engagementMode;
+      const status: GetawayAgentActionStatus = stealthChanged ? 'ok' : 'no-op';
+      return result(
+        beforeSnapshot,
+        afterSnapshot,
+        action.type,
+        status,
+        stealthChanged ? 'Requested stealth toggle.' : describeBlockedStealthToggle(afterSnapshot),
+        'Stealth toggle requested through Redux action.',
+        stealthChanged
+      );
+    }
+
+    case 'advanceMission': {
+      if (!state.missions.pendingAdvance) {
+        return currentResult(
+          state,
+          action.type,
+          'no-op',
+          'No pending mission advance is available.'
+        );
+      }
+
+      const currentLevel = state.missions.levels[state.missions.currentLevelIndex];
+      const nextLevel = state.missions.levels[state.missions.currentLevelIndex + 1];
+      store.dispatch(advanceToNextLevel());
+
+      if (nextLevel?.zoneId) {
+        store.dispatch(setCurrentMapAreaZoneMetadata({ zoneId: nextLevel.zoneId }));
+      }
+
+      await waitFor(100);
+      const afterSnapshot = buildAgentSnapshot(store.getState());
+      return result(
+        beforeSnapshot,
+        afterSnapshot,
+        action.type,
+        'ok',
+        `Advanced mission from ${currentLevel?.name ?? 'current level'} to ${nextLevel?.name ?? 'next level'}.`,
+        nextLevel
+          ? `Mission advanced to ${nextLevel.name}; zone=${nextLevel.zoneId ?? 'unchanged'}.`
+          : 'Mission advance acknowledged at the final configured level.'
+      );
+    }
+
+    case 'continueMission': {
+      if (!beforeSnapshot.overlays.missionCompletionPending) {
+        return currentResult(
+          state,
+          action.type,
+          'no-op',
+          'Mission completion continue is not available because the recap overlay is closed.'
+        );
+      }
+
+      const continueButton =
+        document.querySelector<HTMLButtonElement>('[data-testid="mission-complete-continue"]') ??
+        Array.from(document.querySelectorAll<HTMLButtonElement>('button')).find((button) =>
+          button.textContent?.toLowerCase().includes('next level')
+        );
+
+      if (!continueButton) {
+        return currentResult(
+          state,
+          action.type,
+          'rejected',
+          'Mission completion continue button could not be found.'
+        );
+      }
+
+      continueButton.click();
+      await waitFor(250);
       return result(
         beforeSnapshot,
         buildAgentSnapshot(store.getState()),
         action.type,
         'ok',
-        'Requested stealth toggle.',
-        'Stealth toggle requested through Redux action.'
+        'Clicked mission completion continue.',
+        'Mission completion continue button was clicked through the live DOM.'
+      );
+    }
+
+    case 'triggerMissionFailure': {
+      store.dispatch(setHealth(0));
+      await waitFor(100);
+      return result(
+        beforeSnapshot,
+        buildAgentSnapshot(store.getState()),
+        action.type,
+        'ok',
+        'Triggered mission failure state for QA.',
+        'Player health set to 0 through the dev-only agent bridge.'
+      );
+    }
+
+    case 'retryMission': {
+      const missionFailureOpen =
+        beforeSnapshot.overlays.missionFailureOpen ||
+        beforeSnapshot.player.health <= 0;
+      if (!missionFailureOpen) {
+        return currentResult(
+          state,
+          action.type,
+          'no-op',
+          'Mission failure retry is not available because the failure overlay is closed.'
+        );
+      }
+
+      const retryButton = Array.from(document.querySelectorAll('button')).find((button) =>
+        button.textContent?.toLowerCase().includes('restart level 0')
+      );
+      if (!retryButton) {
+        return currentResult(
+          state,
+          action.type,
+          'rejected',
+          'Mission failure retry button could not be found.'
+        );
+      }
+
+      retryButton.click();
+      await waitFor(250);
+      return result(
+        beforeSnapshot,
+        buildAgentSnapshot(store.getState()),
+        action.type,
+        'ok',
+        'Clicked mission failure retry.',
+        'Mission failure retry button was clicked through the live DOM.'
       );
     }
 

@@ -45,6 +45,17 @@ const hasStartedQuest = (objective: ResolvedMissionObjective, quests: Quest[]): 
     );
   });
 
+const resolveCurrentGuidedPrimaryObjective = (
+  primaryObjectives: OpsBriefingPrimaryObjectiveModel[],
+  questId: string | null
+): OpsBriefingPrimaryObjectiveModel | null => {
+  if (!questId) {
+    return null;
+  }
+
+  return primaryObjectives.find((objective) => objective.questIds.includes(questId)) ?? null;
+};
+
 const toQuestModel = (
   quest: Quest,
   bundle: ReturnType<typeof getNarrativeLocaleBundle>
@@ -97,13 +108,14 @@ export const selectOpsBriefingModel = createSelector(
       ...objective,
       isStarted: hasStartedQuest(objective, quests),
     }));
-    const visiblePrimaryObjectives = guidedStep.stage === 'complete'
-      ? primaryObjectives
-      : primaryObjectives.filter((objective) =>
-          objective.isComplete ||
-          objective.isStarted ||
-          Boolean(guidedStep.questId && objective.questIds.includes(guidedStep.questId))
-        );
+    const currentGuidedPrimaryObjective = resolveCurrentGuidedPrimaryObjective(
+      primaryObjectives,
+      guidedStep.questId
+    );
+    const visiblePrimaryObjectives =
+      guidedStep.stage === 'complete' || !currentGuidedPrimaryObjective
+        ? primaryObjectives
+        : [currentGuidedPrimaryObjective];
 
     return {
       primaryObjectives: visiblePrimaryObjectives,

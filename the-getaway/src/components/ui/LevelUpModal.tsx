@@ -211,35 +211,35 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
   ].filter((step): step is string => Boolean(step));
 
   return (
-    <div style={overlayStyle}>
-      <div style={modalStyle}>
-        <div style={accentGlowStyle} />
-        <header style={headerStyle}>
-          <span style={badgeStyle}>Promotion Achieved</span>
-          <div style={levelRowStyle}>
-            <span style={levelLabelStyle}>Operator Level</span>
-            <span style={levelNumberStyle}>{newLevel}</span>
+    <div className="level-up-modal" style={overlayStyle}>
+      <div className="level-up-modal__shell" style={modalStyle}>
+        <div className="level-up-modal__accent" style={accentGlowStyle} />
+        <header className="level-up-modal__header" style={headerStyle}>
+          <span className="level-up-modal__badge" style={badgeStyle}>Promotion Achieved</span>
+          <div className="level-up-modal__level-row" style={levelRowStyle}>
+            <span className="level-up-modal__level-label" style={levelLabelStyle}>Operator Level</span>
+            <span className="level-up-modal__level-number" style={levelNumberStyle}>{newLevel}</span>
           </div>
-          <p style={subheadingStyle}>
+          <p className="level-up-modal__subheading" style={subheadingStyle}>
             You have advanced your capabilities. Allocate your new resources to stay ahead of CorpSec escalation.
           </p>
         </header>
 
-        <section aria-label="level-up rewards" style={rewardsGridStyle}>
+        <section className="level-up-modal__rewards" aria-label="level-up rewards" style={rewardsGridStyle}>
           {rewardCards.map((reward) => (
-            <article key={reward.key} style={rewardCardStyle}>
-              <span style={rewardIconStyle} aria-hidden="true">{reward.icon}</span>
-              <span style={rewardLabelStyle}>{reward.label}</span>
-              <span style={rewardValueStyle}>{reward.value}</span>
-              <span style={rewardHintStyle}>{reward.hint}</span>
+            <article className="level-up-modal__reward" key={reward.key} style={rewardCardStyle}>
+              <span className="level-up-modal__reward-icon" style={rewardIconStyle} aria-hidden="true">{reward.icon}</span>
+              <span className="level-up-modal__reward-label" style={rewardLabelStyle}>{reward.label}</span>
+              <span className="level-up-modal__reward-value" style={rewardValueStyle}>{reward.value}</span>
+              <span className="level-up-modal__reward-hint" style={rewardHintStyle}>{reward.hint}</span>
             </article>
           ))}
         </section>
 
         {nextSteps.length > 0 && (
-          <section style={nextStepsStyle} aria-label="Next actions">
-            <span style={stepHeadingStyle}>Next Steps</span>
-            <ol style={stepListStyle}>
+          <section className="level-up-modal__next" style={nextStepsStyle} aria-label="Next actions">
+            <span className="level-up-modal__next-heading" style={stepHeadingStyle}>Next Steps</span>
+            <ol className="level-up-modal__next-list" style={stepListStyle}>
               {nextSteps.map((step) => (
                 <li key={step}>{step}</li>
               ))}
@@ -247,8 +247,8 @@ export const LevelUpModal: React.FC<LevelUpModalProps> = ({
           </section>
         )}
 
-        <footer style={footerStyle}>
-          <EnhancedButton onClick={onContinue} variant="primary" size="large">
+        <footer className="level-up-modal__footer" style={footerStyle}>
+          <EnhancedButton className="level-up-modal__continue" onClick={onContinue} variant="primary" size="large">
             Continue
           </EnhancedButton>
         </footer>

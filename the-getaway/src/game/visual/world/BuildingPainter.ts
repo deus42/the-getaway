@@ -2,6 +2,10 @@ import Phaser from 'phaser';
 import type { MapBuildingDefinition } from '../../interfaces/types';
 import type { BuildingVisualProfile, VisualTheme } from '../contracts';
 import { adjustColor } from '../../utils/iso';
+import {
+  resolveLevel0BuildingArt,
+  type Level0BuildingArtEntry,
+} from '../../../content/environment/level0BuildingArtManifest';
 
 export interface BuildingFootprintProjection {
   top: Phaser.Geom.Point;
@@ -22,6 +26,12 @@ export interface BuildingMassingMetrics {
   };
 }
 
+export interface BuildingMassingResult {
+  readonly container: Phaser.GameObjects.Container;
+  readonly renderMode: 'painted' | 'legacy-esb' | 'vector';
+  readonly visualHeightPx: number;
+}
+
 interface DiamondPoints {
   top: Phaser.Geom.Point;
   right: Phaser.Geom.Point;
@@ -29,7 +39,6 @@ interface DiamondPoints {
   left: Phaser.Geom.Point;
 }
 
-const ESB_BUILDING_ID = 'block_1_1';
 const ESB_ATLAS_KEY = 'esb';
 const ESB_FRAME_KEY = 'esb_iso';
 const ESB_FRAME_WIDTH_PX = 696;
@@ -88,13 +97,22 @@ export class BuildingPainter {
     building: MapBuildingDefinition,
     profile: BuildingVisualProfile,
     metrics: BuildingMassingMetrics
-  ): Phaser.GameObjects.Container {
+  ): BuildingMassingResult {
     const container = this.scene.add.container(metrics.center.x, metrics.center.y);
 
     const base = this.toLocal(metrics.center, metrics.footprint);
+    const paintedArt = this.theme.mapProfile.buildingArtSetId
+      ? resolveLevel0BuildingArt(building.id)
+      : undefined;
 
-    // PoC landmark override: swap one Level 0 building slot for an ESB sprite.
-    if (building.id === ESB_BUILDING_ID && this.scene.textures.exists(ESB_ATLAS_KEY)) {
+    if (paintedArt && this.scene.textures.exists(paintedArt.textureKey)) {
+      return this.createPaintedMassing(container, paintedArt, metrics, base);
+    }
+
+    if (
+      resolveLevel0BuildingArt(building.id)?.fallbackProfile.kind === 'legacy-esb-then-vector' &&
+      this.scene.textures.exists(ESB_ATLAS_KEY)
+    ) {
       const tuning = resolveEsbTuning();
       const sprite = this.scene.add.image(
         base.bottom.x + tuning.offsetX,
@@ -133,7 +151,11 @@ export class BuildingPainter {
       sprite.setAlpha(baseAlpha);
 
       container.add(sprite);
-      return container;
+      return {
+        container,
+        renderMode: 'legacy-esb',
+        visualHeightPx: sprite.displayHeight,
+      };
     }
 
     const shadowLayer = this.scene.add.graphics();
@@ -151,7 +173,56 @@ export class BuildingPainter {
     this.drawDistrictDetails(detailLayer, profile, base, roof, span);
 
     container.add([shadowLayer, bodyLayer, detailLayer]);
-    return container;
+    return {
+      container,
+      renderMode: 'vector',
+      visualHeightPx: massingHeight,
+    };
+  }
+
+  private createPaintedMassing(
+    container: Phaser.GameObjects.Container,
+    art: Level0BuildingArtEntry,
+    metrics: BuildingMassingMetrics,
+    base: DiamondPoints
+  ): BuildingMassingResult {
+    const footprintWidth = Phaser.Math.Distance.Between(
+      base.left.x,
+      base.left.y,
+      base.right.x,
+      base.right.y
+    );
+    const targetWidth = footprintWidth * art.footprintFit.widthMultiplier;
+    const scale = targetWidth / Math.max(1, art.footprintFit.sourceFootprintWidthPx);
+    const offsetX = art.footprintFit.offsetTiles.x * metrics.tileHeight * 2;
+    const offsetY = art.footprintFit.offsetTiles.y * metrics.tileHeight;
+    const sprite = this.scene.add.image(
+      base.bottom.x + offsetX,
+      base.bottom.y + offsetY,
+      art.textureKey
+    );
+
+    sprite.setOrigin(art.origin.x, art.origin.y);
+    sprite.setScale(scale);
+    sprite.setAlpha(0.98);
+
+    const emissiveIntensity = Phaser.Math.Clamp(metrics.atmosphere?.emissiveIntensity ?? 0.35, 0, 1);
+    const overlayAlpha = Phaser.Math.Clamp(metrics.atmosphere?.overlayAlpha ?? 0.2, 0, 1);
+    const nightWeight = Phaser.Math.Clamp(emissiveIntensity * 0.74 + overlayAlpha * 0.34, 0, 0.62);
+    const tint = Phaser.Display.Color.Interpolate.ColorWithColor(
+      Phaser.Display.Color.ValueToColor(0xfff9ee),
+      Phaser.Display.Color.ValueToColor(0xb29a7e),
+      100,
+      Math.round(nightWeight * 100)
+    );
+    sprite.setTint(Phaser.Display.Color.GetColor(tint.r, tint.g, tint.b));
+
+    container.add(sprite);
+    return {
+      container,
+      renderMode: 'painted',
+      visualHeightPx: Math.max(metrics.tileHeight * art.visualHeightTiles, sprite.displayHeight),
+    };
   }
 
   public createLabel(
@@ -161,19 +232,26 @@ export class BuildingPainter {
     profile: BuildingVisualProfile
   ): Phaser.GameObjects.Container {
     const container = this.scene.add.container(center.x, center.y - tileHeight * 0.24);
+    const painterly = this.theme.renderStyle === 'graphic-painterly-noir';
 
     const title = this.scene.add.text(0, 0, building.name, {
-      fontFamily: 'Orbitron, "DM Sans", sans-serif',
-      fontSize: this.theme.qualityBudget.enableHighDensityLabels ? '11px' : '10px',
+      fontFamily: painterly
+        ? '"DM Mono", "IBM Plex Mono", monospace'
+        : 'Orbitron, "DM Sans", sans-serif',
+      fontSize: painterly
+        ? (this.theme.qualityBudget.enableHighDensityLabels ? '9px' : '8px')
+        : (this.theme.qualityBudget.enableHighDensityLabels ? '11px' : '10px'),
       fontStyle: '700',
-      color: profile.signagePrimaryHex,
-      stroke: profile.signageSecondaryHex,
-      strokeThickness: 1,
+      color: painterly ? this.colorToHex(this.theme.treatment.surface.bone) : profile.signagePrimaryHex,
+      stroke: painterly ? this.colorToHex(this.theme.treatment.ink.primary) : profile.signageSecondaryHex,
+      strokeThickness: painterly ? 2 : 1,
       align: 'center',
     });
     title.setOrigin(0.5);
-    title.setShadow(0, 0, profile.glowHex, 4, true, true);
-    title.setAlpha(0.72);
+    if (!painterly) {
+      title.setShadow(0, 0, profile.glowHex, 4, true, true);
+    }
+    title.setAlpha(painterly ? 0.48 : 0.72);
 
     const padX = 14;
     const padY = 8;
@@ -182,10 +260,14 @@ export class BuildingPainter {
       0,
       title.width + padX,
       title.height + padY,
-      this.hexToColor(profile.backdropHex),
-      0.34
+      painterly ? this.theme.treatment.ink.primary : this.hexToColor(profile.backdropHex),
+      painterly ? 0.66 : 0.34
     );
-    backdrop.setStrokeStyle(0.9, this.hexToColor(profile.signageSecondaryHex), 0.28);
+    backdrop.setStrokeStyle(
+      painterly ? 0.7 : 0.9,
+      painterly ? this.theme.treatment.lighting.practical : this.hexToColor(profile.signageSecondaryHex),
+      painterly ? 0.2 : 0.28
+    );
 
     container.add([backdrop, title]);
     return container;
@@ -491,5 +573,9 @@ export class BuildingPainter {
 
   private hexToColor(hex: string): number {
     return Phaser.Display.Color.HexStringToColor(hex).color;
+  }
+
+  private colorToHex(color: number): string {
+    return `#${color.toString(16).padStart(6, '0')}`;
   }
 }

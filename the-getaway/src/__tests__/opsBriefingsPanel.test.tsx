@@ -51,6 +51,18 @@ describe('OpsBriefingsPanel', () => {
     ).toBeInTheDocument();
   });
 
+  it('renders the next guided mission as Current Beat after Lira completes', () => {
+    act(() => {
+      store.dispatch(startQuest('quest_market_cache'));
+      store.dispatch(completeQuest('quest_market_cache'));
+    });
+
+    renderPanel();
+
+    expect(screen.getByText('Decrypt the Patrol Manifests')).toBeInTheDocument();
+    expect(screen.queryByText('Recover Lira’s Confiscated Cache')).not.toBeInTheDocument();
+  });
+
   it('shows completed quests in completed overlay mode', () => {
     act(() => {
       store.dispatch(startQuest('quest_market_cache'));

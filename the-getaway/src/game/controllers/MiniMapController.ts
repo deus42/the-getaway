@@ -5,11 +5,13 @@ import type {
   NPC,
   Item,
   Position,
+  Player,
   CameraRuntimeState,
   Quest,
 } from '../interfaces/types';
 import { getLevel0GuidedStep, isLevel0GuidedItem } from '../quests/level0GuidedSlice';
 import type { MainScene } from '../scenes/MainScene';
+import { findPath } from '../world/pathfinding';
 import {
   MiniMapRenderState,
   MiniMapViewportDetail,
@@ -32,6 +34,12 @@ const roundTo = (value: number, precision: number = 4): number => {
 };
 
 const DEFAULT_TILE_SCALE = 2;
+const CONTACT_APPROACH_OFFSETS: Position[] = [
+  { x: 1, y: 0 },
+  { x: -1, y: 0 },
+  { x: 0, y: 1 },
+  { x: 0, y: -1 },
+];
 
 const createEntitySignature = (enemies: Enemy[], npcs: NPC[], playerId: string | undefined, playerX: number, playerY: number): string => {
   const enemySig = enemies
@@ -64,6 +72,32 @@ const clampBaseScale = (area: Pick<MapArea, 'width' | 'height'>, maxWidth: numbe
   const rawScale = Math.min(widthScale, heightScale);
   const clamped = Math.max(0.6, Math.min(4, rawScale || DEFAULT_TILE_SCALE));
   return Number.isFinite(clamped) && clamped > 0 ? clamped : DEFAULT_TILE_SCALE;
+};
+
+const isInBounds = (area: Pick<MapArea, 'width' | 'height'>, position: Position): boolean =>
+  position.x >= 0 &&
+  position.y >= 0 &&
+  position.x < area.width &&
+  position.y < area.height;
+
+const selectShortestPath = (paths: Position[][]): Position[] | null => {
+  if (paths.length === 0) {
+    return null;
+  }
+
+  return [...paths].sort((left, right) => {
+    if (left.length !== right.length) {
+      return left.length - right.length;
+    }
+
+    const leftGoal = left[left.length - 1];
+    const rightGoal = right[right.length - 1];
+    if (leftGoal.y !== rightGoal.y) {
+      return leftGoal.y - rightGoal.y;
+    }
+
+    return leftGoal.x - rightGoal.x;
+  })[0] ?? null;
 };
 
 export const normalizeMiniMapViewport = (
@@ -250,8 +284,18 @@ export class MiniMapController {
     const objectiveMarkers = this.buildObjectives(items, npcs, quests);
     const objectivesSignature = createObjectiveSignature(objectiveMarkers);
 
-    const pathSignature = path && path.length
-      ? path.map((node) => `${node.x}:${node.y}`).join('|')
+    const explicitPath = path && path.length > 0 ? path : null;
+    const guidancePath = explicitPath ?? this.buildGuidedFallbackPath(
+      area,
+      player,
+      enemies,
+      npcs,
+      items,
+      quests
+    );
+
+    const pathSignature = guidancePath && guidancePath.length
+      ? guidancePath.map((node) => `${node.x}:${node.y}`).join('|')
       : '';
 
     const renderState: MiniMapRenderState = {
@@ -275,7 +319,7 @@ export class MiniMapController {
       viewport: normalizedViewport,
       curfewActive: rootState.world.curfewActive,
       timestamp: Date.now(),
-      path: path ?? undefined,
+      path: guidancePath ?? undefined,
       pathSignature,
       objectiveMarkers,
       objectivesSignature,
@@ -293,9 +337,63 @@ export class MiniMapController {
     };
 
     this.lastRenderState = renderState;
-    // Path signature tracking not yet implemented
-    // this.lastPathSignature = pathSignature;
     return renderState;
+  }
+
+  private buildGuidedFallbackPath(
+    area: MapArea,
+    player: Player,
+    enemies: Enemy[],
+    npcs: NPC[],
+    items: Item[],
+    quests: Quest[]
+  ): Position[] | null {
+    const guidedStep = getLevel0GuidedStep(quests);
+    if (guidedStep.stage === 'complete') {
+      return null;
+    }
+
+    const candidatePaths: Position[][] = [];
+    const pathOptions = {
+      player,
+      enemies,
+      npcs,
+    };
+
+    if (guidedStep.itemResourceKeys?.length) {
+      items
+        .filter((item): item is Item & { position: Position } =>
+          Boolean(item.position && isLevel0GuidedItem(item, guidedStep))
+        )
+        .forEach((item) => {
+          const itemPath = findPath(player.position, item.position, area, pathOptions);
+          if (itemPath.length > 0) {
+            candidatePaths.push(itemPath);
+          }
+        });
+    }
+
+    if (guidedStep.contactDialogueId) {
+      const contact = npcs.find((npc) => npc.dialogueId === guidedStep.contactDialogueId);
+      if (contact) {
+        CONTACT_APPROACH_OFFSETS.forEach((offset) => {
+          const candidate = {
+            x: contact.position.x + offset.x,
+            y: contact.position.y + offset.y,
+          };
+          if (!isInBounds(area, candidate)) {
+            return;
+          }
+
+          const contactPath = findPath(player.position, candidate, area, pathOptions);
+          if (contactPath.length > 0) {
+            candidatePaths.push(contactPath);
+          }
+        });
+      }
+    }
+
+    return selectShortestPath(candidatePaths);
   }
 
   private buildEntities(

@@ -3,9 +3,39 @@ export const LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH = 'atlases/level0_environment.p
 export const LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH = 'atlases/level0_environment.json';
 export const LEVEL0_ENVIRONMENT_NORMAL_KEY = 'level0EnvironmentNormal';
 export const LEVEL0_ENVIRONMENT_NORMAL_PATH = 'normals/level0_environment_n.png';
+export const PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY = 'level0PainterlyEnvironment';
+export const PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH = 'atlases/level0_painterly_environment.png';
+export const PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH = 'atlases/level0_painterly_environment.json';
+export const PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY = 'level0PainterlyEnvironmentNormal';
+export const PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_PATH = 'normals/level0_painterly_environment_n.png';
 export const GET155_PREVIEW_ATLAS_KEY = 'get155Preview';
 export const GET155_PREVIEW_ATLAS_IMAGE_PATH = 'atlases/get155_preview.png';
 export const GET155_PREVIEW_ATLAS_JSON_PATH = 'atlases/get155_preview.json';
+
+export interface EnvironmentAtlasSetDefinition {
+  readonly textureKey: string;
+  readonly imagePath: string;
+  readonly jsonPath: string;
+  readonly normalTextureKey: string;
+  readonly normalPath: string;
+}
+
+export const LEVEL0_ENVIRONMENT_ATLAS_SETS = {
+  legacy: {
+    textureKey: LEVEL0_ENVIRONMENT_ATLAS_KEY,
+    imagePath: LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
+    jsonPath: LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH,
+    normalTextureKey: LEVEL0_ENVIRONMENT_NORMAL_KEY,
+    normalPath: LEVEL0_ENVIRONMENT_NORMAL_PATH,
+  },
+  painterly: {
+    textureKey: PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY,
+    imagePath: PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_IMAGE_PATH,
+    jsonPath: PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_JSON_PATH,
+    normalTextureKey: PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY,
+    normalPath: PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_PATH,
+  },
+} as const satisfies Record<string, EnvironmentAtlasSetDefinition>;
 
 export interface EnvironmentAtlasFrameDefinition {
   readonly frame: string;
@@ -53,6 +83,18 @@ export const LEVEL0_ENVIRONMENT_PROP_FRAMES = {
     scale: 0.62,
     alpha: 0.92,
   },
+  vendingKiosk: {
+    frame: 'vending_kiosk',
+    origin: { x: 0.5, y: 0.88 },
+    scale: 0.72,
+    alpha: 0.94,
+  },
+  marketStall: {
+    frame: 'market_stall',
+    origin: { x: 0.5, y: 0.88 },
+    scale: 0.74,
+    alpha: 0.94,
+  },
   sign: {
     frame: 'neon_panel',
     origin: { x: 0.5, y: 0.84 },
@@ -64,6 +106,12 @@ export const LEVEL0_ENVIRONMENT_PROP_FRAMES = {
     origin: { x: 0.5, y: 0.88 },
     scale: 0.54,
     alpha: 0.88,
+  },
+  bollards: {
+    frame: 'bollards_cluster',
+    origin: { x: 0.5, y: 0.84 },
+    scale: 0.64,
+    alpha: 0.92,
   },
   camera: {
     frame: 'camera_mast',

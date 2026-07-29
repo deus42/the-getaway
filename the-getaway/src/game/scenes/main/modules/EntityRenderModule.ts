@@ -18,7 +18,11 @@ import { store } from '../../../../store';
 import { getUIStrings } from '../../../../content/ui';
 import { getLevel0GuidedStep, isLevel0GuidedContact } from '../../../quests/level0GuidedSlice';
 import type { CharacterSpriteDirection } from '../../../../content/characters/spriteManifest';
-import { resolvePlayerSpriteSetId } from '../../../../content/characters/spriteManifest';
+import {
+  resolveEnemySpriteSetId,
+  resolveNpcSpriteSetId,
+  resolvePlayerSpriteSetId,
+} from '../../../../content/characters/spriteManifest';
 import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
 import {
   DEFAULT_CHARACTER_SPRITE_FACING,
@@ -198,6 +202,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
     const metrics = this.ports.getIsoMetrics();
     const pixelPos = this.ports.calculatePixelPosition(position.x, position.y);
     this.runtimeState.playerNameLabel = this.createCharacterNameLabel(playerName, 0x38bdf8, 14);
+    this.runtimeState.playerNameLabel.setVisible(!this.isPainterlyLevel0Exterior());
     this.positionCharacterLabel(this.runtimeState.playerNameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.6);
     this.runtimeState.lastPlayerGridPosition = { ...position };
     this.runtimeState.lastPlayerActionPoints = player.actionPoints;
@@ -346,6 +351,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         healthBar.setVisible(false);
 
         const nameLabel = this.createCharacterNameLabel(enemy.name ?? 'Hostile', 0xef4444);
+        nameLabel.setVisible(!this.isPainterlyLevel0Exterior() || this.ports.isInCombat());
         this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
 
         this.runtimeState.enemySprites.set(enemy.id, {
@@ -394,6 +400,9 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       existingSpriteData.lastGridPosition = { ...enemy.position };
       existingSpriteData.lastActionPoints = enemy.actionPoints;
       this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.45);
+      existingSpriteData.nameLabel.setVisible(
+        !this.isPainterlyLevel0Exterior() || this.ports.isInCombat()
+      );
 
       this.updateEnemyHealthBar(existingSpriteData, pixelPos, metrics, enemy);
     }
@@ -435,6 +444,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         this.configureNpcInteraction(token.container, npc, metrics);
 
         const nameLabel = this.createCharacterNameLabel(npc.name ?? 'Civilian', npc.isInteractive ? 0x22d3ee : 0x94a3b8);
+        nameLabel.setVisible(!this.isPainterlyLevel0Exterior());
         this.positionCharacterLabel(nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
 
         const npcData = {
@@ -468,6 +478,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
       existingSpriteData.markedForRemoval = false;
       existingSpriteData.lastGridPosition = { ...npc.position };
       this.positionCharacterLabel(existingSpriteData.nameLabel, pixelPos.x, pixelPos.y, metrics.tileHeight * 1.35);
+      existingSpriteData.nameLabel.setVisible(!this.isPainterlyLevel0Exterior());
       this.updateNpcCombatIndicator(existingSpriteData, pixelPos, metrics, npc);
       this.updateNpcGuideClue(existingSpriteData, pixelPos, metrics, npc);
     }
@@ -673,13 +684,13 @@ export class EntityRenderModule implements SceneModule<MainScene> {
         fontFamily: 'Orbitron, "DM Sans", sans-serif',
         fontSize: '11px',
         fontStyle: '800',
-        color: '#ecfeff',
+        color: '#f1e5d2',
         align: 'center',
       });
       data.clueLabel.setOrigin(0.5, 1);
-      data.clueLabel.setStroke('#0891b2', 2);
-      data.clueLabel.setShadow(0, 0, '#22d3ee', 10, true, true);
-      data.clueLabel.setBackgroundColor('rgba(8, 47, 73, 0.72)');
+      data.clueLabel.setStroke('#513b35', 2);
+      data.clueLabel.setShadow(0, 0, '#d99a50', 6, true, true);
+      data.clueLabel.setBackgroundColor('rgba(11, 13, 18, 0.84)');
       data.clueLabel.setPadding(5, 2, 5, 2);
     } else if (data.clueLabel.text !== labelText) {
       data.clueLabel.setText(labelText);
@@ -865,7 +876,7 @@ export class EntityRenderModule implements SceneModule<MainScene> {
   ): CharacterRenderDescriptor {
     return {
       role: 'hostileNpc',
-      spriteSetId: enemy.visualProfile?.spriteSetId,
+      spriteSetId: enemy.visualProfile?.spriteSetId ?? resolveEnemySpriteSetId(enemy.resourceKey),
       animationState: hasMoved ? 'move' : 'idle',
       facing: resolveCharacterFacing(previousPosition, enemy.position, enemy.facing, previousFacing),
       attackTriggered,
@@ -883,11 +894,16 @@ export class EntityRenderModule implements SceneModule<MainScene> {
   ): CharacterRenderDescriptor {
     return {
       role: npc.isInteractive ? 'interactiveNpc' : 'friendlyNpc',
-      spriteSetId: npc.visualProfile?.spriteSetId,
+      spriteSetId: npc.visualProfile?.spriteSetId ?? resolveNpcSpriteSetId(npc.dialogueId),
       animationState: isInteracting ? 'interact' : hasMoved ? 'move' : 'idle',
       facing: resolveCharacterFacing(previousPosition, npc.position, undefined, previousFacing),
       accentHex: npc.visualProfile?.accentHex,
       styleVariant: npc.visualProfile?.styleVariant,
     };
+  }
+
+  private isPainterlyLevel0Exterior(): boolean {
+    const area = store.getState().world.currentMapArea;
+    return area?.level === 0 && area.zoneId === 'downtown_checkpoint' && area.isInterior !== true;
   }
 }

@@ -21,7 +21,7 @@ describe('world map surface semantics', () => {
     expect(sidewalk?.surfaceKind).toBe('sidewalk');
   });
 
-  it('keeps the ESB perimeter walkable after trimming the footprint to the visible base', () => {
+  it('keeps the ESB perimeter walkable around the shared two-tile-setback parcel', () => {
     const { slumsArea } = buildWorldResources({ locale: 'en' });
     const esb = slumsArea.buildings?.find((building) => building.id === 'block_1_1');
     expect(esb).toBeDefined();
@@ -31,10 +31,9 @@ describe('world map surface semantics', () => {
 
     const width = esb.footprint.to.x - esb.footprint.from.x + 1;
     const height = esb.footprint.to.y - esb.footprint.from.y + 1;
-    expect(width).toBe(11);
-    expect(height).toBe(6);
-    expect(esb.door.x).toBe(esb.footprint.to.x);
-    expect(esb.door.y).toBe(esb.footprint.to.y - 2);
+    expect(width).toBe(16);
+    expect(height).toBe(12);
+    expect(esb.door.y).toBe(esb.footprint.to.y);
 
     const interiorSample = slumsArea.tiles[esb.footprint.from.y + 1]?.[esb.footprint.from.x + 1];
     expect(interiorSample?.isWalkable).toBe(false);

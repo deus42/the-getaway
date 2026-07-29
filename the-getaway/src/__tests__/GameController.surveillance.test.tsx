@@ -776,4 +776,69 @@ describe('GameController surveillance and stealth fairness', () => {
       unmount();
     }
   });
+
+  test('blocks stealth re-entry while an alarmed camera still has a hard lock', async () => {
+    jest.spyOn(Date, 'now').mockReturnValue(40_000);
+    store.dispatch(setGameTime(NIGHT_START_SECONDS));
+
+    const initialState = store.getState();
+    const { currentMapArea, timeOfDay } = initialState.world;
+
+    initializeZoneSurveillance({
+      area: currentMapArea,
+      timeOfDay,
+      dispatch: store.dispatch,
+      timestamp: Date.now(),
+    });
+
+    const zone = store.getState().surveillance.zones[currentMapArea.id];
+    const camera = Object.values(zone.cameras)[0];
+    expect(camera).toBeDefined();
+
+    if (!camera) {
+      return;
+    }
+
+    act(() => {
+      store.dispatch(
+        updateCameraState({
+          areaId: currentMapArea.id,
+          cameraId: camera.id,
+          timestamp: Date.now(),
+          changes: {
+            alertState: CameraAlertState.ALARMED,
+            detectionProgress: 100,
+            isActive: true,
+          },
+        })
+      );
+    });
+
+    const { unmount, rafSpy, cancelRafSpy } = renderController();
+
+    try {
+      act(() => {
+        store.dispatch(requestStealthToggle());
+      });
+
+      await waitFor(() => {
+        expect(store.getState().player.data.stealthModeEnabled).toBe(false);
+      });
+
+      const logMessages = store.getState().log.messages;
+      expect(
+        logMessages.some((message) =>
+          message.includes('Camera lock still has your profile.')
+        )
+      ).toBe(true);
+      expect(
+        logMessages.some((message) =>
+          message.includes('Stealth enabled. Your profile slips into the dark.')
+        )
+      ).toBe(false);
+    } finally {
+      restoreFrameSpies(rafSpy, cancelRafSpy);
+      unmount();
+    }
+  });
 });

@@ -45,8 +45,13 @@ export class TilePainter {
   public drawTile(tile: MapTile, context: TileContext): void {
     const tileForGround = context.groundOnly ? { ...tile, type: TileType.FLOOR } : tile;
     const baseColor = this.getTileBaseColor(tileForGround, context.gridX, context.gridY);
+    const macroDivisor = this.theme.renderStyle === 'graphic-painterly-noir' ? 10 : 2;
     const variationSeed =
-      ((((Math.floor(context.gridX / 2) * 11) ^ (Math.floor(context.gridY / 2) * 7)) % 7) - 3) * 0.006;
+      ((((Math.floor(context.gridX / macroDivisor) * 11) ^
+        (Math.floor(context.gridY / macroDivisor) * 7)) % 7) - 3) *
+      (this.theme.renderStyle === 'graphic-painterly-noir'
+        ? this.theme.treatment.surface.variation * 0.1
+        : 0.006);
     const modulatedBase = adjustColor(baseColor, variationSeed);
 
     this.drawGround(tileForGround, context, modulatedBase);
@@ -76,8 +81,11 @@ export class TilePainter {
 
   public drawGround(tile: MapTile, context: TileContext, baseColor: number): void {
     const points = this.getPoints(context.center.x, context.center.y, context.tileWidth, context.tileHeight);
-    const macroSeed = Math.floor(context.gridX / 4) ^ Math.floor(context.gridY / 4);
-    const macroShift = ((macroSeed % 5) - 2) * 0.03;
+    const painterly = this.theme.renderStyle === 'graphic-painterly-noir';
+    const macroSeed = Math.floor(context.gridX / (painterly ? 12 : 4)) ^ Math.floor(context.gridY / (painterly ? 12 : 4));
+    const macroShift =
+      ((macroSeed % 5) - 2) *
+      (painterly ? this.theme.treatment.surface.variation * 0.07 : 0.03);
     const modulated = adjustColor(baseColor, macroShift);
     const highlight = adjustColor(modulated, 0.2);
     const shadow = adjustColor(modulated, -0.22);
@@ -88,21 +96,33 @@ export class TilePainter {
     const [top, right, bottom, left] = points;
     const center = new Phaser.Geom.Point(context.center.x, context.center.y);
 
-    this.graphics.fillStyle(highlight, 0.35);
+    this.graphics.fillStyle(highlight, painterly ? 0.035 : 0.35);
     this.graphics.fillPoints([top, right, center], true);
     this.graphics.fillPoints([top, center, left], true);
 
-    this.graphics.fillStyle(shadow, 0.3);
+    this.graphics.fillStyle(shadow, painterly ? 0.055 : 0.3);
     this.graphics.fillPoints([bottom, right, center], true);
     this.graphics.fillPoints([bottom, center, left], true);
 
-    this.graphics.lineStyle(1, adjustColor(modulated, -0.3), 0.42);
+    const grid = this.theme.treatment.grid;
+    const isMajorGridLine =
+      context.gridX % grid.majorLineInterval === 0 ||
+      context.gridY % grid.majorLineInterval === 0;
+    this.graphics.lineStyle(
+      painterly ? this.theme.treatment.outline.width * 0.55 : 1,
+      painterly ? grid.lineColor : adjustColor(modulated, -0.3),
+      painterly && isMajorGridLine ? grid.majorLineAlpha : painterly ? grid.lineAlpha : 0.42
+    );
     this.graphics.strokePoints(points, true);
 
     if (tile.type === TileType.FLOOR) {
       this.drawSurfaceTreatments(tile, context, points, modulated);
     } else if (tile.type === TileType.COVER || tile.type === TileType.WALL) {
-      this.graphics.lineStyle(0.9, 0xf8fafc, 0.08);
+      this.graphics.lineStyle(
+        painterly ? this.theme.treatment.outline.width : 0.9,
+        painterly ? this.theme.treatment.outline.color : 0xf8fafc,
+        painterly ? this.theme.treatment.grid.blockedAlpha : 0.08
+      );
       this.graphics.strokePoints(points, true);
     }
   }
@@ -128,7 +148,11 @@ export class TilePainter {
     this.graphics.fillStyle(adjustColor(baseColor, 0.2), 0.95);
     this.graphics.fillPoints(topPoints, true);
 
-    this.graphics.lineStyle(1.1, 0xfbbf24, 0.3);
+    this.graphics.lineStyle(
+      this.theme.treatment.outline.width,
+      this.theme.treatment.lighting.practical,
+      this.theme.renderStyle === 'graphic-painterly-noir' ? 0.5 : 0.3
+    );
     this.graphics.strokePoints(topPoints, true);
   }
 
@@ -154,12 +178,24 @@ export class TilePainter {
     this.graphics.fillStyle(topColor, 1);
     this.graphics.fillPoints(topPoints, true);
 
-    this.graphics.lineStyle(1.2, 0x22d3ee, 0.18);
+    this.graphics.lineStyle(
+      this.theme.treatment.outline.width,
+      this.theme.treatment.outline.color,
+      this.theme.renderStyle === 'graphic-painterly-noir'
+        ? this.theme.treatment.outline.alpha
+        : 0.18
+    );
     this.graphics.strokePoints(topPoints, true);
 
     const [baseTop, baseRight, baseBottom, baseLeft] = basePoints;
     const [topTop, topRight, topBottom, topLeft] = topPoints;
-    this.graphics.lineStyle(1, 0x7dd3fc, 0.2);
+    this.graphics.lineStyle(
+      1,
+      this.theme.treatment.ink.soft,
+      this.theme.renderStyle === 'graphic-painterly-noir'
+        ? this.theme.treatment.outline.secondaryAlpha
+        : 0.2
+    );
     this.graphics.strokePoints([baseLeft, topLeft], false);
     this.graphics.strokePoints([baseBottom, topBottom], false);
     this.graphics.strokePoints([baseRight, topRight], false);
@@ -183,10 +219,14 @@ export class TilePainter {
     const panelBottomRight = this.lerpPoint(frameTopRight, frameBottomRight, 0.86);
     const panelBottomLeft = this.lerpPoint(frameTopLeft, frameBottomLeft, 0.86);
 
-    this.graphics.fillStyle(0x0f172a, 0.84);
+    this.graphics.fillStyle(this.theme.treatment.ink.primary, 0.84);
     this.graphics.fillPoints([panelTopLeft, panelTopRight, panelBottomRight, panelBottomLeft], true);
 
-    this.graphics.lineStyle(1.3, 0x38bdf8, 0.4);
+    this.graphics.lineStyle(
+      1.3,
+      this.theme.treatment.lighting.practical,
+      this.theme.renderStyle === 'graphic-painterly-noir' ? 0.62 : 0.4
+    );
     this.graphics.strokePoints([panelTopLeft, panelTopRight], false);
   }
 
@@ -199,7 +239,7 @@ export class TilePainter {
         : 0.2;
       this.graphics.fillStyle(adjustColor(baseColor, 0.2), shimmer);
       this.graphics.fillPoints(points, true);
-      this.graphics.lineStyle(1, 0x67e8f9, 0.22);
+      this.graphics.lineStyle(1, this.theme.treatment.lighting.technology, 0.22);
       this.graphics.strokePoints(points, true);
       return;
     }
@@ -210,7 +250,7 @@ export class TilePainter {
 
     this.graphics.fillStyle(adjustColor(baseColor, 0.35), pulse);
     this.graphics.fillPoints(points, true);
-    this.graphics.lineStyle(1.1, 0xf472b6, 0.35);
+    this.graphics.lineStyle(1.1, this.theme.treatment.lighting.threat, 0.48);
     this.graphics.strokePoints(points, true);
   }
 
@@ -281,8 +321,8 @@ export class TilePainter {
       0.03,
       0.28
     );
-    const coolReflection = adjustColor(0x67e8f9, -0.12 + seamOffset);
-    const warmReflection = adjustColor(0xfb923c, -0.25 + seamOffset * 0.7);
+    const coolReflection = adjustColor(this.theme.treatment.lighting.technology, -0.12 + seamOffset);
+    const warmReflection = adjustColor(this.theme.treatment.lighting.practical, -0.25 + seamOffset * 0.7);
 
     this.graphics.lineStyle(1, coolReflection, intensity);
     this.graphics.strokePoints(
@@ -309,6 +349,11 @@ export class TilePainter {
     points: Phaser.Geom.Point[],
     modulatedBase: number
   ): void {
+    if (this.theme.renderStyle === 'graphic-painterly-noir') {
+      this.drawPainterlySurfaceTreatments(tile, context, points, modulatedBase);
+      return;
+    }
+
     const surface = tile.surfaceKind ?? 'lot';
     const axis = tile.surfaceAxis;
     const [top, right, bottom, left] = points;
@@ -536,6 +581,84 @@ export class TilePainter {
     }
     this.drawLotWear(points, modulatedBase, wearSeed);
     this.drawRoadReflection(tile, context, points, isDowntown ? 0.42 : 0.32);
+  }
+
+  private drawPainterlySurfaceTreatments(
+    tile: MapTile,
+    context: TileContext,
+    points: Phaser.Geom.Point[],
+    modulatedBase: number
+  ): void {
+    const surface = tile.surfaceKind ?? 'lot';
+    const [top, right, bottom, left] = points;
+    const scenic = this.scenicTileContextByKey[`${context.gridX}:${context.gridY}`];
+    const seed = this.getWearSeed(context.gridX, context.gridY);
+    const treatment = this.theme.treatment;
+    const inset = this.createInsetDiamond(points, surface === 'road' ? 0.12 : 0.2);
+
+    if (surface === 'road' || surface === 'crosswalk') {
+      this.graphics.fillStyle(adjustColor(modulatedBase, -0.08), 0.28);
+      this.graphics.fillPoints(inset, true);
+
+      if (surface === 'crosswalk') {
+        this.graphics.lineStyle(1.45, treatment.surface.bone, 0.34);
+        [0.3, 0.5, 0.7].forEach((offset) => {
+          this.graphics.strokePoints(
+            [this.lerpPoint(left, top, offset), this.lerpPoint(bottom, right, offset)],
+            false
+          );
+        });
+      } else if (seed % 5 === 0) {
+        const axis = tile.surfaceAxis;
+        this.graphics.lineStyle(0.9, treatment.surface.bone, 0.08);
+        if (axis === 'avenue' || axis === 'intersection') {
+          this.graphics.strokePoints(
+            [this.lerpPoint(top, left, 0.3), this.lerpPoint(bottom, right, 0.3)],
+            false
+          );
+        }
+        if (axis === 'street' || axis === 'intersection') {
+          this.graphics.strokePoints(
+            [this.lerpPoint(left, top, 0.3), this.lerpPoint(right, bottom, 0.3)],
+            false
+          );
+        }
+      }
+    } else if (surface === 'sidewalk') {
+      this.graphics.fillStyle(adjustColor(modulatedBase, 0.06), 0.16);
+      this.graphics.fillPoints(inset, true);
+      if (seed % 4 === 0) {
+        this.graphics.lineStyle(0.8, treatment.surface.bone, 0.1);
+        this.graphics.strokePoints(
+          [this.lerpPoint(top, right, 0.5), this.lerpPoint(left, bottom, 0.5)],
+          false
+        );
+      }
+    } else if (seed % 7 === 0) {
+      this.graphics.lineStyle(1.4, treatment.ink.wash, treatment.ink.dryBrushAlpha);
+      this.graphics.strokePoints(
+        [
+          this.lerpPoint(top, left, 0.42),
+          this.lerpPoint(top, bottom, 0.56),
+          this.lerpPoint(right, bottom, 0.48),
+        ],
+        false
+      );
+    }
+
+    if (scenic?.nearEntrance) {
+      const threshold = this.createInsetDiamond(points, 0.38);
+      const distanceWeight = Phaser.Math.Clamp(1 - scenic.distanceToDoor / 5, 0, 1);
+      this.drawEntryPocket(
+        threshold,
+        treatment.lighting.practical,
+        treatment.surface.bone,
+        distanceWeight,
+        1.16
+      );
+    }
+
+    this.drawRoadReflection(tile, context, points, surface === 'road' || surface === 'crosswalk' ? 0.55 : 0.25);
   }
 
   private createInsetDiamond(points: Phaser.Geom.Point[], inset: number): Phaser.Geom.Point[] {

@@ -163,6 +163,7 @@ export type InputModulePorts = {
   calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number };
   getDiamondPoints(centerX: number, centerY: number, width: number, height: number): Phaser.Geom.Point[];
   renderStaticProps(): void;
+  getVisualTheme?(): VisualTheme | undefined;
 };
 
 export type MinimapBridgeModulePorts = {
@@ -207,6 +208,7 @@ export type SurveillanceRenderModulePorts = {
   getIsoMetrics(): { tileWidth: number; tileHeight: number };
   calculatePixelPosition(gridX: number, gridY: number): { x: number; y: number };
   syncDepth(target: Phaser.GameObjects.GameObject, pixelX: number, pixelY: number, bias: number): void;
+  getVisualTheme?(): VisualTheme | undefined;
 };
 
 export type WorldRenderModulePorts = {

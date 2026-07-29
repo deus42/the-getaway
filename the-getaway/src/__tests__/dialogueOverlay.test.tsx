@@ -238,6 +238,7 @@ describe('DialogueOverlay', () => {
     expect(completionOption).toHaveStyle('pointer-events: auto');
 
     fireEvent.click(completionOption);
+    const playerAfterCompletion = store.getState().player.data;
     const completedQuest = store
       .getState()
       .quests.quests.find((quest) => quest.id === 'quest_market_cache');
@@ -248,10 +249,11 @@ describe('DialogueOverlay', () => {
         ?.isCompleted
     ).toBe(true);
     expect(
-      store.getState().player.data.inventory.items.some(
+      playerAfterCompletion.inventory.items.some(
         (item) => item.resourceKey === 'items.encrypted_datapad'
       )
-    ).toBe(true);
+    ).toBe(false);
+    expect(playerAfterCompletion.credits).toBe(80);
   });
 
   it('allows selecting a dialogue option with number keys', () => {

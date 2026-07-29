@@ -177,6 +177,7 @@ export class MainScene extends Phaser.Scene {
       getIsoMetrics: () => this.getIsoMetrics(),
       calculatePixelPosition: (gridX: number, gridY: number) => this.calculatePixelPosition(gridX, gridY),
       syncDepth: (target, pixelX, pixelY, bias) => this.syncDepth(target, pixelX, pixelY, bias),
+      getVisualTheme: () => this.worldRenderModule.getVisualTheme(),
     });
     this.worldRenderModule = new WorldRenderModule(this, {
       add: this.add,
@@ -238,6 +239,7 @@ export class MainScene extends Phaser.Scene {
       calculatePixelPosition: (gridX: number, gridY: number) => this.calculatePixelPosition(gridX, gridY),
       getDiamondPoints: (centerX: number, centerY: number, width: number, height: number) => this.getDiamondPoints(centerX, centerY, width, height),
       renderStaticProps: () => this.worldRenderModule.renderStaticProps(),
+      getVisualTheme: () => this.worldRenderModule.getVisualTheme(),
     });
     this.cameraModule = new CameraModule(this, {
       cameras: this.cameras,

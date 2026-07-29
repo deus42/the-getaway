@@ -17,20 +17,20 @@ const overlayStyle: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: 'rgba(13, 10, 15, 0.91)',
-  backdropFilter: 'blur(6px)',
+  background: 'var(--hud-color-overlay)',
+  backdropFilter: 'var(--hud-overlay-blur)',
   zIndex: 21,
   padding: '1.5rem',
 };
 
 const shellStyle: React.CSSProperties = {
   width: 'min(520px, 92vw)',
-  borderRadius: '16px',
-  border: '1px solid rgba(248, 113, 113, 0.42)',
-  background: 'linear-gradient(135deg, rgba(32, 12, 18, 0.97), rgba(17, 24, 39, 0.95))',
-  color: '#f8fafc',
+  borderRadius: 'var(--hud-radius-lg)',
+  border: '1px solid var(--hud-color-threat)',
+  background: 'var(--hud-panel-gradient)',
+  color: 'var(--hud-color-bone)',
   fontFamily: "'DM Mono', 'IBM Plex Mono', monospace",
-  boxShadow: '0 40px 68px rgba(2, 6, 23, 0.6), 0 0 34px rgba(248, 113, 113, 0.12)',
+  boxShadow: 'var(--shadow-overlay)',
   display: 'flex',
   flexDirection: 'column',
   gap: '1.2rem',
@@ -38,10 +38,10 @@ const shellStyle: React.CSSProperties = {
 };
 
 const panelStyle: React.CSSProperties = {
-  border: '1px solid rgba(148, 163, 184, 0.22)',
-  borderRadius: '12px',
+  border: '1px solid var(--hud-color-rule)',
+  borderRadius: 'var(--hud-radius-md)',
   padding: '0.9rem 1.1rem',
-  background: 'rgba(15, 23, 42, 0.68)',
+  background: 'var(--hud-color-surface-inset)',
   display: 'flex',
   flexDirection: 'column',
   gap: '0.6rem',
@@ -51,11 +51,11 @@ const retryButtonStyle: React.CSSProperties = {
   all: 'unset',
   cursor: 'pointer',
   padding: '0.72rem 1.2rem',
-  borderRadius: '999px',
-  border: '1px solid rgba(248, 113, 113, 0.55)',
-  background: 'linear-gradient(135deg, rgba(248, 113, 113, 0.78), rgba(251, 146, 60, 0.66))',
-  boxShadow: '0 20px 36px rgba(127, 29, 29, 0.35)',
-  color: '#1f0a0a',
+  borderRadius: 'var(--radius-pill)',
+  border: '1px solid var(--hud-color-threat)',
+  background: 'var(--hud-color-threat)',
+  boxShadow: 'none',
+  color: 'var(--hud-color-ink)',
   fontSize: '0.72rem',
   fontWeight: 700,
   letterSpacing: '0.15em',
@@ -94,14 +94,14 @@ const MissionFailureOverlay: React.FC<MissionFailureOverlayProps> = ({ open, onR
   const remainingPrimaryObjectives = primaryObjectives.filter((objective) => !objective.isComplete);
 
   return (
-    <div role="dialog" aria-modal="true" style={overlayStyle}>
-      <div style={shellStyle}>
+    <div className="mission-failure" role="dialog" aria-modal="true" style={overlayStyle}>
+      <div className="mission-failure__shell" style={shellStyle}>
         <header style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           <span
             style={{
               fontSize: '0.7rem',
               letterSpacing: '0.28em',
-              color: 'rgba(248, 113, 113, 0.82)',
+              color: 'var(--hud-color-threat)',
               textTransform: 'uppercase',
             }}
           >
@@ -121,11 +121,11 @@ const MissionFailureOverlay: React.FC<MissionFailureOverlayProps> = ({ open, onR
 
         <section style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
           <div style={panelStyle}>
-            <span style={{ fontSize: '0.7rem', color: 'rgba(148, 163, 184, 0.78)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--hud-color-muted)' }}>
               {missionStrings.failedSummaryLabel}
             </span>
             {primaryObjectives.length === 0 ? (
-              <span style={{ fontSize: '0.72rem', color: 'rgba(226, 232, 240, 0.86)' }}>
+              <span style={{ fontSize: '0.72rem', color: 'var(--hud-color-bone)' }}>
                 {missionStrings.failedNoObjective}
               </span>
             ) : (
@@ -140,12 +140,12 @@ const MissionFailureOverlay: React.FC<MissionFailureOverlayProps> = ({ open, onR
                 }}
               >
                 {completedPrimaryObjectives.map((objective) => (
-                  <li key={objective.id} style={{ fontSize: '0.74rem', color: 'rgba(226, 232, 240, 0.9)' }}>
+                  <li key={objective.id} style={{ fontSize: '0.74rem', color: 'var(--hud-color-bone)' }}>
                     {missionStrings.failedClearedPrefix}: {objective.label}
                   </li>
                 ))}
                 {remainingPrimaryObjectives.map((objective) => (
-                  <li key={objective.id} style={{ fontSize: '0.74rem', color: 'rgba(226, 232, 240, 0.9)' }}>
+                  <li key={objective.id} style={{ fontSize: '0.74rem', color: 'var(--hud-color-bone)' }}>
                     {missionStrings.failedRemainingPrefix}: {objective.label}
                   </li>
                 ))}
@@ -154,10 +154,10 @@ const MissionFailureOverlay: React.FC<MissionFailureOverlayProps> = ({ open, onR
           </div>
 
           <div style={panelStyle}>
-            <span style={{ fontSize: '0.7rem', color: 'rgba(148, 163, 184, 0.78)' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--hud-color-muted)' }}>
               {missionStrings.failedPressureLabel}
             </span>
-            <span style={{ fontSize: '0.72rem', color: 'rgba(226, 232, 240, 0.88)', lineHeight: 1.45 }}>
+            <span style={{ fontSize: '0.72rem', color: 'var(--hud-color-bone)', lineHeight: 1.45 }}>
               {missionStrings.failedPressureSummary({
                 tier: paranoiaTier.replace(/_/g, ' '),
                 value: Math.round(paranoiaValue),
@@ -165,7 +165,7 @@ const MissionFailureOverlay: React.FC<MissionFailureOverlayProps> = ({ open, onR
             </span>
           </div>
 
-          <span style={{ fontSize: '0.64rem', color: 'rgba(148, 163, 184, 0.68)' }}>
+          <span style={{ fontSize: '0.64rem', color: 'var(--hud-color-muted)' }}>
             {missionStrings.failedRetryHint}
           </span>
         </section>

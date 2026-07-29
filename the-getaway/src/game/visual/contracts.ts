@@ -2,6 +2,61 @@ import type { BuildingDistrict, BuildingSignageStyle, PropDensityTier } from '..
 
 export type VisualQualityPreset = 'performance' | 'balanced' | 'cinematic';
 
+export type VisualRenderStyle = 'noir-vector' | 'graphic-painterly-noir';
+
+export interface VisualTreatmentTokens {
+  readonly ink: {
+    readonly primary: number;
+    readonly soft: number;
+    readonly wash: number;
+    readonly dryBrushAlpha: number;
+  };
+  readonly surface: {
+    readonly bone: number;
+    readonly charcoal: number;
+    readonly umber: number;
+    readonly mutedTeal: number;
+    readonly markAlpha: number;
+    readonly variation: number;
+  };
+  readonly lighting: {
+    readonly keyDirection: 'upper-left';
+    readonly practical: number;
+    readonly practicalShadow: number;
+    readonly technology: number;
+    readonly threat: number;
+    readonly ambient: number;
+    readonly practicalAlpha: number;
+  };
+  readonly outline: {
+    readonly color: number;
+    readonly width: number;
+    readonly alpha: number;
+    readonly secondaryAlpha: number;
+  };
+  readonly grid: {
+    readonly lineColor: number;
+    readonly lineAlpha: number;
+    readonly majorLineAlpha: number;
+    readonly majorLineInterval: number;
+    readonly blockedAlpha: number;
+    readonly walkableAlpha: number;
+  };
+}
+
+export interface MapVisualProfile {
+  readonly id: 'default-vector' | 'level0-painterly-v1';
+  readonly renderStyle: VisualRenderStyle;
+  readonly environmentAtlasSetId: 'legacy-level0' | 'level0-painterly-v1';
+  readonly buildingArtSetId?: 'level0-painterly-v1';
+  readonly showBuildingLabels: boolean;
+  readonly showBoundaryWalls: boolean;
+  readonly camera: {
+    readonly initialFitFactor: number;
+    readonly minimumInitialZoom: number;
+  };
+}
+
 export type EntityVisualRole =
   | 'player'
   | 'friendlyNpc'
@@ -61,6 +116,9 @@ export interface BuildingVisualProfile {
 export interface VisualTheme {
   readonly id: string;
   readonly preset: VisualQualityPreset;
+  readonly renderStyle: VisualRenderStyle;
+  readonly mapProfile: MapVisualProfile;
+  readonly treatment: VisualTreatmentTokens;
   readonly qualityBudget: VisualQualityBudget;
   readonly tilePalettes: {
     readonly floorEven: number;

@@ -28,12 +28,7 @@ const COLLISION_OFFSETS = {
   crate: [{ x: 0, y: 0 }],
 } as const satisfies Record<Get155PreviewFrameId, readonly Position[]>;
 
-const GET155_PLACEMENT_ORDER: readonly Get155PreviewFrameId[] = [
-  'buildingArtDeco',
-  'streetlight',
-  'neonSign',
-  'crate',
-];
+const GET155_PLACEMENT_ORDER: readonly Get155PreviewFrameId[] = [];
 
 const addPosition = (left: Position, right: Position): Position => ({
   x: left.x + right.x,

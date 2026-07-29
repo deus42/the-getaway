@@ -193,7 +193,7 @@ const buildRequirementList = (lines: string[]): React.ReactElement | null => {
     return null;
   }
   return (
-    <ul style={listStyle}>
+    <ul className="perk-selection__list" style={listStyle}>
       {lines.map((line) => (
         <li key={line}>{line}</li>
       ))}
@@ -245,14 +245,15 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
   };
 
   return (
-    <div style={overlayStyle} role="dialog" aria-modal="true" aria-label={uiStrings.perks.panelTitle}>
-      <div style={panelStyle}>
-        <header style={headerStyle}>
+    <div className="perk-selection" style={overlayStyle} role="dialog" aria-modal="true" aria-label={uiStrings.perks.panelTitle}>
+      <div className="perk-selection__shell" style={panelStyle}>
+        <header className="perk-selection__header" style={headerStyle}>
           <div>
-            <h2 style={titleStyle}>{uiStrings.perks.panelTitle}</h2>
-            <div style={remainingStyle}>{uiStrings.perks.remainingLabel(pendingSelections)}</div>
+            <h2 className="perk-selection__title" style={titleStyle}>{uiStrings.perks.panelTitle}</h2>
+            <div className="perk-selection__remaining" style={remainingStyle}>{uiStrings.perks.remainingLabel(pendingSelections)}</div>
           </div>
           <button
+            className="perk-selection__close"
             type="button"
             style={headerCloseButtonStyle(closeDisabled)}
             onClick={closeDisabled ? undefined : onClose}
@@ -263,9 +264,10 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
             ✕
           </button>
         </header>
-        <div style={bodyStyle}>
+        <div className="perk-selection__body" style={bodyStyle}>
           {pendingSelections > 0 && !hasSelectablePerks && (
             <div
+              className="perk-selection__notice"
               style={{
                 background: 'rgba(56, 189, 248, 0.12)',
                 border: '1px solid rgba(56, 189, 248, 0.3)',
@@ -282,25 +284,25 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
           )}
           {byCategory.map(({ category, label, perks }) => (
             <section key={category}>
-              <h3 style={categoryHeaderStyle}>{label}</h3>
-              <div style={perkGridStyle}>
+              <h3 className="perk-selection__category" style={categoryHeaderStyle}>{label}</h3>
+              <div className="perk-selection__grid" style={perkGridStyle}>
                 {perks.map(({ definition, availability }) => {
                   const locked = !availability.canSelect;
                   return (
-                    <article key={definition.id} style={perkCardStyle(locked)}>
-                      <div style={perkNameStyle}>
+                    <article className="perk-selection__card" data-locked={locked} key={definition.id} style={perkCardStyle(locked)}>
+                      <div className="perk-selection__name" style={perkNameStyle}>
                         <span>{definition.name}</span>
-                        {definition.capstone && <span style={capstoneBadgeStyle}>{uiStrings.perks.capstoneTag}</span>}
+                        {definition.capstone && <span className="perk-selection__capstone" style={capstoneBadgeStyle}>{uiStrings.perks.capstoneTag}</span>}
                       </div>
-                      <div style={textStyle}>{definition.description}</div>
+                      <div className="perk-selection__copy" style={textStyle}>{definition.description}</div>
                       {definition.effects.length > 0 && (
                         <div>
-                          <div style={sectionLabelStyle}>{uiStrings.perks.effectsLabel}</div>
+                          <div className="perk-selection__section-label" style={sectionLabelStyle}>{uiStrings.perks.effectsLabel}</div>
                           {buildRequirementList(definition.effects)}
                         </div>
                       )}
                       <div>
-                        <div style={sectionLabelStyle}>{uiStrings.perks.requirementsLabel}</div>
+                        <div className="perk-selection__section-label" style={sectionLabelStyle}>{uiStrings.perks.requirementsLabel}</div>
                         {buildRequirementList(
                           [
                             `Level ${definition.levelRequirement}`,
@@ -311,14 +313,15 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
                       </div>
                       {locked && availability.reasons.length > 0 && (
                         <div>
-                          <div style={sectionLabelStyle}>{uiStrings.perks.lockedLabel}</div>
+                          <div className="perk-selection__section-label" style={sectionLabelStyle}>{uiStrings.perks.lockedLabel}</div>
                           {buildRequirementList(availability.reasons)}
                         </div>
                       )}
                       {player.perks.includes(definition.id) && (
-                        <div style={{ ...sectionLabelStyle, color: '#fbbf24' }}>{uiStrings.perks.alreadyOwnedLabel}</div>
+                        <div className="perk-selection__owned" style={{ ...sectionLabelStyle, color: '#fbbf24' }}>{uiStrings.perks.alreadyOwnedLabel}</div>
                       )}
                       <button
+                        className="perk-selection__select"
                         type="button"
                         style={buttonStyle(!availability.canSelect || pendingSelections <= 0 || player.perks.includes(definition.id))}
                         onClick={() => handleSelect(definition.id, availability.canSelect)}
@@ -333,8 +336,9 @@ const PerkSelectionPanel: React.FC<PerkSelectionPanelProps> = ({ open, pendingSe
             </section>
           ))}
         </div>
-        <footer style={footerStyle}>
+        <footer className="perk-selection__footer" style={footerStyle}>
           <button
+            className="perk-selection__continue"
             type="button"
             style={continueButtonStyle(pendingSelections > 0 && hasSelectablePerks)}
             onClick={onClose}

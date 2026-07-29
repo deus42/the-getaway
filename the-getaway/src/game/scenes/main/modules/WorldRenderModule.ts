@@ -10,14 +10,11 @@ import { SceneModule } from '../SceneModule';
 import { DepthBias } from '../../../utils/depth';
 import { adjustColor } from '../../../utils/iso';
 import { createNoirVectorTheme, resolveBuildingVisualProfile } from '../../../visual/theme/noirVectorTheme';
-import type { BuildingVisualProfile } from '../../../visual/contracts';
+import { resolveVisualThemeForMap } from '../../../visual/theme/mapVisualTheme';
+import type { BuildingVisualProfile, VisualTheme } from '../../../visual/contracts';
 import { TilePainter } from '../../../visual/world/TilePainter';
 import { BuildingPainter } from '../../../visual/world/BuildingPainter';
-import {
-  composeEnvironmentArt,
-  type EnvironmentCompositionResult,
-  type ScenicTileContext,
-} from '../../../visual/world/EnvironmentComposer';
+import { composeEnvironmentArt } from '../../../visual/world/EnvironmentComposer';
 import { SpriteCharacterRigFactory } from '../../../visual/entities/SpriteCharacterRigFactory';
 import { AtmosphereDirector, type AtmosphereProfile } from '../../../visual/world/AtmosphereDirector';
 import { OcclusionEntityHandle, OcclusionReadabilityController } from '../../../visual/world/OcclusionReadabilityController';
@@ -29,7 +26,12 @@ import {
 import { resolvePickupObjectName } from '../../../utils/itemDisplay';
 import { store } from '../../../../store';
 import { setLightsEnabled } from '../../../../store/settingsSlice';
-import { LEVEL0_GUIDED_ITEM_KEYS } from '../../../quests/level0GuidedSlice';
+import {
+  getLevel0GuidedStep,
+  LEVEL0_GUIDED_ITEM_KEYS,
+  resolveLevel0GuidedContactMarkerState,
+  resolveLevel0GuidedItemMarkerState,
+} from '../../../quests/level0GuidedSlice';
 import type { CharacterToken, IsoObjectFactory } from '../../../utils/IsoObjectFactory';
 import type { CharacterRenderDescriptor } from '../../../visual/entities/characterPresentation';
 import {
@@ -38,23 +40,19 @@ import {
   LEVEL0_ENVIRONMENT_ATLAS_KEY,
   LEVEL0_ENVIRONMENT_NORMAL_KEY,
   LEVEL0_ENVIRONMENT_PROP_FRAMES,
-  LEVEL0_ENVIRONMENT_SURFACE_FRAMES,
+  PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY,
+  PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY,
   type EnvironmentAtlasFrameDefinition,
   type Get155PreviewFrameId,
   type Level0EnvironmentPropFrameId,
-  type Level0EnvironmentSurfaceFrameId,
 } from '../../../../content/environment/atlasFrames';
 import {
   GET155_LEVEL0_ANCHOR_BUILDING_ID,
   resolveGet155Level0Placements,
 } from '../../../../content/environment/get155Level0Slice';
-
-const ESB_BUILDING_ID = 'block_1_1';
-const SURFACE_DECAL_LIMIT_BY_PRESET = {
-  performance: 18,
-  balanced: 34,
-  cinematic: 52,
-} as const;
+import {
+  resolveLevel0RouteBeaconsForStage,
+} from '../../../../content/environment/level0RouteSetPieces';
 
 type StaticPropAdder = (prop?: Phaser.GameObjects.GameObject | null) => void;
 
@@ -68,8 +66,6 @@ type PickupSpritePresentation = {
 const hexStringToColor = (value: string): number => {
   return Number.parseInt(value.replace('#', ''), 16);
 };
-
-const positionKey = (position: Position): string => `${position.x}:${position.y}`;
 
 const readValue = <T>(target: object, key: string): T | undefined => {
   return Reflect.get(target, key) as T | undefined;
@@ -266,12 +262,20 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     this.pushRuntimeStateToPorts();
   }
 
+  getVisualTheme(): VisualTheme {
+    return this.runtimeState.visualTheme;
+  }
+
   ensureVisualPipeline(): void {
     const preset = store.getState().settings.visualQualityPreset;
-    const themeChanged = !this.runtimeState.visualTheme || this.runtimeState.visualTheme.preset !== preset;
+    const nextTheme = resolveVisualThemeForMap(this.ports.getCurrentMapArea(), preset);
+    const themeChanged =
+      !this.runtimeState.visualTheme ||
+      this.runtimeState.visualTheme.id !== nextTheme.id ||
+      this.runtimeState.visualTheme.preset !== nextTheme.preset;
 
-    if (!this.runtimeState.visualTheme || this.runtimeState.visualTheme.preset !== preset) {
-      this.runtimeState.visualTheme = createNoirVectorTheme(preset);
+    if (themeChanged) {
+      this.runtimeState.visualTheme = nextTheme;
     }
 
     if (this.ports.mapGraphics && (!this.runtimeState.tilePainter || themeChanged)) {
@@ -380,62 +384,87 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     }
 
     const isoMetrics = this.ports.getIsoMetrics();
+    const guidedStep = getLevel0GuidedStep(store.getState().quests.quests);
     const environmentComposition = this.resolveEnvironmentComposition();
     this.ports.setDemoLampGrid(environmentComposition.preferredLampGrid);
-    this.renderAtlasEnvironmentSlice(currentMapArea, environmentComposition, isoFactory, addProp);
+    this.renderAtlasEnvironmentSlice(currentMapArea, isoFactory, addProp);
+    this.renderGuidedRouteBeacons(currentMapArea, isoFactory, addProp, guidedStep.stage);
 
     interactiveNpcs.forEach((npc) => {
+      const markerState = resolveLevel0GuidedContactMarkerState(npc, guidedStep);
+      const isCurrentGuidedContact = markerState === 'current';
+      const pixel = this.ports.calculatePixelPosition(npc.position.x, npc.position.y);
       addProp(
         isoFactory.createPulsingHighlight(npc.position.x, npc.position.y, {
-          color: 0x22d3ee,
-          alpha: 0.14,
-          pulseColor: 0x7dd3fc,
-          pulseAlpha: { from: 0.26, to: 0.05 },
-          pulseScale: 1.22,
-          widthScale: 0.58,
-          heightScale: 0.58,
+          color: isCurrentGuidedContact ? 0xfacc15 : 0x22d3ee,
+          alpha: isCurrentGuidedContact ? 0.3 : 0.14,
+          pulseColor: isCurrentGuidedContact ? 0xfff3bf : 0x7dd3fc,
+          pulseAlpha: { from: isCurrentGuidedContact ? 0.42 : 0.26, to: 0.05 },
+          pulseScale: isCurrentGuidedContact ? 1.42 : 1.22,
+          widthScale: isCurrentGuidedContact ? 0.82 : 0.58,
+          heightScale: isCurrentGuidedContact ? 0.82 : 0.58,
           depthOffset: 9,
-          duration: 1400,
+          duration: isCurrentGuidedContact ? 950 : 1400,
         })
       );
+
+      if (!isCurrentGuidedContact) {
+        return;
+      }
+
+      addProp(this.createGuidedContactBeacon(pixel, isoMetrics.tileWidth, isoMetrics.tileHeight));
     });
 
     itemMarkers.forEach((item) => {
-      const color = item.isQuestItem ? 0xfacc15 : 0x22d3ee;
-      const pulseColor = item.isQuestItem ? 0xfff3bf : 0x7dd3fc;
+      const markerState = resolveLevel0GuidedItemMarkerState(item, guidedStep);
+      const isCurrentGuidedItem = markerState === 'current';
+      const isFutureGuidedItem = markerState === 'future';
+      const color = isCurrentGuidedItem ? 0xfacc15 : item.isQuestItem ? 0x94a3b8 : 0x22d3ee;
+      const pulseColor = isCurrentGuidedItem ? 0xfff3bf : item.isQuestItem ? 0xcbd5e1 : 0x7dd3fc;
       const pixel = this.ports.calculatePixelPosition(item.position.x, item.position.y);
+      const pickupSprite = this.createPickupSpriteProp(isoFactory, item);
 
-      addProp(this.createPickupSpriteProp(isoFactory, item));
+      if (pickupSprite && isFutureGuidedItem) {
+        pickupSprite.setAlpha(Math.min(pickupSprite.alpha, 0.48));
+        pickupSprite.setTint(0x94a3b8);
+      }
+
+      addProp(pickupSprite);
 
       addProp(
         isoFactory.createPulsingHighlight(item.position.x, item.position.y, {
           color,
-          alpha: item.isQuestItem ? 0.24 : 0.22,
+          alpha: isCurrentGuidedItem ? 0.32 : item.isQuestItem ? 0.12 : 0.22,
           pulseColor,
-          pulseAlpha: { from: item.isQuestItem ? 0.34 : 0.3, to: 0.08 },
-          pulseScale: item.isQuestItem ? 1.28 : 1.22,
-          widthScale: 0.72,
-          heightScale: 0.72,
+          pulseAlpha: {
+            from: isCurrentGuidedItem ? 0.42 : item.isQuestItem ? 0.18 : 0.3,
+            to: 0.06,
+          },
+          pulseScale: isCurrentGuidedItem ? 1.36 : item.isQuestItem ? 1.16 : 1.22,
+          widthScale: isCurrentGuidedItem ? 0.82 : 0.62,
+          heightScale: isCurrentGuidedItem ? 0.82 : 0.62,
           depthOffset: 8,
-          duration: item.isQuestItem ? 1150 : 1300,
+          duration: isCurrentGuidedItem ? 950 : item.isQuestItem ? 1450 : 1300,
         })
       );
 
-      if (!item.isQuestItem) {
+      if (!item.isQuestItem || isFutureGuidedItem) {
         return;
       }
 
-      const itemLabelName = resolvePickupObjectName(item);
+      const itemLabelName = isCurrentGuidedItem
+        ? `TARGET: ${resolvePickupObjectName(item)}`
+        : resolvePickupObjectName(item);
       const itemLabel = this.ports.add.text(pixel.x, pixel.y - isoMetrics.tileHeight * 0.7, itemLabelName, {
         fontFamily: 'Orbitron, "DM Sans", sans-serif',
         fontSize: '10px',
         fontStyle: '700',
-        color: item.isQuestItem ? '#fde68a' : '#dbeafe',
+        color: isCurrentGuidedItem ? '#fff7ad' : '#fde68a',
         align: 'center',
       });
       itemLabel.setOrigin(0.5, 1);
-      itemLabel.setStroke(item.isQuestItem ? '#f59e0b' : '#0284c7', 1.1);
-      itemLabel.setShadow(0, 0, item.isQuestItem ? '#f59e0b' : '#38bdf8', 8, true, true);
+      itemLabel.setStroke(isCurrentGuidedItem ? '#92400e' : '#f59e0b', 1.1);
+      itemLabel.setShadow(0, 0, isCurrentGuidedItem ? '#facc15' : '#f59e0b', 8, true, true);
       this.ports.syncDepth(itemLabel, pixel.x, pixel.y, DepthBias.FLOATING_UI + 14);
       addProp(itemLabel);
     });
@@ -465,6 +494,47 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       .map((item) => `${item.id ?? item.name}@${item.position.x},${item.position.y}`)
       .sort()
       .join('|');
+  }
+
+  private createGuidedContactBeacon(
+    pixel: Position,
+    tileWidth: number,
+    tileHeight: number
+  ): Phaser.GameObjects.Graphics {
+    const beacon = this.ports.add.graphics();
+    beacon.setBlendMode(Phaser.BlendModes.ADD);
+    beacon.fillStyle(0xfacc15, 0.14);
+    beacon.fillEllipse(
+      pixel.x,
+      pixel.y - tileHeight * 0.75,
+      tileWidth * 0.54,
+      tileHeight * 0.9
+    );
+    beacon.lineStyle(2.2, 0xfff3bf, 0.86);
+    beacon.beginPath();
+    beacon.moveTo(pixel.x, pixel.y - tileHeight * 1.92);
+    beacon.lineTo(pixel.x, pixel.y - tileHeight * 0.72);
+    beacon.strokePath();
+    beacon.fillStyle(0xfff3bf, 0.92);
+    beacon.fillTriangle(
+      pixel.x,
+      pixel.y - tileHeight * 2.12,
+      pixel.x - tileWidth * 0.12,
+      pixel.y - tileHeight * 1.78,
+      pixel.x + tileWidth * 0.12,
+      pixel.y - tileHeight * 1.78
+    );
+    beacon.lineStyle(1.4, 0x92400e, 0.55);
+    beacon.strokeTriangle(
+      pixel.x,
+      pixel.y - tileHeight * 2.12,
+      pixel.x - tileWidth * 0.12,
+      pixel.y - tileHeight * 1.78,
+      pixel.x + tileWidth * 0.12,
+      pixel.y - tileHeight * 1.78
+    );
+    this.ports.syncDepth(beacon, pixel.x, pixel.y, DepthBias.FLOATING_UI + 15);
+    return beacon;
   }
 
   applyLightingSettings(settings: VisualFxSettings): void {
@@ -550,9 +620,16 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         const tile = tiles[y][x];
         const center = this.ports.calculatePixelPosition(x, y);
         const hideCoverVolume = currentMapArea?.zoneId?.startsWith('downtown_checkpoint') && tile.type === TileType.COVER;
+        const isBoundaryTile =
+          x === 0 || y === 0 || x === tiles[0].length - 1 || y === tiles.length - 1;
+        const hideBoundaryVolume =
+          !this.runtimeState.visualTheme.mapProfile.showBoundaryWalls &&
+          isBoundaryTile &&
+          tile.type === TileType.WALL;
         const isBuildingFootprint = buildingFootprintTiles.has(`${x}:${y}`);
         const groundOnly =
           hideCoverVolume ||
+          hideBoundaryVolume ||
           (isBuildingFootprint && (tile.type === TileType.WALL || tile.type === TileType.COVER || tile.type === TileType.DOOR));
 
         this.renderTile(tile, center, tileWidth, tileHeight, x, y, groundOnly);
@@ -607,7 +684,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
         y: (footprint.top.y + footprint.right.y + footprint.bottom.y + footprint.left.y) / 4,
       };
 
-      const mass = buildingPainter.createMassing(building, profile, {
+      const massing = buildingPainter.createMassing(building, profile, {
         center: pixelCenter,
         tileHeight,
         widthTiles,
@@ -618,10 +695,12 @@ export class WorldRenderModule implements SceneModule<MainScene> {
           overlayAlpha: atmosphere.overlayAlpha,
         },
       });
+      const mass = massing.container;
       mass.setScrollFactor(1);
 
-      // Keep the ESB in scene depth ordering, but avoid extra hero-object chrome.
-      if (building.id === ESB_BUILDING_ID) {
+      // The legacy landmark remains a fallback, but its oversized source art
+      // keeps the historical depth treatment without coupling orchestration to an ID.
+      if (massing.renderMode === 'legacy-esb') {
         const esbDepthPoint = {
           x: footprint.top.x,
           y: footprint.top.y - tileHeight,
@@ -688,8 +767,7 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       this.ports.syncDepth(entranceGlow, doorPixel.x, doorPixel.y, DepthBias.PROP_LOW + 2);
       this.runtimeState.buildingMassings.push(entranceGlow);
 
-      const districtHeightBoost = profile.district === 'downtown' ? 0.78 : 0.7;
-      const massingHeight = tileHeight * Math.max(0.58, profile.massingHeight * districtHeightBoost);
+      const massingHeight = massing.visualHeightPx;
       const boundsMinX = Math.min(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
       const boundsMaxX = Math.max(footprint.top.x, footprint.right.x, footprint.bottom.x, footprint.left.x);
       const boundsMinY = Math.min(
@@ -719,7 +797,11 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     this.runtimeState.buildingLabels = [];
 
     const currentMapArea = this.ports.getCurrentMapArea();
-    if (!currentMapArea?.buildings || currentMapArea.buildings.length === 0) {
+    if (
+      !this.runtimeState.visualTheme.mapProfile.showBuildingLabels ||
+      !currentMapArea?.buildings ||
+      currentMapArea.buildings.length === 0
+    ) {
       this.pushRuntimeStateToPorts();
       return;
     }
@@ -1046,48 +1128,17 @@ export class WorldRenderModule implements SceneModule<MainScene> {
 
   private renderAtlasEnvironmentSlice(
     currentMapArea: MapArea,
-    environmentComposition: EnvironmentCompositionResult,
     isoFactory: IsoObjectFactory,
     addProp: StaticPropAdder
   ): void {
-    if (this.scene.textures.exists(LEVEL0_ENVIRONMENT_ATLAS_KEY)) {
-      this.renderAtlasSurfaceDecals(currentMapArea, environmentComposition, isoFactory, addProp);
+    if (
+      this.scene.textures.exists(PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY) ||
+      this.scene.textures.exists(LEVEL0_ENVIRONMENT_ATLAS_KEY)
+    ) {
       this.renderAtlasDoorFacades(currentMapArea, isoFactory, addProp);
-      this.renderAtlasCoreProps(currentMapArea, isoFactory, addProp);
     }
 
     this.renderGet155PreviewSlice(currentMapArea, isoFactory, addProp);
-  }
-
-  private renderAtlasSurfaceDecals(
-    currentMapArea: MapArea,
-    environmentComposition: EnvironmentCompositionResult,
-    isoFactory: IsoObjectFactory,
-    addProp: StaticPropAdder
-  ): void {
-    const decalLimit = SURFACE_DECAL_LIMIT_BY_PRESET[this.runtimeState.visualTheme.preset];
-    let placed = 0;
-
-    for (let y = 0; y < currentMapArea.height && placed < decalLimit; y += 1) {
-      for (let x = 0; x < currentMapArea.width && placed < decalLimit; x += 1) {
-        const tile = currentMapArea.tiles[y]?.[x];
-        const scenic = environmentComposition.scenicTileContextByKey[`${x}:${y}`];
-        const decalId = tile ? this.resolveSurfaceDecalId(tile, x, y, scenic) : null;
-
-        if (!decalId) {
-          continue;
-        }
-
-        const frame = LEVEL0_ENVIRONMENT_SURFACE_FRAMES[decalId];
-        const sprite = this.createAtlasSpriteTile(isoFactory, x, y, frame, `surface:${decalId}`);
-        if (!sprite) {
-          continue;
-        }
-
-        addProp(sprite);
-        placed += 1;
-      }
-    }
   }
 
   private renderAtlasDoorFacades(
@@ -1111,40 +1162,59 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     });
   }
 
-  private renderAtlasCoreProps(
+  private renderGuidedRouteBeacons(
     currentMapArea: MapArea,
     isoFactory: IsoObjectFactory,
-    addProp: StaticPropAdder
+    addProp: StaticPropAdder,
+    stage: ReturnType<typeof getLevel0GuidedStep>['stage']
   ): void {
-    const buildings = this.getSortedBuildings(currentMapArea);
-    if (buildings.length === 0) {
-      return;
-    }
-
-    const occupied = this.collectAtlasPropOccupiedPositions(currentMapArea);
-    const propPlan: Level0EnvironmentPropFrameId[] = ['streetlight', 'sign', 'barrier', 'camera', 'crate'];
-    const plan = this.runtimeState.visualTheme.preset === 'performance'
-      ? propPlan.slice(0, 3)
-      : propPlan;
-
-    plan.forEach((propId, index) => {
-      const building = buildings[index % buildings.length];
-      const position = this.findAtlasPropCandidate(currentMapArea, building, occupied, index);
-      if (!position) {
+    const isoMetrics = this.ports.getIsoMetrics();
+    resolveLevel0RouteBeaconsForStage(stage).forEach((beacon) => {
+      const tile = currentMapArea.tiles[beacon.position.y]?.[beacon.position.x];
+      if (!tile?.isWalkable) {
         return;
       }
 
-      occupied.add(positionKey(position));
-      const sprite = this.createAtlasSpriteProp(
-        isoFactory,
-        position.x,
-        position.y,
-        propId,
-        this.resolveAtlasPropDepthBias(propId),
-        `prop:${propId}:${building.id}`
+      addProp(
+        isoFactory.createPulsingHighlight(beacon.position.x, beacon.position.y, {
+          color: 0xfacc15,
+          alpha: 0.18,
+          pulseColor: 0xfff3bf,
+          pulseAlpha: { from: 0.3, to: 0.04 },
+          pulseScale: 1.24,
+          widthScale: 0.42,
+          heightScale: 0.42,
+          depthOffset: 7,
+          duration: 1100,
+        })
       );
-      addProp(sprite);
+
+      const pixel = this.ports.calculatePixelPosition(beacon.position.x, beacon.position.y);
+      addProp(this.createGuidedRouteBeaconMarker(pixel, isoMetrics.tileWidth, isoMetrics.tileHeight));
     });
+  }
+
+  private createGuidedRouteBeaconMarker(
+    pixel: Position,
+    tileWidth: number,
+    tileHeight: number
+  ): Phaser.GameObjects.Graphics {
+    const marker = this.ports.add.graphics();
+    marker.setBlendMode(Phaser.BlendModes.ADD);
+    marker.fillStyle(0xfff3bf, 0.82);
+    marker.beginPath();
+    marker.moveTo(pixel.x, pixel.y - tileHeight * 0.42);
+    marker.lineTo(pixel.x + tileWidth * 0.11, pixel.y - tileHeight * 0.24);
+    marker.lineTo(pixel.x, pixel.y - tileHeight * 0.06);
+    marker.lineTo(pixel.x - tileWidth * 0.11, pixel.y - tileHeight * 0.24);
+    marker.closePath();
+    marker.fillPath();
+    marker.lineStyle(1.2, 0x92400e, 0.55);
+    marker.strokePath();
+    marker.fillStyle(0xfacc15, 0.28);
+    marker.fillEllipse(pixel.x, pixel.y - tileHeight * 0.24, tileWidth * 0.32, tileHeight * 0.22);
+    this.ports.syncDepth(marker, pixel.x, pixel.y, DepthBias.FLOATING_UI + 10);
+    return marker;
   }
 
   private renderGet155PreviewSlice(
@@ -1173,64 +1243,6 @@ export class WorldRenderModule implements SceneModule<MainScene> {
       );
       addProp(sprite);
     });
-  }
-
-  private resolveSurfaceDecalId(
-    tile: MapTile,
-    gridX: number,
-    gridY: number,
-    scenic?: ScenicTileContext
-  ): Level0EnvironmentSurfaceFrameId | null {
-    if (!tile.isWalkable || tile.type !== TileType.FLOOR) {
-      return null;
-    }
-
-    const hash = this.getGridHash(gridX, gridY);
-    const surface = tile.surfaceKind ?? 'lot';
-
-    if (surface === 'road' || surface === 'crosswalk') {
-      if (hash % 19 === 0) {
-        return 'puddle';
-      }
-      if (hash % 7 === 0) {
-        return 'roadWear';
-      }
-      return null;
-    }
-
-    if (surface === 'sidewalk') {
-      return hash % 11 === 0 ? 'grate' : null;
-    }
-
-    if (scenic?.nearEntrance && hash % 3 === 0) {
-      return 'grate';
-    }
-
-    if ((scenic?.zoneRole === 'service_edge' || scenic?.zoneRole === 'service_yard') && hash % 13 === 0) {
-      return 'roadWear';
-    }
-
-    return null;
-  }
-
-  private createAtlasSpriteTile(
-    isoFactory: IsoObjectFactory,
-    gridX: number,
-    gridY: number,
-    frame: EnvironmentAtlasFrameDefinition,
-    debugName: string
-  ): Phaser.GameObjects.Image | null {
-    if (!this.hasLevel0AtlasFrame(frame.frame)) {
-      return null;
-    }
-
-    const sprite = isoFactory.createSpriteTile(gridX, gridY, frame.frame, {
-      textureKey: LEVEL0_ENVIRONMENT_ATLAS_KEY,
-      depthBias: DepthBias.TILE_OVERLAY + 2,
-      origin: frame.origin,
-    });
-    this.applyAtlasSpritePresentation(sprite, frame, debugName);
-    return sprite;
   }
 
   private createPickupSpriteProp(
@@ -1265,11 +1277,11 @@ export class WorldRenderModule implements SceneModule<MainScene> {
   private resolvePickupSpritePresentation(item: Item): PickupSpritePresentation {
     switch (item.resourceKey) {
       case LEVEL0_GUIDED_ITEM_KEYS.keycard:
-        return { frameId: 'keypad', tint: 0xffffff, scale: 0.56, alpha: 0.98 };
+        return { frameId: 'keypad', tint: 0xffffff, scale: 0.72, alpha: 1 };
       case LEVEL0_GUIDED_ITEM_KEYS.datapad:
-        return { frameId: 'datapad', tint: 0xffffff, scale: 0.54, alpha: 0.96 };
+        return { frameId: 'datapad', tint: 0xffffff, scale: 0.64, alpha: 0.98 };
       case LEVEL0_GUIDED_ITEM_KEYS.transitTokens:
-        return { frameId: 'transitToken', tint: 0xffffff, scale: 0.52, alpha: 0.96 };
+        return { frameId: 'transitToken', tint: 0xffffff, scale: 0.6, alpha: 0.98 };
       case 'items.abandoned_medkit':
         return { frameId: 'medkit', tint: 0xffffff, scale: 0.5, alpha: 0.95 };
       default:
@@ -1291,13 +1303,14 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     debugName: string
   ): Phaser.GameObjects.Image | null {
     const frame = LEVEL0_ENVIRONMENT_PROP_FRAMES[frameId];
-    if (!this.hasLevel0AtlasFrame(frame.frame)) {
+    const atlasSource = this.resolveLevel0AtlasFrameSource(frame.frame);
+    if (!atlasSource) {
       return null;
     }
 
     const sprite = isoFactory.createSpriteProp(gridX, gridY, frame.frame, {
-      textureKey: LEVEL0_ENVIRONMENT_ATLAS_KEY,
-      normalTextureKey: LEVEL0_ENVIRONMENT_NORMAL_KEY,
+      textureKey: atlasSource.textureKey,
+      normalTextureKey: atlasSource.normalTextureKey,
       depthBias,
       origin: frame.origin,
     });
@@ -1339,9 +1352,33 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     sprite.setAlpha(frame.alpha);
   }
 
-  private hasLevel0AtlasFrame(frame: string): boolean {
-    const texture = this.scene.textures.get(LEVEL0_ENVIRONMENT_ATLAS_KEY);
-    return Boolean(texture?.has(frame));
+  private resolveLevel0AtlasFrameSource(
+    frame: string
+  ): { textureKey: string; normalTextureKey: string } | null {
+    const prefersPainterly =
+      this.runtimeState.visualTheme.mapProfile.environmentAtlasSetId === 'level0-painterly-v1';
+    const candidates = prefersPainterly
+      ? [
+          {
+            textureKey: PAINTERLY_LEVEL0_ENVIRONMENT_ATLAS_KEY,
+            normalTextureKey: PAINTERLY_LEVEL0_ENVIRONMENT_NORMAL_KEY,
+          },
+          {
+            textureKey: LEVEL0_ENVIRONMENT_ATLAS_KEY,
+            normalTextureKey: LEVEL0_ENVIRONMENT_NORMAL_KEY,
+          },
+        ]
+      : [
+          {
+            textureKey: LEVEL0_ENVIRONMENT_ATLAS_KEY,
+            normalTextureKey: LEVEL0_ENVIRONMENT_NORMAL_KEY,
+          },
+        ];
+
+    return candidates.find(({ textureKey }) => {
+      const texture = this.scene.textures.get(textureKey);
+      return Boolean(texture?.has(frame));
+    }) ?? null;
   }
 
   private hasGet155PreviewAtlasFrame(frame: string): boolean {
@@ -1351,84 +1388,6 @@ export class WorldRenderModule implements SceneModule<MainScene> {
 
   private getSortedBuildings(currentMapArea: MapArea): MapBuildingDefinition[] {
     return [...(currentMapArea.buildings ?? [])].sort((left, right) => left.id.localeCompare(right.id));
-  }
-
-  private collectAtlasPropOccupiedPositions(currentMapArea: MapArea): Set<string> {
-    const occupied = new Set<string>();
-
-    currentMapArea.buildings?.forEach((building) => occupied.add(positionKey(building.door)));
-    currentMapArea.entities.npcs.forEach((npc) => occupied.add(positionKey(npc.position)));
-    currentMapArea.entities.enemies.forEach((enemy) => occupied.add(positionKey(enemy.position)));
-    currentMapArea.entities.items.forEach((item) => {
-      if (item.position) {
-        occupied.add(positionKey(item.position));
-      }
-    });
-
-    return occupied;
-  }
-
-  private findAtlasPropCandidate(
-    currentMapArea: MapArea,
-    building: MapBuildingDefinition,
-    occupied: Set<string>,
-    salt: number
-  ): Position | null {
-    const candidateOffsets = [
-      { x: 1, y: 0 },
-      { x: 0, y: 1 },
-      { x: -1, y: 0 },
-      { x: 0, y: -1 },
-      { x: 1, y: 1 },
-      { x: -1, y: 1 },
-      { x: 1, y: -1 },
-      { x: -1, y: -1 },
-      { x: 2, y: 0 },
-      { x: 0, y: 2 },
-      { x: -2, y: 0 },
-      { x: 0, y: -2 },
-    ];
-    const rotation = salt % candidateOffsets.length;
-    const rotatedOffsets = [
-      ...candidateOffsets.slice(rotation),
-      ...candidateOffsets.slice(0, rotation),
-    ];
-
-    for (const offset of rotatedOffsets) {
-      const candidate = {
-        x: building.door.x + offset.x,
-        y: building.door.y + offset.y,
-      };
-
-      if (this.canPlaceAtlasProp(currentMapArea, candidate, occupied)) {
-        return candidate;
-      }
-    }
-
-    return null;
-  }
-
-  private canPlaceAtlasProp(currentMapArea: MapArea, position: Position, occupied: Set<string>): boolean {
-    if (
-      position.x < 0 ||
-      position.y < 0 ||
-      position.x >= currentMapArea.width ||
-      position.y >= currentMapArea.height ||
-      occupied.has(positionKey(position))
-    ) {
-      return false;
-    }
-
-    const tile = currentMapArea.tiles[position.y]?.[position.x];
-    return Boolean(tile?.isWalkable);
-  }
-
-  private resolveAtlasPropDepthBias(propId: Level0EnvironmentPropFrameId): number {
-    if (propId === 'crate' || propId === 'barrier') {
-      return DepthBias.PROP_LOW + 14;
-    }
-
-    return DepthBias.PROP_TALL + 18;
   }
 
   private resolveGet155PreviewDepthBias(frameId: Get155PreviewFrameId): number {
@@ -1441,10 +1400,6 @@ export class WorldRenderModule implements SceneModule<MainScene> {
     }
 
     return DepthBias.PROP_TALL + 18;
-  }
-
-  private getGridHash(gridX: number, gridY: number): number {
-    return Math.abs((gridX * 73856093) ^ (gridY * 19349663));
   }
 
   private renderTile(

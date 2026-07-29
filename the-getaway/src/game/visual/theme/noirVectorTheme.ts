@@ -162,6 +162,57 @@ const ENTITY_PROFILES: Record<EntityVisualRole, EntityVisualProfile> = {
 export const createNoirVectorTheme = (preset: VisualQualityPreset): VisualTheme => ({
   id: 'noir-vector-v1',
   preset,
+  renderStyle: 'noir-vector',
+  mapProfile: {
+    id: 'default-vector',
+    renderStyle: 'noir-vector',
+    environmentAtlasSetId: 'legacy-level0',
+    showBuildingLabels: true,
+    showBoundaryWalls: true,
+    camera: {
+      initialFitFactor: 1.04,
+      minimumInitialZoom: 0.38,
+    },
+  },
+  treatment: {
+    ink: {
+      primary: 0x05070d,
+      soft: 0x111827,
+      wash: 0x1e293b,
+      dryBrushAlpha: 0.04,
+    },
+    surface: {
+      bone: 0xd7e3ee,
+      charcoal: 0x0f172a,
+      umber: 0x3a2c28,
+      mutedTeal: 0x31525c,
+      markAlpha: 0.12,
+      variation: 0.06,
+    },
+    lighting: {
+      keyDirection: 'upper-left',
+      practical: 0xfacc15,
+      practicalShadow: 0x422006,
+      technology: 0x38bdf8,
+      threat: 0xef4444,
+      ambient: 0x0f172a,
+      practicalAlpha: 0.24,
+    },
+    outline: {
+      color: 0x05070d,
+      width: 1,
+      alpha: 0.34,
+      secondaryAlpha: 0.18,
+    },
+    grid: {
+      lineColor: 0x64748b,
+      lineAlpha: 0.14,
+      majorLineAlpha: 0.18,
+      majorLineInterval: 1,
+      blockedAlpha: 0.34,
+      walkableAlpha: 0.18,
+    },
+  },
   qualityBudget: QUALITY_BUDGETS[preset],
   tilePalettes: {
     floorEven: 0x1b2230,
