@@ -2,7 +2,22 @@
 
 > Tactical stealth RPG authored by AI agents. Level 0 is our living lab: one occupied megacity, two distinct districts, and a HUD that never sleeps.
 
+<p align="center">
+  <a href="https://deus42.github.io/the-getaway/"><strong>Play Level 0</strong></a>
+  ·
+  <a href="memory-bank/04%20Engineering/Roadmap.md"><strong>Roadmap</strong></a>
+  ·
+  <a href="https://ko-fi.com/deus42"><strong>Support development</strong></a>
+</p>
+
+## Play & Support
+
+- **Play the browser demo:** Enter Level 0 directly from [GitHub Pages](https://deus42.github.io/the-getaway/).
+- **Follow development:** Star or watch the repository for new playable drops and roadmap updates.
+- **Support the work:** If you enjoy the prototype, you can [buy Deus a coffee on Ko-fi](https://ko-fi.com/deus42). Support is optional; feedback and follows help just as much.
+
 ## Table of Contents
+- [Play & Support](#play--support)
 - [Snapshot](#snapshot)
 - [Latest Transmission](#latest-transmission)
 - [Gameplay Pillars](#gameplay-pillars)
