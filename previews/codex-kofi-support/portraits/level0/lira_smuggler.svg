@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Lira the Smuggler portrait</title>
+  <desc id="desc">Female smuggler portrait with asymmetrical undercut and neon braid.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2a0f07"/>
+      <stop offset="100%" stop-color="#a63d13"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="18" fill="url(#bg)"/>
+  <ellipse cx="64" cy="71" rx="30" ry="33" fill="#f7c6a0"/>
+  <path d="M31 63c2-21 18-35 35-35 15 0 28 8 35 24-9-6-18-8-28-8-15 0-26 8-42 19z" fill="#f08c2a"/>
+  <path d="M84 34c10 8 13 24 8 37" stroke="#2a0f07" stroke-width="7" stroke-linecap="round"/>
+  <path d="M93 44c8 7 10 16 8 27" stroke="#f8a13e" stroke-width="4" stroke-linecap="round"/>
+  <ellipse cx="52" cy="70" rx="4" ry="5" fill="#2b1b16"/>
+  <ellipse cx="75" cy="70" rx="4" ry="5" fill="#2b1b16"/>
+  <path d="M46 66c3-2 7-2 10 0" stroke="#5a3429" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M71 66c3-2 7-2 10 0" stroke="#5a3429" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M50 84c8 6 19 6 27 0" stroke="#8b4e3b" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M82 73l8 9" stroke="#d94646" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="64" cy="121" r="30" fill="#1b2434"/>
+</svg>

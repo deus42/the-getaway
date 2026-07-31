@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Courier Brant portrait</title>
+  <desc id="desc">Male courier portrait with cap, squared jaw, and trimmed beard.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f2430"/>
+      <stop offset="100%" stop-color="#11606f"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="18" fill="url(#bg)"/>
+  <path d="M34 58h60v32c0 12-9 20-21 20H55c-12 0-21-8-21-20z" fill="#e6be98"/>
+  <path d="M29 53h70v13H29z" fill="#203243"/>
+  <path d="M36 52c8-12 18-19 29-19 11 0 21 4 29 16-7-2-12-3-18-3-11 0-24 3-40 6z" fill="#3a556f"/>
+  <ellipse cx="52" cy="72" rx="4" ry="5" fill="#2b1b16"/>
+  <ellipse cx="76" cy="72" rx="4" ry="5" fill="#2b1b16"/>
+  <path d="M47 67c3-2 8-2 11 0" stroke="#5a3429" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M70 67c3-2 8-2 11 0" stroke="#5a3429" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M52 85c7 3 15 3 22 0" stroke="#7a4f3d" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M45 89c12 12 26 12 38 0" stroke="#3a2a22" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M47 88h34v5H47z" fill="#3a2a22"/>
+  <circle cx="64" cy="122" r="29" fill="#1a2f3d"/>
+</svg>
