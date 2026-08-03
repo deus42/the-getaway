@@ -5,6 +5,8 @@ This runbook defines how to position landmark and parcel buildings so visual fit
 Cross-reference:
 - Operator workflow: `AGENTS.md`
 - System rules and fit modes: `memory-bank/04 Engineering/Architecture.md`
+- Gameplay geometry source: `the-getaway/src/content/levels/level0/layoutContract.ts`
+- Blender-facing deterministic export: `art/iso-assets/contracts/level0-layout-contract.json`
 
 ## Purpose
 
@@ -17,6 +19,8 @@ The goals are:
 - escalate quickly when the current geometry model cannot represent the art accurately
 
 ## Source of Truth Hierarchy
+
+Before any Level 0 Blender placement pass, run `yarn layout:level0:export` and `yarn layout:level0:validate` from `the-getaway/`. Blender may consume the exported contract, but any topology correction returns to the typed source and is re-exported; editing the JSON derivative or rendered art never changes gameplay geometry.
 
 Apply this order when diagnosing fit issues:
 

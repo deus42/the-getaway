@@ -1,0 +1,1398 @@
+{
+  "generatedFrom": "the-getaway/src/content/levels/level0/layoutContract.ts",
+  "purpose": "Shared authoring input for Blender and runtime-alignment validation",
+  "contract": {
+    "id": "level0-tokyo-greybox-v1",
+    "schemaVersion": 1,
+    "projection": {
+      "tileWidth": 64,
+      "tileHeight": 32,
+      "orientation": "isometric-2:1"
+    },
+    "bounds": [
+      {
+        "x": 0,
+        "y": 0
+      },
+      {
+        "x": 84,
+        "y": 0
+      },
+      {
+        "x": 84,
+        "y": 60
+      },
+      {
+        "x": 0,
+        "y": 60
+      }
+    ],
+    "zones": [
+      {
+        "id": "zone.safehouse",
+        "name": "Safehouse edge",
+        "polygon": [
+          {
+            "x": 4,
+            "y": 33
+          },
+          {
+            "x": 39,
+            "y": 33
+          },
+          {
+            "x": 39,
+            "y": 56
+          },
+          {
+            "x": 4,
+            "y": 56
+          }
+        ]
+      },
+      {
+        "id": "zone.public",
+        "name": "Public market",
+        "polygon": [
+          {
+            "x": 4,
+            "y": 4
+          },
+          {
+            "x": 39,
+            "y": 4
+          },
+          {
+            "x": 39,
+            "y": 33
+          },
+          {
+            "x": 4,
+            "y": 33
+          }
+        ]
+      },
+      {
+        "id": "zone.transit",
+        "name": "Transit spine",
+        "polygon": [
+          {
+            "x": 22,
+            "y": 4
+          },
+          {
+            "x": 62,
+            "y": 4
+          },
+          {
+            "x": 62,
+            "y": 56
+          },
+          {
+            "x": 22,
+            "y": 56
+          }
+        ]
+      },
+      {
+        "id": "zone.logistics",
+        "name": "Hidzu logistics",
+        "polygon": [
+          {
+            "x": 45,
+            "y": 4
+          },
+          {
+            "x": 80,
+            "y": 4
+          },
+          {
+            "x": 80,
+            "y": 40
+          },
+          {
+            "x": 45,
+            "y": 40
+          }
+        ]
+      }
+    ],
+    "traversalLoops": [
+      {
+        "id": "loop.outer",
+        "name": "District perimeter",
+        "closed": true,
+        "points": [
+          {
+            "x": 7,
+            "y": 7
+          },
+          {
+            "x": 25,
+            "y": 7
+          },
+          {
+            "x": 42,
+            "y": 7
+          },
+          {
+            "x": 59,
+            "y": 7
+          },
+          {
+            "x": 77,
+            "y": 7
+          },
+          {
+            "x": 77,
+            "y": 53
+          },
+          {
+            "x": 59,
+            "y": 53
+          },
+          {
+            "x": 42,
+            "y": 53
+          },
+          {
+            "x": 25,
+            "y": 53
+          },
+          {
+            "x": 7,
+            "y": 53
+          },
+          {
+            "x": 7,
+            "y": 30
+          },
+          {
+            "x": 7,
+            "y": 7
+          }
+        ]
+      },
+      {
+        "id": "loop.public",
+        "name": "Public preparation loop",
+        "closed": true,
+        "points": [
+          {
+            "x": 25,
+            "y": 7
+          },
+          {
+            "x": 42,
+            "y": 7
+          },
+          {
+            "x": 42,
+            "y": 30
+          },
+          {
+            "x": 25,
+            "y": 30
+          },
+          {
+            "x": 25,
+            "y": 7
+          }
+        ]
+      },
+      {
+        "id": "loop.service",
+        "name": "Service and return loop",
+        "closed": true,
+        "points": [
+          {
+            "x": 42,
+            "y": 30
+          },
+          {
+            "x": 59,
+            "y": 30
+          },
+          {
+            "x": 59,
+            "y": 53
+          },
+          {
+            "x": 42,
+            "y": 53
+          },
+          {
+            "x": 42,
+            "y": 30
+          }
+        ]
+      }
+    ],
+    "surfaces": [
+      {
+        "id": "surface.road.outer_north",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 4,
+            "y": 4
+          },
+          {
+            "x": 80,
+            "y": 4
+          },
+          {
+            "x": 80,
+            "y": 10
+          },
+          {
+            "x": 4,
+            "y": 10
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.road.outer_south",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 4,
+            "y": 50
+          },
+          {
+            "x": 80,
+            "y": 50
+          },
+          {
+            "x": 80,
+            "y": 56
+          },
+          {
+            "x": 4,
+            "y": 56
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.road.outer_west",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 4,
+            "y": 4
+          },
+          {
+            "x": 10,
+            "y": 4
+          },
+          {
+            "x": 10,
+            "y": 56
+          },
+          {
+            "x": 4,
+            "y": 56
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.road.outer_east",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 74,
+            "y": 4
+          },
+          {
+            "x": 80,
+            "y": 4
+          },
+          {
+            "x": 80,
+            "y": 56
+          },
+          {
+            "x": 74,
+            "y": 56
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.road.central",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 4,
+            "y": 27
+          },
+          {
+            "x": 80,
+            "y": 27
+          },
+          {
+            "x": 80,
+            "y": 33
+          },
+          {
+            "x": 4,
+            "y": 33
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.avenue.west",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 22,
+            "y": 4
+          },
+          {
+            "x": 28,
+            "y": 4
+          },
+          {
+            "x": 28,
+            "y": 56
+          },
+          {
+            "x": 22,
+            "y": 56
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.avenue.central",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 39,
+            "y": 4
+          },
+          {
+            "x": 45,
+            "y": 4
+          },
+          {
+            "x": 45,
+            "y": 56
+          },
+          {
+            "x": 39,
+            "y": 56
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.avenue.east",
+        "kind": "road",
+        "polygon": [
+          {
+            "x": 56,
+            "y": 4
+          },
+          {
+            "x": 62,
+            "y": 4
+          },
+          {
+            "x": 62,
+            "y": 56
+          },
+          {
+            "x": 56,
+            "y": 56
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.safehouse.court",
+        "kind": "plaza",
+        "polygon": [
+          {
+            "x": 12,
+            "y": 42
+          },
+          {
+            "x": 22,
+            "y": 42
+          },
+          {
+            "x": 22,
+            "y": 52
+          },
+          {
+            "x": 12,
+            "y": 52
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.public.forecourt",
+        "kind": "plaza",
+        "polygon": [
+          {
+            "x": 10,
+            "y": 25
+          },
+          {
+            "x": 22,
+            "y": 25
+          },
+          {
+            "x": 22,
+            "y": 35
+          },
+          {
+            "x": 10,
+            "y": 35
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.logistics.apron",
+        "kind": "plaza",
+        "polygon": [
+          {
+            "x": 62,
+            "y": 22
+          },
+          {
+            "x": 74,
+            "y": 22
+          },
+          {
+            "x": 74,
+            "y": 34
+          },
+          {
+            "x": 62,
+            "y": 34
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.logistics.service_alley",
+        "kind": "alley",
+        "polygon": [
+          {
+            "x": 62,
+            "y": 33
+          },
+          {
+            "x": 74,
+            "y": 33
+          },
+          {
+            "x": 74,
+            "y": 40
+          },
+          {
+            "x": 62,
+            "y": 40
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.transit.plaza",
+        "kind": "plaza",
+        "polygon": [
+          {
+            "x": 39,
+            "y": 41
+          },
+          {
+            "x": 62,
+            "y": 41
+          },
+          {
+            "x": 62,
+            "y": 50
+          },
+          {
+            "x": 39,
+            "y": 50
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.sidewalk.market",
+        "kind": "sidewalk",
+        "polygon": [
+          {
+            "x": 10,
+            "y": 25
+          },
+          {
+            "x": 22,
+            "y": 25
+          },
+          {
+            "x": 22,
+            "y": 27
+          },
+          {
+            "x": 10,
+            "y": 27
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.sidewalk.civic",
+        "kind": "sidewalk",
+        "polygon": [
+          {
+            "x": 28,
+            "y": 25
+          },
+          {
+            "x": 39,
+            "y": 25
+          },
+          {
+            "x": 39,
+            "y": 27
+          },
+          {
+            "x": 28,
+            "y": 27
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.sidewalk.hidzu",
+        "kind": "sidewalk",
+        "polygon": [
+          {
+            "x": 45,
+            "y": 25
+          },
+          {
+            "x": 56,
+            "y": 25
+          },
+          {
+            "x": 56,
+            "y": 27
+          },
+          {
+            "x": 45,
+            "y": 27
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.sidewalk.logistics",
+        "kind": "sidewalk",
+        "polygon": [
+          {
+            "x": 62,
+            "y": 23
+          },
+          {
+            "x": 74,
+            "y": 23
+          },
+          {
+            "x": 74,
+            "y": 25
+          },
+          {
+            "x": 62,
+            "y": 25
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.crossing.west",
+        "kind": "crossing",
+        "polygon": [
+          {
+            "x": 22,
+            "y": 27
+          },
+          {
+            "x": 28,
+            "y": 27
+          },
+          {
+            "x": 28,
+            "y": 33
+          },
+          {
+            "x": 22,
+            "y": 33
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.crossing.central",
+        "kind": "crossing",
+        "polygon": [
+          {
+            "x": 39,
+            "y": 27
+          },
+          {
+            "x": 45,
+            "y": 27
+          },
+          {
+            "x": 45,
+            "y": 33
+          },
+          {
+            "x": 39,
+            "y": 33
+          }
+        ],
+        "walkable": true
+      },
+      {
+        "id": "surface.crossing.east",
+        "kind": "crossing",
+        "polygon": [
+          {
+            "x": 56,
+            "y": 27
+          },
+          {
+            "x": 62,
+            "y": 27
+          },
+          {
+            "x": 62,
+            "y": 33
+          },
+          {
+            "x": 56,
+            "y": 33
+          }
+        ],
+        "walkable": true
+      }
+    ],
+    "buildingFootprints": [
+      {
+        "id": "building.public_market",
+        "function": "public-market",
+        "polygon": [
+          {
+            "x": 11,
+            "y": 11
+          },
+          {
+            "x": 21,
+            "y": 11
+          },
+          {
+            "x": 21,
+            "y": 25
+          },
+          {
+            "x": 11,
+            "y": 25
+          }
+        ],
+        "height": 5
+      },
+      {
+        "id": "building.civic_north",
+        "function": "civic-services",
+        "polygon": [
+          {
+            "x": 29,
+            "y": 11
+          },
+          {
+            "x": 38,
+            "y": 11
+          },
+          {
+            "x": 38,
+            "y": 25
+          },
+          {
+            "x": 29,
+            "y": 25
+          }
+        ],
+        "height": 7
+      },
+      {
+        "id": "building.hidzu_offices",
+        "function": "hidzu-offices",
+        "polygon": [
+          {
+            "x": 46,
+            "y": 11
+          },
+          {
+            "x": 55,
+            "y": 11
+          },
+          {
+            "x": 55,
+            "y": 25
+          },
+          {
+            "x": 46,
+            "y": 25
+          }
+        ],
+        "height": 8
+      },
+      {
+        "id": "building.logistics_annex",
+        "function": "logistics-compliance",
+        "polygon": [
+          {
+            "x": 63,
+            "y": 11
+          },
+          {
+            "x": 73,
+            "y": 11
+          },
+          {
+            "x": 73,
+            "y": 23
+          },
+          {
+            "x": 63,
+            "y": 23
+          }
+        ],
+        "height": 6
+      },
+      {
+        "id": "building.safehouse",
+        "function": "safehouse-shell",
+        "polygon": [
+          {
+            "x": 11,
+            "y": 35
+          },
+          {
+            "x": 21,
+            "y": 35
+          },
+          {
+            "x": 21,
+            "y": 42
+          },
+          {
+            "x": 11,
+            "y": 42
+          }
+        ],
+        "height": 4
+      },
+      {
+        "id": "building.service_west",
+        "function": "service-workshops",
+        "polygon": [
+          {
+            "x": 29,
+            "y": 35
+          },
+          {
+            "x": 38,
+            "y": 35
+          },
+          {
+            "x": 38,
+            "y": 49
+          },
+          {
+            "x": 29,
+            "y": 49
+          }
+        ],
+        "height": 5
+      },
+      {
+        "id": "building.transit_hall",
+        "function": "transit-hall",
+        "polygon": [
+          {
+            "x": 46,
+            "y": 35
+          },
+          {
+            "x": 55,
+            "y": 35
+          },
+          {
+            "x": 55,
+            "y": 41
+          },
+          {
+            "x": 46,
+            "y": 41
+          }
+        ],
+        "height": 5
+      },
+      {
+        "id": "building.service_south",
+        "function": "service-distribution",
+        "polygon": [
+          {
+            "x": 63,
+            "y": 41
+          },
+          {
+            "x": 73,
+            "y": 41
+          },
+          {
+            "x": 73,
+            "y": 49
+          },
+          {
+            "x": 63,
+            "y": 49
+          }
+        ],
+        "height": 5
+      }
+    ],
+    "entrances": [
+      {
+        "id": "entrance.logistics.public",
+        "buildingId": "building.logistics_annex",
+        "position": {
+          "x": 62,
+          "y": 24
+        },
+        "facingDegrees": 225,
+        "route": "public"
+      },
+      {
+        "id": "entrance.logistics.service",
+        "buildingId": "building.logistics_annex",
+        "position": {
+          "x": 68,
+          "y": 28
+        },
+        "facingDegrees": 315,
+        "route": "service"
+      },
+      {
+        "id": "entrance.safehouse",
+        "buildingId": "building.safehouse",
+        "position": {
+          "x": 16,
+          "y": 43
+        },
+        "facingDegrees": 135,
+        "route": "shared"
+      }
+    ],
+    "droneRegions": [
+      {
+        "id": "drone.region.logistics-verification",
+        "polygon": [
+          {
+            "x": 54,
+            "y": 18
+          },
+          {
+            "x": 78,
+            "y": 18
+          },
+          {
+            "x": 78,
+            "y": 43
+          },
+          {
+            "x": 54,
+            "y": 43
+          }
+        ],
+        "launchAnchorId": "drone.launch"
+      }
+    ],
+    "anchors": [
+      {
+        "id": "safehouse.boundary",
+        "kind": "safehouse",
+        "position": {
+          "x": 17,
+          "y": 46
+        },
+        "radius": 5,
+        "required": true,
+        "ownerId": "building.safehouse"
+      },
+      {
+        "id": "safehouse.spawn",
+        "kind": "safehouse",
+        "position": {
+          "x": 16,
+          "y": 47
+        },
+        "radius": 0.8,
+        "required": true,
+        "ownerId": "building.safehouse"
+      },
+      {
+        "id": "safehouse.departure",
+        "kind": "safehouse",
+        "position": {
+          "x": 21,
+          "y": 50
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "building.safehouse"
+      },
+      {
+        "id": "entrance.safehouse",
+        "kind": "entrance",
+        "position": {
+          "x": 16,
+          "y": 43
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "building.safehouse",
+        "tags": [
+          "shared"
+        ]
+      },
+      {
+        "id": "contact.lira",
+        "kind": "contact",
+        "position": {
+          "x": 16,
+          "y": 30
+        },
+        "radius": 1.4,
+        "required": true,
+        "ownerId": "contact.lira"
+      },
+      {
+        "id": "contact.naila",
+        "kind": "contact",
+        "position": {
+          "x": 25,
+          "y": 17
+        },
+        "radius": 1.4,
+        "required": true,
+        "ownerId": "contact.naila"
+      },
+      {
+        "id": "contact.brant",
+        "kind": "contact",
+        "position": {
+          "x": 42,
+          "y": 17
+        },
+        "radius": 1.4,
+        "required": true,
+        "ownerId": "contact.brant"
+      },
+      {
+        "id": "entrance.logistics.public",
+        "kind": "entrance",
+        "position": {
+          "x": 62,
+          "y": 24
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "building.logistics_annex",
+        "tags": [
+          "public"
+        ]
+      },
+      {
+        "id": "entrance.logistics.service",
+        "kind": "entrance",
+        "position": {
+          "x": 68,
+          "y": 28
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "building.logistics_annex",
+        "tags": [
+          "service"
+        ]
+      },
+      {
+        "id": "terminal.camera_loop",
+        "kind": "terminal",
+        "position": {
+          "x": 59,
+          "y": 24
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "camera.group.logistics"
+      },
+      {
+        "id": "terminal.cache_locker",
+        "kind": "terminal",
+        "position": {
+          "x": 67,
+          "y": 29
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "objective.medkits"
+      },
+      {
+        "id": "terminal.outbound_transit",
+        "kind": "terminal",
+        "position": {
+          "x": 14,
+          "y": 46
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "building.safehouse"
+      },
+      {
+        "id": "drone.launch",
+        "kind": "drone-launch",
+        "position": {
+          "x": 71,
+          "y": 36
+        },
+        "radius": 1.4,
+        "required": true,
+        "ownerId": "drone.verifier.01"
+      },
+      {
+        "id": "hide.service_recess",
+        "kind": "hiding",
+        "position": {
+          "x": 64,
+          "y": 36
+        },
+        "radius": 1.6,
+        "required": true
+      },
+      {
+        "id": "hide.maintenance_bay",
+        "kind": "hiding",
+        "position": {
+          "x": 70,
+          "y": 38
+        },
+        "radius": 1.6,
+        "required": true
+      },
+      {
+        "id": "hide.transit_structure",
+        "kind": "hiding",
+        "position": {
+          "x": 49,
+          "y": 45
+        },
+        "radius": 1.6,
+        "required": true
+      },
+      {
+        "id": "blend.delivery_activity",
+        "kind": "blending",
+        "position": {
+          "x": 25,
+          "y": 30
+        },
+        "radius": 2.2,
+        "required": true
+      },
+      {
+        "id": "blend.public_queue",
+        "kind": "blending",
+        "position": {
+          "x": 53,
+          "y": 30
+        },
+        "radius": 2.2,
+        "required": true
+      },
+      {
+        "id": "objective.medkits",
+        "kind": "objective",
+        "position": {
+          "x": 69,
+          "y": 29
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "terminal.cache_locker"
+      },
+      {
+        "id": "objective.manifest",
+        "kind": "objective",
+        "position": {
+          "x": 71,
+          "y": 29
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "terminal.cache_locker"
+      },
+      {
+        "id": "camera.public_approach",
+        "kind": "camera",
+        "position": {
+          "x": 58,
+          "y": 21
+        },
+        "radius": 0.8,
+        "required": true,
+        "ownerId": "camera.group.logistics"
+      },
+      {
+        "id": "camera.public_gate",
+        "kind": "camera",
+        "position": {
+          "x": 64,
+          "y": 26
+        },
+        "radius": 0.8,
+        "required": true,
+        "ownerId": "camera.group.logistics"
+      },
+      {
+        "id": "camera.service_gate",
+        "kind": "camera",
+        "position": {
+          "x": 72,
+          "y": 27
+        },
+        "radius": 0.8,
+        "required": true,
+        "ownerId": "camera.group.logistics"
+      },
+      {
+        "id": "camera.service_alley",
+        "kind": "camera",
+        "position": {
+          "x": 59,
+          "y": 35
+        },
+        "radius": 0.8,
+        "required": true,
+        "ownerId": "camera.group.logistics"
+      },
+      {
+        "id": "audio.curfew.public",
+        "kind": "audio",
+        "position": {
+          "x": 42,
+          "y": 30
+        },
+        "radius": 6,
+        "required": true,
+        "ownerId": "schedule.curfew"
+      },
+      {
+        "id": "interaction.safehouse.wait",
+        "kind": "interaction",
+        "position": {
+          "x": 18,
+          "y": 47
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "safehouse.wait"
+      },
+      {
+        "id": "interaction.safehouse.rest",
+        "kind": "interaction",
+        "position": {
+          "x": 15,
+          "y": 47
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "safehouse.rest"
+      }
+    ],
+    "occluders": [
+      [
+        {
+          "x": 11,
+          "y": 11
+        },
+        {
+          "x": 21,
+          "y": 11
+        },
+        {
+          "x": 21,
+          "y": 25
+        },
+        {
+          "x": 11,
+          "y": 25
+        }
+      ],
+      [
+        {
+          "x": 29,
+          "y": 11
+        },
+        {
+          "x": 38,
+          "y": 11
+        },
+        {
+          "x": 38,
+          "y": 25
+        },
+        {
+          "x": 29,
+          "y": 25
+        }
+      ],
+      [
+        {
+          "x": 46,
+          "y": 11
+        },
+        {
+          "x": 55,
+          "y": 11
+        },
+        {
+          "x": 55,
+          "y": 25
+        },
+        {
+          "x": 46,
+          "y": 25
+        }
+      ],
+      [
+        {
+          "x": 63,
+          "y": 11
+        },
+        {
+          "x": 73,
+          "y": 11
+        },
+        {
+          "x": 73,
+          "y": 23
+        },
+        {
+          "x": 63,
+          "y": 23
+        }
+      ],
+      [
+        {
+          "x": 11,
+          "y": 35
+        },
+        {
+          "x": 21,
+          "y": 35
+        },
+        {
+          "x": 21,
+          "y": 42
+        },
+        {
+          "x": 11,
+          "y": 42
+        }
+      ],
+      [
+        {
+          "x": 29,
+          "y": 35
+        },
+        {
+          "x": 38,
+          "y": 35
+        },
+        {
+          "x": 38,
+          "y": 49
+        },
+        {
+          "x": 29,
+          "y": 49
+        }
+      ],
+      [
+        {
+          "x": 46,
+          "y": 35
+        },
+        {
+          "x": 55,
+          "y": 35
+        },
+        {
+          "x": 55,
+          "y": 41
+        },
+        {
+          "x": 46,
+          "y": 41
+        }
+      ],
+      [
+        {
+          "x": 63,
+          "y": 41
+        },
+        {
+          "x": 73,
+          "y": 41
+        },
+        {
+          "x": 73,
+          "y": 49
+        },
+        {
+          "x": 63,
+          "y": 49
+        }
+      ]
+    ],
+    "semanticMaskIds": [
+      "mask.level0.walkable",
+      "mask.level0.blocked",
+      "mask.level0.occlusion",
+      "mask.level0.interaction",
+      "mask.level0.surveillance"
+    ],
+    "artLayerIds": [
+      "layer.level0.greybox.ground",
+      "layer.level0.greybox.architecture",
+      "layer.level0.greybox.semantic",
+      "layer.level0.greybox.atmosphere"
+    ]
+  }
+}

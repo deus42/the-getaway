@@ -69,13 +69,13 @@ The program entry gate opens when this reviewed package is committed separately 
 
 | Gate | State | Acceptance evidence required |
 |---|---|---|
-| Direct click-to-move | Not started | No A*, immediate override, direct intent, stable arrival, and invalid-destination feedback. |
-| WASD alternative | Not started | Equivalent collision/focus behavior and immediate cancellation. |
-| Collision sliding | Not started | Corners, walls, narrow alleys, and entrances work without route planning. |
-| Explicit interactions | Not started | Contacts, objects, terminals, hiding, and safehouse require input with truthful range/occlusion. |
-| Focus ownership | Not started | HUD, modal, dialogue, and pause exits never require a sacrificial movement click. |
-| Full-pause observation | Not started | Camera pan/inspection/George prompt available; movement and world mutation impossible; all simulation frozen. |
-| Camera/zoom contract | Blocked | Normal floor is 0.60; default/start framing and exact movement/camera tuning remain open. |
+| Direct click-to-move | Implemented; live review pending | The active scene uses direct world intent, immediate replacement, truthful invalid-target reasons, and no route request. Pure movement and entry tests pass; live human feel remains unaccepted. |
+| WASD alternative | Implemented; live review pending | Isometric screen-direction input replaces click intent immediately and shares the same collision integrator. Keyboard feel/focus still needs target-viewport play. |
+| Collision sliding | Implemented; live review pending | Disc samples and local axis sliding pass deterministic corner/block tests. Narrow-alley and entrance feel still requires human play. |
+| Explicit interactions | Partially implemented | One typed resolver proves knowledge, independently derived world ownership, range, solid-geometry occlusion, and authoritative unavailable reasons; automatic discovery cannot leak unknown/wrong-domain targets and safehouse actions require confirmation. Contacts, mission objects, hiding, and terminals remain with T8–T10. |
+| Focus ownership | Partially evidenced | Menu, Observation, safehouse confirmation, deadline failure, and Escape use additive pause/focus ownership. Confirmation and terminal overlays make the background inert, disable its controls, and reject hidden safehouse mutations. Autosaves strip transient UI owners and hydration derives only terminal pauses. Later overlays still require integration proof. |
+| Full-pause observation | Partially implemented | Observation freezes the clock and movement while allowing camera pan/zoom. Known-device inspection and authored George prompts remain T8/T9. |
+| Camera/zoom contract | Implemented provisionally; acceptance blocked | Runtime clamps normal zoom to 0.60–1.25 and restores follow after observation. Start framing/tuning remain open and minimum-zoom live capture is not yet accepted. |
 
 ## Surveillance and escape readiness
 
@@ -90,7 +90,7 @@ The program entry gate opens when this reviewed package is committed separately 
 | One verifier drone | Not started | Dispatch, warning, verification, search, and recovery proven without combat. |
 | Deterministic interception | Blocked | Exact capture fiction, requirements, and costs remain open. |
 | Safehouse under active surveillance | Blocked | `OPEN-SAFE-001` must freeze boundary/action behavior; acceptance must prove no automatic network clear or magical recovery. |
-| No tactical combat path | Partially evidenced | Normal New Game and development/test agent entry cannot initialize the retired combat runtime, and the active menu exposes no AutoBattle or Combat HUD-layout option. Dormant legacy modules remain recoverable until the replacement runtime exists; the complete production slice still needs human proof. |
+| No tactical combat path | Technically evidenced; human proof pending | Ordinary New Game and agent entry now mount only the canonical Level 0 runtime island. `GameController`, `BootScene`, `MainScene`, AutoBattle, and combat UI remain dormant source and cannot initialize through the active App entry. |
 
 ## Dialogue, George, facts, and information readiness
 
@@ -104,18 +104,18 @@ The program entry gate opens when this reviewed package is committed separately 
 | George HUD + private AR avatar | Blocked | Hardware fiction and exact presentation reference remain open; behavior contract is specified. |
 | Authored George prompts | Not started | No free text, invention, automation, or undiscovered-content leaks. |
 | Operation dossier | Not started | Objectives, facts, people, locations, evidence, timeline, consequences; no rejected systems. |
-| Knowledge minimap | Not started | Discovery precision and no routing/unknown-camera leak. |
+| Knowledge minimap | Foundation implemented | The shared authored-ID knowledge resolver hides undiscovered cameras, drone, objectives, terminals, hiding, and blending contexts from the scene and diagnostics. District/area/entrance objective knowledge never exposes an exact world anchor; only exact precision does. Final approximate-marker rendering and discovery flows remain T8/T9. |
 | Read-only social feed | Not started | Atmospheric Hidzu content only; no posting, messaging, followers, or search risk. |
 
 ## World, actors, HUD, and audio readiness
 
 | Gate | State | Acceptance evidence required |
 |---|---|---|
-| Shared outdoor layout contract | Blocked | Exact dimensions, widths, district zones, anchors, and semantics remain open. |
-| Three traversal loops | Not started | All required locations reachable without pathfinding; outer loop measured at target movement speed. |
+| Shared outdoor layout contract | Implemented provisionally; approval blocked | One typed `level0-tokyo-greybox-v1` contract owns projection, bounds, zones, 20 semantic surfaces, footprints, entrances, drone region, matched occluders, 27 anchors, masks, and art layers; 84×60 and exact values remain `OPEN-*`. |
+| Three traversal loops | Technically evidenced; live review pending | Validator proves exactly three interlocking loops and required-anchor reachability without runtime pathfinding. The provisional direct speed yields an approximately 145-second outer loop; route feel remains unaccepted pending human play. |
 | Unchanged-kit Blender city gate | Blocked | Exact asset/license inventory and logistics-site identity must be frozen; Direction B is a T5 Hidzu-treatment blocker, not a T4 unchanged-kit blocker. |
 | Hidzu identity pass | Not started | Begins only after unchanged-kit composition acceptance. |
-| No zoom-out corruption | Not started | Live captures at all target viewports and minimum zoom show no seams/clipping/repetition. |
+| No zoom-out corruption | Implemented but not visually evidenced | The new vector greybox uses one continuous projection and clamps at 0.60. Required live captures could not be collected in this pass and remain a hard acceptance gate. |
 | Twelve grounded actor sets | Not started | Complete 8-direction `idle/move/interact`, anchors, scale, matching portraits. |
 | Four-lane HUD at 16–18% | Blocked | Lane widths/wireframes remain open; height and information contract are fixed. |
 | Major overlays | Not started | Character, dialogue, dossier, feed, debrief, failure, retry, completion at 1280×720 minimum. |
@@ -126,11 +126,11 @@ The program entry gate opens when this reviewed package is committed separately 
 
 | Gate | State | Acceptance evidence required |
 |---|---|---|
-| New save schema | Not started | Explicit schema version and hydration validation. |
-| Autosave | Not started | Current-run persistence at declared safe points without stale rewrite fields. |
-| Departure Retry snapshot | Not started | Exact identity/build/preparation/fact/time/Health/Paranoia/mission restoration. |
-| Incompatible rewrite saves | Partially evidenced | The recovery seam detects the retired state, disables Continue, explains incompatibility in English/Ukrainian, and clears it through New Game without hydrating package/combat/inventory state. Final proof remains coupled to the new schema and runtime in GET-203/GET-207. |
-| Failure causes | Not started | Health, Paranoia, capture, and deadline each proven with exact reason and Retry. |
+| New save schema | Foundation implemented | Exact nested schema/content guards validate attributes, skills, objectives, contacts, map knowledge, clock consistency, pause owners, exact missing deadline requirements, walkable player/last-known positions, normalized facing, and current generation/seed/layout identity; malformed or stale payloads are rejected without default filling. T7–T10 will add final content fields without reusing rewrite state. |
+| Autosave | Foundation implemented | Current run uses a separate validated key, writes at start/safe transitions/periodic exit protection, strips transient overlay ownership, and excludes retired package/combat/inventory ownership. Final authored checkpoint policy remains later integration work. |
+| Departure Retry snapshot | Foundation implemented | Explicit confirmed departure projects and verifies one identical Retry/autosave state before writing either record, writes Retry first as a recoverable transaction, rejects conflicting sessions/state, requires the authored departure anchor, recreates the scene at that transform, and Retry hydrates the complete snapshot. Full identity/preparation/fact coverage expands with T7/T9/T10. |
+| Incompatible rewrite saves | Technically evidenced; live review pending | The active menu never hydrates `the-getaway-state`, leaves it untouched until explicit New Game, explains incompatibility bilingually, and clears it only through that action. |
+| Failure causes | Partially implemented | Midnight failure records `failure.deadline`, freezes simulation, names exactly the incomplete completion requirements, and offers departure Retry. Wait/Rest confirmations warn before crossing midnight only when those requirements are incomplete. Health, Paranoia, and capture failures remain T7/T8/T10. |
 
 ## Required end-to-end evidence
 

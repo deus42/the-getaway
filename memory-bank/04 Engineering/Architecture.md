@@ -99,6 +99,24 @@ Tooling owns:
 
 Tool output never marks a player-experience gate accepted automatically.
 
+### Active Level 0 runtime seam
+
+The shipping application entry mounts the canonical Level 0 runtime island through `src/App.tsx` and `src/components/level0/Level0RuntimeShell.tsx`. The island deliberately does not mount the retired `GameController`, `BootScene`, `MainScene`, A* input modules, tactical-combat managers, or whole-root prototype hydration. Those modules remain recoverable source until their owning tickets salvage or remove them, but they are not part of ordinary New Game.
+
+Current ownership is explicit:
+
+- `src/content/levels/level0/layoutContract.ts` is the authored runtime topology;
+- `src/game/level0/layout/` owns validation and the reversible 64×32 projection adapter;
+- `src/game/level0/movement/directMovement.ts` owns direct intent, local collision sampling, and axis sliding;
+- `src/game/level0/interaction/interactionResolver.ts` owns knowledge, independently derived world-ownership, range, occlusion, and authoritative availability results; automatic discovery filters unknown or wrong-domain anchors instead of revealing their existence through an error;
+- `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, and immutable departure Retry;
+- `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
+- `src/game/level0/scene/Level0Scene.ts` owns frame-local greybox rendering, actor transform, camera, and input;
+- `src/game/level0/playtest/level0AgentBridge.ts` derives diagnostics from the same store/layout and may dispatch only normal runtime events;
+- `art/iso-assets/contracts/level0-layout-contract.json` is the deterministic Blender-facing export of the same contract.
+
+The retired `the-getaway-state` schema remains disabled. The new Level 0 autosave and Retry use independent keys and exact nested envelopes, so the legacy subscriber cannot hydrate or overwrite the canonical run. Validation rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and failure copy that does not exactly match incomplete requirements. Retry additionally requires the authored departure anchor. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists Retry before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, and safehouse policy remain provisional while their `OPEN-*` decisions are unresolved.
+
 ## 3. Application lifecycle
 
 The target lifecycle is:
@@ -189,6 +207,7 @@ interface Level0LayoutContract {
   surfaces: Level0SurfaceRegion[];
   buildingFootprints: Level0BuildingFootprint[];
   entrances: Level0Entrance[];
+  droneRegions: Level0DroneRegion[];
   anchors: Level0Anchor[];
   occluders: WorldPolygon[];
   semanticMaskIds: string[];
@@ -431,6 +450,8 @@ type ContactStateRecord = Record<'lira' | 'naila' | 'brant', ContactState>;
 
 interface RetrySnapshot {
   schemaVersion: number;
+  contentVersions: Record<string, string>;
+  sessionId: string;
   createdAtWorldMinute: number;
   identity: PlayerIdentity;
   build: PlayerBuild;
@@ -443,9 +464,10 @@ interface RetrySnapshot {
   mapKnowledge: MapKnowledgeState;
   contacts: ContactStateRecord;
   safehouse: SafehouseState;
-  playerPosition: WorldPoint;
+  surveillance: Level0SurveillanceRuntimeState;
+  player: Level0PlayerRuntimeCheckpoint;
   runtimeGeneration: RuntimeGenerationState;
-  contentVersions: Record<string, string>;
+  completion: Level0RunState['completion'];
 }
 ```
 
@@ -594,6 +616,8 @@ The interaction resolver evaluates:
 
 It returns a typed available/blocked result consumed by both prompt UI and activation. Proximity alone never commits an interaction.
 
+Player knowledge and world ownership are separate inputs. Knowledge controls whether a target may be surfaced; world ownership proves that the target's backing domain state exists. An explicitly addressed invalid target may return a truthful diagnostic, while automatic interaction discovery silently excludes unknown or wrong-domain anchors so it cannot leak hidden content.
+
 ### Camera
 
 - Normal Level 0 zoom cannot go below `0.60`.
@@ -701,7 +725,7 @@ Use distinct storage keys and schema envelopes for:
 - operation-departure Retry snapshot;
 - settings/localization.
 
-Each envelope contains schema version, content/layout version, timestamp, and validated payload.
+Each envelope contains schema version, content/layout version, timestamp, and a deeply validated payload. Spatial checkpoints must be finite, walkable, and compatible with the active layout; facing is a nonzero unit vector; deterministic generation identifiers must match the active runtime; deadline failure requirements must equal the completion fields that remain false.
 
 ### Autosave
 

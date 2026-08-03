@@ -1,145 +1,225 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import App from "../App";
-import { PERSISTED_STATE_KEY, resetGame, store } from "../store";
-import { setLocale } from "../store/settingsSlice";
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import App from '../App';
+import {
+  LEVEL0_AUTOSAVE_KEY,
+  LEVEL0_RETRY_KEY,
+  readLevel0Retry,
+} from '../game/level0/runtime/persistence';
+import { PERSISTED_STATE_KEY, resetGame, store } from '../store';
+import { setLocale } from '../store/settingsSlice';
+import { advanceLevel0Clock, hydrateLevel0Run } from '../store/level0RuntimeSlice';
 
-jest.mock("../components/GameCanvas", () => {
-  return function MockedGameCanvas() {
-    return <div data-testid="game-canvas">Game Canvas Mock</div>;
+jest.mock('../components/level0/Level0GameCanvas', () => {
+  return function MockedLevel0GameCanvas() {
+    return <div data-testid="level0-game-canvas">Level 0 Canvas</div>;
   };
 });
 
-jest.mock("../components/ui/MiniMap", () => {
-  return function MockedMiniMap() {
-    return <div data-testid="mini-map">Mini Map Mock</div>;
-  };
-});
-
-jest.mock("../components/debug/GameDebugInspector", () => () => null);
-
-describe("App recovery boundary", () => {
+describe('canonical Level 0 runtime entry', () => {
   beforeEach(() => {
     store.dispatch(resetGame());
-    store.dispatch(setLocale("en"));
+    store.dispatch(setLocale('en'));
     window.localStorage.clear();
     window.sessionStorage.clear();
-    window.history.replaceState({}, "", "/");
+    window.history.replaceState({}, '', '/');
   });
 
   afterEach(() => {
-    window.history.replaceState({}, "", "/");
+    window.history.replaceState({}, '', '/');
+    jest.useRealTimers();
   });
 
-  it("opens on the menu without exposing a compatible legacy run", async () => {
+  it('opens on the menu and starts an ordinary canonical New Game', async () => {
     render(<App />);
 
-    expect(await screen.findByTestId("game-menu")).toBeInTheDocument();
-    expect(screen.getByTestId("continue-game")).toBeDisabled();
-    expect(screen.queryByTestId("game-canvas")).not.toBeInTheDocument();
+    expect(await screen.findByTestId('level0-start-menu')).toBeInTheDocument();
+    expect(screen.getByTestId('level0-continue')).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId('level0-new-game'));
+
+    expect(await screen.findByTestId('level0-game-canvas')).toBeInTheDocument();
+    expect(screen.getByTestId('level0-runtime-hud')).toBeInTheDocument();
+    expect(store.getState().level0Runtime.status).toBe('active');
+    expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(18 * 60 + 30);
+    expect(window.localStorage.getItem(LEVEL0_AUTOSAVE_KEY)).not.toBeNull();
   });
 
-  it("routes New Game to an honest recovery boundary without legacy initialization", async () => {
-    render(<App />);
-
-    fireEvent.click(await screen.findByTestId("start-new-game"));
-
-    const recoveryBoundary = await screen.findByTestId("level0-recovery-boundary");
-    expect(recoveryBoundary).toBeInTheDocument();
-    expect(recoveryBoundary).toHaveStyle({
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0,
-    });
-    recoveryBoundary.querySelectorAll("article").forEach((panel) => {
-      expect(panel).toHaveStyle({ padding: "1.25rem" });
-    });
-    expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("game-canvas")).not.toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(/operative name/i)).not.toBeInTheDocument();
-    expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).toBeNull();
-    expect(store.getState().player.data.name).toBe("Player");
-    expect(store.getState().player.data.backgroundId).toBeUndefined();
-    expect(store.getState().world.inCombat).toBe(false);
-  });
-
-  it("identifies a retired prototype save and clears it before the recovery boundary", async () => {
+  it('reports a retired prototype save and clears it only on explicit New Game', async () => {
     window.localStorage.setItem(PERSISTED_STATE_KEY, JSON.stringify({ legacy: true }));
-
     render(<App />);
 
-    expect(await screen.findByTestId("retired-save-notice")).toHaveStyle({
-      padding: "0.75rem 1rem",
-    });
-    expect(screen.getByTestId("continue-game")).toBeDisabled();
+    expect(await screen.findByTestId('retired-save-notice')).toBeInTheDocument();
+    expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).not.toBeNull();
 
-    fireEvent.click(screen.getByTestId("start-new-game"));
-
-    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
+    fireEvent.click(screen.getByTestId('level0-new-game'));
+    expect(await screen.findByTestId('level0-game-canvas')).toBeInTheDocument();
     expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).toBeNull();
   });
 
-  it("explains the retired save and recovery boundary in Ukrainian", async () => {
-    store.dispatch(setLocale("uk"));
-    window.localStorage.setItem(PERSISTED_STATE_KEY, JSON.stringify({ legacy: true }));
-
+  it('uses the same canonical start path for the agent shortcut', async () => {
+    window.history.replaceState({}, '', '/?agent=1&agentStart=level0&fresh=1');
     render(<App />);
 
-    expect(await screen.findByTestId("retired-save-notice")).toHaveTextContent(
-      /попереднє збереження прототипу несумісне/i
-    );
-    fireEvent.click(screen.getByTestId("start-new-game"));
-
-    expect(await screen.findByRole("heading", { name: /втечу з токіо перебудовують/i })).toBeInTheDocument();
-    expect(screen.getByTestId("recovery-return-to-menu")).toHaveTextContent(/повернутися до меню/i);
+    expect(await screen.findByTestId('level0-game-canvas')).toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.sessionId).toBeTruthy();
+    expect(screen.queryByTestId('level0-start-menu')).not.toBeInTheDocument();
   });
 
-  it("routes the Level 0 agent shortcut to the same boundary", async () => {
-    window.history.replaceState(
-      {},
-      "",
-      "/?agent=1&agentStart=level0&agentName=Operative"
-    );
-
+  it('applies safehouse actions and persists one operation-departure Retry snapshot', async () => {
     render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
 
-    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
-    expect(screen.queryByTestId("game-canvas")).not.toBeInTheDocument();
-    expect(store.getState().player.data.backgroundId).toBeUndefined();
+    fireEvent.click(await screen.findByTestId('safehouse-wait'));
+    expect(screen.getByTestId('safehouse-confirmation')).toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(18 * 60 + 30);
+    fireEvent.click(screen.getByTestId('safehouse-confirm'));
+    expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(19 * 60);
+
+    fireEvent.click(screen.getByTestId('safehouse-depart'));
+    fireEvent.click(screen.getByTestId('safehouse-confirm'));
+    await waitFor(() => expect(window.localStorage.getItem(LEVEL0_RETRY_KEY)).not.toBeNull());
+
+    const retry = readLevel0Retry(window.localStorage);
+    expect(retry.status).toBe('compatible');
+    expect(store.getState().level0Runtime.run?.mission).toBe('L0_OPERATION_DEPARTED');
   });
 
-  it("routes the agent shortcut after a same-tab remount", async () => {
-    window.history.replaceState({}, "", "/?agent=1&agentStart=level0");
-
-    const firstMount = render(<App />);
-    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
-    firstMount.unmount();
-
+  it('pauses the clock while observation is active', async () => {
     render(<App />);
-    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    fireEvent.click(screen.getByTestId('level0-observation'));
+
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toContain('observation');
+    expect(screen.getByTestId('level0-observation')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it("allows the retired PoC shortcut to return to the menu", async () => {
-    window.history.replaceState({}, "", "/?poc=esb");
-
+  it('owns and releases the safehouse confirmation pause without applying a cancelled action', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId("recovery-return-to-menu"));
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    fireEvent.click(await screen.findByTestId('safehouse-rest'));
 
-    await waitFor(() => {
-      expect(screen.getByTestId("game-menu")).toBeInTheDocument();
-      expect(screen.queryByTestId("level0-recovery-boundary")).not.toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toContain('safehouse_action');
+    fireEvent.click(screen.getByTestId('safehouse-cancel'));
+
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).not.toContain('safehouse_action');
+    expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(18 * 60 + 30);
+  });
+
+  it('gives a safehouse confirmation exclusive keyboard and action ownership', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    fireEvent.click(await screen.findByTestId('safehouse-rest'));
+
+    expect(screen.getByTestId('level0-runtime-background')).toHaveAttribute('inert');
+    expect(screen.getByTestId('level0-observation')).toBeDisabled();
+    expect(screen.getByTestId('level0-interact')).toBeDisabled();
+    expect(screen.getByTestId('safehouse-wait')).toBeDisabled();
+    expect(screen.getByTestId('safehouse-rest')).toBeDisabled();
+    expect(screen.getByTestId('safehouse-depart')).toBeDisabled();
+  });
+
+  it('cancels an active safehouse modal on Escape instead of stacking a menu pause', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    fireEvent.click(await screen.findByTestId('safehouse-rest'));
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+
+    expect(screen.queryByTestId('safehouse-confirmation')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('level0-start-menu')).not.toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toEqual([]);
+  });
+
+  it('resumes a menu-saved run without restoring transient pause ownership', async () => {
+    const first = render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    fireEvent.click(screen.getByRole('button', { name: /menu/i }));
+
+    const persisted = JSON.parse(window.localStorage.getItem(LEVEL0_AUTOSAVE_KEY)!);
+    expect(persisted.payload.worldClock.pauseOwners).toEqual([]);
+
+    first.unmount();
+    store.dispatch(resetGame());
+    render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-continue'));
+
+    expect(await screen.findByTestId('level0-runtime-hud')).toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toEqual([]);
+  });
+
+  it('shows an exact paused deadline failure at 24:00', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+
+    act(() => {
+      store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 11 * 60 * 1_000 }));
     });
+
+    expect(await screen.findByTestId('level0-failure')).toBeInTheDocument();
+    expect(screen.getByText('24:00')).toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toContain('failure');
   });
 
-  it("returns from the recovery boundary to the menu", async () => {
+  it('gives a terminal failure overlay exclusive action ownership', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    act(() => {
+      store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 11 * 60 * 1_000 }));
+    });
+
+    expect(await screen.findByTestId('level0-failure')).toBeInTheDocument();
+    expect(screen.getByTestId('level0-runtime-background')).toHaveAttribute('inert');
+    expect(screen.getByTestId('level0-observation')).toBeDisabled();
+    expect(screen.getByTestId('level0-interact')).toBeDisabled();
+    expect(screen.getByTestId('safehouse-wait')).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId('safehouse-wait'));
+    expect(screen.queryByTestId('safehouse-confirmation')).not.toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(24 * 60);
+  });
+
+  it('warns when a confirmed Wait or Rest will cross the operation deadline', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    act(() => {
+      store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 10.5 * 60 * 1_000 }));
+    });
+
+    fireEvent.click(screen.getByTestId('safehouse-wait'));
+    expect(screen.getByTestId('safehouse-confirmation')).toHaveTextContent(
+      /cross the 24:00 deadline and fail the operation/i
+    );
+    fireEvent.click(screen.getByTestId('safehouse-cancel'));
+
+    fireEvent.click(screen.getByTestId('safehouse-rest'));
+    expect(screen.getByTestId('safehouse-confirmation')).toHaveTextContent(
+      /cross the 24:00 deadline and fail the operation/i
+    );
+  });
+
+  it('does not promise deadline failure after both completion requirements are met', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    act(() => {
+      store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 10.5 * 60 * 1_000 }));
+      const run = store.getState().level0Runtime.run!;
+      store.dispatch(hydrateLevel0Run({
+        ...run,
+        completion: { medkitsReturned: true, transitValidated: true },
+      }));
+    });
+
+    fireEvent.click(screen.getByTestId('safehouse-wait'));
+    expect(screen.getByTestId('safehouse-confirmation')).not.toHaveTextContent(
+      /fail the operation/i
+    );
+  });
+
+  it('localizes the runtime start boundary in Ukrainian', async () => {
+    store.dispatch(setLocale('uk'));
     render(<App />);
 
-    fireEvent.click(await screen.findByTestId("start-new-game"));
-    fireEvent.click(await screen.findByTestId("recovery-return-to-menu"));
-
-    await waitFor(() => {
-      expect(screen.getByTestId("game-menu")).toBeInTheDocument();
-    });
-    expect(screen.queryByTestId("level0-recovery-boundary")).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /втеча з токіо/i })).toBeInTheDocument();
+    expect(screen.getByTestId('level0-new-game')).toHaveTextContent(/нова гра/i);
   });
 });

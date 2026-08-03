@@ -1,0 +1,230 @@
+import type {
+  Level0Anchor,
+  Level0BuildingFootprint,
+  Level0LayoutContract,
+  Level0SurfaceRegion,
+  WorldPolygon,
+} from '../../../game/level0/layout/types';
+
+const rect = (left: number, top: number, right: number, bottom: number): WorldPolygon => [
+  { x: left, y: top },
+  { x: right, y: top },
+  { x: right, y: bottom },
+  { x: left, y: bottom },
+];
+
+const surface = (
+  id: string,
+  kind: Level0SurfaceRegion['kind'],
+  left: number,
+  top: number,
+  right: number,
+  bottom: number
+): Level0SurfaceRegion => ({
+  id,
+  kind,
+  polygon: rect(left, top, right, bottom),
+  walkable: kind !== 'blocked' && kind !== 'interior-boundary',
+});
+
+const building = (
+  id: string,
+  functionName: string,
+  left: number,
+  top: number,
+  right: number,
+  bottom: number,
+  height: number
+): Level0BuildingFootprint => ({
+  id,
+  function: functionName,
+  polygon: rect(left, top, right, bottom),
+  height,
+});
+
+const anchor = (
+  id: string,
+  kind: Level0Anchor['kind'],
+  x: number,
+  y: number,
+  radius: number,
+  ownerId?: string,
+  tags?: string[]
+): Level0Anchor => ({
+  id,
+  kind,
+  position: { x, y },
+  radius,
+  required: true,
+  ownerId,
+  tags,
+});
+
+const buildingFootprints = [
+  building('building.public_market', 'public-market', 11, 11, 21, 25, 5),
+  building('building.civic_north', 'civic-services', 29, 11, 38, 25, 7),
+  building('building.hidzu_offices', 'hidzu-offices', 46, 11, 55, 25, 8),
+  building('building.logistics_annex', 'logistics-compliance', 63, 11, 73, 23, 6),
+  building('building.safehouse', 'safehouse-shell', 11, 35, 21, 42, 4),
+  building('building.service_west', 'service-workshops', 29, 35, 38, 49, 5),
+  building('building.transit_hall', 'transit-hall', 46, 35, 55, 41, 5),
+  building('building.service_south', 'service-distribution', 63, 41, 73, 49, 5),
+];
+
+export const LEVEL0_LAYOUT_CONTRACT: Level0LayoutContract = {
+  id: 'level0-tokyo-greybox-v1',
+  schemaVersion: 1,
+  projection: {
+    tileWidth: 64,
+    tileHeight: 32,
+    orientation: 'isometric-2:1',
+  },
+  bounds: rect(0, 0, 84, 60),
+  zones: [
+    { id: 'zone.safehouse', name: 'Safehouse edge', polygon: rect(4, 33, 39, 56) },
+    { id: 'zone.public', name: 'Public market', polygon: rect(4, 4, 39, 33) },
+    { id: 'zone.transit', name: 'Transit spine', polygon: rect(22, 4, 62, 56) },
+    { id: 'zone.logistics', name: 'Hidzu logistics', polygon: rect(45, 4, 80, 40) },
+  ],
+  traversalLoops: [
+    {
+      id: 'loop.outer',
+      name: 'District perimeter',
+      closed: true,
+      points: [
+        { x: 7, y: 7 },
+        { x: 25, y: 7 },
+        { x: 42, y: 7 },
+        { x: 59, y: 7 },
+        { x: 77, y: 7 },
+        { x: 77, y: 53 },
+        { x: 59, y: 53 },
+        { x: 42, y: 53 },
+        { x: 25, y: 53 },
+        { x: 7, y: 53 },
+        { x: 7, y: 30 },
+        { x: 7, y: 7 },
+      ],
+    },
+    {
+      id: 'loop.public',
+      name: 'Public preparation loop',
+      closed: true,
+      points: [
+        { x: 25, y: 7 },
+        { x: 42, y: 7 },
+        { x: 42, y: 30 },
+        { x: 25, y: 30 },
+        { x: 25, y: 7 },
+      ],
+    },
+    {
+      id: 'loop.service',
+      name: 'Service and return loop',
+      closed: true,
+      points: [
+        { x: 42, y: 30 },
+        { x: 59, y: 30 },
+        { x: 59, y: 53 },
+        { x: 42, y: 53 },
+        { x: 42, y: 30 },
+      ],
+    },
+  ],
+  surfaces: [
+    surface('surface.road.outer_north', 'road', 4, 4, 80, 10),
+    surface('surface.road.outer_south', 'road', 4, 50, 80, 56),
+    surface('surface.road.outer_west', 'road', 4, 4, 10, 56),
+    surface('surface.road.outer_east', 'road', 74, 4, 80, 56),
+    surface('surface.road.central', 'road', 4, 27, 80, 33),
+    surface('surface.avenue.west', 'road', 22, 4, 28, 56),
+    surface('surface.avenue.central', 'road', 39, 4, 45, 56),
+    surface('surface.avenue.east', 'road', 56, 4, 62, 56),
+    surface('surface.safehouse.court', 'plaza', 12, 42, 22, 52),
+    surface('surface.public.forecourt', 'plaza', 10, 25, 22, 35),
+    surface('surface.logistics.apron', 'plaza', 62, 22, 74, 34),
+    surface('surface.logistics.service_alley', 'alley', 62, 33, 74, 40),
+    surface('surface.transit.plaza', 'plaza', 39, 41, 62, 50),
+    surface('surface.sidewalk.market', 'sidewalk', 10, 25, 22, 27),
+    surface('surface.sidewalk.civic', 'sidewalk', 28, 25, 39, 27),
+    surface('surface.sidewalk.hidzu', 'sidewalk', 45, 25, 56, 27),
+    surface('surface.sidewalk.logistics', 'sidewalk', 62, 23, 74, 25),
+    surface('surface.crossing.west', 'crossing', 22, 27, 28, 33),
+    surface('surface.crossing.central', 'crossing', 39, 27, 45, 33),
+    surface('surface.crossing.east', 'crossing', 56, 27, 62, 33),
+  ],
+  buildingFootprints,
+  entrances: [
+    {
+      id: 'entrance.logistics.public',
+      buildingId: 'building.logistics_annex',
+      position: { x: 62, y: 24 },
+      facingDegrees: 225,
+      route: 'public',
+    },
+    {
+      id: 'entrance.logistics.service',
+      buildingId: 'building.logistics_annex',
+      position: { x: 68, y: 28 },
+      facingDegrees: 315,
+      route: 'service',
+    },
+    {
+      id: 'entrance.safehouse',
+      buildingId: 'building.safehouse',
+      position: { x: 16, y: 43 },
+      facingDegrees: 135,
+      route: 'shared',
+    },
+  ],
+  droneRegions: [
+    {
+      id: 'drone.region.logistics-verification',
+      polygon: rect(54, 18, 78, 43),
+      launchAnchorId: 'drone.launch',
+    },
+  ],
+  anchors: [
+    anchor('safehouse.boundary', 'safehouse', 17, 46, 5, 'building.safehouse'),
+    anchor('safehouse.spawn', 'safehouse', 16, 47, 0.8, 'building.safehouse'),
+    anchor('safehouse.departure', 'safehouse', 21, 50, 1.2, 'building.safehouse'),
+    anchor('entrance.safehouse', 'entrance', 16, 43, 1.2, 'building.safehouse', ['shared']),
+    anchor('contact.lira', 'contact', 16, 30, 1.4, 'contact.lira'),
+    anchor('contact.naila', 'contact', 25, 17, 1.4, 'contact.naila'),
+    anchor('contact.brant', 'contact', 42, 17, 1.4, 'contact.brant'),
+    anchor('entrance.logistics.public', 'entrance', 62, 24, 1.2, 'building.logistics_annex', ['public']),
+    anchor('entrance.logistics.service', 'entrance', 68, 28, 1.2, 'building.logistics_annex', ['service']),
+    anchor('terminal.camera_loop', 'terminal', 59, 24, 1.2, 'camera.group.logistics'),
+    anchor('terminal.cache_locker', 'terminal', 67, 29, 1.2, 'objective.medkits'),
+    anchor('terminal.outbound_transit', 'terminal', 14, 46, 1.2, 'building.safehouse'),
+    anchor('drone.launch', 'drone-launch', 71, 36, 1.4, 'drone.verifier.01'),
+    anchor('hide.service_recess', 'hiding', 64, 36, 1.6),
+    anchor('hide.maintenance_bay', 'hiding', 70, 38, 1.6),
+    anchor('hide.transit_structure', 'hiding', 49, 45, 1.6),
+    anchor('blend.delivery_activity', 'blending', 25, 30, 2.2),
+    anchor('blend.public_queue', 'blending', 53, 30, 2.2),
+    anchor('objective.medkits', 'objective', 69, 29, 1.2, 'terminal.cache_locker'),
+    anchor('objective.manifest', 'objective', 71, 29, 1.2, 'terminal.cache_locker'),
+    anchor('camera.public_approach', 'camera', 58, 21, 0.8, 'camera.group.logistics'),
+    anchor('camera.public_gate', 'camera', 64, 26, 0.8, 'camera.group.logistics'),
+    anchor('camera.service_gate', 'camera', 72, 27, 0.8, 'camera.group.logistics'),
+    anchor('camera.service_alley', 'camera', 59, 35, 0.8, 'camera.group.logistics'),
+    anchor('audio.curfew.public', 'audio', 42, 30, 6, 'schedule.curfew'),
+    anchor('interaction.safehouse.wait', 'interaction', 18, 47, 1.2, 'safehouse.wait'),
+    anchor('interaction.safehouse.rest', 'interaction', 15, 47, 1.2, 'safehouse.rest'),
+  ],
+  occluders: buildingFootprints.map((footprint) => footprint.polygon),
+  semanticMaskIds: [
+    'mask.level0.walkable',
+    'mask.level0.blocked',
+    'mask.level0.occlusion',
+    'mask.level0.interaction',
+    'mask.level0.surveillance',
+  ],
+  artLayerIds: [
+    'layer.level0.greybox.ground',
+    'layer.level0.greybox.architecture',
+    'layer.level0.greybox.semantic',
+    'layer.level0.greybox.atmosphere',
+  ],
+};

@@ -30,6 +30,8 @@ import { SurveillanceState } from '../game/interfaces/types';
 import reputationReducer, { ReputationState } from './reputationSlice';
 import { REPUTATION_STATE_VERSION } from '../game/systems/reputation/constants';
 import hudLayoutReducer from './hudLayoutSlice';
+import level0RuntimeReducer from './level0RuntimeSlice';
+import type { Level0RuntimeState } from './level0RuntimeSlice';
 
 const STORAGE_KEY = 'the-getaway-state';
 const isBrowser = typeof window !== 'undefined';
@@ -52,6 +54,7 @@ const reducers = {
   paranoia: paranoiaReducer,
   reputation: reputationReducer,
   hudLayout: hudLayoutReducer,
+  level0Runtime: level0RuntimeReducer,
 };
 
 const combinedReducer = combineReducers(reducers);
@@ -60,7 +63,10 @@ export const resetGame = createAction('app/resetGame');
 export const PERSISTED_STATE_KEY = STORAGE_KEY;
 
 type CombinedState = ReturnType<typeof combinedReducer>;
-type PersistedState = CombinedState;
+// The retired prototype persistence envelope intentionally excludes the new
+// Level 0 runtime. Its version remains disabled and it cannot overwrite the
+// separately versioned Level 0 autosave/Retry keys.
+type PersistedState = Omit<CombinedState, 'level0Runtime'>;
 
 interface PersistedStateEnvelope {
   schemaVersion: number;
@@ -356,7 +362,13 @@ const rootReducer = (state: CombinedState | undefined, action: AnyAction) => {
 };
 
 const persistedState = loadState();
-const preloadedState = migratePersistedState(persistedState);
+const migratedState = migratePersistedState(persistedState);
+const preloadedState: CombinedState | undefined = migratedState
+  ? {
+      ...migratedState,
+      level0Runtime: level0RuntimeReducer(undefined, { type: '@@INIT' }),
+    }
+  : undefined;
 
 export const store = configureStore({
   reducer: rootReducer,
@@ -398,5 +410,10 @@ store.subscribe(() => {
   saveState(stateToPersist);
 });
 
-export type RootState = ReturnType<typeof store.getState>;
+type StoreState = ReturnType<typeof store.getState>;
+// Legacy unit fixtures can omit the isolated Level 0 lane. Runtime consumers
+// provide an explicit fallback; the configured application store always has it.
+export type RootState = Omit<StoreState, 'level0Runtime'> & {
+  level0Runtime?: Level0RuntimeState;
+};
 export type AppDispatch = typeof store.dispatch;
