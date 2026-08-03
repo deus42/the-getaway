@@ -107,6 +107,32 @@ output/
 tmp/
 reports/ai-playtests/
 
+# GET-204 licensed Neo Tokyo source and generated Blender staging.
+# Deterministic scripts/manifests remain trackable. Generated derivatives stay
+# local until acquisition-specific entitlement is verified and promotion is
+# explicitly reviewed; raw source and generated scenes never do.
+art/blender/get204/.staging/
+art/blender/get204/.generated/
+art/blender/get204/**/raw/
+art/blender/get204/**/source/
+art/blender/get204/**/textures/
+art/blender/get204/**/tex/
+art/blender/get204/**/*.blend*
+art/blender/get204/**/*.obj
+art/blender/get204/**/*.mtl
+art/blender/get204/**/*.fbx
+art/blender/get204/**/*.c4d
+art/blender/get204/**/*.zip
+art/blender/get204/**/*.7z
+art/blender/get204/**/*.rar
+art/blender/get204/**/*.tga
+art/blender/get204/**/*.tif
+art/blender/get204/**/*.tiff
+art/blender/get204/**/*.exr
+art/blender/get204/**/*.dds
+art/blender/get204/**/*.jpg
+art/blender/get204/**/*.jpeg
+
 # Local agent and knowledge-tool artifacts
 .codex/
 .superpowers/

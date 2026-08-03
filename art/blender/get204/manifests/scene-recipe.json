@@ -1,0 +1,472 @@
+{
+  "schemaVersion": 1,
+  "id": "level0-tokyo-unchanged-kit-v2",
+  "ticket": "GET-204",
+  "phase": "unchanged-kit-composition",
+  "layout": {
+    "contractId": "level0-tokyo-greybox-v3",
+    "schemaVersion": 2,
+    "contractPath": "art/iso-assets/contracts/level0-layout-contract.json",
+    "contractSha256": "25f77d9c70903671e25dd7aa1b7e4578d40dd59159697b160eaf5bce0319d89f",
+    "bounds": [
+      { "x": 0, "y": 0 },
+      { "x": 84, "y": 0 },
+      { "x": 84, "y": 60 },
+      { "x": 0, "y": 60 }
+    ],
+    "traversalLoopIds": ["loop.outer", "loop.public", "loop.service"],
+    "buildingFootprintIds": [
+      "building.public_market",
+      "building.civic_north",
+      "building.hidzu_offices",
+      "building.logistics_annex",
+      "building.safehouse",
+      "building.service_west",
+      "building.transit_hall",
+      "building.service_south",
+      "building.transit_services"
+    ],
+    "entranceIds": [
+      "entrance.logistics.public",
+      "entrance.logistics.service",
+      "entrance.safehouse"
+    ],
+    "anchorIds": [
+      "safehouse.boundary",
+      "safehouse.spawn",
+      "safehouse.departure",
+      "entrance.safehouse",
+      "contact.lira",
+      "contact.naila",
+      "contact.brant",
+      "entrance.logistics.public",
+      "entrance.logistics.service",
+      "terminal.camera_loop",
+      "terminal.cache_locker",
+      "terminal.outbound_transit",
+      "drone.launch",
+      "hide.service_recess",
+      "hide.maintenance_bay",
+      "hide.transit_structure",
+      "blend.delivery_activity",
+      "blend.public_queue",
+      "objective.medkits",
+      "objective.manifest",
+      "camera.public_approach",
+      "camera.public_gate",
+      "camera.service_gate",
+      "camera.service_alley",
+      "audio.curfew.public",
+      "interaction.safehouse.wait",
+      "interaction.safehouse.rest"
+    ],
+    "semanticMaskIds": [
+      "mask.level0.walkable",
+      "mask.level0.blocked",
+      "mask.level0.occlusion",
+      "mask.level0.interaction",
+      "mask.level0.surveillance"
+    ]
+  },
+  "coordinateSystem": {
+    "layoutUnitMeters": 3,
+    "blenderUpAxis": "Z",
+    "origin": { "x": 0, "y": 0, "z": 0 }
+  },
+  "camera": {
+    "type": "orthographic",
+    "sensorFit": "vertical",
+    "azimuthDegrees": 45,
+    "elevationDegrees": 30,
+    "tileWidth": 64,
+    "tileHeight": 32,
+    "followOffsetScenePixels": 80,
+    "defaultZoom": 0.78,
+    "minimumZoom": 0.6
+  },
+  "lighting": {
+    "direction": "upper-left",
+    "states": ["dusk", "blue-hour", "curfew"],
+    "treatment": "neutral-unchanged-kit-foundation"
+  },
+  "publicRealm": {
+    "surfaceIds": [
+      "surface.road.outer_north",
+      "surface.road.outer_south",
+      "surface.road.outer_west",
+      "surface.road.outer_east",
+      "surface.road.central",
+      "surface.avenue.west",
+      "surface.avenue.central",
+      "surface.avenue.east",
+      "surface.safehouse.court",
+      "surface.public.forecourt",
+      "surface.logistics.apron",
+      "surface.logistics.service_alley",
+      "surface.transit.plaza",
+      "surface.sidewalk.market",
+      "surface.sidewalk.civic",
+      "surface.sidewalk.hidzu",
+      "surface.sidewalk.logistics",
+      "surface.crossing.west",
+      "surface.crossing.central",
+      "surface.crossing.east"
+    ],
+    "authoredKinds": ["road", "sidewalk", "crossing", "alley", "plaza", "curb"],
+    "buildingLotTreatment": "structure-bounds"
+  },
+  "buildingPlacements": [
+    {
+      "id": "placement.public-market.small-j",
+      "footprintId": "building.public_market",
+      "assetId": "neo-tokyo-small-j",
+      "role": "street-wall",
+      "layoutPosition": { "x": 16, "y": 18.301333 },
+      "rotationDegrees": 0,
+      "uniformScale": 1.1,
+      "targetHeightMeters": 38.016,
+      "footprintFill": 0.793617,
+      "frontageEdges": ["south"]
+    },
+    {
+      "id": "placement.civic-north.small-f",
+      "footprintId": "building.civic_north",
+      "assetId": "neo-tokyo-small-f",
+      "role": "street-wall",
+      "layoutPosition": { "x": 33.5, "y": 19.689583 },
+      "rotationDegrees": 90,
+      "uniformScale": 1.25,
+      "targetHeightMeters": 35.1375,
+      "footprintFill": 0.651513,
+      "frontageEdges": ["south"]
+    },
+    {
+      "id": "placement.hidzu-offices.small-i",
+      "footprintId": "building.hidzu_offices",
+      "assetId": "neo-tokyo-small-i",
+      "role": "street-wall",
+      "layoutPosition": { "x": 50.5, "y": 20.622667 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.88,
+      "targetHeightMeters": 32.6656,
+      "footprintFill": 0.696381,
+      "frontageEdges": ["south"]
+    },
+    {
+      "id": "placement.logistics-annex.small-h",
+      "footprintId": "building.logistics_annex",
+      "assetId": "neo-tokyo-small-h",
+      "role": "logistics-landmark",
+      "layoutPosition": { "x": 68, "y": 15.739617 },
+      "rotationDegrees": 0,
+      "uniformScale": 1.13,
+      "targetHeightMeters": 38.9285,
+      "footprintFill": 0.98157,
+      "frontageEdges": ["west", "south"]
+    },
+    {
+      "id": "placement.safehouse.small-e",
+      "footprintId": "building.safehouse",
+      "assetId": "neo-tokyo-small-e",
+      "role": "safehouse-shell",
+      "layoutPosition": { "x": 16, "y": 39.55 },
+      "rotationDegrees": 0,
+      "uniformScale": 1.2,
+      "targetHeightMeters": 32.052,
+      "footprintFill": 0.772595,
+      "frontageEdges": ["south"]
+    },
+    {
+      "id": "placement.service-west.small-g",
+      "footprintId": "building.service_west",
+      "assetId": "neo-tokyo-small-g",
+      "role": "street-wall",
+      "layoutPosition": { "x": 35.048, "y": 40.992 },
+      "rotationDegrees": 90,
+      "uniformScale": 1.2,
+      "targetHeightMeters": 38.364,
+      "footprintFill": 0.654209,
+      "frontageEdges": ["north", "east"]
+    },
+    {
+      "id": "placement.transit-hall.small-a",
+      "footprintId": "building.transit_hall",
+      "assetId": "neo-tokyo-small-a",
+      "role": "street-wall",
+      "layoutPosition": { "x": 50.5, "y": 37.25975 },
+      "rotationDegrees": 0,
+      "uniformScale": 1.05,
+      "targetHeightMeters": 26.7645,
+      "footprintFill": 0.88097,
+      "frontageEdges": ["north"]
+    },
+    {
+      "id": "placement.service-south.medium-b",
+      "footprintId": "building.service_south",
+      "assetId": "neo-tokyo-medium-b",
+      "role": "street-wall",
+      "layoutPosition": { "x": 68, "y": 40.451488 },
+      "rotationDegrees": 90,
+      "uniformScale": 0.83,
+      "targetHeightMeters": 35.625957,
+      "footprintFill": 0.831084,
+      "frontageEdges": ["north"]
+    },
+    {
+      "id": "placement.transit-services.small-c",
+      "footprintId": "building.transit_services",
+      "assetId": "neo-tokyo-small-c",
+      "role": "street-wall",
+      "layoutPosition": { "x": 52.5, "y": 46.800342 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.846,
+      "targetHeightMeters": 23.721757,
+      "footprintFill": 0.86276,
+      "frontageEdges": ["south"]
+    }
+  ],
+  "propPlacements": [
+    {
+      "id": "prop.terminal.camera-loop.electric-box-a",
+      "assetId": "neo-tokyo-electric-box-a",
+      "anchorId": "terminal.camera_loop",
+      "role": "terminal",
+      "layoutPosition": { "x": 59, "y": 20 },
+      "rotationDegrees": 90,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.terminal.cache-locker.electric-box-c",
+      "assetId": "neo-tokyo-electric-box-c",
+      "anchorId": "terminal.cache_locker",
+      "role": "terminal",
+      "layoutPosition": { "x": 68, "y": 25 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.85
+    },
+    {
+      "id": "prop.terminal.outbound.intercom",
+      "assetId": "neo-tokyo-intercom",
+      "anchorId": "terminal.outbound_transit",
+      "role": "terminal",
+      "layoutPosition": { "x": 14, "y": 45.5 },
+      "rotationDegrees": 0,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.hide.service-recess.generator-a",
+      "assetId": "neo-tokyo-power-generator-a",
+      "anchorId": "hide.service_recess",
+      "role": "hiding",
+      "layoutPosition": { "x": 63, "y": 25 },
+      "rotationDegrees": 90,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.hide.maintenance-bay.generator-b",
+      "assetId": "neo-tokyo-power-generator-b",
+      "anchorId": "hide.maintenance_bay",
+      "role": "hiding",
+      "layoutPosition": { "x": 74, "y": 26 },
+      "rotationDegrees": 0,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.hide.transit-structure.underground-entrance",
+      "assetId": "neo-tokyo-underground-entrance",
+      "anchorId": "hide.transit_structure",
+      "role": "hiding",
+      "layoutPosition": { "x": 46.25, "y": 45 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.9
+    },
+    {
+      "id": "prop.blend.delivery-activity.awning-b",
+      "assetId": "neo-tokyo-awning-b",
+      "anchorId": "blend.delivery_activity",
+      "role": "blending",
+      "layoutPosition": { "x": 25, "y": 30 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.72,
+      "mountLiftMeters": 1.13
+    },
+    {
+      "id": "prop.blend.public-queue.barriers-west",
+      "assetId": "neo-tokyo-barriers",
+      "anchorId": "blend.public_queue",
+      "role": "blending",
+      "layoutPosition": { "x": 52.2, "y": 29.5 },
+      "rotationDegrees": 90,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.blend.public-queue.barriers-east",
+      "assetId": "neo-tokyo-barriers",
+      "anchorId": "blend.public_queue",
+      "role": "blending",
+      "layoutPosition": { "x": 53.8, "y": 30.5 },
+      "rotationDegrees": 90,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.entrance.logistics-public.door-a-west",
+      "assetId": "neo-tokyo-door-a",
+      "anchorId": "entrance.logistics.public",
+      "role": "entrance",
+      "layoutPosition": { "x": 60.8442, "y": 20.1558 },
+      "rotationDegrees": 315,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.entrance.logistics-public.door-a-east",
+      "assetId": "neo-tokyo-door-a",
+      "anchorId": "entrance.logistics.public",
+      "role": "entrance",
+      "layoutPosition": { "x": 61.1558, "y": 19.8442 },
+      "rotationDegrees": 315,
+      "uniformScale": 1
+    },
+    {
+      "id": "prop.entrance.logistics-service.door-c-west",
+      "assetId": "neo-tokyo-door-c",
+      "anchorId": "entrance.logistics.service",
+      "role": "entrance",
+      "layoutPosition": { "x": 67.8715, "y": 22.3715 },
+      "rotationDegrees": 45,
+      "uniformScale": 1.1
+    },
+    {
+      "id": "prop.entrance.logistics-service.door-c-east",
+      "assetId": "neo-tokyo-door-c",
+      "anchorId": "entrance.logistics.service",
+      "role": "entrance",
+      "layoutPosition": { "x": 68.1285, "y": 22.6285 },
+      "rotationDegrees": 45,
+      "uniformScale": 1.1
+    },
+    {
+      "id": "prop.entrance.safehouse.door-b-west",
+      "assetId": "neo-tokyo-door-b",
+      "anchorId": "entrance.safehouse",
+      "role": "entrance",
+      "layoutPosition": { "x": 15.861, "y": 45.361 },
+      "rotationDegrees": 225,
+      "uniformScale": 1.02
+    },
+    {
+      "id": "prop.entrance.safehouse.door-b-east",
+      "assetId": "neo-tokyo-door-b",
+      "anchorId": "entrance.safehouse",
+      "role": "entrance",
+      "layoutPosition": { "x": 16.139, "y": 45.639 },
+      "rotationDegrees": 225,
+      "uniformScale": 1.02
+    }
+  ],
+  "entranceProof": [
+    {
+      "entranceId": "entrance.logistics.public",
+      "buildingId": "building.logistics_annex",
+      "position": { "x": 61, "y": 20 },
+      "minimumClearWidthMeters": 2.4
+    },
+    {
+      "entranceId": "entrance.logistics.service",
+      "buildingId": "building.logistics_annex",
+      "position": { "x": 68, "y": 22.5 },
+      "minimumClearWidthMeters": 2.4
+    },
+    {
+      "entranceId": "entrance.safehouse",
+      "buildingId": "building.safehouse",
+      "position": { "x": 16, "y": 45.5 },
+      "minimumClearWidthMeters": 2.4
+    }
+  ],
+  "actorScaleProof": [
+    { "id": "actor.safehouse", "anchorId": "safehouse.spawn", "heightMeters": 1.8, "minimumSilhouetteWidthMeters": 0.55 },
+    { "id": "actor.public", "anchorId": "contact.lira", "heightMeters": 1.8, "minimumSilhouetteWidthMeters": 0.55 },
+    { "id": "actor.logistics", "anchorId": "entrance.logistics.public", "heightMeters": 1.8, "minimumSilhouetteWidthMeters": 0.55 }
+  ],
+  "alignedExport": {
+    "canvas": {
+      "width": 5120,
+      "height": 3584,
+      "pixelOrigin": { "x": 2176, "y": 718.383972 },
+      "tileSize": 2048
+    },
+    "budget": {
+      "maxTotalBytes": 50331648,
+      "maxTileBytes": 2097152
+    },
+    "fallbackProfile": "level0-greybox"
+  },
+  "layers": [
+    { "id": "layer.level0.master.ground", "kind": "ground", "fallbackLayerId": "layer.level0.greybox.ground" },
+    { "id": "layer.level0.master.architecture-back", "kind": "architecture-back", "fallbackLayerId": "layer.level0.greybox.architecture" },
+    { "id": "layer.level0.master.architecture-front", "kind": "architecture-front", "fallbackLayerId": "layer.level0.greybox.architecture" },
+    {
+      "id": "layer.level0.master.lighting-foundation.dusk",
+      "kind": "lighting-foundation",
+      "state": "dusk",
+      "fallbackLayerId": "layer.level0.greybox.atmosphere"
+    },
+    {
+      "id": "layer.level0.master.lighting-foundation.blue-hour",
+      "kind": "lighting-foundation",
+      "state": "blue-hour",
+      "fallbackLayerId": "layer.level0.greybox.atmosphere"
+    },
+    {
+      "id": "layer.level0.master.lighting-foundation.curfew",
+      "kind": "lighting-foundation",
+      "state": "curfew",
+      "fallbackLayerId": "layer.level0.greybox.atmosphere"
+    },
+    {
+      "id": "layer.level0.master.semantic.mask.level0.walkable",
+      "kind": "semantic-mask",
+      "maskId": "mask.level0.walkable",
+      "fallbackLayerId": "layer.level0.greybox.semantic"
+    },
+    {
+      "id": "layer.level0.master.semantic.mask.level0.blocked",
+      "kind": "semantic-mask",
+      "maskId": "mask.level0.blocked",
+      "fallbackLayerId": "layer.level0.greybox.semantic"
+    },
+    {
+      "id": "layer.level0.master.semantic.mask.level0.occlusion",
+      "kind": "semantic-mask",
+      "maskId": "mask.level0.occlusion",
+      "fallbackLayerId": "layer.level0.greybox.semantic"
+    },
+    {
+      "id": "layer.level0.master.semantic.mask.level0.interaction",
+      "kind": "semantic-mask",
+      "maskId": "mask.level0.interaction",
+      "fallbackLayerId": "layer.level0.greybox.semantic"
+    },
+    {
+      "id": "layer.level0.master.semantic.mask.level0.surveillance",
+      "kind": "semantic-mask",
+      "maskId": "mask.level0.surveillance",
+      "fallbackLayerId": "layer.level0.greybox.semantic"
+    }
+  ],
+  "captures": [
+    { "id": "1280x720-default", "width": 1280, "height": 720, "zoom": 0.78, "framing": "default", "targetAnchorId": "safehouse.spawn" },
+    { "id": "1280x720-minimum", "width": 1280, "height": 720, "zoom": 0.6, "framing": "minimum", "targetAnchorId": "safehouse.spawn" },
+    { "id": "1440x900-default", "width": 1440, "height": 900, "zoom": 0.78, "framing": "default", "targetAnchorId": "contact.lira" },
+    { "id": "1440x900-minimum", "width": 1440, "height": 900, "zoom": 0.6, "framing": "minimum", "targetAnchorId": "contact.lira" },
+    { "id": "1920x1080-default", "width": 1920, "height": 1080, "zoom": 0.78, "framing": "default", "targetAnchorId": "entrance.logistics.public" },
+    { "id": "1920x1080-minimum", "width": 1920, "height": 1080, "zoom": 0.6, "framing": "minimum", "targetAnchorId": "entrance.logistics.public" }
+  ],
+  "exclusions": [
+    "hidzu-reskin",
+    "propaganda",
+    "surveillance-noir-grading",
+    "raw-asset-commit",
+    "decorative-clutter"
+  ]
+}

@@ -109,6 +109,7 @@ Current ownership is explicit:
 - `src/game/level0/layout/` owns validation and the reversible 64×32 projection adapter;
 - `src/game/level0/movement/directMovement.ts` owns direct intent, local collision sampling, and axis sliding;
 - `src/game/level0/interaction/interactionResolver.ts` owns knowledge, independently derived world-ownership, range, occlusion, and authoritative availability results; automatic discovery filters unknown or wrong-domain anchors instead of revealing their existence through an error;
+- `src/game/level0/art/` owns the T4 source/recipe/runtime-manifest contracts and validators only; generated derivatives remain ignored local evidence and `Level0Scene` still renders the greybox fallback;
 - `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, and immutable departure Retry;
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
 - `src/game/level0/scene/Level0Scene.ts` owns frame-local greybox rendering, actor transform, camera, and input;
@@ -535,21 +536,43 @@ Content may add stable detail fields only through a specification update. Debrie
 
 ```ts
 interface Level0ArtManifest {
+  schemaVersion: 1;
   id: string;
+  usage: 'local-evidence' | 'runtime';
+  recipeId: string;
   layoutContractId: string;
   projection: { tileWidth: 64; tileHeight: 32; orientation: 'isometric-2:1' };
-  origin: WorldPoint;
+  worldOrigin: WorldPoint;
+  canvas: {
+    width: number;
+    height: number;
+    pixelOrigin: WorldPoint;
+    tileSize: number;
+    columns: number;
+    rows: number;
+  };
+  budget: { maxTotalBytes: number; maxTileBytes: number; measuredTotalBytes: number };
   layers: Array<{
     id: string;
-    kind: 'ground' | 'architecture-back' | 'architecture-front' | 'lighting' | 'atmosphere';
+    kind: 'ground' | 'architecture-back' | 'architecture-front' | 'lighting-foundation' | 'semantic-mask';
     state?: 'dusk' | 'blue-hour' | 'curfew';
-    textureKey: string;
-    sourcePath: string;
-    fallbackTextureKey?: string;
+    maskId?: string;
+    tiles: Array<{
+      id: string;
+      imagePath: string;
+      sha256: string;
+      byteSize: number;
+      column: number;
+      row: number;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    }>;
+    fallbackLayerId: string;
   }>;
-  semanticMasks: Record<string, string>;
-  anchorManifestPath: string;
-  sourceRecipeVersion: string;
+  anchorMetadata: { path: string; sha256: string; count: number };
+  fallbackProfile: 'level0-greybox';
 }
 
 type CharacterState = 'idle' | 'move' | 'interact';
@@ -578,11 +601,11 @@ flowchart LR
   B --> C["Phaser collision and anchors"]
   B --> D["Blender scene recipe"]
   D --> E["Unchanged-kit master scene"]
-  E --> F["Hidzu identity pass"]
-  F --> G["Aligned raster layers"]
-  F --> H["Semantic masks and anchors"]
-  G --> I["Level0ArtManifest"]
-  H --> J["Layout/export validator"]
+  E --> F["Ignored local-evidence layers and manifest"]
+  F --> G["Technical validation and requester T4 review"]
+  G --> H["Hidzu identity pass"]
+  H --> I["Entitlement-backed runtime promotion"]
+  F --> J["Layout/export validator"]
   B --> J
   I --> K["Runtime rendering"]
 ```
@@ -591,10 +614,10 @@ flowchart LR
 
 - Layout coordinates, zone names, entrances, devices, contacts, terminals, hiding/blending contexts, and objectives originate in one versioned contract.
 - Blender may refine visual mass and public realm inside the contract but cannot move required gameplay anchors without a reviewed layout change.
-- Export validation compares mask edges, anchors, footprint polygons, projection, and layer registration to tolerances in the Building Positioning Runbook.
+- T4 export validation proves projection and canvas containment, tile-grid registration, file hashes/bytes/budgets, layer semantics/fallbacks, and complete anchor values against the layout contract. Decoded raster-edge agreement remains a visual/runtime acceptance responsibility rather than a claim made by metadata validation alone.
 - If a parallelogram footprint cannot match a visual base within one tile, author a custom polygon or multi-region footprint rather than trim-chasing.
 - One full master scene prevents per-building angle, scale, and light drift.
-- Raw licensed files remain outside Git; source manifests and permitted flattened derivatives are versioned.
+- Raw licensed files remain outside Git. Source manifests, recipes, and validators are versioned; flattened derivatives remain ignored until acquisition-specific entitlement and runtime promotion are explicitly approved.
 
 ## 7. Movement, interaction, camera, and observation
 

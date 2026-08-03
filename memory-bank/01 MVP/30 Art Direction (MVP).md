@@ -28,22 +28,22 @@ The art must make it possible to:
 ## 3. Starting state and prerequisites
 
 - The authoritative gameplay topology is the approved `Level0LayoutContract`, not painted pixels or licensed geometry.
-- The owned source pack is Neo Tokyo 2 at `/Volumes/Elements/Backup/Downloads/Game/Neo Tokyo 2`.
+- The requester identifies Neo Tokyo 2 at `/Volumes/Elements/Backup/Downloads/Game/Neo Tokyo 2` as owned; the repository records that assertion but does not contain acquisition-specific entitlement evidence.
 - Blender `5.0.1` is the authoring environment.
 - Level 0 uses one outdoor master scene, one fixed 2:1 isometric camera, and a runtime 64×32 projection contract.
 - Raw licensed geometry is never committed.
 - Generated `.blend` files remain untracked.
-- The repository may commit versioned scene recipes, source manifests, transforms, semantic metadata, validators, and flattened runtime derivatives allowed by the asset license.
+- The repository may commit versioned scene recipes, source manifests, transforms, semantic metadata, and validators. Flattened derivatives remain ignored `local-evidence` until acquisition-specific entitlement is verified and runtime promotion is explicitly reviewed.
 - The exact approved Direction B comparison artifact and source/license inventory remain open items in [[14 Specification Review Queue]] and must be resolved before art production acceptance.
 
 ## 4. Complete happy-path behavior
 
 1. Runtime/layout work defines the outdoor topology, semantic surfaces, anchors, and three traversal loops.
-2. The Blender pipeline imports the owned pack without stylistic regeneration and composes the entire district in one master scene.
+2. The Blender pipeline imports the requester-asserted-owned pack without stylistic regeneration and composes the entire district in one master scene.
 3. The first visual gate judges unchanged-kit composition: human scale, continuous street walls, public realm, loops, landmarks, actor legibility, and fixed-camera projection.
 4. Only after that composition is accepted does the second gate add Hidzu identity: surveillance hardware, identity scanning, public screens, propaganda, controlled wayfinding, and institutional lighting.
 5. Roads, sidewalks, curbs, crossings, alleys, plazas, setbacks, and entrance aprons are authored as part of the city rather than a flat runtime board beneath freestanding sprites.
-6. Aligned dusk, blue-hour, and curfew layers are exported from the same geometry and camera. Runtime crossfade changes atmosphere without moving collision, doors, devices, or interaction anchors.
+6. T4 exports aligned neutral dusk, blue-hour, and curfew lighting foundations from the same geometry and camera as ignored local evidence. T5 owns final atmosphere; entitlement-backed runtime promotion and crossfade must not move collision, doors, devices, or interaction anchors.
 7. Semantic masks and anchors flow back into validation against the same layout contract.
 8. Runtime actors, camera indicators, interaction feedback, and the HUD remain live layers above flattened environment derivatives.
 9. Fixed-viewport screenshots and human play—not asset counts or validators—determine visual acceptance.
@@ -52,11 +52,11 @@ The art must make it possible to:
 
 The world-art lifecycle is:
 
-`LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → COMPOSITION_ACCEPTED → HIDZU_IDENTITY_PASS → RUNTIME_EXPORT → LIVE_VISUAL_ACCEPTANCE`
+`LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → LOCAL_EVIDENCE_EXPORT → COMPOSITION_ACCEPTED → HIDZU_IDENTITY_PASS → ENTITLEMENT_BACKED_RUNTIME_PROMOTION → LIVE_VISUAL_ACCEPTANCE`
 
 - Failure at the unchanged-kit gate returns to composition and scale; it cannot be hidden with signage, fog, or post-processing.
 - Failure at the Hidzu gate returns to identity/lighting treatment without reopening accepted topology unless measured evidence reveals a topology defect.
-- Runtime export is valid only when projection, masks, anchors, layer registration, and fallback metadata pass validation.
+- Local evidence is technically valid only when projection, masks, anchors, layer registration, byte budgets, and fallback metadata pass validation. Runtime promotion additionally requires acquisition-specific entitlement evidence and explicit review.
 - Live acceptance is separate from technical validation and remains pending until the requester verifies representative play states.
 
 Presentation states are aligned environment layers:
@@ -148,7 +148,7 @@ Presentation states are aligned environment layers:
 
 ## 11. Content-authoring requirements
 
-- Maintain a source/license manifest for every Neo Tokyo asset used and every committed derivative.
+- Maintain a source/provenance manifest for every Neo Tokyo asset used. Record acquisition-specific entitlement for any derivative proposed for commit or runtime promotion; never infer it from requester assertion or general vendor terms.
 - Maintain the Level 0 master-scene recipe, camera/projection settings, transforms, material treatment, light rig, export layers, masks, anchors, and validation checks.
 - Produce unchanged-kit and Hidzu-gate comparison captures at `1280×720`, `1440×900`, and `1920×1080`.
 - Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Retry, debrief, and completion.

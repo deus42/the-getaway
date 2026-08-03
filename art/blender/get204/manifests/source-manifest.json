@@ -1,0 +1,322 @@
+{
+  "schemaVersion": 1,
+  "ticket": "GET-204",
+  "vendor": "KitBash3D",
+  "kit": "Neo Tokyo 2",
+  "sourceRootVariable": "GETAWAY_NEO_TOKYO_ROOT",
+  "archiveRelativePath": "obj.zip",
+  "archiveSha256": "802ec8c3d46afb61493df59c598492b516cec2b02285556dc9e1d0520dd1286f",
+  "archiveBytes": 104163817,
+  "format": "FBX",
+  "sourceObjectCount": 552,
+  "geometryMember": {
+    "path": "obj/Kitbash3d_NeoTokyo2-Native.FBX",
+    "sha256": "a9629dfd68021e46bb91ac665f47b4e3d355fb5eb881b0c09ab1943bce02280c",
+    "byteSize": 75420256,
+    "importer": "bpy.ops.import_scene.fbx",
+    "globalScale": 1,
+    "axisForward": "-Z",
+    "axisUp": "Y"
+  },
+  "textures": {
+    "sourceRelativePath": "c4d/tex",
+    "sourceFileCount": 66,
+    "contentSha256": "b20014f2c481c9b587b2efb1dad6ec01c878ffb4399d2893b532ed761032d0fa",
+    "relinkDirectory": "KB3DTextures"
+  },
+  "ownership": {
+    "basis": "requester-asserted-owned",
+    "assertedAt": "2026-08-03",
+    "exactEntitlementEvidence": "unavailable",
+    "generalTermsUrl": "https://kitbash3d.com/pages/licenses"
+  },
+  "commitBoundary": {
+    "permitted": [
+      "recipes",
+      "manifests",
+      "metadata",
+      "validators"
+    ],
+    "prohibited": [
+      "raw-geometry",
+      "source-textures",
+      "generated-blend",
+      "recoverable-geometry-derivatives",
+      "flattened-derivatives-without-acquisition-specific-license"
+    ]
+  },
+  "selectedAssets": [
+    {
+      "id": "neo-tokyo-small-j",
+      "sourcePrefix": "SmallJ",
+      "category": "small",
+      "sourceObjectPattern": "SmallJ_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 31.71,
+        "depth": 38.72,
+        "height": 34.56
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-small-f",
+      "sourcePrefix": "SmallF",
+      "category": "small",
+      "sourceObjectPattern": "SmallF_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 34.61,
+        "depth": 22.77,
+        "height": 28.11
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-small-i",
+      "sourcePrefix": "SmallI",
+      "category": "small",
+      "sourceObjectPattern": "SmallI_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 39.71,
+        "depth": 42.8,
+        "height": 37.12
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-small-c",
+      "sourcePrefix": "SmallC",
+      "category": "small",
+      "sourceObjectPattern": "SmallC_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 31.90283203125,
+        "depth": 29.075592041015625,
+        "height": 28.039902329444885
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-small-e",
+      "sourcePrefix": "SmallE",
+      "category": "small",
+      "sourceObjectPattern": "SmallE_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 28.16,
+        "depth": 26.75,
+        "height": 26.71
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-small-g",
+      "sourcePrefix": "SmallG",
+      "category": "small",
+      "sourceObjectPattern": "SmallG_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 39.46,
+        "depth": 21.76,
+        "height": 31.97
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-small-a",
+      "sourcePrefix": "SmallA",
+      "category": "small",
+      "sourceObjectPattern": "SmallA_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 30.86,
+        "depth": 23.77,
+        "height": 25.49
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-small-h",
+      "sourcePrefix": "SmallH",
+      "category": "small",
+      "sourceObjectPattern": "SmallH_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 34.37,
+        "depth": 32.71,
+        "height": 34.45
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-medium-b",
+      "sourcePrefix": "MediumB",
+      "category": "medium",
+      "sourceObjectPattern": "MediumB_*",
+      "sourceUpAxis": "Y",
+      "normalize": {
+        "groundContact": "measured-bounds-min-z",
+        "center": "measured-ground-bounds-center",
+        "sourceUnitsPerMeter": 1
+      },
+      "measuredStructuralBoundsMeters": {
+        "width": 53.143287658691406,
+        "depth": 46.47979545593262,
+        "height": 42.92283920943737
+      },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-awning-b",
+      "sourcePrefix": "Awning_B",
+      "category": "public-realm",
+      "sourceObjectPattern": "Awning_B_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 18.48349, "depth": 3.719742, "height": 1.421006 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-barriers",
+      "sourcePrefix": "Barriers",
+      "category": "public-realm",
+      "sourceObjectPattern": "Barriers_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 5.46022, "depth": 0.206161, "height": 1.114079 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-door-a",
+      "sourcePrefix": "Door_A",
+      "category": "public-realm",
+      "sourceObjectPattern": "Door_A_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 1.322037, "depth": 0.068542, "height": 2.299747 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-door-b",
+      "sourcePrefix": "Door_B",
+      "category": "public-realm",
+      "sourceObjectPattern": "Door_B_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 1.179245, "depth": 0.061157, "height": 2.051351 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-door-c",
+      "sourcePrefix": "Door_C",
+      "category": "public-realm",
+      "sourceObjectPattern": "Door_C_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 1.090027, "depth": 0.037231, "height": 1.857941 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-intercom",
+      "sourcePrefix": "Intercom",
+      "category": "public-realm",
+      "sourceObjectPattern": "Intercom_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 0.338409, "depth": 0.109207, "height": 0.641946 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-electric-box-a",
+      "sourcePrefix": "ElectricBox_A",
+      "category": "public-realm",
+      "sourceObjectPattern": "ElectricBox_A_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 0.551849, "depth": 0.566757, "height": 1.817562 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-electric-box-c",
+      "sourcePrefix": "ElectricBox_C",
+      "category": "public-realm",
+      "sourceObjectPattern": "ElectricBox_C_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 3.92244, "depth": 1.546982, "height": 1.995493 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-power-generator-a",
+      "sourcePrefix": "PowerGenerator_A",
+      "category": "public-realm",
+      "sourceObjectPattern": "PowerGenerator_A_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 1.605957, "depth": 2.92749, "height": 1.944584 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-power-generator-b",
+      "sourcePrefix": "PowerGenerator_B",
+      "category": "public-realm",
+      "sourceObjectPattern": "PowerGenerator_B_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 1.605957, "depth": 2.92749, "height": 1.944584 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    },
+    {
+      "id": "neo-tokyo-underground-entrance",
+      "sourcePrefix": "UndergroundEntrance",
+      "category": "public-realm",
+      "sourceObjectPattern": "UndergroundEntrance_*",
+      "sourceUpAxis": "Y",
+      "normalize": { "groundContact": "source-catalog-plane", "center": "measured-ground-bounds-center", "sourceUnitsPerMeter": 1, "sourceGroundDatumMeters": 0.271386 },
+      "measuredStructuralBoundsMeters": { "width": 6.26239, "depth": 11.713898, "height": 4.127892 },
+      "excludedObjectSuffixes": ["StoneFloor", "Asphalt", "Grass", "TileDamage"]
+    }
+  ]
+}

@@ -122,15 +122,15 @@ Exit gate: dusk and curfew routes are topologically viable and debug geometry ag
 ### T4 — Unchanged-kit Tokyo Blender master scene
 
 **Label:** Improvement
-**Depends on:** T3 and approved asset/license manifest
+**Depends on:** T3 and an approved source/provenance manifest for local composition; acquisition-specific entitlement is required before derivative commit or runtime promotion
 **Blocks:** T5
 
 Ownership:
 
-- one full Level 0 master scene using owned Neo Tokyo 2 geometry;
+- one full Level 0 master scene using requester-asserted-owned Neo Tokyo 2 geometry;
 - public realm, human scale, continuous street walls, three loops, and landmarks;
 - fixed 2:1 camera and upper-left light;
-- aligned dusk/blue-hour/curfew export foundations;
+- ignored local-evidence dusk/blue-hour/curfew export foundations with an explicit greybox fallback;
 - semantic masks and anchor export;
 - versioned recipe/manifests without raw licensed geometry.
 
