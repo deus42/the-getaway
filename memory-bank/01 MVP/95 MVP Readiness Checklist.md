@@ -1,193 +1,173 @@
 ---
 status: MVP
-type: checklist
-level: 0
+type: readiness-ledger
+canonical: true
 ---
 
-# MVP Readiness Checklist (Level 0 Vertical Slice)
+# MVP Readiness Checklist
 
-This checklist answers: **“Is Level 0 a playable MVP that matches the intended experience?”**
+This ledger reports evidence against the current Tokyo escape specification. It does not treat the rejected rewrite, green legacy tests, generated assets, or earlier completion claims as proof of the new slice.
 
-Guiding principle: MVP is not “minimal”, it’s **complete for its intended loop**.
+Detailed acceptance scenarios live in [[13 Level 0 Content and State Matrix]] and this ledger. Current product rules live in [[Game Design]], [[10 MVP Spine]], [[11 Level 0 Vertical Slice Contract]], and the per-system specifications.
 
-## Update protocol (use this every time)
-- After finishing any feature/task, update the relevant checkboxes here.
-- Add a short entry under **Changelog** with date + what changed.
-- When reporting progress, paste the **MVP Readiness Summary** section.
+## Evidence states
 
----
+- **Not started:** no current implementation evidence exists.
+- **Partially evidenced:** some relevant behavior or asset exists, but the complete current contract has not been demonstrated.
+- **Ready for requester review:** automated and human-control internal evidence is complete; requester acceptance is pending.
+- **Accepted:** requester has verified the committed build against the current contract.
+- **Blocked:** a named unresolved decision or external dependency prevents final acceptance or complete proof. It does not prevent a reversible provisional trial unless the row says so explicitly.
 
-## MVP Readiness Summary
+Percent-complete estimates are not used. Every row names the evidence required to change state.
 
-**Current estimate** (update over time):
-- Technical MVP completeness: ☑ 92% (target: ≥90%)
-- Experience MVP completeness: ☑ 90% (target: ≥85%; painterly-noir visual acceptance and requester subjective 9/10 playtest still pending before closing GET-180)
+## Documentation and governance
 
-**Current biggest risks** (keep to 1–3 bullets):
-- ☐ The new painterly-noir Level 0 needs requester visual/playfeel acceptance; fixed live-route screenshots are implementation evidence, not final human sign-off.
-- ☐ Painterly actor states still reuse normalized source poses, the current boot preloads hundreds of individual PNGs, and fixed capture readiness needs hardening (GET-184, GET-157, GET-185).
-- ☐ Time-based perception/FSM intent, the React-owned simulation boundary, and the known Transit Hub progression defect remain gameplay risks (GET-186, GET-188, GET-190).
+| Gate | State | Required evidence / current note |
+|---|---|---|
+| Canonical Game Design hub and MVP Spine | Ready for requester review | Current identity, pillars, loop, authority, and links passed contradiction/reference review; requester polish remains. |
+| Level 0 vertical-slice contract | Ready for requester review | Complete 15–20 minute contract is traceable; unresolved choices are blocked explicitly in the review queue rather than guessed. |
+| Decision Register | Ready for requester review | 103 unique current/removed/postponed/superseded decisions map to canonical documents and GET-201–GET-210; unresolved choices retain explicit acceptance gates. |
+| Per-system specifications | Ready for requester review | All 21 canonical system specifications pass the exact 16-section template and ticket-ownership checks. |
+| Content/state matrices | Ready for requester review | 13 mission states, 5 failure IDs, 19 acceptance cases, fact/check/surveillance/outcome/Retry contracts, and 49 explicit `OPEN-*` blockers validate without unknown references. |
+| Plot Bible alignment | Ready for requester review | Tokyo/Hidzu and preserved Cold Iron continuity align; undecided narrative facts remain visible under stable `OPEN-NAR-*` IDs. |
+| Architecture and Roadmap alignment | Ready for requester review | Typed ownership, provenance/idempotency, sequence, and gates align with the canonical design and no removed runtime path is current authority. |
+| Linear program alignment | Ready for requester review | GET-139 and GET-201–GET-210 passed live 2026-08-03 readback for labels, states, parents, blocker/dependency graph, and semantic description parity after the provisional-gate update. |
+| AGENTS governance | Ready for requester review | Specification precedence, OPEN lifecycle, Linear copy/readback, implementation stop conditions, recovery protection, and acceptance gates are explicit. |
+| Documentation commit | Ready for commit | The requester authorized one-by-one implementation on 2026-08-03; record the resulting GET-201 commit in progress and Linear before GET-202 changes the protected runtime worktree. |
 
----
+The program entry gate opens when this reviewed package is committed separately with requester authorization. Open decisions then follow [[14 Specification Review Queue]]: they block final acceptance of affected surfaces, while documented reversible provisional trials may be built for live evaluation.
 
-## A) Core loop completeness (must be true)
+## Level 0 player-flow readiness
 
-**A1. A complete vertical-slice run exists**
-- ☑ New Game → Character Creation → Level 0 start works reliably
-- ☑ Day phase: player can progress via dialogue/quests (low-risk errands)
-- ☑ Night phase: infiltration under curfew pressure is playable and fair
-- ☑ The run has a clear closure: Mission Complete / Fail (with recap)
+| Gate | State | Acceptance evidence required |
+|---|---|---|
+| Character creation in two minutes | Not started | Human run creates callsign, appearance, legal attribute/skill build, and reaches safehouse with no stale identity. |
+| First story decision within three minutes | Not started | Fresh first-run capture and timing from New Game through meaningful Lira choice. |
+| Optional preparation | Not started | Runs with both contacts, one contact, and neither; all remain completable and knowledge differs correctly. |
+| Dusk infiltration | Not started | Human-control run proves observation, service/public behavior, blending, cache recovery, and escape. |
+| Curfew infiltration | Not started | Human-control run proves schedule shift, cameras, terminal, drone, hiding, cache recovery, and escape. |
+| Medkit recovery and Lira return | Not started | Explicit interactions only; no proximity or debug completion. |
+| Optional manifest | Not started | Naila fact, Awareness success, and missed evidence all produce correct nonblocking outcomes. |
+| Transit validation before midnight | Not started | Credential is issued/validated through one-function terminal; exact deadline failure proven. |
+| Debrief and ending | Not started | Outcome-ledger-driven debrief plus Continue Exploring / End Demo; no placeholder Miami load. |
+| 15–20 minute first-run target | Not started | Representative human runs recorded without debug shortcuts or long-read clock leakage. |
 
-**A2. “What do I do next?” is always clear**
-- ☑ The top-priority objective is always visible (HUD + George guidance)
-- ☑ Quest log reflects current state (no stale or contradictory objectives)
-- ☑ Player can recover from mistakes (clear reset path / reattempt loop)
+## RPG readiness
 
----
+| Gate | State | Acceptance evidence required |
+|---|---|---|
+| Four appearances and callsign | Not started | All identities validate across creation, world sprite, portrait, HUD, dialogue, Retry, and save. |
+| Four attributes and eight skills | Not started | Budgets/caps enforced; no background/package residue. |
+| Deterministic checks | Blocked | `OPEN-RPG-001` must freeze requirements and `OPEN-RPG-004` must freeze every stable-ID fact/situational modifier before two-build proof. |
+| Character screen | Not started | Shows only active identity, progression, Health, Paranoia, facts, and consequences; no dead systems. |
+| Authored milestone XP | Blocked | `OPEN-RPG-002` must freeze thresholds and awards before final progression proof and acceptance; provisional authored values may be trialed reversibly. |
+| Safehouse/debrief level-up | Not started | Correct skill/attribute points, caps, persistence, and future-Level-1 carry state. |
+| Health | Blocked | Exact authored damage costs remain open; fatal 0 and safehouse restore rules are specified. |
+| Paranoia | Blocked | Range, penalties, honesty rules, and Rest are specified, but `OPEN-PAR-001` and `OPEN-PAR-002` block complete implementation evidence. |
 
-## B) Quest + objectives reliability (high priority)
+## Movement, observation, and interaction readiness
 
-**B1. Objective state correctness**
-- ☑ Objective completion is gated correctly (no premature completion)
-- ☑ Collect/pickup objectives increment deterministically (no double count, no missed count)
-- ☑ Objectives update immediately after the triggering action (pickup/dialogue/flag)
-- ☑ Mission Accomplished triggers only when all primary objectives are complete
+| Gate | State | Acceptance evidence required |
+|---|---|---|
+| Direct click-to-move | Not started | No A*, immediate override, direct intent, stable arrival, and invalid-destination feedback. |
+| WASD alternative | Not started | Equivalent collision/focus behavior and immediate cancellation. |
+| Collision sliding | Not started | Corners, walls, narrow alleys, and entrances work without route planning. |
+| Explicit interactions | Not started | Contacts, objects, terminals, hiding, and safehouse require input with truthful range/occlusion. |
+| Focus ownership | Not started | HUD, modal, dialogue, and pause exits never require a sacrificial movement click. |
+| Full-pause observation | Not started | Camera pan/inspection/George prompt available; movement and world mutation impossible; all simulation frozen. |
+| Camera/zoom contract | Blocked | Normal floor is 0.60; default/start framing and exact movement/camera tuning remain open. |
 
-**B2. QA/debuggability**
-- ☑ Action log clearly shows quest/objective state transitions
-- ☑ Dev tools (or debug panel) can display: active quests, flags, objective completion
+## Surveillance and escape readiness
 
----
+| Gate | State | Acceptance evidence required |
+|---|---|---|
+| Clear/Suspicious/Pursuit | Not started | Transitions are visible, deterministic, and recoverable as specified. |
+| Shared render/detection geometry | Not started | Camera coverage and actual detection match and respect solid geometry. |
+| Last-known-position pursuit | Not started | Drone/security search last known area, not hidden true coordinates. |
+| Discrete hiding | Not started | Valid/invalid entry, direct-observation lockout, and recovery proven. |
+| Discrete blending | Not started | Authored civilian/service context and schedule behavior proven. |
+| Connected camera terminal | Not started | Systems/OpSec outcomes and trace behavior; no unrelated device control. |
+| One verifier drone | Not started | Dispatch, warning, verification, search, and recovery proven without combat. |
+| Deterministic interception | Blocked | Exact capture fiction, requirements, and costs remain open. |
+| Safehouse under active surveillance | Blocked | `OPEN-SAFE-001` must freeze boundary/action behavior; acceptance must prove no automatic network clear or magical recovery. |
+| No tactical combat path | Not started | Human run and production UI contain no AutoBattle, AP grid, weapon menu, enemy-HP loop, EMP, or magic gadget. |
 
-## C) Stealth / curfew / paranoia experience (signature feel)
+## Dialogue, George, facts, and information readiness
 
-**C1. Stealth feels like a first-class path**
-- ☑ Stealth toggle + HUD feedback are clear and responsive
-- ☑ Guard vision + camera cones are readable (player understands why they’re detected)
-- ☑ Noise model is legible (player understands walk vs sprint consequences)
-- ☑ Detection escalation is fair (no “instant fail” unless clearly telegraphed)
+| Gate | State | Acceptance evidence required |
+|---|---|---|
+| Lira scenes | Blocked | Character/medkit/deadline fiction must be frozen before final content. |
+| Naila and Brant scenes | Blocked | Biographies and relationships must be frozen before final content. |
+| Exact spoken choices and locked reasons | Not started | Requirement/outcome explanations and fail-forward behavior proven. |
+| Bilingual parity | Not started | English and Ukrainian scripted runs commit equivalent state. |
+| Fact Ledger | Not started | Stable facts, provenance, designated effects, Retry behavior, and debrief integration. |
+| George HUD + private AR avatar | Blocked | Hardware fiction and exact presentation reference remain open; behavior contract is specified. |
+| Authored George prompts | Not started | No free text, invention, automation, or undiscovered-content leaks. |
+| Operation dossier | Not started | Objectives, facts, people, locations, evidence, timeline, consequences; no rejected systems. |
+| Knowledge minimap | Not started | Discovery precision and no routing/unknown-camera leak. |
+| Read-only social feed | Not started | Atmospheric Hidzu content only; no posting, messaging, followers, or search risk. |
 
-**C2. Curfew pressure is tuned**
-- ☑ Curfew creates meaningful tension without soft-locking normal play
-- ☑ Cameras meaningfully matter (avoid being cosmetic)
-- ☑ “Night rules” are communicated (through UI, George, and/or a short prompt)
+## World, actors, HUD, and audio readiness
 
-**C3. Paranoia is the core pressure resource**
-- ☑ Paranoia rises from surveillance/curfew exposure in a predictable way
-- ☑ Paranoia decreases through safe/day/rest loops in a predictable way
-- ☐ Paranoia tiers have noticeable, not-annoying impact (tune penalties)
+| Gate | State | Acceptance evidence required |
+|---|---|---|
+| Shared outdoor layout contract | Blocked | Exact dimensions, widths, district zones, anchors, and semantics remain open. |
+| Three traversal loops | Not started | All required locations reachable without pathfinding; outer loop measured at target movement speed. |
+| Unchanged-kit Blender city gate | Blocked | Exact asset/license inventory and logistics-site identity must be frozen; Direction B is a T5 Hidzu-treatment blocker, not a T4 unchanged-kit blocker. |
+| Hidzu identity pass | Not started | Begins only after unchanged-kit composition acceptance. |
+| No zoom-out corruption | Not started | Live captures at all target viewports and minimum zoom show no seams/clipping/repetition. |
+| Twelve grounded actor sets | Not started | Complete 8-direction `idle/move/interact`, anchors, scale, matching portraits. |
+| Four-lane HUD at 16–18% | Blocked | Lane widths/wireframes remain open; height and information contract are fixed. |
+| Major overlays | Not started | Character, dialogue, dossier, feed, debrief, failure, retry, completion at 1280×720 minimum. |
+| Audio coverage | Blocked | Exact cue list/priority/ducking remains open; required categories are specified. |
+| Graphic surveillance noir | Not started | Live human-reviewed frames demonstrate city cohesion, midtone readability, surveillance identity, and no fantasy presentation. |
 
----
+## Save, Retry, and compatibility readiness
 
-## D) Combat path (exists, but not the whole game)
+| Gate | State | Acceptance evidence required |
+|---|---|---|
+| New save schema | Not started | Explicit schema version and hydration validation. |
+| Autosave | Not started | Current-run persistence at declared safe points without stale rewrite fields. |
+| Departure Retry snapshot | Not started | Exact identity/build/preparation/fact/time/Health/Paranoia/mission restoration. |
+| Incompatible rewrite saves | Not started | Honest explanation and New Game path; no partial package/combat/inventory migration. |
+| Failure causes | Not started | Health, Paranoia, capture, and deadline each proven with exact reason and Retry. |
 
-- ☐ Combat can start/end cleanly without UI/state corruption
-- ☐ Combat logs are readable (damage, AP, turn transitions)
-- ☐ AutoBattle works as a convenience toggle (doesn’t break story beats)
-- ☐ Combat is a viable fallback, not the main required path
+## Required end-to-end evidence
 
----
+Before the program can become **Ready for requester review**, capture and inspect at `1280×720`, `1440×900`, and `1920×1080`:
 
-## E) Onboarding + UX (first 3 minutes)
+1. safehouse opening and character creation result;
+2. dusk street and Lira briefing;
+3. Naila and Brant conversations;
+4. public delivery/blending route;
+5. curfew service/hiding route;
+6. known-camera observation and terminal loop;
+7. Suspicious recovery;
+8. Pursuit and drone verification;
+9. medkits and optional manifest;
+10. minimum zoom;
+11. Character screen, dossier, and level-up;
+12. Health, Paranoia, capture, and deadline failures;
+13. Retry restoration;
+14. Lira debrief, completion, and both ending actions;
+15. equivalent English and Ukrainian state changes.
+16. safehouse boundary and action availability while observed, Suspicious, and in Pursuit.
 
-- ☐ Player can learn movement/path preview quickly
-- ☑ Player learns stealth toggle + curfew/cameras without reading docs
-- ☑ Player learns Paranoia as “the pressure bar”
-- ☑ Dialogue choices communicate tone/approach clearly
+Human control must prove the required routes and failure paths. The guided AI playtest is regression evidence only.
 
-Recommended MVP-only tutorialization:
-- ☐ 3–5 contextual tooltips/callouts (only once each)
+## Automated closeout gate
 
----
+After live behavior and visual acceptance for each implementation ticket, run the relevant asset/layout validators and, from `the-getaway/`:
 
-## F) “Signature” MVP content (makes it memorable)
+- `yarn sprites:validate` when actors change;
+- `yarn lint`;
+- `yarn build`;
+- `yarn test --runInBand`;
+- `yarn test --coverage --runInBand` with statement and line coverage above 80%;
+- `yarn playtest:agent -- --profile guided-level0 --max-steps 20 --codex` for Features and Improvements.
 
-- ☑ At least 1 night stealth set-piece that feels authored (guards + camera + meaningful choice)
-- ☑ At least 1 dialogue scene that sells the tone (Disco-ish but simpler)
-- ☑ At least 1 consequence that feels real (quest-state shift + immediate payoff)
+Passing automation does not move a visual or player-experience row to Accepted.
 
----
+## Historical readiness record
 
-## G) Stability, resetability, and testability (must be boringly solid)
-
-- ☑ No soft-locks in the core loop (day→night→closure)
-- ☐ Save/load or session persistence does not corrupt quest state
-- ☑ New Game / Reset produces a clean state (repeatable QA)
-- ☑ Basic smoke test script/checklist exists for every new build
-
----
-
-## H) Presentation polish (high leverage, small scope)
-
-- ☑ Basic audio pass (footsteps + alarm/curfew sting + UI confirms)
-- ☑ Visual clarity: stealth/detection/paranoia states are readable
-- ☑ Outdoor Level 0 uses one coherent painterly-noir world/actor/HUD system with vector and legacy asset fallbacks
-- ☐ Requester has accepted the painterly-noir presentation in a hands-on Level 0 playtest
-- ☐ Performance: stable framerate on target machines for Level 0
-
----
-
-## Definition of Done (MVP Ready)
-MVP is considered **ready** when:
-- All sections **A + B + C + G** are checked ✅, and
-- Sections **D + E + F + H** are at least “good enough” to not break the intended feel.
-
----
-
-## Changelog
-- 2026-07-29 — GET-180/GET-181/GET-182/GET-183 zoom-out correction replaced repeated named-landmark surround sprites with nine anonymous low/mid-rise variants across a continuous opaque city envelope, closed north/south and fractional-zoom seams, aligned camera bounds and the coverage floor to the same padded geometry (including wide-resize reclamping and interrupted combat-restore resumption), and regenerated the nine central landmarks without affine distortion or street spill. Exact runtime plates now own collision/readability while unwarped superstructures use independently validated per-asset fills with zero pixels above alpha `36` at or below their base-corner rows outside the footprint polygons; the art gate also rejects saturated magenta key-color fringe and non-semantic colored lower-podium washes. Painted and procedural surround parcels interleave at unique depths below gameplay. Compact HUD coverage holds through `1359px` in a two-by-two dock capped at `min(440px, 52svh)`; quest archive, intrinsic icons, camera safe-area refresh, and minimap framing were corrected. Camera and minimap now consume the rendered dock rectangle rather than a potentially stale prior-breakpoint measurement. Live inspection passed at 804×1195, 1280×720, 1440×900, 1920×1080, and a 3840×1080 stress viewport; automated closeout evidence is recorded in the active GET-180 note and requester acceptance remains pending.
-- 2026-07-29 — GET-180/GET-181/GET-182 city correction replaced isolated monument exports with nine contiguous painterly block compounds, applied the same measured two-tile runtime setback to every locale parcel (approximately 51.4% footprint coverage), preserved road cores/doors/cameras/cover and the complete Lira → Naila → Brant route, darkened crosswalk/surface repetition, suppressed painterly perimeter volumes and permanent building labels, blended the backdrop into the outer lot value mass, and raised the normal opening to a `0.80` neighborhood view while retaining the `0.38` manual overview and existing combat zoom. Deterministic building and route validators are now part of the closeout gate; requester acceptance and the follow-up tickets above remain open.
-- 2026-07-28 — GET-180 graphic painterly-noir revamp replaced the outdoor Level 0 presentation while preserving quests, controls, and HUD information architecture. The slice now uses a map-aware painterly theme, structured renderer treatment tokens, 14 complete eight-direction actor resource sets with enemy ownership/fallback, eight matching dialogue portraits, a nine-building art manifest, painterly semantic environment assets, reduced grid repetition, neutral runtime-lit buildings, and a Level 0-scoped matte HUD across dialogue/combat/progression/terminal overlays. The original fixed acceptance capture exposed readiness and compact-width gaps now tracked in GET-185/GET-183; requester acceptance remains pending and checklist completion is not claimed.
-- 2026-05-16 — GET-180 requester review rejected the route-dressing direction: the slice still did not feel much better, and the added route props/decals/beacons read as creepy, misaligned objects without gameplay role. Corrective pass removed live `LEVEL0_ROUTE_SET_PIECES`, `LEVEL0_ROUTE_SURFACE_DECALS`, and `LEVEL0_GUIDED_ROUTE_BEACONS` from `level0RouteSetPieces.ts`, stopped `WorldRenderModule` from rendering the broader generated atlas surface decals/core props in normal Level 0 play, and disabled the GET-155 preview placement/collision slice until those objects have accepted gameplay roles. Current guidance now relies on active contact/item markers, minimap fallback routing, objective feedback, door facades, and real pickup sprites. `91 Quests & Objectives.md` and `Architecture.md` now require future route objects to earn their place as cover, hazard, blocker, pickup, or named interaction instead of ambient decoration. Requester subjective acceptance remains pending before GET-180 can close.
-- 2026-05-08 — GET-180 visual-readability continuation made the active-stage route beacons easier to see on long Naila/Brant handoffs without adding HUD chrome or labels. `WorldRenderModule` now layers a small gold diamond marker over each current route beacon's pulse, preserving the existing stage-scoped beacon contract from `level0RouteSetPieces.ts`. Fresh guided no-Codex AI Gamer report `2026-05-08T07-30-42-982Z-guided-level0-f7dde39f` and fresh guided Codex-mode report `2026-05-08T07-34-47-430Z-guided-level0-96d6ffcf` both passed with 0 findings, all Lira/Naila/Brant/recap/mission-advanced milestones, and no console/page/network errors; both traces use the live `continueMission` recap button path. Focused route/guided/scene-sync tests, `yarn lint`, `yarn build`, and `git diff --check` passed. Requester subjective acceptance is still pending before GET-180 can close.
-- 2026-05-08 — GET-180 validation-quality continuation now proves guided mission completion through the player-facing recap path. `MissionCompleteModal` exposes stable non-visible test ids on the recap buttons, `agentBridge` adds `continueMission` to click the live Mission Complete `Next Level` button through the DOM, and the guided AI Gamer profile now uses that action instead of the direct dev-only mission-advance helper. Fresh guided Codex-mode AI Gamer report `2026-05-08T07-22-23-609Z-guided-level0-e839db13` passed with 0 findings, all Lira/Naila/Brant/recap/mission-advanced milestones, 34 screenshots, and no console/page/network errors; trace step 33 confirms the live continue button was clicked. Focused bridge/schema tests, `yarn lint`, `yarn build`, and `git diff --check` passed. Requester subjective acceptance is still pending before GET-180 can close.
-- 2026-05-08 — GET-180 continuation added sparse active-stage route beacons for the long guided Level 0 handoffs without changing HUD layout. `level0RouteSetPieces.ts` now owns stage-scoped beacon coordinates for Lira/keycard, Naila, Brant, and token-return legs, while `WorldRenderModule` renders only the current stage's walkable world glints. Fresh guided no-Codex AI Gamer report `2026-05-08T07-03-30-822Z-guided-level0-e266f012` passed with 0 findings, all Lira/Naila/Brant/recap/mission-advanced milestones, 34 screenshots, and no console/page/network errors. Focused route-beacon/guided-marker/scene-sync tests, `yarn build`, and `git diff --check` passed; requester subjective acceptance is still pending before GET-180 can close.
-- 2026-05-08 — GET-180 continuation improved in-world Level 0 contact readability without changing HUD layout. `level0GuidedSlice` now exposes `resolveLevel0GuidedContactMarkerState`, and `WorldRenderModule` uses it to keep normal interactive-NPC highlights while adding a brighter playfield pulse plus chevron beacon only to the current Lira/Naila/Brant guided contact. Focused guided-slice/scene-sync tests and `yarn lint` passed; fresh guided no-Codex AI Gamer report `2026-05-08T06-49-28-789Z-guided-level0-db5eeb06` passed with 0 findings, all Lira/Naila/Brant/recap/mission-advanced milestones, 35 screenshots, and no console/page/network errors. Requester subjective acceptance is still pending before GET-180 can close.
-- 2026-05-07 — GET-180 mission-terminal validation continuation closed the guided AI Gamer recap and fail/retry evidence gaps. The dev-only agent bridge now exposes constrained `advanceMission`, `triggerMissionFailure`, and `retryMission` actions. The guided Level 0 profile requires a `mission-advanced` milestone instead of stopping at `Mission pending advance reached`, and the new `mission-terminal` profile exercises mission failure, live retry-button reset, and fresh Level 0 restart. Fresh guided no-Codex AI Gamer report `2026-05-07T07-51-44-990Z-guided-level0-11f8c212` passed with 0 findings, all Lira/Naila/Brant/recap/mission-advanced milestones, and no console/page/network errors. Fresh mission-terminal no-Codex and Codex-mode AI Gamer reports `2026-05-07T08-01-15-090Z-mission-terminal-8170b74d` and `2026-05-07T08-03-51-693Z-mission-terminal-df0258d6` passed with 0 findings, all terminal milestones, and no console/page/network errors. Focused bridge/schema tests, `yarn lint`, `yarn build`, and `git diff --check` passed.
-- 2026-05-07 — GET-180 validation-quality continuation removed misleading long-route timeout rows from otherwise green guided AI Gamer evidence. Semantic NPC traversal now uses distance-scaled waits and reports progress toward far contacts as `ok` while the guided runner continues traversal instead of inserting premature idle waits. Validation passed focused agent bridge tests, `yarn lint`, `git diff --check`, and fresh guided no-Codex AI Gamer report `2026-05-07T07-39-28-021Z-guided-level0-2d4f4289` with 0 findings, all Lira/Naila/Brant/recap milestones, no console/page/network errors, and no `Timed out moving toward NPC` / `Timed out waiting for player position` trace lines.
-- 2026-05-07 — GET-180 stop-request closeout added persistent guided minimap routes for long Level 0 handoffs: when no explicit queued player path is active, the minimap now keeps a fallback route toward the current guided pickup or nearest valid approach tile beside the current guided contact, while player-queued paths still take precedence. The AI Gamer runner now also uses screenshot-crop playfield sampling when WebGL canvas readback is unreliable. Fresh guided no-Codex AI Gamer report `2026-05-07T07-20-37-812Z-guided-level0-27398880` passed with 0 findings and all Lira/Naila/Brant/recap milestones. Focused minimap tests, `yarn lint`, and `git diff --check` passed. The continuation heartbeat was paused at the user's stop request; requester subjective acceptance is still pending before GET-180 can close.
-- 2026-05-07 — GET-180 follow-up made in-world Level 0 pickups respect the current guided beat: the active pickup target gets a stronger `TARGET:` label/pulse, future guided pickups dim until active, and static props refresh when the guided target changes so objective markers do not stale after dialogue progression. AI Gamer evidence now waits for sampled non-dark/varied canvas pixels and no longer treats screenshot file size as proof of a rendered playfield. Validation passed focused Level 0 guided/scene-sync tests and `yarn lint`; fresh guided no-Codex AI Gamer reports `2026-05-07T06-42-37-333Z-guided-level0-060d125a` and `2026-05-07T06-46-48-374Z-guided-level0-2af54be3` passed with 0 findings. Browser Use IAB remained unavailable, so evidence came from Playwright/AI Gamer; requester subjective acceptance is still pending.
-- 2026-05-07 — GET-180 continuation added a second route-readability pass for the longer Level 0 lanes without changing HUD layout: authored streetlights, bollards, barriers, grates, puddles, road wear, archive crates, and transit-token neon now make the Lira/cache/Naila/Brant route legs more visually distinct. Added a route set-piece/decal placement regression test and fixed the AI Gamer misuse-regression fallback so a temporary empty active-objective snapshot uses trace-completed Lira/Naila/Brant handoffs instead of repeating completed Lira interactions. The current validation pass also hardened AI Gamer evidence quality: QA-visible bridge signatures now include stealth/time/curfew/combat/paranoia/AP/health state, blocked stealth toggles report honest `no-op` reasons, camera-lock re-entry gives explicit feedback, and the stealth-curfew runner escapes hard camera locks instead of retoggling. Fresh Codex AI Gamer reports now pass with 0 findings for guided Level 0 (`2026-05-07T05-33-01-185Z-guided-level0-551784e1`), stealth-curfew (`2026-05-07T06-06-20-507Z-stealth-curfew-2bc6290e`), and misuse-regression (`2026-05-07T06-19-02-203Z-misuse-regression-9e026383`). Final verification passed `yarn lint`, `yarn build`, `yarn test --runInBand` (106 suites / 670 tests), and `yarn test --coverage --runInBand` (81.45% statements / 68.03% branches / 82.72% functions / 81.45% lines). Browser Use IAB remained unavailable, so evidence came from Playwright/AI Gamer; requester subjective playtest acceptance is still pending before GET-180 can close.
-- 2026-05-06 — GET-180 AI Gamer continuity follow-up resolved the fresh guided-run blocker. The self-improvement heartbeat was paused during active validation to avoid parallel playtest processes on port 5174, the guided deterministic route now switches to night before attempting the curfew-gated keycard pickup, combat-objective blocker detection ignores valid state-changing pressure-lane movement, and the Lira keycard snatch window is a 5-tile combat-pressure pickup so the cache beat resolves faster. Fresh isolated guided Level 0 no-Codex AI Gamer report `2026-05-06T22-25-42-642Z-guided-level0-7e82003a` completed all Lira/Naila/Brant/recap milestones in 33 steps with 0 findings and no browser console/page/network errors. Subjective requester playtest acceptance is still pending before GET-180 can close.
-- 2026-05-06 — GET-180 continuation tightened the right ops rail `Current Beat` behavior so completed Lira/Naila primary beats move out of the default objective card while the guided chain is still in progress. This keeps the default HUD focused on the active/next Naila or Brant mission instead of showing stale completed cache work, without changing HUD layout/classes. Validation passed focused selector + `OpsBriefingsPanel` tests. Fresh AI Gamer reruns were attempted but currently stop early with a medium tooling finding (`Browser page closed during AI playtest`), so AI-runner continuity is a live validation blocker before the goal can be considered complete.
-- 2026-05-06 — GET-180 expanded self-improvement pass made the middle/final Level 0 route beats playable instead of partly reward-skipped: Lira no longer grants Naila's datapad, Naila no longer grants Brant's transit tokens, and the Lira keycard lane now supports a scoped combat-pressure dash pickup instead of forcing patrol cleanup. Level 0 world presentation now adds authored Lira/keycard/Naila/Brant route set pieces with existing atlas props/decals, larger pickup sprites, and larger manifest-driven hero/NPC sprite scales without touching HUD rails. Validation passed targeted dialogue/AI strategy tests, `yarn build`, `yarn lint`, Browser Use HUD DOM/log checks, Playwright screenshot fallback, and guided Level 0 no-Codex AI Gamer with 0 findings through recap. The required 20-step Codex smoke reached Brant route and reported only a low short-gate coverage finding; requester subjective playtest and full post-acceptance gates remain pending.
-- 2026-05-06 — GET-180 Level 0 11/10 playfeel pass turned the accepted guided route into a stronger playable slice and added the dev-only AI playtest harness as a repeatable QA loop. Lira hand-in now completes once and unlocks Naila, keycard pickup updates objective/log/route feedback, combat-pressure clicks either attack/advance or explain invalid actions, George stays quiet with one phase hint at a time, dialogue reach/feedback now handles close-range and combat-blocked NPC clicks, and lightweight browser-safe audio cues now fire for pickup/objective/invalid/curfew/paranoia/recovery/mission events. Validation passed `yarn lint`, `yarn build`, `yarn test`, `yarn test --coverage` (84.75% statements / 76.11% branches / 82.33% functions / 84.75% lines), guided Level 0 no-Codex playtest with 0 findings, and Codex-mode guided/stealth/misuse profiles with no critical/high findings, no browser console/page/network errors, and only low local Codex advisory timeout findings. Final requester subjective 9/10 playfeel sign-off remains pending before GET-180 can be closed.
-- 2026-05-04 — GET-139 Guided Noir Slice final-feel pass tightened the existing Level 0 route without adding new systems. George now opens with mission-first `streetlight` guidance, switches feed tone for curfew stealth and paranoia recovery, and keeps longer route hints readable. The Quests HUD now labels the active route as `Current Beat`, night/curfew clock styling is more urgent, active beat cards use the noir accent palette, and Mission Complete / Fail recaps now read as narrative closure instead of generic system dialogs. Validation passed targeted George/Ops tests, `yarn lint`, `yarn build`, Vite source checks, and `git diff --check`; Playwright/browser screenshot automation was unavailable in this repo, so requester playtest remains pending.
-- 2026-05-04 — GET-139 startup camera/scroller regression follow-up hardened the same-scene New Game path after requester reported the view still opened on a weird location. Camera reset now stops stale follow state, player follow always rebinds to the current player token, and a short startup recenter/viewport broadcast window keeps the initial scroller on the player before movement. Validation passed targeted `CameraModule` tests, `git diff --check`, `yarn lint`, `yarn build`, Vite source checks, and Browser Use DOM smoke for fresh New Game plus active-session New Game restart on `http://127.0.0.1:5174/`; screenshot capture timed out, so requester visual playtest remains pending.
-- 2026-05-04 — GET-139 keypad/keycard sprite visibility follow-up replaced the generic tinted `neon_panel` pickup presentation with explicit Level 0 atlas pickup frames (`pickup_keypad`, `pickup_datapad`, `pickup_transit_token`, `pickup_medkit`). The Lira route Corporate Keycard now resolves to `pickup_keypad` at the authored north-west cache lane placement, while datapad/tokens/medkits also use dedicated sprite objects. Validation passed `node --check scripts/generate-level0-environment-atlas.mjs`, atlas regeneration, `yarn lint`, `yarn build`, targeted collect/dialogue tests, Vite transform checks, and atlas-frame inspection; requester visual playtest remains pending.
-- 2026-05-04 — GET-139 startup camera/scroller fix keeps Level 0 centered on the player before first movement. Same-map New Game restarts now reset/re-follow the camera when the player identity changes, camera follow emits an immediate viewport update, and the minimap viewport/scroller derives from current camera scroll/zoom instead of stale pre-render `worldView` data. Browser smoke covered fresh New Game and active-scene Menu → Start New Game restarts with no warn/error console entries; requester playtest and post-acceptance automated gates remain pending.
-- 2026-05-04 — GET-139 three-quest guided-slice pass changed Level 0 from a Lira-only primary run into a one-by-one Lira → Naila → Brant primary chain. George now stays quiet and emits only route/mission guidance, the Primary Progress HUD shows the current/completed guided beat instead of all three at boot, Naila and Brant sit on the authored path, map markers and over-NPC labels identify the current contact/turn-in, interactive NPC hover uses a pointer cursor, and pickups now render as Level 0 atlas-backed sprite props with stronger object presentation. Requester playtest and post-acceptance automated gates remain pending.
-- 2026-05-02 — GET-139 guidance follow-up made Level 0 start as a guided Lira-cache slice instead of an open systems playground: the player now starts beside Lira, non-slice NPCs and optional pickups are pushed away from the opening route, the Corporate Keycard is authored on the north-west cache lane, the default Quests HUD shows Primary + Active Side only, pre-start primary state says `Brief Lira`, George emits slice-stage guidance, and the top-right clock now shows phase, next phase, and the 22:00-06:00 night/curfew window. Browser smoke reached New Game → Character Creation → Level 0 via Dev Skip and verified the visible guidance surfaces with no warn/error console entries; requester playtest and post-acceptance automated gates remain pending.
-- 2026-05-02 — GET-139 Lira-cache playable slice implementation narrowed Level 0 primary progression to the Lira cache run, reclassified Naila/Brant as optional side operations, focused the player objective surfaces on started work, gated the Lira keycard objective to curfew, connected the Transit Node interior to safehouse paranoia relief, fixed curfew building-exit soft-locking, and added the health-at-zero Mission Failed recap/restart path. Checklist boxes updated for implemented objective clarity/gating, curfew/camera communication, and recovery-loop readiness; manual requester playtest and post-acceptance automated gates remain pending.
-- 2026-04-24 — GET-155 Blender source-art validation slice implemented a script-generated noir isometric template (`art/blender/get155/get155_iso_noir_template.blend`), four primitive preview renders, a committed `get155_preview` atlas/manifest, and a normal Level 0 placement path using existing BootScene preload, semantic atlas registry, `IsoObjectFactory.createSpriteProp`, and depth sorting. Follow-up embedded the building/props into the Level 0 map with shared collision-footprint anchors and non-walkable floor tiles so pathing routes around them. Checklist boxes remain unchanged pending requester visual acceptance; final environment art direction remains the primary residual risk.
-- 2026-04-23 — GET-161 character readability pass started after GET-156 closeout: sprite-backed actors now keep the manifest-driven animation/fallback contract while gaining a synchronized dark rim and contact shadow inside the existing `CharacterToken` container. Checklist boxes remain unchanged pending Level 0 visual validation; final-art polish risk remains, but gameplay-zoom sprite grounding/readability risk is reduced.
-- 2026-04-23 — GET-156 Level 0 graphics vertical slice implemented a constrained atlas-backed environment pass (`level0Environment` preload + semantic frame registry + depth-managed surface decals/door facades/core props), added deterministic coordinate-seeded ground wear in `TilePainter`, and hardened `GameCanvas` so the dev Phaser runtime does not settle with inactive scenes after StrictMode remount. Post-acceptance verification passed (`yarn lint`, `yarn build`, `yarn test`, `yarn test --coverage`) with coverage at `86.94%` statements / `76.92%` branches / `81.94%` functions / `86.94%` lines; checklist boxes remain unchanged pending requester traversal sign-off, while street-level visual-composition and startup reliability risk are reduced.
-- 2026-04-04 — GET-142 pickup objective determinism hardening landed: collect objectives now sync from staged inventory snapshots via a dedicated collect reducer path, so fresh pickups and quest-activation backfill share one clamped source of truth instead of incrementing from two competing effects. Acceptance playtest plus regression coverage are now complete (`yarn lint`, `yarn build`, `yarn test --runInBand`, `yarn test --coverage --runInBand`), checklist boxes remain unchanged, and B1 objective-state drift risk is reduced.
-- 2026-04-04 — GET-159 follow-up HUD usability fix replaced clipped status-lane-based dock sizing with content-aware bottom-dock measurement, keeping the slimmer shell while restoring full CTA visibility (`Character` button and other lower-dock controls no longer trim in the default Level 0 layout). Checklist boxes remain unchanged pending requester playtest sign-off; lower-dock usability risk reduced.
-- 2026-04-03 — `GET-158` stale-ticket closeout completed after a fresh verification rerun on current `main`: `yarn lint`, `yarn build`, `yarn test --runInBand`, and `yarn test --coverage --runInBand` all passed, with coverage at `75.68%` statements / `67.50%` branches / `75.41%` functions / `75.68%` lines. The original atmosphere/readability work and the accepted `GET-159` follow-up are both now closed in Linear at requester direction; the remaining risk is the repo-wide coverage gate itself, not ticket state drift.
-- 2026-04-02 — Requester accepted the combined GET-158/GET-159 visual pass after the ESB footprint-read revert. The post-acceptance verification block ran (`yarn lint`, `yarn build`, `yarn test --runInBand`, `yarn test --coverage --runInBand`): lint/build/tests passed, while total Jest coverage landed at 75.92%, so the visual work is committed and accepted while the repo-wide coverage gate remains a standing engineering risk.
-- 2026-04-02 — GET-159B composition/surface hierarchy pass landed on top of the reset: ESB PoC footprint/entrance chrome removed from the live path, the tower was further demoted in scale/tint, backdrop skyline weight was reduced, `EnvironmentComposer` now drives zoned block-scale surface context, `TilePainter` now emphasizes road/sidewalk/podium/service separation over per-tile decoration noise, and HUD/nameplate pressure was softened via camera fit + dock sizing/readout tweaks. Checklist boxes remain unchanged pending requester playtest sign-off; opening-frame hierarchy risk is lower, while street-level authored-composition risk remains.
-- 2026-03-28 — GET-159 visual reset replaced the rejected freestanding-clutter look with a surface-first corporate-noir repaint: the generated environment atlas path was removed from the live runtime, atmosphere color now drives the camera background, district identity moved into TilePainter/BuildingPainter material logic, and the ESB was further demoted in scale/contrast. Checklist boxes remain unchanged pending requester playtest sign-off; opening-frame cohesion risk is lower, though ESB dominance is still a watch item.
-- 2026-03-28 — GET-159 Level 0 environment-art pass landed on top of GET-158 (generated `level0Environment` atlas + normal sheet, BootScene preload wiring, deterministic `EnvironmentComposer`/`PropScatter` frontage dressing, stronger district-specific ground treatments, and a further-demoted ESB skyline anchor). Checklist boxes unchanged pending requester playtest sign-off; placeholder-heavy opening-frame risk reduced and district identity is materially stronger.
-- 2026-03-28 — GET-158 playfield atmosphere/readability tuning landed (day/night atmosphere math aligned to the real cycle, brighter/differentiated ground palettes, stronger street-edge/readability treatments, entrance emissive zoning, more assertive occlusion boosts, and ESB landmark de-dominance including removal of the production-visible debug outline). Checklist boxes unchanged pending requester playtest sign-off; Level 0 visual-clarity risk reduced.
-- 2026-03-23 — GET-174 sprite beautification pass landed on top of the GET-173 pipeline (generator-driven silhouette/accessory/palette upgrades across all 12 hero/NPC sprite sets, regenerated 8-direction sheets, and preserved the existing runtime contract). Checklist boxes unchanged pending requester verification; final-art polish risk reduced and placeholder-art repetitiveness risk materially lowered.
-- 2026-03-22 — GET-173 eight-direction sprite pipeline landed for hero presets + Level 0 named interactive NPCs (manifest-driven sheet registry, BootScene preload/animation wiring, sprite-aware rig factory with vector fallback, and normalized placeholder exports/validation). Checklist boxes unchanged pending requester playtest sign-off; character presentation/pipeline risk reduced while final-art risk remains.
-- 2026-02-26 — GET-123 dialogue presentation enhancement landed (speaker metadata contracts, portrait placeholder pipeline, deterministic locked-visible skill-check UX, and overlay CSS extraction). Checklist boxes unchanged pending requester playtest sign-off; dialogue readability/identity risk reduced.
-- 2026-02-20 — GET-137 phase 1 scene-architecture extraction landed (MainScene module runtime, lifecycle registry, disposable cleanup). No gameplay checklist boxes changed; risk shifted toward follow-up extraction/validation in later phases.
-- 2026-02-21 — GET-137 follow-up extraction landed for surveillance rendering lifecycle (`SurveillanceRenderModule`), moving vision-cone/camera sprite ownership out of `MainScene` and validating Level 0 smoke run with 0 console errors. Gameplay checklist boxes unchanged; architecture risk reduced further.
-- 2026-02-22 — GET-137 battle-visibility hardening landed in `DayNightOverlayModule` (neutral combat overlay color + alpha cap) with replayed Level 0 combat smoke validation (`PLAYER TURN` visible, 0 console errors). Gameplay checklist boxes unchanged; combat blackout regression risk reduced.
-- 2026-02-23 — GET-170 Level 0 visual/pathing pass landed (surface metadata + road/crosswalk rendering, deterministic A* pathing, ESB footprint inset for closer approach, silhouette character tokens). Gameplay checklist boxes unchanged; readability and navigation clarity risk reduced.
-- 2026-02-24 — GET-170 follow-up stability hardening landed for React/Redux runtime (selector stabilization + debug panel mount guard) after `Maximum update depth exceeded` report; Level 0 stress playtest and console audit show 0 runtime errors. Gameplay checklist boxes unchanged; UI recursion risk reduced.
-- 2026-02-24 — GET-170 ESB follow-up tuning landed (lower camera zoom floor, tighter ESB collision footprint, and south-edge door anchoring) with `?poc=esb&pocDebug=1` browser verification. Gameplay checklist boxes unchanged; landmark readability/navigation mismatch risk reduced.
-- 2026-02-24 — GET-144 stealth fairness/readability pass landed (epoch-based cooldown timing, alarm-only forced break, camera `SUSPICIOUS -> INVESTIGATING -> ALARMED`, centralized readability selectors, and explicit camera/vision/noise cues in HUD/logs). Gameplay checklist boxes unchanged pending requester playtest sign-off; stealth readability/fairness regression risk reduced.
-- 2026-02-24 — GET-144 follow-up HUD clarity/reliability pass landed (no auto stealth dock reflow on `X`, stealth strip moved to bottom player HUD, hardened menu dropdown focus/portal behavior, and explicit camera daytime/hidden-cone cues). Gameplay checklist boxes unchanged pending requester playtest sign-off; HUD stability/readability risk reduced.
-- 2026-02-24 — GET-144 UX refinement pass toned down stealth strip styling, added explicit recovery hints/control guidance (`X` toggle, `Shift` sprint noise), and synchronized movement-profile switching on `Shift + movement` so stealth noise/readability cues match runtime behavior. Gameplay checklist boxes unchanged pending requester sign-off; onboarding/readability risk reduced.
-- 2026-02-24 — GET-144 micro-polish pass removed the always-visible standby stealth control treatment and switched to contextual inline status only when stealth state meaningfully changes. Gameplay checklist boxes unchanged pending requester sign-off; bottom-HUD visual clutter risk reduced.
-- 2026-02-24 — GET-144 HUD control clarity pass added a persistent compact Player HUD stealth chip (`STEALTH ON/OFF`) inline with header controls, removed duplicate standby/pace surfaces, and kept request-driven HUD toggle routing (`requestStealthToggle` nonce). Gameplay checklist boxes unchanged pending requester sign-off; stealth discoverability risk reduced.
-- 2026-02-24 — GET-144 HUD de-dup pass removed the top-right SPY Activity wafer (`CameraDetectionHUD`) so surveillance readability is conveyed by world visuals alone. Gameplay checklist boxes unchanged pending requester sign-off; duplicate-HUD-noise risk reduced.
-- 2026-02-24 — GET-144 day/night HUD pass replaced the phase/icon/progress wafer with a single consistent 24-hour digital clock in the top-right rail (no sun icon, no gradient phase shifting, no horizontal progress bar). Gameplay checklist boxes unchanged pending requester sign-off; top-rail HUD consistency risk reduced.
-- 2026-02-24 — GET-144 day/night timing pass removed digital-colon blinking, throttled top-right clock updates to larger time steps for calmer readability, and aligned curfew activation to world-clock hours 22:00-06:00. Gameplay checklist boxes unchanged pending requester sign-off; temporal readability/curfew-contract risk reduced.
-- 2026-02-24 — GET-144 debug-time alignment pass remapped Debug Inspector presets to 24h expectations (`Set Day` -> 06:00, `Set Night` -> 22:00) and switched inspector time readout to the same clock model as HUD. Gameplay checklist boxes unchanged pending requester sign-off; debug-playtest consistency risk reduced.
-- 2026-02-26 — GET-144 formally closed after requester acceptance + tracking sync (Roadmap Step 19.4 marked complete, C1 stealth readiness checks marked done, and final Linear close-out posted).
-- 2026-02-24 — GET-171 improvement pass removed the player-facing Level HUD runtime mount, moved mission objective diagnostics into Debug Panel Mission Snapshot, made Quests panel canonical (`Primary Progress + Active Side + Available Side`), and wired deterministic Level 0 side-quest progression hooks (enemy kill, camera sabotage, drone waypoint observation). Gameplay checklist boxes unchanged pending requester playtest sign-off; objective clarity/progression reliability risk reduced.
-- 2026-02-24 — GET-171 side-quest clarity follow-up fixed Firebrand Juno spawn bounds, added minimap quest-contact highlights, clarified camera/drone curfew objective copy (22:00-06:00), and enabled side-quest progress auto-promotion from Available to Active on first valid objective event. Gameplay checklist boxes unchanged pending requester sign-off; side-quest discoverability/completion clarity risk reduced.
+Readiness claims made before the 2026-08-02 Tokyo escape specification are superseded. Their detailed implementation and validation history remains preserved in `progress/`, Git history, and Linear. Those records may guide recovery or regression analysis, but they do not satisfy this checklist unless replayed against the current contract.

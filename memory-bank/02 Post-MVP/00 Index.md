@@ -1,17 +1,22 @@
-# Post-MVP Design Notes
+# Post-MVP Design Index
 
-This folder contains systems intentionally deferred from the MVP vertical slice.
+This folder contains only systems explicitly postponed from the current Level 0 program. A removed idea is not automatically Post-MVP and must not be treated as a future commitment.
 
-## Index
-- [[vehicles]]
-- [[crafting-upgrades]]
-- [[weapon-mods]]
-- [[equipment-inventory]]
-- [[survival-mechanics]]
-- [[reputation-systems]]
-- [[storylets]]
-- [[world-simulation]]
-- [[combat-advanced]]
-- [[narrative-advanced]]
-- [[progression-advanced]]
-- [[stamina-system]]
+## Approved postponed areas
+
+- Small player-managed inventory and consumables, only if later play proves meaningful tradeoffs.
+- A manual confrontation interface beyond Level 0’s deterministic interception, subject to a new combat-disposition decision.
+- Full faction contracts and reputation.
+- Complex interiors.
+- Advanced drone and security behavior.
+- Meaningful social-media mechanics.
+- Full witness and gossip systems.
+- Additional protagonist identity/build research.
+- Full Miami Level 1 production.
+
+## Governance
+
+- Each postponed area requires a new approved decision and owning Linear ticket before it becomes active planning.
+- Existing notes in this folder are research/history unless an approved decision explicitly promotes them.
+- Vehicles, survival, hunger/thirst, crafting, weapon modifications, large perk trees, dynamic black markets, procedural quests/dialogue, runtime LLM orchestration, storylets, parcel streaming, and tactical combat are removed—not implied future commitments.
+- See [[01 MVP/12 Game Design Decision Register]] for exact `Postponed` and `Removed` records.

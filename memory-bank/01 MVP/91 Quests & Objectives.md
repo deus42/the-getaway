@@ -1,89 +1,156 @@
 ---
 status: MVP
-type: system
-tags: [quests]
+type: system-specification
+tags: [objectives, facts, dossier, minimap, outcomes]
+canonical: true
 ---
 
-# Quests & Objectives
+# Objectives, Facts, and Operation Dossier
 
-Quest Drivers (MVP scope)
+## 1. Player fantasy and purpose
 
-**Status:** ✅ MVP scope. Quest-driving is deterministic and debuggable (simple triggers + clear state). Advanced/procedural quest drivers live in [[02 Post-MVP/narrative-advanced]].
+The operation layer lets the protagonist build a truthful picture of the mission instead of following omniscient markers. Objectives express what must be done; facts express what the protagonist actually knows; the dossier shows how those pieces connect and what consequences have already been established.
 
-MVP intent:
-	•	Hand-authored quests, triggered by simple conditions (dialogue choice, stepping on tile, pickup collected, flag set).
-	•	Keep logic transparent and debuggable in the quest log / action log.
+## 2. Player-visible verbs
 
-### Rule: structure
+The player can:
 
-Level Progression & Objective Hierarchy
+- read one current main beat in the persistent HUD;
+- open the operation dossier;
+- review completed beats, optional preparation contacts, evidence, people, locations, timeline, and consequences;
+- inspect discovered locations and cameras on the knowledge minimap;
+- acquire facts through dialogue, observation, explicit interaction, and deterministic recognition;
+- explicitly recover medkits, inspect the manifest, return to Lira, and validate transit;
+- continue exploring or end the demo after completion.
 
-- The campaign advances through discrete levels (Level 0: Slums, Level 1: Downtown, Level 2: Industrial Wasteland, and future tiers). Each level ships with a curated list of primary objectives that embody the main mission beats for that space.
-- Every primary objective is composed of one or more quests. Quests define the atomic interactions (dialogue, combat encounters, searches) that flip the underlying state flags. Objectives are therefore collections that resolve to complete when all child quests reach a terminal state (complete or failed when permitted).
-- Objectives include structured metadata: display label, summary copy, gating requirements, and an ordered quest ID list. This enables the HUD panel and quest log to render consistent sequencing and partial progress regardless of how the player reached the current level.
-- For the Level 0 MVP playable slice, the primary chain is now guided one-by-one: Lira cache → Naila datapad → Brant courier tokens. The map, George, and over-NPC clues should expose only the current beat so Level 0 plays like a game slice instead of a parallel systems playground.
+## 3. Starting state and prerequisites
 
-### Rule: completion_feedback
+- A new run begins at mission state `L0_CHARACTER_CREATION`, then enters `L0_SAFEHOUSE_INTRO`.
+- The first world objective is to leave the safehouse boundary and speak with Lira.
+- The Fact Ledger contains only facts justified by the opening premise; it does not pre-populate optional route or surveillance knowledge.
+- The minimap initially knows the protagonist, safehouse, the immediate Lira contact area, and only the level of objective precision justified by the briefing.
+- Every objective, fact, location, person, evidence item, and consequence uses a stable authored key.
 
-Objective Completion & Level Advancement
+## 4. Complete happy-path behavior
 
-- The HUD Level & Objectives panel mirrors the quest log: active objectives render with an inline checkbox and will be crossed out visually once the associated quest set reports completion. Partial progress lines remain normal weight so players can scan outstanding tasks quickly.
-- When all primary objectives for the current level are complete, the UI announces "Mission Accomplished" and hands control to the level advancement funnel. Progression offers a continue prompt, then loads post-mission dialogue, rewards, or the world transition for the next level. Side content remains available until the player confirms the transition.
-- Objective state changes emit Redux events so auxiliary systems (assistant hints, minimap focus, George overlay) can react immediately without polling bespoke quest state.
-- George assistant consumes the same selectors that drive the panel, promoting the top-priority active objective as its default guidance line and celebrating once the level transition modal confirms the mission wrap.
-- Mission Accomplished for Level 0 currently means all three guided primary quests are complete: the Lira keycard/cache objective resolves and closes with Lira, the datapad is recovered and returned to Naila, and the transit-token trail is collected and closed with Brant.
-- Primary quest rewards must not grant the next primary objective item directly. Lira pays credits but does not hand out Naila's encrypted datapad; Naila pays experience but does not hand out Brant's transit tokens. Those objects stay authored world pickups so each contact has a real playable route beat.
-- The Lira keycard lane is a pressure dash, not a required combat clear: during the curfew-gated `recover-keycard` objective, a 5-tile combat-pressure pickup is allowed for `items.corporate_keycard` so the player can snatch the evidence and flee instead of grinding patrol HP.
-- The guided route should be legible in the world itself, but not by scattering decorative props. Current Level 0 guidance comes from the active contact/item marker, the minimap fallback path, and objective feedback. Any future route object must have a clear gameplay role (cover, hazard, pickup, blocker, or named interaction); ambient prop/decal breadcrumbs stay out of the live route until they earn that role.
+1. Character creation transitions to the safehouse opening objective.
+2. Speaking with Lira establishes the primary mission: recover confiscated medkits, return them to her, and validate outbound transit before midnight.
+3. Naila and Brant appear as optional preparation contacts, not mandatory primary beats.
+4. Facts from contacts refine route descriptions, terminal knowledge, and objective/minimap precision.
+5. The player explicitly interacts with the medkit cache; proximity alone cannot complete it.
+6. The optional manifest can be recognized through Naila’s designated fact or the authored Awareness check. Missing it never blocks medkits or completion.
+7. If the network is Suspicious or in Pursuit, the player must resolve that state before the return/escape beat can complete.
+8. The player explicitly returns the medkits to Lira, receives the transit credential, returns to the safehouse, and validates outbound passage before midnight.
+9. Debrief reads the Fact Ledger and outcome ledger; the ending presents `Continue Exploring` and `End Demo`.
 
-### Rule: side_content
+## 5. State model and transitions
 
-Side Quests & Optional Tasks
+The authoritative mission states are defined in [[13 Level 0 Content and State Matrix]]:
 
-- Side quests coexist alongside primary objectives but are tagged as optional. They inherit the same quest atom structure yet render in a dedicated subsection of the HUD panel so they never block level completion.
-- Completing or abandoning side quests has no effect on the Mission Accomplished gate; however, they can grant bonuses, reputation shifts, or alternate dialogue in the next level's intro sequences to reward thorough players.
-- Optional quest metadata includes recommended level and originating faction so the assistant and logbook can surface the most relevant detours without overwhelming the player during critical objectives.
-- Optional Level 0 quests can still auto-promote from available to active when the player makes valid progress, but George and primary progression must keep the guided Lira → Naila → Brant chain dominant until it closes.
+`L0_CHARACTER_CREATION → L0_SAFEHOUSE_INTRO → L0_LIRA_BRIEFING → L0_PREPARATION → L0_OPERATION_DEPARTED → L0_INFILTRATION → L0_MEDKITS_SECURED → L0_ESCAPE → L0_LIRA_RETURN → L0_TRANSIT_VALIDATION → L0_DEBRIEF → L0_COMPLETE`
 
-### Rule: player_surface
+Any authored run failure transitions to `L0_FAILED` with a stable `failure.*` cause. Save incompatibility uses `failure.save_incompatible` before mission hydration and offers New Game rather than partial migration.
 
-Canonical Player Objective Surface (Level 0 MVP)
+Objective states are:
 
-- The player-facing objective UI is the **Quests panel** (`OpsBriefingsPanel`) and is structured as:
-  - **Current Beat** (the one active or next Level 0 guided primary beat; completed Lira/Naila/Brant beats move to completed history/all-quests so the default ops rail does not keep showing stale work),
-  - **Active Side Quests** (started + not completed),
-  - **Available Side Quests** (parked behind the expanded "Show All Quests" overlay, not the default run HUD),
-  - **Completed Quests** (history overlay).
-- The former dedicated Level HUD card is not part of the player runtime path for this pass; objective debugging is provided in test mode via the Debug Panel Mission Snapshot.
-- Available side quests surface giver attribution (`Talk to <NPC>`) and mission summary copy in the expanded overlay so players can deliberately pull optional content without competing with the guided Level 0 chain.
+- `hidden`: not yet justified by protagonist knowledge;
+- `available`: known but not the current required beat;
+- `active`: the one current main beat or an explicitly tracked optional beat;
+- `completed`: satisfied once through an authoritative explicit action or state transition;
+- `failed`: impossible because of a declared mission failure;
+- `superseded`: replaced by a later, more precise authored objective without being presented as failure.
 
-### Rule: side_progression_plumbing
+Facts are append-only within a run. Acquisition stores fact key, provenance, timestamp, source actor/object, and any designated effect. Retry restores the snapshot ledger rather than attempting to reverse facts individually.
 
-Level 0 Side Quest Progression Contracts
+## 6. Rules and tuning values
 
-- Side-quest progression can begin from the **Available** pool (no hard dialogue prerequisite): on first valid objective progress event, the quest is promoted into Active automatically.
-- Enemy defeat progression updates side-quest `kill` objectives deterministically and counts each enemy id only once per objective.
-- Camera sabotage progression updates `devices.surveillance_camera` objectives when the player presses `E` near a valid active camera (NPC interaction keeps priority when both are available).
-- Drone recon progression updates `devices.patrol_drone` objectives on unique waypoint sightings using `${cameraId}:${currentWaypointIndex}` tokens while the drone is active and not in `ALARMED` state.
-- Surveillance-dependent side objectives are curfew-window tasks (22:00-06:00) and must communicate this explicitly in objective copy/log feedback.
+- The persistent quest lane shows exactly one current main beat, deadline when relevant, optional-contact availability, and dossier access.
+- Optional preparation may be tracked, but it cannot visually outrank the current main objective.
+- Facts are binary authored knowledge, not a generic score. A fact’s allowed effects are declared per fact.
+- Objective precision is knowledge-based: unknown district-level target, known area, known entrance, or exact anchor.
+- The minimap never reveals undiscovered cameras, terminals, hiding positions, or exact objectives.
+- The minimap never issues movement commands or draws an automatic route.
+- Medkits and manifest require explicit interaction within authoritative range and visibility.
+- Mission objects are objective state, not a player-managed inventory stack.
+- Completed objectives cannot increment twice through proximity, repeated dialogue, save hydration, or overlapping event handlers.
+- XP comes from declared milestones, not from each objective event or dialogue branch.
 
-**Status:** ⚠️ PARTIAL - HUD scaffold exists; objective gating and mission celebration flow targeted for Step 35.2.
+## 7. Inputs from other systems
 
-Quest Structure & Journal
+- [[90 Dialogue]] adds contact facts and changes objectives through declared effects.
+- [[41 Movement, Interaction & Observation]] validates explicit world interaction.
+- [[42 Surveillance, Security & Civilian Behavior]] supplies network resolution requirements and discovered device state.
+- [[44 Safehouse, Save & Retry]] owns transit validation, autosave, and snapshot restoration.
+- [[92 Character & Progression]] resolves the manifest Awareness check and milestone XP.
+- [[45 HUD & Information Architecture]] renders the current beat, minimap, and dossier access.
+- [[13 Level 0 Content and State Matrix]] defines objective IDs, fact keys, mission transitions, and outcome fields.
 
-Managing the variety of quests requires clear structure and player tools to keep track of objectives and progression:
-	•	Quest Journal: The game provides a journal (or Pip-Boy-like device, or smartphone in a cyberpunk context) where all active and completed quests are logged. Each quest entry includes:
-	•	Quest Name – often hinting at the task or story beat (e.g., “Escape from Downtown” or “A Friend in Need”).
-	•	Description/Context – a brief summary of the situation and goal, often written in a narrative tone. After major decisions, this description can update. (For example, if you chose to help Faction A instead of B in a quest, the description notes that path.)
-	•	Current Objectives – a list of tasks or steps needed to complete the quest, with indicators of which ones are done. e.g., “1. Meet the contact at the old church (Completed). 2. Retrieve the hidden cache. 3. Return to the contact.”
-	•	Quest Giver/Related NPC – notes who initiated the quest or who is important for it, helpful if you need to find them again.
-	•	Rewards (if known) – sometimes listed if the NPC promised something (e.g., payment or an item) or if it’s obvious (completing certain quests might list “+Reputation” or a skill unlock).
-	•	Main vs Side vs Procedural: The journal categorizes quests by type. Main story or faction-critical quests might be under “Main Quests”, optional side quests under “Side Quests”, and repeatable or procedural ones under “Contracts” or “Jobs”. This helps players prioritize and know which quests advance the main narrative versus which are extra content.
-	•	Sorting and Filtering: As the game can have many quests, the player can sort the journal by active/inactive or by location (maybe tag a quest to see it on the map). Completed quests go into a separate history section for review if needed. Failed quests might have their own tab or marking.
-	•	Map Integration: The map will show markers for active quest objectives if appropriate. There could be different colored markers for different quests, or the ability to set one quest as “tracked” so only its markers show to avoid clutter. Some quests might not give a precise marker (for instance, a clue-based quest might just mark a broad area to search or none at all to encourage puzzle-solving).
-	•	Dynamic Updates: The journal updates in real-time as conditions change. If a quest becomes unavailable due to your actions (say you killed an NPC who would give or continue a quest), the quest entry might move to failed and note what happened (“You killed X, so you can no longer help them with Y.”). If a quest’s objectives change mid-way (like an ambush happens, adding a new objective “Survive the ambush”), the journal reflects that.
-	•	Quest Dependencies: Sometimes one quest can affect another. The journal can hint at this. For example, if you have two quests from different factions that are at odds (“Steal the data for Faction A” and “Protect the data for Faction B”), the journal might note the conflict or even merge them into one entry with a branching choice. We aim to avoid having the player confused by two opposite quests active simultaneously without clarification. The game should prompt the player at such junctures to make a decision.
-	•	Quest Completion & Rewards: When a quest is completed, a summary might pop up (“Quest Completed: [Name]. Rewards: XP, items, rep changes.”) and the journal entry moves to completed with a brief epilogue line if needed (“You chose to give the medicine to the clinic, saving many lives.”). This helps reinforce the consequence and gives closure in the log.
-	•	Dialogue Integration: The quest log often echoes information from dialogues (like if an NPC said “Meet me in two days at location X,” the log will have that note). This reduces the chance of players forgetting verbal instructions.
+## 8. Effects on other systems
 
-The quest structure and journal are about player guidance and memory. With so much freedom and branching, it's vital that players have a reliable way to recall what they're supposed to do and what's happening in the world. A well-maintained quest log ensures players can take a break from the game and come back without being lost, and it lets them juggle multiple quests at once in a manageable way.
+- New facts refine dialogue choices, George prompts, minimap knowledge, objectives, check resolution, and debrief.
+- Objective transitions select onboarding prompts, contact availability, mission audio, autosave moments, and acceptance checkpoints.
+- Optional evidence changes Lira’s response, George’s interpretation, the dossier, outcome ledger, and future Miami handoff state.
+- Contact consultation changes route clarity without mutating unrelated character stats.
+- Final completion enables safehouse debrief, progression allocation, and the temporary ending choices.
+
+## 9. UI, world, audio, and George feedback
+
+- The persistent lane states one current action in concrete language.
+- World markers scale in precision with knowledge and disappear or change when completed.
+- Required interactions use readable, forgiving targets and states: usable, too far, blocked, unavailable, or completed.
+- The dossier separates confirmed facts from objectives and consequences; it never presents speculation as verified evidence.
+- Minimap symbols distinguish protagonist, safehouse, known contact, known camera, objective area, and known exit without permanent labels over actors.
+- Objective updates use restrained audio and concise HUD feedback.
+- George may summarize the current beat, confirmed facts, or known route differences; he must say when location or risk remains unknown.
+
+## 10. Failure, recovery, and retry behavior
+
+- Each run failure uses an exact cause: `failure.health`, `failure.paranoia`, `failure.capture`, or `failure.deadline`.
+- A failed optional recognition marks the evidence as unrecognized or missed and leaves the medkit path intact.
+- If an objective interaction is blocked, the prompt explains the current range, visibility, occlusion, ownership, network, or prerequisite issue.
+- Retry restores objective state, facts, contacts visited, time, Health, Paranoia, and preparation exactly as recorded at operation departure.
+- New Game clears all mission, fact, outcome, and minimap knowledge state.
+- Completion cannot occur through a debug bridge, proximity trigger, teleport, automatic pickup, or hidden state mutation.
+
+## 11. Content-authoring requirements
+
+- Maintain stable IDs for all mission states, objectives, facts, contacts, locations, evidence, consequences, and failure causes.
+- Author objective copy at district, area, entrance, and exact-anchor precision where applicable.
+- Author facts for Brant’s delivery window, Naila’s camera topology, connected terminal location, Hidzu–Harrow logistics recognition, medkit requirement, and outbound validation.
+- Author dossier entries for people, locations, evidence, timeline, and established consequences.
+- Author debrief mappings for every outcome-ledger field in [[13 Level 0 Content and State Matrix]].
+- Author English and Ukrainian equivalents with identical keys and state effects.
+
+## 12. Edge cases and prohibited shortcuts
+
+- No mandatory Naila/Brant errands.
+- No procedural contracts, storylet feed, faction reputation, trust meters, crafting tasks, or unrelated backlog content in the dossier.
+- No fact may silently become currency, reputation, XP, or a universal modifier.
+- No unknown camera, entrance, evidence, or objective anchor may leak through minimap initialization, debug defaults, George, or save migration.
+- No automatic pickup or proximity completion.
+- No objective state may be inferred from decorative asset visibility.
+- No required interaction may be hidden behind a building without the approved foreground readability treatment.
+
+## 13. Removed behavior
+
+Removed: broad quest-journal lists of every available side quest, Lira→Naila→Brant mandatory chain, procedural contracts, quest trust/currency rewards, automatic cache collection, faction/reputation objectives, generic discovered-object XP, hidden exact markers, route lines, and debug-only progression.
+
+## 14. Post-MVP extensions
+
+Post-MVP may add campaign-level dossiers, more evidence relationships, additional contacts, and multi-level consequence callbacks. Procedural quests, faction contracts, or reputation are not promised by this extension and require separate approval.
+
+## 15. Human-play acceptance examples
+
+1. At boot, the player sees one immediate objective and no leaked optional route knowledge.
+2. Naila’s fact changes terminal/camera information and the manifest recognition path; Brant’s fact changes delivery timing clarity.
+3. Skipping both contacts leaves both infiltration timings possible but less explicit.
+4. Walking over the medkits does nothing; explicit interaction completes the cache beat once.
+5. Missing the optional manifest still permits Lira return, transit validation, and completion.
+6. Returning medkits while Pursuit remains active does not complete escape until the network is resolved.
+7. Debrief and dossier accurately reflect route, contacts, facts, camera trace, pursuit, injuries, Paranoia peak, evidence, and transit.
+
+## 16. Owning Linear ticket
+
+- System infrastructure: `T9` (`GET-209`) — Dialogue, George, facts, dossier, social feed, and four-lane HUD.
+- Authored mission and acceptance: `T10` (`GET-210`) — Tokyo escape content, audio, onboarding, and end-to-end acceptance.
+- Canonical decisions: `GDR-MIS-001` through `GDR-MIS-010`, `GDR-FACT-001`, `GDR-UI-003`, `GDR-TIME-001`, and `GDR-INT-001` in [[12 Game Design Decision Register]].

@@ -2,17 +2,15 @@
 
 This file is the project-specific overlay for **The Getaway**. Shared execution, safety, evidence, review, rating, debug, and handoff policy lives in the Vault Agent Operating System; do not duplicate it here.
 
-## Preload and precedence
+## Vault Preload
 
-Before repository work, read in order:
-
-1. `/Users/deus/Projects/Vault-Tec/00 Agent Memory.md`
-2. `/Users/deus/Projects/Vault-Tec/35 Context/Agent Operating System.md`
-3. `/Users/deus/Projects/Vault-Tec/90 Admin/Workstream Registry/Source Projects/local-the-getaway.md`
-4. `/Users/deus/Projects/Vault-Tec/90 Admin/Workstream Registry/Project Workspaces/the-getaway.md`
-5. This file and the active `progress/<Linear-key>.md` note, when one exists
-
-Re-open the workspace record, this file, and the active task note after a session resume or context compaction.
+- Before repository work, read `/Users/deus/Projects/Vault-Tec/00 Agent Memory.md`.
+- From that entrypoint, preload `/Users/deus/Projects/Vault-Tec/35 Context/Agent Operating System.md`.
+- Then read this repo's Source Project overlay: `/Users/deus/Projects/Vault-Tec/90 Admin/Workstream Registry/Source Projects/local-the-getaway.md`.
+- Then read this repo's Project Workspace record: `/Users/deus/Projects/Vault-Tec/90 Admin/Workstream Registry/Project Workspaces/the-getaway.md`.
+- Before each new session or same-task resume in this workspace, re-open the Project Workspace record, this file, and the active `progress/<Linear-key>.md` note when one exists.
+- After compaction or resume, also re-open the Agent Operating System and Source Project overlay before continuing.
+- Treat this file as the repo-specific specialization after Vault defaults.
 
 Intentional local overrides to Vault defaults:
 
@@ -20,6 +18,19 @@ Intentional local overrides to Vault defaults:
 - For visual/gameplay work, prove the live behavior before running the full automated closeout block.
 - Commit only when the requester explicitly authorizes a commit.
 - Move Linear to `Done` only after the requester verifies the committed build.
+
+## Execution Policy
+
+- Shared execution, Never Guess, task continuity, reporting, and verification policy lives in the Vault Agent Operating System.
+- During Superpowers brainstorming, treat the local visual companion as pre-approved. When upcoming choices would benefit from browser mockups, diagrams, or side-by-side comparisons, open and use it automatically without asking for consent or repeating token-cost or local-URL warnings. Keep text-only questions in text, and honor an explicit opt-out for the current ask.
+- Before model-sensitive routing or claims, inspect current session/runtime metadata, the relevant local config or model-list command, and current official provider documentation. Treat model IDs, aliases, availability, context, pricing, reasoning controls, and tool support as volatile; mark stale or unavailable evidence explicitly and never silently substitute a different model.
+- Treat `yarn playtest:agent -- --codex` as a harness selection flag, not proof of an exact backing model. Record the effective model from current runtime/session evidence when model identity affects cost, capability, privacy, or acceptance.
+- Keep the existing player-visible evidence gate: live playtesting and rendered screenshots outrank fixture, synthetic, or configuration-only success.
+
+## Commit Identity Hygiene
+
+- Keep commit history human-only. Do not put AI, agent, or tool attribution in authors, committers, subjects, bodies, or trailers, including `Co-Authored-By`, `Generated-By`, or `Assisted-By` markers.
+- Preserve the configured human Git identity. Before pushing, inspect the outgoing range with `git log '@{upstream}..HEAD' --format='%an%n%ae%n%cn%n%ce%n%B'`; rewriting already-pushed history requires explicit requester authorization.
 
 ## Workspace
 
@@ -34,6 +45,12 @@ Canonical project documentation is the Markdown-only `memory-bank/` vault:
 
 - Home: `memory-bank/00 Home.md`
 - Game design (WHAT): `memory-bank/01 MVP/Game Design.md`
+- MVP spine: `memory-bank/01 MVP/10 MVP Spine.md`
+- Level 0 contract: `memory-bank/01 MVP/11 Level 0 Vertical Slice Contract.md`
+- Decision register: `memory-bank/01 MVP/12 Game Design Decision Register.md`
+- Level 0 content/state matrix: `memory-bank/01 MVP/13 Level 0 Content and State Matrix.md`
+- Specification review queue: `memory-bank/01 MVP/14 Specification Review Queue.md`
+- Linear implementation program: `memory-bank/01 MVP/15 Linear Implementation Program.md`
 - Art direction: `memory-bank/01 MVP/30 Art Direction (MVP).md`
 - MVP readiness: `memory-bank/01 MVP/95 MVP Readiness Checklist.md`
 - Lore/tone: `memory-bank/03 Lore/Plot Bible.md`
@@ -51,6 +68,24 @@ Canonical project documentation is the Markdown-only `memory-bank/` vault:
 - Reuse the active issue for a direct follow-up when splitting it would add no ownership or scheduling value. Do not silently pull unrelated tickets into implementation.
 - For meaningful Linear or multi-session work, maintain `progress/<Linear-key>.md` with scope, material directives, decisions, plan, validation evidence, and open risks. Update it when those facts change; do not log routine conversational noise.
 
+## GET-139 documentation-first governance
+
+- For GET-139 and its descendants, resolve authority in this order: current explicit requester directive → Game Design Decision Register → canonical Game Design/MVP Spine/Level 0 Contract/per-system specification → owning Linear ticket → Architecture → tests and runtime code. Lower layers implement higher layers and cannot silently redefine them.
+- Do not modify gameplay, runtime behavior, production art, or player-facing content until the canonical specification package has passed contradiction and traceability review and has been committed separately with requester authorization. After that entry gate, execute one child at a time in Roadmap dependency order.
+- A validated committed deliverable unlocks the next child even when the predecessor remains `In Review` pending requester verification. Keep closure blocker relations and terminal-state policy intact; do not use them to force idle time between otherwise satisfied delivery gates.
+- Create or materially rewrite an implementation ticket only after its owning specification exists. Every ticket must embed its player promise, starting state, complete flow, state transitions, tuning, cross-system effects, world/UI/audio/George feedback, failure and recovery, exclusions, content requirements, and human-play acceptance. A documentation link is supporting context, never a substitute for the ticket specification.
+- Every canonical per-system specification uses the shared 16-section template documented in `memory-bank/01 MVP/00 Index.md`. If a required value is unresolved, record a stable `OPEN-*` decision in the review queue and name the affected acceptance gate instead of inventing an untracked value.
+- Maintain bidirectional traceability: every current design rule has a stable decision ID, canonical system document, and owning Linear ticket; every implementation ticket cites the decision IDs and specification sections it implements.
+- Treat `memory-bank/01 MVP/15 Linear Implementation Program.md` as the canonical copy source for GET-201 through GET-210. After any specification change that affects a child, rewrite the complete affected Linear description from that source and read it back; compare semantic content while allowing only Linear's automatic bullet and issue-link normalization. A partial comment or link does not restore parity.
+- Resolve an `OPEN-*` item as one atomic governance change: record the requester decision and provenance in the Decision Register, replace the recommendation with the approved rule in every affected system/contract/matrix/interface, update every blocking Linear description, update readiness/progress, and rerun ID/link/contradiction/readback checks. Removing the queue row alone is not resolution.
+- `OPEN-*` items are acceptance/freeze blockers, not a blanket prohibition on starting their owning ticket. A Critical item may use its recorded recommended baseline as a reversible provisional trial only when the active progress note and Linear comment name the assumption, implementation seam, live proof, and rollback path. A High item may remain provisional until the affected surface is reviewed. Neither is `Approved`, and a ticket cannot move beyond `In Review` while a materially implemented provisional rule remains unaccepted.
+- Before moving a child to `In Progress`, verify that its Linear description semantically matches the canonical ticket section, predecessor delivery gates have committed evidence, the documentation commit exists, and a progress note names live proof targets plus any provisional `OPEN-*` assumptions. Linear's automatic Markdown/entity normalization is allowed; missing or rewritten requirements are not. A status change or existing experimental code is not evidence that the gate opened.
+- During specification polish, review decisions system by system and preserve unresolved questions in the queue. Do not silently promote a recommended baseline, example, proposed requirement, or historical rating into an approved rule.
+- If implementation exposes an undecided behavior or conflicts with the specification, update the review queue before encoding it. Continue with a reversible provisional trial when the queue provides a coherent baseline and the choice can be judged through live evidence; stop only when no safe reversible path exists or the choice would irreversibly change scope, ownership, licensed assets, save compatibility, or core player behavior.
+- Removed or superseded behavior may be summarized only in the Decision Register, each system specification's required `13. Removed behavior` section, clearly historical progress entries, and recoverable source archives. Those references must label it rejected; it must not appear as current MVP intent in Architecture, Roadmap planning, active ticket requirements, tests presented as acceptance, or player-facing copy.
+- Verify the protected rewrite recovery archive before resetting, deleting, restoring, or replacing rewrite-owned files. Record the archive path, checksums, baseline SHA, salvage map, and restoration proof in `progress/GET-139.md`.
+- GET-139 explicitly replaces the rejected Level 0 topology, movement contract, HUD architecture, and production-art path. Generic preservation guidance in this file applies only after the new specification has locked the replacement contract; the Building Positioning Runbook governs measured alignment inside that contract and does not preserve the rejected four-block topology.
+
 ## Implementation loop
 
 1. Inspect current `main`, the dirty tree, active issue, task note, and relevant docs. Compare changes against current `HEAD` unless another baseline is requested.
@@ -61,12 +96,12 @@ Canonical project documentation is the Markdown-only `memory-bank/` vault:
 6. After requester acceptance, or an explicit request to finalize/commit the current pass, run the required automated closeout checks below.
 7. Commit only the intended coherent files with an authorized message, comment Linear, and leave the issue non-terminal until the requester verifies the committed build.
 
-When hero or named Level 0 actor presentation changes, use the manifest-driven pipeline in `the-getaway/src/content/characters/spriteManifest.ts` and `the-getaway/public/characters/<spriteSetId>/`. `SpriteCharacterRigFactory` is primary; noir-vector rigs are fallback only for missing/invalid matrices or actors outside the rollout.
+When any required Level 0 actor presentation changes, use the manifest-driven pipeline in `the-getaway/src/content/characters/spriteManifest.ts` and `the-getaway/public/characters/<spriteSetId>/`. The production contract covers all twelve grounded actor sets; `SpriteCharacterRigFactory` is primary, while noir-vector rigs are diagnostic fallback only for missing/invalid matrices or actors outside the approved Level 0 roster.
 
 For HUD/theme work:
 
 - Audit every Level 0-visible surface for consistency.
-- Preserve layout and behavior before changing treatment.
+- Preserve the approved information and behavior contracts before changing treatment; do not preserve a superseded layout merely because it exists in code.
 - Keep each HUD component's CSS surface owned by that component; do not create a new bundled style blob.
 - Use semantic theme tokens rather than branching painters/components on theme IDs or scattering hardcoded colors.
 
@@ -81,7 +116,7 @@ Treat placement as measured geometry, not open-ended visual tuning.
 5. Apply the tolerance rubric in the Building Positioning Runbook. If a measured parallelogram pass still misses by more than one tile, stop trim chasing and use a custom polygon or multi-region footprint.
 6. If a pass moves the wrong edge or reopens a correct edge, restore the recorded baseline before the next attempt.
 
-City structure must serve gameplay or spatial readability. Do not add decorative clutter; valid additions include traversable urban mass, cover, hazards, cameras, entrances, pickups, safehouses, active contacts, and semantic surface treatment.
+City structure must serve gameplay or spatial readability. Do not add decorative clutter; valid additions include traversable urban mass, line-of-sight occluders, hazards, cameras, entrances, pickups, safehouses, active contacts, and semantic surface treatment.
 
 ## Acceptance and validation
 
@@ -113,7 +148,7 @@ The Definition of Done is implementation + documentation + accepted live evidenc
 - Update MVP Readiness after gameplay or UX work and include a short readiness summary in the handoff.
 - Consult the Plot Bible for dialogue, quests, factions, or narrative tone.
 - Add a Roadmap progress entry only for a completed `Feature`; skip Improvements and Bugs. Change roadmap plan sections only when scope or ordering changes.
-- Preserve existing XML structure in memory-bank documents; do not invent a parallel schema.
+- Preserve the established Markdown frontmatter, headings, and wiki-link conventions. Extend the canonical package instead of creating a parallel design archive or a second source of truth.
 
 ## Commits and handoff
 

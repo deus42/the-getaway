@@ -1,50 +1,196 @@
 ---
 status: MVP
-type: art
+type: system-specification
+tags: [art-direction, city, blender, hud, actors]
+canonical: true
 ---
 
-# Art Direction (MVP)
+# Art Direction and Blender World Pipeline
 
-Painterly Noir Art Direction
+## 1. Player fantasy and purpose
 
-The Getaway’s visual identity leans into a painterly noir aesthetic—thick atmospheric mood, imperfect brushwork, and deliberate grime that mirrors the city’s moral rot.
+Level 0 should feel like a real Tokyo district whose ordinary public life has been reorganized around corporate identity control. The visual fantasy is not neon spectacle or fantasy noir; it is the unease of being a recognizable human body in a beautiful, legible, comprehensively watched city.
 
-Color Language & Palette Guardrails
-	•	Primary palette draws from desaturated crimsons, bruised umbers, muted teals, sodium ambers, and electric cyan accents reserved for interactables or faction tech.
-	•	Value structure favors high-contrast silhouettes against hazy midtones; brightest highlights are scarce and purposeful (siren lights, HUD callouts, corporate signage).
-	•	Weathering layers (soot streaks, rain wash, chipped enamel) should be hand-painted or overlaid with visible brush grain to avoid sterile gradients.
+The locked direction is **graphic surveillance noir**: strong ink silhouettes, readable midtones, cold institutional surfaces, sodium practical lighting, restrained technology cyan, and crimson reserved for real danger. Art must serve navigation, surveillance, hiding, blending, dialogue, and escape before atmosphere.
 
-Material & Edge Treatment Rules
-	•	Metals: cold base tones with warm edge catches; add micro-scratches and oil bloom to break up flat planes.
-	•	Concrete & masonry: mottled texture passes with charcoal edging; drift grime vertically to imply runoff.
-	•	Fabric & leather: softened edges, frayed seams, and occasional stitch highlights to keep silhouettes readable.
-	•	Hard vs. soft edges: reserve razor-sharp cuts for weapons and corporate hardware; diffuse edges elsewhere to maintain painterly cohesion.
+## 2. Player-visible verbs
 
-Signage, UI Diegesis & Lighting Motifs
-	•	District signage should riff on period noir typography (condensed sans-serifs, deco ligatures) while integrating glitched neon or flicker passes for lived-in decay.
-	•	Diegetic displays (billboards, kiosks, George’s overlays) glow with cool cyan/teal, contrasted by warmer street lighting to frame interactable spaces.
-	•	Use motivated pools of light (overhead lamps, leaking neon, vehicle headlights) to sculpt scenes and reinforce cover silhouettes in gameplay spaces.
-	•	Level 0 route art must earn its place through gameplay: cover, hazards, cameras, pickups, entrances, safehouses, and active contacts are allowed; ambient prop clusters, route clutter, and decorative beacons are not.
-	•	Long Level 0 travel lanes stay legible through authored surface value masses, walkable/blocked/cover contrast, active objective markers, and the minimap route. Do not compensate for weak composition with repeated freestanding decoration or permanent actor labels.
+The art must make it possible to:
 
-Level 0 Graphic Painterly-Noir Production Contract (GET-180)
-	•	Outdoor Level 0 is the first production slice for `graphic-painterly-noir`; interiors, other maps, and invalid/missing assets retain the vector presentation as fallback.
-	•	Palette: charcoal, bruised umber, dirty crimson, muted teal, bone, and sodium amber. Technology cyan is scarce and semantic; crimson is reserved for active threats. Authored light direction is consistently upper-left.
-	•	Actors use complete `64×96` eight-direction sheets with four frames each for `idle`, `move`, `attack`, and `interact`. Hero, contact, guard, and hostile references must share silhouette language with their dialogue portraits; runtime scale does not replace correct frame occupancy.
-	•	Named buildings use neutral authored albedo art over an exact runtime footprint plate. Generated landmarks remain unwarped, register their measured base center to the parcel centroid, and use a per-asset safe fill derived from decoded pixels with alpha greater than `36` at or below the measured base-corner row; the validator permits no such ground-contact pixel outside the footprint polygon and rejects saturated magenta key-color fringe or non-semantic cyan/purple lower-podium washes. Day, curfew, alarm, and practical-light shifts come from runtime atmosphere rather than duplicate baked day/night exports.
-	•	Level 0 reads as one city district: nine gameplay parcels retain distinct landmarks and road cores, while a dedicated anonymous low/mid-rise surround continues urban mass beyond every map edge. Surround art never reuses named landmarks, enters the playable map, becomes translucent, or participates in gameplay depth/input/minimap systems.
-	•	Normal gameplay framing presents a local neighborhood rather than the whole tactical board. The painterly view suppresses perimeter wall volumes and permanent building labels, blends the map edge into continuous urban mass, and preserves the `0.38` manual overview behind a map-aware coverage floor that prevents exposed void.
-	•	The HUD preserves its information architecture but uses matte ink panels, angular edges, fine bone/brass rules, restrained shadows, and semantic amber/crimson/cyan/teal accents. Broad cyan bloom, heavy blur, glossy glass, and rounded-card repetition are outside this slice.
-	•	Compact Level 0 HUD framing uses a measured two-by-two dock through `1359px`, caps at `min(440px, 52svh)`, keeps the quest archive above the dock, and reserves the remaining playfield as the camera-safe area. No lane may depend on content overflow to fit.
-	•	The master board, actor/building references, deterministic normalization scripts, and export notes live under `art/painterly/level0`; runtime assets remain manifest-driven and validator-friendly.
+- distinguish walkable street, sidewalk, alley, entrance, obstacle, and inaccessible mass;
+- identify cameras, current coverage, connected terminals, and the verifier drone;
+- recognize contacts, security, civilians, hiding contexts, and blending contexts without permanent labels;
+- read the two timing approaches and three traversal loops from urban form;
+- find the medkit cache, optional manifest, safehouse, and outbound terminal through knowledge-appropriate landmarks;
+- understand day/curfew changes without losing actors, geometry, or interaction readability;
+- use the four-lane HUD and major overlays without surrendering the world to interface chrome.
 
-Reference Sheets & Production Workflow
-	•	Produce a one-page style sheet per district outlining palette swatches, texture callouts, signage exemplars, and “do/don’t” mini-comparisons.
-	•	Each sheet should cite relevant narrative beats from [[03 Lore/Plot Bible]] so faction tone and environmental storytelling stay aligned.
-	•	Store sheets under `the-getaway/src/assets/style-guides/` (or equivalent) with versioned filenames (`districtName_style_v###.mdx/png`) and log updates in [[04 Engineering/Roadmap]] when districts evolve.
-	•	All outsourced or generated art must reference the applicable sheet to ensure external collaborators hit the noir constraints without guesswork.
-	•	Maintain a reusable SDXL prompt library in `/art/prompts/` (tiles, props, characters). Every brief must reiterate “painterly brush grain, clean albedo, no baked shadows” so runtime lights, not renders, supply depth.
-	•	Export atlas-ready sprites at 2:1 ratios (64×32 base tiles, 128px hero props). Place diffuse PNGs in `public/atlases/` with matching JSON (`props.json`) and keep normal maps in `public/normals/` using the `_n` suffix (`lamp_slim_a` → `lamp_slim_a_n`).
-	•	Verify normals in Level 0 by enabling the Game Menu lighting toggle (pipes into `visualSettings.lightsEnabled`) then stepping into Waterfront Commons: the indoor validation lamp + point light exposes inverted green channels immediately.
+## 3. Starting state and prerequisites
 
-See also: [[03 Lore/Art Direction]]
+- The authoritative gameplay topology is the approved `Level0LayoutContract`, not painted pixels or licensed geometry.
+- The owned source pack is Neo Tokyo 2 at `/Volumes/Elements/Backup/Downloads/Game/Neo Tokyo 2`.
+- Blender `5.0.1` is the authoring environment.
+- Level 0 uses one outdoor master scene, one fixed 2:1 isometric camera, and a runtime 64×32 projection contract.
+- Raw licensed geometry is never committed.
+- Generated `.blend` files remain untracked.
+- The repository may commit versioned scene recipes, source manifests, transforms, semantic metadata, validators, and flattened runtime derivatives allowed by the asset license.
+- The exact approved Direction B comparison artifact and source/license inventory remain open items in [[14 Specification Review Queue]] and must be resolved before art production acceptance.
+
+## 4. Complete happy-path behavior
+
+1. Runtime/layout work defines the outdoor topology, semantic surfaces, anchors, and three traversal loops.
+2. The Blender pipeline imports the owned pack without stylistic regeneration and composes the entire district in one master scene.
+3. The first visual gate judges unchanged-kit composition: human scale, continuous street walls, public realm, loops, landmarks, actor legibility, and fixed-camera projection.
+4. Only after that composition is accepted does the second gate add Hidzu identity: surveillance hardware, identity scanning, public screens, propaganda, controlled wayfinding, and institutional lighting.
+5. Roads, sidewalks, curbs, crossings, alleys, plazas, setbacks, and entrance aprons are authored as part of the city rather than a flat runtime board beneath freestanding sprites.
+6. Aligned dusk, blue-hour, and curfew layers are exported from the same geometry and camera. Runtime crossfade changes atmosphere without moving collision, doors, devices, or interaction anchors.
+7. Semantic masks and anchors flow back into validation against the same layout contract.
+8. Runtime actors, camera indicators, interaction feedback, and the HUD remain live layers above flattened environment derivatives.
+9. Fixed-viewport screenshots and human play—not asset counts or validators—determine visual acceptance.
+
+## 5. State model and transitions
+
+The world-art lifecycle is:
+
+`LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → COMPOSITION_ACCEPTED → HIDZU_IDENTITY_PASS → RUNTIME_EXPORT → LIVE_VISUAL_ACCEPTANCE`
+
+- Failure at the unchanged-kit gate returns to composition and scale; it cannot be hidden with signage, fog, or post-processing.
+- Failure at the Hidzu gate returns to identity/lighting treatment without reopening accepted topology unless measured evidence reveals a topology defect.
+- Runtime export is valid only when projection, masks, anchors, layer registration, and fallback metadata pass validation.
+- Live acceptance is separate from technical validation and remains pending until the requester verifies representative play states.
+
+Presentation states are aligned environment layers:
+
+- `dusk`: public life and readable material separation;
+- `blue-hour`: transitional ambience without geometry change;
+- `curfew`: reduced public activity, stronger surveillance presence, and motivated practical light without crushed values.
+
+## 6. Rules and tuning values
+
+### City structure
+
+- Level 0 is a continuous outdoor Tokyo district, not nine isolated landmarks, a four-block compound, or buildings arranged on an empty board.
+- The layout contains three interlocking traversal loops.
+- A full outer loop targets roughly two to three minutes of ordinary movement; exact dimensions and movement speed remain open until the layout prototype is measured.
+- Buildings form street walls, intersections, setbacks, alleys, entrances, and recognizable subareas at human scale.
+- Every placed object must support navigation, surveillance, hiding/blending, line-of-sight cover, hazard, entrance, contact, mission interaction, safehouse, objective readability, or required civic atmosphere. Decorative clutter is rejected.
+
+### Color and value
+
+- Core palette: charcoal, bruised umber, muted teal, bone, and sodium amber.
+- Technology cyan identifies active Hidzu devices and connections; it is scarce.
+- Dirty crimson identifies confirmed threat and Pursuit, not neutral architecture.
+- Lighting direction remains consistently upper-left for baked assets.
+- Midtones remain readable. Curfew cannot collapse actors, road edges, entrances, and building bases into one black band.
+- Practical lights must be anchored to visible sources and respect the aligned environment state.
+
+### Projection and runtime
+
+- Runtime base projection: `64×32`, `2:1` isometric.
+- Normal outdoor zoom floor: `0.60`.
+- Building, collision, entrance, mask, and depth anchors derive from the shared layout contract and export metadata.
+- Generated environment layers must not be upscaled blurry composites, mismatched-angle plates, or per-building collage assembled independently in Phaser.
+- Overview zoom must not reveal seams, missing tiles, repeated city plates, floating bases, clipping, or corruption.
+
+### Actors and portraits
+
+- Twelve grounded actor identities: four protagonists, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
+- World contract: `64×96`, eight directions, four frames, `idle`, `move`, and `interact`; no attack animation is required.
+- Foot anchors remain stable within two pixels.
+- Actor presentation is approximately 15% larger than strict architectural perspective so bodies remain readable.
+- World sprite, portrait, dialogue identity, and role silhouette must match.
+- Takahiro Kobayashi receives a propaganda/broadcast portrait; George receives separate AR presentation art.
+
+### HUD
+
+- Persistent bottom dock uses four lanes: knowledge minimap, protagonist, George, current quest beat.
+- Target height is `16–18%` of viewport height at supported desktop viewports.
+- Matte ink panels, angular edges, fine bone/brass rules, restrained shadows.
+- No broad glow, glossy glassmorphism, heavy blur, oversized cards, decorative scanlines, or world-obscuring chrome.
+
+## 7. Inputs from other systems
+
+- [[11 Level 0 Vertical Slice Contract]] defines mission flow and player-facing priority.
+- [[41 Movement, Interaction & Observation]] defines camera, zoom, focus, interaction, and occlusion needs.
+- [[42 Surveillance, Security & Civilian Behavior]] defines truthful surveillance geometry and device states.
+- [[45 HUD & Information Architecture]] defines persistent and modal information.
+- [[48 Actors & Portraits]] owns actor-specific art/content requirements.
+- [[49 Audio]] defines audiovisual transition pairing.
+- [[95 MVP Readiness Checklist]] defines evidence states and fixed captures.
+- [[04 Engineering/Building Positioning Runbook]] governs measured alignment after the new layout is accepted; it does not preserve rejected topology.
+
+## 8. Effects on other systems
+
+- Semantic masks define runtime walkable/blocked classification, device/entrance/hiding anchors, and validation evidence without overriding authored gameplay rules.
+- Urban composition makes route, line-of-sight, hiding, and blending decisions readable.
+- Actor scale and value hierarchy determine whether surveillance play is human-centered.
+- Lighting layers select schedule atmosphere but do not change detection geometry.
+- HUD styling communicates objective, neutral information, technology, time, and danger consistently.
+- Prop and landmark selection determines what the minimap and dossier can reference credibly.
+
+## 9. UI, world, audio, and George feedback
+
+- Current objective/action has strongest local emphasis; actors and active observation/threat come next; traversal and entrances next; architecture next; ambience last.
+- Camera coverage is a restrained ground/world layer and never paints whole buildings cyan.
+- Foreground treatment may temporarily clarify a required actor or interaction but cannot make the city broadly translucent or lift duplicate actors over roofs.
+- Known devices share a repeated Hidzu visual grammar across world, minimap, terminal, and HUD.
+- Propaganda, screens, transit notices, and civic messaging express institutional control without replacing playable information.
+- Audio cues are anchored to visible camera, drone, terminal, curfew, entrance, and interaction sources.
+- George’s floating AR avatar is private, light, and subordinate to the protagonist; it cannot resemble an armed companion or obscure route geometry.
+
+## 10. Failure, recovery, and retry behavior
+
+- Missing or invalid art manifests use an explicit fallback and diagnostics; required production acceptance cannot rely on fallback assets.
+- Zoom corruption, seam exposure, anchor drift, detached shadows, unreadable curfew values, or required-object occlusion fails the visual gate.
+- The pipeline must reproduce a known export from versioned recipe/manifests without committing raw licensed geometry.
+- Retry and New Game must select the correct aligned visual state from world-clock state without stale layers from a previous run.
+- If visual and gameplay geometry disagree, gameplay remains authoritative while the art/export is corrected; the runtime may not silently move collision to fit a render.
+
+## 11. Content-authoring requirements
+
+- Maintain a source/license manifest for every Neo Tokyo asset used and every committed derivative.
+- Maintain the Level 0 master-scene recipe, camera/projection settings, transforms, material treatment, light rig, export layers, masks, anchors, and validation checks.
+- Produce unchanged-kit and Hidzu-gate comparison captures at `1280×720`, `1440×900`, and `1920×1080`.
+- Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Retry, debrief, and completion.
+- Maintain actor manifests and matching portrait references for all required identities.
+- Author signage and public-screen copy in the approved cultural/language policy once that open decision is resolved.
+
+## 12. Edge cases and prohibited shortcuts
+
+- No synthetic regeneration of owned architecture into unrelated fantasy or generic cyberpunk buildings.
+- No raw licensed geometry in Git.
+- No independent building sprites arranged as a city collage, opaque parcel slabs, floating bases, empty board, or decorative perimeter.
+- No correcting visual mismatch by changing gameplay topology after the layout contract is accepted without a documented design decision.
+- No giant permanent labels, x-ray actors, universal building transparency, broad path lines, debug outlines, or glow as a substitute for composition.
+- No baked light that contradicts the upper-left rig or visible practical source.
+- No tiny actors against monumental buildings, fantasy-Neo costumes, attack poses, military loadouts, or magical gadgets.
+- No claim of visual success based on checklist completion, generated asset count, configuration, validator output, or an AI rating without live inspected frames.
+
+## 13. Removed behavior
+
+Removed from the active visual direction: painterly-fantasy Neo characters, four-block compound, sparse nine-building board, isolated landmark collage, generated replacement architecture, blurry upscaled composites, flat procedural road board as final presentation, three-lane HUD, attack-sheet requirement, permanent labels, tactical-combat hierarchy, city-wide translucent buildings, decorative clutter, broad cyan glow, and the previous claim that Blender/kit assets were optional experiments rather than the approved city source.
+
+Historic GET-155 and GET-180 assets remain recoverable evidence/fallback only. They are not current production direction.
+
+## 14. Post-MVP extensions
+
+Post-MVP may add complex interiors, additional Tokyo districts, Miami art production, more actor/civilian variation, and advanced weather or security presentation. New districts must reuse the projection, semantic-export, visual-hierarchy, and human-acceptance discipline unless a later approved decision supersedes it.
+
+## 15. Human-play acceptance examples
+
+1. At maximum normal zoom-out, the scene reads as one continuous city with no seams, floating buildings, sparse board, or corruption.
+2. At normal zoom, a player distinguishes protagonist, contact, civilian, and Hidzu security without labels and can read entrances and walkable space.
+3. The public route and curfew route feel like different uses of the same district rather than different map scripts.
+4. A camera, its connected terminal, and its current coverage read as one system without debug overlays.
+5. Curfew changes atmosphere and surveillance tension while actors, road edges, hiding places, and objectives remain readable.
+6. The bottom HUD stays within 18% at target viewports and preserves four clear information lanes.
+7. Side-by-side unchanged-kit and Hidzu captures show that the second pass adds institutional identity without hiding weak composition.
+8. The requester accepts live screenshots and play at all target viewports; automated validators are green but are not treated as visual proof.
+
+## 16. Owning Linear ticket
+
+- City baseline: `T4` (`GET-204`) — Unchanged-kit Tokyo Blender master scene.
+- Hidzu treatment: `T5` (`GET-205`) — Hidzu identity and graphic-surveillance-noir world art.
+- Actors: `T6` (`GET-206`) — Grounded actors, portraits, and entry-flow presentation.
+- HUD: `T9` (`GET-209`) — Dialogue, George, facts, dossier, social feed, and four-lane HUD.
+- Canonical decisions: `GDR-ART-001` through `GDR-ART-005`, `GDR-UI-001`, `GDR-UI-002`, `GDR-GEO-001`, `GDR-REM-011`, and `GDR-SUP-001` through `GDR-SUP-004` in [[12 Game Design Decision Register]].

@@ -1,9 +1,13 @@
 ---
+status: superseded
 category: engineering
-type: tech
+type: historical-reference
 ---
 
 # Tech Stack & Performance
+
+> [!WARNING]
+> Superseded pre-GET-139 planning reference. Its turn-based combat, A*, grid-combat, deep inventory, world-streaming, faction-simulation, save, and speculative platform recommendations are not current requirements and must not guide implementation. Use [[Architecture]], [[01 MVP/12 Game Design Decision Register]], and [[01 MVP/15 Linear Implementation Program]] as current authority.
 
 Technology & Development Focus
 

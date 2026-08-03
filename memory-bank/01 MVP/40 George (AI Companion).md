@@ -1,23 +1,92 @@
 ---
 status: MVP
 type: companion
+canonical: true
 ---
 
 # George (AI Companion)
 
-AI Assistant & Player Guidance
+## 1. Player fantasy and purpose
 
-AI Companion
+George is a private, persistent AI companion who helps the protagonist think under surveillance. He should feel present, useful, fallible in the honest sense of lacking information, and emotionally familiar—not like a quest tooltip, omniscient narrator, free-text chatbot, or autonomous agent.
 
-An omnipresent AI assistant ("George") accompanies the player from the start. George exists as an overlay in the Level-0 Objectives area of the HUD and serves several key functions:
-	•	**Mission Guidance & Tutorials:** George calls attention to the player’s current objectives, suggests next steps, and explains new mechanics when they first appear. It proactively surfaces optional side quests or dynamic events if they align with the player’s goals. Players can ask George “What should I do?” to receive contextual hints without spoiling surprises.
-	•	**Personality & Humor:** George has a distinct personality that evolves to mirror the player’s choices. If the player often uses sarcastic dialogue options, George develops a dry wit; if the player is earnest and compassionate, George’s tone becomes encouraging. The assistant cracks jokes and makes sardonic observations about the dystopian world, adding levity to exploration.
-	•	**Adaptive Relationship:** George comments on the player’s karma, faction alignment, and recent actions. Positive or negative karma shifts George’s respect level and the tenor of its banter. It may admonish ruthless play or cheer moral decisions. Faction reputations can affect George’s advice (e.g., warning when entering hostile territory).
-	•	**Conversation Interface:** Players can initiate short conversations with George using dialogue options similar to NPC interactions (e.g., ask for a hint, vent frustration, or debate philosophy). While George cannot act physically in the world, its responses enrich narrative immersion.
-	•	**Diegetic Implementation:** George is diegetic: an AI chip implanted in the protagonist’s device. This lets it integrate into the world’s tech-noir aesthetic while justifying its narrative commentary. Upgrades or bugs to George can form the basis of quests.
+## 2. Player-visible verbs
 
-George’s dialogue adheres to the tonal guidelines in the plot bible: darkly funny, surreal, and morally nuanced. Designers should log references to relevant plot bible directives (e.g., Tone Guideline 4 for satire) when writing George’s lines to ensure consistency.
+Ask an authored contextual question; request current objective; review verified facts; compare known route risks; ask why an action is blocked; acknowledge curfew/deadline warning; inspect George's current observation.
 
-## Level 0 Final-Feel Rule
+## 3. Starting state and prerequisites
 
-For the GET-139/GET-180 Level 0 slice, George should behave as a quiet mission guide first and an ambient companion second. His default feed should surface one current beat at a time, use the slice code phrases (`streetlight`, `quiet tide`) sparingly, and shift tone by context: operation guidance in daylight, stealth guidance under curfew, recovery guidance when paranoia pressure spikes, return guidance after pickups, and next-contact guidance after hand-ins. Optional banter remains available through the prompt path, but the opening route should stay focused on Lira, the cache lane, recovery, Naila, Brant, and recap closure without ambient noise in the default route.
+George is available from the safehouse opening. The player perceives him through a fourth HUD lane and a floating near-character AR avatar. His exact hardware/origin and exposure model are `OPEN-NAR-009`; provisional content may use only that queue recommendation and may not invent an implant, cloud service, or broader network access.
+
+## 4. Complete happy-path behavior
+
+George introduces immediate controls and Lira without explaining the whole setting. He summarizes facts after Lira/Naila/Brant, distinguishes known and unknown camera risk, warns as curfew/deadline approach, explains terminal/hiding failures, interprets the optional manifest only after recognition, supports return/transit, and contributes one concise factual debrief observation.
+
+## 5. State model and transitions
+
+George presentation states:
+
+- `quiet` — avatar present, no urgent line;
+- `context` — one authored observation/prompt tied to current beat;
+- `warning` — curfew, deadline, network escalation, or invalid action;
+- `insufficient` — explicitly lacks verified information;
+- `debrief` — summarizes outcome ledger facts.
+
+World state never changes merely because George changes presentation state.
+
+## 6. Rules and tuning values
+
+- One persistent HUD observation at a time.
+- One small set of authored prompts per mission/state context.
+- No unrestricted free text.
+- No action execution, targeting, hacking, movement, or state mutation.
+- No undiscovered device/location/fact reveal.
+- Compare risk only from known facts and current visible state.
+- Dialogue and major overlays may suppress the floating avatar while retaining George as an available authored participant where specified.
+
+## 7. Inputs from other systems
+
+Current objective; fact ledger; known locations/devices; world time; surveillance state/source/last-known position; blocked-action reason; Health; Paranoia; outcome ledger; language.
+
+## 8. Effects on other systems
+
+George can focus an existing dossier section or known minimap item and add authored explanation. He does not create facts, objective state, recovery, surveillance effects, or success modifiers.
+
+## 9. UI, world, audio, and George feedback
+
+- HUD lane: avatar/state, one concise line, authored prompt buttons.
+- World: private AR avatar near the protagonist, positioned without obscuring feet, interactions, cameras, or hiding contexts.
+- Audio: subtle presence/prompt/warning cues; no voice acting required.
+- Visual intensity follows semantic state, not ambient animation noise.
+
+## 10. Failure, recovery, and retry behavior
+
+When evidence is insufficient George says so. When an action is impossible he reports the authoritative blocker. Retry restores pre-departure George context and clears post-departure warnings/history derived from discarded state.
+
+## 11. Content-authoring requirements
+
+Each `GeorgePrompt` needs ID, available states, required facts, prohibited unknowns, player-facing question, answer, fact/inference confidence, permitted UI context, localization, cooldown/suppression behavior, and Plot Bible anchor.
+
+## 12. Edge cases and prohibited shortcuts
+
+No generic mission-summary answer to every prompt; no personality meter; no adaptive imitation of player tone; no karma/faction judgment; no ambient spam; no spoilers; no claim that George saw an event absent from the ledger; no floating-avatar collision or public NPC reaction.
+
+## 13. Removed behavior
+
+Free-text chat; personality mirroring; reputation/karma commentary; dynamic-event promotion; autonomous world actions; generic reassurance as Paranoia recovery; top-console or objectives-card-only presentation.
+
+## 14. Post-MVP extensions
+
+Deeper relationship arc, hardware compromise, authored George-centered quests, more contextual prompts, and campaign memory—after origin/privacy rules are approved.
+
+## 15. Human-play acceptance examples
+
+- George correctly answers what is known about a discovered camera and refuses to reveal an unknown one.
+- He explains why hiding is invalid while directly observed.
+- He warns about the deadline without pausing or moving the player.
+- His manifest interpretation differs correctly between recognized and missed evidence.
+- Both HUD and AR forms remain readable without duplicating the same sentence unnecessarily.
+
+## 16. Owning Linear ticket
+
+`T6` (`GET-206`) owns George AR art; `T9` (`GET-209`) owns prompt/state/UI infrastructure; `T10` (`GET-210`) owns authored responses and onboarding use.

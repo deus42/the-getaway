@@ -1,40 +1,165 @@
 ---
 status: MVP
-type: system
-tags: [dialogue]
+type: system-specification
+tags: [dialogue, checks, contacts, localization]
+canonical: true
 ---
 
-# Dialogue
+# Dialogue and Deterministic Checks
 
-Dialogue System
+## 1. Player fantasy and purpose
 
-Dialogue is a crucial tool for storytelling, delivered in a text-driven format reminiscent of classic RPGs:
-	•	Interactive Conversations: When speaking to NPCs, the player is presented with dialogue options to choose from. These options can advance the conversation, allow asking questions, or make decisions that affect outcomes. The dialogue is typically presented with the NPC’s lines and a list of the player’s possible responses.
-	•	Player Choice & Tone: Dialogue options often represent different approaches or tones. For example, you might see choices like “[Friendly] We mean no harm, we just want information,” “[Bribe] Slide some credits across the table How about you help me out?”, “[Threaten] Tell me what I need to know, or else.” The player can shape their character’s personality through these choices, whether they are diplomatic, aggressive, sarcastic, altruistic, etc.
-	•	Skill and Stat Checks: Many dialogue choices are gated by the player’s skills, attributes, or prior actions. A high Charisma or a specific perk might unlock a unique persuasion option that lets you avoid a fight. A character with a strong technical background might get extra dialogue about technology or to solve a problem by hacking. If you’ve aligned with a faction, you might get a special option to leverage that (“Invoke your status as a friend of the Rebellion”). When a choice is locked due to insufficient skill, the game might show it greyed out (to indicate that such an approach was possible, adding replay curiosity). Passing or failing a dialogue skill check can significantly change the result of the conversation.
-	•	Branching Outcomes: Conversations can have multiple outcomes and even end states. You could negotiate a peaceful solution to a conflict via dialogue (preventing a battle), or you might fail and anger the NPC, leading to combat. You might convince someone to give you a key piece of info, or if you skip the right dialogue options, you miss it and have to find another way. Dialogue can also determine alliances – say the wrong thing to a faction leader and they might turn you away or demand a favor to regain trust.
-	•	Information Gathering: Dialogue is a primary way to gather intel about the world. NPCs will share lore, rumors, and hints. A player paying attention to dialogue might discover hidden side quests (“I hear noises from the old subway at night…”), learn passwords or codes, or glean background that helps solve puzzles. We encourage exploration through talking – not every answer is on the map, sometimes you have to chat with locals.
-	•	Dialogue Interface & Logs: The dialogue interface will likely show the name or portrait of the character speaking and the text of their dialogue. The player’s selected response is usually shown as well. We will include a dialogue history log that players can scroll if they need to review what was said (useful for remembering clues or instructions given mid-conversation). Dialogue sequences can be exited or returned to if appropriate (some NPCs allow you to come back and ask more questions later). Important decisions in dialogue will usually prompt the player with a confirmation if they lead to a big irreversible change (“Are you sure you want to insult the warlord? This will make his faction hostile.”).
+Dialogue is practical RPG play. The protagonist reads people, exposes what their build and knowledge allow, accepts costs, and changes how the operation can be understood or completed. Conversations are authored dramatic scenes, not vending machines for exposition, trust points, or generic bonuses.
 
-The dialogue system is essentially the narrative engine of the game, driving story progression, quest initiation/completion, and delivering the rich story we plan. It's designed to handle complex branching while giving the player clarity and meaningful choices.
+## 2. Player-visible verbs
 
-MVP Dialogue Presentation Contract
+The player can:
 
-- Speaker profile metadata:
-	- Each interactive dialogue exposes speaker profiles keyed by ID (`speakers`) plus a default active speaker (`defaultSpeakerId`).
-	- The active line resolves to a display name and portrait token so every conversation has clear speaker identity.
-- Portrait placeholders:
-	- MVP uses deterministic portrait placeholders (initials + color token) instead of requiring final character art.
-	- Portrait IDs remain stable so final painted assets can be mapped later without changing dialogue logic.
-- Skill-check visibility:
-	- Skill checks are deterministic threshold checks only in MVP (no dice/chance layer).
-	- Unmet checks default to **locked-visible** so players can read requirements and understand build-dependent paths.
-	- Authoring can optionally mark specific checks as **hidden** when discovery should remain diegetic.
+- begin a conversation through explicit interaction;
+- read the speaker’s exact line and review recent dialogue history;
+- select the exact line the protagonist will say;
+- inspect visible deterministic requirements before choosing;
+- see locked choices and the concrete capability or fact they require;
+- learn facts, clarify routes, spend time, accept consequences, and fail forward;
+- leave a conversation when the authored scene allows it;
+- revisit contacts when their authored state permits it.
 
-Choices & Consequences (MVP scope)
+## 3. Starting state and prerequisites
 
-**Status:** ✅ MVP scope. Consequences in MVP are immediate and legible (quest-state changes + scene outcomes). Long-tail/procedural consequence frameworks live in [[02 Post-MVP/narrative-advanced]].
+- Lira is the primary Level 0 contact.
+- Naila and Brant are optional preparation contacts.
+- Each conversation node has a stable ID, speaker, localized line, available choices, conditions, effects, and next-node behavior.
+- `PlayerBuild`, `FactLedger`, `WorldClockState`, mission state, and relevant outcome history are available to the resolver.
+- Dialogue begins only through explicit interaction in range with a currently available contact.
+- Dialogue acquires a full simulation pause before the first line appears.
 
-MVP policy:
-	•	Consequences are primarily quest-state changes + immediate scene outcomes.
-	•	Avoid global karma/reputation propagation for MVP (those systems are Post-MVP).
+## 4. Complete happy-path behavior
+
+1. The player explicitly speaks with Lira outside the safehouse.
+2. Lira explains the confiscated medical supplies, the Hidzu logistics site, the midnight deadline, and the promised outbound passage.
+3. The player’s exact choices can clarify the situation, expose build-specific understanding, and set practical tone without awarding currency or generic relationship points.
+4. Optional Naila and Brant conversations provide factual knowledge: camera/terminal topology and delivery/service behavior respectively.
+5. During or after infiltration, authored interactions may use deterministic checks with visible requirements and fail-forward results.
+6. On return, Lira reads the actual outcome ledger: contacts consulted, timing, camera handling, pursuit, injuries, Paranoia, medkits, and optional evidence.
+7. The debrief changes future-facing facts and Miami handoff state without loading Level 1.
+
+## 5. State model and transitions
+
+Each conversation is an authored graph:
+
+`Unavailable → Available → Active → Resolved | Suspended`
+
+- `Unavailable`: prerequisites or schedule do not permit interaction; the world prompt explains why when the contact is otherwise visible.
+- `Available`: explicit interaction may open the scene.
+- `Active`: simulation is paused; only declared dialogue inputs are accepted.
+- `Resolved`: effects are committed atomically and the appropriate return/revisit state is set.
+- `Suspended`: used only when an authored external failure or scene transition interrupts safely; reopening resumes from a declared node rather than replaying committed effects.
+
+Each choice resolves in this order:
+
+1. evaluate availability and locked reason;
+2. compute the deterministic check if present;
+3. choose success or fail-forward effect;
+4. apply facts, objective changes, time, Health, Paranoia, and outcome entries atomically;
+5. advance to the authored next node;
+6. announce material changes.
+
+## 6. Rules and tuning values
+
+- Checks never roll random dice.
+- Resolution is `attribute + skill − Paranoia penalty + authored situational modifier` and succeeds when the result meets or exceeds the visible requirement.
+- A designated fact may reveal a choice, lower a specific requirement, or guarantee a specific recognition. Facts are never universal numeric currency.
+- The selected UI choice is the protagonist’s exact spoken line, not an abstract intent label that produces surprising dialogue.
+- Every authored choice in the reached dialogue node remains visible when locked and states the exact missing attribute, skill, fact, or state. Undiscovered content belongs to a later unreached node; it is not hidden as a locked choice in the current node.
+- Fail-forward changes the situation and communicates the cost; it does not silently dead-end the mission.
+- Optional exposition grants no XP, credits, inventory, or relationship score.
+- Dialogue pauses time, cameras, drone, NPC schedules, movement, and pursuit.
+- English and Ukrainian must produce equivalent state transitions and effects.
+- Current proposed Level 0 check thresholds are catalogued in [[13 Level 0 Content and State Matrix]] under `OPEN-RPG-001`; exact fact and situational modifiers are governed separately by `OPEN-RPG-004`. Their recorded recommendations may drive reversible authored trials, but remain non-final until accepted.
+
+## 7. Inputs from other systems
+
+- [[92 Character & Progression]] supplies attributes, skills, level, and the current Paranoia penalty.
+- [[46 Facts, Dossier, Minimap & Terminals]] supplies mission state and the Fact Ledger.
+- [[80 Day-Night Cycle]] supplies contact availability and pause ownership.
+- [[40 George (AI Companion)]] consumes verified outcomes but does not resolve dialogue.
+- [[35 Narrative Alignment]] and [[03 Lore/Plot Bible]] constrain character voice, setting, and disclosed knowledge.
+- [[13 Level 0 Content and State Matrix]] owns the dialogue-node and check catalogs.
+
+## 8. Effects on other systems
+
+Dialogue may:
+
+- add an authored fact with acquisition provenance;
+- refine an objective or minimap marker;
+- open or clarify a route without making it the only valid path;
+- advance world time through an explicitly authored consequence while the scene itself remains paused;
+- change Health or Paranoia through a clearly communicated event;
+- change contact availability and debrief response;
+- set route, evidence, or future Miami outcome fields;
+- initiate a deterministic interception result.
+
+Dialogue may not directly move the protagonist, operate a terminal, loop a camera, alter unknown surveillance, or fabricate off-screen success.
+
+## 9. UI, world, audio, and George feedback
+
+- Dialogue uses a large anchored overlay while keeping the paused world visible.
+- Speaker portrait, speaker name, current line, and choices are visually dominant.
+- Important prior lines remain accessible without exposing internal node IDs or condition syntax.
+- Requirement explanations use plain player language and show the relevant attribute, skill, fact, modifier, and Paranoia penalty.
+- Material outcomes receive concise feedback: fact learned, route clarified, time spent, Health/Paranoia change, objective update, or consequence recorded.
+- Portraits and world sprites must represent the same identity.
+- Audio uses restrained open/choice/locked/outcome cues; no voice acting is required.
+- George does not interject over a contact’s line. After the conversation closes, he may interpret only the verified fact or consequence that was just acquired.
+
+## 10. Failure, recovery, and retry behavior
+
+- Failed checks execute authored fail-forward effects immediately and explain them.
+- A conversation cannot leave the player with no mission path unless it is an explicit failure/capture outcome.
+- Interrupted dialogue releases pause ownership safely and cannot duplicate committed effects on reopen.
+- Retry restores the exact departure-era conversation states, facts, and contact visits from the snapshot; post-departure conversation outcomes are discarded.
+- New Game clears all dialogue state.
+- Missing localization, portrait, or node targets fail validation and use a development-safe diagnostic fallback; production may not silently skip a required line.
+
+## 11. Content-authoring requirements
+
+- Author the complete Lira briefing, medkit return, route-sensitive debrief, and passage handoff.
+- Author optional Naila and Brant conversations with at least one practical fact each and clear skip behavior.
+- Author interception dialogue/check options that match the protagonist’s grounded civilian competence.
+- Author dialogue variants for optional manifest recognition, pursuit, injury, Paranoia, camera loop/trace, contacts consulted, and deadline pressure.
+- Every node and choice needs English and Ukrainian text, portrait/speaker metadata, conditions, effects, and human-readable locked copy.
+- Record all factual effects in the stable Fact Ledger rather than burying knowledge in dialogue-history strings.
+
+## 12. Edge cases and prohibited shortcuts
+
+- No procedural dialogue generator, runtime tone mixer, LLM dialogue orchestration, or random response assembly.
+- No free-text player input.
+- No generic trust meter, persuasion currency, reputation reward, or XP for exhausting branches.
+- No hidden RNG, hidden requirements, misleading intent labels, or success copy when the committed state differs.
+- No contact can grant an arbitrary stealth/combat buff unrelated to the fact they provided.
+- No mandatory Naila/Brant errand chain.
+- No dialogue can progress while another pause-owning modal creates ambiguous input ownership.
+
+## 13. Removed behavior
+
+Removed: Ghost/Wire/Force selection in dialogue, mandatory Naila→Brant chain, skill/background exposition rewards, generic trust points, procedural templates, tone palettes, witness gossip, reputation propagation, free-text George-like input in contact scenes, and tactical-combat dialogue handoff.
+
+## 14. Post-MVP extensions
+
+Post-MVP may add more contacts, longer relationship arcs, richer bilingual performance, and consequence callbacks. Any reputation or procedural narrative proposal requires a new design decision and cannot be inferred from the Level 0 fact ledger.
+
+## 15. Human-play acceptance examples
+
+1. A first-time player understands Lira’s request, reward, site, curfew, and midnight deadline from the conversation without external instructions.
+2. Two builds see different visible options; the UI explains the difference before selection and the outcome after selection.
+3. Naila grants camera-topology knowledge that refines the dossier and can guarantee the designated manifest recognition without becoming a general bonus.
+4. Brant reveals a credible delivery context that clarifies the dusk route but is not required to enter it.
+5. A failed check changes time, Paranoia, route clarity, or another declared state while keeping completion possible.
+6. Lira’s debrief accurately distinguishes contacts skipped, route, camera trace, pursuit, injuries, Paranoia peak, and manifest outcome.
+7. English and Ukrainian runs commit identical state changes for the same selections.
+
+## 16. Owning Linear ticket
+
+- System infrastructure: `T9` (`GET-209`) — Dialogue, George, facts, dossier, social feed, and four-lane HUD.
+- Authored Level 0 scenes: `T10` (`GET-210`) — Tokyo escape content, audio, onboarding, and end-to-end acceptance.
+- Canonical decisions: `GDR-DLG-001` through `GDR-DLG-003`, `GDR-FACT-001`, `GDR-MIS-003` through `GDR-MIS-008`, `GDR-RPG-003`, `GDR-RPG-004`, `GDR-GEO-002`, and `GDR-GEO-003` in [[12 Game Design Decision Register]].
