@@ -6,6 +6,11 @@ import {
   evaluateSafehouseAction,
   restoreLevel0RetrySnapshot,
 } from '../safehouse';
+import { LEVEL0_LAYOUT_CONTRACT } from '../../../../content/levels/level0/layoutContract';
+
+const DEPARTURE_POSITION = LEVEL0_LAYOUT_CONTRACT.anchors.find(
+  (anchor) => anchor.id === 'safehouse.departure'
+)!.position;
 
 describe('Level 0 safehouse and departure Retry foundation', () => {
   it('makes safehouse actions explicit and blocks them without clearing active surveillance', () => {
@@ -73,14 +78,14 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
 
   it('creates one immutable departure snapshot after preparation', () => {
     const prepared = createInitialLevel0RunState('run-departure');
-    const first = departLevel0Operation(prepared, { x: 21, y: 50 });
+    const first = departLevel0Operation(prepared, { ...DEPARTURE_POSITION });
 
     expect(first.created).toBe(true);
     expect(first.snapshot).not.toBeNull();
     expect(first.run.mission).toBe('L0_OPERATION_DEPARTED');
     expect(first.run.safehouse.departureSnapshotCreated).toBe(true);
     expect(first.snapshot?.mission).toBe('L0_OPERATION_DEPARTED');
-    expect(first.snapshot?.player.position).toEqual({ x: 21, y: 50 });
+    expect(first.snapshot?.player.position).toEqual(DEPARTURE_POSITION);
 
     const mutatedRun = {
       ...first.run,
@@ -93,7 +98,7 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
     };
     expect(first.snapshot?.health).toBe(100);
     expect(first.snapshot?.paranoia).toBe(0);
-    expect(first.snapshot?.player.position).toEqual({ x: 21, y: 50 });
+    expect(first.snapshot?.player.position).toEqual(DEPARTURE_POSITION);
 
     const repeated = departLevel0Operation(mutatedRun, { x: 22, y: 50 });
     expect(repeated.created).toBe(false);
@@ -104,7 +109,7 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
     const prepared = createInitialLevel0RunState('run-departure-paused');
     prepared.worldClock.pauseOwners = ['safehouse_action'];
 
-    const departure = departLevel0Operation(prepared, { x: 21, y: 50 });
+    const departure = departLevel0Operation(prepared, { ...DEPARTURE_POSITION });
 
     expect(departure.run.worldClock.pauseOwners).toEqual(['safehouse_action']);
   });
@@ -112,14 +117,14 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
   it('restores the complete departure state without transient pause ownership', () => {
     const departure = departLevel0Operation(
       createInitialLevel0RunState('run-restore'),
-      { x: 21, y: 50 }
+      { ...DEPARTURE_POSITION }
     );
     const snapshot = departure.snapshot!;
     const restored = restoreLevel0RetrySnapshot(snapshot);
 
     expect(restored.sessionId).toBe('run-restore');
     expect(restored.mission).toBe('L0_OPERATION_DEPARTED');
-    expect(restored.player.position).toEqual({ x: 21, y: 50 });
+    expect(restored.player.position).toEqual(DEPARTURE_POSITION);
     expect(restored.worldClock.pauseOwners).toEqual([]);
     expect(restored.safehouse.insideBoundary).toBe(false);
   });

@@ -8,6 +8,11 @@ import {
 } from '../persistence';
 import { createInitialLevel0RunState, departLevel0Operation } from '../safehouse';
 import { createWorldClockState } from '../worldClock';
+import { LEVEL0_LAYOUT_CONTRACT } from '../../../../content/levels/level0/layoutContract';
+
+const DEPARTURE_POSITION = LEVEL0_LAYOUT_CONTRACT.anchors.find(
+  (anchor) => anchor.id === 'safehouse.departure'
+)!.position;
 
 describe('Level 0 persistence envelopes', () => {
   beforeEach(() => {
@@ -147,7 +152,7 @@ describe('Level 0 persistence envelopes', () => {
   it('keeps the operation Retry immutable when later departure state diverges', () => {
     const departure = departLevel0Operation(
       createInitialLevel0RunState('run-retry-once'),
-      { x: 21, y: 50 }
+      { ...DEPARTURE_POSITION }
     );
     const snapshot = departure.snapshot!;
 
@@ -177,7 +182,7 @@ describe('Level 0 persistence envelopes', () => {
   it('rejects a Retry snapshot that no longer matches the authored departure anchor', () => {
     const departure = departLevel0Operation(
       createInitialLevel0RunState('run-retry-position'),
-      { x: 21, y: 50 }
+      { ...DEPARTURE_POSITION }
     );
     writeLevel0DepartureTransaction(window.localStorage, departure.run, departure.snapshot!, 55);
 
@@ -216,7 +221,7 @@ describe('Level 0 persistence envelopes', () => {
   it('writes Retry before the departed autosave and rejects a conflicting session', () => {
     const first = departLevel0Operation(
       createInitialLevel0RunState('run-transaction-a'),
-      { x: 21, y: 50 }
+      { ...DEPARTURE_POSITION }
     );
     expect(
       writeLevel0DepartureTransaction(window.localStorage, first.run, first.snapshot!, 60)
@@ -229,7 +234,7 @@ describe('Level 0 persistence envelopes', () => {
 
     const second = departLevel0Operation(
       createInitialLevel0RunState('run-transaction-b'),
-      { x: 21, y: 50 }
+      { ...DEPARTURE_POSITION }
     );
     expect(
       writeLevel0DepartureTransaction(window.localStorage, second.run, second.snapshot!, 70)
@@ -241,7 +246,7 @@ describe('Level 0 persistence envelopes', () => {
   it('rejects a first-write Retry snapshot that does not match its departed autosave', () => {
     const departure = departLevel0Operation(
       createInitialLevel0RunState('run-transaction-mismatch'),
-      { x: 21, y: 50 }
+      { ...DEPARTURE_POSITION }
     );
     const mismatchedSnapshot = { ...departure.snapshot!, health: 1 };
 

@@ -29,7 +29,7 @@ describe('Level 0 agent bridge', () => {
     const uninstall = installLevel0AgentBridge({ store, search: '?agent=1', nodeEnv: 'test' });
     const snapshot = window.__getawayAgent?.snapshot();
 
-    expect(snapshot?.world.areaId).toBe('level0-tokyo-greybox-v2');
+    expect(snapshot?.world.areaId).toBe('level0-tokyo-greybox-v3');
     expect(snapshot?.world.map.width).toBe(84);
     expect(snapshot?.player.position).toEqual({ x: 16, y: 47 });
     expect(window.render_game_to_text?.()).toContain('L0_PREPARATION');
