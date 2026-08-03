@@ -628,7 +628,7 @@ const STRINGS: Record<Locale, UIStrings> = {
       lightingToggleDescription: 'Turns on dynamic Light2D rendering for atlas props. Requires WebGL.',
       hudLayoutLabel: 'HUD Layout Override',
       hudLayoutDescription:
-        'Force a specific HUD preset for QA. Auto keeps exploration layout unless combat is active.',
+        'Force a specific HUD preset for QA. Auto follows the current exploration or surveillance state.',
       hudLayoutOptions: {
         auto: 'Auto',
         exploration: 'Exploration',
@@ -1479,7 +1479,7 @@ const STRINGS: Record<Locale, UIStrings> = {
         'Активує динамічне Light2D-освітлення для атласних спрайтів (потрібен WebGL).',
       hudLayoutLabel: 'Режим HUD',
       hudLayoutDescription:
-        'Фіксує пресет HUD для QA. «Авто» тримає режим дослідження, доки не починається бій.',
+        'Фіксує пресет HUD для QA. «Авто» слідує за поточним станом дослідження або спостереження.',
       hudLayoutOptions: {
         auto: 'Авто',
         exploration: 'Дослідження',

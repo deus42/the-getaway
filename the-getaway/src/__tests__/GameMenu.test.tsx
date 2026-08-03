@@ -79,4 +79,15 @@ describe('GameMenu', () => {
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
     expect(screen.getByTestId('menu-settings-panel')).toBeInTheDocument();
   });
+
+  it('does not expose retired AutoBattle or combat-layout controls', () => {
+    renderMenu();
+    fireEvent.click(screen.getByTestId('menu-open-settings'));
+
+    expect(screen.queryByTestId('menu-autobattle-dropdown')).not.toBeInTheDocument();
+    expect(screen.getByTestId('menu-settings-panel')).not.toHaveTextContent(/combat/i);
+
+    fireEvent.click(screen.getByTestId('menu-hud-layout-dropdown'));
+    expect(screen.queryByRole('option', { name: /^Combat$/i })).not.toBeInTheDocument();
+  });
 });

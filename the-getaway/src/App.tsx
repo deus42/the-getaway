@@ -19,14 +19,11 @@ import { selectHudLayoutPreset } from "./store/selectors/hudLayoutSelectors";
 import { HudLayoutPreset } from "./store/hudLayoutSlice";
 import MissionProgressionManager from "./components/system/MissionProgressionManager";
 import FactionReputationManager from "./components/system/FactionReputationManager";
-import { addLogMessage } from "./store/logSlice";
 import { endDialogue } from "./store/questsSlice";
-import { initializeCharacter, consumeLevelUpEvent, clearPendingPerkSelections, removeXPNotification } from "./store/playerSlice";
+import { consumeLevelUpEvent, clearPendingPerkSelections, removeXPNotification } from "./store/playerSlice";
 import { clearAllFeedback } from "./store/combatFeedbackSlice";
-import { PlayerSkills, Player } from "./game/interfaces/types";
-import { DEFAULT_SKILLS } from "./game/interfaces/player";
+import { Player } from "./game/interfaces/types";
 import { getUIStrings } from "./content/ui";
-import { getSystemStrings } from "./content/system";
 import { listPerks, evaluatePerkAvailability } from "./content/perks";
 import { createScopedLogger } from "./utils/logger";
 import {
@@ -40,24 +37,19 @@ import CombatControlWidget from "./components/ui/CombatControlWidget";
 import GameDebugInspector from "./components/debug/GameDebugInspector";
 import {
   GETAWAY_AGENT_START_LEVEL0_EVENT,
-  installGetawayAgentBridge,
   shouldEnableGetawayAgentBridge,
 } from "./game/playtest/agentBridge";
-import { primeLevel0AudioCues } from "./game/feedback/audioCues";
 import { isLevel0Exterior } from "./game/visual/theme/mapVisualTheme";
 import { HUD_SAFE_AREA_CHANGE_EVENT } from "./game/events";
 import "./App.css";
 
 // Lazy load heavy components that aren't needed immediately
 const GameMenu = lazy(() => import("./components/ui/GameMenu"));
-const CharacterCreationScreen = lazy(() => import("./components/ui/CharacterCreationScreen"));
+const Level0RecoveryBoundary = lazy(() => import("./components/ui/Level0RecoveryBoundary"));
 const CharacterScreen = lazy(() => import("./components/ui/CharacterScreen"));
 const LevelUpModal = lazy(() => import("./components/ui/LevelUpModal").then(m => ({ default: m.LevelUpModal })));
 const PerkSelectionPanel = lazy(() => import("./components/ui/PerkSelectionPanel"));
 const LevelUpPointAllocationPanel = lazy(() => import("./components/ui/LevelUpPointAllocationPanel"));
-
-// Type import for CharacterCreationData
-import type { CharacterCreationData } from "./components/ui/CharacterCreationScreen";
 
 const log = createScopedLogger('App');
 
@@ -453,19 +445,11 @@ const getSelectablePerks = (player: Player) =>
     .map((definition) => evaluatePerkAvailability(player, definition))
     .filter((availability) => availability.canSelect);
 
-const buildAgentCharacterData = (name: string): CharacterCreationData => ({
-  name,
-  attributes: DEFAULT_SKILLS,
-  backgroundId: 'corpsec_defector',
-  visualPreset: 'default',
-});
-const AGENT_LEVEL0_SESSION_KEY = 'getaway.agent.level0.started';
-
 function AppShell() {
   const [gameStarted, setGameStarted] = useState(false);
   const [showMenu, setShowMenu] = useState(true);
-  const [showCharacterCreation, setShowCharacterCreation] = useState(false);
-  const [hasSavedGame, setHasSavedGame] = useState(() => hasPersistedGame());
+  const [showRecoveryBoundary, setShowRecoveryBoundary] = useState(false);
+  const [retiredSaveDetected, setRetiredSaveDetected] = useState(() => hasPersistedGame());
   const [levelUpData, setLevelUpData] = useState<{
     newLevel: number;
     skillPointsEarned: number;
@@ -486,6 +470,7 @@ function AppShell() {
   const reputationSystemsEnabled = useSelector(
     (state: RootState) => Boolean(state.settings.reputationSystemsEnabled)
   );
+  const pocRecoveryStartedRef = useRef(false);
   const agentLevel0StartedRef = useRef(false);
 
   useLayoutEffect(() => {
@@ -504,14 +489,6 @@ function AppShell() {
   useEffect(() => {
     log.debug('Component mounted');
     log.debug('Store state:', store.getState());
-    primeLevel0AudioCues();
-  }, []);
-
-  useEffect(() => {
-    return installGetawayAgentBridge({
-      store,
-      nodeEnv: process.env.NODE_ENV,
-    });
   }, []);
 
   useEffect(() => {
@@ -537,45 +514,30 @@ function AppShell() {
     return unsubscribe;
   }, []);
 
-  useEffect(() => {
-    if (!showMenu) {
-      return;
-    }
-
-    if (gameStarted) {
-      setHasSavedGame(true);
-      return;
-    }
-
-    setHasSavedGame(hasPersistedGame());
-  }, [showMenu, gameStarted]);
-
-  const handleCharacterCreationComplete = useCallback((data: CharacterCreationData) => {
+  const openRecoveryBoundary = useCallback(() => {
     store.dispatch(resetGame());
+    store.dispatch(clearAllFeedback());
 
-    const attributes: PlayerSkills = data.attributes ?? DEFAULT_SKILLS;
-    const backgroundId = data.backgroundId ?? 'corpsec_defector';
+    try {
+      window.localStorage.removeItem(PERSISTED_STATE_KEY);
+    } catch {
+      // The in-memory reset still prevents legacy runtime initialization.
+    }
 
-    store.dispatch(
-      initializeCharacter({
-        name: data.name,
-        skills: attributes,
-        backgroundId,
-        visualPreset: data.visualPreset,
-      })
-    );
-
-    const state = store.getState();
-    const { logs } = getSystemStrings(state.settings.locale);
-    store.dispatch(addLogMessage(`${logs.operationStart} - Call sign: ${data.name}`));
-
-    setShowCharacterCreation(false);
-    setGameStarted(true);
-    setHasSavedGame(true);
+    setLevelUpData(null);
+    setXpNotifications([]);
+    setPendingPerkSelections(0);
+    setShowPerkSelection(false);
+    setShowPointAllocation(false);
+    setLevelUpFlowActive(false);
+    setShowCharacterScreen(false);
+    setRetiredSaveDetected(false);
+    setGameStarted(false);
+    setShowMenu(false);
+    setShowRecoveryBoundary(true);
   }, []);
 
-  // PoC convenience: allow loading straight into a fresh Level 0 run for quick visual review.
-  // Usage: add `?poc=esb` to the URL.
+  // Retired visual-review shortcuts stop at the same explicit boundary.
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
@@ -586,31 +548,13 @@ function AppShell() {
       return;
     }
 
-    if (gameStarted || showCharacterCreation) {
+    if (gameStarted || showRecoveryBoundary || pocRecoveryStartedRef.current) {
       return;
     }
 
-    // Force a fresh run so we don't reuse an old persisted world.
-    try {
-      window.localStorage.removeItem(PERSISTED_STATE_KEY);
-    } catch {
-      // ignore
-    }
-    setHasSavedGame(false);
-    setShowMenu(false);
-
-    // Kick straight into the game with a default character.
-    const pocData: CharacterCreationData = {
-      name: params.get('pocName') ?? 'Deus',
-      attributes: DEFAULT_SKILLS,
-      backgroundId: 'corpsec_defector',
-      visualPreset: 'default',
-    };
-
-    // Keep lights settings as-is; ESB PoC neon is implemented as additive emissive graphics.
-
-    handleCharacterCreationComplete(pocData);
-  }, [gameStarted, handleCharacterCreationComplete, showCharacterCreation]);
+    pocRecoveryStartedRef.current = true;
+    openRecoveryBoundary();
+  }, [gameStarted, openRecoveryBoundary, showRecoveryBoundary]);
 
   useEffect(() => {
     if (!gameStarted) {
@@ -622,53 +566,29 @@ function AppShell() {
   }, [gameStarted]);
 
   useEffect(() => {
-    if (showMenu || showCharacterCreation) {
+    if (showMenu || showRecoveryBoundary) {
       setShowCharacterScreen(false);
     }
-  }, [showMenu, showCharacterCreation]);
+  }, [showMenu, showRecoveryBoundary]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key.toLowerCase() === 'c' && gameStarted && !showMenu && !showCharacterCreation) {
+      if (event.key.toLowerCase() === 'c' && gameStarted && !showMenu && !showRecoveryBoundary) {
         setShowCharacterScreen((prev) => !prev);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [gameStarted, showMenu, showCharacterCreation]);
+  }, [gameStarted, showMenu, showRecoveryBoundary]);
 
   const handleStartNewGame = () => {
-    setShowMenu(false);
-    setShowCharacterCreation(true);
+    openRecoveryBoundary();
   };
 
-  const startAgentLevel0 = useCallback((name: string) => {
-    try {
-      window.localStorage.removeItem(PERSISTED_STATE_KEY);
-    } catch {
-      // Ignore storage failures; resetGame still clears in-memory state.
-    }
-
-    try {
-      window.sessionStorage.setItem(AGENT_LEVEL0_SESSION_KEY, '1');
-    } catch {
-      // Ignore session storage failures; the in-memory guard still prevents duplicate starts.
-    }
-
-    store.dispatch(clearAllFeedback());
-    setLevelUpData(null);
-    setXpNotifications([]);
-    setPendingPerkSelections(0);
-    setShowPerkSelection(false);
-    setShowPointAllocation(false);
-    setLevelUpFlowActive(false);
-    setShowCharacterScreen(false);
-    setHasSavedGame(false);
-    setShowMenu(false);
-    setShowCharacterCreation(false);
-    handleCharacterCreationComplete(buildAgentCharacterData(name));
-  }, [handleCharacterCreationComplete]);
+  const startAgentLevel0 = useCallback(() => {
+    openRecoveryBoundary();
+  }, [openRecoveryBoundary]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -683,35 +603,21 @@ function AppShell() {
       return undefined;
     }
 
-    let agentAlreadyStartedInSession = false;
-    try {
-      agentAlreadyStartedInSession =
-        window.sessionStorage.getItem(AGENT_LEVEL0_SESSION_KEY) === '1';
-    } catch {
-      agentAlreadyStartedInSession = false;
-    }
-
-    if (agentAlreadyStartedInSession) {
+    if (!gameStarted && !showRecoveryBoundary && !agentLevel0StartedRef.current) {
       agentLevel0StartedRef.current = true;
-      return undefined;
-    }
-
-    if (!gameStarted && !showCharacterCreation && !agentLevel0StartedRef.current) {
-      agentLevel0StartedRef.current = true;
-      startAgentLevel0(params.get('agentName') ?? 'Agent');
+      startAgentLevel0();
     }
 
     return undefined;
-  }, [gameStarted, showCharacterCreation, startAgentLevel0]);
+  }, [gameStarted, showRecoveryBoundary, startAgentLevel0]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
     }
 
-    const handleAgentStart = (event: Event) => {
-      const detail = (event as CustomEvent<{ name?: string }>).detail;
-      startAgentLevel0(detail?.name ?? 'Agent');
+    const handleAgentStart = () => {
+      startAgentLevel0();
     };
 
     window.addEventListener(GETAWAY_AGENT_START_LEVEL0_EVENT, handleAgentStart);
@@ -720,41 +626,26 @@ function AppShell() {
     };
   }, [startAgentLevel0]);
 
-  const handleCharacterCreationCancel = () => {
-    setShowCharacterCreation(false);
+  const handleRecoveryReturnToMenu = () => {
+    setShowRecoveryBoundary(false);
     setShowMenu(true);
   };
 
   const handleMissionFailureRetry = () => {
-    try {
-      window.localStorage.removeItem(PERSISTED_STATE_KEY);
-    } catch {
-      // Ignore storage failures; resetGame still clears in-memory state.
-    }
-
-    store.dispatch(resetGame());
-    store.dispatch(clearAllFeedback());
-    setLevelUpData(null);
-    setXpNotifications([]);
-    setPendingPerkSelections(0);
-    setShowPerkSelection(false);
-    setShowPointAllocation(false);
-    setLevelUpFlowActive(false);
-    setShowCharacterScreen(false);
-    setHasSavedGame(false);
-    setGameStarted(false);
-    setShowMenu(false);
-    setShowCharacterCreation(true);
+    openRecoveryBoundary();
   };
 
-  const handleContinueGame = () => {
+  const handleContinueGame = useCallback(() => {
+    if (!gameStarted) {
+      openRecoveryBoundary();
+      return;
+    }
+
     // Clear any lingering combat feedback before resuming
     store.dispatch(clearAllFeedback());
 
-    setGameStarted(true);
     setShowMenu(false);
-    setHasSavedGame(true);
-  };
+  }, [gameStarted, openRecoveryBoundary]);
 
   useEffect(() => {
     if (!gameStarted) {
@@ -789,14 +680,14 @@ function AppShell() {
         return;
       }
 
-      if (!showCharacterCreation) {
+      if (!showRecoveryBoundary) {
         setShowMenu(true);
       }
     };
 
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [gameStarted, showMenu, showCharacterCreation, showCharacterScreen, levelUpFlowActive]);
+  }, [gameStarted, showMenu, showRecoveryBoundary, showCharacterScreen, levelUpFlowActive, handleContinueGame]);
 
   const handleOpenMenu = () => {
     if (!gameStarted) {
@@ -821,7 +712,7 @@ function AppShell() {
   };
 
   const handleToggleCharacterScreen = () => {
-    if (!gameStarted || showMenu || showCharacterCreation) {
+    if (!gameStarted || showMenu || showRecoveryBoundary) {
       return;
     }
     setShowCharacterScreen((prev) => !prev);
@@ -921,12 +812,12 @@ function AppShell() {
   };
 
   const missionFailureOpen =
-    gameStarted && !showMenu && !showCharacterCreation && playerHealth <= 0;
+    gameStarted && !showMenu && !showRecoveryBoundary && playerHealth <= 0;
 
   return (
     <>
-      <MissionProgressionManager />
-      {reputationSystemsEnabled && <FactionReputationManager />}
+      {gameStarted ? <MissionProgressionManager /> : null}
+      {gameStarted && reputationSystemsEnabled ? <FactionReputationManager /> : null}
       <div style={layoutShellStyle}>
         {gameStarted && (
           <CommandShell
@@ -937,21 +828,19 @@ function AppShell() {
             hudLayoutPreset={hudLayoutPreset}
           />
         )}
-        <CurfewWarning />
+        {gameStarted ? <CurfewWarning /> : null}
       </div>
       <Suspense fallback={null}>
         {showMenu && (
           <GameMenu
             onStartNewGame={handleStartNewGame}
             onContinue={handleContinueGame}
-            hasActiveGame={gameStarted || hasSavedGame}
+            hasActiveGame={gameStarted}
+            retiredSaveDetected={retiredSaveDetected}
           />
         )}
-        {showCharacterCreation && (
-          <CharacterCreationScreen
-            onComplete={handleCharacterCreationComplete}
-            onCancel={handleCharacterCreationCancel}
-          />
+        {showRecoveryBoundary && (
+          <Level0RecoveryBoundary onReturnToMenu={handleRecoveryReturnToMenu} />
         )}
         {levelUpData && (
           <LevelUpModal
@@ -973,13 +862,17 @@ function AppShell() {
           />
         )}
         <CharacterScreen open={showCharacterScreen} onClose={handleCharacterScreenClose} />
-        <MissionCompletionOverlay />
-        <MissionFailureOverlay open={missionFailureOpen} onRetry={handleMissionFailureRetry} />
+        {gameStarted ? <MissionCompletionOverlay /> : null}
+        {gameStarted ? (
+          <MissionFailureOverlay open={missionFailureOpen} onRetry={handleMissionFailureRetry} />
+        ) : null}
       </Suspense>
-      <XPNotificationManager
-        notifications={xpNotifications}
-        onDismiss={handleDismissXPNotification}
-      />
+      {gameStarted ? (
+        <XPNotificationManager
+          notifications={xpNotifications}
+          onDismiss={handleDismissXPNotification}
+        />
+      ) : null}
     </>
   );
 }

@@ -5,8 +5,6 @@ import { getUIStrings } from "../../content/ui";
 import {
   setLocale,
   setTestMode,
-  setAutoBattleEnabled,
-  setAutoBattleProfile,
   setLightsEnabled,
 } from "../../store/settingsSlice";
 import { applyLocaleToQuests } from "../../store/questsSlice";
@@ -16,8 +14,7 @@ import { RootState, AppDispatch } from "../../store";
 import { GAME_VERSION, GAME_YEAR } from "../../version";
 import EnhancedButton from "./EnhancedButton";
 import { gradientTextStyle } from "./theme";
-import { AUTO_BATTLE_PROFILE_IDS, AutoBattleProfileId } from "../../game/combat/automation/autoBattleProfiles";
-import AutoBattleProfileSelect, { AutoBattleMenuOptionId } from "./AutoBattleProfileSelect";
+import AutoBattleProfileSelect from "./AutoBattleProfileSelect";
 import { updateVisualSettings } from "../../game/settings/visualSettings";
 import { setOverlayEnabled } from "../../store/surveillanceSlice";
 import { HudLayoutPreset, setHudLayoutOverride } from "../../store/hudLayoutSlice";
@@ -30,23 +27,19 @@ interface GameMenuProps {
   onStartNewGame: () => void;
   onContinue: () => void;
   hasActiveGame: boolean;
+  retiredSaveDetected?: boolean;
 }
 
 const GameMenu: React.FC<GameMenuProps> = ({
   onStartNewGame,
   onContinue,
   hasActiveGame,
+  retiredSaveDetected = false,
 }) => {
   const [activeView, setActiveView] = useState<"landing" | "settings">("landing");
   const dispatch = useDispatch<AppDispatch>();
   const locale = useSelector((state: RootState) => state.settings.locale);
   const testMode = useSelector((state: RootState) => state.settings.testMode);
-  const autoBattleEnabled = useSelector(
-    (state: RootState) => state.settings.autoBattleEnabled
-  );
-  const autoBattleProfile = useSelector(
-    (state: RootState) => state.settings.autoBattleProfile
-  );
   const lightsEnabled = useSelector(
     (state: RootState) => state.settings.lightsEnabled
   );
@@ -57,7 +50,6 @@ const GameMenu: React.FC<GameMenuProps> = ({
     (state: RootState) => state.hudLayout.override
   );
   const strings = getUIStrings(locale);
-  const autoBattleStrings = strings.autoBattle;
   const hudLayoutSelectValue: 'auto' | HudLayoutPreset =
     hudLayoutOverride ?? 'auto';
 
@@ -119,57 +111,11 @@ const GameMenu: React.FC<GameMenuProps> = ({
       name: strings.menu.hudLayoutOptions.stealth,
       summary: strings.menu.hudLayoutDescription,
     },
-    {
-      id: 'combat',
-      name: strings.menu.hudLayoutOptions.combat,
-      summary: strings.menu.hudLayoutDescription,
-    },
   ];
 
   const selectedHudLayoutCopy =
     hudLayoutOptions.find((option) => option.id === hudLayoutSelectValue)
     ?? hudLayoutOptions[0];
-
-  const handleAutoBattleModeChange = (nextMode: string) => {
-    const currentMode = autoBattleEnabled ? autoBattleProfile : "manual";
-    if (nextMode === currentMode) {
-      return;
-    }
-
-    if (nextMode === "manual") {
-      if (autoBattleEnabled) {
-        dispatch(setAutoBattleEnabled(false));
-      }
-      return;
-    }
-
-    if (!autoBattleEnabled) {
-      dispatch(setAutoBattleEnabled(true));
-    }
-    if (nextMode !== autoBattleProfile) {
-      dispatch(setAutoBattleProfile(nextMode as AutoBattleProfileId));
-    }
-  };
-
-  const autoBattleModeOptions: Array<{
-    id: AutoBattleMenuOptionId;
-    name: string;
-    summary: string;
-  }> = [
-    {
-      id: "manual",
-      name: autoBattleStrings.manualOption.name,
-      summary: autoBattleStrings.manualOption.summary,
-    },
-    ...AUTO_BATTLE_PROFILE_IDS.map((profileId) => ({
-      id: profileId,
-      name: autoBattleStrings.profiles[profileId].name,
-      summary: autoBattleStrings.profiles[profileId].summary,
-    })),
-  ];
-  const activeModeId: AutoBattleMenuOptionId = autoBattleEnabled ? autoBattleProfile : "manual";
-  const selectedModeCopy =
-    autoBattleModeOptions.find((option) => option.id === activeModeId) ?? autoBattleModeOptions[0];
 
   const sectionLabelClass =
     "mb-[0.5rem] block text-[0.78rem] font-semibold uppercase tracking-[0.08em] text-[#94a3b8]";
@@ -261,6 +207,17 @@ const GameMenu: React.FC<GameMenuProps> = ({
 
         {activeView === "landing" ? (
           <>
+            {retiredSaveDetected ? (
+              <div
+                data-testid="retired-save-notice"
+                className="mb-4 border border-[#8c6a3f] bg-[#211d17] px-4 py-3 text-left text-[0.76rem] leading-5 text-[#d7c8ae]"
+                style={{ padding: "0.75rem 1rem" }}
+              >
+                {locale === "uk"
+                  ? "Попереднє збереження прототипу несумісне з перебудованим токійським прологом. Нова гра безпечно очистить його."
+                  : "The previous prototype save is incompatible with the rebuilt Tokyo prologue. Start New Game to clear it safely."}
+              </div>
+            ) : null}
             {renderPrimaryActions()}
 
             <div className="mt-[1.1rem]">
@@ -308,27 +265,6 @@ const GameMenu: React.FC<GameMenuProps> = ({
                       </button>
                     );
                   })}
-                </div>
-              </div>
-
-              <div>
-                <label className={sectionLabelClass} htmlFor="auto-battle-mode-select">
-                  {autoBattleStrings.heading}
-                </label>
-                <div className="flex flex-col gap-[0.4rem]">
-                  <AutoBattleProfileSelect
-                    triggerId="auto-battle-mode-select"
-                    value={activeModeId}
-                    onChange={handleAutoBattleModeChange}
-                    options={autoBattleModeOptions}
-                    variant="menu"
-                    fullWidth
-                    dataFocusIgnore
-                    triggerTestId="menu-autobattle-dropdown"
-                  />
-                  <div className="text-[0.64rem] text-[#a5b4d5] leading-[1.35]">
-                    {selectedModeCopy.summary}
-                  </div>
                 </div>
               </div>
 

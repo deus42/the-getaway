@@ -62,6 +62,15 @@ export const PERSISTED_STATE_KEY = STORAGE_KEY;
 type CombinedState = ReturnType<typeof combinedReducer>;
 type PersistedState = CombinedState;
 
+interface PersistedStateEnvelope {
+  schemaVersion: number;
+  state: PersistedState;
+}
+
+// GET-207 owns the replacement save schema. Until then, the recovery runtime must
+// neither hydrate retired prototype payloads nor overwrite them before New Game.
+export const CURRENT_SAVE_SCHEMA_VERSION: number | null = null;
+
 const cloneOrDefault = <T>(value: T[] | undefined, fallback: T[]): T[] =>
   Array.isArray(value) ? [...value] : [...fallback];
 
@@ -263,7 +272,7 @@ const migrateSettingsState = (
 };
 
 const loadState = (): PersistedState | undefined => {
-  if (!isBrowser) {
+  if (!isBrowser || CURRENT_SAVE_SCHEMA_VERSION === null) {
     return undefined;
   }
 
@@ -273,7 +282,18 @@ const loadState = (): PersistedState | undefined => {
       return undefined;
     }
 
-    return JSON.parse(serializedState) as PersistedState;
+    const parsed = JSON.parse(serializedState) as Partial<PersistedStateEnvelope>;
+    if (
+      parsed === null ||
+      typeof parsed !== 'object' ||
+      parsed.schemaVersion !== CURRENT_SAVE_SCHEMA_VERSION ||
+      parsed.state === null ||
+      typeof parsed.state !== 'object'
+    ) {
+      return undefined;
+    }
+
+    return parsed.state;
   } catch (error) {
     console.warn('[store] Failed to load state from localStorage:', error);
     return undefined;
@@ -281,12 +301,16 @@ const loadState = (): PersistedState | undefined => {
 };
 
 const saveState = (state: PersistedState) => {
-  if (!isBrowser) {
+  if (!isBrowser || CURRENT_SAVE_SCHEMA_VERSION === null) {
     return;
   }
 
   try {
-    const serializedState = JSON.stringify(state);
+    const envelope: PersistedStateEnvelope = {
+      schemaVersion: CURRENT_SAVE_SCHEMA_VERSION,
+      state,
+    };
+    const serializedState = JSON.stringify(envelope);
     window.localStorage.setItem(STORAGE_KEY, serializedState);
   } catch (error) {
     console.warn('[store] Failed to save state to localStorage:', error);

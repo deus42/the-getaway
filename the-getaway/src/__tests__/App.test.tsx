@@ -1,9 +1,8 @@
-import { act, configure, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import App from "../App";
 import { PERSISTED_STATE_KEY, resetGame, store } from "../store";
-import { startDialogue } from "../store/questsSlice";
+import { setLocale } from "../store/settingsSlice";
 
-// Mock the GameCanvas component to avoid Phaser initialization in tests
 jest.mock("../components/GameCanvas", () => {
   return function MockedGameCanvas() {
     return <div data-testid="game-canvas">Game Canvas Mock</div>;
@@ -18,179 +17,129 @@ jest.mock("../components/ui/MiniMap", () => {
 
 jest.mock("../components/debug/GameDebugInspector", () => () => null);
 
-configure({ asyncUtilTimeout: 5000 });
-
-describe("App component", () => {
+describe("App recovery boundary", () => {
   beforeEach(() => {
     store.dispatch(resetGame());
-    window.localStorage.removeItem(PERSISTED_STATE_KEY);
+    store.dispatch(setLocale("en"));
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+    window.history.replaceState({}, "", "/");
   });
 
-  const completeCharacterCreation = async () => {
-    const nameInput = await screen.findByPlaceholderText("Enter your operative name...");
-    fireEvent.change(nameInput, { target: { value: "Test Operative" } });
+  afterEach(() => {
+    window.history.replaceState({}, "", "/");
+  });
 
-    const presetButtons = await screen.findAllByRole("button", { name: /Operative/i });
-    fireEvent.click(presetButtons[0]);
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
-    });
-
-    const incrementButtons = await screen.findAllByTitle("Increase attribute");
-    for (let i = 0; i < 5; i += 1) {
-      await act(async () => {
-        fireEvent.click(incrementButtons[0]);
-      });
-    }
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Continue/i }));
-    });
-
-    const backgroundCard = await screen.findByTestId('background-card-corpsec_defector');
-    fireEvent.click(backgroundCard);
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: /Confirm & Start/i }));
-    });
-  };
-
-  it("shows the menu first and enters the game when starting a new session", async () => {
+  it("opens on the menu without exposing a compatible legacy run", async () => {
     render(<App />);
 
     expect(await screen.findByTestId("game-menu")).toBeInTheDocument();
-    const continueButtonInitial = await screen.findByTestId("continue-game");
-    expect(continueButtonInitial).toBeDisabled();
+    expect(screen.getByTestId("continue-game")).toBeDisabled();
+    expect(screen.queryByTestId("game-canvas")).not.toBeInTheDocument();
+  });
+
+  it("routes New Game to an honest recovery boundary without legacy initialization", async () => {
+    render(<App />);
 
     fireEvent.click(await screen.findByTestId("start-new-game"));
 
-    await completeCharacterCreation();
-
+    const recoveryBoundary = await screen.findByTestId("level0-recovery-boundary");
+    expect(recoveryBoundary).toBeInTheDocument();
+    expect(recoveryBoundary).toHaveStyle({
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+    });
+    recoveryBoundary.querySelectorAll("article").forEach((panel) => {
+      expect(panel).toHaveStyle({ padding: "1.25rem" });
+    });
     expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
-    expect(screen.getByTestId("game-canvas")).toBeInTheDocument();
-
-    const openMenuButton = await screen.findByTestId("menu-overlay-button");
-    fireEvent.click(openMenuButton);
-
-    const continueButton = screen.getByTestId("continue-game");
-    expect(continueButton).toBeEnabled();
-
-    fireEvent.click(continueButton);
-    expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("game-canvas")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/operative name/i)).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).toBeNull();
+    expect(store.getState().player.data.name).toBe("Player");
+    expect(store.getState().player.data.backgroundId).toBeUndefined();
+    expect(store.getState().world.inCombat).toBe(false);
   });
 
-  it("enables continue when a saved game is found", async () => {
-    const { unmount } = render(<App />);
+  it("identifies a retired prototype save and clears it before the recovery boundary", async () => {
+    window.localStorage.setItem(PERSISTED_STATE_KEY, JSON.stringify({ legacy: true }));
+
+    render(<App />);
+
+    expect(await screen.findByTestId("retired-save-notice")).toHaveStyle({
+      padding: "0.75rem 1rem",
+    });
+    expect(screen.getByTestId("continue-game")).toBeDisabled();
+
+    fireEvent.click(screen.getByTestId("start-new-game"));
+
+    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
+    expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).toBeNull();
+  });
+
+  it("explains the retired save and recovery boundary in Ukrainian", async () => {
+    store.dispatch(setLocale("uk"));
+    window.localStorage.setItem(PERSISTED_STATE_KEY, JSON.stringify({ legacy: true }));
+
+    render(<App />);
+
+    expect(await screen.findByTestId("retired-save-notice")).toHaveTextContent(
+      /попереднє збереження прототипу несумісне/i
+    );
+    fireEvent.click(screen.getByTestId("start-new-game"));
+
+    expect(await screen.findByRole("heading", { name: /втечу з токіо перебудовують/i })).toBeInTheDocument();
+    expect(screen.getByTestId("recovery-return-to-menu")).toHaveTextContent(/повернутися до меню/i);
+  });
+
+  it("routes the Level 0 agent shortcut to the same boundary", async () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/?agent=1&agentStart=level0&agentName=Operative"
+    );
+
+    render(<App />);
+
+    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
+    expect(screen.queryByTestId("game-canvas")).not.toBeInTheDocument();
+    expect(store.getState().player.data.backgroundId).toBeUndefined();
+  });
+
+  it("routes the agent shortcut after a same-tab remount", async () => {
+    window.history.replaceState({}, "", "/?agent=1&agentStart=level0");
+
+    const firstMount = render(<App />);
+    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
+    firstMount.unmount();
+
+    render(<App />);
+    expect(await screen.findByTestId("level0-recovery-boundary")).toBeInTheDocument();
+  });
+
+  it("allows the retired PoC shortcut to return to the menu", async () => {
+    window.history.replaceState({}, "", "/?poc=esb");
+
+    render(<App />);
+    fireEvent.click(await screen.findByTestId("recovery-return-to-menu"));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("game-menu")).toBeInTheDocument();
+      expect(screen.queryByTestId("level0-recovery-boundary")).not.toBeInTheDocument();
+    });
+  });
+
+  it("returns from the recovery boundary to the menu", async () => {
+    render(<App />);
 
     fireEvent.click(await screen.findByTestId("start-new-game"));
-    await completeCharacterCreation();
-    fireEvent.click(await screen.findByTestId("menu-overlay-button"));
-
-    unmount();
-
-    const savedState = window.localStorage.getItem(PERSISTED_STATE_KEY);
-    expect(savedState).not.toBeNull();
-
-    render(<App />);
-
-    const continueButton = await screen.findByTestId("continue-game");
-    expect(continueButton).toBeEnabled();
-
-    fireEvent.click(continueButton);
-    expect(screen.queryByTestId("game-menu")).not.toBeInTheDocument();
-    expect(screen.getByTestId("game-canvas")).toBeInTheDocument();
-  });
-
-  it('opens and closes the character screen', async () => {
-    render(<App />);
-
-    fireEvent.click(await screen.findByTestId('start-new-game'));
-    await completeCharacterCreation();
-
-    const characterButton = screen.getByTestId('summary-open-character');
-    fireEvent.click(characterButton);
-
-    const characterScreen = await screen.findByTestId('character-screen');
-    expect(characterScreen).toBeInTheDocument();
-
-    const closeButton = screen.getByTestId('close-character');
-    fireEvent.click(closeButton);
-    expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument();
-
-    fireEvent.click(characterButton);
-    expect(await screen.findByTestId('character-screen')).toBeInTheDocument();
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-    await waitFor(() => expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument());
-
-    fireEvent.click(characterButton);
-    expect(await screen.findByTestId('character-screen')).toBeInTheDocument();
-
-    fireEvent.keyDown(document, { key: 'c' });
-    await waitFor(() => expect(screen.queryByTestId('character-screen')).not.toBeInTheDocument());
-  });
-
-  it('renders the HUD menu control and does not expose legacy level panel toggles', async () => {
-    render(<App />);
-
-    fireEvent.click(await screen.findByTestId('start-new-game'));
-    await completeCharacterCreation();
-
-    const menuButton = await screen.findByTestId('menu-overlay-button');
-    expect(menuButton).toHaveTextContent(/Menu/i);
-    expect(menuButton).toHaveTextContent(/ESC/i);
-    expect(menuButton.style.width).toBe('90vw');
-    expect(menuButton.style.maxWidth).toBe('240px');
-
-    fireEvent.mouseEnter(menuButton);
-    expect(menuButton.style.transform).toBe('translateY(-2px)');
-    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow-hover)');
-
-    fireEvent.mouseLeave(menuButton);
-    expect(menuButton.style.transform).toBe('translateY(0)');
-    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow)');
-
-    const levelInfoToggle = screen.queryByRole('button', { name: /slums/i });
-    const widthBeforeToggle = menuButton.style.width;
-    expect(levelInfoToggle).toBeNull();
-    fireEvent.keyDown(document, { key: 'l' });
-    await waitFor(() => expect(menuButton.style.width).toBe(widthBeforeToggle));
-
-    fireEvent.focus(menuButton);
-    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow-focus)');
-
-    fireEvent.blur(menuButton);
-    expect(menuButton.style.boxShadow).toBe('var(--hud-command-button-shadow)');
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(await screen.findByTestId('game-menu')).toBeInTheDocument();
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-    await waitFor(() => expect(screen.queryByTestId('game-menu')).not.toBeInTheDocument());
-  });
-
-  it('closes active dialogues before opening the menu', async () => {
-    render(<App />);
-
-    fireEvent.click(await screen.findByTestId('start-new-game'));
-    await completeCharacterCreation();
-
-    const dialogue = store.getState().quests.dialogues[0];
-    expect(dialogue).toBeDefined();
-    store.dispatch(startDialogue({ dialogueId: dialogue.id, nodeId: dialogue.nodes[0].id }));
+    fireEvent.click(await screen.findByTestId("recovery-return-to-menu"));
 
     await waitFor(() => {
-      expect(store.getState().quests.activeDialogue.dialogueId).toBe(dialogue.id);
+      expect(screen.getByTestId("game-menu")).toBeInTheDocument();
     });
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-    await waitFor(() => {
-      expect(store.getState().quests.activeDialogue.dialogueId).toBeNull();
-    });
-    expect(screen.queryByTestId('game-menu')).not.toBeInTheDocument();
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-    expect(await screen.findByTestId('game-menu')).toBeInTheDocument();
+    expect(screen.queryByTestId("level0-recovery-boundary")).not.toBeInTheDocument();
   });
 });

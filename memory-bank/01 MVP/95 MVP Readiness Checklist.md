@@ -33,7 +33,7 @@ Percent-complete estimates are not used. Every row names the evidence required t
 | Architecture and Roadmap alignment | Ready for requester review | Typed ownership, provenance/idempotency, sequence, and gates align with the canonical design and no removed runtime path is current authority. |
 | Linear program alignment | Ready for requester review | GET-139 and GET-201–GET-210 passed live 2026-08-03 readback for labels, states, parents, blocker/dependency graph, and semantic description parity after the provisional-gate update. |
 | AGENTS governance | Ready for requester review | Specification precedence, OPEN lifecycle, Linear copy/readback, implementation stop conditions, recovery protection, and acceptance gates are explicit. |
-| Documentation commit | Ready for commit | The requester authorized one-by-one implementation on 2026-08-03; record the resulting GET-201 commit in progress and Linear before GET-202 changes the protected runtime worktree. |
+| Documentation commit | Ready for requester review | GET-201 is committed separately at `b50a4cd5290490cc8ab8c3521a2c22acaa1afdce`; implementation proceeds ticket by ticket while requester polish remains open. |
 
 The program entry gate opens when this reviewed package is committed separately with requester authorization. Open decisions then follow [[14 Specification Review Queue]]: they block final acceptance of affected surfaces, while documented reversible provisional trials may be built for live evaluation.
 
@@ -90,7 +90,7 @@ The program entry gate opens when this reviewed package is committed separately 
 | One verifier drone | Not started | Dispatch, warning, verification, search, and recovery proven without combat. |
 | Deterministic interception | Blocked | Exact capture fiction, requirements, and costs remain open. |
 | Safehouse under active surveillance | Blocked | `OPEN-SAFE-001` must freeze boundary/action behavior; acceptance must prove no automatic network clear or magical recovery. |
-| No tactical combat path | Not started | Human run and production UI contain no AutoBattle, AP grid, weapon menu, enemy-HP loop, EMP, or magic gadget. |
+| No tactical combat path | Partially evidenced | Normal New Game and development/test agent entry cannot initialize the retired combat runtime, and the active menu exposes no AutoBattle or Combat HUD-layout option. Dormant legacy modules remain recoverable until the replacement runtime exists; the complete production slice still needs human proof. |
 
 ## Dialogue, George, facts, and information readiness
 
@@ -129,7 +129,7 @@ The program entry gate opens when this reviewed package is committed separately 
 | New save schema | Not started | Explicit schema version and hydration validation. |
 | Autosave | Not started | Current-run persistence at declared safe points without stale rewrite fields. |
 | Departure Retry snapshot | Not started | Exact identity/build/preparation/fact/time/Health/Paranoia/mission restoration. |
-| Incompatible rewrite saves | Not started | Honest explanation and New Game path; no partial package/combat/inventory migration. |
+| Incompatible rewrite saves | Partially evidenced | The recovery seam detects the retired state, disables Continue, explains incompatibility in English/Ukrainian, and clears it through New Game without hydrating package/combat/inventory state. Final proof remains coupled to the new schema and runtime in GET-203/GET-207. |
 | Failure causes | Not started | Health, Paranoia, capture, and deadline each proven with exact reason and Retry. |
 
 ## Required end-to-end evidence
