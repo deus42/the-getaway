@@ -1,4 +1,8 @@
-import { isPointInPolygon, isPointWalkable } from '../layout/validator';
+import {
+  isPointInPolygon,
+  isPointWalkableWithClearance,
+} from '../layout/validator';
+import { LEVEL0_PLAYER_CLEARANCE_RADIUS } from '../layout/constants';
 import type { Level0LayoutContract, WorldPoint } from '../layout/types';
 
 export const LEVEL0_DIRECT_MOVEMENT_SPEED = 1.6;
@@ -52,9 +56,10 @@ export const createIdleMovementState = (position: WorldPoint): DirectMovementSta
 export const resolveClickIntent = (
   contract: Level0LayoutContract,
   origin: WorldPoint,
-  target: WorldPoint
+  target: WorldPoint,
+  collisionRadius = LEVEL0_PLAYER_CLEARANCE_RADIUS
 ): ClickIntentResult => {
-  if (isPointWalkable(contract, target)) {
+  if (isPointWalkableWithClearance(contract, target, collisionRadius)) {
     return {
       accepted: true,
       intent: { kind: 'click', target: { ...target } },
@@ -72,7 +77,7 @@ export const resolveClickIntent = (
     intent: { kind: 'idle' },
     feedback: {
       reason: outsideDistrict ? 'outside-district' : occupied ? 'occupied' : 'blocked-surface',
-      reachableMarker: findDirectReachableMarker(contract, origin, target),
+      reachableMarker: findDirectReachableMarker(contract, origin, target, collisionRadius),
     },
   };
 };
@@ -215,29 +220,15 @@ const canOccupy = (
   contract: Level0LayoutContract,
   center: WorldPoint,
   radius: number
-): boolean => {
-  const clampedRadius = Math.max(0, radius);
-  const diagonal = clampedRadius * Math.SQRT1_2;
-  const samples = [
-    center,
-    { x: center.x + clampedRadius, y: center.y },
-    { x: center.x - clampedRadius, y: center.y },
-    { x: center.x, y: center.y + clampedRadius },
-    { x: center.x, y: center.y - clampedRadius },
-    { x: center.x + diagonal, y: center.y + diagonal },
-    { x: center.x + diagonal, y: center.y - diagonal },
-    { x: center.x - diagonal, y: center.y + diagonal },
-    { x: center.x - diagonal, y: center.y - diagonal },
-  ];
-  return samples.every((sample) => isPointWalkable(contract, sample));
-};
+): boolean => isPointWalkableWithClearance(contract, center, radius);
 
 const findDirectReachableMarker = (
   contract: Level0LayoutContract,
   origin: WorldPoint,
-  target: WorldPoint
+  target: WorldPoint,
+  collisionRadius: number
 ): WorldPoint | undefined => {
-  if (!isPointWalkable(contract, origin)) {
+  if (!isPointWalkableWithClearance(contract, origin, collisionRadius)) {
     return undefined;
   }
 
@@ -251,7 +242,7 @@ const findDirectReachableMarker = (
       x: origin.x + (target.x - origin.x) * ratio,
       y: origin.y + (target.y - origin.y) * ratio,
     };
-    if (!isPointWalkable(contract, candidate)) {
+    if (!isPointWalkableWithClearance(contract, candidate, collisionRadius)) {
       break;
     }
     lastWalkable = candidate;

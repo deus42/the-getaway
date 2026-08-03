@@ -4,6 +4,10 @@ import type {
   WorldPolygon,
   WorldPoint,
 } from './types';
+import {
+  LEVEL0_PLAYER_CLEARANCE_RADIUS,
+  LEVEL0_REACHABILITY_SAMPLE_STEP,
+} from './constants';
 
 const EPSILON = 0.0001;
 
@@ -83,7 +87,27 @@ export const isPointWalkable = (
   );
 };
 
-const pointKey = (point: WorldPoint): string => `${point.x}:${point.y}`;
+export const isPointWalkableWithClearance = (
+  contract: Level0LayoutContract,
+  center: WorldPoint,
+  radius = LEVEL0_PLAYER_CLEARANCE_RADIUS
+): boolean => {
+  const clampedRadius = Math.max(0, radius);
+  const diagonal = clampedRadius * Math.SQRT1_2;
+  return [
+    center,
+    { x: center.x + clampedRadius, y: center.y },
+    { x: center.x - clampedRadius, y: center.y },
+    { x: center.x, y: center.y + clampedRadius },
+    { x: center.x, y: center.y - clampedRadius },
+    { x: center.x + diagonal, y: center.y + diagonal },
+    { x: center.x + diagonal, y: center.y - diagonal },
+    { x: center.x - diagonal, y: center.y + diagonal },
+    { x: center.x - diagonal, y: center.y - diagonal },
+  ].every((sample) => isPointWalkable(contract, sample));
+};
+
+const pointKey = (point: WorldPoint): string => `${point.x.toFixed(4)}:${point.y.toFixed(4)}`;
 
 const getPolygonExtents = (polygon: WorldPolygon) => {
   const xs = polygon.map((point) => point.x);
@@ -105,16 +129,23 @@ const nearestWalkableCell = (
   contract: Level0LayoutContract,
   point: WorldPoint
 ): WorldPoint | null => {
-  const rounded = { x: Math.round(point.x), y: Math.round(point.y) };
-  if (isPointWalkable(contract, rounded)) {
+  const step = LEVEL0_REACHABILITY_SAMPLE_STEP;
+  const rounded = {
+    x: Math.round(point.x / step) * step,
+    y: Math.round(point.y / step) * step,
+  };
+  if (isPointWalkableWithClearance(contract, rounded)) {
     return rounded;
   }
 
-  for (let radius = 1; radius <= 3; radius += 1) {
+  for (let radius = 1; radius <= 12; radius += 1) {
     for (let offsetY = -radius; offsetY <= radius; offsetY += 1) {
       for (let offsetX = -radius; offsetX <= radius; offsetX += 1) {
-        const candidate = { x: rounded.x + offsetX, y: rounded.y + offsetY };
-        if (isPointWalkable(contract, candidate)) {
+        const candidate = {
+          x: rounded.x + offsetX * step,
+          y: rounded.y + offsetY * step,
+        };
+        if (isPointWalkableWithClearance(contract, candidate)) {
           return candidate;
         }
       }
@@ -139,10 +170,10 @@ export const findDisconnectedRequiredAnchors = (
   const queue: WorldPoint[] = [start];
   const visited = new Set<string>([pointKey(start)]);
   const directions = [
-    { x: 1, y: 0 },
-    { x: -1, y: 0 },
-    { x: 0, y: 1 },
-    { x: 0, y: -1 },
+    { x: LEVEL0_REACHABILITY_SAMPLE_STEP, y: 0 },
+    { x: -LEVEL0_REACHABILITY_SAMPLE_STEP, y: 0 },
+    { x: 0, y: LEVEL0_REACHABILITY_SAMPLE_STEP },
+    { x: 0, y: -LEVEL0_REACHABILITY_SAMPLE_STEP },
   ];
 
   for (let index = 0; index < queue.length; index += 1) {
@@ -155,7 +186,7 @@ export const findDisconnectedRequiredAnchors = (
         next.y < bounds.minY ||
         next.y > bounds.maxY ||
         visited.has(pointKey(next)) ||
-        !isPointWalkable(contract, next)
+        !isPointWalkableWithClearance(contract, next)
       ) {
         return;
       }
@@ -192,6 +223,104 @@ const polygonsMatch = (left: WorldPolygon, right: WorldPolygon): boolean =>
       Math.abs(point.y - candidate.y) <= EPSILON;
   });
 
+const axisAlignedRectangleBounds = (
+  polygon: WorldPolygon
+): { minX: number; maxX: number; minY: number; maxY: number } | null => {
+  if (polygon.length !== 4) return null;
+  const xs = [...new Set(polygon.map((point) => point.x))];
+  const ys = [...new Set(polygon.map((point) => point.y))];
+  if (xs.length !== 2 || ys.length !== 2) return null;
+  const corners = new Set(polygon.map((point) => `${point.x}:${point.y}`));
+  if (!xs.every((x) => ys.every((y) => corners.has(`${x}:${y}`)))) return null;
+  return {
+    minX: Math.min(...xs),
+    maxX: Math.max(...xs),
+    minY: Math.min(...ys),
+    maxY: Math.max(...ys),
+  };
+};
+
+const pointOnPolygonBoundary = (point: WorldPoint, polygon: WorldPolygon): boolean =>
+  polygon.some((start, index) => pointOnSegment(point, start, polygon[(index + 1) % polygon.length]!));
+
+const pointStrictlyInsidePolygon = (point: WorldPoint, polygon: WorldPolygon): boolean =>
+  isPointInPolygon(point, polygon) && !pointOnPolygonBoundary(point, polygon);
+
+const orientation = (start: WorldPoint, end: WorldPoint, point: WorldPoint): number =>
+  (end.x - start.x) * (point.y - start.y) -
+  (end.y - start.y) * (point.x - start.x);
+
+const segmentsProperlyIntersect = (
+  leftStart: WorldPoint,
+  leftEnd: WorldPoint,
+  rightStart: WorldPoint,
+  rightEnd: WorldPoint
+): boolean => {
+  const leftToRightStart = orientation(leftStart, leftEnd, rightStart);
+  const leftToRightEnd = orientation(leftStart, leftEnd, rightEnd);
+  const rightToLeftStart = orientation(rightStart, rightEnd, leftStart);
+  const rightToLeftEnd = orientation(rightStart, rightEnd, leftEnd);
+  return (
+    leftToRightStart * leftToRightEnd < -EPSILON &&
+    rightToLeftStart * rightToLeftEnd < -EPSILON
+  );
+};
+
+const polygonArea = (polygon: WorldPolygon): number =>
+  Math.abs(
+    polygon.reduce((sum, point, index) => {
+      const next = polygon[(index + 1) % polygon.length]!;
+      return sum + point.x * next.y - next.x * point.y;
+    }, 0) / 2
+  );
+
+const polygonsOverlapWithArea = (left: WorldPolygon, right: WorldPolygon): boolean => {
+  if (left.length < 3 || right.length < 3 || polygonArea(left) <= EPSILON || polygonArea(right) <= EPSILON) {
+    return false;
+  }
+
+  const properIntersection = left.some((leftStart, leftIndex) => {
+    const leftEnd = left[(leftIndex + 1) % left.length]!;
+    return right.some((rightStart, rightIndex) =>
+      segmentsProperlyIntersect(
+        leftStart,
+        leftEnd,
+        rightStart,
+        right[(rightIndex + 1) % right.length]!
+      )
+    );
+  });
+  if (properIntersection) return true;
+
+  const leftBounds = axisAlignedRectangleBounds(left);
+  const rightBounds = axisAlignedRectangleBounds(right);
+  if (leftBounds && rightBounds) {
+    const overlapX = Math.min(leftBounds.maxX, rightBounds.maxX) -
+      Math.max(leftBounds.minX, rightBounds.minX);
+    const overlapY = Math.min(leftBounds.maxY, rightBounds.maxY) -
+      Math.max(leftBounds.minY, rightBounds.minY);
+    return overlapX > EPSILON && overlapY > EPSILON;
+  }
+
+  const pointsAndEdgeMidpoints = (polygon: WorldPolygon): WorldPoint[] =>
+    polygon.flatMap((point, index) => {
+      const next = polygon[(index + 1) % polygon.length]!;
+      return [point, { x: (point.x + next.x) / 2, y: (point.y + next.y) / 2 }];
+    });
+
+  if (
+    pointsAndEdgeMidpoints(left).some((point) => pointStrictlyInsidePolygon(point, right)) ||
+    pointsAndEdgeMidpoints(right).some((point) => pointStrictlyInsidePolygon(point, left))
+  ) {
+    return true;
+  }
+
+  return (
+    left.every((point) => pointOnPolygonBoundary(point, right)) ||
+    right.every((point) => pointOnPolygonBoundary(point, left))
+  );
+};
+
 const loopsInterlock = (contract: Level0LayoutContract): boolean => {
   if (contract.traversalLoops.length === 0) return false;
   const pointSets = contract.traversalLoops.map(
@@ -217,7 +346,7 @@ const loopsInterlock = (contract: Level0LayoutContract): boolean => {
 
 const segmentSamples = (start: WorldPoint, end: WorldPoint): WorldPoint[] => {
   const distance = Math.hypot(end.x - start.x, end.y - start.y);
-  const steps = Math.max(1, Math.ceil(distance));
+  const steps = Math.max(1, Math.ceil(distance / LEVEL0_REACHABILITY_SAMPLE_STEP));
   return Array.from({ length: steps + 1 }, (_, index) => {
     const ratio = index / steps;
     return {
@@ -267,7 +396,7 @@ export const validateLevel0LayoutContract = (
     if (!buildingIds.has(entrance.buildingId)) {
       errors.push(`entrance ${entrance.id} references missing building ${entrance.buildingId}`);
     }
-    if (!isPointWalkable(contract, entrance.position)) {
+    if (!isPointWalkableWithClearance(contract, entrance.position)) {
       errors.push(`entrance ${entrance.id} is not on walkable geometry`);
     }
     const entranceAnchor = findAnchor(contract, entrance.id);
@@ -306,7 +435,7 @@ export const validateLevel0LayoutContract = (
   });
 
   contract.anchors.filter((anchor) => anchor.required).forEach((anchor) => {
-    if (!isPointWalkable(contract, anchor.position)) {
+    if (!isPointWalkableWithClearance(contract, anchor.position)) {
       errors.push(`required anchor ${anchor.id} is not on walkable geometry`);
     }
   });
@@ -323,7 +452,7 @@ export const validateLevel0LayoutContract = (
     }
     loop.points.slice(1).forEach((end, index) => {
       const start = loop.points[index]!;
-      if (segmentSamples(start, end).some((sample) => !isPointWalkable(contract, sample))) {
+      if (segmentSamples(start, end).some((sample) => !isPointWalkableWithClearance(contract, sample))) {
         errors.push(`loop ${loop.id} crosses blocked geometry`);
       }
     });
@@ -346,6 +475,14 @@ export const validateLevel0LayoutContract = (
     if (!occluder || !polygonsMatch(occluder, footprint.polygon)) {
       errors.push(`occluder ${index} does not match building footprint ${footprint.id}`);
     }
+    if (footprint.polygon.some((point) => !isPointInPolygon(point, contract.bounds))) {
+      errors.push(`building footprint ${footprint.id} leaves district bounds`);
+    }
+    contract.buildingFootprints.slice(index + 1).forEach((candidate) => {
+      if (polygonsOverlapWithArea(footprint.polygon, candidate.polygon)) {
+        errors.push(`building footprints ${footprint.id} and ${candidate.id} overlap`);
+      }
+    });
   });
 
   const requiredAnchorIds = contract.anchors

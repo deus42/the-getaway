@@ -1,5 +1,10 @@
 import { resetGame, store } from '../../../../store';
-import { initializeLevel0Run } from '../../../../store/level0RuntimeSlice';
+import {
+  initializeLevel0Run,
+  syncLevel0PlayerCheckpoint,
+} from '../../../../store/level0RuntimeSlice';
+import { LEVEL0_LAYOUT_CONTRACT } from '../../../../content/levels/level0/layoutContract';
+import { resolveClickIntent } from '../../movement/directMovement';
 import {
   LEVEL0_AGENT_MOVE_EVENT,
   LEVEL0_AGENT_MOVE_RESULT_EVENT,
@@ -24,10 +29,30 @@ describe('Level 0 agent bridge', () => {
     const uninstall = installLevel0AgentBridge({ store, search: '?agent=1', nodeEnv: 'test' });
     const snapshot = window.__getawayAgent?.snapshot();
 
-    expect(snapshot?.world.areaId).toBe('level0-tokyo-greybox-v1');
+    expect(snapshot?.world.areaId).toBe('level0-tokyo-greybox-v2');
     expect(snapshot?.world.map.width).toBe(84);
     expect(snapshot?.player.position).toEqual({ x: 16, y: 47 });
     expect(window.render_game_to_text?.()).toContain('L0_PREPARATION');
+    uninstall();
+  });
+
+  it('advertises only nearby movement tiles accepted by direct movement clearance', () => {
+    store.dispatch(syncLevel0PlayerCheckpoint({
+      position: { x: 16, y: 8 },
+      facing: { x: 0, y: 1 },
+    }));
+    const uninstall = installLevel0AgentBridge({ store, search: '?agent=1', nodeEnv: 'test' });
+    const snapshot = window.__getawayAgent!.snapshot();
+
+    const rejected = snapshot.world.map.nearbyWalkableTiles.filter(
+      (target) => !resolveClickIntent(
+        LEVEL0_LAYOUT_CONTRACT,
+        snapshot.player.position,
+        target
+      ).accepted
+    );
+    expect(rejected).toEqual([]);
+    expect(snapshot.world.map.nearbyWalkableTiles).not.toContainEqual({ x: 15, y: 9 });
     uninstall();
   });
 

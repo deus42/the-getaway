@@ -92,6 +92,9 @@ describe('Level 0 persistence envelopes', () => {
     ['occupied player position', (payload: Record<string, unknown>) => {
       (payload.player as Record<string, unknown>).position = { x: 15, y: 15 };
     }],
+    ['clearance-overlapping player position', (payload: Record<string, unknown>) => {
+      (payload.player as Record<string, unknown>).position = { x: 61.2, y: 20 };
+    }],
     ['overflowing player position', (payload: Record<string, unknown>) => {
       (payload.player as Record<string, unknown>).position = { x: 1e308, y: 1e308 };
     }],
@@ -103,6 +106,9 @@ describe('Level 0 persistence envelopes', () => {
     }],
     ['outside last-known position', (payload: Record<string, unknown>) => {
       (payload.surveillance as Record<string, unknown>).lastKnownPosition = { x: 100, y: 100 };
+    }],
+    ['clearance-overlapping last-known position', (payload: Record<string, unknown>) => {
+      (payload.surveillance as Record<string, unknown>).lastKnownPosition = { x: 61.2, y: 20 };
     }],
     ['runtime generation', (payload: Record<string, unknown>) => {
       (payload.runtimeGeneration as Record<string, unknown>).generationVersion = 'drifted-runtime';

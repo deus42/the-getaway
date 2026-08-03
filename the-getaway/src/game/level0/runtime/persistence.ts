@@ -5,7 +5,7 @@ import {
   normalizeLevel0RunForHydration,
 } from './safehouse';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
-import { isPointWalkable } from '../layout/validator';
+import { isPointWalkableWithClearance } from '../layout/validator';
 import type { WorldPoint } from '../layout/types';
 import type {
   AttributeKey,
@@ -150,7 +150,7 @@ const isWorldPoint = (value: unknown): value is WorldPoint =>
   isRecord(value) && hasExactKeys(value, ['x', 'y']) && isFiniteNumber(value.x) && isFiniteNumber(value.y);
 
 const isWalkableWorldPoint = (value: unknown): boolean =>
-  isWorldPoint(value) && isPointWalkable(LEVEL0_LAYOUT_CONTRACT, value);
+  isWorldPoint(value) && isPointWalkableWithClearance(LEVEL0_LAYOUT_CONTRACT, value);
 
 const isNormalizedFacing = (value: unknown): boolean => {
   if (!isWorldPoint(value)) return false;

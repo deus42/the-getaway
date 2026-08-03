@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
 import type { Level0Anchor, WorldPoint, WorldPolygon } from '../layout/types';
+import { LEVEL0_PLAYER_CLEARANCE_RADIUS } from '../layout/constants';
 import { createLevel0Projection } from '../layout/projection';
 import {
   createIdleMovementState,
@@ -187,7 +188,7 @@ export class Level0Scene extends Phaser.Scene {
       }
       const step = stepDirectMovement(contract, this.movement, Math.min(delta, 50) / 1_000, {
         speed: LEVEL0_DIRECT_MOVEMENT_SPEED,
-        collisionRadius: 0.32,
+        collisionRadius: LEVEL0_PLAYER_CLEARANCE_RADIUS,
         arrivalRadius: 0.12,
       });
       this.movement = {

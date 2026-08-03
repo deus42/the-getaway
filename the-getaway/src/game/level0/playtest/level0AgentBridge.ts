@@ -1,5 +1,5 @@
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
-import { isPointWalkable } from '../layout/validator';
+import { isPointWalkableWithClearance } from '../layout/validator';
 import { isLevel0AnchorKnown } from '../runtime/mapKnowledge';
 import type { AppDispatch, RootState } from '../../../store';
 import { advanceLevel0Clock } from '../../../store/level0RuntimeSlice';
@@ -60,7 +60,7 @@ const walkableTileCount = (() => {
   let count = 0;
   for (let y = layoutExtents.minimumY; y < layoutExtents.maximumY; y += 1) {
     for (let x = layoutExtents.minimumX; x < layoutExtents.maximumX; x += 1) {
-      if (isPointWalkable(LEVEL0_LAYOUT_CONTRACT, { x, y })) count += 1;
+      if (isPointWalkableWithClearance(LEVEL0_LAYOUT_CONTRACT, { x, y })) count += 1;
     }
   }
   return count;
@@ -74,7 +74,7 @@ const nearbyWalkableTiles = (position: { x: number; y: number }) => {
       for (let x = center.x - radius; x <= center.x + radius; x += 1) {
         if (
           (x !== center.x || y !== center.y) &&
-          isPointWalkable(LEVEL0_LAYOUT_CONTRACT, { x, y }) &&
+          isPointWalkableWithClearance(LEVEL0_LAYOUT_CONTRACT, { x, y }) &&
           !candidates.some((candidate) => candidate.x === x && candidate.y === y)
         ) {
           candidates.push({ x, y });

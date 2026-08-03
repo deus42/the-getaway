@@ -73,6 +73,15 @@ describe('direct Level 0 movement', () => {
     expect(result.feedback?.reachableMarker?.x).toBeLessThan(4);
   });
 
+  it('rejects a visually open target that cannot fit the runtime player clearance', () => {
+    const result = resolveClickIntent(testContract, { x: 1, y: 5 }, { x: 3.8, y: 5 });
+
+    expect(result.accepted).toBe(false);
+    expect(result.intent).toEqual({ kind: 'idle' });
+    expect(result.feedback?.reason).toBe('blocked-surface');
+    expect(result.feedback?.reachableMarker?.x).toBeLessThanOrEqual(3.68);
+  });
+
   it('maps WASD to screen-readable isometric axes and overrides click movement', () => {
     const previous = {
       position: { x: 2, y: 2 },
