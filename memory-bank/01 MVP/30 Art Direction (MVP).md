@@ -34,14 +34,14 @@ The art must make it possible to:
 - Raw licensed geometry is never committed.
 - Generated `.blend` files remain untracked.
 - The repository may commit versioned scene recipes, source manifests, transforms, semantic metadata, and validators. Flattened derivatives remain ignored `local-evidence` until acquisition-specific entitlement is verified and runtime promotion is explicitly reviewed.
-- The exact approved Direction B comparison artifact and source/license inventory remain open items in [[14 Specification Review Queue]] and must be resolved before art production acceptance.
+- The original Direction B comparison artifact is not recoverable. GET-205 therefore registers a provisional replacement reference at `art/blender/get205/.generated/reference/hidzu-direction-concept-v1.png` (SHA-256 `148876622bbe3e76166acb112bb7ef8d7f300bc3925a8a51b7d28fe3b6c61760`) and records its source frame, generation provenance, prompt, required traits, rejection traits, and hierarchy in `art/blender/get205/manifests/hidzu-treatment.json`. It is reversible local evidence, not an accepted production asset; `OPEN-ART-001` remains open until requester judgment.
 
 ## 4. Complete happy-path behavior
 
 1. Runtime/layout work defines the outdoor topology, semantic surfaces, anchors, and three traversal loops.
 2. The Blender pipeline imports the requester-asserted-owned pack without stylistic regeneration and composes the entire district in one master scene.
 3. The first visual gate judges unchanged-kit composition: human scale, continuous street walls, public realm, loops, landmarks, actor legibility, and fixed-camera projection.
-4. Only after that composition is accepted does the second gate add Hidzu identity: surveillance hardware, identity scanning, public screens, propaganda, controlled wayfinding, and institutional lighting.
+4. A technically validated, committed unchanged-kit composition unlocks the reversible second-gate implementation while requester review remains pending. The second gate adds Hidzu identity: surveillance hardware, identity scanning, public screens, propaganda, controlled wayfinding, and institutional lighting. It cannot be called accepted or promoted to production until requester judgment.
 5. Roads, sidewalks, curbs, crossings, alleys, plazas, setbacks, and entrance aprons are authored as part of the city rather than a flat runtime board beneath freestanding sprites.
 6. T4 exports aligned neutral dusk, blue-hour, and curfew lighting foundations from the same geometry and camera as ignored local evidence. T5 owns final atmosphere; entitlement-backed runtime promotion and crossfade must not move collision, doors, devices, or interaction anchors.
 7. Semantic masks and anchors flow back into validation against the same layout contract.
@@ -52,7 +52,7 @@ The art must make it possible to:
 
 The world-art lifecycle is:
 
-`LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → LOCAL_EVIDENCE_EXPORT → COMPOSITION_ACCEPTED → HIDZU_IDENTITY_PASS → ENTITLEMENT_BACKED_RUNTIME_PROMOTION → LIVE_VISUAL_ACCEPTANCE`
+`LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → T4_LOCAL_EVIDENCE → TECHNICALLY_VALIDATED_COMMIT → PROVISIONAL_HIDZU_IDENTITY_PASS → T5_LOCAL_EVIDENCE → REQUESTER_VISUAL_ACCEPTANCE → ENTITLEMENT_BACKED_RUNTIME_PROMOTION`
 
 - Failure at the unchanged-kit gate returns to composition and scale; it cannot be hidden with signage, fog, or post-processing.
 - Failure at the Hidzu gate returns to identity/lighting treatment without reopening accepted topology unless measured evidence reveals a topology defect.
@@ -83,6 +83,19 @@ Presentation states are aligned environment layers:
 - Lighting direction remains consistently upper-left for baked assets.
 - Midtones remain readable. Curfew cannot collapse actors, road edges, entrances, and building bases into one black band.
 - Practical lights must be anchored to visible sources and respect the aligned environment state.
+
+### Provisional GET-205 treatment contract
+
+- `art/blender/get205/manifests/hidzu-visual-grammar.json` is the single palette, semantic-role, device-shape, civic-message, and color-independent-cue grammar consumed by validation and Blender generation.
+- `art/blender/get205/manifests/hidzu-treatment.json` hash-locks the committed GET-204 source manifest, scene recipe, layout contract, master-scene metadata, base transforms, camera, canvas, anchors, and semantic-mask inventory before applying treatment.
+- The base `level0-tokyo-unchanged-kit-v2` recipe ID and its eleven semantic layer IDs remain stable. `level0-tokyo-hidzu-treatment-v1` is separate treatment identity rather than a replacement gameplay or layout recipe.
+- The provisional treatment declares nine placement-scoped material overrides, 24 gameplay/civic additions, six practical-light sites with visible emitters, three geometry-identical schedule states, and a fixed 17-capture review matrix.
+- Semantic masks and exported anchors are immutable T4 inputs. GET-205 copies the validated T4 mask derivatives byte-for-byte and validates every anchor value rather than repainting gameplay topology.
+- The treatment pins the exact T4 art-manifest hash and a canonical semantic registration digest. T5 validation compares mask identity, path, cell, pixel origin, dimensions, bytes, and content hash to T4 rather than accepting matching mask names alone.
+- Palette tokens, schedule values, material transforms, public-message assignments, grammar identities, and surveillance-state cues are Blender inputs rather than descriptive metadata. Generated evidence records their canonical digests, object bindings, visible text ownership and actual wrapped font-body hashes, color-independent state silhouettes, measured palette coverage, material ownership, and per-addition world bounds; anchor additions must remain inside their declared semantic clearance, while facade additions must remain on their measured source placement.
+- The Node runner holds a generation lock and renders only into an ignored run-scoped staging root. A complete `all` run is validated as one directory, moved into an immutable version directory, validated again, and exposed through an atomically replaced `current` symlink. A post-swap readback is part of publication and restores the prior pointer before rejecting the new run. Partial runs are retained as noncanonical trials and cannot replace `current`; any prerequisite, Blender, validation, publication, or readback failure leaves the prior complete pointer intact unless the filesystem itself rejects rollback, in which case the new immutable run is retained rather than leaving a dangling pointer.
+- Generated `.blend`, tiled layers, evidence, reference image, and captures remain ignored `local-evidence`; the generated art manifest keeps `level0-greybox` as fallback, while run evidence records `runtimeReady: false`. Acquisition-specific entitlement and explicit runtime promotion remain separate gates.
+- Suspicious and Pursuit captures in this ticket are visual presentation hooks, not proof of the GET-208 surveillance mechanics.
 
 ### Projection and runtime
 

@@ -136,14 +136,14 @@ Ownership:
 
 This gate judges composition before Hidzu styling. Signage, fog, and post-processing may not hide weak scale or sparse structure.
 
-Exit gate: requester-accepted fixed frames at all target viewports show a coherent city, readable routes, no void, no angle mismatch, and no zoom corruption.
+Successor gate: a technically validated, committed T4 deliverable with fixed frames, stable projection/masks/anchors, and explicit local-evidence/fallback boundaries unlocks the reversible T5 trial. Final acceptance gate: the requester accepts fixed frames at all target viewports as a coherent city with readable routes, no void, no angle mismatch, and no zoom corruption.
 
 ## Gate 5 — Hidzu identity and surveillance-noir art
 
 ### T5 — Hidzu identity and graphic-surveillance-noir world art
 
 **Label:** Improvement
-**Depends on:** T4 accepted
+**Depends on:** validated committed T4 composition; requester T4 acceptance remains a final visual gate rather than a successor-start gate
 **Blocks:** T6 and T10 visual integration
 
 Ownership:
@@ -154,7 +154,7 @@ Ownership:
 - gameplay-serving entrances, terminals, hiding/blending structures, contact spaces, and hazards;
 - overview atmospheric depth without generic neon clutter.
 
-Exit gate: the accepted city reads specifically as Hidzu-controlled Tokyo while retaining route/objective/actor hierarchy at normal and minimum zoom.
+Successor gate: a technically validated, committed T5 treatment with complete fixed captures may unlock T6 while the treatment remains provisional. Final acceptance gate: the requester agrees the city reads specifically as Hidzu-controlled Tokyo while retaining route/objective/actor hierarchy at normal and minimum zoom.
 
 ## Gate 6 — actor and portrait replacement
 

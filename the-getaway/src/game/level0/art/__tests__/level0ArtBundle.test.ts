@@ -1,6 +1,10 @@
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../../content/levels/level0/layoutContract';
 import type { Level0ArtBundle } from '../types';
-import { validateLevel0ArtBundle, validateLevel0SourceAndRecipe } from '../validator';
+import {
+  validateLevel0ArtBundle,
+  validateLevel0ArtManifest,
+  validateLevel0SourceAndRecipe,
+} from '../validator';
 
 const SHA256 = 'a'.repeat(64);
 const PROP_ANCHOR_IDS = [
@@ -514,6 +518,26 @@ describe('Level0ArtBundle', () => {
     const errors = validateLevel0ArtBundle(bundle, LEVEL0_LAYOUT_CONTRACT);
     expect(errors).toContain('art output paths must be normalized flattened derivatives under environment/level0/t4');
     expect(errors).toContain('GET-204 lighting must remain a neutral unchanged-kit foundation');
+  });
+
+  it('accepts a validated treatment derivative prefix without changing recipe semantics', () => {
+    const bundle = createBundle();
+    bundle.art.layers.forEach((layer) => {
+      layer.tiles.forEach((tile) => {
+        tile.imagePath = tile.imagePath.replace(
+          'environment/level0/t4/',
+          'environment/level0/t5/'
+        );
+      });
+    });
+    bundle.art.anchorMetadata.path = 'environment/level0/t5/anchors.json';
+
+    expect(validateLevel0ArtManifest(
+      bundle.art,
+      bundle.recipe,
+      LEVEL0_LAYOUT_CONTRACT,
+      'environment/level0/t5'
+    )).toEqual([]);
   });
 
   it('rejects shifted canvases and swapped runtime layer semantics', () => {

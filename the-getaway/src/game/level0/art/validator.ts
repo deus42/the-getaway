@@ -94,8 +94,8 @@ const layoutFitsAlignedCanvas = (
   });
 };
 
-const normalizedDerivativePath = (value: string): boolean => {
-  if (!value.startsWith('environment/level0/t4/')) return false;
+const normalizedDerivativePath = (value: string, derivativePrefix: string): boolean => {
+  if (!value.startsWith(`${derivativePrefix}/`)) return false;
   if (value.startsWith('/') || value.includes('\\') || value.split('/').includes('..')) return false;
   return /\.(?:png|webp|json)$/.test(value) && !/\.(?:obj|fbx|mtl|blend\d*)$/i.test(value);
 };
@@ -624,7 +624,8 @@ export const validateLevel0SourceAndRecipe = (
 export const validateLevel0ArtManifest = (
   art: Level0ArtManifest,
   recipe: Level0SceneRecipe,
-  layout: Level0LayoutContract
+  layout: Level0LayoutContract,
+  derivativePrefix = 'environment/level0/t4'
 ): string[] => {
   const errors: string[] = [];
 
@@ -707,8 +708,8 @@ export const validateLevel0ArtManifest = (
   art.layers.forEach((layer) => {
     validateTileGrid(layer.tiles, art, layer.id, errors);
     layer.tiles.forEach((tile) => {
-      if (!normalizedDerivativePath(tile.imagePath)) {
-        errors.push('art output paths must be normalized flattened derivatives under environment/level0/t4');
+      if (!normalizedDerivativePath(tile.imagePath, derivativePrefix)) {
+        errors.push(`art output paths must be normalized flattened derivatives under ${derivativePrefix}`);
       }
     });
   });
@@ -717,7 +718,7 @@ export const validateLevel0ArtManifest = (
     errors.push('runtime art measured byte total drifts from tile metadata');
   }
   if (
-    !normalizedDerivativePath(art.anchorMetadata.path) ||
+    !normalizedDerivativePath(art.anchorMetadata.path, derivativePrefix) ||
     !SHA256_PATTERN.test(art.anchorMetadata.sha256) ||
     art.anchorMetadata.count !== layout.anchors.length
   ) {

@@ -133,6 +133,10 @@ art/blender/get204/**/*.dds
 art/blender/get204/**/*.jpg
 art/blender/get204/**/*.jpeg
 
+# GET-205 generated Hidzu treatment evidence and Blender staging.
+art/blender/get205/.staging/
+art/blender/get205/.generated/
+
 # Local agent and knowledge-tool artifacts
 .codex/
 .superpowers/

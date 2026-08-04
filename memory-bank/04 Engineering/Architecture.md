@@ -109,7 +109,7 @@ Current ownership is explicit:
 - `src/game/level0/layout/` owns validation and the reversible 64×32 projection adapter;
 - `src/game/level0/movement/directMovement.ts` owns direct intent, local collision sampling, and axis sliding;
 - `src/game/level0/interaction/interactionResolver.ts` owns knowledge, independently derived world-ownership, range, occlusion, and authoritative availability results; automatic discovery filters unknown or wrong-domain anchors instead of revealing their existence through an error;
-- `src/game/level0/art/` owns the T4 source/recipe/runtime-manifest contracts and validators only; generated derivatives remain ignored local evidence and `Level0Scene` still renders the greybox fallback;
+- `src/game/level0/art/` owns parallel T4 composition and T5 treatment contracts/validators. T5 preserves the T4 recipe and semantic layer IDs, carries separate treatment identity, deeply validates every exported tile/anchor/evidence field, and rejects runtime promotion while entitlement is unavailable; generated derivatives remain ignored local evidence and `Level0Scene` still renders the greybox fallback;
 - `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, and immutable departure Retry;
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
 - `src/game/level0/scene/Level0Scene.ts` owns frame-local greybox rendering, actor transform, camera, and input;
@@ -601,13 +601,16 @@ flowchart LR
   B --> C["Phaser collision and anchors"]
   B --> D["Blender scene recipe"]
   D --> E["Unchanged-kit master scene"]
-  E --> F["Ignored local-evidence layers and manifest"]
-  F --> G["Technical validation and requester T4 review"]
-  G --> H["Hidzu identity pass"]
-  H --> I["Entitlement-backed runtime promotion"]
-  F --> J["Layout/export validator"]
-  B --> J
-  I --> K["Runtime rendering"]
+  E --> F["T4 ignored local-evidence layers"]
+  F --> G["T4 technical validation and committed delivery"]
+  G --> H["Hash-locked Hidzu treatment"]
+  H --> I["T5 ignored local-evidence layers and captures"]
+  I --> J["T5 validation and requester visual review"]
+  J --> K["Entitlement-backed runtime promotion"]
+  F --> L["Layout and export validators"]
+  I --> L
+  B --> L
+  K --> M["Runtime rendering"]
 ```
 
 ### Contract discipline
@@ -615,6 +618,11 @@ flowchart LR
 - Layout coordinates, zone names, entrances, devices, contacts, terminals, hiding/blending contexts, and objectives originate in one versioned contract.
 - Blender may refine visual mass and public realm inside the contract but cannot move required gameplay anchors without a reviewed layout change.
 - T4 export validation proves projection and canvas containment, tile-grid registration, file hashes/bytes/budgets, layer semantics/fallbacks, and complete anchor values against the layout contract. Decoded raster-edge agreement remains a visual/runtime acceptance responsibility rather than a claim made by metadata validation alone.
+- T5 opens the exact ignored T4 master by expected hash only after the tracked T4 source/recipe and ignored aligned export pass their own validator. It verifies base transform/camera/canvas/anchor digests plus the pinned T4 art-manifest hash and semantic-registration digest, clones placement materials before mutation, and registers treatment-only objects under declared gameplay/civic purpose without changing authoritative collision data.
+- T5 export validation opens the generated art manifest, every tile, anchors, and treatment evidence; it enforces stable T4 recipe/layer IDs, expected derivative roots, exact file inventory, physical hashes and bytes for every registered output including overview and the authoring `.blend`, grid cells, budgets, projection tolerance/canvas containment, all 27 anchor values, byte-identical and spatially identical T4 semantic masks, manifest-derived surface-treatment digest, exact grammar/object bindings, assigned public copy against the actual wrapped font bodies, color-independent surveillance-state cues, independently recomputed palette coverage, measured per-addition bounds, complete capture hashes/dimensions, ignored local-evidence usage, run-evidence `runtimeReady: false`, and the greybox fallback.
+- Hidzu palette tokens, surface/material transforms, public-message assignments, grammar kind/color/silhouette/glyph values, schedule values, and surveillance-state token/cue mappings are authoritative generator inputs. Unknown, incomplete, or semantically reassigned inputs fail before generation.
+- The T5 runner serializes generation with an ignored lock and writes Blender output only to an ignored run-scoped staging root. A full `all` run is validated in staging, moved as one complete immutable directory under `.generated/runs`, revalidated there, and then published by atomically replacing the relative `.generated/current` symlink. A failed validation or pointer update removes the rejected run and preserves the prior pointer; readers resolve only `current` or an explicitly bounded staging/trial/run root.
+- Preview, targeted capture, and export-only runs are retained under ignored `.generated/trials` and never update the canonical pointer. Only a full unfiltered `all` run can satisfy the 17-frame capture/export gate; Blender Python failures propagate a nonzero process exit.
 - If a parallelogram footprint cannot match a visual base within one tile, author a custom polygon or multi-region footprint rather than trim-chasing.
 - One full master scene prevents per-building angle, scale, and light drift.
 - Raw licensed files remain outside Git. Source manifests, recipes, and validators are versioned; flattened derivatives remain ignored until acquisition-specific entitlement and runtime promotion are explicitly approved.
@@ -836,8 +844,8 @@ Required closeout commands remain those in `AGENTS.md` and [[01 MVP/95 MVP Readi
 3. Restore the pre-rewrite foundation while recording every salvage/rejection.
 4. Establish target schema, pause, persistence, and `Level0LayoutContract` foundations.
 5. Implement direct movement, interaction, camera, observation, and shared layout runtime.
-6. Build and accept the unchanged-kit Blender city.
-7. Add and accept Hidzu identity/world art.
+6. Build, technically validate, and commit the unchanged-kit Blender city; requester acceptance remains its final visual gate.
+7. Add, technically validate, and commit the reversible Hidzu identity/world-art trial; requester acceptance remains its final visual gate.
 8. Replace actors and portraits.
 9. Restore identity, build, checks, Health, Paranoia, progression, and Character screen.
 10. Implement surveillance, hiding/blending, drone, camera loop, and interception.

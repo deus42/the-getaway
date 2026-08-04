@@ -1,0 +1,671 @@
+{
+  "schemaVersion": 1,
+  "id": "level0-tokyo-hidzu-treatment-v1",
+  "ticket": "GET-205",
+  "phase": "hidzu-identity-pass",
+  "usage": "local-evidence",
+  "base": {
+    "sourceManifest": {
+      "path": "art/blender/get204/manifests/source-manifest.json",
+      "sha256": "533e8454d8d0c45e6f9caca12d55af9b6ebfc97bb9f9316c0681091cdbd11f30"
+    },
+    "sceneRecipe": {
+      "id": "level0-tokyo-unchanged-kit-v2",
+      "path": "art/blender/get204/manifests/scene-recipe.json",
+      "sha256": "6e158a18ee444cd81f72da363ce9858f522802b6784bff7f8f7132717b5d5880"
+    },
+    "layoutContract": {
+      "id": "level0-tokyo-greybox-v3",
+      "path": "art/iso-assets/contracts/level0-layout-contract.json",
+      "sha256": "25f77d9c70903671e25dd7aa1b7e4578d40dd59159697b160eaf5bce0319d89f"
+    },
+    "masterScene": {
+      "path": "art/blender/get204/.generated/get204-level0-master.blend",
+      "sha256": "84333cee70e9926102227451e7e0060583884fb42091937007b31d4e32e2ff7a",
+      "metadataPath": "art/blender/get204/.generated/master-scene-metadata.json",
+      "metadataSha256": "a42c91035d8fcfc4ba7087acba5a0b8af4b91c1c8a284c2549332ac842b7b972"
+    },
+    "alignedExport": {
+      "manifestPath": "art/blender/get204/.generated/aligned-export/art-manifest.json",
+      "manifestSha256": "ed20a2b7b50e5b2c813af7ed7e0d3b6a9db0d95c23043f64f48f7890ce7d80a9",
+      "semanticMaskRegistrationDigest": "89ecbd89743c427968b71637d307408b25449f9cd602922b68cfd36eae764610"
+    },
+    "immutable": {
+      "geometrySignature": "6f64f467cff60f4426c693ae6baee126789e6f8ab4c97bcbd96c3ced702685fa",
+      "buildingPlacementIds": [
+        "placement.public-market.small-j",
+        "placement.civic-north.small-f",
+        "placement.hidzu-offices.small-i",
+        "placement.logistics-annex.small-h",
+        "placement.safehouse.small-e",
+        "placement.service-west.small-g",
+        "placement.transit-hall.small-a",
+        "placement.service-south.medium-b",
+        "placement.transit-services.small-c"
+      ],
+      "propPlacementIds": [
+        "prop.terminal.camera-loop.electric-box-a",
+        "prop.terminal.cache-locker.electric-box-c",
+        "prop.terminal.outbound.intercom",
+        "prop.hide.service-recess.generator-a",
+        "prop.hide.maintenance-bay.generator-b",
+        "prop.hide.transit-structure.underground-entrance",
+        "prop.blend.delivery-activity.awning-b",
+        "prop.blend.public-queue.barriers-west",
+        "prop.blend.public-queue.barriers-east",
+        "prop.entrance.logistics-public.door-a-west",
+        "prop.entrance.logistics-public.door-a-east",
+        "prop.entrance.logistics-service.door-c-west",
+        "prop.entrance.logistics-service.door-c-east",
+        "prop.entrance.safehouse.door-b-west",
+        "prop.entrance.safehouse.door-b-east"
+      ],
+      "anchorIds": [
+        "safehouse.boundary",
+        "safehouse.spawn",
+        "safehouse.departure",
+        "entrance.safehouse",
+        "contact.lira",
+        "contact.naila",
+        "contact.brant",
+        "entrance.logistics.public",
+        "entrance.logistics.service",
+        "terminal.camera_loop",
+        "terminal.cache_locker",
+        "terminal.outbound_transit",
+        "drone.launch",
+        "hide.service_recess",
+        "hide.maintenance_bay",
+        "hide.transit_structure",
+        "blend.delivery_activity",
+        "blend.public_queue",
+        "objective.medkits",
+        "objective.manifest",
+        "camera.public_approach",
+        "camera.public_gate",
+        "camera.service_gate",
+        "camera.service_alley",
+        "audio.curfew.public",
+        "interaction.safehouse.wait",
+        "interaction.safehouse.rest"
+      ],
+      "semanticMaskIds": [
+        "mask.level0.walkable",
+        "mask.level0.blocked",
+        "mask.level0.occlusion",
+        "mask.level0.interaction",
+        "mask.level0.surveillance"
+      ],
+      "buildingTransformDigest": "7164a9710405645d7768583709d88c7477f7b171e87ec78470cece5e105f1865",
+      "propTransformDigest": "da53c0ffdf01802eefcf54f618d18c7128ea519111ba145c9ea32fb548505b28",
+      "cameraDigest": "0879aae1d399e6e5724289c20aee3fea045350f6e0345876ee5b010ff51cdfb6",
+      "canvasDigest": "da674b16c6e2d533cf4babab0b6368665eff8ad3d9b6f9bfe94e90dbe95b319a",
+      "anchorDigest": "ffe1c47a1366a9de726ad2d78165ab3d1c6e19e155045dcac8fc16ee7d4c69d7",
+      "semanticMaskDigest": "da35f508d7b2c611c828bf0d41c9b670227eb362fedae7e62e4dff2c9cb8a87e"
+    }
+  },
+  "reference": {
+    "status": "provisional-local-reference",
+    "path": "art/blender/get205/.generated/reference/hidzu-direction-concept-v1.png",
+    "sha256": "148876622bbe3e76166acb112bb7ef8d7f300bc3925a8a51b7d28fe3b6c61760",
+    "sourcePath": "art/blender/get204/.generated/master/overview.png",
+    "sourceSha256": "5ea955c31ad906724d12cebbc05aaa078cb71905237fc740d0d27627bfbb456d",
+    "generatedBy": "OpenAI image generation; exact historical generation prompt recorded below",
+    "prompt": "Use the accepted GET-204 isometric Tokyo overview as a strict composition reference. Preserve the camera, street geometry, building positions, scale hierarchy, and routes. Apply grounded graphic surveillance noir: readable charcoal and bruised-umber institutional surfaces, bone rules and lettering, motivated sodium practical lights from visible fixtures, scarce cyan only on active Hidzu technology, crimson only at a genuinely controlled threat point, repeated cameras and identity-control wayfinding, restrained atmosphere, and clear human-scale traversal. Avoid fantasy, generic neon cyberpunk, broad glow, crushed blacks, decorative clutter, synthetic replacement architecture, and hidden operational facts.",
+    "promptTerminology": "Exact historical generation prompt: 'accepted GET-204' meant the technically validated, committed comparison baseline; it did not record requester visual acceptance.",
+    "rubric": {
+      "required": [
+        "readable-midtones",
+        "cold-institutional-surfaces",
+        "motivated-sodium-practicals",
+        "scarce-technology-cyan",
+        "crimson-only-confirmed-danger",
+        "repeated-hidzu-surveillance-grammar",
+        "human-scale-traversal-readability"
+      ],
+      "rejected": [
+        "generic-neon-cyberpunk",
+        "fantasy-ornament",
+        "crushed-blacks",
+        "broad-glow",
+        "decorative-clutter",
+        "geometry-drift",
+        "hidden-fact-leakage"
+      ],
+      "hierarchy": [
+        "objective-action",
+        "actor-placeholder",
+        "observation-threat",
+        "entrance-traversal",
+        "architecture",
+        "atmosphere"
+      ]
+    }
+  },
+  "grammar": {
+    "id": "level0-hidzu-visual-grammar-v1",
+    "path": "art/blender/get205/manifests/hidzu-visual-grammar.json",
+    "sha256": "51353dddff349aa0dd0fb8d3f74f6919eb663feae801b23d99c0c8c46749154b"
+  },
+  "surfaceTreatment": {
+    "window": {
+      "colorTokenId": "sodium-amber",
+      "roughness": 0.42,
+      "metallic": 0.08,
+      "emissionStrength": 1.25
+    },
+    "ground": [
+      { "sourceMaterial": "GET204 district substrate", "color": "#0e0f11", "roughness": 0.98 },
+      { "sourceMaterial": "GET204 asphalt", "color": "#121416", "roughness": 0.96 },
+      { "sourceMaterial": "GET204 service asphalt", "color": "#181412", "roughness": 0.96 },
+      { "sourceMaterial": "GET204 crossing substrate", "color": "#1b1c1e", "roughness": 0.94 },
+      { "sourceMaterial": "GET204 crossing stripe", "color": "#4d463c", "roughness": 0.82 },
+      { "sourceMaterial": "GET204 neutral road edge", "color": "#26292a", "roughness": 0.9 },
+      { "sourceMaterial": "GET204 plaza concrete", "color": "#292421", "roughness": 0.9 },
+      { "sourceMaterial": "GET204 sidewalk concrete", "color": "#212224", "roughness": 0.9 },
+      { "sourceMaterial": "GET204 structure sill", "color": "#161719", "roughness": 0.92 }
+    ],
+    "families": [
+      {
+        "materialFamily": "cold-institutional",
+        "mixFactor": 0.36,
+        "roughnessFloor": 0.62,
+        "metallicCeiling": 0.28
+      },
+      {
+        "materialFamily": "hidzu-controlled-access",
+        "mixFactor": 0.42,
+        "roughnessFloor": 0.62,
+        "metallicCeiling": 0.28
+      },
+      {
+        "materialFamily": "worn-civilian-edge",
+        "mixFactor": 0.28,
+        "roughnessFloor": 0.62,
+        "metallicCeiling": 0.28
+      }
+    ]
+  },
+  "materialOverrides": [
+    {
+      "placementId": "placement.public-market.small-j",
+      "materialFamily": "worn-civilian-edge",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.civic-north.small-f",
+      "materialFamily": "cold-institutional",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.hidzu-offices.small-i",
+      "materialFamily": "hidzu-controlled-access",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.logistics-annex.small-h",
+      "materialFamily": "hidzu-controlled-access",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.safehouse.small-e",
+      "materialFamily": "worn-civilian-edge",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.service-west.small-g",
+      "materialFamily": "worn-civilian-edge",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.transit-hall.small-a",
+      "materialFamily": "cold-institutional",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.service-south.medium-b",
+      "materialFamily": "worn-civilian-edge",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    },
+    {
+      "placementId": "placement.transit-services.small-c",
+      "materialFamily": "cold-institutional",
+      "surfaceColorTokenIds": ["ink", "bruised-umber", "bone"],
+      "provenance": "procedural-override"
+    }
+  ],
+  "additions": [
+    {
+      "id": "add.camera.public-approach",
+      "target": { "kind": "anchor", "id": "camera.public_approach" },
+      "kind": "camera-fixture",
+      "purpose": "surveillance",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.camera",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.camera.public-gate",
+      "target": { "kind": "anchor", "id": "camera.public_gate" },
+      "kind": "camera-fixture",
+      "purpose": "surveillance",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.camera",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.camera.service-gate",
+      "target": { "kind": "anchor", "id": "camera.service_gate" },
+      "kind": "camera-fixture",
+      "purpose": "surveillance",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.camera",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.camera.service-alley",
+      "target": { "kind": "anchor", "id": "camera.service_alley" },
+      "kind": "camera-fixture",
+      "purpose": "surveillance",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.camera",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.terminal.camera-loop",
+      "target": { "kind": "anchor", "id": "terminal.camera_loop" },
+      "kind": "terminal-marker",
+      "purpose": "mission-interaction",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.terminal",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.terminal.cache",
+      "target": { "kind": "anchor", "id": "terminal.cache_locker" },
+      "kind": "terminal-marker",
+      "purpose": "mission-interaction",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.terminal",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.terminal.transit",
+      "target": { "kind": "anchor", "id": "terminal.outbound_transit" },
+      "kind": "terminal-marker",
+      "purpose": "mission-interaction",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.terminal",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.identity.public",
+      "target": { "kind": "anchor", "id": "entrance.logistics.public" },
+      "kind": "identity-frame",
+      "purpose": "entrance",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.identity-frame",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.screen.civic",
+      "target": { "kind": "placement", "id": "placement.hidzu-offices.small-i" },
+      "kind": "public-screen",
+      "purpose": "required-civic-atmosphere",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.public-screen",
+      "messageTemplateIds": [
+        "message.safety",
+        "message.sentiment"
+      ],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.screen.logistics",
+      "target": { "kind": "placement", "id": "placement.logistics-annex.small-h" },
+      "kind": "public-screen",
+      "purpose": "objective-readability",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.public-screen",
+      "messageTemplateIds": [
+        "message.access",
+        "message.suppression"
+      ],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.screen.transit",
+      "target": { "kind": "placement", "id": "placement.transit-hall.small-a" },
+      "kind": "public-screen",
+      "purpose": "navigation",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.public-screen",
+      "messageTemplateIds": [
+        "message.transit",
+        "message.efficiency"
+      ],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.screen.civic-north",
+      "target": { "kind": "placement", "id": "placement.civic-north.small-f" },
+      "kind": "public-screen",
+      "purpose": "required-civic-atmosphere",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.public-screen",
+      "messageTemplateIds": [
+        "message.identity"
+      ],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.entrance.controlled",
+      "target": { "kind": "anchor", "id": "entrance.logistics.service" },
+      "kind": "controlled-entrance",
+      "purpose": "entrance",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.controlled-entrance",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.wayfinding.transit",
+      "target": { "kind": "anchor", "id": "terminal.outbound_transit" },
+      "kind": "transit-wayfinding",
+      "purpose": "navigation",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.transit-wayfinding",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.wayfinding.service",
+      "target": { "kind": "anchor", "id": "entrance.logistics.service" },
+      "kind": "service-wayfinding",
+      "purpose": "navigation",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.service-wayfinding",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.hide.service",
+      "target": { "kind": "anchor", "id": "hide.service_recess" },
+      "kind": "hiding-structure",
+      "purpose": "hiding",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.hiding-context",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.blend.queue",
+      "target": { "kind": "anchor", "id": "blend.public_queue" },
+      "kind": "blending-context",
+      "purpose": "blending",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.blending-context",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.threat.logistics",
+      "target": { "kind": "anchor", "id": "drone.launch" },
+      "kind": "threat-hook",
+      "purpose": "hazard",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.threat-hook",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.light.lira",
+      "target": { "kind": "anchor", "id": "contact.lira" },
+      "kind": "practical-light-source",
+      "purpose": "contact",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.public-screen",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.light.logistics",
+      "target": { "kind": "anchor", "id": "entrance.logistics.public" },
+      "kind": "practical-light-source",
+      "purpose": "entrance",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.controlled-entrance",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.light.safehouse",
+      "target": { "kind": "anchor", "id": "entrance.safehouse" },
+      "kind": "practical-light-source",
+      "purpose": "safehouse",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.public-screen",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.light.camera-terminal",
+      "target": { "kind": "anchor", "id": "terminal.camera_loop" },
+      "kind": "practical-light-source",
+      "purpose": "mission-interaction",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.terminal",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.light.transit",
+      "target": { "kind": "anchor", "id": "terminal.outbound_transit" },
+      "kind": "practical-light-source",
+      "purpose": "navigation",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.transit-wayfinding",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    },
+    {
+      "id": "add.light.brant",
+      "target": { "kind": "anchor", "id": "contact.brant" },
+      "kind": "practical-light-source",
+      "purpose": "contact",
+      "collisionEffect": "none",
+      "grammarId": "hidzu.public-screen",
+      "messageTemplateIds": [],
+      "provenance": "procedural-original"
+    }
+  ],
+  "practicalLights": [
+    {
+      "id": "light.lira",
+      "sourceAdditionId": "add.light.lira",
+      "anchorId": "contact.lira",
+      "visibleSource": true,
+      "colorTokenId": "sodium-amber",
+      "direction": "upper-left",
+      "stateIntensity": { "dusk": 0.8, "blue-hour": 1, "curfew": 0.72 }
+    },
+    {
+      "id": "light.logistics",
+      "sourceAdditionId": "add.light.logistics",
+      "anchorId": "entrance.logistics.public",
+      "visibleSource": true,
+      "colorTokenId": "sodium-amber",
+      "direction": "upper-left",
+      "stateIntensity": { "dusk": 0.72, "blue-hour": 1, "curfew": 0.86 }
+    },
+    {
+      "id": "light.safehouse",
+      "sourceAdditionId": "add.light.safehouse",
+      "anchorId": "entrance.safehouse",
+      "visibleSource": true,
+      "colorTokenId": "sodium-amber",
+      "direction": "upper-left",
+      "stateIntensity": { "dusk": 0.65, "blue-hour": 0.9, "curfew": 0.7 }
+    },
+    {
+      "id": "light.camera-terminal",
+      "sourceAdditionId": "add.light.camera-terminal",
+      "anchorId": "terminal.camera_loop",
+      "visibleSource": true,
+      "colorTokenId": "sodium-amber",
+      "direction": "upper-left",
+      "stateIntensity": { "dusk": 0.7, "blue-hour": 1, "curfew": 0.82 }
+    },
+    {
+      "id": "light.transit",
+      "sourceAdditionId": "add.light.transit",
+      "anchorId": "terminal.outbound_transit",
+      "visibleSource": true,
+      "colorTokenId": "sodium-amber",
+      "direction": "upper-left",
+      "stateIntensity": { "dusk": 0.72, "blue-hour": 0.92, "curfew": 0.76 }
+    },
+    {
+      "id": "light.brant",
+      "sourceAdditionId": "add.light.brant",
+      "anchorId": "contact.brant",
+      "visibleSource": true,
+      "colorTokenId": "sodium-amber",
+      "direction": "upper-left",
+      "stateIntensity": { "dusk": 0.68, "blue-hour": 0.9, "curfew": 0.72 }
+    }
+  ],
+  "publicMessageTemplates": [
+    {
+      "id": "message.safety",
+      "theme": "safety",
+      "copy": "A safer district begins with verified access.",
+      "scope": "visual-template",
+      "revealsFactIds": []
+    },
+    {
+      "id": "message.efficiency",
+      "theme": "efficiency",
+      "copy": "Clear routes. Predictable service.",
+      "scope": "visual-template",
+      "revealsFactIds": []
+    },
+    {
+      "id": "message.transit",
+      "theme": "transit",
+      "copy": "Transit continuity desk — west concourse.",
+      "scope": "visual-template",
+      "revealsFactIds": []
+    },
+    {
+      "id": "message.identity",
+      "theme": "identity-continuity",
+      "copy": "Keep your civic identity current.",
+      "scope": "visual-template",
+      "revealsFactIds": []
+    },
+    {
+      "id": "message.sentiment",
+      "theme": "civic-sentiment",
+      "copy": "Order makes opportunity visible.",
+      "scope": "visual-template",
+      "revealsFactIds": []
+    },
+    {
+      "id": "message.suppression",
+      "theme": "suppression",
+      "copy": "Unverified notices are removed for public safety.",
+      "scope": "visual-template",
+      "revealsFactIds": []
+    },
+    {
+      "id": "message.access",
+      "theme": "controlled-access",
+      "copy": "Authorized logistics personnel beyond this point.",
+      "scope": "visual-template",
+      "revealsFactIds": []
+    }
+  ],
+  "scheduleStates": [
+    {
+      "id": "dusk",
+      "geometrySignature": "6f64f467cff60f4426c693ae6baee126789e6f8ab4c97bcbd96c3ced702685fa",
+      "ambientColorTokenId": "bruised-umber",
+      "practicalLightMultiplier": 0.72,
+      "atmosphereOpacity": 0.08,
+      "architectureMidtoneFloor": 0.22
+    },
+    {
+      "id": "blue-hour",
+      "geometrySignature": "6f64f467cff60f4426c693ae6baee126789e6f8ab4c97bcbd96c3ced702685fa",
+      "ambientColorTokenId": "muted-teal",
+      "practicalLightMultiplier": 1,
+      "atmosphereOpacity": 0.12,
+      "architectureMidtoneFloor": 0.2
+    },
+    {
+      "id": "curfew",
+      "geometrySignature": "6f64f467cff60f4426c693ae6baee126789e6f8ab4c97bcbd96c3ced702685fa",
+      "ambientColorTokenId": "ink",
+      "practicalLightMultiplier": 0.82,
+      "atmosphereOpacity": 0.16,
+      "architectureMidtoneFloor": 0.18
+    }
+  ],
+  "captures": [
+    { "id": "1280x720-default", "width": 1280, "height": 720, "zoom": 0.78, "framing": "default", "targetId": "safehouse.spawn", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "1280x720-minimum", "width": 1280, "height": 720, "zoom": 0.6, "framing": "minimum", "targetId": "contact.lira", "schedule": "blue-hour", "evidence": "live-art" },
+    { "id": "1440x900-default", "width": 1440, "height": 900, "zoom": 0.78, "framing": "default", "targetId": "safehouse.spawn", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "1440x900-minimum", "width": 1440, "height": 900, "zoom": 0.6, "framing": "minimum", "targetId": "contact.lira", "schedule": "blue-hour", "evidence": "live-art" },
+    { "id": "1920x1080-default", "width": 1920, "height": 1080, "zoom": 0.78, "framing": "default", "targetId": "safehouse.spawn", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "1920x1080-minimum", "width": 1920, "height": 1080, "zoom": 0.6, "framing": "minimum", "targetId": "contact.lira", "schedule": "blue-hour", "evidence": "live-art" },
+    { "id": "proof.safehouse", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "safehouse.spawn", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "proof.dusk-street", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "contact.lira", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "proof.lira", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "contact.lira", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "proof.naila", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "contact.naila", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "proof.brant", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "contact.brant", "schedule": "blue-hour", "evidence": "live-art" },
+    { "id": "proof.public-route", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "entrance.logistics.public", "schedule": "dusk", "evidence": "live-art" },
+    { "id": "proof.curfew-route", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "entrance.logistics.service", "schedule": "curfew", "evidence": "live-art" },
+    { "id": "proof.camera-terminal", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "terminal.camera_loop", "schedule": "blue-hour", "evidence": "live-art" },
+    { "id": "proof.cache-manifest", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "objective.medkits", "schedule": "curfew", "evidence": "live-art" },
+    { "id": "proof.suspicious-hook", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "camera.public_gate", "schedule": "blue-hour", "evidence": "simulated-t8-hook" },
+    { "id": "proof.pursuit-hook", "width": 1440, "height": 900, "zoom": 0.78, "framing": "proof", "targetId": "drone.launch", "schedule": "curfew", "evidence": "simulated-t8-hook" }
+  ],
+  "output": {
+    "pathPrefix": "environment/level0/t5",
+    "fallbackProfile": "level0-greybox",
+    "budget": {
+      "maxTotalBytes": 50331648,
+      "maxTileBytes": 2097152
+    }
+  },
+  "exclusions": [
+    "topology-changes",
+    "gameplay-mechanics",
+    "raw-licensed-geometry",
+    "procedural-social-content",
+    "decorative-clutter"
+  ],
+  "provenance": {
+    "sourceTicket": "GET-204",
+    "treatmentTicket": "GET-205",
+    "generatedOutputsIgnored": true,
+    "rawLicensedGeometryCommitted": false
+  }
+}

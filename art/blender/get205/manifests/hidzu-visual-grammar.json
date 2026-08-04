@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "id": "level0-hidzu-visual-grammar-v1",
+  "ticket": "GET-205",
+  "palette": [
+    {
+      "id": "ink",
+      "role": "surface",
+      "hex": "#0b0d12",
+      "maximumCoverageRatio": 0.55
+    },
+    {
+      "id": "bone",
+      "role": "neutral-information",
+      "hex": "#d5c8b5",
+      "maximumCoverageRatio": 0.12
+    },
+    {
+      "id": "bruised-umber",
+      "role": "surface",
+      "hex": "#513b35",
+      "maximumCoverageRatio": 0.25
+    },
+    {
+      "id": "muted-teal",
+      "role": "neutral-information",
+      "hex": "#5b7775",
+      "maximumCoverageRatio": 0.08
+    },
+    {
+      "id": "sodium-amber",
+      "role": "practical-light",
+      "hex": "#d99a50",
+      "maximumCoverageRatio": 0.06
+    },
+    {
+      "id": "technology-cyan",
+      "role": "active-technology",
+      "hex": "#50bfd0",
+      "maximumCoverageRatio": 0.03
+    },
+    {
+      "id": "threat-crimson",
+      "role": "confirmed-danger",
+      "hex": "#8e4147",
+      "maximumCoverageRatio": 0.01
+    }
+  ],
+  "valueHierarchy": [
+    {
+      "role": "objective-action",
+      "rank": 1,
+      "luminanceRange": [0.62, 0.82]
+    },
+    {
+      "role": "actor-placeholder",
+      "rank": 2,
+      "luminanceRange": [0.48, 0.72]
+    },
+    {
+      "role": "observation-threat",
+      "rank": 3,
+      "luminanceRange": [0.42, 0.68]
+    },
+    {
+      "role": "entrance-traversal",
+      "rank": 4,
+      "luminanceRange": [0.34, 0.58]
+    },
+    {
+      "role": "architecture",
+      "rank": 5,
+      "luminanceRange": [0.2, 0.52]
+    },
+    {
+      "role": "atmosphere",
+      "rank": 6,
+      "luminanceRange": [0.08, 0.32]
+    }
+  ],
+  "entries": [
+    {
+      "id": "hidzu.camera",
+      "kind": "camera",
+      "semanticRole": "active-technology",
+      "colorTokenId": "technology-cyan",
+      "silhouette": "hooded-lens",
+      "glyph": "ring-connection",
+      "nonColorCues": ["directional-lens", "connection-ring"]
+    },
+    {
+      "id": "hidzu.terminal",
+      "kind": "terminal",
+      "semanticRole": "active-technology",
+      "colorTokenId": "technology-cyan",
+      "silhouette": "waist-high-console",
+      "glyph": "ring-connection",
+      "nonColorCues": ["screen-frame", "connection-ring"]
+    },
+    {
+      "id": "hidzu.identity-frame",
+      "kind": "identity-checkpoint",
+      "semanticRole": "caution",
+      "colorTokenId": "sodium-amber",
+      "silhouette": "twin-post-frame",
+      "glyph": "single-chevron",
+      "nonColorCues": ["twin-post-frame", "single-chevron"]
+    },
+    {
+      "id": "hidzu.public-screen",
+      "kind": "public-screen",
+      "semanticRole": "neutral-information",
+      "colorTokenId": "muted-teal",
+      "silhouette": "landscape-panel",
+      "glyph": "horizontal-rule",
+      "nonColorCues": ["landscape-panel", "horizontal-rule"]
+    },
+    {
+      "id": "hidzu.controlled-entrance",
+      "kind": "controlled-entrance",
+      "semanticRole": "caution",
+      "colorTokenId": "sodium-amber",
+      "silhouette": "bracketed-threshold",
+      "glyph": "single-chevron",
+      "nonColorCues": ["bracketed-threshold", "single-chevron"]
+    },
+    {
+      "id": "hidzu.transit-wayfinding",
+      "kind": "transit-wayfinding",
+      "semanticRole": "neutral-information",
+      "colorTokenId": "bone",
+      "silhouette": "low-direction-plinth",
+      "glyph": "split-arrow",
+      "nonColorCues": ["low-direction-plinth", "split-arrow"]
+    },
+    {
+      "id": "hidzu.service-wayfinding",
+      "kind": "service-wayfinding",
+      "semanticRole": "neutral-information",
+      "colorTokenId": "muted-teal",
+      "silhouette": "vertical-service-marker",
+      "glyph": "bar-code-stripes",
+      "nonColorCues": ["vertical-service-marker", "bar-code-stripes"]
+    },
+    {
+      "id": "hidzu.hiding-context",
+      "kind": "hiding-context",
+      "semanticRole": "surface",
+      "colorTokenId": "ink",
+      "silhouette": "recessed-service-bay",
+      "glyph": "deep-shadow-notch",
+      "nonColorCues": ["recessed-service-bay", "deep-shadow-notch"]
+    },
+    {
+      "id": "hidzu.blending-context",
+      "kind": "blending-context",
+      "semanticRole": "neutral-information",
+      "colorTokenId": "bone",
+      "silhouette": "queue-rail",
+      "glyph": "parallel-floor-bars",
+      "nonColorCues": ["queue-rail", "parallel-floor-bars"]
+    },
+    {
+      "id": "hidzu.threat-hook",
+      "kind": "threat-hook",
+      "semanticRole": "confirmed-danger",
+      "colorTokenId": "threat-crimson",
+      "silhouette": "solid-alarm-block",
+      "glyph": "double-chevron",
+      "nonColorCues": ["solid-alarm-block", "double-chevron"]
+    }
+  ],
+  "surveillanceStates": [
+    {
+      "id": "clear",
+      "colorTokenId": "technology-cyan",
+      "glyph": "ring-connection",
+      "silhouette": "open-ring",
+      "motionCue": "slow-sweep"
+    },
+    {
+      "id": "suspicious",
+      "colorTokenId": "sodium-amber",
+      "glyph": "single-chevron",
+      "silhouette": "bracketed-focus",
+      "motionCue": "tightening-pulse"
+    },
+    {
+      "id": "pursuit",
+      "colorTokenId": "threat-crimson",
+      "glyph": "double-chevron",
+      "silhouette": "solid-alarm-block",
+      "motionCue": "urgent-strobe"
+    }
+  ]
+}

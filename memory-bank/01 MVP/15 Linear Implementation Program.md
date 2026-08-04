@@ -327,7 +327,7 @@ The player is not asked to interact with Blender. The delivered environment must
 
 ### System rules and state transitions
 
-The art lifecycle is `LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → COMPOSITION_ACCEPTED → ALIGNED_EXPORT_FOUNDATION`. T4 stops at the accepted unchanged-kit foundation. Blender consumes gameplay-owned bounds, surfaces, footprints, entrances, occluders, and anchors; it may refine visual mass within the contract but cannot silently move required gameplay semantics. If composition reveals a genuine topology problem, reopen T3 through a documented layout decision rather than editing collision to fit a render.
+The art lifecycle is `LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → TECHNICALLY_VALIDATED_COMMIT → REQUESTER_COMPOSITION_ACCEPTANCE`. A validated committed T4 deliverable unlocks a reversible T5 trial while T4 remains non-terminal pending requester judgment. Blender consumes gameplay-owned bounds, surfaces, footprints, entrances, occluders, and anchors; it may refine visual mass within the contract but cannot silently move required gameplay semantics. If composition reveals a genuine topology problem, reopen T3 through a documented layout decision rather than editing collision to fit a render.
 
 One camera, scene, scale system, public-realm model, and upper-left light rig govern all geometry. Dusk, blue-hour, and curfew exports share camera, origin, layer boundaries, masks, anchors, and geometry. Raw licensed source and generated `.blend` files remain outside Git; only permitted flattened derivatives, manifests, recipes, metadata, and validators are versioned.
 
@@ -339,7 +339,7 @@ One camera, scene, scale system, public-realm model, and upper-left light rig go
 4. Measure architecture against actor placeholders, entrances, road/sidewalk widths, line-of-sight needs, and two-to-three-minute outer-loop geometry.
 5. Export aligned ground, architecture-back/front, lighting foundation, semantic masks, and anchor metadata; validate against T3.
 6. Capture 1280×720, 1440×900, and 1920×1080 at default framing and 0.60, including a full overview.
-7. Obtain requester acceptance of composition before T5 begins. Signage, fog, grading, or post-processing cannot compensate for a failed city gate.
+7. Obtain requester acceptance before T4 can be accepted, promoted, or treated as final. A technically validated committed T4 may unlock the reversible T5 trial, but signage, fog, grading, or post-processing cannot convert weak composition into accepted composition.
 
 ### Content requirements
 
@@ -371,7 +371,7 @@ Implements `GDR-PROD-004`, `GDR-ART-002`, `GDR-ART-003`, `GDR-ART-004`, `GDR-SUP
 
 ### Human-play acceptance
 
-At all three target viewports and both default/0.60 framing, a reviewer can trace all three loops, distinguish public and service routes, locate safehouse/contact/depot landmarks at the precision the player knows, and follow entrances without debug overlays. A normal-control traversal shows believable street scale, no blocked required anchor, and no art/collision disagreement. Overview captures show continuous urban mass, coherent angle/scale/light, no empty board, no repeated plate, and no corruption. Requester screenshot acceptance is mandatory before T5.
+At all three target viewports and both default/0.60 framing, a reviewer can trace all three loops, distinguish public and service routes, locate safehouse/contact/depot landmarks at the precision the player knows, and follow entrances without debug overlays. A normal-control traversal shows believable street scale, no blocked required anchor, and no art/collision disagreement. Overview captures show continuous urban mass, coherent angle/scale/light, no empty board, no repeated plate, and no corruption. Requester screenshot acceptance is mandatory before T4 final acceptance or runtime promotion; it is not a prerequisite for the explicitly provisional T5 trial.
 
 ### Documentation and validation obligations
 
@@ -385,16 +385,16 @@ Update the Art Direction production inventory, Architecture data flow only where
 
 ### Why this ticket exists
 
-An unchanged asset kit can provide coherent architecture but cannot by itself express The Getaway's identity. T5 adds the second visual gate: a consistent Hidzu-controlled Tokyo where corporate safety, identity scoring, logistics, public information, and surveillance are understandable through repeated visual grammar. It corrects the previous drift into fantasy Neo, generic neon cyberpunk, broad cyan glow, darkness, and atmospheric clutter without destabilizing the city composition accepted in T4.
+An unchanged asset kit can provide coherent architecture but cannot by itself express The Getaway's identity. T5 adds the second visual gate over the technically validated, committed T4 composition: a consistent Hidzu-controlled Tokyo where corporate safety, identity scoring, logistics, public information, and surveillance are understandable through repeated visual grammar. It corrects the previous drift into fantasy Neo, generic neon cyberpunk, broad cyan glow, darkness, and atmospheric clutter without representing T4 as requester-accepted.
 
 ### Player promise
 
-The same accepted city now feels specifically governed by Hidzu. The player can read where identity is checked, which devices are active/connected, how cameras relate to terminals, where public service becomes controlled access, and when danger is merely ambient versus confirmed. Cold institutional surfaces and sodium practical light preserve readable midtones; cyan is scarce technology, crimson is real threat, and the protagonist/objective remain stronger than ambience. Dusk, blue hour, and curfew feel distinct but remain one city.
+The same technically validated city now receives a provisional Hidzu treatment. The player can read where identity is checked, which devices are active/connected, how cameras relate to terminals, where public service becomes controlled access, and when danger is merely ambient versus confirmed. Cold institutional surfaces and sodium practical light preserve readable midtones; cyan is scarce technology, crimson is real threat, and the protagonist/objective remain stronger than ambience. Dusk, blue hour, and curfew feel distinct but remain one city. This promise remains unaccepted until requester review.
 
 ### Starting state
 
-- T4's unchanged-kit composition, projection, masks, anchors, and fixed captures are requester-accepted.
-- The exact Direction B artifact must be registered under `OPEN-ART-001` before style production is judged against it.
+- T4's unchanged-kit composition, projection, masks, anchors, and fixed captures are technically validated and committed. Requester acceptance remains required before T4 is final or Done.
+- The original Direction B artifact is unavailable. A replacement artifact, source frame, hash, generation provenance, prompt, rubric, and rejection criteria must be registered under `OPEN-ART-001` before the provisional style trial is judged; it remains non-final until requester review.
 - Hidzu's institutional role is canonical, but Takahiro's formal title, district name, Japanese diegetic language, safehouse exterior, and crossfade details remain explicit OPEN items.
 - T5 may change materials, signage, lighting, civic/surveillance props, atmosphere, and flattened derivatives; it may not silently change topology, required anchors, device mechanics, or route viability.
 
@@ -404,7 +404,7 @@ The player leaves the safehouse into a district that first reads as ordered civi
 
 ### System rules and state transitions
 
-The T5 lifecycle is `COMPOSITION_ACCEPTED → HIDZU_IDENTITY_PASS → STATE-LAYER_EXPORT → LIVE_VISUAL_ACCEPTANCE`. T5 consumes but does not redefine T3/T4 gameplay semantics. Dusk, blue-hour, and curfew layers stay aligned; schedule state selects atmosphere and public treatment, never a second geometry. Active technology cyan appears only on declared Hidzu devices/connections. Amber carries objective/time/curfew. Crimson appears only for confirmed danger/Pursuit. Neutral information uses muted teal/bone. Lighting remains motivated by visible sources with consistent upper-left direction.
+The T5 lifecycle is `T4_TECHNICALLY_VALIDATED_COMMIT → PROVISIONAL_HIDZU_IDENTITY_PASS → LOCAL_STATE_LAYER_EXPORT → REQUESTER_VISUAL_ACCEPTANCE → ENTITLEMENT_BACKED_RUNTIME_PROMOTION`. T5 consumes but does not redefine T3/T4 gameplay semantics. Dusk, blue-hour, and curfew layers stay aligned; schedule state selects atmosphere and public treatment, never a second geometry. Active technology cyan appears only on declared Hidzu devices/connections. Amber carries objective/time/curfew. Crimson appears only for confirmed danger/Pursuit. Neutral information uses muted teal/bone. Lighting remains motivated by visible sources with consistent upper-left direction.
 
 Every placed or modified object must support navigation, surveillance, hiding/blending, line-of-sight cover, hazard, entrance, contact, mission interaction, safehouse, objective readability, or required civic atmosphere. Public screens and feed surfaces communicate authored Hidzu claims but never leak undiscovered operational facts.
 
@@ -412,7 +412,7 @@ Every placed or modified object must support navigation, surveillance, hiding/bl
 
 1. Resolve/register the Direction B reference and convert it into explicit value, palette, material, silhouette, surveillance, UI-adjacency, and rejection criteria.
 2. Define Hidzu environmental grammar: identity frames, cameras, connected-device markers, terminals, checkpoint language, public screens, propaganda, transit/service wayfinding, and warnings.
-3. Apply material/value treatment while preserving accepted scale, street hierarchy, and midtone readability.
+3. Apply material/value treatment while preserving the technically validated scale, street hierarchy, and midtone readability.
 4. Author aligned dusk, blue-hour, and curfew lighting/atmosphere; measure crossfade and performance after the OPEN gates close.
 5. Integrate gameplay-serving hiding/blending structures, contact spaces, terminal/entrance cues, and required hazards without clutter.
 6. Inspect normal play, Observation, Suspicious/Pursuit presentation hooks, minimum zoom, and every fixed viewport.
@@ -441,7 +441,7 @@ Visual acceptance fails on generic neon cyberpunk, fantasy ornament, crushed cur
 
 ### Dependencies and OPEN blockers
 
-Depends on a validated committed T4 composition. Blocks T6 and T10 visual integration. Critical acceptance blockers are `OPEN-ART-001` and `OPEN-NAR-015`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, and `OPEN-ART-004`. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
+Depends on a validated committed T4 composition. Blocks T6 and T10 visual integration. Critical acceptance blockers are `OPEN-ART-001` and `OPEN-NAR-015`; `OPEN-ART-002` separately blocks any kit-derived runtime promotion or committed flattened derivative while acquisition-specific entitlement is unavailable. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, `OPEN-ART-004`, and the color-independent visual-state portion of `OPEN-ACC-001`. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
 
 ### Canonical decisions/spec sections
 
@@ -471,7 +471,7 @@ The player chooses one of four distinct contemporary protagonist appearances and
 
 ### Starting state
 
-- T5 has locked the accepted graphic-surveillance-noir world language; T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
+- T5 provides a technically validated, committed provisional graphic-surveillance-noir world-language pass; requester acceptance remains its final visual gate. T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
 - Exactly twelve world actor sets are required: four protagonist presets, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
 - The matrix is 64×96 frames, eight directions, four frames, and `idle`/`move`/`interact`; attack is not required.
 - Scale begins around 15% above strict architectural perspective, but exact scale/occupancy is blocked by `OPEN-ART-003`.
@@ -490,7 +490,7 @@ The protagonist appearance transitions once from unselected to one authored pres
 ### Internal milestones and proof gates
 
 1. Resolve biographies/hardware boundaries needed for visual references without authoring final dialogue.
-2. Produce a shared scale, costume, silhouette, palette, portrait, and anchor reference tied to the accepted world.
+2. Produce a shared scale, costume, silhouette, palette, portrait, and anchor reference tied to the current validated provisional world treatment.
 3. Create four protagonist sets, then prove character-creation selection and world persistence with placeholder shell integration.
 4. Create Lira/Naila/Brant; prove world/portrait identity continuity.
 5. Create two security and three civilian sets; prove role readability in public/curfew contexts.
@@ -504,7 +504,7 @@ Maintain actor/portrait manifests, stable preset/actor IDs, source references, a
 
 ### World/UI/audio/George feedback
 
-Facing, foot contact, locomotion, and interaction must be readable against accepted city values without labels or x-ray effects. Character creation and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's AR art is private, restrained, visually distinct from a physical actor, and cannot obscure route geometry or imply that other characters see him.
+Facing, foot contact, locomotion, and interaction must be readable against the current validated city values without labels or x-ray effects. Character creation and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's AR art is private, restrained, visually distinct from a physical actor, and cannot obscure route geometry or imply that other characters see him.
 
 ### Failure and recovery
 
@@ -642,7 +642,7 @@ The player can look at a street and understand who or what is watching, how conc
 
 - T3 provides layout anchors, shared geometry, observation, movement, interaction, time/pause, devices, schedules, and persistence infrastructure.
 - T7 provides deterministic checks, Health, Paranoia, build state, facts seam, and failure payloads.
-- T4/T5 provide accepted visual geometry and surveillance grammar; T6 provides security/civilian actors.
+- T4/T5 provide technically validated, committed provisional visual geometry and surveillance grammar; requester acceptance remains their final visual gate. T6 provides security/civilian actors.
 - Network starts `Clear`, with no last-known position and only discovered devices exposed to player knowledge.
 - Exact camera rates, confirmation rules, search timings, loop duration, civilian/security schedules, Health costs, Paranoia events, and context placement remain T8 acceptance decisions; their recorded `OPEN-*` recommendations may be trialed through replaceable authored data.
 
