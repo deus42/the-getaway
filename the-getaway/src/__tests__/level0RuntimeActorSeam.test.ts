@@ -4,6 +4,8 @@ jest.mock('phaser', () => ({
 }));
 
 import { createInitialLevel0RunState } from '../game/level0/runtime/safehouse';
+import { createTestLevel0RunState } from '../game/level0/testing/createTestLevel0RunState';
+import { createConfirmedLevel0Sample } from '../game/level0/rpg/creation';
 import {
   preloadCharacterSpriteSheetRefs,
 } from '../game/visual/entities/characterSpriteAssets';
@@ -17,14 +19,27 @@ const createMockScene = (): Phaser.Scene => ({
 } as unknown as Phaser.Scene);
 
 describe('Level 0 actor runtime seam', () => {
-  it('starts new runs with the first grounded civilian appearance', () => {
-    expect(createInitialLevel0RunState('actor-default').identity.appearancePresetId).toBe(
+  it('requires a player-confirmed identity and build instead of a production sample default', () => {
+    expect(() => createInitialLevel0RunState(
+      'actor-missing-identity',
+      undefined as never,
+      undefined as never
+    )).toThrow();
+  });
+
+  it('keeps test fixtures on the first grounded civilian appearance', () => {
+    expect(createTestLevel0RunState('actor-default').identity.appearancePresetId).toBe(
       'player_civilian_01'
     );
   });
 
   it('rejects an appearance outside the grounded protagonist roster', () => {
-    expect(() => createInitialLevel0RunState('actor-invalid', 'hero_operative')).toThrow(
+    const sample = createConfirmedLevel0Sample('social_mental', 'Mara');
+    expect(() => createInitialLevel0RunState(
+      'actor-invalid',
+      { ...sample.identity, appearancePresetId: 'hero_operative' },
+      sample.build
+    )).toThrow(
       'Unknown Level 0 appearance preset: hero_operative'
     );
   });

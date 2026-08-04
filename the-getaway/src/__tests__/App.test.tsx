@@ -15,6 +15,22 @@ jest.mock('../components/level0/Level0GameCanvas', () => {
   };
 });
 
+const startNormalRun = async (callsign = 'Mara') => {
+  fireEvent.click(await screen.findByTestId('level0-new-game'));
+  fireEvent.change(screen.getByTestId('level0-callsign'), { target: { value: callsign } });
+  fireEvent.click(screen.getByTestId('level0-create-attribute-mental-increase'));
+  fireEvent.click(screen.getByTestId('level0-create-attribute-mental-increase'));
+  fireEvent.click(screen.getByTestId('level0-create-attribute-social-increase'));
+  fireEvent.click(screen.getByTestId('level0-create-attribute-social-increase'));
+  for (let index = 0; index < 2; index += 1) {
+    fireEvent.click(screen.getByTestId('level0-create-skill-composure-increase'));
+    fireEvent.click(screen.getByTestId('level0-create-skill-insight-increase'));
+    fireEvent.click(screen.getByTestId('level0-create-skill-influence-increase'));
+  }
+  fireEvent.click(screen.getByTestId('level0-creation-confirm'));
+  await screen.findByTestId('level0-game-canvas');
+};
+
 describe('canonical Level 0 runtime entry', () => {
   beforeEach(() => {
     store.dispatch(resetGame());
@@ -35,9 +51,9 @@ describe('canonical Level 0 runtime entry', () => {
     expect(await screen.findByTestId('level0-start-menu')).toBeInTheDocument();
     expect(screen.getByTestId('level0-continue')).toBeDisabled();
 
-    fireEvent.click(screen.getByTestId('level0-new-game'));
+    await startNormalRun();
 
-    expect(await screen.findByTestId('level0-game-canvas')).toBeInTheDocument();
+    expect(screen.getByTestId('level0-game-canvas')).toBeInTheDocument();
     expect(screen.getByTestId('level0-runtime-hud')).toBeInTheDocument();
     expect(store.getState().level0Runtime.status).toBe('active');
     expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(18 * 60 + 30);
@@ -51,8 +67,8 @@ describe('canonical Level 0 runtime entry', () => {
     expect(await screen.findByTestId('retired-save-notice')).toBeInTheDocument();
     expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).not.toBeNull();
 
-    fireEvent.click(screen.getByTestId('level0-new-game'));
-    expect(await screen.findByTestId('level0-game-canvas')).toBeInTheDocument();
+    await startNormalRun();
+    expect(screen.getByTestId('level0-game-canvas')).toBeInTheDocument();
     expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).toBeNull();
   });
 
@@ -67,7 +83,11 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('applies safehouse actions and persists one operation-departure Retry snapshot', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
+    act(() => {
+      const run = store.getState().level0Runtime.run!;
+      store.dispatch(hydrateLevel0Run({ ...run, mission: 'L0_PREPARATION' }));
+    });
 
     fireEvent.click(await screen.findByTestId('safehouse-wait'));
     expect(screen.getByTestId('safehouse-confirmation')).toBeInTheDocument();
@@ -86,7 +106,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('pauses the clock while observation is active', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     fireEvent.click(screen.getByTestId('level0-observation'));
 
     expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toContain('observation');
@@ -95,7 +115,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('owns and releases the safehouse confirmation pause without applying a cancelled action', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     fireEvent.click(await screen.findByTestId('safehouse-rest'));
 
     expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toContain('safehouse_action');
@@ -107,7 +127,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('gives a safehouse confirmation exclusive keyboard and action ownership', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     fireEvent.click(await screen.findByTestId('safehouse-rest'));
 
     expect(screen.getByTestId('level0-runtime-background')).toHaveAttribute('inert');
@@ -120,7 +140,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('cancels an active safehouse modal on Escape instead of stacking a menu pause', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     fireEvent.click(await screen.findByTestId('safehouse-rest'));
 
     fireEvent.keyDown(window, { key: 'Escape' });
@@ -132,7 +152,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('resumes a menu-saved run without restoring transient pause ownership', async () => {
     const first = render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     fireEvent.click(screen.getByRole('button', { name: /menu/i }));
 
     const persisted = JSON.parse(window.localStorage.getItem(LEVEL0_AUTOSAVE_KEY)!);
@@ -149,7 +169,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('shows an exact paused deadline failure at 24:00', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
 
     act(() => {
       store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 11 * 60 * 1_000 }));
@@ -162,7 +182,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('gives a terminal failure overlay exclusive action ownership', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     act(() => {
       store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 11 * 60 * 1_000 }));
     });
@@ -180,7 +200,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('warns when a confirmed Wait or Rest will cross the operation deadline', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     act(() => {
       store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 10.5 * 60 * 1_000 }));
     });
@@ -199,7 +219,7 @@ describe('canonical Level 0 runtime entry', () => {
 
   it('does not promise deadline failure after both completion requirements are met', async () => {
     render(<App />);
-    fireEvent.click(await screen.findByTestId('level0-new-game'));
+    await startNormalRun();
     act(() => {
       store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 10.5 * 60 * 1_000 }));
       const run = store.getState().level0Runtime.run!;

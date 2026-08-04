@@ -1,5 +1,10 @@
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
 import { resolvePlayerSpriteSetId } from '../../../content/characters/spriteManifest';
+import { validateLevel0CreationDraft } from '../rpg/creation';
+import {
+  applyLevel0ResourceEffect,
+  createLevel0ResourceEffect,
+} from '../rpg/resources';
 import {
   acquirePauseOwner,
   createWorldClockState,
@@ -7,13 +12,15 @@ import {
 } from './worldClock';
 import type {
   Level0RunState,
+  PlayerBuild,
+  PlayerIdentity,
   RetrySnapshot,
   SafehouseActionAvailability,
   SafehouseActionId,
 } from './types';
 
-export const LEVEL0_RUN_SCHEMA_VERSION = 1;
-export const LEVEL0_RUNTIME_CONTENT_VERSION = 'level0-runtime-v1';
+export const LEVEL0_RUN_SCHEMA_VERSION = 2;
+export const LEVEL0_RUNTIME_CONTENT_VERSION = 'level0-runtime-v2';
 
 export const LEVEL0_CONTENT_VERSIONS = {
   layout: LEVEL0_LAYOUT_CONTRACT.id,
@@ -32,46 +39,45 @@ const getRequiredAnchorPosition = (anchorId: string) => {
 
 export const createInitialLevel0RunState = (
   sessionId: string,
-  appearancePresetId = 'player_civilian_01'
+  identity: PlayerIdentity,
+  build: PlayerBuild
 ): Level0RunState => {
   if (!sessionId.trim()) {
     throw new Error('Level 0 session ID is required');
   }
-  if (!resolvePlayerSpriteSetId(appearancePresetId)) {
-    throw new Error(`Unknown Level 0 appearance preset: ${appearancePresetId}`);
+  if (!resolvePlayerSpriteSetId(identity.appearancePresetId)) {
+    throw new Error(`Unknown Level 0 appearance preset: ${identity.appearancePresetId}`);
+  }
+  const confirmed = validateLevel0CreationDraft({
+    callsign: identity.callsign,
+    appearancePresetId: identity.appearancePresetId,
+    attributes: { ...build.attributes },
+    skills: { ...build.skills },
+  });
+  if (!confirmed.valid || build.level !== 1 || build.xp !== 0 ||
+    build.unspentSkillPoints !== 0 || build.unspentAttributePoints !== 0) {
+    throw new Error('Level 0 requires a valid confirmed creation build');
   }
 
   return {
     schemaVersion: LEVEL0_RUN_SCHEMA_VERSION,
     contentVersions: { ...LEVEL0_CONTENT_VERSIONS },
     sessionId,
-    identity: {
-      callsign: '',
-      appearancePresetId,
-    },
-    build: {
-      attributes: { physical: 1, mental: 1, social: 1, technical: 1 },
-      skills: {
-        stealth: 0,
-        evasion: 0,
-        awareness: 0,
-        composure: 0,
-        insight: 0,
-        influence: 0,
-        systems: 0,
-        opsec: 0,
-      },
-      level: 1,
-      xp: 0,
-      unspentSkillPoints: 0,
-      unspentAttributePoints: 0,
+    identity: { ...identity, callsign: confirmed.normalizedCallsign },
+    build: JSON.parse(JSON.stringify(build)) as PlayerBuild,
+    rpg: {
+      resolvedChecks: {},
+      resourceEvents: [],
+      announcedParanoiaPenalties: [],
+      awardedMilestoneIds: [],
+      xpEvents: [],
+      pendingLevelUps: 0,
+      allocationEvents: [],
     },
     health: 100,
     paranoia: 0,
     worldClock: createWorldClockState(),
-    // T3 starts at preparation so departure/Retry can be proven before T7/T9/T10
-    // insert creation, Lira, and authored preparation content.
-    mission: 'L0_PREPARATION',
+    mission: 'L0_SAFEHOUSE_INTRO',
     objectives: {
       'objective.runtime.explore': {
         objectiveId: 'objective.runtime.explore',
@@ -118,6 +124,7 @@ export const createInitialLevel0RunState = (
       transitValidated: false,
     },
     failureCause: null,
+    failureSourceId: null,
     failureMissingRequirements: [],
   };
 };
@@ -153,6 +160,9 @@ export const evaluateSafehouseAction = (
     blockedReasonId,
   });
 
+  if (run.mission === 'L0_FAILED' || run.mission === 'L0_COMPLETE') {
+    return blocked('safehouse.blocked.terminal');
+  }
   if (!run.safehouse.insideBoundary) {
     return blocked('safehouse.blocked.not_inside');
   }
@@ -203,6 +213,7 @@ const applyClockResult = (
     worldClock,
     mission: deadlineFailure ? 'L0_FAILED' : run.mission,
     failureCause: deadlineFailure ? 'failure.deadline' : run.failureCause,
+    failureSourceId: deadlineFailure ? 'clock.deadline' : run.failureSourceId,
     failureMissingRequirements: deadlineEvent?.kind === 'deadline-failure'
       ? [...deadlineEvent.missing]
       : run.failureMissingRequirements,
@@ -249,11 +260,33 @@ export const applySafehouseRest = (run: Level0RunState): SafehouseEffectResult =
     };
   }
   const clockResult = jumpWorldClockMinutes(run.worldClock, 30, run.completion);
-  const recovered = {
-    ...applyClockResult(run, clockResult),
-    health: 100,
-    paranoia: Math.max(0, run.paranoia - 40),
-  };
+  let recovered = applyClockResult(run, clockResult);
+  if (recovered.mission !== 'L0_FAILED' && recovered.health < 100) {
+    recovered = applyLevel0ResourceEffect(recovered, createLevel0ResourceEffect({
+      eventId: `safehouse.rest.health.${recovered.worldClock.currentMinute}`,
+      resource: 'health',
+      amount: 100 - recovered.health,
+      sourceId: 'safehouse.rest',
+      feedbackId: 'resource.health.safehouse_rest',
+      worldMinute: recovered.worldClock.currentMinute,
+      retryTreatment: recovered.safehouse.departureSnapshotCreated
+        ? 'discard-on-retry'
+        : 'captured-at-departure',
+    })).run;
+  }
+  if (recovered.mission !== 'L0_FAILED' && recovered.paranoia > 0) {
+    recovered = applyLevel0ResourceEffect(recovered, createLevel0ResourceEffect({
+      eventId: `safehouse.rest.paranoia.${recovered.worldClock.currentMinute}`,
+      resource: 'paranoia',
+      amount: -40,
+      sourceId: 'safehouse.rest',
+      feedbackId: 'resource.paranoia.safehouse_rest',
+      worldMinute: recovered.worldClock.currentMinute,
+      retryTreatment: recovered.safehouse.departureSnapshotCreated
+        ? 'discard-on-retry'
+        : 'captured-at-departure',
+    })).run;
+  }
   return {
     applied: true,
     run: recordSafehouseAction(recovered, 'rest'),
@@ -292,6 +325,7 @@ export const departLevel0Operation = (
       facing: { ...run.player.facing },
     },
     failureCause: null,
+    failureSourceId: null,
     failureMissingRequirements: [],
   };
 
@@ -302,6 +336,7 @@ export const departLevel0Operation = (
     createdAtWorldMinute: departedRun.worldClock.currentMinute,
     identity: departedRun.identity,
     build: departedRun.build,
+    rpg: departedRun.rpg,
     health: departedRun.health,
     paranoia: departedRun.paranoia,
     worldClock: departedRun.worldClock,
@@ -328,6 +363,7 @@ export const restoreLevel0RetrySnapshot = (snapshot: RetrySnapshot): Level0RunSt
     sessionId: restored.sessionId,
     identity: restored.identity,
     build: restored.build,
+    rpg: restored.rpg,
     health: restored.health,
     paranoia: restored.paranoia,
     worldClock: { ...restored.worldClock, pauseOwners: [] },
@@ -342,6 +378,7 @@ export const restoreLevel0RetrySnapshot = (snapshot: RetrySnapshot): Level0RunSt
     runtimeGeneration: restored.runtimeGeneration,
     completion: restored.completion,
     failureCause: null,
+    failureSourceId: null,
     failureMissingRequirements: [],
   };
 };

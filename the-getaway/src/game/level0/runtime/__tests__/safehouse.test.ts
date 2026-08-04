@@ -1,20 +1,25 @@
 import {
   applySafehouseRest,
   applySafehouseWait,
-  createInitialLevel0RunState,
   departLevel0Operation,
   evaluateSafehouseAction,
   restoreLevel0RetrySnapshot,
 } from '../safehouse';
+import { createTestLevel0RunState } from '../../testing/createTestLevel0RunState';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../../content/levels/level0/layoutContract';
 
 const DEPARTURE_POSITION = LEVEL0_LAYOUT_CONTRACT.anchors.find(
   (anchor) => anchor.id === 'safehouse.departure'
 )!.position;
 
+const prepareForDeparture = (run: ReturnType<typeof createTestLevel0RunState>) => ({
+  ...run,
+  mission: 'L0_PREPARATION' as const,
+});
+
 describe('Level 0 safehouse and departure Retry foundation', () => {
   it('makes safehouse actions explicit and blocks them without clearing active surveillance', () => {
-    const clearRun = createInitialLevel0RunState('run-safehouse');
+    const clearRun = createTestLevel0RunState('run-safehouse');
     expect(evaluateSafehouseAction(clearRun, 'wait')).toEqual({
       actionId: 'wait',
       available: true,
@@ -44,7 +49,7 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
 
   it('waits and rests in confirmed thirty-minute effects', () => {
     const run = {
-      ...createInitialLevel0RunState('run-rest'),
+      ...createTestLevel0RunState('run-rest'),
       health: 42,
       paranoia: 60,
     };
@@ -60,10 +65,22 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
     expect(rested.run.worldClock.currentMinute).toBe(19 * 60);
     expect(rested.run.health).toBe(100);
     expect(rested.run.paranoia).toBe(20);
+    expect(rested.run.rpg.resourceEvents).toEqual([
+      expect.objectContaining({
+        resource: 'health',
+        amount: 58,
+        sourceId: 'safehouse.rest',
+      }),
+      expect.objectContaining({
+        resource: 'paranoia',
+        amount: -40,
+        sourceId: 'safehouse.rest',
+      }),
+    ]);
   });
 
   it('crosses midnight into a paused failure with exact missing requirements', () => {
-    const run = createInitialLevel0RunState('run-deadline-wait');
+    const run = createTestLevel0RunState('run-deadline-wait');
     run.worldClock.currentMinute = 23 * 60 + 45;
     run.worldClock.currentWorldMillisecond = run.worldClock.currentMinute * 60_000;
     run.completion.medkitsReturned = true;
@@ -72,12 +89,13 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
 
     expect(waited.run.mission).toBe('L0_FAILED');
     expect(waited.run.failureCause).toBe('failure.deadline');
+    expect(waited.run.failureSourceId).toBe('clock.deadline');
     expect(waited.run.failureMissingRequirements).toEqual(['transit-validated']);
     expect(waited.run.worldClock.pauseOwners).toContain('failure');
   });
 
   it('creates one immutable departure snapshot after preparation', () => {
-    const prepared = createInitialLevel0RunState('run-departure');
+    const prepared = prepareForDeparture(createTestLevel0RunState('run-departure'));
     const first = departLevel0Operation(prepared, { ...DEPARTURE_POSITION });
 
     expect(first.created).toBe(true);
@@ -105,8 +123,40 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
     expect(repeated.snapshot).toBeNull();
   });
 
+  it('does not create an operation Retry before preparation is complete', () => {
+    const intro = createTestLevel0RunState('run-intro');
+    const departure = departLevel0Operation(intro, { ...DEPARTURE_POSITION });
+
+    expect(departure).toEqual({ run: intro, snapshot: null, created: false });
+  });
+
+  it('blocks every safehouse action after failure or completion', () => {
+    const run = createTestLevel0RunState('run-terminal-safehouse');
+    const failed = {
+      ...run,
+      mission: 'L0_FAILED' as const,
+      failureCause: 'failure.capture' as const,
+      failureSourceId: 'interception.identity_gate',
+    };
+    const completed = { ...run, mission: 'L0_COMPLETE' as const };
+
+    expect(evaluateSafehouseAction(failed, 'rest')).toMatchObject({
+      available: false,
+      blockedReasonId: 'safehouse.blocked.terminal',
+    });
+    expect(evaluateSafehouseAction(completed, 'wait')).toMatchObject({
+      available: false,
+      blockedReasonId: 'safehouse.blocked.terminal',
+    });
+    expect(applySafehouseRest(failed)).toMatchObject({
+      applied: false,
+      run: failed,
+      blockedReasonId: 'safehouse.blocked.terminal',
+    });
+  });
+
   it('preserves unrelated additive pause owners during departure', () => {
-    const prepared = createInitialLevel0RunState('run-departure-paused');
+    const prepared = prepareForDeparture(createTestLevel0RunState('run-departure-paused'));
     prepared.worldClock.pauseOwners = ['safehouse_action'];
 
     const departure = departLevel0Operation(prepared, { ...DEPARTURE_POSITION });
@@ -116,7 +166,7 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
 
   it('restores the complete departure state without transient pause ownership', () => {
     const departure = departLevel0Operation(
-      createInitialLevel0RunState('run-restore'),
+      prepareForDeparture(createTestLevel0RunState('run-restore')),
       { ...DEPARTURE_POSITION }
     );
     const snapshot = departure.snapshot!;
@@ -127,5 +177,6 @@ describe('Level 0 safehouse and departure Retry foundation', () => {
     expect(restored.player.position).toEqual(DEPARTURE_POSITION);
     expect(restored.worldClock.pauseOwners).toEqual([]);
     expect(restored.safehouse.insideBoundary).toBe(false);
+    expect(restored.rpg).toEqual(snapshot.rpg);
   });
 });

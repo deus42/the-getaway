@@ -197,7 +197,7 @@ Ownership:
 
 T3 owns persistence infrastructure; T7 owns RPG payload, validation, and player-facing behavior.
 
-Exit gate: at least two different builds produce different practical dialogue, recognition, systems, and escape options while both can complete Level 0.
+Exit gate: at least two different builds are created through normal New Game controls, persist exactly, and produce different results in the reusable visible check-breakdown component for the same canonical requirement. Focused domain proof covers facts, resources, progression, failure, and Retry without inventing unfinished mission transitions. T9/T10 re-prove those differences through normal practical dialogue, recognition, systems, and escape options while both can complete Level 0; those later integration scenarios are not a blocker to delivering the T7 foundation.
 
 ## Gate 8 — surveillance and noncombat escape
 

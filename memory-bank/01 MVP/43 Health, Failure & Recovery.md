@@ -52,8 +52,8 @@ Health makes physical consequences real without turning Level 0 into a damage si
 - Health is an integer range of `0–100`, begins at `100`, and is always visible.
 - Health changes only from visible authored physical consequences. Health `0` is fatal.
 - Safehouse Rest advances `30` world minutes, restores Health to `100`, and removes `40` Paranoia.
-- Exact minor, dangerous, and severe Health costs are unresolved in `OPEN-HLT-001`; only its recorded recommendation may be used as reversible provisional authored data until accepted.
-- Smaller trusted-conversation and difficult-recovery Paranoia relief is unresolved in `OPEN-PAR-002`; only its recorded recommendation may be trialed, with explicit anti-farming behavior.
+- Exact minor, dangerous, and severe Health costs are unresolved in `OPEN-HLT-001`. The isolated provisional authoring table is `minor −10`, `dangerous −25`, and `severe −40`; those values remain replaceable and unaccepted until live encounter review.
+- Smaller trusted-conversation and difficult-recovery Paranoia relief is unresolved in `OPEN-PAR-002`. The isolated provisional authoring table is `trusted conversation −10 once` and `difficult successful recovery −5 once`; stable event IDs enforce anti-farming and final content assignment remains T8–T10 work.
 - Exact Paranoia event amounts or sustained rates are unresolved in `OPEN-PAR-001`; its recorded recommendation must remain isolated provisional tuning until accepted.
 - The exact fiction for capture failure and the narrative reason for the midnight deadline remain unresolved in `OPEN-NAR-012` and `OPEN-NAR-007`; the approved mechanical failure conditions remain in force without invented explanation.
 - Failure occurs at midnight unless explicit medkit return and outbound transit validation have both completed. Once both are complete, the operation deadline cannot fail the completed run.
@@ -80,6 +80,7 @@ Health makes physical consequences real without turning Level 0 into a damage si
 
 - The protagonist HUD lane shows Health and Paranoia continuously at every target viewport.
 - Every Health and Paranoia change names the source and amount at the moment it occurs.
+- Retry treatment follows when the event occurred: pre-departure events become part of the immutable departure snapshot, while post-departure events are discarded by Retry. A reusable cost/recovery preset does not own that timing decision.
 - A choice with a possible cost previews the likely Health, Paranoia, time, or named consequence before confirmation.
 - Failure names the physical cause, medical collapse, confirming actor/system, missed deadline, or incompatible schema rather than showing only a generic mission-failed label.
 - Authored injury, consequence, safehouse, failure, Retry, and completion cues come from [[49 Audio]] and must be paired with readable visual/text feedback.

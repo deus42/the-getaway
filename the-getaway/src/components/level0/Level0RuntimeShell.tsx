@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../content/levels/level0/layoutContract';
-import { CHARACTER_SPRITE_MANIFEST_BY_ID } from '../../content/characters/spriteManifest';
+import {
+  createConfirmedLevel0Sample,
+  isValidLevel0Callsign,
+  normalizeLevel0Callsign,
+} from '../../game/level0/rpg/creation';
+import { getParanoiaCheckPenalty } from '../../game/level0/rpg/checks';
+import { getNextLevelThreshold } from '../../game/level0/rpg/progression';
+import type { PlayerBuild, PlayerIdentity } from '../../game/level0/rpg/types';
 import { resolveLevel0Interaction } from '../../game/level0/interaction/interactionResolver';
 import {
   LEVEL0_AUTOSAVE_KEY,
@@ -20,7 +27,7 @@ import {
   getKnownLevel0AnchorIds,
   getWorldOwnedLevel0AnchorIds,
 } from '../../game/level0/runtime/mapKnowledge';
-import type { SafehouseActionId } from '../../game/level0/runtime/types';
+import type { Level0RunState, SafehouseActionId } from '../../game/level0/runtime/types';
 import {
   GETAWAY_AGENT_START_LEVEL0_EVENT,
   LEVEL0_AGENT_INTERACTION_EVENT,
@@ -29,10 +36,6 @@ import {
 } from '../../game/level0/playtest/level0AgentBridge';
 import type { Level0AgentInteractionDetail } from '../../game/level0/playtest/events';
 import {
-  LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID,
-  LEVEL0_PLAYER_APPEARANCE_IDS,
-  isLevel0PlayerAppearanceId,
-  type Level0PlayerAppearanceId,
   LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
   type Level0ActorInteractionPresentationDetail,
 } from '../../game/level0/scene/level0ActorPresentation';
@@ -40,7 +43,10 @@ import type { AppDispatch, RootState } from '../../store';
 import { PERSISTED_STATE_KEY, resetGame, store } from '../../store';
 import {
   acquireLevel0Pause,
+  activateLevel0PendingLevel,
   advanceLevel0Clock,
+  allocateLevel0Attribute,
+  allocateLevel0Skill,
   applyLevel0SafehouseAction as applyLevel0SafehouseActionState,
   commitLevel0Departure,
   hydrateLevel0Run,
@@ -51,7 +57,15 @@ import {
   syncLevel0PlayerCheckpoint,
   initialLevel0RuntimeState,
 } from '../../store/level0RuntimeSlice';
+import Level0CharacterCreation from './Level0CharacterCreation';
+import Level0CharacterPanel from './Level0CharacterPanel';
 import Level0GameCanvas from './Level0GameCanvas';
+import {
+  describeLevel0ResourceEvent,
+  describeLevel0Source,
+  localizeLevel0Copy,
+  type Level0LocalizedCopy,
+} from './level0RpgCopy';
 import './Level0RuntimeShell.css';
 
 const getStorage = (): Storage | null =>
@@ -71,19 +85,6 @@ const readEntryState = () => {
   };
 };
 
-const readInitialAppearancePresetId = (): Level0PlayerAppearanceId => {
-  const storage = getStorage();
-  if (!storage) return LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID;
-  const autosave = readLevel0Autosave(storage);
-  if (
-    autosave.status === 'compatible' &&
-    isLevel0PlayerAppearanceId(autosave.envelope.payload.identity.appearancePresetId)
-  ) {
-    return autosave.envelope.payload.identity.appearancePresetId;
-  }
-  return LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID;
-};
-
 const makeSessionId = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
@@ -98,22 +99,97 @@ const formatWorldTime = (minute: number): string => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
-const FEEDBACK_COPY: Record<string, string> = {
-  'movement.target.accepted': 'Direct movement target accepted.',
-  'movement.blocked': 'Movement blocked by authored geometry.',
-  'movement.invalid.outside-district': 'Destination is outside the district.',
-  'movement.invalid.occupied': 'Destination is occupied. No route was substituted.',
-  'movement.invalid.blocked-surface': 'Destination is not walkable.',
-  'interaction.none': 'No usable interaction is in range.',
-  'interaction.too_far': 'Move closer to use that target.',
-  'interaction.occluded': 'The target is blocked from this position.',
-  'interaction.unavailable': 'That interaction is currently unavailable.',
-  'interaction.undiscovered': 'That target has not been discovered.',
-  'interaction.wrong_owner': 'That target is not owned by the world interaction layer.',
-  'safehouse.action.wait.applied': 'Waited safely for 30 minutes.',
-  'safehouse.action.rest.applied': 'Restored Health and reduced Paranoia. 30 minutes passed.',
-  'safehouse.departure.complete': 'Operation departure snapshot created.',
-  'retry.restored': 'Operation departure state restored.',
+const FEEDBACK_COPY: Record<string, Level0LocalizedCopy> = {
+  'movement.target.accepted': {
+    en: 'Direct movement target accepted.',
+    uk: 'Ціль прямого руху прийнята.',
+  },
+  'movement.blocked': {
+    en: 'Movement blocked by authored geometry.',
+    uk: 'Рух блокує геометрія світу.',
+  },
+  'movement.invalid.outside-district': {
+    en: 'Destination is outside the district.',
+    uk: 'Ціль розташована поза межами району.',
+  },
+  'movement.invalid.occupied': {
+    en: 'Destination is occupied. No route was substituted.',
+    uk: 'Ціль зайнята. Інший маршрут не обирався.',
+  },
+  'movement.invalid.blocked-surface': {
+    en: 'Destination is not walkable.',
+    uk: 'До цієї цілі не можна пройти.',
+  },
+  'interaction.none': {
+    en: 'No usable interaction is in range.',
+    uk: 'У межах досяжності немає доступної взаємодії.',
+  },
+  'interaction.too_far': {
+    en: 'Move closer to use that target.',
+    uk: 'Підійдіть ближче, щоб скористатися ціллю.',
+  },
+  'interaction.occluded': {
+    en: 'The target is blocked from this position.',
+    uk: 'З цієї позиції ціль перекрита.',
+  },
+  'interaction.unavailable': {
+    en: 'That interaction is currently unavailable.',
+    uk: 'Ця взаємодія зараз недоступна.',
+  },
+  'interaction.undiscovered': {
+    en: 'That target has not been discovered.',
+    uk: 'Цю ціль ще не виявлено.',
+  },
+  'interaction.wrong_owner': {
+    en: 'That target is not controlled by the world interaction layer.',
+    uk: 'Ця ціль не належить шару взаємодій світу.',
+  },
+  'safehouse.action.wait.applied': {
+    en: 'Waited safely for 30 minutes.',
+    uk: 'Безпечно минуло 30 хвилин.',
+  },
+  'safehouse.action.rest.applied': {
+    en: 'Rest completed. 30 minutes passed.',
+    uk: 'Відпочинок завершено. Минуло 30 хвилин.',
+  },
+  'safehouse.departure.complete': {
+    en: 'Operation departure snapshot created.',
+    uk: 'Створено точку повтору на виході до операції.',
+  },
+  'retry.restored': {
+    en: 'Operation departure state restored.',
+    uk: 'Стан на виході до операції відновлено.',
+  },
+  'observation.opened': {
+    en: 'Observation opened. Simulation paused.',
+    uk: 'Режим спостереження відкрито. Симуляцію призупинено.',
+  },
+  'observation.closed': {
+    en: 'Observation closed. Exploration resumed.',
+    uk: 'Режим спостереження закрито. Дослідження продовжено.',
+  },
+  'level_up.activated': {
+    en: 'Level increased. Allocate the available points.',
+    uk: 'Рівень підвищено. Розподіліть доступні очки.',
+  },
+  'level_up.skill.allocated': {
+    en: 'Skill point allocated.',
+    uk: 'Очко навички розподілено.',
+  },
+  'level_up.attribute.allocated': {
+    en: 'Attribute point allocated.',
+    uk: 'Очко атрибута розподілено.',
+  },
+};
+
+const IDLE_FEEDBACK_COPY: Level0LocalizedCopy = {
+  en: 'Click a destination or use WASD. E interacts. O pauses for observation.',
+  uk: 'Клацніть ціль або використовуйте WASD. E — взаємодія. O — пауза для спостереження.',
+};
+
+const GENERIC_FEEDBACK_COPY: Level0LocalizedCopy = {
+  en: 'The situation changed. Review the current objective and available actions.',
+  uk: 'Ситуація змінилася. Перевірте поточну ціль і доступні дії.',
 };
 
 const actionLabel = (actionId: SafehouseActionId): string => {
@@ -125,6 +201,39 @@ const actionLabel = (actionId: SafehouseActionId): string => {
   }
 };
 
+const failureTitle = (
+  run: Level0RunState,
+  ukrainian: boolean
+): string => {
+  if (run.failureCause === 'failure.health') {
+    return ukrainian
+      ? 'Здоров’я впало до 0. Ви не пережили наслідки.'
+      : 'Health reached 0. You did not survive the consequence.';
+  }
+  if (run.failureCause === 'failure.paranoia') {
+    return ukrainian
+      ? 'Параноя досягла 100. Фізіологічний колапс став смертельним.'
+      : 'Paranoia reached 100. The physiological collapse was fatal.';
+  }
+  if (run.failureCause === 'failure.capture') {
+    return ukrainian
+      ? 'Hidzu підтвердила вашу особу та затримала вас.'
+      : 'Hidzu confirmed your identity and captured you.';
+  }
+  if (run.failureMissingRequirements.length === 1) {
+    return run.failureMissingRequirements[0] === 'medkits-returned'
+      ? ukrainian
+        ? 'Опівніч настала до повернення медичних засобів.'
+        : 'Midnight arrived before the medkits were returned.'
+      : ukrainian
+        ? 'Опівніч настала до підтвердження виїзного транзиту.'
+        : 'Midnight arrived before outbound transit was validated.';
+  }
+  return ukrainian
+    ? 'Опівніч настала до повернення медичних засобів і підтвердження транзиту.'
+    : 'Midnight arrived before the medkits were returned and transit was validated.';
+};
+
 const Level0RuntimeShell = () => {
   const dispatch = useDispatch<AppDispatch>();
   const runtime = useSelector(
@@ -133,12 +242,16 @@ const Level0RuntimeShell = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const [entryState, setEntryState] = useState(readEntryState);
   const [menuOpen, setMenuOpen] = useState(true);
-  const [selectedAppearancePresetId, setSelectedAppearancePresetId] =
-    useState<Level0PlayerAppearanceId>(readInitialAppearancePresetId);
+  const [creationOpen, setCreationOpen] = useState(false);
+  const [characterOpen, setCharacterOpen] = useState(false);
   const [pendingSafehouseAction, setPendingSafehouseAction] = useState<
     'wait' | 'rest' | 'depart' | null
   >(null);
   const agentStartedRef = useRef(false);
+  const newGameTriggerRef = useRef<HTMLButtonElement>(null);
+  const creationWasOpenRef = useRef(false);
+  const characterTriggerRef = useRef<HTMLButtonElement>(null);
+  const characterWasOpenRef = useRef(false);
   const run = runtime.run;
   const runSessionId = run?.sessionId ?? null;
   const hasRun = run !== null;
@@ -157,7 +270,7 @@ const Level0RuntimeShell = () => {
     );
   }, []);
 
-  const startNewGame = useCallback(() => {
+  const initializeNewRun = useCallback((identity: PlayerIdentity, build: PlayerBuild) => {
     const storage = getStorage();
     if (storage) {
       clearLevel0Persistence(storage);
@@ -166,20 +279,43 @@ const Level0RuntimeShell = () => {
     dispatch(resetGame());
     dispatch(initializeLevel0Run({
       sessionId: makeSessionId(),
-      appearancePresetId: selectedAppearancePresetId,
+      identity,
+      build,
     }));
+    setCreationOpen(false);
+    setCharacterOpen(false);
     setMenuOpen(false);
     setEntryState({ compatibleAutosave: true, incompatibleSave: false, hasRetry: false });
     const nextRun = store.getState().level0Runtime.run;
     if (storage && nextRun) writeLevel0Autosave(storage, nextRun);
-  }, [dispatch, selectedAppearancePresetId]);
+  }, [dispatch]);
+
+  const startNewGame = useCallback(() => {
+    setCreationOpen(true);
+    setMenuOpen(false);
+  }, []);
+
+  const confirmCharacterCreation = useCallback((identity: PlayerIdentity, build: PlayerBuild) => {
+    initializeNewRun(identity, build);
+  }, [initializeNewRun]);
+
+  const cancelCharacterCreation = useCallback(() => {
+    setCreationOpen(false);
+    setMenuOpen(true);
+  }, []);
+
+  const startAgentGame = useCallback(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requested = normalizeLevel0Callsign(params.get('agentName') ?? 'Agent');
+    const callsign = isValidLevel0Callsign(requested) ? requested : 'Agent';
+    const sample = createConfirmedLevel0Sample('technical_evasion', callsign);
+    initializeNewRun(sample.identity, sample.build);
+  }, [initializeNewRun]);
 
   const continueGame = useCallback(() => {
     if (run) {
-      if (isLevel0PlayerAppearanceId(run.identity.appearancePresetId)) {
-        setSelectedAppearancePresetId(run.identity.appearancePresetId);
-      }
       dispatch(releaseLevel0Pause('menu'));
+      setCreationOpen(false);
       setMenuOpen(false);
       return;
     }
@@ -190,19 +326,14 @@ const Level0RuntimeShell = () => {
       setEntryState((current) => ({ ...current, compatibleAutosave: false, incompatibleSave: true }));
       return;
     }
-    if (isLevel0PlayerAppearanceId(result.envelope.payload.identity.appearancePresetId)) {
-      setSelectedAppearancePresetId(result.envelope.payload.identity.appearancePresetId);
-    }
     dispatch(hydrateLevel0Run(result.envelope.payload));
+    setCreationOpen(false);
     setMenuOpen(false);
   }, [dispatch, run]);
 
   const openMenu = useCallback(() => {
     if (run) {
       dispatch(acquireLevel0Pause('menu'));
-      if (isLevel0PlayerAppearanceId(run.identity.appearancePresetId)) {
-        setSelectedAppearancePresetId(run.identity.appearancePresetId);
-      }
     }
     persistCurrentRun();
     setMenuOpen(true);
@@ -289,14 +420,40 @@ const Level0RuntimeShell = () => {
       return;
     }
     dispatch(restoreLevel0Retry(result.envelope.payload));
-    if (isLevel0PlayerAppearanceId(result.envelope.payload.identity.appearancePresetId)) {
-      setSelectedAppearancePresetId(result.envelope.payload.identity.appearancePresetId);
-    }
+    setCharacterOpen(false);
+    setCreationOpen(false);
     setMenuOpen(false);
     setEntryState((current) => ({ ...current, compatibleAutosave: true, hasRetry: true }));
     const nextRun = store.getState().level0Runtime.run;
     if (nextRun) writeLevel0Autosave(storage, nextRun);
   }, [dispatch]);
+
+  const openCharacter = useCallback(() => {
+    if (!run || menuOpen || pendingSafehouseAction || terminalMission) return;
+    dispatch(acquireLevel0Pause('character'));
+    setCharacterOpen(true);
+  }, [dispatch, menuOpen, pendingSafehouseAction, run, terminalMission]);
+
+  const closeCharacter = useCallback(() => {
+    dispatch(releaseLevel0Pause('character'));
+    setCharacterOpen(false);
+    persistCurrentRun();
+  }, [dispatch, persistCurrentRun]);
+
+  const activateCharacterLevel = useCallback(() => {
+    dispatch(activateLevel0PendingLevel());
+    persistCurrentRun();
+  }, [dispatch, persistCurrentRun]);
+
+  const allocateCharacterAttribute = useCallback((attribute: Parameters<typeof allocateLevel0Attribute>[0]) => {
+    dispatch(allocateLevel0Attribute(attribute));
+    persistCurrentRun();
+  }, [dispatch, persistCurrentRun]);
+
+  const allocateCharacterSkill = useCallback((skill: Parameters<typeof allocateLevel0Skill>[0]) => {
+    dispatch(allocateLevel0Skill(skill));
+    persistCurrentRun();
+  }, [dispatch, persistCurrentRun]);
 
   const handleInteraction = useCallback((preferredAnchorId?: string) => {
     const currentRun = store.getState().level0Runtime.run;
@@ -355,6 +512,26 @@ const Level0RuntimeShell = () => {
   }, []);
 
   useEffect(() => {
+    if (creationOpen) {
+      creationWasOpenRef.current = true;
+      return;
+    }
+    if (!creationWasOpenRef.current) return;
+    creationWasOpenRef.current = false;
+    newGameTriggerRef.current?.focus();
+  }, [creationOpen]);
+
+  useEffect(() => {
+    if (characterOpen) {
+      characterWasOpenRef.current = true;
+      return;
+    }
+    if (!characterWasOpenRef.current) return;
+    characterWasOpenRef.current = false;
+    characterTriggerRef.current?.focus();
+  }, [characterOpen]);
+
+  useEffect(() => {
     if (!hasRun || menuOpen) return undefined;
     let previous = performance.now();
     const timer = window.setInterval(() => {
@@ -377,17 +554,31 @@ const Level0RuntimeShell = () => {
   }, [hasRun, persistCurrentRun, runSessionId]);
 
   useEffect(() => {
-    if (!hasRun) return undefined;
+    if (!hasRun && !creationOpen) return undefined;
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();
-      if (pendingSafehouseAction) closeSafehouseConfirmation();
+      if (creationOpen) cancelCharacterCreation();
+      else if (characterOpen) closeCharacter();
+      else if (pendingSafehouseAction) closeSafehouseConfirmation();
       else if (menuOpen) continueGame();
       else openMenu();
     };
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
-  }, [closeSafehouseConfirmation, continueGame, hasRun, menuOpen, openMenu, pendingSafehouseAction, runSessionId]);
+  }, [
+    cancelCharacterCreation,
+    characterOpen,
+    closeCharacter,
+    closeSafehouseConfirmation,
+    continueGame,
+    creationOpen,
+    hasRun,
+    menuOpen,
+    openMenu,
+    pendingSafehouseAction,
+    runSessionId,
+  ]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || agentStartedRef.current) return;
@@ -395,17 +586,17 @@ const Level0RuntimeShell = () => {
     if (params.get('agent') === '1' && params.get('agentStart') === 'level0') {
       agentStartedRef.current = true;
       if (params.get('fresh') === '1' || !entryState.compatibleAutosave) {
-        startNewGame();
+        startAgentGame();
       } else {
         continueGame();
       }
     }
-  }, [continueGame, entryState.compatibleAutosave, startNewGame]);
+  }, [continueGame, entryState.compatibleAutosave, startAgentGame]);
 
   useEffect(() => installLevel0AgentBridge({ store }), []);
 
   useEffect(() => {
-    const startFromAgent = () => startNewGame();
+    const startFromAgent = () => startAgentGame();
     const retryFromAgent = () => retryOperation();
     const interactFromAgent = (event: Event) => {
       const detail = (event as CustomEvent<Level0AgentInteractionDetail>).detail;
@@ -419,7 +610,7 @@ const Level0RuntimeShell = () => {
       window.removeEventListener(LEVEL0_AGENT_RETRY_EVENT, retryFromAgent);
       window.removeEventListener(LEVEL0_AGENT_INTERACTION_EVENT, interactFromAgent);
     };
-  }, [handleInteraction, retryOperation, startNewGame]);
+  }, [handleInteraction, retryOperation, startAgentGame]);
 
   const clockEventSignature = runtime.clockEventIds.join('|');
   useEffect(() => {
@@ -435,9 +626,27 @@ const Level0RuntimeShell = () => {
     }));
   }, [run]);
 
-  const feedbackCopy = runtime.feedbackId
-    ? FEEDBACK_COPY[runtime.feedbackId] ?? runtime.feedbackId.split('.').join(' ')
-    : 'Click a destination or use WASD. E interacts. O pauses for observation.';
+  const feedbackResourceEvents = run
+    ? runtime.feedbackResourceEventIds.flatMap((eventId) => {
+        const event = run.rpg.resourceEvents.find((candidate) => candidate.eventId === eventId);
+        return event ? [event] : [];
+      })
+    : [];
+  const feedbackCopy = feedbackResourceEvents.length > 0
+    ? feedbackResourceEvents.map((event) => describeLevel0ResourceEvent(event, ukrainian)).join(' · ')
+    : runtime.feedbackId
+      ? localizeLevel0Copy(FEEDBACK_COPY[runtime.feedbackId] ?? GENERIC_FEEDBACK_COPY, ukrainian)
+      : localizeLevel0Copy(IDLE_FEEDBACK_COPY, ukrainian);
+
+  if (creationOpen) {
+    return (
+      <Level0CharacterCreation
+        ukrainian={ukrainian}
+        onCancel={cancelCharacterCreation}
+        onConfirm={confirmCharacterCreation}
+      />
+    );
+  }
 
   if (!run || menuOpen) {
     return (
@@ -457,29 +666,13 @@ const Level0RuntimeShell = () => {
                 : 'A retired prototype save is incompatible. It will remain untouched until you explicitly start New Game.'}
             </div>
           ) : null}
-          <fieldset className="level0-entry__appearance">
-            <legend>{ukrainian ? 'Зовнішність' : 'Appearance'}</legend>
-            <div className="level0-entry__appearance-options">
-              {LEVEL0_PLAYER_APPEARANCE_IDS.map((appearancePresetId, index) => {
-                const entry = CHARACTER_SPRITE_MANIFEST_BY_ID[appearancePresetId];
-                return (
-                  <button
-                    type="button"
-                    key={appearancePresetId}
-                    className="level0-entry__appearance-option"
-                    data-testid={`level0-appearance-${appearancePresetId}`}
-                    aria-pressed={selectedAppearancePresetId === appearancePresetId}
-                    onClick={() => setSelectedAppearancePresetId(appearancePresetId)}
-                  >
-                    {entry ? <img src={entry.portrait.path} alt="" /> : null}
-                    <span>{ukrainian ? `Варіант ${index + 1}` : `Preset ${index + 1}`}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </fieldset>
           <div className="level0-entry__actions">
-            <button type="button" data-testid="level0-new-game" onClick={startNewGame}>
+            <button
+              type="button"
+              data-testid="level0-new-game"
+              ref={newGameTriggerRef}
+              onClick={startNewGame}
+            >
               {ukrainian ? 'Нова гра' : 'New Game'}
             </button>
             <button
@@ -508,7 +701,9 @@ const Level0RuntimeShell = () => {
   }
 
   const failed = run.mission === 'L0_FAILED';
-  const backgroundControlsLocked = pendingSafehouseAction !== null || terminalMission;
+  const backgroundControlsLocked = characterOpen || pendingSafehouseAction !== null || terminalMission;
+  const nextLevelThreshold = getNextLevelThreshold(run.build.level);
+  const paranoiaPenalty = getParanoiaCheckPenalty(run.paranoia);
 
   return (
     <main className="level0-runtime" data-testid="level0-runtime-hud">
@@ -562,15 +757,27 @@ const Level0RuntimeShell = () => {
         </div>
         <div className="level0-runtime__lane">
           <span className="lane-label">PROTAGONIST</span>
+          <strong>{run.identity.callsign} · LV {run.build.level}</strong>
           <div className="level0-runtime__meters">
             <span>HEALTH <b>{run.health}</b></span>
-            <span>PARANOIA <b>{run.paranoia}</b></span>
+            <span>PARANOIA <b>{run.paranoia} / −{paranoiaPenalty}</b></span>
           </div>
-          <small>x {run.player.position.x.toFixed(1)} / y {run.player.position.y.toFixed(1)}</small>
+          <small>
+            XP {run.build.xp}{nextLevelThreshold === null ? '' : ` / ${nextLevelThreshold}`}
+          </small>
+          <div className="level0-runtime__controls">
+            <button
+              type="button"
+              data-testid="level0-character-open"
+              ref={characterTriggerRef}
+              disabled={backgroundControlsLocked}
+              onClick={openCharacter}
+            >Character</button>
+          </div>
         </div>
         <div className="level0-runtime__lane level0-runtime__lane--feedback">
           <span className="lane-label">GEORGE / RUNTIME</span>
-          <p>{feedbackCopy}</p>
+          <p role="status" aria-live="polite">{feedbackCopy}</p>
           <div className="level0-runtime__controls">
             <button
               type="button"
@@ -648,6 +855,17 @@ const Level0RuntimeShell = () => {
         </section>
       ) : null}
 
+      {characterOpen ? (
+        <Level0CharacterPanel
+          run={run}
+          ukrainian={ukrainian}
+          onClose={closeCharacter}
+          onActivateLevel={activateCharacterLevel}
+          onAllocateAttribute={allocateCharacterAttribute}
+          onAllocateSkill={allocateCharacterSkill}
+        />
+      ) : null}
+
       {failed ? (
         <section
           className="level0-runtime__failure"
@@ -656,14 +874,20 @@ const Level0RuntimeShell = () => {
           aria-modal="true"
           aria-labelledby="level0-failure-title"
         >
-          <p>OPERATION FAILED</p>
-          <h2 id="level0-failure-title">{run.failureMissingRequirements.length === 1
-            ? run.failureMissingRequirements[0] === 'medkits-returned'
-              ? 'Midnight arrived before the medkits were returned.'
-              : 'Midnight arrived before outbound transit was validated.'
-            : 'Midnight arrived before the medkits were returned and transit was validated.'}</h2>
-          <button type="button" onClick={retryOperation} disabled={!entryState.hasRetry}>Retry from departure</button>
-          <button type="button" onClick={openMenu}>Return to menu</button>
+          <p>{ukrainian ? 'ОПЕРАЦІЮ ПРОВАЛЕНО' : 'OPERATION FAILED'}</p>
+          <h2 id="level0-failure-title">{failureTitle(run, ukrainian)}</h2>
+          {run.failureSourceId ? (
+            <small>
+              {ukrainian ? 'Джерело' : 'Source'}: {' '}
+              {describeLevel0Source(run.failureSourceId, ukrainian)}
+            </small>
+          ) : null}
+          <button type="button" onClick={retryOperation} disabled={!entryState.hasRetry}>
+            {ukrainian ? 'Повторити від виходу' : 'Retry from departure'}
+          </button>
+          <button type="button" onClick={openMenu}>
+            {ukrainian ? 'Повернутися до меню' : 'Return to menu'}
+          </button>
         </section>
       ) : null}
 

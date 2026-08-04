@@ -1,4 +1,17 @@
 import type { WorldPoint } from '../layout/types';
+import type {
+  Level0RpgLedger,
+  PlayerBuild,
+  PlayerIdentity,
+} from '../rpg/types';
+
+export type {
+  AttributeKey,
+  Level0RpgLedger,
+  PlayerBuild,
+  PlayerIdentity,
+  SkillKey,
+} from '../rpg/types';
 
 export type PauseOwner =
   | 'menu'
@@ -61,30 +74,11 @@ export interface Level0PlayerRuntimeCheckpoint {
 export type SurveillanceLevel = 'clear' | 'suspicious' | 'pursuit';
 export type Level0DeadlineRequirement = 'medkits-returned' | 'transit-validated';
 
-export interface PlayerIdentity {
-  callsign: string;
-  appearancePresetId: string;
-}
-
-export type AttributeKey = 'physical' | 'mental' | 'social' | 'technical';
-export type SkillKey =
-  | 'stealth'
-  | 'evasion'
-  | 'awareness'
-  | 'composure'
-  | 'insight'
-  | 'influence'
-  | 'systems'
-  | 'opsec';
-
-export interface PlayerBuild {
-  attributes: Record<AttributeKey, number>;
-  skills: Record<SkillKey, number>;
-  level: number;
-  xp: number;
-  unspentSkillPoints: number;
-  unspentAttributePoints: number;
-}
+export type Level0FailureCause =
+  | 'failure.deadline'
+  | 'failure.health'
+  | 'failure.paranoia'
+  | 'failure.capture';
 
 export interface SafehouseState {
   insideBoundary: boolean;
@@ -153,6 +147,7 @@ export interface Level0RunState {
   sessionId: string;
   identity: PlayerIdentity;
   build: PlayerBuild;
+  rpg: Level0RpgLedger;
   health: number;
   paranoia: number;
   worldClock: WorldClockState;
@@ -169,7 +164,8 @@ export interface Level0RunState {
     medkitsReturned: boolean;
     transitValidated: boolean;
   };
-  failureCause: 'failure.deadline' | null;
+  failureCause: Level0FailureCause | null;
+  failureSourceId: string | null;
   failureMissingRequirements: Level0DeadlineRequirement[];
 }
 
@@ -180,6 +176,7 @@ export interface RetrySnapshot {
   createdAtWorldMinute: number;
   identity: PlayerIdentity;
   build: PlayerBuild;
+  rpg: Level0RpgLedger;
   health: number;
   paranoia: number;
   worldClock: WorldClockState;

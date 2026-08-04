@@ -547,7 +547,7 @@ The rewrite removed the RPG foundation the requester had invested in and replace
 
 ### Player promise
 
-In under two minutes, the player creates a callsign, selects one of four appearances, and makes a small set of meaningful capability choices. A Social/Mental protagonist and a Technical/Evasion protagonist see materially different dialogue, evidence, terminal, and escape options while both remain viable. Requirements are visible, results are deterministic and explained, stress changes the math honestly, injury matters, and one earned level-up at safehouse/debrief demonstrates that the character will continue into Miami.
+In under two minutes, the player creates a callsign, selects one of four appearances, and makes a small set of meaningful capability choices. T7 establishes and visibly explains why a Social/Mental protagonist and a Technical/Evasion protagonist resolve the same authored requirement differently; T8–T10 then place those capabilities into dialogue, evidence, terminals, hiding, and escape while keeping both builds viable. T7 makes requirements/results deterministic and explainable, makes stress and injury consequential, and establishes safehouse/debrief allocation. T10 owns the normal mission milestones that earn the first level-up and demonstrate continuation into Miami.
 
 ### Starting state
 
@@ -555,6 +555,8 @@ In under two minutes, the player creates a callsign, selects one of four appeara
 - T6 supplies final appearance assets when available, but T7 must preserve the four stable appearance IDs and may use validated temporary presentation until integration.
 - New runs begin before Level 0 in character creation, then Health 100 and Paranoia 0 in the safehouse.
 - Exact Level 0 check requirements, XP threshold/awards, derived-stat disposition, Health costs, Paranoia event amounts/rates, and smaller recovery amounts remain T7 acceptance decisions; their recorded `OPEN-*` recommendations may be trialed through replaceable authored data.
+- The reversible `OPEN-RPG-002` recommendation trials a `100 XP` Level 2 threshold with one-shot `50 XP` awards for explicit medkit return and outbound-transit validation. It remains provisional and cannot be described as accepted tuning.
+- Callsign normalization/display validation remains `OPEN-RPG-005`; its Unicode-safe 1–24-code-point recommendation may be trialed reversibly and must not be described as accepted while open.
 
 ### Complete player flow
 
@@ -562,7 +564,7 @@ In under two minutes, the player creates a callsign, selects one of four appeara
 2. Allocate four additional points across Physical, Mental, Social, and Technical, each starting at 1 with creation cap 3 and long-term cap 5.
 3. Allocate six points across Stealth, Evasion, Awareness, Composure, Insight, Influence, Systems, and OpSec, each starting at 0 with creation cap 2 and long-term cap 5.
 4. Review practical Level 0 meanings and confirm a valid build. Persist `PlayerIdentity` separately from `PlayerBuild`.
-5. During dialogue, evidence, terminal, hiding/pursuit, and interception contexts, show the exact requirement and deterministic calculation before/after selection.
+5. Expose one reusable exact requirement/result breakdown. When T8–T10 invoke the resolver from dialogue, evidence, terminal, hiding/pursuit, and interception contexts, those normal choice surfaces mount the same breakdown before/after selection.
 6. Apply visible authored Health or Paranoia effects; show current resources continuously and explain every change.
 7. Award each authored XP milestone once. When the threshold is reached, hold progression pending until safehouse/debrief.
 8. Allocate two skill points per level and one attribute point every third level; enforce caps and persist the result.
@@ -581,7 +583,7 @@ Paranoia is 0–100 and always named `Paranoia`: 0–39 gives no penalty, 40–6
 4. Restore a Character screen containing only identity, level/XP, four attributes, eight skills, Health, Paranoia, unspent points, important facts, and long-term consequences.
 5. Implement Health/Paranoia event ledgers, threshold feedback, fatal outcomes, Rest integration, and snapshot restoration with tuning values isolated in approved or provisional authored data.
 6. Implement idempotent milestone XP and safehouse/debrief allocation using the approved or provisionally recorded `OPEN-RPG-002` table.
-7. Prove two deliberately different viable builds across dialogue, manifest, terminal/trace, recovery, and interception seams.
+7. Prove two deliberately different player-created builds against the same deterministic catalog entries, with the reusable check breakdown showing exact math. Preserve typed effect seams for dialogue, manifest, terminal/trace, recovery, and interception; T8–T10 own their normal-control mission integration and must re-prove the practical differences there.
 
 ### Content requirements
 
@@ -604,7 +606,7 @@ Health 0 produces `failure.health`; Paranoia 100 produces `failure.paranoia`; bo
 
 ### Dependencies and OPEN blockers
 
-Depends on T3; blocks T8, T9, and T10. Critical acceptance blockers are `OPEN-NAR-001`, `OPEN-RPG-001`, `OPEN-RPG-002`, `OPEN-RPG-004`, `OPEN-HLT-001`, and `OPEN-PAR-001`. High acceptance blockers are `OPEN-RPG-003` and `OPEN-PAR-002`. Recorded recommendations may be trialed provisionally through authored data/constants with deterministic tests and rollback seams; unresolved values prevent final acceptance, not ticket start. T7 owns RPG/resource payload and behavior; T3 owns persistence infrastructure; T8 supplies surveillance/interception sources; T9 presents checks/HUD/facts; T10 authors final values/content and proves them.
+Depends on T3; blocks T8, T9, and T10. Critical acceptance blockers are `OPEN-NAR-001`, `OPEN-RPG-001`, `OPEN-RPG-002`, `OPEN-RPG-004`, `OPEN-HLT-001`, and `OPEN-PAR-001`. High acceptance blockers are `OPEN-RPG-003`, `OPEN-RPG-005`, and `OPEN-PAR-002`. Recorded recommendations may be trialed provisionally through authored data/constants with deterministic tests and rollback seams; unresolved values prevent final acceptance, not ticket start. T7 owns RPG/resource payload and behavior; T3 owns persistence infrastructure; T8 supplies surveillance/interception sources; T9 presents checks/HUD/facts; T10 authors final values/content and proves them.
 
 ### Canonical decisions/spec sections
 
@@ -612,18 +614,21 @@ Implements `GDR-PC-001` through `GDR-PC-003`, `GDR-MIS-008`, `GDR-RPG-001` throu
 
 Canonical detail is in [[92 Character & Progression]], [[43 Health, Failure & Recovery]], [[60 Paranoia]], [[50 Combat]], [[44 Safehouse, Save & Retry]], [[13 Level 0 Content and State Matrix]] sections 4–5 and 10–12, [[04 Engineering/Architecture]] sections 5, 10, and 12, and [[04 Engineering/Roadmap]] Gate 7.
 
-### Human-play acceptance
+### Delivery acceptance and deferred human-play gates
 
-- Create valid and invalid builds, confirm budgets/caps, and reach safehouse in at most two minutes without package knowledge.
-- Run Social/Mental and Technical/Evasion builds; demonstrate different practical dialogue, recognition, terminal/trace, recovery, and interception options while both retain a completion route.
-- Before/after checks, verify exact math and designated fact effects; Naila's fact guarantees only manifest recognition.
-- Cross every Paranoia threshold and verify the exact all-check penalty and truthful feedback; curfew alone changes nothing.
-- Reach Health 0 and Paranoia 100, verify exact failure causes, and Retry exact departure values.
-- Earn the approved milestone once, allocate two skill points at safehouse/debrief, test third-level attribute logic, caps, save/reload, Retry, and New Game.
+GET-207's delivery gate separates player-facing T7 controls from focused domain/persistence evidence. It does not invent mission transitions merely to expose foundations. Authored XP triggers, departure, dialogue, manifest, terminal/trace, pursuit recovery, interception, and complete-route differences are normal-control integration owned jointly with T8–T10 and must be reported as deferred—not simulated or claimed complete by T7 fixtures.
+
+- **T7 player-facing evidence:** create valid and invalid builds, confirm budgets/caps, reach safehouse in at most two minutes without package knowledge, open/close the paused Character panel, see truthful Health/Paranoia/XP/build state, and round-trip the exact player-created run through Continue.
+- **T7 player-facing allocation seam:** with a pending authored level supplied through the canonical action seam, activate and allocate two skill points through Character controls at an allowed safehouse/debrief context; outside that context the same controls are disabled with a reason.
+- **T7 reusable presentation evidence:** create Social/Mental and Technical/Evasion builds through New Game and render different exact results for the same catalog requirement with the reusable check-breakdown component. This is component evidence until T9 mounts it in a normal mission choice.
+- **T7 focused resolver/persistence evidence:** verify exact before/after math, attempt identity, anti-reroll behavior, designated fact effects, and recomputation during hydration; Naila's fact guarantees only manifest recognition.
+- **T7 focused resource/failure/Retry evidence:** cross and recover across every Paranoia threshold, verify exact penalties/feedback, prove no passive curfew mutation, reach Health 0 and Paranoia 100 with exact causes/source IDs, and restore exact departure state. Normal departure remains deferred until Lira/preparation content exists.
+- **T7 focused progression evidence:** award each provisional milestone once, test third-level attribute logic, caps, exact save/reload, Retry, and New Game. T10 owns normal medkit/transit triggers.
+- **Deferred integrated human-play:** T8–T10 must re-prove practical dialogue, recognition, terminal/trace, recovery, interception, both route variants, and equal completion viability through normal mission controls.
 
 ### Documentation and validation obligations
 
-Update Character/Health/Paranoia specs only for approved resolved values, Architecture for implemented state/data flow, MVP Readiness, and `progress/GET-207.md`. Add unit tests for creation validation, pure checks, fact effects, penalties, Health/Paranoia events, fatal outcomes, XP idempotency, allocation/caps, save hydration, Retry, and retired-schema rejection; component tests for creation/Character/check explanations. After normal-control proof, run the AGENTS closeout suite and guided AI regression. Never treat a fixture-only alternate build as human-play evidence.
+Update Character/Health/Paranoia specs only for approved rules or clearly labelled provisional tables, Architecture for implemented state/data flow, MVP Readiness, and `progress/GET-207.md`. Add unit tests for creation validation, pure checks, fact effects, penalties, Health/Paranoia events, fatal outcomes, XP idempotency, allocation/caps, save hydration, Retry, and retired-schema rejection; component tests for creation/Character/check explanations. After T7 player-facing proof, run the AGENTS closeout suite and guided AI regression. Report later mission integrations as deferred and never treat a fixture, direct store dispatch, or domain test as human-play evidence.
 
 ## T8 — Surveillance, security, civilians, hiding, drone, and noncombat escape
 

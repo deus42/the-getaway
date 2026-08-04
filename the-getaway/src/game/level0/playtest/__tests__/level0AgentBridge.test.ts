@@ -10,11 +10,15 @@ import {
   LEVEL0_AGENT_MOVE_RESULT_EVENT,
   installLevel0AgentBridge,
 } from '../level0AgentBridge';
+import { createConfirmedLevel0Sample } from '../../rpg/creation';
 
 describe('Level 0 agent bridge', () => {
   beforeEach(() => {
     store.dispatch(resetGame());
-    store.dispatch(initializeLevel0Run({ sessionId: 'agent-session' }));
+    store.dispatch(initializeLevel0Run({
+      sessionId: 'agent-session',
+      ...createConfirmedLevel0Sample('technical_evasion', 'Agent'),
+    }));
     window.history.replaceState({}, '', '/?agent=1');
   });
 
@@ -32,7 +36,7 @@ describe('Level 0 agent bridge', () => {
     expect(snapshot?.world.areaId).toBe('level0-tokyo-greybox-v3');
     expect(snapshot?.world.map.width).toBe(84);
     expect(snapshot?.player.position).toEqual({ x: 16, y: 47 });
-    expect(window.render_game_to_text?.()).toContain('L0_PREPARATION');
+    expect(window.render_game_to_text?.()).toContain('L0_SAFEHOUSE_INTRO');
     uninstall();
   });
 

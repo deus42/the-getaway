@@ -111,12 +111,13 @@ Current ownership is explicit:
 - `src/game/level0/interaction/interactionResolver.ts` owns knowledge, independently derived world-ownership, range, occlusion, and authoritative availability results; automatic discovery filters unknown or wrong-domain anchors instead of revealing their existence through an error;
 - `src/game/level0/art/` owns parallel T4 composition and T5 treatment contracts/validators. T5 preserves the T4 recipe and semantic layer IDs, carries separate treatment identity, deeply validates every exported tile/anchor/evidence field, and rejects runtime promotion while entitlement is unavailable; generated derivatives remain ignored local evidence and `Level0Scene` still renders the greybox fallback;
 - `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, and immutable departure Retry;
+- `src/game/level0/rpg/` owns creation validation, the authored check catalog and pure resolver, committed attempt/resource/XP/allocation ledgers, provisional tuning tables, fatal resource transitions, and safehouse/debrief progression rules;
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
 - `src/game/level0/scene/Level0Scene.ts` owns frame-local greybox rendering, actor transform, camera, and input;
 - `src/game/level0/playtest/level0AgentBridge.ts` derives diagnostics from the same store/layout and may dispatch only normal runtime events;
 - `art/iso-assets/contracts/level0-layout-contract.json` is the deterministic Blender-facing export of the same contract.
 
-The retired `the-getaway-state` schema remains disabled. The new Level 0 autosave and Retry use independent keys and exact nested envelopes, so the legacy subscriber cannot hydrate or overwrite the canonical run. Validation rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and failure copy that does not exactly match incomplete requirements. Retry additionally requires the authored departure anchor. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists Retry before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, and safehouse policy remain provisional while their `OPEN-*` decisions are unresolved.
+The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 2 uses independent autosave and Retry keys plus exact nested envelopes, so the legacy subscriber cannot hydrate or overwrite the canonical run. Validation reconstructs and checks normalized callsign/build budgets, every committed check from its recorded Paranoia/facts/contexts, the ordered resource before/after chain, threshold announcements, one-shot XP milestones, pending levels, allocation history, and final build totals. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and failure copy that does not exactly match incomplete requirements. Retry additionally requires the authored departure anchor and carries the complete RPG ledger. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists Retry before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, check requirements, XP, and resource presets remain provisional while their `OPEN-*` decisions are unresolved.
 
 ## 3. Application lifecycle
 
@@ -252,6 +253,13 @@ Creation budgets/caps and progression rules come from [[01 MVP/92 Character & Pr
 ### Deterministic checks
 
 ```ts
+interface AuthoredModifier {
+  id: string;
+  amount: number;
+  requiredContextId: string;
+  localizedReasonKey: string;
+}
+
 interface CheckRequirement {
   id: string;
   attribute: AttributeKey;
@@ -262,22 +270,80 @@ interface CheckRequirement {
   successEffectIds: string[];
   failForwardEffectIds: string[];
   localizedRequirementKey: string;
+  visibilityFactId?: string;
+  lockedReasonId?: string;
 }
 
 interface CheckResolution {
   checkId: string;
+  attribute: AttributeKey;
   attributeValue: number;
+  skill: SkillKey;
   skillValue: number;
   paranoiaPenalty: 0 | 1 | 2 | 3;
-  appliedFacts: string[];
+  appliedFactIds: string[];
   appliedModifiers: AuthoredModifier[];
+  guaranteedByFactId: string | null;
+  baseRequiredTotal: number;
+  effectiveRequiredTotal: number;
   finalTotal: number;
-  requiredTotal: number;
-  outcome: 'success' | 'fail-forward';
+  outcome: 'success' | 'fail-forward' | 'fatal';
+  successEffectIds: string[];
+  failForwardEffectIds: string[];
+}
+
+interface CommittedCheckResolution extends CheckResolution {
+  resolutionId: string;
+  attemptKey: string;
+  paranoiaValue: number;
+  knownFactIds: string[];
+  activeContextIds: string[];
+  resolvedAtWorldMinute: number;
+}
+
+interface Level0ResourceEvent {
+  eventId: string;
+  resource: 'health' | 'paranoia';
+  sourceId: string;
+  amount: number;
+  before: number;
+  after: number;
+  worldMinute: number;
+  feedbackId: string;
+  retryTreatment: 'captured-at-departure' | 'discard-on-retry';
+  crossedParanoiaPenalties: Array<1 | 2 | 3>;
+}
+
+interface Level0XpEvent {
+  milestoneId: string;
+  amount: number;
+  before: number;
+  after: number;
+  worldMinute: number;
+  feedbackId: string;
+}
+
+interface Level0AllocationEvent {
+  eventId: string;
+  kind: 'level' | 'skill' | 'attribute';
+  key?: SkillKey | AttributeKey;
+  before: number;
+  after: number;
+  worldMinute: number;
+}
+
+interface Level0RpgLedger {
+  resolvedChecks: Record<string, CommittedCheckResolution>;
+  resourceEvents: Level0ResourceEvent[];
+  announcedParanoiaPenalties: Array<1 | 2 | 3>;
+  awardedMilestoneIds: string[];
+  xpEvents: Level0XpEvent[];
+  pendingLevelUps: number;
+  allocationEvents: Level0AllocationEvent[];
 }
 ```
 
-The resolver is pure and deterministic. UI consumes the same resolution details shown to diagnostics.
+The resolver is pure and deterministic. T7 provides a reusable `Level0CheckBreakdown` component and proves it directly with resolver output; it is not yet mounted in ordinary mission controls. T9 must mount that same read model in authored dialogue/terminal choices so the player and diagnostics consume identical details. A committed attempt key is derived from check ID plus sorted authored context IDs; reopening the same attempt returns its first resolution, while reusing a resolution ID for another attempt is rejected. Persistence stores and recomputes the exact inputs rather than trusting serialized outcome math.
 
 ### Facts and discovery
 
@@ -456,6 +522,7 @@ interface RetrySnapshot {
   createdAtWorldMinute: number;
   identity: PlayerIdentity;
   build: PlayerBuild;
+  rpg: Level0RpgLedger;
   health: number;
   paranoia: number;
   worldClock: WorldClockState;
@@ -655,7 +722,7 @@ The sheet matrix is derived from the stable actor/state/direction path function 
 
 A generated integrity module owns portrait/non-world hashes and byte counts; sheet metrics remain adjacent to each actor directory. The validator independently compares those generated TypeScript records with the central integrity JSON so updating source PNGs and only one generated surface cannot pass. Required actors must pass complete-matrix, pixel-derived anchor/occupancy, portrait/provenance/path, generated-record parity, and fault-injection validation before production acceptance. Fallback is observable neutral resilience, never a rejected fantasy asset or acceptance evidence. Performance measurements are recorded, but shipping acceptance remains blocked until `OPEN-PERF-001` defines target hardware and numeric ceilings.
 
-The four current appearance IDs are defined once by the actor manifest and reused by selection, persistence, and runtime resolution. Save decode rejects unknown IDs. A narrow compatibility shim may map only the known pre-T6 placeholder `provisional-runtime-silhouette` to preset 1 inside an otherwise valid current Level 0 envelope; it is not a general fallback and cannot normalize arbitrary stale/future identity values.
+The four current appearance IDs are defined once by the actor manifest and reused by selection, persistence, and runtime resolution. Save decode strictly rejects unknown or retired IDs, including the pre-T6 `provisional-runtime-silhouette`; it never guesses a current preset from stale identity data.
 
 ## 6. Layout and Blender data flow
 
@@ -790,7 +857,9 @@ George consumes a read-only context assembled from mission state, facts, known d
 
 ## 10. Health, Paranoia, and progression
 
-Health and Paranoia changes are authored effects with source IDs, before/after values, and feedback keys. No frame loop applies passive damage or Paranoia decay/gain.
+Health and Paranoia changes are idempotent authored effects with stable event/source IDs, signed amount, exact before/after values, world minute, feedback key, Retry treatment, and crossed-threshold metadata. Retry treatment is derived from the operation-departure boundary: events already present when the immutable snapshot is created are `captured-at-departure`; later events are `discard-on-retry`. Presets cannot hard-code a contradictory treatment. An existing event ID or terminal run rejects another application. No frame loop applies passive damage or Paranoia decay/gain.
+
+The Redux runtime keeps only ephemeral resource-event IDs for the currently visible feedback. The HUD resolves those IDs back to the authoritative run ledger and renders localized resource, signed amount, and authored source copy; it never derives player text from a machine ID. Persistent consequence summaries remain outcome-ledger data and never reuse transient resource logs.
 
 The pure check resolver obtains the Paranoia penalty from current value:
 
@@ -800,7 +869,7 @@ The pure check resolver obtains the Paranoia penalty from current value:
 - `90–99`: −3;
 - `100`: fatal collapse before further check resolution.
 
-Milestone XP uses stable award IDs to prevent duplication. Level thresholds remain replaceable content data whether provisional or approved. Level-up allocation is rejected outside an allowed safehouse/debrief context.
+Milestone XP uses stable award IDs and an ordered XP event ledger to prevent duplication. Level thresholds and event values remain replaceable content data whether provisional or approved; they are not copied into `PlayerBuild`. A pending level is activated only in a clear, unobserved safehouse or during debrief, grants two skill points and every-third-level attribute points, and writes each level/skill/attribute mutation to the allocation ledger. Domain rejection remains authoritative and the Character UI disables the same actions with the same context explanation.
 
 ## 11. Time, schedules, and pause
 
@@ -820,7 +889,7 @@ Use distinct storage keys and schema envelopes for:
 - operation-departure Retry snapshot;
 - settings/localization.
 
-Each envelope contains schema version, content/layout version, timestamp, and a deeply validated payload. Spatial checkpoints must be finite, walkable, and compatible with the active layout; facing is a nonzero unit vector; deterministic generation identifiers must match the active runtime; deadline failure requirements must equal the completion fields that remain false.
+Each envelope contains schema version, content/layout version, timestamp, and a deeply validated payload. Version 2 requires `PlayerIdentity`, `PlayerBuild`, and the complete `Level0RpgLedger`; there is no production default character or best-effort field filling. Check, resource, XP, threshold, pending-level, allocation, and final-build consistency is recomputed during hydration. Spatial checkpoints must be finite, walkable, and compatible with the active layout; facing is a nonzero unit vector; deterministic generation identifiers must match the active runtime; deadline failure requirements must equal the completion fields that remain false.
 
 ### Autosave
 

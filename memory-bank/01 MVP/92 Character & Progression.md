@@ -28,7 +28,7 @@ The player can:
 ## 3. Starting state and prerequisites
 
 - New Game opens character creation before Level 0.
-- Callsign is player-chosen and validated for display; no fixed `Trace` or `Operative` identity is assigned.
+- Callsign is player-chosen and validated for display; no fixed `Trace` or `Operative` identity is assigned. Exact normalization/display validation remains `OPEN-RPG-005`; its recorded Unicode-safe rule may be trialed reversibly until accepted.
 - Four authored appearances are available and use grounded dystopian civilian/exile presentation.
 - All four attributes begin at `1`.
 - All eight skills begin at `0`.
@@ -60,7 +60,7 @@ The player can:
 - Physical, Mental, Social, Technical;
 - Stealth, Evasion, Awareness, Composure, Insight, Influence, Systems, OpSec;
 - level;
-- current XP and next-level threshold;
+- current XP; the next-level threshold is derived from versioned progression content rather than persisted inside the build;
 - unspent skill points;
 - unspent attribute points.
 
@@ -108,7 +108,7 @@ XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes availa
 - Every third level grants `1` attribute point.
 - No attribute or skill may exceed its long-term cap.
 - XP comes only from authored milestones and is awarded once.
-- The Level 0 XP threshold and milestone award table remain `OPEN-RPG-002` in [[14 Specification Review Queue]].
+- The Level 0 XP threshold and milestone award table remain `OPEN-RPG-002` in [[14 Specification Review Queue]]. Its reversible recommendation trials a `100 XP` Level 2 threshold with one `50 XP` medkit-return award and one `50 XP` transit-validation award; these are not Approved tuning while the item remains open. Thresholds are versioned authored content and are never duplicated into persisted `PlayerBuild` data.
 
 ## 7. Inputs from other systems
 
@@ -133,7 +133,7 @@ XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes availa
 - Character creation explains capabilities in concrete Level 0 language, not abstract genre roles.
 - Budget, caps, invalid allocation, and remaining points are always visible.
 - The Character screen shows only callsign, appearance, level, XP, four attributes, eight skills, Health, Paranoia, unspent points, important facts, and long-term consequence summaries.
-- Check UI shows the named attribute, skill, requirement, Paranoia penalty, known fact modifier, and final outcome explanation.
+- Check UI shows the named attribute, skill, requirement, Paranoia penalty, known fact modifier, localized authored situational reason, exact signed math, and final outcome explanation.
 - Level-up feedback is restrained and becomes actionable only at the safehouse/debrief.
 - George may explain a capability or known consequence, but does not recommend a “best build,” spend points, or reveal hidden checks.
 
@@ -151,7 +151,7 @@ XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes availa
 - Create four grounded protagonist sprite/portrait identities with stable preset IDs.
 - Provide concise localized descriptions for every attribute and skill, including representative Level 0 uses.
 - Author at least two deliberately different viable sample builds and acceptance routes.
-- Catalog every Level 0 check with attribute, skill, requirement, exact stable-ID fact behavior, situational modifiers, success, and fail-forward effects. Requirements and modifier semantics use approved values or the isolated reversible recommendations from `OPEN-RPG-001` and `OPEN-RPG-004` until accepted.
+- Catalog every Level 0 check with attribute, skill, requirement, exact stable-ID fact behavior, situational modifiers with authored localization keys, success, and fail-forward effects. Requirements and modifier semantics use approved values or the isolated reversible recommendations from `OPEN-RPG-001` and `OPEN-RPG-004` until accepted.
 - Define XP milestones and the Level 0 progression demonstration in approved or explicitly provisional authored data before encoding rewards.
 - Author Character-screen consequence summaries from stable outcome fields rather than raw logs.
 
@@ -176,7 +176,7 @@ Post-MVP may add more identity presentation, Level 1 checks, additional authored
 ## 15. Human-play acceptance examples
 
 1. A first-time player creates a valid protagonist in no more than two minutes without needing genre-package knowledge.
-2. A Social/Mental build and a Technical/Evasion build encounter materially different options while both remain able to finish Level 0.
+2. At T7 delivery, a Social/Mental build and a Technical/Evasion build are created through normal New Game controls and produce materially different results in the reusable visible check-breakdown component for the same canonical requirement. T9/T10 must expose and re-prove those differences inside authored dialogue, evidence, terminal, and escape contexts while both remain able to finish Level 0.
 3. Requirements are visible before a check; the result explains exact build, fact, situational, and Paranoia contributions.
 4. Naila’s designated fact guarantees only the manifest recognition it names and does not raise Awareness globally.
 5. Repeated dialogue or interaction cannot duplicate XP.

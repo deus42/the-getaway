@@ -1,5 +1,5 @@
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../../content/levels/level0/layoutContract';
-import { createInitialLevel0RunState } from '../safehouse';
+import { createTestLevel0RunState } from '../../testing/createTestLevel0RunState';
 import {
   getKnownLevel0AnchorIds,
   getWorldOwnedLevel0AnchorIds,
@@ -8,7 +8,7 @@ import {
 
 describe('Level 0 map knowledge', () => {
   it('reveals only authored starting knowledge on a new run', () => {
-    const run = createInitialLevel0RunState('knowledge-start');
+    const run = createTestLevel0RunState('knowledge-start');
     const known = getKnownLevel0AnchorIds(run);
 
     expect(known).toContain('safehouse.boundary');
@@ -21,7 +21,7 @@ describe('Level 0 map knowledge', () => {
   });
 
   it('reveals a camera only after its stable authored ID is discovered', () => {
-    const run = createInitialLevel0RunState('knowledge-camera');
+    const run = createTestLevel0RunState('knowledge-camera');
     const camera = LEVEL0_LAYOUT_CONTRACT.anchors.find(
       (anchor) => anchor.id === 'camera.public_gate'
     )!;
@@ -32,7 +32,7 @@ describe('Level 0 map knowledge', () => {
   });
 
   it('reveals an exact objective anchor only at exact precision', () => {
-    const run = createInitialLevel0RunState('knowledge-objective-precision');
+    const run = createTestLevel0RunState('knowledge-objective-precision');
     const objective = LEVEL0_LAYOUT_CONTRACT.anchors.find(
       (anchor) => anchor.id === 'objective.medkits'
     )!;
@@ -47,7 +47,7 @@ describe('Level 0 map knowledge', () => {
   });
 
   it('derives world ownership independently from player knowledge', () => {
-    const run = createInitialLevel0RunState('knowledge-ownership');
+    const run = createTestLevel0RunState('knowledge-ownership');
 
     expect(getWorldOwnedLevel0AnchorIds(run)).toContain('contact.lira');
     expect(getWorldOwnedLevel0AnchorIds(run)).not.toContain('objective.medkits');

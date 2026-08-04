@@ -43,9 +43,9 @@ Threshold transitions are announced once per crossing and remain visible through
 - No passive curfew gain.
 - No passive outdoor decay.
 - Safehouse rest: −40, +30 minutes, once per confirmed action.
-- Smaller recovery values remain acceptance decisions under `OPEN-PAR-002`; its recorded recommendation may be trialed as replaceable authored data.
+- Smaller recovery values remain acceptance decisions under `OPEN-PAR-002`; the replaceable provisional presets are trusted conversation `−10 once` and difficult successful recovery `−5 once`, enforced by stable event-ID idempotency and not yet attached to final mission content.
 - Event amounts/rates remain acceptance decisions under `OPEN-PAR-001`; its recorded recommendation may be trialed as replaceable authored data.
-- Every change stores source, amount, time, and resulting value.
+- Every change stores stable event/source IDs, signed amount, before/after values, world minute, feedback key, Retry treatment derived from whether the departure snapshot already exists, and any newly crossed penalty thresholds.
 
 ## 7. Inputs from other systems
 
