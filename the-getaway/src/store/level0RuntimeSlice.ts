@@ -73,10 +73,13 @@ const level0RuntimeSlice = createSlice({
   reducers: {
     initializeLevel0Run: (
       _state,
-      action: PayloadAction<{ sessionId: string }>
+      action: PayloadAction<{ sessionId: string; appearancePresetId?: string }>
     ): Level0RuntimeState => ({
       status: 'active',
-      run: createInitialLevel0RunState(action.payload.sessionId),
+      run: createInitialLevel0RunState(
+        action.payload.sessionId,
+        action.payload.appearancePresetId
+      ),
       feedbackId: null,
       clockEventIds: [],
       sceneRevision: 1,

@@ -10,6 +10,7 @@ import {
   getCharacterSpriteAnimationKey,
   getCharacterSpriteSheetPath,
   getCharacterSpriteTextureKey,
+  resolveEnemySpriteSetId,
   resolveNpcSpriteSetId,
   resolvePlayerSpriteSetId,
 } from '../content/characters/spriteManifest';
@@ -19,9 +20,13 @@ import {
   resolveCharacterFacing,
 } from '../game/visual/entities/characterPresentation';
 import {
+  areCharacterSpriteSheetRefsLoaded,
   isCharacterSpriteSetLoaded,
+  preloadCharacterSpriteSheetRefs,
   preloadCharacterSpriteSheets,
+  registerCharacterSpriteSheetAnimations,
   registerCharacterSpriteAnimations,
+  type CharacterSpriteSheetRef,
 } from '../game/visual/entities/characterSpriteAssets';
 import type Phaser from 'phaser';
 
@@ -56,25 +61,26 @@ const createMockScene = ({
 };
 
 describe('sprite manifest helpers', () => {
-  it('resolves sprite set ids for hero appearance presets and NPC dialogue ids', () => {
-    expect(resolvePlayerSpriteSetId('tech')).toBe('hero_tech');
-    expect(resolvePlayerSpriteSetId('unknown-preset')).toBe('hero_operative');
-    expect(resolvePlayerSpriteSetId()).toBe('hero_operative');
+  it('resolves only authored appearance, contact, and security bindings', () => {
+    expect(resolvePlayerSpriteSetId('player_civilian_03')).toBe('player_civilian_03');
+    expect(resolvePlayerSpriteSetId('unknown-preset')).toBeUndefined();
+    expect(resolvePlayerSpriteSetId()).toBeUndefined();
 
-    expect(resolveNpcSpriteSetId('npc_archivist_naila')).toBe('npc_archivist_naila');
+    expect(resolveNpcSpriteSetId('npc_archivist_naila')).toBe('contact_naila');
     expect(resolveNpcSpriteSetId(null)).toBeUndefined();
     expect(resolveNpcSpriteSetId('npc_missing')).toBeUndefined();
+    expect(resolveEnemySpriteSetId('enemies.corpsec_guard')).toBe('security_hidzu_identity');
   });
 
   it('builds deterministic sheet, texture, and animation keys', () => {
-    expect(getCharacterSpriteSheetPath('hero_operative', 'move', 'north-east')).toBe(
-      'characters/hero_operative/move-north-east.png'
+    expect(getCharacterSpriteSheetPath('player_civilian_01', 'move', 'north-east')).toBe(
+      'characters/player_civilian_01/move-north-east.png'
     );
-    expect(getCharacterSpriteTextureKey('hero_operative', 'move', 'north-east')).toBe(
-      'character:hero_operative:move:north-east:sheet'
+    expect(getCharacterSpriteTextureKey('player_civilian_01', 'move', 'north-east')).toBe(
+      'character:player_civilian_01:move:north-east:sheet'
     );
-    expect(getCharacterSpriteAnimationKey('hero_operative', 'move', 'north-east')).toBe(
-      'hero_operative:move:north-east'
+    expect(getCharacterSpriteAnimationKey('player_civilian_01', 'move', 'north-east')).toBe(
+      'player_civilian_01:move:north-east'
     );
   });
 });
@@ -115,6 +121,39 @@ describe('character presentation helpers', () => {
 });
 
 describe('character sprite asset registration', () => {
+  it('deduplicates and registers only valid requested sheet leaves', () => {
+    const scene = createMockScene();
+    const refs: CharacterSpriteSheetRef[] = [
+      { spriteSetId: 'player_civilian_01', state: 'idle', direction: 'north' },
+      { spriteSetId: 'player_civilian_01', state: 'idle', direction: 'north' },
+      { spriteSetId: 'contact_lira', state: 'interact', direction: 'south-east' },
+      { spriteSetId: 'unknown-set', state: 'idle', direction: 'south' },
+    ];
+
+    preloadCharacterSpriteSheetRefs(scene, refs);
+    registerCharacterSpriteSheetAnimations(scene, refs);
+
+    expect(scene.load.spritesheet).toHaveBeenCalledTimes(2);
+    expect(scene.anims.create).toHaveBeenCalledTimes(2);
+    expect(scene.anims.create).toHaveBeenCalledWith(expect.objectContaining({
+      key: 'contact_lira:interact:south-east',
+      repeat: 0,
+    }));
+    expect(areCharacterSpriteSheetRefsLoaded(scene, refs.slice(0, 3))).toBe(true);
+    expect(areCharacterSpriteSheetRefsLoaded(scene, refs)).toBe(false);
+  });
+
+  it('rejects a partial presentation when one requested texture is missing', () => {
+    const missing = getCharacterSpriteTextureKey('contact_lira', 'interact', 'south-east');
+    const scene = createMockScene({ textureExists: (key) => key !== missing });
+    const refs: CharacterSpriteSheetRef[] = [
+      { spriteSetId: 'contact_lira', state: 'idle', direction: 'south-east' },
+      { spriteSetId: 'contact_lira', state: 'interact', direction: 'south-east' },
+    ];
+
+    expect(areCharacterSpriteSheetRefsLoaded(scene, refs)).toBe(false);
+  });
+
   it('preloads every state and direction sheet from the manifest', () => {
     const scene = createMockScene();
 
@@ -127,8 +166,8 @@ describe('character sprite asset registration', () => {
 
     expect(scene.load.spritesheet).toHaveBeenCalledTimes(expectedCallCount);
     expect(scene.load.spritesheet).toHaveBeenCalledWith(
-      'character:hero_operative:idle:north:sheet',
-      'characters/hero_operative/idle-north.png',
+      'character:player_civilian_01:idle:north:sheet',
+      'characters/player_civilian_01/idle-north.png',
       {
         frameWidth: 64,
         frameHeight: 96,
@@ -138,22 +177,22 @@ describe('character sprite asset registration', () => {
   });
 
   it('requires every sheet in a sprite set to be loaded before treating it as available', () => {
-    const missingTextureKey = getCharacterSpriteTextureKey('hero_operative', 'attack', 'north-west');
+    const missingTextureKey = getCharacterSpriteTextureKey('player_civilian_01', 'interact', 'north-west');
     const scene = createMockScene({
       textureExists: (key) => key !== missingTextureKey,
     });
 
-    expect(isCharacterSpriteSetLoaded(scene, 'hero_operative')).toBe(false);
-    expect(isCharacterSpriteSetLoaded(scene, 'npc_archivist_naila')).toBe(true);
+    expect(isCharacterSpriteSetLoaded(scene, 'player_civilian_01')).toBe(false);
+    expect(isCharacterSpriteSetLoaded(scene, 'contact_naila')).toBe(true);
     expect(isCharacterSpriteSetLoaded(scene, 'missing-set')).toBe(false);
     expect(isCharacterSpriteSetLoaded(scene, undefined)).toBe(false);
   });
 
   it('registers looping and non-looping animations only for loaded sprite sets', () => {
-    const skippedSpriteSet = 'npc_archivist_naila';
+    const skippedSpriteSet = 'contact_naila';
     const scene = createMockScene({
       textureExists: (key) => !key.startsWith(`character:${skippedSpriteSet}:`),
-      animationExists: (key) => key === getCharacterSpriteAnimationKey('hero_operative', 'idle', 'north'),
+      animationExists: (key) => key === getCharacterSpriteAnimationKey('player_civilian_01', 'idle', 'north'),
     });
 
     registerCharacterSpriteAnimations(scene);
@@ -166,29 +205,29 @@ describe('character sprite asset registration', () => {
 
     expect(scene.anims.create).toHaveBeenCalledTimes(expectedCreatedAnimations);
 
-    const attackAnimation = (scene.anims.create as jest.Mock).mock.calls
+    const interactAnimation = (scene.anims.create as jest.Mock).mock.calls
       .map(([config]) => config)
-      .find((config) => config.key === getCharacterSpriteAnimationKey('hero_operative', 'attack', 'south'));
+      .find((config) => config.key === getCharacterSpriteAnimationKey('player_civilian_01', 'interact', 'south'));
     const idleAnimation = (scene.anims.create as jest.Mock).mock.calls
       .map(([config]) => config)
-      .find((config) => config.key === getCharacterSpriteAnimationKey('hero_operative', 'idle', 'south'));
+      .find((config) => config.key === getCharacterSpriteAnimationKey('player_civilian_01', 'idle', 'south'));
 
-    expect(attackAnimation).toMatchObject({
-      key: 'hero_operative:attack:south',
-      frameRate: CHARACTER_SPRITE_MANIFEST[0].stateFps.attack,
+    expect(interactAnimation).toMatchObject({
+      key: 'player_civilian_01:interact:south',
+      frameRate: CHARACTER_SPRITE_MANIFEST[0].stateFps.interact,
       repeat: 0,
       frames: {
-        key: 'character:hero_operative:attack:south:sheet',
+        key: 'character:player_civilian_01:interact:south:sheet',
         start: 0,
         end: 3,
       },
     });
     expect(idleAnimation).toMatchObject({
-      key: 'hero_operative:idle:south',
+      key: 'player_civilian_01:idle:south',
       frameRate: CHARACTER_SPRITE_MANIFEST[0].stateFps.idle,
       repeat: -1,
       frames: {
-        key: 'character:hero_operative:idle:south:sheet',
+        key: 'character:player_civilian_01:idle:south:sheet',
         start: 0,
         end: 3,
       },

@@ -1,5 +1,19 @@
 import Phaser from 'phaser';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
+import {
+  CHARACTER_SPRITE_MANIFEST_BY_ID,
+  NON_WORLD_CHARACTER_PRESENTATIONS,
+  getCharacterSpriteAnimationKey,
+  getCharacterSpriteTextureKey,
+  resolvePlayerSpriteSetId,
+  type CharacterSpriteDirection,
+  type CharacterSpriteState,
+} from '../../../content/characters/spriteManifest';
+import {
+  areCharacterSpriteSheetRefsLoaded,
+  preloadCharacterSpriteSheetRefs,
+  registerCharacterSpriteSheetAnimations,
+} from '../../visual/entities/characterSpriteAssets';
 import type { Level0Anchor, WorldPoint, WorldPolygon } from '../layout/types';
 import { LEVEL0_PLAYER_CLEARANCE_RADIUS } from '../layout/constants';
 import { createLevel0Projection } from '../layout/projection';
@@ -22,15 +36,28 @@ import type {
   Level0AgentMoveDetail,
   Level0AgentMoveResultDetail,
 } from '../playtest/events';
+import {
+  LEVEL0_CONTACT_ACTOR_PRESENTATIONS,
+  LEVEL0_ACTOR_INTERACTION_DURATION_MS,
+  LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
+  type Level0ActorInteractionPresentationDetail,
+  resolveLevel0GeorgeWorldPresentation,
+  resolveLevel0ActorSpriteSheetRefs,
+  resolveLevel0PlayerSpriteState,
+  resolveLevel0SceneSpriteSheetRefs,
+  resolveLevel0SpriteDirection,
+} from './level0ActorPresentation';
 
 export const LEVEL0_SCENE_KEY = 'Level0RuntimeScene';
 export const LEVEL0_MIN_ZOOM = 0.6;
 export const LEVEL0_MAX_ZOOM = 1.25;
+const LEVEL0_GEORGE_TEXTURE_KEY = 'level0:george-ar:idle';
 
 export interface Level0SceneRuntime {
   getRun(): Level0RunState | null;
   isMovementPaused(): boolean;
   isObservationActive(): boolean;
+  isGeorgePresentationVisible(): boolean;
   onPlayerCheckpoint(position: WorldPoint, facing: WorldPoint): void;
   onFeedback(feedbackId: string): void;
   onInteraction(anchorId?: string): void;
@@ -47,6 +74,13 @@ interface KeyboardControls {
 }
 
 type AnchorVisual = Phaser.GameObjects.Graphics | Phaser.GameObjects.Text;
+
+interface Level0SceneActorVisual {
+  actorId: string;
+  container: Phaser.GameObjects.Container;
+  sprite: Phaser.GameObjects.Sprite | null;
+  directionMarker: Phaser.GameObjects.Triangle | null;
+}
 
 const contract = LEVEL0_LAYOUT_CONTRACT;
 const origin = {
@@ -122,7 +156,15 @@ export class Level0Scene extends Phaser.Scene {
 
   private playerMarker: Phaser.GameObjects.Container | null = null;
 
+  private playerSprite: Phaser.GameObjects.Sprite | null = null;
+
   private playerDirection: Phaser.GameObjects.Triangle | null = null;
+
+  private georgePresentation: Phaser.GameObjects.Image | Phaser.GameObjects.Graphics | null = null;
+
+  private playerInteractionUntil = 0;
+
+  private readonly contactInteractionUntil = new Map<string, number>();
 
   private targetMarker: Phaser.GameObjects.Graphics | null = null;
 
@@ -136,6 +178,8 @@ export class Level0Scene extends Phaser.Scene {
 
   private readonly anchorVisuals = new Map<string, AnchorVisual[]>();
 
+  private readonly contactActors = new Map<string, Level0SceneActorVisual>();
+
   private pointerDownAt: { x: number; y: number; cameraX: number; cameraY: number } | null = null;
 
   private pointerDragged = false;
@@ -145,19 +189,38 @@ export class Level0Scene extends Phaser.Scene {
     this.runtime = runtime;
   }
 
+  preload(): void {
+    const run = this.runtime.getRun();
+    if (!run) return;
+    preloadCharacterSpriteSheetRefs(
+      this,
+      resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId)
+    );
+    this.load.image(
+      LEVEL0_GEORGE_TEXTURE_KEY,
+      NON_WORLD_CHARACTER_PRESENTATIONS.georgeAr.path
+    );
+  }
+
   create(): void {
     const run = this.runtime.getRun();
     if (!run) {
       throw new Error('Level 0 scene cannot start without an active run');
     }
 
+    registerCharacterSpriteSheetAnimations(
+      this,
+      resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId)
+    );
     this.movement = createIdleMovementState(run.player.position);
     this.movement.facing = { ...run.player.facing };
     this.drawWorld();
     this.syncAnchorKnowledge(run);
-    this.createPlayerMarker();
+    this.createPlayerMarker(run);
+    this.createContactActors();
     this.createIntentMarkers();
     this.configureCamera(run.player.position);
+    this.createGeorgePresentation();
     this.configureInput();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardownInput());
   }
@@ -182,7 +245,8 @@ export class Level0Scene extends Phaser.Scene {
 
     const keyboardInput = this.readKeyboardInput();
     const keyboardActive = Object.values(keyboardInput).some(Boolean);
-    if (!this.runtime.isMovementPaused()) {
+    const interactionActive = this.time.now < this.playerInteractionUntil;
+    if (!this.runtime.isMovementPaused() && !interactionActive) {
       if (keyboardActive || this.movement.intent.kind === 'keyboard') {
         this.movement = resolveIsometricKeyboardIntent(this.movement, keyboardInput);
       }
@@ -205,6 +269,7 @@ export class Level0Scene extends Phaser.Scene {
 
     this.renderMovementState();
     this.followPlayerUnlessObserving();
+    this.renderGeorgePresentation();
     const currentRun = this.runtime.getRun();
     if (currentRun) this.syncAnchorKnowledge(currentRun);
 
@@ -334,6 +399,7 @@ export class Level0Scene extends Phaser.Scene {
       );
       return [graphics];
     }
+    if (anchor.kind === 'contact') return [];
     if (anchor.kind === 'audio') return [];
 
     const position = projection.layoutToScene(anchor.position);
@@ -369,11 +435,157 @@ export class Level0Scene extends Phaser.Scene {
     });
   }
 
-  private createPlayerMarker(): void {
-    const body = this.add.ellipse(0, -15, 18, 28, 0xd5c8ad, 1).setStrokeStyle(3, 0x17191d, 1);
-    this.playerDirection = this.add.triangle(0, -34, 0, 10, -6, -2, 6, -2, 0xd59a45, 1);
-    this.playerMarker = this.add.container(0, 0, [body, this.playerDirection]).setDepth(200);
+  private createPlayerMarker(run: Level0RunState): void {
+    const spriteSetId = resolvePlayerSpriteSetId(run.identity.appearancePresetId);
+    const visual = this.createActorVisual(
+      run.identity.appearancePresetId,
+      spriteSetId,
+      resolveLevel0SpriteDirection(run.player.facing)
+    );
+    this.playerMarker = visual.container;
+    this.playerSprite = visual.sprite;
+    this.playerDirection = visual.directionMarker;
     this.renderMovementState();
+  }
+
+  private createContactActors(): void {
+    LEVEL0_CONTACT_ACTOR_PRESENTATIONS.forEach((presentation) => {
+      const visual = this.createActorVisual(
+        presentation.actorId,
+        presentation.actorId,
+        presentation.facing
+      );
+      const scenePosition = projection.layoutToScene(presentation.position);
+      visual.container
+        .setPosition(scenePosition.x, scenePosition.y)
+        .setDepth(100 + scenePosition.y);
+      this.playActorAnimation(visual.sprite, presentation.actorId, 'idle', presentation.facing);
+      this.contactActors.set(presentation.actorId, visual);
+    });
+  }
+
+  private createGeorgePresentation(): void {
+    if (this.textures.exists(LEVEL0_GEORGE_TEXTURE_KEY)) {
+      this.georgePresentation = this.add
+        .image(0, 0, LEVEL0_GEORGE_TEXTURE_KEY)
+        .setOrigin(0.5)
+        .setAlpha(0.82);
+    } else {
+      const diagnostic = this.add.graphics();
+      diagnostic.lineStyle(12, 0x6ba9ae, 0.9);
+      diagnostic.strokeCircle(0, 0, 72);
+      diagnostic.lineBetween(-52, 0, 52, 0);
+      diagnostic.lineBetween(0, -52, 0, 52);
+      this.georgePresentation = diagnostic;
+    }
+    this.georgePresentation.setData('presentationId', 'george_ar_idle');
+    this.georgePresentation.setData('interactionOwner', false);
+    this.renderGeorgePresentation();
+  }
+
+  private renderGeorgePresentation(): void {
+    if (!this.georgePresentation || !this.movement || !this.playerMarker) return;
+    const playerScenePosition = projection.layoutToScene(this.movement.position);
+    const presentation = resolveLevel0GeorgeWorldPresentation(
+      playerScenePosition,
+      this.cameras.main.zoom
+    );
+    this.georgePresentation
+      .setPosition(presentation.position.x, presentation.position.y)
+      .setScale(presentation.scale)
+      .setDepth(this.playerMarker.depth + 1)
+      .setVisible(this.runtime.isGeorgePresentationVisible());
+  }
+
+  private createActorVisual(
+    actorId: string,
+    spriteSetId: string | undefined,
+    facing: CharacterSpriteDirection
+  ): Level0SceneActorVisual {
+    const container = this.add.container(0, 0);
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x06080a, 0.5);
+    shadow.fillEllipse(0, 1, 28, 8);
+    container.add(shadow);
+
+    const entry = spriteSetId ? CHARACTER_SPRITE_MANIFEST_BY_ID[spriteSetId] : undefined;
+    const requiredRefs = spriteSetId ? resolveLevel0ActorSpriteSheetRefs(spriteSetId) : [];
+    if (spriteSetId && entry && areCharacterSpriteSheetRefsLoaded(this, requiredRefs)) {
+      const sprite = this.add.sprite(
+        0,
+        0,
+        getCharacterSpriteTextureKey(spriteSetId, 'idle', facing),
+        0
+      );
+      sprite.setOrigin(entry.origin.x, entry.origin.y);
+      sprite.setScale(entry.worldScale);
+      container.add(sprite);
+      container.setData('actorId', actorId);
+      container.setData('spriteSetId', spriteSetId);
+      container.setData('presentationKind', 'sprite');
+      this.playActorAnimation(sprite, spriteSetId, 'idle', facing);
+      return { actorId, container, sprite, directionMarker: null };
+    }
+
+    const diagnostic = this.add.graphics();
+    diagnostic.fillStyle(0x31343a, 1);
+    diagnostic.fillRoundedRect(-11, -43, 22, 31, 3);
+    diagnostic.fillStyle(0xb9b2a4, 1);
+    diagnostic.fillCircle(0, -51, 8);
+    diagnostic.lineStyle(4, 0xb9b2a4, 1);
+    diagnostic.lineBetween(-6, -14, -7, 0);
+    diagnostic.lineBetween(6, -14, 7, 0);
+    diagnostic.lineStyle(2, 0x70757d, 1);
+    diagnostic.strokeRoundedRect(-12, -44, 24, 33, 3);
+    const directionMarker = this.add.triangle(
+      0,
+      -31,
+      0,
+      -7,
+      -4,
+      1,
+      4,
+      1,
+      0x78a9ab,
+      1
+    );
+    container.add([diagnostic, directionMarker]);
+    container.setData('actorId', actorId);
+    container.setData('spriteSetId', spriteSetId ?? null);
+    container.setData('presentationKind', 'neutral-diagnostic');
+    this.rotateDiagnosticDirection(directionMarker, facing);
+    return { actorId, container, sprite: null, directionMarker };
+  }
+
+  private playActorAnimation(
+    sprite: Phaser.GameObjects.Sprite | null,
+    spriteSetId: string,
+    state: CharacterSpriteState,
+    facing: CharacterSpriteDirection
+  ): void {
+    if (!sprite) return;
+    const animationKey = getCharacterSpriteAnimationKey(spriteSetId, state, facing);
+    if (!this.anims.exists(animationKey)) return;
+    if (sprite.anims.currentAnim?.key !== animationKey || !sprite.anims.isPlaying) {
+      sprite.play(animationKey, true);
+    }
+  }
+
+  private rotateDiagnosticDirection(
+    marker: Phaser.GameObjects.Triangle,
+    facing: CharacterSpriteDirection
+  ): void {
+    const angles: Record<CharacterSpriteDirection, number> = {
+      north: 0,
+      'north-east': Math.PI / 4,
+      east: Math.PI / 2,
+      'south-east': (Math.PI * 3) / 4,
+      south: Math.PI,
+      'south-west': (Math.PI * 5) / 4,
+      west: (Math.PI * 3) / 2,
+      'north-west': (Math.PI * 7) / 4,
+    };
+    marker.setRotation(angles[facing]);
   }
 
   private createIntentMarkers(): void {
@@ -415,6 +627,10 @@ export class Level0Scene extends Phaser.Scene {
     this.input.on('pointerup', this.handlePointerUp, this);
     this.input.on('wheel', this.handleWheel, this);
     window.addEventListener(LEVEL0_AGENT_MOVE_EVENT, this.handleAgentMove);
+    window.addEventListener(
+      LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
+      this.handleActorInteractionPresentation
+    );
   }
 
   private teardownInput(): void {
@@ -425,6 +641,10 @@ export class Level0Scene extends Phaser.Scene {
     this.input.off('pointerup', this.handlePointerUp, this);
     this.input.off('wheel', this.handleWheel, this);
     window.removeEventListener(LEVEL0_AGENT_MOVE_EVENT, this.handleAgentMove);
+    window.removeEventListener(
+      LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
+      this.handleActorInteractionPresentation
+    );
   }
 
   private readKeyboardInput(): KeyboardInputState {
@@ -439,6 +659,34 @@ export class Level0Scene extends Phaser.Scene {
   private handleInteract(): void {
     if (this.runtime.isMovementPaused()) return;
     this.runtime.onInteraction();
+  }
+
+  private readonly handleActorInteractionPresentation = (event: Event): void => {
+    const detail = (event as CustomEvent<Level0ActorInteractionPresentationDetail>).detail;
+    this.beginActorInteraction(detail?.anchorId);
+  };
+
+  private beginActorInteraction(anchorId?: string): void {
+    this.playerInteractionUntil = this.time.now + LEVEL0_ACTOR_INTERACTION_DURATION_MS;
+    if (this.movement) {
+      this.movement = { ...this.movement, intent: { kind: 'idle' } };
+      this.targetMarker?.setVisible(false);
+    }
+    const contact = LEVEL0_CONTACT_ACTOR_PRESENTATIONS.find(
+      (presentation) => presentation.anchorId === anchorId
+    );
+    if (!contact) return;
+    const visual = this.contactActors.get(contact.actorId);
+    if (!visual) return;
+
+    const interactionUntil = this.time.now + LEVEL0_ACTOR_INTERACTION_DURATION_MS;
+    this.contactInteractionUntil.set(contact.actorId, interactionUntil);
+    this.playActorAnimation(visual.sprite, contact.actorId, 'interact', contact.facing);
+    this.time.delayedCall(LEVEL0_ACTOR_INTERACTION_DURATION_MS, () => {
+      if (this.contactInteractionUntil.get(contact.actorId) !== interactionUntil) return;
+      this.contactInteractionUntil.delete(contact.actorId);
+      this.playActorAnimation(visual.sprite, contact.actorId, 'idle', contact.facing);
+    });
   }
 
   private handleObservationToggle(): void {
@@ -567,6 +815,16 @@ export class Level0Scene extends Phaser.Scene {
     const scenePosition = projection.layoutToScene(this.movement.position);
     this.playerMarker.setPosition(scenePosition.x, scenePosition.y);
     this.playerMarker.setDepth(100 + scenePosition.y);
+    const spriteSetId = this.playerMarker.getData('spriteSetId') as string | null;
+    const spriteFacing = resolveLevel0SpriteDirection(this.movement.facing);
+    const spriteState: CharacterSpriteState = resolveLevel0PlayerSpriteState(
+      this.movement.intent.kind,
+      this.time.now,
+      this.playerInteractionUntil
+    );
+    if (spriteSetId) {
+      this.playActorAnimation(this.playerSprite, spriteSetId, spriteState, spriteFacing);
+    }
     const projectedFacing = {
       x: (this.movement.facing.x - this.movement.facing.y) * contract.projection.tileWidth / 2,
       y: (this.movement.facing.x + this.movement.facing.y) * contract.projection.tileHeight / 2,

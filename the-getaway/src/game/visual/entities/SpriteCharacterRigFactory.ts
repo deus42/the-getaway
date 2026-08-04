@@ -2,7 +2,6 @@ import Phaser from 'phaser';
 import {
   type CharacterSpriteDirection,
   CHARACTER_SPRITE_MANIFEST_BY_ID,
-  type CharacterSpritePalette,
   getCharacterSpriteAnimationKey,
   getCharacterSpriteTextureKey,
 } from '../../../content/characters/spriteManifest';
@@ -17,11 +16,7 @@ import type {
 import { DEFAULT_CHARACTER_SPRITE_FACING } from './characterPresentation';
 import type { IsoObjectFactory } from '../../utils/IsoObjectFactory';
 
-type SpriteBackedPresentationState = CharacterPresentationState & {
-  attackReleaseEvent?: Phaser.Time.TimerEvent;
-};
-
-const DEFAULT_ATTACK_LOCK_MS = 420;
+type SpriteBackedPresentationState = CharacterPresentationState;
 
 type SpriteReadabilityPresentation = {
   rimAlpha: number;
@@ -35,14 +30,6 @@ const resolveSpriteReadabilityPresentation = (
   animationState: CharacterRenderDescriptor['animationState']
 ): SpriteReadabilityPresentation => {
   switch (animationState) {
-    case 'attack':
-      return {
-        rimAlpha: 0.54,
-        rimScaleMultiplier: 1.08,
-        contactShadowAlpha: 0.44,
-        haloAlpha: 0.34,
-        beaconAlpha: 0.28,
-      };
     case 'interact':
       return {
         rimAlpha: 0.5,
@@ -73,13 +60,11 @@ const resolveSpriteReadabilityPresentation = (
 
 const drawSpriteContactShadow = (
   shadow: Phaser.GameObjects.Graphics,
-  palette: CharacterSpritePalette | undefined,
   frameWidth: number,
   worldScale: number
 ): void => {
-  const shadowColor = palette?.shadowColor ?? 0x020617;
   shadow.clear();
-  shadow.fillStyle(shadowColor, 1);
+  shadow.fillStyle(0x020617, 1);
   shadow.fillEllipse(
     0,
     5,
@@ -87,25 +72,6 @@ const drawSpriteContactShadow = (
     Math.max(7, frameWidth * worldScale * 0.16)
   );
 };
-
-export const resolveAttackReleasePresentation = (
-  presentation: {
-    spriteSetId?: string;
-    pendingAnimationState?: CharacterRenderDescriptor['animationState'];
-    pendingFacing?: CharacterSpriteDirection;
-    currentAnimationState: CharacterRenderDescriptor['animationState'];
-    currentFacing: CharacterSpriteDirection;
-  },
-  fallbackSpriteSetId: string
-): {
-  spriteSetId: string;
-  animationState: CharacterRenderDescriptor['animationState'];
-  facing: CharacterSpriteDirection;
-} => ({
-  spriteSetId: presentation.spriteSetId ?? fallbackSpriteSetId,
-  animationState: presentation.pendingAnimationState ?? presentation.currentAnimationState,
-  facing: presentation.pendingFacing ?? presentation.currentFacing,
-});
 
 export class SpriteCharacterRigFactory {
   private readonly fallbackFactory: CharacterRigFactory;
@@ -165,12 +131,11 @@ export class SpriteCharacterRigFactory {
     );
     spriteRim.setOrigin(entry.origin.x, entry.origin.y);
     spriteRim.setScale(entry.worldScale * 1.065);
-    spriteRim.setTint(entry.fallbackPalette?.shadowColor ?? 0x020617);
+    spriteRim.setTint(0x020617);
 
     const contactShadow = this.scene.add.graphics();
     drawSpriteContactShadow(
       contactShadow,
-      entry.fallbackPalette,
       entry.frameSize.width,
       entry.worldScale
     );
@@ -203,7 +168,6 @@ export class SpriteCharacterRigFactory {
     this.presentationByToken.set(token, presentation);
     this.applySpritePresentation(token, descriptor, presentation, true);
     token.container.once(Phaser.GameObjects.Events.DESTROY, () => {
-      presentation.attackReleaseEvent?.remove(false);
       this.presentationByToken.delete(token);
     });
 
@@ -253,38 +217,9 @@ export class SpriteCharacterRigFactory {
     const now = Date.now();
     presentation.pendingAnimationState = descriptor.animationState;
     presentation.pendingFacing = descriptor.facing;
-
-    if (descriptor.attackTriggered) {
-      presentation.animationLockUntil = now + DEFAULT_ATTACK_LOCK_MS;
-      presentation.attackReleaseEvent?.remove(false);
-      presentation.attackReleaseEvent = this.scene.time.delayedCall(DEFAULT_ATTACK_LOCK_MS, () => {
-        const latest = this.presentationByToken.get(token);
-        if (!latest || !latest.isSpriteBacked) {
-          return;
-        }
-        const releasePresentation = resolveAttackReleasePresentation(
-          latest,
-          spriteSetId
-        );
-        latest.animationLockUntil = null;
-        this.playSpriteAnimation(
-          token,
-          releasePresentation.spriteSetId,
-          releasePresentation.animationState,
-          releasePresentation.facing,
-          true
-        );
-        latest.currentAnimationState = releasePresentation.animationState;
-        latest.currentFacing = releasePresentation.facing;
-        token.container.setData('characterFacing', releasePresentation.facing);
-        token.container.setData('characterAnimationState', releasePresentation.animationState);
-      });
-    }
-
-    const isAttackLocked =
-      presentation.animationLockUntil !== null && presentation.animationLockUntil > now;
-    const resolvedAnimationState = isAttackLocked ? 'attack' : descriptor.animationState;
-    const resolvedFacing = isAttackLocked ? presentation.currentFacing : descriptor.facing;
+    presentation.animationLockUntil = null;
+    const resolvedAnimationState = descriptor.animationState;
+    const resolvedFacing = descriptor.facing;
 
     this.playSpriteAnimation(
       token,

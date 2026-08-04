@@ -632,7 +632,7 @@ export const level0EnglishContent: Level0LocaleContent = {
       dialogueId: 'npc_lira_vendor',
       isInteractive: true,
       visualProfile: {
-        spriteSetId: 'npc_lira_vendor',
+        spriteSetId: 'contact_lira',
       },
     },
     {
@@ -660,7 +660,7 @@ export const level0EnglishContent: Level0LocaleContent = {
       dialogueId: 'npc_archivist_naila',
       isInteractive: true,
       visualProfile: {
-        spriteSetId: 'npc_archivist_naila',
+        spriteSetId: 'contact_naila',
       },
     },
     {
@@ -676,7 +676,7 @@ export const level0EnglishContent: Level0LocaleContent = {
       dialogueId: 'npc_courier_brant',
       isInteractive: true,
       visualProfile: {
-        spriteSetId: 'npc_courier_brant',
+        spriteSetId: 'contact_brant',
       },
     },
     {
@@ -691,9 +691,6 @@ export const level0EnglishContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_firebrand_juno',
       isInteractive: true,
-      visualProfile: {
-        spriteSetId: 'npc_firebrand_juno',
-      },
     },
     {
       name: 'Seraph Warden',
@@ -707,9 +704,6 @@ export const level0EnglishContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_seraph_warden',
       isInteractive: true,
-      visualProfile: {
-        spriteSetId: 'npc_seraph_warden',
-      },
     },
     {
       name: 'Drone Handler Kesh',
@@ -723,9 +717,6 @@ export const level0EnglishContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_drone_handler_kesh',
       isInteractive: true,
-      visualProfile: {
-        spriteSetId: 'npc_drone_handler_kesh',
-      },
     },
     {
       name: 'Medic Yara',
@@ -739,9 +730,6 @@ export const level0EnglishContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_medic_yara',
       isInteractive: true,
-      visualProfile: {
-        spriteSetId: 'npc_medic_yara',
-      },
     },
     {
       name: 'Captain Reyna',
@@ -755,9 +743,6 @@ export const level0EnglishContent: Level0LocaleContent = {
       ],
       dialogueId: 'npc_captain_reyna',
       isInteractive: true,
-      visualProfile: {
-        spriteSetId: 'npc_captain_reyna',
-      },
     },
   ],
   itemBlueprints: [

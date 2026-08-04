@@ -1,4 +1,5 @@
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
+import { resolvePlayerSpriteSetId } from '../../../content/characters/spriteManifest';
 import {
   acquirePauseOwner,
   createWorldClockState,
@@ -29,9 +30,15 @@ const getRequiredAnchorPosition = (anchorId: string) => {
   return { ...anchor.position };
 };
 
-export const createInitialLevel0RunState = (sessionId: string): Level0RunState => {
+export const createInitialLevel0RunState = (
+  sessionId: string,
+  appearancePresetId = 'player_civilian_01'
+): Level0RunState => {
   if (!sessionId.trim()) {
     throw new Error('Level 0 session ID is required');
+  }
+  if (!resolvePlayerSpriteSetId(appearancePresetId)) {
+    throw new Error(`Unknown Level 0 appearance preset: ${appearancePresetId}`);
   }
 
   return {
@@ -40,7 +47,7 @@ export const createInitialLevel0RunState = (sessionId: string): Level0RunState =
     sessionId,
     identity: {
       callsign: '',
-      appearancePresetId: 'provisional-runtime-silhouette',
+      appearancePresetId,
     },
     build: {
       attributes: { physical: 1, mental: 1, social: 1, technical: 1 },

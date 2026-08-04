@@ -1,0 +1,1080 @@
+{
+  "schemaVersion": 2,
+  "actorId": "contact_naila",
+  "frameWidth": 64,
+  "frameHeight": 96,
+  "origin": {
+    "x": 0.5,
+    "y": 0.92
+  },
+  "alphaOccupancy": {
+    "minHeightPx": 54,
+    "maxHeightPx": 64,
+    "footRowPx": 88,
+    "tolerancePx": 2
+  },
+  "states": {
+    "idle": {
+      "north": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 25,
+              "height": 61
+            },
+            "alphaPixelCount": 892,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "north-east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 24,
+              "height": 61
+            },
+            "alphaPixelCount": 839,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 826,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 671,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 25,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 671,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 671,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 675,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south-east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 832,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 24,
+              "height": 61
+            },
+            "alphaPixelCount": 832,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 25,
+              "height": 61
+            },
+            "alphaPixelCount": 892,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south-west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 826,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 24,
+              "height": 61
+            },
+            "alphaPixelCount": 838,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 674,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 672,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 674,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 16,
+              "height": 61
+            },
+            "alphaPixelCount": 669,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "north-west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 24,
+              "height": 61
+            },
+            "alphaPixelCount": 833,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 832,
+            "footContactRowPx": 88
+          }
+        ]
+      }
+    },
+    "move": {
+      "north": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 24,
+              "height": 61
+            },
+            "alphaPixelCount": 815,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 26,
+              "width": 26,
+              "height": 63
+            },
+            "alphaPixelCount": 917,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 29,
+              "height": 61
+            },
+            "alphaPixelCount": 917,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 26,
+              "width": 26,
+              "height": 63
+            },
+            "alphaPixelCount": 917,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "north-east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 21,
+              "height": 61
+            },
+            "alphaPixelCount": 769,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 852,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 27,
+              "y": 28,
+              "width": 14,
+              "height": 61
+            },
+            "alphaPixelCount": 586,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 26,
+              "width": 17,
+              "height": 63
+            },
+            "alphaPixelCount": 682,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 22,
+              "height": 61
+            },
+            "alphaPixelCount": 754,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 26,
+              "width": 17,
+              "height": 63
+            },
+            "alphaPixelCount": 682,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south-east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 25,
+              "y": 28,
+              "width": 21,
+              "height": 61
+            },
+            "alphaPixelCount": 766,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 20,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 856,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 24,
+              "height": 61
+            },
+            "alphaPixelCount": 813,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 26,
+              "width": 26,
+              "height": 63
+            },
+            "alphaPixelCount": 917,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 29,
+              "height": 61
+            },
+            "alphaPixelCount": 924,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 26,
+              "width": 26,
+              "height": 63
+            },
+            "alphaPixelCount": 917,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south-west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 789,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 833,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 669,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 26,
+              "width": 17,
+              "height": 63
+            },
+            "alphaPixelCount": 684,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 20,
+              "y": 28,
+              "width": 22,
+              "height": 61
+            },
+            "alphaPixelCount": 670,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 26,
+              "width": 17,
+              "height": 63
+            },
+            "alphaPixelCount": 684,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "north-west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 792,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 829,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 26,
+              "width": 23,
+              "height": 63
+            },
+            "alphaPixelCount": 845,
+            "footContactRowPx": 88
+          }
+        ]
+      }
+    },
+    "interact": {
+      "north": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 28,
+              "height": 61
+            },
+            "alphaPixelCount": 918,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 29,
+              "height": 61
+            },
+            "alphaPixelCount": 932,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 17,
+              "y": 28,
+              "width": 27,
+              "height": 61
+            },
+            "alphaPixelCount": 913,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "north-east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 25,
+              "height": 61
+            },
+            "alphaPixelCount": 849,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 27,
+              "height": 61
+            },
+            "alphaPixelCount": 862,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 19,
+              "y": 28,
+              "width": 25,
+              "height": 61
+            },
+            "alphaPixelCount": 844,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 671,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 28,
+              "width": 19,
+              "height": 61
+            },
+            "alphaPixelCount": 683,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 28,
+              "width": 20,
+              "height": 61
+            },
+            "alphaPixelCount": 699,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 24,
+              "y": 28,
+              "width": 18,
+              "height": 61
+            },
+            "alphaPixelCount": 677,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south-east": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 831,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 836,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 830,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 897,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 901,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 905,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 26,
+              "height": 61
+            },
+            "alphaPixelCount": 899,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "south-west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 20,
+              "y": 28,
+              "width": 25,
+              "height": 61
+            },
+            "alphaPixelCount": 844,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 27,
+              "height": 61
+            },
+            "alphaPixelCount": 852,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 20,
+              "y": 28,
+              "width": 25,
+              "height": 61
+            },
+            "alphaPixelCount": 841,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 23,
+              "y": 28,
+              "width": 17,
+              "height": 61
+            },
+            "alphaPixelCount": 674,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 21,
+              "y": 28,
+              "width": 19,
+              "height": 61
+            },
+            "alphaPixelCount": 691,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 20,
+              "y": 28,
+              "width": 20,
+              "height": 61
+            },
+            "alphaPixelCount": 702,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 22,
+              "y": 28,
+              "width": 18,
+              "height": 61
+            },
+            "alphaPixelCount": 685,
+            "footContactRowPx": 88
+          }
+        ]
+      },
+      "north-west": {
+        "frames": [
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 827,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 831,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 834,
+            "footContactRowPx": 88
+          },
+          {
+            "alphaBounds": {
+              "x": 18,
+              "y": 28,
+              "width": 23,
+              "height": 61
+            },
+            "alphaPixelCount": 830,
+            "footContactRowPx": 88
+          }
+        ]
+      }
+    }
+  }
+}

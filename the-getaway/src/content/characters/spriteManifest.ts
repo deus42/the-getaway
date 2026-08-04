@@ -1,4 +1,10 @@
-export const CHARACTER_SPRITE_STATES = ['idle', 'move', 'attack', 'interact'] as const;
+import {
+  ACTOR_PORTRAIT_INTEGRITY,
+  GENERATED_ACTOR_PROVENANCE,
+  NON_WORLD_PRESENTATION_INTEGRITY,
+} from './generatedActorAssetIntegrity';
+
+export const CHARACTER_SPRITE_STATES = ['idle', 'move', 'interact'] as const;
 export type CharacterSpriteState = (typeof CHARACTER_SPRITE_STATES)[number];
 
 export const CHARACTER_SPRITE_DIRECTIONS = [
@@ -13,59 +19,145 @@ export const CHARACTER_SPRITE_DIRECTIONS = [
 ] as const;
 export type CharacterSpriteDirection = (typeof CHARACTER_SPRITE_DIRECTIONS)[number];
 
+export const LEVEL0_PLAYER_APPEARANCE_IDS = [
+  'player_civilian_01',
+  'player_civilian_02',
+  'player_civilian_03',
+  'player_civilian_04',
+] as const;
+
+export type Level0PlayerAppearanceId = (typeof LEVEL0_PLAYER_APPEARANCE_IDS)[number];
+
+export const LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID: Level0PlayerAppearanceId =
+  'player_civilian_01';
+
+export const isLevel0PlayerAppearanceId = (
+  value: unknown
+): value is Level0PlayerAppearanceId =>
+  typeof value === 'string' &&
+  LEVEL0_PLAYER_APPEARANCE_IDS.includes(value as Level0PlayerAppearanceId);
+
+export type CharacterActorOwnership = 'player' | 'contact' | 'security' | 'civilian';
+
 export interface CharacterSpriteFrameSize {
-  width: number;
-  height: number;
+  width: 64;
+  height: 96;
 }
 
-export interface CharacterSpritePalette {
-  accentColor?: number;
-  glowColor?: number;
-  shadowColor?: number;
+export interface CharacterSpriteFrameMetrics {
+  alphaBounds: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  alphaPixelCount: number;
+  footContactRowPx: number;
 }
 
 export interface CharacterSpriteSheetMetrics {
-  frameWidth: number;
-  frameHeight: number;
+  schemaVersion: 2;
+  actorId: string;
+  frameWidth: 64;
+  frameHeight: 96;
   origin: {
-    x: number;
-    y: number;
+    x: 0.5;
+    y: 0.92;
   };
-  footAnchorTolerancePx: number;
+  alphaOccupancy: CharacterAlphaOccupancyContract;
   states: Record<
     CharacterSpriteState,
-    Record<CharacterSpriteDirection, { frameFootAnchorsPx: number[] }>
+    Record<CharacterSpriteDirection, { frames: CharacterSpriteFrameMetrics[] }>
   >;
 }
 
-type HeroSpriteOwnership = {
-  kind: 'hero';
-  appearancePresets: string[];
-};
+export interface CharacterAlphaOccupancyContract {
+  minHeightPx: 54;
+  maxHeightPx: 64;
+  footRowPx: 88;
+  tolerancePx: 2;
+}
 
-type NpcSpriteOwnership = {
-  kind: 'npc';
-  dialogueId: string;
-};
+export interface CharacterAssetProvenance {
+  recipeId: 'get206-grounded-actor-v2';
+  recipeSha256: string;
+  generatorSha256: string;
+  pngLibrarySha256: string;
+  spriteReferenceId: 'get206-grounded-cast-board-v1';
+  spriteReferenceSha256: 'bc16333c07710bd9bf3d78f1dc32e082bc6585cdce280c3a7fbf6bb107f433aa';
+  portraitReferenceId: 'get206-grounded-portrait-board-v1';
+  portraitReferenceSha256: '72545015a1d9cb3a78143a666a5bb941ed0bc69385247972988e23c4f4469d54';
+}
 
-type EnemySpriteOwnership = {
-  kind: 'enemy';
-  resourceKey: string;
-};
+export interface CharacterPortraitManifestEntry {
+  portraitId: string;
+  path: string;
+  dimensions: {
+    width: 256;
+    height: 256;
+  };
+  safeArea: {
+    x: 0.1;
+    y: 0.1;
+    width: 0.8;
+    height: 0.8;
+  };
+  sha256: string;
+  compressedBytes: number;
+  decodedBytes: number;
+  fallbackKey: 'portrait:neutral-diagnostic';
+}
+
+export interface CharacterSpriteBindings {
+  appearancePresetIds?: readonly string[];
+  dialogueIds?: readonly string[];
+  resourceKeys?: readonly string[];
+  visualRoleKey?: string;
+}
 
 export interface CharacterSpriteManifestEntry {
+  actorId: string;
+  ownership: CharacterActorOwnership;
   spriteSetId: string;
-  owner: HeroSpriteOwnership | NpcSpriteOwnership | EnemySpriteOwnership;
+  bindings: CharacterSpriteBindings;
   frameSize: CharacterSpriteFrameSize;
   frameCount: 4;
   stateFps: Record<CharacterSpriteState, number>;
   origin: {
-    x: number;
-    y: number;
+    x: 0.5;
+    y: 0.92;
   };
-  footAnchorTolerancePx: number;
-  worldScale: number;
-  fallbackPalette?: CharacterSpritePalette;
+  footAnchorTolerancePx: 2;
+  worldScale: 1.3;
+  alphaOccupancy: CharacterAlphaOccupancyContract;
+  depthPolicy: 'ground-anchor-y';
+  portrait: CharacterPortraitManifestEntry;
+  fallback: {
+    kind: 'neutral-diagnostic';
+    rigKey: 'neutral-diagnostic-human';
+  };
+  provenance: CharacterAssetProvenance;
+}
+
+export interface NonWorldCharacterPresentationEntry {
+  presentationId: string;
+  path: string;
+  dimensions: {
+    width: 256;
+    height: 256;
+  };
+  safeArea: {
+    x: 0.1;
+    y: 0.1;
+    width: 0.8;
+    height: 0.8;
+  };
+  sha256: string;
+  compressedBytes: number;
+  decodedBytes: number;
+  fallbackKey: 'portrait:neutral-diagnostic' | 'ar:neutral-diagnostic';
+  background: 'opaque' | 'transparent';
+  provenance: CharacterAssetProvenance;
 }
 
 const SHARED_FRAME_SIZE: CharacterSpriteFrameSize = {
@@ -76,105 +168,116 @@ const SHARED_FRAME_SIZE: CharacterSpriteFrameSize = {
 const SHARED_STATE_FPS: Record<CharacterSpriteState, number> = {
   idle: 4,
   move: 7,
-  attack: 9,
   interact: 5,
 };
 
+const SHARED_ORIGIN = {
+  x: 0.5,
+  y: 0.92,
+} as const;
+
+const SHARED_ALPHA_OCCUPANCY: CharacterAlphaOccupancyContract = {
+  minHeightPx: 54,
+  maxHeightPx: 64,
+  footRowPx: 88,
+  tolerancePx: 2,
+};
+
+const SHARED_PROVENANCE: CharacterAssetProvenance = {
+  recipeId: GENERATED_ACTOR_PROVENANCE.recipeId,
+  recipeSha256: GENERATED_ACTOR_PROVENANCE.recipe.sha256,
+  generatorSha256: GENERATED_ACTOR_PROVENANCE.generator.sha256,
+  pngLibrarySha256: GENERATED_ACTOR_PROVENANCE.pngLibrary.sha256,
+  spriteReferenceId: GENERATED_ACTOR_PROVENANCE.spriteReference.id,
+  spriteReferenceSha256: GENERATED_ACTOR_PROVENANCE.spriteReference.sha256,
+  portraitReferenceId: GENERATED_ACTOR_PROVENANCE.portraitReference.id,
+  portraitReferenceSha256: GENERATED_ACTOR_PROVENANCE.portraitReference.sha256,
+};
+
+const createPortrait = (actorId: string): CharacterPortraitManifestEntry => {
+  const integrity = ACTOR_PORTRAIT_INTEGRITY[actorId];
+  if (!integrity) throw new Error(`Missing generated portrait integrity for ${actorId}`);
+  return {
+    portraitId: `portrait_${actorId}`,
+    path: `portraits/level0/${actorId}.png`,
+    dimensions: { width: 256, height: 256 },
+    safeArea: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+    ...integrity,
+    fallbackKey: 'portrait:neutral-diagnostic',
+  };
+};
+
 const createEntry = (
-  spriteSetId: string,
-  owner: CharacterSpriteManifestEntry['owner'],
-  fallbackPalette: CharacterSpritePalette,
-  worldScale = 1.18
+  actorId: string,
+  ownership: CharacterActorOwnership,
+  bindings: CharacterSpriteBindings
 ): CharacterSpriteManifestEntry => ({
-  spriteSetId,
-  owner,
+  actorId,
+  ownership,
+  spriteSetId: actorId,
+  bindings,
   frameSize: SHARED_FRAME_SIZE,
   frameCount: 4,
   stateFps: SHARED_STATE_FPS,
-  origin: {
-    x: 0.5,
-    y: 0.92,
-  },
+  origin: SHARED_ORIGIN,
   footAnchorTolerancePx: 2,
-  worldScale,
-  fallbackPalette,
+  worldScale: 1.3,
+  alphaOccupancy: SHARED_ALPHA_OCCUPANCY,
+  depthPolicy: 'ground-anchor-y',
+  portrait: createPortrait(actorId),
+  fallback: {
+    kind: 'neutral-diagnostic',
+    rigKey: 'neutral-diagnostic-human',
+  },
+  provenance: SHARED_PROVENANCE,
 });
 
 export const CHARACTER_SPRITE_MANIFEST: CharacterSpriteManifestEntry[] = [
-  createEntry(
-    'hero_operative',
-    { kind: 'hero', appearancePresets: ['operative', 'default'] },
-    { accentColor: 0x5b7775, glowColor: 0x50bfd0, shadowColor: 0x0b0d12 },
-    1.27
-  ),
-  createEntry(
-    'hero_survivor',
-    { kind: 'hero', appearancePresets: ['survivor'] },
-    { accentColor: 0xd99a50, glowColor: 0xd99a50, shadowColor: 0x1b1f24 },
-    1.27
-  ),
-  createEntry(
-    'hero_tech',
-    { kind: 'hero', appearancePresets: ['tech'] },
-    { accentColor: 0x5b7775, glowColor: 0x50bfd0, shadowColor: 0x0b0d12 },
-    1.27
-  ),
-  createEntry(
-    'hero_scavenger',
-    { kind: 'hero', appearancePresets: ['scavenger'] },
-    { accentColor: 0x9a7748, glowColor: 0xd99a50, shadowColor: 0x2a201c },
-    1.27
-  ),
-  createEntry('npc_lira_vendor', { kind: 'npc', dialogueId: 'npc_lira_vendor' }, {
-    accentColor: 0xf472b6,
-    glowColor: 0xf9a8d4,
-    shadowColor: 0x500724,
+  createEntry('player_civilian_01', 'player', {
+    appearancePresetIds: ['player_civilian_01'],
+    visualRoleKey: 'protagonist-preset-01',
   }),
-  createEntry('npc_archivist_naila', { kind: 'npc', dialogueId: 'npc_archivist_naila' }, {
-    accentColor: 0x60a5fa,
-    glowColor: 0x93c5fd,
-    shadowColor: 0x172554,
+  createEntry('player_civilian_02', 'player', {
+    appearancePresetIds: ['player_civilian_02'],
+    visualRoleKey: 'protagonist-preset-02',
   }),
-  createEntry('npc_courier_brant', { kind: 'npc', dialogueId: 'npc_courier_brant' }, {
-    accentColor: 0xf59e0b,
-    glowColor: 0xfbbf24,
-    shadowColor: 0x78350f,
+  createEntry('player_civilian_03', 'player', {
+    appearancePresetIds: ['player_civilian_03'],
+    visualRoleKey: 'protagonist-preset-03',
   }),
-  createEntry('npc_firebrand_juno', { kind: 'npc', dialogueId: 'npc_firebrand_juno' }, {
-    accentColor: 0xef4444,
-    glowColor: 0xf87171,
-    shadowColor: 0x450a0a,
+  createEntry('player_civilian_04', 'player', {
+    appearancePresetIds: ['player_civilian_04'],
+    visualRoleKey: 'protagonist-preset-04',
   }),
-  createEntry('npc_seraph_warden', { kind: 'npc', dialogueId: 'npc_seraph_warden' }, {
-    accentColor: 0xa78bfa,
-    glowColor: 0xc4b5fd,
-    shadowColor: 0x2e1065,
+  createEntry('contact_lira', 'contact', {
+    dialogueIds: ['npc_lira_vendor'],
+    visualRoleKey: 'medical-supplies-contact',
   }),
-  createEntry('npc_drone_handler_kesh', { kind: 'npc', dialogueId: 'npc_drone_handler_kesh' }, {
-    accentColor: 0x14b8a6,
-    glowColor: 0x2dd4bf,
-    shadowColor: 0x042f2e,
+  createEntry('contact_naila', 'contact', {
+    dialogueIds: ['npc_archivist_naila'],
+    visualRoleKey: 'systems-contact',
   }),
-  createEntry('npc_medic_yara', { kind: 'npc', dialogueId: 'npc_medic_yara' }, {
-    accentColor: 0x10b981,
-    glowColor: 0x34d399,
-    shadowColor: 0x022c22,
+  createEntry('contact_brant', 'contact', {
+    dialogueIds: ['npc_courier_brant'],
+    visualRoleKey: 'service-courier-contact',
   }),
-  createEntry('npc_captain_reyna', { kind: 'npc', dialogueId: 'npc_captain_reyna' }, {
-    accentColor: 0x8e4147,
-    glowColor: 0xbc4d54,
-    shadowColor: 0x2f1518,
+  createEntry('security_hidzu_identity', 'security', {
+    resourceKeys: ['enemies.corpsec_guard'],
+    visualRoleKey: 'identity-verification-staff',
   }),
-  createEntry('npc_orn_patrol_sentry', { kind: 'npc', dialogueId: 'npc_guard_orn' }, {
-    accentColor: 0xd99a50,
-    glowColor: 0xd99a50,
-    shadowColor: 0x0b0d12,
-  }, 1.2),
-  createEntry('enemy_corpsec_sweep_captain', { kind: 'enemy', resourceKey: 'enemies.corpsec_guard' }, {
-    accentColor: 0x8e4147,
-    glowColor: 0xbc4d54,
-    shadowColor: 0x0b0d12,
-  }, 1.2),
+  createEntry('security_hidzu_service', 'security', {
+    resourceKeys: ['npcs.hidzu_service_verifier'],
+    visualRoleKey: 'service-verification-staff',
+  }),
+  createEntry('civilian_transit', 'civilian', {
+    visualRoleKey: 'transit-commuter',
+  }),
+  createEntry('civilian_service', 'civilian', {
+    visualRoleKey: 'service-worker',
+  }),
+  createEntry('civilian_delivery', 'civilian', {
+    visualRoleKey: 'delivery-worker',
+  }),
 ];
 
 export const CHARACTER_SPRITE_MANIFEST_BY_ID = CHARACTER_SPRITE_MANIFEST.reduce<
@@ -183,6 +286,29 @@ export const CHARACTER_SPRITE_MANIFEST_BY_ID = CHARACTER_SPRITE_MANIFEST.reduce<
   acc[entry.spriteSetId] = entry;
   return acc;
 }, {});
+
+export const NON_WORLD_CHARACTER_PRESENTATIONS = {
+  takahiroBroadcast: {
+    presentationId: 'portrait_takahiro_broadcast',
+    path: 'portraits/level0/takahiro_broadcast.png',
+    dimensions: { width: 256, height: 256 },
+    safeArea: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+    ...NON_WORLD_PRESENTATION_INTEGRITY.takahiroBroadcast,
+    fallbackKey: 'portrait:neutral-diagnostic',
+    background: 'opaque',
+    provenance: SHARED_PROVENANCE,
+  },
+  georgeAr: {
+    presentationId: 'george_ar_idle',
+    path: 'characters/george/george-ar-idle.png',
+    dimensions: { width: 256, height: 256 },
+    safeArea: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+    ...NON_WORLD_PRESENTATION_INTEGRITY.georgeAr,
+    fallbackKey: 'ar:neutral-diagnostic',
+    background: 'transparent',
+    provenance: SHARED_PROVENANCE,
+  },
+} as const satisfies Record<string, NonWorldCharacterPresentationEntry>;
 
 export const getCharacterSpriteSheetPath = (
   spriteSetId: string,
@@ -206,21 +332,14 @@ export const getCharacterSpriteAnimationKey = (
 ): string => `${spriteSetId}:${state}:${direction}`;
 
 export const resolvePlayerSpriteSetId = (appearancePreset?: string): string | undefined => {
-  if (appearancePreset) {
-    const matched = CHARACTER_SPRITE_MANIFEST.find(
-      (entry) =>
-        entry.owner.kind === 'hero' &&
-        entry.owner.appearancePresets.includes(appearancePreset)
-    );
-    if (matched) {
-      return matched.spriteSetId;
-    }
+  if (!appearancePreset) {
+    return undefined;
   }
 
   return CHARACTER_SPRITE_MANIFEST.find(
     (entry) =>
-      entry.owner.kind === 'hero' &&
-      entry.owner.appearancePresets.includes('operative')
+      entry.ownership === 'player' &&
+      entry.bindings.appearancePresetIds?.includes(appearancePreset)
   )?.spriteSetId;
 };
 
@@ -230,7 +349,8 @@ export const resolveNpcSpriteSetId = (dialogueId?: string | null): string | unde
   }
 
   return CHARACTER_SPRITE_MANIFEST.find(
-    (entry) => entry.owner.kind === 'npc' && entry.owner.dialogueId === dialogueId
+    (entry) =>
+      entry.ownership === 'contact' && entry.bindings.dialogueIds?.includes(dialogueId)
   )?.spriteSetId;
 };
 
@@ -240,6 +360,7 @@ export const resolveEnemySpriteSetId = (resourceKey?: string | null): string | u
   }
 
   return CHARACTER_SPRITE_MANIFEST.find(
-    (entry) => entry.owner.kind === 'enemy' && entry.owner.resourceKey === resourceKey
+    (entry) =>
+      entry.ownership === 'security' && entry.bindings.resourceKeys?.includes(resourceKey)
   )?.spriteSetId;
 };

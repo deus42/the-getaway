@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../content/levels/level0/layoutContract';
+import { CHARACTER_SPRITE_MANIFEST_BY_ID } from '../../content/characters/spriteManifest';
 import { resolveLevel0Interaction } from '../../game/level0/interaction/interactionResolver';
 import {
   LEVEL0_AUTOSAVE_KEY,
@@ -27,6 +28,14 @@ import {
   installLevel0AgentBridge,
 } from '../../game/level0/playtest/level0AgentBridge';
 import type { Level0AgentInteractionDetail } from '../../game/level0/playtest/events';
+import {
+  LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID,
+  LEVEL0_PLAYER_APPEARANCE_IDS,
+  isLevel0PlayerAppearanceId,
+  type Level0PlayerAppearanceId,
+  LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
+  type Level0ActorInteractionPresentationDetail,
+} from '../../game/level0/scene/level0ActorPresentation';
 import type { AppDispatch, RootState } from '../../store';
 import { PERSISTED_STATE_KEY, resetGame, store } from '../../store';
 import {
@@ -60,6 +69,19 @@ const readEntryState = () => {
     incompatibleSave: autosave.status === 'incompatible' || retiredPrototype,
     hasRetry: readLevel0Retry(storage).status === 'compatible',
   };
+};
+
+const readInitialAppearancePresetId = (): Level0PlayerAppearanceId => {
+  const storage = getStorage();
+  if (!storage) return LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID;
+  const autosave = readLevel0Autosave(storage);
+  if (
+    autosave.status === 'compatible' &&
+    isLevel0PlayerAppearanceId(autosave.envelope.payload.identity.appearancePresetId)
+  ) {
+    return autosave.envelope.payload.identity.appearancePresetId;
+  }
+  return LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID;
 };
 
 const makeSessionId = (): string => {
@@ -111,6 +133,8 @@ const Level0RuntimeShell = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const [entryState, setEntryState] = useState(readEntryState);
   const [menuOpen, setMenuOpen] = useState(true);
+  const [selectedAppearancePresetId, setSelectedAppearancePresetId] =
+    useState<Level0PlayerAppearanceId>(readInitialAppearancePresetId);
   const [pendingSafehouseAction, setPendingSafehouseAction] = useState<
     'wait' | 'rest' | 'depart' | null
   >(null);
@@ -140,15 +164,21 @@ const Level0RuntimeShell = () => {
       storage.removeItem(PERSISTED_STATE_KEY);
     }
     dispatch(resetGame());
-    dispatch(initializeLevel0Run({ sessionId: makeSessionId() }));
+    dispatch(initializeLevel0Run({
+      sessionId: makeSessionId(),
+      appearancePresetId: selectedAppearancePresetId,
+    }));
     setMenuOpen(false);
     setEntryState({ compatibleAutosave: true, incompatibleSave: false, hasRetry: false });
     const nextRun = store.getState().level0Runtime.run;
     if (storage && nextRun) writeLevel0Autosave(storage, nextRun);
-  }, [dispatch]);
+  }, [dispatch, selectedAppearancePresetId]);
 
   const continueGame = useCallback(() => {
     if (run) {
+      if (isLevel0PlayerAppearanceId(run.identity.appearancePresetId)) {
+        setSelectedAppearancePresetId(run.identity.appearancePresetId);
+      }
       dispatch(releaseLevel0Pause('menu'));
       setMenuOpen(false);
       return;
@@ -160,12 +190,20 @@ const Level0RuntimeShell = () => {
       setEntryState((current) => ({ ...current, compatibleAutosave: false, incompatibleSave: true }));
       return;
     }
+    if (isLevel0PlayerAppearanceId(result.envelope.payload.identity.appearancePresetId)) {
+      setSelectedAppearancePresetId(result.envelope.payload.identity.appearancePresetId);
+    }
     dispatch(hydrateLevel0Run(result.envelope.payload));
     setMenuOpen(false);
   }, [dispatch, run]);
 
   const openMenu = useCallback(() => {
-    if (run) dispatch(acquireLevel0Pause('menu'));
+    if (run) {
+      dispatch(acquireLevel0Pause('menu'));
+      if (isLevel0PlayerAppearanceId(run.identity.appearancePresetId)) {
+        setSelectedAppearancePresetId(run.identity.appearancePresetId);
+      }
+    }
     persistCurrentRun();
     setMenuOpen(true);
   }, [dispatch, persistCurrentRun, run]);
@@ -251,6 +289,9 @@ const Level0RuntimeShell = () => {
       return;
     }
     dispatch(restoreLevel0Retry(result.envelope.payload));
+    if (isLevel0PlayerAppearanceId(result.envelope.payload.identity.appearancePresetId)) {
+      setSelectedAppearancePresetId(result.envelope.payload.identity.appearancePresetId);
+    }
     setMenuOpen(false);
     setEntryState((current) => ({ ...current, compatibleAutosave: true, hasRetry: true }));
     const nextRun = store.getState().level0Runtime.run;
@@ -287,6 +328,10 @@ const Level0RuntimeShell = () => {
       dispatch(setLevel0Feedback(result.reasonId ?? 'interaction.none'));
       return;
     }
+    window.dispatchEvent(new CustomEvent<Level0ActorInteractionPresentationDetail>(
+      LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
+      { detail: { anchorId: result.anchor.id } }
+    ));
     if (result.anchor.id === 'interaction.safehouse.wait') {
       requestSafehouseAction('wait');
       return;
@@ -412,6 +457,27 @@ const Level0RuntimeShell = () => {
                 : 'A retired prototype save is incompatible. It will remain untouched until you explicitly start New Game.'}
             </div>
           ) : null}
+          <fieldset className="level0-entry__appearance">
+            <legend>{ukrainian ? 'Зовнішність' : 'Appearance'}</legend>
+            <div className="level0-entry__appearance-options">
+              {LEVEL0_PLAYER_APPEARANCE_IDS.map((appearancePresetId, index) => {
+                const entry = CHARACTER_SPRITE_MANIFEST_BY_ID[appearancePresetId];
+                return (
+                  <button
+                    type="button"
+                    key={appearancePresetId}
+                    className="level0-entry__appearance-option"
+                    data-testid={`level0-appearance-${appearancePresetId}`}
+                    aria-pressed={selectedAppearancePresetId === appearancePresetId}
+                    onClick={() => setSelectedAppearancePresetId(appearancePresetId)}
+                  >
+                    {entry ? <img src={entry.portrait.path} alt="" /> : null}
+                    <span>{ukrainian ? `Варіант ${index + 1}` : `Preset ${index + 1}`}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
           <div className="level0-entry__actions">
             <button type="button" data-testid="level0-new-game" onClick={startNewGame}>
               {ukrainian ? 'Нова гра' : 'New Game'}
@@ -455,6 +521,7 @@ const Level0RuntimeShell = () => {
           run={run}
           movementPaused={movementPaused}
           observationActive={observationActive}
+          georgePresentationVisible={!backgroundControlsLocked}
           onPlayerCheckpoint={(position, facing) =>
             dispatch(syncLevel0PlayerCheckpoint({ position, facing }))
           }

@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "referenceId": "get206-grounded-portrait-board-v1",
+  "status": "provisional-reference",
+  "image": "grounded-portrait-board-v1.png",
+  "sha256": "72545015a1d9cb3a78143a666a5bb941ed0bc69385247972988e23c4f4469d54",
+  "dimensions": {
+    "width": 1448,
+    "height": 1086
+  },
+  "layout": {
+    "columns": 4,
+    "rows": 3,
+    "cellWidth": 362,
+    "cellHeight": 362,
+    "identityOrder": [
+      "player_civilian_01",
+      "player_civilian_02",
+      "player_civilian_03",
+      "player_civilian_04",
+      "contact_lira",
+      "contact_naila",
+      "contact_brant",
+      "security_hidzu_identity",
+      "security_hidzu_service",
+      "civilian_transit",
+      "civilian_service",
+      "civilian_delivery"
+    ]
+  },
+  "visualContract": {
+    "direction": "graphic-surveillance-noir",
+    "framing": "head-and-shoulders with complete hair and both shoulders inside each cell",
+    "lighting": "consistent soft upper-left key with readable midtones",
+    "background": "uniform matte warm-charcoal",
+    "prohibited": [
+      "cropped-heads",
+      "full-body-framing",
+      "weapons",
+      "fantasy-armor",
+      "neon-aura",
+      "embedded-text",
+      "extra-identities"
+    ]
+  },
+  "inspection": {
+    "identityCount": 12,
+    "onePortraitPerCell": true,
+    "allHairVisible": true,
+    "bothShouldersVisible": true,
+    "prohibitedCueFound": false,
+    "productionAsset": false,
+    "notes": "Reference controls dialogue-portrait identity, crop, lighting, and tone. Explicit recipe crop boxes exclude the white cell rules."
+  }
+}

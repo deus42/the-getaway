@@ -35,7 +35,7 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#d99a50',
     gradientFromHex: '#1b1f24',
     gradientToHex: '#513b35',
-    imagePath: '/portraits/level0/lira_smuggler.png',
+    imagePath: '/portraits/level0/contact_lira.png',
   },
   archivist_naila: {
     id: 'archivist_naila',
@@ -43,7 +43,7 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#d5c8b5',
     gradientFromHex: '#0b0d12',
     gradientToHex: '#31373a',
-    imagePath: '/portraits/level0/archivist_naila.png',
+    imagePath: '/portraits/level0/contact_naila.png',
   },
   courier_brant: {
     id: 'courier_brant',
@@ -51,7 +51,7 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#d99a50',
     gradientFromHex: '#1b1f24',
     gradientToHex: '#513b35',
-    imagePath: '/portraits/level0/courier_brant.png',
+    imagePath: '/portraits/level0/contact_brant.png',
   },
   firebrand_juno: {
     id: 'firebrand_juno',
@@ -59,7 +59,6 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#8e4147',
     gradientFromHex: '#1d1214',
     gradientToHex: '#513035',
-    imagePath: '/portraits/level0/firebrand_juno.png',
   },
   seraph_warden: {
     id: 'seraph_warden',
@@ -67,7 +66,6 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#d5c8b5',
     gradientFromHex: '#0b0d12',
     gradientToHex: '#514a42',
-    imagePath: '/portraits/level0/seraph_warden.png',
   },
   drone_handler_kesh: {
     id: 'drone_handler_kesh',
@@ -75,7 +73,6 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#50bfd0',
     gradientFromHex: '#0b0d12',
     gradientToHex: '#334b4b',
-    imagePath: '/portraits/level0/drone_handler_kesh.png',
   },
   medic_yara: {
     id: 'medic_yara',
@@ -83,7 +80,6 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#5b7775',
     gradientFromHex: '#0b0d12',
     gradientToHex: '#334541',
-    imagePath: '/portraits/level0/medic_yara.png',
   },
   captain_reyna: {
     id: 'captain_reyna',
@@ -91,7 +87,6 @@ export const DIALOGUE_PORTRAITS: Record<string, DialoguePortraitDefinition> = {
     accentHex: '#8e4147',
     gradientFromHex: '#0b0d12',
     gradientToHex: '#51272d',
-    imagePath: '/portraits/level0/captain_reyna.png',
   },
 };
 

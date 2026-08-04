@@ -137,8 +137,12 @@ art/blender/get204/**/*.jpeg
 art/blender/get205/.staging/
 art/blender/get205/.generated/
 
+# GET-206 atomic character generation staging.
+art/actors/get206/.staging/
+
 # Local agent and knowledge-tool artifacts
 .codex/
+.playwright-mcp/
 .superpowers/
 memory-bank/.smart-env/
 memory-bank/copilot/

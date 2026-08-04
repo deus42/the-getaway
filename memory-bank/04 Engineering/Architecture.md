@@ -576,22 +576,86 @@ interface Level0ArtManifest {
 }
 
 type CharacterState = 'idle' | 'move' | 'interact';
-type CharacterDirection = 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw';
+type CharacterDirection =
+  | 'north'
+  | 'north-east'
+  | 'east'
+  | 'south-east'
+  | 'south'
+  | 'south-west'
+  | 'west'
+  | 'north-west';
 
-interface CharacterSpriteManifest {
+interface CharacterSpriteManifestEntry {
   actorId: string;
   ownership: 'player' | 'contact' | 'security' | 'civilian';
   spriteSetId: string;
-  frame: { width: 64; height: 96; framesPerAnimation: 4 };
-  origin: { x: number; y: number };
-  scale: number;
-  sheets: Record<CharacterState, Partial<Record<CharacterDirection, string>>>;
-  portraitKey: string;
-  fallbackRigKey: string;
+  bindings: {
+    appearancePresetIds?: readonly string[];
+    dialogueIds?: readonly string[];
+    resourceKeys?: readonly string[];
+    visualRoleKey?: string;
+  };
+  frameSize: { width: 64; height: 96 };
+  frameCount: 4;
+  stateFps: Record<CharacterState, number>;
+  origin: { x: 0.5; y: 0.92 };
+  footAnchorTolerancePx: 2;
+  worldScale: number;
+  alphaOccupancy: { minHeightPx: number; maxHeightPx: number; footRowPx: number; tolerancePx: 2 };
+  depthPolicy: 'ground-anchor-y';
+  portrait: CharacterPortraitManifestEntry;
+  fallback: { kind: 'neutral-diagnostic'; rigKey: string };
+  provenance: CharacterAssetProvenance;
 }
+
+interface CharacterPortraitManifestEntry {
+  portraitId: string;
+  path: string;
+  dimensions: { width: 256; height: 256 };
+  safeArea: { x: number; y: number; width: number; height: number };
+  sha256: string;
+  compressedBytes: number;
+  decodedBytes: number;
+  fallbackKey: 'portrait:neutral-diagnostic';
+}
+
+interface NonWorldPresentationManifestEntry {
+  presentationId: string;
+  path: string;
+  dimensions: { width: 256; height: 256 };
+  safeArea: { x: number; y: number; width: number; height: number };
+  sha256: string;
+  compressedBytes: number;
+  decodedBytes: number;
+  background: 'opaque' | 'transparent';
+  fallbackKey: 'portrait:neutral-diagnostic' | 'ar:neutral-diagnostic';
+  provenance: CharacterAssetProvenance;
+}
+
+interface CharacterAssetProvenance {
+  recipeId: string;
+  recipeSha256: string;
+  generatorSha256: string;
+  pngLibrarySha256: string;
+  spriteReferenceId: string;
+  spriteReferenceSha256: string;
+  portraitReferenceId: string;
+  portraitReferenceSha256: string;
+}
+
+declare const getCharacterSpriteSheetPath: (
+  spriteSetId: string,
+  state: CharacterState,
+  direction: CharacterDirection
+) => string;
 ```
 
-Required actors must pass complete-matrix validation before production acceptance. Fallback is resilience, not acceptance evidence.
+The sheet matrix is derived from the stable actor/state/direction path function rather than duplicated inside every manifest entry. `Level0Scene` resolves one explicit presentation plan and passes the same typed sheet references through preload, loaded-state checks, and animation registration: all 24 `idle`/`move`/`interact` direction leaves for the selected protagonist, plus only fixed-facing `idle`/`interact` leaves for Lira, Naila, and Brant (30 sheets total). This prevents loading unused contact movement/directions or the other eight actor sets while retaining the complete validated inventory for later tickets. Layout-space motion is projected through the 2:1 isometric basis before eight-direction animation selection.
+
+A generated integrity module owns portrait/non-world hashes and byte counts; sheet metrics remain adjacent to each actor directory. The validator independently compares those generated TypeScript records with the central integrity JSON so updating source PNGs and only one generated surface cannot pass. Required actors must pass complete-matrix, pixel-derived anchor/occupancy, portrait/provenance/path, generated-record parity, and fault-injection validation before production acceptance. Fallback is observable neutral resilience, never a rejected fantasy asset or acceptance evidence. Performance measurements are recorded, but shipping acceptance remains blocked until `OPEN-PERF-001` defines target hardware and numeric ceilings.
+
+The four current appearance IDs are defined once by the actor manifest and reused by selection, persistence, and runtime resolution. Save decode rejects unknown IDs. A narrow compatibility shim may map only the known pre-T6 placeholder `provisional-runtime-silhouette` to preset 1 inside an otherwise valid current Level 0 envelope; it is not a general fallback and cannot normalize arbitrary stale/future identity values.
 
 ## 6. Layout and Blender data flow
 

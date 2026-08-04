@@ -110,9 +110,17 @@ Presentation states are aligned environment layers:
 - Twelve grounded actor identities: four protagonists, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
 - World contract: `64×96`, eight directions, four frames, `idle`, `move`, and `interact`; no attack animation is required.
 - Foot anchors remain stable within two pixels.
-- Actor presentation is approximately 15% larger than strict architectural perspective so bodies remain readable.
+- Actor presentation uses one shared, replaceable scale. The initial `1.15` trial failed minimum-zoom legibility; the current `1.30` trial is provisionally readable at `0.78` and `0.60` without per-scene scaling. It remains unaccepted under `OPEN-ART-003` until judged in the final city context.
 - World sprite, portrait, dialogue identity, and role silhouette must match.
 - Takahiro Kobayashi receives a propaganda/broadcast portrait; George receives separate AR presentation art.
+
+### GET-206 provisional actor implementation inventory
+
+- Source references are versioned under `art/actors/get206/`: the twelve-figure grounded cast board, the matching portrait board, and deterministic recipe `get206-grounded-actor-v2`.
+- The tracked generator publishes through an isolated staging/swap boundary and emits 12 actor directories, 288 state/direction sheets, 1,152 frames, 12 identity portraits, Takahiro's broadcast portrait, George's transparent AR base, pixel metrics, integrity hashes, and four proof boards. Exact reproduction is checked separately from publication.
+- Runtime identity is manifest-driven. Stable ownership is limited to `player`, `contact`, `security`, or `civilian`; the active Level 0 scene loads only the selected protagonist plus Lira, Naila, and Brant. Missing or corrupt production art uses a neutral diagnostic figure and fails production acceptance; removed fantasy sheets are never fallback.
+- Live fixed-viewport evidence proves the four protagonist selections and three contact anchors without permanent labels. The portraits are coherent and readable, while the normalized world sprites remain deliberately simple/provisional and are not accepted production-quality character art merely because their matrix validates.
+- Security and civilian records are reusable visual archetypes only. T8/T10 retain names, counts, schedules, placement, detection, and mission ownership.
 
 ### HUD
 
@@ -165,7 +173,7 @@ Presentation states are aligned environment layers:
 - Maintain the Level 0 master-scene recipe, camera/projection settings, transforms, material treatment, light rig, export layers, masks, anchors, and validation checks.
 - Produce unchanged-kit and Hidzu-gate comparison captures at `1280×720`, `1440×900`, and `1920×1080`.
 - Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Retry, debrief, and completion.
-- Maintain actor manifests and matching portrait references for all required identities.
+- Maintain actor manifests, deterministic generation recipes, pixel-derived metrics, integrity hashes, neutral fallback evidence, and matching portrait references for all required identities.
 - Author signage and public-screen copy in the approved cultural/language policy once that open decision is resolved.
 
 ## 12. Edge cases and prohibited shortcuts

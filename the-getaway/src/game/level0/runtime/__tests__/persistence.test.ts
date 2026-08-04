@@ -31,6 +31,42 @@ describe('Level 0 persistence envelopes', () => {
     }
   });
 
+  it('narrowly migrates the retired T3 silhouette identity and rejects unknown appearances', () => {
+    const run = createInitialLevel0RunState('run-appearance-migration', 'player_civilian_04');
+    writeLevel0Autosave(window.localStorage, run, 1234);
+    const stored = JSON.parse(window.localStorage.getItem(LEVEL0_AUTOSAVE_KEY)!);
+
+    stored.payload.identity.appearancePresetId = 'provisional-runtime-silhouette';
+    const migrated = decodeLevel0Autosave(JSON.stringify(stored));
+    expect(migrated.status).toBe('compatible');
+    if (migrated.status === 'compatible') {
+      expect(migrated.envelope.payload.identity.appearancePresetId).toBe('player_civilian_01');
+    }
+
+    stored.payload.identity.appearancePresetId = 'unknown-future-appearance';
+    expect(decodeLevel0Autosave(JSON.stringify(stored))).toEqual({
+      status: 'incompatible',
+      reason: 'payload',
+    });
+  });
+
+  it('applies the same narrow appearance migration to Retry snapshots', () => {
+    const departure = departLevel0Operation(
+      createInitialLevel0RunState('run-retry-appearance', 'player_civilian_03'),
+      { ...DEPARTURE_POSITION }
+    );
+    writeLevel0DepartureTransaction(window.localStorage, departure.run, departure.snapshot!, 1250);
+    const stored = JSON.parse(window.localStorage.getItem(LEVEL0_RETRY_KEY)!);
+    stored.payload.identity.appearancePresetId = 'provisional-runtime-silhouette';
+    window.localStorage.setItem(LEVEL0_RETRY_KEY, JSON.stringify(stored));
+
+    const migrated = readLevel0Retry(window.localStorage);
+    expect(migrated.status).toBe('compatible');
+    if (migrated.status === 'compatible') {
+      expect(migrated.envelope.payload.identity.appearancePresetId).toBe('player_civilian_01');
+    }
+  });
+
   it('never persists transient UI pause owners and derives terminal pauses on decode', () => {
     const run = createInitialLevel0RunState('run-transient-pause');
     run.worldClock.pauseOwners = ['menu', 'observation', 'safehouse_action'];

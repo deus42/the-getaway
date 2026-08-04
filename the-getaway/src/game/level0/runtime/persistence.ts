@@ -5,6 +5,10 @@ import {
   normalizeLevel0RunForHydration,
 } from './safehouse';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
+import {
+  LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID,
+  isLevel0PlayerAppearanceId,
+} from '../../../content/characters/spriteManifest';
 import { isPointWalkableWithClearance } from '../layout/validator';
 import type { WorldPoint } from '../layout/types';
 import type {
@@ -249,7 +253,19 @@ const isCompletion = (value: unknown): boolean =>
 const isIdentity = (value: unknown): boolean =>
   isRecord(value) && hasExactKeys(value, ['callsign', 'appearancePresetId']) &&
   typeof value.callsign === 'string' &&
-  typeof value.appearancePresetId === 'string' && value.appearancePresetId.length > 0;
+  isLevel0PlayerAppearanceId(value.appearancePresetId);
+
+const migrateRetiredAppearanceIdentity = (payload: unknown): unknown => {
+  if (!isRecord(payload) || !isRecord(payload.identity)) return payload;
+  if (payload.identity.appearancePresetId !== 'provisional-runtime-silhouette') return payload;
+  return {
+    ...payload,
+    identity: {
+      ...payload.identity,
+      appearancePresetId: LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID,
+    },
+  };
+};
 
 const isBuild = (value: unknown): boolean => {
   if (!isRecord(value) || !isRecord(value.attributes) || !isRecord(value.skills)) return false;
@@ -440,7 +456,8 @@ const decodeEnvelope = <T>(
   raw: string | null,
   expectedKind: Level0PersistenceEnvelope<T>['kind'],
   payloadGuard: (value: unknown) => value is T,
-  normalize: (payload: T) => T
+  normalize: (payload: T) => T,
+  preparePayload: (payload: unknown) => unknown = (payload) => payload
 ): DecodeResult<T> => {
   if (raw === null) return { status: 'absent' };
 
@@ -459,14 +476,15 @@ const decodeEnvelope = <T>(
   if (!hasCurrentContentVersions(parsed.contentVersions)) {
     return { status: 'incompatible', reason: 'content-version' };
   }
-  if (!payloadGuard(parsed.payload)) {
+  const preparedPayload = preparePayload(parsed.payload);
+  if (!payloadGuard(preparedPayload)) {
     return { status: 'incompatible', reason: 'payload' };
   }
   return {
     status: 'compatible',
     envelope: {
       ...(parsed as unknown as Level0PersistenceEnvelope<T>),
-      payload: normalize(parsed.payload),
+      payload: normalize(preparedPayload),
     },
   };
 };
@@ -490,7 +508,13 @@ const serializedEnvelope = <T>(
 ) => JSON.stringify(createEnvelope(kind, payload, timestamp));
 
 export const decodeLevel0Autosave = (raw: string | null): DecodeResult<Level0RunState> =>
-  decodeEnvelope(raw, 'autosave', isLevel0RunState, normalizeLevel0RunForHydration);
+  decodeEnvelope(
+    raw,
+    'autosave',
+    isLevel0RunState,
+    normalizeLevel0RunForHydration,
+    migrateRetiredAppearanceIdentity
+  );
 
 export const writeLevel0Autosave = (
   storage: Storage,
@@ -528,7 +552,13 @@ export const writeLevel0DepartureTransaction = (
   let status: DepartureTransactionResult['status'] = 'written';
 
   if (existingBytes !== null) {
-    const existing = decodeEnvelope(existingBytes, 'retry', isRetrySnapshot, normalizeRetrySnapshot);
+    const existing = decodeEnvelope(
+      existingBytes,
+      'retry',
+      isRetrySnapshot,
+      normalizeRetrySnapshot,
+      migrateRetiredAppearanceIdentity
+    );
     if (existing.status !== 'compatible') {
       return { status: 'conflict', reason: 'retry-payload' };
     }
@@ -560,7 +590,13 @@ export const writeLevel0DepartureTransaction = (
 };
 
 export const readLevel0Retry = (storage: Storage): DecodeResult<RetrySnapshot> =>
-  decodeEnvelope(storage.getItem(LEVEL0_RETRY_KEY), 'retry', isRetrySnapshot, normalizeRetrySnapshot);
+  decodeEnvelope(
+    storage.getItem(LEVEL0_RETRY_KEY),
+    'retry',
+    isRetrySnapshot,
+    normalizeRetrySnapshot,
+    migrateRetiredAppearanceIdentity
+  );
 
 export const readLevel0Autosave = (storage: Storage): DecodeResult<Level0RunState> =>
   decodeLevel0Autosave(storage.getItem(LEVEL0_AUTOSAVE_KEY));

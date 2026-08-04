@@ -474,8 +474,9 @@ The player chooses one of four distinct contemporary protagonist appearances and
 - T5 provides a technically validated, committed provisional graphic-surveillance-noir world-language pass; requester acceptance remains its final visual gate. T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
 - Exactly twelve world actor sets are required: four protagonist presets, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
 - The matrix is 64×96 frames, eight directions, four frames, and `idle`/`move`/`interact`; attack is not required.
-- Scale begins around 15% above strict architectural perspective, but exact scale/occupancy is blocked by `OPEN-ART-003`.
-- Biographies/hardware, entry-flow ownership, and asset budgets remain explicit OPEN items.
+- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Live greybox evidence rejected the initial `1.15` trial as too weak at the `0.60` floor, so the current reversible trial is `1.30`; it is judged at the current `0.78` default zoom and `0.60` floor, with no per-scene scaling.
+- T6 owns reusable security/civilian visual archetypes, not names, biographies, counts, schedules, or authoritative placements. Lira's unresolved identity/relationship is outside T6; her art may communicate only the approved medical-supplies role.
+- George hardware, Naila/Brant biography cues, entry-flow ownership, actor scale, and shipping budgets remain explicit OPEN items. `OPEN-PERF-001` has no numeric baseline, so T6 may record measurements but cannot pass shipping-performance acceptance.
 
 ### Complete player flow
 
@@ -494,17 +495,17 @@ The protagonist appearance transitions once from unselected to one authored pres
 3. Create four protagonist sets, then prove character-creation selection and world persistence with placeholder shell integration.
 4. Create Lira/Naila/Brant; prove world/portrait identity continuity.
 5. Create two security and three civilian sets; prove role readability in public/curfew contexts.
-6. Create twelve matching identity portraits where required by approved surfaces, plus Takahiro broadcast portrait and separate George AR art.
+6. Create twelve matching `256×256` identity portraits, one `256×256` Takahiro broadcast portrait, and one separately registered `256×256` transparent George AR idle/base asset; validate crop/safe area, provenance/hash/bytes, and neutral fallback.
 7. Validate every 8×3×4 matrix, direction order, origin, foot-anchor stability within two pixels, frame occupancy, depth, and fallback metadata.
-8. Capture all identities at default/0.60, all lighting states, creation, dialogue, interaction, Retry, and debrief.
+8. Capture all identities and all twelve portraits plus Takahiro and George at `0.78`/`0.60` across dusk, blue hour, and curfew. T6 proves its neutral selection seam and live protagonist/contact anchors; Character, dialogue, Retry/debrief, schedules, and final entitlement-backed city context remain deferred/not checked for T7/T9/T10 or runtime promotion.
 
 ### Content requirements
 
-Maintain actor/portrait manifests, stable preset/actor IDs, source references, asset-generation or painting recipes, frame normalization rules, direction/state/frame naming, anchors, scales, depth policy, fallback policy, and provenance. Clothing must reflect expatriates, contacts, service/public civilians, and corporate security without weapons, fantasy armor, package colors, or unexplained military competence. Portraits may not bake localized text.
+Maintain actor/portrait manifests, stable preset/actor IDs, source references, asset-generation or painting recipes, frame normalization rules, direction/state/frame naming, anchors, scales, occupancy bounds, depth policy, neutral fallback policy, path safety, SHA-256, compressed/decoded byte metrics, and provenance. Identity portraits are `256×256`, contain one identity with face/shoulders inside the central 80% safe area, and bake no localized text. Clothing must reflect expatriates, contacts, service/public civilians, and corporate security without weapons, fantasy armor, package colors, or unexplained military competence.
 
 ### World/UI/audio/George feedback
 
-Facing, foot contact, locomotion, and interaction must be readable against the current validated city values without labels or x-ray effects. Character creation and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's AR art is private, restrained, visually distinct from a physical actor, and cannot obscure route geometry or imply that other characters see him.
+Facing, foot contact, locomotion, and interaction must be readable against the current validated provisional city values without labels or x-ray effects. Character creation and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's T6 base art is private, restrained, and visually distinct from a physical actor; proof places it near the protagonist's upper-right at `28–36` screen pixels and suppresses it while a full overlay owns focus, but T9 owns final states, placement, prompts, and suppression. It never owns collision/occlusion/depth or implies that other characters see him.
 
 ### Failure and recovery
 
@@ -528,11 +529,11 @@ Implements `GDR-PC-002`, `GDR-GEO-001`, `GDR-ART-001`, `GDR-ART-005`, `GDR-REM-0
 
 ### Human-play acceptance
 
-Select every protagonist preset across fresh runs and verify persistence into world, Character, dialogue identity, Retry, and debrief. Meet Lira, Naila, and Brant; distinguish them and their portraits without labels. Observe both security archetypes and three civilian roles in dusk/curfew contexts without mistaking them for fantasy fighters. At all target viewports, default zoom, and 0.60, verify stable feet within two pixels, correct facing/state, human-scale proportions, no roof placement, and readable silhouettes in every lighting state. Missing fallback may be tested, but fallback cannot count as the production matrix.
+For the current T6 gate, select every protagonist preset through the neutral appearance seam across fresh runs and verify it in the safehouse world; final Character/dialogue/Retry/debrief persistence remains deferred to T7/T9/T10. Meet Lira, Naila, and Brant and distinguish their world/portrait identities without labels. Inspect both reusable security and all three civilian visual archetypes without treating them as authoritative placed/scheduled actors. Inspect all twelve portraits, Takahiro, and George. At 1280×720, 1440×900, and 1920×1080, compare `0.78` and `0.60` across dusk, blue hour, and curfew for pixel-derived foot stability within two pixels, correct facing/state, human-scale proportions, no roof placement, and readable silhouettes. Missing/corrupt assets must produce an observable neutral diagnostic and fail the production gate; fallback never counts as the production matrix. Final entitlement-backed city-context acceptance remains deferred.
 
 ### Documentation and validation obligations
 
-Update actor/portrait inventories, Art Direction, implemented manifest ownership in Architecture, MVP Readiness, and `progress/GET-206.md`. Run sprite-matrix, anchor, direction, frame, scale, portrait, provenance, fallback, and performance validators; run `yarn sprites:validate`; inspect live captures at every required state and viewport. After visual acceptance, run the AGENTS closeout suite and guided AI regression. Record that visual identity/scale acceptance is human evidence, not implied by validator success.
+Update actor/portrait inventories, Art Direction, implemented manifest ownership in Architecture, MVP Readiness, and `progress/GET-206.md`. Run sprite-matrix, pixel-derived anchor/occupancy, direction, frame, scale, portrait, provenance/hash/path, fallback/fault-injection, and measured-load validators; run `yarn sprites:validate`; inspect live captures at every required state and viewport. Record exact counts, requests, compressed bytes, estimated decoded texture bytes, cold-load timing, and observed FPS without claiming a shipping ceiling while `OPEN-PERF-001` is open. After visual acceptance, run the AGENTS closeout suite and guided AI regression. Record that visual identity/scale acceptance is human evidence, not implied by validator success.
 
 ## T7 — Protagonist RPG identity, progression, Health, and Paranoia
 

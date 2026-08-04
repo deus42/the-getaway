@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "referenceId": "get206-grounded-cast-board-v1",
+  "status": "provisional-reference",
+  "image": "grounded-cast-board-v1.png",
+  "sha256": "bc16333c07710bd9bf3d78f1dc32e082bc6585cdce280c3a7fbf6bb107f433aa",
+  "dimensions": {
+    "width": 1369,
+    "height": 1149
+  },
+  "layout": {
+    "columns": 4,
+    "rows": 3,
+    "identityOrder": [
+      "player_civilian_01",
+      "player_civilian_02",
+      "player_civilian_03",
+      "player_civilian_04",
+      "contact_lira",
+      "contact_naila",
+      "contact_brant",
+      "security_hidzu_identity",
+      "security_hidzu_service",
+      "civilian_transit",
+      "civilian_service",
+      "civilian_delivery"
+    ]
+  },
+  "visualContract": {
+    "direction": "graphic-surveillance-noir",
+    "lighting": "upper-left sodium key with restrained cool fill",
+    "palette": [
+      "charcoal",
+      "bruised-umber",
+      "dirty-crimson",
+      "muted-teal",
+      "bone",
+      "sodium-amber"
+    ],
+    "techCyan": "devices-only",
+    "prohibited": [
+      "weapons",
+      "fantasy-armor",
+      "capes",
+      "crowns",
+      "neon-aura",
+      "embedded-text",
+      "extra-identities"
+    ]
+  },
+  "inspection": {
+    "identityCount": 12,
+    "oneFigurePerCell": true,
+    "prohibitedCueFound": false,
+    "productionAsset": false,
+    "notes": "Reference controls roster, silhouette, wardrobe role, palette, and grounded tone. It is not a sprite matrix, portrait sheet, approved biography, or runtime asset."
+  }
+}

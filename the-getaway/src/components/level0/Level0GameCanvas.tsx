@@ -8,6 +8,7 @@ export interface Level0GameCanvasProps {
   run: Level0RunState;
   movementPaused: boolean;
   observationActive: boolean;
+  georgePresentationVisible: boolean;
   onPlayerCheckpoint(position: WorldPoint, facing: WorldPoint): void;
   onFeedback(feedbackId: string): void;
   onInteraction(anchorId?: string): void;
@@ -18,6 +19,7 @@ const Level0GameCanvas = ({
   run,
   movementPaused,
   observationActive,
+  georgePresentationVisible,
   onPlayerCheckpoint,
   onFeedback,
   onInteraction,
@@ -31,6 +33,7 @@ const Level0GameCanvas = ({
     run,
     movementPaused,
     observationActive,
+    georgePresentationVisible,
     onPlayerCheckpoint,
     onFeedback,
     onInteraction,
@@ -40,6 +43,7 @@ const Level0GameCanvas = ({
     run,
     movementPaused,
     observationActive,
+    georgePresentationVisible,
     onPlayerCheckpoint,
     onFeedback,
     onInteraction,
@@ -54,6 +58,7 @@ const Level0GameCanvas = ({
       getRun: () => latestRef.current.run,
       isMovementPaused: () => latestRef.current.movementPaused,
       isObservationActive: () => latestRef.current.observationActive,
+      isGeorgePresentationVisible: () => latestRef.current.georgePresentationVisible,
       onPlayerCheckpoint: (position, facing) =>
         latestRef.current.onPlayerCheckpoint(position, facing),
       onFeedback: (feedbackId) => latestRef.current.onFeedback(feedbackId),

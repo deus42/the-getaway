@@ -28,8 +28,10 @@
     "art:level0:t5:blender": "node scripts/run-get205-blender.mjs",
     "layout:level0:export": "tsx scripts/export-level0-layout-contract.ts",
     "layout:level0:validate": "tsx scripts/validate-level0-layout-contract.ts",
-    "sprites:seed-placeholders": "tsx scripts/generate-character-sprite-placeholders.ts",
+    "sprites:build": "tsx scripts/generate-grounded-character-assets.ts --publish",
+    "sprites:build:check": "tsx scripts/generate-grounded-character-assets.ts --check",
     "sprites:validate": "tsx scripts/validate-character-sprites.ts",
+    "sprites:mutations": "jest src/__tests__/characterAssetValidator.test.ts --runInBand",
     "test": "jest",
     "test:watch": "jest --watch",
     "narrative:generate": "tsx scripts/generate-scene-from-story.ts"

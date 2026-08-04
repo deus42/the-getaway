@@ -96,7 +96,7 @@ Canonical project documentation is the Markdown-only `memory-bank/` vault:
 6. After requester acceptance, or an explicit request to finalize/commit the current pass, run the required automated closeout checks below.
 7. Commit only the intended coherent files with an authorized message, comment Linear, and leave the issue non-terminal until the requester verifies the committed build.
 
-When any required Level 0 actor presentation changes, use the manifest-driven pipeline in `the-getaway/src/content/characters/spriteManifest.ts` and `the-getaway/public/characters/<spriteSetId>/`. The production contract covers all twelve grounded actor sets; `SpriteCharacterRigFactory` is primary, while noir-vector rigs are diagnostic fallback only for missing/invalid matrices or actors outside the approved Level 0 roster.
+When any required Level 0 actor presentation changes, use the manifest-driven pipeline in `the-getaway/src/content/characters/spriteManifest.ts` and `the-getaway/public/characters/<spriteSetId>/`. In the canonical `Level0RuntimeShell`, `Level0Scene` plus its typed per-sheet loader is the primary runtime path for the twelve grounded actor sets, and a neutral diagnostic human is the only permitted missing-asset fallback. `SpriteCharacterRigFactory` and its vector rig belong to the dormant legacy `MainScene`; do not use that path to reintroduce fantasy/role presentation into Level 0. GET-208 owns broader retirement of the legacy combat-era scene path.
 
 For HUD/theme work:
 
