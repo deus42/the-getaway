@@ -1,5 +1,6 @@
 import type { Level0LayoutContract, WorldPoint, WorldPolygon } from '../layout/types';
 import type {
+  Get204FullDistrictRecipe,
   Level0ArtManifest,
   Level0ArtBundle,
   Level0ArtLayer,
@@ -615,6 +616,464 @@ export const validateLevel0SourceAndRecipe = (
   recipe.captures.forEach((capture) => {
     if (!layout.anchors.some((anchor) => anchor.id === capture.targetAnchorId)) {
       errors.push(`capture ${capture.id} references an unknown framing anchor`);
+    }
+  });
+
+  return [...new Set(errors)];
+};
+
+const GET204_FULL_DISTRICT_REFERENCE_CONTRACT = [
+  {
+    role: 'quality-look-target',
+    path: 'art/references/get204/canvas-quality-target.png',
+    sha256: 'ff53c06f9b03966c2468b9bf22e13449421b16f20101573929fcbbcc20083e6d',
+  },
+  {
+    role: 'close-play-target',
+    path: 'art/references/get204/street-play-target.png',
+    sha256: '66cc72f0ec09b928cf2d95f0fe3db61881776ba87f48c99c83852cf47583c9a9',
+  },
+  {
+    role: 'overview-density-target',
+    path: 'art/references/get204/dense-city-target.png',
+    sha256: '3cca77d4f57d7960b6b58869f8b3a4ddeb5589f2c46dbf7015e1e4c4d9860cd0',
+  },
+] as const;
+
+const GET204_SUBDISTRICTS = [
+  'safehouse-backstreets',
+  'public-transit-commercial',
+  'logistics-civic-control',
+] as const;
+
+const GET204_PUBLIC_REALM_KINDS = [
+  'road',
+  'sidewalk',
+  'curb',
+  'crossing',
+  'alley',
+  'drainage',
+  'entrance-threshold',
+] as const;
+
+const GET204_REQUIRED_ANCHORS = [
+  'safehouse.spawn',
+  'contact.lira',
+  'contact.naila',
+  'contact.brant',
+  'entrance.logistics.public',
+  'entrance.logistics.service',
+  'entrance.safehouse',
+  'terminal.camera_loop',
+  'terminal.cache_locker',
+  'terminal.outbound_transit',
+  'drone.launch',
+  'objective.medkits',
+  'objective.manifest',
+] as const;
+
+const isFinitePoint = (point: WorldPoint): boolean =>
+  Number.isFinite(point.x) && Number.isFinite(point.y);
+
+const get204PolygonArea = (polygon: WorldPolygon): number => Math.abs(
+  polygon.reduce((sum, point, index) => {
+    const next = polygon[(index + 1) % polygon.length];
+    return sum + point.x * next.y - next.x * point.y;
+  }, 0)
+) / 2;
+
+/**
+ * Validates the complete candidate independently from the superseded v1
+ * unchanged-kit/greybox bundle. Visual quality is still accepted from live
+ * evidence, while this prevents known structural regressions from reaching it.
+ */
+export const validateGet204FullDistrictRecipe = (
+  recipe: Get204FullDistrictRecipe
+): string[] => {
+  const errors: string[] = [];
+
+  if (
+    recipe.schemaVersion !== 2 ||
+    recipe.ticket !== 'GET-204' ||
+    recipe.acceptanceState !== 'FULL_DISTRICT_LIVE_CANDIDATE' ||
+    recipe.usage !== 'candidate-evidence'
+  ) {
+    errors.push('full-district recipe must use the GET-204 schema-v2 candidate contract');
+  }
+
+  if (
+    recipe.references.length !== GET204_FULL_DISTRICT_REFERENCE_CONTRACT.length ||
+    !GET204_FULL_DISTRICT_REFERENCE_CONTRACT.every((expected, index) => {
+      const actual = recipe.references[index];
+      return actual?.role === expected.role &&
+        actual.path === expected.path &&
+        actual.sha256 === expected.sha256 &&
+        actual.authority.trim().length > 0;
+    })
+  ) {
+    errors.push('full-district recipe must lock all three approved reference authorities and hashes');
+  }
+
+  if (
+    recipe.source.vendor !== 'KitBash3D' ||
+    recipe.source.kit !== 'Neo Tokyo 2' ||
+    recipe.source.sourceRootVariable !== 'GETAWAY_NEO_TOKYO_ROOT' ||
+    recipe.source.format !== 'FBX' ||
+    !exactSetMatch(recipe.source.textureSearchRoots, ['Textures', 'jpeg images', 'c4d/tex']) ||
+    recipe.source.textureSearchRoots[0] !== 'Textures' ||
+    recipe.source.rawSourceCommitted !== false
+  ) {
+    errors.push('full-district source must remain the external owned Neo Tokyo 2 FBX pack with complete texture fallback priority');
+  }
+
+  if (
+    recipe.coordinateSystem.layoutUnitMeters <= 0 ||
+    recipe.coordinateSystem.projection.tileWidth !== 64 ||
+    recipe.coordinateSystem.projection.tileHeight !== 32 ||
+    recipe.coordinateSystem.projection.orientation !== 'isometric-2:1' ||
+    recipe.coordinateSystem.projection.azimuthDegrees !== 45 ||
+    recipe.coordinateSystem.projection.elevationDegrees !== 30 ||
+    recipe.coordinateSystem.bounds.length < 4 ||
+    !recipe.coordinateSystem.bounds.every(isFinitePoint)
+  ) {
+    errors.push('full-district coordinate system must preserve the registered 64x32 isometric projection');
+  }
+
+  const subdistrictIds = recipe.composition.subdistricts.map(({ id }) => id);
+  if (!exactSetMatch(subdistrictIds, GET204_SUBDISTRICTS)) {
+    errors.push('full-district composition requires the three approved subdistricts');
+  }
+  recipe.composition.subdistricts.forEach((subdistrict) => {
+    if (
+      subdistrict.bounds.length < 4 ||
+      !subdistrict.bounds.every(isFinitePoint) ||
+      subdistrict.playerPromise.trim().length === 0 ||
+      subdistrict.landmarkClusterIds.length === 0
+    ) {
+      errors.push(`subdistrict ${subdistrict.id} lacks bounded identity or landmark ownership`);
+    }
+  });
+
+  const blockIds = recipe.composition.urbanBlocks.map(({ id }) => id);
+  if (
+    recipe.composition.urbanBlocks.length !== 8 ||
+    duplicateValues(blockIds).length > 0
+  ) {
+    errors.push('full-district composition requires exactly eight unique compact urban blocks');
+  }
+  recipe.composition.urbanBlocks.forEach((block) => {
+    if (
+      !subdistrictIds.includes(block.subdistrictId) ||
+      block.polygon.length < 4 ||
+      !block.polygon.every(isFinitePoint) ||
+      block.clusterIds.length === 0 ||
+      block.streetEdgeIds.length === 0
+    ) {
+      errors.push(`urban block ${block.id} lacks bounded frontage ownership`);
+    }
+  });
+
+  if (
+    recipe.composition.traversalLoops.length !== 3 ||
+    duplicateValues(recipe.composition.traversalLoops.map(({ id }) => id)).length > 0
+  ) {
+    errors.push('full-district composition requires exactly three unique traversal loops');
+  }
+  recipe.composition.traversalLoops.forEach((loop) => {
+    if (
+      loop.closed !== true ||
+      loop.points.length < 5 ||
+      !loop.points.every(isFinitePoint) ||
+      loop.subdistrictIds.length === 0 ||
+      loop.subdistrictIds.some((id) => !subdistrictIds.includes(id))
+    ) {
+      errors.push(`traversal loop ${loop.id} is incomplete or references an unknown subdistrict`);
+    }
+  });
+
+  if (
+    recipe.composition.density.minimumVisibleBuildingInstances !== 20 ||
+    recipe.composition.density.maximumVisibleBuildingInstances !== 20 ||
+    recipe.composition.density.blockClusterPolicy !==
+      'compact-perimeter-blocks-with-curated-kit-reuse' ||
+    recipe.composition.density.croppedKitHeroFrontageCount !== 4 ||
+    recipe.composition.density.minimumBuiltFootprintRatio < 0.42 ||
+    recipe.composition.density.minimumDistinctSourceRoots < 14 ||
+    recipe.composition.density.maximumSourceReuse > 2 ||
+    recipe.composition.density.maximumTallLandmarks > 3
+  ) {
+    errors.push('full-district density contract requires compact blocks, four cropped-kit hero frontages, curated kit reuse, and a restrained landmark hierarchy');
+  }
+
+  recipe.composition.openSpaces.forEach((space) => {
+    if (
+      space.gameplayOwner === 'decorative' ||
+      space.gameplayOwner.trim().length === 0 ||
+      space.areaLayoutUnits <= 0 ||
+      space.areaLayoutUnits > 72 ||
+      space.polygon.length < 4 ||
+      !space.polygon.every(isFinitePoint)
+    ) {
+      errors.push(`open space ${space.id} is decorative or oversized`);
+    }
+  });
+
+  if (recipe.streetHierarchy.controlledBoulevards.length !== 1) {
+    errors.push('street hierarchy requires exactly one controlled boulevard');
+  }
+  if (recipe.streetHierarchy.ordinaryStreets.length < 4) {
+    errors.push('street hierarchy requires at least four ordinary streets');
+  }
+  if (recipe.streetHierarchy.serviceAlleys.length < 3) {
+    errors.push('street hierarchy requires at least three service alleys');
+  }
+  if (
+    recipe.streetHierarchy.controlledBoulevards.some(({ widthLayoutUnits }) => widthLayoutUnits > 4.5) ||
+    recipe.streetHierarchy.ordinaryStreets.some(({ widthLayoutUnits }) => widthLayoutUnits > 4) ||
+    recipe.streetHierarchy.serviceAlleys.some(({ widthLayoutUnits }) => widthLayoutUnits > 2.25)
+  ) {
+    errors.push('street widths exceed the approved human-scale hierarchy');
+  }
+  GET204_PUBLIC_REALM_KINDS.forEach((kind) => {
+    if (!recipe.streetHierarchy.publicRealmKinds.includes(kind)) {
+      errors.push(`street hierarchy is missing ${kind}`);
+    }
+  });
+  const streetSegments = [
+    ...recipe.streetHierarchy.controlledBoulevards,
+    ...recipe.streetHierarchy.ordinaryStreets,
+    ...recipe.streetHierarchy.serviceAlleys,
+  ];
+  streetSegments.forEach((segment) => {
+    if (
+      segment.widthLayoutUnits <= 0 ||
+      segment.centerline.length < 2 ||
+      !segment.centerline.every(isFinitePoint) ||
+      segment.gameplayPurpose.trim().length === 0
+    ) {
+      errors.push(`street segment ${segment.id} lacks registered geometry or gameplay purpose`);
+    }
+  });
+
+  if (
+    recipe.camera.runtimeDefaultZoom < 1.58 ||
+    recipe.camera.runtimeDefaultZoom > 1.66
+  ) {
+    errors.push('default camera zoom must remain within the approved 1.58-1.66 protagonist-led range');
+  }
+  if (
+    recipe.camera.runtimeMaximumZoom < recipe.camera.runtimeDefaultZoom ||
+    recipe.camera.manualOverviewZoom >= recipe.camera.runtimeDefaultZoom ||
+    recipe.camera.manualOverviewZoom <= 0 ||
+    recipe.camera.followOffsetScenePixels <= 0 ||
+    recipe.camera.actorScreenHeightTargetPx.viewport !== '1440x900' ||
+    recipe.camera.actorScreenHeightTargetPx.min !== 95 ||
+    recipe.camera.actorScreenHeightTargetPx.max !== 115 ||
+    !GET204_SUBDISTRICTS.every((id) => (
+      isFinitePoint(recipe.camera.proofStarts[id]) &&
+      Array.isArray(recipe.camera.proofOccluderClusterIds[id]) &&
+      recipe.camera.proofOccluderClusterIds[id].length > 0
+    ))
+  ) {
+    errors.push('camera contract must separate close play, overview, follow lead, and 95-115px actor proof');
+  }
+
+  const clusters = recipe.architecturalClusters;
+  if (clusters.length !== 20) {
+    errors.push('full-district candidate requires exactly twenty registered architectural clusters');
+  }
+  duplicateValues(clusters.map(({ id }) => id)).forEach((id) => {
+    errors.push(`duplicate architectural cluster id: ${id}`);
+  });
+  const sourceUseCounts = clusters.reduce<Record<string, number>>((counts, cluster) => {
+    counts[cluster.sourcePrefix] = (counts[cluster.sourcePrefix] ?? 0) + 1;
+    return counts;
+  }, {});
+  if (Object.keys(sourceUseCounts).length < recipe.composition.density.minimumDistinctSourceRoots) {
+    errors.push('full-district candidate does not use enough distinct kit roots');
+  }
+  Object.entries(sourceUseCounts).forEach(([sourcePrefix, count]) => {
+    if (count > recipe.composition.density.maximumSourceReuse) {
+      errors.push(`source root ${sourcePrefix} exceeds the curated reuse limit`);
+    }
+  });
+  if (
+    clusters.filter(({ role }) => role === 'district-landmark').length >
+    recipe.composition.density.maximumTallLandmarks
+  ) {
+    errors.push('full-district skyline exceeds the restrained landmark hierarchy');
+  }
+  clusters.forEach((cluster) => {
+    if (
+      !subdistrictIds.includes(cluster.subdistrictId) ||
+      !blockIds.includes(cluster.blockId) ||
+      cluster.role === ('isolated-lot' as typeof cluster.role)
+    ) {
+      errors.push(`cluster ${cluster.id} lacks approved frontage or subdistrict ownership`);
+    }
+    const validKitSource = cluster.artSource === 'owned-kit' &&
+      cluster.sourceCollection === `KB3D.${cluster.sourcePrefix}` &&
+      /^(?:Small|Medium|Large)[A-J]$/.test(cluster.sourcePrefix) &&
+      cluster.verticalCropMeters === undefined;
+    const validCroppedKitSource = cluster.artSource === 'owned-kit-cropped' &&
+      cluster.sourceCollection === `KB3D.${cluster.sourcePrefix}` &&
+      /^(?:Small|Medium|Large)[A-J]$/.test(cluster.sourcePrefix) &&
+      cluster.verticalCropMeters !== undefined &&
+      cluster.verticalCropMeters >= 10 &&
+      cluster.verticalCropMeters <= 16;
+    if (
+      (!validKitSource && !validCroppedKitSource) ||
+      cluster.uniformScale <= 0 ||
+      !Number.isFinite(cluster.rotationDegrees)
+    ) {
+      errors.push(`cluster ${cluster.id} has invalid source registration or transform`);
+    }
+    if (
+      cluster.cropRectangle.width <= 0 ||
+      cluster.cropRectangle.height <= 0 ||
+      cluster.cropRectangle.width > recipe.export.maximumClusterDimension ||
+      cluster.cropRectangle.height > recipe.export.maximumClusterDimension ||
+      !isFinitePoint(cluster.sceneTopLeft) ||
+      !isFinitePoint(cluster.depthAnchor) ||
+      cluster.footprint.length < 4 ||
+      cluster.localOcclusionPolygon.length < 4 ||
+      !cluster.footprint.every(isFinitePoint) ||
+      !cluster.localOcclusionPolygon.every(isFinitePoint)
+    ) {
+      errors.push(`cluster ${cluster.id} lacks bounded crop, depth, footprint, or local occlusion registration`);
+    }
+    const expectedPath = `environment/level0/get204-city/cluster-${cluster.id.replace(/^cluster\./, '').replace(/\./g, '-')}.webp`;
+    if (cluster.runtimePath !== expectedPath) {
+      errors.push(`cluster ${cluster.id} runtime path is not registered to get204-city`);
+    }
+  });
+
+  const allowedSourceProps = /^(?:Awning_[AB]|Barriers|Bollard|Door_[A-D]|ElectricBox_[A-C]|Intercom|Lamp_[AB]|PowerGenerator_[AB]|RubbishBin|RumbleStrip|UndergroundEntrance|Vending_[A-D])$/;
+  if (
+    recipe.sourcePropPlacements.length < 24 ||
+    duplicateValues(recipe.sourcePropPlacements.map(({ id }) => id)).length > 0
+  ) {
+    errors.push('full-district candidate requires at least twenty-four unique source-backed public-realm details');
+  }
+  recipe.sourcePropPlacements.forEach((placement) => {
+    if (
+      !allowedSourceProps.test(placement.sourcePrefix) ||
+      !isFinitePoint(placement.position) ||
+      placement.uniformScale <= 0 ||
+      !Number.isFinite(placement.rotationDegrees) ||
+      !Number.isFinite(placement.mountLiftMeters) ||
+      placement.layer !== 'details'
+    ) {
+      errors.push(`source prop ${placement.id} has invalid source registration or transform`);
+    }
+  });
+
+  recipe.composition.urbanBlocks.forEach((block) => {
+    const ownedClusterIds = clusters
+      .filter(({ blockId }) => blockId === block.id)
+      .map(({ id }) => id);
+    if (!exactSetMatch(block.clusterIds, ownedClusterIds)) {
+      errors.push(`urban block ${block.id} cluster ownership does not match registered architecture`);
+    }
+  });
+  const blockArea = recipe.composition.urbanBlocks.reduce(
+    (sum, block) => sum + get204PolygonArea(block.polygon),
+    0
+  );
+  const builtArea = clusters.reduce(
+    (sum, cluster) => sum + get204PolygonArea(cluster.footprint),
+    0
+  );
+  if (
+    blockArea <= 0 ||
+    builtArea / blockArea < recipe.composition.density.minimumBuiltFootprintRatio
+  ) {
+    errors.push('registered architecture does not meet the compact block footprint ratio');
+  }
+
+  const clusterIds = clusters.map(({ id }) => id);
+  Object.entries(recipe.camera.proofOccluderClusterIds).forEach(([subdistrictId, ids]) => {
+    if (
+      !GET204_SUBDISTRICTS.includes(subdistrictId as typeof GET204_SUBDISTRICTS[number]) ||
+      ids.some((id) => !clusterIds.includes(id))
+    ) {
+      errors.push(`proof occlusion for ${subdistrictId} references unknown city geometry`);
+    }
+  });
+  if (!exactSetMatch(recipe.semanticGeometry.blockedClusterIds, clusterIds)) {
+    errors.push('blocked cluster ids must exactly match registered architecture');
+  }
+  if (
+    recipe.semanticGeometry.walkable.length === 0 ||
+    recipe.semanticGeometry.walkable.some(
+      (region) => region.polygon.length < 4 || !region.polygon.every(isFinitePoint)
+    )
+  ) {
+    errors.push('candidate walkable geometry must be explicit and bounded');
+  }
+  const anchorIds = recipe.semanticGeometry.anchors.map(({ id }) => id);
+  GET204_REQUIRED_ANCHORS.forEach((id) => {
+    if (!anchorIds.includes(id)) errors.push(`candidate is missing required semantic anchor ${id}`);
+  });
+  recipe.semanticGeometry.anchors.forEach((anchor) => {
+    if (!isFinitePoint(anchor.position) || anchor.radius <= 0) {
+      errors.push(`semantic anchor ${anchor.id} lacks a finite position or interaction radius`);
+    }
+  });
+
+  if (
+    recipe.populationStaging.civilians < 12 ||
+    recipe.populationStaging.serviceWorkers < 4 ||
+    recipe.populationStaging.security < 2 ||
+    recipe.populationStaging.unarmedVerifierDrones !== 1
+  ) {
+    errors.push('population staging is too sparse to prove human scale and ordinary public life');
+  }
+  if (
+    recipe.lighting.baseState !== 'blue-hour' ||
+    !exactSetMatch(recipe.lighting.alignedStates, REQUIRED_LIGHTING_STATES) ||
+    recipe.lighting.keyDirection !== 'upper-left' ||
+    recipe.lighting.practicals !== 'visible-emitter-owned'
+  ) {
+    errors.push('lighting must preserve registered states, upper-left key, and visible-emitter practicals');
+  }
+
+  if (
+    recipe.export.strategy !== 'tiled-ground-plus-cropped-registered-master-scene-clusters' ||
+    recipe.export.runtimeRoot !== 'environment/level0/get204-city' ||
+    recipe.export.canvas.width <= 0 ||
+    recipe.export.canvas.height <= 0 ||
+    recipe.export.canvas.groundTileSize <= 0 ||
+    !isFinitePoint(recipe.export.canvas.pixelOrigin) ||
+    recipe.export.maximumClusterDimension <= 0
+  ) {
+    errors.push('full-district export must use registered ground tiles and cropped master-scene clusters');
+  }
+  if (recipe.export.allowFullCanvasTransparentForegroundLayers !== false) {
+    errors.push('full-canvas transparent foreground layers are prohibited');
+  }
+
+  if (recipe.runtime.enablement !== 'normal-level0-path') {
+    errors.push('full-district art must run on the normal Level 0 path');
+  }
+  if (
+    recipe.runtime.fallbackPolicy !== 'fail-visible-on-required-candidate-asset' ||
+    recipe.runtime.runtimeIdentity !== 'get204-full-district-live-candidate-v1' ||
+    !recipe.runtime.prohibitedQueryValues.includes('visualGate=get204-1') ||
+    !recipe.runtime.prohibitedFallbackProfiles.includes('level0-greybox')
+  ) {
+    errors.push('runtime contract must reject the Gate 1 proof path and greybox fallback');
+  }
+
+  [
+    'raw-vendor-geometry',
+    'source-textures',
+    'generated-blend',
+    'full-canvas-transparent-foreground-layer',
+    'unregistered-cluster-asset',
+  ].forEach((entry) => {
+    if (!recipe.commitBoundary.prohibited.includes(entry)) {
+      errors.push(`full-district commit boundary must prohibit ${entry}`);
     }
   });
 

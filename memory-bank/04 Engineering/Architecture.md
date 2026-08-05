@@ -603,9 +603,10 @@ Content may add stable detail fields only through a specification update. Debrie
 
 ```ts
 interface Level0ArtManifest {
-  schemaVersion: 1;
+  schemaVersion: 2;
   id: string;
-  usage: 'local-evidence' | 'runtime';
+  usage: 'candidate-evidence' | 'runtime';
+  compositionStage: 'full-district' | 'quality-lookdev' | 'live-candidate';
   recipeId: string;
   layoutContractId: string;
   projection: { tileWidth: 64; tileHeight: 32; orientation: 'isometric-2:1' };
@@ -728,26 +729,27 @@ The four current appearance IDs are defined once by the actor manifest and reuse
 
 ```mermaid
 flowchart LR
-  A["Approved level design"] --> B["Level0LayoutContract"]
-  B --> C["Phaser collision and anchors"]
-  B --> D["Blender scene recipe"]
-  D --> E["Unchanged-kit master scene"]
-  E --> F["T4 ignored local-evidence layers"]
-  F --> G["T4 technical validation and committed delivery"]
-  G --> H["Hash-locked Hidzu treatment"]
-  H --> I["T5 ignored local-evidence layers and captures"]
-  I --> J["T5 validation and requester visual review"]
-  J --> K["Entitlement-backed runtime promotion"]
-  F --> L["Layout and export validators"]
-  I --> L
-  B --> L
-  K --> M["Runtime rendering"]
+  A["Approved mission skeleton plus three locked references"] --> B["Complete Blender district master"]
+  B --> C["Public realm, materials, lighting, population, surveillance"]
+  C --> D["Candidate collision, occlusion, masks, entrances, anchors"]
+  D --> E["Flattened complete live runtime"]
+  E --> F["Close, clean-world, and full-overview internal review"]
+  F --> G{"Strong enough to show?"}
+  G -- "No" --> B
+  G -- "Yes" --> H{"Requester accepts live candidate?"}
+  H -- "No" --> B
+  H -- "Yes" --> I["Promote exact candidate metadata to Level0LayoutContract"]
+  I --> J["Closeout validation and authorized commit"]
+  J --> K["GET-204 verified; downstream ticket may start"]
 ```
 
 ### Contract discipline
 
-- Layout coordinates, zone names, entrances, devices, contacts, terminals, hiding/blending contexts, and objectives originate in one versioned contract.
-- Blender may refine visual mass and public realm inside the contract but cannot move required gameplay anchors without a reviewed layout change.
+- The mission skeleton owns stable semantic IDs, required places, route purposes, and player-facing behavior. It does not preserve the rejected `84×60` nine-block geometry.
+- Blender owns candidate street/building/public-realm geometry for the complete district. Once the requester accepts the live result, the accepted geometry is back-propagated into the one versioned layout contract before the authorized commit.
+- Phaser collision, entrances, occluders, devices, contacts, terminals, hiding/blending contexts, objectives, and rendered derivatives all consume the accepted contract; no hidden greybox geometry may coexist with a different visible city.
+- GET-204 runtime integration covers the entire district before requester presentation. An offline Blender render or technically valid export cannot establish visual progress by itself.
+- The complete candidate must produce a close live frame, a clean city frame, and a full-district overview from equivalent world/camera parameters.
 - T4 export validation proves projection and canvas containment, tile-grid registration, file hashes/bytes/budgets, layer semantics/fallbacks, and complete anchor values against the layout contract. Decoded raster-edge agreement remains a visual/runtime acceptance responsibility rather than a claim made by metadata validation alone.
 - T5 opens the exact ignored T4 master by expected hash only after the tracked T4 source/recipe and ignored aligned export pass their own validator. It verifies base transform/camera/canvas/anchor digests plus the pinned T4 art-manifest hash and semantic-registration digest, clones placement materials before mutation, and registers treatment-only objects under declared gameplay/civic purpose without changing authoritative collision data.
 - T5 export validation opens the generated art manifest, every tile, anchors, and treatment evidence; it enforces stable T4 recipe/layer IDs, expected derivative roots, exact file inventory, physical hashes and bytes for every registered output including overview and the authoring `.blend`, grid cells, budgets, projection tolerance/canvas containment, all 27 anchor values, byte-identical and spatially identical T4 semantic masks, manifest-derived surface-treatment digest, exact grammar/object bindings, assigned public copy against the actual wrapped font bodies, color-independent surveillance-state cues, independently recomputed palette coverage, measured per-addition bounds, complete capture hashes/dimensions, ignored local-evidence usage, run-evidence `runtimeReady: false`, and the greybox fallback.
@@ -756,7 +758,7 @@ flowchart LR
 - Preview, targeted capture, and export-only runs are retained under ignored `.generated/trials` and never update the canonical pointer. Only a full unfiltered `all` run can satisfy the 17-frame capture/export gate; Blender Python failures propagate a nonzero process exit.
 - If a parallelogram footprint cannot match a visual base within one tile, author a custom polygon or multi-region footprint rather than trim-chasing.
 - One full master scene prevents per-building angle, scale, and light drift.
-- Raw licensed files remain outside Git. Source manifests, recipes, and validators are versioned; flattened derivatives remain ignored until acquisition-specific entitlement and runtime promotion are explicitly approved.
+- Raw vendor geometry and textures remain outside Git. Requester-authorized flattened game derivatives, original gap-fill assets, source manifests, recipes, and validators may be versioned after the complete live candidate is accepted; generated `.blend` files remain untracked.
 
 ## 7. Movement, interaction, camera, and observation
 
@@ -782,7 +784,7 @@ Player knowledge and world ownership are separate inputs. Knowledge controls whe
 
 ### Camera
 
-- Normal Level 0 zoom cannot go below `0.60`.
+- Level 0 exposes a close street-first normal frame and a manual minimum zoom that reaches the composed full-district overview. Exact numeric values are frozen from the complete GET-204 live candidate rather than inherited from the greybox.
 - Camera follow binds to the current protagonist after every load/restart.
 - Observation mode may pan independently while paused, then restores follow without a sacrificial click.
 - Minimap viewport derives from current camera transform, not stale render bounds.
@@ -977,7 +979,7 @@ Required closeout commands remain those in `AGENTS.md` and [[01 MVP/95 MVP Readi
 3. Restore the pre-rewrite foundation while recording every salvage/rejection.
 4. Establish target schema, pause, persistence, and `Level0LayoutContract` foundations.
 5. Implement direct movement, interaction, camera, observation, and shared layout runtime.
-6. Build, technically validate, and commit the unchanged-kit Blender city; requester acceptance remains its final visual gate.
+6. Rebuild the complete GET-204 district, integrate it live, and present one polished reference-bound candidate; only requester acceptance unlocks closeout and commit.
 7. Add, technically validate, and commit the reversible Hidzu identity/world-art trial; requester acceptance remains its final visual gate.
 8. Replace actors and portraits.
 9. Restore identity, build, checks, Health, Paranoia, progression, and Character screen.

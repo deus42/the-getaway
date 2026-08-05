@@ -13,6 +13,7 @@ import {
   areCharacterSpriteSheetRefsLoaded,
   preloadCharacterSpriteSheetRefs,
   registerCharacterSpriteSheetAnimations,
+  type CharacterSpriteSheetRef,
 } from '../../visual/entities/characterSpriteAssets';
 import type { Level0Anchor, WorldPoint, WorldPolygon } from '../layout/types';
 import { LEVEL0_PLAYER_CLEARANCE_RADIUS } from '../layout/constants';
@@ -47,10 +48,20 @@ import {
   resolveLevel0SceneSpriteSheetRefs,
   resolveLevel0SpriteDirection,
 } from './level0ActorPresentation';
+import {
+  GET204_GATE1_MOVEMENT_CONTRACT,
+  GET204_GATE1_REGION,
+  GET204_GATE1_VISUAL,
+  isGet204VisualPixelBlocked,
+  resolveGet204Gate1LayerTopLeft,
+  resolveGet204Gate1OccluderAlpha,
+  resolveGet204OverviewFitZoom,
+  resolveGet204WorldViewBlend,
+} from '../art/get204Gate1';
 
 export const LEVEL0_SCENE_KEY = 'Level0RuntimeScene';
 export const LEVEL0_MIN_ZOOM = 0.6;
-export const LEVEL0_MAX_ZOOM = 1.25;
+export const LEVEL0_MAX_ZOOM = GET204_GATE1_VISUAL.maxZoom;
 const LEVEL0_GEORGE_TEXTURE_KEY = 'level0:george-ar:idle';
 
 export interface Level0SceneRuntime {
@@ -83,6 +94,7 @@ interface Level0SceneActorVisual {
 }
 
 const contract = LEVEL0_LAYOUT_CONTRACT;
+const movementContract = GET204_GATE1_MOVEMENT_CONTRACT;
 const origin = {
   x: Math.ceil(Math.max(...contract.bounds.map((point) => point.y))) *
       (contract.projection.tileWidth / 2) +
@@ -147,6 +159,25 @@ const colorForAnchor = (anchor: Level0Anchor): number => {
 const polygonMaxY = (polygon: WorldPolygon): number =>
   Math.max(...polygon.map((point) => projection.layoutToScene(point).y));
 
+const isLegacyBuildingOutsideGate1 = (polygon: WorldPolygon): boolean =>
+  Math.max(...polygon.map((point) => point.x)) < GET204_GATE1_REGION[0]!.x;
+
+const isPositionInsideGate1 = (point: WorldPoint): boolean =>
+  point.x >= 35 && point.x <= 84 && point.y >= 7.5 && point.y <= 47.8;
+
+const getGate1PopulationSpriteSheetRefs = () =>
+  GET204_GATE1_VISUAL.population.flatMap((actor) => actor.spriteSetId
+    ? [{ spriteSetId: actor.spriteSetId, state: 'idle' as const, direction: actor.facing }]
+    : []
+  );
+
+const getGate1PopulationImageRefs = () =>
+  GET204_GATE1_VISUAL.population.flatMap((actor) =>
+    actor.textureKey && actor.path
+      ? [{ textureKey: actor.textureKey, path: actor.path }]
+      : []
+  );
+
 export class Level0Scene extends Phaser.Scene {
   private readonly runtime: Level0SceneRuntime;
 
@@ -159,6 +190,8 @@ export class Level0Scene extends Phaser.Scene {
   private playerSprite: Phaser.GameObjects.Sprite | null = null;
 
   private playerDirection: Phaser.GameObjects.Triangle | null = null;
+
+  private playerOverviewMarker: Phaser.GameObjects.Graphics | null = null;
 
   private georgePresentation: Phaser.GameObjects.Image | Phaser.GameObjects.Graphics | null = null;
 
@@ -180,6 +213,14 @@ export class Level0Scene extends Phaser.Scene {
 
   private readonly contactActors = new Map<string, Level0SceneActorVisual>();
 
+  private readonly gate1PopulationActors = new Map<string, Level0SceneActorVisual>();
+
+  private readonly gate1ForegroundLayers = new Map<string, Phaser.GameObjects.Image>();
+
+  private readonly get204WorldLayers = new Map<'close' | 'overview', Phaser.GameObjects.Image>();
+
+  private minimumZoom = LEVEL0_MIN_ZOOM;
+
   private pointerDownAt: { x: number; y: number; cameraX: number; cameraY: number } | null = null;
 
   private pointerDragged = false;
@@ -192,10 +233,20 @@ export class Level0Scene extends Phaser.Scene {
   preload(): void {
     const run = this.runtime.getRun();
     if (!run) return;
+    const spriteSheetRefs = [
+      ...resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId),
+      ...getGate1PopulationSpriteSheetRefs(),
+    ];
     preloadCharacterSpriteSheetRefs(
       this,
-      resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId)
+      spriteSheetRefs
     );
+    GET204_GATE1_VISUAL.layers.forEach((layer) => {
+      this.load.image(layer.textureKey, layer.path);
+    });
+    getGate1PopulationImageRefs().forEach(({ textureKey, path }) => {
+      this.load.image(textureKey, path);
+    });
     this.load.image(
       LEVEL0_GEORGE_TEXTURE_KEY,
       NON_WORLD_CHARACTER_PRESENTATIONS.georgeAr.path
@@ -208,16 +259,17 @@ export class Level0Scene extends Phaser.Scene {
       throw new Error('Level 0 scene cannot start without an active run');
     }
 
-    registerCharacterSpriteSheetAnimations(
-      this,
-      resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId)
-    );
+    registerCharacterSpriteSheetAnimations(this, [
+      ...resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId),
+      ...getGate1PopulationSpriteSheetRefs(),
+    ]);
     this.movement = createIdleMovementState(run.player.position);
     this.movement.facing = { ...run.player.facing };
     this.drawWorld();
     this.syncAnchorKnowledge(run);
     this.createPlayerMarker(run);
     this.createContactActors();
+    this.createGate1PopulationActors();
     this.createIntentMarkers();
     this.configureCamera(run.player.position);
     this.createGeorgePresentation();
@@ -250,7 +302,7 @@ export class Level0Scene extends Phaser.Scene {
       if (keyboardActive || this.movement.intent.kind === 'keyboard') {
         this.movement = resolveIsometricKeyboardIntent(this.movement, keyboardInput);
       }
-      const step = stepDirectMovement(contract, this.movement, Math.min(delta, 50) / 1_000, {
+      const step = stepDirectMovement(movementContract, this.movement, Math.min(delta, 50) / 1_000, {
         speed: LEVEL0_DIRECT_MOVEMENT_SPEED,
         collisionRadius: LEVEL0_PLAYER_CLEARANCE_RADIUS,
         arrivalRadius: 0.12,
@@ -268,6 +320,8 @@ export class Level0Scene extends Phaser.Scene {
     }
 
     this.renderMovementState();
+    this.renderGate1ForegroundOcclusion();
+    this.renderGet204WorldView();
     this.followPlayerUnlessObserving();
     this.renderGeorgePresentation();
     const currentRun = this.runtime.getRun();
@@ -315,42 +369,71 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private drawWorld(): void {
-    const ground = this.add.graphics().setDepth(0);
-    ground.fillStyle(0x17191d, 1);
-    ground.fillPoints(contract.bounds.map(project), true);
-    ground.lineStyle(5, 0x60594f, 0.9);
-    ground.strokePoints(contract.bounds.map(project), true);
+    if (GET204_GATE1_VISUAL.runtimeEnabled) {
+      this.drawGate1Art();
+    } else {
+      const ground = this.add.graphics().setDepth(0);
+      ground.fillStyle(0x17191d, 1);
+      ground.fillPoints(contract.bounds.map(project), true);
+      ground.lineStyle(5, 0x60594f, 0.9);
+      ground.strokePoints(contract.bounds.map(project), true);
 
-    const orderedSurfaces = [...contract.surfaces].sort((a, b) => {
-      const priority: Record<string, number> = { road: 0, alley: 1, sidewalk: 2, crossing: 3, plaza: 4 };
-      return (priority[a.kind] ?? 5) - (priority[b.kind] ?? 5);
-    });
-    orderedSurfaces.forEach((surface) => {
-      const graphics = this.add.graphics().setDepth(2 + polygonMaxY(surface.polygon) / 10_000);
-      const fill = surface.kind === 'road'
-        ? 0x25282d
-        : surface.kind === 'alley'
-          ? 0x202329
-          : 0x343337;
-      graphics.fillStyle(fill, 1);
-      graphics.fillPoints(surface.polygon.map(project), true);
-      graphics.lineStyle(1, 0x6e675d, surface.kind === 'plaza' ? 0.65 : 0.3);
-      graphics.strokePoints(surface.polygon.map(project), true);
-    });
+      const orderedSurfaces = [...contract.surfaces].sort((a, b) => {
+        const priority: Record<string, number> = {
+          road: 0,
+          alley: 1,
+          sidewalk: 2,
+          crossing: 3,
+          plaza: 4,
+        };
+        return (priority[a.kind] ?? 5) - (priority[b.kind] ?? 5);
+      });
+      orderedSurfaces.forEach((surface) => {
+        const graphics = this.add.graphics().setDepth(2 + polygonMaxY(surface.polygon) / 10_000);
+        const fill = surface.kind === 'road'
+          ? 0x25282d
+          : surface.kind === 'alley'
+            ? 0x202329
+            : 0x343337;
+        graphics.fillStyle(fill, 1);
+        graphics.fillPoints(surface.polygon.map(project), true);
+        graphics.lineStyle(1, 0x6e675d, surface.kind === 'plaza' ? 0.65 : 0.3);
+        graphics.strokePoints(surface.polygon.map(project), true);
+      });
 
-    contract.traversalLoops.forEach((loop, index) => {
-      const graphics = this.add.graphics().setDepth(4);
-      graphics.lineStyle(3, [0xa0743d, 0x557b76, 0x6f6252][index] ?? 0x6f6252, 0.32);
-      graphics.strokePoints(loop.points.map(project), false);
-    });
+      contract.traversalLoops.forEach((loop, index) => {
+        const graphics = this.add.graphics().setDepth(4);
+        graphics.lineStyle(3, [0xa0743d, 0x557b76, 0x6f6252][index] ?? 0x6f6252, 0.32);
+        graphics.strokePoints(loop.points.map(project), false);
+      });
 
-    contract.buildingFootprints.forEach((footprint, index) => {
-      this.drawBuilding(footprint.polygon, footprint.height, index);
-    });
+      contract.buildingFootprints
+        .filter((footprint) => isLegacyBuildingOutsideGate1(footprint.polygon))
+        .forEach((footprint, index) => {
+          this.drawBuilding(footprint.polygon, footprint.height, index);
+        });
+    }
 
     contract.anchors.forEach((anchor) => {
       const visuals = this.drawAnchor(anchor);
       if (visuals.length > 0) this.anchorVisuals.set(anchor.id, visuals);
+    });
+  }
+
+  private drawGate1Art(): void {
+    const topLeft = resolveGet204Gate1LayerTopLeft(origin);
+    GET204_GATE1_VISUAL.layers.forEach((layer) => {
+      if (!this.textures.exists(layer.textureKey)) return;
+      const image = this.add
+        .image(topLeft.x, topLeft.y, layer.textureKey)
+        .setOrigin(0, 0)
+        .setDepth(layer.depth)
+        .setData('get204Gate1LayerId', layer.id);
+      this.get204WorldLayers.set(layer.view, image);
+      if (layer.occluderId) {
+        image.setData('occluderId', layer.occluderId);
+        this.gate1ForegroundLayers.set(layer.occluderId, image);
+      }
     });
   }
 
@@ -410,7 +493,9 @@ export class Level0Scene extends Phaser.Scene {
     graphics.lineStyle(3, color, 0.95);
     graphics.strokeCircle(position.x, position.y, 9);
 
-    const shouldLabel = !['camera', 'hiding', 'blending', 'drone-launch'].includes(anchor.kind);
+    const shouldLabel =
+      !isPositionInsideGate1(anchor.position) &&
+      !['camera', 'hiding', 'blending', 'drone-launch'].includes(anchor.kind);
     const visuals: AnchorVisual[] = [graphics];
     if (shouldLabel) {
       const label = this.add
@@ -445,11 +530,18 @@ export class Level0Scene extends Phaser.Scene {
     this.playerMarker = visual.container;
     this.playerSprite = visual.sprite;
     this.playerDirection = visual.directionMarker;
+    this.playerOverviewMarker = this.add.graphics();
+    this.playerOverviewMarker.lineStyle(2, 0xd2c6a9, 0.95);
+    this.playerOverviewMarker.strokeCircle(0, 0, 14);
+    this.playerOverviewMarker.fillStyle(0x5f9da2, 0.95);
+    this.playerOverviewMarker.fillCircle(0, 0, 3);
     this.renderMovementState();
   }
 
   private createContactActors(): void {
-    LEVEL0_CONTACT_ACTOR_PRESENTATIONS.forEach((presentation) => {
+    LEVEL0_CONTACT_ACTOR_PRESENTATIONS
+      .filter((presentation) => !isPositionInsideGate1(presentation.position))
+      .forEach((presentation) => {
       const visual = this.createActorVisual(
         presentation.actorId,
         presentation.actorId,
@@ -462,6 +554,113 @@ export class Level0Scene extends Phaser.Scene {
       this.playActorAnimation(visual.sprite, presentation.actorId, 'idle', presentation.facing);
       this.contactActors.set(presentation.actorId, visual);
     });
+  }
+
+  private createGate1PopulationActors(): void {
+    GET204_GATE1_VISUAL.population.forEach((presentation) => {
+      const visual = presentation.kind === 'drone'
+        ? this.createGate1DroneVisual(presentation.id)
+        : presentation.textureKey
+          ? this.createGate1PopulationVisual(
+              presentation.id,
+              presentation.textureKey
+            )
+          : this.createActorVisual(
+              presentation.id,
+              presentation.spriteSetId,
+              presentation.facing,
+              presentation.spriteSetId
+                ? [{
+                    spriteSetId: presentation.spriteSetId,
+                    state: 'idle',
+                    direction: presentation.facing,
+                  }]
+                : undefined
+            );
+      const scenePosition = projection.layoutToScene(presentation.position);
+      visual.container
+        .setPosition(scenePosition.x, scenePosition.y)
+        .setDepth(100 + scenePosition.y)
+        .setData('get204WorldScaleMultiplier', presentation.worldScaleMultiplier);
+      if (presentation.spriteSetId) {
+        this.playActorAnimation(
+          visual.sprite,
+          presentation.spriteSetId,
+          'idle',
+          presentation.facing
+        );
+      }
+      this.gate1PopulationActors.set(presentation.id, visual);
+    });
+  }
+
+  private createGate1PopulationVisual(
+    actorId: string,
+    textureKey: string
+  ): Level0SceneActorVisual {
+    const container = this.add.container(0, 0);
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x05070a, 0.44);
+    shadow.fillEllipse(0, 1, 26, 7);
+    const sprite = this.add.sprite(0, 0, textureKey).setOrigin(0.5, 0.92);
+    container.add([shadow, sprite]);
+    container.setData('actorId', actorId);
+    container.setData('presentationKind', 'get204-runtime-population');
+    return { actorId, container, sprite, directionMarker: null };
+  }
+
+  private createGate1DroneVisual(actorId: string): Level0SceneActorVisual {
+    const container = this.add.container(0, 0);
+    const shadow = this.add.graphics();
+    shadow.fillStyle(0x05070a, 0.4);
+    shadow.fillEllipse(0, 1, 42, 11);
+    const body = this.add.graphics();
+    body.fillStyle(0x202831, 1);
+    body.fillEllipse(0, -43, 38, 18);
+    body.lineStyle(3, 0x748087, 0.9);
+    body.strokeEllipse(0, -43, 42, 21);
+    body.fillStyle(0x58afba, 0.95);
+    body.fillCircle(0, -42, 4);
+    body.fillStyle(0xb4a078, 0.9);
+    body.fillCircle(-15, -43, 2);
+    body.fillCircle(15, -43, 2);
+    body.lineStyle(2, 0x56636a, 0.9);
+    body.lineBetween(-24, -43, -17, -43);
+    body.lineBetween(17, -43, 24, -43);
+    container.add([shadow, body]);
+    container.setData('actorId', actorId);
+    container.setData('presentationKind', 'unarmed-verifier-drone');
+    return { actorId, container, sprite: null, directionMarker: null };
+  }
+
+  private renderGate1ForegroundOcclusion(): void {
+    if (!this.movement) return;
+    this.gate1ForegroundLayers.forEach((image, occluderId) => {
+      image.setAlpha(resolveGet204Gate1OccluderAlpha(occluderId, this.movement!.position));
+    });
+  }
+
+  private renderGet204WorldView(): void {
+    const blend = resolveGet204WorldViewBlend(this.cameras.main.zoom, this.minimumZoom);
+    this.get204WorldLayers.get('overview')?.setAlpha(blend.overviewAlpha);
+    this.get204WorldLayers.get('close')?.setAlpha(blend.closeAlpha);
+    this.playerSprite?.setScale(blend.playerWorldScale);
+    this.gate1PopulationActors.forEach((visual) => {
+      const multiplier = Number(
+        visual.container.getData('get204WorldScaleMultiplier') ?? 1
+      );
+      visual.container
+        .setAlpha(blend.closeAlpha)
+        .setVisible(blend.closeAlpha > 0.04);
+      if (visual.sprite) {
+        visual.sprite.setScale(blend.playerWorldScale * multiplier);
+      } else {
+        visual.container.setScale(multiplier);
+      }
+    });
+    this.playerOverviewMarker
+      ?.setAlpha(blend.overviewAlpha * 0.9)
+      .setScale(1 / Math.max(0.01, this.cameras.main.zoom));
   }
 
   private createGeorgePresentation(): void {
@@ -494,13 +693,17 @@ export class Level0Scene extends Phaser.Scene {
       .setPosition(presentation.position.x, presentation.position.y)
       .setScale(presentation.scale)
       .setDepth(this.playerMarker.depth + 1)
-      .setVisible(this.runtime.isGeorgePresentationVisible());
+      .setVisible(
+        this.runtime.isGeorgePresentationVisible() &&
+        resolveGet204WorldViewBlend(this.cameras.main.zoom, this.minimumZoom).closeAlpha >= 0.5
+      );
   }
 
   private createActorVisual(
     actorId: string,
     spriteSetId: string | undefined,
-    facing: CharacterSpriteDirection
+    facing: CharacterSpriteDirection,
+    requiredRefsOverride?: CharacterSpriteSheetRef[]
   ): Level0SceneActorVisual {
     const container = this.add.container(0, 0);
     const shadow = this.add.graphics();
@@ -509,7 +712,9 @@ export class Level0Scene extends Phaser.Scene {
     container.add(shadow);
 
     const entry = spriteSetId ? CHARACTER_SPRITE_MANIFEST_BY_ID[spriteSetId] : undefined;
-    const requiredRefs = spriteSetId ? resolveLevel0ActorSpriteSheetRefs(spriteSetId) : [];
+    const requiredRefs = requiredRefsOverride ?? (
+      spriteSetId ? resolveLevel0ActorSpriteSheetRefs(spriteSetId) : []
+    );
     if (spriteSetId && entry && areCharacterSpriteSheetRefsLoaded(this, requiredRefs)) {
       const sprite = this.add.sprite(
         0,
@@ -603,16 +808,22 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private configureCamera(position: WorldPoint): void {
-    const projectedBounds = contract.bounds.map((point) => projection.layoutToScene(point));
-    const minX = Math.min(...projectedBounds.map((point) => point.x)) - 240;
-    const maxX = Math.max(...projectedBounds.map((point) => point.x)) + 240;
-    const minY = Math.min(...projectedBounds.map((point) => point.y)) - 360;
-    const maxY = Math.max(...projectedBounds.map((point) => point.y)) + 240;
-    this.cameras.main.setBounds(minX, minY, maxX - minX, maxY - minY);
-    this.cameras.main.setZoom(0.78);
+    const artTopLeft = resolveGet204Gate1LayerTopLeft(origin);
+    const artWidth = Math.max(
+      GET204_GATE1_VISUAL.canvas.width,
+      GET204_GATE1_VISUAL.overviewCanvas.width
+    );
+    const artHeight = Math.max(
+      GET204_GATE1_VISUAL.canvas.height,
+      GET204_GATE1_VISUAL.overviewCanvas.height
+    );
+    this.cameras.main.setBounds(artTopLeft.x, artTopLeft.y, artWidth, artHeight);
+    this.minimumZoom = resolveGet204OverviewFitZoom(this.scale.width, this.scale.height);
+    this.cameras.main.setZoom(GET204_GATE1_VISUAL.defaultZoom);
     const scenePosition = projection.layoutToScene(position);
     this.cameras.main.centerOn(scenePosition.x, scenePosition.y);
     this.cameras.main.setBackgroundColor('#101215');
+    this.renderGet204WorldView();
   }
 
   private configureInput(): void {
@@ -728,7 +939,7 @@ export class Level0Scene extends Phaser.Scene {
   ): void {
     const next = Phaser.Math.Clamp(
       this.cameras.main.zoom - Math.sign(deltaY) * 0.08,
-      LEVEL0_MIN_ZOOM,
+      this.minimumZoom,
       LEVEL0_MAX_ZOOM
     );
     this.cameras.main.setZoom(next);
@@ -736,6 +947,17 @@ export class Level0Scene extends Phaser.Scene {
 
   private acceptSceneClick(scenePoint: WorldPoint): void {
     if (!this.movement) return;
+    const artTopLeft = resolveGet204Gate1LayerTopLeft(origin);
+    if (isGet204VisualPixelBlocked({
+      x: scenePoint.x - artTopLeft.x,
+      y: scenePoint.y - artTopLeft.y,
+    })) {
+      this.movement = { ...this.movement, intent: { kind: 'idle' } };
+      this.targetMarker?.setVisible(false);
+      this.reachableMarker?.setVisible(false);
+      this.runtime.onFeedback('movement.invalid.occupied');
+      return;
+    }
     const layoutPoint = projection.sceneToLayout(scenePoint);
     const run = this.runtime.getRun();
     const clickedAnchor = contract.anchors
@@ -788,7 +1010,7 @@ export class Level0Scene extends Phaser.Scene {
 
   private acceptLayoutClick(layoutPoint: WorldPoint): { accepted: boolean; reason: string } {
     if (!this.movement) return { accepted: false, reason: 'scene-not-ready' };
-    const result = resolveClickIntent(contract, this.movement.position, layoutPoint);
+    const result = resolveClickIntent(movementContract, this.movement.position, layoutPoint);
     if (!result.accepted) {
       this.movement = { ...this.movement, intent: { kind: 'idle' } };
       this.targetMarker?.setVisible(false);
@@ -814,7 +1036,16 @@ export class Level0Scene extends Phaser.Scene {
     if (!this.movement || !this.playerMarker) return;
     const scenePosition = projection.layoutToScene(this.movement.position);
     this.playerMarker.setPosition(scenePosition.x, scenePosition.y);
-    this.playerMarker.setDepth(100 + scenePosition.y);
+    const foregroundIsFaded = GET204_GATE1_VISUAL.occluders.some(
+      (occluder) => resolveGet204Gate1OccluderAlpha(
+        occluder.id,
+        this.movement!.position
+      ) < 1
+    );
+    this.playerMarker.setDepth(foregroundIsFaded ? 8_100 : 100 + scenePosition.y);
+    this.playerOverviewMarker
+      ?.setPosition(scenePosition.x, scenePosition.y)
+      .setDepth(this.playerMarker.depth + 2);
     const spriteSetId = this.playerMarker.getData('spriteSetId') as string | null;
     const spriteFacing = resolveLevel0SpriteDirection(this.movement.facing);
     const spriteState: CharacterSpriteState = resolveLevel0PlayerSpriteState(
@@ -838,7 +1069,19 @@ export class Level0Scene extends Phaser.Scene {
 
   private followPlayerUnlessObserving(): void {
     if (!this.movement || this.runtime.isObservationActive()) return;
-    const scenePosition = projection.layoutToScene(this.movement.position);
-    this.cameras.main.centerOn(scenePosition.x, scenePosition.y - 80);
+    const playerPosition = projection.layoutToScene(this.movement.position);
+    const artTopLeft = resolveGet204Gate1LayerTopLeft(origin);
+    const overviewCenter = {
+      x: artTopLeft.x + GET204_GATE1_VISUAL.overviewCanvas.width / 2,
+      y: artTopLeft.y + GET204_GATE1_VISUAL.overviewCanvas.height / 2,
+    };
+    const { closeAlpha } = resolveGet204WorldViewBlend(
+      this.cameras.main.zoom,
+      this.minimumZoom
+    );
+    this.cameras.main.centerOn(
+      Phaser.Math.Linear(overviewCenter.x, playerPosition.x, closeAlpha),
+      Phaser.Math.Linear(overviewCenter.y, playerPosition.y - 80, closeAlpha)
+    );
   }
 }

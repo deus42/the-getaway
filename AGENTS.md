@@ -116,7 +116,19 @@ Treat placement as measured geometry, not open-ended visual tuning.
 5. Apply the tolerance rubric in the Building Positioning Runbook. If a measured parallelogram pass still misses by more than one tile, stop trim chasing and use a custom polygon or multi-region footprint.
 6. If a pass moves the wrong edge or reopens a correct edge, restore the recorded baseline before the next attempt.
 
-City structure must serve gameplay or spatial readability. Do not add decorative clutter; valid additions include traversable urban mass, line-of-sight occluders, hazards, cameras, entrances, pickups, safehouses, active contacts, and semantic surface treatment.
+City structure must serve gameplay, human scale, or spatial readability. Curated lived-in detail is valid when it strengthens place, navigation, scale, surveillance, hiding/blending, or route identity; examples include awnings, planters, bins, civic signs, kiosks, utilities, and parked service vehicles. Reject random filler, repeated noise, and detail that obscures movement or interaction.
+
+For a materially visual ticket, use the acceptance topology defined by its current canonical specification. Internal composition, look-development, export, and QA stages are production controls, not automatically requester-facing milestones or commit points. Before presenting any visual candidate:
+
+- read the complete live Linear description and comments plus the current canonical specification;
+- name the exact reference frames, comparison viewport, camera relationship, and player-scale target in `progress/<Linear-key>.md`;
+- keep only that ticket active and leave downstream tickets parked;
+- integrate the full specified candidate into the live player-visible runtime;
+- inspect and reject weak intermediate frames internally instead of asking the requester to approve unfinished fragments;
+- show the required clean-world, current-HUD, and overview evidence defined by the ticket;
+- stop for requester visual acceptance before full closeout checks or any acceptance commit.
+
+Offline renders, manifests, asset counts, validators, internal stages, and internal ratings are supporting evidence only. They never substitute for the requested live result, and a visually rejected candidate must not unlock downstream work.
 
 ## Acceptance and validation
 

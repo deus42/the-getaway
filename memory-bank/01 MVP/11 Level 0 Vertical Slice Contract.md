@@ -286,7 +286,7 @@ Health and Paranoia are always visible. The minimap reveals only known informati
 
 - Continuous outdoor Tokyo district with three interlocking loops.
 - Full outer loop target: two to three minutes.
-- Normal outdoor zoom floor: 0.60.
+- Normal play uses the requester-approved close street-first frame; maximum manual zoom-out reaches the composed full-city overview. Exact numeric values are calibrated and frozen from the complete GET-204 live candidate.
 - Runtime projection: 64×32, 2:1 isometric.
 - Owned Neo Tokyo 2 pack is composed unchanged first, then selectively branded as Hidzu.
 - Roads, sidewalks, curbs, alleys, crossings, entrances, public activity, hiding, and surveillance form the district.

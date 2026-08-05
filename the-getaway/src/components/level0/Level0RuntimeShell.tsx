@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../content/levels/level0/layoutContract';
+import { isLevel0PlayerAppearanceId } from '../../content/characters/spriteManifest';
 import {
   createConfirmedLevel0Sample,
   isValidLevel0Callsign,
@@ -39,6 +40,7 @@ import {
   LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
   type Level0ActorInteractionPresentationDetail,
 } from '../../game/level0/scene/level0ActorPresentation';
+import { resolveGet204Gate1StartPosition } from '../../game/level0/art/get204Gate1';
 import type { AppDispatch, RootState } from '../../store';
 import { PERSISTED_STATE_KEY, resetGame, store } from '../../store';
 import {
@@ -282,6 +284,19 @@ const Level0RuntimeShell = () => {
       identity,
       build,
     }));
+    const initializedRun = store.getState().level0Runtime.run;
+    if (initializedRun) {
+      const proofPosition = resolveGet204Gate1StartPosition(initializedRun.player.position);
+      if (
+        proofPosition.x !== initializedRun.player.position.x ||
+        proofPosition.y !== initializedRun.player.position.y
+      ) {
+        dispatch(syncLevel0PlayerCheckpoint({
+          position: proofPosition,
+          facing: { x: 0, y: -1 },
+        }));
+      }
+    }
     setCreationOpen(false);
     setCharacterOpen(false);
     setMenuOpen(false);
@@ -308,7 +323,15 @@ const Level0RuntimeShell = () => {
     const params = new URLSearchParams(window.location.search);
     const requested = normalizeLevel0Callsign(params.get('agentName') ?? 'Agent');
     const callsign = isValidLevel0Callsign(requested) ? requested : 'Agent';
-    const sample = createConfirmedLevel0Sample('technical_evasion', callsign);
+    const requestedAppearance = params.get('agentAppearance');
+    const appearancePresetId = isLevel0PlayerAppearanceId(requestedAppearance)
+      ? requestedAppearance
+      : undefined;
+    const sample = createConfirmedLevel0Sample(
+      'technical_evasion',
+      callsign,
+      appearancePresetId
+    );
     initializeNewRun(sample.identity, sample.build);
   }, [initializeNewRun]);
 
@@ -656,8 +679,8 @@ const Level0RuntimeShell = () => {
           <h1>{ukrainian ? 'Втеча з Токіо' : 'Tokyo Escape'}</h1>
           <p className="level0-entry__promise">
             {ukrainian
-              ? 'Нагляд, параноя, розмови та втеча. Поточна збірка — чесний ігровий грейбокс нового прологу.'
-              : 'Surveillance, paranoia, dialogue, and escape. This build is the honest playable greybox of the rebuilt prologue.'}
+              ? 'Нагляд, параноя, розмови та втеча в контрольованому Токіо.'
+              : 'Surveillance, paranoia, dialogue, and escape through controlled Tokyo.'}
           </p>
           {entryState.incompatibleSave ? (
             <div className="level0-entry__notice" data-testid="retired-save-notice">
@@ -702,11 +725,17 @@ const Level0RuntimeShell = () => {
 
   const failed = run.mission === 'L0_FAILED';
   const backgroundControlsLocked = characterOpen || pendingSafehouseAction !== null || terminalMission;
+  const cleanVisualProof =
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('cleanVisual') === '1';
   const nextLevelThreshold = getNextLevelThreshold(run.build.level);
   const paranoiaPenalty = getParanoiaCheckPenalty(run.paranoia);
 
   return (
-    <main className="level0-runtime" data-testid="level0-runtime-hud">
+    <main
+      className={`level0-runtime${cleanVisualProof ? ' level0-runtime--clean-visual' : ''}`}
+      data-testid="level0-runtime-hud"
+    >
       <div
         data-testid="level0-runtime-background"
         inert={backgroundControlsLocked ? true : undefined}
@@ -753,7 +782,7 @@ const Level0RuntimeShell = () => {
         <div className="level0-runtime__lane level0-runtime__lane--map">
           <span className="lane-label">DISTRICT</span>
           <strong>Tokyo / Hidzu perimeter</strong>
-          <small>Three-loop greybox · zoom 0.60–1.25</small>
+          <small>Public-to-controlled city seam · adaptive overview · close 1.48</small>
         </div>
         <div className="level0-runtime__lane">
           <span className="lane-label">PROTAGONIST</span>

@@ -234,6 +234,12 @@
   display: block;
 }
 
+.level0-runtime--clean-visual .level0-runtime__topbar,
+.level0-runtime--clean-visual .level0-runtime__dock,
+.level0-runtime--clean-visual .level0-runtime__observation {
+  display: none;
+}
+
 .level0-runtime__topbar {
   position: absolute;
   z-index: 20;

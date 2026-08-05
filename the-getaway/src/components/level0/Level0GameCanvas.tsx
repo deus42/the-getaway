@@ -121,7 +121,7 @@ const Level0GameCanvas = ({
     <div
       ref={containerRef}
       data-testid="level0-game-canvas"
-      data-runtime="level0-greybox-v1"
+      data-runtime="get204-production-district-v2"
       style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#101215' }}
     />
   );

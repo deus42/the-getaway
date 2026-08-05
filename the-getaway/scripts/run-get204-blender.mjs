@@ -8,9 +8,10 @@ const blender = process.env.BLENDER_BIN ?? '/Users/deus/Tools/Blender.app/Conten
 const sourceRoot = process.env.GETAWAY_NEO_TOKYO_ROOT;
 const modeIndex = process.argv.indexOf('--mode');
 const mode = modeIndex >= 0 ? process.argv[modeIndex + 1] : 'preview';
-const allowedModes = new Set(['preview', 'captures', 'exports', 'all']);
+const allowedModes = new Set(['massing', 'preview', 'captures', 'exports', 'all']);
 const catalogProps = process.argv.includes('--catalog-props');
 const catalogBuildings = process.argv.includes('--catalog-buildings');
+const fullDistrict = process.argv.includes('--full-district');
 const inventoryOnly = process.argv.includes('--inventory-only');
 
 if (!existsSync(blender)) {
@@ -19,8 +20,8 @@ if (!existsSync(blender)) {
 if (!sourceRoot) {
   throw new Error('Set GETAWAY_NEO_TOKYO_ROOT to the owned Neo Tokyo 2 pack before generation.');
 }
-if (catalogProps && catalogBuildings) {
-  throw new Error('Choose only one GET-204 catalog mode.');
+if ([catalogProps, catalogBuildings, fullDistrict].filter(Boolean).length > 1) {
+  throw new Error('Choose only one GET-204 catalog or full-district mode.');
 }
 if (!catalogProps && !catalogBuildings && (!mode || !allowedModes.has(mode))) {
   throw new Error(`Invalid GET-204 render mode: ${mode ?? '<missing>'}`);
@@ -41,13 +42,14 @@ const runValidation = (verifyExport = false) => {
   if (validation.status !== 0) process.exit(validation.status ?? 1);
 };
 
-if (!catalogProps && !catalogBuildings) {
+if (!catalogProps && !catalogBuildings && !fullDistrict) {
   runValidation();
 }
 
 let scriptPath = 'art/blender/get204/scripts/build_level0_master_scene.py';
 if (catalogProps) scriptPath = 'art/blender/get204/scripts/build_level0_prop_catalog.py';
 if (catalogBuildings) scriptPath = 'art/blender/get204/scripts/build_level0_source_catalog.py';
+if (fullDistrict) scriptPath = 'art/blender/get204/scripts/build_full_district_rebuild.py';
 const script = resolve(repositoryRoot, scriptPath);
 const scriptArguments = [
   '--repo-root',
@@ -74,6 +76,6 @@ if (result.error) throw result.error;
 if (result.status !== 0) {
   process.exit(result.status ?? 1);
 }
-if (!catalogProps && !catalogBuildings && (mode === 'exports' || mode === 'all')) {
+if (!catalogProps && !catalogBuildings && !fullDistrict && (mode === 'exports' || mode === 'all')) {
   runValidation(true);
 }

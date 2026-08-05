@@ -55,7 +55,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 - Collision sliding is required for natural wall and corner movement.
 - Invalid destinations provide a short reason and a reachable marker where appropriate, but the game does not navigate to that marker automatically.
 - Observation fully pauses time and autonomous simulation. It may inspect only known state and may not move, interact, operate terminals, or reveal unknown surveillance.
-- The normal outdoor zoom floor is `0.60`. The exact default zoom and any diagnostic overview are unresolved in `OPEN-MOV-003`.
+- Normal play uses a close street-first camera with the protagonist in the lower-center lead area. Manual minimum zoom reaches the composed full-district overview. Exact numeric zooms and follow offset remain the only unresolved values in `OPEN-MOV-003` and are frozen from the complete GET-204 live candidate.
 - Exact direct-click arrival and blocked-click behavior is unresolved in `OPEN-MOV-001`; movement speed and isometric WASD mapping are unresolved in `OPEN-MOV-002`.
 - District dimensions, route geometry, widths, anchors, counts, and safehouse boundary presentation remain acceptance decisions under `OPEN-LAYOUT-001` through `OPEN-LAYOUT-004`; pre-operation planning/departure topology remains an acceptance decision under `OPEN-LAYOUT-005`. Their recorded recommendations may drive reversible layout trials. Old map constants are not valid substitutes.
 

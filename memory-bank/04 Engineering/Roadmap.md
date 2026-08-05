@@ -117,33 +117,40 @@ Internal gates:
 
 Exit gate: dusk and curfew routes are topologically viable and debug geometry agrees with collision, markers, and entrances.
 
-## Gate 4 — unchanged-kit city composition
+## Gate 4 — Tokyo city foundation
 
-### T4 — Unchanged-kit Tokyo Blender master scene
+### T4 — Tokyo city foundation: hero intersection to dense live district
 
 **Label:** Improvement
-**Depends on:** T3 and an approved source/provenance manifest for local composition; acquisition-specific entitlement is required before derivative commit or runtime promotion
+**Depends on:** the committed T3 runtime/projection/movement foundation; T3's exact rejected city geometry is not a constraint
 **Blocks:** T5
 
 Ownership:
 
-- one full Level 0 master scene using requester-asserted-owned Neo Tokyo 2 geometry;
-- public realm, human scale, continuous street walls, three loops, and landmarks;
-- fixed 2:1 camera and upper-left light;
-- ignored local-evidence dusk/blue-hour/curfew export foundations with an explicit greybox fallback;
-- semantic masks and anchor export;
-- versioned recipe/manifests without raw licensed geometry.
+- one complete full-district live rebuild, with internal composition/look-development stages but only one requester-facing acceptance candidate;
+- one full master scene using the requester-owned Neo Tokyo 2 kit plus necessary original gap-fill assets;
+- street-first normal framing, human-scale actors, continuous street walls, three subdistricts, three loops, and a composed manual-zoom overview;
+- blue-hour primary materials/light with coherent daylight and curfew variants;
+- accepted geometry back-propagated into shared collision, occlusion, masks, entrances, and anchors;
+- versioned flattened derivatives, recipe/manifests, and validators without raw vendor geometry or textures;
+- clean-world, current-HUD, and full-overview live evidence for the complete candidate.
 
-This gate judges composition before Hidzu styling. Signage, fog, and post-processing may not hide weak scale or sparse structure.
+Internal sequence:
 
-Successor gate: a technically validated, committed T4 deliverable with fixed frames, stable projection/masks/anchors, and explicit local-evidence/fallback boundaries unlocks the reversible T5 trial. Final acceptance gate: the requester accepts fixed frames at all target viewports as a coherent city with readable routes, no void, no angle mismatch, and no zoom corruption.
+1. Compose the complete safehouse/backstreet, transit/public-commercial, and Hidzu logistics/civic-control district from the three locked references.
+2. Complete public realm, camera/actor scale, materials, practical lighting, population staging, surveillance grammar, schedule variants, and selective foreground fade across that full scene.
+3. Export candidate collision, occlusion, masks, entrances, and anchors from the visible scene; replace the prototype and greybox across the live runtime.
+4. Internally reject and revise any weak normal, clean-world, or overview frame before requester presentation.
+5. Present one complete live candidate. Only explicit requester approval unlocks closeout and the authorized commit.
+
+No offline render, validator, internal stage, or technical checkpoint unlocks T5. Exit gate: the requester accepts the committed complete build as a coherent live city with readable people/routes, no greybox fallback, no void, no angle mismatch, and no zoom corruption.
 
 ## Gate 5 — Hidzu identity and surveillance-noir art
 
 ### T5 — Hidzu identity and graphic-surveillance-noir world art
 
 **Label:** Improvement
-**Depends on:** validated committed T4 composition; requester T4 acceptance remains a final visual gate rather than a successor-start gate
+**Depends on:** requester-accepted and committed GET-204 full-district live rebuild
 **Blocks:** T6 and T10 visual integration
 
 Ownership:

@@ -252,3 +252,222 @@ export interface Level0ArtBundle {
   recipe: Level0SceneRecipe;
   art: Level0ArtManifest;
 }
+
+export type Get204ReferenceRole =
+  | 'quality-look-target'
+  | 'close-play-target'
+  | 'overview-density-target';
+
+export type Get204SubdistrictId =
+  | 'safehouse-backstreets'
+  | 'public-transit-commercial'
+  | 'logistics-civic-control';
+
+export type Get204ClusterRole =
+  | 'continuous-frontage'
+  | 'corner-anchor'
+  | 'safehouse-frontage'
+  | 'transit-frontage'
+  | 'service-frontage'
+  | 'controlled-threshold'
+  | 'district-landmark';
+
+export interface Get204VisualReference {
+  role: Get204ReferenceRole;
+  path: string;
+  sha256: string;
+  authority: string;
+}
+
+export interface Get204CandidateSubdistrict {
+  id: Get204SubdistrictId;
+  name: string;
+  playerPromise: string;
+  bounds: WorldPolygon;
+  landmarkClusterIds: string[];
+}
+
+export interface Get204CandidateTraversalLoop {
+  id: string;
+  name: string;
+  subdistrictIds: Get204SubdistrictId[];
+  points: WorldPoint[];
+  closed: true;
+}
+
+export interface Get204StreetSegment {
+  id: string;
+  kind: 'controlled-boulevard' | 'ordinary-street' | 'service-alley';
+  centerline: WorldPoint[];
+  widthLayoutUnits: number;
+  gameplayPurpose: string;
+}
+
+export interface Get204RegisteredArchitecturalCluster {
+  id: string;
+  blockId: string;
+  subdistrictId: Get204SubdistrictId;
+  role: Get204ClusterRole;
+  artSource: 'owned-kit' | 'owned-kit-cropped';
+  sourcePrefix: string;
+  sourceCollection: string;
+  layoutPosition: WorldPoint;
+  rotationDegrees: number;
+  uniformScale: number;
+  verticalCropMeters?: number;
+  cropRectangle: { x: number; y: number; width: number; height: number };
+  sceneTopLeft: WorldPoint;
+  depthAnchor: WorldPoint;
+  footprint: WorldPolygon;
+  localOcclusionPolygon: WorldPolygon;
+  runtimePath: string;
+}
+
+export interface Get204SourcePropPlacement {
+  id: string;
+  sourcePrefix: string;
+  position: WorldPoint;
+  rotationDegrees: number;
+  uniformScale: number;
+  mountLiftMeters: number;
+  layer: 'details';
+}
+
+export interface Get204SemanticAnchor {
+  id: string;
+  kind:
+    | 'safehouse'
+    | 'contact'
+    | 'entrance'
+    | 'terminal'
+    | 'camera'
+    | 'drone-launch'
+    | 'hiding'
+    | 'blending'
+    | 'objective';
+  position: WorldPoint;
+  radius: number;
+  ownerId?: string;
+}
+
+/**
+ * Authoring and live-proof contract for the complete GET-204 rebuild. It is
+ * intentionally separate from the superseded schema-v1 unchanged-kit recipe:
+ * the accepted candidate promotes its geometry into the shared layout only
+ * after the requester approves the live result.
+ */
+export interface Get204FullDistrictRecipe {
+  schemaVersion: 2;
+  id: string;
+  ticket: 'GET-204';
+  acceptanceState: 'FULL_DISTRICT_LIVE_CANDIDATE';
+  usage: 'candidate-evidence';
+  references: Get204VisualReference[];
+  source: {
+    vendor: 'KitBash3D';
+    kit: 'Neo Tokyo 2';
+    sourceRootVariable: 'GETAWAY_NEO_TOKYO_ROOT';
+    format: 'FBX';
+    textureSearchRoots: ['Textures', 'jpeg images', 'c4d/tex'];
+    rawSourceCommitted: false;
+  };
+  coordinateSystem: {
+    layoutUnitMeters: number;
+    projection: {
+      tileWidth: 64;
+      tileHeight: 32;
+      orientation: 'isometric-2:1';
+      azimuthDegrees: 45;
+      elevationDegrees: 30;
+    };
+    bounds: WorldPolygon;
+  };
+  composition: {
+    subdistricts: Get204CandidateSubdistrict[];
+    urbanBlocks: Array<{
+      id: string;
+      subdistrictId: Get204SubdistrictId;
+      polygon: WorldPolygon;
+      clusterIds: string[];
+      streetEdgeIds: string[];
+    }>;
+    traversalLoops: Get204CandidateTraversalLoop[];
+    density: {
+      minimumVisibleBuildingInstances: number;
+      maximumVisibleBuildingInstances: number;
+      blockClusterPolicy: 'compact-perimeter-blocks-with-curated-kit-reuse';
+      croppedKitHeroFrontageCount: number;
+      minimumBuiltFootprintRatio: number;
+      minimumDistinctSourceRoots: number;
+      maximumSourceReuse: number;
+      maximumTallLandmarks: number;
+    };
+    openSpaces: Array<{
+      id: string;
+      gameplayOwner: string;
+      areaLayoutUnits: number;
+      polygon: WorldPolygon;
+    }>;
+  };
+  streetHierarchy: {
+    controlledBoulevards: Get204StreetSegment[];
+    ordinaryStreets: Get204StreetSegment[];
+    serviceAlleys: Get204StreetSegment[];
+    publicRealmKinds: string[];
+  };
+  camera: {
+    runtimeDefaultZoom: number;
+    runtimeMaximumZoom: number;
+    manualOverviewZoom: number;
+    followOffsetScenePixels: number;
+    actorScreenHeightTargetPx: {
+      viewport: '1440x900';
+      min: number;
+      max: number;
+    };
+    proofStarts: Record<Get204SubdistrictId, WorldPoint>;
+    proofOccluderClusterIds: Record<Get204SubdistrictId, string[]>;
+  };
+  architecturalClusters: Get204RegisteredArchitecturalCluster[];
+  sourcePropPlacements: Get204SourcePropPlacement[];
+  semanticGeometry: {
+    walkable: Array<{ id: string; kind: string; polygon: WorldPolygon }>;
+    blockedClusterIds: string[];
+    anchors: Get204SemanticAnchor[];
+  };
+  populationStaging: {
+    civilians: number;
+    serviceWorkers: number;
+    security: number;
+    unarmedVerifierDrones: 1;
+  };
+  lighting: {
+    baseState: 'blue-hour';
+    alignedStates: Level0LightingState[];
+    keyDirection: 'upper-left';
+    practicals: 'visible-emitter-owned';
+  };
+  export: {
+    strategy: 'tiled-ground-plus-cropped-registered-master-scene-clusters';
+    canvas: {
+      width: number;
+      height: number;
+      pixelOrigin: WorldPoint;
+      groundTileSize: number;
+    };
+    allowFullCanvasTransparentForegroundLayers: false;
+    maximumClusterDimension: number;
+    runtimeRoot: 'environment/level0/get204-city';
+  };
+  runtime: {
+    enablement: 'normal-level0-path';
+    fallbackPolicy: 'fail-visible-on-required-candidate-asset';
+    runtimeIdentity: 'get204-full-district-live-candidate-v1';
+    prohibitedQueryValues: string[];
+    prohibitedFallbackProfiles: string[];
+  };
+  commitBoundary: {
+    permitted: string[];
+    prohibited: string[];
+  };
+}

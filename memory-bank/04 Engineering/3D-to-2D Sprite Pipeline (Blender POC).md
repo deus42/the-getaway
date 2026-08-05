@@ -29,10 +29,10 @@ The approved production path is defined in:
 
 - [[01 MVP/30 Art Direction (MVP)]] — graphic surveillance-noir visual rules and two-gate Blender workflow;
 - [[Architecture]] — `Level0LayoutContract`, `Level0ArtManifest`, ownership, export data flow, and validation;
-- [[Roadmap]] — T3 layout → T4 unchanged-kit master scene → T5 Hidzu identity → T6 actors;
+- [[Roadmap]] — T3 mission/runtime skeleton → T4 complete live city rebuild → T5 Hidzu identity → T6 actor follow-up;
 - [[Building Positioning Runbook]] — measured alignment after the replacement layout is approved.
 
-The current path uses the owned Neo Tokyo 2 pack in one full outdoor Level 0 Blender master scene. The first gate judges unchanged-kit city composition and scale; the second adds Hidzu identity. Gameplay topology remains authoritative. Raw licensed geometry and generated `.blend` files remain untracked; versioned recipes, manifests, metadata, validators, and permitted flattened derivatives may be committed.
+The current path uses the requester-owned Neo Tokyo 2 pack in one full outdoor Level 0 Blender master scene, with original gap-fill work only where public realm or gameplay needs it. GET-204 completes composition, look development, export, and live integration internally, then presents one full-district candidate for requester acceptance. The mission skeleton stays authoritative while accepted city geometry is back-propagated into the shared layout contract. Raw vendor geometry/textures and generated `.blend` files remain untracked; requester-approved flattened game derivatives, original gap-fill assets, recipes, manifests, metadata, and validators may be committed.
 
 ## Historical artifact boundary
 

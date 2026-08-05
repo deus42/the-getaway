@@ -52,7 +52,7 @@ The future player can expect a customizable expatriate, a human-scale watched ci
 - Draft canonical documents exist but require full contradiction, template, link, decision-ID, and ticket-traceability review.
 - GET-139 still has stale implementation children and relationships in Linear.
 - Only T1 is eligible to be `In Progress`; no gameplay, runtime, production-art, or player-facing content change is authorized by this ticket.
-- `OPEN-NAR-003` and `OPEN-ART-001` remain explicit review items. Their recommended baselines are not approved values.
+- `OPEN-NAR-003` remains an explicit review item. The GET-204 street/overview visual relationships and Neo Tokyo 2 production use were approved later and are recorded in the Decision Register.
 
 ### Complete player flow
 
@@ -102,7 +102,7 @@ The verified archive remains the recovery path for protected work. No reset, res
 
 ### Dependencies and OPEN blockers
 
-Gate 0's verified recovery snapshot is the prerequisite. T1 blocks T2–T10 and GET-139 until its reviewed package is validated and committed separately. `OPEN-NAR-003` and `OPEN-ART-001` remain represented for their owning later surfaces; they do not block the documentation commit. After the commit, one implementation child may move to `In Progress` under the provisional-trial policy above.
+Gate 0's verified recovery snapshot is the prerequisite. T1 blocks T2–T10 and GET-139 until its reviewed package is validated and committed separately. `OPEN-NAR-003` remains represented for its owning later surfaces; it does not block the documentation commit. After the commit, one implementation child may move to `In Progress` under the provisional-trial policy above.
 
 ### Canonical decisions/spec sections
 
@@ -299,7 +299,7 @@ Canonical detail is in [[11 Level 0 Vertical Slice Contract]] starting state, mo
 
 Update Architecture only for implemented ownership/data flow, the layout/content schema, Building Positioning Runbook inputs, MVP Readiness evidence states, and `progress/GET-203.md`. Add focused tests for layout validation, reachability without pathfinding, movement override/sliding, interaction results, pause ownership, clock boundaries, camera reset, save envelopes, snapshot immutability, and incompatibility. After live proof and requester acceptance, run relevant validators plus the AGENTS closeout suite and guided AI regression; record human evidence separately because automation cannot accept movement feel or layout readability.
 
-## T4 — Unchanged-kit Tokyo Blender master scene
+## T4 — Tokyo city foundation: hero intersection to dense live district
 
 - **Label:** Improvement
 - **Initial state:** Todo
@@ -307,75 +307,104 @@ Update Architecture only for implemented ownership/data flow, the layout/content
 
 ### Why this ticket exists
 
-The prior visual revamp failed at the city-assembly level: independent 2D building plates had inconsistent scale and angle, floated on flat roads, exposed seams when zoomed out, and read as isolated landmarks on a board. T4 proves the urban foundation before any Hidzu reskin. It composes the owned Neo Tokyo 2 geometry unchanged in one Blender master scene, aligned to the gameplay contract, so building mass, streets, loops, public realm, lighting, and projection are judged as a city rather than as an asset checklist.
+The current live Level 0 is not an accepted city. It combines a rejected greybox with a localized Neo Tokyo 2 runtime prototype: monumental or disconnected masses, weak street material, small actors, unfinished zoom-out boundaries, and a distant board-first legacy outside the prototype region. Earlier GET-204 work produced useful Blender recipes and proved flattened layers in Phaser, but repeatedly treated technical completion as visual progress. This ticket replaces that failure with a full-district rebuild whose only acceptance is what the requester sees and plays.
+
+Neo Tokyo 2 is the approved production base. The kit is recomposed rather than displayed as a catalog, and original gap-fill work is added where streets, public life, navigation, hiding/blending, or scale require it. The mission skeleton survives, but the rejected `84×60` nine-block geometry does not constrain the city.
 
 ### Player promise
 
-At normal view and the 0.60 floor, the player sees a continuous, human-scale Tokyo district with street walls, crossings, sidewalks, alleys, service access, plazas, recognizable landmarks, and all three traversal loops. Buildings sit in the public realm instead of floating on slabs. Actors and entrances remain readable. Dusk, blue-hour, and curfew layers remain registered to the same geometry. Maximum normal zoom-out shows no repeated plates, clipping, voids, mismatched angles, or corruption.
+At normal play, Level 0 resembles the approved street reference: a close classic 2:1 isometric frame, the protagonist readable in the lower-center lead area, nearby civilians and security at credible human scale, dense three-to-eight-storey street walls, wet road material, warm practical light, cold institutional fill, cameras and civic control embedded in ordinary city life, and enough curated detail to make the location inhabited.
+
+At maximum manual zoom-out, the same level resembles the approved dense-city reference: one compact composed district with a coherent skyline, three recognizable subdistricts, two or three taller landmarks, legible routes, no empty board, and no corrupted edges. The player can move through what is shown; collision, entrances, occlusion, and interaction anchors agree with visible geometry.
 
 ### Starting state
 
-- T3 has an accepted `Level0LayoutContract`, projection, mandatory anchors, semantic masks, and measured route geometry.
+- T3 supplies a useful mission and semantics skeleton, direct movement, projection helpers, and stable anchor concepts. Its exact `84×60` nine-block layout is rejected visual evidence and may be replaced.
 - Owned source pack: `/Volumes/Elements/Backup/Downloads/Game/Neo Tokyo 2`.
 - Authoring environment: Blender 5.0.1; runtime projection: 64×32, 2:1 isometric; upper-left light direction.
-- `OPEN-ART-002` must resolve exact asset selection, license, provenance, transformations, and prohibited committed geometry before master-scene production.
-- This ticket starts with unchanged kit composition. Graphic treatment, propaganda, surveillance identity, and Hidzu reskin belong to T5.
+- The requester has confirmed ownership and authorized the pack as production input. Raw vendor geometry/textures remain outside Git; recipes, source references, original gap-fill work, metadata, and flattened game derivatives may be versioned.
+- Existing GET-204/205 Blender work is salvageable technique and comparison evidence, not an accepted city or runtime.
+- Existing character creation, Character screen, progression, Health, Paranoia, George, dialogue, dossier/facts/quests, movement/observation, Menu, and HUD behavior are protected from this ticket.
+- GET-205/206/208/209 remain parked while GET-204 is active. This ticket may use already-existing actor art as a placeholder, but it does not reopen those systems.
 
 ### Complete player flow
 
-The player is not asked to interact with Blender. The delivered environment must support the T3 flow visually: safehouse opening; route to Lira; optional Naila/Brant loops; public delivery approach; curfew service approach; camera/terminal/hiding/blending locations; cache and manifest area; escape/return path; and outbound validation. From each route, the player can identify the next spatial decision from street hierarchy and landmarks without permanent labels or a glowing path. The same world remains coherent as time moves from dusk through curfew and as the camera pans or reaches the 0.60 floor.
+The player begins in a human-scale backstreet/safehouse area and enters a connected public street system rather than standing beside huge anonymous blocks. The route toward Lira and the optional contacts passes through credible storefront, transit, service, and residential edges. The public approach reaches a complete public-to-controlled intersection where ordinary life, a delivery context, surveillance, and the logistics threshold are visible together. The service approach uses tighter alleys, utilities, loading space, hiding structure, and a controlled rear entrance. The player can read where they may walk, where they may hide or blend, which space is controlled, and where the next landmark lies without permanent world labels or a glowing route.
+
+The same composition remains coherent through blue-hour dusk, daylight checks, and curfew. Normal play keeps people and entrances large enough to read. Manual zoom-out reveals the full district as one deliberate composition rather than exposing an unfinished boundary.
 
 ### System rules and state transitions
 
-The art lifecycle is `LAYOUT_CONTRACT → UNCHANGED_KIT_COMPOSITION → TECHNICALLY_VALIDATED_COMMIT → REQUESTER_COMPOSITION_ACCEPTANCE`. A validated committed T4 deliverable unlocks a reversible T5 trial while T4 remains non-terminal pending requester judgment. Blender consumes gameplay-owned bounds, surfaces, footprints, entrances, occluders, and anchors; it may refine visual mass within the contract but cannot silently move required gameplay semantics. If composition reveals a genuine topology problem, reopen T3 through a documented layout decision rather than editing collision to fit a render.
+GET-204 now has one requester-facing acceptance state: `FULL_DISTRICT_LIVE_CANDIDATE`. Internal composition, public-realm, look-development, export, and runtime-review stages are production checks only. They do not become partial products, checkpoint commits, or claims that the city is accepted.
 
-One camera, scene, scale system, public-realm model, and upper-left light rig govern all geometry. Dusk, blue-hour, and curfew exports share camera, origin, layer boundaries, masks, anchors, and geometry. Raw licensed source and generated `.blend` files remain outside Git; only permitted flattened derivatives, manifests, recipes, metadata, and validators are versioned.
+The current `get204-gate1` implementation is disposable prototype evidence. It may be replaced in full. A production candidate must contain the complete safehouse/backstreet, transit/public-commercial, and Hidzu logistics/civic-control district before it is presented. Normal play and manual overview are different framings of the same complete master scene, not separate painted plates.
 
-### Internal milestones and proof gates
+The mission skeleton owns required places, semantic identities, and route purposes. The rebuilt master scene owns detailed streets, building footprints, entrances, public realm, and occluders. Candidate walkable, blocked, entrance, interaction, surveillance, and occlusion metadata is exported from that scene and used by the live proof; no rejected greybox collision may remain beneath the candidate. After requester acceptance, that exact metadata becomes the shared layout contract before the authorized commit.
 
-1. Inventory selected source assets and record license/provenance, transformations, scene role, and commit boundary.
-2. Establish one deterministic Blender scene recipe, 2:1 camera, world origin, unit/scale convention, public-realm materials, and upper-left light.
-3. Compose safehouse, contacts, logistics site, three loops, public/service entrances, landmarks, and street walls without adding Hidzu treatment.
-4. Measure architecture against actor placeholders, entrances, road/sidewalk widths, line-of-sight needs, and two-to-three-minute outer-loop geometry.
-5. Export aligned ground, architecture-back/front, lighting foundation, semantic masks, and anchor metadata; validate against T3.
-6. Capture 1280×720, 1440×900, and 1920×1080 at default framing and 0.60, including a full overview.
-7. Obtain requester acceptance before T4 can be accepted, promoted, or treated as final. A technically validated committed T4 may unlock the reversible T5 trial, but signage, fog, grading, or post-processing cannot convert weak composition into accepted composition.
+One master scene, scale system, 2:1 camera family, blue-hour light rig, material language, and public-realm grammar govern all city geometry. The three locked references have separate authority: `canvas-quality-target.png` owns finish and lighting, `street-play-target.png` owns normal-play scale and composition, and `dense-city-target.png` owns district density and overview completeness.
+
+### Internal production stages and proof gate
+
+1. **Full-district composition.** Compose all three subdistricts, three interlocking traversal loops, mostly three-to-eight-storey street walls, two or three landmarks, compact intersections, tight alleys, and deliberately limited open space. Reject the composition internally if normal play is not street-first or the overview is not a complete city silhouette.
+2. **Public realm and human scale.** Author roads, sidewalks, curbs, crossings, drainage, alleys, entrances, service seams, transit furniture, and controlled thresholds. Calibrate the protagonist to approximately `95–115 px` visible height at `1440×900` with a provisional `1.24–1.32` normal zoom; freeze the exact value from live comparison rather than from the old greybox.
+3. **Quality look development.** Reach the Canvas target with readable facade midtones, differentiated materials, after-rain response, motivated warm practicals, cool blue-hour fill, restrained atmosphere, integrated signage, and no blank or floating masses. Populate ordinary public behavior, service/delivery context, believable security positions, cameras, and one unarmed verifier drone.
+4. **Registered export.** Export flattened back/ground layers, independently fadeable foreground occluders, schedule-light variants, and candidate semantic metadata from the same scene. Generated `.blend` files and raw vendor sources remain outside Git.
+5. **Live runtime integration.** Replace the active prototype and obsolete greybox presentation across the whole district. Prove direct movement, entrances, interaction anchors, foreground recovery, camera follow, and manual zoom-out against the visible geometry using normal controls.
+6. **Internal visual review.** Capture close gameplay, clean world, and full-district overview at the target viewports. Continue fixing visible failures; do not present a weak or partial candidate merely because validators pass.
+7. **Requester acceptance.** Present the complete live candidate with the existing HUD and a clean comparison frame. Only explicit requester approval unlocks closeout validation and an authorized commit. GET-204 remains `In Progress` until the requester verifies that committed build.
 
 ### Content requirements
 
-The master scene must include authored roads, sidewalks, curbs, crossings, alleys, plazas, setbacks, entrance aprons, service/public spaces, skyline/massing, and enough gameplay-serving public furniture to make hiding/blending/device anchors credible. Maintain a source manifest, scene recipe, import transforms, camera settings, material/light setup, layer registry, semantic-mask mapping, anchor export, derivative inventory, fallback metadata, and reproduction instructions.
+The city must include authored asphalt, lane markings, crossings, sidewalks, curbs, drainage, alleys, setbacks, entrance aprons, loading/service space, transit/commercial edges, backstreet edges, controlled civic/logistics frontage, skyline mass, and readable building bases. Curated lived-in detail may include awnings, restrained planters, bins, signs, kiosks, utilities, barriers, cameras, street lamps, vending, transit shelters, and parked service vehicles when each supports scale, place, navigation, surveillance, hiding/blending, or route identity.
+
+The public-to-controlled intersection remains a required hero frame inside the complete district. It contains at least one ordinary public-life cluster, one controlled threshold, one visible surveillance relationship, one credible service edge, and a clear protagonist path. Repetition, random filler, empty plaza, monumental setback, floating slab, and isolated showcase building are failures anywhere in the district.
+
+Maintain the selected-source inventory, original gap-fill inventory, scene recipe, transforms, camera settings, materials/lights, semantic layers, masks, anchors, flattened derivative manifest, runtime fallback, and reproduction instructions. Raw Neo Tokyo source is never copied into the repository.
+
+Preserve the rejected baseline, close-play target, and full-city target under stable project paths with SHA-256 digests before authoring begins. Temporary attachment paths and ignored generated output are not durable acceptance references.
 
 ### World/UI/audio/George feedback
 
-This ticket supplies world hierarchy, not final UI or audio. Ground/surface material separation, building bases, entrances, landmarks, and route transitions must remain visible behind the future four-lane HUD. Actor placeholders establish scale and occlusion without final assets. Lighting foundations preserve readable midtones and visible practical-source locations but do not yet add Hidzu-specific cyan/crimson semantics. Audio anchors and George references may be exported as semantics; production cues and prompts remain T10/T9 work.
+GET-204 owns the city presentation only. The existing HUD and Menu remain behaviorally unchanged so the world can be judged under the real interface rather than an idealized mockup. A clean-world proof may hide UI only for comparison; it is never the sole evidence.
+
+Existing protagonist/contact art is used as the live scale reference. Curated civilian, security, and drone placeholders may be introduced only where the hero scene needs population and threat readability; their final behavior remains GET-208. Blue-hour world feedback uses readable midtones, wet surface response, visible practical sources, restrained cyan technology, and crimson only for actual danger. George remains a live runtime layer and must not be baked into the environment.
 
 ### Failure and recovery
 
-The visual gate fails on sparse-board composition, monumental scale that erases actors, angle mismatch, floating foundations, dead public space, unreadable entrances, blocked required sightlines, layer seams, upscaled blur, zoom-out corruption, or mask/anchor drift. Return to scene composition or export registration depending on the measured cause. Do not trim sprites or move collision opportunistically. Versioned recipe/manifests must reproduce the accepted export; fallback art is diagnostic resilience, not acceptance.
+The candidate fails if the live scene does not materially satisfy all three approved reference relationships together. Specific failures include tiny actors, monumental building scale, empty plazas, disconnected blocks, weak road depth, flat or unmotivated lighting, unreadable entrances, random clutter, permanent labels, occlusion without selective recovery, view-boundary exposure during normal play, zoom-out corruption, blurry upscaling, layer seams, hidden collision, or art/anchor drift.
+
+On failure, record the comparison frame and correct one variable class at a time: camera/actor relationship, massing, public realm, lighting/material, detail/population, occlusion, or registration. Do not present another isolated intersection as acceptance evidence and do not claim the rebuild on the basis of an offline render if the live runtime remains weaker.
 
 ### Explicit exclusions
 
-- No Hidzu reskin, propaganda, identity-scanner language, surveillance-noir grading, or final curfew atmosphere.
-- No synthetic regeneration of the pack into unrelated architecture.
+- No broad redesign of character creation, Character screen, progression, Health, Paranoia, George, dialogue, dossier, quests, stealth rules, surveillance rules, Menu, or HUD architecture.
+- No synthetic regeneration of the pack into unrelated architecture. Original gap-fill assets are allowed only where the kit lacks required public-realm or gameplay pieces.
 - No raw licensed geometry or generated `.blend` committed.
-- No per-building Phaser collage, opaque parcel slabs, decorative perimeter, or filler clutter.
-- No gameplay-rule, actor, dialogue, HUD, surveillance, or mission-content implementation.
+- No per-building Phaser collage, opaque parcel slabs, decorative perimeter, blank board, or random filler clutter.
+- No hiding a weak city with labels, post-processing, fog, glow, or a HUD-free mockup.
+- No downstream GET-205/206/208/209 implementation while this ticket is the active visual gate.
 
 ### Dependencies and OPEN blockers
 
-Depends on T3. Blocks T5. Critical acceptance blockers are `OPEN-ART-002`, `OPEN-NAR-015`, and `OPEN-LAYOUT-002`; source/license evidence must exist before any licensed derivative is committed. High acceptance blockers are `OPEN-NAR-013`, `OPEN-MOV-003`, `OPEN-LAYOUT-004`, `OPEN-ART-004`, and `OPEN-PERF-001`. The 0.60 normal floor is approved; exact default framing and diagnostic-overview behavior remain open under `OPEN-MOV-003`. Reversible composition/export recommendations may be trialed, but missing license authority is not provisional.
+Depends on the committed runtime/projection/movement foundation from T3, but explicitly supersedes its exact rejected city geometry. Blocks renewed work on T5 and the visual acceptance of T6/T8/T9/T10. Neo Tokyo 2 production use and the full-district rebuild are approved. `OPEN-NAR-013`, `OPEN-NAR-015`, `OPEN-MOV-003`, `OPEN-LAYOUT-001`, `OPEN-LAYOUT-002`, `OPEN-LAYOUT-004`, `OPEN-ART-003`, `OPEN-ART-004`, and `OPEN-PERF-001` remain acceptance or tuning items only where their exact values are not fixed by the requester-approved live result.
 
 ### Canonical decisions/spec sections
 
-Implements `GDR-PROD-004`, `GDR-ART-002`, `GDR-ART-003`, `GDR-ART-004`, `GDR-SUP-001`, and `GDR-SUP-002`. Canonical detail is in [[30 Art Direction (MVP)]] sections 3–6 and 10–15, [[13 Level 0 Content and State Matrix]] section 13, [[41 Movement, Interaction & Observation]] camera requirements, [[04 Engineering/Architecture]] sections 5–7, and [[04 Engineering/Roadmap]] Gate 4.
+Implements `GDR-PROD-004`, `GDR-ART-002` through `GDR-ART-007`, `GDR-ART-009`, `GDR-GOV-001`, `GDR-SUP-001`, and `GDR-SUP-002`. Canonical detail is in [[30 Art Direction (MVP)]] sections 3–6 and 9–15, [[31 GET-204 Visual Rebuild Quality Contract]], [[13 Level 0 Content and State Matrix]] section 13, [[41 Movement, Interaction & Observation]] camera requirements, [[04 Engineering/Architecture]] sections 5–7, and [[04 Engineering/Roadmap]] Gate 4.
 
 ### Human-play acceptance
 
-At all three target viewports and both default/0.60 framing, a reviewer can trace all three loops, distinguish public and service routes, locate safehouse/contact/depot landmarks at the precision the player knows, and follow entrances without debug overlays. A normal-control traversal shows believable street scale, no blocked required anchor, and no art/collision disagreement. Overview captures show continuous urban mass, coherent angle/scale/light, no empty board, no repeated plate, and no corruption. Requester screenshot acceptance is mandatory before T4 final acceptance or runtime promotion; it is not a prerequisite for the explicitly provisional T5 trial.
+At `1440×900` and `1920×1080`, normal play is recognizably close to the approved street relationship: the protagonist and nearby people are readable, buildings create a dense human-scale street canyon, public and controlled space are distinct, roads and sidewalks have material depth, practical light is motivated, and the city feels inhabited. The same live state is captured cleanly and under the current HUD.
+
+Manual minimum zoom reveals one composed compact district comparable to the approved overview relationship. Three subdistricts and three loops are legible; no blank board, miniature building, empty perimeter, repeated plate, greybox fallback, or corrupted edge is visible.
+
+The normal-control route crosses the complete city without hidden collision, stale prototype art, unreadable foreground occlusion, schedule-layer drift, or severe frame/loading instability. Blue hour is the primary final look; daylight and curfew are coherent. Required entrances, contacts, cameras, hiding/blending contexts, terminals, and objective locations remain readable without permanent labels. The requester explicitly accepts or rejects this complete live result before closeout or commit.
 
 ### Documentation and validation obligations
 
-Update the Art Direction production inventory, Architecture data flow only where implemented, Building Positioning Runbook evidence, MVP Readiness, and `progress/GET-204.md`. Validate source/license manifest, deterministic recipe, layer registration, projection, masks, anchors, footprint tolerance, route readability, asset budget after `OPEN-PERF-001`, and fixed captures. Run relevant art/layout validators and closeout commands only after live visual proof. Record the exact Blender version and export recipe; do not commit licensed source or generated scene files.
+Update the Decision Register, Art Direction, Architecture data flow only where implemented, Building Positioning Runbook evidence, MVP Readiness, and `progress/GET-204.md`. Keep this full ticket section semantically identical to Linear and read Linear back after writing it. Validate selected source references, deterministic recipe, original gap-fill ownership, projection, masks, anchors, collision/visual agreement, route readability, derivative inventory, and the provisional performance budget.
+
+Before the sole acceptance commit, first obtain requester visual approval, then run the relevant art/layout validators and the AGENTS closeout suite. Record clean-world, live-HUD, and full-overview evidence paths, exact Blender version, runtime URL/state, target viewport, camera value, player scale relationship, and any deferred issue. Never commit raw vendor geometry/textures or generated `.blend` files.
 
 ## T5 — Hidzu identity and graphic-surveillance-noir world art
 
@@ -393,8 +422,8 @@ The same technically validated city now receives a provisional Hidzu treatment. 
 
 ### Starting state
 
-- T4's unchanged-kit composition, projection, masks, anchors, and fixed captures are technically validated and committed. Requester acceptance remains required before T4 is final or Done.
-- The original Direction B artifact is unavailable. A replacement artifact, source frame, hash, generation provenance, prompt, rubric, and rejection criteria must be registered under `OPEN-ART-001` before the provisional style trial is judged; it remains non-final until requester review.
+- The earlier T4/T5 offline composition, projection, masks, anchors, and captures are historical pipeline evidence only. GET-205 remains parked until all three requester-approved GET-204 live city gates are committed.
+- The approved visual relationship is recorded by the close street reference and the registered dense-city reference; exact objects are not binding.
 - Hidzu's institutional role is canonical, but Takahiro's formal title, district name, Japanese diegetic language, safehouse exterior, and crossfade details remain explicit OPEN items.
 - T5 may change materials, signage, lighting, civic/surveillance props, atmosphere, and flattened derivatives; it may not silently change topology, required anchors, device mechanics, or route viability.
 
@@ -441,7 +470,7 @@ Visual acceptance fails on generic neon cyberpunk, fantasy ornament, crushed cur
 
 ### Dependencies and OPEN blockers
 
-Depends on a validated committed T4 composition. Blocks T6 and T10 visual integration. Critical acceptance blockers are `OPEN-ART-001` and `OPEN-NAR-015`; `OPEN-ART-002` separately blocks any kit-derived runtime promotion or committed flattened derivative while acquisition-specific entitlement is unavailable. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, `OPEN-ART-004`, and the color-independent visual-state portion of `OPEN-ACC-001`. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
+Depends on a requester-accepted and committed GET-204 Gate 3 live district. Blocks T6 and T10 visual integration. Critical acceptance blocker is `OPEN-NAR-015`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, `OPEN-ART-004`, and the color-independent visual-state portion of `OPEN-ACC-001`. Neo Tokyo 2 production use is approved; raw vendor source remains outside Git. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
 
 ### Canonical decisions/spec sections
 
@@ -467,14 +496,14 @@ The prior characters were tiny or stiff against monumental buildings and drifted
 
 ### Player promise
 
-The player chooses one of four distinct contemporary protagonist appearances and recognizes that same person in the world and all approved identity surfaces. Lira, Naila, Brant, security, and civilian/service roles are readable without permanent labels. Bodies remain grounded, directional, and proportionate at default zoom and 0.60 through dusk and curfew. Portrait/world identity stays coherent, and nobody looks like a fantasy commando or tactical enemy token.
+The player chooses one of four distinct contemporary protagonist appearances and recognizes that same person in the world and all approved identity surfaces. Lira, Naila, Brant, security, and civilian/service roles are readable without permanent labels. Bodies remain grounded, directional, and proportionate at the accepted close normal frame and composed manual overview through dusk and curfew. Portrait/world identity stays coherent, and nobody looks like a fantasy commando or tactical enemy token.
 
 ### Starting state
 
 - T5 provides a technically validated, committed provisional graphic-surveillance-noir world-language pass; requester acceptance remains its final visual gate. T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
 - Exactly twelve world actor sets are required: four protagonist presets, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
 - The matrix is 64×96 frames, eight directions, four frames, and `idle`/`move`/`interact`; attack is not required.
-- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Live greybox evidence rejected the initial `1.15` trial as too weak at the `0.60` floor, so the current reversible trial is `1.30`; it is judged at the current `0.78` default zoom and `0.60` floor, with no per-scene scaling.
+- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Earlier `1.15`/`1.30` greybox trials are evidence only. GET-204 Gate 1 calibrates camera/building relationship first; any later actor adjustment remains one shared scale with no arbitrary per-scene scaling.
 - T6 owns reusable security/civilian visual archetypes, not names, biographies, counts, schedules, or authoritative placements. Lira's unresolved identity/relationship is outside T6; her art may communicate only the approved medical-supplies role.
 - George hardware, Naila/Brant biography cues, entry-flow ownership, actor scale, and shipping budgets remain explicit OPEN items. `OPEN-PERF-001` has no numeric baseline, so T6 may record measurements but cannot pass shipping-performance acceptance.
 
@@ -497,7 +526,7 @@ The protagonist appearance transitions once from unselected to one authored pres
 5. Create two security and three civilian sets; prove role readability in public/curfew contexts.
 6. Create twelve matching `256×256` identity portraits, one `256×256` Takahiro broadcast portrait, and one separately registered `256×256` transparent George AR idle/base asset; validate crop/safe area, provenance/hash/bytes, and neutral fallback.
 7. Validate every 8×3×4 matrix, direction order, origin, foot-anchor stability within two pixels, frame occupancy, depth, and fallback metadata.
-8. Capture all identities and all twelve portraits plus Takahiro and George at `0.78`/`0.60` across dusk, blue hour, and curfew. T6 proves its neutral selection seam and live protagonist/contact anchors; Character, dialogue, Retry/debrief, schedules, and final entitlement-backed city context remain deferred/not checked for T7/T9/T10 or runtime promotion.
+8. Capture all identities and all twelve portraits plus Takahiro and George at the accepted close normal frame and composed overview across dusk, blue hour, and curfew. T6 proves its neutral selection seam and live protagonist/contact anchors; Character, dialogue, Retry/debrief, and schedules remain deferred/not checked for T7/T9/T10.
 
 ### Content requirements
 
@@ -529,7 +558,7 @@ Implements `GDR-PC-002`, `GDR-GEO-001`, `GDR-ART-001`, `GDR-ART-005`, `GDR-REM-0
 
 ### Human-play acceptance
 
-For the current T6 gate, select every protagonist preset through the neutral appearance seam across fresh runs and verify it in the safehouse world; final Character/dialogue/Retry/debrief persistence remains deferred to T7/T9/T10. Meet Lira, Naila, and Brant and distinguish their world/portrait identities without labels. Inspect both reusable security and all three civilian visual archetypes without treating them as authoritative placed/scheduled actors. Inspect all twelve portraits, Takahiro, and George. At 1280×720, 1440×900, and 1920×1080, compare `0.78` and `0.60` across dusk, blue hour, and curfew for pixel-derived foot stability within two pixels, correct facing/state, human-scale proportions, no roof placement, and readable silhouettes. Missing/corrupt assets must produce an observable neutral diagnostic and fail the production gate; fallback never counts as the production matrix. Final entitlement-backed city-context acceptance remains deferred.
+For the current T6 gate, select every protagonist preset through the neutral appearance seam across fresh runs and verify it in the safehouse world; final Character/dialogue/Retry/debrief persistence remains deferred to T7/T9/T10. Meet Lira, Naila, and Brant and distinguish their world/portrait identities without labels. Inspect both reusable security and all three civilian visual archetypes without treating them as authoritative placed/scheduled actors. Inspect all twelve portraits, Takahiro, and George. At 1280×720, 1440×900, and 1920×1080, compare the accepted normal and overview framings across dusk, blue hour, and curfew for pixel-derived foot stability within two pixels, correct facing/state, human-scale proportions, no roof placement, and readable silhouettes. Missing/corrupt assets must produce an observable neutral diagnostic and fail the production gate; fallback never counts as the production matrix. Final accepted-city context remains deferred to GET-204.
 
 ### Documentation and validation obligations
 

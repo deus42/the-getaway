@@ -240,7 +240,7 @@ It excludes all post-departure movement, facts, device state, medkit/evidence st
 
 ## 13. World semantic contract
 
-The `Level0LayoutContract` is the single gameplay source for:
+The approved mission skeleton first defines the required places and route purposes. During GET-204, the complete master scene exports candidate semantic metadata for live proof; after requester acceptance, that exact geometry is back-propagated into the `Level0LayoutContract`, which then becomes the single shared runtime/Blender source for:
 
 - district boundary and three traversal loops;
 - walkable and blocked surfaces;
@@ -256,7 +256,7 @@ The `Level0LayoutContract` is the single gameplay source for:
 - objective, medkit, and manifest anchors;
 - runtime/Blender semantic masks and projection metadata.
 
-Coordinates, dimensions, widths, and counts beyond the approved minimum remain acceptance decisions under `OPEN-LAYOUT-001` through `OPEN-LAYOUT-004`. The exact pre-operation planning/departure topology is separately governed by `OPEN-LAYOUT-005`. Their recorded recommendations may be trialed through replaceable layout data and debug overlays.
+The previous exact `84×60` nine-block geometry is superseded and is not a preservation constraint. Coordinates, dimensions, widths, and counts beyond the approved mission skeleton remain acceptance decisions under `OPEN-LAYOUT-001` through `OPEN-LAYOUT-004`; GET-204 resolves them through the complete live candidate before they are frozen in the contract. The exact pre-operation planning/departure topology is separately governed by `OPEN-LAYOUT-005`. Their recorded recommendations may be trialed through replaceable layout data and diagnostics, but a rejected greybox or partial prototype may not override an accepted city composition.
 
 ## 14. Human-play acceptance matrix
 

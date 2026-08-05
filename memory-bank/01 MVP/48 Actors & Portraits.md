@@ -34,7 +34,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 3. World actors render at a human-readable scale with stable feet/anchor placement, correct facing, and coherent idle, movement, and interaction animation.
 4. Lira, Naila, Brant, human security, and authored civilian groups remain visually distinguishable through grounded role/identity treatment rather than floating permanent labels or fantasy equipment.
 5. Interaction presentation follows the authoritative actor and dialogue state. Portraits or identity panels, where authored, match the same character rather than creating a second identity.
-6. At the current `0.78` default zoom and the `0.60` normal floor, actors remain readable against the technically validated provisional city values and dusk, blue-hour, and curfew states without appearing giant relative to architecture. Final entitlement-backed city-context acceptance remains deferred.
+6. At the requester-approved close normal frame and composed manual overview, actors remain readable against the accepted GET-204 city and dusk, blue-hour, and curfew states without appearing giant relative to architecture. Exact numeric zoom and scale are frozen from the complete live candidate rather than the rejected greybox.
 
 ## 5. State model and transitions
 
@@ -50,7 +50,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Attack animation is not required because Level 0 contains no active combat loop.
 - The protagonist has four authored appearance presets. There is no combinatorial body-part creator or fixed Operative/Trace identity.
 - Actor art follows graphic surveillance noir: grounded contemporary clothing and roles, readable midtones, strong ink silhouettes, restrained technology, and no fantasy-Neo styling.
-- The provisional `OPEN-ART-003` oracle uses the canonical `64×96` source frame, origin `(0.50, 0.92)`, measured alpha height `54–64` px, and one replaceable manifest scale for all twelve actors. Live greybox evidence rejected the initial `1.15` trial as too weak at the `0.60` floor. The current reversible `1.30` trial targets approximately `55–65` on-screen alpha pixels at the current `0.78` default zoom and `42–50` at the `0.60` floor. Evidence compares both zooms against T3 ground anchors and the provisional T5 architecture; revisions remain one shared manifest change, never per-scene scaling.
+- The provisional `OPEN-ART-003` oracle keeps the canonical `64×96` source frame, origin `(0.50, 0.92)`, measured alpha height `54–64` px, and one replaceable manifest scale for all twelve actors. The earlier `1.15` and `1.30` greybox trials are evidence only. The complete GET-204 candidate first calibrates camera/building relationship to the approved street frame, then adjusts one shared actor scale if needed; revisions never use arbitrary per-scene scaling.
 - Actor placement and visual bases must remain aligned with gameplay anchors, walkable surfaces, collision, interaction reachability, and depth ordering.
 - Character-creation/main-menu presentation may use the recorded `OPEN-UI-002` recommendation provisionally. `OPEN-PERF-001` has no approved target hardware, byte, memory, decode, or frame ceiling, so T6 records exact counts/bytes, estimated decoded texture bytes, requests, cold-load timing, and observed FPS but cannot pass a shipping-performance gate. Neither surface is final while its item remains open.
 
@@ -74,7 +74,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 
 ## 9. UI, world, audio, and George feedback
 
-- World actors use grounded silhouettes and readable direction/motion at default zoom and `0.60`, against dusk, blue-hour, and curfew presentation without roof-floating or scale drift.
+- World actors use grounded silhouettes and readable direction/motion at the accepted normal and overview framings, against dusk, blue-hour, and curfew presentation without roof-floating or scale drift.
 - Character creation and Character surfaces show the selected authored preset and callsign/build identity through the approved or provisionally recorded `OPEN-UI-002` ownership split.
 - Named-actor portrait presentation, where required by authored dialogue or debrief, uses the same stable identity and graphic-noir treatment as the world actor. Each identity portrait is a `256×256` PNG with one identity, no text, face/shoulders inside the central 80% safe area, registered provenance/hash/byte metrics, and a neutral diagnostic fallback.
 - Movement and interaction animation align with authored movement/interaction audio from [[49 Audio]]; visual events do not fire unrelated gameplay state.
@@ -129,7 +129,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Use dusk delivery activity and curfew security movement; distinguish civilian/service/security roles while authoritative schedules and surveillance remain unchanged by art.
 - Trigger a live named-contact interaction and confirm both actor presentations return cleanly to idle. Final dialogue, Retry, and debrief identity continuity remains a T7/T9/T10 acceptance gate rather than evidence claimed by T6.
 - Inspect all twelve portraits, Takahiro's broadcast portrait, and George's AR base art for identity, crop, provenance, fallback, and grounded tone.
-- `AC-L0-018`: at 1280x720, 1440x900, and 1920x1080, inspect `0.78` and `0.60` across dusk, blue hour, and curfew; actors must remain grounded, readable, correctly anchored, and proportionate to the current provisional architecture values.
+- `AC-L0-018`: at 1280x720, 1440x900, and 1920x1080, inspect the accepted close normal frame and full-city manual overview across dusk, blue hour, and curfew; actors must remain grounded, readable, correctly anchored, and proportionate to accepted architecture.
 
 ## 16. Owning Linear ticket
 

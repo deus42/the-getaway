@@ -66,6 +66,7 @@ The detailed beat, state, fact, check, and acceptance definitions live in [[11 L
 - [[50 Combat]]
 - [[93 Inventory (MVP)]]
 - [[30 Art Direction (MVP)]]
+- [[31 GET-204 Visual Rebuild Quality Contract]]
 - [[48 Actors & Portraits]]
 - [[49 Audio]]
 

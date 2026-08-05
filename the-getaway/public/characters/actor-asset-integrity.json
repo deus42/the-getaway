@@ -34,130 +34,130 @@
       },
       "sheets": {
         "idle-north": {
-          "sha256": "1c06fe3ddf4a50e29e256de2fb4c869fb7d158f0d354f14ad98fb52af0de6b90",
-          "compressedBytes": 4085,
+          "sha256": "2ae054675b7a9a19ced299e9c67b2d9c556979b9f4ef48a4e0737e6099220e40",
+          "compressedBytes": 3208,
           "decodedBytes": 98304
         },
         "idle-north-east": {
-          "sha256": "5adb29db64acd736401046f3b443aadf2f68927615d69f004bba02d2da1e4374",
-          "compressedBytes": 4019,
+          "sha256": "a1433fcd11422f78290e37c6b1ebbbe0f6f3a4079210f5919872590301fed864",
+          "compressedBytes": 3008,
           "decodedBytes": 98304
         },
         "idle-east": {
-          "sha256": "688d6b69a93f777f778aefa92680797b66c45109aa9cb2af638d43911fd6f171",
-          "compressedBytes": 3415,
+          "sha256": "8ca07b9f9dee0ab891da105ede85724d753f99ed80007c77cf047d44e6b02313",
+          "compressedBytes": 3088,
           "decodedBytes": 98304
         },
         "idle-south-east": {
-          "sha256": "b36e1db0d69b4197f156276c757574355dac21b30dde89822f9743d1e2682269",
-          "compressedBytes": 4116,
+          "sha256": "de296440fe0b81f5e3ca9cfffb605bc47a2ec0478e56f928ca7ea02b1f3ea74a",
+          "compressedBytes": 3248,
           "decodedBytes": 98304
         },
         "idle-south": {
-          "sha256": "3dc554534654e920277f9ca8f0c0a4626410e5fd725e46957b045f4c51945409",
-          "compressedBytes": 4182,
+          "sha256": "0548173b55d32abce16b90da0b4202aa423923e98b731ae9f2486dd4bf50b3b8",
+          "compressedBytes": 3425,
           "decodedBytes": 98304
         },
         "idle-south-west": {
-          "sha256": "692d0e212a0e07556122f6c0875c75c5273cd8ace9ddef05d64c58cff19d88cb",
-          "compressedBytes": 4137,
+          "sha256": "84c216e250815183d6753bf344d38ff5be680cc698904f3ff6bae75ee8e86e1b",
+          "compressedBytes": 2781,
           "decodedBytes": 98304
         },
         "idle-west": {
-          "sha256": "c8fbeb040ac0f6a8382d0715dcad094e6c03d68c905c995a949eb479aa6dba42",
-          "compressedBytes": 3315,
-          "decodedBytes": 98304
-        },
-        "idle-north-west": {
-          "sha256": "1c5f95534fbd6dfce09ce9c8e80c89b749a92ce310448b6943f202315aaf1a2c",
-          "compressedBytes": 3993,
-          "decodedBytes": 98304
-        },
-        "move-north": {
-          "sha256": "77c14f374e76c04a5c8dc494a6a5d1c23a29950db5f904b08274230ce95a047f",
-          "compressedBytes": 3336,
-          "decodedBytes": 98304
-        },
-        "move-north-east": {
-          "sha256": "ef40f566be737469cfdd0a1dc3e52dff00c04baccec91cf0e875d5b509907f9a",
-          "compressedBytes": 3302,
-          "decodedBytes": 98304
-        },
-        "move-east": {
-          "sha256": "e9bb652694ddea21c40545f0bd9bd048e6775a5d953affd8a0c1eda74e80110a",
+          "sha256": "3c4048e4eea36dcee5b52bb86ebac2cf770169b6aa7e50bb05345f850a299c2b",
           "compressedBytes": 3126,
           "decodedBytes": 98304
         },
+        "idle-north-west": {
+          "sha256": "e2747e111a0fc8efd385d3b4f2466701fc378a942144079b9de69482cc575f08",
+          "compressedBytes": 3114,
+          "decodedBytes": 98304
+        },
+        "move-north": {
+          "sha256": "77cc027468c4c784ce7392c921982856fe4e15d542fc5e1e6d23b45c0d0eea84",
+          "compressedBytes": 11055,
+          "decodedBytes": 98304
+        },
+        "move-north-east": {
+          "sha256": "84bf94cf7be591fc099377710b64bc0fdfdf34347876b5feac40c360e460f982",
+          "compressedBytes": 10069,
+          "decodedBytes": 98304
+        },
+        "move-east": {
+          "sha256": "cc70e2209f5d33a9fc1ed0bcbedb8f9b1f56ae10c9f7697c412daabd10388d5f",
+          "compressedBytes": 10372,
+          "decodedBytes": 98304
+        },
         "move-south-east": {
-          "sha256": "1c43255d9513bde87267407d9e795b66654a62ba0680615bd730739ec78d9801",
-          "compressedBytes": 3306,
+          "sha256": "e61a437173ad0d2f3c2939fc3d4338190f4e435d4b982ad33ba925628514fba9",
+          "compressedBytes": 10607,
           "decodedBytes": 98304
         },
         "move-south": {
-          "sha256": "fa7960557ccd154e0cf55338a202e03fa13565caf3a4eb5e3cd5ee4dde4d35c5",
-          "compressedBytes": 3385,
+          "sha256": "233bf7fbbe5919575ee34d24c0b9dcd56df9cf5856c89ee54cce6bca98be51cf",
+          "compressedBytes": 11708,
           "decodedBytes": 98304
         },
         "move-south-west": {
-          "sha256": "734c04dba8943f936fea551ca2266617bbdbddb66c42b17501acd5f8c79d1821",
-          "compressedBytes": 3398,
+          "sha256": "97a29022338a3db39b4948dd893fc8aa3b169bd828ea17d40446a9ed7757face",
+          "compressedBytes": 9207,
           "decodedBytes": 98304
         },
         "move-west": {
-          "sha256": "79043f058a5470742f87a5a94c100a846844aa6a99c6761e6de28baa72ab7352",
-          "compressedBytes": 3044,
+          "sha256": "d84f58485d54f1c0dfec74d0d95ac16ed250d88d539bafa9d85d8c921f785971",
+          "compressedBytes": 10313,
           "decodedBytes": 98304
         },
         "move-north-west": {
-          "sha256": "62b28868deb76a137bf2cc32bcc1db7edb1504b33fed034680b3f5185d385f0c",
-          "compressedBytes": 3344,
+          "sha256": "c29ded3737698ea0d9e3e910a1c6ad8c0e09d5bda826c2f1fe94457f0c263a3a",
+          "compressedBytes": 10688,
           "decodedBytes": 98304
         },
         "interact-north": {
-          "sha256": "689b3fe92cbe3c2ca74e25950ce7d16e0bdf127a46bdf22748e49a5836b791ad",
-          "compressedBytes": 2531,
+          "sha256": "2ae054675b7a9a19ced299e9c67b2d9c556979b9f4ef48a4e0737e6099220e40",
+          "compressedBytes": 3208,
           "decodedBytes": 98304
         },
         "interact-north-east": {
-          "sha256": "b4b2fad94d52c1efd3545ebef6337f67d2b8281dcf8e1f850db3239bc9575a17",
-          "compressedBytes": 2260,
+          "sha256": "a1433fcd11422f78290e37c6b1ebbbe0f6f3a4079210f5919872590301fed864",
+          "compressedBytes": 3008,
           "decodedBytes": 98304
         },
         "interact-east": {
-          "sha256": "9fd178e491ca00c2c434848af24227106fc83b4adff08839ee9030a367206501",
-          "compressedBytes": 2162,
+          "sha256": "8ca07b9f9dee0ab891da105ede85724d753f99ed80007c77cf047d44e6b02313",
+          "compressedBytes": 3088,
           "decodedBytes": 98304
         },
         "interact-south-east": {
-          "sha256": "31065a0a5a0a2f6ee29390f1201457244a51dbd2c2e459325bcf0734de55234c",
-          "compressedBytes": 2507,
+          "sha256": "de296440fe0b81f5e3ca9cfffb605bc47a2ec0478e56f928ca7ea02b1f3ea74a",
+          "compressedBytes": 3248,
           "decodedBytes": 98304
         },
         "interact-south": {
-          "sha256": "d464c886f19ea79513abd6e6d3a7a6adec9ce08c42992e010f0d4cad614ab599",
-          "compressedBytes": 2392,
+          "sha256": "0548173b55d32abce16b90da0b4202aa423923e98b731ae9f2486dd4bf50b3b8",
+          "compressedBytes": 3425,
           "decodedBytes": 98304
         },
         "interact-south-west": {
-          "sha256": "4ea063f17bf736be012e8096d623a5636cbfe1d880a9aa9d8aed200373748107",
-          "compressedBytes": 2357,
+          "sha256": "84c216e250815183d6753bf344d38ff5be680cc698904f3ff6bae75ee8e86e1b",
+          "compressedBytes": 2781,
           "decodedBytes": 98304
         },
         "interact-west": {
-          "sha256": "4e7ff529e1ecfa54b03a378603d80cfcf2da46610ec072485c6a801f0b2663fd",
-          "compressedBytes": 2062,
+          "sha256": "3c4048e4eea36dcee5b52bb86ebac2cf770169b6aa7e50bb05345f850a299c2b",
+          "compressedBytes": 3126,
           "decodedBytes": 98304
         },
         "interact-north-west": {
-          "sha256": "cab4b2f1f551f204174c41de3fac60f3dd81788a3181a86912c772c52020ffbe",
-          "compressedBytes": 2509,
+          "sha256": "e2747e111a0fc8efd385d3b4f2466701fc378a942144079b9de69482cc575f08",
+          "compressedBytes": 3114,
           "decodedBytes": 98304
         }
       },
       "metrics": {
-        "sha256": "f1e9175a452a42e7712f0ec93562193a7cccb12a69e1c796e4438a29f77a1900",
-        "compressedBytes": 24781,
-        "decodedBytes": 24781
+        "sha256": "c9d462fd38e5575c2a3a38a7bf0a7554aca16bfbdef2ef912ba56ba2eb0ee1ab",
+        "compressedBytes": 24759,
+        "decodedBytes": 24759
       }
     },
     "player_civilian_02": {
