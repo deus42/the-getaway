@@ -30,7 +30,8 @@ const REQUIRED_ANCHOR_IDS = [
 ] as const;
 
 describe('Level0LayoutContract', () => {
-  const cloneContract = () => JSON.parse(JSON.stringify(LEVEL0_LAYOUT_CONTRACT)) as typeof LEVEL0_LAYOUT_CONTRACT;
+  const cloneContract = () =>
+    JSON.parse(JSON.stringify(LEVEL0_LAYOUT_CONTRACT)) as typeof LEVEL0_LAYOUT_CONTRACT;
   const polygonArea = (polygon: readonly { x: number; y: number }[]) =>
     Math.abs(
       polygon.reduce((sum, point, index) => {
@@ -38,10 +39,15 @@ describe('Level0LayoutContract', () => {
         return sum + point.x * next.y - next.x * point.y;
       }, 0) / 2
     );
+  const loopLength = (points: readonly { x: number; y: number }[]) =>
+    points.slice(1).reduce((total, end, index) => {
+      const start = points[index]!;
+      return total + Math.hypot(end.x - start.x, end.y - start.y);
+    }, 0);
 
-  it('uses the canonical 2:1 projection and a replaceable authored schema', () => {
-    expect(LEVEL0_LAYOUT_CONTRACT.id).toBe('level0-tokyo-greybox-v3');
-    expect(LEVEL0_LAYOUT_CONTRACT.schemaVersion).toBe(2);
+  it('uses the approved four-block source contract and canonical 2:1 projection', () => {
+    expect(LEVEL0_LAYOUT_CONTRACT.id).toBe('level0-get204-four-block-source-candidate-v1');
+    expect(LEVEL0_LAYOUT_CONTRACT.schemaVersion).toBe(3);
     expect(LEVEL0_LAYOUT_CONTRACT.projection).toEqual({
       tileWidth: 64,
       tileHeight: 32,
@@ -49,9 +55,9 @@ describe('Level0LayoutContract', () => {
     });
     expect(LEVEL0_LAYOUT_CONTRACT.bounds).toEqual([
       { x: 0, y: 0 },
-      { x: 84, y: 0 },
-      { x: 84, y: 60 },
-      { x: 0, y: 60 },
+      { x: 58, y: 0 },
+      { x: 58, y: 44 },
+      { x: 0, y: 44 },
     ]);
   });
 
@@ -60,7 +66,11 @@ describe('Level0LayoutContract', () => {
   });
 
   it('authors exactly three interlocking traversal loops', () => {
-    expect(LEVEL0_LAYOUT_CONTRACT.traversalLoops).toHaveLength(3);
+    expect(LEVEL0_LAYOUT_CONTRACT.traversalLoops.map(({ id }) => id)).toEqual([
+      'loop.public-contact',
+      'loop.logistics-service',
+      'loop.outer-escape',
+    ]);
 
     const membership = new Map<string, Set<string>>();
     LEVEL0_LAYOUT_CONTRACT.traversalLoops.forEach((loop) => {
@@ -72,151 +82,107 @@ describe('Level0LayoutContract', () => {
       });
     });
 
-    const sharedJunctions = [...membership.values()].filter((loops) => loops.size > 1);
-    expect(sharedJunctions.length).toBeGreaterThanOrEqual(2);
+    expect([...membership.values()].filter((loops) => loops.size > 1)).toHaveLength(2);
   });
 
   it('authors public-realm semantics and a bounded drone verification region', () => {
     expect(LEVEL0_LAYOUT_CONTRACT.surfaces.some((surface) => surface.kind === 'sidewalk')).toBe(true);
     expect(LEVEL0_LAYOUT_CONTRACT.surfaces.some((surface) => surface.kind === 'crossing')).toBe(true);
+    expect(LEVEL0_LAYOUT_CONTRACT.surfaces.filter((surface) => surface.kind === 'alley')).toHaveLength(3);
     expect(LEVEL0_LAYOUT_CONTRACT.droneRegions).toHaveLength(1);
     expect(LEVEL0_LAYOUT_CONTRACT.droneRegions[0]?.launchAnchorId).toBe('drone.launch');
   });
 
-  it('authors city-scale street bands and building mass instead of a sparse board', () => {
+  it('locks dense named mass across the three mission districts', () => {
     const districtArea = polygonArea(LEVEL0_LAYOUT_CONTRACT.bounds);
-    const buildingAreas = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.map((footprint) =>
-      polygonArea(footprint.polygon)
+    const buildingArea = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.reduce(
+      (sum, footprint) => sum + polygonArea(footprint.polygon),
+      0
     );
-    const buildingArea = buildingAreas.reduce((sum, area) => sum + area, 0);
-    const plazaAreas = LEVEL0_LAYOUT_CONTRACT.surfaces
-      .filter((surface) => surface.kind === 'plaza')
-      .map((surface) => polygonArea(surface.polygon));
-    const roadBandWidths = LEVEL0_LAYOUT_CONTRACT.surfaces
-      .filter((surface) => surface.kind === 'road')
-      .map((surface) => {
-        const xs = surface.polygon.map((point) => point.x);
-        const ys = surface.polygon.map((point) => point.y);
-        return Math.min(Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys));
-      });
-    expect(plazaAreas.length).toBeGreaterThanOrEqual(3);
-    expect(roadBandWidths).toHaveLength(8);
-    expect(LEVEL0_LAYOUT_CONTRACT.buildingFootprints).toHaveLength(9);
-    expect(buildingArea / districtArea).toBeGreaterThanOrEqual(0.27);
-    expect(Math.min(...buildingAreas)).toBeGreaterThanOrEqual(80);
-    expect(Math.max(...plazaAreas)).toBeLessThanOrEqual(120);
-    expect(Math.min(...roadBandWidths)).toBeGreaterThanOrEqual(3.5);
-    expect(Math.max(...roadBandWidths)).toBeLessThanOrEqual(4);
-    const footprintIds = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.map(
-      (footprint) => footprint.id
-    );
-    [
-      'building.public_arcade_west',
-      'building.safehouse_annex',
-      'building.service_frontage',
-    ].forEach((retiredId) => expect(footprintIds).not.toContain(retiredId));
+    const footprintIds = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.map(({ id }) => id);
+
+    expect(LEVEL0_LAYOUT_CONTRACT.zones.map(({ id }) => id)).toEqual([
+      'zone.safehouse-backstreets',
+      'zone.public-transit-commercial',
+      'zone.logistics-civic-control',
+    ]);
+    expect(LEVEL0_LAYOUT_CONTRACT.buildingFootprints).toHaveLength(16);
+    expect(buildingArea / districtArea).toBeGreaterThanOrEqual(0.55);
+    expect(footprintIds.filter((id) => id.startsWith('cluster.safehouse.'))).toHaveLength(4);
+    expect(footprintIds.filter((id) => id.startsWith('cluster.public.'))).toHaveLength(4);
+    expect(footprintIds.filter((id) => id.startsWith('cluster.logistics.'))).toHaveLength(4);
+    expect(footprintIds.filter((id) => id.startsWith('cluster.service.'))).toHaveLength(4);
+    expect(footprintIds.some((id) => id.startsWith('building.'))).toBe(false);
   });
 
-  it('keeps the outdoor safehouse compact and immediately legible from spawn', () => {
-    const court = LEVEL0_LAYOUT_CONTRACT.surfaces.find(
-      (surface) => surface.id === 'surface.safehouse.court'
+  it('keeps the safehouse threshold compact and its opening actions readable', () => {
+    const threshold = LEVEL0_LAYOUT_CONTRACT.surfaces.find(
+      (surface) => surface.id === 'walkable.safehouse-threshold'
     )!;
-    const spawn = LEVEL0_LAYOUT_CONTRACT.anchors.find(
-      (anchor) => anchor.id === 'safehouse.spawn'
+    const boundary = LEVEL0_LAYOUT_CONTRACT.anchors.find(
+      (anchor) => anchor.id === 'safehouse.boundary'
+    )!;
+    const safehouse = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.find(
+      (footprint) => footprint.id === 'cluster.safehouse.home'
     )!;
     const entrance = LEVEL0_LAYOUT_CONTRACT.anchors.find(
       (anchor) => anchor.id === 'entrance.safehouse'
     )!;
-    const safehouse = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.find(
-      (footprint) => footprint.id === 'building.safehouse'
-    )!;
-    expect(safehouse.polygon).toEqual([
-      { x: 9.5, y: 33 },
-      { x: 22.5, y: 33 },
-      { x: 22.5, y: 45 },
-      { x: 9.5, y: 45 },
-    ]);
-    expect(court.polygon).toEqual([
-      { x: 10, y: 45 },
-      { x: 19, y: 45 },
-      { x: 19, y: 51 },
-      { x: 10, y: 51 },
-    ]);
-    expect(polygonArea(court.polygon)).toBeLessThanOrEqual(60);
-    expect(Math.hypot(
-      spawn.position.x - entrance.position.x,
-      spawn.position.y - entrance.position.y
-    )).toBeLessThanOrEqual(2);
 
-    const boundary = LEVEL0_LAYOUT_CONTRACT.anchors.find(
-      (anchor) => anchor.id === 'safehouse.boundary'
-    )!;
-    const ownedAnchorIds = [
+    expect(polygonArea(threshold.polygon)).toBe(14);
+    expect(safehouse.polygon).toEqual([
+      { x: 2, y: 32.6 },
+      { x: 12, y: 32.6 },
+      { x: 12, y: 41.5 },
+      { x: 2, y: 41.5 },
+    ]);
+    expect(entrance.position).toEqual({ x: 13, y: 36.5 });
+
+    [
       'safehouse.spawn',
       'safehouse.departure',
-      'entrance.safehouse',
-      'terminal.outbound_transit',
+      'contact.lira',
       'interaction.safehouse.wait',
       'interaction.safehouse.rest',
-    ] as const;
-    ownedAnchorIds.forEach((anchorId) => {
-      const candidate = LEVEL0_LAYOUT_CONTRACT.anchors.find(
-        (anchor) => anchor.id === anchorId
-      )!;
+    ].forEach((anchorId) => {
+      const anchor = LEVEL0_LAYOUT_CONTRACT.anchors.find((candidate) => candidate.id === anchorId)!;
       expect(Math.hypot(
-        candidate.position.x - boundary.position.x,
-        candidate.position.y - boundary.position.y
+        anchor.position.x - boundary.position.x,
+        anchor.position.y - boundary.position.y
       )).toBeLessThanOrEqual(boundary.radius);
-    });
-
-    const actionApproaches = [
-      { action: 'depart', position: { x: 18, y: 51 } },
-      { action: 'outbound-transit', position: { x: 14, y: 46 } },
-      { action: 'wait', position: { x: 18, y: 48 } },
-      { action: 'rest', position: { x: 15, y: 48 } },
-    ] as const;
-    actionApproaches.forEach(({ position: approach }) => {
-      expect(isPointWalkableWithClearance(LEVEL0_LAYOUT_CONTRACT, approach)).toBe(true);
-      expect(Math.hypot(
-        approach.x - boundary.position.x,
-        approach.y - boundary.position.y
-      )).toBeLessThanOrEqual(boundary.radius);
+      expect(isPointWalkableWithClearance(LEVEL0_LAYOUT_CONTRACT, anchor.position)).toBe(true);
     });
   });
 
-  it('authors one full-scale transit service mass beside its compact hiding plaza', () => {
-    const transitServices = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.find(
-      (footprint) => footprint.id === 'building.transit_services'
-    )!;
-    const transitPlaza = LEVEL0_LAYOUT_CONTRACT.surfaces.find(
-      (surface) => surface.id === 'surface.transit.plaza'
-    )!;
-    const hidingAnchor = LEVEL0_LAYOUT_CONTRACT.anchors.find(
-      (anchor) => anchor.id === 'hide.transit_structure'
-    )!;
+  it('keeps both logistics approaches and their grounded devices reachable', () => {
+    const entranceIds = LEVEL0_LAYOUT_CONTRACT.entrances.map(({ id }) => id);
+    expect(entranceIds).toEqual([
+      'entrance.logistics.public',
+      'entrance.logistics.service',
+      'entrance.safehouse',
+    ]);
+    expect(LEVEL0_LAYOUT_CONTRACT.entrances.slice(0, 2).every(
+      ({ buildingId }) => buildingId === 'cluster.logistics.threshold'
+    )).toBe(true);
 
-    expect(transitServices.polygon).toEqual([
-      { x: 48, y: 41.5 },
-      { x: 57, y: 41.5 },
-      { x: 57, y: 51 },
-      { x: 48, y: 51 },
-    ]);
-    expect(transitPlaza.polygon).toEqual([
-      { x: 44.5, y: 41.5 },
-      { x: 48, y: 41.5 },
-      { x: 48, y: 51 },
-      { x: 44.5, y: 51 },
-    ]);
-    expect(hidingAnchor.position).toEqual({ x: 46.25, y: 45 });
+    [
+      'entrance.logistics.public',
+      'entrance.logistics.service',
+      'terminal.camera_loop',
+      'terminal.cache_locker',
+      'hide.service_recess',
+      'hide.maintenance_bay',
+    ].forEach((anchorId) => {
+      const anchor = LEVEL0_LAYOUT_CONTRACT.anchors.find((candidate) => candidate.id === anchorId)!;
+      expect(isPointWalkableWithClearance(LEVEL0_LAYOUT_CONTRACT, anchor.position)).toBe(true);
+    });
   });
 
   it('keeps the outer loop within the two-to-three-minute traversal target', () => {
-    const loop = LEVEL0_LAYOUT_CONTRACT.traversalLoops.find((candidate) => candidate.id === 'loop.outer')!;
-    const length = loop.points.slice(1).reduce((total, end, index) => {
-      const start = loop.points[index]!;
-      return total + Math.hypot(end.x - start.x, end.y - start.y);
-    }, 0);
-    const seconds = length / LEVEL0_DIRECT_MOVEMENT_SPEED;
+    const loop = LEVEL0_LAYOUT_CONTRACT.traversalLoops.find(
+      (candidate) => candidate.id === 'loop.outer-escape'
+    )!;
+    const seconds = loopLength(loop.points) / LEVEL0_DIRECT_MOVEMENT_SPEED;
     expect(seconds).toBeGreaterThanOrEqual(120);
     expect(seconds).toBeLessThanOrEqual(180);
   });
@@ -235,27 +201,31 @@ describe('Level0LayoutContract', () => {
     );
 
     const occluderDrift = cloneContract();
+    const firstFootprintId = occluderDrift.buildingFootprints[0]!.id;
     occluderDrift.occluders[0]![0]!.x += 1;
     expect(validateLevel0LayoutContract(occluderDrift)).toContain(
-      'occluder 0 does not match building footprint building.public_market'
+      `occluder 0 does not match building footprint ${firstFootprintId}`
     );
   });
 
   it('rejects overlapping or out-of-district rectangular building mass', () => {
     const overlap = cloneContract();
+    const firstId = overlap.buildingFootprints[0]!.id;
+    const secondId = overlap.buildingFootprints[1]!.id;
     overlap.buildingFootprints[1]!.polygon = overlap.buildingFootprints[0]!.polygon.map(
       (point) => ({ ...point })
     );
     overlap.occluders[1] = overlap.buildingFootprints[1]!.polygon.map((point) => ({ ...point }));
     expect(validateLevel0LayoutContract(overlap)).toContain(
-      'building footprints building.public_market and building.civic_north overlap'
+      `building footprints ${firstId} and ${secondId} overlap`
     );
 
     const outside = cloneContract();
+    const outsideId = outside.buildingFootprints[0]!.id;
     outside.buildingFootprints[0]!.polygon[0]!.x = -1;
     outside.occluders[0] = outside.buildingFootprints[0]!.polygon.map((point) => ({ ...point }));
     expect(validateLevel0LayoutContract(outside)).toContain(
-      'building footprint building.public_market leaves district bounds'
+      `building footprint ${outsideId} leaves district bounds`
     );
   });
 
@@ -265,11 +235,11 @@ describe('Level0LayoutContract', () => {
       id: 'building.test.custom-overlap',
       function: 'test-only',
       polygon: [
-        { x: 10, y: 10 },
-        { x: 20, y: 10 },
-        { x: 21, y: 18 },
-        { x: 16, y: 24 },
-        { x: 10, y: 18 },
+        { x: 3, y: 34 },
+        { x: 5, y: 34 },
+        { x: 6, y: 36 },
+        { x: 4, y: 38 },
+        { x: 3, y: 36 },
       ],
       height: 1,
     });
@@ -278,7 +248,7 @@ describe('Level0LayoutContract', () => {
     );
 
     expect(validateLevel0LayoutContract(overlap)).toContain(
-      'building footprints building.public_market and building.test.custom-overlap overlap'
+      'building footprints cluster.safehouse.home and building.test.custom-overlap overlap'
     );
   });
 
@@ -288,10 +258,10 @@ describe('Level0LayoutContract', () => {
       id: 'building.test.shifted-overlap',
       function: 'test-only',
       polygon: [
-        { x: 10.5, y: 9.5 },
-        { x: 23.5, y: 9.5 },
-        { x: 23.5, y: 25.5 },
-        { x: 10.5, y: 25.5 },
+        { x: 1.5, y: 34 },
+        { x: 12.5, y: 34 },
+        { x: 12.5, y: 35 },
+        { x: 1.5, y: 35 },
       ],
       height: 1,
     });
@@ -300,20 +270,20 @@ describe('Level0LayoutContract', () => {
     );
 
     expect(validateLevel0LayoutContract(overlap)).toContain(
-      'building footprints building.public_market and building.test.shifted-overlap overlap'
+      'building footprints cluster.safehouse.home and building.test.shifted-overlap overlap'
     );
   });
 
-  it('validates required anchors and loop corridors with the player collision clearance', () => {
+  it('validates required anchors and loop corridors with player collision clearance', () => {
     const pinchedLoop = cloneContract();
     pinchedLoop.buildingFootprints.push({
       id: 'building.test.loop-pinch',
       function: 'test-only',
       polygon: [
-        { x: 7.2, y: 9 },
-        { x: 8.8, y: 9 },
-        { x: 8.8, y: 28 },
-        { x: 7.2, y: 28 },
+        { x: 15.2, y: 25 },
+        { x: 15.8, y: 25 },
+        { x: 15.8, y: 26 },
+        { x: 15.2, y: 26 },
       ],
       height: 1,
     });
@@ -321,11 +291,14 @@ describe('Level0LayoutContract', () => {
       pinchedLoop.buildingFootprints[pinchedLoop.buildingFootprints.length - 1]!.polygon
     );
     expect(validateLevel0LayoutContract(pinchedLoop)).toContain(
-      'loop loop.outer crosses blocked geometry'
+      'loop loop.public-contact crosses blocked geometry'
     );
 
     const pinchedAnchor = cloneContract();
-    pinchedAnchor.anchors.find((anchor) => anchor.id === 'contact.lira')!.position.y = 25.6;
+    pinchedAnchor.anchors.find((anchor) => anchor.id === 'contact.lira')!.position = {
+      x: 10,
+      y: 29,
+    };
     expect(validateLevel0LayoutContract(pinchedAnchor)).toContain(
       'required anchor contact.lira is not on walkable geometry'
     );
@@ -337,10 +310,10 @@ describe('Level0LayoutContract', () => {
       id: 'building.test.subsample-loop-pinch',
       function: 'test-only',
       polygon: [
-        { x: 7.45, y: 6.9 },
-        { x: 7.55, y: 6.9 },
-        { x: 7.55, y: 7.1 },
-        { x: 7.45, y: 7.1 },
+        { x: 15.45, y: 25.45 },
+        { x: 15.55, y: 25.45 },
+        { x: 15.55, y: 25.55 },
+        { x: 15.45, y: 25.55 },
       ],
       height: 1,
     });
@@ -349,7 +322,7 @@ describe('Level0LayoutContract', () => {
     );
 
     expect(validateLevel0LayoutContract(subSamplePinch)).toContain(
-      'loop loop.outer crosses blocked geometry'
+      'loop loop.public-contact crosses blocked geometry'
     );
   });
 

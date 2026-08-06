@@ -127,9 +127,9 @@ Exit gate: dusk and curfew routes are topologically viable and debug geometry ag
 
 Ownership:
 
-- one complete full-district live rebuild, with internal composition/look-development stages but only one requester-facing acceptance candidate;
-- one full master scene using the requester-owned Neo Tokyo 2 kit plus necessary original gap-fill assets;
-- street-first normal framing, human-scale actors, continuous street walls, three subdistricts, three loops, and a composed manual-zoom overview;
+- one mission-sized four-block rebuild, with an actual Blender proof gate before any live runtime replacement;
+- one master scene using named assets from the requester-owned Neo Tokyo 2 kit plus necessary project-owned public-realm gap fills;
+- street-first normal framing, human-scale actors, continuous street walls, three functional identities, three loops, one restrained landmark maximum, and a composed four-block overview;
 - blue-hour primary materials/light with coherent daylight and curfew variants;
 - accepted geometry back-propagated into shared collision, occlusion, masks, entrances, and anchors;
 - versioned flattened derivatives, recipe/manifests, and validators without raw vendor geometry or textures;
@@ -137,20 +137,20 @@ Ownership:
 
 Internal sequence:
 
-1. Compose the complete safehouse/backstreet, transit/public-commercial, and Hidzu logistics/civic-control district from the three locked references.
-2. Complete public realm, camera/actor scale, materials, practical lighting, population staging, surveillance grammar, schedule variants, and selective foreground fade across that full scene.
-3. Export candidate collision, occlusion, masks, entrances, and anchors from the visible scene; replace the prototype and greybox across the live runtime.
-4. Internally reject and revise any weak normal, clean-world, or overview frame before requester presentation.
-5. Present one complete live candidate. Only explicit requester approval unlocks closeout and the authorized commit.
+1. Compose exactly four dense mission blocks from named Neo Tokyo 2 assets, using the approved KitBash + Reference 2 concept for relationships but never as production geometry.
+2. Complete public realm, camera/actor scale, materials, practical lighting, and a few non-baked scale figures in that one source-bound Blender scene.
+3. Internally reject and revise weak close or overview renders; present the best actual Blender pair for requester approval.
+4. Only after that approval, export candidate collision, occlusion, masks, entrances, and anchors from the accepted master and integrate a reversible live candidate.
+5. Present clean-world, current-HUD, and four-block overview live evidence. Only separate explicit live approval unlocks closeout and an authorized commit.
 
-No offline render, validator, internal stage, or technical checkpoint unlocks T5. Exit gate: the requester accepts the committed complete build as a coherent live city with readable people/routes, no greybox fallback, no void, no angle mismatch, and no zoom corruption.
+An AI-generated concept, validator, internal rating, or technical checkpoint cannot unlock T5. The actual Blender render is a mandatory source-geometry gate but not final delivery. Exit gate: the requester accepts the committed same-master live build as a coherent four-block city with readable people/routes, named KitBash provenance, no fallback leak, no void, no angle mismatch, and no zoom corruption.
 
 ## Gate 5 — Hidzu identity and surveillance-noir art
 
 ### T5 — Hidzu identity and graphic-surveillance-noir world art
 
 **Label:** Improvement
-**Depends on:** requester-accepted and committed GET-204 full-district live rebuild
+**Depends on:** requester-accepted and committed GET-204 four-block same-master live rebuild
 **Blocks:** T6 and T10 visual integration
 
 Ownership:

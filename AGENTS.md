@@ -84,7 +84,7 @@ Canonical project documentation is the Markdown-only `memory-bank/` vault:
 - If implementation exposes an undecided behavior or conflicts with the specification, update the review queue before encoding it. Continue with a reversible provisional trial when the queue provides a coherent baseline and the choice can be judged through live evidence; stop only when no safe reversible path exists or the choice would irreversibly change scope, ownership, licensed assets, save compatibility, or core player behavior.
 - Removed or superseded behavior may be summarized only in the Decision Register, each system specification's required `13. Removed behavior` section, clearly historical progress entries, and recoverable source archives. Those references must label it rejected; it must not appear as current MVP intent in Architecture, Roadmap planning, active ticket requirements, tests presented as acceptance, or player-facing copy.
 - Verify the protected rewrite recovery archive before resetting, deleting, restoring, or replacing rewrite-owned files. Record the archive path, checksums, baseline SHA, salvage map, and restoration proof in `progress/GET-139.md`.
-- GET-139 explicitly replaces the rejected Level 0 topology, movement contract, HUD architecture, and production-art path. Generic preservation guidance in this file applies only after the new specification has locked the replacement contract; the Building Positioning Runbook governs measured alignment inside that contract and does not preserve the rejected four-block topology.
+- GET-139 explicitly replaces the rejected Level 0 topology, movement contract, HUD architecture, and production-art path. Generic preservation guidance in this file applies only after the new specification has locked the replacement contract; the Building Positioning Runbook governs measured alignment inside that contract and does not preserve the rejected sparse/fenced four-block compound, nine-block board, or oversized full-district experiments. The later approved dense four-block mission envelope is current and distinct.
 
 ## Implementation loop
 
@@ -117,6 +117,8 @@ Treat placement as measured geometry, not open-ended visual tuning.
 6. If a pass moves the wrong edge or reopens a correct edge, restore the recorded baseline before the next attempt.
 
 City structure must serve gameplay, human scale, or spatial readability. Curated lived-in detail is valid when it strengthens place, navigation, scale, surveillance, hiding/blending, or route identity; examples include awnings, planters, bins, civic signs, kiosks, utilities, and parked service vehicles. Reject random filler, repeated noise, and detail that obscures movement or interaction.
+
+When a visual direction depends on a licensed source pack, every production building or source-derived prop must retain named provenance to the selected pack asset. AI-assisted concepts may define composition, camera, value, lighting, or treatment, but they cannot satisfy source-identity acceptance and may not replace the source geometry. Prove the actual authored source scene in rendered close and overview frames before promoting it into the live runtime.
 
 For a materially visual ticket, use the acceptance topology defined by its current canonical specification. Internal composition, look-development, export, and QA stages are production controls, not automatically requester-facing milestones or commit points. Before presenting any visual candidate:
 

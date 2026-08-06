@@ -26,7 +26,6 @@ const CANVAS = {
 };
 const FIXTURE_LAYOUT_UNIT_METERS = 2;
 const FIXTURE_BUILDING_SCALE = 0.8;
-const FIXTURE_BUILDING_BOUNDS_METERS = { width: 20, depth: 20, height: 20 };
 
 const polygonDimensions = (polygon: readonly { x: number; y: number }[]) => {
   const xs = polygon.map((point) => point.x);
@@ -34,6 +33,22 @@ const polygonDimensions = (polygon: readonly { x: number; y: number }[]) => {
   return {
     width: Math.max(...xs) - Math.min(...xs),
     depth: Math.max(...ys) - Math.min(...ys),
+  };
+};
+
+const fixtureBuildingBoundsMeters = (
+  polygon: readonly { x: number; y: number }[]
+) => {
+  const footprint = polygonDimensions(polygon);
+  const frontageMarginMeters = 0.6;
+  return {
+    width: (
+      footprint.width * FIXTURE_LAYOUT_UNIT_METERS - frontageMarginMeters
+    ) / FIXTURE_BUILDING_SCALE,
+    depth: (
+      footprint.depth * FIXTURE_LAYOUT_UNIT_METERS - frontageMarginMeters
+    ) / FIXTURE_BUILDING_SCALE,
+    height: 20,
   };
 };
 
@@ -103,7 +118,7 @@ const createBundle = (): Level0ArtBundle => ({
       prohibited: ['raw-geometry', 'source-textures', 'generated-blend'],
     },
     selectedAssets: [
-      ...LEVEL0_LAYOUT_CONTRACT.buildingFootprints.map((_, index) => ({
+      ...LEVEL0_LAYOUT_CONTRACT.buildingFootprints.map((building, index) => ({
         id: `neo-tokyo-building-${index + 1}`,
         sourcePrefix: `Building${index + 1}`,
         category: (index < 2 ? 'large' : index < 5 ? 'medium' : 'small') as
@@ -117,7 +132,7 @@ const createBundle = (): Level0ArtBundle => ({
           center: 'measured-ground-bounds-center' as const,
           sourceUnitsPerMeter: 1,
         },
-        measuredStructuralBoundsMeters: { ...FIXTURE_BUILDING_BOUNDS_METERS },
+        measuredStructuralBoundsMeters: fixtureBuildingBoundsMeters(building.polygon),
         excludedObjectSuffixes: ['StoneFloor', 'Asphalt', 'Grass', 'TileDamage'],
       })),
       ...PROP_ANCHOR_IDS.map((_, index) => ({
@@ -183,12 +198,13 @@ const createBundle = (): Level0ArtBundle => ({
     buildingPlacements: LEVEL0_LAYOUT_CONTRACT.buildingFootprints.map((building, index) => {
       const footprint = polygonDimensions(building.polygon);
       const extents = polygonExtents(building.polygon);
+      const assetBounds = fixtureBuildingBoundsMeters(building.polygon);
       const footprintAreaMeters =
         footprint.width * FIXTURE_LAYOUT_UNIT_METERS *
         footprint.depth * FIXTURE_LAYOUT_UNIT_METERS;
       const transformedAssetAreaMeters =
-        FIXTURE_BUILDING_BOUNDS_METERS.width * FIXTURE_BUILDING_SCALE *
-        FIXTURE_BUILDING_BOUNDS_METERS.depth * FIXTURE_BUILDING_SCALE;
+        assetBounds.width * FIXTURE_BUILDING_SCALE *
+        assetBounds.depth * FIXTURE_BUILDING_SCALE;
       return {
         id: `placement-${index + 1}`,
         footprintId: building.id,
@@ -199,12 +215,12 @@ const createBundle = (): Level0ArtBundle => ({
         layoutPosition: {
           x: (building.polygon[0]!.x + building.polygon[2]!.x) / 2,
           y: extents.maxY - (
-            FIXTURE_BUILDING_BOUNDS_METERS.depth * FIXTURE_BUILDING_SCALE / 2 + 0.3
+            assetBounds.depth * FIXTURE_BUILDING_SCALE / 2 + 0.3
           ) / FIXTURE_LAYOUT_UNIT_METERS,
         },
         rotationDegrees: 0,
         uniformScale: FIXTURE_BUILDING_SCALE,
-        targetHeightMeters: FIXTURE_BUILDING_BOUNDS_METERS.height * FIXTURE_BUILDING_SCALE,
+        targetHeightMeters: assetBounds.height * FIXTURE_BUILDING_SCALE,
         footprintFill: transformedAssetAreaMeters / footprintAreaMeters,
         frontageEdges: ['south' as const],
       };
@@ -555,8 +571,8 @@ describe('Level0ArtBundle', () => {
 
   it('rejects an aligned canvas that clips the projected Level 0 bounds', () => {
     const bundle = createBundle();
-    bundle.recipe.alignedExport.canvas.pixelOrigin.x = 2944;
-    bundle.art.canvas.pixelOrigin.x = 2944;
+    bundle.recipe.alignedExport.canvas.pixelOrigin.x = 0;
+    bundle.art.canvas.pixelOrigin.x = 0;
 
     expect(validateLevel0ArtBundle(bundle, LEVEL0_LAYOUT_CONTRACT)).toContain(
       'aligned export canvas clips the projected Level 0 layout bounds'

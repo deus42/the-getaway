@@ -40,7 +40,7 @@ import {
   LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
   type Level0ActorInteractionPresentationDetail,
 } from '../../game/level0/scene/level0ActorPresentation';
-import { resolveGet204Gate1StartPosition } from '../../game/level0/art/get204Gate1';
+import { resolveGet204CityStartPosition } from '../../game/level0/art/get204City';
 import type { AppDispatch, RootState } from '../../store';
 import { PERSISTED_STATE_KEY, resetGame, store } from '../../store';
 import {
@@ -286,7 +286,7 @@ const Level0RuntimeShell = () => {
     }));
     const initializedRun = store.getState().level0Runtime.run;
     if (initializedRun) {
-      const proofPosition = resolveGet204Gate1StartPosition(initializedRun.player.position);
+      const proofPosition = resolveGet204CityStartPosition(initializedRun.player.position);
       if (
         proofPosition.x !== initializedRun.player.position.x ||
         proofPosition.y !== initializedRun.player.position.y
@@ -782,7 +782,7 @@ const Level0RuntimeShell = () => {
         <div className="level0-runtime__lane level0-runtime__lane--map">
           <span className="lane-label">DISTRICT</span>
           <strong>Tokyo / Hidzu perimeter</strong>
-          <small>Public-to-controlled city seam · adaptive overview · close 1.48</small>
+          <small>Public-to-controlled city seam · adaptive overview · close 2.00</small>
         </div>
         <div className="level0-runtime__lane">
           <span className="lane-label">PROTAGONIST</span>

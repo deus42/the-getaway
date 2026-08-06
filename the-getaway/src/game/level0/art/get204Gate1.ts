@@ -346,6 +346,7 @@ const GATE1_SURFACES: Level0SurfaceRegion[] = [
 export const GET204_GATE1_MOVEMENT_CONTRACT: Level0LayoutContract = {
   ...LEVEL0_LAYOUT_CONTRACT,
   id: 'level0-get204-live-candidate-v2',
+  bounds: GET204_GATE1_REGION,
   surfaces: [...LEVEL0_LAYOUT_CONTRACT.surfaces, ...GATE1_SURFACES],
   buildingFootprints: [
     ...GATE1_BUILDING_FOOTPRINTS,

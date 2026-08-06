@@ -622,16 +622,21 @@ export const validateLevel0SourceAndRecipe = (
   return [...new Set(errors)];
 };
 
-const GET204_FULL_DISTRICT_REFERENCE_CONTRACT = [
+const GET204_MISSION_DISTRICT_REFERENCE_CONTRACT = [
   {
-    role: 'quality-look-target',
-    path: 'art/references/get204/canvas-quality-target.png',
-    sha256: 'ff53c06f9b03966c2468b9bf22e13449421b16f20101573929fcbbcc20083e6d',
+    role: 'approved-composition-previsualization',
+    path: 'art/references/get205/kitbash-reference2-blend-concept-v1.png',
+    sha256: 'b8e69fcbb4839cf2fb70fa80e03c42ff321e6a5ee00c2287f1f824f08e951c5d',
   },
   {
     role: 'close-play-target',
     path: 'art/references/get204/street-play-target.png',
     sha256: '66cc72f0ec09b928cf2d95f0fe3db61881776ba87f48c99c83852cf47583c9a9',
+  },
+  {
+    role: 'quality-look-target',
+    path: 'art/references/get204/canvas-quality-target.png',
+    sha256: 'ff53c06f9b03966c2468b9bf22e13449421b16f20101573929fcbbcc20083e6d',
   },
   {
     role: 'overview-density-target',
@@ -644,6 +649,13 @@ const GET204_SUBDISTRICTS = [
   'safehouse-backstreets',
   'public-transit-commercial',
   'logistics-civic-control',
+] as const;
+
+const GET204_MISSION_BLOCKS = [
+  'block.safehouse-backstreet',
+  'block.public-transit-contact',
+  'block.controlled-logistics',
+  'block.service-seam',
 ] as const;
 
 const GET204_PUBLIC_REALM_KINDS = [
@@ -683,27 +695,27 @@ const get204PolygonArea = (polygon: WorldPolygon): number => Math.abs(
 ) / 2;
 
 /**
- * Validates the complete candidate independently from the superseded v1
- * unchanged-kit/greybox bundle. Visual quality is still accepted from live
- * evidence, while this prevents known structural regressions from reaching it.
+ * Validates the four-block named-source candidate. Visual quality still comes
+ * from the actual Blender renders and later live evidence; this validator only
+ * prevents known scope, provenance, and registration regressions.
  */
-export const validateGet204FullDistrictRecipe = (
+export const validateGet204MissionDistrictRecipe = (
   recipe: Get204FullDistrictRecipe
 ): string[] => {
   const errors: string[] = [];
 
   if (
-    recipe.schemaVersion !== 2 ||
+    recipe.schemaVersion !== 3 ||
     recipe.ticket !== 'GET-204' ||
-    recipe.acceptanceState !== 'FULL_DISTRICT_LIVE_CANDIDATE' ||
+    recipe.acceptanceState !== 'FOUR_BLOCK_BLENDER_SOURCE_CANDIDATE' ||
     recipe.usage !== 'candidate-evidence'
   ) {
-    errors.push('full-district recipe must use the GET-204 schema-v2 candidate contract');
+    errors.push('GET-204 mission district must use the schema-v3 Blender source candidate contract');
   }
 
   if (
-    recipe.references.length !== GET204_FULL_DISTRICT_REFERENCE_CONTRACT.length ||
-    !GET204_FULL_DISTRICT_REFERENCE_CONTRACT.every((expected, index) => {
+    recipe.references.length !== GET204_MISSION_DISTRICT_REFERENCE_CONTRACT.length ||
+    !GET204_MISSION_DISTRICT_REFERENCE_CONTRACT.every((expected, index) => {
       const actual = recipe.references[index];
       return actual?.role === expected.role &&
         actual.path === expected.path &&
@@ -711,7 +723,7 @@ export const validateGet204FullDistrictRecipe = (
         actual.authority.trim().length > 0;
     })
   ) {
-    errors.push('full-district recipe must lock all three approved reference authorities and hashes');
+    errors.push('GET-204 mission district must lock the approved concept and three supporting references');
   }
 
   if (
@@ -723,8 +735,17 @@ export const validateGet204FullDistrictRecipe = (
     recipe.source.textureSearchRoots[0] !== 'Textures' ||
     recipe.source.rawSourceCommitted !== false
   ) {
-    errors.push('full-district source must remain the external owned Neo Tokyo 2 FBX pack with complete texture fallback priority');
+    errors.push('GET-204 source must remain the external Neo Tokyo 2 FBX pack with complete texture fallback priority');
   }
+  Object.entries(recipe.source.objectSuffixExclusions ?? {}).forEach(([prefix, suffixes]) => {
+    if (
+      !/^(?:Small|Medium)[A-J]$/.test(prefix) ||
+      suffixes.length === 0 ||
+      suffixes.some((suffix) => suffix.trim().length === 0)
+    ) {
+      errors.push(`GET-204 source-object exclusions are invalid for ${prefix}`);
+    }
+  });
 
   if (
     recipe.coordinateSystem.layoutUnitMeters <= 0 ||
@@ -736,30 +757,42 @@ export const validateGet204FullDistrictRecipe = (
     recipe.coordinateSystem.bounds.length < 4 ||
     !recipe.coordinateSystem.bounds.every(isFinitePoint)
   ) {
-    errors.push('full-district coordinate system must preserve the registered 64x32 isometric projection');
+    errors.push('GET-204 mission district must preserve the registered 64x32 isometric projection');
+  }
+  const layoutBounds = recipe.coordinateSystem.bounds;
+  const layoutWidth = layoutBounds.length > 0
+    ? Math.max(...layoutBounds.map(({ x }) => x)) - Math.min(...layoutBounds.map(({ x }) => x))
+    : Number.POSITIVE_INFINITY;
+  const layoutHeight = layoutBounds.length > 0
+    ? Math.max(...layoutBounds.map(({ y }) => y)) - Math.min(...layoutBounds.map(({ y }) => y))
+    : Number.POSITIVE_INFINITY;
+  if (layoutWidth > 60 || layoutHeight > 46) {
+    errors.push('GET-204 mission district exceeds the approved compact bounds');
   }
 
   const subdistrictIds = recipe.composition.subdistricts.map(({ id }) => id);
   if (!exactSetMatch(subdistrictIds, GET204_SUBDISTRICTS)) {
-    errors.push('full-district composition requires the three approved subdistricts');
+    errors.push('GET-204 mission district requires the three approved functional identities');
   }
   recipe.composition.subdistricts.forEach((subdistrict) => {
     if (
       subdistrict.bounds.length < 4 ||
       !subdistrict.bounds.every(isFinitePoint) ||
       subdistrict.playerPromise.trim().length === 0 ||
-      subdistrict.landmarkClusterIds.length === 0
+      !Array.isArray(subdistrict.identityClusterIds) ||
+      subdistrict.identityClusterIds.length === 0
     ) {
-      errors.push(`subdistrict ${subdistrict.id} lacks bounded identity or landmark ownership`);
+      errors.push(`subdistrict ${subdistrict.id} lacks bounded identity ownership`);
     }
   });
 
   const blockIds = recipe.composition.urbanBlocks.map(({ id }) => id);
   if (
-    recipe.composition.urbanBlocks.length !== 8 ||
+    recipe.composition.urbanBlocks.length !== 4 ||
+    !exactSetMatch(blockIds, GET204_MISSION_BLOCKS) ||
     duplicateValues(blockIds).length > 0
   ) {
-    errors.push('full-district composition requires exactly eight unique compact urban blocks');
+    errors.push('GET-204 mission district requires exactly four unique urban blocks');
   }
   recipe.composition.urbanBlocks.forEach((block) => {
     if (
@@ -769,7 +802,7 @@ export const validateGet204FullDistrictRecipe = (
       block.clusterIds.length === 0 ||
       block.streetEdgeIds.length === 0
     ) {
-      errors.push(`urban block ${block.id} lacks bounded frontage ownership`);
+      errors.push(`urban block ${block.id} lacks bounded mission frontage ownership`);
     }
   });
 
@@ -777,7 +810,7 @@ export const validateGet204FullDistrictRecipe = (
     recipe.composition.traversalLoops.length !== 3 ||
     duplicateValues(recipe.composition.traversalLoops.map(({ id }) => id)).length > 0
   ) {
-    errors.push('full-district composition requires exactly three unique traversal loops');
+    errors.push('GET-204 mission district requires exactly three unique traversal loops');
   }
   recipe.composition.traversalLoops.forEach((loop) => {
     if (
@@ -792,17 +825,17 @@ export const validateGet204FullDistrictRecipe = (
   });
 
   if (
-    recipe.composition.density.minimumVisibleBuildingInstances !== 20 ||
-    recipe.composition.density.maximumVisibleBuildingInstances !== 20 ||
+    recipe.composition.density.minimumVisibleBuildingInstances !== 12 ||
+    recipe.composition.density.maximumVisibleBuildingInstances !== 16 ||
     recipe.composition.density.blockClusterPolicy !==
-      'compact-perimeter-blocks-with-curated-kit-reuse' ||
-    recipe.composition.density.croppedKitHeroFrontageCount !== 4 ||
-    recipe.composition.density.minimumBuiltFootprintRatio < 0.42 ||
-    recipe.composition.density.minimumDistinctSourceRoots < 14 ||
+      'four-mission-blocks-with-named-kit-provenance' ||
+    recipe.composition.density.croppedKitHeroFrontageCount !== 0 ||
+    recipe.composition.density.minimumBuiltFootprintRatio !== 0.46 ||
+    recipe.composition.density.minimumDistinctSourceRoots !== 10 ||
     recipe.composition.density.maximumSourceReuse > 2 ||
-    recipe.composition.density.maximumTallLandmarks > 3
+    recipe.composition.density.maximumTallLandmarks !== 1
   ) {
-    errors.push('full-district density contract requires compact blocks, four cropped-kit hero frontages, curated kit reuse, and a restrained landmark hierarchy');
+    errors.push('GET-204 density contract requires four blocks, 12-16 named buildings, zero cropped frontage, and one landmark maximum');
   }
 
   recipe.composition.openSpaces.forEach((space) => {
@@ -810,7 +843,7 @@ export const validateGet204FullDistrictRecipe = (
       space.gameplayOwner === 'decorative' ||
       space.gameplayOwner.trim().length === 0 ||
       space.areaLayoutUnits <= 0 ||
-      space.areaLayoutUnits > 72 ||
+      space.areaLayoutUnits > 36 ||
       space.polygon.length < 4 ||
       !space.polygon.every(isFinitePoint)
     ) {
@@ -818,21 +851,21 @@ export const validateGet204FullDistrictRecipe = (
     }
   });
 
-  if (recipe.streetHierarchy.controlledBoulevards.length !== 1) {
-    errors.push('street hierarchy requires exactly one controlled boulevard');
+  if (recipe.streetHierarchy.controlledBoulevards.length !== 0) {
+    errors.push('GET-204 four-block city prohibits a monumental controlled boulevard');
   }
-  if (recipe.streetHierarchy.ordinaryStreets.length < 4) {
-    errors.push('street hierarchy requires at least four ordinary streets');
+  if (recipe.streetHierarchy.ordinaryStreets.length < 2) {
+    errors.push('GET-204 four-block city requires at least two ordinary streets');
   }
-  if (recipe.streetHierarchy.serviceAlleys.length < 3) {
-    errors.push('street hierarchy requires at least three service alleys');
+  if (recipe.streetHierarchy.serviceAlleys.length < 2) {
+    errors.push('GET-204 four-block city requires at least two service alleys');
   }
   if (
-    recipe.streetHierarchy.controlledBoulevards.some(({ widthLayoutUnits }) => widthLayoutUnits > 4.5) ||
+    recipe.streetHierarchy.controlledBoulevards.some(({ widthLayoutUnits }) => widthLayoutUnits > 0) ||
     recipe.streetHierarchy.ordinaryStreets.some(({ widthLayoutUnits }) => widthLayoutUnits > 4) ||
     recipe.streetHierarchy.serviceAlleys.some(({ widthLayoutUnits }) => widthLayoutUnits > 2.25)
   ) {
-    errors.push('street widths exceed the approved human-scale hierarchy');
+    errors.push('GET-204 street widths exceed the approved human-scale hierarchy');
   }
   GET204_PUBLIC_REALM_KINDS.forEach((kind) => {
     if (!recipe.streetHierarchy.publicRealmKinds.includes(kind)) {
@@ -856,12 +889,7 @@ export const validateGet204FullDistrictRecipe = (
   });
 
   if (
-    recipe.camera.runtimeDefaultZoom < 1.58 ||
-    recipe.camera.runtimeDefaultZoom > 1.66
-  ) {
-    errors.push('default camera zoom must remain within the approved 1.58-1.66 protagonist-led range');
-  }
-  if (
+    recipe.camera.runtimeDefaultZoom <= recipe.camera.manualOverviewZoom ||
     recipe.camera.runtimeMaximumZoom < recipe.camera.runtimeDefaultZoom ||
     recipe.camera.manualOverviewZoom >= recipe.camera.runtimeDefaultZoom ||
     recipe.camera.manualOverviewZoom <= 0 ||
@@ -875,12 +903,12 @@ export const validateGet204FullDistrictRecipe = (
       recipe.camera.proofOccluderClusterIds[id].length > 0
     ))
   ) {
-    errors.push('camera contract must separate close play, overview, follow lead, and 95-115px actor proof');
+    errors.push('GET-204 camera must separate close play, overview, follow lead, and the 95-115px actor proof');
   }
 
   const clusters = recipe.architecturalClusters;
-  if (clusters.length !== 20) {
-    errors.push('full-district candidate requires exactly twenty registered architectural clusters');
+  if (clusters.length < 12 || clusters.length > 16) {
+    errors.push('GET-204 four-block city requires 12-16 registered architectural clusters');
   }
   duplicateValues(clusters.map(({ id }) => id)).forEach((id) => {
     errors.push(`duplicate architectural cluster id: ${id}`);
@@ -890,18 +918,18 @@ export const validateGet204FullDistrictRecipe = (
     return counts;
   }, {});
   if (Object.keys(sourceUseCounts).length < recipe.composition.density.minimumDistinctSourceRoots) {
-    errors.push('full-district candidate does not use enough distinct kit roots');
+    errors.push('GET-204 source candidate does not use enough distinct kit roots');
   }
   Object.entries(sourceUseCounts).forEach(([sourcePrefix, count]) => {
     if (count > recipe.composition.density.maximumSourceReuse) {
-      errors.push(`source root ${sourcePrefix} exceeds the curated reuse limit`);
+      errors.push(`source root ${sourcePrefix} exceeds the GET-204 reuse limit`);
     }
   });
   if (
     clusters.filter(({ role }) => role === 'district-landmark').length >
     recipe.composition.density.maximumTallLandmarks
   ) {
-    errors.push('full-district skyline exceeds the restrained landmark hierarchy');
+    errors.push('GET-204 four-block skyline allows one restrained landmark maximum');
   }
   clusters.forEach((cluster) => {
     if (
@@ -909,24 +937,24 @@ export const validateGet204FullDistrictRecipe = (
       !blockIds.includes(cluster.blockId) ||
       cluster.role === ('isolated-lot' as typeof cluster.role)
     ) {
-      errors.push(`cluster ${cluster.id} lacks approved frontage or subdistrict ownership`);
+      errors.push(`cluster ${cluster.id} lacks approved block or functional-identity ownership`);
     }
     const validKitSource = cluster.artSource === 'owned-kit' &&
       cluster.sourceCollection === `KB3D.${cluster.sourcePrefix}` &&
-      /^(?:Small|Medium|Large)[A-J]$/.test(cluster.sourcePrefix) &&
+      /^(?:Small|Medium)[A-J]$/.test(cluster.sourcePrefix) &&
       cluster.verticalCropMeters === undefined;
-    const validCroppedKitSource = cluster.artSource === 'owned-kit-cropped' &&
-      cluster.sourceCollection === `KB3D.${cluster.sourcePrefix}` &&
-      /^(?:Small|Medium|Large)[A-J]$/.test(cluster.sourcePrefix) &&
-      cluster.verticalCropMeters !== undefined &&
-      cluster.verticalCropMeters >= 10 &&
-      cluster.verticalCropMeters <= 16;
     if (
-      (!validKitSource && !validCroppedKitSource) ||
+      !validKitSource ||
       cluster.uniformScale <= 0 ||
-      !Number.isFinite(cluster.rotationDegrees)
+      !Number.isFinite(cluster.rotationDegrees) ||
+      !['north-west', 'north-east', 'south-west', 'south-east'].includes(
+        cluster.placementAnchor
+      ) ||
+      !Number.isFinite(cluster.streetWallInsetMeters) ||
+      cluster.streetWallInsetMeters < 0.35 ||
+      cluster.streetWallInsetMeters > 1.25
     ) {
-      errors.push(`cluster ${cluster.id} has invalid source registration or transform`);
+      errors.push('GET-204 source candidate prohibits cropped or generated architecture');
     }
     if (
       cluster.cropRectangle.width <= 0 ||
@@ -940,7 +968,7 @@ export const validateGet204FullDistrictRecipe = (
       !cluster.footprint.every(isFinitePoint) ||
       !cluster.localOcclusionPolygon.every(isFinitePoint)
     ) {
-      errors.push(`cluster ${cluster.id} lacks bounded crop, depth, footprint, or local occlusion registration`);
+      errors.push(`cluster ${cluster.id} lacks bounded render, depth, footprint, or local occlusion registration`);
     }
     const expectedPath = `environment/level0/get204-city/cluster-${cluster.id.replace(/^cluster\./, '').replace(/\./g, '-')}.webp`;
     if (cluster.runtimePath !== expectedPath) {
@@ -950,10 +978,10 @@ export const validateGet204FullDistrictRecipe = (
 
   const allowedSourceProps = /^(?:Awning_[AB]|Barriers|Bollard|Door_[A-D]|ElectricBox_[A-C]|Intercom|Lamp_[AB]|PowerGenerator_[AB]|RubbishBin|RumbleStrip|UndergroundEntrance|Vending_[A-D])$/;
   if (
-    recipe.sourcePropPlacements.length < 24 ||
+    recipe.sourcePropPlacements.length < 12 ||
     duplicateValues(recipe.sourcePropPlacements.map(({ id }) => id)).length > 0
   ) {
-    errors.push('full-district candidate requires at least twenty-four unique source-backed public-realm details');
+    errors.push('GET-204 mission district requires at least twelve source-backed public-realm details');
   }
   recipe.sourcePropPlacements.forEach((placement) => {
     if (
@@ -988,7 +1016,7 @@ export const validateGet204FullDistrictRecipe = (
     blockArea <= 0 ||
     builtArea / blockArea < recipe.composition.density.minimumBuiltFootprintRatio
   ) {
-    errors.push('registered architecture does not meet the compact block footprint ratio');
+    errors.push('registered architecture does not meet the four-block footprint ratio');
   }
 
   const clusterIds = clusters.map(({ id }) => id);
@@ -1022,12 +1050,12 @@ export const validateGet204FullDistrictRecipe = (
   });
 
   if (
-    recipe.populationStaging.civilians < 12 ||
-    recipe.populationStaging.serviceWorkers < 4 ||
-    recipe.populationStaging.security < 2 ||
+    recipe.populationStaging.proofScaleFigures !== 4 ||
+    recipe.populationStaging.bakedEnvironmentActorCount !== 0 ||
+    recipe.populationStaging.runtimeActorPolicy !== 'separate-runtime-actors' ||
     recipe.populationStaging.unarmedVerifierDrones !== 1
   ) {
-    errors.push('population staging is too sparse to prove human scale and ordinary public life');
+    errors.push('GET-204 environment art must contain zero baked actors');
   }
   if (
     recipe.lighting.baseState !== 'blue-hour' ||
@@ -1047,22 +1075,22 @@ export const validateGet204FullDistrictRecipe = (
     !isFinitePoint(recipe.export.canvas.pixelOrigin) ||
     recipe.export.maximumClusterDimension <= 0
   ) {
-    errors.push('full-district export must use registered ground tiles and cropped master-scene clusters');
+    errors.push('GET-204 export must use registered ground tiles and same-master clusters');
   }
   if (recipe.export.allowFullCanvasTransparentForegroundLayers !== false) {
     errors.push('full-canvas transparent foreground layers are prohibited');
   }
 
   if (recipe.runtime.enablement !== 'normal-level0-path') {
-    errors.push('full-district art must run on the normal Level 0 path');
+    errors.push('GET-204 art must run on the normal Level 0 path');
   }
   if (
     recipe.runtime.fallbackPolicy !== 'fail-visible-on-required-candidate-asset' ||
-    recipe.runtime.runtimeIdentity !== 'get204-full-district-live-candidate-v1' ||
+    recipe.runtime.runtimeIdentity !== 'get204-four-block-source-candidate-v1' ||
     !recipe.runtime.prohibitedQueryValues.includes('visualGate=get204-1') ||
     !recipe.runtime.prohibitedFallbackProfiles.includes('level0-greybox')
   ) {
-    errors.push('runtime contract must reject the Gate 1 proof path and greybox fallback');
+    errors.push('GET-204 runtime contract must reject the Gate 1 path and greybox fallback');
   }
 
   [
@@ -1071,14 +1099,19 @@ export const validateGet204FullDistrictRecipe = (
     'generated-blend',
     'full-canvas-transparent-foreground-layer',
     'unregistered-cluster-asset',
+    'generated-architecture',
+    'baked-environment-actors',
   ].forEach((entry) => {
     if (!recipe.commitBoundary.prohibited.includes(entry)) {
-      errors.push(`full-district commit boundary must prohibit ${entry}`);
+      errors.push(`GET-204 commit boundary must prohibit ${entry}`);
     }
   });
 
   return [...new Set(errors)];
 };
+
+/** @deprecated Historical name retained for external callers during GET-204. */
+export const validateGet204FullDistrictRecipe = validateGet204MissionDistrictRecipe;
 
 export const validateLevel0ArtManifest = (
   art: Level0ArtManifest,

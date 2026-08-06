@@ -1,0 +1,519 @@
+{
+  "schemaVersion": 3,
+  "id": "get204-four-block-kitbash-mission-v1",
+  "ticket": "GET-204",
+  "acceptanceState": "FOUR_BLOCK_BLENDER_SOURCE_CANDIDATE",
+  "usage": "candidate-evidence",
+  "references": [
+    {
+      "role": "approved-composition-previsualization",
+      "path": "art/references/get205/kitbash-reference2-blend-concept-v1.png",
+      "sha256": "b8e69fcbb4839cf2fb70fa80e03c42ff321e6a5ee00c2287f1f824f08e951c5d",
+      "authority": "Four-block composition, close playable camera, protagonist-to-building relationship, street-wall density, restrained landmark, and warm-cold value hierarchy; previsualization only, never production geometry."
+    },
+    {
+      "role": "close-play-target",
+      "path": "art/references/get204/street-play-target.png",
+      "sha256": "66cc72f0ec09b928cf2d95f0fe3db61881776ba87f48c99c83852cf47583c9a9",
+      "authority": "Normal-play camera intimacy, readable protagonist scale, lower-center lead, social context, entrances, and surveillance embedded in ordinary street life."
+    },
+    {
+      "role": "quality-look-target",
+      "path": "art/references/get204/canvas-quality-target.png",
+      "sha256": "ff53c06f9b03966c2468b9bf22e13449421b16f20101573929fcbbcc20083e6d",
+      "authority": "Material depth, facade richness, readable midtones, motivated practical lighting, restrained wet response, contact shadow, and professional finish."
+    },
+    {
+      "role": "overview-density-target",
+      "path": "art/references/get204/dense-city-target.png",
+      "sha256": "3cca77d4f57d7960b6b58869f8b3a4ddeb5589f2c46dbf7015e1e4c4d9860cd0",
+      "authority": "Coherent four-block overview density and complete edges only; this reference does not expand the mission scope or authorize a decorative skyline."
+    }
+  ],
+  "source": {
+    "vendor": "KitBash3D",
+    "kit": "Neo Tokyo 2",
+    "sourceRootVariable": "GETAWAY_NEO_TOKYO_ROOT",
+    "format": "FBX",
+    "textureSearchRoots": ["Textures", "jpeg images", "c4d/tex"],
+    "objectSuffixExclusions": { "SmallD": ["Ads"] },
+    "rawSourceCommitted": false
+  },
+  "coordinateSystem": {
+    "layoutUnitMeters": 3,
+    "projection": {
+      "tileWidth": 64,
+      "tileHeight": 32,
+      "orientation": "isometric-2:1",
+      "azimuthDegrees": 45,
+      "elevationDegrees": 30
+    },
+    "bounds": [
+      { "x": 0, "y": 0 },
+      { "x": 58, "y": 0 },
+      { "x": 58, "y": 44 },
+      { "x": 0, "y": 44 }
+    ]
+  },
+  "composition": {
+    "subdistricts": [
+      {
+        "id": "safehouse-backstreets",
+        "name": "Safehouse backstreet block",
+        "playerPromise": "A discreet lived-in edge with shelter, service texture, and a legible path into the watched public street.",
+        "bounds": [
+          { "x": 0, "y": 22 }, { "x": 29, "y": 22 },
+          { "x": 29, "y": 44 }, { "x": 0, "y": 44 }
+        ],
+        "identityClusterIds": ["cluster.safehouse.home", "cluster.safehouse.corner"]
+      },
+      {
+        "id": "public-transit-commercial",
+        "name": "Public transit and contact block",
+        "playerPromise": "The ordinary public face of Tokyo, with compact commerce, transit activity, contacts, and normalized surveillance.",
+        "bounds": [
+          { "x": 0, "y": 0 }, { "x": 29, "y": 0 },
+          { "x": 29, "y": 22 }, { "x": 0, "y": 22 }
+        ],
+        "identityClusterIds": ["cluster.public.corner", "cluster.public.transit"]
+      },
+      {
+        "id": "logistics-civic-control",
+        "name": "Controlled logistics and service blocks",
+        "playerPromise": "Hidzu control expressed through logistics, identity thresholds, cameras, and a service route rather than a military fortress.",
+        "bounds": [
+          { "x": 29, "y": 0 }, { "x": 58, "y": 0 },
+          { "x": 58, "y": 44 }, { "x": 29, "y": 44 }
+        ],
+        "identityClusterIds": ["cluster.logistics.landmark", "cluster.service.workshop"]
+      }
+    ],
+    "urbanBlocks": [
+      {
+        "id": "block.safehouse-backstreet",
+        "subdistrictId": "safehouse-backstreets",
+        "polygon": [
+          { "x": 2, "y": 23.75 }, { "x": 27.25, "y": 23.75 },
+          { "x": 27.25, "y": 42 }, { "x": 2, "y": 42 }
+        ],
+        "clusterIds": [
+          "cluster.safehouse.home", "cluster.safehouse.corner",
+          "cluster.safehouse.utility", "cluster.safehouse.workshop"
+        ],
+        "streetEdgeIds": ["street.public-east-west", "street.public-north-south", "alley.safehouse-seam"]
+      },
+      {
+        "id": "block.public-transit-contact",
+        "subdistrictId": "public-transit-commercial",
+        "polygon": [
+          { "x": 2, "y": 2 }, { "x": 27.25, "y": 2 },
+          { "x": 27.25, "y": 20.25 }, { "x": 2, "y": 20.25 }
+        ],
+        "clusterIds": [
+          "cluster.public.corner", "cluster.public.transit",
+          "cluster.public.market", "cluster.public.kiosk"
+        ],
+        "streetEdgeIds": ["street.public-east-west", "street.public-north-south"]
+      },
+      {
+        "id": "block.controlled-logistics",
+        "subdistrictId": "logistics-civic-control",
+        "polygon": [
+          { "x": 30.75, "y": 2 }, { "x": 56, "y": 2 },
+          { "x": 56, "y": 20.25 }, { "x": 30.75, "y": 20.25 }
+        ],
+        "clusterIds": [
+          "cluster.logistics.landmark", "cluster.logistics.depot",
+          "cluster.logistics.threshold", "cluster.logistics.admin"
+        ],
+        "streetEdgeIds": ["street.public-east-west", "street.public-north-south", "alley.logistics-service"]
+      },
+      {
+        "id": "block.service-seam",
+        "subdistrictId": "logistics-civic-control",
+        "polygon": [
+          { "x": 30.75, "y": 23.75 }, { "x": 56, "y": 23.75 },
+          { "x": 56, "y": 42 }, { "x": 30.75, "y": 42 }
+        ],
+        "clusterIds": [
+          "cluster.service.workshop", "cluster.service.utility",
+          "cluster.service.return", "cluster.service.connector"
+        ],
+        "streetEdgeIds": ["street.public-east-west", "street.public-north-south", "alley.service-return"]
+      }
+    ],
+    "traversalLoops": [
+      {
+        "id": "loop.public-contact",
+        "name": "Public contact loop",
+        "subdistrictIds": ["safehouse-backstreets", "public-transit-commercial"],
+        "points": [
+          { "x": 15.5, "y": 31.5 }, { "x": 15.5, "y": 22 },
+          { "x": 29, "y": 22 }, { "x": 29, "y": 31.5 },
+          { "x": 15.5, "y": 31.5 }
+        ],
+        "closed": true
+      },
+      {
+        "id": "loop.logistics-service",
+        "name": "Logistics service loop",
+        "subdistrictIds": ["logistics-civic-control"],
+        "points": [
+          { "x": 29, "y": 22 }, { "x": 44, "y": 22 },
+          { "x": 44, "y": 34.5 }, { "x": 29, "y": 34.5 },
+          { "x": 29, "y": 22 }
+        ],
+        "closed": true
+      },
+      {
+        "id": "loop.outer-escape",
+        "name": "Outer escape loop",
+        "subdistrictIds": ["safehouse-backstreets", "public-transit-commercial", "logistics-civic-control"],
+        "points": [
+          { "x": 15.5, "y": 31.5 }, { "x": 1, "y": 31.5 },
+          { "x": 1, "y": 1 }, { "x": 57, "y": 1 },
+          { "x": 57, "y": 43 }, { "x": 1, "y": 43 },
+          { "x": 1, "y": 31.5 },
+          { "x": 15.5, "y": 31.5 }
+        ],
+        "closed": true
+      }
+    ],
+    "density": {
+      "minimumVisibleBuildingInstances": 12,
+      "maximumVisibleBuildingInstances": 16,
+      "blockClusterPolicy": "four-mission-blocks-with-named-kit-provenance",
+      "croppedKitHeroFrontageCount": 0,
+      "minimumBuiltFootprintRatio": 0.46,
+      "minimumDistinctSourceRoots": 10,
+      "maximumSourceReuse": 2,
+      "maximumTallLandmarks": 1
+    },
+    "openSpaces": [
+      {
+        "id": "space.safehouse-threshold",
+        "gameplayOwner": "safehouse-and-lira-staging",
+        "areaLayoutUnits": 14,
+        "polygon": [
+          { "x": 14, "y": 27 }, { "x": 17.5, "y": 27 },
+          { "x": 17.5, "y": 31 }, { "x": 14, "y": 31 }
+        ]
+      },
+      {
+        "id": "space.transit-threshold",
+        "gameplayOwner": "contact-and-blending-staging",
+        "areaLayoutUnits": 10.5,
+        "polygon": [
+          { "x": 22, "y": 18.25 }, { "x": 27.25, "y": 18.25 },
+          { "x": 27.25, "y": 20.25 }, { "x": 22, "y": 20.25 }
+        ]
+      },
+      {
+        "id": "space.logistics-threshold",
+        "gameplayOwner": "public-delivery-and-identity-check",
+        "areaLayoutUnits": 10.5,
+        "polygon": [
+          { "x": 30.75, "y": 18.25 }, { "x": 36, "y": 18.25 },
+          { "x": 36, "y": 20.25 }, { "x": 30.75, "y": 20.25 }
+        ]
+      },
+      {
+        "id": "space.service-observation",
+        "gameplayOwner": "camera-reading-and-pursuit-recovery",
+        "areaLayoutUnits": 13.8125,
+        "polygon": [
+          { "x": 30.75, "y": 23.75 }, { "x": 35, "y": 23.75 },
+          { "x": 35, "y": 27 }, { "x": 31.5, "y": 27 }
+        ]
+      }
+    ]
+  },
+  "streetHierarchy": {
+    "controlledBoulevards": [],
+    "ordinaryStreets": [
+      {
+        "id": "street.public-east-west",
+        "kind": "ordinary-street",
+        "centerline": [{ "x": 0, "y": 22 }, { "x": 58, "y": 22 }],
+        "widthLayoutUnits": 2,
+        "gameplayPurpose": "Primary public route linking contacts, logistics threshold, and return path."
+      },
+      {
+        "id": "street.public-north-south",
+        "kind": "ordinary-street",
+        "centerline": [{ "x": 29, "y": 0 }, { "x": 29, "y": 44 }],
+        "widthLayoutUnits": 2,
+        "gameplayPurpose": "Human-scale cross street connecting all four blocks without automated routing."
+      }
+    ],
+    "serviceAlleys": [
+      {
+        "id": "alley.safehouse-seam",
+        "kind": "service-alley",
+        "centerline": [{ "x": 0, "y": 31.5 }, { "x": 27.4, "y": 31.5 }],
+        "widthLayoutUnits": 1.2,
+        "gameplayPurpose": "Discreet safehouse approach and small hiding/recovery seam."
+      },
+      {
+        "id": "alley.logistics-service",
+        "kind": "service-alley",
+        "centerline": [{ "x": 30.6, "y": 13.5 }, { "x": 58, "y": 13.5 }],
+        "widthLayoutUnits": 1,
+        "gameplayPurpose": "Rear logistics threshold and camera-readable service connection."
+      },
+      {
+        "id": "alley.service-return",
+        "kind": "service-alley",
+        "centerline": [{ "x": 30.6, "y": 34.5 }, { "x": 58, "y": 34.5 }],
+        "widthLayoutUnits": 1,
+        "gameplayPurpose": "Camera-terminal, hiding, and return route through the service block."
+      }
+    ],
+    "publicRealmKinds": ["road", "sidewalk", "curb", "crossing", "alley", "drainage", "entrance-threshold"]
+  },
+  "camera": {
+    "runtimeDefaultZoom": 2.9,
+    "runtimeMaximumZoom": 3.25,
+    "manualOverviewZoom": 0.6,
+    "followOffsetScenePixels": 80,
+    "actorScreenHeightTargetPx": { "viewport": "1440x900", "min": 95, "max": 115 },
+    "proofStarts": {
+      "safehouse-backstreets": { "x": 15.5, "y": 31.5 },
+      "public-transit-commercial": { "x": 25.3, "y": 22 },
+      "logistics-civic-control": { "x": 38, "y": 20 }
+    },
+    "proofOccluderClusterIds": {
+      "safehouse-backstreets": ["cluster.safehouse.corner"],
+      "public-transit-commercial": ["cluster.service.utility"],
+      "logistics-civic-control": ["cluster.service.workshop"]
+    }
+  },
+  "architecturalClusters": [
+    {
+      "id": "cluster.safehouse.home", "blockId": "block.safehouse-backstreet", "subdistrictId": "safehouse-backstreets", "role": "safehouse-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallA", "sourceCollection": "KB3D.SmallA",
+      "layoutPosition": { "x": 7, "y": 37.05 }, "rotationDegrees": 0, "uniformScale": 0.92, "placementAnchor": "north-west", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 120, "y": 1680, "width": 820, "height": 980 }, "sceneTopLeft": { "x": 120, "y": 1680 }, "depthAnchor": { "x": 7, "y": 41 },
+      "footprint": [{ "x": 2, "y": 32.6 }, { "x": 12, "y": 32.6 }, { "x": 12, "y": 41.5 }, { "x": 2, "y": 41.5 }],
+      "localOcclusionPolygon": [{ "x": 2, "y": 32.6 }, { "x": 12, "y": 32.6 }, { "x": 12, "y": 41.5 }, { "x": 2, "y": 41.5 }],
+      "runtimePath": "environment/level0/get204-city/cluster-safehouse-home.webp"
+    },
+    {
+      "id": "cluster.safehouse.corner", "blockId": "block.safehouse-backstreet", "subdistrictId": "safehouse-backstreets", "role": "corner-anchor", "artSource": "owned-kit", "sourcePrefix": "SmallF", "sourceCollection": "KB3D.SmallF",
+      "layoutPosition": { "x": 21.5, "y": 37.05 }, "rotationDegrees": 90, "uniformScale": 0.75, "placementAnchor": "north-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 720, "y": 1640, "width": 940, "height": 980 }, "sceneTopLeft": { "x": 720, "y": 1640 }, "depthAnchor": { "x": 20, "y": 41 },
+      "footprint": [{ "x": 17, "y": 32.6 }, { "x": 27.25, "y": 32.6 }, { "x": 27.25, "y": 41.5 }, { "x": 17, "y": 41.5 }],
+      "localOcclusionPolygon": [{ "x": 17, "y": 32.6 }, { "x": 27.25, "y": 32.6 }, { "x": 27.25, "y": 41.5 }, { "x": 17, "y": 41.5 }],
+      "runtimePath": "environment/level0/get204-city/cluster-safehouse-corner.webp"
+    },
+    {
+      "id": "cluster.safehouse.utility", "blockId": "block.safehouse-backstreet", "subdistrictId": "safehouse-backstreets", "role": "service-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallE", "sourceCollection": "KB3D.SmallE",
+      "layoutPosition": { "x": 21.75, "y": 27.45 }, "rotationDegrees": 0, "uniformScale": 0.62, "placementAnchor": "north-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 1080, "y": 1320, "width": 700, "height": 760 }, "sceneTopLeft": { "x": 1080, "y": 1320 }, "depthAnchor": { "x": 21.75, "y": 30 },
+      "footprint": [{ "x": 17.5, "y": 23.75 }, { "x": 27.25, "y": 23.75 }, { "x": 27.25, "y": 30.4 }, { "x": 17.5, "y": 30.4 }],
+      "localOcclusionPolygon": [{ "x": 17.5, "y": 23.75 }, { "x": 27.25, "y": 23.75 }, { "x": 27.25, "y": 30.4 }, { "x": 17.5, "y": 30.4 }],
+      "runtimePath": "environment/level0/get204-city/cluster-safehouse-utility.webp"
+    },
+    {
+      "id": "cluster.safehouse.workshop", "blockId": "block.safehouse-backstreet", "subdistrictId": "safehouse-backstreets", "role": "service-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallG", "sourceCollection": "KB3D.SmallG",
+      "layoutPosition": { "x": 8, "y": 27.45 }, "rotationDegrees": 0, "uniformScale": 0.73, "placementAnchor": "north-west", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 240, "y": 1260, "width": 840, "height": 760 }, "sceneTopLeft": { "x": 240, "y": 1260 }, "depthAnchor": { "x": 8, "y": 31 },
+      "footprint": [{ "x": 2, "y": 23.75 }, { "x": 14, "y": 23.75 }, { "x": 14, "y": 30.4 }, { "x": 2, "y": 30.4 }],
+      "localOcclusionPolygon": [{ "x": 2, "y": 23.75 }, { "x": 14, "y": 23.75 }, { "x": 14, "y": 30.4 }, { "x": 2, "y": 30.4 }],
+      "runtimePath": "environment/level0/get204-city/cluster-safehouse-workshop.webp"
+    },
+    {
+      "id": "cluster.public.corner", "blockId": "block.public-transit-contact", "subdistrictId": "public-transit-commercial", "role": "corner-anchor", "artSource": "owned-kit", "sourcePrefix": "SmallI", "sourceCollection": "KB3D.SmallI",
+      "layoutPosition": { "x": 7, "y": 6.5 }, "rotationDegrees": 90, "uniformScale": 0.62, "placementAnchor": "north-west", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 300, "y": 360, "width": 880, "height": 980 }, "sceneTopLeft": { "x": 300, "y": 360 }, "depthAnchor": { "x": 7, "y": 11 },
+      "footprint": [{ "x": 2, "y": 2 }, { "x": 12, "y": 2 }, { "x": 12, "y": 11 }, { "x": 2, "y": 11 }],
+      "localOcclusionPolygon": [{ "x": 2, "y": 2 }, { "x": 12, "y": 2 }, { "x": 12, "y": 11 }, { "x": 2, "y": 11 }],
+      "runtimePath": "environment/level0/get204-city/cluster-public-corner.webp"
+    },
+    {
+      "id": "cluster.public.transit", "blockId": "block.public-transit-contact", "subdistrictId": "public-transit-commercial", "role": "transit-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallB", "sourceCollection": "KB3D.SmallB",
+      "layoutPosition": { "x": 20, "y": 6 }, "rotationDegrees": 0, "uniformScale": 0.98, "placementAnchor": "north-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 960, "y": 300, "width": 900, "height": 860 }, "sceneTopLeft": { "x": 960, "y": 300 }, "depthAnchor": { "x": 20, "y": 10 },
+      "footprint": [{ "x": 14, "y": 2 }, { "x": 27.25, "y": 2 }, { "x": 27.25, "y": 10 }, { "x": 14, "y": 10 }],
+      "localOcclusionPolygon": [{ "x": 14, "y": 2 }, { "x": 27.25, "y": 2 }, { "x": 27.25, "y": 10 }, { "x": 14, "y": 10 }],
+      "runtimePath": "environment/level0/get204-city/cluster-public-transit.webp"
+    },
+    {
+      "id": "cluster.public.market", "blockId": "block.public-transit-contact", "subdistrictId": "public-transit-commercial", "role": "continuous-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallF", "sourceCollection": "KB3D.SmallF",
+      "layoutPosition": { "x": 19, "y": 15 }, "rotationDegrees": 0, "uniformScale": 0.8, "placementAnchor": "south-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 900, "y": 760, "width": 980, "height": 1080 }, "sceneTopLeft": { "x": 900, "y": 760 }, "depthAnchor": { "x": 19, "y": 19 },
+      "footprint": [{ "x": 13, "y": 11 }, { "x": 27.25, "y": 11 }, { "x": 27.25, "y": 20.25 }, { "x": 13, "y": 20.25 }],
+      "localOcclusionPolygon": [{ "x": 13, "y": 11 }, { "x": 27.25, "y": 11 }, { "x": 27.25, "y": 20.25 }, { "x": 13, "y": 20.25 }],
+      "runtimePath": "environment/level0/get204-city/cluster-public-market.webp"
+    },
+    {
+      "id": "cluster.public.kiosk", "blockId": "block.public-transit-contact", "subdistrictId": "public-transit-commercial", "role": "continuous-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallE", "sourceCollection": "KB3D.SmallE",
+      "layoutPosition": { "x": 7, "y": 15.5 }, "rotationDegrees": 0, "uniformScale": 0.82, "placementAnchor": "south-west", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 180, "y": 820, "width": 760, "height": 880 }, "sceneTopLeft": { "x": 180, "y": 820 }, "depthAnchor": { "x": 7, "y": 19 },
+      "footprint": [{ "x": 2, "y": 12 }, { "x": 12, "y": 12 }, { "x": 12, "y": 20.25 }, { "x": 2, "y": 20.25 }],
+      "localOcclusionPolygon": [{ "x": 2, "y": 12 }, { "x": 12, "y": 12 }, { "x": 12, "y": 20.25 }, { "x": 2, "y": 20.25 }],
+      "runtimePath": "environment/level0/get204-city/cluster-public-kiosk.webp"
+    },
+    {
+      "id": "cluster.logistics.landmark", "blockId": "block.controlled-logistics", "subdistrictId": "logistics-civic-control", "role": "district-landmark", "artSource": "owned-kit", "sourcePrefix": "SmallH", "sourceCollection": "KB3D.SmallH",
+      "layoutPosition": { "x": 38, "y": 7.5 }, "rotationDegrees": 0, "uniformScale": 0.92, "placementAnchor": "north-west", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 1940, "y": 240, "width": 1040, "height": 1320 }, "sceneTopLeft": { "x": 1940, "y": 240 }, "depthAnchor": { "x": 38, "y": 13 },
+      "footprint": [{ "x": 30.75, "y": 2 }, { "x": 44, "y": 2 }, { "x": 44, "y": 13 }, { "x": 30.75, "y": 13 }],
+      "localOcclusionPolygon": [{ "x": 30.75, "y": 2 }, { "x": 44, "y": 2 }, { "x": 44, "y": 13 }, { "x": 30.75, "y": 13 }],
+      "runtimePath": "environment/level0/get204-city/cluster-logistics-landmark.webp"
+    },
+    {
+      "id": "cluster.logistics.depot", "blockId": "block.controlled-logistics", "subdistrictId": "logistics-civic-control", "role": "service-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallI", "sourceCollection": "KB3D.SmallI",
+      "layoutPosition": { "x": 50.5, "y": 7.5 }, "rotationDegrees": 0, "uniformScale": 0.72, "placementAnchor": "north-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 2700, "y": 340, "width": 980, "height": 1120 }, "sceneTopLeft": { "x": 2700, "y": 340 }, "depthAnchor": { "x": 50.5, "y": 13 },
+      "footprint": [{ "x": 45, "y": 2 }, { "x": 56, "y": 2 }, { "x": 56, "y": 13 }, { "x": 45, "y": 13 }],
+      "localOcclusionPolygon": [{ "x": 45, "y": 2 }, { "x": 56, "y": 2 }, { "x": 56, "y": 13 }, { "x": 45, "y": 13 }],
+      "runtimePath": "environment/level0/get204-city/cluster-logistics-depot.webp"
+    },
+    {
+      "id": "cluster.logistics.threshold", "blockId": "block.controlled-logistics", "subdistrictId": "logistics-civic-control", "role": "controlled-threshold", "artSource": "owned-kit", "sourcePrefix": "SmallG", "sourceCollection": "KB3D.SmallG",
+      "layoutPosition": { "x": 38, "y": 16.75 }, "rotationDegrees": 0, "uniformScale": 0.7, "placementAnchor": "south-west", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 1980, "y": 980, "width": 820, "height": 760 }, "sceneTopLeft": { "x": 1980, "y": 980 }, "depthAnchor": { "x": 38, "y": 19.5 },
+      "footprint": [{ "x": 30.75, "y": 14 }, { "x": 44, "y": 14 }, { "x": 44, "y": 20.25 }, { "x": 30.75, "y": 20.25 }],
+      "localOcclusionPolygon": [{ "x": 30.75, "y": 14 }, { "x": 44, "y": 14 }, { "x": 44, "y": 20.25 }, { "x": 30.75, "y": 20.25 }],
+      "runtimePath": "environment/level0/get204-city/cluster-logistics-threshold.webp"
+    },
+    {
+      "id": "cluster.logistics.admin", "blockId": "block.controlled-logistics", "subdistrictId": "logistics-civic-control", "role": "continuous-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallD", "sourceCollection": "KB3D.SmallD",
+      "layoutPosition": { "x": 50.5, "y": 16.75 }, "rotationDegrees": 0, "uniformScale": 0.39, "placementAnchor": "south-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 2780, "y": 1040, "width": 820, "height": 720 }, "sceneTopLeft": { "x": 2780, "y": 1040 }, "depthAnchor": { "x": 50.5, "y": 19.5 },
+      "footprint": [{ "x": 45, "y": 14 }, { "x": 56, "y": 14 }, { "x": 56, "y": 20.25 }, { "x": 45, "y": 20.25 }],
+      "localOcclusionPolygon": [{ "x": 45, "y": 14 }, { "x": 56, "y": 14 }, { "x": 56, "y": 20.25 }, { "x": 45, "y": 20.25 }],
+      "runtimePath": "environment/level0/get204-city/cluster-logistics-admin.webp"
+    },
+    {
+      "id": "cluster.service.workshop", "blockId": "block.service-seam", "subdistrictId": "logistics-civic-control", "role": "service-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallC", "sourceCollection": "KB3D.SmallC",
+      "layoutPosition": { "x": 39, "y": 30.5 }, "rotationDegrees": 0, "uniformScale": 0.55, "placementAnchor": "south-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 1800, "y": 1460, "width": 940, "height": 1120 }, "sceneTopLeft": { "x": 1800, "y": 1460 }, "depthAnchor": { "x": 37.5, "y": 34 },
+      "footprint": [{ "x": 35, "y": 27 }, { "x": 43, "y": 27 }, { "x": 43, "y": 34 }, { "x": 35, "y": 34 }],
+      "localOcclusionPolygon": [{ "x": 35, "y": 27 }, { "x": 43, "y": 27 }, { "x": 43, "y": 34 }, { "x": 35, "y": 34 }],
+      "runtimePath": "environment/level0/get204-city/cluster-service-workshop.webp"
+    },
+    {
+      "id": "cluster.service.utility", "blockId": "block.service-seam", "subdistrictId": "logistics-civic-control", "role": "service-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallJ", "sourceCollection": "KB3D.SmallJ",
+      "layoutPosition": { "x": 50.5, "y": 29.25 }, "rotationDegrees": 90, "uniformScale": 0.75, "placementAnchor": "north-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 2700, "y": 1480, "width": 900, "height": 900 }, "sceneTopLeft": { "x": 2700, "y": 1480 }, "depthAnchor": { "x": 50.5, "y": 34 },
+      "footprint": [{ "x": 45, "y": 23.75 }, { "x": 56, "y": 23.75 }, { "x": 56, "y": 34 }, { "x": 45, "y": 34 }],
+      "localOcclusionPolygon": [{ "x": 45, "y": 23.75 }, { "x": 56, "y": 23.75 }, { "x": 56, "y": 34 }, { "x": 45, "y": 34 }],
+      "runtimePath": "environment/level0/get204-city/cluster-service-utility.webp"
+    },
+    {
+      "id": "cluster.service.return", "blockId": "block.service-seam", "subdistrictId": "logistics-civic-control", "role": "corner-anchor", "artSource": "owned-kit", "sourcePrefix": "SmallA", "sourceCollection": "KB3D.SmallA",
+      "layoutPosition": { "x": 37.5, "y": 38.5 }, "rotationDegrees": 0, "uniformScale": 0.8, "placementAnchor": "south-west", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 1880, "y": 2100, "width": 860, "height": 820 }, "sceneTopLeft": { "x": 1880, "y": 2100 }, "depthAnchor": { "x": 37.5, "y": 42 },
+      "footprint": [{ "x": 30.75, "y": 35 }, { "x": 43, "y": 35 }, { "x": 43, "y": 42 }, { "x": 30.75, "y": 42 }],
+      "localOcclusionPolygon": [{ "x": 30.75, "y": 35 }, { "x": 43, "y": 35 }, { "x": 43, "y": 42 }, { "x": 30.75, "y": 42 }],
+      "runtimePath": "environment/level0/get204-city/cluster-service-return.webp"
+    },
+    {
+      "id": "cluster.service.connector", "blockId": "block.service-seam", "subdistrictId": "logistics-civic-control", "role": "service-frontage", "artSource": "owned-kit", "sourcePrefix": "SmallJ", "sourceCollection": "KB3D.SmallJ",
+      "layoutPosition": { "x": 50.5, "y": 38.5 }, "rotationDegrees": 180, "uniformScale": 0.48, "placementAnchor": "south-east", "streetWallInsetMeters": 0.55,
+      "cropRectangle": { "x": 2700, "y": 2080, "width": 920, "height": 880 }, "sceneTopLeft": { "x": 2700, "y": 2080 }, "depthAnchor": { "x": 50.5, "y": 42 },
+      "footprint": [{ "x": 45, "y": 35 }, { "x": 56, "y": 35 }, { "x": 56, "y": 42 }, { "x": 45, "y": 42 }],
+      "localOcclusionPolygon": [{ "x": 45, "y": 35 }, { "x": 56, "y": 35 }, { "x": 56, "y": 42 }, { "x": 45, "y": 42 }],
+      "runtimePath": "environment/level0/get204-city/cluster-service-connector.webp"
+    }
+  ],
+  "sourcePropPlacements": [
+    { "id": "prop.safehouse.awning", "sourcePrefix": "Awning_A", "position": { "x": 12.4, "y": 36.5 }, "rotationDegrees": 90, "uniformScale": 0.9, "mountLiftMeters": 2.5, "layer": "details" },
+    { "id": "prop.safehouse.intercom", "sourcePrefix": "Intercom", "position": { "x": 12.3, "y": 35.8 }, "rotationDegrees": 90, "uniformScale": 1, "mountLiftMeters": 1.4, "layer": "details" },
+    { "id": "prop.public.vending", "sourcePrefix": "Vending_A", "position": { "x": 12.5, "y": 19.82 }, "rotationDegrees": 180, "uniformScale": 0.9, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.public.lamp", "sourcePrefix": "Lamp_A", "position": { "x": 18, "y": 20.62 }, "rotationDegrees": 0, "uniformScale": 0.9, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.public.market-door", "sourcePrefix": "Door_B", "position": { "x": 23.2, "y": 20.03 }, "rotationDegrees": 180, "uniformScale": 0.9, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.public.market-light", "sourcePrefix": "Lamp_B", "position": { "x": 20.8, "y": 20.01 }, "rotationDegrees": 180, "uniformScale": 0.85, "mountLiftMeters": 2.75, "layer": "details" },
+    { "id": "prop.public.contact-vending", "sourcePrefix": "Vending_B", "position": { "x": 19.2, "y": 20.58 }, "rotationDegrees": 180, "uniformScale": 0.82, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.public.transit-vending", "sourcePrefix": "Vending_C", "position": { "x": 26.15, "y": 20.12 }, "rotationDegrees": 180, "uniformScale": 0.78, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.public.kiosk-door", "sourcePrefix": "Door_C", "position": { "x": 10.5, "y": 20.03 }, "rotationDegrees": 180, "uniformScale": 0.86, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.public.kiosk-awning", "sourcePrefix": "Awning_A", "position": { "x": 10.5, "y": 19.98 }, "rotationDegrees": 180, "uniformScale": 0.78, "mountLiftMeters": 2.45, "layer": "details" },
+    { "id": "prop.logistics.barrier", "sourcePrefix": "Barriers", "position": { "x": 40, "y": 20.62 }, "rotationDegrees": 0, "uniformScale": 0.8, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.logistics.bollard", "sourcePrefix": "Bollard", "position": { "x": 42, "y": 20.62 }, "rotationDegrees": 0, "uniformScale": 0.9, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.logistics.door", "sourcePrefix": "Door_A", "position": { "x": 44.2, "y": 17 }, "rotationDegrees": 90, "uniformScale": 0.85, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.logistics.threshold-door", "sourcePrefix": "Door_D", "position": { "x": 36.0, "y": 20.03 }, "rotationDegrees": 180, "uniformScale": 0.9, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.logistics.threshold-intercom", "sourcePrefix": "Intercom", "position": { "x": 36.9, "y": 19.98 }, "rotationDegrees": 180, "uniformScale": 0.88, "mountLiftMeters": 1.4, "layer": "details" },
+    { "id": "prop.logistics.threshold-light", "sourcePrefix": "Lamp_B", "position": { "x": 34.4, "y": 20.01 }, "rotationDegrees": 180, "uniformScale": 0.85, "mountLiftMeters": 2.8, "layer": "details" },
+    { "id": "prop.service.electric", "sourcePrefix": "ElectricBox_A", "position": { "x": 44.2, "y": 29 }, "rotationDegrees": 90, "uniformScale": 0.9, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.service.rubbish", "sourcePrefix": "RubbishBin", "position": { "x": 44, "y": 34.2 }, "rotationDegrees": 0, "uniformScale": 0.9, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.service.generator", "sourcePrefix": "PowerGenerator_A", "position": { "x": 55.5, "y": 34.2 }, "rotationDegrees": 0, "uniformScale": 0.8, "mountLiftMeters": 0, "layer": "details" },
+    { "id": "prop.service.rumble", "sourcePrefix": "RumbleStrip", "position": { "x": 48, "y": 34.5 }, "rotationDegrees": 0, "uniformScale": 1, "mountLiftMeters": 0, "layer": "details" }
+  ],
+  "semanticGeometry": {
+    "walkable": [
+      { "id": "walkable.public-east-west", "kind": "road", "polygon": [{ "x": 0, "y": 21 }, { "x": 58, "y": 21 }, { "x": 58, "y": 23 }, { "x": 0, "y": 23 }] },
+      { "id": "walkable.public-north-south", "kind": "road", "polygon": [{ "x": 28, "y": 0 }, { "x": 30, "y": 0 }, { "x": 30, "y": 44 }, { "x": 28, "y": 44 }] },
+      { "id": "walkable.public-crossing", "kind": "crossing", "polygon": [{ "x": 28, "y": 21 }, { "x": 30, "y": 21 }, { "x": 30, "y": 23 }, { "x": 28, "y": 23 }] },
+      { "id": "walkable.safehouse-alley", "kind": "alley", "polygon": [{ "x": 0, "y": 30.9 }, { "x": 27.4, "y": 30.9 }, { "x": 27.4, "y": 32.1 }, { "x": 0, "y": 32.1 }] },
+      { "id": "walkable.logistics-alley", "kind": "alley", "polygon": [{ "x": 30.6, "y": 13 }, { "x": 58, "y": 13 }, { "x": 58, "y": 14 }, { "x": 30.6, "y": 14 }] },
+      { "id": "walkable.service-alley", "kind": "alley", "polygon": [{ "x": 30.6, "y": 34 }, { "x": 58, "y": 34 }, { "x": 58, "y": 35 }, { "x": 30.6, "y": 35 }] },
+      { "id": "walkable.safehouse-threshold", "kind": "sidewalk", "polygon": [{ "x": 14, "y": 27 }, { "x": 17.5, "y": 27 }, { "x": 17.5, "y": 31 }, { "x": 14, "y": 31 }] }
+    ],
+    "blockedClusterIds": [
+      "cluster.safehouse.home", "cluster.safehouse.corner", "cluster.safehouse.utility", "cluster.safehouse.workshop",
+      "cluster.public.corner", "cluster.public.transit", "cluster.public.market", "cluster.public.kiosk",
+      "cluster.logistics.landmark", "cluster.logistics.depot", "cluster.logistics.threshold", "cluster.logistics.admin",
+      "cluster.service.workshop", "cluster.service.utility", "cluster.service.return", "cluster.service.connector"
+    ],
+    "anchors": [
+      { "id": "safehouse.boundary", "kind": "safehouse", "position": { "x": 15.5, "y": 31.5 }, "radius": 3.2, "ownerId": "cluster.safehouse.home" },
+      { "id": "safehouse.spawn", "kind": "safehouse", "position": { "x": 15.5, "y": 31.5 }, "radius": 1.2 },
+      { "id": "safehouse.departure", "kind": "safehouse", "position": { "x": 17.5, "y": 31.5 }, "radius": 1.2, "ownerId": "cluster.safehouse.home" },
+      { "id": "contact.lira", "kind": "contact", "position": { "x": 15.5, "y": 30 }, "radius": 1.2 },
+      { "id": "contact.naila", "kind": "contact", "position": { "x": 10, "y": 20.62 }, "radius": 1.2 },
+      { "id": "contact.brant", "kind": "contact", "position": { "x": 18, "y": 20.62 }, "radius": 1.2 },
+      { "id": "entrance.logistics.public", "kind": "entrance", "position": { "x": 36, "y": 20.62 }, "radius": 1.3, "ownerId": "cluster.logistics.threshold" },
+      { "id": "entrance.logistics.service", "kind": "entrance", "position": { "x": 44.5, "y": 16.5 }, "radius": 1.3, "ownerId": "cluster.logistics.threshold" },
+      { "id": "entrance.safehouse", "kind": "entrance", "position": { "x": 13, "y": 36.5 }, "radius": 1.3, "ownerId": "cluster.safehouse.home" },
+      { "id": "terminal.camera_loop", "kind": "terminal", "position": { "x": 44, "y": 34.5 }, "radius": 1.1 },
+      { "id": "terminal.cache_locker", "kind": "terminal", "position": { "x": 38, "y": 20.62 }, "radius": 1.1 },
+      { "id": "terminal.outbound_transit", "kind": "terminal", "position": { "x": 24, "y": 20.62 }, "radius": 1.1 },
+      { "id": "camera.public_approach", "kind": "camera", "position": { "x": 31.5, "y": 20.62 }, "radius": 0.8, "ownerId": "camera.group.logistics" },
+      { "id": "camera.public_gate", "kind": "camera", "position": { "x": 36, "y": 20.62 }, "radius": 0.8, "ownerId": "camera.group.logistics" },
+      { "id": "camera.service_gate", "kind": "camera", "position": { "x": 44.5, "y": 16.5 }, "radius": 0.8, "ownerId": "camera.group.logistics" },
+      { "id": "camera.service_alley", "kind": "camera", "position": { "x": 44, "y": 34.5 }, "radius": 0.8, "ownerId": "camera.group.logistics" },
+      { "id": "drone.launch", "kind": "drone-launch", "position": { "x": 52, "y": 20.62 }, "radius": 1.2 },
+      { "id": "hide.service_recess", "kind": "hiding", "position": { "x": 40, "y": 34.5 }, "radius": 1.2 },
+      { "id": "hide.maintenance_bay", "kind": "hiding", "position": { "x": 47, "y": 34.5 }, "radius": 1.2 },
+      { "id": "hide.transit_structure", "kind": "hiding", "position": { "x": 27.7, "y": 24.5 }, "radius": 1.2 },
+      { "id": "blend.delivery_activity", "kind": "blending", "position": { "x": 22, "y": 20.62 }, "radius": 1.2 },
+      { "id": "blend.public_queue", "kind": "blending", "position": { "x": 20, "y": 20.62 }, "radius": 1.2 },
+      { "id": "objective.medkits", "kind": "objective", "position": { "x": 40, "y": 20.62 }, "radius": 1.1 },
+      { "id": "objective.manifest", "kind": "objective", "position": { "x": 42, "y": 20.62 }, "radius": 1.1 },
+      { "id": "audio.curfew.public", "kind": "audio", "position": { "x": 29, "y": 22 }, "radius": 6, "ownerId": "schedule.curfew" },
+      { "id": "interaction.safehouse.wait", "kind": "interaction", "position": { "x": 14.8, "y": 31.6 }, "radius": 1.2, "ownerId": "safehouse.wait" },
+      { "id": "interaction.safehouse.rest", "kind": "interaction", "position": { "x": 16.2, "y": 31.6 }, "radius": 1.2, "ownerId": "safehouse.rest" }
+    ]
+  },
+  "populationStaging": {
+    "proofScaleFigures": 4,
+    "bakedEnvironmentActorCount": 0,
+    "runtimeActorPolicy": "separate-runtime-actors",
+    "unarmedVerifierDrones": 1
+  },
+  "lighting": {
+    "baseState": "blue-hour",
+    "alignedStates": ["dusk", "blue-hour", "curfew"],
+    "keyDirection": "upper-left",
+    "practicals": "visible-emitter-owned"
+  },
+  "export": {
+    "strategy": "tiled-ground-plus-cropped-registered-master-scene-clusters",
+    "canvas": { "width": 4096, "height": 3072, "pixelOrigin": { "x": 2048, "y": 560 }, "groundTileSize": 2048 },
+    "allowFullCanvasTransparentForegroundLayers": false,
+    "maximumClusterDimension": 2048,
+    "runtimeRoot": "environment/level0/get204-city"
+  },
+  "runtime": {
+    "enablement": "normal-level0-path",
+    "fallbackPolicy": "fail-visible-on-required-candidate-asset",
+    "runtimeIdentity": "get204-four-block-source-candidate-v1",
+    "prohibitedQueryValues": ["visualGate=get204-1"],
+    "prohibitedFallbackProfiles": ["level0-greybox"]
+  },
+  "commitBoundary": {
+    "permitted": ["recipe", "source-provenance", "original-public-realm", "semantic-metadata", "validators", "approved-flattened-derivatives"],
+    "prohibited": ["raw-vendor-geometry", "source-textures", "generated-blend", "full-canvas-transparent-foreground-layer", "unregistered-cluster-asset", "generated-architecture", "baked-environment-actors"]
+  }
+}

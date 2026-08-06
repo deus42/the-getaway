@@ -14,7 +14,7 @@ Authority flows from current requester directives through [[01 MVP/12 Game Desig
 
 1. **Specification before runtime.** No gameplay recovery or reimplementation begins until the documentation gate in `AGENTS.md` is satisfied.
 2. **One authority per state.** Redux owns persistent/domain state, Phaser owns frame-local presentation and simulation objects, React owns DOM presentation and player input for overlays, and content manifests own authored data.
-3. **Gameplay topology outranks art.** `Level0LayoutContract` is authoritative for zones, walkability, footprints, entrances, and gameplay anchors. Blender consumes it; exported art never silently redefines it.
+3. **Mission semantics and accepted geometry have separate authority.** The mission skeleton owns required places, route purposes, stable semantic IDs, and player behavior. The requester-accepted four-block Blender master owns detailed visible geometry. `Level0LayoutContract` is the one reconciled runtime record for walkability, footprints, entrances, occlusion, and gameplay anchors; neither a rejected greybox nor an unaccepted render may silently redefine the other authority.
 4. **Truthful perception.** Surveillance rendering and detection consume the same resolved geometry and occlusion data.
 5. **Explicit effects.** Dialogue, interactions, terminals, and mission transitions commit typed effects; no component mutates unrelated domains opportunistically.
 6. **Deterministic recovery.** Autosave and Retry are distinct persisted records. Retry restores one complete departure snapshot rather than reversing later events.
@@ -109,11 +109,11 @@ Current ownership is explicit:
 - `src/game/level0/layout/` owns validation and the reversible 64×32 projection adapter;
 - `src/game/level0/movement/directMovement.ts` owns direct intent, local collision sampling, and axis sliding;
 - `src/game/level0/interaction/interactionResolver.ts` owns knowledge, independently derived world-ownership, range, occlusion, and authoritative availability results; automatic discovery filters unknown or wrong-domain anchors instead of revealing their existence through an error;
-- `src/game/level0/art/` owns parallel T4 composition and T5 treatment contracts/validators. T5 preserves the T4 recipe and semantic layer IDs, carries separate treatment identity, deeply validates every exported tile/anchor/evidence field, and rejects runtime promotion while entitlement is unavailable; generated derivatives remain ignored local evidence and `Level0Scene` still renders the greybox fallback;
+- `src/game/level0/art/` owns the T4 named-source city contract, live derivative selection, registered camera/LOD rules, provenance, and validation plus the parked T5 treatment contracts. The normal route now renders the T4 four-block city; `visualGate=get204-1` changes only deterministic camera/player start. T5 preserves T4 recipe/semantic identities and remains unable to replace the city until its own accepted export is runtime-ready;
 - `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, and immutable departure Retry;
 - `src/game/level0/rpg/` owns creation validation, the authored check catalog and pure resolver, committed attempt/resource/XP/allocation ledgers, provisional tuning tables, fatal resource transitions, and safehouse/debrief progression rules;
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
-- `src/game/level0/scene/Level0Scene.ts` owns frame-local greybox rendering, actor transform, camera, and input;
+- `src/game/level0/scene/Level0Scene.ts` owns live city-layer composition, explicit diagnostic fallback, separate actor transforms/occlusion, camera, and input. City treatment/LOD selection is derived from camera state; protagonist position must never replace one architectural plate with another or mutate geometry presentation;
 - `src/game/level0/playtest/level0AgentBridge.ts` derives diagnostics from the same store/layout and may dispatch only normal runtime events;
 - `art/iso-assets/contracts/level0-layout-contract.json` is the deterministic Blender-facing export of the same contract.
 
@@ -606,7 +606,7 @@ interface Level0ArtManifest {
   schemaVersion: 2;
   id: string;
   usage: 'candidate-evidence' | 'runtime';
-  compositionStage: 'full-district' | 'quality-lookdev' | 'live-candidate';
+  compositionStage: 'four-block-source' | 'quality-lookdev' | 'live-candidate';
   recipeId: string;
   layoutContractId: string;
   projection: { tileWidth: 64; tileHeight: 32; orientation: 'isometric-2:1' };
@@ -640,7 +640,7 @@ interface Level0ArtManifest {
     fallbackLayerId: string;
   }>;
   anchorMetadata: { path: string; sha256: string; count: number };
-  fallbackProfile: 'level0-greybox';
+  fallbackProfile: 'level0-t4-live-city';
 }
 
 type CharacterState = 'idle' | 'move' | 'interact';
@@ -729,30 +729,29 @@ The four current appearance IDs are defined once by the actor manifest and reuse
 
 ```mermaid
 flowchart LR
-  A["Approved mission skeleton plus three locked references"] --> B["Complete Blender district master"]
-  B --> C["Public realm, materials, lighting, population, surveillance"]
-  C --> D["Candidate collision, occlusion, masks, entrances, anchors"]
-  D --> E["Flattened complete live runtime"]
-  E --> F["Close, clean-world, and full-overview internal review"]
-  F --> G{"Strong enough to show?"}
-  G -- "No" --> B
-  G -- "Yes" --> H{"Requester accepts live candidate?"}
+  A["Approved mission skeleton, four-block envelope, and locked references"] --> B["Named-source Neo Tokyo 2 Blender master"]
+  B --> C["Close render and four-block overview from the same master"]
+  C --> D{"Requester accepts Blender source and composition?"}
+  D -- "No" --> B
+  D -- "Yes" --> E["Export candidate geometry, layers, collision, occlusion, entrances, and anchors"]
+  E --> F["Reconcile one Level0LayoutContract and integrate live"]
+  F --> G["Close, current-HUD, and four-block overview review"]
+  G --> H{"Requester accepts live candidate?"}
   H -- "No" --> B
-  H -- "Yes" --> I["Promote exact candidate metadata to Level0LayoutContract"]
-  I --> J["Closeout validation and authorized commit"]
-  J --> K["GET-204 verified; downstream ticket may start"]
+  H -- "Yes" --> I["Closeout validation and authorized commit"]
+  I --> J["GET-204 verified; downstream ticket may start"]
 ```
 
 ### Contract discipline
 
-- The mission skeleton owns stable semantic IDs, required places, route purposes, and player-facing behavior. It does not preserve the rejected `84×60` nine-block geometry.
-- Blender owns candidate street/building/public-realm geometry for the complete district. Once the requester accepts the live result, the accepted geometry is back-propagated into the one versioned layout contract before the authorized commit.
+- The mission skeleton owns stable semantic IDs, required places, route purposes, and player-facing behavior. The current envelope is exactly four dense mission blocks with three functional identities and three interlocking loops. It does not preserve the rejected sparse/fenced four-block compound or `84×60` nine-block geometry.
+- The named-source Neo Tokyo 2 Blender master owns candidate street/building/public-realm geometry for those four blocks. The approved AI-assisted concept owns composition/camera/value relationships only. After the Blender proof is accepted, candidate geometry is reconciled into the one versioned layout contract; after the live result is accepted, that exact reconciled contract becomes the delivery boundary.
 - Phaser collision, entrances, occluders, devices, contacts, terminals, hiding/blending contexts, objectives, and rendered derivatives all consume the accepted contract; no hidden greybox geometry may coexist with a different visible city.
-- GET-204 runtime integration covers the entire district before requester presentation. An offline Blender render or technically valid export cannot establish visual progress by itself.
-- The complete candidate must produce a close live frame, a clean city frame, and a full-district overview from equivalent world/camera parameters.
+- GET-204 has two distinct requester gates: actual Blender close/overview source proof before runtime replacement, then close/current-HUD/overview proof in the live runtime. A validator cannot accept either gate, and an AI-generated concept cannot satisfy source provenance.
+- The complete live candidate must produce a close frame, a clean city frame, and a four-block mission overview from equivalent world/camera parameters.
 - T4 export validation proves projection and canvas containment, tile-grid registration, file hashes/bytes/budgets, layer semantics/fallbacks, and complete anchor values against the layout contract. Decoded raster-edge agreement remains a visual/runtime acceptance responsibility rather than a claim made by metadata validation alone.
 - T5 opens the exact ignored T4 master by expected hash only after the tracked T4 source/recipe and ignored aligned export pass their own validator. It verifies base transform/camera/canvas/anchor digests plus the pinned T4 art-manifest hash and semantic-registration digest, clones placement materials before mutation, and registers treatment-only objects under declared gameplay/civic purpose without changing authoritative collision data.
-- T5 export validation opens the generated art manifest, every tile, anchors, and treatment evidence; it enforces stable T4 recipe/layer IDs, expected derivative roots, exact file inventory, physical hashes and bytes for every registered output including overview and the authoring `.blend`, grid cells, budgets, projection tolerance/canvas containment, all 27 anchor values, byte-identical and spatially identical T4 semantic masks, manifest-derived surface-treatment digest, exact grammar/object bindings, assigned public copy against the actual wrapped font bodies, color-independent surveillance-state cues, independently recomputed palette coverage, measured per-addition bounds, complete capture hashes/dimensions, ignored local-evidence usage, run-evidence `runtimeReady: false`, and the greybox fallback.
+- T5 export validation opens the generated art manifest, every tile, anchors, and treatment evidence; it enforces stable T4 recipe/layer IDs, expected derivative roots, exact file inventory, physical hashes and bytes for every registered output including overview and the authoring `.blend`, grid cells, budgets, projection tolerance/canvas containment, all 27 anchor values, byte-identical and spatially identical T4 semantic masks, manifest-derived surface-treatment digest, exact grammar/object bindings, assigned public copy against the actual wrapped font bodies, color-independent surveillance-state cues, independently recomputed palette coverage, measured per-addition bounds, complete capture hashes/dimensions, ignored local-evidence usage, run-evidence `runtimeReady: false`, and an observable fallback to the accepted T4 live city rather than rejected greybox or generated-plate presentation.
 - Hidzu palette tokens, surface/material transforms, public-message assignments, grammar kind/color/silhouette/glyph values, schedule values, and surveillance-state token/cue mappings are authoritative generator inputs. Unknown, incomplete, or semantically reassigned inputs fail before generation.
 - The T5 runner serializes generation with an ignored lock and writes Blender output only to an ignored run-scoped staging root. A full `all` run is validated in staging, moved as one complete immutable directory under `.generated/runs`, revalidated there, and then published by atomically replacing the relative `.generated/current` symlink. A failed validation or pointer update removes the rejected run and preserves the prior pointer; readers resolve only `current` or an explicitly bounded staging/trial/run root.
 - Preview, targeted capture, and export-only runs are retained under ignored `.generated/trials` and never update the canonical pointer. Only a full unfiltered `all` run can satisfy the 17-frame capture/export gate; Blender Python failures propagate a nonzero process exit.
@@ -784,7 +783,7 @@ Player knowledge and world ownership are separate inputs. Knowledge controls whe
 
 ### Camera
 
-- Level 0 exposes a close street-first normal frame and a manual minimum zoom that reaches the composed full-district overview. Exact numeric values are frozen from the complete GET-204 live candidate rather than inherited from the greybox.
+- Level 0 exposes a close street-first normal frame and a manual minimum zoom that reaches the composed four-block mission overview. Exact numeric values are frozen from the accepted same-master GET-204 live candidate rather than inherited from the greybox or generated plate.
 - Camera follow binds to the current protagonist after every load/restart.
 - Observation mode may pan independently while paused, then restores follow without a sacrificial click.
 - Minimap viewport derives from current camera transform, not stale render bounds.
@@ -979,7 +978,7 @@ Required closeout commands remain those in `AGENTS.md` and [[01 MVP/95 MVP Readi
 3. Restore the pre-rewrite foundation while recording every salvage/rejection.
 4. Establish target schema, pause, persistence, and `Level0LayoutContract` foundations.
 5. Implement direct movement, interaction, camera, observation, and shared layout runtime.
-6. Rebuild the complete GET-204 district, integrate it live, and present one polished reference-bound candidate; only requester acceptance unlocks closeout and commit.
+6. Rebuild the exact four-block GET-204 district from named Neo Tokyo 2 sources, obtain Blender close/overview approval, reconcile its geometry into the layout contract, integrate it live, and obtain separate live acceptance; only then may closeout and commit proceed.
 7. Add, technically validate, and commit the reversible Hidzu identity/world-art trial; requester acceptance remains its final visual gate.
 8. Replace actors and portraits.
 9. Restore identity, build, checks, Health, Paranoia, progression, and Character screen.
@@ -996,7 +995,7 @@ The following may exist in recovery archives or Git history but are not active t
 - fixed Operative/Trace initialization;
 - backgrounds and Ghost/Wire/Force packages;
 - A* or threat-aware player routing;
-- fixed 54×38/four-block or nine-parcel topology;
+- fixed `54×38` sparse/fenced four-block, `84×60` nine-block, `96×72`, or nine-parcel topology; the later approved dense four-block mission envelope is current and distinct;
 - tactical/AP combat, AutoBattle, enemy turns, cover, weapon/loadout, attack sheets;
 - EMP, lure, breach, magic hacking, or universal movement-noise systems;
 - broad inventory/equipment/economy/crafting/weapon modifications;

@@ -5,7 +5,7 @@ describe('resolveLevel0Interaction', () => {
   it('returns an authored interaction in forgiving range', () => {
     const result = resolveLevel0Interaction(
       LEVEL0_LAYOUT_CONTRACT,
-      { x: 15.5, y: 47 },
+      { x: 15.5, y: 31.5 },
       { preferredAnchorId: 'interaction.safehouse.rest' }
     );
 
@@ -16,7 +16,7 @@ describe('resolveLevel0Interaction', () => {
   it('explains when a preferred target is too far away', () => {
     const result = resolveLevel0Interaction(
       LEVEL0_LAYOUT_CONTRACT,
-      { x: 40, y: 30 },
+      { x: 5, y: 40 },
       { preferredAnchorId: 'terminal.cache_locker' }
     );
 
@@ -28,8 +28,8 @@ describe('resolveLevel0Interaction', () => {
   it('does not surface cameras or audio anchors as direct interactions', () => {
     const result = resolveLevel0Interaction(
       LEVEL0_LAYOUT_CONTRACT,
-      { x: 58, y: 21 },
-      { maximumSearchRadius: 1 }
+      { x: 31.5, y: 20.62 },
+      { maximumSearchRadius: 0.5 }
     );
 
     expect(result.status).toBe('none');
@@ -52,7 +52,7 @@ describe('resolveLevel0Interaction', () => {
 
     const wrongOwner = resolveLevel0Interaction(
       LEVEL0_LAYOUT_CONTRACT,
-      { x: 15, y: 47 },
+      { x: 15.5, y: 31.5 },
       {
         preferredAnchorId: 'interaction.safehouse.rest',
         knownAnchorIds: ['interaction.safehouse.rest'],
@@ -68,7 +68,7 @@ describe('resolveLevel0Interaction', () => {
   it('prefers a usable target over a nearer unavailable target', () => {
     const result = resolveLevel0Interaction(
       LEVEL0_LAYOUT_CONTRACT,
-      { x: 16.5, y: 47 },
+      { x: 15.5, y: 31.5 },
       {
         knownAnchorIds: ['interaction.safehouse.rest', 'interaction.safehouse.wait'],
         unavailableReasonByAnchorId: {
@@ -96,7 +96,7 @@ describe('resolveLevel0Interaction', () => {
 
     const wrongOwner = resolveLevel0Interaction(
       LEVEL0_LAYOUT_CONTRACT,
-      { x: 15, y: 47 },
+      { x: 15.5, y: 31.5 },
       {
         knownAnchorIds: ['interaction.safehouse.rest'],
         worldOwnedAnchorIds: [],
@@ -116,16 +116,16 @@ describe('resolveLevel0Interaction', () => {
       occluders: [
         ...LEVEL0_LAYOUT_CONTRACT.occluders,
         [
-          { x: 15.2, y: 46.8 },
-          { x: 15.4, y: 46.8 },
-          { x: 15.4, y: 47.2 },
-          { x: 15.2, y: 47.2 },
+          { x: 15.75, y: 30.6 },
+          { x: 15.95, y: 30.6 },
+          { x: 15.95, y: 31 },
+          { x: 15.75, y: 31 },
         ],
       ],
     };
     const result = resolveLevel0Interaction(
       contract,
-      { x: 15.5, y: 47 },
+      { x: 15.5, y: 30 },
       { preferredAnchorId: 'interaction.safehouse.rest' }
     );
 

@@ -133,10 +133,22 @@ def stage_source(repo_root: Path, source_root: Path, archive: Path) -> Path:
         temporary.replace(fbx_path)
 
     texture_link = staging_root / "KB3DTextures"
-    expected_texture_root = (source_root / "c4d" / "tex").resolve()
+    canonical_texture_root = (source_root / "c4d" / "tex").resolve()
+    texture_cache = os.environ.get("GETAWAY_NEO_TOKYO_TEXTURE_CACHE")
+    expected_texture_root = (
+        (Path(texture_cache).expanduser().resolve() / "Textures")
+        if texture_cache
+        else canonical_texture_root
+    )
+    if not expected_texture_root.is_dir():
+        raise RuntimeError(f"Missing staged texture root: {expected_texture_root}")
     if texture_link.is_symlink():
-        if texture_link.resolve() != expected_texture_root:
+        current_texture_root = texture_link.resolve()
+        if current_texture_root not in {canonical_texture_root, expected_texture_root}:
             raise RuntimeError(f"Refusing to replace unexpected texture symlink: {texture_link}")
+        if current_texture_root != expected_texture_root:
+            texture_link.unlink()
+            texture_link.symlink_to(expected_texture_root, target_is_directory=True)
     elif texture_link.exists():
         raise RuntimeError(f"Refusing to replace unexpected staging content: {texture_link}")
     else:

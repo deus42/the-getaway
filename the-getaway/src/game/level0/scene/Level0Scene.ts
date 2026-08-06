@@ -49,19 +49,17 @@ import {
   resolveLevel0SpriteDirection,
 } from './level0ActorPresentation';
 import {
-  GET204_GATE1_MOVEMENT_CONTRACT,
-  GET204_GATE1_REGION,
-  GET204_GATE1_VISUAL,
-  isGet204VisualPixelBlocked,
-  resolveGet204Gate1LayerTopLeft,
-  resolveGet204Gate1OccluderAlpha,
-  resolveGet204OverviewFitZoom,
-  resolveGet204WorldViewBlend,
-} from '../art/get204Gate1';
+  GET204_CITY_MOVEMENT_CONTRACT,
+  GET204_CITY_RUNTIME,
+  resolveGet204CityInitialZoom,
+  resolveGet204CityLayerTopLeft,
+  resolveGet204CityOverviewFitZoom,
+  resolveGet204CityWorldViewBlend,
+} from '../art/get204City';
 
 export const LEVEL0_SCENE_KEY = 'Level0RuntimeScene';
-export const LEVEL0_MIN_ZOOM = 0.6;
-export const LEVEL0_MAX_ZOOM = GET204_GATE1_VISUAL.maxZoom;
+export const LEVEL0_MIN_ZOOM = 0.5;
+export const LEVEL0_MAX_ZOOM = GET204_CITY_RUNTIME.maxZoom;
 const LEVEL0_GEORGE_TEXTURE_KEY = 'level0:george-ar:idle';
 
 export interface Level0SceneRuntime {
@@ -94,7 +92,8 @@ interface Level0SceneActorVisual {
 }
 
 const contract = LEVEL0_LAYOUT_CONTRACT;
-const movementContract = GET204_GATE1_MOVEMENT_CONTRACT;
+const movementContract = GET204_CITY_MOVEMENT_CONTRACT;
+const activeVisual = GET204_CITY_RUNTIME;
 const origin = {
   x: Math.ceil(Math.max(...contract.bounds.map((point) => point.y))) *
       (contract.projection.tileWidth / 2) +
@@ -159,23 +158,10 @@ const colorForAnchor = (anchor: Level0Anchor): number => {
 const polygonMaxY = (polygon: WorldPolygon): number =>
   Math.max(...polygon.map((point) => projection.layoutToScene(point).y));
 
-const isLegacyBuildingOutsideGate1 = (polygon: WorldPolygon): boolean =>
-  Math.max(...polygon.map((point) => point.x)) < GET204_GATE1_REGION[0]!.x;
-
-const isPositionInsideGate1 = (point: WorldPoint): boolean =>
-  point.x >= 35 && point.x <= 84 && point.y >= 7.5 && point.y <= 47.8;
-
 const getGate1PopulationSpriteSheetRefs = () =>
-  GET204_GATE1_VISUAL.population.flatMap((actor) => actor.spriteSetId
+  activeVisual.population.flatMap((actor) => actor.spriteSetId
     ? [{ spriteSetId: actor.spriteSetId, state: 'idle' as const, direction: actor.facing }]
     : []
-  );
-
-const getGate1PopulationImageRefs = () =>
-  GET204_GATE1_VISUAL.population.flatMap((actor) =>
-    actor.textureKey && actor.path
-      ? [{ textureKey: actor.textureKey, path: actor.path }]
-      : []
   );
 
 export class Level0Scene extends Phaser.Scene {
@@ -215,8 +201,6 @@ export class Level0Scene extends Phaser.Scene {
 
   private readonly gate1PopulationActors = new Map<string, Level0SceneActorVisual>();
 
-  private readonly gate1ForegroundLayers = new Map<string, Phaser.GameObjects.Image>();
-
   private readonly get204WorldLayers = new Map<'close' | 'overview', Phaser.GameObjects.Image>();
 
   private minimumZoom = LEVEL0_MIN_ZOOM;
@@ -241,11 +225,8 @@ export class Level0Scene extends Phaser.Scene {
       this,
       spriteSheetRefs
     );
-    GET204_GATE1_VISUAL.layers.forEach((layer) => {
+    activeVisual.layers.forEach((layer) => {
       this.load.image(layer.textureKey, layer.path);
-    });
-    getGate1PopulationImageRefs().forEach(({ textureKey, path }) => {
-      this.load.image(textureKey, path);
     });
     this.load.image(
       LEVEL0_GEORGE_TEXTURE_KEY,
@@ -320,7 +301,6 @@ export class Level0Scene extends Phaser.Scene {
     }
 
     this.renderMovementState();
-    this.renderGate1ForegroundOcclusion();
     this.renderGet204WorldView();
     this.followPlayerUnlessObserving();
     this.renderGeorgePresentation();
@@ -369,7 +349,7 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private drawWorld(): void {
-    if (GET204_GATE1_VISUAL.runtimeEnabled) {
+    if (activeVisual.runtimeEnabled) {
       this.drawGate1Art();
     } else {
       const ground = this.add.graphics().setDepth(0);
@@ -407,11 +387,9 @@ export class Level0Scene extends Phaser.Scene {
         graphics.strokePoints(loop.points.map(project), false);
       });
 
-      contract.buildingFootprints
-        .filter((footprint) => isLegacyBuildingOutsideGate1(footprint.polygon))
-        .forEach((footprint, index) => {
+      contract.buildingFootprints.forEach((footprint, index) => {
           this.drawBuilding(footprint.polygon, footprint.height, index);
-        });
+      });
     }
 
     contract.anchors.forEach((anchor) => {
@@ -421,20 +399,58 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private drawGate1Art(): void {
-    const topLeft = resolveGet204Gate1LayerTopLeft(origin);
-    GET204_GATE1_VISUAL.layers.forEach((layer) => {
+    activeVisual.layers.forEach((layer) => {
       if (!this.textures.exists(layer.textureKey)) return;
+      const textureKey = layer.view === 'close'
+        ? this.createFeatheredCloseTexture(layer.textureKey, layer.width, layer.height)
+        : layer.textureKey;
+      const targetScene = projection.layoutToScene(layer.targetLayout);
+      const topLeft = resolveGet204CityLayerTopLeft(targetScene, layer);
       const image = this.add
-        .image(topLeft.x, topLeft.y, layer.textureKey)
+        .image(topLeft.x, topLeft.y, textureKey)
         .setOrigin(0, 0)
+        .setScale(1 / layer.renderZoom)
         .setDepth(layer.depth)
-        .setData('get204Gate1LayerId', layer.id);
+        .setData('get204CityLayerId', layer.id);
       this.get204WorldLayers.set(layer.view, image);
-      if (layer.occluderId) {
-        image.setData('occluderId', layer.occluderId);
-        this.gate1ForegroundLayers.set(layer.occluderId, image);
-      }
     });
+  }
+
+  private createFeatheredCloseTexture(
+    sourceTextureKey: string,
+    width: number,
+    height: number
+  ): string {
+    const featheredTextureKey = `${sourceTextureKey}:feathered`;
+    if (this.textures.exists(featheredTextureKey)) return featheredTextureKey;
+
+    const texture = this.textures.createCanvas(featheredTextureKey, width, height);
+    if (!texture) return sourceTextureKey;
+
+    const context = texture.getContext();
+    const sourceImage = this.textures.get(sourceTextureKey).getSourceImage() as CanvasImageSource;
+    context.drawImage(sourceImage, 0, 0, width, height);
+    context.globalCompositeOperation = 'destination-in';
+
+    const horizontal = context.createLinearGradient(0, 0, width, 0);
+    horizontal.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    horizontal.addColorStop(0.12, 'rgba(0, 0, 0, 1)');
+    horizontal.addColorStop(0.88, 'rgba(0, 0, 0, 1)');
+    horizontal.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    context.fillStyle = horizontal;
+    context.fillRect(0, 0, width, height);
+
+    const vertical = context.createLinearGradient(0, 0, 0, height);
+    vertical.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vertical.addColorStop(0.12, 'rgba(0, 0, 0, 1)');
+    vertical.addColorStop(0.88, 'rgba(0, 0, 0, 1)');
+    vertical.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    context.fillStyle = vertical;
+    context.fillRect(0, 0, width, height);
+
+    context.globalCompositeOperation = 'source-over';
+    texture.refresh();
+    return featheredTextureKey;
   }
 
   private drawBuilding(polygon: WorldPolygon, height: number, index: number): void {
@@ -493,8 +509,7 @@ export class Level0Scene extends Phaser.Scene {
     graphics.lineStyle(3, color, 0.95);
     graphics.strokeCircle(position.x, position.y, 9);
 
-    const shouldLabel =
-      !isPositionInsideGate1(anchor.position) &&
+    const shouldLabel = !activeVisual.runtimeEnabled &&
       !['camera', 'hiding', 'blending', 'drone-launch'].includes(anchor.kind);
     const visuals: AnchorVisual[] = [graphics];
     if (shouldLabel) {
@@ -539,9 +554,7 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private createContactActors(): void {
-    LEVEL0_CONTACT_ACTOR_PRESENTATIONS
-      .filter((presentation) => !isPositionInsideGate1(presentation.position))
-      .forEach((presentation) => {
+    LEVEL0_CONTACT_ACTOR_PRESENTATIONS.forEach((presentation) => {
       const visual = this.createActorVisual(
         presentation.actorId,
         presentation.actorId,
@@ -557,26 +570,21 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private createGate1PopulationActors(): void {
-    GET204_GATE1_VISUAL.population.forEach((presentation) => {
+    activeVisual.population.forEach((presentation) => {
       const visual = presentation.kind === 'drone'
         ? this.createGate1DroneVisual(presentation.id)
-        : presentation.textureKey
-          ? this.createGate1PopulationVisual(
-              presentation.id,
-              presentation.textureKey
-            )
-          : this.createActorVisual(
-              presentation.id,
-              presentation.spriteSetId,
-              presentation.facing,
-              presentation.spriteSetId
-                ? [{
-                    spriteSetId: presentation.spriteSetId,
-                    state: 'idle',
-                    direction: presentation.facing,
-                  }]
-                : undefined
-            );
+        : this.createActorVisual(
+            presentation.id,
+            presentation.spriteSetId,
+            presentation.facing,
+            presentation.spriteSetId
+              ? [{
+                  spriteSetId: presentation.spriteSetId,
+                  state: 'idle',
+                  direction: presentation.facing,
+                }]
+              : undefined
+          );
       const scenePosition = projection.layoutToScene(presentation.position);
       visual.container
         .setPosition(scenePosition.x, scenePosition.y)
@@ -592,21 +600,6 @@ export class Level0Scene extends Phaser.Scene {
       }
       this.gate1PopulationActors.set(presentation.id, visual);
     });
-  }
-
-  private createGate1PopulationVisual(
-    actorId: string,
-    textureKey: string
-  ): Level0SceneActorVisual {
-    const container = this.add.container(0, 0);
-    const shadow = this.add.graphics();
-    shadow.fillStyle(0x05070a, 0.44);
-    shadow.fillEllipse(0, 1, 26, 7);
-    const sprite = this.add.sprite(0, 0, textureKey).setOrigin(0.5, 0.92);
-    container.add([shadow, sprite]);
-    container.setData('actorId', actorId);
-    container.setData('presentationKind', 'get204-runtime-population');
-    return { actorId, container, sprite, directionMarker: null };
   }
 
   private createGate1DroneVisual(actorId: string): Level0SceneActorVisual {
@@ -633,25 +626,24 @@ export class Level0Scene extends Phaser.Scene {
     return { actorId, container, sprite: null, directionMarker: null };
   }
 
-  private renderGate1ForegroundOcclusion(): void {
-    if (!this.movement) return;
-    this.gate1ForegroundLayers.forEach((image, occluderId) => {
-      image.setAlpha(resolveGet204Gate1OccluderAlpha(occluderId, this.movement!.position));
-    });
-  }
-
   private renderGet204WorldView(): void {
-    const blend = resolveGet204WorldViewBlend(this.cameras.main.zoom, this.minimumZoom);
+    const blend = resolveGet204CityWorldViewBlend(this.cameras.main.zoom);
     this.get204WorldLayers.get('overview')?.setAlpha(blend.overviewAlpha);
     this.get204WorldLayers.get('close')?.setAlpha(blend.closeAlpha);
     this.playerSprite?.setScale(blend.playerWorldScale);
+    this.contactActors.forEach((visual) => {
+      visual.container
+        .setAlpha(blend.actorAlpha)
+        .setVisible(blend.actorAlpha > 0.04);
+      visual.sprite?.setScale(blend.playerWorldScale * 0.96);
+    });
     this.gate1PopulationActors.forEach((visual) => {
       const multiplier = Number(
         visual.container.getData('get204WorldScaleMultiplier') ?? 1
       );
       visual.container
-        .setAlpha(blend.closeAlpha)
-        .setVisible(blend.closeAlpha > 0.04);
+        .setAlpha(blend.actorAlpha)
+        .setVisible(blend.actorAlpha > 0.04);
       if (visual.sprite) {
         visual.sprite.setScale(blend.playerWorldScale * multiplier);
       } else {
@@ -695,7 +687,7 @@ export class Level0Scene extends Phaser.Scene {
       .setDepth(this.playerMarker.depth + 1)
       .setVisible(
         this.runtime.isGeorgePresentationVisible() &&
-        resolveGet204WorldViewBlend(this.cameras.main.zoom, this.minimumZoom).closeAlpha >= 0.5
+        resolveGet204CityWorldViewBlend(this.cameras.main.zoom).actorAlpha >= 0.5
       );
   }
 
@@ -808,18 +800,14 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private configureCamera(position: WorldPoint): void {
-    const artTopLeft = resolveGet204Gate1LayerTopLeft(origin);
-    const artWidth = Math.max(
-      GET204_GATE1_VISUAL.canvas.width,
-      GET204_GATE1_VISUAL.overviewCanvas.width
-    );
-    const artHeight = Math.max(
-      GET204_GATE1_VISUAL.canvas.height,
-      GET204_GATE1_VISUAL.overviewCanvas.height
-    );
-    this.cameras.main.setBounds(artTopLeft.x, artTopLeft.y, artWidth, artHeight);
-    this.minimumZoom = resolveGet204OverviewFitZoom(this.scale.width, this.scale.height);
-    this.cameras.main.setZoom(GET204_GATE1_VISUAL.defaultZoom);
+    const overviewLayer = activeVisual.layers.find(({ view }) => view === 'overview')!;
+    const overviewTarget = projection.layoutToScene(overviewLayer.targetLayout);
+    const overviewTopLeft = resolveGet204CityLayerTopLeft(overviewTarget, overviewLayer);
+    const artWidth = overviewLayer.width / overviewLayer.renderZoom;
+    const artHeight = overviewLayer.height / overviewLayer.renderZoom;
+    this.cameras.main.setBounds(overviewTopLeft.x, overviewTopLeft.y, artWidth, artHeight);
+    this.minimumZoom = resolveGet204CityOverviewFitZoom(this.scale.width, this.scale.height);
+    this.cameras.main.setZoom(resolveGet204CityInitialZoom());
     const scenePosition = projection.layoutToScene(position);
     this.cameras.main.centerOn(scenePosition.x, scenePosition.y);
     this.cameras.main.setBackgroundColor('#101215');
@@ -947,17 +935,6 @@ export class Level0Scene extends Phaser.Scene {
 
   private acceptSceneClick(scenePoint: WorldPoint): void {
     if (!this.movement) return;
-    const artTopLeft = resolveGet204Gate1LayerTopLeft(origin);
-    if (isGet204VisualPixelBlocked({
-      x: scenePoint.x - artTopLeft.x,
-      y: scenePoint.y - artTopLeft.y,
-    })) {
-      this.movement = { ...this.movement, intent: { kind: 'idle' } };
-      this.targetMarker?.setVisible(false);
-      this.reachableMarker?.setVisible(false);
-      this.runtime.onFeedback('movement.invalid.occupied');
-      return;
-    }
     const layoutPoint = projection.sceneToLayout(scenePoint);
     const run = this.runtime.getRun();
     const clickedAnchor = contract.anchors
@@ -1036,13 +1013,7 @@ export class Level0Scene extends Phaser.Scene {
     if (!this.movement || !this.playerMarker) return;
     const scenePosition = projection.layoutToScene(this.movement.position);
     this.playerMarker.setPosition(scenePosition.x, scenePosition.y);
-    const foregroundIsFaded = GET204_GATE1_VISUAL.occluders.some(
-      (occluder) => resolveGet204Gate1OccluderAlpha(
-        occluder.id,
-        this.movement!.position
-      ) < 1
-    );
-    this.playerMarker.setDepth(foregroundIsFaded ? 8_100 : 100 + scenePosition.y);
+    this.playerMarker.setDepth(100 + scenePosition.y);
     this.playerOverviewMarker
       ?.setPosition(scenePosition.x, scenePosition.y)
       .setDepth(this.playerMarker.depth + 2);
@@ -1070,18 +1041,14 @@ export class Level0Scene extends Phaser.Scene {
   private followPlayerUnlessObserving(): void {
     if (!this.movement || this.runtime.isObservationActive()) return;
     const playerPosition = projection.layoutToScene(this.movement.position);
-    const artTopLeft = resolveGet204Gate1LayerTopLeft(origin);
-    const overviewCenter = {
-      x: artTopLeft.x + GET204_GATE1_VISUAL.overviewCanvas.width / 2,
-      y: artTopLeft.y + GET204_GATE1_VISUAL.overviewCanvas.height / 2,
-    };
-    const { closeAlpha } = resolveGet204WorldViewBlend(
-      this.cameras.main.zoom,
-      this.minimumZoom
-    );
+    const overview = this.get204WorldLayers.get('overview');
+    const overviewCenter = overview
+      ? { x: overview.x + overview.displayWidth / 2, y: overview.y + overview.displayHeight / 2 }
+      : playerPosition;
+    const { actorAlpha } = resolveGet204CityWorldViewBlend(this.cameras.main.zoom);
     this.cameras.main.centerOn(
-      Phaser.Math.Linear(overviewCenter.x, playerPosition.x, closeAlpha),
-      Phaser.Math.Linear(overviewCenter.y, playerPosition.y - 80, closeAlpha)
+      Phaser.Math.Linear(overviewCenter.x, playerPosition.x, actorAlpha),
+      Phaser.Math.Linear(overviewCenter.y, playerPosition.y - 80, actorAlpha)
     );
   }
 }

@@ -416,7 +416,7 @@ describe('Level 0 RPG identity flow', () => {
 
     expect(listener).toHaveBeenCalledTimes(1);
     expect((listener.mock.calls[0]![0] as CustomEvent).detail).toEqual({
-      anchorId: 'interaction.safehouse.rest',
+      anchorId: 'interaction.safehouse.wait',
     });
     window.removeEventListener(LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT, listener);
   });

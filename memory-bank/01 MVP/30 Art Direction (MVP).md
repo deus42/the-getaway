@@ -27,7 +27,7 @@ The art must make it possible to:
 
 ## 3. Starting state and prerequisites
 
-- The mission skeleton is authoritative: safehouse, contacts, logistics objective, public/service approaches, three-loop intent, and required gameplay semantics must survive. The rejected `84×60` nine-block geometry is not authoritative.
+- The mission skeleton is authoritative: safehouse, contacts, logistics objective, public/service approaches, three-loop intent, and required gameplay semantics must survive. The rejected `84×60` nine-block geometry and the old sparse/fenced four-block compound are not authoritative.
 - The requester identifies Neo Tokyo 2 at `/Volumes/Elements/Backup/Downloads/Game/Neo Tokyo 2` as owned; the repository records that assertion but does not contain acquisition-specific entitlement evidence.
 - Blender `5.0.1` is the authoring environment.
 - Level 0 uses one outdoor master scene, one fixed 2:1 isometric camera, and a runtime 64×32 projection contract.
@@ -35,19 +35,19 @@ The art must make it possible to:
 - Generated `.blend` files remain untracked.
 - The requester has confirmed ownership and explicitly authorized Neo Tokyo 2 as the production base. Raw vendor geometry and textures remain outside Git. Versioned recipes, manifests, transforms, original gap-fill assets, semantic metadata, validators, and flattened game derivatives may be committed through the normal visual-acceptance gate.
 - [[31 GET-204 Visual Rebuild Quality Contract]] is the binding visual acceptance specification.
-- Three durable references divide authority: `art/references/get204/canvas-quality-target.png` owns render/material/light quality; `art/references/get204/street-play-target.png` (Reference 2) owns normal camera, protagonist prominence, street scale, and inhabited composition; `art/references/get204/dense-city-target.png` owns the complete overview and skyline relationship. They define visual relationships rather than exact geography or exact objects.
+- Four durable references divide authority. `art/references/get205/kitbash-reference2-blend-concept-v1.png` is the approved AI-assisted composition north star and owns the mission-sized four-block relationship, but never production geometry. `art/references/get204/canvas-quality-target.png` owns render/material/light quality; `art/references/get204/street-play-target.png` (Reference 2) owns normal camera, protagonist prominence, street scale, and inhabited composition; `art/references/get204/dense-city-target.png` is a secondary overview-density check only. They define visual relationships rather than exact geography or exact objects.
 
 ## 4. Complete happy-path behavior
 
-1. GET-204 rebuilds one complete district master scene around the mission skeleton, using Neo Tokyo 2 geometry plus the original gap-fill work needed to make the streets believable and playable.
-2. The full-district composition establishes the production camera, actor/building relationship, road and sidewalk materials, street-wall rhythm, public-life density, practical lighting, and selective foreground-fade rule together rather than preserving an interim intersection patch.
-3. The district contains three related subdistricts: safehouse/backstreets, public transit/commercial, and controlled logistics/civic.
-4. The full city uses mostly three-to-eight-storey street walls, two or three taller landmarks, one controlled boulevard, ordinary two-lane streets, tight service alleys, almost no open plazas, and dense central mass with simpler distant edges.
+1. GET-204 rebuilds one mission-sized four-block master scene around the quest skeleton, using named Neo Tokyo 2 geometry plus only the project-owned public-realm gap fills needed to make the streets believable and playable.
+2. The four-block composition establishes the production camera, actor/building relationship, road and sidewalk materials, street-wall rhythm, practical lighting, and selective foreground-fade rule before any runtime promotion.
+3. The four blocks distribute three functional identities: safehouse/backstreet, public/transit/contact street, and controlled logistics/service approach.
+4. The city uses mostly low/mid-rise continuous street walls, resolved corners, compact ordinary streets and service alleys, no oversized plaza, and at most one restrained Hidzu landmark.
 5. Roads, sidewalks, curbs, crossings, alleys, setbacks, entrances, drainage, public furniture, utilities, and service details are authored as part of the city rather than a flat board beneath freestanding objects.
 6. Accepted visual geometry is back-propagated into the shared layout contract so collision, entrances, occlusion, masks, anchors, and rendered streets agree before each gate is committed.
 7. Blue-hour dusk is the primary look. Daylight and curfew remain coherent schedule variants of the same geometry; wet-surface response, warm practicals, cold institutional fill, and readable midtones remain motivated.
 8. Runtime actors, camera indicators, interaction feedback, George, and the current HUD remain live layers above the environment. GET-204 does not redesign HUD behavior or information architecture.
-9. The complete rebuild is proven through a clean city frame, the same live scene with the current HUD, and the full-district minimum-zoom composition.
+9. The first gate is an actual Blender close frame and four-block overview from the same named-source master. Only after that visual approval is the rebuild proven live through a clean city frame, the same scene with the current HUD, and the minimum-zoom composition.
 10. Fixed-viewport screenshots and human play—not asset counts, validators, offline composites, or internal ratings—determine visual acceptance.
 
 ## 5. State model and transitions
@@ -71,11 +71,11 @@ Presentation states are aligned environment layers:
 
 ### City structure
 
-- Level 0 is a compact continuous outdoor Tokyo district, not nine isolated landmarks, a four-block compound, or buildings arranged on an empty board.
+- Level 0 is a compact continuous four-block outdoor Tokyo mission district, not nine isolated landmarks, the rejected sparse/fenced four-block compound, a large decorative city, or buildings arranged on an empty board.
 - Preserve three interlocking traversal loops and the mission skeleton, but replace the exact rejected `84×60` block geometry when city composition requires it.
-- The district has three related subdistricts: safehouse/backstreets, public transit/commercial, and controlled logistics/civic.
-- Building rhythm is mostly three-to-eight-storey street walls with two or three taller landmarks. The core is dense; edges simplify into skyline mass rather than empty board.
-- Street hierarchy combines one controlled boulevard, ordinary two-lane streets, and tight service alleys. Plazas are rare and compact.
+- Four blocks distribute three functional identities: safehouse/backstreets, public transit/contact street, and controlled logistics/service approach.
+- Building rhythm is mostly low/mid-rise continuous street walls with one restrained landmark maximum. Corners close the streets without dwarfing the player.
+- Street hierarchy combines compact ordinary streets, crossings, sidewalks, and tight service alleys. Large plazas and monumental boulevards are excluded.
 - Curated lived-in detail is required where it makes scale and place credible: awnings, restrained planters, bins, civic signs, kiosks, utilities, drainage, barriers, and parked service vehicles. Random filler, repetition, and navigation-obscuring clutter are rejected.
 - Ordinary public life appears through small authored civilian/service groups and restrained ambient motion rather than a simulated crowd.
 
@@ -107,7 +107,7 @@ The following records describe the earlier GET-205 generator and remain useful f
 
 - Runtime base projection: `64×32`, `2:1` isometric.
 - Normal play uses a close 2:1 isometric frame with the protagonist in the lower-center lead area and actor/building relationships comparable to the approved street reference. The exact default zoom is calibrated from the complete live candidate.
-- Maximum manual zoom-out reaches a deliberately composed full-district overview comparable to the approved dense-city reference. It is not the default play frame.
+- Maximum manual zoom-out reaches a deliberately composed four-block mission overview. The dense-city reference supplies only the coherence/density relationship and does not expand the level scope.
 - Building, collision, entrance, mask, and depth anchors derive from the shared layout contract and export metadata.
 - Generated environment layers must not be upscaled blurry composites, mismatched-angle plates, or per-building collage assembled independently in Phaser.
 - Normal play hides the district boundary. Manual minimum zoom may reveal the whole authored composition, but never missing city edges, repeated plates, floating bases, clipping, voids, or corruption.
@@ -118,7 +118,7 @@ The following records describe the earlier GET-205 generator and remain useful f
 - Twelve grounded actor identities: four protagonists, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
 - World contract: `64×96`, eight directions, four frames, `idle`, `move`, and `interact`; no attack animation is required.
 - Foot anchors remain stable within two pixels.
-- Actor presentation is calibrated with the complete-city camera so the protagonist, nearby civilians, contacts, and security have the human presence shown in the approved street reference. A global sprite multiplier is secondary to the camera/building relationship and remains adjustable until the live frame is accepted.
+- Actor presentation is calibrated with the four-block mission camera so the protagonist, nearby civilians, contacts, and security have the human presence shown in the approved street reference. A global sprite multiplier is secondary to the camera/building relationship and remains adjustable until the live frame is accepted.
 - World sprite, portrait, dialogue identity, and role silhouette must match.
 - Takahiro Kobayashi receives a propaganda/broadcast portrait; George receives separate AR presentation art.
 
@@ -179,7 +179,7 @@ The following records describe the earlier GET-205 generator and remain useful f
 
 - Maintain a source/provenance manifest for every Neo Tokyo asset used and keep all raw vendor files outside Git. Record requester-confirmed ownership honestly; do not invent a receipt or license tier.
 - Maintain the Level 0 master-scene recipe, camera/projection settings, transforms, material treatment, light rig, export layers, masks, anchors, and validation checks.
-- For the complete GET-204 rebuild, produce a clean world frame, the same live frame with the current HUD, and a full-district overview at `1440×900` and `1920×1080`; verify `1280×720` compatibility before final closeout.
+- For GET-204, first produce an actual Blender close frame and four-block overview from the same named-source master. After that gate is approved, produce a clean live frame, the same frame with the current HUD, and a four-block overview at `1440×900` and `1920×1080`; verify `1280×720` compatibility before final closeout.
 - Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Retry, debrief, and completion.
 - Maintain actor manifests, deterministic generation recipes, pixel-derived metrics, integrity hashes, neutral fallback evidence, and matching portrait references for all required identities.
 - Author signage and public-screen copy in the approved cultural/language policy once that open decision is resolved.
@@ -197,7 +197,7 @@ The following records describe the earlier GET-205 generator and remain useful f
 
 ## 13. Removed behavior
 
-Removed from the active visual direction: painterly-fantasy Neo characters, four-block compound, exact `84×60` nine-block authority, sparse nine-building board, isolated landmark collage, generated replacement architecture, blurry upscaled composites, flat procedural road board as final presentation, three-lane HUD, attack-sheet requirement, permanent labels, tactical-combat hierarchy, city-wide translucent buildings, random filler clutter, broad cyan glow, local-evidence-only production, and the previous claim that Blender/kit assets were optional experiments rather than the approved city source.
+Removed from the active visual direction: painterly-fantasy Neo characters, the old sparse/fenced four-block compound, exact `84×60` nine-block authority, oversized decorative district scope, sparse nine-building board, isolated landmark collage, generated replacement architecture, blurry upscaled composites, flat procedural road board as final presentation, three-lane HUD, attack-sheet requirement, permanent labels, tactical-combat hierarchy, city-wide translucent buildings, random filler clutter, broad cyan glow, local-evidence-only production, and the previous claim that Blender/kit assets were optional experiments rather than the approved city source.
 
 Historic GET-155 and GET-180 assets remain recoverable evidence/fallback only. They are not current production direction.
 
@@ -218,7 +218,7 @@ Post-MVP may add complex interiors, additional Tokyo districts, Miami art produc
 
 ## 16. Owning Linear ticket
 
-- City baseline: `T4` (`GET-204`) — full-district Tokyo live visual rebuild.
+- City baseline: `T4` (`GET-204`) — four-block named-KitBash Tokyo rebuild, Blender proof before runtime promotion.
 - Hidzu treatment: `T5` (`GET-205`) — Hidzu identity and graphic-surveillance-noir world art.
 - Actors: `T6` (`GET-206`) — Grounded actors, portraits, and entry-flow presentation.
 - HUD: `T9` (`GET-209`) — Dialogue, George, facts, dossier, social feed, and four-lane HUD.

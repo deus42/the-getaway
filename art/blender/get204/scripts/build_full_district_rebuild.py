@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the complete GET-204 Tokyo district from one registered master scene.
+"""Build the GET-204 four-block Tokyo mission district from one master scene.
 
 The owned Neo Tokyo 2 FBX remains external. This script duplicates selected
 source collections into one coherent city, adds project-owned public realm and
@@ -36,7 +36,6 @@ from build_gate1_hero_intersection import (  # noqa: E402
     add_practical_light,
     add_service_van,
     add_street_light,
-    add_transit_shelter,
     add_verifier_booth,
     collection,
     cube,
@@ -61,12 +60,12 @@ from build_level0_source_catalog import (  # noqa: E402
 
 BUILDING_Z = 0.16
 GROUND_Z = 0.0
-GENERATED_RELATIVE_ROOT = Path("art/blender/get204/.generated/full-district")
-RECIPE_RELATIVE_PATH = Path("art/blender/get204/manifests/full-district-rebuild.json")
+GENERATED_RELATIVE_ROOT = Path("art/blender/get204/.generated/mission-district")
+RECIPE_RELATIVE_PATH = Path("art/blender/get204/manifests/mission-district-rebuild.json")
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Build the GET-204 complete Tokyo district.")
+    parser = argparse.ArgumentParser(description="Build the GET-204 four-block Tokyo mission district.")
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[4])
     parser.add_argument(
         "--source-root",
@@ -171,21 +170,114 @@ def procedural_surface_material(
     return result
 
 
-def repair_source_materials(materials: Iterable[bpy.types.Material]) -> None:
+def repair_source_materials(
+    materials: Iterable[bpy.types.Material],
+    source_root: Path,
+) -> None:
+    texture_root = source_root / "Textures"
+
+    def disconnect_input(
+        links: bpy.types.NodeLinks,
+        socket: bpy.types.NodeSocket,
+    ) -> None:
+        for link in list(links):
+            if link.to_socket == socket:
+                links.remove(link)
+
+    def texture_node(
+        nodes: bpy.types.Nodes,
+        path: Path,
+        label: str,
+        color_space: str,
+    ) -> bpy.types.Node | None:
+        if not path.is_file():
+            return None
+        image = bpy.data.images.load(str(path), check_existing=True)
+        image.colorspace_settings.name = color_space
+        node = nodes.new("ShaderNodeTexImage")
+        node.name = f"GET204 PBR {label}"
+        node.label = label
+        node.image = image
+        node.interpolation = "Linear"
+        return node
+
     for source in materials:
         if not source.use_nodes or source.node_tree is None:
             continue
         lowered = source.name.lower()
+        if lowered.startswith("get204 "):
+            continue
+        material_key = source.name.split(".", 1)[0]
+        texture_stem = f"KB3D_NTT_{material_key}"
+        nodes = source.node_tree.nodes
+        links = source.node_tree.links
         for node in source.node_tree.nodes:
             if node.bl_idname != "ShaderNodeBsdfPrincipled":
                 continue
-            if "Roughness" in node.inputs and not node.inputs["Roughness"].is_linked:
-                node.inputs["Roughness"].default_value = min(
-                    float(node.inputs["Roughness"].default_value),
-                    0.68,
-                )
+            base_path = texture_root / f"{texture_stem}_basecolor.jpg"
+            if not base_path.is_file():
+                base_path = texture_root / f"{texture_stem}_diffuse.jpg"
+            base = texture_node(nodes, base_path, f"{material_key} base color", "sRGB")
+            roughness = texture_node(
+                nodes,
+                texture_root / f"{texture_stem}_roughness.jpg",
+                f"{material_key} roughness",
+                "Non-Color",
+            )
+            metallic = texture_node(
+                nodes,
+                texture_root / f"{texture_stem}_metallic.jpg",
+                f"{material_key} metallic",
+                "Non-Color",
+            )
+            normal = texture_node(
+                nodes,
+                texture_root / f"{texture_stem}_normal.jpg",
+                f"{material_key} normal",
+                "Non-Color",
+            )
+            ao = texture_node(
+                nodes,
+                texture_root / f"{texture_stem}_ao.jpg",
+                f"{material_key} ambient occlusion",
+                "Non-Color",
+            )
+
+            if base is not None:
+                disconnect_input(links, node.inputs["Base Color"])
+                if ao is not None:
+                    multiply = nodes.new("ShaderNodeMixRGB")
+                    multiply.name = f"GET204 PBR {material_key} base x AO"
+                    multiply.blend_type = "MULTIPLY"
+                    multiply.inputs[0].default_value = 1.0
+                    links.new(base.outputs["Color"], multiply.inputs[1])
+                    links.new(ao.outputs["Color"], multiply.inputs[2])
+                    links.new(multiply.outputs["Color"], node.inputs["Base Color"])
+                else:
+                    links.new(base.outputs["Color"], node.inputs["Base Color"])
+            if roughness is not None:
+                disconnect_input(links, node.inputs["Roughness"])
+                links.new(roughness.outputs["Color"], node.inputs["Roughness"])
+            else:
+                disconnect_input(links, node.inputs["Roughness"])
+                node.inputs["Roughness"].default_value = 0.32 if "glass" in lowered else 0.58
+            disconnect_input(links, node.inputs["Metallic"])
+            if metallic is not None:
+                links.new(metallic.outputs["Color"], node.inputs["Metallic"])
+            else:
+                node.inputs["Metallic"].default_value = 0.0
+            if "Specular IOR Level" in node.inputs:
+                disconnect_input(links, node.inputs["Specular IOR Level"])
+                node.inputs["Specular IOR Level"].default_value = 0.45
+            if normal is not None:
+                disconnect_input(links, node.inputs["Normal"])
+                normal_map = nodes.new("ShaderNodeNormalMap")
+                normal_map.name = f"GET204 PBR {material_key} normal map"
+                normal_map.inputs["Strength"].default_value = 0.72
+                links.new(normal.outputs["Color"], normal_map.inputs["Color"])
+                links.new(normal_map.outputs["Normal"], node.inputs["Normal"])
             if "Coat Weight" in node.inputs:
-                node.inputs["Coat Weight"].default_value = 0.08
+                node.inputs["Coat Weight"].default_value = 0.035
             if any(token in lowered for token in ("light", "lamp", "emiss", "neon", "sign")):
                 if "Emission Color" in node.inputs:
                     node.inputs["Emission Color"].default_value = (1.0, 0.36, 0.12, 1)
@@ -196,19 +288,15 @@ def repair_source_materials(materials: Iterable[bpy.types.Material]) -> None:
                     )
             if "ads" in lowered and "Emission Color" in node.inputs:
                 base_color = node.inputs.get("Base Color")
-                source_link = next(
-                    (link for link in source.node_tree.links if link.to_socket == base_color),
-                    None,
-                )
+                source_link = next((link for link in links if link.to_socket == base_color), None)
                 if source_link is not None:
-                    links = source.node_tree.links
                     links.new(source_link.from_socket, node.inputs["Emission Color"])
                 if "Emission Strength" in node.inputs:
-                    node.inputs["Emission Strength"].default_value = 1.5
-            if lowered.startswith("glass") and "Emission Color" in node.inputs:
-                node.inputs["Emission Color"].default_value = (0.12, 0.045, 0.015, 1)
+                    node.inputs["Emission Strength"].default_value = 0.85
+            if "glass" in lowered and "Emission Color" in node.inputs:
+                node.inputs["Emission Color"].default_value = (0.012, 0.03, 0.05, 1)
                 if "Emission Strength" in node.inputs:
-                    node.inputs["Emission Strength"].default_value = 0.1
+                    node.inputs["Emission Strength"].default_value = 0.08
 
 
 def relink_source_images(
@@ -267,12 +355,14 @@ def relink_source_images(
 def selected_building_members(
     objects: Sequence[bpy.types.Object],
     prefix: str,
+    excluded_suffixes: Sequence[str] = (),
 ) -> list[bpy.types.Object]:
     return [
         obj
         for obj in objects
         if obj.name == prefix or obj.name.startswith(f"{prefix}_")
         if obj.name.split(".", 1)[0].removeprefix(f"{prefix}_") not in BUILDING_EXCLUSIONS
+        if obj.name.split(".", 1)[0].removeprefix(f"{prefix}_") not in excluded_suffixes
     ]
 
 
@@ -443,7 +533,12 @@ def place_architectural_clusters(
         if placement["artSource"] not in ("owned-kit", "owned-kit-cropped"):
             continue
         prefix = placement["sourcePrefix"]
-        sources = selected_building_members(groups.get(prefix, []), prefix)
+        excluded_suffixes = recipe["source"].get("objectSuffixExclusions", {}).get(prefix, [])
+        sources = selected_building_members(
+            groups.get(prefix, []),
+            prefix,
+            excluded_suffixes,
+        )
         if not sources:
             raise RuntimeError(f"Missing structural source collection {prefix}")
         source_bounds = bounds_for(sources)
@@ -469,8 +564,20 @@ def place_architectural_clusters(
         created: list[bpy.types.Object] = []
         crop_boundary_points: list[Vector] = []
         for instance_index in range(instance_count):
-            x = float(placement["layoutPosition"]["x"]) * unit
-            y = float(placement["layoutPosition"]["y"]) * unit
+            placed_width = source_width * scale
+            placed_depth = source_depth * scale
+            inset = float(placement["streetWallInsetMeters"])
+            anchor = placement["placementAnchor"]
+            x = (
+                left * unit + inset + placed_width / 2
+                if anchor.endswith("west")
+                else right * unit - inset - placed_width / 2
+            )
+            y = (
+                top * unit + inset + placed_depth / 2
+                if anchor.startswith("north")
+                else bottom * unit - inset - placed_depth / 2
+            )
             transform = (
                 Matrix.Translation(Vector((x, y, BUILDING_Z)))
                 @ Matrix.Rotation(math.radians(float(placement["rotationDegrees"])), 4, "Z")
@@ -516,6 +623,8 @@ def place_architectural_clusters(
             "instanceCount": instance_count,
             "repeatAxis": repeat_axis,
             "requestedScaleCeiling": placement["uniformScale"],
+            "placementAnchor": placement["placementAnchor"],
+            "streetWallInsetMeters": placement["streetWallInsetMeters"],
             "footprint": placement["footprint"],
             "placedDimensionsMeters": list(placed_bounds.dimensions),
             "placedHeightMeters": placed_bounds.dimensions[2],
@@ -556,7 +665,7 @@ def add_sidewalk_pair(
 ) -> None:
     start, end = segment["centerline"][0], segment["centerline"][-1]
     half_road = float(segment["widthLayoutUnits"]) / 2
-    sidewalk_width = 1.0 if segment["kind"] != "controlled-boulevard" else 1.25
+    sidewalk_width = 0.75 if segment["kind"] != "controlled-boulevard" else 1.0
     curb_width = 0.11
     vertical = abs(float(start["x"]) - float(end["x"])) < 0.001
     if vertical:
@@ -653,15 +762,15 @@ def add_crosswalk(
     target: bpy.types.Collection,
     marking: bpy.types.Material,
 ) -> None:
-    for index in range(-3, 4):
-        offset = index * 0.38
+    for index in range(-2, 3):
+        offset = index * 0.28
         if horizontal:
-            dimensions = (0.22 * unit, 3.2 * unit, 0.026)
+            dimensions = (0.12 * unit, 1.35 * unit, 0.026)
             location = ((center[0] + offset) * unit, center[1] * unit, 0.102)
         else:
-            dimensions = (3.2 * unit, 0.22 * unit, 0.026)
+            dimensions = (1.35 * unit, 0.12 * unit, 0.026)
             location = (center[0] * unit, (center[1] + offset) * unit, 0.102)
-        cube(f"GET204.CITY.crosswalk.{name}.{index + 3}", location, dimensions, target, marking)
+        cube(f"GET204.CITY.crosswalk.{name}.{index + 2}", location, dimensions, target, marking)
 
 
 def build_public_realm(
@@ -670,21 +779,29 @@ def build_public_realm(
 ) -> dict[str, bpy.types.Material]:
     unit = float(recipe["coordinateSystem"]["layoutUnitMeters"])
     asphalt = procedural_surface_material(
-        "GET204 City wet asphalt",
-        (0.018, 0.024, 0.032, 1),
-        (0.052, 0.062, 0.072, 1),
-        0.27,
+        "GET204 City restrained asphalt",
+        (0.022, 0.03, 0.04, 1),
+        (0.075, 0.085, 0.095, 1),
+        0.58,
         2.4,
         0.14,
-        0.28,
+        0.03,
     )
     substrate = procedural_surface_material(
         "GET204 City district substrate",
-        (0.006, 0.009, 0.014, 1),
-        (0.018, 0.022, 0.028, 1),
+        (0.012, 0.018, 0.026, 1),
+        (0.035, 0.045, 0.058, 1),
         0.72,
         1.1,
         0.08,
+    )
+    block_paving = procedural_surface_material(
+        "GET204 City inhabited block paving",
+        (0.035, 0.043, 0.052, 1),
+        (0.115, 0.105, 0.092, 1),
+        0.68,
+        4.2,
+        0.13,
     )
     alley = procedural_surface_material(
         "GET204 City patched alley",
@@ -712,17 +829,31 @@ def build_public_realm(
         0.13,
     )
     seam = material("GET204 City sidewalk seams", (0.035, 0.038, 0.042, 1), 0.72)
-    marking = material("GET204 City road marking", (0.63, 0.56, 0.39, 1), 0.46)
+    marking = material("GET204 City road marking", (0.3, 0.275, 0.225, 1), 0.72)
     repair = material("GET204 City asphalt repair", (0.075, 0.065, 0.06, 1), 0.5)
     metal = material("GET204 City drain metal", (0.055, 0.065, 0.07, 1), 0.36, 0.62)
-    puddle = material("GET204 City rain puddle", (0.012, 0.025, 0.035, 1), 0.06, 0.05)
+    puddle = material("GET204 City rain puddle", (0.012, 0.025, 0.035, 1), 0.48, 0.03)
     if puddle.node_tree:
         shader = puddle.node_tree.nodes.get("Principled BSDF")
         if shader and "Coat Weight" in shader.inputs:
-            shader.inputs["Coat Weight"].default_value = 0.8
+            shader.inputs["Coat Weight"].default_value = 0.1
 
     bounds = recipe["coordinateSystem"]["bounds"]
     add_rect("GET204.CITY.ground.base", bounds, unit, -0.16, 0.16, ground, substrate)
+
+    # Materially occupy each mission block before streets are layered over it.
+    # The rejected pass exposed the near-black district substrate between source
+    # groups, which read as empty lots instead of inhabited public realm.
+    for block in recipe["composition"]["urbanBlocks"]:
+        add_rect(
+            f"GET204.CITY.{block['id']}.paving",
+            block["polygon"],
+            unit,
+            0.0,
+            0.07,
+            ground,
+            block_paving,
+        )
 
     segments = [
         *recipe["streetHierarchy"]["controlledBoulevards"],
@@ -748,21 +879,16 @@ def build_public_realm(
         add_rect(f"GET204.CITY.{space['id']}", space["polygon"], unit, 0.075, 0.14, ground, concrete)
 
     for name, center, horizontal in (
-        ("west-north", (21, 15), True),
-        ("controlled-north", (53, 15), True),
-        ("west-public", (21, 30), True),
-        ("controlled-public", (53, 30), True),
-        ("west-south", (21, 43), True),
-        ("controlled-south", (53, 43), True),
+        ("intersection-west", (26.55, 22), True),
+        ("intersection-north", (29, 19.55), False),
     ):
         add_crosswalk(name, center, horizontal, unit, ground, marking)
 
     repair_patches = (
-        (12, 30, 5.5, 1.1),
-        (42, 43, 7.0, 1.0),
-        (53, 9, 1.25, 5.2),
-        (66, 30, 4.8, 1.0),
-        (63, 43, 6.5, 0.9),
+        (10, 22, 5.5, 0.75),
+        (47, 22, 5.0, 0.7),
+        (29, 8, 0.7, 4.2),
+        (29, 37, 0.75, 3.8),
     )
     for index, (x, y, width, depth) in enumerate(repair_patches):
         cube(
@@ -774,12 +900,10 @@ def build_public_realm(
         )
 
     for index, (x, y, radius_x, radius_y) in enumerate((
-        (14, 29.3, 1.2, 0.38),
-        (45, 43.8, 1.45, 0.34),
-        (53.8, 36, 0.5, 1.35),
-        (70.2, 42.6, 0.45, 1.0),
-        (32, 15.6, 0.85, 0.28),
-        (62, 30.4, 1.1, 0.32),
+        (12, 22.6, 0.8, 0.22),
+        (43, 21.4, 0.95, 0.24),
+        (29.6, 11, 0.22, 0.8),
+        (36, 34.7, 0.7, 0.18),
     )):
         puddle_object = cylinder(
             f"GET204.CITY.puddle.{index}",
@@ -793,20 +917,16 @@ def build_public_realm(
         puddle_object.scale.x = radius_x * unit
         puddle_object.scale.y = radius_y * unit
 
-    for index, (x, y) in enumerate(((21, 8), (53, 8), (68, 30), (21, 48), (53, 48), (70, 43))):
+    for index, (x, y) in enumerate(((12, 22), (46, 22), (29, 9), (29, 36))):
         cylinder(f"GET204.CITY.manhole.{index}", (x * unit, y * unit, 0.12), 0.48, 0.055, ground, metal, 32)
 
     for index, (x, y, horizontal) in enumerate((
-        (18.8, 24, False),
-        (23.2, 36, False),
-        (50.5, 24, False),
-        (55.5, 36, False),
-        (68.8, 30, False),
-        (73.5, 36, False),
-        (30, 16.8, True),
-        (42, 28.2, True),
-        (62, 41.0, True),
-        (72, 44.8, True),
+        (26.9, 10, False),
+        (31.1, 15, False),
+        (26.9, 30, False),
+        (31.1, 38, False),
+        (10, 19.9, True),
+        (45, 24.1, True),
     )):
         dimensions = (1.4, 0.42, 0.045) if horizontal else (0.42, 1.4, 0.045)
         cube(
@@ -1269,8 +1389,66 @@ def add_screen_pylon(
     screen: bpy.types.Material,
     rotation: float = 0,
 ) -> None:
-    cube(f"{name}.frame", (x * unit, y * unit, 2.2), (1.4, 0.35, 4.4), target, frame, rotation)
-    cube(f"{name}.screen", (x * unit, y * unit - 0.19, 2.45), (1.1, 0.035, 2.85), target, screen, rotation)
+    cube(f"{name}.frame", (x * unit, y * unit, 1.45), (0.78, 0.24, 2.9), target, frame, rotation)
+    cube(f"{name}.screen", (x * unit, y * unit - 0.14, 1.62), (0.58, 0.035, 1.72), target, screen, rotation)
+
+
+def add_compact_transit_shelter(
+    name: str,
+    x: float,
+    y: float,
+    unit: float,
+    target: bpy.types.Collection,
+    frame: bpy.types.Material,
+    glass: bpy.types.Material,
+    trim: bpy.types.Material,
+) -> None:
+    center_x = x * unit
+    center_y = y * unit
+    cube(f"{name}.roof", (center_x, center_y, 2.55), (4.15, 1.55, 0.15), target, frame)
+    for index, offset_x in enumerate((-1.82, 0.0, 1.82)):
+        cube(
+            f"{name}.post.{index}",
+            (center_x + offset_x, center_y, 1.28),
+            (0.09, 0.09, 2.56),
+            target,
+            trim,
+        )
+    cube(f"{name}.glass", (center_x, center_y - 0.66, 1.35), (3.72, 0.05, 2.15), target, glass)
+    cube(f"{name}.bench", (center_x, center_y + 0.18, 0.53), (2.75, 0.46, 0.12), target, trim)
+
+
+def add_hidzu_wall_mark(
+    name: str,
+    x: float,
+    y: float,
+    z: float,
+    unit: float,
+    target: bpy.types.Collection,
+    frame: bpy.types.Material,
+    lettering: bpy.types.Material,
+) -> None:
+    """Add restrained project-owned identity to a real KitBash frontage."""
+
+    cube(
+        f"{name}.panel",
+        (x * unit, y * unit, z),
+        (8.4, 0.2, 2.35),
+        target,
+        frame,
+    )
+    text_curve = bpy.data.curves.new(f"{name}.letters.curve", type="FONT")
+    text_curve.body = "HIDZU"
+    text_curve.align_x = "CENTER"
+    text_curve.align_y = "CENTER"
+    text_curve.size = 1.28
+    text_curve.extrude = 0.035
+    text_curve.bevel_depth = 0.012
+    text_curve.materials.append(lettering)
+    text = bpy.data.objects.new(f"{name}.letters", text_curve)
+    text.location = (x * unit, y * unit - 0.13, z - 0.03)
+    text.rotation_euler[0] = math.radians(90)
+    target.objects.link(text)
 
 
 def add_compact_car(
@@ -1323,6 +1501,50 @@ def add_cafe_table(
         )
 
 
+def add_contact_stall(
+    name: str,
+    x: float,
+    y: float,
+    unit: float,
+    target: bpy.types.Collection,
+    frame: bpy.types.Material,
+    canopy: bpy.types.Material,
+    counter: bpy.types.Material,
+    practical: bpy.types.Material,
+    lights: bpy.types.Collection,
+) -> None:
+    """Build one mission-owned social/blending frontage, not a building."""
+
+    center_x = x * unit
+    center_y = y * unit
+    cube(f"{name}.canopy", (center_x, center_y, 2.48), (3.8, 1.72, 0.16), target, canopy)
+    for index, (offset_x, offset_y) in enumerate(((-1.7, -0.72), (1.7, -0.72), (-1.7, 0.72), (1.7, 0.72))):
+        cube(
+            f"{name}.post.{index}",
+            (center_x + offset_x, center_y + offset_y, 1.25),
+            (0.08, 0.08, 2.5),
+            target,
+            frame,
+        )
+    cube(f"{name}.back", (center_x, center_y - 0.72, 1.28), (3.45, 0.1, 2.15), target, frame)
+    cube(f"{name}.counter", (center_x, center_y + 0.54, 0.92), (2.9, 0.58, 1.12), target, counter)
+    for index, offset_x in enumerate((-0.92, 0.0, 0.92)):
+        cube(
+            f"{name}.display.{index}",
+            (center_x + offset_x, center_y + 0.22, 1.47),
+            (0.68, 0.18, 0.42),
+            target,
+            practical if index == 1 else counter,
+        )
+    light_data = bpy.data.lights.new(f"{name}.light", "POINT")
+    light_data.energy = 240
+    light_data.color = (1.0, 0.35, 0.12)
+    light_data.shadow_soft_size = 1.15
+    light = bpy.data.objects.new(light_data.name, light_data)
+    light.location = (center_x, center_y + 0.18, 2.22)
+    lights.objects.link(light)
+
+
 def add_verifier_drone(
     name: str,
     x: float,
@@ -1333,91 +1555,127 @@ def add_verifier_drone(
     dark: bpy.types.Material,
     tech: bpy.types.Material,
 ) -> None:
-    cylinder(name, (x * unit, y * unit, z), 1.25, 0.34, target, dark, 32)
-    cylinder(f"{name}.ring", (x * unit, y * unit, z - 0.2), 0.92, 0.08, target, tech, 32)
+    cylinder(name, (x * unit, y * unit, z), 0.72, 0.22, target, dark, 32)
+    cylinder(f"{name}.ring", (x * unit, y * unit, z - 0.13), 0.52, 0.055, target, tech, 32)
     for index, angle in enumerate((45, 135, 225, 315)):
         radians = math.radians(angle)
         cube(
             f"{name}.sensor.{index}",
-            (x * unit + math.cos(radians) * 0.9, y * unit + math.sin(radians) * 0.9, z - 0.12),
-            (0.18, 0.18, 0.14),
+            (x * unit + math.cos(radians) * 0.5, y * unit + math.sin(radians) * 0.5, z - 0.08),
+            (0.11, 0.11, 0.09),
             target,
             tech,
         )
 
 
-def add_human_proxy(
+def add_lush_planter(
     name: str,
     x: float,
     y: float,
     unit: float,
     target: bpy.types.Collection,
-    clothing: bpy.types.Material,
-    skin: bpy.types.Material,
+    concrete: bpy.types.Material,
+    stem: bpy.types.Material,
+    foliage: bpy.types.Material,
 ) -> None:
-    # Runtime actors are deliberately presented larger than strict perspective
-    # so they remain readable against the architectural plate. Keep the authoring
-    # proof at the same relationship instead of using tiny realistic mannequins.
-    perspective_scale = 2.25
-    bpy.ops.mesh.primitive_cone_add(
-        vertices=12,
-        radius1=0.24 * perspective_scale,
-        radius2=0.18 * perspective_scale,
-        depth=0.72 * perspective_scale,
-        location=(x * unit, y * unit, 1.12 * perspective_scale),
-    )
-    torso = bpy.context.object
-    torso.name = f"{name}.torso"
-    torso.data.materials.append(clothing)
-    move_to_collection(torso, target)
-    hips = cube(
-        f"{name}.hips",
-        (x * unit, y * unit, 0.73 * perspective_scale),
-        (0.42 * perspective_scale, 0.3 * perspective_scale, 0.22 * perspective_scale),
-        target,
-        clothing,
-    )
-    bevel_object(hips, 0.08)
-    bpy.ops.mesh.primitive_uv_sphere_add(
-        segments=16,
-        ring_count=8,
-        radius=0.19 * perspective_scale,
-        location=(x * unit, y * unit, 1.69 * perspective_scale),
-    )
-    head = bpy.context.object
-    head.name = f"{name}.head"
-    head.data.materials.append(skin)
-    move_to_collection(head, target)
-    if "protagonist" in name or "security" in name:
-        backpack = cube(
-            f"{name}.backpack",
-            (x * unit + 0.12 * perspective_scale, y * unit + 0.13 * perspective_scale, 1.12 * perspective_scale),
-            (0.34 * perspective_scale, 0.18 * perspective_scale, 0.48 * perspective_scale),
-            target,
-            clothing,
-        )
-        bevel_object(backpack, 0.08)
-    for offset in (-0.12, 0.12):
+    """Create one restrained organic public-realm cluster at human scale."""
+
+    cube(f"{name}.box", (x * unit, y * unit, 0.32), (1.45, 0.78, 0.62), target, concrete)
+    for index, (offset_x, offset_y, height, radius) in enumerate((
+        (-0.32, -0.08, 0.95, 0.33),
+        (0.02, 0.08, 1.18, 0.38),
+        (0.34, -0.03, 0.88, 0.31),
+    )):
         cylinder(
-            f"{name}.leg.{offset}",
-            (x * unit + offset * perspective_scale, y * unit, 0.34 * perspective_scale),
-            0.075 * perspective_scale,
-            0.68 * perspective_scale,
+            f"{name}.stem.{index}",
+            (x * unit + offset_x, y * unit + offset_y, 0.66 + height * 0.34),
+            0.035,
+            height * 0.68,
             target,
-            clothing,
+            stem,
             10,
         )
-    for offset, lean in ((-0.31, -10), (0.31, 10)):
-        arm = cylinder(
-            f"{name}.arm.{offset}",
-            (x * unit + offset * perspective_scale, y * unit, 1.12 * perspective_scale),
-            0.065 * perspective_scale,
-            0.62 * perspective_scale,
-            target,
-            clothing,
-            10,
+        bpy.ops.mesh.primitive_ico_sphere_add(
+            subdivisions=2,
+            radius=radius,
+            location=(x * unit + offset_x, y * unit + offset_y, 0.86 + height * 0.72),
         )
-        arm.rotation_euler[1] = math.radians(lean)
+        crown = bpy.context.object
+        crown.name = f"{name}.crown.{index}"
+        crown.scale = (1.0, 0.72, 1.18)
+        crown.data.materials.append(foliage)
+        move_to_collection(crown, target)
+
+
+def add_actor_sprite_proof(
+    name: str,
+    sprite_set_id: str,
+    x: float,
+    y: float,
+    unit: float,
+    target: bpy.types.Collection,
+    presentation_scale: float,
+) -> None:
+    """Place frame zero from a separate runtime sheet as scale proof only."""
+
+    sprite_path = (
+        SCRIPT_DIRECTORY.parents[3]
+        / "the-getaway/public/characters"
+        / sprite_set_id
+        / "idle-south.png"
+    )
+    if not sprite_path.is_file():
+        raise RuntimeError(f"Missing GET-204 actor proof sheet: {sprite_path}")
+
+    frame_height = 1.72 * presentation_scale
+    frame_width = frame_height * (64 / 96)
+    screen_axis = Vector((1.0, -1.0, 0.0)).normalized()
+    center = Vector((x * unit, y * unit, 0.0))
+    left = center - screen_axis * (frame_width / 2)
+    right = center + screen_axis * (frame_width / 2)
+    mesh = bpy.data.meshes.new(f"{name}.mesh")
+    mesh.from_pydata(
+        [
+            tuple(left),
+            tuple(right),
+            tuple(right + Vector((0.0, 0.0, frame_height))),
+            tuple(left + Vector((0.0, 0.0, frame_height))),
+        ],
+        [],
+        [(0, 1, 2, 3)],
+    )
+    uv_layer = mesh.uv_layers.new(name="GET204 first idle frame")
+    for loop, uv in zip(uv_layer.data, ((0.0, 0.0), (0.25, 0.0), (0.25, 1.0), (0.0, 1.0))):
+        loop.uv = uv
+
+    actor_material = bpy.data.materials.new(f"{name}.material")
+    actor_material.use_nodes = True
+    nodes = actor_material.node_tree.nodes
+    links = actor_material.node_tree.links
+    nodes.clear()
+    output = nodes.new("ShaderNodeOutputMaterial")
+    shader = nodes.new("ShaderNodeBsdfPrincipled")
+    texture = nodes.new("ShaderNodeTexImage")
+    texture.image = bpy.data.images.load(str(sprite_path), check_existing=True)
+    texture.interpolation = "Linear"
+    shader.inputs["Roughness"].default_value = 0.82
+    links.new(texture.outputs["Color"], shader.inputs["Base Color"])
+    links.new(texture.outputs["Alpha"], shader.inputs["Alpha"])
+    if "Emission Color" in shader.inputs:
+        links.new(texture.outputs["Color"], shader.inputs["Emission Color"])
+    if "Emission Strength" in shader.inputs:
+        shader.inputs["Emission Strength"].default_value = 0.35
+    links.new(shader.outputs["BSDF"], output.inputs["Surface"])
+    if hasattr(actor_material, "surface_render_method"):
+        actor_material.surface_render_method = "DITHERED"
+    elif hasattr(actor_material, "blend_method"):
+        actor_material.blend_method = "BLEND"
+
+    mesh.materials.append(actor_material)
+    actor = bpy.data.objects.new(name, mesh)
+    actor["get204_proof_only"] = True
+    actor["get204_sprite_set_id"] = sprite_set_id
+    target.objects.link(actor)
 
 
 def build_city_details(
@@ -1431,44 +1689,44 @@ def build_city_details(
     dark = material("GET204 City ink metal", (0.022, 0.03, 0.04, 1), 0.42, 0.45)
     bone = material("GET204 City bone metal", (0.34, 0.30, 0.24, 1), 0.56, 0.08)
     glass = material("GET204 City dark glass", (0.02, 0.065, 0.085, 1), 0.12, 0.08)
-    tech = material("GET204 City device cyan", (0.01, 0.11, 0.14, 1), 0.2, 0.08, (0.03, 0.52, 0.68, 1), 3.0)
-    warm = material("GET204 City sodium practical", (0.2, 0.07, 0.018, 1), 0.25, 0.04, (1.0, 0.26, 0.045, 1), 4.0)
-    crimson = material("GET204 City threat crimson", (0.17, 0.012, 0.012, 1), 0.32, 0.05, (0.8, 0.015, 0.01, 1), 2.6)
+    tech = material("GET204 City device cyan", (0.01, 0.09, 0.115, 1), 0.34, 0.05, (0.025, 0.36, 0.46, 1), 1.45)
+    warm = material("GET204 City sodium practical", (0.16, 0.055, 0.014, 1), 0.38, 0.03, (0.72, 0.16, 0.025, 1), 1.25)
+    crimson = material("GET204 City threat crimson", (0.13, 0.01, 0.01, 1), 0.42, 0.03, (0.56, 0.012, 0.008, 1), 1.55)
     foliage = material("GET204 City muted foliage", (0.045, 0.09, 0.065, 1), 0.72)
     service = material("GET204 City service teal", (0.055, 0.15, 0.15, 1), 0.42, 0.08)
     commuter = material("GET204 City commuter graphite", (0.11, 0.12, 0.13, 1), 0.3, 0.14)
     taxi = material("GET204 City muted taxi amber", (0.34, 0.18, 0.035, 1), 0.34, 0.1)
-    skin = material("GET204 City proof skin", (0.3, 0.18, 0.12, 1), 0.62)
-    civilian = material("GET204 City proof civilian", (0.08, 0.105, 0.12, 1), 0.72)
-    security = material("GET204 City proof security", (0.035, 0.045, 0.06, 1), 0.48, 0.12)
-    protagonist = material("GET204 City proof protagonist", (0.34, 0.13, 0.045, 1), 0.48, 0.08)
 
     for index, (x, y) in enumerate((
-        (21, 6), (21, 22), (21, 36), (21, 49),
-        (53, 7), (53, 24), (53, 36), (53, 49),
-        (9, 30), (34, 30), (66, 30), (14, 43), (40, 43), (72, 43),
+        (9, 20.62), (18, 23.38), (25, 20.62),
+        (33, 23.38), (43, 20.62), (51, 23.38),
+        (27.62, 7), (30.38, 16), (27.62, 29), (30.38, 39),
     )):
         add_street_light(f"GET204.CITY.light.{index}", x * unit, y * unit, details, dark, warm, lights)
 
     for index, (x, y, rotation) in enumerate((
-        (49.5, 15.0, 0),
-        (56.5, 28.0, 180),
-        (69.5, 37.0, 180),
-        (64.0, 45.0, 270),
-        (18.5, 41.5, 90),
+        (29.0, 10.0, 0),
+        (44.0, 13.5, 180),
+        (44.0, 34.5, 180),
     )):
         add_camera(f"GET204.CITY.camera.{index}", x * unit, y * unit, rotation, details, dark, tech)
+    add_camera("GET204.CITY.camera.public-threshold", 30.55 * unit, 20.45 * unit, 225, details, dark, tech)
 
-    add_transit_shelter(34.0 * unit, 28.0 * unit, details, dark, glass, bone)
-    add_verifier_booth(57.0 * unit, 30.0 * unit, details, dark, glass, tech)
-    add_service_van(60.0 * unit, 30.2 * unit, details, service, dark, glass)
-    add_service_van(67.0 * unit, 43.0 * unit, details, service, dark, glass)
+    add_compact_transit_shelter(
+        "GET204.CITY.transit",
+        23.7,
+        20.62,
+        unit,
+        details,
+        dark,
+        glass,
+        bone,
+    )
+    add_verifier_booth(32.2 * unit, 20.62 * unit, details, dark, glass, tech)
+    add_service_van(49.0 * unit, 34.5 * unit, details, service, dark, glass)
     for index, (x, y, rotation, body) in enumerate((
-        (26.0, 30.0, 0, commuter),
-        (44.5, 30.0, 180, taxi),
-        (53.0, 20.5, 90, commuter),
-        (21.0, 10.0, 90, service),
-        (53.0, 47.5, 270, taxi),
+        (11.0, 22.0, 0, commuter),
+        (29.0, 8.0, 90, taxi),
     )):
         add_compact_car(
             f"GET204.CITY.car.{index}",
@@ -1482,27 +1740,59 @@ def build_city_details(
             glass,
             warm,
         )
-    add_bollard_row("GET204.CITY.control.bollards", (56.2 * unit, 27.2 * unit), (56.2 * unit, 32.8 * unit), 7, details, dark, crimson)
+    add_bollard_row("GET204.CITY.control.bollards", (33.0 * unit, 20.62 * unit), (36.0 * unit, 20.62 * unit), 5, details, dark, crimson)
 
-    for index, (x, y) in enumerate(((31.8, 28.0), (36.2, 28.0), (17.8, 44.2), (57.8, 34.0))):
-        add_planter(f"GET204.CITY.planter.{index}", x * unit, y * unit, details, surfaces["concrete"], foliage)
-    add_bench("GET204.CITY.transit.bench", 33.5 * unit, 28.4 * unit, details, dark, bone)
-    add_bike_rack("GET204.CITY.transit.bikes", 36.8 * unit, 28.2 * unit, details, dark)
-    add_cafe_table("GET204.CITY.cafe.table.0", 39.0, 28.0, unit, details, dark, bone)
-    add_cafe_table("GET204.CITY.cafe.table.1", 40.4, 28.0, unit, details, dark, bone)
-    add_screen_pylon("GET204.CITY.screen.public", 38.0, 29.0, unit, details, dark, tech)
-    add_screen_pylon("GET204.CITY.screen.control", 57.8, 26.5, unit, details, dark, warm)
-    add_screen_pylon("GET204.CITY.screen.curfew", 68.2, 42.0, unit, details, dark, crimson)
-    add_verifier_drone("GET204.CITY.drone.verifier", 72.4, 31.8, 7.2, unit, details, dark, tech)
+    for index, (x, y) in enumerate((
+        (14.5, 20.62), (19.8, 20.62), (26.5, 20.62),
+        (26.7, 23.38), (31.3, 23.38), (38.5, 20.62),
+    )):
+        add_lush_planter(
+            f"GET204.CITY.planter.{index}",
+            x,
+            y,
+            unit,
+            details,
+            surfaces["concrete"],
+            dark,
+            foliage,
+        )
+    add_bench("GET204.CITY.transit.bench", 22.4 * unit, 20.62 * unit, details, dark, bone)
+    add_bench("GET204.CITY.public.bench", 26.65 * unit, 23.38 * unit, details, dark, bone, 180)
+    add_bike_rack("GET204.CITY.transit.bikes", 25.1 * unit, 20.62 * unit, details, dark)
+    add_cafe_table("GET204.CITY.cafe.table.0", 16.6, 20.72, unit, details, dark, bone)
+    add_contact_stall(
+        "GET204.CITY.contact-stall.public",
+        18.6,
+        20.52,
+        unit,
+        details,
+        dark,
+        service,
+        bone,
+        warm,
+        lights,
+    )
+    add_screen_pylon("GET204.CITY.screen.public", 26.5, 20.45, unit, details, dark, tech)
+    add_screen_pylon("GET204.CITY.screen.control", 36.8, 20.62, unit, details, dark, warm)
+    add_hidzu_wall_mark(
+        "GET204.CITY.identity.logistics",
+        36.8,
+        20.07,
+        8.4,
+        unit,
+        details,
+        dark,
+        tech,
+    )
+    add_verifier_drone("GET204.CITY.drone.verifier", 27.0, 18.0, 9.0, unit, proof, dark, tech)
 
     practicals = (
-        (16.0, 49.0, 3.2, 520),
-        (24.4, 30.0, 3.4, 680),
-        (35.0, 15.0, 4.0, 760),
-        (49.0, 30.0, 4.0, 700),
-        (58.2, 30.0, 4.0, 760),
-        (69.5, 38.0, 3.5, 620),
-        (64.0, 43.0, 3.5, 650),
+        (13.0, 36.5, 3.2, 430),
+        (12.0, 20.05, 3.2, 420),
+        (25.5, 20.05, 3.4, 460),
+        (33.0, 20.05, 3.8, 500),
+        (39.0, 20.05, 3.8, 470),
+        (44.0, 34.5, 3.2, 440),
     )
     for index, (x, y, z, energy) in enumerate(practicals):
         add_practical_light(f"GET204.CITY.practical.{index}", x * unit, y * unit, z, energy, lights)
@@ -1514,32 +1804,26 @@ def build_city_details(
             warm,
         )
 
-    civilian_positions = (
-        (30.5, 28.1), (31.8, 27.9), (33.2, 28.15), (35.4, 27.95),
-        (39.2, 28.1), (40.5, 27.9), (16.0, 42.5), (19.5, 43.2),
-        (40.5, 15.0), (45.0, 15.3), (58.0, 29.5), (59.5, 30.4),
-        (61.0, 29.5), (63.0, 43.2), (67.0, 42.7), (72.0, 43.1),
+    proof_figures = (
+        ("protagonist", "player_civilian_01", 25.3, 22.35, 2.35),
+        ("contact", "contact_naila", 19.4, 20.95, 1.45),
+        ("civilian", "civilian_transit", 24.15, 20.95, 1.38),
+        ("security", "security_hidzu_identity", 31.25, 21.7, 1.55),
     )
-    for index, (x, y) in enumerate(civilian_positions):
-        add_human_proxy(f"GET204.CITY.civilian.{index}", x, y, unit, proof, civilian if index % 3 else service, skin)
-    for index, (x, y) in enumerate(((56.8, 29.0), (60.0, 31.0), (69.5, 38.0), (72.0, 42.0))):
-        add_human_proxy(f"GET204.CITY.security.{index}", x, y, unit, proof, security, skin)
-    for subdistrict_id, point in recipe["camera"]["proofStarts"].items():
-        x = float(point["x"])
-        y = float(point["y"])
-        add_human_proxy(
-            f"GET204.CITY.protagonist.{subdistrict_id}",
+    for name, sprite_set_id, x, y, presentation_scale in proof_figures:
+        add_actor_sprite_proof(
+            f"GET204.CITY.proof.{name}",
+            sprite_set_id,
             x,
             y,
             unit,
             proof,
-            protagonist,
-            skin,
+            presentation_scale,
         )
         shadow = cylinder(
-            f"GET204.CITY.protagonist.{subdistrict_id}.shadow",
+            f"GET204.CITY.proof.{name}.shadow",
             (x * unit, y * unit, 0.13),
-            0.72,
+            0.32 * presentation_scale,
             0.02,
             proof,
             dark,
@@ -1548,7 +1832,7 @@ def build_city_details(
         shadow.scale.y = 0.48
     for light_object in lights.objects:
         if getattr(light_object.data, "type", None) == "POINT":
-            light_object.data.energy *= 3.25
+            light_object.data.energy *= 1.35
 
 
 def configure_scene(
@@ -1566,7 +1850,7 @@ def configure_scene(
     scene.render.use_file_extension = True
     if hasattr(scene.render, "use_freestyle"):
         scene.render.use_freestyle = False
-    scene.view_settings.exposure = 1.85
+    scene.view_settings.exposure = 1.25
     scene.view_settings.gamma = 1.0
     try:
         scene.view_settings.look = "AgX - Medium High Contrast"
@@ -1587,8 +1871,8 @@ def configure_scene(
     glow.inputs["Type"].default_value = "Fog Glow"
     glow.inputs["Quality"].default_value = "High"
     glow.inputs["Threshold"].default_value = 1.15
-    glow.inputs["Strength"].default_value = 0.18
-    glow.inputs["Size"].default_value = 0.42
+    glow.inputs["Strength"].default_value = 0.03
+    glow.inputs["Size"].default_value = 0.2
     output = compositor.nodes.new("NodeGroupOutput")
     compositor.links.new(render_layers.outputs["Image"], glow.inputs["Image"])
     compositor.links.new(glow.outputs["Image"], output.inputs["Image"])
@@ -1599,8 +1883,8 @@ def configure_scene(
     scene.world.use_nodes = True
     background = scene.world.node_tree.nodes.get("Background") if scene.world.node_tree else None
     if background:
-        background.inputs["Color"].default_value = (0.012, 0.018, 0.03, 1)
-        background.inputs["Strength"].default_value = 0.62
+        background.inputs["Color"].default_value = (0.028, 0.055, 0.09, 1)
+        background.inputs["Strength"].default_value = 0.48
 
     camera_data = bpy.data.cameras.new("GET204 City registered camera")
     camera_data.type = "ORTHO"
@@ -1620,8 +1904,8 @@ def configure_scene(
         4.0,
     ))
     sun_data = bpy.data.lights.new("GET204 City upper-left key", "SUN")
-    sun_data.energy = 2.15
-    sun_data.angle = math.radians(8)
+    sun_data.energy = 1.45
+    sun_data.angle = math.radians(6)
     sun_data.color = (1.0, 0.84, 0.68)
     sun = bpy.data.objects.new("GET204 City upper-left key", sun_data)
     sun.location = target + Vector((-160, 120, 230))
@@ -1629,10 +1913,10 @@ def configure_scene(
     lights.objects.link(sun)
 
     area_data = bpy.data.lights.new("GET204 City cool institutional fill", "AREA")
-    area_data.energy = 5600
+    area_data.energy = 4500
     area_data.shape = "DISK"
-    area_data.size = 180
-    area_data.color = (0.46, 0.58, 0.72)
+    area_data.size = 220
+    area_data.color = (0.52, 0.65, 0.82)
     area = bpy.data.objects.new("GET204 City cool institutional fill", area_data)
     area.location = target + Vector((120, -150, 155))
     point_at(area, target)
@@ -1688,6 +1972,7 @@ def render_view(
     zoom: float,
     material_override: bpy.types.Material | None = None,
     hidden_cluster_ids: Sequence[str] = (),
+    hide_scale_proof: bool = False,
 ) -> Path:
     aim_registered_camera(scene, camera, recipe, target_layout, width, height, zoom)
     original_exposure = scene.view_settings.exposure
@@ -1698,6 +1983,13 @@ def render_view(
         obj
         for obj in scene.objects
         if obj.get("get204_cluster_id") in hidden_cluster_ids
+        or (
+            hide_scale_proof
+            and any(
+                collection.name == "GET204_MISSION_DISTRICT_SCALE_PROOF"
+                for collection in obj.users_collection
+            )
+        )
     ]
     original_hidden_states = {obj.name: bool(obj.hide_render) for obj in hidden_objects}
     for obj in hidden_objects:
@@ -1776,11 +2068,26 @@ def render_requested_views(
                 1440,
                 900,
                 float(recipe["camera"]["runtimeDefaultZoom"]),
+                hidden_cluster_ids=recipe["camera"]["proofOccluderClusterIds"][subdistrict_id],
             ))
     if mode == "exports":
-        raise RuntimeError(
-            "Full-district runtime export is intentionally blocked until the master-scene preview passes internal visual review."
+        runtime_root = output_root.parent / "runtime"
+        runtime_width = 4096
+        runtime_height = 2304
+        runtime_zoom = float(recipe["camera"]["manualOverviewZoom"]) * (
+            runtime_width / 1920
         )
+        outputs.append(render_view(
+            scene,
+            camera,
+            recipe,
+            runtime_root / "overview-people-free-4096x2304.png",
+            center,
+            runtime_width,
+            runtime_height,
+            runtime_zoom,
+            hide_scale_proof=True,
+        ))
     return outputs
 
 
@@ -1799,7 +2106,7 @@ def write_metadata(
         "id": recipe["id"],
         "ticket": "GET-204",
         "acceptanceState": recipe["acceptanceState"],
-        "purpose": "Ignored complete-city authoring evidence; live requester acceptance remains pending.",
+        "purpose": "Four-block named-KitBash authoring evidence plus requester-authorized people-free live candidate export.",
         "blender": {"version": bpy.app.version_string, "buildHash": bpy.app.build_hash.decode("utf-8")},
         "recipe": {"path": str(recipe_path.relative_to(repo_root)), "sha256": sha256_file(recipe_path)},
         "references": recipe["references"],
@@ -1834,19 +2141,29 @@ def main() -> None:
     scene = reset_scene()
     fbx_path = stage_source(repo_root, source_root, archive)
     imported = import_fbx(fbx_path)
+    texture_cache = os.environ.get("GETAWAY_NEO_TOKYO_TEXTURE_CACHE")
+    texture_source_root = (
+        Path(texture_cache).expanduser().resolve()
+        if texture_cache
+        else source_root
+    )
+    if texture_cache and not (texture_source_root / "Textures").is_dir():
+        raise RuntimeError(
+            "GETAWAY_NEO_TOKYO_TEXTURE_CACHE must contain the verified Textures directory"
+        )
     source_texture_evidence = relink_source_images(
-        source_root,
+        texture_source_root,
         recipe["source"]["textureSearchRoots"],
     )
-    repair_source_materials(bpy.data.materials)
+    repair_source_materials(bpy.data.materials, texture_source_root)
     groups = group_buildings(imported)
 
-    master = collection("GET204_FULL_DISTRICT", scene.collection)
-    ground = collection("GET204_FULL_DISTRICT_GROUND", master)
-    architecture = collection("GET204_FULL_DISTRICT_ARCHITECTURE", master)
-    details = collection("GET204_FULL_DISTRICT_DETAILS", master)
-    proof = collection("GET204_FULL_DISTRICT_SCALE_PROOF", master)
-    lights = collection("GET204_FULL_DISTRICT_LIGHTS", master)
+    master = collection("GET204_MISSION_DISTRICT", scene.collection)
+    ground = collection("GET204_MISSION_DISTRICT_GROUND", master)
+    architecture = collection("GET204_MISSION_DISTRICT_ARCHITECTURE", master)
+    details = collection("GET204_MISSION_DISTRICT_DETAILS", master)
+    proof = collection("GET204_MISSION_DISTRICT_SCALE_PROOF", master)
+    lights = collection("GET204_MISSION_DISTRICT_LIGHTS", master)
 
     kit_building_evidence = place_architectural_clusters(groups, recipe, architecture)
     source_prop_evidence = place_source_props(imported, recipe, {"details": details})
@@ -1868,7 +2185,7 @@ def main() -> None:
 
     output_root = repo_root / GENERATED_RELATIVE_ROOT / "previews"
     outputs = render_requested_views(scene, camera, recipe, output_root, args.mode, args.view)
-    scene_path = repo_root / GENERATED_RELATIVE_ROOT / "master" / "get204-full-district.blend"
+    scene_path = repo_root / GENERATED_RELATIVE_ROOT / "master" / "get204-mission-district.blend"
     scene_path.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(scene_path), compress=True)
     write_metadata(
@@ -1882,7 +2199,7 @@ def main() -> None:
         scene_path,
     )
     print(
-        f"GET-204 full district complete: {len(building_evidence)} clusters, "
+        f"GET-204 four-block mission district complete: {len(building_evidence)} clusters, "
         f"{len(outputs)} renders -> {output_root}"
     )
 

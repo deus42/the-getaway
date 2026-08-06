@@ -254,6 +254,7 @@ export interface Level0ArtBundle {
 }
 
 export type Get204ReferenceRole =
+  | 'approved-composition-previsualization'
   | 'quality-look-target'
   | 'close-play-target'
   | 'overview-density-target';
@@ -272,6 +273,12 @@ export type Get204ClusterRole =
   | 'controlled-threshold'
   | 'district-landmark';
 
+export type Get204PlacementAnchor =
+  | 'north-west'
+  | 'north-east'
+  | 'south-west'
+  | 'south-east';
+
 export interface Get204VisualReference {
   role: Get204ReferenceRole;
   path: string;
@@ -284,7 +291,7 @@ export interface Get204CandidateSubdistrict {
   name: string;
   playerPromise: string;
   bounds: WorldPolygon;
-  landmarkClusterIds: string[];
+  identityClusterIds: string[];
 }
 
 export interface Get204CandidateTraversalLoop {
@@ -308,12 +315,14 @@ export interface Get204RegisteredArchitecturalCluster {
   blockId: string;
   subdistrictId: Get204SubdistrictId;
   role: Get204ClusterRole;
-  artSource: 'owned-kit' | 'owned-kit-cropped';
+  artSource: 'owned-kit';
   sourcePrefix: string;
   sourceCollection: string;
   layoutPosition: WorldPoint;
   rotationDegrees: number;
   uniformScale: number;
+  placementAnchor: Get204PlacementAnchor;
+  streetWallInsetMeters: number;
   verticalCropMeters?: number;
   cropRectangle: { x: number; y: number; width: number; height: number };
   sceneTopLeft: WorldPoint;
@@ -344,23 +353,24 @@ export interface Get204SemanticAnchor {
     | 'drone-launch'
     | 'hiding'
     | 'blending'
-    | 'objective';
+    | 'objective'
+    | 'audio'
+    | 'interaction';
   position: WorldPoint;
   radius: number;
   ownerId?: string;
 }
 
 /**
- * Authoring and live-proof contract for the complete GET-204 rebuild. It is
- * intentionally separate from the superseded schema-v1 unchanged-kit recipe:
- * the accepted candidate promotes its geometry into the shared layout only
- * after the requester approves the live result.
+ * Authoring and proof contract for the four-block GET-204 source rebuild. The
+ * accepted Blender candidate promotes its geometry into the shared layout only
+ * after the requester approves the rendered close and overview pair.
  */
 export interface Get204FullDistrictRecipe {
-  schemaVersion: 2;
+  schemaVersion: 3;
   id: string;
   ticket: 'GET-204';
-  acceptanceState: 'FULL_DISTRICT_LIVE_CANDIDATE';
+  acceptanceState: 'FOUR_BLOCK_BLENDER_SOURCE_CANDIDATE';
   usage: 'candidate-evidence';
   references: Get204VisualReference[];
   source: {
@@ -369,6 +379,7 @@ export interface Get204FullDistrictRecipe {
     sourceRootVariable: 'GETAWAY_NEO_TOKYO_ROOT';
     format: 'FBX';
     textureSearchRoots: ['Textures', 'jpeg images', 'c4d/tex'];
+    objectSuffixExclusions: Record<string, string[]>;
     rawSourceCommitted: false;
   };
   coordinateSystem: {
@@ -395,7 +406,7 @@ export interface Get204FullDistrictRecipe {
     density: {
       minimumVisibleBuildingInstances: number;
       maximumVisibleBuildingInstances: number;
-      blockClusterPolicy: 'compact-perimeter-blocks-with-curated-kit-reuse';
+      blockClusterPolicy: 'four-mission-blocks-with-named-kit-provenance';
       croppedKitHeroFrontageCount: number;
       minimumBuiltFootprintRatio: number;
       minimumDistinctSourceRoots: number;
@@ -436,9 +447,9 @@ export interface Get204FullDistrictRecipe {
     anchors: Get204SemanticAnchor[];
   };
   populationStaging: {
-    civilians: number;
-    serviceWorkers: number;
-    security: number;
+    proofScaleFigures: number;
+    bakedEnvironmentActorCount: 0;
+    runtimeActorPolicy: 'separate-runtime-actors';
     unarmedVerifierDrones: 1;
   };
   lighting: {
@@ -462,7 +473,7 @@ export interface Get204FullDistrictRecipe {
   runtime: {
     enablement: 'normal-level0-path';
     fallbackPolicy: 'fail-visible-on-required-candidate-asset';
-    runtimeIdentity: 'get204-full-district-live-candidate-v1';
+    runtimeIdentity: 'get204-four-block-source-candidate-v1';
     prohibitedQueryValues: string[];
     prohibitedFallbackProfiles: string[];
   };
