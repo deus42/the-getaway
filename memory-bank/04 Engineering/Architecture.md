@@ -33,7 +33,7 @@ React owns:
 - main menu and New Game entry;
 - character creation;
 - four-lane HUD DOM;
-- dialogue, Character screen, dossier, feed, terminal, debrief, failure, Retry, and completion overlays;
+- dialogue, Character screen, dossier, feed, terminal, debrief, failure, Retry, completion, and Game Design Bible overlays;
 - localization rendering;
 - accessible focus, keyboard routing, and modal ownership;
 - creation/destruction of the Phaser canvas boundary.
@@ -82,6 +82,7 @@ Typed content modules/manifests own:
 - hiding/blending contexts;
 - terminals and surveillance devices;
 - George prompts;
+- the curated finalized-only bilingual Game Design Bible catalog, its stable topic IDs, and non-rendered source/decision traceability metadata;
 - audio cue registry;
 - art and actor manifests;
 - acceptance fixtures and deterministic diagnostics.
@@ -115,6 +116,7 @@ Current ownership is explicit:
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
 - `src/game/level0/scene/Level0Scene.ts` owns live city-layer composition, explicit diagnostic fallback, separate actor transforms/occlusion, camera, and input. City treatment/LOD selection is derived from camera state; protagonist position must never replace one architectural plate with another or mutate geometry presentation;
 - `src/game/level0/playtest/level0AgentBridge.ts` derives diagnostics from the same store/layout and may dispatch only normal runtime events;
+- `src/content/gameBible/` owns the finalized English/Ukrainian reference catalog, shared language-neutral rules, search extraction, relations, topic coverage, and non-rendered traceability; `src/components/level0/Level0GameBible.tsx` owns its accessible presentation and cannot dispatch game-domain effects;
 - `art/iso-assets/contracts/level0-layout-contract.json` is the deterministic Blender-facing export of the same contract.
 
 The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 2 uses independent autosave and Retry keys plus exact nested envelopes, so the legacy subscriber cannot hydrate or overwrite the canonical run. Validation reconstructs and checks normalized callsign/build budgets, every committed check from its recorded Paranoia/facts/contexts, the ordered resource before/after chain, threshold announcements, one-shot XP milestones, pending levels, allocation history, and final build totals. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and failure copy that does not exactly match incomplete requirements. Retry additionally requires the authored departure anchor and carries the complete RPG ledger. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists Retry before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, check requirements, XP, and resource presets remain provisional while their `OPEN-*` decisions are unresolved.
@@ -858,7 +860,7 @@ George consumes a read-only context assembled from mission state, facts, known d
 
 ## 10. Health, Paranoia, and progression
 
-Health and Paranoia changes are idempotent authored effects with stable event/source IDs, signed amount, exact before/after values, world minute, feedback key, Retry treatment, and crossed-threshold metadata. Retry treatment is derived from the operation-departure boundary: events already present when the immutable snapshot is created are `captured-at-departure`; later events are `discard-on-retry`. Presets cannot hard-code a contradictory treatment. An existing event ID or terminal run rejects another application. No frame loop applies passive damage or Paranoia decay/gain.
+Health and Paranoia changes are idempotent authored effects with stable event/source IDs, signed amount, exact before/after values, world minute, feedback key, Retry treatment, and crossed-threshold metadata. Retry treatment is derived from the operation-departure boundary: events already present when the immutable snapshot is created are `captured-at-departure`; later events are `discard-on-retry`. Presets cannot hard-code a contradictory treatment. An existing event ID or terminal run rejects another application. No render frame loop applies passive damage or Paranoia decay/gain; the authoritative surveillance reducer owns the deterministic valid-exposure accumulator and emits source-attributed ledger deltas under `OPEN-PAR-001`.
 
 The Redux runtime keeps only ephemeral resource-event IDs for the currently visible feedback. The HUD resolves those IDs back to the authoritative run ledger and renders localized resource, signed amount, and authored source copy; it never derives player text from a machine ID. Persistent consequence summaries remain outcome-ledger data and never reuse transient resource logs.
 
@@ -917,6 +919,24 @@ Selectors provide one read model per lane. CSS ownership remains component-local
 
 Persistent height must remain within 16–18% at supported desktop viewports. Overlays acquire pause/focus ownership and fit at `1280×720`. Overlay close returns focus to the correct world/control owner without issuing gameplay input.
 
+The Game Design Bible follows a one-way content path:
+
+```text
+canonical Game Design package + Approved decision rows
+  → curated finalized-only EN/UK typed catalogs
+  → catalog validation, search index, and independent topic/decision traceability
+  → Level0GameBible semantic renderer
+  → Level0RuntimeShell entry, focus, input, and transient pause ownership
+```
+
+Canonical Markdown is never rendered at runtime. `sourceRefs` and `decisionRefs` are validation metadata excluded from renderer props, search text, DOM, and the player-visible text bridge. A test-only inventory parses the current Decision Register and required-topic registry so both locale catalogs cannot jointly omit an Approved player-facing rule. Governance-only decisions require a bounded non-player-facing classification.
+
+`Level0RuntimeShell` owns local Bible UI state and an idempotent `bible` pause acquisition record. Start-menu access creates no run and no pause owner. Active-play access acquires `bible` once; paused-menu access composes `menu + bible`; closing, unmount, run replacement, New Game, and shell teardown release only an owner acquired by that overlay instance. `bible` is a valid transient pause owner for runtime decoding but is stripped from autosave, hydration, and Retry like other UI-only owners.
+
+The overlay blocks world keyboard, pointer, and controller input and keeps underlying React/Phaser surfaces inert and hidden from assistive navigation while open. Its UI state is not Redux domain state. The agent bridge receives an optional ref-backed `getUiState` callback and reports open/chapter/section/query/drawer/result information only during `render_game_to_text`; it cannot use that callback to mutate the run.
+
+Responsive ownership remains inside `Level0GameBible.css`: three panes at `>=1200px`, two panes at `841–1199px`, and one reading column plus internal navigation drawer at `<=840px`. The article is capped at `820px`/`76ch`, table overflow is locally bounded, and underlying world dimensions never determine document layout.
+
 ## 14. Audio architecture
 
 A typed audio registry maps domain events to cue IDs, priority, cooldown, ducking group, spatial anchor behavior, and fallback. Required categories include city ambience, footsteps, entrances, terminals, camera sweep/focus, drone approach/verification, Suspicious, Pursuit, curfew, safehouse, Health/Paranoia effects, objectives, failure, completion, and restrained UI confirmation.
@@ -925,9 +945,9 @@ Audio is feedback, not authority. Missing audio cannot block state transitions, 
 
 ## 15. Localization architecture
 
-English and Ukrainian share stable content IDs and typed effect definitions. Only player-facing strings differ. Validation fails when a required node, choice, locked reason, objective, fact, prompt, failure cause, terminal state, or debrief line is missing in either language.
+English and Ukrainian share stable content IDs and typed effect definitions. Only player-facing strings differ. Validation fails when a required node, choice, locked reason, objective, fact, prompt, failure cause, terminal state, debrief line, Bible chapter/section/block shape, topic, relation, shared numeric rule, or search field is missing in either language.
 
-State transitions are tested once against shared content effects and with parity assertions across both localized presentations.
+State transitions are tested once against shared content effects and with parity assertions across both localized presentations. Bible acceptance additionally requires recorded semantic review of every paired chapter—including examples, tables, state flows, keywords, numbers, and cause/effect direction—because structural parity cannot prove equivalent meaning.
 
 ## 16. Failure and recovery architecture
 
@@ -950,6 +970,7 @@ Failure is a domain event that records the exact cause, freezes simulation, capt
 - mission/objective transition legality;
 - fact/check/effect validity;
 - English/Ukrainian parity;
+- Game Design Bible chapter/section/block parity, required semantic roles, Approved-decision/topic coverage, source-reference resolution, graph/search validity, and absence of governance, uncertainty, historical, implementation, repository, or delivery-process text from rendered content;
 - layout zones, loops, anchors, footprints, and reachability without pathfinding;
 - Blender mask/anchor/projection registration;
 - art manifest completeness and source/license metadata;

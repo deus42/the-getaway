@@ -39,12 +39,13 @@ This is a safety gate, not a gameplay ticket. No reset, deletion, restore, or se
 ### T1 — Canonical game-design bible and decision register
 
 **Label:** Improvement
-**State during specification work:** In Progress
+**State:** In Review; audit-backed Bible expansion uncommitted
 **Blocks:** every implementation ticket and GET-139
 
 Deliver:
 
 - canonical Game Design hub and MVP Spine;
+- forensic coverage of all 214 original structured design rounds plus later requester corrections;
 - full Level 0 contract;
 - atomic Decision Register;
 - common-template per-system specifications;
@@ -63,7 +64,7 @@ Exit gate:
 5. Requester reviews the package and authorizes execution; unresolved choices remain explicit per-ticket acceptance gates.
 6. Documentation is committed separately after explicit authorization.
 
-Only T1 may be `In Progress` until this gate opens. Afterward, keep one implementation child active at a time in dependency order.
+The original entry gate opened with the separately committed package at `b50a4cd5290490cc8ab8c3521a2c22acaa1afdce`. GET-201 remains nonterminal while this audit-backed Bible expansion awaits requester review and separate commit authorization; that uncommitted polish does not revoke already delivered predecessor gates. Keep one implementation child active at a time in dependency order.
 
 ## Gate 2 — recover the canonical foundation
 

@@ -6,8 +6,8 @@ vault: getaway-memory-bank
 # The Getaway — Vault Home
 
 ## Now (MVP)
-- [[01 MVP/00 Index|MVP Index]]
-- [[01 MVP/Game Design|Game Design (MVP source of truth)]]
+- [[01 MVP/00 Index|Game Design Bible Index]]
+- [[01 MVP/Game Design|Game Design Bible (MVP source of truth)]]
 - [[01 MVP/10 MVP Spine|MVP Spine]]
 - [[01 MVP/11 Level 0 Vertical Slice Contract|Level 0 Vertical Slice Contract]]
 - [[01 MVP/12 Game Design Decision Register|Game Design Decision Register]]
@@ -26,6 +26,6 @@ vault: getaway-memory-bank
 
 ## How to use this vault
 - Current explicit requester directives and the Decision Register outrank every lower-level artifact.
-- Canonical system specifications define current player behavior; Linear embeds their implementation scope; Architecture defines how approved behavior is owned.
+- Read the Game Design Bible hub first, then the chronological Level 0 contract and owning system chapters. Canonical system specifications define current player behavior; Linear embeds their implementation scope; Architecture defines how approved behavior is owned.
 - Use backlinks to see what a mechanic touches. Implementation history lives under `progress/` and may not override current design.
 - Rejected ideas remain only in the Decision Register and clearly historical records. Post-MVP contains only explicitly postponed work, not every removed idea.

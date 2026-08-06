@@ -129,7 +129,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Use dusk delivery activity and curfew security movement; distinguish civilian/service/security roles while authoritative schedules and surveillance remain unchanged by art.
 - Trigger a live named-contact interaction and confirm both actor presentations return cleanly to idle. Final dialogue, Retry, and debrief identity continuity remains a T7/T9/T10 acceptance gate rather than evidence claimed by T6.
 - Inspect all twelve portraits, Takahiro's broadcast portrait, and George's AR base art for identity, crop, provenance, fallback, and grounded tone.
-- `AC-L0-018`: at 1280x720, 1440x900, and 1920x1080, inspect the accepted close normal frame and full-city manual overview across dusk, blue hour, and curfew; actors must remain grounded, readable, correctly anchored, and proportionate to accepted architecture.
+- `AC-L0-018`: at 1280x720, 1440x900, and 1920x1080, inspect the accepted close normal frame and four-block mission overview across dusk, blue hour, and curfew; actors must remain grounded, readable, correctly anchored, and proportionate to accepted architecture.
 
 ## 16. Owning Linear ticket
 

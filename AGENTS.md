@@ -44,7 +44,7 @@ Intentional local overrides to Vault defaults:
 Canonical project documentation is the Markdown-only `memory-bank/` vault:
 
 - Home: `memory-bank/00 Home.md`
-- Game design (WHAT): `memory-bank/01 MVP/Game Design.md`
+- Game Design Bible entry point (WHAT): `memory-bank/01 MVP/Game Design.md`
 - MVP spine: `memory-bank/01 MVP/10 MVP Spine.md`
 - Level 0 contract: `memory-bank/01 MVP/11 Level 0 Vertical Slice Contract.md`
 - Decision register: `memory-bank/01 MVP/12 Game Design Decision Register.md`

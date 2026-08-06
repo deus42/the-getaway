@@ -14,6 +14,23 @@ In 15–20 minutes, an exposed American expatriate with a personal RPG build and
 
 The player must feel vulnerable but capable. Their strength comes from preparation, perception, social understanding, systems knowledge, composure, and movement—not military power or fantasy technology.
 
+## Journey at a glance
+
+| Chapter | Player intention | Authoritative transition | Proof of completion |
+|---|---|---|---|
+| New Game | Create somebody worth carrying forward. | Valid callsign, appearance, attributes, and skills create the run. | Build summary agrees with the Character screen and persisted identity. |
+| Safehouse | Understand immediate exposure and available planning actions. | Explicit world control begins at 18:30 inside the safehouse boundary. | Player can move, inspect, consult George, and see unavailable actions with reasons. |
+| Lira | Accept a humane operation with a credible deadline and reward. | Exact dialogue acceptance enters preparation. | Medkits, two timing contexts, midnight, and passage are understood. |
+| Preparation | Decide whether more knowledge is worth the time and travel. | Optional Naila/Brant facts are recorded, or consciously skipped. | Both, either, and neither-contact states remain viable. |
+| Departure | Commit one deterministic attempt. | Explicit operation departure creates the immutable Retry snapshot. | Snapshot contains the complete pre-operation state and no later outcome. |
+| Infiltration | Read and cross the four-block district. | Explicit route actions move the run into the logistics-site sequence. | Dusk/public and curfew/service routes use normal controls and truthful surveillance. |
+| Recovery | Operate the cache and choose whether to investigate. | Explicit terminal use releases medkits; optional manifest inspection records its exact outcome. | Mission object and evidence state cannot change through proximity. |
+| Escape | Break the network's evidence chain. | Clear/Suspicious/Pursuit resolves through line of sight, direction, context, or authored interception. | The network searches last-known evidence and never hidden true position. |
+| Return | Honor the bargain and make outcomes legible. | Explicit medkit handoff issues the credential. | Lira responds only to actual facts and ledger outcomes. |
+| Validation | Secure the route before midnight. | Explicit outbound-terminal validation completes the deadline condition. | Deadline failure is disabled only after handoff and validation are both true. |
+| Debrief | Understand cost, evidence, and future consequence. | Factual dossier/debrief reads stable ledgers and opens progression. | Contacts, route, trace, pursuit, injury, Paranoia, evidence, and timing are correct. |
+| Close | Decide whether to remain or end. | `Continue Exploring` or `End Demo`. | No placeholder Miami load and no second Level 0 mission. |
+
 ## Starting state
 
 - Map: outdoor Level 0 Tokyo district.
@@ -51,6 +68,7 @@ The player begins inside a clearly readable safehouse boundary at 18:30.
 - Contextual onboarding teaches click-to-move, WASD, interaction, pause ownership, and George access without a separate tutorial screen.
 - The safehouse exposes rest, safe waiting, Character, dossier, George consultation, and the outbound terminal. Transit validation is visible but unavailable until Lira supplies the credential.
 - The player may inspect these actions before departure; unavailable actions explain why.
+- The safehouse is an outdoor-readable planning threshold within the four-block district, not a loading door to an unimplemented interior. Its visual boundary, world collision, surveillance behavior, and action availability must agree.
 
 ## 3. Lira briefing
 
@@ -209,6 +227,8 @@ When intercepted, the player receives a short deterministic confrontation. Optio
 
 Once the medkits are returned and transit is valid, the operation deadline can no longer fail the completed run. Continue Exploring does not load Miami or create additional Level 0 missions.
 
+The debrief is a deterministic reading of the outcome ledger. It distinguishes contacts consulted or skipped; dusk or curfew timing; camera loop not used, clean, or traced; peak network state; drone verification; successful hiding or blending; interception; injury; Paranoia peak; manifest uninspected, missed, Awareness-recognized, or Naila-guaranteed; medkit return; transit validation; and deadline margin. Missing ledger evidence produces omission or an explicit unknown—not invented praise, blame, or narration.
+
 ## 13. Health, Paranoia, and recovery
 
 ### Health
@@ -284,14 +304,15 @@ Health and Paranoia are always visible. The minimap reveals only known informati
 
 ## 18. World and presentation
 
-- Continuous outdoor Tokyo district with three interlocking loops.
+- Exactly four dense, continuous outdoor Tokyo mission blocks carrying three functional identities and three interlocking loops. This is not the rejected sparse/fenced four-block compound and not the rejected oversized nine-block board.
 - Full outer loop target: two to three minutes.
-- Normal play uses the requester-approved close street-first frame; maximum manual zoom-out reaches the composed full-city overview. Exact numeric values are calibrated and frozen from the complete GET-204 live candidate.
+- Normal play uses the requester-approved close street-first frame; maximum manual zoom-out reaches the composed four-block mission overview. Exact numeric values are calibrated and frozen from the accepted same-master GET-204 live candidate.
 - Runtime projection: 64×32, 2:1 isometric.
-- Owned Neo Tokyo 2 pack is composed unchanged first, then selectively branded as Hidzu.
+- The requester-owned Neo Tokyo 2 pack is recomposed from named source assets in one Blender 5.0.1 master; project-authored gap fills are limited to public realm and gameplay needs. The approved AI-assisted concept guides composition, camera, and value but never substitutes for production geometry.
 - Roads, sidewalks, curbs, alleys, crossings, entrances, public activity, hiding, and surveillance form the district.
 - No decorative clutter.
 - Graphic surveillance noir: readable midtones, strong ink silhouettes, cold institutional surfaces, sodium practical light, restrained cyan technology, crimson danger, and no fantasy-Neo styling.
+- The accepted Blender master owns detailed visible geometry after its source/render gate. Collision, occlusion, entrances, device/context anchors, and runtime interaction must be back-propagated to agree with that geometry before live acceptance.
 
 ## 19. Completion acceptance
 

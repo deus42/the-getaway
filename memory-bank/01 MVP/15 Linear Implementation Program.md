@@ -16,7 +16,7 @@ These aliases and exact Linear keys are authoritative for the implementation pro
 | T1 | GET-201 | Canonical game-design bible and decision register | Improvement | In Progress | T2–T10 and GET-139 |
 | T2 | GET-202 | Recover the canonical pre-rewrite foundation | Improvement | Todo | T3 and all runtime implementation |
 | T3 | GET-203 | Level 0 runtime and shared outdoor-layout contract | Feature | Todo | T4, T7, T8, T9, T10 |
-| T4 | GET-204 | Unchanged-kit Tokyo Blender master scene | Improvement | Todo | T5 |
+| T4 | GET-204 | Tokyo city foundation: hero intersection to dense live district | Improvement | Todo | T5 |
 | T5 | GET-205 | Hidzu identity and graphic-surveillance-noir world art | Improvement | Todo | T6 and T10 visual integration |
 | T6 | GET-206 | Grounded actors, portraits, and entry-flow presentation | Improvement | Todo | T10 final presentation |
 | T7 | GET-207 | Protagonist RPG identity, progression, Health, and Paranoia | Feature | Todo | T8, T9, T10 |
@@ -24,7 +24,7 @@ These aliases and exact Linear keys are authoritative for the implementation pro
 | T9 | GET-209 | Dialogue, George, facts, dossier, social feed, and four-lane HUD | Feature | Todo | T10 content integration |
 | T10 | GET-210 | Tokyo escape content, audio, onboarding, and end-to-end acceptance | Feature | Todo | GET-139 acceptance |
 
-Only T1 may be `In Progress` until the specification package is reviewed, validated, and committed separately. After that entry gate, keep one child active at a time in Roadmap order. A validated committed deliverable may unlock its successor while the predecessor remains `In Review` pending requester verification. Every child blocks GET-139 through final acceptance.
+The table records each issue's creation state, not its current operational state. The specification entry gate was satisfied by the separately committed GET-201 package. After that gate, keep one implementation child active at a time in Roadmap order. A validated committed deliverable may unlock its successor while the predecessor remains `In Review` pending requester verification. Every child remains a closure blocker for GET-139 through final acceptance.
 
 `OPEN-*` items are ticket acceptance/freeze gates rather than a program-wide start gate. Each ticket may implement the queue's recorded recommendation as a reversible provisional trial only when its progress note and Linear comment identify the assumption, implementation seam, live proof, and rollback path. Provisional behavior cannot move beyond `In Review` or be described as final until the requester accepts, changes, postpones, or removes the decision.
 
@@ -38,25 +38,31 @@ Only T1 may be `In Progress` until the specification package is reviewed, valida
 
 The repository, runtime, tests, historical progress, and existing Linear program describe several mutually incompatible versions of The Getaway. Earlier sources still present a fixed Operative, Ghost/Wire/Force packages, A* routing, `Pressure`, a sparse four-block compound, tactical combat, AutoBattle, and a three-lane HUD as current intent. The requester rejected that direction and approved a grounded Tokyo surveillance-escape RPG instead. This ticket creates one canonical specification before any recovery or reimplementation can turn another stale checklist into product behavior.
 
-The work is complete only when product rules, lore, system specifications, Architecture, Roadmap, readiness, AGENTS governance, progress evidence, and the ten implementation tickets agree. Historic work remains recoverable evidence, but no completed test, old ticket, or compiling subsystem may outrank the current design.
+The first specification package established the correct structure but did not prove that every historical answer and later requester correction was captured, nor did its short hub provide the complete readable Bible requested for ongoing implementation. A later requester correction also established that “in-game documentation” means the complete Bible must be usable inside the running game, not only stored as internal Markdown. This ticket therefore has three inseparable deliverables: a forensic design audit, the finished canonical authoring Bible, and its exhaustive finalized-only player-facing projection.
+
+The work is complete only when all 214 structured design exchanges, prose directives, earlier design/lore material, later corrections, current parallel-task decisions, canonical documents, implementation evidence, and Linear have an explicit present outcome; when product rules, lore, system specifications, Architecture, Roadmap, readiness, AGENTS governance, progress evidence, and the ten implementation tickets agree; and when a player can read the fullest practical finalized design in English or Ukrainian from the start menu, paused menu, or `F1` without seeing governance or unresolved material. Historic work remains recoverable evidence, but no completed test, old ticket, compiling subsystem, or raw Markdown rendering may outrank the current design.
 
 ### Player promise
 
-Although this ticket changes internal documentation rather than the executable game, it protects a concrete player promise: Level 0 will become a 15–20 minute outdoor Tokyo prologue about surveillance, Paranoia, dialogue, hiding, compromised technology, George, practical RPG builds, and escape. It will not become a combat-centric power fantasy or an assembly of disconnected features because an older implementation happened to exist.
+The player can open a polished **Game Design Bible** before New Game, from the paused menu, or with `F1` during eligible play and understand the complete finalized game without leaving the application. The reference explains the fantasy, campaign, chronological Level 0 journey, every system, cross-system causality, feedback, failure and recovery, persistence, production direction, content boundaries, and continuation. It is exhaustive rather than a short tutorial, and English/Ukrainian presentations have equivalent structure and meaning.
 
-The future player can expect a customizable expatriate, a human-scale watched city, two viable infiltration timings, optional contacts, honest facts and checks, explicit medkit recovery and transit validation, recoverable surveillance, a factual debrief, and real progression toward Miami.
+The underlying game promise remains a customizable expatriate, a human-scale watched city, two viable infiltration timings, optional contacts, honest facts and checks, explicit medkit recovery and transit validation, recoverable surveillance, a factual debrief, and real progression toward Miami. Contextual onboarding still teaches immediate actions through play; the Bible is the complete optional reference, not a replacement for world feedback, George, HUD, dossier, dialogue, or readable failure.
 
 ### Starting state
 
-- The protected worktree is based on `main` at `49a4da7bed164051cc1fbeba60493ca5de92310f` and has a verified external recovery archive recorded in `progress/GET-139.md`.
-- Draft canonical documents exist but require full contradiction, template, link, decision-ID, and ticket-traceability review.
-- GET-139 still has stale implementation children and relationships in Linear.
-- Only T1 is eligible to be `In Progress`; no gameplay, runtime, production-art, or player-facing content change is authorized by this ticket.
-- `OPEN-NAR-003` remains an explicit review item. The GET-204 street/overview visual relationships and Neo Tokyo 2 production use were approved later and are recorded in the Decision Register.
+- The original canonical package is committed as `b50a4cd5290490cc8ab8c3521a2c22acaa1afdce`; its recovery boundary remains recorded in `progress/GET-139.md`.
+- GET-201 is `In Review` and remains nonterminal pending requester review. Implementation descendants have progressed in parallel under the validated-commit gate, so their newest explicit requester decisions must be refreshed before authoring and before final validation.
+- The active shared worktree contains protected runtime, art, and concurrent documentation changes. This ticket may edit only its documentation/governance boundary and must preserve newer task-owned changes.
+- The raw source contains 215 early question calls: one preceding recovery/governance baseline plus exactly 214 original design exchanges. All 214 design exchanges were answered, including `doc_audience = Canonical game bible`. Forty-five later structured clarification calls plus later prose corrections and approvals are audited separately as subsequent evidence rather than miscounted as part of the original 214.
+- Direct requester correction on 2026-08-06 supersedes the inferred documentation-only/no-codex interpretation: GET-201 owns the complete player-facing in-game Bible as well as the canonical audit/authoring package. The approved design is `docs/superpowers/specs/2026-08-06-in-game-bible-design.md`.
+- The active shared worktree contains protected runtime, art, and concurrent documentation changes. The corrected canonical specification must be reviewed and committed separately before Bible runtime files are edited. GET-201 must then be the only active visual/runtime child; another task's state is never changed silently.
+- No gameplay schema, mission behavior, production art, or save-format change belongs to the Bible. No commit is authorized without a separate explicit requester instruction.
 
 ### Complete player flow
 
-The specification must describe the entire normal-control experience without gaps: New Game; callsign, appearance, attribute, and skill creation; 18:30 safehouse opening; Lira briefing; optional Naila and Brant preparation; deliberate dusk or curfew timing; direct movement and full-pause observation; camera, civilian, security, terminal, hiding, blending, and verifier-drone decisions; explicit medkit recovery; optional manifest recognition; Clear/Suspicious/Pursuit escape; explicit Lira handoff; outbound-terminal validation before midnight; safehouse recovery and level-up; factual debrief; and `Continue Exploring` or `End Demo`.
+Before any run, the start menu shows `Game Design Bible` with an `F1` hint. Opening it creates no run or pause state. During an active run, the paused menu shows the same action; eligible `F1` opens directly from play. The player searches localized title/summary/section/body/keyword content, selects chapters and on-page sections, reads semantic prose/tables/state flows/examples, uses previous/next, and closes to the exact invoking surface. Opening in active play acquires `bible` pause once; opening above the menu composes `menu + bible`; closing releases only `bible` and restores focus. Higher-priority modals and editable inputs keep authority.
+
+The Bible describes the entire normal-control experience without gaps: New Game; callsign, appearance, attribute, and skill creation; 18:30 safehouse opening; Lira briefing; optional Naila and Brant preparation; deliberate dusk or curfew timing; direct movement and full-pause observation; camera, civilian, security, terminal, hiding, blending, and verifier-drone decisions; explicit medkit recovery; optional manifest recognition; Clear/Suspicious/Pursuit escape; explicit Lira handoff; outbound-terminal validation before midnight; safehouse recovery and level-up; factual debrief; and `Continue Exploring` or `End Demo`.
 
 The documents must also define the Health, Paranoia, capture, deadline, incompatible-save, and deterministic Retry paths. Every step names starting state, authoritative transition, player-visible feedback, forbidden shortcut, and human-play evidence.
 
@@ -66,14 +72,21 @@ Use [[12 Game Design Decision Register]] as the atomic status ledger: `Approved`
 
 Every per-system specification must contain the shared sixteen sections from player fantasy through owning ticket. Every unresolved required value receives an existing stable `OPEN-*` entry with a recommended baseline and blocked tickets. The precedence order is current requester directive, Decision Register, canonical product/system/lore specification, Linear issue, Architecture, then tests/runtime/history as evidence.
 
+The runtime never renders canonical Markdown. A typed bilingual catalog contains only finalized player-facing prose and semantic blocks. Each section retains non-rendered source and Approved-decision references. An independent test-only inventory parses current Approved decisions and required topics so every player-facing rule maps to a Bible section or receives a bounded non-player-facing governance classification. Unresolved constants are not invented: the Bible explains the approved behavior at the approved precision and omits only the undecided number.
+
+Bible UI state is React-local, URL-independent, and session-only. The runtime recognizes `bible` as a transient composable pause owner but strips it from autosave, hydration, and Retry. Opening, navigation, locale change, search, and close cannot mutate run, clock, position, facts, mission, outcome ledger, autosave, or Retry. Repeated `F1`, close/Escape races, unmount, run replacement, New Game, and shell teardown are idempotent and release only ownership acquired by that overlay instance.
+
 ### Internal milestones and proof gates
 
-1. Complete the Game Design hub, MVP Spine, Level 0 contract, Decision Register, content/state matrix, review queue, and all per-system specifications.
-2. Reconcile Tokyo/Hidzu with the preserved 2036 Cold Iron campaign and distinguish Hidzu as upstream supplier from Eisenclave as American integrator/operator.
-3. Align Art Direction, Architecture, Roadmap, Post-MVP boundary, MVP Readiness, indexes, AGENTS, and `progress/GET-139.md`.
-4. Produce this ten-ticket copy source and then create self-contained Linear issues with exact aliases, labels, states, blockers, and dependency relationships.
-5. Run contradiction searches, sixteen-section checks, unique-ID/reference checks, traceability checks, Markdown hygiene, and independent specification review.
-6. Present the package and explicit review queue to the requester. Commit documentation separately only after explicit authorization.
+1. Forensically extract and classify all 214 structured exchanges, prose directives, earlier canonical material, later corrections, current task decisions, runtime/test evidence, and Linear into a temporary decision-coverage matrix.
+2. Resolve explicit supersession chains and return material ambiguity to the requester instead of guessing. Implemented or ticketed behavior without Approved or explicitly provisional authority is a gap; a stable `OPEN-*` is not.
+3. Turn [[Game Design]] into the complete readable Bible entry point, expand [[10 MVP Spine]], make [[11 Level 0 Vertical Slice Contract]] a chronological walkthrough, and complete every affected 16-section system chapter with prose, tables, examples, dependencies, failure/recovery, content, and acceptance.
+4. Reconcile every Level 0 transition across character creation, safehouse, briefing, preparation, departure, both timings, surveillance, cache/evidence, escape, Lira return, validation, debrief, progression, Continue Exploring, and End Demo.
+5. Align the Decision Register, content/state matrix, review queue, Art Direction, Architecture, Roadmap, Post-MVP boundary, MVP Readiness, indexes, AGENTS, and `progress/GET-201.md` after the active parallel task reaches a stable checkpoint.
+6. Regenerate all ten self-contained descriptions from this canonical program, rewrite GET-201–GET-210 in full without changing active operational state, and read every issue back for semantic parity.
+7. Specify and implement the typed sixteen-chapter English/Ukrainian catalog, independent Approved-decision/topic traceability, forbidden-content gate, semantic renderer, search/navigation, focus-contained responsive layout, start/pause/`F1` entry, composable pause lifecycle, persistence stripping, and equivalent agent text state through red/green tests.
+8. Run contradiction, sixteen-section, unique-ID/reference, traceability, wiki-link, ticket-parity, Markdown hygiene, and final documentation-diff review. Record exact evidence and legitimate OPEN items in `progress/GET-201.md`.
+9. Prove the live surface at `1920×1080`, `1440×900`, `1280×720`, `1200`, `1199`, `841`, `840`, and `390×844`; exercise EN/UK search, chapter/section navigation, drawer, tables, pause/resume, focus/input, no-state-mutation, Retry, and text-bridge behavior; stop for requester visual acceptance before full closeout.
 
 ### Content requirements
 
@@ -81,9 +94,19 @@ The package must cover product identity; setting; narrative; character creation/
 
 The Decision Register must retain recoverable historic ratings exactly, including the withdrawn `9.2/10` and reviewed `4.5/10` visual assessment, without reconstructing missing ratings.
 
+The main Bible reading experience must explain the game fantasy, intended experience, pillars, setting/campaign premise, Level 0 promise, complete loop, system relationships, content boundaries, visual/audio direction, failure, progression, persistence, continuation, and chapter navigation. The system package must cover setting, narrative, character/RPG, checks, Health, Paranoia, movement, interaction, observation, stealth, surveillance, cameras, drone, security, civilians, time, schedules, safehouse, Retry, dialogue, George, facts, dossier, objectives, HUD, minimap, social feed, terminals, combat disposition, inventory disposition, Blender/world art, actors, portraits, lighting, audio, localization, accessibility, performance, readiness, and governance.
+
+The in-game catalog has exactly sixteen chapters: What The Getaway Is; Setting and Campaign; Complete Level 0 Journey; Character/Builds/Checks/Progression; Health/Paranoia/Failure/Recovery; Movement/Interaction/Camera/Observation; Time/Schedules/Safehouse/Save/Retry; Surveillance/Cameras/Security/Civilians/Drone; Stealth/Hiding/Blending/Interception/Escape; Narrative/Dialogue/George/Contacts; Facts/Dossier/Objectives/Minimap/Terminals/Social Feed; HUD; World/District/Routes/Geometry; Art/Blender/Actors/Portraits/Lighting; Audio/Localization/Accessibility/Performance; Content Boundaries/Continuation.
+
+Every chapter includes a purpose/player promise, outline, detailed prose, concrete Level 0 examples, useful state/comparison tables, inputs and downstream effects, world/HUD/dialogue/audio/George feedback, failure/recovery/persistence/Retry behavior, and related chapters. English and Ukrainian share IDs, navigation order, semantic block shapes, topic coverage, shared rules, tables/state relationships, and meaning; every chapter receives recorded bilingual semantic review and a back-translation spot-check.
+
 ### World/UI/audio/George feedback
 
-This ticket defines rather than implements feedback. The package must specify graphic surveillance noir, human-scale continuous city form, truthful surveillance geometry, the four-lane 16–18% dock, always-visible Health and Paranoia, world-visible paused overlays, one-function terminals, knowledge-limited minimap, bounded George prompts and private AR presence, and required audio families. It must state which values remain open instead of turning recommendations into silent production constants.
+The canonical package specifies graphic surveillance noir, exactly four dense mission blocks with three functional identities and three interlocking loops, named Neo Tokyo 2 source provenance, close street-first play and a four-block overview, truthful surveillance geometry, the four-lane 16–18% dock, always-visible Health and Paranoia, world-visible paused overlays, one-function terminals, knowledge-limited minimap, bounded George prompts and private AR presence, and required audio families. It states which internal values remain open instead of turning recommendations into silent production constants.
+
+The player-facing Bible uses a restrained surveillance-noir reference-manual shell. At `>=1200px`: sticky top bar, `264px` chapter rail, centered article capped at `820px`/`76ch`, and `196px` on-page outline. At `841–1199px`: `224px` rail, article, and inline section list. At `<=840px`: one column, full-width search row, chapter drawer inside the single dialog, expandable on-page navigation, `16–24px` padding, locally scrollable tables, and ≥`44px` targets. Warm practical gold marks current reading context, cyan supports action, and crimson appears only in genuine danger/failure examples. No critical meaning is color- or audio-only.
+
+Underlying world/HUD/dialogue/audio/George state remains visible only as the paused invoking context and is not recomputed by the Bible. Search-result count and section changes are announced accessibly. Headings and tables are semantic; current chapter/section use `aria-current`; focus remains trapped and returns to the invoker or gameplay shell.
 
 ### Failure and recovery
 
@@ -91,32 +114,53 @@ If sources conflict, do not reconcile them by compromise or by whichever impleme
 
 The verified archive remains the recovery path for protected work. No reset, restore, deletion, or selective salvage occurs here.
 
+The in-game content gate fails on any governance identifier, tracker/dependency state, provisional/recommended/unresolved/approval language, Removed/Superseded/rejected/historical alternative, implementation ownership, repository path, raw wiki link, or test/build/coverage/commit/delivery state. Missing or stale source/decision/topic mappings fail validation. Missing localized content fails closed to a controlled error rather than silently mixing locales or rendering internal material.
+
+Opening from active play freezes clock, schedules, surveillance, drone, autonomous actors, movement, interaction, and deadline. Closing above a paused menu leaves the menu paused. A missing invocation target restores a safe menu/world focus fallback. Session reading state never enters save or Retry, stale chapter/section memory falls back to the first valid target, and teardown cannot leak or prematurely release pause ownership.
+
 ### Explicit exclusions
 
-- No gameplay/runtime/schema implementation, player-facing content production, or production-art mutation.
+- No mission/gameplay behavior, save-format, gameplay schema, or production-art mutation.
 - No silent approval of recommended `OPEN-*` baselines.
 - No new parallel design archive outside `memory-bank/`.
-- No F1 help/codex feature.
+- No short tutorial/help page as a substitute for contextual onboarding; the complete finalized in-game Bible is required.
+- No direct canonical-Markdown renderer, runtime content filtering, governance/debug/development copy, or raw source reference in the player-visible surface.
+- No generic documentation editor, annotations, bookmarks saved into the run, external links, write actions, or game-state mutation from the Bible.
 - No resurrection of removed systems as “future flexibility.”
 - No commit, ticket `Done`, or GET-139 closure without requester authorization and verification.
 
 ### Dependencies and OPEN blockers
 
-Gate 0's verified recovery snapshot is the prerequisite. T1 blocks T2–T10 and GET-139 until its reviewed package is validated and committed separately. `OPEN-NAR-003` remains represented for its owning later surfaces; it does not block the documentation commit. After the commit, one implementation child may move to `In Progress` under the provisional-trial policy above.
+Gate 0's verified recovery snapshot and the separately committed original specification package are prerequisites already satisfied. The corrected in-game specification must receive its own reviewed documentation commit before runtime work. GET-201 must be the only active visual/runtime child during implementation; downstream tasks remain parked or terminal. T1 remains a closure blocker for T2–T10 and GET-139 but does not invalidate previously committed delivery evidence.
+
+The Bible feature itself has no provisional `OPEN-*` assumption: its existence, name, scope, access points, finalized-only content boundary, bilingual equivalence, pause behavior, information architecture, and responsive breakpoints are Approved. Unresolved game-design values remain represented internally for their owning systems but never render; their existence does not justify invented constants or block explanation of the Approved behavior.
 
 ### Canonical decisions/spec sections
 
-Implements `GDR-PROD-001`, `GDR-PROD-002`, `GDR-SET-001`, `GDR-SET-002`, `GDR-SET-004`, `GDR-SET-005`, `GDR-SET-006`, `GDR-PC-004`, `GDR-GOV-001`, `GDR-GOV-002`, `GDR-GOV-003`, `GDR-GOV-005`, `GDR-GOV-007`, and `GDR-SUP-004`.
+Implements `GDR-PROD-001`, `GDR-PROD-002`, `GDR-SET-001`, `GDR-SET-002`, `GDR-SET-004`, `GDR-SET-005`, `GDR-SET-006`, `GDR-PC-004`, `GDR-UI-004`, `GDR-GOV-001`, `GDR-GOV-002`, `GDR-GOV-003`, `GDR-GOV-005`, `GDR-GOV-007`, `GDR-GOV-008`, `GDR-REM-012`, and `GDR-SUP-004`, plus every current Approved player-facing rule mapped by the independent in-game coverage inventory.
 
-Canonical sources are [[Game Design]], [[10 MVP Spine]], [[11 Level 0 Vertical Slice Contract]], [[12 Game Design Decision Register]], [[13 Level 0 Content and State Matrix]], [[14 Specification Review Queue]], every system specification in [[01 MVP/00 Index]], [[03 Lore/Plot Bible]], [[04 Engineering/Architecture]], [[04 Engineering/Roadmap]], [[95 MVP Readiness Checklist]], `AGENTS.md`, and `progress/GET-139.md`.
+Canonical sources are [[Game Design]], [[10 MVP Spine]], [[11 Level 0 Vertical Slice Contract]], [[12 Game Design Decision Register]], [[13 Level 0 Content and State Matrix]], [[14 Specification Review Queue]], every system specification in [[01 MVP/00 Index]], [[03 Lore/Plot Bible]], [[04 Engineering/Architecture]], [[04 Engineering/Roadmap]], [[45 HUD & Information Architecture]], [[95 MVP Readiness Checklist]], `AGENTS.md`, `progress/GET-139.md`, the forensic audit record in `progress/GET-201.md`, and the approved in-game design `docs/superpowers/specs/2026-08-06-in-game-bible-design.md`.
 
 ### Human-play acceptance
 
-No runtime play acceptance is claimed. Specification acceptance means a reviewer can trace each step of `AC-L0-001` through `AC-L0-019` from player action to state transition, content owner, feedback, failure/recovery rule, and ticket without relying on old code. A reviewer must also find no current claim for fixed Operative/Trace, packages, A*, Pressure, tactical combat, AutoBattle, the rejected compound, fantasy actors, procedural narrative, deep inventory, or a three-lane HUD.
+Specification acceptance means a reviewer can trace each step of `AC-L0-001` through `AC-L0-019` from player action to state transition, content owner, feedback, persistence/Retry, outcome-ledger write, failure/recovery rule, and ticket without relying on old code. Every one of the 214 historical structured exchanges and every later material correction has an explicit current, superseded, unresolved, non-design, or stale-mirror outcome. A reviewer must also find no current claim for fixed Operative/Trace, packages, A*, Pressure, tactical combat, AutoBattle, the rejected sparse compound or oversized nine-block board, fantasy actors, procedural narrative, deep inventory, or a three-lane HUD.
+
+Runtime acceptance requires all of the following under live human control:
+
+- start-menu button and `F1` open the Bible with no run/pause creation; paused-menu button and `F1` compose `menu + bible`; active-play `F1` acquires one Bible owner; ineligible modals/editable inputs retain authority;
+- every one of sixteen chapters and every section is reachable in EN and UK; title, summary, section, body, and keyword search return deterministic localized labels/excerpts and focus the correct section;
+- drawer, focus trap/restoration, Escape precedence, backdrop/close behavior, semantic headings/tables, result announcements, current-state semantics, controller/pointer/keyboard blocking, and stale-target fallback work at the defined breakpoints;
+- opening, navigating, and closing preserve mission, clock, position, facts, network, outcome, autosave, and Retry; repeated `F1`, close/Escape races, unmount, run replacement, New Game, and shell teardown do not leak or double-release pause;
+- inspected screenshots pass at `1920×1080`, `1440×900`, `1280×720`, `1200`, `1199`, `841`, `840`, and `390×844`, including long Ukrainian headings, search results, a table, deep scroll, and the narrow drawer;
+- rendered and text-bridge content contains no unresolved/governance/history/implementation/delivery material, and the bridge reports the same open/chapter/section/query/drawer/ordered-result state visible to the player.
 
 ### Documentation and validation obligations
 
-Run a full current-doc contradiction search; validate all sixteen headings; validate unique `GDR-*`, `OPEN-*`, fact, check, objective, state, failure, terminal, and acceptance IDs; verify bidirectional decision/document/ticket references; inspect every Linear child after creation for exact label/state/parent/blocker/dependency data; and run `git diff --check`. Record evidence and unresolved risks in `progress/GET-139.md`. Keep T1 nonterminal until requester review and authorized documentation commit.
+Run a full current-doc contradiction search; validate all sixteen specification headings and all sixteen in-game chapters; validate unique `GDR-*`, `OPEN-*`, fact, check, objective, state, failure, terminal, acceptance, Bible chapter/section/topic IDs, and source references; verify bidirectional decision/document/ticket/Bible mappings; resolve wiki links; inspect every Linear child after rewrite for semantic description parity plus unchanged label/state/parent/blocker/dependency data; and run `git diff --check`.
+
+The in-game validation gate parses every Approved Decision Register row; checks rendered mapping or bounded non-player-facing classification; checks every required topic and per-chapter semantic role; checks exact EN/UK structure, shared numeric/state data, search fields, relations, source resolution, and recorded semantic review; and rejects governance, uncertainty, historical, implementation, repository, raw-link, or delivery-process content. Focused component/runtime tests cover search, navigation, breakpoints, focus, input, pause, persistence, Retry, teardown, and text state. After live acceptance, run lint, build, all tests, coverage above 80%, guided AI regression, inspect the newest report, and resolve/defer every actionable finding.
+
+Record source boundaries, audit counts, per-system coverage, repaired gaps/conflicts, supersession chains, legitimate internal OPEN items, in-game chapter/topic/decision/source coverage, bilingual review, live screenshots, console state, pause/focus/no-mutation proof, tests, AI report, affected chapters/tickets, and Linear readback evidence in `progress/GET-201.md`. Keep T1 nonterminal pending requester verification. Create no commit without separate authorization.
 
 ## T2 — Recover the canonical pre-rewrite foundation
 
@@ -225,7 +269,7 @@ All mandatory places are reachable through three interlocking loops; no building
 - T1 has a reviewed, validated, committed deliverable and T2 has produced a reproducible bootable foundation; either predecessor may remain `In Review` pending requester verification.
 - Exact layout dimensions, loop geometry, street widths, anchors, safehouse boundary, actor movement tuning, and default camera framing remain T3 acceptance decisions; use only their recorded `OPEN-*` recommendations as reversible provisional layout/configuration data.
 - The world is outdoor-only; no full interior is required.
-- T3 begins from topology and measured greybox behavior. It must not shape the map around old 54×38, 96×72, four-block, nine-parcel, or existing sprite-collage assumptions.
+- T3 begins from the mission skeleton and measured greybox behavior. Its provisional geometry must remain replaceable by the later accepted four-block Blender master; it must not preserve the old `54×38` sparse/fenced four-block compound, `84×60` nine-block board, `96×72` experiment, nine-parcel layout, or sprite-collage assumptions.
 
 ### Complete player flow
 
@@ -299,112 +343,192 @@ Canonical detail is in [[11 Level 0 Vertical Slice Contract]] starting state, mo
 
 Update Architecture only for implemented ownership/data flow, the layout/content schema, Building Positioning Runbook inputs, MVP Readiness evidence states, and `progress/GET-203.md`. Add focused tests for layout validation, reachability without pathfinding, movement override/sliding, interaction results, pause ownership, clock boundaries, camera reset, save envelopes, snapshot immutability, and incompatibility. After live proof and requester acceptance, run relevant validators plus the AGENTS closeout suite and guided AI regression; record human evidence separately because automation cannot accept movement feel or layout readability.
 
-## T4 — Tokyo city foundation: hero intersection to dense live district
+## T4 — Four-block Neo Tokyo 2 city rebuild
 
-- **Label:** Improvement
-- **Initial state:** Todo
-- **Parent:** GET-139
+* **Label:** Improvement
+* **State:** In Progress
+* **Parent:** GET-139
+* **Blocks:** GET-205 and downstream visual integration
 
 ### Why this ticket exists
 
-The current live Level 0 is not an accepted city. It combines a rejected greybox with a localized Neo Tokyo 2 runtime prototype: monumental or disconnected masses, weak street material, small actors, unfinished zoom-out boundaries, and a distant board-first legacy outside the prototype region. Earlier GET-204 work produced useful Blender recipes and proved flattened layers in Phaser, but repeatedly treated technical completion as visual progress. This ticket replaces that failure with a full-district rebuild whose only acceptance is what the requester sees and plays.
+The committed Level 0 plate is a meaningful visual-direction checkpoint: it improved camera intimacy, actor scale, glare, separate population, collision rejection, and overview stability. It is not the final city foundation. Source audit found that its architecture is a generated raster composition with zero production buildings that can be traced to named Neo Tokyo 2 assets.
 
-Neo Tokyo 2 is the approved production base. The kit is recomposed rather than displayed as a catalog, and original gap-fill work is added where streets, public life, navigation, hiding/blending, or scale require it. The mission skeleton survives, but the rejected `84×60` nine-block geometry does not constrain the city.
+The earlier real Blender district also failed: it used genuine kit geometry but assembled it as a sparse, flat catalog scene. The correction is not a return to that city and not a larger one-shot rebuild. GET-204 now builds exactly four dense mission blocks from named Neo Tokyo 2 assets, preserving the approved composition and human-scale relationship while restoring professional source identity.
 
 ### Player promise
 
-At normal play, Level 0 resembles the approved street reference: a close classic 2:1 isometric frame, the protagonist readable in the lower-center lead area, nearby civilians and security at credible human scale, dense three-to-eight-storey street walls, wet road material, warm practical light, cold institutional fill, cameras and civic control embedded in ordinary city life, and enough curated detail to make the location inhabited.
+Normal play feels close to Reference 2: the protagonist reads as a person, nearby entrances and civilians are legible, buildings make a credible street canyon, and the player can read an immediate movement choice plus a surveillance relationship.
 
-At maximum manual zoom-out, the same level resembles the approved dense-city reference: one compact composed district with a coherent skyline, three recognizable subdistricts, two or three taller landmarks, legible routes, no empty board, and no corrupted edges. The player can move through what is shown; collision, entrances, occlusion, and interaction anchors agree with visible geometry.
+Manual overview reveals the same compact four-block mission space. It does not expose an empty board, isolated showcase buildings, a tower cluster, repeated generated plates, or corrupted edges.
 
-### Starting state
+The city is attractive, maintained, contemporary, and comprehensively watched. It is not fantasy Neo, generic neon cyberpunk, or a military compound.
 
-- T3 supplies a useful mission and semantics skeleton, direct movement, projection helpers, and stable anchor concepts. Its exact `84×60` nine-block layout is rejected visual evidence and may be replaced.
-- Owned source pack: `/Volumes/Elements/Backup/Downloads/Game/Neo Tokyo 2`.
-- Authoring environment: Blender 5.0.1; runtime projection: 64×32, 2:1 isometric; upper-left light direction.
-- The requester has confirmed ownership and authorized the pack as production input. Raw vendor geometry/textures remain outside Git; recipes, source references, original gap-fill work, metadata, and flattened game derivatives may be versioned.
-- Existing GET-204/205 Blender work is salvageable technique and comparison evidence, not an accepted city or runtime.
-- Existing character creation, Character screen, progression, Health, Paranoia, George, dialogue, dossier/facts/quests, movement/observation, Menu, and HUD behavior are protected from this ticket.
-- GET-205/206/208/209 remain parked while GET-204 is active. This ticket may use already-existing actor art as a placeholder, but it does not reopen those systems.
+### Locked reference authority
 
-### Complete player flow
+1. `art/references/get205/kitbash-reference2-blend-concept-v1.png`
+   * SHA-256: `b8e69fcbb4839cf2fb70fa80e03c42ff321e6a5ee00c2287f1f824f08e951c5d`
+   * Approved AI-assisted previsualization.
+   * Owns the four-block composition, close camera, protagonist/building relationship, street-wall density, warm/cold value hierarchy, and one restrained Hidzu landmark.
+   * Does **not** own production geometry and may never be promoted as game architecture.
+2. `art/references/get204/street-play-target.png`
+   * Owns normal-play intimacy, actor prominence, social readability, and street context.
+3. `art/references/get204/canvas-quality-target.png`
+   * Owns material depth, facade richness, motivated lighting, readable midtones, and restrained wet response.
+4. `art/references/get204/dense-city-target.png`
+   * Secondary overview-density reference only; it does not expand the mission scope.
 
-The player begins in a human-scale backstreet/safehouse area and enters a connected public street system rather than standing beside huge anonymous blocks. The route toward Lira and the optional contacts passes through credible storefront, transit, service, and residential edges. The public approach reaches a complete public-to-controlled intersection where ordinary life, a delivery context, surveillance, and the logistics threshold are visible together. The service approach uses tighter alleys, utilities, loading space, hiding structure, and a controlled rear entrance. The player can read where they may walk, where they may hide or blend, which space is controlled, and where the next landmark lies without permanent world labels or a glowing route.
+### Starting state and protected baseline
 
-The same composition remains coherent through blue-hour dusk, daylight checks, and curfew. Normal play keeps people and entrances large enough to read. Manual zoom-out reveals the full district as one deliberate composition rather than exposing an unfinished boundary.
+* Source pack: `/Volumes/Elements/Backup/Downloads/Game/Neo Tokyo 2`.
+* Authoring environment: Blender 5.0.1.
+* Runtime projection: 64×32, 2:1 isometric.
+* The actual Blender close/overview proof and four-block treatment direction are approved. One master now registers 16 KitBash clusters from 10 named Neo Tokyo 2 building roots, and its people-free derivatives render on the normal Phaser route as an uncommitted live candidate. The committed plate remains recovery-only until requester live acceptance and an authorized commit.
+* Current HUD, Menu, character systems, movement, quests, dialogue, surveillance behavior, George, and progression are not redesigned here.
+* Current uncommitted GET-205 treatment and partial GET-208 work remain protected.
+* Raw licensed geometry/textures and generated `.blend` files stay outside Git.
+* No commit is authorized until the relevant visual result is accepted and the requester explicitly asks to commit.
 
-### System rules and state transitions
+### Exact city shape
 
-GET-204 now has one requester-facing acceptance state: `FULL_DISTRICT_LIVE_CANDIDATE`. Internal composition, public-realm, look-development, export, and runtime-review stages are production checks only. They do not become partial products, checkpoint commits, or claims that the city is accepted.
+The master contains exactly four dense urban blocks:
 
-The current `get204-gate1` implementation is disposable prototype evidence. It may be replaced in full. A production candidate must contain the complete safehouse/backstreet, transit/public-commercial, and Hidzu logistics/civic-control district before it is presented. Normal play and manual overview are different framings of the same complete master scene, not separate painted plates.
+1. **Safehouse/backstreet block**
+   * discreet safehouse threshold;
+   * residential/service frontage;
+   * sheltered edges and utilities;
+   * ordinary route into public space.
+2. **Public/transit/contact block**
+   * strongest civilian/public presence;
+   * compact commercial or service frontage;
+   * transit shelter/kiosk and public screens;
+   * contact staging and normalized surveillance.
+3. **Controlled logistics block**
+   * Hidzu logistics frontage;
+   * public delivery threshold and identity control;
+   * mission-objective frontage;
+   * institutional without a fortress silhouette.
+4. **Service-seam block**
+   * alley/loading space;
+   * camera-terminal relationship;
+   * hiding structure and rear approach;
+   * route reconnecting public and safehouse sides.
 
-The mission skeleton owns required places, semantic identities, and route purposes. The rebuilt master scene owns detailed streets, building footprints, entrances, public realm, and occluders. Candidate walkable, blocked, entrance, interaction, surveillance, and occlusion metadata is exported from that scene and used by the live proof; no rejected greybox collision may remain beneath the candidate. After requester acceptance, that exact metadata becomes the shared layout contract before the authorized commit.
+Three interlocking route loops may cross these blocks, but mission topology remains gameplay-owned. The art must express approved route purposes and cannot invent or delete them for composition.
 
-One master scene, scale system, 2:1 camera family, blue-hour light rig, material language, and public-realm grammar govern all city geometry. The three locked references have separate authority: `canvas-quality-target.png` owns finish and lighting, `street-play-target.png` owns normal-play scale and composition, and `dense-city-target.png` owns district density and overview completeness.
+Mostly low/mid-rise source buildings form continuous street walls and resolved corners. One restrained landmark may orient the district. A skyline cluster, monumental boulevard, second/third tower landmark, large plaza, and decorative outer city are excluded.
 
-### Internal production stages and proof gate
+### Source and geometry rules
 
-1. **Full-district composition.** Compose all three subdistricts, three interlocking traversal loops, mostly three-to-eight-storey street walls, two or three landmarks, compact intersections, tight alleys, and deliberately limited open space. Reject the composition internally if normal play is not street-first or the overview is not a complete city silhouette.
-2. **Public realm and human scale.** Author roads, sidewalks, curbs, crossings, drainage, alleys, entrances, service seams, transit furniture, and controlled thresholds. Calibrate the protagonist to approximately `95–115 px` visible height at `1440×900` with a provisional `1.24–1.32` normal zoom; freeze the exact value from live comparison rather than from the old greybox.
-3. **Quality look development.** Reach the Canvas target with readable facade midtones, differentiated materials, after-rain response, motivated warm practicals, cool blue-hour fill, restrained atmosphere, integrated signage, and no blank or floating masses. Populate ordinary public behavior, service/delivery context, believable security positions, cameras, and one unarmed verifier drone.
-4. **Registered export.** Export flattened back/ground layers, independently fadeable foreground occluders, schedule-light variants, and candidate semantic metadata from the same scene. Generated `.blend` files and raw vendor sources remain outside Git.
-5. **Live runtime integration.** Replace the active prototype and obsolete greybox presentation across the whole district. Prove direct movement, entrances, interaction anchors, foreground recovery, camera follow, and manual zoom-out against the visible geometry using normal controls.
-6. **Internal visual review.** Capture close gameplay, clean world, and full-district overview at the target viewports. Continue fixing visible failures; do not present a weak or partial candidate merely because validators pass.
-7. **Requester acceptance.** Present the complete live candidate with the existing HUD and a clean comparison frame. Only explicit requester approval unlocks closeout validation and an authorized commit. GET-204 remains `In Progress` until the requester verifies that committed build.
+Every visible production building and source-derived prop records:
 
-### Content requirements
+* exact Neo Tokyo 2 source prefix/group;
+* source path or collection;
+* selected structural members;
+* normalized ground contact;
+* authored transform;
+* block and route role;
+* attached project-owned gap fills.
 
-The city must include authored asphalt, lane markings, crossings, sidewalks, curbs, drainage, alleys, setbacks, entrance aprons, loading/service space, transit/commercial edges, backstreet edges, controlled civic/logistics frontage, skyline mass, and readable building bases. Curated lived-in detail may include awnings, restrained planters, bins, signs, kiosks, utilities, barriers, cameras, street lamps, vending, transit shelters, and parked service vehicles when each supports scale, place, navigation, surveillance, hiding/blending, or route identity.
+AI-generated or synthetically regenerated production architecture is prohibited. Cropped synthetic frontage that obscures source identity is prohibited. Project-owned roads, sidewalks, curbs, crossings, drainage, entrance aprons, signs, cameras, thresholds, shelters, and other gameplay-serving public-realm gap fills are allowed.
 
-The public-to-controlled intersection remains a required hero frame inside the complete district. It contains at least one ordinary public-life cluster, one controlled threshold, one visible surveillance relationship, one credible service edge, and a clear protagonist path. Repetition, random filler, empty plaza, monumental setback, floating slab, and isolated showcase building are failures anywhere in the district.
+The same master scene owns building geometry, camera family, public realm, materials, lighting, and later export registration. Runtime collision, entrances, occlusion, masks, and anchors are derived only after the master passes its first visual gate.
 
-Maintain the selected-source inventory, original gap-fill inventory, scene recipe, transforms, camera settings, materials/lights, semantic layers, masks, anchors, flattened derivative manifest, runtime fallback, and reproduction instructions. Raw Neo Tokyo source is never copied into the repository.
+### Camera, people, and world treatment
 
-Preserve the rejected baseline, close-play target, and full-city target under stable project paths with SHA-256 digests before authoring begins. Temporary attachment paths and ignored generated output are not durable acceptance references.
+* Normal play uses a close classic 2:1 isometric frame.
+* The protagonist occupies the lower-center lead area.
+* Target visible protagonist height is approximately 95–115 pixels at 1440×900.
+* The close frame retains one immediate route choice, one social context, and one surveillance relationship.
+* Overview uses the same master scene and reveals only the four-block mission space.
+* A few separate proxy figures may establish scale in offline renders.
+* Environment exports contain zero baked people; protagonist, contacts, civilians, security, drone, George, and stateful devices remain runtime-owned.
+* Roads have material separation, repairs, drainage, markings, roughness variation, and restrained reflections tied to visible light sources.
+* Buildings retain recognizable kit geometry/materials, readable midtones, believable sills, and visible entrances.
+* Blue hour supplies cool fill; sodium warmth comes from visible practicals.
+* Cyan is scarce and device-bound; crimson is reserved for genuine restriction/danger.
+* Wet response may enrich materials but cannot become broad glare, ripples, or mirror pavement.
+* GET-204 may establish one restrained Hidzu landmark cue. Full identity grammar, propaganda, schedule states, and atmosphere remain GET-205.
 
-### World/UI/audio/George feedback
+### Delivery sequence and gates
 
-GET-204 owns the city presentation only. The existing HUD and Menu remain behaviorally unchanged so the world can be judged under the real interface rather than an idealized mockup. A clean-world proof may hide UI only for comparison; it is never the sole evidence.
+ 1. Align Linear, canonical specifications, progress notes, and source-provenance policy.
+ 2. Write a failing contract test that rejects the old eight-block/20-cluster recipe and requires exactly four source-bound blocks.
+ 3. Create a new mission-district manifest with named Neo Tokyo 2 provenance.
+ 4. Build one actual Blender master and author the four-block public realm.
+ 5. Render close and overview frames from the same scene.
+ 6. Internally reject weak scale, massing, street walls, source identity, materials, or lighting and fix one variable class per pass.
+ 7. Present the strongest actual Blender close/overview pair to the requester.
+ 8. Only after explicit Blender approval, export registered layers and semantic geometry and integrate a reversible live candidate.
+ 9. Prove live camera, actors, collision, entrances, selective occlusion, and overview at target viewports.
+10. Obtain separate live acceptance before closeout and any authorized commit.
 
-Existing protagonist/contact art is used as the live scale reference. Curated civilian, security, and drone placeholders may be introduced only where the hero scene needs population and threat readability; their final behavior remains GET-208. Blue-hour world feedback uses readable midtones, wet surface response, visible practical sources, restrained cyan technology, and crimson only for actual danger. George remains a live runtime layer and must not be baked into the environment.
+### First requester gate: actual Blender proof
+
+The proof contains:
+
+* one close play frame showing the Reference 2 camera/actor relationship, entrance and route readability, source architecture, and rendering quality;
+* one overview showing the same four-block master, compact mission scope, three functional identities, named source buildings, one restrained landmark maximum, and no sparse-board silhouette;
+* source inventory, Blender version, camera, dimensions, and hashes.
+
+The generated concept may appear beside the proof only as a target. It is never evidence that the production scene exists.
 
 ### Failure and recovery
 
-The candidate fails if the live scene does not materially satisfy all three approved reference relationships together. Specific failures include tiny actors, monumental building scale, empty plazas, disconnected blocks, weak road depth, flat or unmotivated lighting, unreadable entrances, random clutter, permanent labels, occlusion without selective recovery, view-boundary exposure during normal play, zoom-out corruption, blurry upscaling, layer seams, hidden collision, or art/anchor drift.
+Reject the pass if it shows any of the following:
 
-On failure, record the comparison frame and correct one variable class at a time: camera/actor relationship, massing, public realm, lighting/material, detail/population, occlusion, or registration. Do not present another isolated intersection as acceptance evidence and do not claim the rebuild on the basis of an offline render if the live runtime remains weaker.
+* weak or untraceable KitBash identity;
+* generated production architecture;
+* tiny character or distant board framing;
+* tower-dominated or monumental massing;
+* isolated buildings, empty lots, oversized plaza, or sparse compound language;
+* flat roads, floating buildings, blank facades, or impossible light;
+* glare, ripple, fog, bloom, neon, or grading used to hide weak geometry;
+* baked people in environment art;
+* labels or decorative clutter compensating for unreadable routes;
+* overview voids, seams, blur, or corruption.
+
+On failure, preserve the last measured baseline and change one variable class: source selection, massing, street hierarchy, camera/actor relationship, public realm, material, or lighting. Do not proceed to runtime to disguise the defect.
 
 ### Explicit exclusions
 
-- No broad redesign of character creation, Character screen, progression, Health, Paranoia, George, dialogue, dossier, quests, stealth rules, surveillance rules, Menu, or HUD architecture.
-- No synthetic regeneration of the pack into unrelated architecture. Original gap-fill assets are allowed only where the kit lacks required public-realm or gameplay pieces.
-- No raw licensed geometry or generated `.blend` committed.
-- No per-building Phaser collage, opaque parcel slabs, decorative perimeter, blank board, or random filler clutter.
-- No hiding a weak city with labels, post-processing, fog, glow, or a HUD-free mockup.
-- No downstream GET-205/206/208/209 implementation while this ticket is the active visual gate.
+* No HUD or Menu redesign.
+* No quest, dialogue, RPG, George, stealth, surveillance, combat, or actor-system redesign.
+* No large city beyond the four mission blocks.
+* No synthetic replacement of Neo Tokyo 2 buildings.
+* No per-building Phaser collage as final production architecture.
+* No raw licensed geometry/textures or generated `.blend` in Git.
+* No baked people.
+* No runtime replacement before Blender approval.
+* No GET-205 implementation while this source-geometry gate is active.
 
-### Dependencies and OPEN blockers
+### Dependencies, OPEN blockers, and canonical ownership
 
-Depends on the committed runtime/projection/movement foundation from T3, but explicitly supersedes its exact rejected city geometry. Blocks renewed work on T5 and the visual acceptance of T6/T8/T9/T10. Neo Tokyo 2 production use and the full-district rebuild are approved. `OPEN-NAR-013`, `OPEN-NAR-015`, `OPEN-MOV-003`, `OPEN-LAYOUT-001`, `OPEN-LAYOUT-002`, `OPEN-LAYOUT-004`, `OPEN-ART-003`, `OPEN-ART-004`, and `OPEN-PERF-001` remain acceptance or tuning items only where their exact values are not fixed by the requester-approved live result.
+GET-204 depends on GET-203's delivered runtime, projection, direct-movement, and semantic-layout foundations, while explicitly superseding every rejected sparse-compound, nine-block, full-district, and generated-plate geometry assumption. It blocks GET-205 and downstream visual integration. Work already present for GET-205 or GET-208 is protected concurrent evidence only and does not transfer ownership into this ticket.
 
-### Canonical decisions/spec sections
+The approved four-block envelope, three functional identities, three traversal loops, named Neo Tokyo 2 provenance, same-master Blender proof, and separate live-acceptance gate are current rules. Exact accepted bounds, widths, detailed anchors, masks, camera calibration, occluder behavior, and performance limits remain governed by `OPEN-MOV-003`, `OPEN-LAYOUT-001`, `OPEN-LAYOUT-002`, `OPEN-LAYOUT-004`, `OPEN-ART-003`, `OPEN-ART-004`, and `OPEN-PERF-001` until requester evidence freezes them; no implementation constant silently resolves those items.
 
-Implements `GDR-PROD-004`, `GDR-ART-002` through `GDR-ART-007`, `GDR-ART-009`, `GDR-GOV-001`, `GDR-SUP-001`, and `GDR-SUP-002`. Canonical detail is in [[30 Art Direction (MVP)]] sections 3–6 and 9–15, [[31 GET-204 Visual Rebuild Quality Contract]], [[13 Level 0 Content and State Matrix]] section 13, [[41 Movement, Interaction & Observation]] camera requirements, [[04 Engineering/Architecture]] sections 5–7, and [[04 Engineering/Roadmap]] Gate 4.
+Implements `GDR-PROD-004`, `GDR-ART-002` through `GDR-ART-007`, `GDR-ART-009`, `GDR-ART-010`, `GDR-GOV-001`, `GDR-SUP-001`, and `GDR-SUP-002`. Canonical ownership is [[30 Art Direction (MVP)]] sections 3–6 and 9–15, [[31 GET-204 Visual Rebuild Quality Contract]], [[13 Level 0 Content and State Matrix]] section 13, [[41 Movement, Interaction & Observation]] camera and layout rules, [[04 Engineering/Architecture]] sections 5–7, and [[04 Engineering/Roadmap]] Gate 4.
 
-### Human-play acceptance
+### Human-play acceptance after Blender approval
 
-At `1440×900` and `1920×1080`, normal play is recognizably close to the approved street relationship: the protagonist and nearby people are readable, buildings create a dense human-scale street canyon, public and controlled space are distinct, roads and sidewalks have material depth, practical light is motivated, and the city feels inhabited. The same live state is captured cleanly and under the current HUD.
+The later live candidate must:
 
-Manual minimum zoom reveals one composed compact district comparable to the approved overview relationship. Three subdistricts and three loops are legible; no blank board, miniature building, empty perimeter, repeated plate, greybox fallback, or corrupted edge is visible.
+* come from the accepted master;
+* keep the protagonist and population as separate runtime actors;
+* prevent movement onto visible buildings and people;
+* align collision, entrances, occlusion, masks, and anchors with visible geometry;
+* preserve current controls, HUD, Menu, and gameplay ownership;
+* show a readable close frame and coherent four-block overview at 1440×900 and 1920×1080, with 1280×720 compatibility;
+* contain no fallback leak, generated-plate seam, void, angle mismatch, or zoom corruption.
 
-The normal-control route crosses the complete city without hidden collision, stale prototype art, unreadable foreground occlusion, schedule-layer drift, or severe frame/loading instability. Blue hour is the primary final look; daylight and curfew are coherent. Required entrances, contacts, cameras, hiding/blending contexts, terminals, and objective locations remain readable without permanent labels. The requester explicitly accepts or rejects this complete live result before closeout or commit.
+The requester accepts the live result separately. Only then may closeout validation and an explicitly authorized commit occur.
 
 ### Documentation and validation obligations
 
-Update the Decision Register, Art Direction, Architecture data flow only where implemented, Building Positioning Runbook evidence, MVP Readiness, and `progress/GET-204.md`. Keep this full ticket section semantically identical to Linear and read Linear back after writing it. Validate selected source references, deterministic recipe, original gap-fill ownership, projection, masks, anchors, collision/visual agreement, route readability, derivative inventory, and the provisional performance budget.
+Keep the Decision Register, Art Direction, GET-204 quality contract, Roadmap, MVP Readiness, AGENTS source-provenance rule, this Linear issue/comments, and `progress/GET-204.md` aligned.
 
-Before the sole acceptance commit, first obtain requester visual approval, then run the relevant art/layout validators and the AGENTS closeout suite. Record clean-world, live-HUD, and full-overview evidence paths, exact Blender version, runtime URL/state, target viewport, camera value, player scale relationship, and any deferred issue. Never commit raw vendor geometry/textures or generated `.blend` files.
+Before an authorized commit, run relevant art/layout validators, lint, build, tests, coverage above the project floor, and the guided Level 0 playtest; inspect the visual evidence and diff. Technical success cannot substitute for visual acceptance.
 
 ## T5 — Hidzu identity and graphic-surveillance-noir world art
 
@@ -414,7 +538,7 @@ Before the sole acceptance commit, first obtain requester visual approval, then 
 
 ### Why this ticket exists
 
-An unchanged asset kit can provide coherent architecture but cannot by itself express The Getaway's identity. T5 adds the second visual gate over the technically validated, committed T4 composition: a consistent Hidzu-controlled Tokyo where corporate safety, identity scoring, logistics, public information, and surveillance are understandable through repeated visual grammar. It corrects the previous drift into fantasy Neo, generic neon cyberpunk, broad cyan glow, darkness, and atmospheric clutter without representing T4 as requester-accepted.
+An unchanged asset kit can provide coherent architecture but cannot by itself express The Getaway's identity. After the requester accepts and authorizes the same-master T4 live four-block city, T5 adds the second visual layer: a consistent Hidzu-controlled Tokyo where corporate safety, identity scoring, logistics, public information, and surveillance are understandable through repeated visual grammar. It corrects the previous drift into fantasy Neo, generic neon cyberpunk, broad cyan glow, darkness, and atmospheric clutter without treating the current uncommitted T4 live checkpoint as final acceptance.
 
 ### Player promise
 
@@ -422,7 +546,7 @@ The same technically validated city now receives a provisional Hidzu treatment. 
 
 ### Starting state
 
-- The earlier T4/T5 offline composition, projection, masks, anchors, and captures are historical pipeline evidence only. GET-205 remains parked until all three requester-approved GET-204 live city gates are committed.
+- Earlier T4/T5 offline compositions and the former three-gate/full-city plan are historical evidence only. GET-204 now has an actual named-KitBash four-block Blender source and an uncommitted live candidate; GET-205 remains parked until that same-master live candidate receives explicit requester acceptance and an authorized commit.
 - The approved visual relationship is recorded by the close street reference and the registered dense-city reference; exact objects are not binding.
 - Hidzu's institutional role is canonical, but Takahiro's formal title, district name, Japanese diegetic language, safehouse exterior, and crossfade details remain explicit OPEN items.
 - T5 may change materials, signage, lighting, civic/surveillance props, atmosphere, and flattened derivatives; it may not silently change topology, required anchors, device mechanics, or route viability.
@@ -433,7 +557,7 @@ The player leaves the safehouse into a district that first reads as ordered civi
 
 ### System rules and state transitions
 
-The T5 lifecycle is `T4_TECHNICALLY_VALIDATED_COMMIT → PROVISIONAL_HIDZU_IDENTITY_PASS → LOCAL_STATE_LAYER_EXPORT → REQUESTER_VISUAL_ACCEPTANCE → ENTITLEMENT_BACKED_RUNTIME_PROMOTION`. T5 consumes but does not redefine T3/T4 gameplay semantics. Dusk, blue-hour, and curfew layers stay aligned; schedule state selects atmosphere and public treatment, never a second geometry. Active technology cyan appears only on declared Hidzu devices/connections. Amber carries objective/time/curfew. Crimson appears only for confirmed danger/Pursuit. Neutral information uses muted teal/bone. Lighting remains motivated by visible sources with consistent upper-left direction.
+The T5 lifecycle is `T4_REQUESTER_ACCEPTED_COMMIT → PROVISIONAL_HIDZU_IDENTITY_PASS → LOCAL_STATE_LAYER_EXPORT → REQUESTER_VISUAL_ACCEPTANCE → ENTITLEMENT_BACKED_RUNTIME_PROMOTION`. T5 consumes but does not redefine T3/T4 gameplay semantics. Dusk, blue-hour, and curfew layers stay aligned; schedule state selects atmosphere and public treatment, never a second geometry. Active technology cyan appears only on declared Hidzu devices/connections. Amber carries objective/time/curfew. Crimson appears only for confirmed danger/Pursuit. Neutral information uses muted teal/bone. Lighting remains motivated by visible sources with consistent upper-left direction.
 
 Every placed or modified object must support navigation, surveillance, hiding/blending, line-of-sight cover, hazard, entrance, contact, mission interaction, safehouse, objective readability, or required civic atmosphere. Public screens and feed surfaces communicate authored Hidzu claims but never leak undiscovered operational facts.
 
@@ -457,7 +581,7 @@ World feedback must prioritize current objective/action, actor, observation/thre
 
 ### Failure and recovery
 
-Visual acceptance fails on generic neon cyberpunk, fantasy ornament, crushed curfew blacks, impossible lights, broad glow, large translucent buildings, unmotivated fog, soft upscaled composites, slab bases, repeated plates, unreadable devices, hidden objectives, or decorative clutter. Correct treatment/lighting/export layers without reopening accepted topology unless measured gameplay evidence proves a real layout defect. Missing/invalid art may fall back with diagnostics, but fallback cannot satisfy production acceptance.
+Visual acceptance fails on generic neon cyberpunk, fantasy ornament, crushed curfew blacks, impossible lights, broad glow, large translucent buildings, unmotivated fog, soft upscaled composites, slab bases, repeated plates, unreadable devices, hidden objectives, or decorative clutter. Correct treatment/lighting/export layers without reopening accepted topology unless measured gameplay evidence proves a real layout defect. Missing/invalid T5 art falls back observably to the accepted T4 live city, never to rejected greybox or generated-plate presentation; any fallback still fails T5 production acceptance.
 
 ### Explicit exclusions
 
@@ -470,7 +594,7 @@ Visual acceptance fails on generic neon cyberpunk, fantasy ornament, crushed cur
 
 ### Dependencies and OPEN blockers
 
-Depends on a requester-accepted and committed GET-204 Gate 3 live district. Blocks T6 and T10 visual integration. Critical acceptance blocker is `OPEN-NAR-015`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, `OPEN-ART-004`, and the color-independent visual-state portion of `OPEN-ACC-001`. Neo Tokyo 2 production use is approved; raw vendor source remains outside Git. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
+Depends on a requester-accepted and committed GET-204 same-master live four-block candidate. Blocks T6 and T10 visual integration. Critical acceptance blocker is `OPEN-NAR-015`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, `OPEN-ART-004`, and the color-independent visual-state portion of `OPEN-ACC-001`. Neo Tokyo 2 production use is approved; raw vendor source remains outside Git. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
 
 ### Canonical decisions/spec sections
 
@@ -503,7 +627,7 @@ The player chooses one of four distinct contemporary protagonist appearances and
 - T5 provides a technically validated, committed provisional graphic-surveillance-noir world-language pass; requester acceptance remains its final visual gate. T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
 - Exactly twelve world actor sets are required: four protagonist presets, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
 - The matrix is 64×96 frames, eight directions, four frames, and `idle`/`move`/`interact`; attack is not required.
-- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Earlier `1.15`/`1.30` greybox trials are evidence only. GET-204 Gate 1 calibrates camera/building relationship first; any later actor adjustment remains one shared scale with no arbitrary per-scene scaling.
+- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Earlier `1.15`/`1.30` greybox trials are evidence only. The accepted same-master GET-204 close/live comparison calibrates camera/building relationship first; any later actor adjustment remains one shared scale with no arbitrary per-scene scaling.
 - T6 owns reusable security/civilian visual archetypes, not names, biographies, counts, schedules, or authoritative placements. Lira's unresolved identity/relationship is outside T6; her art may communicate only the approved medical-supplies role.
 - George hardware, Naila/Brant biography cues, entry-flow ownership, actor scale, and shipping budgets remain explicit OPEN items. `OPEN-PERF-001` has no numeric baseline, so T6 may record measurements but cannot pass shipping-performance acceptance.
 
@@ -639,7 +763,7 @@ Depends on T3; blocks T8, T9, and T10. Critical acceptance blockers are `OPEN-NA
 
 ### Canonical decisions/spec sections
 
-Implements `GDR-PC-001` through `GDR-PC-003`, `GDR-MIS-008`, `GDR-RPG-001` through `GDR-RPG-006`, `GDR-HLT-001`, `GDR-HLT-002`, `GDR-PAR-001` through `GDR-PAR-004`, `GDR-TIME-003`, `GDR-SUR-005`, `GDR-ESC-001`, `GDR-FACT-001`, `GDR-REM-001`, `GDR-REM-002`, and `GDR-REM-006`.
+Implements `GDR-PC-001` through `GDR-PC-003`, `GDR-MIS-008`, `GDR-RPG-001` through `GDR-RPG-006`, `GDR-HLT-001`, `GDR-HLT-002`, `GDR-PAR-001` through `GDR-PAR-005`, `GDR-TIME-003`, `GDR-SUR-005`, `GDR-ESC-001`, `GDR-FACT-001`, `GDR-REM-001`, `GDR-REM-002`, and `GDR-REM-006`.
 
 Canonical detail is in [[92 Character & Progression]], [[43 Health, Failure & Recovery]], [[60 Paranoia]], [[50 Combat]], [[44 Safehouse, Save & Retry]], [[13 Level 0 Content and State Matrix]] sections 4–5 and 10–12, [[04 Engineering/Architecture]] sections 5, 10, and 12, and [[04 Engineering/Roadmap]] Gate 7.
 
@@ -684,8 +808,8 @@ The player can look at a street and understand who or what is watching, how conc
 ### Complete player flow
 
 1. Discover a camera through ordinary sight, contact knowledge, or authored interaction; its sweep and current coverage become readable and knowledge can persist.
-2. Observe from safety or cross the lane. Sustained valid exposure builds visible concern rather than instantly confirming identity.
-3. At the approved or explicitly provisional threshold, enter `Suspicious`, record source and last-known position, raise communicated Paranoia, focus nearby connected cameras, and dispatch the single verifier drone when appropriate.
+2. Observe from safety or cross the lane. Sustained valid exposure builds visible concern rather than instantly confirming identity and raises source-attributed Paranoia over time according to the reversible `OPEN-PAR-001` tuning.
+3. At the approved or explicitly provisional threshold, enter `Suspicious`, record source and last-known position, communicate the current Paranoia source/rate, focus nearby connected cameras, and dispatch the single verifier drone when appropriate.
 4. Break current observation, move away from last-known position, and enter a credible authored hiding or blending context. Invalid entry explains direct observation, range, schedule, occupancy, or context requirements.
 5. If exposure continues, an identity checkpoint confirms, or the drone verifies, enter `Pursuit`. Security and drone investigate network evidence and last-known positions, never secret live coordinates.
 6. Break sight, change direction, and use an authored context. Successful escape transitions `Pursuit → Suspicious → Clear`; difficult recovery may grant its approved or explicitly provisional one-time Paranoia relief.
@@ -698,6 +822,8 @@ The player can look at a street and understand who or what is watching, how conc
 `SurveillanceState` contains `level`, source device/actor, last-known position, timestamps, current search area, and trace/verification provenance. `Clear → Suspicious` requires authored valid observation or suspicious behavior; `Suspicious → Pursuit` requires continued evidence, an explicit checkpoint, or drone verification—never a hidden timer alone. `Pursuit → Suspicious` requires broken sight plus credible evasion; `Suspicious → Clear` requires completed context recovery. Render and detection use the same camera geometry and solid occlusion. Devices cannot see through buildings or across invalid elevation/masks.
 
 Hiding and blending are authored IDs with geometry, availability schedule, capacity, prerequisites, invalid reasons, and recovery behavior. A context cannot be entered while directly observed. Civilian group size and schedules use the Approved rule or the explicit reversible `OPEN-CIV-001` baseline; when provisional, the trial uses small groups with arrival/hold/depart phases that support specific public blending rather than decorative crowds. Human-security roster and schedules likewise use Approved data or the explicit reversible `OPEN-SEC-001` baseline; security verifies, blocks, and intercepts but has no battle AI. The single drone announces approach, searches last-known areas and possible contexts, and cannot attack or be fought. Noise exists only as authored world events with known source and investigation consequence.
+
+Paranoia gain follows the original approved shape: it accrues over time only while valid observation or Pursuit evidence is attributable to a communicated source. The surveillance reducer owns that deterministic exposure window and stops it when evidence breaks. `OPEN-PAR-001` owns the exact rate, overlap, sampling, and caps; a transition-only one-shot substitute is not silently canonical.
 
 ### Internal milestones and proof gates
 
@@ -735,7 +861,7 @@ Depends on validated committed T3 and T7 foundations; consumes T4–T6 geometry/
 
 ### Canonical decisions/spec sections
 
-Implements `GDR-PAR-002`, `GDR-PAR-004`, `GDR-OBS-001`, `GDR-OBS-002`, `GDR-SUR-001` through `GDR-SUR-005`, `GDR-STL-001` through `GDR-STL-003`, `GDR-ESC-001`, `GDR-ESC-002`, `GDR-REM-004`, and `GDR-REM-005`.
+Implements `GDR-PAR-002`, `GDR-PAR-004`, `GDR-PAR-005`, `GDR-OBS-001`, `GDR-OBS-002`, `GDR-SUR-001` through `GDR-SUR-005`, `GDR-STL-001` through `GDR-STL-003`, `GDR-ESC-001`, `GDR-ESC-002`, `GDR-REM-004`, and `GDR-REM-005`.
 
 Canonical detail is in [[42 Surveillance, Security & Civilian Behavior]], [[70 Stealth]], [[50 Combat]], [[60 Paranoia]], [[41 Movement, Interaction & Observation]], [[13 Level 0 Content and State Matrix]] sections 6–8 and 11, [[04 Engineering/Architecture]] surveillance ownership/contracts, and [[04 Engineering/Roadmap]] Gate 8.
 
@@ -882,7 +1008,7 @@ From New Game to debrief, the player experiences a 15–20 minute grounded Tokyo
 
 The objective state machine, facts/check matrix, outcome ledger, failure IDs, snapshot, and acceptance IDs in [[13 Level 0 Content and State Matrix]] are authoritative. Every mission-object transition requires explicit input and is idempotent. Midnight causes `failure.deadline` while either medkits have not been returned or transit has not been validated. Completion requires both; active Suspicious/Pursuit must be resolved before invisible completion is allowed. The manifest is always optional. Contact facts change designated clarity/checks, not route permission. The debrief reads `Level0OutcomeLedger`; it never reconstructs truth from display logs or generic morality.
 
-Onboarding is contextual and disappears once the action is demonstrated; no separate F1 codex exists. Audio and visual feedback use the same semantic events as gameplay. English and Ukrainian share semantic IDs. Performance, save, and viewport behavior are part of acceptance, not post-ship polish. Until `OPEN-TIME-001` is accepted, pacing trials use its recorded 1–2 / 2–3 / 0–4 / 6–8 / 3–4 / 2–3 minute segment bands, 19:15–19:45 dusk-departure window, and 60-world-minute return reserve; segment maxima do not stack and the total remains 15–20 minutes.
+Onboarding is contextual and disappears once the action is demonstrated. The complete in-game Game Design Bible remains an optional reference under T1 and never substitutes for teaching immediate controls through play. Audio and visual feedback use the same semantic events as gameplay. English and Ukrainian share semantic IDs. Performance, save, and viewport behavior are part of acceptance, not post-ship polish. Until `OPEN-TIME-001` is accepted, pacing trials use its recorded 1–2 / 2–3 / 0–4 / 6–8 / 3–4 / 2–3 minute segment bands, 19:15–19:45 dusk-departure window, and 60-world-minute return reserve; segment maxima do not stack and the total remains 15–20 minutes.
 
 ### Internal milestones and proof gates
 
@@ -919,7 +1045,7 @@ Depends on validated committed T3–T9 deliverables. Critical acceptance blocker
 
 ### Canonical decisions/spec sections
 
-Implements the end-to-end current contract, especially `GDR-PROD-001` through `GDR-PROD-003`, `GDR-SET-001` through `GDR-SET-006`, `GDR-PC-001`, `GDR-PC-004`, `GDR-CAMP-001`, `GDR-MIS-001` through `GDR-MIS-010`, `GDR-RPG-005`, `GDR-RPG-006`, `GDR-HLT-001`, `GDR-HLT-002`, `GDR-PAR-002`, `GDR-TIME-001`, `GDR-INT-001`, `GDR-STL-003`, `GDR-ESC-001`, `GDR-ESC-002`, `GDR-DLG-001`, `GDR-DLG-003`, `GDR-FACT-001`, `GDR-GEO-002`, `GDR-SOC-001`, `GDR-AUD-001`, `GDR-GOV-001`, and `GDR-GOV-006`.
+Implements the end-to-end current contract, especially `GDR-PROD-001` through `GDR-PROD-003`, `GDR-SET-001` through `GDR-SET-006`, `GDR-PC-001`, `GDR-PC-004`, `GDR-CAMP-001`, `GDR-MIS-001` through `GDR-MIS-010`, `GDR-RPG-005`, `GDR-RPG-006`, `GDR-HLT-001`, `GDR-HLT-002`, `GDR-PAR-002`, `GDR-PAR-005`, `GDR-TIME-001`, `GDR-INT-001`, `GDR-STL-003`, `GDR-ESC-001`, `GDR-ESC-002`, `GDR-DLG-001`, `GDR-DLG-003`, `GDR-FACT-001`, `GDR-GEO-002`, `GDR-SOC-001`, `GDR-AUD-001`, `GDR-GOV-001`, and `GDR-GOV-006`.
 
 Canonical detail is in [[Game Design]], [[10 MVP Spine]], [[11 Level 0 Vertical Slice Contract]], every system specification, [[13 Level 0 Content and State Matrix]], [[03 Lore/Plot Bible]], [[30 Art Direction (MVP)]], [[95 MVP Readiness Checklist]], [[04 Engineering/Architecture]], and [[04 Engineering/Roadmap]] Gate 10.
 

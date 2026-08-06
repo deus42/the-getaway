@@ -11,6 +11,14 @@ The Getaway turns modern institutional anxieties—identity scoring, pervasive c
 
 The player succeeds by interpreting systems and people rather than overpowering them. The experience should feel tense, observed, intimate, and contemporary. Technology is credible infrastructure with ownership and limits, not magic.
 
+## Product promise
+
+Build a personal expatriate, learn how Hidzu-controlled Tokyo sees them, recover medicine for Lira, escape an evidence-driven surveillance response, and secure passage toward Miami before midnight. Every useful advantage must come from the player's build, a fact with provenance, readable world state, or deliberate physical action.
+
+The first three minutes establish identity, exposure, George, Lira, the humanitarian objective, the two timing possibilities, and the deadline. The middle of the slice turns knowledge into route choice and surveillance pressure. The final minutes convert the player's actual conduct into return, validation, debrief, recovery, and persistent RPG progression.
+
+The intended audience is a player who enjoys authored RPG consequence and systemic stealth but does not want a combat power fantasy, opaque immersive-sim puzzle logic, or a sprawling sandbox before the central experience is coherent.
+
 ## Level 0 pillars
 
 ### Surveillance
@@ -39,7 +47,13 @@ The player chooses a callsign, appearance, four attributes, and eight skills. De
 
 ### City
 
-Level 0 is one continuous outdoor Tokyo district with three interlocking traversal loops, recognizable public and service spaces, credible surveillance coverage, discrete hiding and blending contexts, and a two-to-three-minute outer loop. Architecture forms streets rather than sitting as isolated objects.
+Level 0 is exactly four dense, continuous outdoor Tokyo mission blocks with three functional identities and three interlocking traversal loops. It contains recognizable public and service spaces, credible surveillance coverage, discrete hiding and blending contexts, and a two-to-three-minute outer loop. Architecture forms streets rather than sitting as isolated objects. This approved topology is distinct from both the rejected sparse/fenced four-block compound and the rejected oversized nine-block board.
+
+## Player agency contract
+
+The player chooses their build, whether to seek optional preparation, when to depart, which route context to exploit, which risks to accept, whether to inspect optional evidence, how to escape, and whether to continue exploring after completion. The game may clarify consequences and known risk; it may not choose a route, perform an interaction, conceal deterministic requirements, invent knowledge, or convert failure into an unexplained state change.
+
+Skipping optional content creates less information or stricter checks, never a silent dead end. A difficult build can still finish the mission through another authored action. A failed nonterminal check changes time, stress, injury, route clarity, or another declared state and explains that change.
 
 ## Complete Level 0 loop
 
@@ -56,6 +70,8 @@ Level 0 is one continuous outdoor Tokyo district with three interlocking travers
 11. **Validate passage.** Use the outbound terminal at the safehouse before midnight.
 12. **Recover and progress.** Rest, review the dossier, consult George, allocate any earned level-up, and receive the factual debrief.
 13. **Close.** Choose `Continue Exploring` or `End Demo`. Do not load Miami until Level 1 exists.
+
+The loop is complete only when all transitions are explicit. Medkits require explicit cache interaction and explicit handoff. Passage requires explicit credential issuance and explicit outbound-terminal validation. Pursuit must be resolved rather than erased by crossing the safehouse boundary. Debrief reads the outcome ledger rather than reconstructing history from presentation state.
 
 ## First-run pacing target
 
@@ -79,6 +95,20 @@ Level 0 establishes that Hidzu supplies identity, logistics, and surveillance in
 ## Definition of the MVP
 
 MVP means this loop is complete, readable, emotionally coherent, and replayable through ordinary controls. It does not mean every existing subsystem is surfaced. A system that does not serve this loop is removed from Level 0 or postponed.
+
+MVP quality is demonstrated in the actual player-visible build. A fixture can prove a state transition, a validator can prove a content contract, and a screenshot can prove a frame. None alone proves that a new player can understand and complete the journey. Final evidence therefore combines ordinary-control play, the target desktop viewports, both languages, the specified state/failure matrix, and a factual debrief.
+
+## Authored content minimum
+
+- one complete Lira operation and factual debrief;
+- optional Naila and Brant preparation with a viable neither-contact run;
+- dusk/public and curfew/service route contexts in the same four-block district;
+- three one-function terminals: camera loop, cache locker, and outbound validation;
+- one optional manifest with guaranteed, checked, missed, and uninspected outcomes;
+- one verifier drone, a small authored security set, and small authored civilian/blending groups;
+- four protagonist appearances, twelve grounded actor sets, matching portraits, and George AR presentation;
+- one progression event plus four normal run failures and deterministic Retry;
+- equivalent English and Ukrainian semantics and non-audio-only critical feedback.
 
 ## Permanent Level 0 boundaries
 

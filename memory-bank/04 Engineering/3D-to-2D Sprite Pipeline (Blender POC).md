@@ -19,7 +19,7 @@ This note preserves the conclusion of GET-155 and the rejected GET-180/iso-compi
 
 - A collection of separately rendered building sprites does not become a coherent city when assembled in Phaser.
 - Numeric footprint validation does not prove correct human scale, street rhythm, lighting, actor readability, or visual quality.
-- Four-block, nine-parcel, 54×38, and 96×72 experiments are not approved Level 0 topology.
+- The sparse/fenced four-block compound, nine-parcel, `54×38`, `84×60`, and `96×72` experiments are not approved Level 0 topology. The later requester-approved dense four-block mission envelope is current and distinct.
 - Generated synthetic replacements, opaque parcel plates, and per-building collage are not production art direction.
 - Successful commands, validators, tests, or an AI visual rating are not requester acceptance.
 
@@ -32,7 +32,7 @@ The approved production path is defined in:
 - [[Roadmap]] — T3 mission/runtime skeleton → T4 complete live city rebuild → T5 Hidzu identity → T6 actor follow-up;
 - [[Building Positioning Runbook]] — measured alignment after the replacement layout is approved.
 
-The current path uses the requester-owned Neo Tokyo 2 pack in one full outdoor Level 0 Blender master scene, with original gap-fill work only where public realm or gameplay needs it. GET-204 completes composition, look development, export, and live integration internally, then presents one full-district candidate for requester acceptance. The mission skeleton stays authoritative while accepted city geometry is back-propagated into the shared layout contract. Raw vendor geometry/textures and generated `.blend` files remain untracked; requester-approved flattened game derivatives, original gap-fill assets, recipes, manifests, metadata, and validators may be committed.
+The current path uses the requester-owned Neo Tokyo 2 pack in one four-block outdoor Level 0 Blender master scene, with original gap-fill work only where public realm or gameplay needs it. GET-204 first presents actual same-master close and four-block overview renders for source/composition approval, then exports, reconciles, integrates, and presents the live candidate for separate acceptance. The mission skeleton stays authoritative for semantics while accepted city geometry is back-propagated into the shared layout contract. Raw vendor geometry/textures and generated `.blend` files remain untracked; requester-approved flattened game derivatives, original gap-fill assets, recipes, manifests, metadata, and validators may be committed.
 
 ## Historical artifact boundary
 

@@ -3,13 +3,15 @@ status: MVP
 type: index
 ---
 
-# MVP Index
+# MVP Game Design Bible Index
 
-The canonical Level 0 specification is the set of current-design documents linked below. Historic progress, tests, code, screenshots, and Linear tickets are evidence or implementation records; they do not override this specification.
+The canonical Level 0 Game Design Bible is the set of current-design documents linked below. Historic progress, tests, code, screenshots, and Linear tickets are evidence or implementation records; they do not override this specification.
+
+For a first read, use [[Game Design]] → [[10 MVP Spine]] → [[11 Level 0 Vertical Slice Contract]], then follow the system chapters for the feature being implemented. Use [[12 Game Design Decision Register]] to verify authority and supersession, and [[14 Specification Review Queue]] whenever a required exact value is still open.
 
 ## Product contract
 
-- [[Game Design]] — concise source-of-truth hub
+- [[Game Design]] — complete readable Bible entry point and system map
 - [[10 MVP Spine]] — product pillars and complete player loop
 - [[11 Level 0 Vertical Slice Contract]] — Level 0 mission contract
 - [[12 Game Design Decision Register]] — approved, removed, postponed, and superseded decisions
