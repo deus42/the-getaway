@@ -13,7 +13,7 @@ The player succeeds by interpreting systems and people rather than overpowering 
 
 ## Product promise
 
-Build a personal expatriate, learn how Hidzu-controlled Tokyo sees them, recover medicine for Lira, escape an evidence-driven surveillance response, and secure passage toward Miami before midnight. Every useful advantage must come from the player's build, a fact with provenance, readable world state, or deliberate physical action.
+Build a personal expatriate who needs passage toward Miami to investigate their missing father and Operation Cold Iron. Begin as an ordinary person Hidzu Corporation does not consider a problem, recover medicine for Lira, become legible only through observed rule-breaking, escape the resulting evidence-driven response, and validate passage before midnight. Every useful advantage must come from the player's build, a fact with provenance, readable world state, or deliberate physical action.
 
 The first three minutes establish identity, exposure, George, Lira, the humanitarian objective, the two timing possibilities, and the deadline. The middle of the slice turns knowledge into route choice and surveillance pressure. The final minutes convert the player's actual conduct into return, validation, debrief, recovery, and persistent RPG progression.
 
@@ -23,11 +23,11 @@ The intended audience is a player who enjoys authored RPG consequence and system
 
 ### Surveillance
 
-The Hidzu network is visible, systemic, and fallible. Cameras and the verifier drone share truthful geometry and last-known information. They can become concerned, search evidence, and lose the protagonist. They never read the true player position through solid geometry.
+The Hidzu Corporation network is visible, systemic, and fallible. Ordinary public camera visibility is harmless. Concern requires shared visibility plus an observed restricted-area breach, protected interaction, medkit removal, failed verification, or detected feed change. Cameras and Needle share truthful geometry and last-known information, lose recognition after full recovery to `Clear`, and never read the true player position through solid geometry. Blind spots are ordinary occlusion, never authored off-grid zones.
 
 ### Paranoia
 
-Paranoia is an honest 0–100 resource caused by surveillance exposure, pursuit, injury, dangerous escape, capture outcomes, and authored shocks. It penalizes deterministic checks at visible thresholds and becomes fatal at 100. It never creates false UI, hallucinations, or fake objectives.
+Paranoia is an honest 0–100 resource caused by rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored shocks. It penalizes deterministic checks at visible thresholds and becomes fatal at 100. Two one-use city grounding actions trade ten world minutes for ten relief, and the first qualifying difficult escape can remove five. It never creates false UI, hallucinations, or fake objectives.
 
 ### Dialogue and facts
 
@@ -39,7 +39,7 @@ Movement, observation, hiding, blending, timing, and evasion are the primary ten
 
 ### George
 
-George is the protagonist's private AI companion. He appears as a fourth HUD lane and a near-character AR avatar, summarizes verified state, explains blocked actions, compares known risk, and surfaces authored contextual questions. He cannot act for the player or reveal undiscovered information.
+George is the protagonist's private AI companion. He appears as a fourth HUD lane and a near-character AR avatar, summarizes verified state, explains blocked actions and missing information, compares known risk, and surfaces authored contextual questions. Silence is never hidden information; Level 0 adds no deletion/freedom desire arc. He cannot act for the player or reveal undiscovered information.
 
 ### RPG identity
 
@@ -53,25 +53,25 @@ Level 0 is exactly four dense, continuous outdoor Tokyo mission blocks with thre
 
 The player chooses their build, whether to seek optional preparation, when to depart, which route context to exploit, which risks to accept, whether to inspect optional evidence, how to escape, and whether to continue exploring after completion. The game may clarify consequences and known risk; it may not choose a route, perform an interaction, conceal deterministic requirements, invent knowledge, or convert failure into an unexplained state change.
 
-Skipping optional content creates less information or stricter checks, never a silent dead end. A difficult build can still finish the mission through another authored action. A failed nonterminal check changes time, stress, injury, route clarity, or another declared state and explains that change.
+Skipping optional content creates less information or stricter checks, never a silent dead end. Every check-bearing choice presents the exact deterministic math before selection and the same contributors after resolution. A difficult build can still finish the mission through another authored action. A failed nonterminal check changes time, Paranoia, Health, route clarity, or another declared state and explains that change; only the final failed capture-escape check may end the attempt.
 
 ## Complete Level 0 loop
 
 1. **Create.** Choose callsign, one of four appearances, four attribute points, and six skill points.
 2. **Wake exposed.** Begin inside the safehouse boundary at 18:30. George gives only immediate context and controls.
-3. **Meet Lira.** Learn that Hidzu seized medical supplies, the cache is in a logistics site, passage toward Miami is the payment, and midnight is the deadline.
+3. **Meet Lira.** Learn that Hidzu Corporation seized medical supplies, the cache is in a logistics site, passage toward Miami is the payment, and midnight is the deadline.
 4. **Prepare or proceed.** Consult Naila, Brant, both, or neither. Preparation yields specific facts, not buffs.
 5. **Choose timing through play.** Infiltrate before 22:00 through public delivery activity or wait for curfew and use the service alley.
 6. **Read the network.** Observe known cameras, public behavior, entrances, hiding/blending contexts, and the verifier drone. Use George and the dossier only within known information.
-7. **Recover the medkits.** Explicitly operate the cache-locker terminal and take the mission object.
-8. **Investigate optionally.** Recognize the Hidzu–Harrow shipping manifest through Naila's fact or an authored Awareness check. Missing it never blocks completion.
+7. **Recover the medkits.** Explicitly operate the cache-locker terminal and take the mission object; the observed removal is a valid surveillance rule break.
+8. **Investigate optionally.** Progress Cold Iron evidence from Naila warning to manifest recognition, then optionally spend five world minutes to copy it. Missing or declining the copy never blocks completion.
 9. **Escape honestly.** Resolve Suspicious or Pursuit through line-of-sight break, direction change, hiding, blending, or an authored confrontation—not an invisible exit trigger.
 10. **Return to Lira.** Explicitly hand over the medkits. Lira reads the actual outcome ledger.
 11. **Validate passage.** Use the outbound terminal at the safehouse before midnight.
 12. **Recover and progress.** Rest, review the dossier, consult George, allocate any earned level-up, and receive the factual debrief.
 13. **Close.** Choose `Continue Exploring` or `End Demo`. Do not load Miami until Level 1 exists.
 
-The loop is complete only when all transitions are explicit. Medkits require explicit cache interaction and explicit handoff. Passage requires explicit credential issuance and explicit outbound-terminal validation. Pursuit must be resolved rather than erased by crossing the safehouse boundary. Debrief reads the outcome ledger rather than reconstructing history from presentation state.
+The loop is complete only when all transitions are explicit. Medkits require explicit cache interaction and explicit handoff. Manifest copying requires its own five-world-minute confirmation. Passage requires explicit credential issuance and explicit outbound-terminal validation. Pursuit must be resolved rather than erased by crossing the safehouse boundary. Debrief reads the outcome ledger rather than reconstructing history from presentation state. Failure uses a cause-specific surface: only capture receives a Hidzu Corporation incident report and surveillance-limited evidence map.
 
 ## First-run pacing target
 
@@ -90,7 +90,7 @@ The 18:30–00:00 world window equals eleven minutes of unpaused simulation at 3
 
 ## Campaign continuity
 
-Level 0 establishes that Hidzu supplies identity, logistics, and surveillance infrastructure to Harrow's Operation Cold Iron. The optional manifest determines how much the protagonist and future Miami contact know at handoff. The protagonist's missing father remains the personal connection to Cold Iron. Miami is the first playable campaign destination after the prologue.
+Level 0 establishes that Hidzu Corporation supplies identity, logistics, and surveillance infrastructure to Harrow's Operation Cold Iron. The optional manifest determines how much the protagonist and future Miami contact know at handoff. The protagonist's missing father remains the personal connection to Cold Iron. Miami is the first playable campaign destination after the prologue.
 
 ## Definition of the MVP
 
@@ -103,11 +103,12 @@ MVP quality is demonstrated in the actual player-visible build. A fixture can pr
 - one complete Lira operation and factual debrief;
 - optional Naila and Brant preparation with a viable neither-contact run;
 - dusk/public and curfew/service route contexts in the same four-block district;
-- three one-function terminals: camera loop, cache locker, and outbound validation;
-- one optional manifest with guaranteed, checked, missed, and uninspected outcomes;
-- one verifier drone, a small authored security set, and small authored civilian/blending groups;
+- three one-function terminals: one-use camera feed, cache locker, and outbound validation;
+- one optional Cold Iron chain with unknown, Naila-warning, recognized, and copied states;
+- one named verifier drone, Needle, a small authored security set, and small authored civilian/blending groups that never report hidden state;
+- Transit Road, Market Ring, and Outer Space route names; four street-clock moments; two grounding actions; and three threshold ambience sources;
 - four protagonist appearances, twelve grounded actor sets, matching portraits, and George AR presentation;
-- one progression event plus four normal run failures and deterministic Retry;
+- one progression event plus four normal run failures and deterministic Restart Attempt;
 - equivalent English and Ukrainian semantics and non-audio-only critical feedback.
 
 ## Permanent Level 0 boundaries

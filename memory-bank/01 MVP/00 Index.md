@@ -27,7 +27,7 @@ For a first read, use [[Game Design]] → [[10 MVP Spine]] → [[11 Level 0 Vert
 - [[41 Movement, Interaction & Observation]]
 - [[42 Surveillance, Security & Civilian Behavior]]
 - [[43 Health, Failure & Recovery]]
-- [[44 Safehouse, Save & Retry]]
+- [[44 Safehouse, Save & Restart Attempt]]
 - [[45 HUD & Information Architecture]]
 - [[46 Facts, Dossier, Minimap & Terminals]]
 - [[47 Social Feed]]
@@ -53,7 +53,7 @@ Every canonical system specification uses this exact section contract:
 7. Inputs from other systems.
 8. Effects on other systems.
 9. UI, world, audio, and George feedback.
-10. Failure, recovery, and retry behavior.
+10. Failure, recovery, and Restart Attempt behavior.
 11. Content-authoring requirements.
 12. Edge cases and prohibited shortcuts.
 13. Removed behavior.

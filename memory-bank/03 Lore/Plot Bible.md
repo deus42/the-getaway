@@ -30,7 +30,7 @@ Cold Iron depends on more than soldiers. It requires:
 
 The campaign asks whether the player can expose, fracture, or stop that system without reproducing its disregard for ordinary people. The protagonist’s missing father and the evidence discovered across the campaign make Cold Iron both political and personal.
 
-## 3. Tokyo prologue — Hidzu-controlled civic life
+## 3. Tokyo prologue — Hidzu Corporation-controlled civic life
 
 Level 0 takes place outdoors in Tokyo before the Miami campaign begins.
 
@@ -46,16 +46,16 @@ Tokyo is not a war zone. Its threat comes from normality under observation:
 - laptops, terminals, and social feeds that make institutional judgment feel ambient;
 - citizens adapting their behavior because they may be observed.
 
-Takahiro Kobayashi is the public executive authority associated with Hidzu’s Tokyo control system. His exact formal title remains `OPEN-NAR-003`; writing may refer to him as a Hidzu executive or authority until it is approved.
+Takahiro Kobayashi is the public executive authority associated with Hidzu Corporation’s Tokyo control system. His exact formal title remains `OPEN-NAR-003`; writing may refer to him as a Hidzu Corporation executive or authority until it is approved.
 
-Hidzu secretly supplies surveillance AI, identity infrastructure, and logistics capability used by Harrow’s Operation Cold Iron. Eisenclave remains Harrow’s primary American integrator and operator. This distinction is canonical:
+Hidzu Corporation secretly supplies surveillance AI, identity infrastructure, and logistics capability used by Harrow’s Operation Cold Iron. Eisenclave remains Harrow’s primary American integrator and operator. This distinction is canonical:
 
-- **Hidzu:** upstream technology, identity, and logistics supplier;
+- **Hidzu Corporation:** upstream technology, identity, and logistics supplier;
 - **Eisenclave:** American collaborator that integrates and operates those systems for Harrow and the ESD.
 
 ## 4. Protagonist
 
-The protagonist is an American expatriate living in or moving through Hidzu-controlled Tokyo. They are not a fixed operative, soldier, courier archetype, or mandatory character named Trace.
+The protagonist is an American expatriate living in or moving through Hidzu Corporation-controlled Tokyo. They are not a fixed operative, soldier, courier archetype, or mandatory character named Trace.
 
 At New Game, the player chooses:
 
@@ -63,11 +63,11 @@ At New Game, the player chooses:
 - one of four authored appearances;
 - a grounded set of attributes and skills.
 
-The protagonist has touched evidence connected to their missing father and Operation Cold Iron. That contact caused Hidzu’s systems to flag them. Their Tokyo chronology and the exact flagging evidence remain `OPEN-NAR-001` and `OPEN-NAR-002` and must be resolved before the opening script is frozen.
+The protagonist seeks passage to Miami because they believe their missing father is connected to Operation Cold Iron. Hidzu Corporation does not consider them a problem when Level 0 begins. Their Tokyo chronology remains `OPEN-NAR-001`; the opening must not invent a prior flagging event.
 
 What is already true:
 
-- the protagonist is exposed and cannot simply resume ordinary life;
+- the protagonist is motivated by a personal lead but begins as an ordinary public presence in Hidzu Corporation's network;
 - they have limited leverage and no unexplained military competence;
 - their father disappeared during the Battle of Miami;
 - credible evidence suggests he may have survived and entered ESD custody or transfer routes connected to Cold Iron;
@@ -81,13 +81,13 @@ George is useful because he can organize verified facts, compare known risks, ex
 
 George’s physical/technical substrate—implant, wearable, lens, phone-linked system, or another form—remains `OPEN-NAR-009`. Until resolved, scripts should describe his private AR presence without asserting unsupported hardware.
 
-George’s voice is precise, dry, observant, and honest about uncertainty. His humor should relieve pressure without turning fear into a gag.
+George’s voice is precise, dry, observant, and honest about uncertainty. He always explains why useful information is missing; silence is never a hidden clue. His humor should relieve pressure without turning fear into a gag. Level 0 gives him no personal desire, deletion/freedom request, or secret agenda.
 
 ## 6. Level 0 cast
 
 ### Lira
 
-Lira is the primary mission contact. Hidzu confiscated medical supplies she needs returned. In exchange for the protagonist’s help, she can arrange an outbound transit credential toward Miami.
+Lira is the primary mission contact. Hidzu Corporation confiscated medical supplies she needs returned. In exchange for the protagonist’s help, she can arrange an outbound transit credential toward Miami.
 
 Lira is not a quest vending machine or generic trust meter. Her briefing establishes the human need, the logistics-site problem, the midnight deadline, and the promised passage. Her debrief responds to what the protagonist actually did.
 
@@ -95,7 +95,7 @@ Her precise identity/relationship, the medkit beneficiaries, and the confiscatio
 
 ### Naila
 
-Naila is an optional contact with systems knowledge and factual context about Hidzu’s camera network, connected terminal topology, and shipping information. She grants knowledge, not a hacking buff.
+Naila is an optional contact with systems knowledge and factual context about Hidzu Corporation’s camera network, connected terminal topology, and shipping information. She grants knowledge, not a hacking buff.
 
 Her approved biography, personal stakes, and knowledge provenance remain `OPEN-NAR-010`.
 
@@ -105,9 +105,9 @@ Brant is an optional contact who understands service routes, delivery timing, an
 
 His approved biography, role in Tokyo, and knowledge provenance remain `OPEN-NAR-011`.
 
-### Hidzu security and civilians
+### Hidzu Corporation security and civilians
 
-Hidzu security should feel procedural and institutionally confident rather than theatrical or monstrous. Civilians are not decoration: they demonstrate how ordinary people queue, work, wait, comply, avoid attention, and create credible blending contexts.
+Hidzu Corporation security should feel procedural and institutionally confident rather than theatrical or monstrous. Civilians are not decoration: they demonstrate how ordinary people queue, work, wait, comply, avoid attention, and create credible blending contexts.
 
 The exact number, identities, and schedules of Level 0 security and civilians remain content-authoring decisions in [[01 MVP/14 Specification Review Queue]].
 
@@ -121,9 +121,9 @@ Kobayashi appears in propaganda, civic messaging, or broadcast material rather t
 
 1. The player creates a protagonist.
 2. The protagonist begins at 18:30 inside the outdoor safehouse boundary.
-3. George introduces only the immediate danger, controls, and known situation.
+3. George introduces controls, the known Miami/father/Cold Iron goal, and the fact that Hidzu Corporation has no current concern; he does not invent immediate exposure.
 4. The protagonist meets Lira within the first meaningful story decision window.
-5. Lira explains the confiscated medkits, the Hidzu logistics site, the midnight deadline, and the promised outbound passage.
+5. Lira explains the confiscated medkits, the Hidzu Corporation logistics site, the midnight deadline, and the promised outbound passage.
 
 ### Preparation
 
@@ -138,7 +138,7 @@ The routes are not moral alignment choices or character classes. They are differ
 
 ### Cache and evidence
 
-The protagonist explicitly recovers the confiscated medical supplies. A nearby shipping manifest may reveal the Hidzu–Harrow/Cold Iron connection. Naila’s designated fact guarantees that recognition; otherwise an authored Awareness check may recognize it. Failure or omission does not block the medkit objective.
+The protagonist explicitly recovers the confiscated medical supplies. Removing them is a surveillance rule break only if a camera or Needle sees it. A nearby shipping manifest uses the dedicated chain `unknown → Naila warning → manifest recognized → manifest copied`. Naila's warning guarantees recognition; otherwise an authored Awareness check may recognize it. Copying is a separate five-world-minute action with no extra check. Failure or omission does not block the medkit objective.
 
 The precise beneficiaries of the supplies, seizure incident, facility identity, and manifest contents remain open narrative facts and must be frozen before final dialogue/content authoring. Facility identity is `OPEN-NAR-015`.
 
@@ -157,7 +157,7 @@ Lira and George respond to the factual outcome ledger:
 - camera loop and trace;
 - hiding/blending recovery;
 - pursuit or interception;
-- injuries and Paranoia peak;
+- Health loss and Paranoia peak;
 - medkits returned;
 - manifest recognized, missed, or not inspected;
 - transit validated.
@@ -188,7 +188,7 @@ Public feeds, terminals, laptops, identity systems, corporate safety language, s
 
 ## 9. Campaign continuation
 
-Level 0 is a prologue. It adds the Tokyo/Hidzu supply-chain layer without replacing the established campaign spine.
+Level 0 is a prologue. It adds the Tokyo/Hidzu Corporation supply-chain layer without replacing the established campaign spine.
 
 ### Level 1 / Act 1 — Miami
 
@@ -234,11 +234,11 @@ A Miami grassroots network led by Amara Velez, focused on civilian survival, por
 
 ### Eisenclave Conglomerate
 
-Harrow’s American corporate integrator for surveillance, utilities, data analysis, and drone/security operations. Eisenclave turns upstream systems—including Hidzu capability—into ESD operational power.
+Harrow’s American corporate integrator for surveillance, utilities, data analysis, and drone/security operations. Eisenclave turns upstream systems—including Hidzu Corporation capability—into ESD operational power.
 
 ### Hidzu Corporation
 
-Tokyo-centered corporate supplier of identity, surveillance AI, and logistics infrastructure. Hidzu’s public language is optimistic, efficient, and civic; its violence is often administrative before it is physical.
+Tokyo-centered corporate supplier of identity, surveillance AI, and logistics infrastructure. Hidzu Corporation’s public language is optimistic, efficient, and civic; its violence is often administrative before it is physical.
 
 ### Scavenger and informal networks
 
@@ -258,7 +258,7 @@ Informal crews and brokers exist in the wider campaign, but dynamic black market
 Example tone, not production dialogue:
 
 - **Human:** “They call it a safety hold. The medicine is still gone.”
-- **Hidzu:** “Identity continuity protects every resident. Remain available for verification.”
+- **Hidzu Corporation:** “Identity continuity protects every resident. Remain available for verification.”
 - **George:** “I know where the camera looked. I do not know what it inferred.”
 
 ## 12. Visual and audio motifs
@@ -294,7 +294,7 @@ Rejected ideas remain documented in [[01 MVP/12 Game Design Decision Register]] 
 
 The following are intentionally unresolved and must be answered before final content production:
 
-- protagonist’s Tokyo chronology and exact flagging incident;
+- protagonist’s Tokyo chronology;
 - Takahiro Kobayashi’s title;
 - Lira, Naila, and Brant biographies and prior relationships;
 - medkit beneficiaries and confiscation event;
@@ -310,10 +310,10 @@ The authoritative question wording, recommended baseline, and implementation blo
 
 Level 0 narrative is ready for implementation only when:
 
-1. A player can explain who Hidzu is, what Lira needs, why passage matters, and when the deadline occurs without reading external documentation.
+1. A player can explain who Hidzu Corporation is, what Lira needs, why the protagonist wants Miami, why Hidzu Corporation is not yet concerned, and when the deadline occurs without reading external documentation.
 2. The protagonist feels customizable and civilian-scale rather than like a fixed commando.
 3. Naila and Brant change practical knowledge without becoming mandatory.
-4. The optional manifest connects Hidzu, Eisenclave/Harrow, Cold Iron, and Miami without blocking the local human objective.
+4. The optional manifest connects Hidzu Corporation, Eisenclave/Harrow, Cold Iron, and Miami without blocking the local human objective.
 5. George distinguishes known fact, inference, and missing evidence.
 6. The debrief reflects actual actions and costs.
 7. Tokyo’s prologue adds a modern surveillance lens while preserving the 2036 American Cold Iron campaign.

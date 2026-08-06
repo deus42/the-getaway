@@ -42,7 +42,7 @@ The player can:
 3. They distribute six skill points among Stealth, Evasion, Awareness, Composure, Insight, Influence, Systems, and OpSec, respecting the creation cap.
 4. The summary previews the resulting totals and the practical situations each capability supports.
 5. Confirmation creates `PlayerIdentity` and `PlayerBuild`, then begins Level 0 at the safehouse.
-6. During play, authored checks use the build and current Paranoia penalty. The UI explains the requirement before selection and the resolved contributors afterward.
+6. During play, authored checks use the build and current Paranoia penalty. The same `Level0CheckBreakdown` is mounted before selection in `preview` mode and after commitment in `result` mode.
 7. Authored mission milestones award XP once.
 8. When a level is earned, allocation waits until the player reaches the safehouse or debrief.
 9. Each level grants two skill points; every third level also grants one attribute point.
@@ -101,8 +101,10 @@ XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes availa
 ### Checks and progression
 
 - Deterministic check: `attribute + skill − Paranoia penalty + authored situational modifier ≥ visible requirement`.
+- Preview displays `needs N — you have M` and every signed component; result reuses the same resolver inputs and read model.
 - Each check declares exactly one attribute and one skill.
 - Facts can reveal, lower, or guarantee only declared checks.
+- Every nonfatal failed check commits a declared worse-but-real effect. Only the final failed capture-escape option may end an attempt.
 - No random roll, critical success, critical failure, or hidden percentage exists.
 - Each level grants `2` skill points.
 - Every third level grants `1` attribute point.
@@ -116,7 +118,7 @@ XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes availa
 - [[90 Dialogue]] requests deterministic checks and displays requirements/results.
 - [[70 Stealth]] consumes Stealth, Evasion, Composure, Systems, OpSec, and Awareness where declared.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies fact modifiers and XP milestones.
-- [[44 Safehouse, Save & Retry]] controls level-up allocation context and persistence.
+- [[44 Safehouse, Save & Restart Attempt]] controls level-up allocation context and persistence.
 - [[48 Actors & Portraits]] maps appearance preset IDs to validated actor/portrait manifests.
 
 ## 8. Effects on other systems
@@ -133,25 +135,25 @@ XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes availa
 - Character creation explains capabilities in concrete Level 0 language, not abstract genre roles.
 - Budget, caps, invalid allocation, and remaining points are always visible.
 - The Character screen shows only callsign, appearance, level, XP, four attributes, eight skills, Health, Paranoia, unspent points, important facts, and long-term consequence summaries.
-- Check UI shows the named attribute, skill, requirement, Paranoia penalty, known fact modifier, localized authored situational reason, exact signed math, and final outcome explanation.
+- Check UI mounts `Level0CheckBreakdown` with `presentation: preview | result` and shows the named attribute, skill, requirement, Paranoia penalty, known fact modifier, localized authored situational reason, exact signed math, and final outcome explanation.
 - Level-up feedback is restrained and becomes actionable only at the safehouse/debrief.
 - George may explain a capability or known consequence, but does not recommend a “best build,” spend points, or reveal hidden checks.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
 - Character creation cannot confirm an empty callsign, invalid preset, unspent required creation points, over-cap value, or malformed build.
 - Leaving creation before confirmation discards the draft. After confirmation, the persisted identity/build is authoritative for the run; replacing it requires New Game.
-- Retry restores identity, build, level, XP, and unspent points exactly as of operation departure.
+- Restart Attempt restores identity, build, level, XP, and unspent points exactly from `OperationAttemptBaseline`.
 - New Game clears all identity/build state and begins creation.
 - Retired rewrite saves with fixed Operative/package state are rejected; they are never partially mapped into the new build.
-- A failed check commits its authored fail-forward result and cannot be rerolled by reopening the same interaction.
+- A failed check commits its authored fail-forward result and cannot be rerolled by reopening the same interaction; validation rejects a nonfatal catalog entry with no real state/path effect.
 
 ## 11. Content-authoring requirements
 
 - Create four grounded protagonist sprite/portrait identities with stable preset IDs.
 - Provide concise localized descriptions for every attribute and skill, including representative Level 0 uses.
 - Author at least two deliberately different viable sample builds and acceptance routes.
-- Catalog every Level 0 check with attribute, skill, requirement, exact stable-ID fact behavior, situational modifiers with authored localization keys, success, and fail-forward effects. Requirements and modifier semantics use approved values or the isolated reversible recommendations from `OPEN-RPG-001` and `OPEN-RPG-004` until accepted.
+- Catalog every Level 0 check with attribute, skill, requirement, exact stable-ID fact behavior, situational modifiers with authored localization keys, success, and a concrete fail-forward effect. Requirements and modifier semantics use approved values or the isolated reversible recommendations from `OPEN-RPG-001` and `OPEN-RPG-004` until accepted; validator coverage rejects every nonfatal entry whose failure changes only prose.
 - Define XP milestones and the Level 0 progression demonstration in approved or explicitly provisional authored data before encoding rewards.
 - Author Character-screen consequence summaries from stable outcome fields rather than raw logs.
 
@@ -159,6 +161,7 @@ XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes availa
 
 - No fixed Trace/Operative name, backgrounds, Courier/Cadet/Medic origin, or Ghost/Wire/Force package.
 - No hidden derived combat stats, empty equipment slots, perk tree, weapon modifiers, encumbrance, crafting, faction meter, or nonfunctional statistics.
+- No check choice without mounted exact preview math, preview/result drift, nonterminal wall, or final failure outside the last capture-escape choice.
 - No XP for dialogue exhaustion, repeated interaction, enemy defeat, walking, decorative discovery, or grinding.
 - No automatic point spending or build recommendation presented as canonical.
 - No fact converted into a permanent skill bonus.
@@ -177,14 +180,16 @@ Post-MVP may add more identity presentation, Level 1 checks, additional authored
 
 1. A first-time player creates a valid protagonist in no more than two minutes without needing genre-package knowledge.
 2. At T7 delivery, a Social/Mental build and a Technical/Evasion build are created through normal New Game controls and produce materially different results in the reusable visible check-breakdown component for the same canonical requirement. T9/T10 must expose and re-prove those differences inside authored dialogue, evidence, terminal, and escape contexts while both remain able to finish Level 0.
-3. Requirements are visible before a check; the result explains exact build, fact, situational, and Paranoia contributions.
-4. Naila’s designated fact guarantees only the manifest recognition it names and does not raise Awareness globally.
-5. Repeated dialogue or interaction cannot duplicate XP.
-6. Level 0 grants enough authored XP to demonstrate one safehouse/debrief allocation event once the open threshold is approved.
-7. Retry returns the exact departure build; New Game opens creation with no stale package or progression state.
+3. Requirements and all signed components are visible before every check; the result uses identical math and explains the committed effect.
+4. Exercise every catalog failure; each nonterminal result changes a declared route/resource/state while only final capture escape can end the attempt.
+5. Naila’s designated fact guarantees only the manifest recognition it names and does not raise Awareness globally.
+6. Repeated dialogue or interaction cannot duplicate XP.
+7. Level 0 grants enough authored XP to demonstrate one safehouse/debrief allocation event once the open threshold is approved.
+8. Restart Attempt returns the exact departure build; New Game opens creation with no stale package or progression state.
 
 ## 16. Owning Linear ticket
 
 - Primary: `T7` (`GET-207`) — Protagonist RPG identity, progression, Health, and Paranoia.
+- Integration: `T3A` (`GET-211`) captures/restores the build in `OperationAttemptBaseline`; `T9A` (`GET-213`) mounts exact preview/result math and validates fail-forward behavior.
 - Actor identity dependency: `T6` (`GET-206`) — Grounded actors, portraits, and entry-flow presentation.
-- Canonical decisions: `GDR-PC-001` through `GDR-PC-003`, `GDR-RPG-001` through `GDR-RPG-006`, `GDR-HLT-001`, `GDR-HLT-002`, `GDR-PAR-001` through `GDR-PAR-004`, `GDR-TIME-003`, `GDR-REM-001`, `GDR-REM-002`, and `GDR-REM-006` in [[12 Game Design Decision Register]].
+- Canonical decisions: `GDR-PC-002`, `GDR-PC-003`, `GDR-PC-005`, `GDR-RPG-001` through `GDR-RPG-007`, `GDR-HLT-001` through `GDR-HLT-003`, `GDR-PAR-001` through `GDR-PAR-007`, `GDR-TIME-003`, `GDR-REM-001`, `GDR-REM-002`, and `GDR-REM-006` in [[12 Game Design Decision Register]].

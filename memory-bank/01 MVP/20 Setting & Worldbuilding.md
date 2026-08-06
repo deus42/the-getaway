@@ -8,7 +8,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-The player is an American expatriate whose ordinary life in Tokyo becomes impossible after Hidzu correlates their identity with evidence connected to a missing father and Operation Cold Iron. The city should feel functional, attractive, inhabited, and quietly coercive—not ruined, lawless, supernatural, or designed as a combat arena.
+The player is an American expatriate seeking passage from Tokyo to Miami to investigate their missing father and Operation Cold Iron. Hidzu Corporation does not consider the protagonist a problem when Level 0 begins. The city should feel functional, attractive, inhabited, and quietly coercive—not ruined, lawless, supernatural, or designed as a combat arena.
 
 The fantasy depends on a double reading. A public kiosk is useful transit infrastructure and an identity checkpoint. A clean logistics annex distributes goods and can quietly remove medicine from people whom the system no longer recognizes. A camera is not an enemy turret; it is part of a civic promise that has become a custody mechanism. The player learns to read this institutional second meaning without being told that every citizen, screen, or device is secretly hostile.
 
@@ -16,22 +16,22 @@ The fantasy depends on a double reading. A public kiosk is useful transit infras
 
 Move through public and service space; observe institutional behavior; read public screens and signs; talk to contacts; use one-function terminals; hide; blend; inspect evidence; ask George about verified context; leave before identity control closes around them.
 
-These verbs express one grounded relationship with the setting: the protagonist is allowed to be present until Hidzu's systems correlate enough evidence to make them removable. The player is not conquering territory. They are managing visibility, credibility, knowledge, obligation, and time inside somebody else's rules.
+These verbs express one grounded relationship with the setting: the protagonist begins as an ordinary public presence, then becomes legible as a concern only when surveillance observes a declared rule break. The player is not conquering territory. They are managing visibility, credibility, knowledge, obligation, and time inside somebody else's rules.
 
 ## 3. Starting state and prerequisites
 
 - Year: 2036.
-- Place: an outdoor Tokyo district controlled through Hidzu identity, surveillance, mobility, and logistics systems.
+- Place: an outdoor Tokyo district controlled through Hidzu Corporation identity, surveillance, mobility, and logistics systems.
 - Political background: Harrow and ESD control the United States and prepare Operation Cold Iron.
 - Personal background: the protagonist is an expatriate with a father missing since the Battle of Miami.
-- Current exposure: Hidzu has flagged the protagonist after an unresolved evidence event tracked by `OPEN-NAR-002`.
+- Current exposure: none. Hidzu Corporation has no reason to treat the protagonist as a problem at Level 0 start.
 - The exact district identity, protagonist chronology, and local cast biographies remain in [[14 Specification Review Queue]].
 
 ## 4. Complete happy-path behavior
 
-The opening communicates corporate order before threat: reliable transit language, public safety messaging, identity checkpoints, service routines, and curated civic sentiment. Lira's mission reveals who falls outside that order. Naila exposes the network's technical shape. Brant exposes its behavioral routines. The cache manifest then connects Hidzu's infrastructure to Eisenclave, ESD, and Cold Iron. The player leaves with passage toward Miami and a clearer understanding of the system pursuing them.
+The opening communicates corporate order before threat: reliable transit language, public safety messaging, identity checkpoints, service routines, and curated civic sentiment. Lira's mission reveals who falls outside that order. Naila exposes the network's technical shape. Brant exposes its behavioral routines. The cache manifest then connects Hidzu Corporation's infrastructure to Eisenclave, ESD, and Cold Iron. The player leaves with passage toward Miami and a clearer understanding of the system pursuing them.
 
-For example, the dusk route can pass an ordinary delivery queue whose markings, announcement, and verifier behavior all appear reasonable. Brant's fact explains how a legitimate courier acts there. Later, the cache's seizure language reveals that the same compliance grammar denied medicine to an undocumented clinic. If the manifest is recognized, identical logistics language links Hidzu hardware to Cold Iron. The setting therefore advances through repeated concrete institutions, not detached lore exposition.
+For example, the dusk route can pass an ordinary delivery queue whose markings, announcement, and verifier behavior all appear reasonable. Brant's fact explains how a legitimate courier acts there. Later, the cache's seizure language reveals that the same compliance grammar denied medicine to an undocumented clinic. If the manifest is recognized, identical logistics language links Hidzu Corporation hardware to Cold Iron. The setting therefore advances through repeated concrete institutions, not detached lore exposition.
 
 ## 5. State model and transitions
 
@@ -45,18 +45,18 @@ These are scheduled presentation/content states, not procedural world simulation
 
 | Institution | Public promise | Actual Level 0 power | Player-facing evidence |
 |---|---|---|---|
-| Hidzu identity system | Continuity, safety, efficient access | Correlates people across transit, surveillance, and logistics | Verification frames, credential expiry, public notices, protagonist flagging |
-| Hidzu surveillance network | Faster response and safer streets | Stores concern, last-known position, and identity confirmation | Cameras, network states, verifier drone, security behavior |
-| Hidzu logistics compliance | Reliable distribution | Seizes goods from invalid identities and routes supplier hardware | Medkit hold, cache locker, shipping manifest |
-| Eisenclave/ESD | American security operations | Integrates Hidzu capability for Cold Iron | Optional manifest and future-facing dossier consequence |
+| Hidzu Corporation identity system | Continuity, safety, efficient access | Correlates rule-breaking evidence across transit, surveillance, and logistics | Verification frames, credential expiry, public notices, concern created during play |
+| Hidzu Corporation surveillance network | Faster response and safer streets | Stores concern, last-known position, and identity confirmation | Cameras, network states, verifier drone, security behavior |
+| Hidzu Corporation logistics compliance | Reliable distribution | Seizes goods from invalid identities and routes supplier hardware | Medkit hold, cache locker, shipping manifest |
+| Eisenclave/ESD | American security operations | Integrates Hidzu Corporation capability for Cold Iron | Optional manifest and future-facing dossier consequence |
 | Underground contacts | Mutual aid and practical survival | Supply facts, passage, and human alternatives | Lira, Naila, Brant, clinic need, outbound route |
 
 ## 6. Rules and tuning values
 
-- Hidzu is the upstream international provider of identity, surveillance-AI, and logistics capability.
+- Hidzu Corporation is the upstream international provider of identity, surveillance-AI, and logistics capability.
 - Eisenclave integrates and operates related systems for ESD in the United States.
 - Harrow/ESD do not physically occupy Tokyo in Level 0.
-- Takahiro Kobayashi appears through Hidzu's public image; exact title and Cold Iron knowledge are `OPEN-NAR-003`.
+- Takahiro Kobayashi appears through Hidzu Corporation's public image; exact title and Cold Iron knowledge are `OPEN-NAR-003`.
 - Tokyo-to-Miami passage is a covert multi-leg route, never an unexplained direct commute.
 - Technology has a visible owner, location, range, input, and consequence.
 
@@ -70,27 +70,28 @@ The setting chapter does not own those state machines, but it constrains their f
 
 Setting defines faction language, device ownership, public behavior, contact knowledge, objective wording, propaganda, visual motifs, audio cues, evidence interpretation, and the future Miami handoff.
 
-It also limits solution design. Hidzu infrastructure may correlate identity and dispatch verification, but it cannot act like magic omniscience. Civilians may follow public routines or become blending contexts, but they are not generic cover tokens. The optional manifest may reveal an international supply chain, but it cannot erase the immediate medkit obligation or turn Level 0 into an American battlefield.
+It also limits solution design. Hidzu Corporation infrastructure may correlate identity and dispatch verification, but it cannot act like magic omniscience. Civilians may follow public routines or become blending contexts, but they are not generic cover tokens. The optional manifest may reveal an international supply chain, but it cannot erase the immediate medkit obligation or turn Level 0 into an American battlefield.
 
 ## 9. UI, world, audio, and George feedback
 
-- UI uses Hidzu naming consistently and distinguishes fact from inference.
+- UI uses Hidzu Corporation naming consistently and distinguishes fact from inference.
 - World art shows checkpoints, cameras, terminals, laptops, public screens, service access, queues, identity scanning, and civic messaging without clutter.
 - Audio uses restrained public announcements, device confirmation, drone hum, city ambience, and curfew transition.
 - George explains only what the protagonist knows about these systems.
+- Street time is embodied at 21:00, 21:30, 22:00, and 23:30; three spatial sound leaks and the named Transit Road, Market Ring, and Outer Space routes make the district readable through fiction.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
-Worldbuilding never introduces an untelegraphed fail state. Capture, deadline, Health, and Paranoia failures use the authored systems. Retry restores known facts and preparation exactly as of departure; it does not randomize schedules or public behavior.
+Worldbuilding never introduces an untelegraphed fail state. Capture, deadline, Health, and Paranoia failures use the authored systems. Restart Attempt restores `OperationAttemptBaseline`; it does not randomize schedules or public behavior.
 
-Failure fiction remains proportional to implemented scope. Capture may end in administrative custody only after `OPEN-NAR-012` is resolved or used as an explicit provisional line; the game does not depict an unimplemented prison sequence. Midnight failure explains the lost credential/route only through the accepted or explicitly provisional `OPEN-NAR-007` fiction. A Retry is the same authored city and schedule, allowing the player to learn rather than hope for a different simulation roll.
+Failure fiction remains proportional to implemented scope. Capture may end in administrative custody only after `OPEN-NAR-012` is resolved or used as an explicit provisional line; the game does not depict an unimplemented prison sequence. Midnight failure explains the lost credential/route only through the accepted or explicitly provisional `OPEN-NAR-007` fiction. A Restart Attempt is the same authored city and schedule, allowing the player to learn rather than hope for a different simulation roll.
 
 ## 11. Content-authoring requirements
 
 - Name and culturally review the district.
 - Define Lira, Naila, Brant, Takahiro, and the medkit beneficiaries.
-- Author distinct Hidzu, Eisenclave, and ESD terminology.
-- Define the flagging evidence, manifest contents, midnight deadline fiction, and multi-leg passage.
+- Author distinct Hidzu Corporation, Eisenclave, and ESD terminology.
+- Define the manifest contents, midnight deadline fiction, and multi-leg passage. Do not invent a pre-Level-0 flagging event.
 - Author Japanese diegetic language separately from English/Ukrainian localization.
 - Cite [[03 Lore/Plot Bible]] and stable decision IDs.
 
@@ -112,17 +113,17 @@ Generic biome city; lawless slums/wasteland opening; mandatory Trace/background 
 
 Miami and the occupied-America campaign; NARC, Shelterline, ESD, Eisenclave, and later factions; more districts/interiors; broader reputation only after authored consequences prove the need.
 
-Tokyo may later gain additional districts, interiors, and consequences, but Level 0 does not promise a full Tokyo campaign. Post-MVP additions must preserve the distinction between Hidzu as upstream international infrastructure and Eisenclave/ESD as American integration/operation rather than collapsing them into one generic enemy faction.
+Tokyo may later gain additional districts, interiors, and consequences, but Level 0 does not promise a full Tokyo campaign. Post-MVP additions must preserve the distinction between Hidzu Corporation as upstream international infrastructure and Eisenclave/ESD as American integration/operation rather than collapsing them into one generic enemy faction.
 
 ## 15. Human-play acceptance examples
 
-- A first-time player can state who controls Tokyo, why the protagonist is exposed, what Lira needs, and why Miami matters within three minutes.
-- Hidzu and ESD read as connected but distinct institutions.
+- A first-time player can state who controls Tokyo, why the protagonist wants Miami, what Lira needs, and why Hidzu Corporation is not yet concerned within three minutes.
+- Hidzu Corporation and ESD read as connected but distinct institutions.
 - Dusk and curfew change public behavior without implying two unrelated maps.
 - No player describes the setting as fantasy, supernatural, generic wasteland, or cyber-commando fiction.
-- A player can point to one useful Hidzu service, one coercive use of the same infrastructure, and one human consequence without consulting the Bible.
+- A player can point to one useful Hidzu Corporation service, one coercive use of the same infrastructure, and one human consequence without consulting the Bible.
 - Recognizing the manifest changes what the player understands about Cold Iron while leaving Lira's local humanitarian objective emotionally primary.
 
 ## 16. Owning Linear ticket
 
-`T1` (`GET-201`) owns canonical lore alignment; `T3` (`GET-203`) owns the district contract; `T5` (`GET-205`) owns Hidzu environmental identity; `T10` (`GET-210`) owns authored Level 0 setting delivery.
+`T1` (`GET-201`) owns canonical lore alignment; `T3` (`GET-203`) owns the district contract; `T5` (`GET-205`) owns Hidzu Corporation environmental identity; `T10` (`GET-210`) and `T10A` (`GET-214`) own authored Level 0 setting delivery.

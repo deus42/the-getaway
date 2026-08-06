@@ -9,12 +9,12 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-The social feed lets the player see how Hidzu-curated public reality surrounds the operation: safety propaganda, civic notices, managed sentiment, suppression, and transit information coexist with what the protagonist actually experiences. For Level 0 it is a small read-only atmosphere and context surface, not a social-media game or a source of procedural truth. This implements `GDR-SOC-001` and preserves the honesty constraints of `GDR-PAR-003` and `GDR-FACT-001`.
+The social feed lets the player see how Hidzu Corporation-curated public reality surrounds the operation: safety propaganda, civic notices, managed sentiment, suppression, and transit information coexist with what the protagonist actually experiences. For Level 0 it is a small read-only atmosphere and context surface, not a social-media game or a source of procedural truth. This implements `GDR-SOC-001` and preserves the honesty constraints of `GDR-PAR-003` and `GDR-FACT-001`.
 
 ## 2. Player-visible verbs
 
 - Open the social-feed overlay.
-- Read authored Hidzu propaganda, notices, curated sentiment, suppression examples, and transit information.
+- Read authored Hidzu Corporation propaganda, notices, curated sentiment, suppression examples, and transit information.
 - Compare public messaging with already-known mission and world context.
 - Close the overlay and return to the prior world or overlay state.
 
@@ -42,12 +42,12 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 - Entries are authored content records, not simulated users or agents. Any entry variation must be tied to an explicit approved mission/world prerequisite and remain semantically deterministic.
 - Reading an entry does not acquire a fact, complete an objective, change trust/reputation, advance time, or alter surveillance unless a future approved decision explicitly defines that single effect.
 - Closing the feed releases only its own focus/pause ownership and restores the prior running or otherwise-paused state.
-- New Game and Retry restore the authored feed availability appropriate to their canonical state; presentation-owned read state cannot leak mission knowledge.
+- New Game and Restart Attempt restore the authored feed availability appropriate to their canonical state; presentation-owned read state cannot leak mission knowledge.
 
 ## 6. Rules and tuning values
 
 - Level 0 social media is read-only atmosphere and public context.
-- Required content families are Hidzu propaganda, civic or compliance notices, curated public sentiment, visible suppression, and transit information.
+- Required content families are Hidzu Corporation propaganda, civic or compliance notices, curated public sentiment, visible suppression, and transit information.
 - The feed is authored and deterministic. It contains no procedural posts, runtime LLM output, storylets, or emergent social graph.
 - The feed has no generic sentiment, trust, reputation, karma, follower, reach, or engagement value.
 - The overlay pauses time and autonomous simulation while open.
@@ -56,7 +56,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 
 ## 7. Inputs from other systems
 
-- [[20 Setting & Worldbuilding]] supplies Hidzu's public safety/efficiency identity and institutional control of identity, mobility, surveillance, and logistics.
+- [[20 Setting & Worldbuilding]] supplies Hidzu Corporation's public safety/efficiency identity and institutional control of identity, mobility, surveillance, and logistics.
 - [[35 Narrative Alignment]] supplies grounded tone and the rule that social absurdity or juxtaposition is never supernatural.
 - [[91 Quests & Objectives]] and [[80 Day-Night Cycle]] may supply explicit approved content prerequisites such as mission phase, curfew, or transit state.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies the boundary between public atmosphere and acquired private/operational facts.
@@ -78,20 +78,20 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 - George may explain the difference between verified operational facts and authored public messaging when an approved prompt exists. He cannot infer suppressed truth, invent a post, or scrape unknown information.
 - Critical mission state remains visible through its owning HUD/dossier/world surface and is never available only in the feed.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
 - The feed cannot directly fail the operation, trigger capture, change Health/Paranoia, or satisfy an objective.
 - If no entry is available for a state, the surface communicates that bounded absence and leaves all game state unchanged; it does not generate filler.
 - Closing the feed always restores the prior pause/focus state cleanly.
-- Retry removes any post-departure presentation state and restores only the authored availability for the departure snapshot; it cannot preserve knowledge that the snapshot did not contain.
+- Restart Attempt removes any post-departure presentation state and restores only the authored availability for the departure snapshot; it cannot preserve knowledge that the snapshot did not contain.
 - An unavailable or malformed feed is a presentation/content acceptance failure, not permission to bypass a mission fact, terminal, or dialogue requirement.
 
 ## 11. Content-authoring requirements
 
-- Author a bounded Level 0 set covering all five approved families: Hidzu propaganda, notices, curated sentiment, suppression, and transit information.
+- Author a bounded Level 0 set covering all five approved families: Hidzu Corporation propaganda, notices, curated sentiment, suppression, and transit information.
 - Every entry needs a stable content ID, content family, explicit availability prerequisites if any, canonical semantic text, English/Ukrainian localization mapping, graphic treatment, and any approved relationship to mission/debrief state.
-- Entries must remain credible public communications within Hidzu-controlled Tokyo and must not resolve the OPEN narrative facts about the protagonist, Lira, the manifest, Hidzu leadership, or the district by implication.
-- Hidzu leadership copy and district identity remain acceptance decisions under `OPEN-NAR-003` and `OPEN-NAR-013`; entries may use only approved language or the explicitly recorded reversible recommendation.
+- Entries must remain credible public communications within Hidzu Corporation-controlled Tokyo and must not resolve the OPEN narrative facts about the protagonist, Lira, the manifest, Hidzu Corporation leadership, or the district by implication.
+- Hidzu Corporation leadership copy and district identity remain acceptance decisions under `OPEN-NAR-003` and `OPEN-NAR-013`; entries may use only approved language or the explicitly recorded reversible recommendation.
 - Resolve `OPEN-NAR-014` and `OPEN-LOC-001` before shipping bilingual/in-fiction language treatment.
 - Keep feed content factual about its publisher's claim while making curation or suppression legible through authored context; do not use Paranoia or randomness to alter truth.
 
@@ -119,9 +119,9 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 ## 15. Human-play acceptance examples
 
 - Open the feed during an active unpaused operation, read each available authored category, and close it; time, patrols, cameras, drone, movement, and mission state must not advance.
-- Compare a Hidzu public claim with already-known dossier facts; confirm the feed adds atmosphere/context but no hidden fact or generic score.
+- Compare a Hidzu Corporation public claim with already-known dossier facts; confirm the feed adds atmosphere/context but no hidden fact or generic score.
 - Trigger high Paranoia, reopen the feed, and confirm the content remains truthful and no fake entry or UI corruption appears.
-- Retry after viewing post-departure feed content and confirm no mission knowledge leaks beyond the departure snapshot.
+- Restart Attempt after viewing post-departure feed content and confirm no mission knowledge leaks beyond the departure snapshot.
 - `AC-L0-017` and `AC-L0-018`: verify equivalent English/Ukrainian state and readable overlay behavior at all target viewports after the OPEN language, UI, and accessibility decisions are accepted.
 
 ## 16. Owning Linear ticket

@@ -17,7 +17,7 @@ Authority flows from current requester directives through [[01 MVP/12 Game Desig
 3. **Mission semantics and accepted geometry have separate authority.** The mission skeleton owns required places, route purposes, stable semantic IDs, and player behavior. The requester-accepted four-block Blender master owns detailed visible geometry. `Level0LayoutContract` is the one reconciled runtime record for walkability, footprints, entrances, occlusion, and gameplay anchors; neither a rejected greybox nor an unaccepted render may silently redefine the other authority.
 4. **Truthful perception.** Surveillance rendering and detection consume the same resolved geometry and occlusion data.
 5. **Explicit effects.** Dialogue, interactions, terminals, and mission transitions commit typed effects; no component mutates unrelated domains opportunistically.
-6. **Deterministic recovery.** Autosave and Retry are distinct persisted records. Retry restores one complete departure snapshot rather than reversing later events.
+6. **Deterministic recovery.** Autosave and `OperationAttemptBaseline` are distinct persisted records. `restartAttempt` restores the complete departure baseline rather than reversing later events.
 7. **Knowledge is state.** Facts and discovery control what the dossier, minimap, George, dialogue, and objectives may reveal.
 8. **Pause is ownership, not a boolean.** Every pause surface acquires a reason; simulation resumes only when all reasons release.
 9. **Human evidence outranks technical proxies.** Validators and tests protect contracts. Live human-control behavior and inspected frames prove the game.
@@ -33,7 +33,7 @@ React owns:
 - main menu and New Game entry;
 - character creation;
 - four-lane HUD DOM;
-- dialogue, Character screen, dossier, feed, terminal, debrief, failure, Retry, completion, and Game Design Bible overlays;
+- dialogue, Character screen, dossier, feed, terminal, debrief, failure, Restart Attempt, completion, and Game Design Bible overlays;
 - localization rendering;
 - accessible focus, keyboard routing, and modal ownership;
 - creation/destruction of the Phaser canvas boundary.
@@ -51,7 +51,7 @@ Redux owns serializable run state:
 - discovered map knowledge;
 - surveillance network state and last-known position;
 - contact/dialogue state;
-- safehouse, autosave metadata, and Retry snapshot;
+- safehouse, autosave metadata, and `OperationAttemptBaseline` metadata;
 - settings and localization.
 
 Reducers accept typed domain events and remain deterministic. Selectors produce read models for React, Phaser synchronization, save serialization, George prompts, and diagnostics.
@@ -111,7 +111,7 @@ Current ownership is explicit:
 - `src/game/level0/movement/directMovement.ts` owns direct intent, local collision sampling, and axis sliding;
 - `src/game/level0/interaction/interactionResolver.ts` owns knowledge, independently derived world-ownership, range, occlusion, and authoritative availability results; automatic discovery filters unknown or wrong-domain anchors instead of revealing their existence through an error;
 - `src/game/level0/art/` owns the T4 named-source city contract, live derivative selection, registered camera/LOD rules, provenance, and validation plus the parked T5 treatment contracts. The normal route now renders the T4 four-block city; `visualGate=get204-1` changes only deterministic camera/player start. T5 preserves T4 recipe/semantic identities and remains unable to replace the city until its own accepted export is runtime-ready;
-- `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, and immutable departure Retry;
+- `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, the immutable `OperationAttemptBaseline`, and the `restartAttempt` action;
 - `src/game/level0/rpg/` owns creation validation, the authored check catalog and pure resolver, committed attempt/resource/XP/allocation ledgers, provisional tuning tables, fatal resource transitions, and safehouse/debrief progression rules;
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
 - `src/game/level0/scene/Level0Scene.ts` owns live city-layer composition, explicit diagnostic fallback, separate actor transforms/occlusion, camera, and input. City treatment/LOD selection is derived from camera state; protagonist position must never replace one architectural plate with another or mutate geometry presentation;
@@ -119,7 +119,7 @@ Current ownership is explicit:
 - `src/content/gameBible/` owns the finalized English/Ukrainian reference catalog, shared language-neutral rules, search extraction, relations, topic coverage, and non-rendered traceability; `src/components/level0/Level0GameBible.tsx` owns its accessible presentation and cannot dispatch game-domain effects;
 - `art/iso-assets/contracts/level0-layout-contract.json` is the deterministic Blender-facing export of the same contract.
 
-The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 2 uses independent autosave and Retry keys plus exact nested envelopes, so the legacy subscriber cannot hydrate or overwrite the canonical run. Validation reconstructs and checks normalized callsign/build budgets, every committed check from its recorded Paranoia/facts/contexts, the ordered resource before/after chain, threshold announcements, one-shot XP milestones, pending levels, allocation history, and final build totals. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and failure copy that does not exactly match incomplete requirements. Retry additionally requires the authored departure anchor and carries the complete RPG ledger. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists Retry before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, check requirements, XP, and resource presets remain provisional while their `OPEN-*` decisions are unresolved.
+The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 3 uses independent autosave and `OperationAttemptBaseline` keys plus exact nested envelopes, so legacy or stale development saves cannot hydrate or overwrite the canonical run. Validation reconstructs and checks normalized callsign/build budgets, every committed check from its recorded Paranoia/facts/contexts, the ordered resource before/after chain, threshold announcements, one-shot XP milestones, pending levels, allocation history, camera-group attempt history, grounding usage, Cold Iron evidence state, processed clock boundaries, and final build totals. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and cause-specific failure data that does not match the authoritative ledgers. `OperationAttemptBaseline` additionally requires the authored departure anchor and carries the complete RPG, surveillance, recovery, and schedule state. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists the baseline before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, check requirements, XP, and unresolved surveillance/art values remain provisional while their `OPEN-*` decisions are unresolved.
 
 ## 3. Application lifecycle
 
@@ -143,7 +143,7 @@ BOOT
   → CONTINUE_EXPLORING | END_DEMO
 ```
 
-Scene loading is an application side effect between valid character confirmation and `L0_SAFEHOUSE_INTRO`, not a second mission state. Any authored run failure enters `L0_FAILED` with one exact `failure.*` cause and exposes Retry. `failure.save_incompatible` prevents Level 0 hydration and offers New Game. Miami is continuation data only; no Level 1 scene is loaded.
+Scene loading is an application side effect between valid character confirmation and `L0_SAFEHOUSE_INTRO`, not a second mission state. Any authored run failure enters `L0_FAILED` with one exact `failure.*` cause and exposes Restart Attempt. `failure.save_incompatible` prevents Level 0 hydration and offers New Game. Miami is continuation data only; no Level 1 scene is loaded.
 
 Starting or restarting a run must:
 
@@ -165,10 +165,10 @@ Starting or restarting a run must:
 | World time/schedules | Redux clock | Phaser schedule evaluation | Yes | Frame deltas emit clock progress only while unpaused. |
 | Pause ownership | Redux | Phaser active/frozen gate | Yes for save-safe states | Additive reason set. |
 | Surveillance state | Redux | Phaser detection/search presentation | Yes | Geometry remains content/runtime derived. |
-| Actor transforms | Phaser during play | Redux snapshot checkpoints only | Snapshot | Avoid per-frame Redux position churn. |
+| Actor transforms | Phaser during play | Redux checkpoint records only | Baseline/autosave | Avoid per-frame Redux position churn. |
 | Discovery/minimap knowledge | Redux | Minimap/world emphasis | Yes | Unknown content cannot leak. |
 | Dialogue state | Redux/content graph | React overlay | Yes | Effects commit atomically. |
-| Safehouse/autosave/Retry | Persistence service + Redux metadata | React actions | Yes | Retry is separate record. |
+| Safehouse/autosave/Restart Attempt | Persistence service + Redux metadata | React actions | Yes | `OperationAttemptBaseline` is a separate record restored only by `restartAttempt`. |
 | Camera/viewport | Phaser | React minimap scroller read model | No | Reinitialized deterministically. |
 | Audio instances | Phaser/audio service | None | No | Derived from current domain events/state. |
 
@@ -201,6 +201,16 @@ type Level0AnchorKind =
   | 'interaction'
   | 'audio';
 
+type Level0TraversalLoopId =
+  | 'loop.public-contact'
+  | 'loop.logistics-service'
+  | 'loop.outer-escape';
+
+interface Level0TraversalLoopDisplayName {
+  loopId: Level0TraversalLoopId;
+  localizedDisplayNameKey: string;
+}
+
 interface Level0LayoutContract {
   id: string;
   schemaVersion: number;
@@ -208,6 +218,7 @@ interface Level0LayoutContract {
   bounds: WorldPolygon;
   zones: Level0Zone[];
   traversalLoops: Level0TraversalLoop[];
+  traversalLoopDisplayNames: Level0TraversalLoopDisplayName[];
   surfaces: Level0SurfaceRegion[];
   buildingFootprints: Level0BuildingFootprint[];
   entrances: Level0Entrance[];
@@ -219,7 +230,7 @@ interface Level0LayoutContract {
 }
 ```
 
-The contract is authored from approved rules plus explicitly recorded provisional layout data. Both Blender export and Phaser runtime consume it. Exact dimensions and anchors remain non-final while their review items are open and must stay replaceable through this contract.
+The contract is authored from approved rules plus explicitly recorded provisional layout data. Both Blender export and Phaser runtime consume it. The three stable loop IDs resolve through localization to **Transit Road**, **Market Ring**, and **Outer Space** without renaming internal IDs. Exact dimensions and anchors remain non-final while their review items are open and must stay replaceable through this contract.
 
 ### Player identity and build
 
@@ -303,6 +314,19 @@ interface CommittedCheckResolution extends CheckResolution {
   resolvedAtWorldMinute: number;
 }
 
+interface Level0CheckBreakdown {
+  presentation: 'preview' | 'result';
+  checkId: string;
+  requiredTotal: number;
+  finalTotal: number;
+  attribute: { key: AttributeKey; value: number };
+  skill: { key: SkillKey; value: number };
+  paranoiaPenalty: 0 | 1 | 2 | 3;
+  appliedFactIds: string[];
+  appliedModifiers: AuthoredModifier[];
+  outcome?: CheckResolution['outcome'];
+}
+
 interface Level0ResourceEvent {
   eventId: string;
   resource: 'health' | 'paranoia';
@@ -312,8 +336,8 @@ interface Level0ResourceEvent {
   after: number;
   worldMinute: number;
   feedbackId: string;
-  retryTreatment: 'captured-at-departure' | 'discard-on-retry';
-  crossedParanoiaPenalties: Array<1 | 2 | 3>;
+  attemptTreatment: 'captured-at-departure' | 'discard-on-restart-attempt';
+  crossedParanoiaThresholds: Array<40 | 70 | 90>;
 }
 
 interface Level0XpEvent {
@@ -337,7 +361,7 @@ interface Level0AllocationEvent {
 interface Level0RpgLedger {
   resolvedChecks: Record<string, CommittedCheckResolution>;
   resourceEvents: Level0ResourceEvent[];
-  announcedParanoiaPenalties: Array<1 | 2 | 3>;
+  announcedParanoiaThresholds: Array<40 | 70 | 90>;
   awardedMilestoneIds: string[];
   xpEvents: Level0XpEvent[];
   pendingLevelUps: number;
@@ -345,7 +369,7 @@ interface Level0RpgLedger {
 }
 ```
 
-The resolver is pure and deterministic. T7 provides a reusable `Level0CheckBreakdown` component and proves it directly with resolver output; it is not yet mounted in ordinary mission controls. T9 must mount that same read model in authored dialogue/terminal choices so the player and diagnostics consume identical details. A committed attempt key is derived from check ID plus sorted authored context IDs; reopening the same attempt returns its first resolution, while reusing a resolution ID for another attempt is rejected. Persistence stores and recomputes the exact inputs rather than trusting serialized outcome math.
+The resolver is pure and deterministic. `Level0CheckBreakdown` renders the same calculation twice: `preview` before an authored choice is committed and `result` after resolution. Preview and result must use identical requirements, build values, fact/context modifiers, and Paranoia penalty; the result adds only the committed outcome. Every nonfatal catalog entry must declare and validate at least one real `failForwardEffectId`; only the final failed capture-escape check may resolve as `fatal`. A committed attempt key is derived from check ID plus sorted authored context IDs; reopening the same attempt returns its first resolution, while reusing a resolution ID for another attempt is rejected. Persistence stores and recomputes the exact inputs rather than trusting serialized outcome math.
 
 ### Facts and discovery
 
@@ -365,8 +389,15 @@ interface KnownFact {
   appliedEffectIds: string[];
 }
 
+type ColdIronEvidenceState =
+  | 'unknown'
+  | 'naila_warning'
+  | 'manifest_recognized'
+  | 'manifest_copied';
+
 interface FactLedger {
   known: Record<string, KnownFact>;
+  coldIronEvidence: ColdIronEvidenceState;
 }
 
 interface MapKnowledgeState {
@@ -379,18 +410,54 @@ interface MapKnowledgeState {
 }
 ```
 
-Facts are stable authored keys with declared effects. The first valid acquisition creates the `KnownFact` and atomically records the declared effect IDs after they apply. A later valid acquisition may append or refine provenance through a unique `acquisitionId`, but it cannot reapply an effect already present in `appliedEffectIds`. Discovery and facts are related but not interchangeable.
+Facts are stable authored keys with declared effects. The general ledger remains binary: a fact is known or unknown. The dedicated `ColdIronEvidenceState` is the only staged evidence chain and advances in order from `unknown` through Naila's warning and manifest recognition to an explicit manifest-copy interaction. Copying costs exactly five world minutes, has no additional check, and is idempotent. The first valid acquisition creates the `KnownFact` and atomically records the declared effect IDs after they apply. A later valid acquisition may append or refine provenance through a unique `acquisitionId`, but it cannot reapply an effect already present in `appliedEffectIds`. Discovery and facts are related but not interchangeable.
 
 ### Surveillance
 
 ```ts
 type SurveillanceLevel = 'clear' | 'suspicious' | 'pursuit';
+type SurveillanceRuleBreakKind =
+  | 'restricted-area-breach'
+  | 'protected-interaction'
+  | 'medkit-removal'
+  | 'failed-verification'
+  | 'detected-camera-feed-change';
+type CameraGroupAttemptHistory = 'unused' | 'active' | 'clean' | 'traced';
+
+interface ObservationEvidence {
+  observerId: string;
+  observedAtWorldMinute: number;
+  position: WorldPoint;
+  visible: boolean;
+  occluderIds: string[];
+}
+
+interface SurveillanceRuleBreakEvidence {
+  evidenceId: string;
+  kind: SurveillanceRuleBreakKind;
+  sourceId: string;
+  observedById: string;
+  observedAtWorldMinute: number;
+  position: WorldPoint;
+}
+
+interface SurveillanceLedgerEntry {
+  entryId: string;
+  kind: 'sighting' | 'detected-camera-feed-change' | 'needle-verification' | 'capture';
+  sourceId: string;
+  worldMinute: number;
+  position: WorldPoint;
+  ruleBreakEvidenceId?: string;
+}
 
 interface SurveillanceState {
   level: SurveillanceLevel;
   sourceDeviceId?: string;
   sourceActorId?: string;
   activeObserverIds: string[];
+  recognitionSourceIds: string[];
+  cameraGroupHistory: Record<string, CameraGroupAttemptHistory>;
+  ledger: SurveillanceLedgerEntry[];
   lastTransitionReasonId?: string;
   lastKnownPosition?: WorldPoint;
   lastObservedAtWorldMinute?: number;
@@ -412,9 +479,27 @@ interface SurveillanceState {
     phase: 'dispatching' | 'verifying' | 'searching' | 'returning';
   };
 }
+
+interface CaptureReportReadModel {
+  corporationDisplayNameKey: string;
+  sightings: Array<{
+    sourceId: string;
+    worldMinute: number;
+    position: WorldPoint;
+  }>;
+  detectedTampering: SurveillanceLedgerEntry[];
+  needleVerifications: SurveillanceLedgerEntry[];
+  captureEvidence: SurveillanceLedgerEntry;
+  connectedSightlineSegmentIds: string[];
+  disconnectedGapCount: number;
+}
 ```
 
-Runtime geometry emits observation evidence. A pure transition owner applies the approved thresholds and stores only legitimate last-known updates.
+Runtime geometry emits raw `ObservationEvidence`. A separate rule-break resolver emits `SurveillanceRuleBreakEvidence` only for the five approved behaviors. The transition owner may create concern or Paranoia only when valid visibility and valid rule-break evidence coincide; ordinary public camera visibility is inert. Solid geometry and ordinary occlusion create blind spots without an off-grid zone type. Returning fully to `clear` empties recognition sources and makes later ordinary public visibility harmless until another observed rule break.
+
+Each camera group has one attempt-long history. Activation may expire, but `clean` or `traced` remains authoritative until `restartAttempt`; Level 0 authors exactly one usable group. `Needle` is the localized player-facing name for the single verifier drone, while its internal ID remains stable. Civilians consume only current visible camera, Needle, and player-behavior presentation signals; they never read this hidden ledger, raise reports, or mutate surveillance.
+
+The capture-report selector reads only the surveillance ledger. It may connect sightings that the ledger can actually relate, but it never interpolates the protagonist's full movement path; unseen gaps remain disconnected. `CaptureReportReadModel` is unavailable for deadline, Health, and Paranoia failures.
 
 ### World clock and pause
 
@@ -432,32 +517,52 @@ type PauseOwner =
   | 'safehouse_action'
   | 'george_consultation'
   | 'interception'
-  | 'retry_confirmation'
+  | 'restart_attempt_confirmation'
   | 'level_up'
   | 'debrief'
   | 'mission_recap'
   | 'failure'
   | 'completion';
 
+type Level0ClockBoundaryId =
+  | 'clock.2100'
+  | 'clock.2130'
+  | 'clock.2200'
+  | 'clock.2330';
+
 interface WorldClockState {
   currentMinute: number;
   phase: 'dusk' | 'blue-hour' | 'curfew';
   curfewActive: boolean;
   deadlineReached: boolean;
-  lastProcessedScheduleBoundaryId?: string;
+  processedBoundaryIds: Level0ClockBoundaryId[];
   pauseOwners: PauseOwner[];
   scheduleStates: Record<string, string>;
 }
+
+interface GroundingActionDefinition {
+  actionId: 'grounding.transit-road-vending-coffee' | 'grounding.market-ring-shrine';
+  anchorId: string;
+  worldMinuteCost: 10;
+  paranoiaDelta: -10;
+  usesPerAttempt: 1;
+}
+
+interface Level0AttemptRecoveryState {
+  usedGroundingActionIds: GroundingActionDefinition['actionId'][];
+  difficultSurveillanceEscapeReliefUsed: boolean;
+  announcedParanoiaThresholds: Array<40 | 70 | 90>;
+}
 ```
 
-Frame time advances the clock only when `pauseOwners` is empty and the run is in an active exploration state.
+Frame time advances the clock only when `pauseOwners` is empty and the run is in an active exploration state. Boundary IDs persist as an idempotency set so 21:00, 21:30, 22:00, and 23:30 each fire exactly once across pause, autosave, hydration, and explicit clock jumps. Attempt recovery state makes both ten-minute/−10 grounding actions one-use, limits the qualifying difficult-escape relief to one −5 event, and lets George announce each 40/70/90 threshold once per attempt.
 
-### Safehouse and Retry
+### Safehouse and Restart Attempt
 
 ```ts
 interface SafehouseState {
   insideBoundary: boolean;
-  departureSnapshotCreated: boolean;
+  operationAttemptBaselineCreated: boolean;
   recoveryAvailable: boolean;
   transitCredentialState: 'not-issued' | 'issued' | 'validated';
   debriefAvailable: boolean;
@@ -517,8 +622,8 @@ interface ContactState {
 
 type ContactStateRecord = Record<'lira' | 'naila' | 'brant', ContactState>;
 
-interface RetrySnapshot {
-  schemaVersion: number;
+interface OperationAttemptBaseline {
+  schemaVersion: 3;
   contentVersions: Record<string, string>;
   sessionId: string;
   createdAtWorldMinute: number;
@@ -527,6 +632,7 @@ interface RetrySnapshot {
   rpg: Level0RpgLedger;
   health: number;
   paranoia: number;
+  recovery: Level0AttemptRecoveryState;
   worldClock: WorldClockState;
   mission: Level0MissionState;
   objectives: ObjectiveStateRecord;
@@ -539,9 +645,17 @@ interface RetrySnapshot {
   runtimeGeneration: RuntimeGenerationState;
   completion: Level0RunState['completion'];
 }
+
+interface OperationAttemptBaselineReadback {
+  departureWorldMinute: number;
+  contactsConsulted: Array<'naila' | 'brant'>;
+  health: number;
+  paranoia: number;
+  localizedRestorationMeaningKey: string;
+}
 ```
 
-The snapshot is written once when the player explicitly leaves the safehouse for the operation. Retry hydrates it as a whole and clears all post-departure runtime state.
+`OperationAttemptBaseline` is written once when the player explicitly leaves the safehouse for the operation. George reads the actual departure time, consulted contacts, Health, Paranoia, and restoration meaning through `OperationAttemptBaselineReadback` before confirmation. The player-facing **Restart Attempt** action dispatches `restartAttempt`, which hydrates the baseline as a whole and clears all post-departure runtime state. The confirmation overlay owns only `restart_attempt_confirmation`.
 
 ### George prompts
 
@@ -554,11 +668,12 @@ interface GeorgePrompt {
   excludedSurveillanceStates?: SurveillanceLevel[];
   localizedQuestionKey: string;
   localizedResponseKey: string;
+  unavailableReasonKey?: string;
   effect: 'none';
 }
 ```
 
-George prompts are authored, contextual, informational, and effect-free. He never accepts unrestricted free text in Level 0.
+George prompts are authored, contextual, informational, and effect-free. Every unavailable or incomplete answer resolves to an authored truthful reason: missing discovery, non-networked space, absent source, or insufficient current evidence. Silence is never encoded as hidden gameplay information. George has no personal desire, deletion request, or Miami freedom arc in Level 0. He never accepts unrestricted free text in Level 0.
 
 ### Outcome ledger
 
@@ -573,9 +688,9 @@ interface Level0OutcomeLedger {
     factId: string;
     acquisitionIds: string[];
   }>;
-  cameraLoop: 'not_used' | 'clean' | 'traced';
+  cameraGroupHistory: Record<string, CameraGroupAttemptHistory>;
   networkPeak: 'clear' | 'suspicious' | 'pursuit';
-  droneVerified: boolean;
+  needleVerified: boolean;
   hidingContextsUsed: string[];
   blendingContextsUsed: string[];
   interceptionOutcome: string | null;
@@ -583,12 +698,7 @@ interface Level0OutcomeLedger {
   paranoiaPeak: number;
   medkitsRecovered: boolean;
   medkitsReturned: boolean;
-  manifestInspected: boolean;
-  manifestRecognizedBy:
-    | 'naila_fact'
-    | 'awareness'
-    | 'missed'
-    | 'not_inspected';
+  coldIronEvidence: ColdIronEvidenceState;
   transitValidated: boolean;
   failureCause:
     | 'failure.health'
@@ -604,6 +714,14 @@ Content may add stable detail fields only through a specification update. Debrie
 ### Art and actors
 
 ```ts
+interface ActorLightRegion {
+  id: string;
+  bounds: WorldPolygon;
+  semanticTint: 'amber' | 'cyan';
+  intensity: number;
+  priority: number;
+}
+
 interface Level0ArtManifest {
   schemaVersion: 2;
   id: string;
@@ -621,6 +739,7 @@ interface Level0ArtManifest {
     columns: number;
     rows: number;
   };
+  actorLightRegions: ActorLightRegion[];
   budget: { maxTotalBytes: number; maxTileBytes: number; measuredTotalBytes: number };
   layers: Array<{
     id: string;
@@ -723,6 +842,8 @@ declare const getCharacterSpriteSheetPath: (
 
 The sheet matrix is derived from the stable actor/state/direction path function rather than duplicated inside every manifest entry. `Level0Scene` resolves one explicit presentation plan and passes the same typed sheet references through preload, loaded-state checks, and animation registration: all 24 `idle`/`move`/`interact` direction leaves for the selected protagonist, plus only fixed-facing `idle`/`interact` leaves for Lira, Naila, and Brant (30 sheets total). This prevents loading unused contact movement/directions or the other eight actor sets while retaining the complete validated inventory for later tickets. Layout-space motion is projected through the 2:1 isometric basis before eight-direction animation selection.
 
+Actor tint samples authored `ActorLightRegion` metadata at the actor foot anchor. The reversible `OPEN-ART-005` baseline selects only the strongest overlapping region, eases changes over 250 ms, and applies restrained semantic amber/cyan palette tokens. The tint renderer is presentation-only: it cannot enter visibility, surveillance, collision, movement, interaction, or schedule calculations.
+
 A generated integrity module owns portrait/non-world hashes and byte counts; sheet metrics remain adjacent to each actor directory. The validator independently compares those generated TypeScript records with the central integrity JSON so updating source PNGs and only one generated surface cannot pass. Required actors must pass complete-matrix, pixel-derived anchor/occupancy, portrait/provenance/path, generated-record parity, and fault-injection validation before production acceptance. Fallback is observable neutral resilience, never a rejected fantasy asset or acceptance evidence. Performance measurements are recorded, but shipping acceptance remains blocked until `OPEN-PERF-001` defines target hardware and numeric ceilings.
 
 The four current appearance IDs are defined once by the actor manifest and reused by selection, persistence, and runtime resolution. Save decode strictly rejects unknown or retired IDs, including the pre-T6 `provisional-runtime-silhouette`; it never guesses a current preset from stale identity data.
@@ -754,7 +875,7 @@ flowchart LR
 - T4 export validation proves projection and canvas containment, tile-grid registration, file hashes/bytes/budgets, layer semantics/fallbacks, and complete anchor values against the layout contract. Decoded raster-edge agreement remains a visual/runtime acceptance responsibility rather than a claim made by metadata validation alone.
 - T5 opens the exact ignored T4 master by expected hash only after the tracked T4 source/recipe and ignored aligned export pass their own validator. It verifies base transform/camera/canvas/anchor digests plus the pinned T4 art-manifest hash and semantic-registration digest, clones placement materials before mutation, and registers treatment-only objects under declared gameplay/civic purpose without changing authoritative collision data.
 - T5 export validation opens the generated art manifest, every tile, anchors, and treatment evidence; it enforces stable T4 recipe/layer IDs, expected derivative roots, exact file inventory, physical hashes and bytes for every registered output including overview and the authoring `.blend`, grid cells, budgets, projection tolerance/canvas containment, all 27 anchor values, byte-identical and spatially identical T4 semantic masks, manifest-derived surface-treatment digest, exact grammar/object bindings, assigned public copy against the actual wrapped font bodies, color-independent surveillance-state cues, independently recomputed palette coverage, measured per-addition bounds, complete capture hashes/dimensions, ignored local-evidence usage, run-evidence `runtimeReady: false`, and an observable fallback to the accepted T4 live city rather than rejected greybox or generated-plate presentation.
-- Hidzu palette tokens, surface/material transforms, public-message assignments, grammar kind/color/silhouette/glyph values, schedule values, and surveillance-state token/cue mappings are authoritative generator inputs. Unknown, incomplete, or semantically reassigned inputs fail before generation.
+- Hidzu Corporation palette tokens, surface/material transforms, public-message assignments, grammar kind/color/silhouette/glyph values, schedule values, and surveillance-state token/cue mappings are authoritative generator inputs. Unknown, incomplete, or semantically reassigned inputs fail before generation.
 - The T5 runner serializes generation with an ignored lock and writes Blender output only to an ignored run-scoped staging root. A full `all` run is validated in staging, moved as one complete immutable directory under `.generated/runs`, revalidated there, and then published by atomically replacing the relative `.generated/current` symlink. A failed validation or pointer update removes the rejected run and preserves the prior pointer; readers resolve only `current` or an explicitly bounded staging/trial/run root.
 - Preview, targeted capture, and export-only runs are retained under ignored `.generated/trials` and never update the canonical pointer. Only a full unfiltered `all` run can satisfy the 17-frame capture/export gate; Blender Python failures propagate a nonzero process exit.
 - If a parallelogram footprint cannot match a visual base within one tile, author a custom polygon or multi-region footprint rather than trim-chasing.
@@ -793,32 +914,32 @@ Player knowledge and world ownership are separate inputs. Knowledge controls whe
 
 ### Observation
 
-Observation acquires the `observation` pause reason. It permits camera pan and read-only inspection of known cameras, drone, last-known state, contacts, entrances, hiding/blending contexts, current objective, facts, and one authored George prompt. It cannot issue movement, activate terminals, alter surveillance, or commit world state.
+Observation acquires the `observation` pause reason. It permits camera pan and read-only inspection of known cameras, exact discovered coverage, Needle, last-known state, contacts, entrances, hiding/blending contexts, current objective, facts, and one authored George prompt. Normal play receives only subtle authored camera light/reflection warnings; Observation is the exact-coverage surface. It cannot issue movement, activate terminals, alter surveillance, commit world state, or trigger a vignette/reward.
 
 ## 8. Surveillance architecture
 
 ### Shared geometry
 
-Each surveillance device owns one current orientation/sweep definition. The visibility resolver combines it with range, field of view, layout occluders, and active schedule. Both the world rendering layer and detection sampler consume that same result.
+Each surveillance device owns one current orientation/sweep definition. The visibility resolver combines it with range, field of view, layout occluders, and active schedule. Both the world rendering layer and detection sampler consume that same result. Blind spots are the ordinary result of solid geometry and occlusion; there is no separate off-grid region or network-null topology.
 
 ### Network transition owner
 
 A pure network reducer receives typed evidence:
 
-- observation started/continued/broken;
-- authored suspicious action;
-- trace-producing terminal outcome;
-- drone verification;
+- raw observation started/continued/broken;
+- observed restricted-area breach, protected interaction, or medkit removal;
+- detected camera-feed change;
+- failed verification or Needle verification;
 - recovery-context entered/maintained/invalidated;
 - interception result.
 
-It updates `SurveillanceState` according to the approved matrix. It cannot query the hidden protagonist transform when no valid observer has supplied it.
+It updates `SurveillanceState` according to the approved matrix. Visibility alone in ordinary public space creates no concern. A concern transition requires current valid `ObservationEvidence` paired with `SurveillanceRuleBreakEvidence`; it cannot query the hidden protagonist transform when no valid observer has supplied it. A full transition to `clear` resets recognition and active observer attribution.
 
 The safehouse boundary never dispatches a network-clear event by itself. A pure safehouse-availability resolver consumes `SafehouseState`, `SurveillanceState`, and current valid observation evidence and returns `SafehouseActionAvailability` records for Wait, Rest, save, level-up, George planning, and terminals. Until `OPEN-SAFE-001` is accepted, the resolver uses that queue entry's documented recommendation as explicit replaceable content data; UI and world interactions consume the same typed result and cannot invent a separate safe-zone policy. The provisional value cannot be treated as final acceptance evidence.
 
 ### Drone
 
-Exactly one Level 0 drone receives dispatch targets from the network. Its runtime controller moves toward the stored last-known position, verifies visible/hiding areas according to authored rules, searches, and returns. It has no weapon, HP, combat turn, or defeat state.
+Exactly one Level 0 verifier drone, player-facing **Needle**, receives dispatch targets from the network. Its runtime controller follows one authored patrol, moves toward stored legitimate last-known positions, verifies visible/hiding areas according to authored rules, searches, and returns. Presentation emits its authored hum, approach warning, and verification warning. It has no weapon, HP, combat turn, or defeat state.
 
 ### Hiding and blending
 
@@ -826,13 +947,13 @@ Contexts are layout/content records, not tile tags inferred at runtime. Each dec
 
 ### Camera loop
 
-Only the connected camera terminal can request a camera loop. The check/effect resolver uses Systems and OpSec, applies exactly the target declared by the terminal, schedules restoration, and records clean/trace outcome. There is no global hack bus.
+Only the connected camera terminal can request the single Level 0 camera-group loop, and that group can be used once per attempt. The check/effect resolver uses Systems and OpSec, applies exactly the target declared by the terminal, schedules active-loop expiry, and records `clean` or `traced`. That terminal history persists until `restartAttempt`; expiry never returns it to `unused`. There is no global hack bus.
 
 ## 9. Dialogue, facts, objectives, and George
 
 ### Dialogue graph
 
-Dialogue content is an authored graph with stable nodes and localized exact lines. The dialogue domain evaluates availability/checks, commits typed effects atomically, advances the node, and records history. React renders the read model; no UI component dispatches unrelated low-level state mutations.
+Dialogue content is an authored graph with stable nodes and localized exact lines. The dialogue domain evaluates availability/checks, exposes the exact `preview` breakdown before every checked choice, commits typed effects atomically, advances the node, records the `result` breakdown, and follows the declared worse path on every nonterminal failure. React renders the read model; no UI component dispatches unrelated low-level state mutations.
 
 ### Effect registry
 
@@ -852,15 +973,17 @@ Every effect is idempotent or protected by a stable event ID.
 
 ### Objectives and facts
 
-Mission state and objective state are separate. The mission state machine controls legal sequence; objectives provide player-facing instructions. Facts determine knowledge and modifiers. No log text is parsed to infer any of these domains.
+Mission state and objective state are separate. The mission state machine controls legal sequence; objectives provide player-facing instructions. General facts remain binary and determine knowledge/modifiers. The dedicated Cold Iron state machine advances only through Naila warning → manifest recognition → explicit five-minute manifest copy. No log text is parsed to infer any of these domains.
 
 ### George
 
-George consumes a read-only context assembled from mission state, facts, known devices/locations, time, Health/Paranoia, and allowed prompt definitions. His response resolver selects authored content only. `effect: 'none'` is enforced at the contract boundary.
+George consumes a read-only context assembled from mission state, facts, known devices/locations, time, Health/Paranoia, and allowed prompt definitions. His response resolver selects authored content only and always returns a truthful limit reason when useful information is unavailable. Threshold announcements are gated by attempt history at 40, 70, and 90. Departure confirmation consumes the baseline readback. `effect: 'none'` is enforced at the contract boundary; absence of a line never carries hidden gameplay meaning.
 
 ## 10. Health, Paranoia, and progression
 
-Health and Paranoia changes are idempotent authored effects with stable event/source IDs, signed amount, exact before/after values, world minute, feedback key, Retry treatment, and crossed-threshold metadata. Retry treatment is derived from the operation-departure boundary: events already present when the immutable snapshot is created are `captured-at-departure`; later events are `discard-on-retry`. Presets cannot hard-code a contradictory treatment. An existing event ID or terminal run rejects another application. No render frame loop applies passive damage or Paranoia decay/gain; the authoritative surveillance reducer owns the deterministic valid-exposure accumulator and emits source-attributed ledger deltas under `OPEN-PAR-001`.
+Health and Paranoia changes are idempotent authored effects with stable event/source IDs, signed amount, exact before/after values, world minute, feedback key, attempt treatment, and crossed-threshold metadata. Attempt treatment is derived from the operation-departure boundary: events already present when the immutable baseline is created are `captured-at-departure`; later events are `discard-on-restart-attempt`. Presets cannot hard-code a contradictory treatment. An existing event ID or terminal run rejects another application. No render frame loop applies passive damage or Paranoia decay/gain. Surveillance-origin Paranoia requires the approved paired observation/rule-break evidence; ordinary public visibility is never a source.
+
+The vending-machine coffee and shrine actions use authored `GroundingActionDefinition` records and the attempt recovery ledger: each costs ten world minutes, removes ten Paranoia, and is consumed once. The first qualifying difficult surveillance escape may emit one authored −5 Paranoia event. Dialogue cannot create grounding relief. Health remains authored damage/recovery only; no Health band drives a limp, movement multiplier, detection modifier, or civilian response.
 
 The Redux runtime keeps only ephemeral resource-event IDs for the currently visible feedback. The HUD resolves those IDs back to the authoritative run ledger and renders localized resource, signed amount, and authored source copy; it never derives player text from a machine ID. Persistent consequence summaries remain outcome-ledger data and never reuse transient resource logs.
 
@@ -876,9 +999,9 @@ Milestone XP uses stable award IDs and an ordered XP event ledger to prevent dup
 
 ## 11. Time, schedules, and pause
 
-The clock service receives frame deltas only during active exploration with no pause owners. It advances at 30×, emits boundary events exactly once, and derives phase/curfew/deadline state.
+The clock service receives frame deltas only during active exploration with no pause owners. It advances at 30×, persists idempotent boundary IDs, and derives phase/curfew/deadline state. Authored city changes fire exactly once at 21:00, 21:30, 22:00, and 23:30 even when a pause, save hydration, or explicit clock jump straddles the boundary.
 
-Schedules are authored state tables keyed by world phase/boundary, not free-running NPC scripts. Schedule transitions can change availability, position/path definitions, public/blending context, and ambience. They cannot move a currently interacting actor or mutate geometry silently.
+Schedules are authored state tables keyed by world phase/boundary, not free-running NPC scripts. Schedule transitions can change availability, position/path definitions, public/blending context, shutters, crowd density, signage/light state, and ambience. They cannot move a currently interacting actor or mutate geometry silently. Spatial ambience has three authored world anchors: the Transit Road restaurant, Market Ring workshop, and safehouse-side apartment.
 
 Safehouse Wait and Rest dispatch explicit clock jumps after confirmation. All boundary events between old and new time are processed deterministically.
 
@@ -889,22 +1012,22 @@ Safehouse Wait and Rest dispatch explicit clock jumps after confirmation. All bo
 Use distinct storage keys and schema envelopes for:
 
 - current-run autosave;
-- operation-departure Retry snapshot;
+- operation-departure `OperationAttemptBaseline`;
 - settings/localization.
 
-Each envelope contains schema version, content/layout version, timestamp, and a deeply validated payload. Version 2 requires `PlayerIdentity`, `PlayerBuild`, and the complete `Level0RpgLedger`; there is no production default character or best-effort field filling. Check, resource, XP, threshold, pending-level, allocation, and final-build consistency is recomputed during hydration. Spatial checkpoints must be finite, walkable, and compatible with the active layout; facing is a nonzero unit vector; deterministic generation identifiers must match the active runtime; deadline failure requirements must equal the completion fields that remain false.
+Each envelope contains schema version, content/layout version, timestamp, and a deeply validated payload. Version 3 requires `PlayerIdentity`, `PlayerBuild`, the complete `Level0RpgLedger`, surveillance/camera history, Cold Iron evidence, grounding/threshold history, and processed clock boundaries; there is no production default character or best-effort field filling. Check, resource, XP, threshold, pending-level, allocation, camera-history, boundary-idempotency, and final-build consistency is recomputed during hydration. Spatial checkpoints must be finite, walkable, and compatible with the active layout; facing is a nonzero unit vector; deterministic generation identifiers must match the active runtime; deadline failure requirements must equal the completion fields that remain false. Version 2 and other stale development saves are rejected explicitly with `failure.save_incompatible` and a New Game path.
 
 ### Autosave
 
-Autosave records current run at declared safe transitions. It is for continuing the run, not for deterministic mission Retry.
+Autosave records current run at declared safe transitions. It is for continuing the run, not for deterministic mission restoration.
 
-### Retry
+### Restart Attempt
 
-The departure snapshot is created when the player explicitly crosses the operation-departure boundary after preparation. Retry discards post-departure state and hydrates the snapshot. Runtime-only controllers are rebuilt from restored domain state; they are not serialized as opaque objects.
+The `OperationAttemptBaseline` is created when the player explicitly crosses the operation-departure boundary after preparation. **Restart Attempt** dispatches `restartAttempt`, discards post-departure state, and hydrates the baseline. Runtime-only controllers are rebuilt from restored domain state; they are not serialized as opaque objects.
 
 ### Compatibility
 
-The new design requires a new schema version. Rewrite-era saves containing fixed Operative/package/combat/reputation/storylet/inventory assumptions are rejected. The UI explains incompatibility and offers New Game. No best-effort partial migration is permitted.
+The new design requires schema version 3. Version 2, rewrite-era saves containing fixed Operative/package/combat/reputation/storylet/inventory assumptions, and other stale development envelopes are rejected. The UI explains incompatibility and offers New Game. No best-effort partial migration is permitted.
 
 ## 13. HUD and overlay architecture
 
@@ -916,6 +1039,8 @@ The bottom dock is a fixed four-lane semantic layout:
 4. current quest beat.
 
 Selectors provide one read model per lane. CSS ownership remains component-local and uses semantic tokens. Level 0 styling is scoped through a visual-style data attribute. No component branches on raw theme IDs for painter logic.
+
+The George and current-task lanes remain distinct selectors and distinct presentation regions. Checked choices consume the shared `Level0CheckBreakdown` preview/result read model; no HUD or dialogue component recalculates the margin. Canonical Bible content is corrected only when a changed approved rule would otherwise make it false—no epigraph, quotation, or decorative-fiction schema is added.
 
 Persistent height must remain within 16–18% at supported desktop viewports. Overlays acquire pause/focus ownership and fit at `1280×720`. Overlay close returns focus to the correct world/control owner without issuing gameplay input.
 
@@ -931,7 +1056,7 @@ canonical Game Design package + Approved decision rows
 
 Canonical Markdown is never rendered at runtime. `sourceRefs` and `decisionRefs` are validation metadata excluded from renderer props, search text, DOM, and the player-visible text bridge. A test-only inventory parses the current Decision Register and required-topic registry so both locale catalogs cannot jointly omit an Approved player-facing rule. Governance-only decisions require a bounded non-player-facing classification.
 
-`Level0RuntimeShell` owns local Bible UI state and an idempotent `bible` pause acquisition record. Start-menu access creates no run and no pause owner. Active-play access acquires `bible` once; paused-menu access composes `menu + bible`; closing, unmount, run replacement, New Game, and shell teardown release only an owner acquired by that overlay instance. `bible` is a valid transient pause owner for runtime decoding but is stripped from autosave, hydration, and Retry like other UI-only owners.
+`Level0RuntimeShell` owns local Bible UI state and an idempotent `bible` pause acquisition record. Start-menu access creates no run and no pause owner. Active-play access acquires `bible` once; paused-menu access composes `menu + bible`; closing, unmount, run replacement, New Game, and shell teardown release only an owner acquired by that overlay instance. `bible` is a valid transient pause owner for runtime decoding but is stripped from autosave, hydration, and Restart Attempt like other UI-only owners.
 
 The overlay blocks world keyboard, pointer, and controller input and keeps underlying React/Phaser surfaces inert and hidden from assistive navigation while open. Its UI state is not Redux domain state. The agent bridge receives an optional ref-backed `getUiState` callback and reports open/chapter/section/query/drawer/result information only during `render_game_to_text`; it cannot use that callback to mutate the run.
 
@@ -939,7 +1064,7 @@ Responsive ownership remains inside `Level0GameBible.css`: three panes at `>=120
 
 ## 14. Audio architecture
 
-A typed audio registry maps domain events to cue IDs, priority, cooldown, ducking group, spatial anchor behavior, and fallback. Required categories include city ambience, footsteps, entrances, terminals, camera sweep/focus, drone approach/verification, Suspicious, Pursuit, curfew, safehouse, Health/Paranoia effects, objectives, failure, completion, and restrained UI confirmation.
+A typed audio registry maps domain events to cue IDs, priority, cooldown, ducking group, spatial anchor behavior, and fallback. Required categories include city ambience, footsteps, entrances, terminals, camera sweep/focus, Needle hum/approach/verification, Suspicious, Pursuit, the four clock boundaries, safehouse, Health/Paranoia effects, objectives, failure, completion, and restrained UI confirmation. The three required threshold ambience sources bind to authored Transit Road restaurant, Market Ring workshop, and safehouse-side apartment anchors.
 
 Audio is feedback, not authority. Missing audio cannot block state transitions, and repeated selector renders cannot replay one-shot cues.
 
@@ -958,7 +1083,7 @@ There are four Level 0 terminal failure causes:
 - authored interception resolves to capture;
 - midnight occurs while either Lira return or transit validation remains incomplete.
 
-Failure is a domain event that records the exact cause, freezes simulation, captures a final outcome ledger, and opens the failure overlay. Retry is available only when a valid departure snapshot exists; otherwise New Game is offered with an honest explanation.
+Failure is a domain event that records the exact cause, freezes simulation, captures a final outcome ledger, and opens the cause-specific failure overlay. Capture derives a short Hidzu Corporation incident report and partial map from real sightings, detected feed changes, Needle verification, and capture evidence only; unseen route gaps remain disconnected. Deadline failure lists the unfinished Lira-return/transit requirements and never fabricates a capture. Health and Paranoia failures remain simple factual explanations. Restart Attempt is available only when a valid `OperationAttemptBaseline` exists; otherwise New Game is offered with an honest explanation.
 
 ## 17. Validation and diagnostics
 
@@ -975,11 +1100,17 @@ Failure is a domain event that records the exact cause, freezes simulation, capt
 - Blender mask/anchor/projection registration;
 - art manifest completeness and source/license metadata;
 - actor matrix, frame, direction, origin, scale, and portrait completeness;
-- save-schema and Retry-snapshot validation.
+- save-schema and `OperationAttemptBaseline` validation;
+- paired observation/rule-break evidence, camera-group history, and capture-report non-disclosure;
+- check preview/result parity and nonfatal fail-forward coverage;
+- Cold Iron state-order, grounding one-use, threshold-history, and clock-boundary idempotency;
+- `ActorLightRegion` containment, semantic tint tokens, foot-anchor sampling, and presentation-only dependency checks.
 
 ### Runtime diagnostics
 
-Development diagnostics may expose current mission state, objective/facts, pause owners, clock, surveillance state, last-known position, device geometry, interaction result, layout/mask alignment, and outcome ledger. Diagnostics are never required to play or complete the game and are excluded from production acceptance captures.
+Development diagnostics may expose current mission state, objective/facts, pause owners, clock, surveillance state, last-known position, device geometry, interaction result, layout/mask alignment, and outcome ledger. The guided bridge exposes only `move`, `observe`, `interact`, `choose`, `useContext`, and `consultGeorge`; start, wait, and Restart Attempt are typed non-verb controls. Canonical profiles reject legacy stealth toggles, automatic collection, forced progress/failure, combat shortcuts, and direct state mutation. Direct mutation remains fixture-only evidence. Diagnostics are never required to play or complete the game and are excluded from production acceptance captures.
+
+Typed milestone probes cover creation, Lira acceptance, preparation, departure baseline, infiltration, medkits, every manifest state and copy action, surveillance recovery, return, transit validation, debrief, capture, deadline, and Restart Attempt. A probe observes reachable domain state; it does not manufacture the milestone.
 
 ### Test layers
 
@@ -997,15 +1128,17 @@ Required closeout commands remain those in `AGENTS.md` and [[01 MVP/95 MVP Readi
 1. Preserve and verify the external dirty-tree archive.
 2. Complete, review, approve, and separately commit the canonical specification.
 3. Restore the pre-rewrite foundation while recording every salvage/rejection.
-4. Establish target schema, pause, persistence, and `Level0LayoutContract` foundations.
+4. Establish target schema, pause, `OperationAttemptBaseline`, `restartAttempt`, and `Level0LayoutContract` foundations.
 5. Implement direct movement, interaction, camera, observation, and shared layout runtime.
 6. Rebuild the exact four-block GET-204 district from named Neo Tokyo 2 sources, obtain Blender close/overview approval, reconcile its geometry into the layout contract, integrate it live, and obtain separate live acceptance; only then may closeout and commit proceed.
-7. Add, technically validate, and commit the reversible Hidzu identity/world-art trial; requester acceptance remains its final visual gate.
+7. Add, technically validate, and commit the reversible Hidzu Corporation identity/world-art trial; requester acceptance remains its final visual gate.
 8. Replace actors and portraits.
 9. Restore identity, build, checks, Health, Paranoia, progression, and Character screen.
-10. Implement surveillance, hiding/blending, drone, camera loop, and interception.
-11. Implement dialogue/facts/George/dossier/minimap/HUD infrastructure.
-12. Author/integrate mission content, audio, onboarding, bilingual presentation, and end-to-end acceptance.
+10. Implement surveillance, hiding/blending, Needle, single-use camera history, civilian presentation, and interception after the Restart Attempt foundation.
+11. Modernize GET-179's reachable-control vocabulary and milestone probes after the Restart Attempt foundation; its milestone plus surveillance block the legibility/content child.
+12. Implement exact checks, Cold Iron evidence, George explanations/readback, cause-specific failure, dialogue, dossier, minimap, and HUD infrastructure.
+13. Author/integrate clock moments, named routes, grounding, street sound, mission content, onboarding, bilingual presentation, and end-to-end acceptance.
+14. Integrate actor light-region sampling only after the city/content child is delivered.
 
 Large tickets use internal milestones and proof gates; they do not blur ownership across steps.
 

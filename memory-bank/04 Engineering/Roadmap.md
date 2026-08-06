@@ -16,11 +16,11 @@ This document defines current implementation order and gates. It is not a game-d
 
 ## Current program — GET-139 Tokyo escape vertical slice
 
-Build a 15–20 minute outdoor Tokyo surveillance-escape RPG prologue that proves character creation, dialogue/facts, Paranoia, George, direct movement, observation, surveillance recovery, hiding/blending, optional evidence, safehouse/Retry, progression, and factual debrief without tactical combat.
+Build a 15–20 minute outdoor Tokyo surveillance-escape RPG prologue that proves character creation, dialogue/facts, Paranoia, George, direct movement, observation, surveillance recovery, hiding/blending, optional evidence, safehouse/Restart Attempt, progression, and factual debrief without tactical combat.
 
 GET-139 stays `In Progress` until the requester verifies the committed final build. Child tickets may move to `In Review` after their own evidence gate; `Done` still requires the repository completion policy and requester verification.
 
-After the separate GET-201 documentation commit, execute one child at a time. A validated committed deliverable unlocks its successor even when the predecessor remains `In Review`. `OPEN-*` items are acceptance/freeze gates: recorded recommendations may be implemented as reversible provisional trials under `GDR-GOV-007`, but unresolved material behavior cannot move beyond `In Review` or be called final.
+The original separate GET-201 documentation commit opened the existing delivery chain. This validated Fable-alignment package adds a new gate: do not start GET-211–GET-215 or GET-179 modernization until the requester explicitly authorizes its separate documentation commit. After that gate, execute one child at a time. A validated committed deliverable unlocks its successor even when the predecessor remains `In Review`. `OPEN-*` items are acceptance/freeze gates: recorded recommendations may be implemented as reversible provisional trials under `GDR-GOV-007`, but unresolved material behavior cannot move beyond `In Review` or be called final.
 
 ## Gate 0 — protected-work recovery preflight
 
@@ -39,7 +39,7 @@ This is a safety gate, not a gameplay ticket. No reset, deletion, restore, or se
 ### T1 — Canonical game-design bible and decision register
 
 **Label:** Improvement
-**State:** In Review; audit-backed Bible expansion uncommitted
+**State:** Todo in Linear; audit-backed Bible/Fable alignment expansion uncommitted
 **Blocks:** every implementation ticket and GET-139
 
 Deliver:
@@ -49,7 +49,7 @@ Deliver:
 - full Level 0 contract;
 - atomic Decision Register;
 - common-template per-system specifications;
-- mission, objective, fact, check, surveillance, dialogue, outcome, save/Retry, world, and acceptance matrices;
+- mission, objective, fact, check, surveillance, dialogue, outcome, save/Restart Attempt, world, and acceptance matrices;
 - explicit unresolved-decision queue with recommended baselines and blocked work;
 - Plot Bible, Art Direction, Architecture, Roadmap, MVP Readiness, index, AGENTS, and progress alignment;
 - self-contained Linear descriptions derived from the canonical package;
@@ -96,12 +96,12 @@ Exit gate: the workspace is reproducible, bootable, and contains no unreviewed r
 
 **Label:** Feature
 **Depends on:** T2
-**Blocks:** T4, T7, T8, T9, T10
+**Blocks:** T3A, T4, T7, T8, T9, T10
 
 Ownership:
 
 - `Level0LayoutContract` and all runtime semantic anchors;
-- new save schema, autosave infrastructure, Retry storage, and pause ownership;
+- save schema, autosave infrastructure, attempt-baseline storage seam, and pause ownership;
 - world clock and authored schedule infrastructure;
 - direct click/WASD movement, collision sliding, input override, focus recovery;
 - explicit interaction resolver;
@@ -113,10 +113,29 @@ Internal gates:
 1. **Layout draft:** three loops and all mandatory anchors exist in one contract.
 2. **Movement proof:** all mandatory locations are reachable without pathfinding; corners/alleys work under click and WASD.
 3. **Pause/focus proof:** every overlay and observation freezes simulation and returns clean input ownership.
-4. **Persistence proof:** autosave and operation-departure Retry remain distinct and deterministic.
+4. **Persistence proof:** autosave and the operation-departure baseline remain distinct and deterministic.
 5. **Projection proof:** runtime and Blender consume the same coordinates/masks/anchors.
 
 Exit gate: dusk and curfew routes are topologically viable and debug geometry agrees with collision, markers, and entrances.
+
+### T3A / GET-211 — Rename the operation baseline and Restart Attempt contract
+
+**Linear:** GET-211
+**Label:** Improvement
+**Parent:** GET-203
+**Depends on:** delivered T3 persistence/runtime seam and the separately committed specification update
+**Blocks:** T8A and GET-179 modernization
+
+Ownership:
+
+- replace public/shared `retry*` symbols and persisted fields with `OperationAttemptBaseline` and `restartAttempt`;
+- bump the Level 0 schema, validators, storage keys/envelopes, actions, and reducers;
+- reject stale development saves explicitly rather than partially migrating them;
+- assign confirmation ownership to `restart_attempt_confirmation`;
+- present player-facing **Restart Attempt** copy;
+- have George read the actual departure time, consulted contacts, Health, Paranoia, and restoration meaning before confirmation.
+
+Exit gate: autosave and `OperationAttemptBaseline` remain separate; departure writes the complete baseline before the departed autosave; every baseline field restores exactly through `restartAttempt`; stale saves fail honestly; and no current public/shared or persisted `retry*` name remains.
 
 ## Gate 4 — Tokyo city foundation
 
@@ -146,9 +165,9 @@ Internal sequence:
 
 An AI-generated concept, validator, internal rating, or technical checkpoint cannot unlock T5. The actual Blender render is a mandatory source-geometry gate but not final delivery. Exit gate: the requester accepts the committed same-master live build as a coherent four-block city with readable people/routes, named KitBash provenance, no fallback leak, no void, no angle mismatch, and no zoom corruption.
 
-## Gate 5 — Hidzu identity and surveillance-noir art
+## Gate 5 — Hidzu Corporation identity and surveillance-noir art
 
-### T5 — Hidzu identity and graphic-surveillance-noir world art
+### T5 — Hidzu Corporation identity and graphic-surveillance-noir world art
 
 **Label:** Improvement
 **Depends on:** requester-accepted and committed GET-204 four-block same-master live rebuild
@@ -162,7 +181,7 @@ Ownership:
 - gameplay-serving entrances, terminals, hiding/blending structures, contact spaces, and hazards;
 - overview atmospheric depth without generic neon clutter.
 
-Successor gate: a technically validated, committed T5 treatment with complete fixed captures may unlock T6 while the treatment remains provisional. Final acceptance gate: the requester agrees the city reads specifically as Hidzu-controlled Tokyo while retaining route/objective/actor hierarchy at normal and minimum zoom.
+Successor gate: a technically validated, committed T5 treatment with complete fixed captures may unlock T6 while the treatment remains provisional. Final acceptance gate: the requester agrees the city reads specifically as Hidzu Corporation-controlled Tokyo while retaining route/objective/actor hierarchy at normal and minimum zoom.
 
 ## Gate 6 — actor and portrait replacement
 
@@ -176,7 +195,7 @@ Ownership:
 
 - four protagonist presets;
 - Lira, Naila, Brant;
-- two Hidzu security archetypes;
+- two Hidzu Corporation security archetypes;
 - three civilian archetypes;
 - twelve matching portraits;
 - Takahiro broadcast portrait and George AR art;
@@ -200,12 +219,12 @@ Ownership:
 - Character screen;
 - authored XP, pending level-up, safehouse/debrief allocation;
 - Health and Paranoia state/rules/effects;
-- build/identity persistence in autosave and Retry;
+- build/identity persistence in autosave and Restart Attempt;
 - rejection of old package/background saves.
 
 T3 owns persistence infrastructure; T7 owns RPG payload, validation, and player-facing behavior.
 
-Exit gate: at least two different builds are created through normal New Game controls, persist exactly, and produce different results in the reusable visible check-breakdown component for the same canonical requirement. Focused domain proof covers facts, resources, progression, failure, and Retry without inventing unfinished mission transitions. T9/T10 re-prove those differences through normal practical dialogue, recognition, systems, and escape options while both can complete Level 0; those later integration scenarios are not a blocker to delivering the T7 foundation.
+Exit gate: at least two different builds are created through normal New Game controls, persist exactly, and produce different results in the reusable visible check-breakdown component for the same canonical requirement. Focused domain proof covers facts, resources, progression, failure, and Restart Attempt without inventing unfinished mission transitions. T9/T10 re-prove those differences through normal practical dialogue, recognition, systems, and escape options while both can complete Level 0; those later integration scenarios are not a blocker to delivering the T7 foundation.
 
 ## Gate 8 — surveillance and noncombat escape
 
@@ -213,18 +232,18 @@ Exit gate: at least two different builds are created through normal New Game con
 
 **Label:** Feature
 **Depends on:** T3 and T7
-**Blocks:** T9 contextual integration and T10 scenarios
+**Blocks:** T8A, T9 contextual integration, and T10 scenarios
 
 Ownership:
 
 - Clear/Suspicious/Pursuit network;
 - shared render/detection geometry;
 - last-known position;
-- known-coverage presentation;
+- subtle normal-play camera light/reflection warnings and exact discovered coverage in Observation;
 - authored security/civilian schedules that support surveillance and blending;
 - discrete hiding and blending;
 - connected camera terminal loop with Systems/OpSec trace behavior;
-- exactly one verifier drone;
+- exactly one verifier drone, player-facing **Needle**;
 - authored noise events;
 - real-time pursuit recovery;
 - deterministic noncombat interception and capture.
@@ -233,13 +252,43 @@ T8 owns mechanics. T10 authors and proves mission scenarios using them.
 
 Exit gate: dusk blending, curfew hiding, Suspicious recovery, Pursuit recovery, drone verification, camera looping, and capture all work through normal controls without tactical combat.
 
+### T8A / GET-212 — Make Hidzu Corporation surveillance readable, attributable, and limited
+
+**Linear:** GET-212
+**Label:** Improvement
+**Parent:** GET-208
+**Depends on:** T3A
+**Blocks:** T9A
+
+Ownership:
+
+- retain raw `ObservationEvidence` as geometry truth and add `SurveillanceRuleBreakEvidence` for the five approved concern sources;
+- keep ordinary public camera visibility harmless and derive blind spots only from normal geometry/occlusion;
+- render subtle warnings in normal play and exact discovered coverage only in Observation;
+- author one camera group usable once per attempt, with `unused | active | clean | traced` history that persists until Restart Attempt;
+- author Needle's single patrol, hum, approach warning, verification warning, and valid last-known behavior;
+- reset recognition on full return to `Clear`;
+- keep civilian glances/movement presentation-only and based only on visible camera, Needle, or player behavior;
+- gate surveillance-origin Paranoia behind paired valid visibility and rule-break evidence.
+
+Exit gate: normal controls prove harmless public observation, all five concern causes, solid-geometry blind spots, one camera use, trace/history persistence, Clear recognition reset, Needle warnings, and civilians that neither know hidden state nor report the player.
+
+### GET-179 modernization milestone — reachable Level 0 harness
+
+**Depends on:** T3A
+**Blocks:** T9A alongside T8A
+
+GET-179 keeps start, waits, and Restart Attempt as typed non-verb controls. Its guided vocabulary becomes exactly `move`, `observe`, `interact`, `choose`, `useContext`, and `consultGeorge`. Canonical profiles reject legacy stealth-toggle, automatic-collection, forced-progress, forced-failure, combat shortcuts, and direct state mutation. Milestone probes cover creation, Lira acceptance, preparation, departure baseline, infiltration, medkits, all manifest states/copy, surveillance recovery, return, transit validation, debrief, capture, deadline, and Restart Attempt.
+
+Exit gate: deterministic and guided profiles reach the specified milestones using only normal reachable controls; direct state mutation remains fixture evidence.
+
 ## Gate 9 — dialogue, George, facts, dossier, and HUD
 
 ### T9 — Dialogue, George, facts, dossier, social feed, and four-lane HUD
 
 **Label:** Feature
 **Depends on:** T3 and T7; consumes T8 context
-**Blocks:** T10 content integration
+**Blocks:** T9A and T10 content integration
 
 Ownership:
 
@@ -249,12 +298,31 @@ Ownership:
 - George fourth lane, private AR avatar, and authored prompts;
 - fixed four-lane 16–18% dock;
 - Character-screen entry point and all major overlays;
-- read-only Hidzu social feed;
+- read-only Hidzu Corporation social feed;
 - English/Ukrainian content parity validation.
 
 T9 owns system infrastructure and presentation. T10 owns final Level 0 dialogue/debrief content and complete scenario integration.
 
 Exit gate: facts change routes/checks/objectives/George/debrief truthfully, unknown information does not leak, and all UI fits target viewports with no free-text or inactive systems.
+
+### T9A / GET-213 — Make checks, evidence, George, departure, and failure fully legible
+
+**Linear:** GET-213
+**Label:** Improvement
+**Parent:** GET-209
+**Depends on:** T8A and the GET-179 modernization milestone
+**Blocks:** T10A
+
+Ownership:
+
+- mount exact `Level0CheckBreakdown` previews before every checked choice and results from the same deterministic inputs;
+- validate a real declared worse path for every nonterminal failure, reserving terminal failure for the final failed capture escape;
+- keep the general Fact Ledger binary while implementing the dedicated Cold Iron chain and explicit five-minute/no-check copy action;
+- make George explain every unavailable-information boundary, keep silence non-semantic, and add no personal deletion arc;
+- render George's departure baseline readback and Restart Attempt presentation;
+- derive capture reports/maps only from real surveillance-ledger evidence, while deadline, Health, and Paranoia failures remain cause-specific.
+
+Exit gate: preview/result math is identical, every nonterminal failure progresses at a declared cost, all four Cold Iron states are reachable, copying costs five minutes, George's limits are explicit, baseline restoration is legible, and no failure surface invents evidence.
 
 ## Gate 10 — authored mission and end-to-end acceptance
 
@@ -262,7 +330,7 @@ Exit gate: facts change routes/checks/objectives/George/debrief truthfully, unkn
 
 **Label:** Feature
 **Depends on:** T5, T6, T7, T8, T9
-**Blocks:** GET-139 acceptance
+**Blocks:** T10A, T10B, and GET-139 acceptance
 
 Ownership:
 
@@ -272,13 +340,49 @@ Ownership:
 - contextual onboarding;
 - complete audio content;
 - factual debrief and Miami continuation data;
-- all failure/retry paths;
+- all failure/Restart Attempt paths;
 - bilingual end-to-end content;
 - fixed-viewport and human-control acceptance suite.
 
 T10 integrates approved systems; it does not reimplement or redefine them.
 
 Exit gate: the complete 15–20 minute route matrix in [[01 MVP/13 Level 0 Content and State Matrix]] and [[01 MVP/95 MVP Readiness Checklist]] passes with normal player controls, no debug bridge, and requester visual/play acceptance.
+
+### T10A / GET-214 — Make curfew, routes, recovery, and street sound live in the city
+
+**Linear:** GET-214
+**Label:** Improvement
+**Parent:** GET-210
+**Depends on:** T9A plus the existing T10 city/content prerequisites
+**Blocks:** T10B and final GET-139 acceptance
+
+Ownership:
+
+- fire idempotent street changes at 21:00, 21:30, 22:00, and 23:30;
+- localize the existing stable loop IDs as Transit Road, Market Ring, and Outer Space;
+- author the Transit Road vending-machine coffee and Market Ring/Outer Space shrine actions at ten minutes/−10 Paranoia, once each per attempt;
+- preserve one qualifying difficult-surveillance-escape −5 relief and one George warning at each 40/70/90 threshold;
+- author civilian schedule changes, threshold lines, and bilingual content;
+- spatialize ambience at the Transit Road restaurant, Market Ring workshop, and safehouse-side apartment.
+
+Exit gate: all four clock boundaries fire once across pause/save restoration, named routes and grounding effects are exact in English/Ukrainian, civilian changes are authored, and all three street-sound locations are audible from their thresholds.
+
+### T10B / GET-215 — Blend actors into authored street lighting
+
+**Linear:** GET-215
+**Label:** Improvement
+**Parent:** GET-210
+**Depends on:** T10A
+**Blocks:** final GET-139 visual acceptance
+
+Ownership:
+
+- add validated `ActorLightRegion` metadata to the visual manifest;
+- sample regions at each actor's foot anchor and apply semantic amber/cyan tint only;
+- keep the tint presentation-only and independent from detection, movement, collision, interaction, and schedules;
+- use the reversible `OPEN-ART-005` baseline of strongest-region-only blending, 250 ms easing, and restrained intensity until requester visual tuning is accepted.
+
+Exit gate: live English/Ukrainian frames at 1280×720, 1440×900, and 1920×1080 show subtle coherent transitions without changing gameplay outcomes or obscuring actor readability.
 
 ## Dependency graph
 
@@ -287,21 +391,33 @@ flowchart TD
   S["Verified recovery snapshot"] --> T1["T1 Canonical specification"]
   T1 --> T2["T2 Runtime recovery"]
   T2 --> T3["T3 Runtime and layout"]
+  T3 --> T3A["T3A Restart foundation"]
   T3 --> T4["T4 Unchanged-kit city"]
-  T4 --> T5["T5 Hidzu world art"]
+  T4 --> T5["T5 Hidzu Corporation world art"]
   T5 --> T6["T6 Actors and portraits"]
   T3 --> T7["T7 RPG identity"]
   T3 --> T8["T8 Surveillance"]
   T7 --> T8
+  T3A --> T8A["T8A Readable surveillance"]
+  T8 --> T8A
+  T3A --> H["GET-179 harness milestone"]
   T3 --> T9["T9 Dialogue George HUD"]
   T7 --> T9
   T8 --> T9
+  T8A --> T9A["T9A Legible checks and failure"]
+  H --> T9A
+  T9 --> T9A
   T5 --> T10["T10 Integrated slice"]
   T6 --> T10
   T7 --> T10
   T8 --> T10
   T9 --> T10
-  T10 --> P["GET-139 requester acceptance"]
+  T9A --> T10A["T10A City time and sound"]
+  T10 --> T10A
+  T5 --> T10B["T10B Actor light integration"]
+  T6 --> T10B
+  T10A --> T10B["T10B Actor light integration"]
+  T10B --> P["GET-139 requester acceptance"]
 ```
 
 ## Per-ticket delivery loop

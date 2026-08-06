@@ -24,7 +24,7 @@ George is available from the safehouse opening. The player perceives him through
 
 ## 4. Complete happy-path behavior
 
-George introduces immediate controls and Lira without explaining the whole setting. He summarizes facts after Lira/Naila/Brant, distinguishes known and unknown camera risk, warns as curfew/deadline approach, explains terminal/hiding failures, interprets the optional manifest only after recognition, supports return/transit, and contributes one concise factual debrief observation.
+George introduces immediate controls, the Miami/father/Cold Iron goal, and Lira without explaining the whole setting or claiming that Hidzu Corporation already suspects the protagonist. He summarizes facts after Lira/Naila/Brant, distinguishes known and unknown camera risk, warns as curfew/deadline approach, explains terminal/hiding failures, interprets the optional manifest only after recognition, supports return/transit, reads the departure plan back before confirmation, and contributes one concise factual debrief observation.
 
 Example: after Naila identifies the connected terminal, George may say that the known terminal controls the logistics approach group and that OpSec still matters. Without that fact, he may identify a physically discovered terminal and admit that its network relationship is unknown. After a traced loop, he may explain the successful local effect and the recorded trace; he cannot pretend the failure did not happen or recommend a route he has not learned.
 
@@ -32,7 +32,7 @@ Example: after Naila identifies the connected terminal, George may say that the 
 
 George presentation states:
 
-- `quiet` — avatar present, no urgent line;
+- `quiet` — avatar present, no urgent line and no hidden gameplay meaning;
 - `context` — one authored observation/prompt tied to current beat;
 - `warning` — curfew, deadline, network escalation, or invalid action;
 - `insufficient` — explicitly lacks verified information;
@@ -55,11 +55,15 @@ World state never changes merely because George changes presentation state.
 - No action execution, targeting, hacking, movement, or state mutation.
 - No undiscovered device/location/fact reveal.
 - Compare risk only from known facts and current visible state.
+- Every unavailable or insufficient response states why useful information is missing. Absence or silence never encodes hidden gameplay information.
+- Emit at most one authored Paranoia warning per attempt at the first crossings of 40, 70, and 90.
+- Before departure, read the actual departure time, consulted/skipped contacts, Health, Paranoia, and `OperationAttemptBaseline` restoration meaning; never substitute planned values for real state.
+- Level 0 gives George no personal want, deletion/freedom request, or secret agenda.
 - Dialogue and major overlays may suppress the floating avatar while retaining George as an available authored participant where specified.
 
 ## 7. Inputs from other systems
 
-Current objective; fact ledger; known locations/devices; world time; surveillance state/source/last-known position; blocked-action reason; Health; Paranoia; outcome ledger; language.
+Current objective; fact ledger; `ColdIronEvidenceState`; known locations/devices; world time; surveillance state/source/last-known position; blocked-action reason; Health; Paranoia; threshold-announcement history; departure-readback model; outcome ledger; language.
 
 George consumes read models, not mutable domain objects. Each authored response declares which facts and state fields justify it, which unknowns suppress it, and whether the response is valid during ordinary play, Observation, safehouse planning, a warning, or debrief.
 
@@ -76,21 +80,21 @@ Selecting a prompt can record that the response was viewed for UX continuity, bu
 - Audio: subtle presence/prompt/warning cues; no voice acting required.
 - Visual intensity follows semantic state, not ambient animation noise.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
-When evidence is insufficient George says so. When an action is impossible he reports the authoritative blocker. Retry restores pre-departure George context and clears post-departure warnings/history derived from discarded state.
+When evidence is insufficient George says why. When an action is impossible he reports the authoritative blocker. Restart Attempt restores the George context and threshold-announcement history captured in `OperationAttemptBaseline` and clears later warnings/history.
 
-If George content is missing or invalid, the safe behavior is a bounded unavailable response plus ordinary game controls—not an invented fallback answer. Failure, Retry, and incompatible-save surfaces remain usable without George. He may explain what Retry restores, but cannot trigger it.
+If George content is missing or invalid, the safe behavior is a bounded unavailable response plus ordinary game controls—not an invented fallback answer. Failure, Restart Attempt, and incompatible-save surfaces remain usable without George. He may explain what Restart Attempt restores, but cannot trigger it.
 
 ## 11. Content-authoring requirements
 
 Each `GeorgePrompt` needs ID, available states, required facts, prohibited unknowns, player-facing question, answer, fact/inference confidence, permitted UI context, localization, cooldown/suppression behavior, and Plot Bible anchor.
 
-The minimum Level 0 inventory covers: opening controls; Lira; each contact's acquired facts; unknown versus known camera risk; connected terminal; weak-OpSec trace; invalid hiding/blending; first Suspicious; last-known position; drone dispatch; Pursuit; recovery; manifest present/recognized/missed; injury; Paranoia threshold; curfew/deadline warnings; medkit return; transit validation; and debrief. Each state needs a no-spam rule and an equivalent English/Ukrainian meaning.
+The minimum Level 0 inventory covers: opening controls and Miami purpose; Lira; each contact's acquired facts; unknown versus known camera risk; connected terminal; weak-OpSec trace; invalid hiding/blending; first Suspicious; last-known position; Needle dispatch/approach/verification; Pursuit; recovery; manifest present/recognized/copied/missed; Health loss; one line for each 40/70/90 Paranoia crossing; four street-clock moments; exact departure readback; curfew/deadline warnings; medkit return; transit validation; and debrief. Each state needs a no-spam rule and an equivalent English/Ukrainian meaning.
 
 ## 12. Edge cases and prohibited shortcuts
 
-No generic mission-summary answer to every prompt; no personality meter; no adaptive imitation of player tone; no karma/faction judgment; no ambient spam; no spoilers; no claim that George saw an event absent from the ledger; no floating-avatar collision or public NPC reaction.
+No generic mission-summary answer to every prompt; no meaningful silence; no personal deletion/freedom arc; no personality meter; no adaptive imitation of player tone; no karma/faction judgment; no ambient spam; no spoilers; no claim that George saw an event absent from the ledger; no floating-avatar collision or public NPC reaction.
 
 ## 13. Removed behavior
 
@@ -100,13 +104,14 @@ Free-text chat; personality mirroring; reputation/karma commentary; dynamic-even
 
 Deeper relationship arc, hardware compromise, authored George-centered quests, more contextual prompts, and campaign memory—after origin/privacy rules are approved.
 
-Future compromise can make George's channel risky only through explicit evidence and authored rules; it cannot retroactively make his Level 0 information dishonest. Free-text conversation, cloud orchestration, autonomous action, and personality imitation are not implied extensions.
+Future compromise can make George's channel risky only through explicit evidence and authored rules; it cannot retroactively make his Level 0 information dishonest or turn Level 0 silence into a hidden signal. Free-text conversation, cloud orchestration, autonomous action, and personality imitation are not implied extensions.
 
 ## 15. Human-play acceptance examples
 
 - George correctly answers what is known about a discovered camera and refuses to reveal an unknown one.
 - He explains why hiding is invalid while directly observed.
 - He warns about the deadline without pausing or moving the player.
+- He explains each missing-information case, speaks once at each 40/70/90 Paranoia threshold, and reads the real departure state before confirmation.
 - His manifest interpretation differs correctly between recognized and missed evidence.
 - Both HUD and AR forms remain readable without duplicating the same sentence unnecessarily.
 - Ignoring every optional George prompt leaves the operation completable and understandable through world, HUD, dialogue, and dossier feedback.
@@ -114,4 +119,4 @@ Future compromise can make George's channel risky only through explicit evidence
 
 ## 16. Owning Linear ticket
 
-`T6` (`GET-206`) owns George AR art; `T9` (`GET-209`) owns prompt/state/UI infrastructure; `T10` (`GET-210`) owns authored responses and onboarding use.
+`T6` (`GET-206`) owns George AR art; `T9` (`GET-209`) and `T9A` (`GET-213`) own prompt/state/UI and departure/failure legibility; `T10` (`GET-210`) and `T10A` (`GET-214`) own authored responses and onboarding use.

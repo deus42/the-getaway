@@ -10,11 +10,11 @@ canonical: true
 
 Level 0 is about avoiding confirmation and escaping institutional custody, not defeating enemies. Physical danger exists as authored consequence, but the game never changes into a tactical battle.
 
-The protagonist may be brave, persuasive, composed, technically capable, or physically resourceful, but they are not equipped to dominate Hidzu security. The tension of interception comes from making one legible decision under institutional pressure and living with its cost. Avoidance is success; violence is neither the default fantasy nor a hidden optimal route.
+The protagonist may be brave, persuasive, composed, technically capable, or physically resourceful, but they are not equipped to dominate Hidzu Corporation security. The tension of interception comes from making one legible decision under institutional pressure and living with its cost. Avoidance is success; violence is neither the default fantasy nor a hidden optimal route.
 
 ## 2. Player-visible verbs
 
-Read the confrontation; speak; hold composure; evade; make a physical escape attempt; accept a previewed cost; Retry after capture or fatal consequence.
+Read the confrontation; speak; hold composure; evade; make a physical escape attempt; accept a previewed cost; Restart Attempt after capture or fatal consequence.
 
 The player may also back away before an interception becomes final when the surveillance/stealth state still permits ordinary movement. Once the authored confrontation begins, world simulation pauses and only its declared choices are accepted.
 
@@ -43,7 +43,7 @@ No transition enters a combat scene or turn loop.
 | `approaching` | Source, reason, escape context, warning | Continue ordinary escape if the world state still permits it |
 | `engaged` | Exact authored choices, requirements, and likely costs | Select one choice or remain in the paused overlay |
 | `resolved_escape` | Applied cost, placement, network state, named consequence | Resume world play under the declared state |
-| `captured` | Exact failed option and custody cause | Enter factual failure and deterministic Retry/New Game |
+| `captured` | Exact failed option and custody cause | Enter factual failure and deterministic Restart Attempt/New Game |
 
 ## 6. Rules and tuning values
 
@@ -64,7 +64,7 @@ Layout and actor presentation provide the credible physical context; dialogue/ch
 
 ## 8. Effects on other systems
 
-May change Health, Paranoia, time, network state, outcome ledger, objective reachability, debrief, failure cause, and Retry availability.
+May change Health, Paranoia, time, network state, outcome ledger, objective reachability, debrief, failure cause, and Restart Attempt availability.
 
 An outcome declares each effect atomically. For example, a dangerous Evasion escape may reduce Health, advance time, preserve Pursuit at a new authored position, and record `interceptionOutcome`; a social success may step the network down only if the fiction and node explicitly support that change. No generic victory reward is emitted.
 
@@ -74,11 +74,11 @@ World remains visible under a short anchored overlay. Requirements and costs are
 
 Choice text is the protagonist's exact intended action or line, not an abstract “Aggressive” or “Clever” label. Locked choices name the missing capability or fact. Critical state remains text/shape readable without relying only on crimson or sound.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
-Failed non-final options fail forward only where authored; the final failed outcome is capture. Retry restores departure state and removes confrontation costs/outcomes. Health 0 and Paranoia 100 use their own exact failures.
+Failed non-final options fail forward only where authored; the final failed outcome is capture. Restart Attempt restores departure state and removes confrontation costs/outcomes. Health 0 and Paranoia 100 use their own exact failures.
 
-A fail-forward outcome must keep one authored path alive and state its cost. A terminal capture never launches an unimplemented custody level. The failure surface names the confirming actor/system and chosen failed option, then restores the same pre-operation attempt if Retry is selected.
+A fail-forward outcome must keep one authored path alive and state its cost. A terminal capture never launches an unimplemented custody level. The failure surface names the confirming actor/system and chosen failed option, then restores the same pre-operation attempt if Restart Attempt is selected.
 
 ## 11. Content-authoring requirements
 
@@ -105,7 +105,7 @@ A richer manual confrontation interface may be researched after the slice. Tacti
 - An Influence build sees a supported option with exact math and cost.
 - An Evasion build escapes with previewed Health/time cost.
 - An unsupported option is absent or visibly locked for a concrete reason.
-- Final failure produces capture and deterministic Retry without flashing a combat HUD.
+- Final failure produces capture and deterministic Restart Attempt without flashing a combat HUD.
 - A player can explain the physical fiction, exact requirement, and likely cost of every reached option before choosing.
 - The debrief names the actual interception outcome and cost without using victory, kill, damage-dealt, or combat terminology.
 

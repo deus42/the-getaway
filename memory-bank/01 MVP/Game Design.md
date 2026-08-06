@@ -12,7 +12,7 @@ The canonical authoring Bible is a package rather than one enormous file. This h
 
 ## Game fantasy and identity
 
-The Getaway is a grounded dystopian surveillance RPG about escaping systems that already know too much about you. The protagonist is an exposed American expatriate living in Hidzu-controlled Tokyo in 2036. They are not a cyberpunk commando, chosen hero, or blank tactical unit. They are a civilian-scale person with an uneven RPG build, a missing father connected to Operation Cold Iron, a small network of people who may help, and a private AI companion named George.
+The Getaway is a grounded dystopian surveillance RPG about becoming legible to systems that were not looking for you until your choices gave them a reason. The protagonist is an American expatriate living under Hidzu Corporation's ordinary civic systems in Tokyo in 2036. At Level 0's start, Hidzu Corporation does not consider them a problem. They are not a cyberpunk commando, chosen hero, or blank tactical unit. They are a civilian-scale person with an uneven RPG build, a missing father connected to Operation Cold Iron, a small network of people who may help, a need to reach Miami and investigate, and a private AI companion named George.
 
 The central fantasy is competence under observation. The player studies a city that appears orderly and useful, learns where its institutional systems are strong or fallible, chooses what risks to take, helps somebody who has been excluded by those systems, and leaves before the city converts concern into custody. Success comes from preparation, perception, social reading, operational security, composure, movement, hiding, blending, and knowing when to disengage.
 
@@ -22,19 +22,19 @@ The game is not a power fantasy disguised as stealth. Cameras cannot be destroye
 
 Level 0 should make the player feel five things in sequence:
 
-1. **Personally exposed.** Character creation gives ownership, then the safehouse opening makes clear that the protagonist's identity is already becoming unsafe.
+1. **Personally motivated.** Character creation gives ownership, then the safehouse opening establishes the father's Cold Iron trail and the need to secure passage toward Miami without pretending the network already considers the protagonist suspicious.
 2. **Oriented, not lectured.** Lira, the city, George, and contextual onboarding explain the immediate problem through play. The player understands the human stakes before the wider conspiracy.
 3. **Prepared through knowledge.** Naila and Brant can improve the player's understanding, but neither is mandatory. Facts clarify a route or a specific check; they are not generic buffs.
-4. **Watched but not cheated.** Cameras, security, civilians, and the verifier drone communicate what they know. Suspicion and pursuit follow evidence and last-known position, not invisible omniscience.
+4. **Watched but not pre-condemned.** Ordinary public camera visibility is harmless. Concern begins only when valid visibility is paired with an observed restricted-area breach, protected interaction, medkit removal, failed verification, or detected feed change. Cameras, security, civilians, and Needle communicate only what they can actually perceive.
 5. **Changed by the escape.** Returning the medkits, validating passage, reviewing the factual debrief, and receiving a real progression event turn the prologue into the first persistent campaign chapter.
 
-The tone is tense, intimate, contemporary, and humane. Hidzu control is frightening because it resembles credible public infrastructure: identity continuity, logistics compliance, transit validation, safety messaging, queues, cameras, and automated verification. Humor is dry survival behavior. Surrealism may exist as metaphor or social absurdity, never as supernatural truth.
+The tone is tense, intimate, contemporary, and humane. Hidzu Corporation control is frightening because it resembles credible public infrastructure: identity continuity, logistics compliance, transit validation, safety messaging, queues, cameras, and automated verification. Humor is dry survival behavior. Surrealism may exist as metaphor or social absurdity, never as supernatural truth.
 
 ## Design pillars
 
 ### Surveillance is the antagonist
 
-Cameras, identity systems, human verification, one patrol drone, checkpoints, public screens, and behavioral scrutiny form a connected but fallible network. The network can become concerned, record a last-known position, search, verify, and lose the protagonist. Rendered coverage and actual detection share the same geometry. Solid buildings block both sight and knowledge.
+Cameras, identity systems, human verification, Needle, checkpoints, public screens, and behavioral scrutiny form a connected but fallible network. The network can become concerned only after observed rule-breaking, record a last-known position, search, verify, and lose the protagonist. Returning to `Clear` removes recognition, so later ordinary public visibility is harmless again. Rendered coverage and actual detection share the same geometry; solid buildings create ordinary blind spots, and no special off-grid zone exists.
 
 ### Dialogue changes practical options
 
@@ -42,7 +42,7 @@ Conversations are RPG play. Lira establishes the bargain, Naila explains technic
 
 ### Paranoia is consequential and honest
 
-Paranoia is a visible 0–100 resource caused by communicated surveillance exposure, pursuit, injury, dangerous escape, capture outcomes, and authored story shocks. Its thresholds penalize every deterministic check and 100 is fatal. It never fabricates clues, changes objective truth, lies through the HUD, or creates hallucinated evidence.
+Paranoia is a visible 0–100 resource caused by communicated rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored story shocks. Its thresholds penalize every deterministic check and 100 is fatal. The player may spend ten world minutes for ten relief once at the Transit Road vending machine and once at the Market Ring/Outer Space shrine; the first qualifying difficult surveillance escape may remove five once. It never fabricates clues, changes objective truth, lies through the HUD, or creates hallucinated evidence.
 
 ### Escape matters more than combat
 
@@ -50,7 +50,7 @@ Movement, observation, timing, line-of-sight breaks, hiding, blending, camera lo
 
 ### George is operational but bounded
 
-George is a private near-character AI presence, not an omniscient assistant. He summarizes verified state, explains blockers, compares known risks, distinguishes fact from inference, and offers authored contextual questions. He cannot move, interact, hack, choose, reveal unknown information, or mutate the world.
+George is a private near-character AI presence, not an omniscient assistant. He summarizes verified state, explains blockers and why information is unavailable, compares known risks, distinguishes fact from inference, and offers authored contextual questions. Silence is never hidden information. He cannot move, interact, hack, choose, reveal unknown information, or mutate the world, and Level 0 gives him no deletion/freedom desire arc.
 
 ### RPG identity persists
 
@@ -62,11 +62,11 @@ Level 0 is exactly four dense, continuous mission blocks carrying three function
 
 ## Setting and campaign premise
 
-In 2036, Hidzu presents itself as the infrastructure of safe, efficient civic life. It controls identity correlation, movement validation, surveillance, and logistics in the Level 0 district. Across the Pacific, Harrow and ESD prepare Operation Cold Iron. Eisenclave integrates Hidzu-supplied identity, surveillance-AI, and logistics capabilities into the American system.
+In 2036, Hidzu Corporation presents itself as the infrastructure of safe, efficient civic life. It controls identity correlation, movement validation, surveillance, and logistics in the Level 0 district. Across the Pacific, Harrow and ESD prepare Operation Cold Iron. Eisenclave integrates Hidzu Corporation-supplied identity, surveillance-AI, and logistics capabilities into the American system.
 
-The protagonist left Miami after the Battle and is now an American expatriate in Tokyo. Their father disappeared in connection with Cold Iron. Hidzu has flagged the protagonist after an evidence event whose exact content remains `OPEN-NAR-002`; the broader chronology remains `OPEN-NAR-001`. Those are legitimate gaps, not invitations to invent biography.
+The protagonist left Miami after the Battle and is now an American expatriate in Tokyo. Their father disappeared in connection with Cold Iron. The protagonist seeks passage back toward Miami to investigate, but Hidzu Corporation does not begin Level 0 with them flagged or recognized as a problem. Their broader chronology remains `OPEN-NAR-001`; that is a legitimate gap, not an invitation to invent biography.
 
-Lira offers passage toward Miami in exchange for recovering medical supplies confiscated by Hidzu. The local mission is deliberately humane and complete in itself: help people denied access to medicine, survive the response, and honor the return. The optional shipping manifest connects that act to the larger Cold Iron supply chain. Miami is the future Level 1 handoff, not a placeholder scene loaded by this slice.
+Lira offers passage toward Miami in exchange for recovering medical supplies confiscated by Hidzu Corporation. The local mission is deliberately humane and complete in itself: help people denied access to medicine, survive the response, and honor the return. The optional shipping manifest connects that act to the larger Cold Iron supply chain. Miami is the future Level 1 handoff, not a placeholder scene loaded by this slice.
 
 See [[20 Setting & Worldbuilding]], [[35 Narrative Alignment]], and [[03 Lore/Plot Bible]] for the full fiction contract and unresolved narrative boundaries.
 
@@ -80,12 +80,12 @@ Level 0 is a 15–20 minute outdoor prologue. In one ordinary-control run it mus
 - optional preparation through Naila and Brant, including a viable neither-contact route;
 - a dusk/public approach and a curfew/service approach through the same four-block district;
 - readable cameras, explicit interactions, discrete hiding, social blending, one patrol drone, and last-known-position pursuit;
-- a meaningful optional Hidzu–Harrow shipping clue that never blocks the humanitarian objective;
+- a meaningful optional Hidzu Corporation–Harrow shipping clue that never blocks the humanitarian objective;
 - Health and Paranoia consequences with explicit safehouse recovery;
 - George in the HUD and as a private near-character AR presence;
-- a factual operation dossier, knowledge-based minimap, and deterministic debrief;
+- a factual operation dossier, knowledge-based minimap, deterministic debrief, and cause-specific failure reporting;
 - one real progression event that carries into the future campaign;
-- completion, all four run failures, and deterministic Retry through normal player controls.
+- completion, all four run failures, and deterministic Restart Attempt through normal player controls.
 
 The complete journey is:
 
@@ -97,11 +97,11 @@ The complete journey is:
 
 The fullest practical explanation of The Getaway is available from the start menu before a run, from the paused menu during a run, and directly with `F1` during eligible gameplay. This optional reference does not replace contextual onboarding: the world, Lira, George, HUD, dossier, and readable failures still teach immediate actions through play. The Bible exists so a player can understand the complete designed game—its fantasy, Level 0 journey, systems, cause-and-effect relationships, feedback, failure and recovery, content boundaries, and continuation—without leaving the running application.
 
-The player-visible Bible contains sixteen chapters: product identity; setting and campaign; the complete Level 0 journey; character/builds/checks/progression; Health/Paranoia/failure/recovery; movement/interaction/camera/observation; time/schedules/safehouse/save/Retry; surveillance/cameras/security/civilians/drone; stealth/hiding/blending/interception/escape; narrative/dialogue/George/contacts; facts/dossier/objectives/minimap/terminals/social feed; HUD; world/district/routes/geometry; art/Blender/actors/portraits/lighting; audio/localization/accessibility/performance; and content boundaries/continuation.
+The player-visible Bible contains sixteen chapters: product identity; setting and campaign; the complete Level 0 journey; character/builds/checks/progression; Health/Paranoia/failure/recovery; movement/interaction/camera/observation; time/schedules/safehouse/save/Restart Attempt; surveillance/cameras/security/civilians/Needle; stealth/hiding/blending/interception/escape; narrative/dialogue/George/contacts; facts/dossier/objectives/minimap/terminals/social feed; HUD; world/district/routes/geometry; art/Blender/actors/portraits/lighting; audio/localization/accessibility/performance; and content boundaries/continuation.
 
 English and Ukrainian use identical chapter and section identity, order, gameplay meaning, examples, state relationships, and approved numeric rules. Search covers localized titles, summaries, section headings, body text, and keywords. The reading surface uses a reference-manual layout: chapter rail, readable central article, and on-page outline on wide screens; a two-pane layout at medium widths; and a focus-contained chapter drawer plus single reading column at `840px` and below.
 
-Opening the Bible from active play acquires its own pause owner. If the paused menu already owns pause, both owners coexist; closing the Bible releases only its own owner. Time, schedules, surveillance, drone behavior, movement, world input, and deadlines cannot advance while the Bible is open. The surface never changes mission state, facts, outcomes, autosave, or the Retry snapshot, and it remembers reading position only for the browser session.
+Opening the Bible from active play acquires its own pause owner. If the paused menu already owns pause, both owners coexist; closing the Bible releases only its own owner. Time, schedules, surveillance, Needle behavior, movement, world input, and deadlines cannot advance while the Bible is open. The surface never changes mission state, facts, outcomes, autosave, or `OperationAttemptBaseline`, and it remembers reading position only for the browser session.
 
 The rendered copy describes only the finalized end-state design. It never displays `OPEN-*` or decision/ticket identifiers, tracker state, provisional or recommended language, rejected or superseded behavior, implementation ownership, repository paths, test/build/coverage/commit state, or raw wiki links. When a canonical behavior is approved but an exact constant is not, the in-game explanation states the approved behavior without inventing the unresolved number.
 
@@ -116,12 +116,12 @@ No major Level 0 system is an island. The following relationships are design con
 | Movement and layout | Position, facing, line of sight, interaction eligibility | Surveillance, discovery, hiding/blending, objectives | The player physically earns safety and knowledge; the game does not route for them. |
 | Surveillance network | Clear/Suspicious/Pursuit, source, last-known evidence | Paranoia, George, HUD, safehouse availability, outcome ledger | Escalation is attributable and recoverable rather than omniscient. |
 | Health and Paranoia | Visible condition and check penalty | Checks, safehouse, failure, dialogue, debrief | Consequences shape choices and can end the attempt without creating combat. |
-| Safehouse and persistence | Wait, Rest, autosave, immutable departure Retry | Time, recovery, progression, mission continuation | Recovery costs time; Retry restores one honest attempt boundary. |
+| Safehouse and persistence | Wait, Rest, autosave, immutable `OperationAttemptBaseline` | Time, recovery, progression, mission continuation | Recovery costs time; Restart Attempt restores one honest departure boundary. |
 | Facts and objectives | Knowledge precision and current required beat | HUD, terminals, dialogue, George, dossier, debrief | The player knows what to do without omniscient markers. |
 | Outcome ledger | What actually happened | Lira return, debrief, Miami continuation | The game never credits, condemns, or describes an action the player did not take. |
 | Art, actors, audio, localization, accessibility | Equivalent semantic presentation | Every system above | Geometry, state, warning, and meaning remain readable across viewports, languages, and sensory needs. |
 
-The critical reconciliation seams are specified explicitly: facts → checks → George → objectives → dossier → debrief; surveillance → Paranoia → safehouse → Retry; time → schedules → routes → deadline; Blender geometry → collision → entrances → interaction/device anchors; and Health/Paranoia → checks → failure → Retry.
+The critical reconciliation seams are specified explicitly: facts → checks → George → objectives → dossier → debrief; surveillance rule breaks → concern → Paranoia → safehouse → Restart Attempt; time → schedules → routes → deadline; Blender geometry → collision → entrances → interaction/device anchors; and Health/Paranoia → checks → cause-specific failure → Restart Attempt.
 
 ## Failure, recovery, persistence, and continuation
 
@@ -132,7 +132,7 @@ Level 0 has four normal run failures:
 - a final authored interception option fails and the protagonist is captured;
 - midnight arrives before both medkit return and outbound transit validation are complete.
 
-Failure names the exact cause. Retry returns to the immutable operation-departure snapshot created after briefing and optional preparation, when the player explicitly leaves for the operation. It restores identity, build, time, facts, known world state, objectives, Health, Paranoia, and deterministic content versions exactly as captured. It discards every post-departure movement, fact, device state, mission object, injury, stress event, clock advance, and outcome.
+Failure names the exact cause. Capture alone shows a short Hidzu Corporation incident report and sparse evidence map built only from real sightings, detected feed tampering, Needle verification, and capture evidence; unseen movement remains disconnected. Deadline instead lists unfinished requirements, while Health and Paranoia remain simple factual explanations. **Restart Attempt** restores the immutable `OperationAttemptBaseline` created after briefing and optional preparation, when the player explicitly leaves for the operation. Before confirmation, George reads the real departure time, consulted contacts, Health, Paranoia, and what will be discarded. Restoration returns identity, build, time, facts, known world state, objectives, Health, Paranoia, and deterministic content versions exactly as captured and discards every post-departure movement, fact, device state, mission object, Health loss, Paranoia event, clock advance, and outcome.
 
 Safehouse Rest advances 30 world minutes, restores Health to 100, and removes 40 Paranoia. Wait advances time in confirmed 30-minute steps. Exact action availability while observed, Suspicious, or in Pursuit remains `OPEN-SAFE-001`; crossing the boundary is never an undocumented reset.
 
@@ -144,9 +144,9 @@ The locked visual language is graphic surveillance noir: readable midtones, stro
 
 The city uses the requester-owned Neo Tokyo 2 kit in one named-source Blender 5.0.1 master. The approved AI-assisted four-block concept is a composition, camera, and value north star only. Every production building retains named source provenance; project-authored gap fills are limited to streets, public realm, navigation, and gameplay readability. The accepted master owns detailed visible geometry after its Blender gate; collision, occlusion, entrances, and anchors must then agree with it before live acceptance.
 
-Normal play is close and street-first, with the protagonist readable in the lower-center lead area. Manual overview shows the complete four-block mission space without expanding scope. Actors are separate runtime entities: four protagonist appearances, Lira, Naila, Brant, two security roles, and three civilian archetypes, all with grounded idle/move/interact presentation and matching portraits. People are never baked into city plates.
+Normal play is close and street-first, with the protagonist readable in the lower-center lead area. Manual overview shows the complete four-block mission space without expanding scope. Actors are separate runtime entities: four protagonist appearances, Lira, Naila, Brant, two security roles, and three civilian archetypes, all with grounded idle/move/interact presentation and matching portraits. People are never baked into city plates. Their foot anchors may sample authored amber/cyan light regions with subtle eased presentation-only tint; lighting never changes detection or movement.
 
-Audio is mandatory semantic feedback. City ambience, footsteps, interactions, cameras, network transitions, drone approach/verification, curfew, objectives, safehouse, failure, and completion have distinct authored cue families. There is no Level 0 voice acting, and no critical meaning may be audio-only.
+Audio is mandatory semantic feedback. City ambience, footsteps, interactions, cameras, network transitions, Needle approach/verification, the 21:00/21:30/22:00/23:30 street changes, objectives, safehouse, failure, and completion have distinct authored cue families. A Transit Road restaurant, Market Ring workshop, and safehouse-side apartment provide three spatial threshold sound leaks. There is no Level 0 voice acting, and no critical meaning may be audio-only.
 
 English and Ukrainian render one language-neutral semantic content graph: the same node, fact, check, objective, outcome, and state transition must occur in both languages. Japanese diegetic signage and announcements remain part of Tokyo's fiction and receive contextual translation rather than being rewritten as Ukrainian in-world text. Exact content ownership remains `OPEN-LOC-001`, and the diegetic-language policy remains `OPEN-NAR-014` until accepted.
 
@@ -162,9 +162,11 @@ See [[30 Art Direction (MVP)]], [[31 GET-204 Visual Rebuild Quality Contract]], 
 - one Lira medkit operation;
 - two optional preparation contacts;
 - two primary timings through one continuous space;
-- three one-function terminals;
+- three one-function terminals, with the single connected camera group usable once per attempt;
 - one optional manifest clue;
-- exactly one verifier drone;
+- exactly one named verifier drone, Needle;
+- three player-facing route names: Transit Road, Market Ring, and Outer Space;
+- two one-use grounding actions and three localized street-threshold ambience sources;
 - a small authored civilian/security cast and schedule set;
 - four protagonist appearances, twelve actor sets, matching portraits, and George AR art;
 - English and Ukrainian semantic content;
@@ -186,7 +188,7 @@ Miami and the occupied-America campaign, additional districts and interiors, mor
 
 - [[10 MVP Spine]] — compact product contract, quality bar, loop, and permanent boundaries.
 - [[11 Level 0 Vertical Slice Contract]] — complete chronological walkthrough.
-- [[20 Setting & Worldbuilding]] — 2036, Tokyo, Hidzu, Cold Iron, and campaign relationship.
+- [[20 Setting & Worldbuilding]] — 2036, Tokyo, Hidzu Corporation, Cold Iron, and campaign relationship.
 - [[35 Narrative Alignment]] — tone, character knowledge, authored consequence, and debrief truth.
 - [[03 Lore/Plot Bible]] — wider campaign premise, factions, characters, and continuity.
 
@@ -195,14 +197,14 @@ Miami and the occupied-America campaign, additional districts and interiors, mor
 - [[92 Character & Progression]] — callsign, appearances, attributes, skills, checks, XP, and level-up.
 - [[43 Health, Failure & Recovery]] — physical consequence and exact run failures.
 - [[60 Paranoia]] — stress sources, thresholds, penalties, honesty, and recovery.
-- [[44 Safehouse, Save & Retry]] — planning hub, Wait, Rest, autosave, departure snapshot, and restoration.
+- [[44 Safehouse, Save & Restart Attempt]] — planning hub, Wait, Rest, autosave, `OperationAttemptBaseline`, and restoration.
 - [[93 Inventory (MVP)]] — why mission objects are explicit state rather than managed inventory.
 
 ### World action and pressure
 
 - [[41 Movement, Interaction & Observation]] — direct controls, collision, explicit actions, and full-pause inspection.
 - [[70 Stealth]] — hiding, blending, line-of-sight breaks, and pursuit recovery.
-- [[42 Surveillance, Security & Civilian Behavior]] — shared network, cameras, drone, security, civilians, and interception.
+- [[42 Surveillance, Security & Civilian Behavior]] — rule-break evidence, shared network, cameras, Needle, security, civilians, and interception.
 - [[80 Day-Night Cycle]] — clock, curfew, schedules, safe waiting, and deadline.
 - [[50 Combat]] — noncombat disposition and short authored confrontation boundary.
 
@@ -213,7 +215,7 @@ Miami and the occupied-America campaign, additional districts and interiors, mor
 - [[46 Facts, Dossier, Minimap & Terminals]] — knowledge provenance and one-function devices.
 - [[91 Quests & Objectives]] — mission state, current beat, outcome ledger, and completion.
 - [[45 HUD & Information Architecture]] — four-lane world-first dock, paused overlays, and the in-game Game Design Bible.
-- [[47 Social Feed]] — read-only Hidzu atmosphere.
+- [[47 Social Feed]] — read-only Hidzu Corporation atmosphere.
 
 ### Production and equivalence
 
@@ -233,6 +235,6 @@ Miami and the occupied-America campaign, additional districts and interiors, mor
 
 ## Bible acceptance standard
 
-This Bible is complete enough for implementation when a new engineer can trace every Level 0 transition to one state owner, triggering player action, prerequisites, facts/checks, world/HUD/dialogue/audio/George feedback, persistence/Retry behavior, failure/recovery outcome, outcome-ledger write, system chapter, and Linear owner. A missing exact value is acceptable only when it has a stable `OPEN-*`, an explicit affected gate, and no silently promoted implementation constant.
+This Bible is complete enough for implementation when a new engineer can trace every Level 0 transition to one state owner, triggering player action, prerequisites, facts/checks, world/HUD/dialogue/audio/George feedback, persistence/Restart Attempt behavior, failure/recovery outcome, outcome-ledger write, system chapter, and Linear owner. A missing exact value is acceptable only when it has a stable `OPEN-*`, an explicit affected gate, and no silently promoted implementation constant.
 
-The in-game projection is complete enough for players when every current Approved player-facing decision and required topic maps to a rendered section or to an explicit non-player-facing governance classification; all sixteen English and Ukrainian chapters have equivalent structure and meaning; every source/decision reference resolves in non-rendered metadata; forbidden uncertainty, history, tracker, and implementation language is absent; search and navigation reach every section; and start-menu, paused-menu, `F1`, responsive, focus, pause, Retry, and no-state-mutation behavior pass live human-control acceptance.
+The in-game projection is complete enough for players when every current Approved player-facing decision and required topic maps to a rendered section or to an explicit non-player-facing governance classification; all sixteen English and Ukrainian chapters have equivalent structure and meaning; every source/decision reference resolves in non-rendered metadata; forbidden uncertainty, history, tracker, and implementation language is absent; search and navigation reach every section; and start-menu, paused-menu, `F1`, responsive, focus, pause, Restart Attempt, and no-state-mutation behavior pass live human-control acceptance.

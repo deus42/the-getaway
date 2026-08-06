@@ -9,13 +9,13 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-Paranoia represents physiological and cognitive stress from being watched, pursued, injured, and forced into dangerous decisions. It makes surveillance consequential while preserving absolute trust in the game's facts and interface.
+Paranoia represents physiological and cognitive stress from being watched, pursued, physically harmed, and forced into dangerous decisions. It makes surveillance consequential while preserving absolute trust in the game's facts and interface.
 
 The player fantasy is not “my perception is unreliable.” It is “I can feel the cost of remaining functional while the threat is real.” Paranoia narrows the protagonist's practical margin through visible deterministic penalties. It never alters truth, secretly changes surveillance geometry, or punishes the player for failing to distinguish authored reality from deception.
 
 ## 2. Player-visible verbs
 
-Read the current value/threshold/cause; reduce exposure; complete a credible hiding/blending recovery; seek one authored trusted conversation; return to the safehouse and rest; choose whether to continue under penalty.
+Read the current value/threshold/cause; reduce exposure; complete a credible difficult surveillance escape; use vending-machine coffee on Transit Road; use the shrine near the Market Ring/Outer Space junction; return to the safehouse and rest; choose whether to continue under penalty.
 
 The player cannot consume a generic calming item, wait in open space for passive decay, click a reassurance button, or exploit repeatable conversation. Recovery is attached to a named safe action or a one-shot authored event.
 
@@ -27,7 +27,7 @@ The current value, penalty tier, latest communicated source, and any crossed thr
 
 ## 4. Complete happy-path behavior
 
-Visible surveillance concern raises Paranoia with an explicit source. The player breaks contact and recovers through a credible context, possibly earning small authored relief. If stress remains high, checks show the penalty. Safehouse rest costs 30 minutes and removes 40. The debrief records peak value and significant causes/recoveries.
+Observed rule-breaking surveillance concern raises Paranoia with an explicit source; ordinary public visibility does not. The player breaks contact and recovers through a credible context, and the first qualifying difficult escape may remove five. If stress remains high, checks show the penalty. The two grounding actions each cost ten world minutes and remove ten once; safehouse Rest costs 30 minutes and removes 40. The debrief records peak value and significant causes/recoveries.
 
 Example: while shared surveillance evidence says a camera, verifier, or pursuer is validly observing the protagonist, Paranoia rises over time and names that source. The surveillance state owns the deterministic exposure window; the render loop does not apply stress. When evidence breaks, gain stops immediately. Exact rate, overlap, sampling, and caps remain `OPEN-PAR-001`. After the player completes a difficult authored recovery, the approved or provisional recovery event applies once. A later check displays the resulting threshold penalty as part of its exact math.
 
@@ -41,34 +41,36 @@ Example: while shared surveillance evidence says a camera, verifier, or pursuer 
 | 90–99 | −3 | Critical medical risk |
 | 100 | fatal | Medical collapse |
 
-Threshold transitions are announced once per crossing and remain visible through the numeric bar/penalty.
+George announces the first crossing of 40, 70, and 90 once per attempt; repeated movement around a threshold does not repeat that line. The numeric bar/penalty remains continuously truthful.
 
 | Event class | Valid source example | Ledger behavior | Invalid shortcut |
 |---|---|---|---|
-| Surveillance exposure | Sustained valid observation or Pursuit evidence | Deterministic source-owned exposure deltas with stable window/tick identity | Gain every render frame, from an unseen source, or after evidence breaks |
-| Physical consequence | Authored injury or dangerous escape | Apply alongside the named Health/time consequence | Generic combat damage or ambient chip stress |
+| Surveillance exposure | Valid visibility plus an observed restricted breach, protected interaction, medkit removal, failed verification, or detected feed change; or Pursuit evidence | Deterministic source-owned deltas with stable observation/rule-break identity | Gain from ordinary public visibility, every render frame, an unseen source, or after evidence breaks |
+| Physical consequence | Authored Health loss or dangerous escape | Apply alongside the named Health/time consequence | Generic combat damage or ambient chip stress |
 | Story shock | Explicit authored revelation | One event with visible cause | Random spike or false information |
-| Difficult recovery | Valid hiding/blending recovery | One eligible recovery event | Waiting in open space or farming one context |
-| Trusted conversation | Named authored contact moment | One eligible recovery event | Reopening dialogue repeatedly |
+| Difficult escape | First qualifying surveillance escape | `−5` once per attempt | Waiting in open space or farming one context |
+| Transit Road coffee | Explicit vending-machine grounding action | `−10`, `+10` world minutes, once per attempt | Proximity, repeat use, or dialogue substitute |
+| Junction shrine | Explicit shrine grounding action | `−10`, `+10` world minutes, once per attempt | Proximity, repeat use, or dialogue substitute |
 | Safehouse Rest | Confirmed safe action | `−40`, clamped, plus `+30` minutes | Boundary crossing or passive safe-zone decay |
 
 ## 6. Rules and tuning values
 
 - Range 0–100, always named `Paranoia`.
 - Approved penalties above apply to every deterministic check.
-- Sources: sustained valid observation or Pursuit evidence, injury, dangerous escape/capture outcome, and authored story shock. Suspicious/Pursuit labels alone do not create an unowned duplicate gain.
+- Sources: a valid observed surveillance rule break or Pursuit evidence, Health consequence, dangerous escape/capture outcome, and authored story shock. Ordinary public visibility and Suspicious/Pursuit labels alone do not create an unowned duplicate gain.
 - No passive curfew gain.
 - No passive outdoor decay.
 - Safehouse rest: −40, +30 minutes, once per confirmed action.
-- Smaller recovery values remain acceptance decisions under `OPEN-PAR-002`; the replaceable provisional presets are trusted conversation `−10 once` and difficult successful recovery `−5 once`, enforced by stable event-ID idempotency and not yet attached to final mission content.
+- Vending-machine coffee on Transit Road and the shrine near the Market Ring/Outer Space junction each cost `10` world minutes, remove `10` Paranoia, and work once per attempt. Dialogue never removes Paranoia.
+- The first qualifying difficult surveillance escape removes `5` Paranoia once per attempt.
 - Event amounts/rates remain acceptance decisions under `OPEN-PAR-001`; its recorded recommendation may be trialed as replaceable authored data.
-- Every change stores stable event/source IDs, signed amount, before/after values, world minute, feedback key, Retry treatment derived from whether the departure snapshot already exists, and any newly crossed penalty thresholds.
+- Every change stores stable event/source IDs, signed amount, before/after values, world minute, feedback key, Restart Attempt treatment derived from whether `OperationAttemptBaseline` exists, and any newly crossed penalty thresholds.
 
 ## 7. Inputs from other systems
 
-Surveillance transitions; exposure events; Health changes; interception outcomes; story events; safehouse actions; trusted conversations; successful recovery contexts; Retry.
+Surveillance rule-break evidence; Pursuit events; Health changes; interception outcomes; story events; safehouse actions; the two grounding definitions; the qualifying difficult escape; Restart Attempt.
 
-Every producer supplies a stable event ID, source, signed amount, world minute, feedback key, and Retry treatment. Paranoia does not infer events by polling camera overlap, HUD animation, curfew phase, or dialogue text.
+Every producer supplies a stable event ID, source, signed amount, world minute, feedback key, and Restart Attempt treatment. Paranoia does not infer events by polling camera overlap, HUD animation, curfew phase, or dialogue text.
 
 ## 8. Effects on other systems
 
@@ -78,23 +80,23 @@ Checks consume the current penalty at resolution and record the exact value used
 
 ## 9. UI, world, audio, and George feedback
 
-HUD shows value, range, penalty, and latest cause without diagnostic clutter. Changes use restrained color/audio and concise text. George may identify the verified cause and recovery options; he cannot directly lower Paranoia unless an authored conversation owns that effect.
+HUD shows value, range, penalty, and latest cause without diagnostic clutter. Changes use restrained color/audio and concise text. George may identify the verified cause and recovery options and speaks once at 40, 70, and 90; his dialogue never directly lowers Paranoia.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
-100 causes an exact fatal medical-collapse failure. Retry restores departure value and discards post-departure changes. Recovery cannot reduce below 0 or be repeatedly farmed from the same authored event.
+100 causes an exact fatal medical-collapse failure. Restart Attempt restores the value, source history, one-use grounding/escape guards, and threshold-announcement history in `OperationAttemptBaseline` and discards later changes. Recovery cannot reduce below 0 or be repeatedly farmed from the same authored event.
 
-If a single event crosses multiple thresholds, feedback reports the applied amount and final penalty without firing contradictory repeated banners. If Retry restores a value already above a threshold, the HUD shows the correct penalty but does not replay historical crossing feedback. New Game resets value, source history, peak, and one-shot recovery guards.
+If a single event crosses multiple thresholds, feedback reports the applied amount and final penalty without firing contradictory repeated banners. If Restart Attempt restores a value already above a threshold, the HUD shows the correct penalty but does not replay historical crossing feedback. New Game resets value, source history, peak, and one-shot recovery guards.
 
 ## 11. Content-authoring requirements
 
-Every source/recovery defines stable event ID, trigger, amount/rate, cap, cooldown/one-shot rule, player-facing reason, audio/visual cue, George response, dossier wording, localization, and Retry treatment.
+Every source/recovery defines stable event ID, trigger, amount/rate, cap, cooldown/one-shot rule, player-facing reason, audio/visual cue, George response, dossier wording, localization, and Restart Attempt treatment.
 
-Authors must also declare whether the event can coincide with a Health/time cost, which system emits it, and how duplicate dispatch is rejected. Exact mission assignments for `OPEN-PAR-001` and `OPEN-PAR-002` remain provisional until human pacing review; code or ticket constants do not approve them.
+Authors must also declare whether the event can coincide with a Health/time cost, which system emits it, and how duplicate dispatch is rejected. Exact gain assignments for `OPEN-PAR-001` remain provisional until human pacing review; approved recovery amounts/locations and threshold announcements are not provisional.
 
 ## 12. Edge cases and prohibited shortcuts
 
-No false clues, hallucinations, fake UI, control inversion, hidden modifiers, random spikes, passive curfew gain, outdoor walking decay, consumable relief, generic reassurance button, or duplicated gain from one event across systems.
+No false clues, hallucinations, fake UI, control inversion, hidden modifiers, random spikes, passive curfew gain, outdoor walking decay, consumable relief, dialogue relief, generic reassurance button, ordinary-visibility gain, or duplicated gain from one event across systems.
 
 No percentage accuracy/detection modifier, camera concern multiplier, actor-speed change, color-only critical warning, negative value, value above 100, duplicate threshold announcement, or debrief inference from the final value alone.
 
@@ -110,15 +112,17 @@ Future campaign content may make recovery socially or materially costly and may 
 
 ## 15. Human-play acceptance examples
 
-- Camera exposure raises Paranoia and names the camera/network cause.
+- Ordinary public camera visibility causes no gain; an observed declared rule break raises Paranoia and names both sources.
 - Crossing 40 visibly changes an authored check by exactly −1.
 - Curfew passage without observation causes no gain.
 - Safehouse rest advances time, restores Health, and subtracts exactly 40.
-- Reaching 100 produces the correct failure and Retry state.
+- Each grounding action advances ten minutes, subtracts exactly ten once, and cannot be repeated; the first qualifying difficult escape subtracts exactly five once.
+- George speaks exactly once per attempt at each first 40/70/90 crossing.
+- Reaching 100 produces the correct failure and Restart Attempt state.
 - One Suspicious transition cannot double-charge Paranoia through camera, network, HUD, and audio listeners.
 - A check at 69 and the same check after crossing to 70 show the exact change from `−1` to `−2`, with no hidden modifier.
-- Retry from a high-stress failed attempt restores the departure value, source history, and penalty exactly and clears later events.
+- Restart Attempt from a high-stress failed attempt restores the departure value, source history, and penalty exactly and clears later events.
 
 ## 16. Owning Linear ticket
 
-`T7` (`GET-207`) owns resource/check/save behavior; `T8` (`GET-208`) owns surveillance sources and recovery events; `T9` (`GET-209`) owns HUD/George/dossier feedback; `T10` (`GET-210`) owns authored tuning evidence.
+`T7` (`GET-207`) owns resource/check/save behavior; `T8A` (`GET-212`) owns surveillance-source gating and the difficult-escape event; `T9A` (`GET-213`) owns exact check/George presentation; `T10A` (`GET-214`) owns the two grounding actions and threshold content under `T10` (`GET-210`).

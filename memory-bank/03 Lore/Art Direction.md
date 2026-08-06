@@ -8,7 +8,7 @@ status: reference
 
 This note holds narrative-facing visual motifs only. The canonical production rules and pipeline are in [[01 MVP/30 Art Direction (MVP)]]. Rendering ownership and typed manifests are in [[04 Engineering/Architecture]].
 
-## Hidzu-controlled Tokyo
+## Hidzu Corporation-controlled Tokyo
 
 - Civic technology should look useful, maintained, and politely coercive.
 - Cameras are integrated into lights, transit structures, identity gates, and service infrastructure rather than presented as fantasy turrets.
@@ -26,7 +26,7 @@ This note holds narrative-facing visual motifs only. The canonical production ru
 
 ## Faction distinction
 
-- **Hidzu:** bright civic confidence, identity continuity, controlled service, frictionless safety language.
+- **Hidzu Corporation:** bright civic confidence, identity continuity, controlled service, frictionless safety language.
 - **Eisenclave/ESD:** American operational integration, harder enforcement, infrastructure capture, and Cold Iron logistics.
 - **Shelterline/NARC:** later-campaign improvised continuity, evacuation, analog redundancy, and human networks rather than a generic “resistance neon” palette.
 

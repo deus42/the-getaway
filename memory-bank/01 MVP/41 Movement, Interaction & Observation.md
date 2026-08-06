@@ -25,7 +25,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 ## 3. Starting state and prerequisites
 
 - Level 0 begins inside the authored safehouse boundary at 18:30 with no movement intent active.
-- Contextual onboarding exposes click-to-move, WASD, interaction, pause ownership, and George access in the playable opening; there is no separate F1 help or codex.
+- Contextual onboarding exposes click-to-move, WASD, interaction, pause ownership, and George access in the playable opening; there is no separate F1 tutorial. The in-game Game Design Bible remains a reference surface and does not replace onboarding.
 - The safehouse and Lira meeting point are known. Devices and contexts are known only when the starting view or an authored fact legitimately reveals them.
 - Observation is available from normal outdoor play. Any overlay that owns simulation pause must release input cleanly before world control resumes.
 
@@ -46,7 +46,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 - Arrival, collision, or replacement input ends or changes the current intent according to the final direct-movement contract; exact blocked-click and arrival behavior remains governed by `OPEN-MOV-001`.
 - Explicit interaction may transition only the authored target's own state. Proximity alone never completes the interaction.
 - Entering Observation adds a full simulation pause and suspends protagonist movement and autonomous state changes. Exiting Observation removes that ownership and restores the prior running or otherwise-paused state.
-- Observation changes no mission, fact, device, surveillance, inventory, or protagonist state by itself.
+- Observation changes no mission, fact, device, surveillance, inventory, or protagonist state by itself. It can reveal the exact coverage of an already-discovered camera because that is inspection of known geometry, not a state mutation.
 
 ## 6. Rules and tuning values
 
@@ -55,6 +55,8 @@ The player moves through a continuous, human-scale district by reading streets, 
 - Collision sliding is required for natural wall and corner movement.
 - Invalid destinations provide a short reason and a reachable marker where appropriate, but the game does not navigate to that marker automatically.
 - Observation fully pauses time and autonomous simulation. It may inspect only known state and may not move, interact, operate terminals, or reveal unknown surveillance.
+- Normal-play status lights, IR glints, and authored reflections provide subtle camera warnings. Observation draws exact discovered coverage from the same `ObservationEvidence` geometry.
+- Solid geometry and occlusion are the only spatial blind-spot contract. No special off-grid zone changes George, minimap, surveillance, or Paranoia behavior.
 - Normal play uses a close street-first camera with the protagonist in the lower-center lead area. Manual minimum zoom reaches the composed four-block mission overview. Exact numeric zooms and follow offset remain the only unresolved values in `OPEN-MOV-003` and are frozen from the accepted same-master GET-204 live candidate.
 - Exact direct-click arrival and blocked-click behavior is unresolved in `OPEN-MOV-001`; movement speed and isometric WASD mapping are unresolved in `OPEN-MOV-002`.
 - The approved topological envelope is exactly four dense mission blocks with three functional identities and three interlocking loops. Exact bounds, widths, anchors, context counts, and safehouse boundary presentation remain acceptance decisions under `OPEN-LAYOUT-001` through `OPEN-LAYOUT-004`; pre-operation planning/departure topology remains an acceptance decision under `OPEN-LAYOUT-005`. Their recorded recommendations may drive reversible layout trials. The old sparse/fenced four-block compound, `54×38`, `84×60` nine-block, and `96×72` experiments are not valid substitutes.
@@ -81,17 +83,17 @@ The player moves through a continuous, human-scale district by reading streets, 
 - A valid interaction target has a contextual affordance that names the action; an unavailable target names the blocker.
 - Invalid movement gives a short reason and, where appropriate, a reachable marker without implying that a route will be chosen automatically.
 - Solid boundaries, entrances, sidewalks, alleys, crossings, and context entrances must be visually readable at normal play zoom.
-- Observation strengthens already-discovered coverage and inspection information while keeping unknown devices hidden.
+- Observation strengthens already-discovered coverage into exact known geometry while keeping unknown devices hidden.
 - Movement, collision, interaction, and Observation open/close use authored audio families from [[49 Audio]].
 - George may explain a blocked action or answer one authored contextual question from verified knowledge. He cannot issue movement, interact, or reveal an unknown route or device.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
 - A blocked destination is movement feedback, not a run failure. The player recovers by issuing a new direct input; the game does not silently reroute them.
 - Returning from HUD or overlay focus restores world input without consuming a click that would also move the protagonist.
 - Observation cannot be used to let recovery timers, searches, patrols, cameras, or the deadline advance; all are paused together.
 - Movement and interaction may expose the player to authored surveillance, interception, Health, Paranoia, capture, or deadline consequences, but those systems own the resulting failure.
-- Retry restores the operation-departure snapshot and departure anchor defined by [[44 Safehouse, Save & Retry]], with no post-departure movement or interaction state retained.
+- Restart Attempt restores the operation-departure snapshot and departure anchor defined by [[44 Safehouse, Save & Restart Attempt]], with no post-departure movement or interaction state retained.
 
 ## 11. Content-authoring requirements
 
@@ -104,7 +106,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 
 - No A*, click queue, automatic door traversal, path preview that implies execution, threat-aware steering, hidden safest path, or automatic correction around surveillance.
 - No automatic pickup, proximity handoff, proximity objective completion, or overlay click leaking into world movement.
-- Observation cannot move the player, use a terminal, acquire a fact, change surveillance, or reveal an undiscovered camera or route.
+- Observation cannot move the player, use a terminal, acquire a fact, change surveillance, or reveal an undiscovered camera or route. It has no authored human vignettes or Paranoia reward.
 - Solid geometry must agree across collision, visible world edges, interaction reachability, and surveillance occlusion.
 - A focus transition must not require or consume a sacrificial click before WASD or click control works again.
 - Retired `54×38` sparse/fenced four-block, `84×60` nine-block, `96×72`, and nine-isolated-building layouts are not valid defaults. The current four-block mission envelope is a later approved replacement, not a restoration of the rejected compound.
@@ -127,9 +129,10 @@ The player moves through a continuous, human-scale district by reading streets, 
 - `AC-L0-001`: create a character, regain world control, use both click and WASD, interact with Lira, and reach the first decision in under three minutes without a focus-loss click.
 - `AC-L0-002` through `AC-L0-004`: traverse dusk, curfew, and no-contact routes through ordinary direct controls, with no hidden routing or automatic interaction.
 - Open Observation during an active camera or patrol cycle, pan and inspect known state, then close it; protagonist, clock, patrol, camera, and drone state must remain unchanged.
+- Compare a discovered camera in normal play and Observation; subtle light/reflection warnings and exact coverage must derive from the same geometry, including solid-geometry blind spots.
 - Recover medkits, hand them to Lira, and validate transit only through explicit in-range interactions.
 - `AC-L0-018`: repeat movement, interaction, Observation, dialogue return, and HUD focus transitions at 1280x720, 1440x900, and 1920x1080 with readable world geometry and no input leak.
 
 ## 16. Owning Linear ticket
 
-`T3` (`GET-203`) owns outdoor runtime movement, interaction, Observation, layout integration, time, and persistence primitives. `T8` (`GET-208`) owns surveillance and context eligibility consumed here; `T9` (`GET-209`) owns inspection/HUD/focus presentation; `T10` (`GET-210`) owns authored mission interactions and end-to-end acceptance.
+`T3` (`GET-203`) owns outdoor runtime movement, interaction, Observation, layout integration, time, and persistence primitives. `T8` (`GET-208`) and `T8A` (`GET-212`) own surveillance geometry and context eligibility consumed here; `T9` (`GET-209`) owns inspection/HUD/focus presentation; `T10` (`GET-210`) owns authored mission interactions and end-to-end acceptance.

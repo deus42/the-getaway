@@ -42,7 +42,7 @@ The art must make it possible to:
 1. GET-204 rebuilds one mission-sized four-block master scene around the quest skeleton, using named Neo Tokyo 2 geometry plus only the project-owned public-realm gap fills needed to make the streets believable and playable.
 2. The four-block composition establishes the production camera, actor/building relationship, road and sidewalk materials, street-wall rhythm, practical lighting, and selective foreground-fade rule before any runtime promotion.
 3. The four blocks distribute three functional identities: safehouse/backstreet, public/transit/contact street, and controlled logistics/service approach.
-4. The city uses mostly low/mid-rise continuous street walls, resolved corners, compact ordinary streets and service alleys, no oversized plaza, and at most one restrained Hidzu landmark.
+4. The city uses mostly low/mid-rise continuous street walls, resolved corners, compact ordinary streets and service alleys, no oversized plaza, and at most one restrained Hidzu Corporation landmark.
 5. Roads, sidewalks, curbs, crossings, alleys, setbacks, entrances, drainage, public furniture, utilities, and service details are authored as part of the city rather than a flat board beneath freestanding objects.
 6. Accepted visual geometry is back-propagated into the shared layout contract so collision, entrances, occlusion, masks, anchors, and rendered streets agree before each gate is committed.
 7. Blue-hour dusk is the primary look. Daylight and curfew remain coherent schedule variants of the same geometry; wet-surface response, warm practicals, cold institutional fill, and readable midtones remain motivated.
@@ -82,7 +82,7 @@ Presentation states are aligned environment layers:
 ### Color and value
 
 - Core palette: charcoal, bruised umber, muted teal, bone, and sodium amber.
-- Technology cyan identifies active Hidzu devices and connections; it is scarce.
+- Technology cyan identifies active Hidzu Corporation devices and connections; it is scarce.
 - Dirty crimson identifies confirmed threat and Pursuit, not neutral architecture.
 - Lighting direction remains consistently upper-left for baked assets.
 - Midtones remain readable. Curfew cannot collapse actors, road edges, entrances, and building bases into one black band.
@@ -115,10 +115,11 @@ The following records describe the earlier GET-205 generator and remain useful f
 
 ### Actors and portraits
 
-- Twelve grounded actor identities: four protagonists, Lira, Naila, Brant, two Hidzu security archetypes, and three civilian archetypes.
+- Twelve grounded actor identities: four protagonists, Lira, Naila, Brant, two Hidzu Corporation security archetypes, and three civilian archetypes.
 - World contract: `64×96`, eight directions, four frames, `idle`, `move`, and `interact`; no attack animation is required.
 - Foot anchors remain stable within two pixels.
 - Actor presentation is calibrated with the four-block mission camera so the protagonist, nearby civilians, contacts, and security have the human presence shown in the approved street reference. A global sprite multiplier is secondary to the camera/building relationship and remains adjustable until the live frame is accepted.
+- Actors sample authored `ActorLightRegion` metadata at their foot anchor and ease a subtle semantic amber/cyan tint. `OPEN-ART-005` owns final tint strength/feathering; its reversible baseline is strongest-region-only blending, `250 ms` easing, and restrained intensity.
 - World sprite, portrait, dialogue identity, and role silhouette must match.
 - Takahiro Kobayashi receives a propaganda/broadcast portrait; George receives separate AR presentation art.
 
@@ -154,6 +155,7 @@ The following records describe the earlier GET-205 generator and remain useful f
 - Urban composition makes route, line-of-sight, hiding, and blending decisions readable.
 - Actor scale and value hierarchy determine whether surveillance play is human-centered.
 - Lighting layers select schedule atmosphere but do not change detection geometry.
+- Actor-light tint is presentation-only and does not change detection, movement, collision, checks, schedules, or civilian behavior.
 - HUD styling communicates objective, neutral information, technology, time, and danger consistently.
 - Prop and landmark selection determines what the minimap and dossier can reference credibly.
 
@@ -162,17 +164,18 @@ The following records describe the earlier GET-205 generator and remain useful f
 - Current objective/action has strongest local emphasis; actors and active observation/threat come next; traversal and entrances next; architecture next; ambience last.
 - Camera coverage is a restrained ground/world layer and never paints whole buildings cyan.
 - Foreground treatment may temporarily clarify a required actor or interaction but cannot make the city broadly translucent or lift duplicate actors over roofs.
-- Known devices share a repeated Hidzu visual grammar across world, minimap, terminal, and HUD.
+- Known devices share a repeated Hidzu Corporation visual grammar across world, minimap, terminal, and HUD.
 - Propaganda, screens, transit notices, and civic messaging express institutional control without replacing playable information.
 - Audio cues are anchored to visible camera, drone, terminal, curfew, entrance, and interaction sources.
 - George’s floating AR avatar is private, light, and subordinate to the protagonist; it cannot resemble an armed companion or obscure route geometry.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
 - Missing or invalid art manifests use an explicit fallback and diagnostics; required production acceptance cannot rely on fallback assets.
 - Zoom corruption, seam exposure, anchor drift, detached shadows, unreadable curfew values, or required-object occlusion fails the visual gate.
 - The pipeline must reproduce a known export from versioned recipe/manifests without committing raw licensed geometry.
-- Retry and New Game must select the correct aligned visual state from world-clock state without stale layers from a previous run.
+- Restart Attempt and New Game must select the correct aligned visual state from world-clock state without stale layers from a previous run.
+- Restart Attempt and scene rebuild clear transient actor-tint interpolation and resample the restored foot anchors deterministically.
 - If visual and gameplay geometry disagree, preserve the mission skeleton, identify the accepted visual geometry, and back-propagate it into the single layout/collision/mask/anchor contract. Neither hidden collision nor a visually weak legacy block may remain authoritative by accident.
 
 ## 11. Content-authoring requirements
@@ -180,7 +183,7 @@ The following records describe the earlier GET-205 generator and remain useful f
 - Maintain a source/provenance manifest for every Neo Tokyo asset used and keep all raw vendor files outside Git. Record requester-confirmed ownership honestly; do not invent a receipt or license tier.
 - Maintain the Level 0 master-scene recipe, camera/projection settings, transforms, material treatment, light rig, export layers, masks, anchors, and validation checks.
 - For GET-204, first produce an actual Blender close frame and four-block overview from the same named-source master. After that gate is approved, produce a clean live frame, the same frame with the current HUD, and a four-block overview at `1440×900` and `1920×1080`; verify `1280×720` compatibility before final closeout.
-- Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Retry, debrief, and completion.
+- Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Restart Attempt, debrief, and completion.
 - Maintain actor manifests, deterministic generation recipes, pixel-derived metrics, integrity hashes, neutral fallback evidence, and matching portrait references for all required identities.
 - Author signage and public-screen copy in the approved cultural/language policy once that open decision is resolved.
 
@@ -215,11 +218,13 @@ Post-MVP may add complex interiors, additional Tokyo districts, Miami art produc
 6. The bottom HUD stays within 18% at target viewports and preserves four clear information lanes.
 7. A clean city frame and the same live frame under the current HUD preserve the same world hierarchy; GET-204 does not fake quality by hiding the HUD or redesigning it.
 8. The requester accepts the complete rebuilt live district; automated validators and internal stage captures are green but are not treated as visual proof.
+9. At 1280×720, 1440×900, and 1920×1080, actors cross authored light regions with subtle eased amber/cyan integration and no gameplay change.
 
 ## 16. Owning Linear ticket
 
 - City baseline: `T4` (`GET-204`) — four-block named-KitBash Tokyo rebuild, Blender proof before runtime promotion.
-- Hidzu treatment: `T5` (`GET-205`) — Hidzu identity and graphic-surveillance-noir world art.
+- Hidzu Corporation treatment: `T5` (`GET-205`) — Hidzu Corporation identity and graphic-surveillance-noir world art.
 - Actors: `T6` (`GET-206`) — Grounded actors, portraits, and entry-flow presentation.
+- Actor lighting: `T10B` (`GET-215`) — `ActorLightRegion` metadata, runtime foot-anchor sampling/tinting, validators, and live visual acceptance under `T10` (`GET-210`).
 - HUD: `T9` (`GET-209`) — Dialogue, George, facts, dossier, social feed, and four-lane HUD.
-- Canonical decisions: `GDR-ART-001` through `GDR-ART-009`, `GDR-UI-001`, `GDR-UI-002`, `GDR-GEO-001`, `GDR-REM-011`, and `GDR-SUP-001` through `GDR-SUP-004` in [[12 Game Design Decision Register]].
+- Canonical decisions: `GDR-ART-001` through `GDR-ART-011`, `GDR-UI-001`, `GDR-UI-002`, `GDR-GEO-001`, `GDR-REM-011`, and `GDR-SUP-001` through `GDR-SUP-004` in [[12 Game Design Decision Register]].

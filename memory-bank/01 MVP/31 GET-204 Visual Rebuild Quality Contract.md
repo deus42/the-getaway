@@ -20,7 +20,7 @@ The committed generated-plate city is a protected fallback and useful visual-dir
 - File: `art/references/get205/kitbash-reference2-blend-concept-v1.png`
 - SHA-256: `b8e69fcbb4839cf2fb70fa80e03c42ff321e6a5ee00c2287f1f824f08e951c5d`
 - Provenance: AI-assisted previsualization generated from the real Neo Tokyo 2 catalog, an actual earlier Blender render, and Reference 2.
-- Owns: mission-sized four-block composition, close play angle, protagonist/building relationship, street-wall density, warm/cold value hierarchy, one restrained Hidzu landmark, and the intended blend of professional kit identity with authored game composition.
+- Owns: mission-sized four-block composition, close play angle, protagonist/building relationship, street-wall density, warm/cold value hierarchy, one restrained Hidzu Corporation landmark, and the intended blend of professional kit identity with authored game composition.
 - Does not own: production geometry, topology, collision, exact building identity, or entitlement. It cannot satisfy source-provenance acceptance and may not be promoted as game art.
 
 ### Reference 2 normal-play target
@@ -58,7 +58,7 @@ The four blocks carry three connected functional identities:
 
 1. **Safehouse/backstreet block** — discreet threshold, residential/service frontage, utilities, sheltered edges, and an ordinary route into public space.
 2. **Public/transit/contact block** — the strongest civilian presence, compact commercial/service frontage, transit shelter or kiosk, public screens, contacts, and visible but normalized surveillance.
-3. **Controlled logistics block** — Hidzu logistics frontage, public delivery threshold, identity verification, cache objective, and visible institutional control without a fortress silhouette.
+3. **Controlled logistics block** — Hidzu Corporation logistics frontage, public delivery threshold, identity verification, cache objective, and visible institutional control without a fortress silhouette.
 4. **Service-seam block** — alley/loading space, camera terminal relationship, hiding structure, rear approach, and the route that reconnects public and safehouse sides.
 
 Three interlocking traversal loops may cross these blocks, but the mission topology remains gameplay-owned. Art must make the approved routes legible; it may not invent or remove route purposes for visual convenience.
@@ -93,7 +93,7 @@ The overview camera uses the same master scene and projection. It reveals the fo
 
 Offline scale figures are allowed only as clearly separate proof objects. Production environment layers contain zero baked people. Protagonist, civilians, security, drone, George, and stateful devices remain runtime-owned.
 
-## 7. Streets, materials, lighting, and Hidzu restraint
+## 7. Streets, materials, lighting, and Hidzu Corporation restraint
 
 - Roads have roughness variation, repairs, staining, drainage, markings, and restrained reflections tied to visible sources.
 - Sidewalks and curbs have real height, edge, joints, and material separation.
@@ -102,7 +102,7 @@ Offline scale figures are allowed only as clearly separate proof objects. Produc
 - Facades preserve recognizable kit geometry/materials and readable midtones.
 - Blue hour supplies cool fill; warm practicals come from visible lamps, windows, kiosks, and entrances.
 - Technology cyan is scarce and device-bound. Crimson marks genuine restriction or danger only.
-- One restrained Hidzu landmark/identity cue is enough for the GET-204 proof. Full surveillance grammar, propaganda, schedule states, and world-art identity remain GET-205 work after geometry acceptance.
+- One restrained Hidzu Corporation landmark/identity cue is enough for the GET-204 proof. Full surveillance grammar, propaganda, schedule states, and world-art identity remain GET-205 work after geometry acceptance.
 - Wet response may enrich material depth but never become broad glare, ripples, or mirror-like pavement.
 
 ## 8. Content discipline

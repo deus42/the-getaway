@@ -8,7 +8,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-Narrative makes the surveillance mechanics personal: a flagged expatriate must decide whom to trust, what to learn, how much risk to impose on others, and whether to carry evidence toward Miami while helping Lira's clinic network.
+Narrative makes the surveillance mechanics personal: an expatriate seeking Miami to investigate their father and Cold Iron must decide whom to trust, what to learn, how much risk to impose on others, and whether to copy evidence while helping Lira's clinic network. Hidzu Corporation begins with no concern about them; the player creates any later scrutiny through legible actions.
 
 The narrative is not a reward wrapper around systems. It gives every system a human meaning. The clock is Lira's closing route, not an arbitrary timer. The medkits belong to people excluded by identity policy, not a loot objective. The manifest matters because it connects the protagonist's father and future campaign to the same infrastructure harming people nearby. George matters because the protagonist is not completely alone, even when nobody else can perceive him.
 
@@ -24,9 +24,9 @@ All narrative content follows [[03 Lore/Plot Bible]], [[11 Level 0 Vertical Slic
 
 ## 4. Complete happy-path behavior
 
-Character creation establishes a personal protagonist. George frames immediate exposure without a lore dump. Lira makes the humanitarian bargain. Optional Naila and Brant conversations provide distinct facts. World messages show Hidzu's public story. The optional manifest reveals the international supply chain. Lira's return and the safehouse debrief interpret only actual outcomes and point toward the father, Cold Iron, and Miami.
+Character creation establishes a personal protagonist. George frames the Miami goal and current lack of Hidzu Corporation concern without a lore dump. Lira makes the humanitarian bargain. Optional Naila and Brant conversations provide distinct facts. World messages show Hidzu Corporation's public story. The optional manifest can be recognized and explicitly copied. Lira's return and the safehouse debrief interpret only actual outcomes and point toward the father, Cold Iron, and Miami.
 
-The emotional arc is `exposure → obligation → preparation → controlled fear → earned escape → accountability → forward purpose`. Lira first asks for action, not allegiance. Naila and Brant reveal different survival literacies. The infiltration demonstrates the gap between Hidzu's public language and its effects. Return makes the player face the costs they accepted. Debrief converts those concrete events into durable self-knowledge and campaign direction.
+The emotional arc is `purpose → obligation → preparation → self-created exposure → controlled fear → earned escape → accountability → forward purpose`. Lira first asks for action, not allegiance. Naila and Brant reveal different survival literacies. The infiltration demonstrates the gap between Hidzu Corporation's public language and its effects. Return makes the player face the costs they accepted. Debrief converts those concrete events into durable self-knowledge and campaign direction.
 
 ## 5. State model and transitions
 
@@ -45,6 +45,7 @@ Narrative follows stable mission states and node families. Each authored choice 
 - English and Ukrainian share semantic node IDs and effects.
 - Exact player lines are shown before selection.
 - George labels verified fact, reasonable inference, and insufficient evidence distinctly.
+- George always gives the reason for insufficient information; silence is never a hidden clue. Level 0 adds no George deletion/freedom desire.
 - Humor is dry survival behavior, never a joke that erases human cost.
 - Surreal imagery is figurative or socially absurd, never supernatural.
 - Exposition grants no XP, credits, trust, reputation, or loot.
@@ -67,9 +68,9 @@ Portraits and names match world actors. Dialogue history preserves prior lines. 
 
 Exact spoken lines appear on choices before selection. Locked choices remain visible when the current node legitimately offers them and state the real missing requirement. World remains visible beneath anchored dialogue so place, speaker, and danger context are retained while shared pause protects reading. English and Ukrainian may differ idiomatically but must preserve speaker intent, information, requirements, effects, and emotional force.
 
-## 10. Failure, recovery, and retry behavior
+## 10. Failure, recovery, and Restart Attempt behavior
 
-Dialogue failures fail forward unless the node is an explicitly final interception. Retry restores pre-departure conversations/facts and removes post-departure narrative state. Failure/debrief text states observed causes, never hidden logic.
+Dialogue failures fail forward unless the node is the explicitly final capture-escape choice. Restart Attempt restores pre-departure conversations/facts and removes post-departure narrative state. Failure/debrief text states observed causes, never hidden logic.
 
 Fail-forward is not cosmetic failure. It must change a declared cost or route condition—for example time spent, Paranoia gained, a stricter later option, lost objective precision, or an authored confrontation consequence—while keeping a viable mission path. Reopening a resolved node cannot duplicate facts, costs, or emotional beats.
 
@@ -77,7 +78,7 @@ Fail-forward is not cosmetic failure. It must change a declared cost or route co
 
 For every node record speaker, audience, emotional intent, exact player line, prerequisites, visible requirement, fact inputs, state effects, fail-forward, history text, English/UK copy, Plot Bible anchor, and owning decision IDs.
 
-Every debrief clause also needs an exact ledger predicate and mutually compatible ordering. Content must cover contacts both/one/neither, dusk/curfew, camera loop clean/traced/not used, network peak, drone verification, interception, injury, Paranoia peak, manifest outcome, medkit return, transit validation, and deadline margin without producing contradictory prose.
+Every debrief clause also needs an exact ledger predicate and mutually compatible ordering. Content must cover contacts both/one/neither, dusk/curfew, camera history unused/active/clean/traced, network peak, Needle verification, interception, Health loss, Paranoia peak, the four Cold Iron evidence states, medkit return, transit validation, and deadline margin without producing contradictory prose.
 
 ## 12. Edge cases and prohibited shortcuts
 
@@ -105,4 +106,4 @@ Post-MVP relationship depth may remember conduct and commitments, but it is not 
 
 ## 16. Owning Linear ticket
 
-`T1` (`GET-201`) owns narrative canon; `T9` (`GET-209`) owns dialogue/fact infrastructure and localization; `T10` (`GET-210`) owns final authored Level 0 content.
+`T1` (`GET-201`) owns narrative canon; `T9` (`GET-209`) and `T9A` (`GET-213`) own dialogue/fact/legibility infrastructure and localization; `T10` (`GET-210`) and `T10A` (`GET-214`) own final authored Level 0 content.
