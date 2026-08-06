@@ -20,6 +20,7 @@ import {
   LEVEL0_AGENT_RETRY_EVENT,
 } from './events';
 import type { Level0AgentMoveResultDetail } from './events';
+import type { GameBibleUiState } from '../../../content/gameBible/types';
 
 export {
   LEVEL0_AGENT_INTERACTION_EVENT,
@@ -430,6 +431,7 @@ export const installLevel0AgentBridge = (options: {
   store: Level0AgentStore;
   search?: string;
   nodeEnv?: string;
+  getGameBibleUiState?: () => GameBibleUiState;
 }): (() => void) => {
   if (typeof window === 'undefined') return () => undefined;
   const search = options.search ?? window.location.search;
@@ -450,6 +452,15 @@ export const installLevel0AgentBridge = (options: {
   window.render_game_to_text = () => JSON.stringify({
     runtime: options.store.getState().level0Runtime.run,
     agent: emptySnapshot(options.store.getState()),
+    gameBible: options.getGameBibleUiState?.() ?? {
+      open: false,
+      chapterId: null,
+      sectionId: null,
+      query: '',
+      drawerOpen: false,
+      resultCount: 0,
+      visibleResults: [],
+    },
   });
   window.advanceTime = (realMilliseconds: number) => {
     options.store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: realMilliseconds }));

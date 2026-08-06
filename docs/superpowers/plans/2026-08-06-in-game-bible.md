@@ -96,7 +96,7 @@ Run the existing audit checks recorded in `progress/GET-201.md` against the exac
 
 Stop and present the reviewed documentation diff to the requester. Ask for separate explicit authorization to stage and commit only the task-owned canonical/spec/plan/progress files. Do not edit `the-getaway/src/**`, move GET-201 to `In Progress`, or begin Task 2 before authorization.
 
-- [ ] **Step 8: After authorization, create and verify the documentation commit**
+- [x] **Step 8: After authorization, create and verify the documentation commit**
 
 Stage only the reviewed task-owned documentation paths, inspect the staged diff, and commit with `docs(GET-201): define the in-game Game Design Bible`. Verify the resulting SHA, human-only identity, and exact committed paths.
 
@@ -108,7 +108,7 @@ Before moving GET-201 to `In Progress`, verify all of these gates explicitly: th
 
 **Precondition:** Task 1's standalone documentation commit and all entry-gate evidence are verified; GET-201 is the only active visual/runtime ticket; all downstream tickets are parked or terminal; `progress/GET-201.md` records zero provisional `OPEN-*` assumptions for this implementation.
 
-- [ ] **Step 1: Write the failing structure/finality test**
+- [x] **Step 1: Write the failing structure/finality test**
 
 The test imports `GAME_BIBLE_CATALOG`, `getRenderedBibleText`, and `validateGameBibleCatalog`. It requires sixteen chapters in each locale, matching chapter/section/block shapes, no validation errors, and no rendered match for governance IDs, implementation/delivery language, uncertainty language, historical alternatives, raw wiki links, or repository paths. Use a denylist at least as strict as:
 
@@ -116,7 +116,7 @@ The test imports `GAME_BIBLE_CATALOG`, `getRenderedBibleText`, and `validateGame
 
 Also perform a human semantic-finality pass over every rendered block: wording must describe the final game experience directly, never a proposal, production status, alternative, or approval process.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run:
 
@@ -124,15 +124,15 @@ Run:
 
 Expected: FAIL because content/gameBible/catalog does not exist.
 
-- [ ] **Step 3: Add minimal types and validation shell**
+- [x] **Step 3: Add minimal types and validation shell**
 
 Define paragraph, bullets, steps, callout, table, and state-flow blocks; localized catalogs; search results; and UI text state. Every chapter must carry section-role coverage for `purpose`, `player-flow`, `rules-and-examples`, `connections`, `feedback`, `failure-recovery-persistence-retry`, and `see-also`. Validate IDs, table shape, relations, section targets, and every `sourceRefs` path/anchor.
 
-- [ ] **Step 4: Add failing independent traceability tests**
+- [x] **Step 4: Add failing independent traceability tests**
 
 Read the canonical Decision Register in Jest, parse every Approved row, and assert each ID is covered by section decisionRefs or a bounded non-player-facing classification. Assert every required topic appears in equivalent locale section IDs.
 
-- [ ] **Step 5: Run RED again**
+- [x] **Step 5: Run RED again**
 
 Run:
 
@@ -140,19 +140,19 @@ Run:
 
 Expected: FAIL with missing topic/decision/role mappings, not a path/parser error.
 
-- [ ] **Step 6: Implement sixteen English chapters**
+- [x] **Step 6: Implement sixteen English chapters**
 
 Each chapter satisfies every required role: design purpose and fantasy; complete player flow; rules, states, transitions, and concrete Level 0 examples; inputs and downstream effects; world/HUD/dialogue/audio/George feedback; failure, recovery, persistence, and Retry behavior; and explicit related chapters. Use `sharedRules.ts` only for values already approved canonically: 18:30, 30×, 22:00, 24:00, Health/Paranoia thresholds, four blocks, three identities/loops, character budgets, and HUD height.
 
-- [ ] **Step 7: Implement equivalent Ukrainian chapters**
+- [x] **Step 7: Implement equivalent Ukrainian chapters**
 
 Match IDs, topics, block types, table shapes, state flows, decision refs, and numeric rules. Use natural Ukrainian prose.
 
-- [ ] **Step 8: Complete traceability classification**
+- [x] **Step 8: Complete traceability classification**
 
 Map every player-visible Approved decision to a section. Classify only delivery/repository governance decisions as non-player-facing with a concrete reason.
 
-- [ ] **Step 9: Run GREEN and inspect metrics**
+- [x] **Step 9: Run GREEN and inspect metrics**
 
 Run:
 
@@ -160,7 +160,7 @@ Run:
 
 Report chapter/section/role/topic/decision/source-reference counts plus EN/UK rendered word counts. Expected: pass with no forbidden rendered marker, missing role, broken source ref, or uncovered Approved decision.
 
-- [ ] **Step 10: Record bilingual semantic review**
+- [x] **Step 10: Record bilingual semantic review**
 
 Record per-chapter review of examples, flows, tables, keywords, exact values, and cause/effect direction plus one back-translation spot-check per chapter.
 
@@ -168,11 +168,11 @@ Record per-chapter review of examples, flows, tables, keywords, exact values, an
 
 **Files:** level0GameBible.test.tsx, Level0GameBible.tsx, Level0GameBible.css.
 
-- [ ] **Step 1: Write failing navigation/search tests**
+- [x] **Step 1: Write failing navigation/search tests**
 
 Assert dialog naming, close focus, rail, active chapter/section, body blocks, search excerpts, result selection, no-results copy, previous/next boundaries, and slash-to-search. Search each indexed field independently—chapter title, chapter summary, section title, body, and keywords—in both EN and UK, and verify stable ordered result IDs and localized labels/excerpts.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run:
 
@@ -180,11 +180,11 @@ Run:
 
 Expected: FAIL because the component does not exist.
 
-- [ ] **Step 3: Implement semantic renderer and search**
+- [x] **Step 3: Implement semantic renderer and search**
 
 Use exhaustive block switching, semantic headings/tables/captions, no HTML injection, memoized localized index, and result selection that scrolls/focuses the heading.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run:
 
@@ -192,19 +192,19 @@ Run:
 
 Expected: content/search tests pass.
 
-- [ ] **Step 5: Add failing focus/drawer tests**
+- [x] **Step 5: Add failing focus/drawer tests**
 
 Mock narrow `matchMedia`. Assert drawer close focus, inert/hidden article, Tab containment, Escape precedence, backdrop close, trigger restoration, long Ukrainian names, and selected chapter focus. Add close/reopen tests for current-session chapter memory and a stale stored chapter/section ID fallback to the first valid target.
 
-- [ ] **Step 6: Implement focus traps and drawer**
+- [x] **Step 6: Implement focus traps and drawer**
 
 Keep one modal. Scope refs/key handlers to the overlay. Add observer-backed active-section tracking with a deterministic jsdom fallback.
 
-- [ ] **Step 7: Implement approved CSS**
+- [x] **Step 7: Implement approved CSS**
 
 Use semantic tokens, three columns at ≥1200, two columns at 841–1199, drawer/single column at ≤840, article ≤820 px/76ch, bounded table scroll, ≥44 px targets, and no page-level overflow.
 
-- [ ] **Step 8: Run component GREEN**
+- [x] **Step 8: Run component GREEN**
 
 Run:
 
@@ -216,13 +216,13 @@ Expected: all standalone tests pass without console warnings.
 
 **Files:** Bible integration test, RuntimeShell, runtime types/persistence/tests, slice test.
 
-- [ ] **Step 1: Write failing entry/F1 matrix tests**
+- [x] **Step 1: Write failing entry/F1 matrix tests**
 
 Require start-menu button without run/pause, gameplay F1 with one bible owner, paused-menu F1/button preserving menu+bible, repeated F1 no-op, ignored F1 in editable/modal contexts, eligible default prevention, Escape/close focus restoration, and deterministic close-button/Escape race handling.
 
 Add lifecycle/input/state-invariance cases before implementation: unmount, run replacement, New Game, and shell teardown each release Bible pause ownership exactly once; a missing/stale invocation trigger falls back to the correct menu/world focus target; controller, pointer, keyboard, and Phaser input cannot reach the world while open; and opening/navigating/closing the Bible does not mutate mission, clock, position, outcome ledger, autosave payload, or Retry snapshot.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run:
 
@@ -230,7 +230,7 @@ Run:
 
 Expected: button missing and bible owner unsupported.
 
-- [ ] **Step 3: Add transient pause tests then implementation**
+- [x] **Step 3: Add transient pause tests then implementation**
 
 First test that bible composes with menu, is recognized by decode, and is stripped from autosave/hydration/Retry. Run RED with:
 
@@ -238,19 +238,19 @@ First test that bible composes with menu, is recognized by decode, and is stripp
 
 Then minimally add it to `PauseOwner` and `PAUSE_OWNERS` while preserving normalization, and rerun the same command GREEN.
 
-- [ ] **Step 4: Integrate lifecycle**
+- [x] **Step 4: Integrate lifecycle**
 
 Add local Bible UI state and refs for invocation/acquisition. Opening is idempotent; cleanup releases once; overlay sits above start/menu/runtime without unmounting the current surface; background becomes inert/hidden.
 
-- [ ] **Step 5: Add visible links**
+- [x] **Step 5: Add visible links**
 
 Place Game Design Bible with F1 hint in the primary start/pause actions. Do not add HUD clutter unless live review proves discoverability inadequate.
 
-- [ ] **Step 6: Implement key precedence**
+- [x] **Step 6: Implement key precedence**
 
 Handle F1/Escape in capture order, ignore editable/higher-priority modal states, prevent browser help only when eligible, and block Phaser input while open.
 
-- [ ] **Step 7: Run integration GREEN**
+- [x] **Step 7: Run integration GREEN**
 
 Run:
 
@@ -262,11 +262,11 @@ Expected: Bible, App, RPG identity, slice, and persistence focused suites pass.
 
 **Files:** level0AgentBridge test/source and RuntimeShell.
 
-- [ ] **Step 1: Write failing callback test**
+- [x] **Step 1: Write failing callback test**
 
 Install bridge with `getUiState` and require `render_game_to_text.gameBible` to contain `open`, `chapterId`, `sectionId`, `query`, `drawerOpen`, `resultCount`, and ordered `visibleResults`. Each visible result contains stable chapter/section IDs plus localized label and excerpt.
 
-- [ ] **Step 2: Run RED**
+- [x] **Step 2: Run RED**
 
 Run:
 
@@ -274,11 +274,11 @@ Run:
 
 Expected: `getUiState` unsupported.
 
-- [ ] **Step 3: Implement optional callback**
+- [x] **Step 3: Implement optional callback**
 
 Keep existing callers compatible. Read callback only during text render. Pass a ref-backed callback from shell.
 
-- [ ] **Step 4: Run GREEN**
+- [x] **Step 4: Run GREEN**
 
 Run:
 
@@ -290,7 +290,7 @@ Expected: bridge and Bible integration tests pass.
 
 **Files:** progress/GET-201.md plus local ignored screenshots.
 
-- [ ] **Step 1: Start the live game on strict port 5174**
+- [x] **Step 1: Start the live game on strict port 5174**
 
 Run:
 
@@ -300,19 +300,19 @@ Do not alter package scripts.
 
 Before opening the browser, freshly read the complete live GET-201 description and comments, the approved design spec, the canonical HUD/Game Design/Architecture rules, and `progress/GET-201.md`. Confirm GET-201 remains the only active ticket and record the exact comparison viewports, reference mockup, player-scale target, and proof paths.
 
-- [ ] **Step 2: Run the required web-game client**
+- [x] **Step 2: Run the required web-game client**
 
 Use /Users/deus/.codex/skills/develop-web-game/scripts/web_game_playwright_client.js. Verify menu open/close, New Game, active F1 pause, search, chapter selection, close/resume, render_game_to_text, and console.
 
-- [ ] **Step 3: Capture every boundary**
+- [x] **Step 3: Capture every boundary**
 
 Inspect screenshots at 1920×1080, 1440×900, 1280×720, 1200, 1199, 841, 840, and 390×844. Include long Ukrainian headings, search results, a table, deep scroll, and drawer.
 
-- [ ] **Step 4: Fix one visual class at a time**
+- [x] **Step 4: Fix one visual class at a time**
 
 Correct hierarchy/spacing, then rail/outline sizing, then drawer/table overflow, then polish. Re-run and inspect latest screenshots after every correction.
 
-- [ ] **Step 5: Run the five-step scenario**
+- [x] **Step 5: Run the five-step scenario**
 
 1. Open from start and search Paranoia.
 2. Switch to Ukrainian and verify equivalent chapter/section.

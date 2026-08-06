@@ -15,6 +15,7 @@ export type {
 
 export type PauseOwner =
   | 'menu'
+  | 'bible'
   | 'settings'
   | 'character_creation'
   | 'character'

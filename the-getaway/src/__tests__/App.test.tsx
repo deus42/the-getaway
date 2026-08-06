@@ -60,6 +60,68 @@ describe('canonical Level 0 runtime entry', () => {
     expect(window.localStorage.getItem(LEVEL0_AUTOSAVE_KEY)).not.toBeNull();
   });
 
+  it('opens the complete Game Design Bible from the start menu without creating a run', async () => {
+    render(<App />);
+
+    fireEvent.click(await screen.findByTestId('level0-bible-open'));
+    expect(screen.getByRole('dialog', { name: 'Game Design Bible' })).toBeInTheDocument();
+    expect(store.getState().level0Runtime.run).toBeNull();
+    fireEvent.click(screen.getByTestId('game-bible-close'));
+    expect(screen.getByTestId('level0-start-menu')).toBeInTheDocument();
+  });
+
+  it('opens the Bible with F1 during play and owns only its composable pause', async () => {
+    render(<App />);
+    await startNormalRun();
+
+    fireEvent.keyDown(window, { key: 'F1' });
+    expect(screen.getByRole('dialog', { name: 'Game Design Bible' })).toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toContain('bible');
+    const pausedMinute = store.getState().level0Runtime.run!.worldClock.currentMinute;
+    act(() => {
+      store.dispatch(advanceLevel0Clock({ realDeltaMilliseconds: 5_000 }));
+    });
+    expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(pausedMinute);
+
+    fireEvent.click(screen.getByTestId('game-bible-close'));
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).not.toContain('bible');
+    expect(screen.getByTestId('level0-runtime-hud')).toBeInTheDocument();
+  });
+
+  it('keeps the Bible open with unchanged pause ownership on repeated F1', async () => {
+    render(<App />);
+    await startNormalRun();
+
+    fireEvent.keyDown(window, { key: 'F1' });
+    expect(screen.getByRole('dialog', { name: 'Game Design Bible' })).toBeInTheDocument();
+    const ownersAfterOpen = [...store.getState().level0Runtime.run!.worldClock.pauseOwners];
+
+    fireEvent.keyDown(window, { key: 'F1' });
+    expect(screen.getByRole('dialog', { name: 'Game Design Bible' })).toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toEqual(ownersAfterOpen);
+    expect(
+      store.getState().level0Runtime.run?.worldClock.pauseOwners.filter((owner) => owner === 'bible')
+    ).toHaveLength(1);
+
+    fireEvent.keyDown(screen.getByRole('dialog', { name: 'Game Design Bible' }), { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Game Design Bible' })).not.toBeInTheDocument();
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).not.toContain('bible');
+  });
+
+  it('opens from the paused menu and leaves the menu pause intact on close', async () => {
+    render(<App />);
+    await startNormalRun();
+    fireEvent.click(screen.getByRole('button', { name: /menu/i }));
+
+    fireEvent.click(screen.getByTestId('level0-bible-open'));
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toEqual(
+      expect.arrayContaining(['menu', 'bible'])
+    );
+    fireEvent.click(screen.getByTestId('game-bible-close'));
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).toContain('menu');
+    expect(store.getState().level0Runtime.run?.worldClock.pauseOwners).not.toContain('bible');
+  });
+
   it('reports a retired prototype save and clears it only on explicit New Game', async () => {
     window.localStorage.setItem(PERSISTED_STATE_KEY, JSON.stringify({ legacy: true }));
     render(<App />);

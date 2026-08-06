@@ -125,7 +125,7 @@ describe('Level 0 persistence envelopes', () => {
 
   it('never persists transient UI pause owners and derives terminal pauses on decode', () => {
     const run = createTestLevel0RunState('run-transient-pause');
-    run.worldClock.pauseOwners = ['menu', 'observation', 'safehouse_action'];
+    run.worldClock.pauseOwners = ['menu', 'bible', 'observation', 'safehouse_action'];
 
     writeLevel0Autosave(window.localStorage, run, 1234);
 

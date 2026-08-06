@@ -40,6 +40,40 @@ describe('Level 0 agent bridge', () => {
     uninstall();
   });
 
+  it('exposes the same visible Game Design Bible state through text rendering', () => {
+    const getGameBibleUiState = jest.fn(() => ({
+      open: true,
+      chapterId: 'condition',
+      sectionId: 'condition.recovery',
+      query: 'Paranoia',
+      drawerOpen: false,
+      resultCount: 2,
+      visibleResults: [{
+        chapterId: 'condition',
+        sectionId: 'condition.recovery',
+        label: 'Health, Paranoia, Failure, and Recovery',
+        excerpt: 'Retry restores the departure state.',
+      }],
+    }));
+    const uninstall = installLevel0AgentBridge({
+      store,
+      search: '?agent=1',
+      nodeEnv: 'test',
+      getGameBibleUiState,
+    });
+
+    const rendered = JSON.parse(window.render_game_to_text!());
+    expect(rendered.gameBible).toMatchObject({
+      open: true,
+      chapterId: 'condition',
+      sectionId: 'condition.recovery',
+      query: 'Paranoia',
+      resultCount: 2,
+    });
+    expect(getGameBibleUiState).toHaveBeenCalled();
+    uninstall();
+  });
+
   it('advertises only nearby movement tiles accepted by direct movement clearance', () => {
     store.dispatch(syncLevel0PlayerCheckpoint({
       position: { x: 16, y: 8 },

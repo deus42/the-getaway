@@ -56,6 +56,7 @@ export type DepartureTransactionResult =
 const CONTACT_KEYS = ['lira', 'naila', 'brant'] as const;
 const PAUSE_OWNERS: PauseOwner[] = [
   'menu',
+  'bible',
   'settings',
   'character_creation',
   'character',

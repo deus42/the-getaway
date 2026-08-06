@@ -1,0 +1,1051 @@
+/* ---------------------------------------------------------------------------
+   Game Design Bible — surveillance-noir intelligence archive (GDR redesign)
+
+   Design intent: one dominant dark reading surface — an operational dossier —
+   floating over the dimmed, blurred game world. Editorial serif typography,
+   hairline structure instead of boxes, amber reserved for the active thread,
+   mono confined to tiny archive metadata. No dashboard columns, no HUD
+   telemetry styling, no paper documentation site.
+   --------------------------------------------------------------------------- */
+
+.game-bible {
+  --gb-night: 8, 10, 14;
+  --gb-surface: #15181e;
+  --gb-surface-deep: #101318;
+  --gb-surface-lift: #1b1f27;
+  --gb-text: #d8d1c2;
+  --gb-text-soft: #b3ac9e;
+  --gb-text-dim: #837d72;
+  --gb-amber: #d99a50;
+  --gb-amber-soft: rgba(217, 154, 80, 0.62);
+  --gb-crimson: #b0554e;
+  --gb-teal: #6f9b9e;
+  --gb-hairline: rgba(216, 209, 194, 0.13);
+  --gb-hairline-strong: rgba(216, 209, 194, 0.24);
+  --gb-serif: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino,
+    Georgia, "Times New Roman", serif;
+  --gb-label: "DM Mono", "IBM Plex Mono", "SFMono-Regular", monospace;
+
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: clamp(0px, 3.4vh, 44px) clamp(0px, 3.2vw, 56px);
+  /* The paused world stays present behind the archive: dim + slight blur,
+     heavier toward the edges so the dossier owns the light. */
+  background:
+    radial-gradient(120% 90% at 50% 42%, rgba(var(--gb-night), 0.42) 0%, rgba(var(--gb-night), 0.78) 74%, rgba(var(--gb-night), 0.9) 100%);
+  -webkit-backdrop-filter: blur(7px) saturate(0.82) brightness(0.82);
+  backdrop-filter: blur(7px) saturate(0.82) brightness(0.82);
+  color: var(--gb-text);
+  font-family: var(--gb-serif);
+}
+
+.game-bible *,
+.game-bible *::before,
+.game-bible *::after {
+  box-sizing: border-box;
+}
+
+ /* High-specificity reset: both the app-level HUD styles (cyan focus glow,
+    hover lift) and the runtime shell's `.level0-runtime button` chrome (boxed,
+    uppercase, mono) reach into this overlay during gameplay. The archive is an
+    editorial surface, not telemetry chrome, so buttons are reset hard here and
+    restyled per element. */
+.game-bible .game-bible__dialog button {
+  font: inherit;
+  font-family: inherit;
+  font-weight: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+  line-height: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  box-shadow: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.game-bible .game-bible__dialog button:hover,
+.game-bible .game-bible__dialog button:focus,
+.game-bible .game-bible__dialog button:focus-visible {
+  border-color: transparent;
+  background: none;
+  box-shadow: none;
+  transform: none;
+}
+
+.game-bible input {
+  font: inherit;
+  color: inherit;
+}
+
+.game-bible .game-bible__dialog button:focus-visible,
+.game-bible .game-bible__dialog input:focus-visible,
+.game-bible .game-bible__dialog [tabindex="-1"]:focus-visible,
+.game-bible .game-bible__dialog [tabindex="0"]:focus-visible {
+  outline: 2px solid var(--gb-amber-soft);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+.game-bible .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --------------------------------------------------------------------------
+   The dossier surface
+   -------------------------------------------------------------------------- */
+
+.game-bible__dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(1280px, 100%);
+  height: min(920px, 100%);
+  min-height: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(172deg, var(--gb-surface-lift) 0%, var(--gb-surface) 22%, var(--gb-surface-deep) 100%);
+  border: 1px solid rgba(216, 209, 194, 0.1);
+  box-shadow:
+    0 60px 140px -30px rgba(0, 0, 0, 0.85),
+    0 18px 48px rgba(0, 0, 0, 0.55);
+}
+
+/* Restrained paper grain + top light so the surface reads as material. */
+.game-bible__dialog::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(216, 209, 194, 0.045) 0%, rgba(216, 209, 194, 0) 120px),
+    repeating-linear-gradient(115deg, rgba(216, 209, 194, 0.012) 0 2px, transparent 2px 5px);
+}
+
+.game-bible__dialog > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Masthead: archive identity, quiet search, exit
+   -------------------------------------------------------------------------- */
+
+.game-bible__masthead {
+  display: flex;
+  align-items: center;
+  gap: clamp(16px, 2.4vw, 36px);
+  padding: 18px clamp(20px, 3vw, 40px) 16px;
+  border-bottom: 1px solid var(--gb-hairline);
+}
+
+.game-bible__brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+.game-bible__brand p {
+  margin: 0 0 3px;
+  font-family: var(--gb-label);
+  font-size: 10px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+  white-space: nowrap;
+}
+
+.game-bible__brand h1 {
+  margin: 0;
+  font-size: clamp(19px, 1.6vw, 23px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--gb-text);
+  white-space: nowrap;
+}
+
+.game-bible__seal {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  border: 1px solid var(--gb-hairline-strong);
+  border-radius: 50%;
+  font-family: var(--gb-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--gb-amber);
+  background: radial-gradient(circle at 34% 30%, rgba(217, 154, 80, 0.14), transparent 62%);
+}
+
+/* Search lives in the masthead: present, quiet, secondary. */
+.game-bible__searchbar {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.game-bible__searchbar label {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 440px;
+  margin-left: auto;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gb-hairline);
+  transition: border-color 140ms ease;
+}
+
+.game-bible__searchbar label:focus-within {
+  border-color: var(--gb-amber-soft);
+}
+
+.game-bible__searchbar svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--gb-text-dim);
+  stroke-width: 1.6;
+}
+
+.game-bible__searchbar input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: none;
+  border: 0;
+  outline: none;
+  font-family: var(--gb-serif);
+  font-size: 15px;
+  color: var(--gb-text);
+}
+
+.game-bible__searchbar input::placeholder {
+  color: var(--gb-text-dim);
+  opacity: 1;
+}
+
+.game-bible__searchbar input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.game-bible__searchbar > span {
+  display: none;
+}
+
+.game-bible__searchbar kbd,
+.game-bible__masthead-actions kbd {
+  font-family: var(--gb-label);
+  font-size: 10px;
+  color: var(--gb-text-dim);
+  border: 1px solid var(--gb-hairline);
+  border-radius: 3px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+.game-bible__masthead-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 0 0 auto;
+}
+
+.game-bible__pause-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--gb-label);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__pause-state i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gb-amber);
+  box-shadow: 0 0 8px rgba(217, 154, 80, 0.55);
+}
+
+.game-bible__masthead-actions > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 4px;
+  font-size: 15px;
+  color: var(--gb-text-soft);
+  transition: color 140ms ease;
+}
+
+.game-bible__masthead-actions > button:hover {
+  color: var(--gb-text);
+}
+
+/* --------------------------------------------------------------------------
+   Workspace: quiet chapter index + one dominant reading surface
+   -------------------------------------------------------------------------- */
+
+.game-bible__workspace {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.game-bible__rail {
+  flex: 0 0 264px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 26px 8px 26px clamp(20px, 3vw, 40px);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(216, 209, 194, 0.18) transparent;
+}
+
+.game-bible__rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.game-bible__rail-head span {
+  font-family: var(--gb-label);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__rail-head button {
+  display: none;
+}
+
+.game-bible__chapters > div > p {
+  margin: 22px 0 8px;
+  font-family: var(--gb-label);
+  font-size: 9px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+  opacity: 0.85;
+}
+
+.game-bible__chapters > div:first-child > p {
+  margin-top: 0;
+}
+
+.game-bible__chapters button {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  width: 100%;
+  padding: 7px 10px 7px 12px;
+  border-left: 2px solid transparent;
+  font-size: 14.5px;
+  line-height: 1.35;
+  color: var(--gb-text-soft);
+  transition: color 130ms ease, border-color 130ms ease;
+}
+
+.game-bible__chapters button span {
+  font-family: var(--gb-label);
+  font-size: 10px;
+  color: var(--gb-text-dim);
+  flex: 0 0 auto;
+  transform: translateY(-1px);
+}
+
+.game-bible__chapters button:hover {
+  color: var(--gb-text);
+}
+
+.game-bible__chapters button.is-active {
+  color: var(--gb-text);
+  border-left-color: var(--gb-amber);
+}
+
+.game-bible__chapters button.is-active span {
+  color: var(--gb-amber);
+}
+
+/* --------------------------------------------------------------------------
+   Article: the reading surface
+   -------------------------------------------------------------------------- */
+
+.game-bible__article-scroll {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(216, 209, 194, 0.22) transparent;
+  border-left: 1px solid var(--gb-hairline);
+}
+
+.game-bible__article,
+.game-bible__results {
+  max-width: 76ch;
+  margin: 0 auto;
+  padding: clamp(30px, 4.6vh, 52px) clamp(22px, 3.6vw, 56px) clamp(44px, 6vh, 72px);
+}
+
+.game-bible__article {
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.game-bible__article p {
+  margin: 0 0 1.15em;
+  color: var(--gb-text);
+  overflow-wrap: break-word;
+}
+
+/* Chapter opening */
+.game-bible__chapter-head {
+  margin-bottom: 12px;
+}
+
+.game-bible__chapter-kicker {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 0 0 14px;
+  font-family: var(--gb-label);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--gb-amber);
+}
+
+.game-bible__chapter-kicker::after {
+  content: "";
+  flex: 1 1 auto;
+  height: 1px;
+  background: var(--gb-hairline);
+  transform: translateY(-3px);
+}
+
+.game-bible__chapter-number {
+  font-family: var(--gb-label);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__chapter-head h2 {
+  margin: 0 0 14px;
+  font-size: clamp(30px, 3.4vw, 42px);
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: #e6dfd0;
+  overflow-wrap: break-word;
+}
+
+.game-bible__chapter-summary {
+  font-size: 19px;
+  line-height: 1.55;
+  color: var(--gb-text-soft);
+  margin-bottom: 0;
+}
+
+.game-bible__chapter-kicker .game-bible__chapter-number {
+  color: var(--gb-text-dim);
+}
+
+/* In-chapter contents: replaces the permanent right ToC column. */
+.game-bible__toc {
+  margin: 26px 0 40px;
+  padding: 16px 0 18px;
+  border-top: 1px solid var(--gb-hairline);
+  border-bottom: 1px solid var(--gb-hairline);
+}
+
+.game-bible__toc > p {
+  margin: 0 0 10px;
+  font-family: var(--gb-label);
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__toc-list {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 26px;
+  row-gap: 6px;
+}
+
+.game-bible__toc button {
+  position: relative;
+  padding: 4px 0;
+  font-size: 14.5px;
+  color: var(--gb-text-soft);
+  transition: color 130ms ease;
+}
+
+.game-bible__toc button:hover {
+  color: var(--gb-text);
+}
+
+.game-bible__toc button.is-active {
+  color: var(--gb-amber);
+}
+
+/* Sections */
+.game-bible__section {
+  margin-top: 42px;
+}
+
+.game-bible__section:first-of-type {
+  margin-top: 0;
+}
+
+.game-bible__section h3 {
+  margin: 0 0 16px;
+  font-size: clamp(21px, 2vw, 25px);
+  line-height: 1.28;
+  font-weight: 600;
+  color: #e2dbcb;
+  overflow-wrap: break-word;
+}
+
+.game-bible__section ul,
+.game-bible__section ol {
+  margin: 0 0 1.3em;
+  padding-left: 1.35em;
+}
+
+.game-bible__section li {
+  margin-bottom: 0.5em;
+}
+
+.game-bible__section li::marker {
+  color: var(--gb-amber-soft);
+}
+
+/* Callout: an annotated margin note, not a boxed admonition. */
+.game-bible__callout {
+  margin: 1.7em 0;
+  padding: 4px 0 6px 20px;
+  border-left: 2px solid var(--gb-amber);
+}
+
+.game-bible__callout--failure {
+  border-left-color: var(--gb-crimson);
+}
+
+.game-bible__callout--example {
+  border-left-color: var(--gb-teal);
+}
+
+.game-bible__callout strong {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--gb-label);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gb-amber);
+}
+
+.game-bible__callout--failure strong {
+  color: #c97a70;
+}
+
+.game-bible__callout--example strong {
+  color: var(--gb-teal);
+}
+
+.game-bible__callout p {
+  margin: 0;
+  color: var(--gb-text-soft);
+  font-size: 16.5px;
+}
+
+/* Tables: typographic, hairline rows, local horizontal scroll. */
+.game-bible__table-wrap {
+  margin: 1.8em 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(216, 209, 194, 0.22) transparent;
+}
+
+.game-bible__table-wrap table {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.game-bible__table-wrap caption {
+  caption-side: top;
+  text-align: left;
+  padding-bottom: 10px;
+  font-family: var(--gb-label);
+  font-size: 10px;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__table-wrap thead th {
+  padding: 8px 18px 8px 0;
+  text-align: left;
+  font-family: var(--gb-label);
+  font-weight: 500;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+  border-bottom: 1px solid var(--gb-hairline-strong);
+}
+
+.game-bible__table-wrap tbody th,
+.game-bible__table-wrap tbody td {
+  padding: 10px 18px 10px 0;
+  vertical-align: top;
+  border-bottom: 1px solid var(--gb-hairline);
+}
+
+.game-bible__table-wrap tbody th {
+  font-weight: 600;
+  color: var(--gb-text);
+}
+
+.game-bible__table-wrap tbody td {
+  color: var(--gb-text-soft);
+}
+
+/* State flow: a vertical procedure line with amber stations. */
+.game-bible__state-flow {
+  list-style: none;
+  margin: 1.8em 0;
+  padding: 0 0 0 26px;
+  position: relative;
+}
+
+.game-bible__state-flow::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  bottom: 10px;
+  width: 1px;
+  background: var(--gb-hairline-strong);
+}
+
+.game-bible__state-flow li {
+  position: relative;
+  margin-bottom: 18px;
+  padding-left: 2px;
+}
+
+.game-bible__state-flow li::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  top: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--gb-surface);
+  border: 1.5px solid var(--gb-amber);
+}
+
+.game-bible__state-flow strong {
+  display: block;
+  font-size: 16px;
+  color: var(--gb-text);
+  margin-bottom: 3px;
+}
+
+.game-bible__state-flow span {
+  display: block;
+  font-size: 15.5px;
+  line-height: 1.6;
+  color: var(--gb-text-soft);
+}
+
+/* Related + pager: quiet typographic navigation. */
+.game-bible__related {
+  margin-top: 54px;
+  padding-top: 18px;
+  border-top: 1px solid var(--gb-hairline);
+}
+
+.game-bible__related > p {
+  margin: 0 0 10px;
+  font-family: var(--gb-label);
+  font-size: 9.5px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__related > div {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 28px;
+  row-gap: 8px;
+}
+
+.game-bible__related button {
+  display: inline-flex;
+  gap: 8px;
+  align-items: baseline;
+  min-height: 34px;
+  font-size: 15px;
+  color: var(--gb-text-soft);
+  transition: color 130ms ease;
+}
+
+.game-bible__related button span {
+  color: var(--gb-amber-soft);
+  transition: transform 130ms ease;
+}
+
+.game-bible__related button:hover {
+  color: var(--gb-text);
+}
+
+.game-bible__related button:hover span {
+  transform: translateX(3px);
+}
+
+.game-bible__pager {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 40px;
+  padding-top: 22px;
+  border-top: 1px solid var(--gb-hairline);
+}
+
+.game-bible__pager button {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-width: 46%;
+  min-height: 44px;
+  color: var(--gb-text-soft);
+  transition: color 130ms ease;
+}
+
+.game-bible__pager button:last-child {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.game-bible__pager button:hover:not(:disabled) {
+  color: var(--gb-text);
+}
+
+.game-bible__pager button:disabled {
+  opacity: 0.32;
+  cursor: default;
+}
+
+.game-bible__pager span {
+  font-family: var(--gb-label);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__pager strong {
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+/* --------------------------------------------------------------------------
+   Search results: same reading surface, matches carry the amber thread.
+   -------------------------------------------------------------------------- */
+
+.game-bible__results h2 {
+  margin: 0 0 26px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.2;
+  color: #e6dfd0;
+  overflow-wrap: break-word;
+}
+
+.game-bible__result-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.game-bible__result-list button {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--gb-hairline);
+}
+
+.game-bible__result-list button:hover strong {
+  color: var(--gb-amber);
+}
+
+.game-bible__result-list strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 16.5px;
+  font-weight: 600;
+  color: var(--gb-text);
+  transition: color 130ms ease;
+}
+
+.game-bible__result-list span {
+  display: block;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gb-text-dim);
+}
+
+.game-bible__empty {
+  color: var(--gb-text-dim);
+  font-size: 16px;
+}
+
+.game-bible__live-region {
+  position: absolute;
+}
+
+/* --------------------------------------------------------------------------
+   Mid widths (841–1199): the index narrows before it collapses.
+   -------------------------------------------------------------------------- */
+
+.game-bible__drawer-toggle {
+  display: none;
+}
+
+@media (max-width: 1199px) {
+  .game-bible__rail {
+    flex-basis: 218px;
+  }
+
+  .game-bible__chapters button {
+    font-size: 13.5px;
+  }
+}
+
+/* Just above the sheet breakpoint the index yields width to the text so the
+   reading measure stays comfortable. */
+@media (max-width: 1023px) {
+  .game-bible__rail {
+    flex-basis: 176px;
+    padding-left: 18px;
+  }
+
+  .game-bible__article,
+  .game-bible__results {
+    padding-left: 26px;
+    padding-right: 26px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Narrow (≤840px): full-height sheet, purpose-designed contents overlay.
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1279px) {
+  .game-bible__pause-state {
+    display: none;
+  }
+}
+
+@media (max-width: 840px) {
+  .game-bible {
+    padding: 0;
+  }
+
+  .game-bible__dialog {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .game-bible__masthead {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 14px 18px 12px;
+  }
+
+  .game-bible__seal {
+    display: none;
+  }
+
+  .game-bible__brand p {
+    font-size: 9px;
+    letter-spacing: 0.22em;
+    white-space: normal;
+  }
+
+  .game-bible__brand h1 {
+    white-space: normal;
+    font-size: 18px;
+  }
+
+  .game-bible__pause-state {
+    display: none;
+  }
+
+  .game-bible__searchbar {
+    order: 3;
+    flex-basis: 100%;
+    gap: 10px;
+  }
+
+  .game-bible__searchbar label {
+    max-width: none;
+    margin-left: 0;
+    min-height: 44px;
+  }
+
+  .game-bible__drawer-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 0 2px;
+    font-size: 15px;
+    color: var(--gb-text-soft);
+  }
+
+  .game-bible__drawer-toggle span {
+    color: var(--gb-amber);
+    font-size: 13px;
+  }
+
+  /* The chapter index becomes a full-screen contents overlay. */
+  .game-bible__rail {
+    position: absolute;
+    inset: 0;
+    z-index: 30;
+    flex: none;
+    padding: 22px 22px 34px;
+    background: linear-gradient(178deg, var(--gb-surface-lift) 0%, var(--gb-surface-deep) 100%);
+    transform: translateY(8px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 160ms ease, transform 160ms ease, visibility 0s linear 160ms;
+  }
+
+  .game-bible__rail.is-open {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  .game-bible__rail-head {
+    margin-bottom: 22px;
+  }
+
+  .game-bible__rail-head button {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    margin: -8px -8px 0 0;
+    font-size: 26px;
+    line-height: 1;
+    color: var(--gb-text-soft);
+  }
+
+  .game-bible__chapters button {
+    min-height: 44px;
+    font-size: 17px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  .game-bible__chapters > div > p {
+    margin-top: 26px;
+  }
+
+  .game-bible__article-scroll {
+    border-left: 0;
+  }
+
+  .game-bible__article,
+  .game-bible__results {
+    padding: 26px 20px 56px;
+  }
+
+  .game-bible__article {
+    font-size: 16.5px;
+  }
+
+  .game-bible__toc-list {
+    flex-direction: column;
+    row-gap: 0;
+  }
+
+  .game-bible__toc button {
+    min-height: 44px;
+    width: 100%;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--gb-hairline);
+    font-size: 15.5px;
+  }
+
+  .game-bible__toc button:last-child {
+    border-bottom: 0;
+  }
+
+  .game-bible__pager {
+    flex-direction: column;
+  }
+
+  .game-bible__pager button,
+  .game-bible__pager button:last-child {
+    max-width: none;
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-bible__rail,
+  .game-bible__rail.is-open,
+  .game-bible__related button span,
+  .game-bible__chapters button,
+  .game-bible__result-list strong {
+    transition: none;
+  }
+}

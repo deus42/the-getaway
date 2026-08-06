@@ -29,6 +29,8 @@ import {
   getWorldOwnedLevel0AnchorIds,
 } from '../../game/level0/runtime/mapKnowledge';
 import type { Level0RunState, SafehouseActionId } from '../../game/level0/runtime/types';
+import type { GameBibleUiState } from '../../content/gameBible/types';
+import { setLocale } from '../../store/settingsSlice';
 import {
   GETAWAY_AGENT_START_LEVEL0_EVENT,
   LEVEL0_AGENT_INTERACTION_EVENT,
@@ -62,6 +64,7 @@ import {
 import Level0CharacterCreation from './Level0CharacterCreation';
 import Level0CharacterPanel from './Level0CharacterPanel';
 import Level0GameCanvas from './Level0GameCanvas';
+import Level0GameBible from './Level0GameBible';
 import {
   describeLevel0ResourceEvent,
   describeLevel0Source,
@@ -246,6 +249,7 @@ const Level0RuntimeShell = () => {
   const [menuOpen, setMenuOpen] = useState(true);
   const [creationOpen, setCreationOpen] = useState(false);
   const [characterOpen, setCharacterOpen] = useState(false);
+  const [bibleOpen, setBibleOpen] = useState(false);
   const [pendingSafehouseAction, setPendingSafehouseAction] = useState<
     'wait' | 'rest' | 'depart' | null
   >(null);
@@ -254,6 +258,17 @@ const Level0RuntimeShell = () => {
   const creationWasOpenRef = useRef(false);
   const characterTriggerRef = useRef<HTMLButtonElement>(null);
   const characterWasOpenRef = useRef(false);
+  const bibleInvokerRef = useRef<HTMLElement | null>(null);
+  const biblePauseAcquiredRef = useRef(false);
+  const bibleUiStateRef = useRef<GameBibleUiState>({
+    open: false,
+    chapterId: null,
+    sectionId: null,
+    query: '',
+    drawerOpen: false,
+    resultCount: 0,
+    visibleResults: [],
+  });
   const run = runtime.run;
   const runSessionId = run?.sessionId ?? null;
   const hasRun = run !== null;
@@ -451,6 +466,39 @@ const Level0RuntimeShell = () => {
     if (nextRun) writeLevel0Autosave(storage, nextRun);
   }, [dispatch]);
 
+  const openBible = useCallback(() => {
+    if (creationOpen || characterOpen || pendingSafehouseAction || terminalMission) return;
+    bibleInvokerRef.current = document.activeElement instanceof HTMLElement
+      ? document.activeElement
+      : null;
+    if (run && !biblePauseAcquiredRef.current) {
+      dispatch(acquireLevel0Pause('bible'));
+      biblePauseAcquiredRef.current = true;
+    }
+    setBibleOpen(true);
+  }, [characterOpen, creationOpen, dispatch, pendingSafehouseAction, run, terminalMission]);
+
+  const closeBible = useCallback(() => {
+    if (biblePauseAcquiredRef.current) {
+      dispatch(releaseLevel0Pause('bible'));
+      biblePauseAcquiredRef.current = false;
+    }
+    bibleUiStateRef.current = {
+      ...bibleUiStateRef.current,
+      open: false,
+      drawerOpen: false,
+      query: '',
+      resultCount: 0,
+      visibleResults: [],
+    };
+    setBibleOpen(false);
+    window.requestAnimationFrame(() => bibleInvokerRef.current?.focus());
+  }, [dispatch]);
+
+  const handleBibleUiState = useCallback((state: GameBibleUiState) => {
+    bibleUiStateRef.current = state;
+  }, []);
+
   const openCharacter = useCallback(() => {
     if (!run || menuOpen || pendingSafehouseAction || terminalMission) return;
     dispatch(acquireLevel0Pause('character'));
@@ -577,9 +625,32 @@ const Level0RuntimeShell = () => {
   }, [hasRun, persistCurrentRun, runSessionId]);
 
   useEffect(() => {
+    const handleBibleShortcut = (event: KeyboardEvent) => {
+      if (event.key !== 'F1') return;
+      if (creationOpen || characterOpen || pendingSafehouseAction || terminalMission) return;
+      event.preventDefault();
+      event.stopPropagation();
+      // Contract: repeated F1 while the Bible is open is a no-op. Closing is
+      // deliberate (Escape/Close) so an accidental repeat press cannot dump
+      // the player back into the live world.
+      if (!bibleOpen) openBible();
+    };
+    window.addEventListener('keydown', handleBibleShortcut, true);
+    return () => window.removeEventListener('keydown', handleBibleShortcut, true);
+  }, [bibleOpen, characterOpen, closeBible, creationOpen, openBible, pendingSafehouseAction, terminalMission]);
+
+  useEffect(() => () => {
+    if (biblePauseAcquiredRef.current) {
+      dispatch(releaseLevel0Pause('bible'));
+      biblePauseAcquiredRef.current = false;
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
     if (!hasRun && !creationOpen) return undefined;
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      if (bibleOpen) return;
       event.preventDefault();
       if (creationOpen) cancelCharacterCreation();
       else if (characterOpen) closeCharacter();
@@ -591,6 +662,7 @@ const Level0RuntimeShell = () => {
     return () => window.removeEventListener('keydown', handleEscape);
   }, [
     cancelCharacterCreation,
+    bibleOpen,
     characterOpen,
     closeCharacter,
     closeSafehouseConfirmation,
@@ -616,7 +688,13 @@ const Level0RuntimeShell = () => {
     }
   }, [continueGame, entryState.compatibleAutosave, startAgentGame]);
 
-  useEffect(() => installLevel0AgentBridge({ store }), []);
+  useEffect(() => installLevel0AgentBridge({
+    store,
+    nodeEnv: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'development'
+      : 'production',
+    getGameBibleUiState: () => bibleUiStateRef.current,
+  }), []);
 
   useEffect(() => {
     const startFromAgent = () => startAgentGame();
@@ -673,7 +751,13 @@ const Level0RuntimeShell = () => {
 
   if (!run || menuOpen) {
     return (
-      <main className="level0-entry" data-testid="level0-start-menu">
+      <>
+      <main
+        className="level0-entry"
+        data-testid="level0-start-menu"
+        inert={bibleOpen ? true : undefined}
+        aria-hidden={bibleOpen ? true : undefined}
+      >
         <section className="level0-entry__panel">
           <p className="level0-entry__eyebrow">HIDZU CONTROL DISTRICT / LEVEL 0</p>
           <h1>{ukrainian ? 'Втеча з Токіо' : 'Tokyo Escape'}</h1>
@@ -711,6 +795,22 @@ const Level0RuntimeShell = () => {
                 {ukrainian ? 'Повторити операцію' : 'Retry operation'}
               </button>
             ) : null}
+            <button
+              type="button"
+              data-testid="level0-bible-open"
+              onClick={openBible}
+            >
+              {ukrainian ? 'Біблія ігрового дизайну' : 'Game Design Bible'} <span>F1</span>
+            </button>
+            <button
+              type="button"
+              className="level0-entry__locale"
+              data-testid="level0-locale-toggle"
+              aria-label={ukrainian ? 'Switch language to English' : 'Перемкнути мову на українську'}
+              onClick={() => dispatch(setLocale(ukrainian ? 'en' : 'uk'))}
+            >
+              {ukrainian ? 'ENG' : 'УКР'}
+            </button>
           </div>
           <dl className="level0-entry__contract">
             <div><dt>Runtime</dt><dd>Direct movement / no A*</dd></div>
@@ -720,11 +820,20 @@ const Level0RuntimeShell = () => {
           {run ? <button type="button" className="level0-entry__resume" onClick={continueGame}>Return to district</button> : null}
         </section>
       </main>
+      {bibleOpen ? (
+        <Level0GameBible
+          locale={locale}
+          simulationPaused={Boolean(run)}
+          onClose={closeBible}
+          onUiStateChange={handleBibleUiState}
+        />
+      ) : null}
+      </>
     );
   }
 
   const failed = run.mission === 'L0_FAILED';
-  const backgroundControlsLocked = characterOpen || pendingSafehouseAction !== null || terminalMission;
+  const backgroundControlsLocked = bibleOpen || characterOpen || pendingSafehouseAction !== null || terminalMission;
   const cleanVisualProof =
     typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('cleanVisual') === '1';
@@ -918,6 +1027,15 @@ const Level0RuntimeShell = () => {
             {ukrainian ? 'Повернутися до меню' : 'Return to menu'}
           </button>
         </section>
+      ) : null}
+
+      {bibleOpen ? (
+        <Level0GameBible
+          locale={locale}
+          simulationPaused={run.worldClock.pauseOwners.includes('bible')}
+          onClose={closeBible}
+          onUiStateChange={handleBibleUiState}
+        />
       ) : null}
 
       <span className="level0-runtime__storage" aria-hidden="true">
