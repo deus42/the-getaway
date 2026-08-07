@@ -283,6 +283,111 @@ export interface AlphaMeasurement {
   footContactRowPx: number;
 }
 
+export interface AlphaComponent extends AlphaMeasurement {
+  pixelIndices: number[];
+}
+
+export const findAlphaComponents = (
+  image: RgbaImage,
+  alphaThreshold = 8
+): AlphaComponent[] => {
+  const visited = new Uint8Array(image.width * image.height);
+  const components: AlphaComponent[] = [];
+
+  for (let startY = 0; startY < image.height; startY += 1) {
+    for (let startX = 0; startX < image.width; startX += 1) {
+      const startIndex = startY * image.width + startX;
+      if (
+        visited[startIndex] === 1 ||
+        image.data[startIndex * 4 + 3] < alphaThreshold
+      ) {
+        continue;
+      }
+
+      const queue = [startIndex];
+      const pixelIndices: number[] = [];
+      visited[startIndex] = 1;
+      let minX = startX;
+      let minY = startY;
+      let maxX = startX;
+      let maxY = startY;
+
+      for (let queueIndex = 0; queueIndex < queue.length; queueIndex += 1) {
+        const pixelIndex = queue[queueIndex];
+        const x = pixelIndex % image.width;
+        const y = Math.floor(pixelIndex / image.width);
+        pixelIndices.push(pixelIndex);
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+
+        for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+          for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+            if (offsetX === 0 && offsetY === 0) continue;
+            const neighborX = x + offsetX;
+            const neighborY = y + offsetY;
+            if (
+              neighborX < 0 ||
+              neighborX >= image.width ||
+              neighborY < 0 ||
+              neighborY >= image.height
+            ) {
+              continue;
+            }
+            const neighborIndex = neighborY * image.width + neighborX;
+            if (
+              visited[neighborIndex] === 1 ||
+              image.data[neighborIndex * 4 + 3] < alphaThreshold
+            ) {
+              continue;
+            }
+            visited[neighborIndex] = 1;
+            queue.push(neighborIndex);
+          }
+        }
+      }
+
+      components.push({
+        alphaBounds: {
+          x: minX,
+          y: minY,
+          width: maxX - minX + 1,
+          height: maxY - minY + 1,
+        },
+        alphaPixelCount: pixelIndices.length,
+        footContactRowPx: maxY,
+        pixelIndices,
+      });
+    }
+  }
+
+  return components;
+};
+
+export const extractAlphaComponent = (
+  source: RgbaImage,
+  component: AlphaComponent
+): RgbaImage => {
+  const { x, y, width, height } = component.alphaBounds;
+  if (width <= 0 || height <= 0 || component.pixelIndices.length === 0) {
+    throw new Error('Cannot extract an empty alpha component');
+  }
+  const output: RgbaImage = {
+    width,
+    height,
+    data: new Uint8Array(width * height * 4),
+  };
+  for (const pixelIndex of component.pixelIndices) {
+    const sourceX = pixelIndex % source.width;
+    const sourceY = Math.floor(pixelIndex / source.width);
+    const sourceOffset = pixelIndex * 4;
+    const targetOffset = ((sourceY - y) * width + (sourceX - x)) * 4;
+    output.data.set(source.data.subarray(sourceOffset, sourceOffset + 4), targetOffset);
+  }
+  return output;
+};
+
 export const measureAlpha = (image: RgbaImage, alphaThreshold = 8): AlphaMeasurement => {
   let minX = image.width;
   let minY = image.height;

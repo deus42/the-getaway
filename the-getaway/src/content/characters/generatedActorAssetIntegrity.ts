@@ -7,18 +7,18 @@ export interface GeneratedAssetIntegrity {
 }
 
 export const GENERATED_ACTOR_PROVENANCE = {
-  "recipeId": "get206-grounded-actor-v2",
+  "recipeId": "get206-grounded-actor-v3",
   "recipe": {
     "path": "art/actors/get206/manifests/grounded-actor-recipe.json",
-    "sha256": "2ee82d62ce2c4957cd8b09c10b882d2c5f8fc7fa596a4124095f2f91bc447c9f"
+    "sha256": "06143b06297a8c024121898f121a4cee415ee487d41f3cc542881e46b0bad44c"
   },
   "generator": {
     "path": "the-getaway/scripts/generate-grounded-character-assets.ts",
-    "sha256": "14444161b8e2a83aecbce1ced77943e108f435d185660334835acbdc7453e007"
+    "sha256": "d35aa83b116291361886bc932fd5a145e1cfc7245aa9444caa88724b3ca06968"
   },
   "pngLibrary": {
     "path": "the-getaway/scripts/lib/rgbaPng.ts",
-    "sha256": "caca24465ec948f5bda07f1ebdeb05635211c549a21bd0d5ccd9e4bc02409f9d"
+    "sha256": "b5a9da812d1aad82d27849f0c2b64d4ba9293457955a712bc09827889e49ec2e"
   },
   "spriteReference": {
     "id": "get206-grounded-cast-board-v1",
@@ -97,13 +97,13 @@ export const ACTOR_PORTRAIT_INTEGRITY: Record<string, GeneratedAssetIntegrity> =
 
 export const NON_WORLD_PRESENTATION_INTEGRITY: Record<string, GeneratedAssetIntegrity> = {
   "takahiroBroadcast": {
-    "sha256": "b0090ceb4fc8bec8f77f2a2794114988cca1ad727cdb879890842a0a0a84001a",
-    "compressedBytes": 8264,
+    "sha256": "07bfd26e87fc24fc02dad65d8720c3f856a2b0e6c826e987cf21ce454e2b90d9",
+    "compressedBytes": 127300,
     "decodedBytes": 262144
   },
   "georgeAr": {
-    "sha256": "8d476e8c621431d58b620cb4577a41758c825c201d7a29f098e8a83d6cc8ad56",
-    "compressedBytes": 3821,
+    "sha256": "7693b8e7d97e9cd518032facd0a90469ed04ca8863e93d0e9898ad519c9401bc",
+    "compressedBytes": 63595,
     "decodedBytes": 262144
   }
 };

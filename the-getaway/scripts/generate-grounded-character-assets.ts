@@ -13,11 +13,12 @@ import {
   type CharacterSpriteState,
 } from '../src/content/characters/spriteManifest';
 import {
-  encodeRgbaPng,
   decodeRgbaPng,
+  encodeRgbaPng,
+  extractAlphaComponent,
   extractRgbaRegion,
+  findAlphaComponents,
   measureAlpha,
-  resizeRgbaBox,
   resizeRgbaBilinear,
   sha256Hex,
   type RgbaImage,
@@ -25,10 +26,15 @@ import {
 
 const ROOT_DIR = path.resolve(import.meta.dirname, '..');
 const REPOSITORY_ROOT = path.resolve(ROOT_DIR, '..');
-const BUILD_MODE = process.argv.includes('--check') ? 'check' : process.argv.includes('--publish') ? 'publish' : null;
+const BUILD_MODE = process.argv.includes('--check')
+  ? 'check'
+  : process.argv.includes('--publish')
+    ? 'publish'
+    : null;
 if (!BUILD_MODE || (process.argv.includes('--check') && process.argv.includes('--publish'))) {
   throw new Error('Use exactly one generation mode: --publish or --check');
 }
+
 const STAGING_ROOT = path.join(
   REPOSITORY_ROOT,
   'art',
@@ -68,37 +74,20 @@ const FINAL_INTEGRITY_TS_PATH = path.join(
 );
 const INTEGRITY_JSON_PATH = path.join(CHARACTER_OUTPUT_DIR, 'actor-asset-integrity.json');
 
-type Rgba = readonly [number, number, number, number];
-type HairStyle = 'crop' | 'short' | 'curls' | 'bun' | 'cap';
-type Accessory =
-  | 'messenger'
-  | 'document-pouch'
-  | 'medical-bag'
-  | 'folio'
-  | 'service-bag'
-  | 'identity-scanner'
-  | 'tablet'
-  | 'toolbox'
-  | 'delivery-bag'
-  | 'none';
+type SourceLayout = 'template-eight' | 'seven-plus-north-strip';
 
-interface ActorStyleProfile {
-  actorId: string;
-  skin: number;
-  hair: number;
-  jacket: number;
-  shirt: number;
-  trousers: number;
-  shoes: number;
-  accent: number;
-  hairStyle: HairStyle;
-  accessory: Accessory;
-  accessorySide: -1 | 1;
-  bodyWidth: number;
-  shoulderWidth: number;
-  headWidth: number;
-  jacketLength: number;
-  heightOffset: number;
+interface SourceFileRecipe {
+  path: string;
+  sha256: string;
+}
+
+interface SpriteSourceRecipe extends SourceFileRecipe {
+  layout: SourceLayout;
+  northOverride?: SourceFileRecipe;
+}
+
+interface ActorRecipeEntry {
+  spriteSource: SpriteSourceRecipe;
   portraitCrop: {
     x: number;
     y: number;
@@ -108,499 +97,241 @@ interface ActorStyleProfile {
 }
 
 interface ActorRecipe {
-  schemaVersion: 1;
+  schemaVersion: 2;
   recipeId: string;
-  spriteReference: { id: string; path: string; sha256: string };
-  portraitReference: { id: string; path: string; sha256: string };
-  renderContract: { supersample: number };
-  actors: Record<string, Omit<ActorStyleProfile, 'actorId'>>;
+  sourceWorkflow: {
+    kind: 'ai-assisted-raster-generation';
+    tool: string;
+    generatedOn: string;
+    ownership: 'project-generated';
+    normalization: 'deterministic-repository-pipeline';
+  };
+  spriteReference: SourceFileRecipe & { id: string };
+  portraitReference: SourceFileRecipe & { id: string };
+  presentations: {
+    takahiroBroadcast: SourceFileRecipe & { background: 'opaque' };
+    georgeAr: SourceFileRecipe & { background: 'chroma-key-green' };
+  };
+  renderContract: {
+    frameWidth: 64;
+    frameHeight: 96;
+    frameCount: 4;
+    sourceNormalization: {
+      targetAlphaHeightPx: number;
+      maxAlphaWidthPx: number;
+      footRowPx: number;
+      sourceFigureExtraction: {
+        authoredColumns: 4;
+        authoredRows: 7;
+        minimumComponentPixels: number;
+        maxDetachedComponentPixels: number;
+      };
+      chromaKey: {
+        greenDominance: number;
+        minimumGreen: number;
+        softEdgePx: number;
+      };
+    };
+  };
+  actors: Record<string, ActorRecipeEntry>;
+}
+
+interface LoadedActorSource {
+  rows: RgbaImage[][];
+  northOverrideRows?: RgbaImage[][];
+}
+
+interface IntegrityRecord {
+  sha256: string;
+  compressedBytes: number;
+  decodedBytes: number;
+}
+
+interface ActorIntegrityRecord {
+  portrait: IntegrityRecord;
+  sheets: Record<string, IntegrityRecord>;
+  metrics: IntegrityRecord;
+}
+
+interface BuiltActor {
+  integrity: ActorIntegrityRecord;
+  portrait: RgbaImage;
+  sampleSheets: Record<CharacterSpriteState, RgbaImage>;
+  directionFrames: Record<CharacterSpriteDirection, RgbaImage>;
+}
+
+interface ProvenanceFileRecord {
+  path: string;
+  sha256: string;
+}
+
+interface ActorAssetProvenance {
+  recipeId: string;
+  recipe: ProvenanceFileRecord;
+  generator: ProvenanceFileRecord;
+  pngLibrary: ProvenanceFileRecord;
+  spriteReference: ProvenanceFileRecord & { id: string };
+  portraitReference: ProvenanceFileRecord & { id: string };
+}
+
+interface GeneratedTarget {
+  label: string;
+  stagedPath: string;
+  finalPath: string;
 }
 
 const RECIPE = JSON.parse(readFileSync(RECIPE_PATH, 'utf8')) as ActorRecipe;
+if (RECIPE.schemaVersion !== 2) {
+  throw new Error(`Expected grounded actor recipe schemaVersion 2, got ${RECIPE.schemaVersion}`);
+}
+const ACTOR_RECIPE_ID = RECIPE.recipeId;
 const SPRITE_REFERENCE_PATH = path.resolve(REPOSITORY_ROOT, RECIPE.spriteReference.path);
 const PORTRAIT_REFERENCE_PATH = path.resolve(REPOSITORY_ROOT, RECIPE.portraitReference.path);
-const ACTOR_RECIPE_ID = RECIPE.recipeId;
-const SUPERSAMPLE = RECIPE.renderContract.supersample;
-const PROFILES = Object.fromEntries(
-  Object.entries(RECIPE.actors).map(([actorId, profile]) => [actorId, { actorId, ...profile }])
-) as Record<string, ActorStyleProfile>;
 
-const clamp = (value: number, min: number, max: number): number =>
-  Math.max(min, Math.min(max, value));
-
-const color = (hex: number, alpha = 255): Rgba => [
-  (hex >> 16) & 0xff,
-  (hex >> 8) & 0xff,
-  hex & 0xff,
-  alpha,
+const GENERATED_TARGETS: readonly GeneratedTarget[] = [
+  {
+    label: 'characters',
+    stagedPath: CHARACTER_OUTPUT_DIR,
+    finalPath: FINAL_CHARACTER_OUTPUT_DIR,
+  },
+  {
+    label: 'portraits',
+    stagedPath: PORTRAIT_OUTPUT_DIR,
+    finalPath: FINAL_PORTRAIT_OUTPUT_DIR,
+  },
+  {
+    label: 'proof',
+    stagedPath: PROOF_OUTPUT_DIR,
+    finalPath: FINAL_PROOF_OUTPUT_DIR,
+  },
+  {
+    label: 'generated-integrity-module',
+    stagedPath: INTEGRITY_TS_PATH,
+    finalPath: FINAL_INTEGRITY_TS_PATH,
+  },
 ];
 
-const shade = (hex: number, amount: number): number => {
-  const shift = (channel: number): number => clamp(Math.round(channel + amount * 255), 0, 255);
-  return (
-    (shift((hex >> 16) & 0xff) << 16) |
-    (shift((hex >> 8) & 0xff) << 8) |
-    shift(hex & 0xff)
-  );
-};
+const clamp = (value: number, minimum: number, maximum: number): number =>
+  Math.max(minimum, Math.min(maximum, value));
 
-class Painter {
-  readonly image: RgbaImage;
-
-  constructor(
-    readonly logicalWidth: number,
-    readonly logicalHeight: number,
-    readonly scale: number
+const assertSafeRepositorySourcePath = (relativePath: string): string => {
+  if (
+    path.isAbsolute(relativePath) ||
+    relativePath.includes('..') ||
+    !relativePath.startsWith('art/actors/') ||
+    path.extname(relativePath).toLowerCase() !== '.png'
   ) {
-    this.image = {
-      width: logicalWidth * scale,
-      height: logicalHeight * scale,
-      data: new Uint8Array(logicalWidth * logicalHeight * scale * scale * 4),
-    };
+    throw new Error(`Unsafe actor source path: ${JSON.stringify(relativePath)}`);
   }
-
-  private blendPixel(x: number, y: number, source: Rgba): void {
-    if (x < 0 || y < 0 || x >= this.image.width || y >= this.image.height) return;
-    const offset = (y * this.image.width + x) * 4;
-    const sourceAlpha = source[3] / 255;
-    if (sourceAlpha <= 0) return;
-    const targetAlpha = this.image.data[offset + 3] / 255;
-    const outputAlpha = sourceAlpha + targetAlpha * (1 - sourceAlpha);
-    if (outputAlpha <= 0) return;
-    this.image.data[offset] = Math.round(
-      (source[0] * sourceAlpha + this.image.data[offset] * targetAlpha * (1 - sourceAlpha)) /
-        outputAlpha
-    );
-    this.image.data[offset + 1] = Math.round(
-      (source[1] * sourceAlpha +
-        this.image.data[offset + 1] * targetAlpha * (1 - sourceAlpha)) /
-        outputAlpha
-    );
-    this.image.data[offset + 2] = Math.round(
-      (source[2] * sourceAlpha +
-        this.image.data[offset + 2] * targetAlpha * (1 - sourceAlpha)) /
-        outputAlpha
-    );
-    this.image.data[offset + 3] = Math.round(outputAlpha * 255);
+  const resolved = path.resolve(REPOSITORY_ROOT, relativePath);
+  const sourceRoot = `${path.resolve(REPOSITORY_ROOT, 'art', 'actors')}${path.sep}`;
+  if (!resolved.startsWith(sourceRoot)) {
+    throw new Error(`Actor source escapes the source root: ${JSON.stringify(relativePath)}`);
   }
+  return resolved;
+};
 
-  fillRect(x: number, y: number, width: number, height: number, fill: Rgba): void {
-    const left = Math.floor(x * this.scale);
-    const top = Math.floor(y * this.scale);
-    const right = Math.ceil((x + width) * this.scale);
-    const bottom = Math.ceil((y + height) * this.scale);
-    for (let pixelY = top; pixelY < bottom; pixelY += 1) {
-      for (let pixelX = left; pixelX < right; pixelX += 1) this.blendPixel(pixelX, pixelY, fill);
+const readVerifiedPng = async (source: SourceFileRecipe, label: string): Promise<RgbaImage> => {
+  const resolved = assertSafeRepositorySourcePath(source.path);
+  const buffer = await fs.readFile(resolved);
+  const actualSha256 = sha256Hex(buffer);
+  if (actualSha256 !== source.sha256) {
+    throw new Error(`${label} hash mismatch: expected ${source.sha256}, got ${actualSha256}`);
+  }
+  return decodeRgbaPng(buffer);
+};
+
+const chromaKeyGreen = (source: RgbaImage): RgbaImage => {
+  const image: RgbaImage = {
+    width: source.width,
+    height: source.height,
+    data: new Uint8Array(source.data),
+  };
+  const { greenDominance, minimumGreen, softEdgePx } =
+    RECIPE.renderContract.sourceNormalization.chromaKey;
+  const feather = 0.22 + softEdgePx * 0.04;
+
+  for (let offset = 0; offset < image.data.length; offset += 4) {
+    const red = image.data[offset];
+    const green = image.data[offset + 1];
+    const blue = image.data[offset + 2];
+    const alpha = image.data[offset + 3];
+    const competingChannel = Math.max(red, blue, 1);
+    const dominance = green / competingChannel;
+    if (green >= minimumGreen && dominance >= greenDominance) {
+      const strength = clamp((dominance - greenDominance) / feather, 0, 1);
+      image.data[offset + 3] = Math.round(alpha * (1 - strength));
+    }
+
+    if (image.data[offset + 3] > 0 && green > competingChannel) {
+      image.data[offset + 1] = Math.min(green, competingChannel + 12);
     }
   }
+  return image;
+};
 
-  ellipse(cx: number, cy: number, rx: number, ry: number, fill: Rgba): void {
-    const left = Math.floor((cx - rx) * this.scale);
-    const right = Math.ceil((cx + rx) * this.scale);
-    const top = Math.floor((cy - ry) * this.scale);
-    const bottom = Math.ceil((cy + ry) * this.scale);
-    for (let y = top; y <= bottom; y += 1) {
-      for (let x = left; x <= right; x += 1) {
-        const logicalX = (x + 0.5) / this.scale;
-        const logicalY = (y + 0.5) / this.scale;
-        const normalized = ((logicalX - cx) / rx) ** 2 + ((logicalY - cy) / ry) ** 2;
-        if (normalized <= 1) this.blendPixel(x, y, fill);
-      }
-    }
+const componentCenter = (component: {
+  alphaBounds: { x: number; y: number; width: number; height: number };
+}): { x: number; y: number } => ({
+  x: component.alphaBounds.x + component.alphaBounds.width / 2,
+  y: component.alphaBounds.y + component.alphaBounds.height / 2,
+});
+
+const extractAuthoredAtlasRows = (
+  source: RgbaImage,
+  rowCount: number,
+  label: string
+): RgbaImage[][] => {
+  const keyed = chromaKeyGreen(source);
+  const { authoredColumns, minimumComponentPixels } =
+    RECIPE.renderContract.sourceNormalization.sourceFigureExtraction;
+  const expectedFigureCount = authoredColumns * rowCount;
+  const candidates = findAlphaComponents(keyed)
+    .filter((component) => component.alphaPixelCount >= minimumComponentPixels)
+    .sort((left, right) => {
+      const leftCenter = componentCenter(left);
+      const rightCenter = componentCenter(right);
+      return leftCenter.y - rightCenter.y || leftCenter.x - rightCenter.x;
+    });
+
+  if (candidates.length < expectedFigureCount) {
+    throw new Error(
+      `${label} contains ${candidates.length} complete keyed figures; expected at least ${expectedFigureCount}`
+    );
   }
 
-  polygon(points: readonly { x: number; y: number }[], fill: Rgba): void {
-    const scaled = points.map((point) => ({ x: point.x * this.scale, y: point.y * this.scale }));
-    const minX = Math.floor(Math.min(...scaled.map((point) => point.x)));
-    const maxX = Math.ceil(Math.max(...scaled.map((point) => point.x)));
-    const minY = Math.floor(Math.min(...scaled.map((point) => point.y)));
-    const maxY = Math.ceil(Math.max(...scaled.map((point) => point.y)));
-    for (let y = minY; y <= maxY; y += 1) {
-      for (let x = minX; x <= maxX; x += 1) {
-        let inside = false;
-        for (let current = 0, previous = scaled.length - 1; current < scaled.length; previous = current++) {
-          const a = scaled[current];
-          const b = scaled[previous];
-          const crosses =
-            a.y > y !== b.y > y && x < ((b.x - a.x) * (y - a.y)) / (b.y - a.y) + a.x;
-          if (crosses) inside = !inside;
-        }
-        if (inside) this.blendPixel(x, y, fill);
-      }
-    }
-  }
-
-  line(x1: number, y1: number, x2: number, y2: number, width: number, fill: Rgba): void {
-    const distance = Math.hypot(x2 - x1, y2 - y1);
-    const steps = Math.max(1, Math.ceil(distance * this.scale * 1.5));
-    for (let step = 0; step <= steps; step += 1) {
-      const t = step / steps;
-      this.ellipse(
-        x1 + (x2 - x1) * t,
-        y1 + (y2 - y1) * t,
-        width / 2,
-        width / 2,
-        fill
+  const selected = candidates.slice(0, expectedFigureCount);
+  const rows: RgbaImage[][] = [];
+  for (let rowIndex = 0; rowIndex < rowCount; rowIndex += 1) {
+    const components = selected
+      .slice(rowIndex * authoredColumns, (rowIndex + 1) * authoredColumns)
+      .sort((left, right) => componentCenter(left).x - componentCenter(right).x);
+    if (components.length !== authoredColumns) {
+      throw new Error(
+        `${label} row ${rowIndex} contains ${components.length} keyed figures; expected ${authoredColumns}`
       );
     }
+    rows.push(components.map((component) => extractAlphaComponent(keyed, component)));
   }
-
-  roundedRect(x: number, y: number, width: number, height: number, radius: number, fill: Rgba): void {
-    this.fillRect(x + radius, y, width - radius * 2, height, fill);
-    this.fillRect(x, y + radius, width, height - radius * 2, fill);
-    this.ellipse(x + radius, y + radius, radius, radius, fill);
-    this.ellipse(x + width - radius, y + radius, radius, radius, fill);
-    this.ellipse(x + radius, y + height - radius, radius, radius, fill);
-    this.ellipse(x + width - radius, y + height - radius, radius, radius, fill);
-  }
-}
-
-const DIRECTION_VECTOR: Record<CharacterSpriteDirection, { x: number; y: number }> = {
-  north: { x: 0, y: -1 },
-  'north-east': { x: 0.72, y: -0.72 },
-  east: { x: 1, y: 0 },
-  'south-east': { x: 0.72, y: 0.72 },
-  south: { x: 0, y: 1 },
-  'south-west': { x: -0.72, y: 0.72 },
-  west: { x: -1, y: 0 },
-  'north-west': { x: -0.72, y: -0.72 },
+  return rows;
 };
 
-const MOVE_PHASE = [-1, 0, 1, 0] as const;
-const MOVE_BOB = [0, -1, 0, -1] as const;
-const INTERACT_REACH = [0, 1.6, 3.2, 1.2] as const;
-
-const drawOutlinedEllipse = (
-  painter: Painter,
-  cx: number,
-  cy: number,
-  rx: number,
-  ry: number,
-  fill: number,
-  outline = 0x17191a
-): void => {
-  painter.ellipse(cx, cy, rx + 1, ry + 1, color(outline, 245));
-  painter.ellipse(cx, cy, rx, ry, color(fill));
-};
-
-const drawHair = (
-  painter: Painter,
-  profile: ActorStyleProfile,
-  headX: number,
-  headY: number,
-  facing: { x: number; y: number }
-): void => {
-  const hair = color(profile.hair);
-  switch (profile.hairStyle) {
-    case 'curls':
-      for (const [dx, dy, radius] of [
-        [-3.3, -4.5, 2.3],
-        [-1.2, -5.7, 2.5],
-        [1.2, -5.9, 2.5],
-        [3.2, -4.7, 2.2],
-        [0, -3.8, 3.2],
-      ] as const) {
-        painter.ellipse(headX + dx, headY + dy, radius, radius, hair);
-      }
-      break;
-    case 'bun':
-      painter.ellipse(headX, headY - 4.5, profile.headWidth * 0.55, 3.2, hair);
-      painter.ellipse(headX - facing.x * 2.4, headY - 7.7, 2.6, 2.3, hair);
-      break;
-    case 'cap':
-      painter.ellipse(headX, headY - 4.4, profile.headWidth * 0.58, 2.8, hair);
-      painter.line(
-        headX,
-        headY - 4.3,
-        headX + (facing.x || 1) * 5.2,
-        headY - 3.8,
-        1.4,
-        color(shade(profile.jacket, 0.06))
-      );
-      break;
-    case 'crop':
-      painter.ellipse(headX, headY - 4.8, profile.headWidth * 0.48, 2.7, hair);
-      break;
-    case 'short':
-      painter.ellipse(headX, headY - 4.6, profile.headWidth * 0.54, 3.1, hair);
-      painter.line(headX - 3.5, headY - 4.2, headX + 2.5, headY - 6.1, 1, color(shade(profile.hair, 0.08)));
-      break;
-  }
-  if (facing.y < -0.35) {
-    painter.ellipse(
-      headX - facing.x * 0.4,
-      headY - 0.8,
-      profile.headWidth * (Math.abs(facing.x) > 0.35 ? 0.4 : 0.5),
-      5.1,
-      color(profile.hair, 235)
-    );
-    painter.line(
-      headX - profile.headWidth * 0.34,
-      headY + 2.6,
-      headX + profile.headWidth * 0.34,
-      headY + 3.4,
-      0.8,
-      color(shade(profile.hair, 0.08), 180)
-    );
-  }
-};
-
-const drawFaceDetail = (
-  painter: Painter,
-  headX: number,
-  headY: number,
-  facing: { x: number; y: number },
-  skin: number
-): void => {
-  if (facing.y < -0.35) return;
-  const feature = color(shade(skin, -0.28), 210);
-  if (Math.abs(facing.x) > 0.85) {
-    painter.polygon(
-      [
-        { x: headX + facing.x * 2.8, y: headY - 1.2 },
-        { x: headX + facing.x * 5.1, y: headY + 0.2 },
-        { x: headX + facing.x * 2.8, y: headY + 1.1 },
-      ],
-      feature
-    );
-    painter.ellipse(headX + facing.x * 1.8, headY - 1.2, 0.6, 0.45, feature);
-    return;
-  }
-  painter.ellipse(headX - 1.7 + facing.x, headY - 1.1, 0.45, 0.4, feature);
-  painter.ellipse(headX + 1.7 + facing.x, headY - 1.1, 0.45, 0.4, feature);
-  painter.line(headX - 1, headY + 2.1, headX + 1.2, headY + 2, 0.45, feature);
-};
-
-const drawAccessory = (
-  painter: Painter,
-  profile: ActorStyleProfile,
-  torsoX: number,
-  torsoY: number,
-  shoulderWidth: number,
-  facing: { x: number; y: number },
-  reach: number
-): void => {
-  if (profile.accessory === 'none') return;
-  const side = facing.y < -0.35 ? -profile.accessorySide : profile.accessorySide;
-  const sideCompression = Math.abs(facing.x) > 0.85 ? 0.55 : 1;
-  const bagX = torsoX + side * (shoulderWidth * 0.5 + 3.6) * sideCompression;
-  const bagColor = color(shade(profile.accent, -0.08));
-  const outline = color(0x17191a, 245);
-
-  if (['messenger', 'service-bag', 'delivery-bag', 'medical-bag'].includes(profile.accessory)) {
-    painter.line(
-      torsoX - side * shoulderWidth * 0.35,
-      torsoY - 8,
-      bagX,
-      torsoY + 8,
-      1.2,
-      color(shade(profile.accent, 0.02), 230)
-    );
-    const width = profile.accessory === 'medical-bag' ? 10 : profile.accessory === 'delivery-bag' ? 9 : 8;
-    const height = profile.accessory === 'medical-bag' ? 8 : 9;
-    painter.roundedRect(bagX - width / 2 - 0.7, torsoY + 4.3, width + 1.4, height + 1.4, 1.4, outline);
-    painter.roundedRect(bagX - width / 2, torsoY + 5, width, height, 1.2, bagColor);
-    if (profile.accessory === 'medical-bag') {
-      painter.line(bagX - 2.5, torsoY + 9, bagX + 2.5, torsoY + 9, 1, color(profile.accent));
-      painter.line(bagX, torsoY + 6.5, bagX, torsoY + 11.5, 1, color(profile.accent));
-    }
-    return;
-  }
-
-  if (profile.accessory === 'toolbox') {
-    painter.roundedRect(bagX - 5.5, torsoY + 10, 11, 6, 1, outline);
-    painter.roundedRect(bagX - 4.8, torsoY + 10.6, 9.6, 4.8, 0.8, bagColor);
-    painter.line(bagX - 2, torsoY + 9.8, bagX + 2, torsoY + 9.8, 1.2, color(profile.accent));
-    return;
-  }
-
-  const handX = torsoX + (facing.x || side) * (shoulderWidth * 0.58 + reach + 2);
-  const handY = torsoY - 1 - facing.y * reach * 0.35;
-  if (profile.accessory === 'document-pouch' || profile.accessory === 'folio') {
-    painter.roundedRect(bagX - 3.6, torsoY + 1, 7.2, 10, 0.7, outline);
-    painter.roundedRect(bagX - 3, torsoY + 1.7, 6, 8.6, 0.5, color(profile.accent));
-  } else if (profile.accessory === 'identity-scanner') {
-    painter.roundedRect(handX - 2.2, handY - 3, 4.4, 6, 0.8, outline);
-    painter.roundedRect(handX - 1.5, handY - 2.2, 3, 4.4, 0.5, color(0x4c8d93));
-    painter.ellipse(handX, handY - 1, 0.7, 0.7, color(0x77c4c9));
-  } else if (profile.accessory === 'tablet') {
-    painter.roundedRect(handX - 3.4, handY - 4.2, 6.8, 8.4, 0.8, outline);
-    painter.roundedRect(handX - 2.7, handY - 3.5, 5.4, 7, 0.5, color(0x416f73));
-    painter.line(handX - 1.8, handY - 1, handX + 1.8, handY - 1, 0.7, color(0x75b5b8));
-  }
-};
-
-const renderActorFrame = (
-  profile: ActorStyleProfile,
-  state: CharacterSpriteState,
-  direction: CharacterSpriteDirection,
-  frameIndex: number
-): RgbaImage => {
-  const painter = new Painter(64, 96, SUPERSAMPLE);
-  const facing = DIRECTION_VECTOR[direction];
-  const movePhase = state === 'move' ? MOVE_PHASE[frameIndex] : 0;
-  const bob = state === 'move' ? MOVE_BOB[frameIndex] : 0;
-  const idleShift = state === 'idle' ? [0, 0.25, 0, -0.25][frameIndex] : 0;
-  const reach = state === 'interact' ? INTERACT_REACH[frameIndex] : 0;
-  const torsoX = 32 + facing.x * 0.7 + idleShift;
-  const torsoTop = 42 + bob + profile.heightOffset;
-  const torsoBottom = torsoTop + profile.jacketLength;
-  const sideView = Math.abs(facing.x) > 0.85;
-  const diagonalView = Math.abs(facing.x) > 0.35 && Math.abs(facing.x) <= 0.85;
-  const backView = facing.y < -0.35;
-  const frontView = facing.y > 0.35;
-  const shoulderWidth = profile.shoulderWidth * (sideView ? 0.58 : diagonalView ? 0.82 : 1);
-  const bodyWidth = profile.bodyWidth * (sideView ? 0.62 : diagonalView ? 0.84 : 1);
-  const outline = 0x16191a;
-
-  const leftFootX = torsoX - (sideView ? 2.2 : 4.2) - movePhase * 1.7 * (facing.x || 1);
-  const rightFootX = torsoX + (sideView ? 2.2 : 4.2) + movePhase * 1.7 * (facing.x || 1);
-  const leftFootBottom = movePhase > 0 ? 85.5 : 88;
-  const rightFootBottom = movePhase < 0 ? 85.5 : 88;
-  const hipY = torsoBottom - 1;
-
-  painter.line(torsoX - bodyWidth * 0.22, hipY, leftFootX, leftFootBottom - 2.2, 5.2, color(outline));
-  painter.line(torsoX + bodyWidth * 0.22, hipY, rightFootX, rightFootBottom - 2.2, 5.2, color(outline));
-  painter.line(
-    torsoX - bodyWidth * 0.22,
-    hipY,
-    leftFootX,
-    leftFootBottom - 2.2,
-    3.6,
-    color(shade(profile.trousers, facing.y < 0 ? -0.04 : 0.01))
-  );
-  painter.line(
-    torsoX + bodyWidth * 0.22,
-    hipY,
-    rightFootX,
-    rightFootBottom - 2.2,
-    3.6,
-    color(shade(profile.trousers, -0.08))
-  );
-  painter.roundedRect(leftFootX - 3.8, leftFootBottom - 2.5, 7.6, 2.5, 0.8, color(outline));
-  painter.roundedRect(leftFootX - 3.1, leftFootBottom - 2.2, 6.2, 2.0, 0.6, color(profile.shoes));
-  painter.roundedRect(rightFootX - 3.8, rightFootBottom - 2.5, 7.6, 2.5, 0.8, color(outline));
-  painter.roundedRect(rightFootX - 3.1, rightFootBottom - 2.2, 6.2, 2.0, 0.6, color(shade(profile.shoes, -0.04)));
-
-  painter.polygon(
-    [
-      { x: torsoX - shoulderWidth / 2 - 1, y: torsoTop },
-      { x: torsoX + shoulderWidth / 2 + 1, y: torsoTop },
-      { x: torsoX + bodyWidth / 2 + 1, y: torsoBottom },
-      { x: torsoX - bodyWidth / 2 - 1, y: torsoBottom },
-    ],
-    color(outline)
-  );
-  painter.polygon(
-    [
-      { x: torsoX - shoulderWidth / 2, y: torsoTop + 0.8 },
-      { x: torsoX + shoulderWidth / 2, y: torsoTop + 0.8 },
-      { x: torsoX + bodyWidth / 2, y: torsoBottom - 0.5 },
-      { x: torsoX - bodyWidth / 2, y: torsoBottom - 0.5 },
-    ],
-    color(profile.jacket)
-  );
-  painter.polygon(
-    [
-      { x: torsoX - shoulderWidth / 2 + 1, y: torsoTop + 1.4 },
-      { x: torsoX - 0.5, y: torsoTop + 1.4 },
-      { x: torsoX - 1.2, y: torsoBottom - 1.3 },
-      { x: torsoX - bodyWidth / 2 + 1, y: torsoBottom - 1.3 },
-    ],
-    color(shade(profile.jacket, 0.08), 190)
-  );
-  if (backView) {
-    painter.line(
-      torsoX - shoulderWidth * 0.38,
-      torsoTop + 6,
-      torsoX + shoulderWidth * 0.38,
-      torsoTop + 6 + Math.abs(facing.x) * 1.2,
-      1.1,
-      color(shade(profile.jacket, -0.13), 210)
-    );
-    painter.line(
-      torsoX + facing.x * 1.1,
-      torsoTop + 7,
-      torsoX + facing.x * 0.4,
-      torsoBottom - 3,
-      0.8,
-      color(shade(profile.jacket, 0.11), 165)
-    );
-  } else {
-    const chestShift = sideView ? facing.x * 1.3 : diagonalView ? facing.x * 0.8 : 0;
-    painter.polygon(
-      [
-        { x: torsoX - 3.2 + chestShift, y: torsoTop + 1.2 },
-        { x: torsoX + 3.2 + chestShift, y: torsoTop + 1.2 },
-        { x: torsoX + 2.2 + chestShift, y: torsoTop + 11 },
-        { x: torsoX - 2.2 + chestShift, y: torsoTop + 11 },
-      ],
-      color(profile.shirt)
-    );
-    painter.line(
-      torsoX + chestShift,
-      torsoTop + 2,
-      torsoX + chestShift * 0.3,
-      torsoBottom - 2,
-      0.8,
-      color(shade(profile.jacket, -0.16), 185)
-    );
-  }
-  const brushSide = facing.x >= 0 ? -1 : 1;
-  painter.line(
-    torsoX + brushSide * bodyWidth * 0.22,
-    torsoTop + 10,
-    torsoX + brushSide * bodyWidth * 0.35,
-    torsoTop + 15,
-    0.65,
-    color(shade(profile.jacket, frontView ? 0.12 : -0.1), 145)
-  );
-
-  const armSwing = state === 'move' ? movePhase * 2.6 : 0;
-  const interactDirectionX = facing.x || profile.accessorySide;
-  const leftHandX = torsoX - shoulderWidth / 2 - 1 - armSwing + (interactDirectionX < 0 ? -reach : 0);
-  const rightHandX = torsoX + shoulderWidth / 2 + 1 + armSwing + (interactDirectionX >= 0 ? reach : 0);
-  const leftHandY = torsoTop + 16 + armSwing * 0.25 - (interactDirectionX < 0 ? reach * facing.y * 0.4 : 0);
-  const rightHandY = torsoTop + 16 - armSwing * 0.25 - (interactDirectionX >= 0 ? reach * facing.y * 0.4 : 0);
-  painter.line(torsoX - shoulderWidth / 2 + 1, torsoTop + 3, leftHandX, leftHandY, 5, color(outline));
-  painter.line(torsoX + shoulderWidth / 2 - 1, torsoTop + 3, rightHandX, rightHandY, 5, color(outline));
-  painter.line(torsoX - shoulderWidth / 2 + 1, torsoTop + 3, leftHandX, leftHandY, 3.3, color(shade(profile.jacket, 0.02)));
-  painter.line(torsoX + shoulderWidth / 2 - 1, torsoTop + 3, rightHandX, rightHandY, 3.3, color(shade(profile.jacket, -0.06)));
-  drawOutlinedEllipse(painter, leftHandX, leftHandY, 1.8, 2.1, profile.skin, outline);
-  drawOutlinedEllipse(painter, rightHandX, rightHandY, 1.8, 2.1, profile.skin, outline);
-
-  const neckY = torsoTop - 1;
-  painter.roundedRect(torsoX - 2, neckY - 1.4, 4, 4, 1.2, color(profile.skin));
-  const headX = torsoX + facing.x * (sideView ? 3.2 : diagonalView ? 2.2 : 0.4);
-  const headY = torsoTop - 6 + bob * 0.5;
-  drawOutlinedEllipse(
-    painter,
-    headX,
-    headY,
-    (profile.headWidth / 2) * (sideView ? 0.72 : diagonalView ? 0.88 : 1),
-    6,
-    facing.y < -0.35 ? shade(profile.skin, -0.06) : profile.skin,
-    outline
-  );
-  painter.ellipse(
-    headX - (sideView ? facing.x * 0.8 : 1.6),
-    headY - 1.8,
-    sideView ? 0.8 : 1.2,
-    3.5,
-    color(shade(profile.skin, 0.12), backView ? 55 : 120)
-  );
-  drawFaceDetail(painter, headX, headY, facing, profile.skin);
-  drawHair(painter, profile, headX, headY, facing);
-  drawAccessory(painter, profile, torsoX, torsoTop + 9, shoulderWidth, facing, reach);
-
-  return resizeRgbaBox(painter.image, 64, 96);
+const cropToAlpha = (source: RgbaImage, alphaThreshold = 8): RgbaImage => {
+  const measurement = measureAlpha(source, alphaThreshold);
+  const { x, y, width, height } = measurement.alphaBounds;
+  if (width <= 0 || height <= 0) throw new Error('Source frame became empty after chroma key');
+  return extractRgbaRegion(source, x, y, width, height);
 };
 
 const blit = (target: RgbaImage, source: RgbaImage, targetX: number, targetY: number): void => {
   for (let y = 0; y < source.height; y += 1) {
+    const outputY = targetY + y;
+    if (outputY < 0 || outputY >= target.height) continue;
     for (let x = 0; x < source.width; x += 1) {
+      const outputX = targetX + x;
+      if (outputX < 0 || outputX >= target.width) continue;
       const sourceOffset = (y * source.width + x) * 4;
-      const targetOffset = ((targetY + y) * target.width + targetX + x) * 4;
+      const targetOffset = (outputY * target.width + outputX) * 4;
       target.data.set(source.data.subarray(sourceOffset, sourceOffset + 4), targetOffset);
     }
   }
@@ -608,9 +339,13 @@ const blit = (target: RgbaImage, source: RgbaImage, targetX: number, targetY: nu
 
 const composite = (target: RgbaImage, source: RgbaImage, targetX: number, targetY: number): void => {
   for (let y = 0; y < source.height; y += 1) {
+    const outputY = targetY + y;
+    if (outputY < 0 || outputY >= target.height) continue;
     for (let x = 0; x < source.width; x += 1) {
+      const outputX = targetX + x;
+      if (outputX < 0 || outputX >= target.width) continue;
       const sourceOffset = (y * source.width + x) * 4;
-      const targetOffset = ((targetY + y) * target.width + targetX + x) * 4;
+      const targetOffset = (outputY * target.width + outputX) * 4;
       const sourceAlpha = source.data[sourceOffset + 3] / 255;
       const targetAlpha = target.data[targetOffset + 3] / 255;
       const outputAlpha = sourceAlpha + targetAlpha * (1 - sourceAlpha);
@@ -627,204 +362,216 @@ const composite = (target: RgbaImage, source: RgbaImage, targetX: number, target
   }
 };
 
-const drawProceduralPortrait = (profile: ActorStyleProfile): RgbaImage => {
-  const painter = new Painter(256, 256, 2);
-  for (let y = 0; y < 256; y += 1) {
-    const t = y / 255;
-    const base = shade(0x242322, t * -0.08);
-    painter.fillRect(0, y, 256, 1, color(base));
-  }
-  painter.polygon(
-    [
-      { x: 0, y: 184 },
-      { x: 256, y: 112 },
-      { x: 256, y: 152 },
-      { x: 0, y: 224 },
-    ],
-    color(profile.accent, 36)
+const normalizeWorldFrame = (sourceCell: RgbaImage): RgbaImage => {
+  const cropped = cropToAlpha(sourceCell);
+  const { targetAlphaHeightPx, maxAlphaWidthPx, footRowPx } =
+    RECIPE.renderContract.sourceNormalization;
+  const scale = Math.min(
+    targetAlphaHeightPx / cropped.height,
+    maxAlphaWidthPx / cropped.width
   );
-  for (let stripe = -100; stripe < 320; stripe += 42) {
-    painter.line(stripe, 256, stripe + 160, 0, 1, color(0xd8c9ad, 18));
+  const width = Math.max(1, Math.round(cropped.width * scale));
+  const height = Math.max(1, Math.round(cropped.height * scale));
+  const resized = resizeRgbaBilinear(cropped, width, height);
+  const resizedMeasurement = measureAlpha(resized);
+  if (resizedMeasurement.footContactRowPx < 0) {
+    throw new Error('Normalized source frame contains no visible actor pixels');
   }
 
-  const shoulderY = 190;
-  painter.polygon(
-    [
-      { x: 36, y: 256 },
-      { x: 52, y: shoulderY },
-      { x: 99, y: 166 },
-      { x: 157, y: 166 },
-      { x: 204, y: shoulderY },
-      { x: 220, y: 256 },
-    ],
-    color(0x151718)
-  );
-  painter.polygon(
-    [
-      { x: 42, y: 256 },
-      { x: 58, y: shoulderY + 2 },
-      { x: 102, y: 171 },
-      { x: 154, y: 171 },
-      { x: 198, y: shoulderY + 2 },
-      { x: 214, y: 256 },
-    ],
-    color(profile.jacket)
-  );
-  painter.polygon(
-    [
-      { x: 45, y: 256 },
-      { x: 62, y: shoulderY + 6 },
-      { x: 124, y: 176 },
-      { x: 116, y: 256 },
-    ],
-    color(shade(profile.jacket, 0.08), 170)
-  );
-  painter.polygon(
-    [
-      { x: 102, y: 170 },
-      { x: 154, y: 170 },
-      { x: 166, y: 256 },
-      { x: 91, y: 256 },
-    ],
-    color(profile.shirt)
-  );
-  painter.roundedRect(112, 139, 32, 46, 12, color(profile.skin));
-  drawOutlinedEllipse(painter, 128, 105, 39, 53, profile.skin, 0x151718);
-  painter.ellipse(110, 91, 12, 28, color(shade(profile.skin, 0.12), 105));
-  painter.ellipse(113, 102, 4, 3, color(shade(profile.skin, -0.32)));
-  painter.ellipse(143, 102, 4, 3, color(shade(profile.skin, -0.32)));
-  painter.line(128, 105, 124, 126, 2, color(shade(profile.skin, -0.18), 200));
-  painter.line(114, 140, 142, 140, 2, color(shade(profile.skin, -0.3), 210));
-
-  const portraitFacing = { x: 0.12, y: 1 };
-  switch (profile.hairStyle) {
-    case 'curls':
-      for (const [dx, dy, radius] of [
-        [-30, -36, 19],
-        [-12, -48, 21],
-        [10, -49, 21],
-        [29, -37, 19],
-        [0, -29, 27],
-      ] as const) {
-        painter.ellipse(128 + dx, 88 + dy, radius, radius, color(profile.hair));
-      }
-      break;
-    case 'bun':
-      painter.ellipse(128, 61, 43, 32, color(profile.hair));
-      painter.ellipse(114, 27, 21, 18, color(profile.hair));
-      break;
-    case 'cap':
-      painter.ellipse(128, 59, 46, 28, color(profile.hair));
-      painter.line(128, 63, 178, 67, 9, color(shade(profile.jacket, 0.06)));
-      break;
-    case 'crop':
-      painter.ellipse(128, 61, 42, 28, color(profile.hair));
-      break;
-    case 'short':
-      painter.ellipse(128, 59, 45, 31, color(profile.hair));
-      painter.line(96, 65, 145, 48, 5, color(shade(profile.hair, 0.08)));
-      break;
-  }
-  drawAccessory(painter, profile, 128, 204, 80, portraitFacing, 0);
-  return resizeRgbaBox(painter.image, 256, 256);
-};
-
-const drawTakahiroPortrait = (): RgbaImage => {
-  const profile: ActorStyleProfile = {
-    actorId: 'takahiro_broadcast',
-    skin: 0xb17a5d,
-    hair: 0x232323,
-    jacket: 0x202629,
-    shirt: 0xd3c7b4,
-    trousers: 0x202629,
-    shoes: 0x17191a,
-    accent: 0xa47a45,
-    hairStyle: 'short',
-    accessory: 'none',
-    accessorySide: 1,
-    bodyWidth: 12,
-    shoulderWidth: 17,
-    headWidth: 9,
-    jacketLength: 21,
-    heightOffset: 0,
-    portraitCrop: { x: 0, y: 0, width: 256, height: 256 },
+  const output: RgbaImage = {
+    width: RECIPE.renderContract.frameWidth,
+    height: RECIPE.renderContract.frameHeight,
+    data: new Uint8Array(
+      RECIPE.renderContract.frameWidth * RECIPE.renderContract.frameHeight * 4
+    ),
   };
-  const portrait = drawProceduralPortrait(profile);
-  const painter = new Painter(256, 256, 1);
-  blit(painter.image, portrait, 0, 0);
-  painter.fillRect(18, 18, 7, 80, color(0xb18349, 190));
-  painter.fillRect(30, 18, 2, 54, color(0x6f9da0, 130));
-  painter.line(190, 24, 232, 24, 2, color(0xd5c6aa, 120));
-  painter.line(206, 31, 232, 31, 1, color(0xd5c6aa, 90));
-  return painter.image;
+  const centerX = resizedMeasurement.alphaBounds.x + resizedMeasurement.alphaBounds.width / 2;
+  const targetX = Math.round(output.width / 2 - centerX);
+  const targetY = footRowPx - resizedMeasurement.footContactRowPx;
+  blit(output, resized, targetX, targetY);
+  return output;
 };
 
-const drawGeorgeAr = (): RgbaImage => {
-  const painter = new Painter(256, 256, 2);
-  const cyan = 0x6ab9bd;
-  const bone = 0xd7cbb4;
-  painter.ellipse(128, 126, 83, 98, color(0x28464a, 42));
-  painter.ellipse(128, 108, 42, 55, color(0x31565a, 92));
-  painter.ellipse(128, 104, 36, 49, color(0x5c7470, 88));
-  painter.line(100, 79, 114, 55, 3, color(cyan, 190));
-  painter.line(114, 55, 142, 54, 2, color(bone, 150));
-  painter.line(142, 54, 158, 78, 3, color(cyan, 190));
-  painter.line(94, 125, 102, 168, 3, color(cyan, 170));
-  painter.line(102, 168, 154, 168, 2, color(bone, 130));
-  painter.line(154, 168, 163, 125, 3, color(cyan, 170));
-  painter.ellipse(114, 104, 4, 3, color(bone, 220));
-  painter.ellipse(142, 104, 4, 3, color(bone, 220));
-  painter.line(115, 131, 141, 131, 2, color(bone, 160));
-  for (let line = 0; line < 7; line += 1) {
-    const y = 57 + line * 22;
-    painter.line(61 + (line % 2) * 8, y, 195 - (line % 3) * 7, y, 1, color(cyan, 58));
+const mirrorHorizontal = (source: RgbaImage): RgbaImage => {
+  const output: RgbaImage = {
+    width: source.width,
+    height: source.height,
+    data: new Uint8Array(source.data.length),
+  };
+  for (let y = 0; y < source.height; y += 1) {
+    for (let x = 0; x < source.width; x += 1) {
+      const sourceOffset = (y * source.width + x) * 4;
+      const targetOffset = (y * source.width + (source.width - 1 - x)) * 4;
+      output.data.set(source.data.subarray(sourceOffset, sourceOffset + 4), targetOffset);
+    }
   }
-  painter.line(52, 205, 204, 205, 2, color(cyan, 110));
-  painter.line(76, 214, 180, 214, 1, color(bone, 70));
-  return resizeRgbaBox(painter.image, 256, 256);
+  return output;
+};
+
+const translateFrame = (source: RgbaImage, offsetX: number, offsetY: number): RgbaImage => {
+  const output: RgbaImage = {
+    width: source.width,
+    height: source.height,
+    data: new Uint8Array(source.data.length),
+  };
+  blit(output, source, offsetX, offsetY);
+  return output;
+};
+
+const TEMPLATE_ROW_BY_DIRECTION: Record<CharacterSpriteDirection, number> = {
+  north: 4,
+  'north-east': 3,
+  east: 2,
+  'south-east': 1,
+  south: 0,
+  'south-west': 1,
+  west: 6,
+  'north-west': 5,
+};
+
+const shouldMirrorTemplateDirection = (direction: CharacterSpriteDirection): boolean =>
+  direction === 'south-east';
+
+const sevenRowSourceDirection = (
+  direction: CharacterSpriteDirection
+): { row: number; mirror: boolean; northOverride: boolean } => {
+  switch (direction) {
+    case 'south':
+      return { row: 0, mirror: false, northOverride: false };
+    case 'south-west':
+      return { row: 1, mirror: false, northOverride: false };
+    case 'south-east':
+      return { row: 1, mirror: true, northOverride: false };
+    case 'east':
+      return { row: 2, mirror: false, northOverride: false };
+    case 'west':
+      return { row: 2, mirror: true, northOverride: false };
+    case 'north-east':
+      return { row: 3, mirror: false, northOverride: false };
+    case 'north-west':
+      return { row: 3, mirror: true, northOverride: false };
+    case 'north':
+      return { row: 0, mirror: false, northOverride: true };
+  }
+};
+
+const extractMoveFrames = (
+  source: LoadedActorSource,
+  recipe: SpriteSourceRecipe,
+  direction: CharacterSpriteDirection
+): RgbaImage[] => {
+  const frames: RgbaImage[] = [];
+  if (recipe.layout === 'template-eight') {
+    const row = TEMPLATE_ROW_BY_DIRECTION[direction];
+    for (let frameIndex = 0; frameIndex < 4; frameIndex += 1) {
+      const sourceFrame = source.rows[row]?.[frameIndex];
+      if (!sourceFrame) throw new Error(`Template source is missing row ${row}, frame ${frameIndex}`);
+      const normalized = normalizeWorldFrame(sourceFrame);
+      frames.push(shouldMirrorTemplateDirection(direction) ? mirrorHorizontal(normalized) : normalized);
+    }
+    return frames;
+  }
+
+  const selection = sevenRowSourceDirection(direction);
+  const selectedRows = selection.northOverride ? source.northOverrideRows : source.rows;
+  if (!selectedRows) throw new Error('Seven-row actor source is missing its north override');
+  for (let frameIndex = 0; frameIndex < 4; frameIndex += 1) {
+    const sourceFrame = selectedRows[selection.row]?.[frameIndex];
+    if (!sourceFrame) {
+      throw new Error(`Seven-row source is missing row ${selection.row}, frame ${frameIndex}`);
+    }
+    const normalized = normalizeWorldFrame(sourceFrame);
+    frames.push(selection.mirror ? mirrorHorizontal(normalized) : normalized);
+  }
+  return frames;
+};
+
+const interactionDirectionSign = (direction: CharacterSpriteDirection): number => {
+  if (direction.includes('east')) return 1;
+  if (direction.includes('west')) return -1;
+  return 1;
+};
+
+const deriveStateFrames = (
+  moveFrames: readonly RgbaImage[],
+  state: CharacterSpriteState,
+  direction: CharacterSpriteDirection
+): RgbaImage[] => {
+  if (state === 'move') return [...moveFrames];
+  const base = moveFrames[1];
+  if (!base) throw new Error(`Missing neutral source frame for ${state}-${direction}`);
+  if (state === 'idle') {
+    return [
+      translateFrame(base, 0, 0),
+      translateFrame(base, 0, -1),
+      translateFrame(base, 0, 0),
+      translateFrame(base, 0, 0),
+    ];
+  }
+  const sign = interactionDirectionSign(direction);
+  return [
+    translateFrame(base, 0, 0),
+    translateFrame(base, sign, 0),
+    translateFrame(base, sign * 2, -1),
+    translateFrame(base, sign, 0),
+  ];
+};
+
+const createSheet = (frames: readonly RgbaImage[]): {
+  image: RgbaImage;
+  frames: CharacterSpriteFrameMetrics[];
+} => {
+  if (frames.length !== 4) throw new Error(`Expected four actor frames, got ${frames.length}`);
+  const image: RgbaImage = {
+    width: RECIPE.renderContract.frameWidth * RECIPE.renderContract.frameCount,
+    height: RECIPE.renderContract.frameHeight,
+    data: new Uint8Array(
+      RECIPE.renderContract.frameWidth *
+        RECIPE.renderContract.frameCount *
+        RECIPE.renderContract.frameHeight *
+        4
+    ),
+  };
+  frames.forEach((frame, frameIndex) => {
+    blit(image, frame, frameIndex * RECIPE.renderContract.frameWidth, 0);
+  });
+  return { image, frames: frames.map((frame) => measureAlpha(frame)) };
 };
 
 const deriveReferencePortrait = (
   board: RgbaImage,
-  profile: ActorStyleProfile
+  actorId: string,
+  crop: ActorRecipeEntry['portraitCrop']
 ): RgbaImage => {
-  const { x, y, width, height } = profile.portraitCrop;
+  const { x, y, width, height } = crop;
   if (x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > board.width || y + height > board.height) {
-    throw new Error(`Portrait crop for ${profile.actorId} is outside the portrait reference board`);
+    throw new Error(`Portrait crop for ${actorId} is outside the portrait reference board`);
   }
   return resizeRgbaBilinear(extractRgbaRegion(board, x, y, width, height), 256, 256);
 };
 
-const createSheet = (
-  profile: ActorStyleProfile,
-  state: CharacterSpriteState,
-  direction: CharacterSpriteDirection
-): { image: RgbaImage; frames: CharacterSpriteFrameMetrics[] } => {
-  const sheet: RgbaImage = {
-    width: 64 * 4,
-    height: 96,
-    data: new Uint8Array(64 * 4 * 96 * 4),
-  };
-  const frames: CharacterSpriteFrameMetrics[] = [];
-  for (let frameIndex = 0; frameIndex < 4; frameIndex += 1) {
-    const frame = renderActorFrame(profile, state, direction, frameIndex);
-    blit(sheet, frame, frameIndex * 64, 0);
-    frames.push(measureAlpha(frame));
-  }
-  return { image: sheet, frames };
+const normalizeGeorgePresentation = (source: RgbaImage): RgbaImage => {
+  const cropped = cropToAlpha(chromaKeyGreen(source));
+  const scale = Math.min(200 / cropped.width, 200 / cropped.height);
+  const width = Math.max(1, Math.round(cropped.width * scale));
+  const height = Math.max(1, Math.round(cropped.height * scale));
+  const resized = resizeRgbaBilinear(cropped, width, height);
+  const output: RgbaImage = { width: 256, height: 256, data: new Uint8Array(256 * 256 * 4) };
+  blit(output, resized, Math.round((256 - width) / 2), 230 - height);
+  return output;
 };
 
-interface IntegrityRecord {
-  sha256: string;
-  compressedBytes: number;
-  decodedBytes: number;
-}
-
-interface ActorIntegrityRecord {
-  portrait: IntegrityRecord;
-  sheets: Record<string, IntegrityRecord>;
-  metrics: IntegrityRecord;
-}
+const fillImage = (width: number, height: number, hex: number): RgbaImage => {
+  const image: RgbaImage = { width, height, data: new Uint8Array(width * height * 4) };
+  for (let pixel = 0; pixel < width * height; pixel += 1) {
+    const offset = pixel * 4;
+    image.data[offset] = (hex >> 16) & 0xff;
+    image.data[offset + 1] = (hex >> 8) & 0xff;
+    image.data[offset + 2] = hex & 0xff;
+    image.data[offset + 3] = 255;
+  }
+  return image;
+};
 
 const writePng = async (filePath: string, image: RgbaImage): Promise<IntegrityRecord> => {
   const png = encodeRgbaPng(image);
@@ -850,23 +597,28 @@ const writeJson = async (filePath: string, value: unknown): Promise<IntegrityRec
 
 const buildActor = async (
   entry: CharacterSpriteManifestEntry,
+  actorRecipe: ActorRecipeEntry,
+  source: LoadedActorSource,
   portraitReferenceBoard: RgbaImage
-): Promise<{ integrity: ActorIntegrityRecord; portrait: RgbaImage; sampleSheets: Record<string, RgbaImage> }> => {
-  const profile = PROFILES[entry.actorId];
-  if (!profile) throw new Error(`Missing grounded actor profile for ${entry.actorId}`);
+): Promise<BuiltActor> => {
   const actorDir = path.join(CHARACTER_OUTPUT_DIR, entry.spriteSetId);
   const states = {} as CharacterSpriteSheetMetrics['states'];
   const sheetIntegrity: Record<string, IntegrityRecord> = {};
-  const sampleSheets: Record<string, RgbaImage> = {};
+  const sampleSheets = {} as Record<CharacterSpriteState, RgbaImage>;
+  const directionFrames = {} as Record<CharacterSpriteDirection, RgbaImage>;
 
-  for (const state of CHARACTER_SPRITE_STATES) {
-    states[state] = {} as CharacterSpriteSheetMetrics['states'][CharacterSpriteState];
-    for (const direction of CHARACTER_SPRITE_DIRECTIONS) {
-      const sheet = createSheet(profile, state, direction);
+  for (const direction of CHARACTER_SPRITE_DIRECTIONS) {
+    const moveFrames = extractMoveFrames(source, actorRecipe.spriteSource, direction);
+    for (const state of CHARACTER_SPRITE_STATES) {
+      states[state] ??= {} as CharacterSpriteSheetMetrics['states'][CharacterSpriteState];
+      const sheet = createSheet(deriveStateFrames(moveFrames, state, direction));
       const key = `${state}-${direction}`;
       states[state][direction] = { frames: sheet.frames };
       sheetIntegrity[key] = await writePng(path.join(actorDir, `${key}.png`), sheet.image);
       if (direction === 'south-east') sampleSheets[state] = sheet.image;
+      if (state === 'idle') {
+        directionFrames[direction] = extractRgbaRegion(sheet.image, 64, 0, 64, 96);
+      }
     }
   }
 
@@ -880,7 +632,11 @@ const buildActor = async (
     states,
   };
   const metricsIntegrity = await writeJson(path.join(actorDir, 'sheet-metrics.json'), metrics);
-  const portrait = deriveReferencePortrait(portraitReferenceBoard, profile);
+  const portrait = deriveReferencePortrait(
+    portraitReferenceBoard,
+    entry.actorId,
+    actorRecipe.portraitCrop
+  );
   const portraitIntegrity = await writePng(
     path.join(PORTRAIT_OUTPUT_DIR, `${entry.actorId}.png`),
     portrait
@@ -894,23 +650,12 @@ const buildActor = async (
     },
     portrait,
     sampleSheets,
+    directionFrames,
   };
 };
 
-const fillImage = (width: number, height: number, hex: number): RgbaImage => {
-  const image: RgbaImage = { width, height, data: new Uint8Array(width * height * 4) };
-  for (let pixel = 0; pixel < width * height; pixel += 1) {
-    const offset = pixel * 4;
-    image.data[offset] = (hex >> 16) & 0xff;
-    image.data[offset + 1] = (hex >> 8) & 0xff;
-    image.data[offset + 2] = hex & 0xff;
-    image.data[offset + 3] = 255;
-  }
-  return image;
-};
-
 const composeProofBoards = async (
-  built: Record<string, { portrait: RgbaImage; sampleSheets: Record<string, RgbaImage> }>,
+  built: Record<string, BuiltActor>,
   takahiro: RgbaImage,
   george: RgbaImage
 ): Promise<Record<string, IntegrityRecord>> => {
@@ -921,8 +666,7 @@ const composeProofBoards = async (
     const row = Math.floor(index / 4);
     const cellX = column * 320;
     const cellY = row * 128;
-    const portrait = resizeRgbaBilinear(built[entry.actorId].portrait, 120, 120);
-    composite(actorBoard, portrait, cellX + 4, cellY + 4);
+    composite(actorBoard, resizeRgbaBilinear(built[entry.actorId].portrait, 120, 120), cellX + 4, cellY + 4);
     CHARACTER_SPRITE_STATES.forEach((state, stateIndex) => {
       const frame = extractRgbaRegion(built[entry.actorId].sampleSheets[state], 64, 0, 64, 96);
       composite(actorBoard, frame, cellX + 124 + stateIndex * 64, cellY + 16);
@@ -940,8 +684,12 @@ const composeProofBoards = async (
     george,
   ];
   portraits.forEach((portrait, index) => {
-    const scaled = resizeRgbaBilinear(portrait, 128, 128);
-    composite(portraitBoard, scaled, (index % 4) * 128, Math.floor(index / 4) * 128);
+    composite(
+      portraitBoard,
+      resizeRgbaBilinear(portrait, 128, 128),
+      (index % 4) * 128,
+      Math.floor(index / 4) * 128
+    );
   });
   proofIntegrity.portraitRoster = await writePng(
     path.join(PROOF_OUTPUT_DIR, 'portrait-roster-board.png'),
@@ -951,8 +699,12 @@ const composeProofBoards = async (
   const directionBoard = fillImage(512, 1152, 0x17191a);
   CHARACTER_SPRITE_MANIFEST.forEach((entry, actorIndex) => {
     CHARACTER_SPRITE_DIRECTIONS.forEach((direction, directionIndex) => {
-      const frame = renderActorFrame(PROFILES[entry.actorId], 'idle', direction, 1);
-      composite(directionBoard, frame, directionIndex * 64, actorIndex * 96);
+      composite(
+        directionBoard,
+        built[entry.actorId].directionFrames[direction],
+        directionIndex * 64,
+        actorIndex * 96
+      );
     });
   });
   proofIntegrity.actorDirections = await writePng(
@@ -965,10 +717,9 @@ const composeProofBoards = async (
     CHARACTER_SPRITE_STATES.forEach((state, stateIndex) => {
       const sheet = built[entry.actorId].sampleSheets[state];
       for (let frameIndex = 0; frameIndex < 4; frameIndex += 1) {
-        const frame = extractRgbaRegion(sheet, frameIndex * 64, 0, 64, 96);
         composite(
           animationBoard,
-          frame,
+          extractRgbaRegion(sheet, frameIndex * 64, 0, 64, 96),
           stateIndex * 256 + frameIndex * 64,
           actorIndex * 96
         );
@@ -979,7 +730,6 @@ const composeProofBoards = async (
     path.join(PROOF_OUTPUT_DIR, 'actor-animation-board.png'),
     animationBoard
   );
-
   return proofIntegrity;
 };
 
@@ -1005,49 +755,6 @@ const renderIntegrityModule = (
     2
   )};\n`;
 };
-
-interface ProvenanceFileRecord {
-  path: string;
-  sha256: string;
-}
-
-interface ActorAssetProvenance {
-  recipeId: string;
-  recipe: ProvenanceFileRecord;
-  generator: ProvenanceFileRecord;
-  pngLibrary: ProvenanceFileRecord;
-  spriteReference: ProvenanceFileRecord & { id: string };
-  portraitReference: ProvenanceFileRecord & { id: string };
-}
-
-interface GeneratedTarget {
-  label: string;
-  stagedPath: string;
-  finalPath: string;
-}
-
-const GENERATED_TARGETS: readonly GeneratedTarget[] = [
-  {
-    label: 'characters',
-    stagedPath: CHARACTER_OUTPUT_DIR,
-    finalPath: FINAL_CHARACTER_OUTPUT_DIR,
-  },
-  {
-    label: 'portraits',
-    stagedPath: PORTRAIT_OUTPUT_DIR,
-    finalPath: FINAL_PORTRAIT_OUTPUT_DIR,
-  },
-  {
-    label: 'proof',
-    stagedPath: PROOF_OUTPUT_DIR,
-    finalPath: FINAL_PROOF_OUTPUT_DIR,
-  },
-  {
-    label: 'generated-integrity-module',
-    stagedPath: INTEGRITY_TS_PATH,
-    finalPath: FINAL_INTEGRITY_TS_PATH,
-  },
-];
 
 const pathExists = async (targetPath: string): Promise<boolean> => {
   try {
@@ -1143,12 +850,43 @@ const main = async (): Promise<void> => {
   if (portraitReferenceSha256 !== RECIPE.portraitReference.sha256) {
     throw new Error(`Portrait reference hash mismatch: ${portraitReferenceSha256}`);
   }
+
   const manifestActorIds = CHARACTER_SPRITE_MANIFEST.map((entry) => entry.actorId);
-  const recipeActorIds = Object.keys(PROFILES);
+  const recipeActorIds = Object.keys(RECIPE.actors);
   if (JSON.stringify(recipeActorIds) !== JSON.stringify(manifestActorIds)) {
     throw new Error('Actor recipe order/roster does not exactly match the runtime manifest');
   }
-  const portraitReferenceBoard = decodeRgbaPng(portraitReference);
+
+  const actorSources: Record<string, LoadedActorSource> = {};
+  for (const actorId of manifestActorIds) {
+    const spriteSource = RECIPE.actors[actorId].spriteSource;
+    const sourceAtlas = await readVerifiedPng(spriteSource, `${actorId} source atlas`);
+    const northOverride = spriteSource.northOverride
+      ? await readVerifiedPng(spriteSource.northOverride, `${actorId} north source atlas`)
+      : undefined;
+    actorSources[actorId] = {
+      rows: extractAuthoredAtlasRows(
+        sourceAtlas,
+        RECIPE.renderContract.sourceNormalization.sourceFigureExtraction.authoredRows,
+        `${actorId} source atlas`
+      ),
+      northOverrideRows: northOverride
+        ? extractAuthoredAtlasRows(northOverride, 1, `${actorId} north source atlas`)
+        : undefined,
+    };
+    if (
+      spriteSource.layout === 'seven-plus-north-strip' &&
+      !actorSources[actorId].northOverrideRows
+    ) {
+      throw new Error(`${actorId} requires a hashed north override source`);
+    }
+  }
+
+  const [takahiroSource, georgeSource] = await Promise.all([
+    readVerifiedPng(RECIPE.presentations.takahiroBroadcast, 'Takahiro broadcast source'),
+    readVerifiedPng(RECIPE.presentations.georgeAr, 'George AR source'),
+  ]);
+
   const provenance: ActorAssetProvenance = {
     recipeId: ACTOR_RECIPE_ID,
     recipe: {
@@ -1175,16 +913,22 @@ const main = async (): Promise<void> => {
     },
   };
 
+  const portraitReferenceBoard = decodeRgbaPng(portraitReference);
   const actorIntegrity: Record<string, ActorIntegrityRecord> = {};
-  const built: Record<string, { portrait: RgbaImage; sampleSheets: Record<string, RgbaImage> }> = {};
+  const built: Record<string, BuiltActor> = {};
   for (const entry of CHARACTER_SPRITE_MANIFEST) {
-    const actor = await buildActor(entry, portraitReferenceBoard);
+    const actor = await buildActor(
+      entry,
+      RECIPE.actors[entry.actorId],
+      actorSources[entry.actorId],
+      portraitReferenceBoard
+    );
     actorIntegrity[entry.actorId] = actor.integrity;
-    built[entry.actorId] = { portrait: actor.portrait, sampleSheets: actor.sampleSheets };
+    built[entry.actorId] = actor;
   }
 
-  const takahiro = drawTakahiroPortrait();
-  const george = drawGeorgeAr();
+  const takahiro = resizeRgbaBilinear(takahiroSource, 256, 256);
+  const george = normalizeGeorgePresentation(georgeSource);
   const nonWorldIntegrity = {
     takahiroBroadcast: await writePng(
       path.join(STAGING_APP_ROOT, 'public', NON_WORLD_CHARACTER_PRESENTATIONS.takahiroBroadcast.path),
@@ -1242,7 +986,7 @@ const main = async (): Promise<void> => {
     CHARACTER_SPRITE_STATES.length *
     CHARACTER_SPRITE_DIRECTIONS.length;
   console.log(
-    `[sprites] ${BUILD_MODE === 'check' ? 'Verified' : 'Published'} ${CHARACTER_SPRITE_MANIFEST.length} actors, ${sheetCount} sheets, 12 portraits, Takahiro, George, and proof boards`
+    `[sprites] ${BUILD_MODE === 'check' ? 'Verified' : 'Published'} ${CHARACTER_SPRITE_MANIFEST.length} source-backed actors, ${sheetCount} sheets, 12 portraits, Takahiro, George, and proof boards`
   );
 };
 

@@ -14,7 +14,10 @@ import type {
   WorldPolygon,
 } from '../layout/types';
 import { isPointInPolygon } from '../layout/validator';
-import type { CharacterSpriteDirection } from '../../../content/characters/spriteManifest';
+import {
+  LEVEL0_ACTOR_WORLD_SCALE,
+  type CharacterSpriteDirection,
+} from '../../../content/characters/spriteManifest';
 
 export const GET204_CITY_RECIPE = candidateRecipeJson as unknown as Get204FullDistrictRecipe;
 
@@ -330,7 +333,7 @@ const runtimePopulation: readonly Get204CityPopulationActor[] = [
     spriteSetId: 'civilian_transit',
     position: { x: 24.15, y: 20.95 },
     facing: 'south-east',
-    worldScaleMultiplier: 0.94,
+    worldScaleMultiplier: 1,
     blocksMovement: false,
   },
   {
@@ -339,7 +342,7 @@ const runtimePopulation: readonly Get204CityPopulationActor[] = [
     spriteSetId: 'civilian_transit',
     position: { x: 26.2, y: 21.3 },
     facing: 'south-west',
-    worldScaleMultiplier: 0.92,
+    worldScaleMultiplier: 1,
     blocksMovement: false,
   },
   {
@@ -348,7 +351,7 @@ const runtimePopulation: readonly Get204CityPopulationActor[] = [
     spriteSetId: 'civilian_service',
     position: { x: 42.5, y: 34.5 },
     facing: 'south-east',
-    worldScaleMultiplier: 0.96,
+    worldScaleMultiplier: 1,
     blocksMovement: false,
   },
   {
@@ -357,7 +360,7 @@ const runtimePopulation: readonly Get204CityPopulationActor[] = [
     spriteSetId: 'civilian_delivery',
     position: { x: 27, y: 21 },
     facing: 'south-east',
-    worldScaleMultiplier: 0.96,
+    worldScaleMultiplier: 1,
     blocksMovement: false,
   },
   {
@@ -433,7 +436,7 @@ export const GET204_CITY_RUNTIME: Get204CityRuntimeVisual = {
   zoomPresentation: {
     geometryMode: 'dual-registered-plate-crossfade',
     actorScaleMode: 'screen-compensated',
-    actorWorldScale: 0.64,
+    actorWorldScale: LEVEL0_ACTOR_WORLD_SCALE,
     actorVisibility: 'zoom-fade',
     cameraFollowMode: 'overview-to-player',
   },

@@ -28,6 +28,9 @@ export const LEVEL0_PLAYER_APPEARANCE_IDS = [
 
 export type Level0PlayerAppearanceId = (typeof LEVEL0_PLAYER_APPEARANCE_IDS)[number];
 
+/** One camera-independent production scale for every grounded Level 0 human. */
+export const LEVEL0_ACTOR_WORLD_SCALE = 0.96 as const;
+
 export const LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID: Level0PlayerAppearanceId =
   'player_civilian_01';
 
@@ -79,7 +82,7 @@ export interface CharacterAlphaOccupancyContract {
 }
 
 export interface CharacterAssetProvenance {
-  recipeId: 'get206-grounded-actor-v2';
+  recipeId: 'get206-grounded-actor-v3';
   recipeSha256: string;
   generatorSha256: string;
   pngLibrarySha256: string;
@@ -128,7 +131,7 @@ export interface CharacterSpriteManifestEntry {
     y: 0.92;
   };
   footAnchorTolerancePx: 2;
-  worldScale: 1.3;
+  worldScale: typeof LEVEL0_ACTOR_WORLD_SCALE;
   alphaOccupancy: CharacterAlphaOccupancyContract;
   depthPolicy: 'ground-anchor-y';
   portrait: CharacterPortraitManifestEntry;
@@ -221,7 +224,7 @@ const createEntry = (
   stateFps: SHARED_STATE_FPS,
   origin: SHARED_ORIGIN,
   footAnchorTolerancePx: 2,
-  worldScale: 1.3,
+  worldScale: LEVEL0_ACTOR_WORLD_SCALE,
   alphaOccupancy: SHARED_ALPHA_OCCUPANCY,
   depthPolicy: 'ground-anchor-y',
   portrait: createPortrait(actorId),

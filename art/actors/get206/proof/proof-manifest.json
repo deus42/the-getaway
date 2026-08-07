@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "recipeId": "get206-grounded-actor-v2",
+  "recipeId": "get206-grounded-actor-v3",
   "identityOrder": [
     "player_civilian_01",
     "player_civilian_02",
@@ -33,26 +33,26 @@
   "images": {
     "actorRoster": {
       "path": "actor-roster-board.png",
-      "sha256": "948e4ca601db91bf72d11d4e135e287c0ad06984bd0bf578d6e4e7b697531954",
-      "compressedBytes": 420047,
+      "sha256": "6a80b6c96b18a37f0f4b63a6b0a69bbc033423b632ac3cb2c17cb37914c66c8e",
+      "compressedBytes": 423813,
       "decodedBytes": 1966080
     },
     "portraitRoster": {
       "path": "portrait-roster-board.png",
-      "sha256": "fd5f4dbc299b8bb107b8da7bbc87e34392c3991d1ce54935c3649d0418b1b5ab",
-      "compressedBytes": 397500,
+      "sha256": "2e8f1b9a8569fdbf1779797dac691234718a68678a075289c7d2cb6b93e2f86e",
+      "compressedBytes": 441275,
       "decodedBytes": 1048576
     },
     "actorDirections": {
       "path": "actor-direction-board.png",
-      "sha256": "927489c23e8b6b48a65c9190a1263879909f74fb7b23d12ecdf083f19aeaf428",
-      "compressedBytes": 76122,
+      "sha256": "967cd96c322f926b433a595baed62394c79aaec2b557ee9b084d58a2c457ddfa",
+      "compressedBytes": 240179,
       "decodedBytes": 2359296
     },
     "actorAnimations": {
       "path": "actor-animation-board.png",
-      "sha256": "79df8ef90d046063ed458550b9d1c91e5583b13e73f0321349c629bd9bca498a",
-      "compressedBytes": 71904,
+      "sha256": "3088b2ae8a5034e7da691046255c89108351cecb6348a32c25615557a6ce4729",
+      "compressedBytes": 146314,
       "decodedBytes": 3538944
     }
   },

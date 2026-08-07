@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { LEVEL0_ACTOR_WORLD_SCALE } from '../../../../content/characters/spriteManifest';
 import {
   GET204_CITY_RUNTIME,
   resolveGet204CityOverviewBounds,
@@ -160,7 +161,7 @@ describe('GET-205 four-block Hidzu treatment', () => {
     expect(GET205_HIDZU_RUNTIME_VISUAL.zoomPresentation).toEqual({
       geometryMode: 'single-registered-plate',
       actorScaleMode: 'world-locked',
-      actorWorldScale: 0.64,
+      actorWorldScale: LEVEL0_ACTOR_WORLD_SCALE,
       actorVisibility: 'always',
       cameraFollowMode: 'player-locked',
     });
@@ -182,10 +183,15 @@ describe('GET-205 four-block Hidzu treatment', () => {
       overviewAlpha: 1,
       closeAlpha: 0,
       actorAlpha: 1,
-      playerWorldScale: 0.64,
+      playerWorldScale: LEVEL0_ACTOR_WORLD_SCALE,
     });
     expect(transition).toEqual(close);
     expect(overview).toEqual(close);
+    expect(
+      GET205_HIDZU_RUNTIME_VISUAL.population
+        .filter(({ kind }) => kind !== 'drone')
+        .every(({ worldScaleMultiplier }) => worldScaleMultiplier === 1)
+    ).toBe(true);
     expect(resolveGet204CityOverviewFitZoom(1280, 540, GET205_HIDZU_RUNTIME_VISUAL)).toBe(0.6);
   });
 

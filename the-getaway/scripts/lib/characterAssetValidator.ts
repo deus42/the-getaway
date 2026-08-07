@@ -12,6 +12,7 @@ import {
 import {
   decodeRgbaPng,
   extractRgbaRegion,
+  findAlphaComponents,
   measureAlpha,
   sha256Hex,
   type RgbaImage,
@@ -91,7 +92,8 @@ export interface CharacterAssetValidationReport {
   appRoot: string;
 }
 
-const EXPECTED_RECIPE_ID = 'get206-grounded-actor-v2';
+const EXPECTED_RECIPE_ID = 'get206-grounded-actor-v3';
+const MAX_DETACHED_COMPONENT_PIXELS = 5;
 const EXPECTED_RECIPE_PATH = path.join(
   'art',
   'actors',
@@ -632,6 +634,15 @@ const validateActor = async (
         );
         const measured = measureAlpha(frame);
         compareMeasurement(frameLabel, measured, declared, errors);
+        const alphaComponents = findAlphaComponents(frame).sort(
+          (left, right) => right.alphaPixelCount - left.alphaPixelCount
+        );
+        const largestDetachedComponent = alphaComponents[1]?.alphaPixelCount ?? 0;
+        if (largestDetachedComponent > MAX_DETACHED_COMPONENT_PIXELS) {
+          errors.push(
+            `${frameLabel}: detached alpha component ${largestDetachedComponent}px exceeds ${MAX_DETACHED_COMPONENT_PIXELS}px`
+          );
+        }
         if (measured.alphaPixelCount <= 0) errors.push(`${frameLabel}: frame is fully transparent`);
         if (
           measured.alphaBounds.height < entry.alphaOccupancy.minHeightPx ||
@@ -781,11 +792,58 @@ const validateReferenceMetadata = async (
   }
 };
 
-const validateRecipe = (
+const validateRecipeSourceFile = async (
+  label: string,
+  value: unknown,
+  repositoryRoot: string,
+  errors: string[]
+): Promise<void> => {
+  if (!assertExactKeys(label, value, ['path', 'sha256'], errors)) return;
+  if (typeof value.path !== 'string' || typeof value.sha256 !== 'string') {
+    errors.push(`${label}: path and sha256 must be strings`);
+    return;
+  }
+  if (!validateRuntimePath(`${label}: path`, value.path, errors)) return;
+  if (
+    !value.path.startsWith('art/actors/get204/source/') &&
+    !value.path.startsWith('art/actors/get206/source/')
+  ) {
+    errors.push(`${label}: source must live under the versioned GET-204/GET-206 actor source roots`);
+    return;
+  }
+  if (path.extname(value.path).toLowerCase() !== '.png') {
+    errors.push(`${label}: source must be a PNG`);
+    return;
+  }
+  if (!/^[a-f0-9]{64}$/.test(value.sha256)) {
+    errors.push(`${label}: expected a lowercase SHA-256 digest`);
+    return;
+  }
+  const absolutePath = path.resolve(repositoryRoot, value.path);
+  if (!isWithin(path.resolve(repositoryRoot, 'art', 'actors'), absolutePath)) {
+    errors.push(`${label}: unsafe source path ${JSON.stringify(value.path)}`);
+    return;
+  }
+  const buffer = await readBuffer(absolutePath, label, errors);
+  if (!buffer) return;
+  const actualSha256 = sha256Hex(buffer);
+  if (actualSha256 !== value.sha256) {
+    errors.push(`${label}: SHA-256 mismatch; expected ${value.sha256}, got ${actualSha256}`);
+  }
+  if (!validatePngStructure(label, buffer, errors)) return;
+  try {
+    decodeRgbaPng(buffer);
+  } catch (error) {
+    errors.push(`${label}: PNG decode failed (${error instanceof Error ? error.message : String(error)})`);
+  }
+};
+
+const validateRecipe = async (
   buffer: Buffer,
   provenance: ActorAssetProvenance,
+  repositoryRoot: string,
   errors: string[]
-): void => {
+): Promise<void> => {
   let recipe: Record<string, unknown>;
   try {
     recipe = JSON.parse(buffer.toString('utf8')) as Record<string, unknown>;
@@ -797,15 +855,34 @@ const validateRecipe = (
     !assertExactKeys(
       'recipe',
       recipe,
-      ['actors', 'portraitReference', 'recipeId', 'renderContract', 'schemaVersion', 'spriteReference'],
+      [
+        'actors',
+        'portraitReference',
+        'presentations',
+        'recipeId',
+        'renderContract',
+        'schemaVersion',
+        'sourceWorkflow',
+        'spriteReference',
+      ],
       errors
     )
   ) {
     return;
   }
-  if (recipe.schemaVersion !== 1) errors.push('recipe: expected schemaVersion 1');
+  if (recipe.schemaVersion !== 2) errors.push('recipe: expected schemaVersion 2');
   if (recipe.recipeId !== EXPECTED_RECIPE_ID || recipe.recipeId !== provenance.recipeId) {
     errors.push(`recipe: expected recipeId ${EXPECTED_RECIPE_ID}`);
+  }
+  const expectedSourceWorkflow = {
+    kind: 'ai-assisted-raster-generation',
+    tool: 'OpenAI image generation tool (image_gen)',
+    generatedOn: '2026-08-07',
+    ownership: 'project-generated',
+    normalization: 'deterministic-repository-pipeline',
+  };
+  if (JSON.stringify(recipe.sourceWorkflow) !== JSON.stringify(expectedSourceWorkflow)) {
+    errors.push('recipe: sourceWorkflow must record the authored actor-source origin');
   }
   const expectedActorIds = CHARACTER_SPRITE_MANIFEST.map((entry) => entry.actorId);
   if (!isRecord(recipe.actors) || !sameStrings(Object.keys(recipe.actors), expectedActorIds)) {
@@ -826,6 +903,18 @@ const validateRecipe = (
     footTolerancePx: 2,
     portraitDimensions: { width: 256, height: 256 },
     portraitSafeArea: { x: 0.1, y: 0.1, width: 0.8, height: 0.8 },
+    sourceNormalization: {
+      targetAlphaHeightPx: 62,
+      maxAlphaWidthPx: 54,
+      footRowPx: 88,
+      sourceFigureExtraction: {
+        authoredColumns: 4,
+        authoredRows: 7,
+        minimumComponentPixels: 1000,
+        maxDetachedComponentPixels: 5,
+      },
+      chromaKey: { greenDominance: 1.18, minimumGreen: 72, softEdgePx: 1 },
+    },
   };
   if (JSON.stringify(recipe.renderContract) !== JSON.stringify(expectedRenderContract)) {
     errors.push('recipe: renderContract drifted from the canonical 12×3×8×4 asset contract');
@@ -841,6 +930,68 @@ const validateRecipe = (
     ) {
       errors.push(`recipe: ${key} does not match central provenance`);
     }
+  }
+
+  if (isRecord(recipe.actors)) {
+    for (const actorId of expectedActorIds) {
+      const actor = recipe.actors[actorId];
+      if (!isRecord(actor) || !isRecord(actor.spriteSource)) {
+        errors.push(`recipe: ${actorId} must define spriteSource provenance`);
+        continue;
+      }
+      const source = actor.spriteSource;
+      const expectedKeys = source.layout === 'seven-plus-north-strip'
+        ? ['layout', 'northOverride', 'path', 'sha256']
+        : ['layout', 'path', 'sha256'];
+      if (!assertExactKeys(`recipe: ${actorId}.spriteSource`, source, expectedKeys, errors)) {
+        continue;
+      }
+      if (!['template-eight', 'seven-plus-north-strip'].includes(String(source.layout))) {
+        errors.push(`recipe: ${actorId}.spriteSource has an unsupported layout`);
+        continue;
+      }
+      await validateRecipeSourceFile(
+        `recipe: ${actorId}.spriteSource`,
+        { path: source.path, sha256: source.sha256 },
+        repositoryRoot,
+        errors
+      );
+      if (source.layout === 'seven-plus-north-strip') {
+        await validateRecipeSourceFile(
+          `recipe: ${actorId}.spriteSource.northOverride`,
+          source.northOverride,
+          repositoryRoot,
+          errors
+        );
+      }
+    }
+  }
+
+  if (!assertExactKeys('recipe: presentations', recipe.presentations, ['georgeAr', 'takahiroBroadcast'], errors)) {
+    return;
+  }
+  for (const [presentationId, expectedBackground] of [
+    ['takahiroBroadcast', 'opaque'],
+    ['georgeAr', 'chroma-key-green'],
+  ] as const) {
+    const presentation = recipe.presentations[presentationId];
+    if (!assertExactKeys(
+      `recipe: presentations.${presentationId}`,
+      presentation,
+      ['background', 'path', 'sha256'],
+      errors
+    )) {
+      continue;
+    }
+    if (presentation.background !== expectedBackground) {
+      errors.push(`recipe: presentations.${presentationId} background drifted`);
+    }
+    await validateRecipeSourceFile(
+      `recipe: presentations.${presentationId}`,
+      { path: presentation.path, sha256: presentation.sha256 },
+      repositoryRoot,
+      errors
+    );
   }
 };
 
@@ -918,7 +1069,7 @@ const validateProvenance = async (
     repositoryRoot,
     errors
   );
-  if (recipeBuffer) validateRecipe(recipeBuffer, provenance, errors);
+  if (recipeBuffer) await validateRecipe(recipeBuffer, provenance, repositoryRoot, errors);
 
   for (const entry of CHARACTER_SPRITE_MANIFEST) {
     validateManifestProvenance(entry.actorId, entry.provenance, provenance, errors);

@@ -76,6 +76,29 @@ const createCanonicalFixture = async (): Promise<FixturePaths> => {
     path.join(REPOSITORY_ROOT, 'art', 'actors', 'get206', 'manifests', 'grounded-actor-recipe.json'),
     path.join(repositoryRoot, 'art', 'actors', 'get206', 'manifests', 'grounded-actor-recipe.json')
   );
+  await copyFileWithParents(
+    path.join(
+      REPOSITORY_ROOT,
+      'art',
+      'actors',
+      'get204',
+      'source',
+      'player-civilian-01-walk-green-v1.png'
+    ),
+    path.join(
+      repositoryRoot,
+      'art',
+      'actors',
+      'get204',
+      'source',
+      'player-civilian-01-walk-green-v1.png'
+    )
+  );
+  await fs.cp(
+    path.join(REPOSITORY_ROOT, 'art', 'actors', 'get206', 'source'),
+    path.join(repositoryRoot, 'art', 'actors', 'get206', 'source'),
+    { recursive: true }
+  );
   await fs.cp(
     path.join(REPOSITORY_ROOT, 'art', 'actors', 'get206', 'proof'),
     path.join(repositoryRoot, 'art', 'actors', 'get206', 'proof'),
@@ -342,6 +365,33 @@ describe('GET-206 character asset validator', () => {
     expectRejected(fixture, /alpha bounds mismatch|alpha pixel count mismatch|foot row mismatch/);
   });
 
+  it('rejects a detached visible component even when the sheet integrity is updated', async () => {
+    const actorId = CHARACTER_SPRITE_MANIFEST[0].actorId;
+    const sheetKey = 'idle-north';
+    const sheetPath = path.join(
+      fixture.appRoot,
+      'public',
+      'characters',
+      actorId,
+      `${sheetKey}.png`
+    );
+    const sheet = decodeRgbaPng(await fs.readFile(sheetPath));
+    for (let y = 0; y < 2; y += 1) {
+      for (let x = 0; x < 3; x += 1) {
+        const offset = (y * sheet.width + x) * 4;
+        sheet.data[offset] = 255;
+        sheet.data[offset + 1] = 255;
+        sheet.data[offset + 2] = 255;
+        sheet.data[offset + 3] = 255;
+      }
+    }
+    const png = encodeRgbaPng(sheet);
+    await fs.writeFile(sheetPath, png);
+    await updateSheetIntegrity(fixture, actorId, sheetKey, png);
+
+    expectRejected(fixture, /detached alpha component/);
+  });
+
   it('rejects metrics edited to disagree with decoded frame pixels', async () => {
     const actorId = CHARACTER_SPRITE_MANIFEST[0].actorId;
     const metricsPath = path.join(
@@ -436,7 +486,24 @@ describe('GET-206 character asset validator', () => {
     integrity.provenance.recipeId = 'unreviewed-recipe';
     await writeIntegrity(fixture, integrity);
 
-    expectRejected(fixture, /expected recipeId get206-grounded-actor-v2/);
+    expectRejected(fixture, /expected recipeId get206-grounded-actor-v3/);
+  });
+
+  it('rejects a source atlas whose bytes drift from the authored recipe', async () => {
+    const sourcePath = path.join(
+      fixture.repositoryRoot,
+      'art',
+      'actors',
+      'get206',
+      'source',
+      'atlases',
+      'contact_lira-walk-green-v1.png'
+    );
+    const source = Buffer.from(await fs.readFile(sourcePath));
+    source[source.length - 1] ^= 0x01;
+    await fs.writeFile(sourcePath, source);
+
+    expectRejected(fixture, /contact_lira\.spriteSource: SHA-256 mismatch/);
   });
 
   it('rejects reference paths that escape the repository', async () => {

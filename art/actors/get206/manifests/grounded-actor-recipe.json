@@ -1,6 +1,13 @@
 {
-  "schemaVersion": 1,
-  "recipeId": "get206-grounded-actor-v2",
+  "schemaVersion": 2,
+  "recipeId": "get206-grounded-actor-v3",
+  "sourceWorkflow": {
+    "kind": "ai-assisted-raster-generation",
+    "tool": "OpenAI image generation tool (image_gen)",
+    "generatedOn": "2026-08-07",
+    "ownership": "project-generated",
+    "normalization": "deterministic-repository-pipeline"
+  },
   "spriteReference": {
     "id": "get206-grounded-cast-board-v1",
     "path": "art/actors/get206/references/grounded-cast-board-v1.png",
@@ -10,6 +17,18 @@
     "id": "get206-grounded-portrait-board-v1",
     "path": "art/actors/get206/references/grounded-portrait-board-v1.png",
     "sha256": "72545015a1d9cb3a78143a666a5bb941ed0bc69385247972988e23c4f4469d54"
+  },
+  "presentations": {
+    "takahiroBroadcast": {
+      "path": "art/actors/get206/source/presentations/takahiro-broadcast-v1.png",
+      "sha256": "a0b63cce8f882a1a7a438c298213b02bc955ec4adb31570f6a3797d78446714c",
+      "background": "opaque"
+    },
+    "georgeAr": {
+      "path": "art/actors/get206/source/presentations/george-ar-green-v1.png",
+      "sha256": "ab57785c47ad16cefe65de6efc9bb4c02ca039abdbf1a836ab5d501a547b765a",
+      "background": "chroma-key-green"
+    }
   },
   "renderContract": {
     "supersample": 4,
@@ -32,10 +51,27 @@
     "footRowPx": 88,
     "footTolerancePx": 2,
     "portraitDimensions": { "width": 256, "height": 256 },
-    "portraitSafeArea": { "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8 }
+    "portraitSafeArea": { "x": 0.1, "y": 0.1, "width": 0.8, "height": 0.8 },
+    "sourceNormalization": {
+      "targetAlphaHeightPx": 62,
+      "maxAlphaWidthPx": 54,
+      "footRowPx": 88,
+      "sourceFigureExtraction": {
+        "authoredColumns": 4,
+        "authoredRows": 7,
+        "minimumComponentPixels": 1000,
+        "maxDetachedComponentPixels": 5
+      },
+      "chromaKey": { "greenDominance": 1.18, "minimumGreen": 72, "softEdgePx": 1 }
+    }
   },
   "actors": {
     "player_civilian_01": {
+      "spriteSource": {
+        "path": "art/actors/get204/source/player-civilian-01-walk-green-v1.png",
+        "sha256": "de98b94c95871b1471dc707a60b852581172ca795143552977260cc6b1bfbfe0",
+        "layout": "template-eight"
+      },
       "skin": 6240812,
       "hair": 1512726,
       "jacket": 3093814,
@@ -54,6 +90,11 @@
       "portraitCrop": { "x": 2, "y": 2, "width": 358, "height": 358 }
     },
     "player_civilian_02": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/player_civilian_02-walk-green-v1.png",
+        "sha256": "f8498fb5008b33dc3444961d4758d066d854105696b6b078b8f6684354dc03c5",
+        "layout": "template-eight"
+      },
       "skin": 11565661,
       "hair": 1645082,
       "jacket": 2436143,
@@ -72,6 +113,11 @@
       "portraitCrop": { "x": 364, "y": 2, "width": 358, "height": 358 }
     },
     "player_civilian_03": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/player_civilian_03-walk-green-v1.png",
+        "sha256": "8d77928e62ebaf591bdfcf7693bf3042157ffcc809f345b39cf23f26cfa3f796",
+        "layout": "template-eight"
+      },
       "skin": 9132611,
       "hair": 1849115,
       "jacket": 3232078,
@@ -90,6 +136,11 @@
       "portraitCrop": { "x": 726, "y": 2, "width": 358, "height": 358 }
     },
     "player_civilian_04": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/player_civilian_04-walk-green-v1.png",
+        "sha256": "0d6c4c0097eb03aee8be463ead612fe488acfce02b009a08e941214448fa3eb7",
+        "layout": "template-eight"
+      },
       "skin": 10118476,
       "hair": 2104089,
       "jacket": 5588278,
@@ -108,6 +159,11 @@
       "portraitCrop": { "x": 1088, "y": 2, "width": 358, "height": 358 }
     },
     "contact_lira": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/contact_lira-walk-green-v1.png",
+        "sha256": "ce4f17c4d0235efb035a4d63037ef249bdcb307e1a7842e84ab7470c1cf1b5cf",
+        "layout": "template-eight"
+      },
       "skin": 10118993,
       "hair": 2170139,
       "jacket": 5198153,
@@ -126,6 +182,11 @@
       "portraitCrop": { "x": 2, "y": 364, "width": 358, "height": 358 }
     },
     "contact_naila": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/contact_naila-walk-green-v1.png",
+        "sha256": "f2b01d96fe2fce923ddda3d4c4a3babfedf94d2f1adccc3511f0d4b657bfd771",
+        "layout": "template-eight"
+      },
       "skin": 9667150,
       "hair": 1973019,
       "jacket": 7037522,
@@ -144,6 +205,11 @@
       "portraitCrop": { "x": 364, "y": 364, "width": 358, "height": 358 }
     },
     "contact_brant": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/contact_brant-walk-green-v1.png",
+        "sha256": "447fb89da444c848928fa47e5ee688f4b8ac2585c37f4fc9a3de669e853ba910",
+        "layout": "template-eight"
+      },
       "skin": 9132867,
       "hair": 2760989,
       "jacket": 4014139,
@@ -162,6 +228,15 @@
       "portraitCrop": { "x": 726, "y": 364, "width": 358, "height": 358 }
     },
     "security_hidzu_identity": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/security_hidzu_identity-walk-green-v1.png",
+        "sha256": "9f64cba1125405b9bf2a5b83c12caa8e169c0db9343b147003f79f815a559b8f",
+        "layout": "seven-plus-north-strip",
+        "northOverride": {
+          "path": "art/actors/get206/source/atlases/security_hidzu_identity-north-green-v1.png",
+          "sha256": "fc6dc88dad65f6f95c6dc6995f9ec9c8851ce2051cc8dee7f873cc80e937cce6"
+        }
+      },
       "skin": 11171161,
       "hair": 1382168,
       "jacket": 2238765,
@@ -180,6 +255,11 @@
       "portraitCrop": { "x": 1088, "y": 364, "width": 358, "height": 358 }
     },
     "security_hidzu_service": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/security_hidzu_service-walk-green-v1.png",
+        "sha256": "e6341c1a033d23ac3f607a1da2e02c7971ca762ef498ed5d720a3e8aa4c39af8",
+        "layout": "template-eight"
+      },
       "skin": 10710610,
       "hair": 1710618,
       "jacket": 2502707,
@@ -198,6 +278,11 @@
       "portraitCrop": { "x": 2, "y": 726, "width": 358, "height": 358 }
     },
     "civilian_transit": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/civilian_transit-walk-green-v1.png",
+        "sha256": "3289364e8a6e485ca8bd14c0cbaf67f50837182b0b204adea5b2bb722d160a85",
+        "layout": "template-eight"
+      },
       "skin": 11302488,
       "hair": 1644825,
       "jacket": 7431760,
@@ -216,6 +301,11 @@
       "portraitCrop": { "x": 364, "y": 726, "width": 358, "height": 358 }
     },
     "civilian_service": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/civilian_service-walk-green-v1.png",
+        "sha256": "ef4236e6703896787f88b0448c3e1fb0544cc84afd3fac44ce2a0409c491c178",
+        "layout": "template-eight"
+      },
       "skin": 6897711,
       "hair": 1512982,
       "jacket": 3160636,
@@ -234,6 +324,11 @@
       "portraitCrop": { "x": 726, "y": 726, "width": 358, "height": 358 }
     },
     "civilian_delivery": {
+      "spriteSource": {
+        "path": "art/actors/get206/source/atlases/civilian_delivery-walk-green-v1.png",
+        "sha256": "ce6645f0e399fd8422e3d7da68223d694730492bb8ecd1592e84f7619d01b7c3",
+        "layout": "template-eight"
+      },
       "skin": 10841684,
       "hair": 1710104,
       "jacket": 2896951,

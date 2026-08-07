@@ -1,4 +1,5 @@
 import productionManifestJson from '../../../../../art/blender/get205/manifests/four-block-runtime-production.json';
+import { LEVEL0_ACTOR_WORLD_SCALE } from '../../../content/characters/spriteManifest';
 import {
   GET204_CITY_RUNTIME,
   resolveGet204CityRenderFocusPixel,
@@ -104,7 +105,7 @@ const createRuntimeProfile = (
   zoomPresentation: {
     geometryMode: 'single-registered-plate',
     actorScaleMode: 'world-locked',
-    actorWorldScale: 0.64,
+    actorWorldScale: LEVEL0_ACTOR_WORLD_SCALE,
     actorVisibility: 'always',
     cameraFollowMode: 'player-locked',
   },

@@ -691,7 +691,7 @@ export class Level0Scene extends Phaser.Scene {
       visual.container
         .setAlpha(blend.actorAlpha)
         .setVisible(blend.actorAlpha > 0.04);
-      visual.sprite?.setScale(blend.playerWorldScale * 0.96);
+      visual.sprite?.setScale(blend.playerWorldScale);
     });
     this.gate1PopulationActors.forEach((visual) => {
       const multiplier = Number(
