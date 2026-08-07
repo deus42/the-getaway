@@ -711,10 +711,10 @@ The player chooses one of four distinct contemporary protagonist appearances and
 
 ### Starting state
 
-- T5 provides a technically validated, committed provisional graphic-surveillance-noir world-language pass; requester acceptance remains its final visual gate. T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
+- T5 provides the requester-accepted and committed GET-205 graphic-surveillance-noir production city. Its normal desktop/mobile profiles are the immutable live comparison context for T6; GET-204 and the greybox are diagnostic evidence only. T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
 - Exactly twelve world actor sets are required: four protagonist presets, Lira, Naila, Brant, two Hidzu Corporation security archetypes, and three civilian archetypes.
 - The matrix is 64×96 frames, eight directions, four frames, and `idle`/`move`/`interact`; attack is not required.
-- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Earlier `1.15`/`1.30` greybox trials are evidence only. The accepted same-master GET-204 close/live comparison calibrates camera/building relationship first; any later actor adjustment remains one shared scale with no arbitrary per-scene scaling.
+- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Earlier `1.15`/`1.30` greybox trials and the GET-205 production profile's `0.64` technical scale are evidence only. The accepted GET-205 close/live frame fixes the camera/building relationship first; any actor adjustment remains one shared world scale with no zoom compensation or arbitrary per-scene scaling.
 - T6 owns reusable security/civilian visual archetypes, not names, biographies, counts, schedules, or authoritative placements. Lira's unresolved identity/relationship is outside T6; her art may communicate only the approved medical-supplies role.
 - George hardware, Naila/Brant biography cues, entry-flow ownership, actor scale, and shipping budgets remain explicit OPEN items. `OPEN-PERF-001` has no numeric baseline, so T6 may record measurements but cannot pass shipping-performance acceptance.
 
@@ -745,7 +745,7 @@ Maintain actor/portrait manifests, stable preset/actor IDs, source references, a
 
 ### World/UI/audio/George feedback
 
-Facing, foot contact, locomotion, and interaction must be readable against the current validated provisional city values without labels or x-ray effects. Character creation and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's T6 base art is private, restrained, and visually distinct from a physical actor; proof places it near the protagonist's upper-right at `28–36` screen pixels and suppresses it while a full overlay owns focus, but T9 owns final states, placement, prompts, and suppression. It never owns collision/occlusion/depth or implies that other characters see him.
+Facing, foot contact, locomotion, and interaction must be readable against the accepted GET-205 production city without labels or x-ray effects. Character creation and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's T6 base art is private, restrained, and visually distinct from a physical actor; proof places it near the protagonist's upper-right at `28–36` screen pixels and suppresses it while a full overlay owns focus, but T9 owns final states, placement, prompts, and suppression. It never owns collision/occlusion/depth or implies that other characters see him.
 
 ### Failure and recovery
 
@@ -761,7 +761,7 @@ Production acceptance fails for missing matrices, anchor drift, sliding feet, mi
 
 ### Dependencies and OPEN blockers
 
-Depends on T5's validated committed visual-language pass; consumes T3 anchors and later T7/T9 identity state/surfaces. Blocks T10 and T10B final presentation. T6 owns stable actor origins/foot anchors; T10B alone owns light-region sampling/tint. High acceptance blockers are `OPEN-NAR-009`, `OPEN-NAR-010`, `OPEN-NAR-011`, `OPEN-UI-002`, `OPEN-ART-003`, and `OPEN-PERF-001`. Their recommendations may be trialed provisionally through replaceable manifests/assets and cannot be called accepted while open. `OPEN-UI-002` must preserve the Roadmap split: T6 owns appearance/George assets; T9 owns shell/layout.
+Depends on the requester-accepted, validated, and committed T5 production city; consumes T3 anchors and later T7/T9 identity state/surfaces. Blocks T10 and T10B final presentation. T6 owns stable actor origins/foot anchors; T10B alone owns light-region sampling/tint. High acceptance blockers are `OPEN-NAR-009`, `OPEN-NAR-010`, `OPEN-NAR-011`, `OPEN-UI-002`, `OPEN-ART-003`, and `OPEN-PERF-001`. Their recommendations may be trialed provisionally through replaceable manifests/assets and cannot be called accepted while open. `OPEN-UI-002` must preserve the Roadmap split: T6 owns appearance/George assets; T9 owns shell/layout.
 
 ### Canonical decisions/spec sections
 
@@ -769,7 +769,7 @@ Implements `GDR-PC-002`, `GDR-GEO-001`, `GDR-ART-001`, `GDR-ART-005`, `GDR-REM-0
 
 ### Human-play acceptance
 
-For the current T6 gate, select every protagonist preset through the neutral appearance seam across fresh runs and verify it in the safehouse world; final Character/dialogue/Restart Attempt/debrief persistence remains deferred to T7/T9/T10. Meet Lira, Naila, and Brant and distinguish their world/portrait identities without labels. Inspect both reusable security and all three civilian visual archetypes without treating them as authoritative placed/scheduled actors. Inspect all twelve portraits, Takahiro, and George. At 1280×720, 1440×900, and 1920×1080, compare the accepted normal and overview framings across dusk, blue hour, and curfew for pixel-derived foot stability within two pixels, correct facing/state, human-scale proportions, no roof placement, and readable silhouettes. Missing/corrupt assets must produce an observable neutral diagnostic and fail the production gate; fallback never counts as the production matrix. Final accepted-city context remains deferred to GET-204.
+For the current T6 gate, select every protagonist preset through the neutral appearance seam across fresh runs and verify it in the safehouse world; final Character/dialogue/Restart Attempt/debrief persistence remains deferred to T7/T9/T10. Meet Lira, Naila, and Brant and distinguish their world/portrait identities without labels. Inspect both reusable security and all three civilian visual archetypes without treating them as authoritative placed/scheduled actors. Inspect all twelve portraits, Takahiro, and George. At 1280×720, 1440×900, and 1920×1080, compare the accepted GET-205 normal and overview framings across dusk, blue hour, and curfew for pixel-derived foot stability within two pixels, correct facing/state, human-scale proportions, no roof placement, and readable silhouettes. Missing/corrupt assets must produce an observable neutral diagnostic and fail the production gate; fallback never counts as the production matrix. GET-204 or greybox fallback captures do not satisfy the current production-city gate.
 
 ### Documentation and validation obligations
 
