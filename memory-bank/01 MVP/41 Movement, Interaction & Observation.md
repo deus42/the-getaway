@@ -76,7 +76,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 - Explicit interaction may advance the mission, acquire a fact or mission object, open one terminal, begin dialogue, enter a context, or perform a safehouse action only through that target's contract.
 - Observation exposes known information without advancing time, movement, patrols, cameras, drone behavior, or mission state.
 - Movement during unpaused play advances the operation clock normally and may place the protagonist into visible surveillance or civilian contexts.
-- Route and context choices contribute authored values to `Level0OutcomeLedger`; movement itself grants no XP or generic reward.
+- Route and context choices contribute authored values to `Level0OutcomeLedger`; movement itself grants no reward.
 
 ## 9. UI, world, audio, and George feedback
 
@@ -92,7 +92,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 - A blocked destination is movement feedback, not a run failure. The player recovers by issuing a new direct input; the game does not silently reroute them.
 - Returning from HUD or overlay focus restores world input without consuming a click that would also move the protagonist.
 - Observation cannot be used to let recovery timers, searches, patrols, cameras, or the deadline advance; all are paused together.
-- Movement and interaction may expose the player to authored surveillance, interception, Health, Paranoia, capture, or deadline consequences, but those systems own the resulting failure.
+- Movement and interaction may expose the player to authored surveillance, interception, Paranoia, capture, or deadline consequences, but those systems own the resulting failure.
 - Restart Attempt restores the operation-departure snapshot and departure anchor defined by [[44 Safehouse, Save & Restart Attempt]], with no post-departure movement or interaction state retained.
 
 ## 11. Content-authoring requirements
@@ -126,7 +126,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 
 ## 15. Human-play acceptance examples
 
-- `AC-L0-001`: create a character, regain world control, use both click and WASD, interact with Lira, and reach the first decision in under three minutes without a focus-loss click.
+- `AC-L0-001`: complete cover-select, regain world control, use both click and WASD, interact with Lira, and reach the first decision in under three minutes without a focus-loss click.
 - `AC-L0-002` through `AC-L0-004`: traverse dusk, curfew, and no-contact routes through ordinary direct controls, with no hidden routing or automatic interaction.
 - Open Observation during an active camera or patrol cycle, pan and inspect known state, then close it; protagonist, clock, patrol, camera, and drone state must remain unchanged.
 - Compare a discovered camera in normal play and Observation; subtle light/reflection warnings and exact coverage must derive from the same geometry, including solid-geometry blind spots.

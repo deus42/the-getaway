@@ -15,7 +15,7 @@ For a first read, use [[Game Design]] → [[10 MVP Spine]] → [[11 Level 0 Vert
 - [[10 MVP Spine]] — product pillars and complete player loop
 - [[11 Level 0 Vertical Slice Contract]] — Level 0 mission contract
 - [[12 Game Design Decision Register]] — approved, removed, postponed, and superseded decisions
-- [[13 Level 0 Content and State Matrix]] — beats, facts, checks, outcomes, pacing, and acceptance
+- [[13 Level 0 Content and State Matrix]] — beats, facts, gates, outcomes, pacing, and acceptance
 - [[14 Specification Review Queue]] — unresolved decisions, provisional baselines, and ticket acceptance gates
 
 ## System specifications

@@ -73,7 +73,7 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 
 - Normal exploration rate: `30×`.
 - Safehouse Wait step: `30` in-world minutes, confirmation required.
-- Safehouse Rest: `30` in-world minutes, Health to `100`, Paranoia `−40`, clamped at `0`.
+- Safehouse Rest: `30` in-world minutes, Paranoia `−40`, clamped at `0`.
 - Each grounding action advances exactly `10` world minutes and removes `10` Paranoia once per attempt.
 - Dialogue, menus, Character screen, dossier, observation, debrief, mission completion, mission failure, and Restart Attempt confirmation pause both clock and autonomous simulation.
 - There is no passive Paranoia increase merely because curfew is active.
@@ -98,7 +98,7 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 - Deadline proximity changes objective copy, George warnings, audio announcements, and HUD urgency.
 - Boundaries update route/civilian schedules and the spatial ambience at the Transit Road restaurant, Market Ring workshop, and safehouse-side apartment.
 - Wait and Rest affect available mission time and are recorded in the deterministic world-clock event log; the outcome ledger retains only the final timing classification and deadline result.
-- The final deadline determines mission failure independently of Health or Paranoia.
+- The final deadline determines mission failure independently of Paranoia.
 
 ## 9. UI, world, audio, and George feedback
 
@@ -128,7 +128,7 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 
 ## 12. Edge cases and prohibited shortcuts
 
-- No background simulation while reading, choosing dialogue, allocating progression, observing, or viewing a failure/debrief overlay.
+- No background simulation while reading, choosing dialogue, selecting research, observing, or viewing a failure/debrief overlay.
 - No real-world wall-clock dependence; all mission timing uses deterministic world-clock state.
 - No passive curfew Paranoia gain.
 - No unannounced time skips, automatic operation launch, or forced curfew transition for dramatic convenience.
@@ -150,7 +150,7 @@ Post-MVP may add longer authored schedules, indoor schedule changes, additional 
 2. Dialogue is left open for several real minutes; world time, camera sweep, and drone position remain unchanged.
 3. The player waits twice at the safehouse and sees exactly one hour advance with the correct schedule update.
 4. Cross 21:00, 21:30, 22:00, and 23:30 around pause/save restoration; each public/activity/sound/light change fires exactly once without moving buildings or objectives.
-5. Rest previews and applies 30 minutes, full Health, and 40 Paranoia recovery exactly once.
+5. Rest previews and applies 30 minutes and 40 Paranoia recovery exactly once.
 6. A midnight failure identifies whether Lira hand-in or outbound validation was missing and Restart Attempt restores the departure clock.
 
 ## 16. Owning Linear ticket

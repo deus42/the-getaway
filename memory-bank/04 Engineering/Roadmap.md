@@ -120,6 +120,8 @@ Exit gate: dusk and curfew routes are topologically viable and debug geometry ag
 
 ### T3A / GET-211 — Rename the operation baseline and Restart Attempt contract
 
+> **Canceled — absorbed by T7A (GET-216) on 2026-08-07.** The rename scope and its blocks edges (T8A, GET-179 modernization) transferred to T7A; the contract below is historical.
+
 **Linear:** GET-211
 **Label:** Improvement
 **Parent:** GET-203
@@ -133,7 +135,7 @@ Ownership:
 - reject stale development saves explicitly rather than partially migrating them;
 - assign confirmation ownership to `restart_attempt_confirmation`;
 - present player-facing **Restart Attempt** copy;
-- have George read the actual departure time, consulted contacts, Health, Paranoia, and restoration meaning before confirmation.
+- have George read the actual departure time, consulted contacts, the Paranoia tier, held abilities, and restoration meaning before confirmation.
 
 Exit gate: autosave and `OperationAttemptBaseline` remain separate; departure writes the complete baseline before the departed autosave; every baseline field restores exactly through `restartAttempt`; stale saves fail honestly; and no current public/shared or persisted `retry*` name remains.
 
@@ -204,9 +206,11 @@ Ownership:
 
 Exit gate: all matrices and anchors validate; actors are human-scale, readable without labels, grounded in the world, and visibly non-fantasy.
 
-## Gate 7 — RPG identity, Health, Paranoia, progression
+## Gate 7 — identity, abilities, Paranoia, research
 
 ### T7 — Protagonist RPG identity, progression, Health, and Paranoia
+
+> **Superseded scope:** delivered In Review evidence of the numeric era; current condition/ability scope is T7A / GET-216 below.
 
 **Label:** Feature
 **Depends on:** T3
@@ -225,6 +229,27 @@ Ownership:
 T3 owns persistence infrastructure; T7 owns RPG payload, validation, and player-facing behavior.
 
 Exit gate: at least two different builds are created through normal New Game controls, persist exactly, and produce different results in the reusable visible check-breakdown component for the same canonical requirement. Focused domain proof covers facts, resources, progression, failure, and Restart Attempt without inventing unfinished mission transitions. T9/T10 re-prove those differences through normal practical dialogue, recognition, systems, and escape options while both can complete Level 0; those later integration scenarios are not a blocker to delivering the T7 foundation.
+
+### T7A / GET-216 — Pivot to Paranoia tiers, binary abilities, cover-select, and research
+
+**Linear:** GET-216
+**Label:** Improvement
+**Parent:** GET-207
+**Depends on:** delivered T7 and the committed pivot documentation package; absorbs T3A (GET-211)
+**Blocks:** T8A, GET-179 modernization, and T9A
+
+Ownership:
+
+- remove Health; single condition resource Paranoia presented as the Calm/Uneasy/Shaken/Breaking tiers with `fragile` ability locks;
+- replace attributes/skills/XP/levels with the binary ability catalog and gate resolver (met/not-met with exact reasons);
+- cover-select: one playable social-forward cover, three visibly disabled, zero numbers;
+- safehouse research: declared fact plus world minutes converts to one ability, once per option;
+- breakdown at 100 staged as surrender feeding `failure.breakdown`;
+- the absorbed T3A rename scope: `OperationAttemptBaseline`, `restartAttempt`, `restart_attempt_confirmation`, one v2→v3 schema window, stale-save rejection;
+- Bible character/condition chapter rewrite with per-chapter design-lineage notes; 43/92 file retitles with reference updates;
+- agent-bridge four-band tiers plus the temporary legacy `health: 100` shim.
+
+Exit gate: cover-select, gates, tier locks, research, breakdown, and Restart Attempt prove out under normal controls at target viewports in both languages, with no numeric surface anywhere and only the two parked GET-208 suites red.
 
 ## Gate 8 — surveillance and noncombat escape
 
@@ -307,6 +332,8 @@ Exit gate: facts change routes/checks/objectives/George/debrief truthfully, unkn
 
 ### T9A / GET-213 — Make checks, evidence, George, departure, and failure fully legible
 
+> Vocabulary note: the checks this creation-state title names are now deterministic gates (`GDR-RPG-009`).
+
 **Linear:** GET-213
 **Label:** Improvement
 **Parent:** GET-209
@@ -315,12 +342,12 @@ Exit gate: facts change routes/checks/objectives/George/debrief truthfully, unkn
 
 Ownership:
 
-- mount exact `Level0CheckBreakdown` previews before every checked choice and results from the same deterministic inputs;
+- mount exact gate verdicts (met/not-met with reasons) before every gated choice and results from the same deterministic inputs;
 - validate a real declared worse path for every nonterminal failure, reserving terminal failure for the final failed capture escape;
-- keep the general Fact Ledger binary while implementing the dedicated Cold Iron chain and explicit five-minute/no-check copy action;
+- keep the general Fact Ledger binary while implementing the dedicated Cold Iron chain and explicit five-minute/no-gate copy action;
 - make George explain every unavailable-information boundary, keep silence non-semantic, and add no personal deletion arc;
 - render George's departure baseline readback and Restart Attempt presentation;
-- derive capture reports/maps only from real surveillance-ledger evidence, while deadline, Health, and Paranoia failures remain cause-specific.
+- derive capture reports/maps only from real surveillance-ledger evidence, while deadline and breakdown failures remain cause-specific.
 
 Exit gate: preview/result math is identical, every nonterminal failure progresses at a declared cost, all four Cold Iron states are reachable, copying costs five minutes, George's limits are explicit, baseline restoration is legible, and no failure surface invents evidence.
 
@@ -391,20 +418,23 @@ flowchart TD
   S["Verified recovery snapshot"] --> T1["T1 Canonical specification"]
   T1 --> T2["T2 Runtime recovery"]
   T2 --> T3["T3 Runtime and layout"]
-  T3 --> T3A["T3A Restart foundation"]
+  T3 --> T3A["T3A Restart foundation (absorbed by T7A)"]
   T3 --> T4["T4 Unchanged-kit city"]
   T4 --> T5["T5 Hidzu Corporation world art"]
   T5 --> T6["T6 Actors and portraits"]
   T3 --> T7["T7 RPG identity"]
   T3 --> T8["T8 Surveillance"]
   T7 --> T8
-  T3A --> T8A["T8A Readable surveillance"]
+  T7 --> T7A["T7A Tiers, abilities, covers, research"]
+  T3A -.-> T7A
+  T7A --> T8A["T8A Readable surveillance"]
   T8 --> T8A
-  T3A --> H["GET-179 harness milestone"]
+  T7A --> H["GET-179 harness milestone"]
   T3 --> T9["T9 Dialogue George HUD"]
   T7 --> T9
   T8 --> T9
-  T8A --> T9A["T9A Legible checks and failure"]
+  T8A --> T9A["T9A Legible gates and failure"]
+  T7A --> T9A
   H --> T9A
   T9 --> T9A
   T5 --> T10["T10 Integrated slice"]
@@ -445,7 +475,7 @@ Only the following areas are explicitly postponed:
 - advanced drone/security behavior;
 - meaningful social-media mechanics;
 - full witness/gossip systems;
-- additional identity/build research;
+- additional identity/build design exploration;
 - Miami Level 1 production.
 
 Everything listed as `Removed` in the Decision Register is not a future promise.

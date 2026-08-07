@@ -88,7 +88,7 @@ There is no voice acting in Level 0.
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- `failure.health`, `failure.paranoia`, `failure.capture`, `failure.deadline`, and `failure.save_incompatible` require distinguishable authored failure feedback paired with the exact text cause.
+- `failure.breakdown`, `failure.capture`, `failure.deadline`, and `failure.save_incompatible` require distinguishable authored failure feedback paired with the exact text cause.
 - Missing audio cannot hide or alter Restart Attempt/New Game actions; visual/text feedback remains complete.
 - Restart Attempt stops or clears post-departure presentation and restarts only the ambience/cues appropriate to the restored departure state.
 - Recovery from `Pursuit` must audibly follow the real `Pursuit` to `Suspicious` to `Clear` transitions; no early calm cue may claim recovery before state changes.

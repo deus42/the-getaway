@@ -36,7 +36,7 @@ The player cannot equip, stack, split, drop, sell, craft, repair, modify, or sor
 1. Lira’s briefing establishes that the medkits were confiscated and must be returned.
 2. At the logistics site, the player explicitly interacts with the medkit cache.
 3. Mission state records the medkits as recovered; the object changes world presentation and the dossier updates.
-4. The player may inspect the manifest. Recognition follows Naila's warning or the deterministic Awareness check; copying is a separate explicit five-world-minute action with no extra check. The manifest is evidence, not a carry-weight item.
+4. The player may inspect the manifest. Recognition follows Naila's warning or the deterministic recognition gate; copying is a separate explicit five-world-minute action with no extra gate. The manifest is evidence, not a carry-weight item.
 5. Returning to Lira explicitly transfers the medkits and records the handoff.
 6. Lira provides an outbound transit credential.
 7. The safehouse outbound terminal consumes or validates that credential for its one declared function.
@@ -67,7 +67,7 @@ Transitions are atomic, idempotent, and owned by explicit interaction or dialogu
 - Walking over an object never changes ownership.
 - A world object’s visual disappearance or replacement cannot be the sole authority for mission state.
 - The manifest recognition result cannot block medkit recovery or Level 0 completion.
-- Recognition does not copy automatically. Copying is explicit, costs exactly five world minutes, and adds no check.
+- Recognition does not copy automatically. Copying is explicit, costs exactly five world minutes, and adds no gate.
 - Removing the medkits is a declared surveillance rule break only when a camera or Needle validly observes it.
 - The transit credential has one purpose: outbound-transit validation.
 - A terminal cannot manipulate an object it does not own or perform an unrelated function.
@@ -79,7 +79,7 @@ Transitions are atomic, idempotent, and owned by explicit interaction or dialogu
 - [[46 Facts, Dossier, Minimap & Terminals]] owns objective/fact/outcome updates.
 - [[90 Dialogue]] owns medkit handoff and credential issuance through Lira.
 - [[44 Safehouse, Save & Restart Attempt]] owns outbound validation and persistence.
-- [[92 Character & Progression]] supplies the manifest Awareness check.
+- [[92 Character & Progression]] supplies the designated perception ability for the manifest recognition gate.
 - [[46 Facts, Dossier, Minimap & Terminals]] defines the one-function terminal contract.
 
 ## 8. Effects on other systems
@@ -101,7 +101,7 @@ Transitions are atomic, idempotent, and owned by explicit interaction or dialogu
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- Interrupted or repeated interactions cannot duplicate recovery, handoff, evidence, credential, XP, or objective transitions.
+- Interrupted or repeated interactions cannot duplicate recovery, handoff, evidence, credential, or objective transitions.
 - If the medkit interaction is blocked, the prompt states the precise interaction issue.
 - If the player misses or fails to recognize the manifest, the mission continues and the dossier remains honest.
 - Restart Attempt restores object, binary fact, and `ColdIronEvidenceState` exactly from `OperationAttemptBaseline`; normally this means medkits at cache, manifest `unknown` or pre-departure `naila_warning`, and transit credential not issued.
@@ -138,7 +138,7 @@ A small player-managed inventory and consumables are Post-MVP research, not a co
 
 1. Walking over medkits does nothing; explicit interaction visibly records recovery once.
 2. The medkits appear in the dossier as mission state without opening an inventory panel.
-3. Naila advances the warning, inspection plus warning or Awareness recognizes, and explicit no-check copying costs five world minutes; failure does not block medkits.
+3. Naila advances the warning, inspection plus warning or the designated perception ability recognizes, and explicit no-gate copying costs five world minutes; failure does not block medkits.
 4. Lira accepts the medkits only after recovery and issues the credential once.
 5. The outbound terminal validates only the credential and cannot loop cameras or unlock the cache.
 6. Restart Attempt restores the cache and credential to their departure states with no duplicate facts or rewards.

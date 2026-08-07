@@ -1,195 +1,171 @@
 ---
 status: MVP
 type: system-specification
-tags: [character-creation, attributes, skills, xp, progression]
+tags: [cover-select, abilities, gates, research, progression]
 canonical: true
 ---
 
-# Character Creation and Progression
+# Character, Covers, Abilities, and Research
 
 ## 1. Player fantasy and purpose
 
-The protagonist is a player-authored expatriate with a personal history, uneven competence, and room to grow—not a fixed operative or fantasy archetype. Character creation must produce practical differences in dialogue, observation, systems use, emotional control, and escape while remaining small enough to understand in two minutes.
+The protagonist is one authored person — an American expatriate with a missing father and a reason to leave — whose identity the player chooses as a *cover*: the life they lived in Tokyo before tonight. Identity is a person, not a budget. Capability is binary: the protagonist either can do a thing or cannot, and the interesting pressure is that stress switches parts of that capability off. This carries identity without numbers, in the tradition of Pentiment's numberless role-playing and Deus Ex's binary enablers, with Disco Elysium's thought cabinet inverted into the progression spine.
 
 ## 2. Player-visible verbs
 
 The player can:
 
-- choose a callsign;
-- choose one of four authored appearance presets;
-- distribute attribute and skill points;
-- inspect what every capability affects;
-- review the complete build before starting;
-- open the Character screen during paused play;
-- see visible check requirements and why a result succeeded or failed;
-- earn authored milestone XP;
-- spend level-up points only at a safehouse or debrief.
+- select one of four authored covers at New Game (one playable in Level 0; three visibly disabled);
+- read each cover's short fiction and its three starting abilities;
+- inspect every held ability, its `fragile`/`hardened` tag, and — when locked — the exact tier reason;
+- see every gate as met or not met with its exact reason, before and after choosing;
+- research a new ability at the safehouse by spending a declared fact plus world minutes;
+- open the Character screen during paused play.
 
 ## 3. Starting state and prerequisites
 
-- New Game opens character creation before Level 0.
-- Callsign is player-chosen and validated for display; no fixed `Trace` or `Operative` identity is assigned. Exact normalization/display validation remains `OPEN-RPG-005`; its recorded Unicode-safe rule may be trialed reversibly until accepted.
-- Four authored appearances are available and use grounded dystopian civilian/exile presentation.
-- All four attributes begin at `1`.
-- All eight skills begin at `0`.
-- The player must complete valid allocation and confirm before entering the safehouse opening.
-- The game stores character identity separately from build/progression state.
+- New Game opens cover-select before Level 0. There is no numeric allocation step and no free-text naming step.
+- Four covers of the one protagonist are presented with authored bilingual names and one-paragraph fictions (`OPEN-NAR-016`); the Level 0 playable cover is social-forward, and the other three render honestly as future selections.
+- Confirming the cover creates the run identity: cover ID, the cover's authored display presentation, and its three starting abilities.
+- The ability catalog, `fragile`/`hardened` tags, and lock tiers are versioned authored content (`OPEN-ABL-001`); they are never persisted as copies inside the run beyond held-ability IDs and research state.
+- The game stores cover identity separately from condition (Paranoia) and knowledge (facts) state.
 
 ## 4. Complete happy-path behavior
 
-1. The player enters a callsign and selects one of four appearances.
-2. They distribute four additional attribute points among Physical, Mental, Social, and Technical, respecting the creation cap.
-3. They distribute six skill points among Stealth, Evasion, Awareness, Composure, Insight, Influence, Systems, and OpSec, respecting the creation cap.
-4. The summary previews the resulting totals and the practical situations each capability supports.
-5. Confirmation creates `PlayerIdentity` and `PlayerBuild`, then begins Level 0 at the safehouse.
-6. During play, authored checks use the build and current Paranoia penalty. The same `Level0CheckBreakdown` is mounted before selection in `preview` mode and after commitment in `result` mode.
-7. Authored mission milestones award XP once.
-8. When a level is earned, allocation waits until the player reaches the safehouse or debrief.
-9. Each level grants two skill points; every third level also grants one attribute point.
-10. The Level 0 debrief demonstrates one meaningful progression event and carries the resulting build into future Level 1 data.
+1. The player reads the four covers and selects the playable one.
+2. Level 0 begins at the safehouse at Calm with the cover's three abilities lit.
+3. During play, authored gates consult held abilities, known facts, and the Paranoia tier; each gate shows met or not met with its exact reason before selection and the same verdict after resolution.
+4. When Paranoia enters a higher tier, abilities tagged for that tier lock visibly; `hardened` abilities hold.
+5. At the safehouse, the player may research: a listed option consumes its declared fact plus its world-minute cost and grants one new ability, once.
+6. The debrief records held abilities, research completed, and the peak Paranoia tier, and carries the resulting identity into future Level 1 data.
 
 ## 5. State model and transitions
 
-`PlayerIdentity` contains:
+Run identity contains:
 
-- callsign;
-- appearance preset ID.
+- cover ID;
+- held ability IDs (starting plus researched);
+- research state (per option: available, consumed).
 
-`PlayerBuild` contains:
+Cover-select states:
 
-- Physical, Mental, Social, Technical;
-- Stealth, Evasion, Awareness, Composure, Insight, Influence, Systems, OpSec;
-- level;
-- current XP; the next-level threshold is derived from versioned progression content rather than persisted inside the build;
-- unspent skill points;
-- unspent attribute points.
+`COVER_SELECT → CONFIRMED`
 
-Creation states:
+Ability states (derived, never duplicated into persistence):
 
-`IDENTITY → ATTRIBUTES → SKILLS → REVIEW → CONFIRMED`
+`HELD → LIT | LOCKED(tier)` — locking derives from the current Paranoia tier and the ability's authored tag; it is never stored, only computed.
 
-Progression states:
+Research states per option:
 
-`ACTIVE → LEVEL_PENDING → ALLOCATION_AVAILABLE → ALLOCATED`
-
-XP may move the build to `LEVEL_PENDING` anywhere, but allocation becomes available only in a safehouse/debrief context.
+`UNAVAILABLE(missing fact) → AVAILABLE → CONSUMED(ability granted)`
 
 ## 6. Rules and tuning values
 
-### Attributes
+### Covers
 
-| Attribute | Start | Creation budget/cap | Long-term cap | Level 0 meaning |
-|---|---:|---:|---:|---|
-| Physical | 1 | Shared +4 / max 3 | 5 | Endurance, force, and grounded physical escape. |
-| Mental | 1 | Shared +4 / max 3 | 5 | Awareness, Insight, Composure, and interpretation. |
-| Social | 1 | Shared +4 / max 3 | 5 | Reading people, credibility, and Influence. |
-| Technical | 1 | Shared +4 / max 3 | 5 | Systems use and operational security. |
+| Cover | Level 0 state | Starting abilities | Character |
+|---|---|---|---|
+| Social-forward cover | Playable | Three abilities, mostly `fragile` | The one who talks; strongest with people, most exposed to stress. |
+| Technical cover | Visibly disabled | Authored later | The one who understands the network. |
+| Movement cover | Visibly disabled | Authored later | The one who was never where you looked. |
+| Fourth cover | Visibly disabled | Authored later | Reserved with its fiction (`OPEN-NAR-016`). |
 
-### Skills
+### Abilities
 
-| Skill | Start | Creation budget/cap | Long-term cap | Level 0 meaning |
-|---|---:|---:|---:|---|
-| Stealth | 0 | Shared +6 / max 2 | 5 | Using authored concealment and low-profile movement contexts. |
-| Evasion | 0 | Shared +6 / max 2 | 5 | Breaking pursuit and physical interception. |
-| Awareness | 0 | Shared +6 / max 2 | 5 | Noticing surveillance, routes, and evidence. |
-| Composure | 0 | Shared +6 / max 2 | 5 | Functioning under pressure and interrogation. |
-| Insight | 0 | Shared +6 / max 2 | 5 | Reading motives and contradictions. |
-| Influence | 0 | Shared +6 / max 2 | 5 | Persuasion and social positioning. |
-| Systems | 0 | Shared +6 / max 2 | 5 | Operating terminals and understanding connected devices. |
-| OpSec | 0 | Shared +6 / max 2 | 5 | Avoiding trace and recognizing operational exposure. |
+- An ability is a named binary key: held or not held. No ranks, no partial states.
+- Every ability is tagged `hardened` (never locks) or `fragile` with a declared lock tier (`fragile: uneasy` locks at Uneasy and above; `fragile: shaken` locks at Shaken and above).
+- Each cover starts with exactly three abilities; the Level 0 catalog stays within twelve to sixteen total (`OPEN-ABL-001`).
+- Social abilities tag mostly `fragile`; movement and technical abilities tag mostly `hardened` — character expressed as stress response.
 
-### Checks and progression
+### Gates
 
-- Deterministic check: `attribute + skill − Paranoia penalty + authored situational modifier ≥ visible requirement`.
-- Preview displays `needs N — you have M` and every signed component; result reuses the same resolver inputs and read model.
-- Each check declares exactly one attribute and one skill.
-- Facts can reveal, lower, or guarantee only declared checks.
-- Every nonfatal failed check commits a declared worse-but-real effect. Only the final failed capture-escape option may end an attempt.
-- No random roll, critical success, critical failure, or hidden percentage exists.
-- Each level grants `2` skill points.
-- Every third level grants `1` attribute point.
-- No attribute or skill may exceed its long-term cap.
-- XP comes only from authored milestones and is awarded once.
-- The Level 0 XP threshold and milestone award table remain `OPEN-RPG-002` in [[14 Specification Review Queue]]. Its reversible recommendation trials a `100 XP` Level 2 threshold with one `50 XP` medkit-return award and one `50 XP` transit-validation award; these are not Approved tuning while the item remains open. Thresholds are versioned authored content and are never duplicated into persisted `PlayerBuild` data.
+- A gate passes when the player holds a designated ability that is currently lit, holds a designated fact, or accepts the gate's declared costed path (`GDR-RPG-009`).
+- Every authored gate keeps at least two real solutions among ability/fact/costed path.
+- Presentation is met/not-met with the exact reason — the missing ability, the locking tier, the missing fact, or the cost — never arithmetic (`GDR-RPG-007`).
+- Every nonterminal failed or refused gate commits a declared worse-but-real path (time, Paranoia, exposure, or route change). Only the final failed capture-escape gate may end the attempt.
+- No random roll, critical result, or hidden percentage exists.
+
+### Research
+
+- Research happens only at the safehouse under the availability policy of `OPEN-SAFE-001`.
+- Each option declares one required fact, a world-minute cost, and the one ability it grants; it can be consumed once.
+- One to two options per run, each costing 15–20 world minutes, remain the reversible trial values (`OPEN-ABL-002`).
+- Research never uses randomness, never grants facts, and never removes Paranoia.
 
 ## 7. Inputs from other systems
 
-- [[60 Paranoia]] supplies the current all-check penalty.
-- [[90 Dialogue]] requests deterministic checks and displays requirements/results.
-- [[70 Stealth]] consumes Stealth, Evasion, Composure, Systems, OpSec, and Awareness where declared.
-- [[46 Facts, Dossier, Minimap & Terminals]] supplies fact modifiers and XP milestones.
-- [[44 Safehouse, Save & Restart Attempt]] controls level-up allocation context and persistence.
-- [[48 Actors & Portraits]] maps appearance preset IDs to validated actor/portrait manifests.
+- [[60 Paranoia]] supplies the current tier that derives ability locks.
+- [[90 Dialogue]] requests gate verdicts and displays reasons/results.
+- [[70 Stealth]] consumes designated movement abilities where declared.
+- [[46 Facts, Dossier, Minimap & Terminals]] supplies the facts that gates and research consume.
+- [[44 Safehouse, Save & Restart Attempt]] controls the research context and persistence.
+- [[48 Actors & Portraits]] maps the cover to its validated actor/portrait presentation.
 
 ## 8. Effects on other systems
 
-- Build differences alter available dialogue, recognition, camera looping, trace risk, pursuit recovery, and interception options.
-- Level and XP appear in the protagonist HUD lane and Character screen.
-- Unspent points enable a safehouse/debrief progression action.
-- Callsign appears in HUD, dialogue, debrief, and save metadata.
-- Appearance selects the protagonist world sprite and portrait consistently.
-- Progression persists into future Miami Level 1 data.
+- Cover and held abilities alter available dialogue, recognition, camera looping, trace risk, pursuit recovery, and interception options.
+- The Paranoia tier gauge and ability lock states appear in the protagonist HUD lane (`GDR-UI-005`).
+- Available research appears as a safehouse action.
+- The cover's authored name appears in HUD, dialogue, debrief, and save metadata.
+- The cover selects the protagonist world sprite and portrait consistently.
+- Identity, abilities, and research history persist into future Miami Level 1 data.
 
 ## 9. UI, world, audio, and George feedback
 
-- Character creation explains capabilities in concrete Level 0 language, not abstract genre roles.
-- Budget, caps, invalid allocation, and remaining points are always visible.
-- The Character screen shows only callsign, appearance, level, XP, four attributes, eight skills, Health, Paranoia, unspent points, important facts, and long-term consequence summaries.
-- Check UI mounts `Level0CheckBreakdown` with `presentation: preview | result` and shows the named attribute, skill, requirement, Paranoia penalty, known fact modifier, localized authored situational reason, exact signed math, and final outcome explanation.
-- Level-up feedback is restrained and becomes actionable only at the safehouse/debrief.
-- George may explain a capability or known consequence, but does not recommend a “best build,” spend points, or reveal hidden checks.
+- Cover-select explains each cover in concrete Level 0 language — who they were, what they can do — never in genre-role abstractions and never with numbers.
+- The Character screen shows only the cover, held abilities with their lit/locked states and reasons, the Paranoia tier, important facts, and long-term consequence summaries.
+- Gate UI shows the verdict and its exact reason where the choice lives, before selection and after resolution.
+- Research options show the required fact, the world-minute cost, and the ability granted before confirmation.
+- George may explain an ability, a lock, or a known consequence, but does not recommend a cover, spend time, or reveal hidden gates.
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- Character creation cannot confirm an empty callsign, invalid preset, unspent required creation points, over-cap value, or malformed build.
-- Leaving creation before confirmation discards the draft. After confirmation, the persisted identity/build is authoritative for the run; replacing it requires New Game.
-- Restart Attempt restores identity, build, level, XP, and unspent points exactly from `OperationAttemptBaseline`.
-- New Game clears all identity/build state and begins creation.
-- Retired rewrite saves with fixed Operative/package state are rejected; they are never partially mapped into the new build.
-- A failed check commits its authored fail-forward result and cannot be rerolled by reopening the same interaction; validation rejects a nonfatal catalog entry with no real state/path effect.
+- Cover-select cannot confirm a disabled cover or a malformed selection.
+- After confirmation, the persisted identity is authoritative for the run; replacing it requires New Game.
+- Restart Attempt restores cover, held abilities, and research state exactly from `OperationAttemptBaseline`.
+- New Game clears identity, abilities, and research state and reopens cover-select.
+- Retired numeric-identity saves (attributes, skills, XP, levels) are rejected; they are never partially mapped into covers or abilities.
+- A failed gate commits its authored fail-forward result and cannot be rerolled by reopening the same interaction; validation rejects a nonterminal gate whose failure changes only prose.
 
 ## 11. Content-authoring requirements
 
-- Create four grounded protagonist sprite/portrait identities with stable preset IDs.
-- Provide concise localized descriptions for every attribute and skill, including representative Level 0 uses.
-- Author at least two deliberately different viable sample builds and acceptance routes.
-- Catalog every Level 0 check with attribute, skill, requirement, exact stable-ID fact behavior, situational modifiers with authored localization keys, success, and a concrete fail-forward effect. Requirements and modifier semantics use approved values or the isolated reversible recommendations from `OPEN-RPG-001` and `OPEN-RPG-004` until accepted; validator coverage rejects every nonfatal entry whose failure changes only prose.
-- Define XP milestones and the Level 0 progression demonstration in approved or explicitly provisional authored data before encoding rewards.
+- Author four covers: bilingual names, one-paragraph fictions, sprite/portrait identities with stable IDs, and the three disabled presentations (`OPEN-NAR-016`).
+- Author the ability catalog with stable IDs, bilingual names, one-line concrete meanings, `fragile`/`hardened` tags, and lock tiers (`OPEN-ABL-001`).
+- Catalog every Level 0 gate with its context, ability path, fact path, costed path, lock interaction, success, and a concrete fail-forward effect; validator coverage rejects every nonterminal entry whose failure changes only prose.
+- Author research options with required facts, world-minute costs, granted abilities, and bilingual descriptions (`OPEN-ABL-002`).
 - Author Character-screen consequence summaries from stable outcome fields rather than raw logs.
 
 ## 12. Edge cases and prohibited shortcuts
 
-- No fixed Trace/Operative name, backgrounds, Courier/Cadet/Medic origin, or Ghost/Wire/Force package.
-- No hidden derived combat stats, empty equipment slots, perk tree, weapon modifiers, encumbrance, crafting, faction meter, or nonfunctional statistics.
-- No check choice without mounted exact preview math, preview/result drift, nonterminal wall, or final failure outside the last capture-escape choice.
-- No XP for dialogue exhaustion, repeated interaction, enemy defeat, walking, decorative discovery, or grinding.
-- No automatic point spending or build recommendation presented as canonical.
-- No fact converted into a permanent skill bonus.
-- No save migration that guesses how old packages map to new attributes/skills.
-- No fantasy costume or unexplained military competence implied by appearance or build text.
+- No numeric attribute, skill, XP, level, point pool, allocation, or respec anywhere — state, UI, save, or copy.
+- No fixed Trace/Operative name, free-text naming, Courier/Cadet/Medic origin, or Ghost/Wire/Force package.
+- No gate without a mounted verdict-and-reason, no preview/result drift, no nonterminal wall, and no final failure outside the last capture-escape gate.
+- No ability granted by anything except cover start or completed research; no fact converted into a permanent ability.
+- No hidden lock math: every lock names its tier; every lit ability is genuinely usable.
+- No research randomness, chains beyond one step, or options that circumvent `OPEN-SAFE-001` availability.
+- No save migration that guesses how numeric builds map to covers or abilities.
 
 ## 13. Removed behavior
 
-Removed: fixed protagonist, mandatory Trace name, backgrounds, six-attribute variants, Ghost/Wire/Force packages, large perk trees, combat skill trees, package gadgets, enemy-kill XP, inventory/equipment-derived stats, capstone perks, and automatic level allocation.
+Removed: fixed protagonist, mandatory Trace name, free-form backgrounds, four-attribute/eight-skill numeric builds with creation budgets and caps (superseded `GDR-RPG-001`/`GDR-RPG-002`), the deterministic check formula (superseded `GDR-RPG-003`), XP milestones and safehouse level-ups (superseded `GDR-RPG-005`/`GDR-RPG-006`), callsign entry and appearance-preset selection (superseded `GDR-PC-002`), six-attribute variants, Ghost/Wire/Force packages, large perk trees, combat skill trees, package gadgets, enemy-kill XP, inventory/equipment-derived stats, capstone perks, and automatic level allocation.
 
 ## 14. Post-MVP extensions
 
-Post-MVP may add more identity presentation, Level 1 checks, additional authored consequences, and later progression milestones. Additional skills, attributes, perks, backgrounds, or respec systems require explicit design approval and cannot be inferred from the current caps.
+Post-MVP may enable the three disabled covers (`GDR-PC-007`), add Level 1 gates, deepen research chains, and extend the ability catalog. New numeric systems, ranks, or respec mechanics require explicit design approval and cannot be inferred from the binary model.
 
 ## 15. Human-play acceptance examples
 
-1. A first-time player creates a valid protagonist in no more than two minutes without needing genre-package knowledge.
-2. At T7 delivery, a Social/Mental build and a Technical/Evasion build are created through normal New Game controls and produce materially different results in the reusable visible check-breakdown component for the same canonical requirement. T9/T10 must expose and re-prove those differences inside authored dialogue, evidence, terminal, and escape contexts while both remain able to finish Level 0.
-3. Requirements and all signed components are visible before every check; the result uses identical math and explains the committed effect.
-4. Exercise every catalog failure; each nonterminal result changes a declared route/resource/state while only final capture escape can end the attempt.
-5. Naila’s designated fact guarantees only the manifest recognition it names and does not raise Awareness globally.
-6. Repeated dialogue or interaction cannot duplicate XP.
-7. Level 0 grants enough authored XP to demonstrate one safehouse/debrief allocation event once the open threshold is approved.
-8. Restart Attempt returns the exact departure build; New Game opens creation with no stale package or progression state.
+1. A first-time player reads the covers and starts playing in under one minute without needing genre knowledge, and no number appears anywhere in the flow.
+2. The three disabled covers render honestly as future selections and cannot be confirmed.
+3. Every authored gate shows met/not-met with its exact reason before choice and the identical verdict after resolution, and every authored gate is solvable at least two ways under normal controls.
+4. Entering Uneasy locks exactly the declared `fragile: uneasy` abilities with the tier named as the reason, while a `hardened` ability passes its gate at every tier.
+5. A research option is unavailable without its fact, consumes exactly its declared fact and world minutes when taken, grants exactly one ability, and cannot be repeated.
+6. Naila's designated fact guarantees only the manifest recognition it names.
+7. Restart Attempt returns the exact departure cover, abilities, and research state; New Game reopens cover-select with no stale state.
 
 ## 16. Owning Linear ticket
 
-- Primary: `T7` (`GET-207`) — Protagonist RPG identity, progression, Health, and Paranoia.
-- Integration: `T3A` (`GET-211`) captures/restores the build in `OperationAttemptBaseline`; `T9A` (`GET-213`) mounts exact preview/result math and validates fail-forward behavior.
+- Primary: `T7A` (`GET-216`) — Paranoia tiers, binary abilities, cover-select, and research; historic numeric scope remains with `T7` (`GET-207`) as delivered evidence.
+- Integration: `T7A` captures/restores identity in `OperationAttemptBaseline`; `T9A` (`GET-213`) mounts gate verdict/reason presentation and validates fail-forward behavior.
 - Actor identity dependency: `T6` (`GET-206`) — Grounded actors, portraits, and entry-flow presentation.
-- Canonical decisions: `GDR-PC-002`, `GDR-PC-003`, `GDR-PC-005`, `GDR-RPG-001` through `GDR-RPG-007`, `GDR-HLT-001` through `GDR-HLT-003`, `GDR-PAR-001` through `GDR-PAR-007`, `GDR-TIME-003`, `GDR-REM-001`, `GDR-REM-002`, and `GDR-REM-006` in [[12 Game Design Decision Register]].
+- Canonical decisions: `GDR-PC-003`, `GDR-PC-005`, `GDR-PC-006`, `GDR-PC-007`, `GDR-RPG-004`, `GDR-RPG-007`, `GDR-RPG-008`, `GDR-RPG-009`, `GDR-RPG-010`, `GDR-PAR-008`, `GDR-MIS-008`, `GDR-GOV-009`, `GDR-REM-001`, `GDR-REM-002`, and `GDR-REM-006` in [[12 Game Design Decision Register]].

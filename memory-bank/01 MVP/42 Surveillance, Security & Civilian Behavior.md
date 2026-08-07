@@ -19,16 +19,16 @@ The player survives a visible but fallible institutional network by understandin
 - Break line of sight, change direction, and enter an eligible authored hiding or blending context.
 - Behave credibly within delivery activity or a public queue.
 - Respond to Needle's authored hum, approach warning, and verification warning.
-- Resolve an authored interception through a supported Influence, Insight, Composure, Evasion, or Physical escape option.
+- Resolve an authored interception through a supported social, composure, evasion, or physical escape option.
 
 ## 3. Starting state and prerequisites
 
 - The Level 0 surveillance network begins `Clear`.
 - Hidzu Corporation has no recognition or concern about the protagonist at the start; ordinary public camera visibility alone cannot change that.
 - No camera is known unless it is physically visible from the starting context or revealed by an approved fact.
-- The protagonist begins in the safehouse boundary, outside active operation pursuit, with Health `100` and Paranoia `0`.
+- The protagonist begins in the safehouse boundary, outside active operation pursuit, with Paranoia `0`.
 - The district contains exactly one unarmed patrol drone. Exact human-security and civilian counts, schedules, and placements are unresolved by `OPEN-SEC-001`, `OPEN-CIV-001`, and `OPEN-LAYOUT-003`.
-- Camera looping requires the connected terminal and a Systems action. Hiding and blending require authored contexts and their declared eligibility rules.
+- Camera looping requires the connected terminal and the designated technical ability. Hiding and blending require authored contexts and their declared eligibility rules.
 - Safehouse entry and action behavior under direct observation, `Suspicious`, or `Pursuit` remains an acceptance decision under `OPEN-SAFE-001`; its recorded recommendation may be implemented provisionally, but the network cannot gain an undocumented boundary reset.
 
 ## 4. Complete happy-path behavior
@@ -36,7 +36,7 @@ The player survives a visible but fallible institutional network by understandin
 1. The player discovers a camera, public group, security presence, entrance, or context through sight, contact information, or authored observation.
 2. The world and knowledge surfaces show only the information legitimately discovered, using the same camera geometry that detection uses.
 3. On the dusk/public timing, the player reads delivery activity and uses credible blending behavior; on the curfew/service timing, the player times camera coverage and discrete hiding positions.
-4. A technical player may operate the connected terminal once per attempt. Systems enables a temporary loop; OpSec determines whether the persistent camera-group history becomes `clean` or `traced` after the active effect expires.
+4. A technical player may operate the connected terminal once per attempt. The designated technical ability enables a temporary loop; the supporting operational fact determines whether the persistent camera-group history becomes `clean` or `traced` after the active effect expires.
 5. If a camera or Needle sees a declared rule break and concern reaches `Suspicious`, the game identifies both the observation and rule-break source, the last-known position, and the Paranoia cause. The player breaks observation and reaches a credible hiding or blending context.
 6. If identity becomes confirmed, the network enters `Pursuit`. The player breaks sight, changes direction, and recovers through an authored context while cameras, security, and the drone search last-known evidence rather than true coordinates.
 7. Successful Pursuit recovery returns through `Suspicious` before `Clear`. An interception, if reached, resolves through visible deterministic choices rather than combat.
@@ -64,7 +64,7 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - Normal play uses subtle status LEDs, IR glints, and authored wet-pavement reflections; Observation shows exact discovered coverage.
 - The unarmed drone is player-facing `Needle`, follows one authored patrol, and verifies `Suspicious` events at last-known positions and hiding areas. It cannot be fought, looted, or disabled by a fantasy gadget.
 - Level 0 has one camera set, temporarily looped only from its connected terminal and usable once per attempt. History transitions `unused → active → clean|traced`; active duration remains unresolved in `OPEN-SUR-004`, but the final history persists until Restart Attempt.
-- Systems enables the loop action. Weak OpSec leaves an explicit trace; when a valid observer detects that feed change, the paired typed rule break may set the network to at least `Suspicious` even though the loop succeeds.
+- The designated technical ability enables the loop action. Looping without the supporting operational fact leaves an explicit trace as its declared cost; when a valid observer detects that feed change, the paired typed rule break may set the network to at least `Suspicious` even though the loop succeeds.
 - Hiding and blending use discrete authored contexts. Darkness alone is not hiding; hiding cannot begin under direct observation; blending requires behavior credible for that social context.
 - Exact concern rate, Pursuit confirmation tuning, search/recovery timings, and loop duration remain acceptance decisions under `OPEN-SUR-001` through `OPEN-SUR-004`; their recorded recommendations may be trialed as replaceable authored state-machine data.
 - Paranoia gains must come from communicated authored events; exact event amounts or sustained rates may use only the isolated reversible recommendation from `OPEN-PAR-001` until accepted.
@@ -78,8 +78,8 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - [[41 Movement, Interaction & Observation]] supplies protagonist position, facing, line-of-sight breaks, direction changes, explicit interactions, and full-pause Observation.
 - `Level0LayoutContract` supplies camera and security anchors, solid occlusion, network relationships, drone launch/search regions, entrances, and authored hiding or blending contexts.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies camera discovery, network facts, terminal ownership, and the knowledge boundary.
-- [[92 Character & Progression]] supplies deterministic Systems, OpSec, Influence, Insight, Composure, Evasion, Physical, and Stealth calculations.
-- [[60 Paranoia]] supplies the current penalty tier and records communicated surveillance stress.
+- [[92 Character & Progression]] supplies the held abilities that gates consult.
+- [[60 Paranoia]] supplies the current Paranoia tier and records communicated surveillance stress.
 - [[80 Day-Night Cycle]] supplies dusk, curfew, clock, and shared pause state.
 - Naila and Brant facts supply only their designated topology, terminal, timing, and behavior effects.
 
@@ -98,7 +98,7 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - `Suspicious` uses an amber network change, names the source direction and last-known event, and communicates the Paranoia cause.
 - `Pursuit` uses a crimson state change plus clear camera, security, and drone warnings focused on the last-known position.
 - Needle has one recognizable hum and distinct approach and verification warnings before confirmation.
-- Hiding or blending prompts name eligibility and explain direct observation, behavior, fact, check, or state blockers.
+- Hiding or blending prompts name eligibility and explain direct observation, behavior, fact, gate, or state blockers.
 - George may summarize verified source, last-known evidence, known context eligibility, and authored recovery choices. He cannot reveal the protagonist's hidden safety, an unknown camera, or the best route.
 - Surveillance, drone, transition, consequence, and curfew cues come from [[49 Audio]] and cannot be the only carrier of critical state.
 
@@ -107,8 +107,8 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - `Suspicious` is recoverable by breaking observation and entering or maintaining a credible authored hiding or blending context.
 - `Pursuit` recovery requires line-of-sight break, direction change, and authored hiding or blending. It returns to `Suspicious`, then `Clear`; no invisible anywhere-cooldown clears it.
 - A failed final authored interception option causes `failure.capture`, naming the confirming actor or system and the player's decision.
-- Interception options show their deterministic requirement and likely Health, Paranoia, time, or named consequence before selection.
-- Restart Attempt restores time, Health, Paranoia, facts, map knowledge, and mission state from `OperationAttemptBaseline`, then reconstructs the baseline `Clear` network/device/context runtime from versioned layout and generation data. No Pursuit, trace, camera use, or other post-departure outcome survives Restart Attempt; within a live attempt, clean/traced camera history never disappears.
+- Interception options show their deterministic requirement and likely Paranoia, time, or named consequence before selection.
+- Restart Attempt restores time, Paranoia, facts, map knowledge, and mission state from `OperationAttemptBaseline`, then reconstructs the baseline `Clear` network/device/context runtime from versioned layout and generation data. No Pursuit, trace, camera use, or other post-departure outcome survives Restart Attempt; within a live attempt, clean/traced camera history never disappears.
 - Safehouse arrival during active surveillance follows the approved or explicitly provisional `OPEN-SAFE-001` rule; it cannot silently clear evidence, stop a search, autosave over danger, or grant recovery.
 
 ## 11. Content-authoring requirements
@@ -129,7 +129,7 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - No direct `Clear`-to-capture transition; only the final failed capture-escape after valid escalation may end the attempt through capture.
 - No universal darkness hiding, hiding while directly observed, or blending without context-credible behavior.
 - No passive curfew Paranoia, passive outdoor recovery, universal footstep-noise simulation, or noise-lure ability.
-- Camera looping cannot be repeated in one attempt, return to `unused` after expiry, open doors, erase identity, disable the district, affect unrelated devices, or bypass OpSec.
+- Camera looping cannot be repeated in one attempt, return to `unused` after expiry, open doors, erase identity, disable the district, affect unrelated devices, or bypass the declared trace cost.
 - Public space is not immunity from observed rule breaks. Civilians are authored social contexts and presentation-only visible-event mirrors, not reporters, hidden-state sensors, a simulated crowd, or generic cover bonus.
 - Security verifies and intercepts; it does not enter a tactical or automatic combat loop.
 - No safehouse boundary immunity or undocumented `Suspicious`/`Pursuit` reset.
@@ -162,4 +162,4 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 
 ## 16. Owning Linear ticket
 
-`T8` (`GET-208`) owns the base surveillance, human-security, civilian, hiding, verifier-drone, and noncombat-interception framework. `T8A` (`GET-212`) owns rule-break evidence, harmless public observation, blind spots, camera presentation/history, Needle, recognition reset, civilian reactions, and surveillance Paranoia gating. `T3` (`GET-203`) supplies layout/runtime primitives; `T7` (`GET-207`) supplies checks, Health, Paranoia, and Restart Attempt data; `T9` (`GET-209`) supplies knowledge and feedback surfaces; `T10` (`GET-210`) supplies authored mission content and end-to-end acceptance.
+`T8` (`GET-208`) owns the base surveillance, human-security, civilian, hiding, verifier-drone, and noncombat-interception framework. `T8A` (`GET-212`) owns rule-break evidence, harmless public observation, blind spots, camera presentation/history, Needle, recognition reset, civilian reactions, and surveillance Paranoia gating. `T3` (`GET-203`) supplies layout/runtime primitives; `T7` (`GET-207`) supplies gates, Paranoia, and Restart Attempt data; `T9` (`GET-209`) supplies knowledge and feedback surfaces; `T10` (`GET-210`) supplies authored mission content and end-to-end acceptance.

@@ -6,13 +6,13 @@ level: 0
 
 # Level 0 Content and State Matrix
 
-This document turns [[11 Level 0 Vertical Slice Contract]] into stable authored identifiers, state transitions, facts, checks, outcomes, and human-play scenarios. Values marked with an `OPEN-*` reference block final acceptance of their affected surface. Their recorded queue recommendation may be implemented only as an explicit reversible provisional trial; no untracked value may be guessed.
+This document turns [[11 Level 0 Vertical Slice Contract]] into stable authored identifiers, state transitions, facts, gates, outcomes, and human-play scenarios. Values marked with an `OPEN-*` reference block final acceptance of their affected surface. Their recorded queue recommendation may be implemented only as an explicit reversible provisional trial; no untracked value may be guessed.
 
 ## 1. Mission state machine
 
 | State ID | Entry condition | Required player-visible state | Valid next states | Invalid shortcuts |
 |---|---|---|---|---|
-| `L0_CHARACTER_CREATION` | New Game | Callsign, appearance, attributes, skills, confirmation | `L0_SAFEHOUSE_INTRO` | Direct fixed-character entry |
+| `L0_COVER_SELECT` | New Game | Cover fiction, three starting abilities, playable-cover confirmation | `L0_SAFEHOUSE_INTRO` | Direct fixed-character entry |
 | `L0_SAFEHOUSE_INTRO` | Valid new character initialized | 18:30, safehouse actions, George opening, Lira objective | `L0_LIRA_BRIEFING` | Operation departure, transit validation |
 | `L0_LIRA_BRIEFING` | Explicit interaction with Lira | Mission stakes, two timings, curfew/deadline, passage bargain | `L0_PREPARATION` | Automatic acceptance, package choice |
 | `L0_PREPARATION` | Mission accepted | Naila/Brant optional, waiting/rest available, entrances discoverable | `L0_OPERATION_DEPARTED` | Mandatory contact sequence |
@@ -22,30 +22,30 @@ This document turns [[11 Level 0 Vertical Slice Contract]] into stable authored 
 | `L0_ESCAPE` | Leave cache interaction context | Resolve Suspicious/Pursuit to Clear, then return-to-Lira objective | `L0_LIRA_RETURN`, `L0_FAILED` | Invisible exit trigger while surveillance remains unresolved |
 | `L0_LIRA_RETURN` | Explicit Lira interaction with medkits while the network is Clear | Factual return dialogue, medkit handoff, transit credential | `L0_TRANSIT_VALIDATION`, `L0_FAILED` | Proximity handoff or return during active surveillance |
 | `L0_TRANSIT_VALIDATION` | Credential issued | Safehouse outbound terminal enabled, deadline active | `L0_DEBRIEF`, `L0_FAILED` | Automatic validation |
-| `L0_DEBRIEF` | Explicit valid terminal use before deadline | Transit valid, failure clock disabled, recovery/level-up/debrief | `L0_COMPLETE` | Miami load |
+| `L0_DEBRIEF` | Explicit valid terminal use before deadline | Transit valid, failure clock disabled, recovery/research/debrief | `L0_COMPLETE` | Miami load |
 | `L0_COMPLETE` | Debrief acknowledged | `Continue Exploring`, `End Demo` | terminal/free-roam states only | Placeholder Level 1 |
-| `L0_FAILED` | Health 0, Paranoia 100, capture, or midnight failure | Cause-specific factual screen, Restart Attempt, New Game | restored `L0_OPERATION_DEPARTED` or `L0_CHARACTER_CREATION` | Silent reset, stale partial state, invented capture evidence |
+| `L0_FAILED` | Breakdown at Paranoia 100, capture, or midnight failure | Cause-specific factual screen, Restart Attempt, New Game | restored `L0_OPERATION_DEPARTED` or `L0_COVER_SELECT` | Silent reset, stale partial state, invented capture evidence |
 
 ## 1A. Cross-system transition ledger
 
 This ledger reconciles the complete player journey. “Feedback” always includes equivalent readable meaning; audio and color may reinforce but never exclusively carry a required state.
 
-| Transition | State owner | Triggering player action | Prerequisites / blockers | Facts or checks | Required feedback | Persistence / Restart Attempt | Outcome-ledger write | Specification / ticket |
+| Transition | State owner | Triggering player action | Prerequisites / blockers | Facts or gates | Required feedback | Persistence / Restart Attempt | Outcome-ledger write | Specification / ticket |
 |---|---|---|---|---|---|---|---|---|
 | New Game → Character creation | Application + RPG domain | Select New Game | No incompatible hydration in progress | None | Creation purpose, budgets, caps, four appearances | Draft is not persisted; New Game clears prior Level 0 state | None | [[92 Character & Progression]] / T7 |
-| Creation → Safehouse | RPG + lifecycle | Confirm valid callsign, appearance, and complete allocation | Callsign/preset/budgets valid | No check | Build summary, world load, George opening, current beat | Create new-schema autosave; Restart Attempt absent | None | [[92 Character & Progression]], [[44 Safehouse, Save & Restart Attempt]] / T3, T7 |
-| Safehouse → Lira briefing | Mission + dialogue | Move and explicitly interact with Lira | Lira available/in range; overlay focus valid | Optional authored Lira check only where catalogued | Exact dialogue, pause, objective context, George quiet | Autosave may record current safehouse run; Restart Attempt absent | Contact interaction only after authored effect | [[90 Dialogue]], [[91 Quests & Objectives]] / T9, T10 |
+| Cover-select → Safehouse | Identity + lifecycle | Confirm the playable cover | Cover valid and enabled | No gate | Build summary, world load, George opening, current beat | Create new-schema autosave; Restart Attempt absent | None | [[92 Character & Progression]], [[44 Safehouse, Save & Restart Attempt]] / T3, T7 |
+| Safehouse → Lira briefing | Mission + dialogue | Move and explicitly interact with Lira | Lira available/in range; overlay focus valid | Optional authored Lira gate only where catalogued | Exact dialogue, pause, objective context, George quiet | Autosave may record current safehouse run; Restart Attempt absent | Contact interaction only after authored effect | [[90 Dialogue]], [[91 Quests & Objectives]] / T9, T10 |
 | Briefing → Preparation | Mission | Explicitly accept Lira's bargain | Stakes, two timings, deadline, passage stated | Lira facts acquired with provenance | Current beat, dossier facts, route-level markers, mission cue | Pre-departure state persists; Restart Attempt absent | `acceptedAt`, `contactsConsulted += lira`, facts | [[90 Dialogue]], [[46 Facts, Dossier, Minimap & Terminals]] / T9, T10 |
-| Preparation → Departure | Safehouse + persistence | Consult any contacts or neither, review George's exact readback, then confirm departure | Mission accepted; departure topology under `OPEN-LAYOUT-005`; unsafe actions under `OPEN-SAFE-001` | Naila/Brant facts and optional checks completed or skipped | Real departure time, contacts, Health, Paranoia, and Restart Attempt meaning | Immutable `OperationAttemptBaseline` created before later world mutation | `departedAt`, contacts/facts, primary timing begins | [[44 Safehouse, Save & Restart Attempt]], [[80 Day-Night Cycle]] / T3, T7, T10, GET-211 |
+| Preparation → Departure | Safehouse + persistence | Consult any contacts or neither, review George's exact readback, then confirm departure | Mission accepted; departure topology under `OPEN-LAYOUT-005`; unsafe actions under `OPEN-SAFE-001` | Naila/Brant facts and optional gates completed or skipped | Real departure time, contacts, the Paranoia tier, held abilities, and Restart Attempt meaning | Immutable `OperationAttemptBaseline` created before later world mutation | `departedAt`, contacts/facts, primary timing begins | [[44 Safehouse, Save & Restart Attempt]], [[80 Day-Night Cycle]] / T3, T7, T10, GET-211 |
 | Departure → Infiltration | Mission + movement | Cross into operation space through public or service approach | Route active for time/context; movement/collision/interaction valid | Known route facts refine clarity; no contact is mandatory | World route identity, camera/context discovery, objective precision, ambience | Running state checkpointed; Restart Attempt remains immutable | `primaryTiming`, facts discovered | [[41 Movement, Interaction & Observation]], [[80 Day-Night Cycle]] / T3, T8, T10 |
 | Infiltration → Medkits secured | Mission + terminal | Reach and explicitly operate cache locker, then explicitly take medkits | Range/access; not captured/fatal/deadline-failed | Visible authored access/check if defined | One-function terminal result, mission-object acquisition, escape beat | Post-departure state saved normally but excluded from Restart Attempt | `medkitsRecovered = true` | [[46 Facts, Dossier, Minimap & Terminals]], [[93 Inventory (MVP)]] / T9, T10 |
-| Cache → Manifest outcome | Facts + checks | Explicitly inspect or intentionally leave the manifest; after recognition, explicitly copy or leave it | Manifest present; inspection in range | `naila_warning` guarantees recognition; otherwise `check.manifest_recognition`; copying adds no check | Exact recognition/miss reason; explicit copy confirmation and five-world-minute cost; George only after known result | Post-departure evidence/check discarded on Restart Attempt | `coldIronEvidenceState`, `manifestCopyCompletedAt` | [[46 Facts, Dossier, Minimap & Terminals]], [[92 Character & Progression]] / T7, T9, T10, GET-213 |
-| Medkits secured → Escape resolved | Surveillance network | Leave cache, break sight, change direction, use valid hiding/blending or resolve interception | `ObservationEvidence` plus a valid `SurveillanceRuleBreakEvidence`; context eligibility; Health/Paranoia above fatal thresholds | Context/check requirements visible; contact facts only designated effects | Source, last-known position, network transition, Paranoia cause, Needle/security/audio/George | All post-departure network/resource state discarded on Restart Attempt | network peak, camera-group history, Needle, contexts, interception, Health/Paranoia | [[42 Surveillance, Security & Civilian Behavior]], [[70 Stealth]] / T8, GET-212 |
+| Cache → Manifest outcome | Facts + gates | Explicitly inspect or intentionally leave the manifest; after recognition, explicitly copy or leave it | Manifest present; inspection in range | `naila_warning` guarantees recognition; otherwise `gate.manifest_recognition`; copying adds no gate | Exact recognition/miss reason; explicit copy confirmation and five-world-minute cost; George only after known result | Post-departure evidence/check discarded on Restart Attempt | `coldIronEvidenceState`, `manifestCopyCompletedAt` | [[46 Facts, Dossier, Minimap & Terminals]], [[92 Character & Progression]] / T7, T9, T10, GET-213 |
+| Medkits secured → Escape resolved | Surveillance network | Leave cache, break sight, change direction, use valid hiding/blending or resolve interception | `ObservationEvidence` plus a valid `SurveillanceRuleBreakEvidence`; context eligibility; Paranoia below breakdown | Context/gate requirements visible; contact facts only designated effects | Source, last-known position, network transition, Paranoia cause, Needle/security/audio/George | All post-departure network/resource state discarded on Restart Attempt | network peak, camera-group history, Needle, contexts, interception, Paranoia | [[42 Surveillance, Security & Civilian Behavior]], [[70 Stealth]] / T8, GET-212 |
 | Escape → Lira return | Mission + dialogue | Reach Lira while eligible and explicitly hand over medkits | Medkits held; network Clear; before deadline | Debrief predicates read current facts/outcomes | Factual return dialogue, handoff, credential issuance, objective update | Handoff persists in autosave but Restart Attempt stays departure | `medkitsReturned = true`; credential fact | [[90 Dialogue]], [[91 Quests & Objectives]] / T9, T10 |
 | Lira return → Transit validation | Safehouse + terminal | Return to safehouse and explicitly operate outbound terminal | Credential issued, unexpired, eligible safehouse action, before midnight | No unrelated check; terminal validates one credential function | Expiry/result, objective completion, deadline disabled, validation cue | Transit result persists; Restart Attempt remains departure until run ends | `transitValidated = true`, `completedAt` candidate | [[44 Safehouse, Save & Restart Attempt]], [[46 Facts, Dossier, Minimap & Terminals]] / T3, T9, T10 |
-| Validation → Debrief/progression | Mission + RPG | Enter and acknowledge factual debrief; allocate if level pending | Medkits returned and transit valid | Ledger predicates; provisional XP only under `OPEN-RPG-002` | Actual route/facts/costs, dossier, George observation, XP/level-up math | Completed autosave stores final identity/build/outcome | `completedAt`; no invented outcome | [[91 Quests & Objectives]], [[92 Character & Progression]] / T7, T9, T10 |
+| Validation → Debrief/progression | Mission + identity | Enter and acknowledge factual debrief | Medkits returned and transit valid | Ledger predicates; no reward; research recap only | Actual route/facts/costs, dossier, George observation, research recap | Completed autosave stores final identity/ability/outcome | `completedAt`; no invented outcome | [[91 Quests & Objectives]], [[92 Character & Progression]] / T7, T9, T10 |
 | Debrief → Continue / End | Lifecycle | Select `Continue Exploring` or `End Demo` | Debrief acknowledged | None | Exact terminal choice and consequence | Completed run persists; no new Restart Attempt attempt or Miami scene | No new mission outcome | [[11 Level 0 Vertical Slice Contract]] / T10 |
-| Any active run → Failure → Restart Attempt | Health/Paranoia, surveillance, clock, persistence | Failure trigger, then explicit Restart Attempt or New Game | Exact failure cause; compatible departure snapshot required for Restart Attempt | No reroll or hidden override | Cause, contributing action/system, restoration meaning | Restart Attempt restores full departure snapshot; New Game clears all | `failureCause` belongs to failed attempt evidence only | [[43 Health, Failure & Recovery]], [[44 Safehouse, Save & Restart Attempt]] / T3, T7, T8, T10 |
+| Any active run → Failure → Restart Attempt | Paranoia, surveillance, clock, persistence | Failure trigger, then explicit Restart Attempt or New Game | Exact failure cause; compatible departure snapshot required for Restart Attempt | No reroll or hidden override | Cause, contributing action/system, restoration meaning | Restart Attempt restores full departure snapshot; New Game clears all | `failureCause` belongs to failed attempt evidence only | [[43 Health, Failure & Recovery]], [[44 Safehouse, Save & Restart Attempt]] / T3, T7, T8, T10 |
 
 ## 2. Objective contract
 
@@ -67,11 +67,11 @@ Only the highest-priority incomplete primary objective appears in the persistent
 
 These beat ranges decompose the reversible `OPEN-TIME-001` trial baseline for observation and tuning; they are not Approved values and their maxima are not intended to stack into one run.
 
-| Beat ID | Target duration | Clock | Required content | Decision or skill expression | Exit proof |
+| Beat ID | Target duration | Clock | Required content | Decision or ability expression | Exit proof |
 |---|---:|---|---|---|---|
 | `beat.create` | 1–2 min | Paused | Callsign, four appearances, allocation, build summary | Build identity | Character persisted |
 | `beat.safehouse` | 1 min | 18:30, paused in overlays | George opening, safehouse affordances | Inspect or leave | Lira objective understood |
-| `beat.lira` | 1–2 min | Paused | Bargain, medkits, timings, deadline, passage | Dialogue tone/check only where authored | Mission accepted |
+| `beat.lira` | 1–2 min | Paused | Bargain, medkits, timings, deadline, passage | Dialogue gate only where authored | Mission accepted |
 | `beat.prepare` | 0–4 min | Mixed | Naila, Brant, wait/rest | Consult both/one/neither; choose timing | Departure snapshot |
 | `beat.approach` | 2–3 min | Running | Three-loop city reading, entrances, public/service contexts | Observation and route choice | Site boundary entered |
 | `beat.infiltrate` | 3–4 min | Mixed | Camera, terminal, drone risk, hiding/blending | Systems/OpSec or avoidance | Cache reached |
@@ -79,7 +79,7 @@ These beat ranges decompose the reversible `OPEN-TIME-001` trial baseline for ob
 | `beat.escape` | 2–3 min | Running | Clear/Suspicious/Pursuit response | Evasion, composure, hiding/blending | Lira safely reachable |
 | `beat.return` | 1–2 min | Paused | Handoff, factual reaction, credential | Consequence acknowledgment | Credential issued |
 | `beat.validate` | 1 min | Mixed | Safehouse return and terminal | Time management | Transit valid |
-| `beat.debrief` | 1–2 min | Paused | Dossier summary, level-up, Miami bridge | Progress allocation | Complete state |
+| `beat.debrief` | 1–2 min | Paused | Dossier summary, research recap, Miami bridge | Outcome reading | Complete state |
 
 The unpaused operation budget must fit within eleven real minutes at 30×. `OPEN-TIME-001` must validate route-specific budgets before final pacing acceptance; its recorded route budget may be trialed provisionally.
 
@@ -107,25 +107,27 @@ The unpaused operation budget must fit within eleven real minutes at 30×. `OPEN
 
 Facts never increment a generic score and remain binary acquired/not-acquired entries. Duplicate acquisition may update provenance but cannot duplicate effects or rewards. `ColdIronEvidenceState` is a separate monotonic four-state chain—`unknown → naila_warning → manifest_recognized → manifest_copied`—not a universal rumor/confirmed/leverage layer.
 
-## 5. Deterministic check catalog
+## 5. Deterministic gate catalog
 
-Exact requirements marked `OPEN-RPG-001` are proposed defaults and block final check acceptance until resolved. Exact fact and situational-modifier behavior is separately governed by `OPEN-RPG-004`. Implementers may use only those recorded recommendations as reversible provisional data; they may not choose among alternatives or infer a modifier from prose.
+The exact ability catalog, `fragile`/`hardened` tags, lock tiers, and per-gate key mapping are governed by `OPEN-ABL-001`; the ability IDs below are its recorded reversible recommendation, not approved tuning. Implementers may use only these recorded recommendations as reversible provisional data; they may not choose among alternatives or infer a key from prose. Every authored gate keeps at least two real solutions among its ability, fact, and costed paths (`GDR-RPG-009`); for interception nodes the second solution may be a sibling gate family offered by the same node.
 
-| Check ID | Context | Attribute + skill | Proposed requirement | Fact effect | Success | Fail-forward |
-|---|---|---|---:|---|---|---|
-| `check.lira_read_stakes` | Lira briefing | Social + Insight | 3 | None | Reveals Lira's immediate personal risk | Mission remains available without private inference |
-| `check.naila_opsec` | Naila preparation | Technical + OpSec | 4 | Proposed: no fact modifier; Naila is the source (`OPEN-RPG-004`) | Naila shares trace-risk detail | Core topology fact still available; trace detail withheld |
-| `check.brant_credibility` | Brant preparation | Social + Influence | 4 | Proposed: no fact modifier; any authored node-visibility prerequisite is separate from the calculation (`OPEN-RPG-004`) | Exact behavior phrase and window | Broader timing fact only |
-| `check.public_blend` | Dusk entrance | Social + Insight | 4 | Proposed: `fact.brant.delivery_protocol` lowers by 1 and never guarantees (`OPEN-RPG-004`) | Enter blending context cleanly | Suspicion increases; route remains recoverable |
-| `check.camera_loop` | Connected terminal | Technical + Systems | 4 | Proposed: `fact.naila.camera_topology` lowers by 1 (`OPEN-RPG-004`) | Camera loop begins | Terminal explains missing capability; avoidance remains |
-| `check.camera_trace` | Successful loop | Mental + OpSec | 4 | `fact.naila.connected_terminal` does not bypass OpSec | No trace | Loop succeeds but network becomes Suspicious |
-| `check.manifest_recognition` | Optional manifest | Mental + Awareness | 4 | `naila_warning` guarantees success | `manifest_recognized`; explicit copy becomes available | Manifest presence recorded; significance missed; medkits and escape remain available |
-| `check.intercept_influence` | Authored interception | Social + Influence | 5 | Proposed: `fact.brant.delivery_protocol` lowers by 1 only in a named public-route interception (`OPEN-RPG-004`) | Escape with time/Paranoia cost | Option fails into capture or alternate choice per node |
-| `check.intercept_composure` | Authored interception | Mental + Composure | 5 | Low Paranoia provides no bonus; thresholds apply normally | Maintain cover story or controlled withdrawal | Health/Paranoia cost or capture per node |
-| `check.intercept_evasion` | Authored interception | Physical + Evasion | 5 | Proposed: the node's named nearby `fact.world.hiding.<id>` lowers by 1 (`OPEN-RPG-004`) | Break contact with Health/time cost | Capture on final failed option |
-| `check.pursuit_hide` | Pursuit recovery | Mental + Stealth | 4 | Authored hiding context is prerequisite, not a bonus | Network falls to Suspicious | Drone verifies the context; Pursuit continues |
+Provisional ability set (social-forward cover starts with the first three): `ability.read_people` (`fragile: uneasy`), `ability.negotiate` (`fragile: uneasy`), `ability.blend_in` (`fragile: uneasy`), `ability.steady_voice` (`fragile: shaken`), `ability.spot_patterns` (`fragile: shaken`), `ability.terminal_craft` (`hardened`), `ability.trace_discipline` (`hardened`), `ability.slip_away` (`hardened`), `ability.quiet_feet` (`hardened`).
 
-Before selection, every displayed calculation lists the requirement and the player's exact total from base attribute, skill, Paranoia penalty, authored modifier, and fact effect. Result presentation reuses the same `Level0CheckBreakdown` and deterministic inputs. Every nonfatal catalog failure must commit its declared worse-but-real effect; only the final failed capture-escape option may terminate the attempt.
+| Gate ID | Context | Ability path | Fact path | Costed path | Success | Fail-forward |
+|---|---|---|---|---|---|---|
+| `gate.lira_read_stakes` | Lira briefing | `ability.read_people` | None | Listen longer: +5 world minutes | Reveals Lira's immediate personal risk | Mission remains available without private inference |
+| `gate.naila_opsec` | Naila preparation | `ability.trace_discipline` | None | Press her: small declared Paranoia cost | Naila shares trace-risk detail | Core topology fact still available; trace detail withheld |
+| `gate.brant_credibility` | Brant preparation | `ability.negotiate` | None | Buy time with him: +10 world minutes | Exact behavior phrase and window | Broader timing fact only |
+| `gate.public_blend` | Dusk entrance | `ability.blend_in` | `fact.brant.delivery_protocol` | Wait for a busier window: +10 world minutes | Enter blending context cleanly | Suspicion increases; route remains recoverable |
+| `gate.camera_loop` | Connected terminal | `ability.terminal_craft` | None | On-foot avoidance remains the declared alternative route | Camera loop begins | Terminal explains the missing ability; avoidance remains |
+| `gate.camera_trace` | Successful loop | `ability.trace_discipline` | `fact.naila.camera_topology` | Accept declared trace risk | No trace | Loop succeeds but traced; network becomes Suspicious |
+| `gate.manifest_recognition` | Optional manifest | `ability.spot_patterns` | `naila_warning` guarantees | Study it: +5 world minutes | `manifest_recognized`; explicit copy becomes available | Manifest presence recorded; significance missed; medkits and escape remain available |
+| `gate.intercept_social` | Authored interception | `ability.negotiate` | `fact.brant.delivery_protocol` in the named public-route interception only | Sibling family per node | Escape with time/Paranoia cost | Option fails into capture or alternate choice per node |
+| `gate.intercept_composure` | Authored interception | `ability.steady_voice` | None | Sibling family per node | Maintain cover story or controlled withdrawal | Paranoia cost or capture per node |
+| `gate.intercept_evasion` | Authored interception | `ability.slip_away` | The node's named nearby `fact.world.hiding.<id>` | Sibling family per node | Break contact with time cost | Capture on final failed option |
+| `gate.pursuit_hide` | Pursuit recovery | `ability.quiet_feet` | Authored hiding context is prerequisite, not a key | None | Network falls to Suspicious | Needle verifies the context; Pursuit continues |
+
+Before selection, every displayed gate shows met or not met with its exact reason — the missing ability, the locking tier, the missing fact, or the declared cost. Result presentation reuses the identical verdict and inputs. A locked `fragile` ability names its tier; `hardened` abilities never lock. Every nonfatal catalog failure must commit its declared worse-but-real effect; only the final failed capture-escape option may terminate the attempt.
 
 ## 6. Surveillance transition matrix
 
@@ -152,7 +154,7 @@ Every context has:
 - occupancy bounds;
 - line-of-sight entry rule;
 - valid network states;
-- required behavior/fact/check;
+- required behavior/fact/gate;
 - drone verification behavior;
 - exit behavior;
 - world, HUD, audio, and George feedback;
@@ -188,14 +190,14 @@ Exact prose is authored under T10; infrastructure and state effects are owned by
 |---|---|---|---|
 | `lira.intro` | Recognition, immediate exposure, meeting purpose | none | First meeting / repeat |
 | `lira.briefing` | Medkits, Hidzu Corporation site, dusk/curfew, deadline, passage | mission accepted; core facts | Build-sensitive optional lines |
-| `lira.return` | Explicit handoff and outcome reading | medkits returned; credential issued | Contacts, route, camera, drone, pursuit, Health, Paranoia, evidence |
+| `lira.return` | Explicit handoff and outcome reading | medkits returned; credential issued | Contacts, route, camera, drone, pursuit, Paranoia, evidence |
 | `naila.preparation` | Camera topology, terminal, shipping pattern | Naila facts | Check success/fail-forward; repeat summary |
 | `brant.preparation` | Delivery window, protocol, public behavior | Brant facts | Check success/fail-forward; repeat summary |
-| `interception.<context>` | Short grounded confrontation | cost, escape, or capture | Only supported check options |
+| `interception.<context>` | Short grounded confrontation | cost, escape, or capture | Only supported gate options |
 | `george.context.<state>` | Authored question and bounded answer | no world mutation | Unknown/insufficient-evidence response |
-| `debrief.level0` | Factual run summary and Miami bridge | XP/level-up availability; completion | Evidence found/missed and major outcome combinations |
+| `debrief.level0` | Factual run summary and Miami bridge | Research recap; completion | Evidence found/missed and major outcome combinations |
 
-English and Ukrainian use identical node IDs, check requirements, fact effects, and state transitions.
+English and Ukrainian use identical node IDs, gate requirements, fact effects, and state transitions.
 
 ## 10. Outcome ledger
 
@@ -215,7 +217,8 @@ English and Ukrainian use identical node IDs, check requirements, fact effects, 
 | `hidingContextsUsed` | stable ID set |
 | `blendingContextsUsed` | stable ID set |
 | `interceptionOutcome` | stable outcome ID or null |
-| `healthLost` | integer |
+| `paranoiaTierPeak` | tier name |
+| `researchCompleted` | ability ID list |
 | `paranoiaPeak` | integer 0–100 |
 | `medkitsRecovered` | boolean |
 | `medkitsReturned` | boolean |
@@ -231,8 +234,7 @@ The ledger does not contain reputation, karma, trust, violence, kills, loot valu
 
 | Failure ID | Trigger | Message must name | Restart Attempt restoration | Prohibited behavior |
 |---|---|---|---|---|
-| `failure.health` | Health reaches 0 | Simple physical cause and final consequence | `OperationAttemptBaseline` | Injury simulation, limp, movement penalty, generic “mission failed” only |
-| `failure.paranoia` | Paranoia reaches 100 | Simple medical collapse and contributing source | `OperationAttemptBaseline` | Hallucination framing or surveillance dossier |
+| `failure.breakdown` | Paranoia reaches 100 | Staged surrender/freeze/bolt per context, then a truthful contributing source | `OperationAttemptBaseline` | Hallucination framing or surveillance dossier |
 | `failure.capture` | Final authored capture-escape option fails | Short Hidzu Corporation incident report/map using only real sightings, detected tampering, Needle verification, and capture evidence | `OperationAttemptBaseline` | Complete reconstructed path, joined unseen gaps, unknown content, tactical battle fallback |
 | `failure.deadline` | 00:00 while either medkit return or transit validation is incomplete | Exact unfinished requirements | `OperationAttemptBaseline` | Pretended capture or failure after transit is valid |
 | `failure.save_incompatible` | Retired schema detected | Incompatibility and New Game requirement | No partial Restart Attempt | Silent migration or corrupted defaults |
@@ -245,12 +247,12 @@ Stores the current new-schema run at authored safe points. It is not the same ob
 
 ### `OperationAttemptBaseline`
 
-Created exactly once per attempt after George reads back the real departure time, contacts, Health, Paranoia, and restoration meaning and the player confirms departure. It stores:
+Created exactly once per attempt after George reads back the real departure time, contacts, the Paranoia tier, held abilities, and restoration meaning and the player confirms departure. It stores:
 
 - schema version;
 - callsign and appearance;
-- attributes, skills, level, XP, and unspent points;
-- Health and Paranoia;
+- cover identity, held abilities, and research state;
+- Paranoia and tier-announcement history;
 - world time;
 - mission and objective states;
 - contacts visited and facts acquired before departure;
@@ -290,34 +292,34 @@ The previous sparse/fenced four-block compound, exact `54×38`, exact `84×60` n
 
 | Case ID | Start/build | Required actions | Expected proof |
 |---|---|---|---|
-| `AC-L0-001` | New Game | Create character; enter safehouse; meet Lira | First decision <3 min; build and mission state correct |
-| `AC-L0-002` | Social/Insight build | Consult Brant; use dusk public route | Fact changes objective precision/blending; completion succeeds |
-| `AC-L0-003` | Technical/OpSec build | Consult Naila; wait for curfew; loop camera | Connected terminal only; clean trace outcome possible |
-| `AC-L0-004` | Any viable build | Skip both contacts; complete either route | Mission remains possible with less clarity/stricter checks |
+| `AC-L0-001` | New Game | Select the playable cover; enter safehouse; meet Lira | First decision <3 min; cover and mission state correct |
+| `AC-L0-002` | Social-forward cover | Consult Brant; use dusk public route | Fact changes objective precision/blending; completion succeeds |
+| `AC-L0-003` | Research-expanded cover | Consult Naila; research the technical ability; wait for curfew; loop camera | Connected terminal only; clean trace outcome possible |
+| `AC-L0-004` | The playable cover | Skip both contacts; complete either route | Mission remains possible with less clarity and fewer open gate paths |
 | `AC-L0-005` | Naila fact | Inspect manifest | Recognition guaranteed and attributed to fact |
-| `AC-L0-006` | Awareness-capable build | Skip Naila; inspect manifest | Visible deterministic check recognizes evidence |
-| `AC-L0-007` | Low Awareness/no fact | Inspect or skip manifest | Evidence may be missed; medkit mission still completes |
+| `AC-L0-006` | Perception ability held | Skip Naila; inspect manifest | The visible recognition gate passes through the ability path |
+| `AC-L0-007` | No perception ability or fact | Inspect or skip manifest | Evidence may be missed; medkit mission still completes |
 | `AC-L0-008` | Any | Trigger Suspicious; recover through context | Last-known position and Paranoia cause visible; returns Clear |
 | `AC-L0-009` | Any | Trigger Pursuit; break sight/change direction/hide | Network searches old position and returns through Suspicious |
 | `AC-L0-010` | Any | Allow drone verification | Strong warning; Pursuit transition is understandable |
-| `AC-L0-011` | Supported build | Resolve authored interception successfully | Visible requirement/cost; no combat mode |
+| `AC-L0-011` | Supported option | Resolve authored interception successfully | Visible requirement/cost; no combat mode |
 | `AC-L0-012` | Unsupported/failed options | Fail interception | Exact capture failure; deterministic Restart Attempt |
-| `AC-L0-013` | Health-loss attempt | Reach Health 0 | Exact cause; Restart Attempt restores departure Health |
-| `AC-L0-014` | High-stress attempt | Reach Paranoia 100 | Fatal medical collapse; no dishonest perception |
+| `AC-L0-014` | High-stress attempt | Reach Paranoia 100 | Staged surrender into `failure.breakdown` with a truthful contributing source; no dishonest perception; Restart Attempt restores the departure state |
 | `AC-L0-015` | Late attempt | Reach midnight while medkit return or validation remains incomplete | Deadline failure; Restart Attempt restores departure time |
-| `AC-L0-016` | Completed attempt | Return medkits; validate transit; debrief | Actual facts/outcomes shown; deadline disabled; level-up available |
-| `AC-L0-017` | English then Ukrainian | Repeat equivalent path | Identical state changes and checks |
+| `AC-L0-016` | Completed attempt | Return medkits; validate transit; debrief | Actual facts/outcomes shown; deadline disabled; research recap shown |
+| `AC-L0-017` | English then Ukrainian | Repeat equivalent path | Identical state changes and gates |
 | `AC-L0-018` | All target viewports | Exercise opening, dialogue, HUD, observation, Pursuit, Character, dossier, failure, debrief | No overflow/corruption; dock 16–18%; world and actors readable |
 | `AC-L0-019` | Active surveillance near safehouse | Reach/cross the safehouse boundary while observed, Suspicious, and in Pursuit; attempt every safehouse action | Entry never clears the network; availability, search behavior, and recovery match the approved or explicitly provisional `OPEN-SAFE-001` rule with explicit reasons and no magical escape. Provisional evidence informs review but cannot close final acceptance. |
 | `AC-L0-020` | Clear/public | Remain visibly in ordinary public camera coverage without a rule break; leave and re-enter after recovery to Clear | No concern or Paranoia from visibility alone; recognition reset makes later ordinary visibility harmless |
 | `AC-L0-021` | Clear | Trigger each declared rule break while visibly observed, one at a time | Each transition is attributable to restricted breach, protected interaction, medkit removal, failed verification, or detected feed change; occluded attempts do not count |
 | `AC-L0-022` | Camera set unused | Loop once; allow expiry; repeat with clean and traced outcomes; Restart Attempt | State is `unused → active → clean|traced`, cannot be reused in-attempt, and resets only with Restart Attempt |
 | `AC-L0-023` | Needle patrol | Hear approach; receive verification warning; observe civilian reaction | Named hum/warnings are distinct; civilians only mirror visible events and never report hidden state |
-| `AC-L0-024` | Two builds | Preview and resolve every catalog check, including each nonfatal failure | Preview/result math is identical; every nonterminal failure commits its declared worse path; only final capture escape can end the attempt |
+| `AC-L0-024` | Fresh and research-expanded runs | Preview and resolve every catalog gate through each of its paths, including each nonfatal failure | Preview/result verdicts are identical; every nonterminal failure commits its declared worse path; only final capture escape can end the attempt |
 | `AC-L0-025` | Cold Iron paths | Skip/consult Naila; miss/recognize manifest; copy recognized manifest | All four states are reachable as authored, copying costs five world minutes and no second check, general facts remain binary |
-| `AC-L0-026` | Rising Paranoia | Use both grounding actions, qualifying escape, and cross 40/70/90 | Each grounding is once/attempt for +10 min/−10; escape relief is once for −5; George speaks once per threshold |
+| `AC-L0-026` | Rising Paranoia | Use both grounding actions, qualifying escape, and enter Uneasy, Shaken, and Breaking | Each grounding is once/attempt for +10 min/−10; escape relief is once for −5; George speaks once per tier entry; each tier's declared locks apply and lift exactly |
 | `AC-L0-027` | Running clock with pause/save restoration | Cross 21:00, 21:30, 22:00, and 23:30; reload around boundaries | Every street event fires exactly once and reflects the correct crowd/light/audio state |
-| `AC-L0-028` | Capture/deadline/resource failures | Produce all four cause families | Capture report contains only ledger evidence with disconnected gaps; other failures remain cause-specific and never imply capture |
+| `AC-L0-028` | Capture/deadline/breakdown failures | Produce all three cause families | Capture report contains only ledger evidence with disconnected gaps; other failures remain cause-specific and never imply capture |
 | `AC-L0-029` | All target viewports/languages | Traverse all three named routes, three sound thresholds, and authored actor-light regions | English/Ukrainian route names are stable; ambience is spatial; restrained tint eases without changing movement or detection |
+| `AC-L0-030` | Breaking-tier attempt | Hold Breaking (90–99); attempt gates through fragile and hardened ability paths; recover below the boundary | Every declared fragile ability shows locked with its exact tier reason; hardened abilities pass; recovery relights exactly the declared set |
 
-All cases use visible controls. Debug bridges may prepare diagnostics but cannot satisfy a player-flow step.
+All cases use visible controls. Debug bridges may prepare diagnostics but cannot satisfy a player-flow step. `AC-L0-013` is retired together with the Health system; its ID is never reused.

@@ -7,7 +7,7 @@ canonical: true
 
 # Linear Implementation Program
 
-This document is the copy source for GET-139, its ten top-level children, five focused nested Improvement children, and the affected GET-179 harness contract. Each description is deliberately self-contained: a Linear issue may link back here and to the canonical specifications, but those links do not replace the behavior, boundary, evidence, and recovery contract embedded in the issue itself.
+This document is the copy source for GET-139, its ten top-level children, six focused nested Improvement children — of which T3A is canceled as absorbed by T7A — and the affected GET-179 harness contract. Each description is deliberately self-contained: a Linear issue may link back here and to the canonical specifications, but those links do not replace the behavior, boundary, evidence, and recovery contract embedded in the issue itself.
 
 These aliases and exact Linear keys are authoritative for the implementation program.
 
@@ -22,6 +22,7 @@ These aliases and exact Linear keys are authoritative for the implementation pro
 | T6 | GET-206 | Grounded actors, portraits, and entry-flow presentation | Improvement | Todo | T10 and T10B final presentation |
 | T7 | GET-207 | Protagonist RPG identity, progression, Health, and Paranoia | Feature | Todo | T8, T9, T10 |
 | T8 | GET-208 | Surveillance, security, civilians, hiding, drone, and noncombat escape | Feature | Todo | T8A, T9 contextual integration, and T10 scenarios |
+| T7A | GET-216 | Pivot the protagonist to Paranoia tiers, binary abilities, cover-select, and research | Improvement | Todo | T8A, T9A, and the GET-179 modernization |
 | T8A | GET-212 | Make Hidzu Corporation surveillance readable, attributable, and limited | Improvement | Todo | T9A |
 | H1 | GET-179 | Modernize the guided Level 0 harness vocabulary and probes | Existing issue | Existing state | T9A milestone gate |
 | T9 | GET-209 | Dialogue, George, facts, dossier, social feed, and four-lane HUD | Feature | Todo | T9A and T10 content integration |
@@ -57,7 +58,7 @@ The player creates a grounded expatriate protagonist who is not already a Hidzu 
 
 ### Complete player flow
 
-1. Create callsign, appearance, attributes, and skills; enter the safehouse at 18:30 with Health 100, Paranoia 0, and network `Clear`.
+1. Select the playable cover; enter the safehouse at 18:30 at Calm (internal Paranoia 0) and network `Clear`.
 2. Meet Lira and learn that passage toward Miami is exchanged for confiscated medkits; consult Naila/Brant in any order or skip them.
 3. George reads the actual departure state; confirmation creates `OperationAttemptBaseline` and starts the operation.
 4. Travel through Transit Road, Market Ring, and Outer Space. Normal public camera visibility is harmless until an observed rule break; ordinary geometry creates blind spots.
@@ -69,7 +70,7 @@ The player creates a grounded expatriate protagonist who is not already a Hidzu 
 
 ### System rules and state transitions
 
-Direct click/WASD movement, explicit interaction, full-pause Observation, deterministic checks, binary general facts, the dedicated Cold Iron chain, Health, Paranoia, `Clear/Suspicious/Pursuit`, last-known search, discrete hiding/blending, one Needle patrol, four-lane HUD, and authored world time remain the current contract. Concern requires current visibility plus one of five approved `SurveillanceRuleBreakEvidence` types. Every nonterminal check failure commits a declared worse path. Clock boundaries at 21:00, 21:30, 22:00, and 23:30 are idempotent. Actor light regions are presentation-only.
+Direct click/WASD movement, explicit interaction, full-pause Observation, deterministic gates, binary general facts, the dedicated Cold Iron chain, Paranoia tiers, `Clear/Suspicious/Pursuit`, last-known search, discrete hiding/blending, one Needle patrol, four-lane HUD, and authored world time remain the current contract. Concern requires current visibility plus one of five approved `SurveillanceRuleBreakEvidence` types. Every nonterminal check failure commits a declared worse path. Clock boundaries at 21:00, 21:30, 22:00, and 23:30 are idempotent. Actor light regions are presentation-only.
 
 ### Internal milestones and proof gates
 
@@ -91,7 +92,7 @@ The street—not only the HUD—communicates time, coverage, route identity, and
 
 ### Failure and recovery
 
-Health 0 and Paranoia 100 show simple factual causes. Midnight lists unfinished Lira-return/transit requirements and never implies capture. Capture derives only actual sightings, detected camera-feed change, Needle verification, and capture evidence; unseen path gaps remain disconnected. **Restart Attempt** dispatches `restartAttempt` against `OperationAttemptBaseline` under `restart_attempt_confirmation`; stale development saves are rejected rather than guessed forward.
+Breakdown at Paranoia 100 stages its surrender and shows a simple factual cause. Midnight lists unfinished Lira-return/transit requirements and never implies capture. Capture derives only actual sightings, detected camera-feed change, Needle verification, and capture evidence; unseen path gaps remain disconnected. **Restart Attempt** dispatches `restartAttempt` against `OperationAttemptBaseline` under `restart_attempt_confirmation`; stale development saves are rejected rather than guessed forward.
 
 ### Explicit exclusions
 
@@ -149,9 +150,9 @@ The underlying game promise remains a customizable expatriate, a human-scale wat
 
 Before any run, the start menu shows `Game Design Bible` with an `F1` hint. Opening it creates no run or pause state. During an active run, the paused menu shows the same action; eligible `F1` opens directly from play. The player searches localized title/summary/section/body/keyword content, selects chapters and on-page sections, reads semantic prose/tables/state flows/examples, uses previous/next, and closes to the exact invoking surface. Opening in active play acquires `bible` pause once; opening above the menu composes `menu + bible`; closing releases only `bible` and restores focus. Higher-priority modals and editable inputs keep authority.
 
-The Bible describes the entire normal-control experience without gaps: New Game; callsign, appearance, attribute, and skill creation; 18:30 safehouse opening; Lira briefing; optional Naila and Brant preparation; deliberate dusk or curfew timing; direct movement and full-pause observation; camera, civilian, security, terminal, hiding, blending, and Needle decisions; explicit medkit recovery; optional Cold Iron warning/recognition/five-minute copy; Clear/Suspicious/Pursuit escape; explicit Lira handoff; outbound-terminal validation before midnight; safehouse/grounding recovery and level-up; factual debrief; and `Continue Exploring` or `End Demo`.
+The Bible describes the entire normal-control experience without gaps: New Game; cover-select; 18:30 safehouse opening; Lira briefing; optional Naila and Brant preparation; deliberate dusk or curfew timing; direct movement and full-pause observation; camera, civilian, security, terminal, hiding, blending, and Needle decisions; explicit medkit recovery; optional Cold Iron warning/recognition/five-minute copy; Clear/Suspicious/Pursuit escape; explicit Lira handoff; outbound-terminal validation before midnight; safehouse/grounding recovery and level-up; factual debrief; and `Continue Exploring` or `End Demo`.
 
-The documents must also define the Health, Paranoia, capture, deadline, incompatible-save, and deterministic Restart Attempt paths. Every step names starting state, authoritative transition, player-visible feedback, forbidden shortcut, and human-play evidence.
+The documents must also define the breakdown, capture, deadline, incompatible-save, and deterministic Restart Attempt paths. Every step names starting state, authoritative transition, player-visible feedback, forbidden shortcut, and human-play evidence.
 
 ### System rules and state transitions
 
@@ -168,7 +169,7 @@ Bible UI state is React-local, URL-independent, and session-only. The runtime re
 1. Forensically extract and classify all 214 structured exchanges, prose directives, earlier canonical material, later corrections, current task decisions, runtime/test evidence, and Linear into a temporary decision-coverage matrix.
 2. Resolve explicit supersession chains and return material ambiguity to the requester instead of guessing. Implemented or ticketed behavior without Approved or explicitly provisional authority is a gap; a stable `OPEN-*` is not.
 3. Turn [[Game Design]] into the complete readable Bible entry point, expand [[10 MVP Spine]], make [[11 Level 0 Vertical Slice Contract]] a chronological walkthrough, and complete every affected 16-section system chapter with prose, tables, examples, dependencies, failure/recovery, content, and acceptance.
-4. Reconcile every Level 0 transition across character creation, safehouse, briefing, preparation, departure, both timings, surveillance, cache/evidence, escape, Lira return, validation, debrief, progression, Continue Exploring, and End Demo.
+4. Reconcile every Level 0 transition across cover-select, safehouse, briefing, preparation, departure, both timings, surveillance, cache/evidence, escape, Lira return, validation, debrief, progression, Continue Exploring, and End Demo.
 5. Align the Decision Register, content/state matrix, review queue, Art Direction, Architecture, Roadmap, Post-MVP boundary, MVP Readiness, indexes, AGENTS, and `progress/GET-201.md` after the active parallel task reaches a stable checkpoint.
 6. Regenerate GET-139, GET-201–GET-210, GET-179, and all five focused-child descriptions from this canonical program; rewrite each in full without changing existing operational state, then read every issue back for semantic parity.
 7. Specify and implement the typed sixteen-chapter English/Ukrainian catalog, independent Approved-decision/topic traceability, forbidden-content gate, semantic renderer, search/navigation, focus-contained responsive layout, start/pause/`F1` entry, composable pause lifecycle, persistence stripping, and equivalent agent text state through red/green tests.
@@ -177,13 +178,13 @@ Bible UI state is React-local, URL-independent, and session-only. The runtime re
 
 ### Content requirements
 
-The package must cover product identity; setting; narrative; character creation/progression; Health; Paranoia; movement, interaction, camera, and observation; stealth; surveillance; civilians/security; time and schedules; safehouse/save/Restart Attempt; dialogue/checks; George; facts/dossier/minimap/terminals; objectives; social feed; combat and inventory disposition; city/Blender pipeline; actors/portraits; HUD; audio; localization; accessibility; performance; readiness; and delivery governance.
+The package must cover product identity; setting; narrative; covers/abilities/research; Paranoia; movement, interaction, camera, and observation; stealth; surveillance; civilians/security; time and schedules; safehouse/save/Restart Attempt; dialogue/checks; George; facts/dossier/minimap/terminals; objectives; social feed; combat and inventory disposition; city/Blender pipeline; actors/portraits; HUD; audio; localization; accessibility; performance; readiness; and delivery governance.
 
 The Decision Register must retain recoverable historic ratings exactly, including the withdrawn `9.2/10` and reviewed `4.5/10` visual assessment, without reconstructing missing ratings.
 
 The main Bible reading experience must explain the game fantasy, intended experience, pillars, setting/campaign premise, Level 0 promise, complete loop, system relationships, content boundaries, visual/audio direction, failure, progression, persistence, continuation, and chapter navigation. The system package must cover setting, narrative, character/RPG, checks, Health, Paranoia, movement, interaction, observation, stealth, surveillance, cameras, Needle, security, civilians, time, schedules, safehouse, Restart Attempt, dialogue, George, facts, dossier, objectives, HUD, minimap, social feed, terminals, combat disposition, inventory disposition, Blender/world art, actors, portraits, lighting, audio, localization, accessibility, performance, readiness, and governance.
 
-The in-game catalog has exactly sixteen chapters: What The Getaway Is; Setting and Campaign; Complete Level 0 Journey; Character/Builds/Checks/Progression; Health/Paranoia/Failure/Recovery; Movement/Interaction/Camera/Observation; Time/Schedules/Safehouse/Save/Restart Attempt; Surveillance/Cameras/Security/Civilians/Drone; Stealth/Hiding/Blending/Interception/Escape; Narrative/Dialogue/George/Contacts; Facts/Dossier/Objectives/Minimap/Terminals/Social Feed; HUD; World/District/Routes/Geometry; Art/Blender/Actors/Portraits/Lighting; Audio/Localization/Accessibility/Performance; Content Boundaries/Continuation.
+The in-game catalog has exactly sixteen chapters: What The Getaway Is; Setting and Campaign; Complete Level 0 Journey; Character/Covers/Abilities/Research; Paranoia/Failure/Recovery; Movement/Interaction/Camera/Observation; Time/Schedules/Safehouse/Save/Restart Attempt; Surveillance/Cameras/Security/Civilians/Drone; Stealth/Hiding/Blending/Interception/Escape; Narrative/Dialogue/George/Contacts; Facts/Dossier/Objectives/Minimap/Terminals/Social Feed; HUD; World/District/Routes/Geometry; Art/Blender/Actors/Portraits/Lighting; Audio/Localization/Accessibility/Performance; Content Boundaries/Continuation.
 
 Every chapter includes a purpose/player promise, outline, detailed prose, concrete Level 0 examples, useful state/comparison tables, inputs and downstream effects, world/HUD/dialogue/audio/George feedback, failure/recovery/persistence/Restart Attempt behavior, and related chapters. English and Ukrainian share IDs, navigation order, semantic block shapes, topic coverage, shared rules, tables/state relationships, and meaning; every chapter receives recorded bilingual semantic review and a back-translation spot-check.
 
@@ -362,8 +363,8 @@ All mandatory places are reachable through three interlocking loops; no building
 
 1. New Level 0 initializes the protagonist inside the safehouse at 18:30 with a current-run autosave, no `OperationAttemptBaseline`, and the Lira objective.
 2. The player reads available safehouse actions, moves directly with click or WASD, and interacts explicitly with Lira/contact/terminal/entrance placeholders through typed range, visibility, occlusion, ownership, and availability results.
-3. After accepting the operation, the player may Wait in confirmed 30-minute steps or Rest for 30 minutes, Health 100, and Paranoia −40.
-4. Explicit operation departure creates one immutable operation baseline and starts the active route; T3A supplies its final `OperationAttemptBaseline` schema, readback, and `restartAttempt` action.
+3. After accepting the operation, the player may Wait in confirmed 30-minute steps or Rest for 30 minutes and Paranoia −40.
+4. Explicit operation departure creates one immutable operation baseline and starts the active route; T7A supplies its final `OperationAttemptBaseline` schema, readback, and `restartAttempt` action.
 5. The player can reach public and service entrances, all contact and terminal anchors, cache/manifest anchors, camera/device regions, hiding/blending anchors, and the return path across three connected loops without pathfinding.
 6. Observation pauses clock, schedules, cameras, actors, drone placeholders, and movement while allowing camera pan/read-only inspection of known state.
 7. Reload, failure Restart Attempt, and New Game rebuild the scene, camera, focus, time, and saved state without stale listeners or overlays.
@@ -703,7 +704,7 @@ Update Art Direction with the registered reference/rubric and implemented conven
 
 ### Why this ticket exists
 
-The prior characters were tiny or stiff against monumental buildings and drifted into fantasy-operative styling. Actor sheets, portraits, character creation, dialogue identity, and world scale also came from inconsistent sources. T6 establishes one grounded cast and one manifest contract so the protagonist, contacts, Hidzu Corporation security, civilians, Takahiro's broadcast image, and George's private AR presence belong to the same modern surveillance dystopia.
+The prior characters were tiny or stiff against monumental buildings and drifted into fantasy-operative styling. Actor sheets, portraits, cover-select, dialogue identity, and world scale also came from inconsistent sources. T6 establishes one grounded cast and one manifest contract so the protagonist, contacts, Hidzu Corporation security, civilians, Takahiro's broadcast image, and George's private AR presence belong to the same modern surveillance dystopia.
 
 ### Player promise
 
@@ -720,7 +721,7 @@ The player chooses one of four distinct contemporary protagonist appearances and
 
 ### Complete player flow
 
-New Game presents four authored grounded presets alongside callsign/build creation; selecting one persists the appearance ID. In the safehouse and district, the protagonist's idle, facing, movement, and interactions align with their ground anchor. Lira, Naila, and Brant appear as the same identities used in dialogue/debrief presentation. Civilians visually support delivery activity, queues, waiting, and service roles; security reads as institutional verification staff rather than a combat class. At curfew and during surveillance transitions, actor value and silhouettes remain legible. George appears as a private near-character AR companion and in his HUD identity without becoming a physical party member.
+New Game presents the four authored covers, one playable and three visibly disabled; confirming the playable cover persists its appearance ID. In the safehouse and district, the protagonist's idle, facing, movement, and interactions align with their ground anchor. Lira, Naila, and Brant appear as the same identities used in dialogue/debrief presentation. Civilians visually support delivery activity, queues, waiting, and service roles; security reads as institutional verification staff rather than a combat class. At curfew and during surveillance transitions, actor value and silhouettes remain legible. George appears as a private near-character AR companion and in his HUD identity without becoming a physical party member.
 
 ### System rules and state transitions
 
@@ -732,7 +733,7 @@ The protagonist appearance transitions once from unselected to one authored pres
 
 1. Resolve biographies/hardware boundaries needed for visual references without authoring final dialogue.
 2. Produce a shared scale, costume, silhouette, palette, portrait, and anchor reference tied to the current validated provisional world treatment.
-3. Create four protagonist sets, then prove character-creation selection and world persistence with placeholder shell integration.
+3. Create four protagonist sets, then prove cover-select and world persistence with placeholder shell integration.
 4. Create Lira/Naila/Brant; prove world/portrait identity continuity.
 5. Create two security and three civilian sets; prove role readability in public/curfew contexts.
 6. Create twelve matching `256×256` identity portraits, one `256×256` Takahiro broadcast portrait, and one separately registered `256×256` transparent George AR idle/base asset; validate crop/safe area, provenance/hash/bytes, and neutral fallback.
@@ -745,7 +746,7 @@ Maintain actor/portrait manifests, stable preset/actor IDs, source references, a
 
 ### World/UI/audio/George feedback
 
-Facing, foot contact, locomotion, and interaction must be readable against the accepted GET-205 production city without labels or x-ray effects. Character creation and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's T6 base art is private, restrained, and visually distinct from a physical actor; proof places it near the protagonist's upper-right at `28–36` screen pixels and suppresses it while a full overlay owns focus, but T9 owns final states, placement, prompts, and suppression. It never owns collision/occlusion/depth or implies that other characters see him.
+Facing, foot contact, locomotion, and interaction must be readable against the accepted GET-205 production city without labels or x-ray effects. Cover-select and Character screen show the selected appearance once T9's shell is integrated. Dialogue/debrief identity matches the world actor. Footsteps/interactions emit semantic hooks for T10 audio but do not drive state. George's T6 base art is private, restrained, and visually distinct from a physical actor; proof places it near the protagonist's upper-right at `28–36` screen pixels and suppresses it while a full overlay owns focus, but T9 owns final states, placement, prompts, and suppression. It never owns collision/occlusion/depth or implies that other characters see him.
 
 ### Failure and recovery
 
@@ -776,6 +777,8 @@ For the current T6 gate, select every protagonist preset through the neutral app
 Update actor/portrait inventories, Art Direction, implemented manifest ownership in Architecture, MVP Readiness, and `progress/GET-206.md`. Run sprite-matrix, pixel-derived anchor/occupancy, direction, frame, scale, portrait, provenance/hash/path, fallback/fault-injection, and measured-load validators; run `yarn sprites:validate`; inspect live captures at every required state and viewport. Record exact counts, requests, compressed bytes, estimated decoded texture bytes, cold-load timing, and observed FPS without claiming a shipping ceiling while `OPEN-PERF-001` is open. Preserve one authoritative foot anchor per actor for T10B, but do not add lighting-driven detection/movement or Health injury presentation. After visual acceptance, run the AGENTS closeout suite and guided AI regression.
 
 ## T7 — Protagonist RPG identity, progression, Health, and Paranoia
+
+> **Superseded scope (2026-08-07):** this section records the delivered creation-state contract, kept as In Review evidence. The numeric model it describes — Health, attributes, skills, XP, levels, and arithmetic checks — is superseded by `GDR-RPG-008`/`GDR-RPG-009`/`GDR-RPG-010`, `GDR-PAR-008`/`GDR-PAR-009`, `GDR-HLT-004`, and `GDR-PC-006`. The current condition/ability scope is **T7A (GET-216)**. Nothing below is current MVP intent.
 
 - **Label:** Feature
 - **Initial state:** Todo
@@ -887,10 +890,10 @@ The player can look at a street and understand who or what is watching, why conc
 ### Starting state
 
 - T3 provides layout anchors, shared geometry, observation, movement, interaction, time/pause, devices, schedules, and persistence infrastructure.
-- T7 provides deterministic checks, Health, Paranoia, build state, facts seam, and failure payloads.
+- T7A provides deterministic gates, Paranoia tiers, ability state, facts seam, and failure payloads.
 - T4/T5 provide technically validated, committed provisional visual geometry and surveillance grammar; requester acceptance remains their final visual gate. T6 provides security/civilian actors.
 - Network starts `Clear`, with no last-known position and only discovered devices exposed to player knowledge.
-- Exact camera rates, confirmation rules, search timings, loop duration, civilian/security schedules, Health costs, Paranoia events, and context placement remain T8 acceptance decisions; their recorded `OPEN-*` recommendations may be trialed through replaceable authored data.
+- Exact camera rates, confirmation rules, search timings, loop duration, civilian/security schedules, Paranoia events, and context placement remain T8 acceptance decisions; their recorded `OPEN-*` recommendations may be trialed through replaceable authored data.
 
 ### Complete player flow
 
@@ -944,7 +947,7 @@ Suspicious is always recoverable unless another explicit authored event confirms
 
 ### Dependencies and OPEN blockers
 
-Depends on validated committed T3 and T7 foundations; T8A additionally depends on T3A. T8 consumes T4–T6 geometry/presentation and blocks T8A, T9 contextual presentation, and T10 integration. Critical acceptance blockers are `OPEN-HLT-001`, `OPEN-PAR-001`, `OPEN-SUR-001`, `OPEN-SUR-002`, `OPEN-SUR-003`, `OPEN-CIV-001`, `OPEN-SEC-001`, `OPEN-LAYOUT-003`, and `OPEN-SAFE-001`. High acceptance blockers are `OPEN-RPG-003`, `OPEN-MOV-002`, `OPEN-SUR-004`, and `OPEN-NAR-012`. Recorded recommendations may be trialed provisionally through authored state-machine/content data with explicit live proof and rollback; unresolved behavior cannot be final. T8 owns reusable mechanics; T8A owns attribution/limits/presentation/history; T10/T10A own final placement and city content.
+Depends on validated committed T3 and T7 foundations; T8A additionally depends on T3A. T8 consumes T4–T6 geometry/presentation and blocks T8A, T9 contextual presentation, and T10 integration. Critical acceptance blockers are `OPEN-PAR-001`, `OPEN-SUR-001`, `OPEN-SUR-002`, `OPEN-SUR-003`, `OPEN-CIV-001`, `OPEN-SEC-001`, `OPEN-LAYOUT-003`, and `OPEN-SAFE-001`. High acceptance blockers are `OPEN-MOV-002`, `OPEN-SUR-004`, and `OPEN-NAR-012`. Recorded recommendations may be trialed provisionally through authored state-machine/content data with explicit live proof and rollback; unresolved behavior cannot be final. T8 owns reusable mechanics; T8A owns attribution/limits/presentation/history; T10/T10A own final placement and city content.
 
 ### Canonical decisions/spec sections
 
@@ -984,7 +987,7 @@ Conversation is gameplay. The player sees the exact line they will say, exact de
 ### Starting state
 
 - T3 provides pause/focus, clock, layout anchors, interaction, discovered-world state, overlay ownership, and persistence.
-- T7 provides identity/build/check/resource payloads; T8 provides network/context state and verified risk data; T6 provides portrait/George art.
+- T7A provides identity/ability/gate/condition payloads; T8 provides network/context state and verified risk data; T6 provides portrait/George art.
 - The canonical semantic dialogue graph is language-neutral; English and Ukrainian render identical IDs, requirements, effects, and order.
 - Exact fiction, dialogue wireframes, lane allocation, accessibility baseline, localization ownership, and some George/contact identities remain T9 acceptance decisions; their recorded `OPEN-*` recommendations may be trialed through replaceable authored content and tokens.
 
@@ -992,7 +995,7 @@ Conversation is gameplay. The player sees the exact line they will say, exact de
 
 1. The four-lane dock shows knowledge minimap, protagonist, George, and one current quest beat in 16–18% viewport height.
 2. The player opens an anchored world-visible dialogue. Time/simulation pause; speaker portrait/name/line, history, and exact player lines remain legible.
-3. Available and locked options show the exact `Level0CheckBreakdown` preview. Selection commits one authored effect bundle once, shows the matching result, and applies a declared real fail-forward path unless it is the final failed capture escape.
+3. Available and locked options show the exact gate verdict with its reason. Selection commits one authored effect bundle once, shows the matching result, and applies a declared real fail-forward path unless it is the final failed capture escape.
 4. General facts record a stable binary key, provenance, time, source node, and designated uses. Cold Iron alone advances `unknown → Naila warning → manifest recognized → manifest copied`; the copy interaction costs five world minutes and has no additional check.
 5. The player opens dossier/Character/minimap/feed overlays without losing focus or time. The dossier presents current objective, completed beats, optional preparation, evidence, people/places, timeline, and established consequences.
 6. George offers only authored prompts valid for current context/verified ledgers. His private floating avatar and HUD lane stay synchronized; insufficient evidence always yields an honest reason rather than semantic silence. Before departure he reads the real `OperationAttemptBaseline` inputs/restoration meaning.
@@ -1001,7 +1004,7 @@ Conversation is gameplay. The player sees the exact line they will say, exact de
 
 ### System rules and state transitions
 
-Dialogue nodes and choices use stable semantic IDs, localized text keys, visibility rules, `CheckRequirement`, `Level0CheckBreakdown` preview/result, binary fact requirements, cost preview, success/real fail-forward effect bundles, history entries, and outcome-ledger writes. Effects are transactional and idempotent; reopening cannot reroll, re-award, duplicate facts, or recopy the manifest. Contacts have no generic trust meter. `FactLedger` remains binary; `ColdIronEvidenceState` is the sole staged chain. Objective/minimap precision derives from facts/discovery, not hidden omniscience.
+Dialogue nodes and choices use stable semantic IDs, localized text keys, visibility rules, `GateRequirement`, gate verdict preview/result, binary fact requirements, cost preview, success/real fail-forward effect bundles, history entries, and outcome-ledger writes. Effects are transactional and idempotent; reopening cannot reroll, re-award, duplicate facts, or recopy the manifest. Contacts have no generic trust meter. `FactLedger` remains binary; `ColdIronEvidenceState` is the sole staged chain. Objective/minimap precision derives from facts/discovery, not hidden omniscience.
 
 `GeorgePrompt` is authored for allowed context, required facts/mission state, exclusions, question/response keys, explicit unavailable-reason keys, and `effect: none`. George cannot mutate the world, conceal rules through silence, or carry a deletion/freedom want in Level 0. The HUD owns presentation only; domain state remains in its system. George and current-task lanes remain separate. All overlays/dialogue own a named pause token and release it deterministically.
 
@@ -1009,7 +1012,7 @@ Dialogue nodes and choices use stable semantic IDs, localized text keys, visibil
 
 1. Register approved values or explicit reversible provisional baselines for dialogue/dossier wireframes, lane allocation, accessibility, localization, and core fiction `OPEN-*` items; lock them only after live acceptance.
 2. Define/validate semantic dialogue, effect-bundle, binary fact/provenance, `ColdIronEvidenceState`, dossier, minimap-discovery, George-limit/readback, and cause-specific failure schemas.
-3. Implement transaction-safe dialogue/check/history with exact preview/result parity, nonfatal fail-forward validation, and bilingual state equivalence.
+3. Implement transaction-safe dialogue/gate/history with exact preview/result verdict parity, nonfatal fail-forward validation, and bilingual state equivalence.
 4. Implement binary FactLedger propagation plus the dedicated Cold Iron warning/recognition/five-minute copy chain without a universal evidence ladder.
 5. Implement George lane/private avatar synchronization, contextual prompts with explicit insufficiency behavior, 40/70/90 one-shot lines, and departure readback.
 6. Implement the four-lane 16–18% dock plus Character, dossier, dialogue, feed, and related overlays across all target viewports.
@@ -1017,7 +1020,7 @@ Dialogue nodes and choices use stable semantic IDs, localized text keys, visibil
 
 ### Content requirements
 
-Provide reusable nodes/choice/effect/check-breakdown schemas; English/Ukrainian localization catalogs; portrait/name/history treatment; binary fact catalog/provenance labels; the four-state Cold Iron catalog and five-minute copy action; dossier sections; discovery/precision rules; George prompt/limit/readback/threshold lines; capture/deadline/resource failure models; current-beat models; social-feed cards/screens; overlay empty/error states; and semantic HUD tokens. T10/T10A author final mission/city lines, but T9/T9A provide representative samples for every effect, lock, fail-forward, and cause-specific failure path. Accessibility content includes non-color risk labels, keyboard focus/order, scalable text, subtitles/captions, reduced motion/flash, and volume entry points once approved.
+Provide reusable nodes/choice/effect/gate-verdict schemas; English/Ukrainian localization catalogs; portrait/name/history treatment; binary fact catalog/provenance labels; the four-state Cold Iron catalog and five-minute copy action; dossier sections; discovery/precision rules; George prompt/limit/readback/threshold lines; capture/deadline/resource failure models; current-beat models; social-feed cards/screens; overlay empty/error states; and semantic HUD tokens. T10/T10A author final mission/city lines, but T9/T9A provide representative samples for every effect, lock, fail-forward, and cause-specific failure path. Accessibility content includes non-color risk labels, keyboard focus/order, scalable text, subtitles/captions, reduced motion/flash, and volume entry points once approved.
 
 ### World/UI/audio/George feedback
 
@@ -1036,7 +1039,7 @@ Missing localization or invalid node/effect data fails validation and cannot sil
 
 ### Dependencies and OPEN blockers
 
-Depends on validated committed T3 and T7 foundations and consumes T6/T8 state. T9 blocks T9A and T10; T9A depends on T8A plus the GET-179 modernization milestone and blocks T10A. Critical acceptance blockers are `OPEN-NAR-004`, `OPEN-NAR-005`, `OPEN-NAR-007`, `OPEN-NAR-008`, `OPEN-NAR-015`, `OPEN-RPG-001`, `OPEN-RPG-004`, and `OPEN-SAFE-001`. High acceptance blockers are `OPEN-NAR-006`, `OPEN-NAR-009` through `OPEN-NAR-011`, `OPEN-NAR-014`, `OPEN-UI-001` through `OPEN-UI-003`, `OPEN-LOC-001`, and `OPEN-ACC-001`. `OPEN-NAR-002` and `OPEN-PAR-002` are resolved. Recorded recommendations remain reversible/non-final while open.
+Depends on validated committed T3 and T7 foundations and consumes T6/T8 state. T9 blocks T9A and T10; T9A depends on T8A plus the GET-179 modernization milestone and blocks T10A. Critical acceptance blockers are `OPEN-NAR-004`, `OPEN-NAR-005`, `OPEN-NAR-007`, `OPEN-NAR-008`, `OPEN-NAR-015`, `OPEN-ABL-001`, and `OPEN-SAFE-001`. High acceptance blockers are `OPEN-NAR-006`, `OPEN-NAR-009` through `OPEN-NAR-011`, `OPEN-NAR-014`, `OPEN-UI-001` through `OPEN-UI-003`, `OPEN-LOC-001`, and `OPEN-ACC-001`. `OPEN-NAR-002` and `OPEN-PAR-002` are resolved. Recorded recommendations remain reversible/non-final while open.
 
 ### Canonical decisions/spec sections
 
@@ -1050,10 +1053,10 @@ Canonical detail is in [[90 Dialogue]], [[40 George (AI Companion)]], [[46 Facts
 - Verify each contact changes at least one designated piece of knowledge and never a trust bar; skip both without soft lock.
 - Reach all four Cold Iron states and prove the explicit copy costs five minutes with no check or universal evidence-grade mutation.
 - Ask every available/unavailable George prompt in HUD, Observation, safehouse, and dossier; prove verified-only answers, explicit limit reasons, no semantic silence/personal arc, departure readback, and zero world mutation.
-- Trigger capture/deadline/Health/Paranoia and prove each uses only its own authoritative read model.
+- Trigger capture/deadline/breakdown and prove each uses only its own authoritative read model.
 - Discover and withhold cameras/locations/facts; verify minimap, objective precision, dossier, and George reveal exactly the known subset.
 - At 1280×720, 1440×900, and 1920×1080, exercise all overlays, long English/Ukrainian strings, focus restoration, accessibility modes, and 16–18% four-lane dock.
-- Repeat an equivalent semantic path in both languages and prove identical state, checks, facts, costs, objective, and ledger writes (`AC-L0-017`, `AC-L0-018`).
+- Repeat an equivalent semantic path in both languages and prove identical state, gates, facts, costs, objective, and ledger writes (`AC-L0-017`, `AC-L0-018`).
 - In `AC-L0-019`, verify every blocked safehouse control and George prompt communicates the same accepted network-state reason in both languages.
 
 ### Documentation and validation obligations
@@ -1072,22 +1075,22 @@ The program is successful only when the approved systems become one coherent, no
 
 ### Player promise
 
-From New Game to debrief, the player experiences a 15–20 minute grounded Tokyo escape story: create a personal build, begin as someone Hidzu Corporation does not yet consider a problem, meet Lira, optionally learn from Naila/Brant, choose dusk public behavior or curfew service evasion, recover confiscated medkits, optionally recognize and copy Cold Iron evidence, escape a fair attributable surveillance response, return the supplies, validate passage toward Miami before midnight, recover/level up, and receive a debrief that names only what happened. Both informed and uninformed runs remain possible, and the ending honestly stops before Miami.
+From New Game to debrief, the player experiences a 15–20 minute grounded Tokyo escape story: choose a cover, begin as someone Hidzu Corporation does not yet consider a problem, meet Lira, optionally learn from Naila/Brant, choose dusk public behavior or curfew service evasion, recover confiscated medkits, optionally recognize and copy Cold Iron evidence, escape a fair attributable surveillance response, return the supplies, validate passage toward Miami before midnight, recover/level up, and receive a debrief that names only what happened. Both informed and uninformed runs remain possible, and the ending honestly stops before Miami.
 
 ### Starting state
 
 - T2–T9 have passed their own live gates and expose stable contracts/content seams.
 - No implementation child is accepted merely because its tests pass; T10 begins from a production-like preview and the canonical acceptance matrix.
 - Every T10 `OPEN-*` item has either an approved rule or an explicitly recorded reversible provisional baseline. Unresolved Critical and High items block final acceptance of their affected surfaces, not T10 start.
-- New Game uses the new schema only. The operation begins at 18:30 in the outdoor safehouse with Health 100, Paranoia 0, no mission facts, network Clear, and no fake Miami level.
+- New Game uses the new schema only. The operation begins at 18:30 in the outdoor safehouse at Calm (Paranoia 0), no mission facts, network Clear, and no fake Miami level.
 
 ### Complete player flow
 
-1. Create callsign, appearance, attributes, and skills in at most two minutes; contextual onboarding teaches confirmation and Character access.
+1. Select the playable cover in under one minute; contextual onboarding teaches confirmation and Character access.
 2. Enter the safehouse; George introduces immediate controls/situation only. Exit and meet Lira within the first three minutes.
 3. Accept the medkit/passage exchange. Lira explains Hidzu Corporation logistics, midnight, and available preparation without forcing errands; the protagonist seeks Miami to investigate their father and Cold Iron rather than flee a pre-existing corporate flag.
 4. Consult Naila and/or Brant in either order or skip both. Facts alter objective precision, dialogue, terminal understanding, blending, evidence recognition, George, and debrief only where authored.
-5. Hear George read the real departure time, contacts, Health, Paranoia, and restoration meaning; confirm `OperationAttemptBaseline`. Choose Transit Road/Market Ring/Outer Space timing and adapt as the four clock moments change the street.
+5. Hear George read the real departure time, contacts, the Paranoia tier, held abilities, and restoration meaning; confirm `OperationAttemptBaseline`. Choose Transit Road/Market Ring/Outer Space timing and adapt as the four clock moments change the street.
 6. Read subtle camera warnings, use Observation for exact discovered coverage, remain harmless in ordinary public view, avoid or trigger observed rule breaks, use the single camera group once, and respond to Suspicious/Pursuit/Needle/interception as play produces.
 7. Explicitly recover medkits. Advance optional Cold Iron evidence from Naila warning to manifest recognition, then explicitly spend five world minutes to copy it—or leave it at any earlier state without blocking completion.
 8. Escape the site and fully resolve active surveillance state. Explicitly return medkits to Lira; receive route/fact/consequence-aware dialogue and transit credential.
@@ -1096,7 +1099,7 @@ From New Game to debrief, the player experiences a 15–20 minute grounded Tokyo
 
 ### System rules and state transitions
 
-The objective state machine, binary facts, `ColdIronEvidenceState`, exact check matrix, surveillance ledger, outcome ledger, failure IDs, `OperationAttemptBaseline`, and acceptance IDs in [[13 Level 0 Content and State Matrix]] are authoritative. Every mission-object transition requires explicit input and is idempotent. Midnight causes `failure.deadline` while either medkits have not been returned or transit has not been validated. Completion requires both; active Suspicious/Pursuit must be resolved before invisible completion. Cold Iron evidence is always optional. The debrief reads authoritative ledgers; it never reconstructs truth from display logs or generic morality.
+The objective state machine, binary facts, `ColdIronEvidenceState`, exact gate catalog, surveillance ledger, outcome ledger, failure IDs, `OperationAttemptBaseline`, and acceptance IDs in [[13 Level 0 Content and State Matrix]] are authoritative. Every mission-object transition requires explicit input and is idempotent. Midnight causes `failure.deadline` while either medkits have not been returned or transit has not been validated. Completion requires both; active Suspicious/Pursuit must be resolved before invisible completion. Cold Iron evidence is always optional. The debrief reads authoritative ledgers; it never reconstructs truth from display logs or generic morality.
 
 Ordinary public visibility is harmless. Surveillance concern requires paired visibility and approved rule-break evidence; normal geometry/occlusion creates blind spots; Clear resets recognition. The one camera group's terminal history persists until Restart Attempt. Every checked choice shows identical preview/result math and each nonterminal failure advances through a declared worse path. Four clock boundaries are idempotent. Actor tint is presentation-only.
 
@@ -1105,7 +1108,7 @@ Onboarding is contextual and disappears once the action is demonstrated. The com
 ### Internal milestones and proof gates
 
 1. Register approved or reversible provisional values for all T10 fiction, tuning, localization, accessibility, audio, and performance decisions; freeze the authored beat sheet and route budgets only after live acceptance.
-2. Integrate T9A's checks/Cold Iron/George/failure contract, then author creation opening, Lira briefing, optional contacts, both timing routes, cache/copy, return, validation, debrief, failures, Restart Attempt, and ending.
+2. Integrate T9A's gates/Cold Iron/George/failure contract, then author the cover-select opening, Lira briefing, optional contacts, both timing routes, cache/copy, return, validation, debrief, failures, Restart Attempt, and ending.
 3. Deliver T10A's four street-clock moments, named-route/grounding/threshold/civilian content, and three spatial sound thresholds with bilingual parity.
 4. Deliver T10B's validated foot-anchor `ActorLightRegion` tint after T10A city/content evidence.
 5. Prove objective/fact/surveillance/outcome ledgers across informed, uninformed, every Cold Iron state, each rule break, Clear recovery, interception, every failure, and completion.
@@ -1115,7 +1118,7 @@ Onboarding is contextual and disappears once the action is demonstrated. The com
 
 ### Content requirements
 
-Deliver the complete English/Ukrainian semantic script; contact biographies/portraits/anchors; mission/objective/binary-fact/Cold-Iron/check/effect data; Transit Road/Market Ring/Outer Space schedule content; four idempotent clock moments; civilian/security/device/context placement; one camera group and Needle patrol; three one-function terminals; cache/medkit/manifest-recognition/five-minute-copy interactions; two grounding actions and three threshold lines; three spatial ambience locations; contextual onboarding; all cause-specific failure/debrief/completion variants; XP milestones; Miami continuation payload; public Hidzu Corporation feed/signage excerpts; and actor-light metadata. Every branch declares prerequisites, visible consequence, ledger write, localization, Restart Attempt behavior, and fallback.
+Deliver the complete English/Ukrainian semantic script; contact biographies/portraits/anchors; mission/objective/binary-fact/Cold-Iron/gate/effect data; Transit Road/Market Ring/Outer Space schedule content; four idempotent clock moments; civilian/security/device/context placement; one camera group and Needle patrol; three one-function terminals; cache/medkit/manifest-recognition/five-minute-copy interactions; two grounding actions and three threshold lines; three spatial ambience locations; contextual onboarding; all cause-specific failure/debrief/completion variants; XP milestones; Miami continuation payload; public Hidzu Corporation feed/signage excerpts; and actor-light metadata. Every branch declares prerequisites, visible consequence, ledger write, localization, Restart Attempt behavior, and fallback.
 
 ### World/UI/audio/George feedback
 
@@ -1123,7 +1126,7 @@ The accepted continuous city, grounded actors, separate George/current-task lane
 
 ### Failure and recovery
 
-Health 0 and Paranoia 100 state simple factual causes. Deadline lists unfinished Lira-return/transit requirements and never claims capture. Capture alone shows a short Hidzu Corporation report/map built only from actual sightings, detected feed change, Needle verification, and capture evidence; unseen route gaps remain disconnected. Each offers Restart Attempt from a valid `OperationAttemptBaseline`; stale schema explains New Game. Missing optional contacts/evidence never soft-locks. Missing required content/localization/audio/anchor/transition fails validation rather than auto-completing.
+Breakdown at Paranoia 100 states its staged surrender and factual cause. Deadline lists unfinished Lira-return/transit requirements and never claims capture. Capture alone shows a short Hidzu Corporation report/map built only from actual sightings, detected feed change, Needle verification, and capture evidence; unseen route gaps remain disconnected. Each offers Restart Attempt from a valid `OperationAttemptBaseline`; stale schema explains New Game. Missing optional contacts/evidence never soft-locks. Missing required content/localization/audio/anchor/transition fails validation rather than auto-completing.
 
 ### Explicit exclusions
 
@@ -1134,7 +1137,7 @@ Health 0 and Paranoia 100 state simple factual causes. Deadline lists unfinished
 
 ### Dependencies and OPEN blockers
 
-Depends on validated committed T3–T9 deliverables. T10A additionally depends on T9A; T10B depends on T10A. Critical acceptance blockers are `OPEN-NAR-001`, `OPEN-NAR-004`, `OPEN-NAR-005`, `OPEN-NAR-007`, `OPEN-NAR-008`, `OPEN-NAR-015`, `OPEN-RPG-001`, `OPEN-RPG-002`, `OPEN-RPG-004`, `OPEN-HLT-001`, `OPEN-PAR-001`, `OPEN-TIME-001`, `OPEN-CIV-001`, `OPEN-SEC-001`, `OPEN-LAYOUT-005`, and `OPEN-SAFE-001`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-006`, `OPEN-NAR-010` through `OPEN-NAR-014`, `OPEN-AUD-001`, `OPEN-LOC-001`, `OPEN-ACC-001`, `OPEN-PERF-001`, and `OPEN-ART-005`. `OPEN-NAR-002` and `OPEN-PAR-002` are resolved. Recorded recommendations remain explicitly provisional until accepted.
+Depends on validated committed T3–T9 deliverables. T10A additionally depends on T9A; T10B depends on T10A. Critical acceptance blockers are `OPEN-NAR-001`, `OPEN-NAR-004`, `OPEN-NAR-005`, `OPEN-NAR-007`, `OPEN-NAR-008`, `OPEN-NAR-015`, `OPEN-ABL-001`, `OPEN-ABL-002`, `OPEN-NAR-016`, `OPEN-PAR-001`, `OPEN-TIME-001`, `OPEN-CIV-001`, `OPEN-SEC-001`, `OPEN-LAYOUT-005`, and `OPEN-SAFE-001`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-006`, `OPEN-NAR-010` through `OPEN-NAR-014`, `OPEN-AUD-001`, `OPEN-LOC-001`, `OPEN-ACC-001`, `OPEN-PERF-001`, and `OPEN-ART-005`. `OPEN-NAR-002` and `OPEN-PAR-002` are resolved. Recorded recommendations remain explicitly provisional until accepted.
 
 ### Canonical decisions/spec sections
 
@@ -1144,7 +1147,7 @@ Canonical detail is in [[Game Design]], [[10 MVP Spine]], [[11 Level 0 Vertical 
 
 ### Human-play acceptance
 
-Run all `AC-L0-001` through `AC-L0-029` in a stable production-like preview. Cover harmless public observation, every rule break, geometric blind spots, one-use camera/history, Clear reset, Needle, civilians, all Cold Iron states/copy, exact check preview/result and fail-forward, baseline readback/restoration, grounding/thresholds, four clock moments, named routes, three sounds, evidence-limited failures, actor tint, both languages, and every target viewport. Each run uses only normal visible controls and the modernized guided harness vocabulary. Acceptance requires 15–20 minute pacing, first decision under three minutes, four-lane dock at 16–18%, continuous city, human-scale actors, readable risks/actions, exact outcomes, no magical safehouse reset, and no console/page/state/save/objective errors.
+Run all `AC-L0-001` through `AC-L0-030` (with `AC-L0-013` retired) in a stable production-like preview. Cover harmless public observation, every rule break, geometric blind spots, one-use camera/history, Clear reset, Needle, civilians, all Cold Iron states/copy, exact check preview/result and fail-forward, baseline readback/restoration, grounding/thresholds, four clock moments, named routes, three sounds, evidence-limited failures, actor tint, both languages, and every target viewport. Each run uses only normal visible controls and the modernized guided harness vocabulary. Acceptance requires 15–20 minute pacing, first decision under three minutes, four-lane dock at 16–18%, continuous city, human-scale actors, readable risks/actions, exact outcomes, no magical safehouse reset, and no console/page/state/save/objective errors.
 
 ### Documentation and validation obligations
 
@@ -1152,86 +1155,96 @@ Update canonical specs only for approved final values, Plot Bible for final auth
 
 ## T3A — Rename the operation baseline and Restart Attempt contract
 
+- **Status: Canceled — absorbed by T7A (GET-216) on 2026-08-07.** The complete rename scope (Restart Attempt vocabulary, `OperationAttemptBaseline`, v3 schema boundary, validators, UI copy, stale-save rejection) executes inside T7A's single v2→v3 window, and T3A's blocks edges (T8A, GET-179 modernization) transferred to T7A. The historical 14-section contract remains in Git history and on the canceled Linear issue.
+
+## T7A — Pivot the protagonist to Paranoia tiers, binary abilities, cover-select, and research
+
 - **Label:** Improvement
 - **Initial state:** Todo
 - **Project:** MVP
-- **Parent:** GET-203
+- **Parent:** GET-207
 
 ### Why this ticket exists
 
-The runtime foundation currently exposes legacy `retry*` and departure-snapshot terminology across shared types, actions, persistence, validators, pause ownership, UI, and tests. That vocabulary obscures the actual contract: the player restarts one operation attempt from one immutable, explicitly confirmed baseline. T3A performs the coherent schema/API change before surveillance or harness work adds more state to the old surface.
+The delivered T7 foundation implements the superseded numeric contract: Health, four attributes, eight skills, XP, levels, and arithmetic checks. T7A replaces it with the approved single-resource, binary-ability design before T9A presents gates and before any content hard-codes dead numbers. It also absorbs GET-211's rename scope so the game crosses exactly one v2→v3 schema boundary. (Design lineage per `GDR-GOV-009`: Pentiment's numberless identity; Deus Ex's binary enablers; Citizen Sleeper's drives and clocks; Disco Elysium's thought cabinet, made the spine.)
 
 ### Player promise
 
-Before leaving the safehouse, George reads the real departure time, whether Naila/Brant were consulted, current Health, current Paranoia, and what will be restored. The player confirms or cancels. After failure, **Restart Attempt** returns to exactly that confirmed state with no later movement, time, facts, resources, device history, objectives, or outcomes leaking through.
+The player selects one of four covers of the same protagonist — one playable, three visibly disabled — and sees no number anywhere. Every gate reads met or not met with its exact reason. Named Paranoia tiers lock `fragile` abilities while `hardened` ones hold. Research at the safehouse trades facts plus world minutes for one new ability. At 100 the protagonist stages a surrender, and the ending reads only real evidence.
 
 ### Starting state
 
-- T3 has delivered separate autosave and immutable departure-baseline seams plus typed pause/persistence ownership.
-- The Fable-alignment specification package is validated, semantically synchronized to Linear, and separately committed with requester authorization.
-- Existing v2 and development save data may contain `retry*` names and cannot be silently coerced into the new contract.
-- This ticket does not begin surveillance/content implementation.
+- T7 (GET-207, In Review) delivered the numeric foundation now superseded; its evidence remains historical and its committed build stays untouched as delivered proof.
+- The pivot documentation package (register, queue, specs, matrix, this program) is committed with requester authorization; `traceability.ts` bijection was synchronized in the same pass.
+- `LEVEL0_RUN_SCHEMA_VERSION` is 2; saves carry `retry*` names and numeric builds; neither migrates.
+- The agent bridge exposes `health` and a three-band paranoia tier; the guided harness keys failure heuristics on `player.health`.
 
 ### Complete player flow
 
-1. Begin/continue a compatible pre-departure run with no `OperationAttemptBaseline`.
-2. Accept Lira's operation and complete or skip optional preparation.
-3. Choose departure; George renders `OperationAttemptBaselineReadback` from live state.
-4. Cancel and confirm no baseline/state change, or confirm and atomically write the baseline before the departed autosave.
-5. Change every representative post-departure domain, fail, and open `restart_attempt_confirmation`.
-6. Confirm **Restart Attempt**; dispatch `restartAttempt`, restore the baseline, rebuild runtime-only controllers, and resume at departure.
-7. Present New Game—not partial hydration—when a stale or malformed schema is found.
+1. New Game opens cover-select: four covers with fictions, one confirmable, zero numbers.
+2. The run starts at the safehouse at Calm with the cover's three abilities lit.
+3. Gate encounters show met/not-met with exact reasons and keep at least two real solutions each.
+4. Tier crossings lock the declared `fragile` abilities; George announces each first entry once.
+5. Safehouse research consumes a declared fact plus world minutes and grants one ability, once.
+6. Grounding actions and Rest recover Paranoia through the time economy.
+7. At 100, the staged surrender ends the attempt as `failure.breakdown`; Restart Attempt restores the exact departure baseline.
 
 ### System rules and state transitions
 
-Player action is **Restart Attempt**; persisted type is `OperationAttemptBaseline`; code action is `restartAttempt`; pause owner is `restart_attempt_confirmation`. Level 0 schema/runtime content advances to version 3. Autosave and baseline use independent keys/envelopes. The baseline is created exactly once per attempt at explicit confirmed departure, stores the complete approved departure state, and is immutable afterward. `restartAttempt` is legal only with a compatible baseline and restores it transactionally. All shared/public/persisted `retry*` symbols and fields are removed; historical prose may retain old terminology only when clearly labeled superseded.
+Paranoia is internal 0–100 presented as Calm 0–39 / Uneasy 40–69 / Shaken 70–89 / Breaking 90–99 on the approved cuts; 100 is breakdown with surrender staging (`GDR-PAR-008`, `GDR-PAR-009`). Gates pass by designated lit ability OR designated fact OR declared costed path; verdicts are met/not-met with exact reasons and never arithmetic (`GDR-RPG-009`). Abilities are binary and tagged `fragile` (with a lock tier) or `hardened` (`GDR-RPG-008`). Research consumes facts plus world minutes and yields one ability once per option (`GDR-RPG-010`). Health does not exist; physical consequence expresses as time, Paranoia, or capture (`GDR-HLT-004`). The schema advances to v3 including the `OperationAttemptBaseline`/`restartAttempt`/`restart_attempt_confirmation` renames; stale v2 and retired development saves are rejected, never migrated.
 
 ### Internal milestones and proof gates
 
-1. Inventory every shared/public/persisted `retry*`, departure-snapshot, action, selector, storage key, pause owner, validator, fixture, diagnostic, and player-facing string.
-2. Introduce v3 `OperationAttemptBaseline`, `OperationAttemptBaselineReadback`, `restartAttempt`, and `restart_attempt_confirmation` in one typed seam.
-3. Update reducers/selectors/persistence and make departure baseline-before-autosave atomic/idempotent.
-4. Update validators and explicitly reject v2/stale development saves without defaults or best-effort migration.
-5. Update UI/localization/George readback and all normal-control actions.
-6. Update tests/fixtures/diagnostics, then run a current-authority terminology scan proving no forbidden current `retry*` surface remains.
+1. Execute the absorbed GET-211 inventory/rename seam: every shared/public/persisted `retry*` symbol becomes the Restart Attempt vocabulary in one typed pass.
+2. Replace build/Health state with cover/ability/condition state and rewrite the v3 validators fail-closed.
+3. Implement the gate resolver on the interaction-resolver `{status, reasonId}` pattern with verdict read models.
+4. Implement tier derivation, `fragile` locks, and George tier announcements.
+5. Implement the safehouse research action with once-only consumption.
+6. Replace character creation with the cover-select shell: one playable, three visibly disabled, no numbers.
+7. Rewrite the Bible's character and condition chapters (both locales), sharedRules, coverage topics, and traceability; add the per-chapter design-lineage notes phrased to clear the forbidden-text scan; perform the physical 43/92 file retitles with sourceRef and wiki-link updates.
+8. Update the agent bridge: four-band named tiers plus a legacy `health: 100` constant in the existing removed-systems shim block until GET-179 modernizes the harness.
+9. Run the terminology scan proving no current Health/XP/check surface remains in code, UI copy, or persistence.
 
 ### Content requirements
 
-Provide equivalent English/Ukrainian labels, confirmation/cancel copy, George readback templates, restoration explanation, invalid/missing-baseline reasons, stale-save explanation, and New Game route. Define stable storage/version identifiers and fixtures for no baseline, valid baseline, divergent session/content/layout, malformed ledger, stale v2, cancellation, confirmation, and complete restoration.
+Bilingual: four cover names and fictions with three disabled presentations (`OPEN-NAR-016`); the ability catalog with tags and lock tiers (`OPEN-ABL-001`); research options and costs (`OPEN-ABL-002`); tier names and lock/unlock reasons; gate verdict reason strings; surrender staging variants; rewritten Bible chapters with lineage notes.
 
 ### World/UI/audio/George feedback
 
-The confirmation surface shows actual values, not planned defaults. George speaks the readback in one concise authored sequence and cannot create/confirm the baseline himself. Autosave feedback and Restart Attempt feedback remain distinguishable. A restrained confirmation/restoration cue may play, but audio is not authority. Focus returns cleanly and the four HUD lanes rebuild from restored state.
+The protagonist lane shows the numberless tier gauge and ability lit/locked states (`GDR-UI-005`; presentation per `OPEN-UI-004`). Gates show verdicts where the choice lives. Tier changes use restrained semantic cues; George announces each first tier entry once, explains locks, and cannot research, unlock, or lower Paranoia.
 
 ### Failure and recovery
 
-A failed baseline write does not enter the departed state or overwrite autosave. A failed departed-autosave write leaves a detectable conflict and cannot claim success. Invalid/stale/mismatched baselines disable Restart Attempt with an exact reason and offer New Game. `restartAttempt` either restores the complete validated baseline or leaves the current state unchanged; partial restoration is forbidden.
+100 stages surrender/freeze/bolt per context before the `failure.breakdown` ending; the summary derives only from real ledger evidence. Failed costed paths commit their declared worse outcomes. Restart Attempt restores cover, abilities, research state, Paranoia, and tier one-shot histories exactly; v2/malformed saves reject to New Game with exact reasons.
 
 ### Explicit exclusions
 
-- No gameplay surveillance, dialogue, Cold Iron, clock-content, grounding, actor-light, or mission-authoring changes.
-- No save migration from v2/retired development fields, alias shims that keep `retry*` public, post-departure overwrite, or reconstruction from the current autosave.
-- No commit, issue completion, or successor start before requester-authorized documentation/implementation gates.
+- No Health, damage numbers, XP, levels, attribute/skill arithmetic, point allocation, respec, or derived stats anywhere.
+- No hidden tier math, dishonest high-Paranoia UI, ability loss outside declared tier locks, or research randomness.
+- No `retry*` alias shims that keep the retired vocabulary public; no save migration.
+- No surveillance-causality, dialogue-graph, or city/audio changes owned by T8A/T9A/T10A.
 
 ### Dependencies and OPEN blockers
 
-Depends on delivered GET-203 persistence/runtime foundations and the separately committed specification package. Blocks T8A and GET-179 modernization. No unresolved numeric gameplay value blocks implementation; `OPEN-SAFE-001` still governs safehouse action availability but does not change baseline naming or atomicity.
+Depends on delivered T7 and the committed pivot documentation package; absorbs and supersedes T3A (GET-211) including its blocks edges. Blocks T8A, the GET-179 modernization, and T9A. Acceptance blockers: `OPEN-ABL-001`, `OPEN-ABL-002`, `OPEN-NAR-016`, `OPEN-UI-004`; the revised `OPEN-RPG-005`, `OPEN-PAR-001`, `OPEN-TIME-001`, `OPEN-SAFE-001`, and `OPEN-LAYOUT-005` govern their surfaces.
 
 ### Canonical decisions/spec sections
 
-Implements `GDR-SAFE-001` and supports `GDR-PAR-006`, `GDR-PAR-007`, `GDR-SUR-009`, `GDR-TIME-004`, and `GDR-FAIL-001` by preserving their attempt state. Canonical detail is in [[44 Safehouse, Save & Restart Attempt]], [[43 Health, Failure & Recovery]], [[13 Level 0 Content and State Matrix]] baseline/persistence sections, [[04 Engineering/Architecture]] typed contracts/persistence, and [[04 Engineering/Roadmap]] T3A.
+Implements `GDR-RPG-008`, `GDR-RPG-009`, `GDR-RPG-010`, `GDR-PAR-008`, `GDR-PAR-009`, `GDR-HLT-004`, `GDR-PC-006`, `GDR-UI-005`, `GDR-GOV-009`, and `GDR-SAFE-001`; revises the surfaces of `GDR-TIME-003`, `GDR-UI-002`, `GDR-FAIL-001`, `GDR-MIS-008`, `GDR-SUR-005`, and `GDR-ESC-001`. Canonical detail: [[92 Character & Progression]], [[43 Health, Failure & Recovery]], [[60 Paranoia]], [[44 Safehouse, Save & Restart Attempt]], [[45 HUD & Information Architecture]], [[13 Level 0 Content and State Matrix]] §§1–5, 10–12, 14, [[04 Engineering/Architecture]], and [[04 Engineering/Roadmap]] Gate 7.
 
 ### Human-play acceptance
 
-- Depart after each preparation combination and verify George reads exact time, contacts, Health, Paranoia, and restoration meaning.
-- Cancel once with no state write; confirm once and prove the baseline precedes the departed autosave.
-- Mutate mission, facts/Cold Iron, resources, time/boundaries, camera history, grounding/threshold history, contacts, knowledge, surveillance, position, objectives, and outcomes; fail and prove exact baseline restoration.
-- Repeat at all supported viewports/languages and prove focus/pause ownership.
-- Load v2, malformed, wrong-session, wrong-content/layout, and missing baseline fixtures and confirm explicit rejection/New Game without partial state.
+- Cover-select shows four covers, confirms only the playable one, and contains zero numbers.
+- Every authored gate is solved two different ways under normal controls.
+- Each tier boundary locks and relights exactly the declared `fragile` set with tier reasons while a `hardened` control ability passes throughout (`AC-L0-030`).
+- Research consumes its exact fact and minutes once and grants exactly one ability.
+- Reaching 100 stages the surrender and produces the evidence-limited breakdown ending (`AC-L0-014`); Restart Attempt restores the departure state exactly.
+- The sixteen Bible chapters render the new design with lineage notes in both languages.
+- All target viewports, both languages, normal controls only.
 
 ### Documentation and validation obligations
 
-Update Architecture, Safehouse/Health/Paranoia specs, state matrix, MVP Readiness, runtime schema docs, localization inventory, and the child progress note. Validate public/shared symbol absence, storage-key/version parity, baseline completeness/immutability, readback truth, stale-save rejection, reducer/action/pause ownership, restart atomicity, and diff hygiene. After live acceptance, run the full Improvement closeout gate. Do not commit without explicit authorization.
+Update Character/Failure/Paranoia/Safehouse/HUD specs for shipped behavior, Architecture, the state matrix, readiness, localization inventory, README, and `progress/GET-216.md`. Focused Jest: Bible bijection/sixteen-chapter/forbidden-text/source-ref suites, gate resolver, tier locks, research idempotency, v3 rejection, bridge shim. Run the Improvement closeout and guided AI regression only after live human acceptance; commit only with explicit requester authorization and keep the issue non-terminal until the committed build is verified.
 
 ## T8A — Make Hidzu Corporation surveillance readable, attributable, and limited
 
@@ -1294,7 +1307,7 @@ Suspicious/Pursuit remain recoverable under T8 rules; full Clear erases recognit
 ### Explicit exclusions
 
 - No suspicion from ordinary public visibility, special off-grid zones, abstract always-on exact cones, repeatable camera looping, anonymous/random drone, omniscient pursuer, camera-through-solid detection, or global hack bus.
-- No civilian access to hidden network state, reporting, gameplay authority, Health reaction, crowd simulation, or trust/reputation system.
+- No civilian access to hidden network state, reporting, gameplay authority, injury reaction, crowd simulation, or trust/reputation system.
 - No Observation vignette/reward, lighting-driven detection, combat, or final failure-overlay implementation owned by T9A.
 
 ### Dependencies and OPEN blockers
@@ -1336,14 +1349,15 @@ Harness evidence reflects a route a player could actually perform. A green guide
 - T3A provides the final Restart Attempt control/action and schema-visible baseline state.
 - The existing GET-179 issue, state, labels, project, parent, and prior evidence remain intact; this is a complete description replacement, not a new harness ticket.
 - Current deterministic/fixture profiles may retain direct mutation only when explicitly labeled fixture evidence and excluded from canonical guided acceptance.
-- T8A may develop in parallel after T3A, but T9A waits for both T8A and this milestone.
+- T8A may develop in parallel after T7A, but T9A waits for both T8A and this milestone.
+- Until this modernization lands, the bridge keeps a legacy `health: 100` constant in its removed-systems shim block; the modernized schema drops it and adopts the four named Paranoia tiers.
 
 ### Complete player flow
 
 1. Start a new run through the typed non-verb start control.
 2. Use only `move`, `observe`, `interact`, `choose`, `useContext`, and `consultGeorge` for gameplay.
 3. Use typed wait controls where normal UI exposes waiting; never mutate the clock directly.
-4. Reach and report creation, Lira acceptance, preparation, departure baseline, infiltration, medkits, all manifest states/copy, surveillance recovery, return, transit validation, debrief, capture, and deadline milestones.
+4. Reach and report cover-select, Lira acceptance, preparation, departure baseline, infiltration, medkits, all manifest states/copy, surveillance recovery, return, transit validation, debrief, capture, and deadline milestones.
 5. Trigger **Restart Attempt** only through its typed non-verb control and verify the restoration milestone.
 6. Emit a deterministic report that distinguishes reachable guided evidence from fixture-only state evidence.
 
@@ -1403,80 +1417,80 @@ Replace the complete GET-179 Linear description from this section while preservi
 
 ### Why this ticket exists
 
-The core RPG/information systems can be deterministic yet still feel arbitrary when math appears only after choice, facts flatten into generic grades, George's absence is ambiguous, departure restoration is invisible, or every failure uses a generic recap. T9A mounts the exact existing math and evidence boundaries at the decisions where they matter, while deriving failure knowledge only from authoritative ledgers.
+The core RPG/information systems can be deterministic yet still feel arbitrary when the verdict appears only after choice, facts flatten into generic grades, George's absence is ambiguous, departure restoration is invisible, or every failure uses a generic recap. T9A mounts the exact gate verdicts and evidence boundaries at the decisions where they matter, while deriving failure knowledge only from authoritative ledgers.
 
 ### Player promise
 
-Before every checked choice the player sees “needs N—you have M” with the exact attribute, skill, Paranoia, fact, and situational terms. Nonterminal failure always opens a declared worse but real path. Cold Iron evidence progresses through four understandable states. George says why he cannot help and reads the departure baseline honestly. Capture shows only Hidzu Corporation evidence that actually exists; deadline, Health, and Paranoia tell their own truth.
+Before every gated choice the player sees met or not met with the exact reason — the designated ability and its lit/locked state, the designated fact, or the declared cost. Nonterminal failure always opens a declared worse but real path. Cold Iron evidence progresses through four understandable states. George says why he cannot help and reads the departure baseline honestly. Capture shows only Hidzu Corporation evidence that actually exists; deadline and breakdown tell their own truth.
 
 ### Starting state
 
 - T9 supplies dialogue/effect/fact/dossier/minimap/George/HUD/overlay infrastructure and the separate George/current-task lanes.
-- T7 supplies the pure deterministic resolver and reusable `Level0CheckBreakdown` data.
-- T8A supplies surveillance ledger/capture evidence; GET-179 has reached its modernized reachable milestone; T3A supplies baseline/readback/action.
-- Exact requirement values and dossier wireframe remain under existing `OPEN-RPG-*`/`OPEN-UI-*`; this ticket may use only their documented reversible baselines.
+- T7A supplies the pure gate resolver and reusable verdict read models.
+- T8A supplies surveillance ledger/capture evidence; GET-179 has reached its modernized reachable milestone; T7A supplies baseline/readback/action.
+- The exact gate catalog and dossier wireframe remain under `OPEN-ABL-001`/`OPEN-UI-*`; this ticket may use only their documented reversible baselines.
 
 ### Complete player flow
 
-1. Open every checked dialogue/terminal/interception choice and inspect a `preview` breakdown before committing.
-2. Choose success and fail-forward variants; inspect a `result` with identical inputs and the committed outcome/effects.
-3. Reach every nonterminal failure and continue through its declared time/Paranoia/Health/objective/route cost; fail the final capture escape to end an attempt.
+1. Open every gated dialogue/terminal/interception choice and inspect its verdict and reason before committing.
+2. Choose success and fail-forward variants; inspect the identical post-resolution verdict and the committed outcome/effects.
+3. Reach every nonterminal failure and continue through its declared time/Paranoia/objective/route cost; fail the final capture escape to end an attempt.
 4. Start with Cold Iron `unknown`, receive Naila's warning, recognize the manifest through the authored observation, and explicitly spend five world minutes to copy it—or stop at any earlier state.
 5. Ask George for known/unknown/non-networked information and receive verified content or an explicit truthful limit reason; never infer from silence.
 6. Review George's live departure readback, confirm/cancel, then inspect Restart Attempt presentation.
-7. Trigger capture, deadline, Health, and Paranoia failures and compare their distinct read models.
+7. Trigger capture, deadline, and breakdown failures and compare their distinct read models.
 
 ### System rules and state transitions
 
-`Level0CheckBreakdown.presentation` is `preview | result`; both views are produced from the same resolver inputs and requirement. Result adds only committed outcome/history. Every nonfatal catalog entry has at least one real `failForwardEffectId`; only the final failed capture escape is fatal. `FactLedger` stays binary. `ColdIronEvidenceState` alone advances `unknown | naila_warning | manifest_recognized | manifest_copied`; copying is explicit, idempotent, +5 world minutes, and check-free. George always returns an authored response/limit reason when consulted; silence has no gameplay semantics and no deletion arc exists. Failure selectors are cause-specific.
+The gate verdict presentation is `preview | result`; both views are produced from the same resolver inputs and keys. Result adds only committed outcome/history. Every nonfatal catalog entry has at least one real `failForwardEffectId`; only the final failed capture escape is fatal. `FactLedger` stays binary. `ColdIronEvidenceState` alone advances `unknown | naila_warning | manifest_recognized | manifest_copied`; copying is explicit, idempotent, +5 world minutes, and gate-free. George always returns an authored response/limit reason when consulted; silence has no gameplay semantics and no deletion arc exists. Failure selectors are cause-specific.
 
 ### Internal milestones and proof gates
 
-1. Mount preview breakdowns in every authored checked-choice surface; mount results from committed resolutions.
+1. Mount preview verdicts in every authored gated-choice surface; mount results from committed resolutions.
 2. Validate preview/result parity and reject every nonfatal catalog entry without a real reachable fail-forward effect.
 3. Implement/validate the four-state Cold Iron reducer, observation recognition, five-minute copy, persistence, dossier/George/debrief propagation, and no universal grading.
 4. Add explicit George limit reasons, separate-lane presentation, threshold/readback integration, and no-semantic-silence validation.
 5. Build `CaptureReportReadModel` from the T8A ledger without path interpolation; build separate deadline/resource models.
-6. Integrate Restart Attempt confirmation/readback presentation from T3A.
+6. Integrate Restart Attempt confirmation/readback presentation from T7A.
 7. Prove all states/failures in both languages and through GET-179's reachable controls.
 
 ### Content requirements
 
-Provide exact localized breakdown term labels; all checked requirements/modifiers/guarantees/locked reasons; real fail-forward effect/cost copy; Cold Iron state/provenance/copy strings; George limit categories and departure lines; capture report headings/ledger event labels/map-gap treatment; deadline unfinished-requirement rows; Health/Paranoia factual explanations; Restart Attempt labels; and bilingual test fixtures.
+Provide exact localized verdict labels; all gate keys and locked reasons; real fail-forward effect/cost copy; Cold Iron state/provenance/copy strings; George limit categories and departure lines; capture report headings/ledger event labels/map-gap treatment; deadline unfinished-requirement rows; breakdown factual explanations with surrender staging; Restart Attempt labels; and bilingual test fixtures.
 
 ### World/UI/audio/George feedback
 
-Check previews stay compact and attached to the choice; results visually preserve the same terms. The four-lane HUD keeps George and current task distinct. George uses one concise live sentence per prompt/threshold/readback beat, never an invented inner want. Capture presentation reads as a restrained Hidzu Corporation incident report and partial map, not an omniscient replay. Cause-specific semantic cues may differ, but missing audio never changes state.
+Gate verdicts stay compact and attached to the choice; results visually preserve the same reasons. The four-lane HUD keeps George and current task distinct. George uses one concise live sentence per prompt/threshold/readback beat, never an invented inner want. Capture presentation reads as a restrained Hidzu Corporation incident report and partial map, not an omniscient replay. Cause-specific semantic cues may differ, but missing audio never changes state.
 
 ### Failure and recovery
 
-Every nonterminal check failure commits once, enters a worse real state/path, and cannot reroll on reopen. Only the final failed capture escape enters `failure.capture`. Capture report data is rejected if it contains an unobserved position, unknown tampering, nonexistent Needle verification, or a connected segment across an unseen gap. Deadline derives only unfinished requirements; Health/Paranoia derive only resource ledgers. Restart Attempt restores `OperationAttemptBaseline`; overlay/UI transients are discarded.
+Every nonterminal gate failure commits once, enters a worse real state/path, and cannot reroll on reopen. Only the final failed capture escape enters `failure.capture`. Capture report data is rejected if it contains an unobserved position, unknown tampering, nonexistent Needle verification, or a connected segment across an unseen gap. Deadline derives only unfinished requirements; breakdown derives only the Paranoia ledger. Restart Attempt restores `OperationAttemptBaseline`; overlay/UI transients are discarded.
 
 ### Explicit exclusions
 
-- No RNG/roll animation, hidden math, generic “failed” wall, universal evidence levels, automatic manifest copy, extra copy check, full-route reconstruction, fake capture at midnight, or shared generic failure screen.
+- No RNG/roll animation, hidden math, generic “failed” wall, universal evidence levels, automatic manifest copy, extra copy gate, full-route reconstruction, fake capture at midnight, or shared generic failure screen.
 - No George hidden silence, free text, deletion/freedom arc, automation, invented knowledge, George/current-task merge, Bible epigraph decoration, or Observation vignettes.
 - No change to surveillance geometry/causality owned by T8A or city/audio content owned by T10A.
 
 ### Dependencies and OPEN blockers
 
-Depends on T8A and the completed GET-179 modernization milestone plus delivered T7/T9/T3A foundations. Blocks T10A. Critical/high blockers include `OPEN-RPG-001`, `OPEN-RPG-004`, `OPEN-NAR-004`, `OPEN-NAR-005`, `OPEN-NAR-007`, `OPEN-NAR-008`, `OPEN-NAR-009` through `OPEN-NAR-011`, `OPEN-NAR-014`, `OPEN-NAR-015`, `OPEN-UI-001` through `OPEN-UI-003`, `OPEN-LOC-001`, `OPEN-ACC-001`, and `OPEN-SAFE-001`. `OPEN-NAR-002` and `OPEN-PAR-002` are resolved.
+Depends on T8A and the completed GET-179 modernization milestone plus delivered T7A/T9 foundations. Blocks T10A. Critical/high blockers include `OPEN-ABL-001`, `OPEN-NAR-004`, `OPEN-NAR-005`, `OPEN-NAR-007`, `OPEN-NAR-008`, `OPEN-NAR-009` through `OPEN-NAR-011`, `OPEN-NAR-014`, `OPEN-NAR-015`, `OPEN-UI-001` through `OPEN-UI-003`, `OPEN-LOC-001`, `OPEN-ACC-001`, and `OPEN-SAFE-001`. `OPEN-NAR-002` and `OPEN-PAR-002` are resolved.
 
 ### Canonical decisions/spec sections
 
-Implements `GDR-RPG-007`, `GDR-FACT-002`, `GDR-GEO-004`, `GDR-SAFE-001`, `GDR-FAIL-001`, `GDR-PAR-007`, and the existing dialogue/fact/HUD decisions. Canonical detail is in [[90 Dialogue]], [[46 Facts, Dossier, Minimap & Terminals]], [[40 George (AI Companion)]], [[45 HUD & Information Architecture]], [[43 Health, Failure & Recovery]], [[44 Safehouse, Save & Restart Attempt]], [[13 Level 0 Content and State Matrix]], [[04 Engineering/Architecture]], and [[04 Engineering/Roadmap]] T9A.
+Implements `GDR-RPG-007`, `GDR-RPG-009`, `GDR-PAR-009`, `GDR-FACT-002`, `GDR-GEO-004`, `GDR-SAFE-001`, `GDR-FAIL-001`, `GDR-PAR-007`, and the existing dialogue/fact/HUD decisions. Canonical detail is in [[90 Dialogue]], [[46 Facts, Dossier, Minimap & Terminals]], [[40 George (AI Companion)]], [[45 HUD & Information Architecture]], [[43 Health, Failure & Recovery]], [[44 Safehouse, Save & Restart Attempt]], [[13 Level 0 Content and State Matrix]], [[04 Engineering/Architecture]], and [[04 Engineering/Roadmap]] T9A.
 
 ### Human-play acceptance
 
-- Compare preview/result for every check and verify identical totals/terms; execute every fail-forward route and the one final-capture exception.
-- Reach `unknown`, Naila warning, manifest recognized, and manifest copied; verify exact five-minute cost, no check, idempotency, persistence, and optional completion.
+- Compare preview/result for every gate and verify identical verdicts/reasons; execute every fail-forward route and the one final-capture exception.
+- Reach `unknown`, Naila warning, manifest recognized, and manifest copied; verify exact five-minute cost, no gate, idempotency, persistence, and optional completion.
 - Ask George across known, undiscovered, non-networked, and unavailable contexts; verify explicit reasons, no hidden silence/arc, separate lanes, threshold history, and exact departure readback.
-- Trigger capture with sparse/dense evidence and inspect disconnected gaps; trigger deadline/Health/Paranoia and prove zero borrowed capture content.
+- Trigger capture with sparse/dense evidence and inspect disconnected gaps; trigger deadline/breakdown and prove zero borrowed capture content.
 - Restart from each failure and verify exact baseline; repeat at all target viewports/languages using normal controls.
 
 ### Documentation and validation obligations
 
-Update Dialogue/Facts/George/HUD/Health/Safehouse specs, Architecture, state matrix, readiness, localization, and the child progress note. Add breakdown parity, catalog fail-forward, Cold Iron transition/copy/persistence, George-limit, baseline presentation, capture non-disclosure, cause-specific failure, pause/focus, and bilingual tests. Inspect live overlays/maps at all viewports. Run Improvement closeout only after normal-control acceptance; no DOM/fixture proof substitutes for legibility/truth.
+Update Dialogue/Facts/George/HUD/Failure/Safehouse specs, Architecture, state matrix, readiness, localization, and the child progress note. Add breakdown parity, catalog fail-forward, Cold Iron transition/copy/persistence, George-limit, baseline presentation, capture non-disclosure, cause-specific failure, pause/focus, and bilingual tests. Inspect live overlays/maps at all viewports. Run Improvement closeout only after normal-control acceptance; no DOM/fixture proof substitutes for legibility/truth.
 
 ## T10A — Make curfew, routes, recovery, and street sound live in the city
 
@@ -1620,7 +1634,7 @@ Missing/invalid region metadata fails the production validator and falls back ob
 
 ### Explicit exclusions
 
-- No detection, visibility, stealth, recognition, movement, collision, interaction, schedule, Health, Paranoia, civilian-behavior, dialogue, fact, or outcome effect.
+- No detection, visibility, stealth, recognition, movement, collision, interaction, schedule, Paranoia, civilian-behavior, dialogue, fact, or outcome effect.
 - No dynamic global illumination, per-pixel light simulation, arbitrary per-actor color, crimson gameplay tint, bloom, outline, shadow-system rewrite, baked actor, or source-scene geometry replacement.
 - No final intensity/feather claim before `OPEN-ART-005` live requester review.
 

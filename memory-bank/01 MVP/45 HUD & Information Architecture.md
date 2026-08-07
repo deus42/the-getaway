@@ -9,12 +9,12 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-The HUD gives the player one stable operational read without shrinking the district into a dashboard. It keeps only current, truthful, actionable state persistent—known world information, protagonist condition, George, and the current mission beat—while deeper reading surfaces pause the simulation. The George and current-task lanes stay separate. The complete in-game Game Design Bible is an optional long-form reference; changed rules are corrected there, but Fable feedback adds no decorative quotations, epigraphs, or alternate worldbuilding layer. This implements `GDR-UI-001` through `GDR-UI-004`, `GDR-GEO-001` through `GDR-GEO-004`, `GDR-RPG-007`, `GDR-FAIL-001`, and `GDR-GOV-001`.
+The HUD gives the player one stable operational read without shrinking the district into a dashboard. It keeps only current, truthful, actionable state persistent—known world information, protagonist condition, George, and the current mission beat—while deeper reading surfaces pause the simulation. The George and current-task lanes stay separate. The complete in-game Game Design Bible is an optional long-form reference; changed rules are corrected there, and the one approved editorial addition is the short per-chapter design-lineage note of `GDR-GOV-009` — no decorative quotations, epigraphs, or alternate worldbuilding layer. This implements `GDR-UI-001` through `GDR-UI-005`, `GDR-GEO-001` through `GDR-GEO-004`, `GDR-RPG-007`, `GDR-FAIL-001`, `GDR-GOV-009`, and `GDR-GOV-001`.
 
 ## 2. Player-visible verbs
 
 - Read the four persistent bottom-dock lanes.
-- Read Health and Paranoia at all times.
+- Read the Paranoia tier and ability states at all times.
 - Inspect the highest-priority incomplete mission beat and its known deadline or optional indicators.
 - Open the knowledge minimap, Character, dossier, social feed, dialogue history, George prompts, debrief, failure, and completion surfaces.
 - Open the full Game Design Bible from the start menu or paused menu, or press `F1` during eligible play; search, change chapter/section, switch locale with the game, and resume the exact prior state.
@@ -24,7 +24,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 ## 3. Starting state and prerequisites
 
 - On valid Level 0 initialization, the bottom dock is present with four lanes in this order: knowledge minimap, protagonist, George, current quest beat.
-- Health begins at `100`, Paranoia at `0`, and both are visible in the protagonist lane.
+- The run begins at the Calm tier with the cover's abilities lit; the tier gauge and ability states are visible in the protagonist lane.
 - The quest lane begins with `l0.meet_lira`; it shows only the highest-priority incomplete primary objective.
 - The minimap initially knows the safehouse and Lira meeting point plus only devices physically visible from the starting context.
 - George initially exposes only authored opening context, controls, and current verified state.
@@ -35,7 +35,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 1. The player enters the safehouse with the world occupying the dominant viewport and the four-lane dock occupying only its approved height.
 2. The minimap updates as facts and physical discovery add legitimate knowledge; it never expands into a movement planner.
-3. The protagonist lane keeps Health and Paranoia visible through exploration, surveillance, overlays, failure risk, and recovery.
+3. The protagonist lane keeps the tier gauge and ability lock states visible through exploration, surveillance, overlays, failure risk, and recovery.
 4. George presents verified current context and authored questions in his lane while his private AR avatar remains a world presence near the protagonist.
 5. The quest lane advances one beat at a time from Lira through preparation, recovery, escape, return, transit, and debrief. Optional contact/evidence status remains compact or moves into the dossier.
 6. Opening the Game Design Bible from the start menu shows the finalized sixteen-chapter bilingual reference without constructing a run. Opening it from the paused menu retains the menu pause owner and adds the Bible owner. Eligible `F1` during play adds the Bible owner exactly once.
@@ -47,7 +47,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 - The persistent dock remains visible during normal world play and reflects canonical state rather than maintaining a second mission or resource model.
 - The knowledge minimap transitions only when a stable known-location, known-device, known-context, or objective-precision fact is acquired or removed by a valid new run/Restart Attempt restoration.
-- The protagonist lane reflects current callsign/appearance context where authored and always reflects current Health and Paranoia.
+- The protagonist lane reflects the current cover context where authored and always reflects the current Paranoia tier and ability states.
 - The George lane selects only authored prompts whose prerequisites are satisfied; unavailable knowledge produces a bounded unknown/insufficient-evidence response.
 - The George lane always gives a reason when useful information is unavailable. Silence carries no hidden gameplay meaning.
 - The quest lane selects the highest-priority incomplete primary objective; completed and optional content does not displace the current beat.
@@ -61,25 +61,25 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 - The persistent bottom dock has exactly four functional lanes: knowledge minimap, protagonist, George, and current quest beat.
 - Dock height is `16–18%` of the viewport at 1280x720, 1440x900, and 1920x1080.
-- Health and Paranoia are always visible; Paranoia is never renamed `Pressure`.
+- The Paranoia tier is always visible and never renamed `Pressure`; per `GDR-UI-005` the lane shows the tier gauge and ability lit/locked states with no numbers and no Health.
 - The quest lane shows one current beat. Optional preparation and evidence use compact indicators and the dossier rather than a competing objective list.
 - The minimap shows only discovered locations and cameras and never issues movement or displays a hidden safest route.
 - George uses authored contextual prompts and verified information; there is no generic chat box.
-- Every deterministic choice mounts the shared `Level0CheckBreakdown` before selection and reuses it after resolution with `preview` or `result` presentation.
+- Every gated choice shows its met/not-met verdict with the exact reason before selection and the identical verdict after resolution (`GDR-RPG-007`, `GDR-RPG-009`).
 - Dialogue, Character, dossier, social feed, terminal, debrief, failure, and completion surfaces share one visual language and pause simulation according to their owning contract.
 - The complete Game Design Bible has exactly sixteen finalized-content chapters with equivalent English/Ukrainian chapter and section IDs, order, semantic block shapes, gameplay meaning, and shared approved numeric/state data.
 - The Bible is available from the start menu and paused menu with an `F1` hint. Eligible `F1` opens it during gameplay, prevents browser help, and stops propagation before world input. Ineligible modal/editable contexts retain authority.
 - Wide layout (`>=1200px`) uses a `264px` chapter rail, centered article no wider than `820px`/`76ch`, and `196px` on-page outline. Medium layout (`841–1199px`) uses a `224px` rail and inline section list. Narrow layout (`<=840px`) uses one column, a modal navigation drawer, an expandable on-page list, bounded table scrolling, and targets at least `44px`.
 - The player-visible copy contains finalized end-state design only. It exposes no `OPEN-*`, decision/ticket identifiers, tracker/dependency state, provisional/recommended/unresolved language, historical alternatives, implementation ownership, repository paths, raw wiki links, or test/build/coverage/commit state.
 - Search indexes localized chapter titles, summaries, section titles, body text, and keywords. Results preserve deterministic order and show chapter, section, and localized excerpt.
-- Exact lane widths are unresolved in `OPEN-UI-001`; character-creation/menu visual ownership in `OPEN-UI-002`; and dialogue/dossier wireframes in `OPEN-UI-003`.
+- Exact lane widths are unresolved in `OPEN-UI-001`; cover-select/menu visual ownership in `OPEN-UI-002`; dialogue/dossier wireframes in `OPEN-UI-003`; and the tier-gauge/ability presentation in `OPEN-UI-004`.
 - Accessibility behavior remains an acceptance decision under `OPEN-ACC-001`; semantic localization ownership and equivalence remain acceptance decisions under `OPEN-LOC-001`, and the fiction language policy under `OPEN-NAR-014`. Recorded recommendations may be implemented provisionally through replaceable tokens and localized content.
 
 ## 7. Inputs from other systems
 
 - [[91 Quests & Objectives]] supplies the single current primary beat, optional indicators, deadline, and completion/failure state.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies known locations, cameras, contexts, objective precision, dossier entries, and terminal surfaces.
-- [[43 Health, Failure & Recovery]] and [[60 Paranoia]] supply visible protagonist values, causes, and failure state.
+- [[43 Health, Failure & Recovery]] and [[60 Paranoia]] supply the visible tier, ability locks, causes, and failure state.
 - [[40 George (AI Companion)]] supplies verified summaries, authored prompts, bounded answers, and AR-avatar state.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies the current network state, source, last-known feedback, and known coverage.
 - [[80 Day-Night Cycle]] supplies current time, curfew/deadline context, and shared pause ownership.
@@ -100,7 +100,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 - The dock uses the locked graphic surveillance-noir language: world-first composition, readable midtones, strong silhouettes, restrained cyan technology, and crimson danger without broad fantasy glow.
 - The minimap distinguishes knowledge from unknown space and strengthens only discovered surveillance information.
-- Health, Paranoia, current beat, network risk, deadlines, blockers, and failure causes use their approved readable text and semantic state; exact color-independent companion treatment follows the recorded `OPEN-ACC-001` recommendation provisionally until accepted.
+- The tier gauge, ability states, current beat, network risk, deadlines, blockers, and failure causes use their approved readable text and semantic state; exact color-independent companion treatment follows the recorded `OPEN-ACC-001` recommendation provisionally until accepted.
 - The private George AR avatar remains near the protagonist while the George lane carries authored prompts and verified summaries; neither may occlude required world interaction.
 - Overlay, dialogue, terminal, objective, network, failure, and completion audio families come from [[49 Audio]] and remain secondary to readable state.
 - The Bible uses the same graphic-surveillance-noir semantic tokens but favors quiet long-form readability: warm practical gold for selected reading context, restrained cyan for supporting actions, and crimson only inside genuine danger/failure examples. Its dialog name, close action, chapter/section current state, result count, tables, headings, and drawer are exposed semantically; no meaning depends on color or sound.
@@ -109,7 +109,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- Failure replaces normal action focus with a cause-specific read model, Restart Attempt, and New Game actions while time and autonomous simulation remain paused. Capture alone shows a Hidzu Corporation incident report/map from real surveillance-ledger evidence with disconnected unseen gaps; deadline lists unfinished requirements; Health and Paranoia remain simple factual explanations.
+- Failure replaces normal action focus with a cause-specific read model, Restart Attempt, and New Game actions while time and autonomous simulation remain paused. Capture alone shows a Hidzu Corporation incident report/map from real surveillance-ledger evidence with disconnected unseen gaps; deadline lists unfinished requirements; breakdown stages its surrender and remains a simple factual explanation.
 - Restart Attempt restores HUD, known minimap state, current objective, resources, George context, and overlays from `OperationAttemptBaseline`; no stale post-departure badge, route, alert, or dialogue remains.
 - Incompatible saves show the exact New Game requirement and never render a partial HUD from default-filled state.
 - After transit validation, completion/debrief offers only `Continue Exploring` and `End Demo`; it does not display a fake next level.
@@ -122,16 +122,16 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 - Author one semantic model for each lane and each overlay; English and Ukrainian render identical state, requirements, and transitions.
 - Give every quest beat, fact, prompt, blocker, resource change, network transition, failure, and completion action stable semantic content rather than presentation-derived logic.
-- Give every check one shared preview/result breakdown and every nonfatal failed choice one declared, visible fail-forward effect.
+- Give every gate one shared verdict/reason presentation and every nonfatal failed choice one declared, visible fail-forward effect.
 - Give capture a typed report/map presentation that cannot infer unseen route segments or unknown content; keep other failure layouts cause-specific.
 - Produce target-viewport wireframes for dialogue and dossier under `OPEN-UI-003`; provisional wireframes may drive a reversible implementation pass, but approval is required before final surface acceptance.
 - Resolve and document exact desktop/collapse lane allocations under `OPEN-UI-001` without dropping any of the four functions.
 - Implement text scaling, reduced motion/flash, volume controls, color-independent risk cues, keyboard parity, and subtitle requirements from the approved or provisionally recorded `OPEN-ACC-001` baseline; resolve it before final accessibility acceptance.
-- Character creation and main-menu presentation may use the provisionally recorded `OPEN-UI-002` ownership split and must join the same accepted visual system before closeout.
+- Cover-select and main-menu presentation may use the provisionally recorded `OPEN-UI-002` ownership split and must join the same accepted visual system before closeout.
 - Author the Bible as typed semantic data, not raw Markdown or component-specific JSX: paragraphs, bullets, steps, callouts, tables with captions/headers, and state flows. Every section carries stable topic IDs plus non-rendered source/decision references.
 - Cover all sixteen chapters defined in [[Game Design]]. Every chapter must explain purpose, player flow, rules and examples, cross-system inputs/effects, world/HUD/dialogue/audio/George feedback, failure/recovery/persistence/Restart Attempt, and related chapters.
 - Maintain an independent required-topic and Approved-decision inventory. Every player-facing Approved rule maps to a rendered section; delivery/repository governance may be classified non-player-facing only with a bounded reason. Every source reference must resolve.
-- Correct Bible statements made false by this decision pass, but add no chapter epigraphs, quotations, decorative memos, graffiti, Observation vignettes, or George/task-lane merge.
+- Correct Bible statements made false by this decision pass, and add the short per-chapter design-lineage note of `GDR-GOV-009` phrased to clear the forbidden-text scan; add no chapter epigraphs, quotations, decorative memos, graffiti, Observation vignettes, or George/task-lane merge.
 - Record bilingual semantic review for every chapter, including examples, tables, state flows, keywords, numbers, cause/effect direction, and one back-translation spot-check. Structural parity alone is insufficient.
 
 ## 12. Edge cases and prohibited shortcuts
@@ -139,7 +139,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 - No oversized three-lane HUD, duplicate objective panels, permanent world labels, generic log wall, or dashboard that obscures the world.
 - No minimap path execution, hidden full-map knowledge, undiscovered camera reveal, threat-aware route, or automatic protagonist movement.
 - No unrestricted George input, invented answer, or UI action that mutates world state without the player's explicit authored action.
-- No hidden-information silence, merged George/current-task lane, pre-choice check without exact math, or generic failure screen shared across all causes.
+- No hidden-information silence, merged George/current-task lane, pre-choice gate without its verdict and reason, numeric condition readout, or generic failure screen shared across all causes.
 - No reading/decision overlay may allow the clock, patrol, cameras, drone, movement, or deadline to leak forward while it owns pause.
 - No stale focus requiring a sacrificial click and no overlay click issuing movement beneath it.
 - No debug bridge, fixture-only state, or generated screenshot may substitute for target-viewport human acceptance.
@@ -163,14 +163,14 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 ## 15. Human-play acceptance examples
 
-- `AC-L0-001`: enter Level 0 and understand movement, Lira, Health, Paranoia, George, and the current beat without opening a help screen.
+- `AC-L0-001`: enter Level 0 and understand movement, Lira, the Paranoia tier, held abilities, George, and the current beat without opening a help screen.
 - Trigger `Suspicious`, `Pursuit`, resource changes, a blocked action, and a deadline warning; each must remain attributable without overwhelming the world.
-- Preview and resolve representative successful and failed checks; requirement, total, component math, and Paranoia penalty remain identical before/after, and each nonterminal failure exposes its real worse path.
-- Compare capture, deadline, Health, and Paranoia failures; only capture reads surveillance evidence, and its map never joins unseen gaps.
+- Preview and resolve representative passed and failed gates; the verdict and its exact reason remain identical before/after, and each nonterminal failure exposes its real worse path.
+- Compare capture, deadline, and breakdown failures; only capture reads surveillance evidence, and its map never joins unseen gaps.
 - Open and close dialogue, Character, dossier, social feed, George, a terminal, failure, and debrief while active simulation is nearby; nothing advances and focus returns cleanly.
 - `AC-L0-016`: complete return, terminal validation, progression, and debrief with the actual facts/outcomes shown and only `Continue Exploring` / `End Demo` terminal choices.
 - `AC-L0-017`: repeat an equivalent path in English and Ukrainian and confirm identical state, requirements, and layout viability.
-- `AC-L0-018`: at every target viewport, confirm dock height `16–18%`, all four functions remain present, Health/Paranoia are readable, and the district/actors dominate the frame.
+- `AC-L0-018`: at every target viewport, confirm dock height `16–18%`, all four functions remain present, the tier gauge and ability states are readable, and the district/actors dominate the frame.
 - From the no-run start menu, open the Bible through both the visible button and `F1`; confirm no run/pause state is created and close restores the invoker.
 - During active play, note time and position, open with `F1`, navigate/search in both languages, and confirm world time, movement, surveillance, actors, mission/outcomes, autosave, and Restart Attempt remain unchanged. Close and confirm exact state resumes.
 - Open above the paused menu; confirm both `menu` and `bible` owners coexist, then close the Bible and prove the menu remains paused. Repeated `F1`, Escape/close races, unmount, run replacement, New Game, and shell teardown never leak or double-release ownership.
@@ -179,4 +179,4 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 ## 16. Owning Linear ticket
 
-`T1` (`GET-201`) owns the player-facing Game Design Bible and corrects changed rules without decorative expansion. `T9` (`GET-209`) owns the broader HUD, minimap/dossier, separate George/task lanes, overlays, focus, and localization infrastructure. `T9A` (`GET-213`) owns check previews, George explanations, departure/failure legibility, and Restart Attempt presentation. `T6` (`GET-206`) owns protagonist/George visual assets; `T7` (`GET-207`) owns RPG/resource state; `T8A` (`GET-212`) owns network evidence; `T10` (`GET-210`) owns authored mission content, audio, localization completion, and end-to-end acceptance.
+`T1` (`GET-201`) owns the player-facing Game Design Bible and corrects changed rules; `T7A` (`GET-216`) delivers the pivot's Bible content pass, the tier-gauge/ability lane data, and the lineage notes. `T9` (`GET-209`) owns the broader HUD, minimap/dossier, separate George/task lanes, overlays, focus, and localization infrastructure. `T9A` (`GET-213`) owns gate verdicts, George explanations, departure/failure legibility, and Restart Attempt presentation. `T6` (`GET-206`) owns protagonist/George visual assets; `T8A` (`GET-212`) owns network evidence; `T10` (`GET-210`) owns authored mission content, audio, localization completion, and end-to-end acceptance. Historic numeric HUD scope remains with `T7` (`GET-207`) as delivered evidence.

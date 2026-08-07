@@ -6,11 +6,11 @@ level: 0
 
 # Level 0 Vertical Slice Contract
 
-This is the authoritative player-experience contract for Level 0. [[13 Level 0 Content and State Matrix]] defines the stable beat IDs, facts, checks, states, and acceptance cases. A technically reachable route is insufficient; the mission must be understandable, intentional, and engaging through normal player controls.
+This is the authoritative player-experience contract for Level 0. [[13 Level 0 Content and State Matrix]] defines the stable beat IDs, facts, gates, states, and acceptance cases. A technically reachable route is insufficient; the mission must be understandable, intentional, and engaging through normal player controls.
 
 ## Player promise
 
-In 15–20 minutes, an American expatriate with a personal RPG build and a private AI companion helps Lira recover confiscated medical supplies, learns how Hidzu Corporation's city watches people, optionally documents a Cold Iron logistics connection, and validates passage toward Miami before midnight. The protagonist seeks Miami to investigate their missing father and Operation Cold Iron; Hidzu Corporation does not consider them a problem when Level 0 begins.
+In 15–20 minutes, an American expatriate playing one chosen cover of themselves, with a private AI companion, helps Lira recover confiscated medical supplies, learns how Hidzu Corporation's city watches people, optionally documents a Cold Iron logistics connection, and validates passage toward Miami before midnight. The protagonist seeks Miami to investigate their missing father and Operation Cold Iron; Hidzu Corporation does not consider them a problem when Level 0 begins.
 
 The player must feel vulnerable but capable. Their strength comes from preparation, perception, social understanding, systems knowledge, composure, and movement—not military power or fantasy technology.
 
@@ -18,17 +18,17 @@ The player must feel vulnerable but capable. Their strength comes from preparati
 
 | Chapter | Player intention | Authoritative transition | Proof of completion |
 |---|---|---|---|
-| New Game | Create somebody worth carrying forward. | Valid callsign, appearance, attributes, and skills create the run. | Build summary agrees with the Character screen and persisted identity. |
+| New Game | Choose who they were before tonight. | Confirming the playable cover creates the run; the three disabled covers cannot confirm. | The cover, its three abilities, and the persisted identity agree with the Character screen. |
 | Safehouse | Understand the Miami lead and available planning actions. | Explicit world control begins at 18:30 inside the safehouse boundary. | Player can move, inspect, consult George, and see unavailable actions with reasons. |
 | Lira | Accept a humane operation with a credible deadline and reward. | Exact dialogue acceptance enters preparation. | Medkits, two timing contexts, midnight, and passage are understood. |
 | Preparation | Decide whether more knowledge is worth the time and travel. | Optional Naila/Brant facts are recorded, or consciously skipped. | Both, either, and neither-contact states remain viable. |
-| Departure | Commit one deterministic attempt. | George reads back the real departure time, contacts, Health, Paranoia, and restoration meaning; confirmation creates `OperationAttemptBaseline`. | Baseline contains the complete departure state and no later outcome. |
+| Departure | Commit one deterministic attempt. | George reads back the real departure time, contacts, the Paranoia tier, held abilities, and restoration meaning; confirmation creates `OperationAttemptBaseline`. | Baseline contains the complete departure state and no later outcome. |
 | Infiltration | Read and cross the four-block district. | Explicit route actions move the run into the logistics-site sequence. | Dusk/public and curfew/service routes use normal controls and truthful surveillance. |
 | Recovery | Operate the cache and choose whether to investigate. | Explicit terminal use releases medkits; optional manifest inspection can recognize and then copy the evidence. | Mission object and evidence state cannot change through proximity; copying costs exactly five world minutes. |
 | Escape | Break the network's evidence chain. | Clear/Suspicious/Pursuit resolves through line of sight, direction, context, or authored interception. | The network searches only observed evidence and never hidden true position; a full return to `Clear` resets recognition. |
 | Return | Honor the bargain and make outcomes legible. | Explicit medkit handoff issues the credential. | Lira responds only to actual facts and ledger outcomes. |
 | Validation | Secure the route before midnight. | Explicit outbound-terminal validation completes the deadline condition. | Deadline failure is disabled only after handoff and validation are both true. |
-| Debrief | Understand cost, evidence, and future consequence. | Factual dossier/debrief reads stable ledgers and opens progression. | Contacts, route, trace, pursuit, Health loss, Paranoia, evidence, and timing are correct. |
+| Debrief | Understand cost, evidence, and future consequence. | Factual dossier/debrief reads stable ledgers and opens progression. | Contacts, route, trace, pursuit, the Paranoia record, evidence, and timing are correct. |
 | Close | Decide whether to remain or end. | `Continue Exploring` or `End Demo`. | No placeholder Miami load and no second Level 0 mission. |
 
 ## Starting state
@@ -38,28 +38,24 @@ The player must feel vulnerable but capable. Their strength comes from preparati
 - Time: 18:30.
 - Network: `Clear`.
 - Hidzu Corporation concern/recognition: none.
-- Health: 100.
-- Paranoia: 0.
+- Paranoia: 0 — the Calm tier, full ability set lit.
 - Mission: not yet accepted.
 - Known locations: safehouse and Lira meeting point.
 - Known devices: none unless physically visible from the starting context.
-- Save: a new autosave is created after character creation and Level 0 initialization.
+- Save: a new autosave is created after cover-select and Level 0 initialization.
 - George: available, private, and limited to opening context and controls.
 
-## 1. Character creation
+## 1. Cover-select
 
-New Game opens character creation before the world begins.
+New Game opens cover-select before the world begins.
 
-- Choose a callsign.
-- Choose one of four authored visual presets.
-- Physical, Mental, Social, and Technical begin at 1.
-- Distribute four additional attribute points; creation cap 3, long-term cap 5.
-- Stealth, Evasion, Awareness, Composure, Insight, Influence, Systems, and OpSec begin at 0.
-- Distribute six skill points; creation cap 2, long-term cap 5.
-- The screen previews derived Health/Paranoia presentation and the kinds of checks affected, without exposing inactive combat or equipment statistics.
-- Confirmation shows a concise build summary and creates the Level 0 run.
+- Four authored covers of the one protagonist are presented with names and one-paragraph fictions.
+- The Level 0 playable cover is social-forward; the other three render honestly as disabled future selections.
+- Each cover lists its three starting abilities with plain-language meanings and `fragile`/`hardened` tags.
+- No number appears anywhere in the flow; there is nothing to allocate and nothing to type.
+- Confirmation shows the cover summary and creates the Level 0 run in seconds.
 
-There is no fixed name, background choice, class, package, perk tree, loadout selection, faction alignment, or weapon selection.
+There is no numeric allocation, free-text naming, class, package, perk tree, loadout selection, faction alignment, or weapon selection.
 
 ## 2. Safehouse opening
 
@@ -204,7 +200,7 @@ Hiding uses discrete authored physical contexts such as service recesses, stair 
 - The cache-locker terminal communicates its single function before use.
 - The medkits require explicit interaction and become a mission object, not a managed inventory stack.
 - The nearby manifest is optional and uses the explicit `ColdIronEvidenceState` chain: `unknown → naila_warning → manifest_recognized → manifest_copied`.
-- Naila's warning guarantees recognition of its Cold Iron significance; without the warning, the authored Awareness check is previewed with its exact math.
+- Naila's warning guarantees recognition of its Cold Iron significance; without the warning, the authored recognition gate is previewed with its verdict and exact reason.
 - Recognition never copies the manifest automatically. Copying is a separate explicit interaction that advances the clock by exactly five world minutes and requires no additional check.
 - Failure to recognize the connection changes only evidence and future understanding; it never blocks medkit recovery.
 - Copied evidence updates the dossier, George, Lira's debrief, the outcome ledger, and the future Miami handoff. The general `FactLedger` remains binary and does not gain universal rumor/confirmed/leverage grades.
@@ -213,11 +209,11 @@ Hiding uses discrete authored physical contexts such as service recesses, stair 
 
 Level 0 contains no tactical combat mode.
 
-When intercepted, the player receives a short deterministic confrontation. Options appear only when supported by the current build, facts, and fiction. The authored option families are dialogue/Influence, Insight, Composure, Evasion, and Physical escape.
+When intercepted, the player receives a short deterministic confrontation. Options appear only when supported by held lit abilities, facts, and fiction. The authored gate families are social, insight, composure, evasion, and physical escape.
 
 - Requirements and likely costs are visible before selection.
-- Success may cost Health, Paranoia, time, or a named consequence.
-- Every nonterminal failure commits a declared worse-but-real path through time, Paranoia, Health, position, access, or network state. Only the final failed capture-escape choice may end the attempt.
+- Success may cost Paranoia, time, or a named consequence.
+- Every nonterminal failure commits a declared worse-but-real path through time, Paranoia, position, access, or network state. Only the final failed capture-escape gate may end the attempt.
 - There is no attack grid, weapon selection, enemy HP loop, AutoBattle, EMP, takedown ability, or magical gadget.
 
 ## 12. Return, transit, and debrief
@@ -225,45 +221,36 @@ When intercepted, the player receives a short deterministic confrontation. Optio
 1. Leave the logistics site.
 2. Resolve any Suspicious or Pursuit state.
 3. Explicitly return the medkits to Lira.
-4. Receive dialogue reflecting contacts, timing, cameras, drone, pursuit, Health loss, Paranoia, and optional evidence.
+4. Receive dialogue reflecting contacts, timing, cameras, drone, pursuit, Paranoia, and optional evidence.
 5. Receive the outbound transit credential.
 6. Return to the safehouse.
 7. Use the outbound terminal before midnight.
-8. Enter debrief, recovery, and any earned level-up.
+8. Enter debrief and recovery.
 9. Choose `Continue Exploring` or `End Demo`.
 
 Once the medkits are returned and transit is valid, the operation deadline can no longer fail the completed run. Continue Exploring does not load Miami or create additional Level 0 missions.
 
-The debrief is a deterministic reading of the outcome ledger. It distinguishes contacts consulted or skipped; dusk or curfew timing; camera set unused, active, clean, or traced; peak network state; Needle verification; successful hiding or blending; interception; Health loss; Paranoia peak; Cold Iron evidence state; medkit return; transit validation; and deadline margin. Missing ledger evidence produces omission or an explicit unknown—not invented praise, blame, or narration.
+The debrief is a deterministic reading of the outcome ledger. It distinguishes contacts consulted or skipped; dusk or curfew timing; camera set unused, active, clean, or traced; peak network state; Needle verification; successful hiding or blending; interception; the peak Paranoia tier; Cold Iron evidence state; medkit return; transit validation; and deadline margin. Missing ledger evidence produces omission or an explicit unknown—not invented praise, blame, or narration.
 
-## 13. Health, Paranoia, and recovery
+## 13. Paranoia and recovery
 
-### Health
+There is no Health meter. The single condition resource is Paranoia; authored physical consequences cost world minutes, raise Paranoia, or end in capture (`GDR-HLT-004`).
 
-- Range 0–100; always visible.
-- Changes only through authored physical consequences.
-- No ambient chip damage or tactical damage simulation.
-- Health 0 ends the run.
-- Safehouse rest restores Health to 100.
-- Health does not create an injury state, limp, movement penalty, or civilian reaction. Consequences remain authored Health changes with factual feedback.
-
-### Paranoia
-
-- Range 0–100; always visible and always named `Paranoia`.
-- 0–39: no check penalty.
-- 40–69: −1 to all checks.
-- 70–89: −2 to all checks.
-- 90–99: −3 to all checks.
-- 100: fatal medical collapse.
+- Internal range 0–100; always presented as the named tier and always named `Paranoia`.
+- Calm (0–39): full ability set lit.
+- Uneasy (40–69): abilities tagged `fragile: uneasy` lock, each naming the tier as its reason.
+- Shaken (70–89): all `fragile` abilities lock; `hardened` abilities hold.
+- Breaking (90–99): locks persist and George's warnings shorten.
+- 100: breakdown — the protagonist stages a surrender, freeze, or bolt and the attempt ends (`failure.breakdown`).
 - Rises only from visible authored surveillance, pursuit, physical consequences, dangerous escape/capture outcomes, and story shocks.
 - Does not passively rise from curfew.
 - Does not passively decay while walking or waiting outside.
 - Safehouse rest removes 40 and advances time 30 minutes.
 - Vending-machine coffee on Transit Road and the shrine near the Market Ring/Outer Space junction each cost ten world minutes, remove ten Paranoia, and work once per attempt.
 - Dialogue does not remove Paranoia. The first qualifying difficult surveillance escape may remove five Paranoia once per attempt.
-- George warns once per attempt when Paranoia first crosses 40, 70, and 90.
+- George warns once per attempt at the first entry into Uneasy, Shaken, and Breaking.
 
-Every change communicates its source and amount.
+Every change communicates its source; no number is shown in normal play.
 
 ## 14. Time and safehouse
 
@@ -274,35 +261,35 @@ Every change communicates its source and amount.
 - Hard deadline: 00:00 while either medkit return or transit validation remains incomplete.
 - Dialogue, menus, Character, dossier, observation, terminals, debrief, completion, and failure pause time and autonomous simulation.
 - Safe waiting advances in confirmed 30-minute steps.
-- Recovery rest advances 30 minutes, restores Health, and removes 40 Paranoia.
-- The safehouse is the autosave point, planning hub, recovery location, level-up location, George consultation point, and outbound terminal location.
-- Before operation departure, George reads back the actual departure time, contacts consulted or skipped, Health, Paranoia, and exactly what Restart Attempt will restore. The player then confirms or cancels.
+- Recovery rest advances 30 minutes and removes 40 Paranoia.
+- The safehouse is the autosave point, planning hub, recovery location, research location, George consultation point, and outbound terminal location.
+- Research converts a declared fact plus world minutes into one new ability, once per option (`GDR-RPG-010`).
+- Before operation departure, George reads back the actual departure time, contacts consulted or skipped, the Paranoia tier, held abilities, and exactly what Restart Attempt will restore. The player then confirms or cancels.
 - Exact safehouse entry and action availability while directly observed, `Suspicious`, or `Pursuit` is blocked by `OPEN-SAFE-001`. Crossing the boundary may never be implemented as an undocumented surveillance reset.
 
-## 15. Deterministic RPG checks
+## 15. Deterministic gates
 
-Every check declares one attribute, one skill, a requirement, relevant facts, situational modifiers, success, and fail-forward result.
+Every gate declares its context, ability path, fact path, costed path, lock interaction, success, and fail-forward result.
 
-`attribute + skill − Paranoia penalty + authored modifier >= requirement`
+A gate passes when the player holds the designated lit ability or the designated fact, or accepts its declared costed path (`GDR-RPG-009`).
 
-- No random roll.
-- Before every choice, the exact breakdown is visible in the form `needs N — you have M (Attribute A + Skill B − Paranoia P + authored/fact modifiers)`.
+- No random roll and no arithmetic anywhere.
+- Before every choice, the verdict is visible as met or not met with its exact reason — the missing ability, the locking tier, the missing fact, or the cost.
 - Locked options remain visible with the exact reason.
-- Resolution explains which capability, fact, penalty, or condition caused the result.
-- Preview and result use the same deterministic breakdown; every nonfatal catalog entry declares and applies a real fail-forward effect.
-- A fact may reveal, lower, unlock, or guarantee only a designated authored outcome; facts are not generic currency.
-- Exact Level 0 requirements remain acceptance decisions under `OPEN-RPG-001`; exact stable-ID fact and situational modifiers are governed separately by `OPEN-RPG-004`. Only their recorded recommendations may be used as reversible provisional authored data until accepted.
+- Resolution explains which ability, fact, tier, or cost caused the result; preview and result use the identical verdict.
+- Every authored gate keeps at least two real solutions; every nonfatal catalog entry declares and applies a real fail-forward effect.
+- A fact may reveal, clarify, unlock, or guarantee only a designated authored outcome; facts are not generic currency.
+- The exact gate catalog and ability mapping remain acceptance decisions under `OPEN-ABL-001`. Only its recorded recommendation may be used as reversible provisional authored data until accepted.
 
 ## 16. Failure and Restart Attempt
 
 The run fails when:
 
-- Health reaches 0;
-- Paranoia reaches 100;
+- Paranoia reaches 100 and the protagonist breaks down — staging a surrender, freeze, or bolt (`failure.breakdown`);
 - the player is captured after an authored confrontation failure;
 - midnight arrives while either the medkit return or outbound transit validation is incomplete.
 
-Capture shows a short Hidzu Corporation incident report and map built only from real sightings, detected tampering, Needle verification, and capture evidence. Unseen route gaps remain disconnected. Midnight failure instead lists the unfinished medkit-return and/or transit-validation requirements and never claims capture. Health and Paranoia failures remain simple factual cause explanations.
+Capture shows a short Hidzu Corporation incident report and map built only from real sightings, detected tampering, Needle verification, and capture evidence. Unseen route gaps remain disconnected. Midnight failure instead lists the unfinished medkit-return and/or transit-validation requirements and never claims capture. Breakdown stages its surrender and remains a simple, factual, evidence-limited explanation.
 
 Each failure offers Restart Attempt only when a compatible `OperationAttemptBaseline` exists. `restartAttempt` restores the deterministic departure state recorded after George's readback and explicit confirmation; `restart_attempt_confirmation` owns that pause surface. New Game clears all Level 0 state. The Level 0 persistence schema is bumped, and stale development saves using the retired contract are rejected explicitly rather than partially migrated.
 
@@ -315,7 +302,7 @@ The persistent bottom dock is a fixed four-lane layout occupying 16–18% of the
 3. George;
 4. current quest beat.
 
-Health and Paranoia are always visible. The minimap reveals only known information. The current-task and George lanes remain separate. The quest lane shows one current beat; George has one live authored sentence or prompt, not a generic chat box. George always explains why he lacks useful information; silence is never hidden gameplay information, and Level 0 gives him no personal desire or deletion arc. Dialogue, Character, dossier, feed, debrief, failure, and completion overlays share one visual language and pause simulation.
+The Paranoia tier gauge and ability states are always visible with no numbers (`GDR-UI-005`). The minimap reveals only known information. The current-task and George lanes remain separate. The quest lane shows one current beat; George has one live authored sentence or prompt, not a generic chat box. George always explains why he lacks useful information; silence is never hidden gameplay information, and Level 0 gives him no personal desire or deletion arc. Dialogue, Character, dossier, feed, debrief, failure, and completion overlays share one visual language and pause simulation.
 
 ## 18. World and presentation
 
@@ -342,11 +329,11 @@ Acceptance requires normal-control proof at 1280×720, 1440×900, and 1920×1080
 - all four Cold Iron evidence states and the explicit five-world-minute copy action;
 - Clear, Suspicious recovery, Pursuit escape, and drone verification;
 - harmless ordinary public observation, every declared rule-break source, solid-geometry blind spots, one camera-set use, persistent clean/traced history, Clear recognition reset, Needle warnings, and presentation-only civilian reactions;
-- both one-use grounding actions, the one difficult-escape relief, one George warning at each Paranoia threshold, and all four idempotent street-clock boundaries;
-- Health, Paranoia, capture, and midnight failures plus Restart Attempt;
-- capture reports with disconnected unseen gaps and cause-specific deadline/Health/Paranoia screens;
-- Character creation, Character screen, deterministic checks, level-up, dossier, dialogue, debrief, and both languages;
-- preview/result check-math parity and a real fail-forward result for every nonterminal failed check;
+- both one-use grounding actions, the one difficult-escape relief, one George announcement at each first tier entry, and all four idempotent street-clock boundaries;
+- breakdown, capture, and midnight failures plus Restart Attempt;
+- capture reports with disconnected unseen gaps and cause-specific deadline/breakdown screens;
+- cover-select with three disabled covers, Character screen, deterministic gates, tier locks, research, dossier, dialogue, debrief, and both languages;
+- preview/result verdict parity, at least two proven solutions per authored gate, and a real fail-forward result for every nonterminal failed gate;
 - the three named routes, three ambient sound locations, and actor tint transitions;
 - no debug-only completion, automatic pickup, teleport, direct state mutation, console/page/save/objective error, visual corruption, fantasy presentation, or oversized HUD.
 

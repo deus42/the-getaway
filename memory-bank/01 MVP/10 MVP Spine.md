@@ -27,11 +27,11 @@ The Hidzu Corporation network is visible, systemic, and fallible. Ordinary publi
 
 ### Paranoia
 
-Paranoia is an honest 0–100 resource caused by rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored shocks. It penalizes deterministic checks at visible thresholds and becomes fatal at 100. Two one-use city grounding actions trade ten world minutes for ten relief, and the first qualifying difficult escape can remove five. It never creates false UI, hallucinations, or fake objectives.
+Paranoia is an honest internal 0–100 resource — presented only as the named tiers Calm, Uneasy, Shaken, and Breaking — caused by rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored shocks. Rising tiers lock `fragile` abilities instead of subtracting numbers, and 100 is breakdown: the protagonist stages a surrender and the attempt ends. Two one-use city grounding actions trade ten world minutes for ten relief, and the first qualifying difficult escape can remove five. It never creates false UI, hallucinations, or fake objectives.
 
 ### Dialogue and facts
 
-Dialogue changes knowledge and practical possibilities. Lira, Naila, and Brant author different parts of the operation. Facts have names and provenance; they reveal routes, clarify objectives, change checks, inform George, and alter the debrief. There is no generic trust currency.
+Dialogue changes knowledge and practical possibilities. Lira, Naila, and Brant author different parts of the operation. Facts have names and provenance; they reveal routes, clarify objectives, open gates, inform George, and alter the debrief. There is no generic trust currency.
 
 ### Escape
 
@@ -41,9 +41,9 @@ Movement, observation, hiding, blending, timing, and evasion are the primary ten
 
 George is the protagonist's private AI companion. He appears as a fourth HUD lane and a near-character AR avatar, summarizes verified state, explains blocked actions and missing information, compares known risk, and surfaces authored contextual questions. Silence is never hidden information; Level 0 adds no deletion/freedom desire arc. He cannot act for the player or reveal undiscovered information.
 
-### RPG identity
+### Identity and abilities
 
-The player chooses a callsign, appearance, four attributes, and eight skills. Deterministic checks, explicit facts, authored XP, safehouse level-ups, Health, Paranoia, and long-term consequence summaries create a small but real RPG foundation.
+The player chooses one of four authored covers of the same protagonist — the life they lived before tonight — and plays with binary abilities: held or not, lit or locked by stress, with no number anywhere. Deterministic gates, explicit facts, safehouse research that trades world minutes for new abilities, Paranoia tiers, and long-term consequence summaries create a small but real identity foundation (numberless identity in the tradition of Pentiment; research as the spine, after Disco Elysium's thought cabinet).
 
 ### City
 
@@ -51,13 +51,13 @@ Level 0 is exactly four dense, continuous outdoor Tokyo mission blocks with thre
 
 ## Player agency contract
 
-The player chooses their build, whether to seek optional preparation, when to depart, which route context to exploit, which risks to accept, whether to inspect optional evidence, how to escape, and whether to continue exploring after completion. The game may clarify consequences and known risk; it may not choose a route, perform an interaction, conceal deterministic requirements, invent knowledge, or convert failure into an unexplained state change.
+The player chooses their cover, whether to seek optional preparation, when to depart, which route context to exploit, which risks to accept, whether to inspect optional evidence, how to escape, and whether to continue exploring after completion. The game may clarify consequences and known risk; it may not choose a route, perform an interaction, conceal deterministic requirements, invent knowledge, or convert failure into an unexplained state change.
 
-Skipping optional content creates less information or stricter checks, never a silent dead end. Every check-bearing choice presents the exact deterministic math before selection and the same contributors after resolution. A difficult build can still finish the mission through another authored action. A failed nonterminal check changes time, Paranoia, Health, route clarity, or another declared state and explains that change; only the final failed capture-escape check may end the attempt.
+Skipping optional content creates less information or fewer open gate paths, never a silent dead end. Every gated choice presents its met/not-met verdict and exact reason before selection and the same verdict after resolution. Any cover can still finish the mission through another authored path. A failed nonterminal gate changes time, Paranoia, route clarity, or another declared state and explains that change; only the final failed capture-escape gate may end the attempt.
 
 ## Complete Level 0 loop
 
-1. **Create.** Choose callsign, one of four appearances, four attribute points, and six skill points.
+1. **Choose a cover.** Pick the playable cover of the protagonist; read its fiction and three abilities; no numbers, no typing.
 2. **Wake exposed.** Begin inside the safehouse boundary at 18:30. George gives only immediate context and controls.
 3. **Meet Lira.** Learn that Hidzu Corporation seized medical supplies, the cache is in a logistics site, passage toward Miami is the payment, and midnight is the deadline.
 4. **Prepare or proceed.** Consult Naila, Brant, both, or neither. Preparation yields specific facts, not buffs.
@@ -68,7 +68,7 @@ Skipping optional content creates less information or stricter checks, never a s
 9. **Escape honestly.** Resolve Suspicious or Pursuit through line-of-sight break, direction change, hiding, blending, or an authored confrontation—not an invisible exit trigger.
 10. **Return to Lira.** Explicitly hand over the medkits. Lira reads the actual outcome ledger.
 11. **Validate passage.** Use the outbound terminal at the safehouse before midnight.
-12. **Recover and progress.** Rest, review the dossier, consult George, allocate any earned level-up, and receive the factual debrief.
+12. **Recover and progress.** Rest, review the dossier, consult George, complete any eligible research, and receive the factual debrief.
 13. **Close.** Choose `Continue Exploring` or `End Demo`. Do not load Miami until Level 1 exists.
 
 The loop is complete only when all transitions are explicit. Medkits require explicit cache interaction and explicit handoff. Manifest copying requires its own five-world-minute confirmation. Passage requires explicit credential issuance and explicit outbound-terminal validation. Pursuit must be resolved rather than erased by crossing the safehouse boundary. Debrief reads the outcome ledger rather than reconstructing history from presentation state. Failure uses a cause-specific surface: only capture receives a Hidzu Corporation incident report and surveillance-limited evidence map.
@@ -79,7 +79,7 @@ The following segment bands are the explicit reversible trial baseline for `OPEN
 
 | Segment | Target wall-clock time | Simulation ownership |
 |---|---:|---|
-| Character creation | 1–2 min | Paused |
+| Cover-select | under 1 min | Paused |
 | Safehouse and Lira | 2–3 min | Paused during dialogue |
 | Optional preparation | 0–4 min | Mixed |
 | Infiltration and recovery | 6–8 min | Running except observation/terminal UI |
@@ -107,8 +107,8 @@ MVP quality is demonstrated in the actual player-visible build. A fixture can pr
 - one optional Cold Iron chain with unknown, Naila-warning, recognized, and copied states;
 - one named verifier drone, Needle, a small authored security set, and small authored civilian/blending groups that never report hidden state;
 - Transit Road, Market Ring, and Outer Space route names; four street-clock moments; two grounding actions; and three threshold ambience sources;
-- four protagonist appearances, twelve grounded actor sets, matching portraits, and George AR presentation;
-- one progression event plus four normal run failures and deterministic Restart Attempt;
+- four authored covers (one playable, three visibly disabled), twelve grounded actor sets, matching portraits, and George AR presentation;
+- one research progression event plus three normal run failures (breakdown, capture, deadline) and deterministic Restart Attempt;
 - equivalent English and Ukrainian semantics and non-audio-only critical feedback.
 
 ## Permanent Level 0 boundaries

@@ -25,7 +25,7 @@ The player can:
 
 ## 3. Starting state and prerequisites
 
-- A new run begins at mission state `L0_CHARACTER_CREATION`, then enters `L0_SAFEHOUSE_INTRO`.
+- A new run begins at mission state `L0_COVER_SELECT`, then enters `L0_SAFEHOUSE_INTRO`.
 - The first world objective is to leave the safehouse boundary and speak with Lira.
 - The Fact Ledger contains only facts justified by the opening premise; it does not pre-populate optional route or surveillance knowledge.
 - The minimap initially knows the protagonist, safehouse, the immediate Lira contact area, and only the level of objective precision justified by the briefing.
@@ -33,12 +33,12 @@ The player can:
 
 ## 4. Complete happy-path behavior
 
-1. Character creation transitions to the safehouse opening objective.
+1. Cover-select transitions to the safehouse opening objective.
 2. Speaking with Lira establishes the primary mission: recover confiscated medkits, return them to her, and validate outbound transit before midnight.
 3. Naila and Brant appear as optional preparation contacts, not mandatory primary beats.
 4. Facts from contacts refine route descriptions, terminal knowledge, and objective/minimap precision.
 5. The player explicitly interacts with the medkit cache; proximity alone cannot complete it.
-6. The optional manifest follows `ColdIronEvidenceState`: Naila provides the warning, the warning or Awareness can recognize it, and a separate explicit five-world-minute action copies it. Missing or leaving it never blocks medkits or completion.
+6. The optional manifest follows `ColdIronEvidenceState`: Naila provides the warning, the warning or the designated perception ability can recognize it, and a separate explicit five-world-minute action copies it. Missing or leaving it never blocks medkits or completion.
 7. If the network is Suspicious or in Pursuit, the player must resolve that state before the return/escape beat can complete.
 8. The player explicitly returns the medkits to Lira, receives the transit credential, returns to the safehouse, and validates outbound passage before midnight.
 9. Debrief reads the Fact Ledger and outcome ledger; the ending presents `Continue Exploring` and `End Demo`.
@@ -47,7 +47,7 @@ The player can:
 
 The authoritative mission states are defined in [[13 Level 0 Content and State Matrix]]:
 
-`L0_CHARACTER_CREATION → L0_SAFEHOUSE_INTRO → L0_LIRA_BRIEFING → L0_PREPARATION → L0_OPERATION_DEPARTED → L0_INFILTRATION → L0_MEDKITS_SECURED → L0_ESCAPE → L0_LIRA_RETURN → L0_TRANSIT_VALIDATION → L0_DEBRIEF → L0_COMPLETE`
+`L0_COVER_SELECT → L0_SAFEHOUSE_INTRO → L0_LIRA_BRIEFING → L0_PREPARATION → L0_OPERATION_DEPARTED → L0_INFILTRATION → L0_MEDKITS_SECURED → L0_ESCAPE → L0_LIRA_RETURN → L0_TRANSIT_VALIDATION → L0_DEBRIEF → L0_COMPLETE`
 
 Any authored run failure transitions to `L0_FAILED` with a stable `failure.*` cause. Save incompatibility uses `failure.save_incompatible` before mission hydration and offers New Game rather than partial migration.
 
@@ -67,14 +67,14 @@ Facts are append-only and binary within a run. Acquisition stores fact key, prov
 - The persistent quest lane shows exactly one current main beat, deadline when relevant, optional-contact availability, and dossier access.
 - Optional preparation may be tracked, but it cannot visually outrank the current main objective.
 - Facts are binary authored knowledge, not a generic score. A fact’s allowed effects are declared per fact.
-- Only Cold Iron uses `unknown → naila_warning → manifest_recognized → manifest_copied`; copying costs five world minutes and no extra check.
+- Only Cold Iron uses `unknown → naila_warning → manifest_recognized → manifest_copied`; copying costs five world minutes and no extra gate.
 - Objective precision is knowledge-based: unknown district-level target, known area, known entrance, or exact anchor.
 - The minimap never reveals undiscovered cameras, terminals, hiding positions, or exact objectives.
 - The minimap never issues movement commands or draws an automatic route.
 - Medkits and manifest require explicit interaction within authoritative range and visibility.
 - Mission objects are objective state, not a player-managed inventory stack.
 - Completed objectives cannot increment twice through proximity, repeated dialogue, save hydration, or overlapping event handlers.
-- XP comes from declared milestones, not from each objective event or dialogue branch.
+- Progression comes from safehouse research, not from each objective event or dialogue branch.
 
 ## 7. Inputs from other systems
 
@@ -82,17 +82,17 @@ Facts are append-only and binary within a run. Acquisition stores fact key, prov
 - [[41 Movement, Interaction & Observation]] validates explicit world interaction.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies network resolution requirements and discovered device state.
 - [[44 Safehouse, Save & Restart Attempt]] owns transit validation, autosave, and snapshot restoration.
-- [[92 Character & Progression]] resolves the manifest Awareness check and milestone XP.
+- [[92 Character & Progression]] supplies the designated perception ability consulted by the manifest recognition gate and owns safehouse research.
 - [[45 HUD & Information Architecture]] renders the current beat, minimap, and dossier access.
 - [[13 Level 0 Content and State Matrix]] defines objective IDs, fact keys, mission transitions, and outcome fields.
 
 ## 8. Effects on other systems
 
-- New facts refine dialogue choices, George prompts, minimap knowledge, objectives, check resolution, and debrief.
+- New facts refine dialogue choices, George prompts, minimap knowledge, objectives, gate resolution, and debrief.
 - Objective transitions select onboarding prompts, contact availability, mission audio, autosave moments, and acceptance checkpoints.
 - Optional evidence changes Lira’s response, George’s interpretation, the dossier, outcome ledger, and future Miami handoff state.
 - Contact consultation changes route clarity without mutating unrelated character stats.
-- Final completion enables safehouse debrief, progression allocation, and the temporary ending choices.
+- Final completion enables safehouse debrief, research, and the temporary ending choices.
 
 ## 9. UI, world, audio, and George feedback
 
@@ -106,10 +106,10 @@ Facts are append-only and binary within a run. Acquisition stores fact key, prov
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- Each run failure uses an exact cause: `failure.health`, `failure.paranoia`, `failure.capture`, or `failure.deadline`.
+- Each run failure uses an exact cause: `failure.breakdown`, `failure.capture`, or `failure.deadline`.
 - A failed optional recognition marks the evidence as unrecognized or missed and leaves the medkit path intact.
 - If an objective interaction is blocked, the prompt explains the current range, visibility, occlusion, ownership, network, or prerequisite issue.
-- Restart Attempt restores objective state, facts, `ColdIronEvidenceState`, contacts visited, time, Health, Paranoia, and preparation exactly as recorded in `OperationAttemptBaseline`.
+- Restart Attempt restores objective state, facts, `ColdIronEvidenceState`, contacts visited, time, Paranoia, and preparation exactly as recorded in `OperationAttemptBaseline`.
 - New Game clears all mission, fact, outcome, and minimap knowledge state.
 - Completion cannot occur through a debug bridge, proximity trigger, teleport, automatic pickup, or hidden state mutation.
 
@@ -126,7 +126,7 @@ Facts are append-only and binary within a run. Acquisition stores fact key, prov
 
 - No mandatory Naila/Brant errands.
 - No procedural contracts, storylet feed, faction reputation, trust meters, crafting tasks, or unrelated backlog content in the dossier.
-- No fact may silently become currency, reputation, XP, or a universal modifier.
+- No fact may silently become currency, reputation, or a universal modifier.
 - No universal rumor/confirmed/leverage layer and no automatic manifest copy on inspection or recognition.
 - No unknown camera, entrance, evidence, or objective anchor may leak through minimap initialization, debug defaults, George, or save migration.
 - No automatic pickup or proximity completion.
@@ -149,7 +149,7 @@ Post-MVP may add campaign-level dossiers, more evidence relationships, additiona
 4. Walking over the medkits does nothing; explicit interaction completes the cache beat once.
 5. Missing the optional manifest still permits Lira return, transit validation, and completion.
 6. Returning medkits while Pursuit remains active does not complete escape until the network is resolved.
-7. Debrief and dossier accurately reflect route, contacts, binary facts, camera history, pursuit, Health loss, Paranoia peak, `ColdIronEvidenceState`, and transit.
+7. Debrief and dossier accurately reflect route, contacts, binary facts, camera history, pursuit, Paranoia peak, `ColdIronEvidenceState`, and transit.
 
 ## 16. Owning Linear ticket
 
