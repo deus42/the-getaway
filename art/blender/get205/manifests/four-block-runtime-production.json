@@ -1,0 +1,606 @@
+{
+  "schemaVersion": 1,
+  "id": "get205-hidzu-production-v1",
+  "ticket": "GET-205",
+  "source": {
+    "pack": "KitBash3D Neo Tokyo 2",
+    "scene": "art/blender/get205/.generated/four-block-baked-v3/master/get205-four-block-baked-v3.blend",
+    "stablePlate": "art/blender/get205/.generated/four-block-baked-v3/runtime/stable-people-free-6400x3600.png",
+    "stablePlateSha256": "9d5fc52c8b270b845526139bbce83c952bb93112e355432b598526cba3d76383",
+    "peopleBakedIntoPlate": false,
+    "authoring": "blender-baked-kitbash-master"
+  },
+  "profiles": [
+    {
+      "id": "desktop",
+      "selection": "viewport-width-greater-than-820",
+      "fullPlate": {
+        "width": 6400,
+        "height": 3600
+      },
+      "renderZoom": 2,
+      "initialZoom": 2,
+      "assets": [
+        {
+          "id": "background.north-west",
+          "left": 0,
+          "top": 0,
+          "width": 3202,
+          "height": 1802,
+          "role": "architecture-back",
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/background-north-west.webp",
+          "sha256": "5727c5427f3697c16fb7ed9ed9d4a2de8f3bc03f915fa182ad051bdb40ae7162",
+          "bytes": 468728
+        },
+        {
+          "id": "background.north-east",
+          "left": 3198,
+          "top": 0,
+          "width": 3202,
+          "height": 1802,
+          "role": "architecture-back",
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/background-north-east.webp",
+          "sha256": "c48cd368978f94836235e474f2d3516088dbf46bdb63b45c8854834c7aebf752",
+          "bytes": 301074
+        },
+        {
+          "id": "background.south-west",
+          "left": 0,
+          "top": 1798,
+          "width": 3202,
+          "height": 1802,
+          "role": "architecture-back",
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/background-south-west.webp",
+          "sha256": "9d7138be71ad890e2a526e05a4d7e335f79da9f06e1fb3045e1d5e232e9fb180",
+          "bytes": 352600
+        },
+        {
+          "id": "background.south-east",
+          "left": 3198,
+          "top": 1798,
+          "width": 3202,
+          "height": 1802,
+          "role": "architecture-back",
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/background-south-east.webp",
+          "sha256": "c2bce6fe4e32fb28a19d9f2b24354aecbb7f4915ef8b43ce13b51f25117f0a79",
+          "bytes": 514112
+        },
+        {
+          "id": "foreground.cluster.safehouse.home",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.home",
+          "left": 317,
+          "top": 837,
+          "width": 1107,
+          "height": 1191,
+          "depthAnchor": {
+            "x": 7,
+            "y": 41
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-safehouse-home.webp",
+          "sha256": "d7c7395bbfc040a8453de6e1b64b5a36cbce0f475f0c2966995fae061f1b120f",
+          "bytes": 110864
+        },
+        {
+          "id": "foreground.cluster.safehouse.corner",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.corner",
+          "left": 1444,
+          "top": 1524,
+          "width": 962,
+          "height": 1039,
+          "depthAnchor": {
+            "x": 20,
+            "y": 41
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-safehouse-corner.webp",
+          "sha256": "4d487d2b4940af67304e1f544d41a83258bf68d51b93afed7b050c6d773780c3",
+          "bytes": 100746
+        },
+        {
+          "id": "foreground.cluster.safehouse.utility",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.utility",
+          "left": 2202,
+          "top": 1344,
+          "width": 775,
+          "height": 838,
+          "depthAnchor": {
+            "x": 21.75,
+            "y": 30
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-safehouse-utility.webp",
+          "sha256": "3d0f80a0e8a06299e3452c0a630688a6bc3f4f8c4047cb9777b6ec8ea87f3742",
+          "bytes": 68278
+        },
+        {
+          "id": "foreground.cluster.safehouse.workshop",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.workshop",
+          "left": 1002,
+          "top": 580,
+          "width": 997,
+          "height": 1105,
+          "depthAnchor": {
+            "x": 8,
+            "y": 31
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-safehouse-workshop.webp",
+          "sha256": "27f27de822b886744cb8581442ab3c725299ed6d4b0a0591db9cd03213b17b35",
+          "bytes": 97300
+        },
+        {
+          "id": "foreground.cluster.public.corner",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.corner",
+          "left": 2212,
+          "top": 0,
+          "width": 1126,
+          "height": 1053,
+          "depthAnchor": {
+            "x": 7,
+            "y": 11
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-public-corner.webp",
+          "sha256": "a19f5c431e49395d3e53b9d90335108d54ee5e7806cbf117069495dcd8af38c5",
+          "bytes": 95134
+        },
+        {
+          "id": "foreground.cluster.public.transit",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.transit",
+          "left": 3180,
+          "top": 382,
+          "width": 1189,
+          "height": 1158,
+          "depthAnchor": {
+            "x": 20,
+            "y": 10
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-public-transit.webp",
+          "sha256": "298d80e5789e9b6f6363d9fefcad0f4edf83b1b6362617970aeed1ddea811618",
+          "bytes": 95646
+        },
+        {
+          "id": "foreground.cluster.public.market",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.market",
+          "left": 2585,
+          "top": 770,
+          "width": 1027,
+          "height": 1111,
+          "depthAnchor": {
+            "x": 19,
+            "y": 19
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-public-market.webp",
+          "sha256": "2e6ce2866dba0b0d45c846505366f50567f5d4b4794691a35036a2c702f5dc3c",
+          "bytes": 102900
+        },
+        {
+          "id": "foreground.cluster.public.kiosk",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.kiosk",
+          "left": 1583,
+          "top": 239,
+          "width": 1009,
+          "height": 1092,
+          "depthAnchor": {
+            "x": 7,
+            "y": 19
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-public-kiosk.webp",
+          "sha256": "f2021bb5eef8f2a6546bd169a0ab435403f391161aff73867a662a24912925b1",
+          "bytes": 86148
+        },
+        {
+          "id": "foreground.cluster.logistics.landmark",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.landmark",
+          "left": 3925,
+          "top": 578,
+          "width": 1366,
+          "height": 1513,
+          "depthAnchor": {
+            "x": 38,
+            "y": 13
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-logistics-landmark.webp",
+          "sha256": "927ae05aa0b97bf38f2fd0b54a945c80c0b0632c5157137c32dc8552ca3ff31d",
+          "bytes": 158536
+        },
+        {
+          "id": "foreground.cluster.logistics.depot",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.depot",
+          "left": 4897,
+          "top": 1210,
+          "width": 1299,
+          "height": 1335,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 13
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-logistics-depot.webp",
+          "sha256": "66d68fe2f385047f44d18590b4be7f4afb8bfcbc1aa7b886b83dc94d740988ee",
+          "bytes": 98304
+        },
+        {
+          "id": "foreground.cluster.logistics.threshold",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.threshold",
+          "left": 3428,
+          "top": 1238,
+          "width": 958,
+          "height": 1061,
+          "depthAnchor": {
+            "x": 38,
+            "y": 19.5
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-logistics-threshold.webp",
+          "sha256": "d4a738c8fda93cc229584434244f3f41310811fe46a0a23f71d7467cd2ba397b",
+          "bytes": 101956
+        },
+        {
+          "id": "foreground.cluster.logistics.admin",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.admin",
+          "left": 4461,
+          "top": 1803,
+          "width": 933,
+          "height": 998,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 19.5
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-logistics-admin.webp",
+          "sha256": "936f7a4c1f2d94e653ad132afbced649f2fa16b3582463eeacdf5f24cfc00013",
+          "bytes": 66366
+        },
+        {
+          "id": "foreground.cluster.service.workshop",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.workshop",
+          "left": 2929,
+          "top": 2062,
+          "width": 764,
+          "height": 763,
+          "depthAnchor": {
+            "x": 37.5,
+            "y": 34
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-service-workshop.webp",
+          "sha256": "71e37eaa540c8de45b12dcab9df9e12f37d8afea82dfb0949c1780e47d47f600",
+          "bytes": 42466
+        },
+        {
+          "id": "foreground.cluster.service.utility",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.utility",
+          "left": 3650,
+          "top": 1917,
+          "width": 1167,
+          "height": 1257,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 34
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-service-utility.webp",
+          "sha256": "685de066b9d50fcee40df2474bfb3595b143d19d8b8080202e16a1ae0ab4b439",
+          "bytes": 141380
+        },
+        {
+          "id": "foreground.cluster.service.return",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.return",
+          "left": 2044,
+          "top": 1922,
+          "width": 968,
+          "height": 1042,
+          "depthAnchor": {
+            "x": 37.5,
+            "y": 42
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-service-return.webp",
+          "sha256": "c87aab551b9efc2f7ce6a6c2a2febe837b7b7027b35acc8982ce910b2bc10ef1",
+          "bytes": 66578
+        },
+        {
+          "id": "foreground.cluster.service.connector",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.connector",
+          "left": 3304,
+          "top": 2665,
+          "width": 764,
+          "height": 832,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 42
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/desktop/foreground/cluster-service-connector.webp",
+          "sha256": "594609fe304bd670ebe2a716e1796b353829397cb53643fab43a3202a837ba26",
+          "bytes": 47328
+        }
+      ]
+    },
+    {
+      "id": "mobile",
+      "selection": "viewport-width-at-most-820",
+      "fullPlate": {
+        "width": 3200,
+        "height": 1800
+      },
+      "renderZoom": 1,
+      "initialZoom": 1.05,
+      "assets": [
+        {
+          "id": "background.full",
+          "role": "architecture-back",
+          "left": 0,
+          "top": 0,
+          "width": 3200,
+          "height": 1800,
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/background.webp",
+          "sha256": "c634cdedfb2b605079badf9c9c40aa1259ee7b532a34808ba858ac385530fe19",
+          "bytes": 539102
+        },
+        {
+          "id": "foreground.cluster.safehouse.home",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.home",
+          "left": 159,
+          "top": 419,
+          "width": 554,
+          "height": 596,
+          "depthAnchor": {
+            "x": 7,
+            "y": 41
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-safehouse-home.webp",
+          "sha256": "b5fd93cf3292c13ddd15060a77227a7d202815e9c526bd2f98a75785b011b4ba",
+          "bytes": 38936
+        },
+        {
+          "id": "foreground.cluster.safehouse.corner",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.corner",
+          "left": 722,
+          "top": 762,
+          "width": 481,
+          "height": 520,
+          "depthAnchor": {
+            "x": 20,
+            "y": 41
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-safehouse-corner.webp",
+          "sha256": "f40582bcf7453d9b507ae394b1b531fd5812f203f5d633d3570cbb142de9f6e8",
+          "bytes": 36740
+        },
+        {
+          "id": "foreground.cluster.safehouse.utility",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.utility",
+          "left": 1101,
+          "top": 672,
+          "width": 388,
+          "height": 419,
+          "depthAnchor": {
+            "x": 21.75,
+            "y": 30
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-safehouse-utility.webp",
+          "sha256": "da5ebaae0f70a3b9f0fe0b0588c7bbf427f05e849b25e852a3e70f735700311b",
+          "bytes": 22458
+        },
+        {
+          "id": "foreground.cluster.safehouse.workshop",
+          "role": "architecture-front",
+          "clusterId": "cluster.safehouse.workshop",
+          "left": 501,
+          "top": 290,
+          "width": 499,
+          "height": 553,
+          "depthAnchor": {
+            "x": 8,
+            "y": 31
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-safehouse-workshop.webp",
+          "sha256": "e69f52c745f0fe8946c3622c9fd2a045da582001717f9ea947c5d1fe58b62132",
+          "bytes": 32090
+        },
+        {
+          "id": "foreground.cluster.public.corner",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.corner",
+          "left": 1106,
+          "top": 0,
+          "width": 563,
+          "height": 527,
+          "depthAnchor": {
+            "x": 7,
+            "y": 11
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-public-corner.webp",
+          "sha256": "d8dc374021c86381407564e8efe7629ee0ecfff170c697894d9fd5a0027b8d16",
+          "bytes": 37138
+        },
+        {
+          "id": "foreground.cluster.public.transit",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.transit",
+          "left": 1590,
+          "top": 191,
+          "width": 595,
+          "height": 579,
+          "depthAnchor": {
+            "x": 20,
+            "y": 10
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-public-transit.webp",
+          "sha256": "b49feea421c27824dbf7824a3077dc1525ccfc1bcf277b3f712c9181bca1ed4e",
+          "bytes": 34130
+        },
+        {
+          "id": "foreground.cluster.public.market",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.market",
+          "left": 1293,
+          "top": 385,
+          "width": 514,
+          "height": 556,
+          "depthAnchor": {
+            "x": 19,
+            "y": 19
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-public-market.webp",
+          "sha256": "16952d62d93d9173a29f5d4dfbea51a569aa698c52ca1c6cd8d60f2955183bbc",
+          "bytes": 34362
+        },
+        {
+          "id": "foreground.cluster.public.kiosk",
+          "role": "architecture-front",
+          "clusterId": "cluster.public.kiosk",
+          "left": 792,
+          "top": 120,
+          "width": 505,
+          "height": 546,
+          "depthAnchor": {
+            "x": 7,
+            "y": 19
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-public-kiosk.webp",
+          "sha256": "a4708d6b15128ec12c172a8f16c8bf7ec1b0cb7ea9290cfc000f92ab5abd9dbc",
+          "bytes": 32100
+        },
+        {
+          "id": "foreground.cluster.logistics.landmark",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.landmark",
+          "left": 1963,
+          "top": 289,
+          "width": 683,
+          "height": 757,
+          "depthAnchor": {
+            "x": 38,
+            "y": 13
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-logistics-landmark.webp",
+          "sha256": "4affe6501b509f9bf1b9aaaccdbae5605d268edc1a4487e06b3e11878faf3bf6",
+          "bytes": 60062
+        },
+        {
+          "id": "foreground.cluster.logistics.depot",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.depot",
+          "left": 2449,
+          "top": 605,
+          "width": 650,
+          "height": 668,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 13
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-logistics-depot.webp",
+          "sha256": "25efb1eb1c9fcf068865d886734febf5edd3480abe1d2e399fbe9e9a2a5ca39c",
+          "bytes": 34412
+        },
+        {
+          "id": "foreground.cluster.logistics.threshold",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.threshold",
+          "left": 1714,
+          "top": 619,
+          "width": 479,
+          "height": 531,
+          "depthAnchor": {
+            "x": 38,
+            "y": 19.5
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-logistics-threshold.webp",
+          "sha256": "b31790463c0c37c40de9ba76205e18f82729df9b3c20cabeff50ed2ae9513330",
+          "bytes": 34226
+        },
+        {
+          "id": "foreground.cluster.logistics.admin",
+          "role": "architecture-front",
+          "clusterId": "cluster.logistics.admin",
+          "left": 2231,
+          "top": 902,
+          "width": 467,
+          "height": 499,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 19.5
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-logistics-admin.webp",
+          "sha256": "645171b506c59e7cd2854f07182b64683a2a5bdf60662b90629d40d072e17faf",
+          "bytes": 22996
+        },
+        {
+          "id": "foreground.cluster.service.workshop",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.workshop",
+          "left": 1465,
+          "top": 1031,
+          "width": 382,
+          "height": 382,
+          "depthAnchor": {
+            "x": 37.5,
+            "y": 34
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-service-workshop.webp",
+          "sha256": "0eeb76b990f54cf42f783232d5fa90d30cac793973e4cb9159e20fb08bf40a80",
+          "bytes": 14204
+        },
+        {
+          "id": "foreground.cluster.service.utility",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.utility",
+          "left": 1825,
+          "top": 959,
+          "width": 584,
+          "height": 629,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 34
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-service-utility.webp",
+          "sha256": "55287f4262f3fbf85f3e8745b0d98649d8ac86fd4beb9ee4d467fb09d02c1945",
+          "bytes": 45578
+        },
+        {
+          "id": "foreground.cluster.service.return",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.return",
+          "left": 1022,
+          "top": 961,
+          "width": 484,
+          "height": 521,
+          "depthAnchor": {
+            "x": 37.5,
+            "y": 42
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-service-return.webp",
+          "sha256": "6ba15e0d9668e117b20680eccf93eead7d1b26eae307b3e9c90d520e38f5a521",
+          "bytes": 23008
+        },
+        {
+          "id": "foreground.cluster.service.connector",
+          "role": "architecture-front",
+          "clusterId": "cluster.service.connector",
+          "left": 1652,
+          "top": 1333,
+          "width": 382,
+          "height": 416,
+          "depthAnchor": {
+            "x": 50.5,
+            "y": 42
+          },
+          "path": "environment/level0/get205-hidzu-production-v1/mobile/foreground/cluster-service-connector.webp",
+          "sha256": "5e865537219795b2fad2b5c28f6b50c3d1e136d649c8267f804039700fd6145b",
+          "bytes": 16778
+        }
+      ]
+    }
+  ]
+}

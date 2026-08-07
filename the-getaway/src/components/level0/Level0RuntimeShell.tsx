@@ -29,6 +29,7 @@ import {
   getWorldOwnedLevel0AnchorIds,
 } from '../../game/level0/runtime/mapKnowledge';
 import type { Level0RunState, SafehouseActionId } from '../../game/level0/runtime/types';
+import { shouldAdvanceLevel0Clock } from '../../game/level0/runtime/clockEligibility';
 import type { GameBibleUiState } from '../../content/gameBible/types';
 import { setLocale } from '../../store/settingsSlice';
 import {
@@ -43,6 +44,7 @@ import {
   type Level0ActorInteractionPresentationDetail,
 } from '../../game/level0/scene/level0ActorPresentation';
 import { resolveGet204CityStartPosition } from '../../game/level0/art/get204City';
+import { LEVEL0_RUNTIME_VISUAL } from '../../game/level0/art/get205HidzuRuntime';
 import type { AppDispatch, RootState } from '../../store';
 import { PERSISTED_STATE_KEY, resetGame, store } from '../../store';
 import {
@@ -103,6 +105,10 @@ const formatWorldTime = (minute: number): string => {
   const minutes = clamped % 60;
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
+
+const LEVEL0_RUNTIME_INITIAL_ZOOM_LABEL = LEVEL0_RUNTIME_VISUAL
+  .defaultZoom
+  .toFixed(2);
 
 const FEEDBACK_COPY: Record<string, Level0LocalizedCopy> = {
   'movement.target.accepted': {
@@ -247,6 +253,7 @@ const Level0RuntimeShell = () => {
   const locale = useSelector((state: RootState) => state.settings.locale);
   const [entryState, setEntryState] = useState(readEntryState);
   const [menuOpen, setMenuOpen] = useState(true);
+  const [sceneReady, setSceneReady] = useState(false);
   const [creationOpen, setCreationOpen] = useState(false);
   const [characterOpen, setCharacterOpen] = useState(false);
   const [bibleOpen, setBibleOpen] = useState(false);
@@ -603,15 +610,22 @@ const Level0RuntimeShell = () => {
   }, [characterOpen]);
 
   useEffect(() => {
-    if (!hasRun || menuOpen) return undefined;
+    if (!hasRun || menuOpen || !sceneReady) return undefined;
     let previous = performance.now();
     const timer = window.setInterval(() => {
       const now = performance.now();
-      dispatch(advanceLevel0Clock({ realDeltaMilliseconds: Math.min(1_000, now - previous) }));
+      const elapsed = Math.min(1_000, now - previous);
       previous = now;
+      if (!shouldAdvanceLevel0Clock({
+        hasRun,
+        menuOpen,
+        sceneReady,
+        documentHidden: document.hidden,
+      })) return;
+      dispatch(advanceLevel0Clock({ realDeltaMilliseconds: elapsed }));
     }, 250);
     return () => window.clearInterval(timer);
-  }, [dispatch, hasRun, menuOpen, runSessionId]);
+  }, [dispatch, hasRun, menuOpen, runSessionId, sceneReady]);
 
   useEffect(() => {
     if (!hasRun) return undefined;
@@ -855,6 +869,7 @@ const Level0RuntimeShell = () => {
           movementPaused={movementPaused}
           observationActive={observationActive}
           georgePresentationVisible={!backgroundControlsLocked}
+          onSceneReady={setSceneReady}
           onPlayerCheckpoint={(position, facing) =>
             dispatch(syncLevel0PlayerCheckpoint({ position, facing }))
           }
@@ -891,7 +906,10 @@ const Level0RuntimeShell = () => {
         <div className="level0-runtime__lane level0-runtime__lane--map">
           <span className="lane-label">DISTRICT</span>
           <strong>Tokyo / Hidzu perimeter</strong>
-          <small>Public-to-controlled city seam · adaptive overview · close 2.00</small>
+          <small>
+            Public-to-controlled city seam · adaptive overview · close{' '}
+            {LEVEL0_RUNTIME_INITIAL_ZOOM_LABEL}
+          </small>
         </div>
         <div className="level0-runtime__lane">
           <span className="lane-label">PROTAGONIST</span>

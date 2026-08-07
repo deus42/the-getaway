@@ -32,6 +32,7 @@
     "art:level0:t5:all:validate": "tsx scripts/validate-level0-hidzu-plan.ts --verify-local --verify-export --verify-captures",
     "art:level0:t5:mutations": "node scripts/test-level0-hidzu-mutations.mjs",
     "art:level0:t5:blender": "node scripts/run-get205-blender.mjs",
+    "art:level0:t5:production": "node scripts/build-get205-runtime-assets.mjs",
     "layout:level0:export": "tsx scripts/export-level0-layout-contract.ts",
     "layout:level0:validate": "tsx scripts/validate-level0-layout-contract.ts",
     "sprites:build": "tsx scripts/generate-grounded-character-assets.ts --publish",

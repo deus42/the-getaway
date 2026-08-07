@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import type { WorldPoint } from '../../game/level0/layout/types';
 import type { Level0RunState } from '../../game/level0/runtime/types';
@@ -9,6 +9,7 @@ export interface Level0GameCanvasProps {
   movementPaused: boolean;
   observationActive: boolean;
   georgePresentationVisible: boolean;
+  onSceneReady(ready: boolean): void;
   onPlayerCheckpoint(position: WorldPoint, facing: WorldPoint): void;
   onFeedback(feedbackId: string): void;
   onInteraction(anchorId?: string): void;
@@ -20,6 +21,7 @@ const Level0GameCanvas = ({
   movementPaused,
   observationActive,
   georgePresentationVisible,
+  onSceneReady,
   onPlayerCheckpoint,
   onFeedback,
   onInteraction,
@@ -28,12 +30,14 @@ const Level0GameCanvas = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const runtimeRef = useRef<Level0SceneRuntime | null>(null);
+  const [sceneReady, setSceneReady] = useState(false);
 
   const latestRef = useRef({
     run,
     movementPaused,
     observationActive,
     georgePresentationVisible,
+    onSceneReady,
     onPlayerCheckpoint,
     onFeedback,
     onInteraction,
@@ -44,6 +48,7 @@ const Level0GameCanvas = ({
     movementPaused,
     observationActive,
     georgePresentationVisible,
+    onSceneReady,
     onPlayerCheckpoint,
     onFeedback,
     onInteraction,
@@ -53,9 +58,14 @@ const Level0GameCanvas = ({
   useEffect(() => {
     const container = containerRef.current;
     if (!container || gameRef.current) return undefined;
+    let mounted = true;
 
     const runtime: Level0SceneRuntime = {
       getRun: () => latestRef.current.run,
+      onSceneReady: (ready) => {
+        if (mounted) setSceneReady(ready);
+        latestRef.current.onSceneReady(ready);
+      },
       isMovementPaused: () => latestRef.current.movementPaused,
       isObservationActive: () => latestRef.current.observationActive,
       isGeorgePresentationVisible: () => latestRef.current.georgePresentationVisible,
@@ -108,6 +118,8 @@ const Level0GameCanvas = ({
     window.addEventListener('resize', resize);
 
     return () => {
+      mounted = false;
+      latestRef.current.onSceneReady(false);
       if (resizeFrame !== null) window.cancelAnimationFrame(resizeFrame);
       observer?.disconnect();
       window.removeEventListener('resize', resize);
@@ -122,8 +134,30 @@ const Level0GameCanvas = ({
       ref={containerRef}
       data-testid="level0-game-canvas"
       data-runtime="get204-four-block-source-candidate-v1"
+      data-scene-ready={String(sceneReady)}
       style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#101215' }}
-    />
+    >
+      {!sceneReady ? (
+        <div
+          data-testid="level0-scene-loading"
+          role="status"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 2,
+            display: 'grid',
+            placeItems: 'center',
+            color: '#cfc4aa',
+            background: '#101215',
+            font: '600 12px/1.4 monospace',
+            letterSpacing: '0.16em',
+            textTransform: 'uppercase',
+          }}
+        >
+          Loading district…
+        </div>
+      ) : null}
+    </div>
   );
 };
 

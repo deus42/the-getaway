@@ -1,0 +1,129 @@
+{
+  "schemaVersion": 3,
+  "id": "get205-four-block-blender-baked-v3",
+  "ticket": "GET-205",
+  "source": {
+    "scene": "art/blender/get204/.generated/mission-district/master/get204-mission-district.blend",
+    "recipe": "art/blender/get204/manifests/mission-district-rebuild.json",
+    "geometryOwner": "GET-204",
+    "sourcePack": "KitBash3D Neo Tokyo 2",
+    "geometryChanges": "none"
+  },
+  "treatment": {
+    "identityPresentation": "blender-baked-facade-scale",
+    "removeObjects": [
+      "GET204.CITY.identity.logistics.panel",
+      "GET204.CITY.identity.logistics.letters"
+    ],
+    "palette": {
+      "mount": [0.028, 0.032, 0.034, 1.0],
+      "bone": [0.46, 0.405, 0.31, 1.0],
+      "technology": [0.018, 0.2, 0.23, 1.0],
+      "civic": [0.36, 0.16, 0.038, 1.0]
+    },
+    "environmentMatte": {
+      "kind": "noninteractive-atmospheric-surround",
+      "gameplayCollision": false,
+      "geometryOwner": "GET-205-atmosphere-only",
+      "centerLayout": { "x": 29.0, "y": 22.0 },
+      "sizeMeters": 720.0,
+      "elevationMeters": -0.45,
+      "surfaceColor": [0.012, 0.016, 0.019, 1.0],
+      "worldColor": [0.004, 0.007, 0.011, 1.0]
+    },
+    "facadeSigns": [
+      {
+        "id": "public-transit",
+        "clusterId": "cluster.public.market",
+        "layoutPosition": { "x": 23.35, "y": 20.08 },
+        "elevationMeters": 5.3,
+        "widthMeters": 5.8,
+        "heightMeters": 1.0,
+        "mainText": "HIDZU",
+        "subText": "CIVIC TRANSIT",
+        "accent": "technology",
+        "gameplayPurpose": "Marks Hidzu's ordinary public-service presence at the contact and blending route."
+      },
+      {
+        "id": "logistics-threshold",
+        "clusterId": "cluster.logistics.threshold",
+        "layoutPosition": { "x": 36.8, "y": 20.08 },
+        "elevationMeters": 7.55,
+        "widthMeters": 4.45,
+        "heightMeters": 0.86,
+        "mainText": "HIDZU",
+        "subText": "LOGISTICS 04",
+        "accent": "civic",
+        "gameplayPurpose": "Identifies the controlled public logistics entrance without creating a billboard."
+      },
+      {
+        "id": "civic-landmark",
+        "clusterId": "cluster.logistics.landmark",
+        "layoutPosition": { "x": 38.0, "y": 12.96 },
+        "elevationMeters": 10.2,
+        "widthMeters": 4.15,
+        "heightMeters": 0.82,
+        "mainText": "HIDZU",
+        "subText": "IDENTITY SERVICES",
+        "accent": "technology",
+        "gameplayPurpose": "Creates one restrained district-scale corporate landmark on the accepted KitBash facade."
+      },
+      {
+        "id": "service-return",
+        "clusterId": "cluster.service.workshop",
+        "layoutPosition": { "x": 39.0, "y": 34.02 },
+        "elevationMeters": 4.35,
+        "widthMeters": 3.35,
+        "heightMeters": 0.68,
+        "mainText": "HIDZU",
+        "subText": "CONTROLLED ACCESS",
+        "accent": "civic",
+        "gameplayPurpose": "Reinforces the service-route identity at street scale."
+      }
+    ]
+  },
+  "camera": {
+    "azimuthDegrees": 45,
+    "elevationDegrees": 30,
+    "followOffsetScenePixels": 80,
+    "views": [
+      {
+        "id": "stable-runtime",
+        "output": "runtime/stable-people-free-6400x3600.png",
+        "width": 6400,
+        "height": 3600,
+        "targetLayout": { "x": 29.0, "y": 22.0 },
+        "renderZoom": 2.0,
+        "hideClusterIds": []
+      },
+      {
+        "id": "logistics-proof",
+        "output": "proof/logistics-1440x900.png",
+        "width": 1440,
+        "height": 900,
+        "targetLayout": { "x": 38.0, "y": 20.0 },
+        "renderZoom": 2.9,
+        "hideClusterIds": ["cluster.service.workshop"]
+      }
+    ]
+  },
+  "output": {
+    "root": "art/blender/get205/.generated/four-block-baked-v3",
+    "scene": "master/get205-four-block-baked-v3.blend",
+    "metadata": "metadata.json",
+    "foregroundRoot": "runtime/foreground",
+    "foregroundMetadata": "runtime/foreground-layers.json",
+    "peopleBakedIntoPlate": false
+  },
+  "prohibited": [
+    "oversized-facade-banner",
+    "floating-post-render-panel",
+    "post-render-svg-identity",
+    "baked-environment-actors",
+    "topology-change",
+    "collision-change",
+    "camera-change",
+    "broad-cyan-glow",
+    "generic-neon-cyberpunk"
+  ]
+}

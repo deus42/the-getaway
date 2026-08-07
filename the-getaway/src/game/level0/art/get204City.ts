@@ -34,7 +34,7 @@ export interface Get204CityRuntimeCluster extends Get204RegisteredArchitecturalC
 
 export interface Get204CityRuntimeLayer {
   id: string;
-  kind: 'architecture-back';
+  kind: 'architecture-back' | 'architecture-front' | 'identity-treatment';
   view: 'overview' | 'close';
   textureKey: string;
   path: string;
@@ -45,6 +45,51 @@ export interface Get204CityRuntimeLayer {
   targetLayout: WorldPoint;
   focusPixel: WorldPoint;
   peopleBakedIntoPlate: false;
+  colorSource?: 'registered-stable-runtime-plate';
+  sha256?: string;
+  sourceCrop?: {
+    readonly left: number;
+    readonly top: number;
+  };
+  occlusion?: {
+    readonly clusterId: string;
+    readonly mode: 'hard';
+  };
+}
+
+export interface Get204CityZoomPresentation {
+  readonly geometryMode: 'dual-registered-plate-crossfade' | 'single-registered-plate';
+  readonly actorScaleMode: 'screen-compensated' | 'world-locked';
+  readonly actorWorldScale: number;
+  readonly actorVisibility: 'zoom-fade' | 'always';
+  readonly cameraFollowMode: 'overview-to-player' | 'player-locked';
+}
+
+export interface Get204CityRuntimeVisual {
+  readonly id: string;
+  readonly runtimeEnabled: true;
+  readonly projection: typeof GET204_CITY_LAYOUT.projection;
+  readonly canvas: typeof GET204_CITY_RECIPE.export.canvas;
+  readonly overviewCanvas: { readonly width: number; readonly height: number };
+  readonly defaultZoom: number;
+  readonly maxZoom: number;
+  readonly maximumZoom: number;
+  readonly manualOverviewZoom: number;
+  readonly actorScreenHeightTargetPx: {
+    readonly min: number;
+    readonly max: number;
+  };
+  readonly proofStarts: typeof GET204_CITY_RECIPE.camera.proofStarts;
+  readonly proofStart: WorldPoint;
+  readonly closeRegion: WorldPolygon;
+  readonly zoomBlend: { readonly closeStart: number; readonly closeComplete: number };
+  readonly zoomPresentation: Get204CityZoomPresentation;
+  readonly layers: readonly Get204CityRuntimeLayer[];
+  readonly occluders: readonly unknown[];
+  readonly populationOwnership: 'separate-runtime-actors';
+  readonly population: readonly Get204CityPopulationActor[];
+  readonly groundTiles: readonly Get204CityGroundTile[];
+  readonly clusters: readonly Get204CityRuntimeCluster[];
 }
 
 export interface Get204CityPopulationActor {
@@ -230,6 +275,15 @@ const groundFocusY = (height: number, renderZoom: number): number =>
     renderZoom *
     Math.cos(BLENDER_CAMERA_ELEVATION_RADIANS);
 
+export const resolveGet204CityRenderFocusPixel = (
+  width: number,
+  height: number,
+  renderZoom: number
+): WorldPoint => ({
+  x: width / 2,
+  y: groundFocusY(height, renderZoom),
+});
+
 const runtimeLayers: readonly Get204CityRuntimeLayer[] = [
   {
     id: 'layer.get204-city.overview.people-free',
@@ -242,7 +296,11 @@ const runtimeLayers: readonly Get204CityRuntimeLayer[] = [
     height: 2304,
     renderZoom: OVERVIEW_RUNTIME_RENDER_ZOOM,
     targetLayout: { x: 29, y: 22 },
-    focusPixel: { x: 2048, y: groundFocusY(2304, OVERVIEW_RUNTIME_RENDER_ZOOM) },
+    focusPixel: resolveGet204CityRenderFocusPixel(
+      4096,
+      2304,
+      OVERVIEW_RUNTIME_RENDER_ZOOM
+    ),
     peopleBakedIntoPlate: false,
   },
   {
@@ -273,16 +331,16 @@ const runtimePopulation: readonly Get204CityPopulationActor[] = [
     position: { x: 24.15, y: 20.95 },
     facing: 'south-east',
     worldScaleMultiplier: 0.94,
-    blocksMovement: true,
+    blocksMovement: false,
   },
   {
     id: 'get204.civilian.transit-b',
     kind: 'civilian',
     spriteSetId: 'civilian_transit',
-    position: { x: 21.8, y: 22.55 },
+    position: { x: 26.2, y: 21.3 },
     facing: 'south-west',
     worldScaleMultiplier: 0.92,
-    blocksMovement: true,
+    blocksMovement: false,
   },
   {
     id: 'get204.civilian.service',
@@ -291,16 +349,16 @@ const runtimePopulation: readonly Get204CityPopulationActor[] = [
     position: { x: 42.5, y: 34.5 },
     facing: 'south-east',
     worldScaleMultiplier: 0.96,
-    blocksMovement: true,
+    blocksMovement: false,
   },
   {
     id: 'get204.civilian.delivery',
     kind: 'civilian',
     spriteSetId: 'civilian_delivery',
-    position: { x: 22.2, y: 20.62 },
+    position: { x: 27, y: 21 },
     facing: 'south-east',
     worldScaleMultiplier: 0.96,
-    blocksMovement: true,
+    blocksMovement: false,
   },
   {
     id: 'get204.security.public-entry',
@@ -351,7 +409,7 @@ export const GET204_CITY_MOVEMENT_CONTRACT: Level0LayoutContract = {
   ],
 };
 
-export const GET204_CITY_RUNTIME = {
+export const GET204_CITY_RUNTIME: Get204CityRuntimeVisual = {
   id: GET204_CITY_RECIPE.runtime.runtimeIdentity,
   runtimeEnabled: true,
   projection: GET204_CITY_LAYOUT.projection,
@@ -371,6 +429,13 @@ export const GET204_CITY_RUNTIME = {
   zoomBlend: {
     closeStart: 1.5,
     closeComplete: 2,
+  },
+  zoomPresentation: {
+    geometryMode: 'dual-registered-plate-crossfade',
+    actorScaleMode: 'screen-compensated',
+    actorWorldScale: 0.64,
+    actorVisibility: 'zoom-fade',
+    cameraFollowMode: 'overview-to-player',
   },
   layers: runtimeLayers,
   occluders: [] as const,
@@ -394,15 +459,62 @@ export const resolveGet204CityLayerTopLeft = (
   y: targetScene.y - layer.focusPixel.y / layer.renderZoom,
 });
 
+export interface Get204CityOverviewBounds {
+  readonly targetLayout: WorldPoint;
+  readonly left: number;
+  readonly top: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+export const resolveGet204CityOverviewBounds = (
+  visual: Get204CityRuntimeVisual = GET204_CITY_RUNTIME
+): Get204CityOverviewBounds => {
+  const layers = visual.layers.filter(
+    ({ kind, view }) => kind === 'architecture-back' && view === 'overview'
+  );
+  const reference = layers[0];
+  if (!reference) throw new Error(`Visual ${visual.id} has no overview architecture`);
+
+  const bounds = layers.map((layer) => {
+    const deltaX = layer.targetLayout.x - reference.targetLayout.x;
+    const deltaY = layer.targetLayout.y - reference.targetLayout.y;
+    const targetOffset = {
+      x: (deltaX - deltaY) * visual.projection.tileWidth / 2,
+      y: (deltaX + deltaY) * visual.projection.tileHeight / 2,
+    };
+    const left = targetOffset.x - layer.focusPixel.x / layer.renderZoom;
+    const top = targetOffset.y - layer.focusPixel.y / layer.renderZoom;
+    return {
+      left,
+      top,
+      right: left + layer.width / layer.renderZoom,
+      bottom: top + layer.height / layer.renderZoom,
+    };
+  });
+  const left = Math.min(...bounds.map((bound) => bound.left));
+  const top = Math.min(...bounds.map((bound) => bound.top));
+  const right = Math.max(...bounds.map((bound) => bound.right));
+  const bottom = Math.max(...bounds.map((bound) => bound.bottom));
+  return {
+    targetLayout: { ...reference.targetLayout },
+    left,
+    top,
+    width: right - left,
+    height: bottom - top,
+  };
+};
+
 export const resolveGet204CityOverviewFitZoom = (
   viewportWidth: number,
-  viewportHeight: number
+  viewportHeight: number,
+  visual: Get204CityRuntimeVisual = GET204_CITY_RUNTIME
 ): number => {
-  const overview = runtimeLayers.find(({ view }) => view === 'overview')!;
+  const overview = resolveGet204CityOverviewBounds(visual);
   return Math.max(
-    0.5,
-    viewportWidth / (overview.width / overview.renderZoom),
-    viewportHeight / (overview.height / overview.renderZoom)
+    visual.manualOverviewZoom,
+    viewportWidth / overview.width,
+    viewportHeight / overview.height
   );
 };
 
@@ -416,19 +528,31 @@ export const resolveGet204CityStartPosition = (
     : { ...fallback };
 };
 
-export const resolveGet204CityInitialZoom = (search?: string): number => {
-  const source = search ?? (typeof window === 'undefined' ? '' : window.location.search);
-  return new URLSearchParams(source).get('visualGate') === 'get204-1'
-    ? 2
-    : GET204_CITY_RUNTIME.defaultZoom;
-};
+export const resolveGet204CityInitialZoom = (
+  _search?: string,
+  visual: Get204CityRuntimeVisual = GET204_CITY_RUNTIME
+): number => visual.defaultZoom;
 
-export const resolveGet204CityWorldViewBlend = (zoom: number): {
+export const resolveGet204CityWorldViewBlend = (
+  zoom: number,
+  visualOrLegacyPlayerPosition: Get204CityRuntimeVisual | WorldPoint = GET204_CITY_RUNTIME
+): {
   overviewAlpha: number;
   closeAlpha: number;
   actorAlpha: number;
   playerWorldScale: number;
 } => {
+  const visual = 'zoomPresentation' in visualOrLegacyPlayerPosition
+    ? visualOrLegacyPlayerPosition
+    : GET204_CITY_RUNTIME;
+  if (visual.zoomPresentation.geometryMode === 'single-registered-plate') {
+    return {
+      overviewAlpha: 1,
+      closeAlpha: 0,
+      actorAlpha: 1,
+      playerWorldScale: visual.zoomPresentation.actorWorldScale,
+    };
+  }
   const { closeStart, closeComplete } = GET204_CITY_RUNTIME.zoomBlend;
   const closeAlpha = clamp01((zoom - closeStart) / (closeComplete - closeStart));
   return {
@@ -436,8 +560,12 @@ export const resolveGet204CityWorldViewBlend = (zoom: number): {
     // treatment so camera bounds never expose a black seam.
     overviewAlpha: 1,
     closeAlpha,
-    actorAlpha: clamp01((zoom - 0.68) / 0.42),
-    playerWorldScale: Math.max(0.42, Math.min(0.95, 1.25 / Math.max(0.5, zoom))),
+    actorAlpha: visual.zoomPresentation.actorVisibility === 'always'
+      ? 1
+      : clamp01((zoom - 0.68) / 0.42),
+    playerWorldScale: visual.zoomPresentation.actorScaleMode === 'world-locked'
+      ? visual.zoomPresentation.actorWorldScale
+      : Math.max(0.42, Math.min(0.95, 1.25 / Math.max(0.5, zoom))),
   };
 };
 

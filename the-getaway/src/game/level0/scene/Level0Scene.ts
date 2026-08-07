@@ -50,20 +50,31 @@ import {
 } from './level0ActorPresentation';
 import {
   GET204_CITY_MOVEMENT_CONTRACT,
-  GET204_CITY_RUNTIME,
   resolveGet204CityInitialZoom,
   resolveGet204CityLayerTopLeft,
+  resolveGet204CityOverviewBounds,
   resolveGet204CityOverviewFitZoom,
   resolveGet204CityWorldViewBlend,
 } from '../art/get204City';
+import {
+  GET205_HIDZU_SCHEDULE_TREATMENTS,
+  isGet205RuntimeVisual,
+  LEVEL0_RUNTIME_VISUAL as activeVisual,
+} from '../art/get205HidzuRuntime';
 
 export const LEVEL0_SCENE_KEY = 'Level0RuntimeScene';
 export const LEVEL0_MIN_ZOOM = 0.5;
-export const LEVEL0_MAX_ZOOM = GET204_CITY_RUNTIME.maxZoom;
+export const LEVEL0_MAX_ZOOM = activeVisual.maxZoom;
 const LEVEL0_GEORGE_TEXTURE_KEY = 'level0:george-ar:idle';
+const GET205_ATMOSPHERE_COLORS: Record<Level0RunState['worldClock']['phase'], number> = {
+  dusk: 0x3b2418,
+  'blue-hour': 0x102638,
+  curfew: 0x07111c,
+};
 
 export interface Level0SceneRuntime {
   getRun(): Level0RunState | null;
+  onSceneReady(ready: boolean): void;
   isMovementPaused(): boolean;
   isObservationActive(): boolean;
   isGeorgePresentationVisible(): boolean;
@@ -93,7 +104,6 @@ interface Level0SceneActorVisual {
 
 const contract = LEVEL0_LAYOUT_CONTRACT;
 const movementContract = GET204_CITY_MOVEMENT_CONTRACT;
-const activeVisual = GET204_CITY_RUNTIME;
 const origin = {
   x: Math.ceil(Math.max(...contract.bounds.map((point) => point.y))) *
       (contract.projection.tileWidth / 2) +
@@ -201,7 +211,14 @@ export class Level0Scene extends Phaser.Scene {
 
   private readonly gate1PopulationActors = new Map<string, Level0SceneActorVisual>();
 
-  private readonly get204WorldLayers = new Map<'close' | 'overview', Phaser.GameObjects.Image>();
+  private readonly get204WorldLayers = new Map<
+    'close' | 'overview',
+    Phaser.GameObjects.Image[]
+  >();
+
+  private scheduleAtmosphere: Phaser.GameObjects.Rectangle | null = null;
+
+  private activeSchedulePhase: Level0RunState['worldClock']['phase'] | null = null;
 
   private minimumZoom = LEVEL0_MIN_ZOOM;
 
@@ -247,6 +264,7 @@ export class Level0Scene extends Phaser.Scene {
     this.movement = createIdleMovementState(run.player.position);
     this.movement.facing = { ...run.player.facing };
     this.drawWorld();
+    this.createScheduleTreatment(run);
     this.syncAnchorKnowledge(run);
     this.createPlayerMarker(run);
     this.createContactActors();
@@ -255,7 +273,11 @@ export class Level0Scene extends Phaser.Scene {
     this.configureCamera(run.player.position);
     this.createGeorgePresentation();
     this.configureInput();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.teardownInput());
+    this.runtime.onSceneReady(true);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.teardownInput();
+      this.runtime.onSceneReady(false);
+    });
   }
 
   update(_time: number, delta: number): void {
@@ -305,7 +327,10 @@ export class Level0Scene extends Phaser.Scene {
     this.followPlayerUnlessObserving();
     this.renderGeorgePresentation();
     const currentRun = this.runtime.getRun();
-    if (currentRun) this.syncAnchorKnowledge(currentRun);
+    if (currentRun) {
+      this.renderScheduleTreatment(currentRun);
+      this.syncAnchorKnowledge(currentRun);
+    }
 
     this.lastCheckpointAt += delta;
     if (this.lastCheckpointAt >= 250) {
@@ -412,8 +437,35 @@ export class Level0Scene extends Phaser.Scene {
         .setScale(1 / layer.renderZoom)
         .setDepth(layer.depth)
         .setData('get204CityLayerId', layer.id);
-      this.get204WorldLayers.set(layer.view, image);
+      const viewLayers = this.get204WorldLayers.get(layer.view) ?? [];
+      viewLayers.push(image);
+      this.get204WorldLayers.set(layer.view, viewLayers);
     });
+  }
+
+  private createScheduleTreatment(run: Level0RunState): void {
+    if (!isGet205RuntimeVisual(activeVisual)) return;
+    this.scheduleAtmosphere = this.add
+      .rectangle(0, 0, 1, 1, GET205_ATMOSPHERE_COLORS[run.worldClock.phase], 0)
+      .setOrigin(0)
+      .setScrollFactor(0)
+      .setDepth(7_000);
+    this.renderScheduleTreatment(run);
+  }
+
+  private renderScheduleTreatment(run: Level0RunState): void {
+    if (!this.scheduleAtmosphere || !isGet205RuntimeVisual(activeVisual)) return;
+    const phase = run.worldClock.phase;
+    const treatment = GET205_HIDZU_SCHEDULE_TREATMENTS[phase];
+    if (this.activeSchedulePhase !== phase) {
+      this.get204WorldLayers.forEach((layers) => {
+        layers.forEach((layer) => layer.setTint(treatment.tint));
+      });
+      this.scheduleAtmosphere
+        .setFillStyle(GET205_ATMOSPHERE_COLORS[phase], treatment.atmosphereAlpha);
+      this.activeSchedulePhase = phase;
+    }
+    this.scheduleAtmosphere.setDisplaySize(this.scale.width, this.scale.height);
   }
 
   private createFeatheredCloseTexture(
@@ -627,9 +679,13 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private renderGet204WorldView(): void {
-    const blend = resolveGet204CityWorldViewBlend(this.cameras.main.zoom);
-    this.get204WorldLayers.get('overview')?.setAlpha(blend.overviewAlpha);
-    this.get204WorldLayers.get('close')?.setAlpha(blend.closeAlpha);
+    const blend = resolveGet204CityWorldViewBlend(this.cameras.main.zoom, activeVisual);
+    this.get204WorldLayers.get('overview')?.forEach((layer) =>
+      layer.setAlpha(blend.overviewAlpha)
+    );
+    this.get204WorldLayers.get('close')?.forEach((layer) =>
+      layer.setAlpha(blend.closeAlpha)
+    );
     this.playerSprite?.setScale(blend.playerWorldScale);
     this.contactActors.forEach((visual) => {
       visual.container
@@ -687,7 +743,7 @@ export class Level0Scene extends Phaser.Scene {
       .setDepth(this.playerMarker.depth + 1)
       .setVisible(
         this.runtime.isGeorgePresentationVisible() &&
-        resolveGet204CityWorldViewBlend(this.cameras.main.zoom).actorAlpha >= 0.5
+        resolveGet204CityWorldViewBlend(this.cameras.main.zoom, activeVisual).actorAlpha >= 0.5
       );
   }
 
@@ -800,14 +856,20 @@ export class Level0Scene extends Phaser.Scene {
   }
 
   private configureCamera(position: WorldPoint): void {
-    const overviewLayer = activeVisual.layers.find(({ view }) => view === 'overview')!;
-    const overviewTarget = projection.layoutToScene(overviewLayer.targetLayout);
-    const overviewTopLeft = resolveGet204CityLayerTopLeft(overviewTarget, overviewLayer);
-    const artWidth = overviewLayer.width / overviewLayer.renderZoom;
-    const artHeight = overviewLayer.height / overviewLayer.renderZoom;
-    this.cameras.main.setBounds(overviewTopLeft.x, overviewTopLeft.y, artWidth, artHeight);
-    this.minimumZoom = resolveGet204CityOverviewFitZoom(this.scale.width, this.scale.height);
-    this.cameras.main.setZoom(resolveGet204CityInitialZoom());
+    const overview = resolveGet204CityOverviewBounds(activeVisual);
+    const overviewTarget = projection.layoutToScene(overview.targetLayout);
+    this.cameras.main.setBounds(
+      overviewTarget.x + overview.left,
+      overviewTarget.y + overview.top,
+      overview.width,
+      overview.height
+    );
+    this.minimumZoom = resolveGet204CityOverviewFitZoom(
+      this.scale.width,
+      this.scale.height,
+      activeVisual
+    );
+    this.cameras.main.setZoom(resolveGet204CityInitialZoom(undefined, activeVisual));
     const scenePosition = projection.layoutToScene(position);
     this.cameras.main.centerOn(scenePosition.x, scenePosition.y);
     this.cameras.main.setBackgroundColor('#101215');
@@ -1016,7 +1078,7 @@ export class Level0Scene extends Phaser.Scene {
     this.playerMarker.setDepth(100 + scenePosition.y);
     this.playerOverviewMarker
       ?.setPosition(scenePosition.x, scenePosition.y)
-      .setDepth(this.playerMarker.depth + 2);
+      .setDepth(10_002);
     const spriteSetId = this.playerMarker.getData('spriteSetId') as string | null;
     const spriteFacing = resolveLevel0SpriteDirection(this.movement.facing);
     const spriteState: CharacterSpriteState = resolveLevel0PlayerSpriteState(
@@ -1041,11 +1103,18 @@ export class Level0Scene extends Phaser.Scene {
   private followPlayerUnlessObserving(): void {
     if (!this.movement || this.runtime.isObservationActive()) return;
     const playerPosition = projection.layoutToScene(this.movement.position);
-    const overview = this.get204WorldLayers.get('overview');
+    if (activeVisual.zoomPresentation.cameraFollowMode === 'player-locked') {
+      this.cameras.main.centerOn(playerPosition.x, playerPosition.y - 80);
+      return;
+    }
+    const overview = this.get204WorldLayers.get('overview')?.[0];
     const overviewCenter = overview
       ? { x: overview.x + overview.displayWidth / 2, y: overview.y + overview.displayHeight / 2 }
       : playerPosition;
-    const { actorAlpha } = resolveGet204CityWorldViewBlend(this.cameras.main.zoom);
+    const { actorAlpha } = resolveGet204CityWorldViewBlend(
+      this.cameras.main.zoom,
+      activeVisual
+    );
     this.cameras.main.centerOn(
       Phaser.Math.Linear(overviewCenter.x, playerPosition.x, actorAlpha),
       Phaser.Math.Linear(overviewCenter.y, playerPosition.y - 80, actorAlpha)

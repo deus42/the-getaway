@@ -10,8 +10,15 @@ import { setLocale } from '../store/settingsSlice';
 import { advanceLevel0Clock, hydrateLevel0Run } from '../store/level0RuntimeSlice';
 
 jest.mock('../components/level0/Level0GameCanvas', () => {
-  return function MockedLevel0GameCanvas() {
-    return <div data-testid="level0-game-canvas">Level 0 Canvas</div>;
+  return function MockedLevel0GameCanvas(props: { onSceneReady?: (ready: boolean) => void }) {
+    return (
+      <div
+        data-testid="level0-game-canvas"
+        data-has-scene-ready-callback={String(typeof props.onSceneReady === 'function')}
+      >
+        Level 0 Canvas
+      </div>
+    );
   };
 });
 
@@ -54,6 +61,10 @@ describe('canonical Level 0 runtime entry', () => {
     await startNormalRun();
 
     expect(screen.getByTestId('level0-game-canvas')).toBeInTheDocument();
+    expect(screen.getByTestId('level0-game-canvas')).toHaveAttribute(
+      'data-has-scene-ready-callback',
+      'true'
+    );
     expect(screen.getByTestId('level0-runtime-hud')).toBeInTheDocument();
     expect(store.getState().level0Runtime.status).toBe('active');
     expect(store.getState().level0Runtime.run?.worldClock.currentMinute).toBe(18 * 60 + 30);

@@ -88,9 +88,19 @@ Presentation states are aligned environment layers:
 - Midtones remain readable. Curfew cannot collapse actors, road edges, entrances, and building bases into one black band.
 - Practical lights must be anchored to visible sources and respect the aligned environment state.
 
-### Parked GET-205 pipeline evidence
+### Active GET-205 production path
 
-The following records describe the earlier GET-205 generator and remain useful for selective salvage. They are not current visual acceptance, do not constrain GET-204 composition, and do not authorize downstream work before the complete GET-204 live rebuild is accepted.
+- GET-205 opens the accepted GET-204 Neo Tokyo 2 master as a derivative rather than rebuilding or replacing the four-block city. Its tracked treatment manifest adds only facade-scale Hidzu identity and a noninteractive atmospheric surround below the gameplay surface; all sixteen building transforms, the `58×44` topology, anchors, masks, collision, and actor ownership remain GET-204-owned.
+- The authoritative people-free environment source is one `6400×3600` Blender render with no hidden source clusters. Runtime zoom never swaps or crossfades a second architectural composition.
+- The desktop profile preserves that native render through four registered overlapping WebP background tiles plus sixteen same-source hard-occlusion foreground crops. Every texture edge is at most `3202` pixels, so the profile does not depend on an unsupported `6400`-pixel WebGL texture.
+- The mobile profile uses one `3200×1800` WebP background plus sixteen half-resolution foreground crops, approximately `39.46 MiB` estimated decoded RGBA and `1.01 MiB` compressed. Its initial zoom is `1.05`; desktop remains `2.00`.
+- `get205-hidzu-production-v1` is the normal Level 0 visual path. `?visualTreatment=get204-1` is the explicit diagnostic fallback, while `?visualProfile=desktop|mobile` is a diagnostic profile override. Normal profile selection uses viewport width, with mobile selected at `820` pixels or below.
+- Dusk, blue hour, and curfew apply restrained, geometry-stable tint/atmosphere treatments to the same environment layers. They never change collision, camera target, architecture, actor scale, occlusion depth, device geometry, or schedule rules.
+- Flattened derivatives, hashes, dimensions, source crops, depth anchors, profile budgets, and Neo Tokyo 2 provenance are versioned. Raw vendor geometry/textures and generated `.blend` files remain outside Git.
+
+### Historical GET-205 pipeline evidence
+
+The following records describe the earlier pre-four-block GET-205 generator and remain useful for selective salvage. They are not the active runtime, do not constrain the accepted GET-204 composition, and do not satisfy current visual acceptance.
 
 - `art/blender/get205/manifests/hidzu-visual-grammar.json` is the single palette, semantic-role, device-shape, civic-message, and color-independent-cue grammar consumed by validation and Blender generation.
 - `art/blender/get205/manifests/hidzu-treatment.json` hash-locks the committed GET-204 source manifest, scene recipe, layout contract, master-scene metadata, base transforms, camera, canvas, anchors, and semantic-mask inventory before applying treatment.
@@ -183,6 +193,7 @@ The following records describe the earlier GET-205 generator and remain useful f
 - Maintain a source/provenance manifest for every Neo Tokyo asset used and keep all raw vendor files outside Git. Record requester-confirmed ownership honestly; do not invent a receipt or license tier.
 - Maintain the Level 0 master-scene recipe, camera/projection settings, transforms, material treatment, light rig, export layers, masks, anchors, and validation checks.
 - For GET-204, first produce an actual Blender close frame and four-block overview from the same named-source master. After that gate is approved, produce a clean live frame, the same frame with the current HUD, and a four-block overview at `1440×900` and `1920×1080`; verify `1280×720` compatibility before final closeout.
+- For GET-205, regenerate the production manifest and both runtime profiles with `yarn art:level0:t5:production` whenever the accepted stable plate or foreground silhouettes change. Hash-check every published derivative and inspect normal desktop, minimum overview, automatic mobile, dusk, blue-hour, and curfew states in the live Level 0 runtime before acceptance.
 - Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Restart Attempt, debrief, and completion.
 - Maintain actor manifests, deterministic generation recipes, pixel-derived metrics, integrity hashes, neutral fallback evidence, and matching portrait references for all required identities.
 - Author signage and public-screen copy in the approved cultural/language policy once that open decision is resolved.

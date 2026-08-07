@@ -1,0 +1,180 @@
+{
+  "schemaVersion": 1,
+  "id": "get204-gate1-hero-intersection-v1",
+  "ticket": "GET-204",
+  "purpose": "Requester acceptance candidate for the live public-to-controlled hero intersection.",
+  "references": [
+    {
+      "role": "rejected-baseline",
+      "path": "art/references/get204/rejected-greybox.png",
+      "sha256": "af780e7cdaf029c2986988b2487afd448a4da21c0893f68cabbff6a95252819c"
+    },
+    {
+      "role": "close-play-target",
+      "path": "art/references/get204/street-play-target.png",
+      "sha256": "66cc72f0ec09b928cf2d95f0fe3db61881776ba87f48c99c83852cf47583c9a9"
+    },
+    {
+      "role": "gate2-density-target",
+      "path": "art/references/get204/dense-city-target.png",
+      "sha256": "3cca77d4f57d7960b6b58869f8b3a4ddeb5589f2c46dbf7015e1e4c4d9860cd0"
+    }
+  ],
+  "coordinateSystem": {
+    "layoutUnitMeters": 3,
+    "projection": {
+      "tileWidth": 64,
+      "tileHeight": 32,
+      "orientation": "isometric-2:1",
+      "azimuthDegrees": 45,
+      "elevationDegrees": 30
+    }
+  },
+  "canvas": {
+    "width": 3072,
+    "height": 2048,
+    "pixelOrigin": {
+      "x": 608,
+      "y": -400
+    },
+    "targetLayoutPosition": {
+      "x": 59,
+      "y": 30
+    },
+    "runtimeDefaultZoom": 1.15
+  },
+  "region": {
+    "minX": 35,
+    "minY": 8,
+    "maxX": 82,
+    "maxY": 52
+  },
+  "buildingPlacements": [
+    {
+      "id": "gate1.north-west.public",
+      "sourcePrefix": "SmallA",
+      "position": { "x": 51.3, "y": 23.0 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.9,
+      "layer": "architecture-back"
+    },
+    {
+      "id": "gate1.north-east.controlled",
+      "sourcePrefix": "SmallF",
+      "position": { "x": 66.0, "y": 23.2 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.9,
+      "layer": "architecture-back"
+    },
+    {
+      "id": "gate1.south-west.public",
+      "sourcePrefix": "SmallE",
+      "position": { "x": 51.4, "y": 36.0 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.9,
+      "layer": "front-south-west"
+    },
+    {
+      "id": "gate1.south-east.service",
+      "sourcePrefix": "SmallC",
+      "position": { "x": 66.3, "y": 36.0 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.85,
+      "layer": "front-south-east"
+    },
+    {
+      "id": "gate1.background.west",
+      "sourcePrefix": "SmallG",
+      "position": { "x": 42.0, "y": 20.5 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.8,
+      "layer": "architecture-back"
+    },
+    {
+      "id": "gate1.background.east",
+      "sourcePrefix": "SmallH",
+      "position": { "x": 75.3, "y": 20.5 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.8,
+      "layer": "architecture-back"
+    },
+    {
+      "id": "gate1.background.far-west",
+      "sourcePrefix": "SmallB",
+      "position": { "x": 45.8, "y": 12.5 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.82,
+      "layer": "architecture-back"
+    },
+    {
+      "id": "gate1.background.far-east",
+      "sourcePrefix": "SmallI",
+      "position": { "x": 69.5, "y": 12.0 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.78,
+      "layer": "architecture-back"
+    },
+    {
+      "id": "gate1.foreground.far-west",
+      "sourcePrefix": "SmallJ",
+      "position": { "x": 41.0, "y": 41.2 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.8,
+      "layer": "front-far-west"
+    },
+    {
+      "id": "gate1.foreground.far-east",
+      "sourcePrefix": "SmallD",
+      "position": { "x": 75.5, "y": 40.5 },
+      "rotationDegrees": 0,
+      "uniformScale": 0.75,
+      "layer": "front-far-east"
+    }
+  ],
+  "sourcePropPlacements": [
+    { "id": "gate1.awning.public", "sourcePrefix": "Awning_A", "position": { "x": 55.2, "y": 26.7 }, "rotationDegrees": 0, "uniformScale": 1.0, "mountLiftMeters": 2.45, "layer": "architecture-back" },
+    { "id": "gate1.barrier.controlled", "sourcePrefix": "Barriers", "position": { "x": 60.6, "y": 25.8 }, "rotationDegrees": 90, "uniformScale": 0.72, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.door.controlled", "sourcePrefix": "Door_A", "position": { "x": 61.2, "y": 24.7 }, "rotationDegrees": 90, "uniformScale": 1.0, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.intercom.controlled", "sourcePrefix": "Intercom", "position": { "x": 61.0, "y": 25.0 }, "rotationDegrees": 90, "uniformScale": 1.0, "mountLiftMeters": 1.25, "layer": "architecture-back" },
+    { "id": "gate1.terminal.controlled", "sourcePrefix": "ElectricBox_A", "position": { "x": 60.9, "y": 25.5 }, "rotationDegrees": 90, "uniformScale": 1.0, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.utility.service-a", "sourcePrefix": "PowerGenerator_A", "position": { "x": 71.8, "y": 25.1 }, "rotationDegrees": 90, "uniformScale": 1.0, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.utility.service-b", "sourcePrefix": "PowerGenerator_B", "position": { "x": 72.0, "y": 26.4 }, "rotationDegrees": 90, "uniformScale": 1.0, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.transit.entrance", "sourcePrefix": "UndergroundEntrance", "position": { "x": 53.8, "y": 27.3 }, "rotationDegrees": 0, "uniformScale": 0.72, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.bin.public", "sourcePrefix": "RubbishBin", "position": { "x": 56.0, "y": 27.2 }, "rotationDegrees": 0, "uniformScale": 1.0, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.vending.public-a", "sourcePrefix": "Vending_A", "position": { "x": 54.9, "y": 26.9 }, "rotationDegrees": 0, "uniformScale": 1.0, "mountLiftMeters": 0.0, "layer": "architecture-back" },
+    { "id": "gate1.vending.public-b", "sourcePrefix": "Vending_C", "position": { "x": 55.4, "y": 26.9 }, "rotationDegrees": 0, "uniformScale": 1.0, "mountLiftMeters": 0.0, "layer": "architecture-back" }
+  ],
+  "runtime": {
+    "proofStart": { "x": 59.2, "y": 27.2 },
+    "actorScreenHeightTargetPx": { "min": 72, "max": 92 },
+    "population": {
+      "publicCivilians": 3,
+      "serviceCivilians": 1,
+      "security": 2,
+      "unarmedVerifierDrones": 1
+    },
+    "proofPathRoles": [
+      "road",
+      "sidewalk",
+      "controlled-threshold",
+      "service-seam",
+      "foreground-occlusion"
+    ]
+  },
+  "commitBoundary": {
+    "permitted": [
+      "recipe",
+      "script",
+      "reference-copies",
+      "metadata",
+      "project-owned-gap-fills",
+      "flattened-runtime-derivatives"
+    ],
+    "prohibited": [
+      "raw-vendor-geometry",
+      "source-textures",
+      "generated-blend",
+      "recoverable-vendor-asset-export"
+    ]
+  }
+}

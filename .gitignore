@@ -137,6 +137,21 @@ art/blender/get204/**/*.jpeg
 art/blender/get205/.staging/
 art/blender/get205/.generated/
 
+# Superseded local Level 0 visual trials. Keep these recoverable on disk, but
+# only the manifest-driven get205-hidzu-production-v1 assets are production.
+the-getaway/public/environment/level0/get205-hidzu-four-block-baked-v1/
+the-getaway/public/environment/level0/get205-hidzu-four-block-baked-v2/
+the-getaway/public/environment/level0/get205-hidzu-v1/
+the-getaway/public/environment/level0/get204-gate1/
+the-getaway/public/environment/level0/get204-street-v2/
+the-getaway/public/environment/level0/get204-city-v2/close.png
+the-getaway/public/environment/level0/get204-city-v2/overview.png
+the-getaway/public/environment/level0/get204-city-v2/overview-16x10-v2.png
+the-getaway/public/environment/level0/get204-city/overview-people-free-v1.png
+the-getaway/artifacts/
+art/references/get205/live-close-1440x900-candidate-v1.png
+art/references/get205/live-overview-1440x900-candidate-v1.png
+
 # GET-206 atomic character generation staging.
 art/actors/get206/.staging/
 

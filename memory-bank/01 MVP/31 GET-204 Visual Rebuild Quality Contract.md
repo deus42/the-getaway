@@ -159,7 +159,7 @@ Reject and continue if any proof shows:
 ## 13. Ownership and governance
 
 - Owning Linear issue: GET-204; move to `In Review` after the authorized acceptance commit, never directly to `Done`.
-- GET-205 is parked until the actual source-geometry Blender gate passes.
-- Current accepted live runtime and uncommitted GET-205 trial are preserved during the Blender rebuild.
+- The source-geometry Blender gate passed and GET-204 was requester-accepted and committed at `2206f8b`; GET-205 is now the active world-treatment ticket.
+- Preserve the accepted GET-204 live runtime as the explicit diagnostic fallback after the requester-accepted GET-205 production path becomes the normal Level 0 presentation.
 - No production runtime replacement or commit occurs without the relevant requester approval.
 - The Decision Register, Art Direction, Roadmap, MVP Readiness, Linear issue/comments, active plan, AGENTS source-provenance rule, and `progress/GET-204.md` must remain aligned.
