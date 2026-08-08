@@ -1,7 +1,7 @@
 ---
 status: MVP
 type: system-specification
-tags: [cover-select, abilities, gates, research, progression]
+tags: [cover-select, abilities, gates, research]
 canonical: true
 ---
 
@@ -104,7 +104,7 @@ Research states per option:
 ## 8. Effects on other systems
 
 - Cover and held abilities alter available dialogue, recognition, camera looping, trace risk, pursuit recovery, and interception options.
-- The Paranoia tier gauge and ability lock states appear in the protagonist HUD lane (`GDR-UI-005`).
+- The continuous read-only Paranoia slider, current named tier, and ability lock states appear in the protagonist HUD lane (`GDR-UI-005`).
 - Available research appears as a safehouse action.
 - The cover's authored name appears in HUD, dialogue, debrief, and save metadata.
 - The cover selects the protagonist world sprite and portrait consistently.
@@ -113,7 +113,7 @@ Research states per option:
 ## 9. UI, world, audio, and George feedback
 
 - Cover-select explains each cover in concrete Level 0 language — who they were, what they can do — never in genre-role abstractions and never with numbers.
-- The Character screen shows only the cover, held abilities with their lit/locked states and reasons, the Paranoia tier, important facts, and long-term consequence summaries.
+- The Character screen shows only the cover, held abilities with their lit/locked states and reasons, the continuous read-only Paranoia slider with its named tier, important facts, and long-term consequence summaries.
 - Gate UI shows the verdict and its exact reason where the choice lives, before selection and after resolution.
 - Research options show the required fact, the world-minute cost, and the ability granted before confirmation.
 - George may explain an ability, a lock, or a known consequence, but does not recommend a cover, spend time, or reveal hidden gates.

@@ -41,7 +41,7 @@ Example: while shared surveillance evidence says a camera, verifier, or pursuer 
 | Breaking | 90–99 | `fragile` abilities stay locked; George's warnings shorten | One step from the end |
 | — | 100 | Breakdown: staged surrender, freeze, or bolt; `failure.breakdown` | The character gives themselves up |
 
-George announces the first entry into Uneasy, Shaken, and Breaking once per attempt; repeated movement around a boundary does not repeat that line. The tier gauge remains continuously truthful, and tiers use the approved internal cuts of the superseded penalty model exactly (`GDR-PAR-008`).
+George announces the first entry into Uneasy, Shaken, and Breaking once per attempt; repeated movement around a boundary does not repeat that line. The read-only slider remains continuously truthful to the exact internal value, and its threshold ticks use the approved internal cuts of the superseded penalty model exactly (`GDR-PAR-008`, `GDR-UI-005`).
 
 | Event class | Valid source example | Ledger behavior | Invalid shortcut |
 |---|---|---|---|
@@ -80,7 +80,7 @@ Gates consult the current tier at resolution and record the exact tier used as t
 
 ## 9. UI, world, audio, and George feedback
 
-HUD shows the tier gauge, named tier, ability lock states, and latest cause without diagnostic clutter and without numbers (`GDR-UI-005`, presentation under `OPEN-UI-004`). Changes use restrained color/audio and concise text. George may identify the verified cause and recovery options and speaks once at each first entry into Uneasy, Shaken, and Breaking; his dialogue never directly lowers Paranoia.
+HUD and Character screen show the same continuous read-only slider, threshold ticks, named tier, ability lock states, and latest cause without diagnostic clutter or a printed number (`GDR-UI-005`). Changes use restrained color/audio and concise text. George may identify the verified cause and recovery options and speaks once at each first entry into Uneasy, Shaken, and Breaking; his dialogue never directly lowers Paranoia.
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 

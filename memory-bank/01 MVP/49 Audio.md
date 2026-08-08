@@ -54,7 +54,7 @@ There is no voice acting in Level 0.
 - Needle, network transitions, four clock boundaries, three spatial sound leaks, objectives, and dialogue UI are separate required cue contexts; their provisional differentiation, priority, and mix follow `OPEN-AUD-001` until human acceptance resolves it.
 - Level 0 has no voice acting. Spoken dialogue remains authored text with the approved subtitle/localization treatment.
 - Critical information is never audio-only; matching world, HUD, text, shape, or animation feedback is required.
-- Audio never changes a check, fact, objective, surveillance state, Health, Paranoia, time, or mission result.
+- Audio never changes a gate verdict, fact, objective, surveillance state, Paranoia, time, or mission result.
 - No loudness, duration, loop, priority, ducking, spatialization, file format, or source value is approved here. Recorded recommendations in `OPEN-AUD-001` may be implemented only as explicit replaceable trial data.
 - Player-facing volume and accessibility behavior uses the recorded `OPEN-ACC-001` recommendation provisionally and remains unaccepted until human review.
 
@@ -62,7 +62,7 @@ There is no voice acting in Level 0.
 
 - [[41 Movement, Interaction & Observation]] supplies authoritative movement, collision, interaction, and Observation transitions.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies camera, network, security, civilian, drone, hiding/blending, and interception transitions.
-- [[43 Health, Failure & Recovery]] supplies physical consequence, Paranoia threshold, failure, recovery, and Restart Attempt events.
+- [[43 Failure, Surrender & Recovery]] supplies physical consequence, named Paranoia-tier, failure, recovery, and Restart Attempt events.
 - [[44 Safehouse, Save & Restart Attempt]] supplies waiting, Rest, save, departure, terminal validation, and restoration events.
 - [[45 HUD & Information Architecture]] supplies UI/overlay focus, prompt, objective, dialogue, dossier, feed, debrief, failure, and completion events.
 - [[80 Day-Night Cycle]] supplies dusk/curfew/deadline and shared pause state.
@@ -98,7 +98,7 @@ There is no voice acting in Level 0.
 
 - Author a cue inventory covering city, movement, interaction, surveillance, consequence, curfew, safehouse, UI, failure, and completion.
 - Map every cue to a stable semantic event, required world/HUD/text companion, pause behavior, Restart Attempt/New Game cleanup, localization/subtitle need, and the source/licensing evidence required by the approved or explicitly provisional `OPEN-AUD-001` baseline. Allowed overlap and priority remain provisional until that decision is accepted; provisional cues cannot close production-audio acceptance.
-- Provide distinct authored cues for camera concern/network transitions, Needle hum/approach/verification, the 21:00/21:30/22:00/23:30 street moments, three spatial ambience locations, objectives, dialogue UI, terminals, medkit recovery, Health/Paranoia consequence, Rest, failure causes, transit validation, debrief/progression, and demo closure.
+- Provide distinct authored cues for camera concern/network transitions, Needle hum/approach/verification, the 21:00/21:30/22:00/23:30 street moments, three spatial ambience locations, objectives, dialogue UI, terminals, medkit recovery, Paranoia-tier change, ability lock/unlock, research, Rest, failure causes, transit validation, debrief, and demo closure.
 - Resolve `OPEN-AUD-001` before selecting production sources or locking loudness/mixing; resolve `OPEN-ACC-001` before locking volume/subtitle and non-audio parity.
 - Do not select or commit production sources until `OPEN-AUD-001` resolves source/licensing and provenance requirements. No voice-acting inventory is required for Level 0.
 

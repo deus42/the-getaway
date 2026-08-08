@@ -27,7 +27,7 @@ The Hidzu Corporation network is visible, systemic, and fallible. Ordinary publi
 
 ### Paranoia
 
-Paranoia is an honest internal 0–100 resource — presented only as the named tiers Calm, Uneasy, Shaken, and Breaking — caused by rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored shocks. Rising tiers lock `fragile` abilities instead of subtracting numbers, and 100 is breakdown: the protagonist stages a surrender and the attempt ends. Two one-use city grounding actions trade ten world minutes for ten relief, and the first qualifying difficult escape can remove five. It never creates false UI, hallucinations, or fake objectives.
+Paranoia is an honest internal 0–100 resource presented through a continuous read-only slider and the named tiers Calm, Uneasy, Shaken, and Breaking; the exact number is never printed in normal play. It is caused by rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored shocks. Rising tiers lock `fragile` abilities instead of subtracting numbers, and 100 is breakdown: the protagonist stages a surrender and the attempt ends. Two one-use city grounding actions trade ten world minutes for ten relief, and the first qualifying difficult escape can remove five. It never creates false UI, hallucinations, or fake objectives.
 
 ### Dialogue and facts
 

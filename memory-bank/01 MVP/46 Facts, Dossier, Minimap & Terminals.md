@@ -66,7 +66,7 @@ Knowledge is practical leverage with an exact source. The general fact ledger re
 
 - Authored dialogue supplies Lira, Naila, Brant, interception, George, and debrief fact sources.
 - [[41 Movement, Interaction & Observation]] supplies physical discovery, range, explicit interaction, and the known-state inspection boundary.
-- [[92 Character & Progression]] supplies the held abilities and Paranoia tier that gates consult.
+- [[92 Character, Covers, Abilities & Research]] supplies the held abilities and Paranoia tier that gates consult.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies camera/network relationships, connected-loop effects, trace outcome, and context discovery.
 - [[91 Quests & Objectives]] supplies the current objective, medkit-return state, credential issuance, deadline, debrief, and completion transitions.
 - [[44 Safehouse, Save & Restart Attempt]] supplies persistence, restoration, safehouse terminal location, and compatibility rules.

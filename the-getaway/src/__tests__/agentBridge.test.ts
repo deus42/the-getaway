@@ -142,7 +142,7 @@ describe('getaway agent bridge', () => {
     expect(validateAgentAction({ type: 'continueMission' }).ok).toBe(true);
     expect(validateAgentAction({ type: 'advanceMission' }).ok).toBe(true);
     expect(validateAgentAction({ type: 'triggerMissionFailure' }).ok).toBe(true);
-    expect(validateAgentAction({ type: 'retryMission' }).ok).toBe(true);
+    expect(validateAgentAction({ type: 'restartAttempt' }).ok).toBe(true);
   });
 
   it('scales semantic movement waits for long NPC routes', () => {

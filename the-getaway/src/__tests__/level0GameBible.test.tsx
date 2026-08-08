@@ -15,12 +15,12 @@ describe('Level0GameBible', () => {
     expect(screen.getByTestId('game-bible-chapter-rail')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'What The Getaway Is' })).toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'attributable physiological and cognitive strain' } });
+    fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'physiological and cognitive strain' } });
     expect(await screen.findByTestId('game-bible-search-results')).toHaveTextContent(
-      /health, paranoia, failure, and recovery/i
+      /paranoia, breakdown, and recovery/i
     );
-    fireEvent.click(screen.getAllByRole('button', { name: /health, paranoia, failure, and recovery —/i })[0]);
-    expect(screen.getByRole('heading', { name: 'Health, Paranoia, Failure, and Recovery' })).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button', { name: /paranoia, breakdown, and recovery —/i })[0]);
+    expect(screen.getByRole('heading', { name: 'Paranoia, Breakdown, and Recovery' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('game-bible-close'));
     expect(onClose).toHaveBeenCalledTimes(1);

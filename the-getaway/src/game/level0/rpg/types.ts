@@ -1,172 +1,122 @@
-export type AttributeKey = 'physical' | 'mental' | 'social' | 'technical';
+export type Level0CoverId =
+  | 'cover.neighbor'
+  | 'cover.technician'
+  | 'cover.commuter'
+  | 'cover.archivist';
 
-export type SkillKey =
-  | 'stealth'
-  | 'evasion'
-  | 'awareness'
-  | 'composure'
-  | 'insight'
-  | 'influence'
-  | 'systems'
-  | 'opsec';
-
-export interface PlayerIdentity {
-  callsign: string;
+export interface CoverIdentity {
+  coverId: Level0CoverId;
   appearancePresetId: string;
 }
 
-export interface PlayerBuild {
-  attributes: Record<AttributeKey, number>;
-  skills: Record<SkillKey, number>;
-  level: number;
-  xp: number;
-  unspentSkillPoints: number;
-  unspentAttributePoints: number;
+export type Level0AbilityId =
+  | 'ability.read_people'
+  | 'ability.negotiate'
+  | 'ability.blend_in'
+  | 'ability.steady_voice'
+  | 'ability.spot_patterns'
+  | 'ability.terminal_craft'
+  | 'ability.trace_discipline'
+  | 'ability.slip_away'
+  | 'ability.quiet_feet';
+
+export type Level0ParanoiaTier =
+  | 'calm'
+  | 'uneasy'
+  | 'shaken'
+  | 'breaking'
+  | 'breakdown';
+
+export interface Level0AbilityDefinition {
+  id: Level0AbilityId;
+  tag: 'hardened' | { fragile: 'uneasy' | 'shaken' };
 }
 
-export interface Level0CreationDraft {
-  callsign: string;
-  appearancePresetId: string;
-  attributes: Record<AttributeKey, number>;
-  skills: Record<SkillKey, number>;
+export type Level0ResearchOptionId =
+  | 'research.naila_camera_topology'
+  | 'research.brant_delivery_protocol';
+
+export type Level0ResearchState = 'unavailable' | 'available' | 'consumed';
+
+export type Level0ResearchStateRecord = Record<
+  Level0ResearchOptionId,
+  Level0ResearchState
+>;
+
+export interface RunAbilities {
+  heldAbilityIds: Level0AbilityId[];
+  researchState: Level0ResearchStateRecord;
 }
 
-export type Level0CreationErrorId =
-  | 'callsign.required'
-  | 'callsign.invalid'
-  | 'callsign.too_long'
-  | 'appearance.invalid'
-  | 'attributes.invalid'
-  | 'attributes.over_cap'
-  | 'attributes.unspent'
-  | 'skills.invalid'
-  | 'skills.over_cap'
-  | 'skills.unspent';
+export type Level0GateId =
+  | 'gate.lira_read_stakes'
+  | 'gate.naila_opsec'
+  | 'gate.brant_credibility'
+  | 'gate.public_blend'
+  | 'gate.camera_loop'
+  | 'gate.camera_trace'
+  | 'gate.manifest_recognition'
+  | 'gate.intercept_social'
+  | 'gate.intercept_composure'
+  | 'gate.intercept_evasion'
+  | 'gate.pursuit_hide';
 
-export interface Level0CreationValidation {
-  valid: boolean;
-  errors: Level0CreationErrorId[];
-  normalizedCallsign: string;
-  remainingAttributePoints: number;
-  remainingSkillPoints: number;
-  identity: PlayerIdentity | null;
-  build: PlayerBuild | null;
+export type Level0GatePath = 'ability' | 'fact' | 'costed';
+export type Level0GatePresentation = 'preview' | 'result';
+
+export interface Level0GateRequirement {
+  id: Level0GateId;
+  abilityPath: Level0AbilityId | null;
+  factPath: string | null;
+  costedPath: string | null;
+  successEffectIds: readonly string[];
+  failForwardEffectIds: readonly string[];
 }
 
-export type ParanoiaCheckPenalty = 0 | 1 | 2 | 3;
-
-export type CheckFactRule =
-  | {
-      kind: 'lower-requirement';
-      factId?: string;
-      factIdPrefix?: string;
-      amount: number;
-      requiredContextId?: string;
-    }
-  | {
-      kind: 'guarantee-success';
-      factId: string;
-      requiredContextId?: string;
-    }
-  | {
-      kind: 'lower-requirement-from-nearby-fact';
-      factIdPrefix: string;
-      contextIdPrefix: string;
-      amount: number;
-    }
-  | {
-      kind: 'reveal';
-      factId: string;
-    };
-
-export interface AuthoredModifier {
-  id: string;
-  amount: number;
-  requiredContextId: string;
-  localizedReasonKey: string;
+export interface Level0GateVerdict {
+  gateId: Level0GateId;
+  path: Level0GatePath;
+  status: 'met' | 'not-met';
+  reasonId: string;
+  presentation: Level0GatePresentation;
+  abilityId: Level0AbilityId | null;
+  factId: string | null;
+  costedPathId: string | null;
+  paranoiaTier: Level0ParanoiaTier;
 }
 
-export interface CheckRequirement {
-  id: string;
-  attribute: AttributeKey;
-  skill: SkillKey;
-  requiredTotal: number;
-  factRules: CheckFactRule[];
-  situationalModifiers: AuthoredModifier[];
-  successEffectIds: string[];
-  failForwardEffectIds: string[];
-  localizedRequirementKey: string;
-  visibilityFactId?: string;
-  lockedReasonId?: string;
-}
-
-export interface CheckResolution {
-  checkId: string;
-  attribute: AttributeKey;
-  attributeValue: number;
-  skill: SkillKey;
-  skillValue: number;
-  paranoiaPenalty: ParanoiaCheckPenalty;
-  appliedFactIds: string[];
-  appliedModifiers: AuthoredModifier[];
-  guaranteedByFactId: string | null;
-  baseRequiredTotal: number;
-  effectiveRequiredTotal: number;
-  finalTotal: number;
-  outcome: 'success' | 'fail-forward' | 'fatal';
-  successEffectIds: string[];
-  failForwardEffectIds: string[];
-}
-
-export interface CommittedCheckResolution extends CheckResolution {
+export interface CommittedLevel0GateVerdict extends Level0GateVerdict {
   resolutionId: string;
   attemptKey: string;
-  paranoiaValue: number;
-  knownFactIds: string[];
-  activeContextIds: string[];
   resolvedAtWorldMinute: number;
 }
 
-export type Level0ResourceKind = 'health' | 'paranoia';
-export type Level0RetryTreatment = 'captured-at-departure' | 'discard-on-retry';
+export type Level0AttemptTreatment = 'captured-in-baseline' | 'discard-on-restart';
 
-export interface Level0ResourceEvent {
+export interface Level0ParanoiaEvent {
   eventId: string;
-  resource: Level0ResourceKind;
   sourceId: string;
   amount: number;
   before: number;
   after: number;
   worldMinute: number;
   feedbackId: string;
-  retryTreatment: Level0RetryTreatment;
-  crossedParanoiaPenalties: Exclude<ParanoiaCheckPenalty, 0>[];
+  attemptTreatment: Level0AttemptTreatment;
+  newlyEnteredTiers: Array<Exclude<Level0ParanoiaTier, 'calm' | 'breakdown'>>;
 }
 
-export interface Level0XpEvent {
-  milestoneId: string;
-  amount: number;
-  before: number;
-  after: number;
-  worldMinute: number;
-  feedbackId: string;
-}
-
-export interface Level0AllocationEvent {
+export interface Level0ResearchEvent {
   eventId: string;
-  kind: 'level' | 'skill' | 'attribute';
-  key?: SkillKey | AttributeKey;
-  before: number;
-  after: number;
-  worldMinute: number;
+  optionId: Level0ResearchOptionId;
+  consumedFactId: string;
+  grantedAbilityId: Level0AbilityId;
+  worldMinuteCost: number;
+  completedAtWorldMinute: number;
 }
 
 export interface Level0RpgLedger {
-  resolvedChecks: Record<string, CommittedCheckResolution>;
-  resourceEvents: Level0ResourceEvent[];
-  announcedParanoiaPenalties: Exclude<ParanoiaCheckPenalty, 0>[];
-  awardedMilestoneIds: string[];
-  xpEvents: Level0XpEvent[];
-  pendingLevelUps: number;
-  allocationEvents: Level0AllocationEvent[];
+  gateResolutions: Record<string, CommittedLevel0GateVerdict>;
+  paranoiaEvents: Level0ParanoiaEvent[];
+  announcedParanoiaTiers: Array<Exclude<Level0ParanoiaTier, 'calm' | 'breakdown'>>;
+  researchEvents: Level0ResearchEvent[];
 }

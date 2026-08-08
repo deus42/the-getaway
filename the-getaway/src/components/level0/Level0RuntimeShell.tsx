@@ -1,41 +1,23 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import type { GameBibleUiState } from '../../content/gameBible/types';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../content/levels/level0/layoutContract';
-import { isLevel0PlayerAppearanceId } from '../../content/characters/spriteManifest';
-import {
-  createConfirmedLevel0Sample,
-  isValidLevel0Callsign,
-  normalizeLevel0Callsign,
-} from '../../game/level0/rpg/creation';
-import { getParanoiaCheckPenalty } from '../../game/level0/rpg/checks';
-import { getNextLevelThreshold } from '../../game/level0/rpg/progression';
-import type { PlayerBuild, PlayerIdentity } from '../../game/level0/rpg/types';
+import { resolveGet204CityStartPosition } from '../../game/level0/art/get204City';
+import { LEVEL0_RUNTIME_VISUAL } from '../../game/level0/art/get205HidzuRuntime';
 import { resolveLevel0Interaction } from '../../game/level0/interaction/interactionResolver';
 import {
-  LEVEL0_AUTOSAVE_KEY,
-  LEVEL0_RETRY_KEY,
-  clearLevel0Persistence,
-  readLevel0Autosave,
-  readLevel0Retry,
-  writeLevel0DepartureTransaction,
-  writeLevel0Autosave,
-} from '../../game/level0/runtime/persistence';
-import {
-  departLevel0Operation,
-  evaluateSafehouseAction,
-} from '../../game/level0/runtime/safehouse';
-import {
-  getKnownLevel0AnchorIds,
-  getWorldOwnedLevel0AnchorIds,
-} from '../../game/level0/runtime/mapKnowledge';
-import type { Level0RunState, SafehouseActionId } from '../../game/level0/runtime/types';
-import { shouldAdvanceLevel0Clock } from '../../game/level0/runtime/clockEligibility';
-import type { GameBibleUiState } from '../../content/gameBible/types';
-import { setLocale } from '../../store/settingsSlice';
+  deriveLevel0ParanoiaTier,
+  resolveLevel0AbilityState,
+} from '../../game/level0/rpg/gates';
+import { LEVEL0_RESEARCH_CATALOG } from '../../game/level0/rpg/research';
+import type {
+  Level0CoverId,
+  Level0ResearchOptionId,
+} from '../../game/level0/rpg/types';
 import {
   GETAWAY_AGENT_START_LEVEL0_EVENT,
   LEVEL0_AGENT_INTERACTION_EVENT,
-  LEVEL0_AGENT_RETRY_EVENT,
+  LEVEL0_AGENT_RESTART_ATTEMPT_EVENT,
   installLevel0AgentBridge,
 } from '../../game/level0/playtest/level0AgentBridge';
 import type { Level0AgentInteractionDetail } from '../../game/level0/playtest/events';
@@ -43,52 +25,90 @@ import {
   LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
   type Level0ActorInteractionPresentationDetail,
 } from '../../game/level0/scene/level0ActorPresentation';
-import { resolveGet204CityStartPosition } from '../../game/level0/art/get204City';
-import { LEVEL0_RUNTIME_VISUAL } from '../../game/level0/art/get205HidzuRuntime';
+import { shouldAdvanceLevel0Clock } from '../../game/level0/runtime/clockEligibility';
+import {
+  getKnownLevel0AnchorIds,
+  getWorldOwnedLevel0AnchorIds,
+} from '../../game/level0/runtime/mapKnowledge';
+import {
+  LEVEL0_ATTEMPT_BASELINE_KEY,
+  LEVEL0_AUTOSAVE_KEY,
+  clearLevel0Persistence,
+  readLevel0Autosave,
+  readLevel0OperationAttemptBaseline,
+  writeLevel0Autosave,
+  writeLevel0DepartureTransaction,
+} from '../../game/level0/runtime/persistence';
+import {
+  departLevel0Operation,
+  evaluateSafehouseAction,
+} from '../../game/level0/runtime/safehouse';
+import type {
+  Level0RunState,
+  PauseOwner,
+  SafehouseActionId,
+} from '../../game/level0/runtime/types';
 import type { AppDispatch, RootState } from '../../store';
 import { PERSISTED_STATE_KEY, resetGame, store } from '../../store';
 import {
   acquireLevel0Pause,
-  activateLevel0PendingLevel,
   advanceLevel0Clock,
-  allocateLevel0Attribute,
-  allocateLevel0Skill,
   applyLevel0SafehouseAction as applyLevel0SafehouseActionState,
   commitLevel0Departure,
   hydrateLevel0Run,
   initializeLevel0Run,
+  initialLevel0RuntimeState,
   releaseLevel0Pause,
-  restoreLevel0Retry,
+  researchLevel0Ability,
+  restartAttempt,
   setLevel0Feedback,
   syncLevel0PlayerCheckpoint,
-  initialLevel0RuntimeState,
 } from '../../store/level0RuntimeSlice';
-import Level0CharacterCreation from './Level0CharacterCreation';
+import { setLocale } from '../../store/settingsSlice';
 import Level0CharacterPanel from './Level0CharacterPanel';
-import Level0GameCanvas from './Level0GameCanvas';
+import Level0CoverSelect from './Level0CoverSelect';
 import Level0GameBible from './Level0GameBible';
+import Level0GameCanvas from './Level0GameCanvas';
 import {
-  describeLevel0ResourceEvent,
+  LEVEL0_ABILITY_COPY,
+  LEVEL0_PARANOIA_TIER_COPY,
+  LEVEL0_RESEARCH_COPY,
+  describeLevel0Cover,
+  describeLevel0ParanoiaEvent,
   describeLevel0Source,
   localizeLevel0Copy,
   type Level0LocalizedCopy,
 } from './level0RpgCopy';
 import './Level0RuntimeShell.css';
 
+interface Level0EntryState {
+  compatibleAutosave: boolean;
+  incompatibleSave: boolean;
+  hasAttemptBaseline: boolean;
+}
+
+type PendingSafehouseAction =
+  | { kind: 'wait' | 'rest' | 'depart' }
+  | { kind: 'research'; optionId: Level0ResearchOptionId };
+
 const getStorage = (): Storage | null =>
   typeof window === 'undefined' ? null : window.localStorage;
 
-const readEntryState = () => {
+const readEntryState = (): Level0EntryState => {
   const storage = getStorage();
   if (!storage) {
-    return { compatibleAutosave: false, incompatibleSave: false, hasRetry: false };
+    return {
+      compatibleAutosave: false,
+      incompatibleSave: false,
+      hasAttemptBaseline: false,
+    };
   }
   const autosave = readLevel0Autosave(storage);
   const retiredPrototype = storage.getItem(PERSISTED_STATE_KEY) !== null;
   return {
     compatibleAutosave: autosave.status === 'compatible',
     incompatibleSave: autosave.status === 'incompatible' || retiredPrototype,
-    hasRetry: readLevel0Retry(storage).status === 'compatible',
+    hasAttemptBaseline: readLevel0OperationAttemptBaseline(storage).status === 'compatible',
   };
 };
 
@@ -106,9 +126,7 @@ const formatWorldTime = (minute: number): string => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 };
 
-const LEVEL0_RUNTIME_INITIAL_ZOOM_LABEL = LEVEL0_RUNTIME_VISUAL
-  .defaultZoom
-  .toFixed(2);
+const LEVEL0_RUNTIME_INITIAL_ZOOM_LABEL = LEVEL0_RUNTIME_VISUAL.defaultZoom.toFixed(2);
 
 const FEEDBACK_COPY: Record<string, Level0LocalizedCopy> = {
   'movement.target.accepted': {
@@ -156,20 +174,36 @@ const FEEDBACK_COPY: Record<string, Level0LocalizedCopy> = {
     uk: 'Ця ціль не належить шару взаємодій світу.',
   },
   'safehouse.action.wait.applied': {
-    en: 'Waited safely for 30 minutes.',
-    uk: 'Безпечно минуло 30 хвилин.',
+    en: 'Waited safely for thirty minutes.',
+    uk: 'Безпечно минуло тридцять хвилин.',
   },
   'safehouse.action.rest.applied': {
-    en: 'Rest completed. 30 minutes passed.',
-    uk: 'Відпочинок завершено. Минуло 30 хвилин.',
+    en: 'Rest completed. Paranoia eased.',
+    uk: 'Відпочинок завершено. Параноя послабилася.',
   },
   'safehouse.departure.complete': {
-    en: 'Operation departure snapshot created.',
-    uk: 'Створено точку повтору на виході до операції.',
+    en: 'Operation attempt baseline created.',
+    uk: 'Створено базовий стан спроби операції.',
   },
-  'retry.restored': {
-    en: 'Operation departure state restored.',
-    uk: 'Стан на виході до операції відновлено.',
+  'restart_attempt.restored': {
+    en: 'The operation attempt was restored to departure.',
+    uk: 'Спробу операції відновлено до моменту виходу.',
+  },
+  'restart_attempt.unavailable': {
+    en: 'No compatible operation attempt baseline is available.',
+    uk: 'Немає сумісного базового стану спроби операції.',
+  },
+  'research.applied': {
+    en: 'Research completed. A new ability is now held.',
+    uk: 'Дослідження завершено. Отримано нову здатність.',
+  },
+  'research.blocked.fact_missing': {
+    en: 'Research requires a verified contact fact.',
+    uk: 'Для дослідження потрібен підтверджений факт від контакту.',
+  },
+  'research.blocked.consumed': {
+    en: 'That research has already been completed.',
+    uk: 'Це дослідження вже завершено.',
   },
   'observation.opened': {
     en: 'Observation opened. Simulation paused.',
@@ -178,18 +212,6 @@ const FEEDBACK_COPY: Record<string, Level0LocalizedCopy> = {
   'observation.closed': {
     en: 'Observation closed. Exploration resumed.',
     uk: 'Режим спостереження закрито. Дослідження продовжено.',
-  },
-  'level_up.activated': {
-    en: 'Level increased. Allocate the available points.',
-    uk: 'Рівень підвищено. Розподіліть доступні очки.',
-  },
-  'level_up.skill.allocated': {
-    en: 'Skill point allocated.',
-    uk: 'Очко навички розподілено.',
-  },
-  'level_up.attribute.allocated': {
-    en: 'Attribute point allocated.',
-    uk: 'Очко атрибута розподілено.',
   },
 };
 
@@ -203,33 +225,30 @@ const GENERIC_FEEDBACK_COPY: Level0LocalizedCopy = {
   uk: 'Ситуація змінилася. Перевірте поточну ціль і доступні дії.',
 };
 
-const actionLabel = (actionId: SafehouseActionId): string => {
-  switch (actionId) {
-    case 'wait': return 'Wait 30m';
-    case 'rest': return 'Rest 30m';
-    case 'depart': return 'Begin operation';
-    default: return actionId;
-  }
-};
-
-const failureTitle = (
-  run: Level0RunState,
+const actionLabel = (
+  actionId: Extract<SafehouseActionId, 'wait' | 'rest' | 'depart'>,
   ukrainian: boolean
 ): string => {
-  if (run.failureCause === 'failure.health') {
+  if (actionId === 'wait') return ukrainian ? 'Чекати 30 хв' : 'Wait 30m';
+  if (actionId === 'rest') return ukrainian ? 'Відпочити 30 хв' : 'Rest 30m';
+  return ukrainian ? 'Почати операцію' : 'Begin operation';
+};
+
+const failureTitle = (run: Level0RunState, ukrainian: boolean): string => {
+  if (run.failureCause === 'failure.breakdown') {
     return ukrainian
-      ? 'Здоров’я впало до 0. Ви не пережили наслідки.'
-      : 'Health reached 0. You did not survive the consequence.';
-  }
-  if (run.failureCause === 'failure.paranoia') {
-    return ukrainian
-      ? 'Параноя досягла 100. Фізіологічний колапс став смертельним.'
-      : 'Paranoia reached 100. The physiological collapse was fatal.';
+      ? 'Тиск нагляду став нестерпним. Ви здалися до завершення втечі.'
+      : 'Surveillance pressure became unmanageable. You surrendered before the escape was complete.';
   }
   if (run.failureCause === 'failure.capture') {
     return ukrainian
       ? 'Hidzu підтвердила вашу особу та затримала вас.'
       : 'Hidzu confirmed your identity and captured you.';
+  }
+  if (run.failureCause === 'failure.save_incompatible') {
+    return ukrainian
+      ? 'Цю спробу створено за несумісними правилами. Почніть нову гру.'
+      : 'This attempt was created under incompatible rules. Start a new game.';
   }
   if (run.failureMissingRequirements.length === 1) {
     return run.failureMissingRequirements[0] === 'medkits-returned'
@@ -245,6 +264,9 @@ const failureTitle = (
     : 'Midnight arrived before the medkits were returned and transit was validated.';
 };
 
+const pendingPauseOwner = (pending: PendingSafehouseAction): PauseOwner =>
+  pending.kind === 'research' ? 'research' : 'safehouse_action';
+
 const Level0RuntimeShell = () => {
   const dispatch = useDispatch<AppDispatch>();
   const runtime = useSelector(
@@ -254,15 +276,13 @@ const Level0RuntimeShell = () => {
   const [entryState, setEntryState] = useState(readEntryState);
   const [menuOpen, setMenuOpen] = useState(true);
   const [sceneReady, setSceneReady] = useState(false);
-  const [creationOpen, setCreationOpen] = useState(false);
+  const [coverSelectOpen, setCoverSelectOpen] = useState(false);
   const [characterOpen, setCharacterOpen] = useState(false);
   const [bibleOpen, setBibleOpen] = useState(false);
-  const [pendingSafehouseAction, setPendingSafehouseAction] = useState<
-    'wait' | 'rest' | 'depart' | null
-  >(null);
+  const [pendingSafehouseAction, setPendingSafehouseAction] = useState<PendingSafehouseAction | null>(null);
   const agentStartedRef = useRef(false);
   const newGameTriggerRef = useRef<HTMLButtonElement>(null);
-  const creationWasOpenRef = useRef(false);
+  const coverSelectWasOpenRef = useRef(false);
   const characterTriggerRef = useRef<HTMLButtonElement>(null);
   const characterWasOpenRef = useRef(false);
   const bibleInvokerRef = useRef<HTMLElement | null>(null);
@@ -276,6 +296,7 @@ const Level0RuntimeShell = () => {
     resultCount: 0,
     visibleResults: [],
   });
+
   const run = runtime.run;
   const runSessionId = run?.sessionId ?? null;
   const hasRun = run !== null;
@@ -289,78 +310,62 @@ const Level0RuntimeShell = () => {
     const currentRun = store.getState().level0Runtime.run;
     if (!storage || !currentRun) return;
     writeLevel0Autosave(storage, currentRun);
-    setEntryState((current) =>
-      current.compatibleAutosave ? current : { ...current, compatibleAutosave: true }
-    );
+    setEntryState((current) => current.compatibleAutosave
+      ? current
+      : { ...current, compatibleAutosave: true });
   }, []);
 
-  const initializeNewRun = useCallback((identity: PlayerIdentity, build: PlayerBuild) => {
+  const initializeNewRun = useCallback((coverId: Level0CoverId) => {
     const storage = getStorage();
     if (storage) {
       clearLevel0Persistence(storage);
       storage.removeItem(PERSISTED_STATE_KEY);
     }
     dispatch(resetGame());
-    dispatch(initializeLevel0Run({
-      sessionId: makeSessionId(),
-      identity,
-      build,
-    }));
+    dispatch(initializeLevel0Run({ sessionId: makeSessionId(), coverId }));
     const initializedRun = store.getState().level0Runtime.run;
     if (initializedRun) {
-      const proofPosition = resolveGet204CityStartPosition(initializedRun.player.position);
+      const startPosition = resolveGet204CityStartPosition(initializedRun.player.position);
       if (
-        proofPosition.x !== initializedRun.player.position.x ||
-        proofPosition.y !== initializedRun.player.position.y
+        startPosition.x !== initializedRun.player.position.x ||
+        startPosition.y !== initializedRun.player.position.y
       ) {
         dispatch(syncLevel0PlayerCheckpoint({
-          position: proofPosition,
+          position: startPosition,
           facing: { x: 0, y: -1 },
         }));
       }
     }
-    setCreationOpen(false);
+    setCoverSelectOpen(false);
     setCharacterOpen(false);
     setMenuOpen(false);
-    setEntryState({ compatibleAutosave: true, incompatibleSave: false, hasRetry: false });
+    setEntryState({
+      compatibleAutosave: true,
+      incompatibleSave: false,
+      hasAttemptBaseline: false,
+    });
     const nextRun = store.getState().level0Runtime.run;
     if (storage && nextRun) writeLevel0Autosave(storage, nextRun);
   }, [dispatch]);
 
   const startNewGame = useCallback(() => {
-    setCreationOpen(true);
+    setCoverSelectOpen(true);
     setMenuOpen(false);
   }, []);
 
-  const confirmCharacterCreation = useCallback((identity: PlayerIdentity, build: PlayerBuild) => {
-    initializeNewRun(identity, build);
-  }, [initializeNewRun]);
-
-  const cancelCharacterCreation = useCallback(() => {
-    setCreationOpen(false);
+  const cancelCoverSelect = useCallback(() => {
+    setCoverSelectOpen(false);
     setMenuOpen(true);
   }, []);
 
   const startAgentGame = useCallback(() => {
-    const params = new URLSearchParams(window.location.search);
-    const requested = normalizeLevel0Callsign(params.get('agentName') ?? 'Agent');
-    const callsign = isValidLevel0Callsign(requested) ? requested : 'Agent';
-    const requestedAppearance = params.get('agentAppearance');
-    const appearancePresetId = isLevel0PlayerAppearanceId(requestedAppearance)
-      ? requestedAppearance
-      : undefined;
-    const sample = createConfirmedLevel0Sample(
-      'technical_evasion',
-      callsign,
-      appearancePresetId
-    );
-    initializeNewRun(sample.identity, sample.build);
+    initializeNewRun('cover.neighbor');
   }, [initializeNewRun]);
 
   const continueGame = useCallback(() => {
     if (run) {
       dispatch(releaseLevel0Pause('menu'));
-      setCreationOpen(false);
+      setCoverSelectOpen(false);
       setMenuOpen(false);
       return;
     }
@@ -368,32 +373,49 @@ const Level0RuntimeShell = () => {
     if (!storage) return;
     const result = readLevel0Autosave(storage);
     if (result.status !== 'compatible') {
-      setEntryState((current) => ({ ...current, compatibleAutosave: false, incompatibleSave: true }));
+      setEntryState((current) => ({
+        ...current,
+        compatibleAutosave: false,
+        incompatibleSave: true,
+      }));
       return;
     }
     dispatch(hydrateLevel0Run(result.envelope.payload));
-    setCreationOpen(false);
+    setCoverSelectOpen(false);
     setMenuOpen(false);
   }, [dispatch, run]);
 
   const openMenu = useCallback(() => {
-    if (run) {
-      dispatch(acquireLevel0Pause('menu'));
-    }
+    if (run) dispatch(acquireLevel0Pause('menu'));
     persistCurrentRun();
     setMenuOpen(true);
   }, [dispatch, persistCurrentRun, run]);
 
   const toggleObservation = useCallback(() => {
-    if (!run || menuOpen || pendingSafehouseAction || terminalMission) return;
-    dispatch(observationActive ? releaseLevel0Pause('observation') : acquireLevel0Pause('observation'));
+    if (
+      !run ||
+      menuOpen ||
+      coverSelectOpen ||
+      characterOpen ||
+      bibleOpen ||
+      pendingSafehouseAction ||
+      terminalMission
+    ) return;
+    dispatch(observationActive
+      ? releaseLevel0Pause('observation')
+      : acquireLevel0Pause('observation'));
     dispatch(setLevel0Feedback(observationActive ? 'observation.closed' : 'observation.opened'));
-  }, [dispatch, menuOpen, observationActive, pendingSafehouseAction, run, terminalMission]);
-
-  const applySafehouseAction = useCallback((actionId: 'wait' | 'rest') => {
-    dispatch(applyLevel0SafehouseActionState(actionId));
-    persistCurrentRun();
-  }, [dispatch, persistCurrentRun]);
+  }, [
+    bibleOpen,
+    characterOpen,
+    coverSelectOpen,
+    dispatch,
+    menuOpen,
+    observationActive,
+    pendingSafehouseAction,
+    run,
+    terminalMission,
+  ]);
 
   const beginOperation = useCallback(() => {
     const storage = getStorage();
@@ -406,14 +428,14 @@ const Level0RuntimeShell = () => {
       return;
     }
     const departure = departLevel0Operation(currentRun, departureAnchor.position);
-    if (!departure.created || !departure.snapshot) {
+    if (!departure.created || !departure.baseline) {
       dispatch(setLevel0Feedback('safehouse.departure.blocked'));
       return;
     }
     const transaction = writeLevel0DepartureTransaction(
       storage,
       departure.run,
-      departure.snapshot
+      departure.baseline
     );
     if (transaction.status === 'conflict') {
       dispatch(setLevel0Feedback(`safehouse.departure.${transaction.reason}`));
@@ -423,58 +445,95 @@ const Level0RuntimeShell = () => {
     setEntryState((current) => ({
       ...current,
       compatibleAutosave: true,
-      hasRetry: true,
+      hasAttemptBaseline: true,
     }));
   }, [dispatch]);
 
-  const requestSafehouseAction = useCallback((actionId: 'wait' | 'rest' | 'depart') => {
+  const requestSafehouseAction = useCallback((kind: 'wait' | 'rest' | 'depart') => {
     const currentRun = store.getState().level0Runtime.run;
-    if (
-      !currentRun ||
-      pendingSafehouseAction ||
-      currentRun.mission === 'L0_FAILED' ||
-      currentRun.mission === 'L0_COMPLETE'
-    ) return;
-    const availability = evaluateSafehouseAction(currentRun, actionId);
+    if (!currentRun || pendingSafehouseAction || terminalMission) return;
+    const availability = evaluateSafehouseAction(currentRun, kind);
     if (!availability.available) {
       dispatch(setLevel0Feedback(availability.blockedReasonId ?? 'safehouse.blocked'));
       return;
     }
-    dispatch(acquireLevel0Pause('safehouse_action'));
-    setPendingSafehouseAction(actionId);
-  }, [dispatch, pendingSafehouseAction]);
+    const pending: PendingSafehouseAction = { kind };
+    dispatch(acquireLevel0Pause(pendingPauseOwner(pending)));
+    setPendingSafehouseAction(pending);
+  }, [dispatch, pendingSafehouseAction, terminalMission]);
+
+  const requestResearch = useCallback((optionId: Level0ResearchOptionId) => {
+    const currentRun = store.getState().level0Runtime.run;
+    if (!currentRun || pendingSafehouseAction || terminalMission) return;
+    const availability = evaluateSafehouseAction(currentRun, 'research');
+    const researchState = currentRun.abilities.researchState[optionId];
+    if (!availability.available) {
+      dispatch(setLevel0Feedback(availability.blockedReasonId ?? 'research.blocked'));
+      return;
+    }
+    if (researchState !== 'available') {
+      dispatch(setLevel0Feedback(
+        researchState === 'consumed'
+          ? 'research.blocked.consumed'
+          : 'research.blocked.fact_missing'
+      ));
+      return;
+    }
+    const pending: PendingSafehouseAction = { kind: 'research', optionId };
+    dispatch(acquireLevel0Pause(pendingPauseOwner(pending)));
+    setPendingSafehouseAction(pending);
+  }, [dispatch, pendingSafehouseAction, terminalMission]);
 
   const closeSafehouseConfirmation = useCallback(() => {
-    dispatch(releaseLevel0Pause('safehouse_action'));
+    if (pendingSafehouseAction) {
+      dispatch(releaseLevel0Pause(pendingPauseOwner(pendingSafehouseAction)));
+    }
     setPendingSafehouseAction(null);
-  }, [dispatch]);
+  }, [dispatch, pendingSafehouseAction]);
 
   const confirmSafehouseAction = useCallback(() => {
     if (!pendingSafehouseAction) return;
-    if (pendingSafehouseAction === 'depart') beginOperation();
-    else applySafehouseAction(pendingSafehouseAction);
+    if (pendingSafehouseAction.kind === 'depart') {
+      beginOperation();
+    } else if (pendingSafehouseAction.kind === 'research') {
+      dispatch(researchLevel0Ability(pendingSafehouseAction.optionId));
+      persistCurrentRun();
+    } else {
+      dispatch(applyLevel0SafehouseActionState(pendingSafehouseAction.kind));
+      persistCurrentRun();
+    }
     closeSafehouseConfirmation();
-  }, [applySafehouseAction, beginOperation, closeSafehouseConfirmation, pendingSafehouseAction]);
+  }, [
+    beginOperation,
+    closeSafehouseConfirmation,
+    dispatch,
+    pendingSafehouseAction,
+    persistCurrentRun,
+  ]);
 
-  const retryOperation = useCallback(() => {
+  const restartOperationAttempt = useCallback(() => {
     const storage = getStorage();
     if (!storage) return;
-    const result = readLevel0Retry(storage);
+    const result = readLevel0OperationAttemptBaseline(storage);
     if (result.status !== 'compatible') {
-      dispatch(setLevel0Feedback('retry.unavailable'));
+      dispatch(setLevel0Feedback('restart_attempt.unavailable'));
       return;
     }
-    dispatch(restoreLevel0Retry(result.envelope.payload));
+    dispatch(restartAttempt(result.envelope.payload));
     setCharacterOpen(false);
-    setCreationOpen(false);
+    setCoverSelectOpen(false);
     setMenuOpen(false);
-    setEntryState((current) => ({ ...current, compatibleAutosave: true, hasRetry: true }));
+    setEntryState((current) => ({
+      ...current,
+      compatibleAutosave: true,
+      hasAttemptBaseline: true,
+    }));
     const nextRun = store.getState().level0Runtime.run;
     if (nextRun) writeLevel0Autosave(storage, nextRun);
   }, [dispatch]);
 
   const openBible = useCallback(() => {
-    if (creationOpen || characterOpen || pendingSafehouseAction || terminalMission) return;
+    if (coverSelectOpen || characterOpen || pendingSafehouseAction || terminalMission) return;
     bibleInvokerRef.current = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null;
@@ -483,7 +542,7 @@ const Level0RuntimeShell = () => {
       biblePauseAcquiredRef.current = true;
     }
     setBibleOpen(true);
-  }, [characterOpen, creationOpen, dispatch, pendingSafehouseAction, run, terminalMission]);
+  }, [characterOpen, coverSelectOpen, dispatch, pendingSafehouseAction, run, terminalMission]);
 
   const closeBible = useCallback(() => {
     if (biblePauseAcquiredRef.current) {
@@ -502,10 +561,6 @@ const Level0RuntimeShell = () => {
     window.requestAnimationFrame(() => bibleInvokerRef.current?.focus());
   }, [dispatch]);
 
-  const handleBibleUiState = useCallback((state: GameBibleUiState) => {
-    bibleUiStateRef.current = state;
-  }, []);
-
   const openCharacter = useCallback(() => {
     if (!run || menuOpen || pendingSafehouseAction || terminalMission) return;
     dispatch(acquireLevel0Pause('character'));
@@ -515,21 +570,6 @@ const Level0RuntimeShell = () => {
   const closeCharacter = useCallback(() => {
     dispatch(releaseLevel0Pause('character'));
     setCharacterOpen(false);
-    persistCurrentRun();
-  }, [dispatch, persistCurrentRun]);
-
-  const activateCharacterLevel = useCallback(() => {
-    dispatch(activateLevel0PendingLevel());
-    persistCurrentRun();
-  }, [dispatch, persistCurrentRun]);
-
-  const allocateCharacterAttribute = useCallback((attribute: Parameters<typeof allocateLevel0Attribute>[0]) => {
-    dispatch(allocateLevel0Attribute(attribute));
-    persistCurrentRun();
-  }, [dispatch, persistCurrentRun]);
-
-  const allocateCharacterSkill = useCallback((skill: Parameters<typeof allocateLevel0Skill>[0]) => {
-    dispatch(allocateLevel0Skill(skill));
     persistCurrentRun();
   }, [dispatch, persistCurrentRun]);
 
@@ -546,7 +586,8 @@ const Level0RuntimeShell = () => {
     ] as const).forEach(([anchorId, actionId]) => {
       const availability = evaluateSafehouseAction(currentRun, actionId);
       if (!availability.available) {
-        unavailableReasonByAnchorId[anchorId] = availability.blockedReasonId ?? 'interaction.unavailable';
+        unavailableReasonByAnchorId[anchorId] =
+          availability.blockedReasonId ?? 'interaction.unavailable';
       }
     });
     const result = resolveLevel0Interaction(
@@ -590,14 +631,14 @@ const Level0RuntimeShell = () => {
   }, []);
 
   useEffect(() => {
-    if (creationOpen) {
-      creationWasOpenRef.current = true;
+    if (coverSelectOpen) {
+      coverSelectWasOpenRef.current = true;
       return;
     }
-    if (!creationWasOpenRef.current) return;
-    creationWasOpenRef.current = false;
+    if (!coverSelectWasOpenRef.current) return;
+    coverSelectWasOpenRef.current = false;
     newGameTriggerRef.current?.focus();
-  }, [creationOpen]);
+  }, [coverSelectOpen]);
 
   useEffect(() => {
     if (characterOpen) {
@@ -641,17 +682,14 @@ const Level0RuntimeShell = () => {
   useEffect(() => {
     const handleBibleShortcut = (event: KeyboardEvent) => {
       if (event.key !== 'F1') return;
-      if (creationOpen || characterOpen || pendingSafehouseAction || terminalMission) return;
+      if (coverSelectOpen || characterOpen || pendingSafehouseAction || terminalMission) return;
       event.preventDefault();
       event.stopPropagation();
-      // Contract: repeated F1 while the Bible is open is a no-op. Closing is
-      // deliberate (Escape/Close) so an accidental repeat press cannot dump
-      // the player back into the live world.
       if (!bibleOpen) openBible();
     };
     window.addEventListener('keydown', handleBibleShortcut, true);
     return () => window.removeEventListener('keydown', handleBibleShortcut, true);
-  }, [bibleOpen, characterOpen, closeBible, creationOpen, openBible, pendingSafehouseAction, terminalMission]);
+  }, [bibleOpen, characterOpen, coverSelectOpen, openBible, pendingSafehouseAction, terminalMission]);
 
   useEffect(() => () => {
     if (biblePauseAcquiredRef.current) {
@@ -661,12 +699,11 @@ const Level0RuntimeShell = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (!hasRun && !creationOpen) return undefined;
+    if (!hasRun && !coverSelectOpen) return undefined;
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return;
-      if (bibleOpen) return;
+      if (event.key !== 'Escape' || bibleOpen) return;
       event.preventDefault();
-      if (creationOpen) cancelCharacterCreation();
+      if (coverSelectOpen) cancelCoverSelect();
       else if (characterOpen) closeCharacter();
       else if (pendingSafehouseAction) closeSafehouseConfirmation();
       else if (menuOpen) continueGame();
@@ -675,13 +712,13 @@ const Level0RuntimeShell = () => {
     window.addEventListener('keydown', handleEscape);
     return () => window.removeEventListener('keydown', handleEscape);
   }, [
-    cancelCharacterCreation,
     bibleOpen,
+    cancelCoverSelect,
     characterOpen,
     closeCharacter,
     closeSafehouseConfirmation,
     continueGame,
-    creationOpen,
+    coverSelectOpen,
     hasRun,
     menuOpen,
     openMenu,
@@ -694,11 +731,8 @@ const Level0RuntimeShell = () => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('agent') === '1' && params.get('agentStart') === 'level0') {
       agentStartedRef.current = true;
-      if (params.get('fresh') === '1' || !entryState.compatibleAutosave) {
-        startAgentGame();
-      } else {
-        continueGame();
-      }
+      if (params.get('fresh') === '1' || !entryState.compatibleAutosave) startAgentGame();
+      else continueGame();
     }
   }, [continueGame, entryState.compatibleAutosave, startAgentGame]);
 
@@ -712,20 +746,20 @@ const Level0RuntimeShell = () => {
 
   useEffect(() => {
     const startFromAgent = () => startAgentGame();
-    const retryFromAgent = () => retryOperation();
+    const restartFromAgent = () => restartOperationAttempt();
     const interactFromAgent = (event: Event) => {
       const detail = (event as CustomEvent<Level0AgentInteractionDetail>).detail;
       handleInteraction(detail?.anchorId);
     };
     window.addEventListener(GETAWAY_AGENT_START_LEVEL0_EVENT, startFromAgent);
-    window.addEventListener(LEVEL0_AGENT_RETRY_EVENT, retryFromAgent);
+    window.addEventListener(LEVEL0_AGENT_RESTART_ATTEMPT_EVENT, restartFromAgent);
     window.addEventListener(LEVEL0_AGENT_INTERACTION_EVENT, interactFromAgent);
     return () => {
       window.removeEventListener(GETAWAY_AGENT_START_LEVEL0_EVENT, startFromAgent);
-      window.removeEventListener(LEVEL0_AGENT_RETRY_EVENT, retryFromAgent);
+      window.removeEventListener(LEVEL0_AGENT_RESTART_ATTEMPT_EVENT, restartFromAgent);
       window.removeEventListener(LEVEL0_AGENT_INTERACTION_EVENT, interactFromAgent);
     };
-  }, [handleInteraction, retryOperation, startAgentGame]);
+  }, [handleInteraction, restartOperationAttempt, startAgentGame]);
 
   const clockEventSignature = runtime.clockEventIds.join('|');
   useEffect(() => {
@@ -741,24 +775,26 @@ const Level0RuntimeShell = () => {
     }));
   }, [run]);
 
-  const feedbackResourceEvents = run
-    ? runtime.feedbackResourceEventIds.flatMap((eventId) => {
-        const event = run.rpg.resourceEvents.find((candidate) => candidate.eventId === eventId);
+  const feedbackParanoiaEvents = run
+    ? runtime.feedbackParanoiaEventIds.flatMap((eventId) => {
+        const event = run.rpg.paranoiaEvents.find((candidate) => candidate.eventId === eventId);
         return event ? [event] : [];
       })
     : [];
-  const feedbackCopy = feedbackResourceEvents.length > 0
-    ? feedbackResourceEvents.map((event) => describeLevel0ResourceEvent(event, ukrainian)).join(' · ')
+  const feedbackCopy = feedbackParanoiaEvents.length > 0
+    ? feedbackParanoiaEvents
+      .map((event) => describeLevel0ParanoiaEvent(event, ukrainian))
+      .join(' · ')
     : runtime.feedbackId
       ? localizeLevel0Copy(FEEDBACK_COPY[runtime.feedbackId] ?? GENERIC_FEEDBACK_COPY, ukrainian)
       : localizeLevel0Copy(IDLE_FEEDBACK_COPY, ukrainian);
 
-  if (creationOpen) {
+  if (coverSelectOpen) {
     return (
-      <Level0CharacterCreation
+      <Level0CoverSelect
         ukrainian={ukrainian}
-        onCancel={cancelCharacterCreation}
-        onConfirm={confirmCharacterCreation}
+        onCancel={cancelCoverSelect}
+        onConfirm={initializeNewRun}
       />
     );
   }
@@ -766,103 +802,112 @@ const Level0RuntimeShell = () => {
   if (!run || menuOpen) {
     return (
       <>
-      <main
-        className="level0-entry"
-        data-testid="level0-start-menu"
-        inert={bibleOpen ? true : undefined}
-        aria-hidden={bibleOpen ? true : undefined}
-      >
-        <section className="level0-entry__panel">
-          <p className="level0-entry__eyebrow">HIDZU CONTROL DISTRICT / LEVEL 0</p>
-          <h1>{ukrainian ? 'Втеча з Токіо' : 'Tokyo Escape'}</h1>
-          <p className="level0-entry__promise">
-            {ukrainian
-              ? 'Нагляд, параноя, розмови та втеча в контрольованому Токіо.'
-              : 'Surveillance, paranoia, dialogue, and escape through controlled Tokyo.'}
-          </p>
-          {entryState.incompatibleSave ? (
-            <div className="level0-entry__notice" data-testid="retired-save-notice">
+        <main
+          className="level0-entry"
+          data-testid="level0-start-menu"
+          inert={bibleOpen ? true : undefined}
+          aria-hidden={bibleOpen ? true : undefined}
+        >
+          <section className="level0-entry__panel">
+            <p className="level0-entry__eyebrow">HIDZU CONTROL DISTRICT / LEVEL 0</p>
+            <h1>{ukrainian ? 'Втеча з Токіо' : 'Tokyo Escape'}</h1>
+            <p className="level0-entry__promise">
               {ukrainian
-                ? 'Старе збереження прототипу несумісне. Воно не буде змінене, доки ви явно не почнете Нову гру.'
-                : 'A retired prototype save is incompatible. It will remain untouched until you explicitly start New Game.'}
+                ? 'Нагляд, параноя, розмови та втеча в контрольованому Токіо.'
+                : 'Surveillance, paranoia, dialogue, and escape through controlled Tokyo.'}
+            </p>
+            {entryState.incompatibleSave ? (
+              <div className="level0-entry__notice" data-testid="retired-save-notice">
+                {ukrainian
+                  ? 'Старе збереження прототипу несумісне. Почніть Нову гру, щоб створити спробу за чинними правилами.'
+                  : 'A retired prototype save is incompatible. Start New Game to create an attempt under the current rules.'}
+              </div>
+            ) : null}
+            <div className="level0-entry__actions">
+              <button
+                type="button"
+                data-testid="level0-new-game"
+                ref={newGameTriggerRef}
+                onClick={startNewGame}
+              >
+                {ukrainian ? 'Нова гра' : 'New Game'}
+              </button>
+              <button
+                type="button"
+                data-testid="level0-continue"
+                disabled={!run && !entryState.compatibleAutosave}
+                onClick={continueGame}
+              >
+                {ukrainian ? 'Продовжити' : 'Continue'}
+              </button>
+              {entryState.hasAttemptBaseline ? (
+                <button
+                  type="button"
+                  data-testid="level0-restart-attempt-menu"
+                  onClick={restartOperationAttempt}
+                >
+                  {ukrainian ? 'Перезапустити спробу' : 'Restart Attempt'}
+                </button>
+              ) : null}
+              <button type="button" data-testid="level0-bible-open" onClick={openBible}>
+                {ukrainian ? 'Біблія ігрового дизайну' : 'Game Design Bible'} <span>F1</span>
+              </button>
+              <button
+                type="button"
+                className="level0-entry__locale"
+                data-testid="level0-locale-toggle"
+                aria-label={ukrainian ? 'Switch language to English' : 'Перемкнути мову на українську'}
+                onClick={() => dispatch(setLocale(ukrainian ? 'en' : 'uk'))}
+              >
+                {ukrainian ? 'ENG' : 'УКР'}
+              </button>
             </div>
-          ) : null}
-          <div className="level0-entry__actions">
-            <button
-              type="button"
-              data-testid="level0-new-game"
-              ref={newGameTriggerRef}
-              onClick={startNewGame}
-            >
-              {ukrainian ? 'Нова гра' : 'New Game'}
-            </button>
-            <button
-              type="button"
-              data-testid="level0-continue"
-              disabled={!run && !entryState.compatibleAutosave}
-              onClick={continueGame}
-            >
-              {ukrainian ? 'Продовжити' : 'Continue'}
-            </button>
-            {entryState.hasRetry ? (
-              <button type="button" data-testid="level0-retry" onClick={retryOperation}>
-                {ukrainian ? 'Повторити операцію' : 'Retry operation'}
+            <dl className="level0-entry__contract">
+              <div><dt>Identity</dt><dd>Authored civilian cover</dd></div>
+              <div><dt>Pressure</dt><dd>Named Paranoia conditions</dd></div>
+              <div><dt>Choices</dt><dd>Ability, fact, or declared cost</dd></div>
+            </dl>
+            {run ? (
+              <button type="button" className="level0-entry__resume" onClick={continueGame}>
+                {ukrainian ? 'Повернутися до району' : 'Return to district'}
               </button>
             ) : null}
-            <button
-              type="button"
-              data-testid="level0-bible-open"
-              onClick={openBible}
-            >
-              {ukrainian ? 'Біблія ігрового дизайну' : 'Game Design Bible'} <span>F1</span>
-            </button>
-            <button
-              type="button"
-              className="level0-entry__locale"
-              data-testid="level0-locale-toggle"
-              aria-label={ukrainian ? 'Switch language to English' : 'Перемкнути мову на українську'}
-              onClick={() => dispatch(setLocale(ukrainian ? 'en' : 'uk'))}
-            >
-              {ukrainian ? 'ENG' : 'УКР'}
-            </button>
-          </div>
-          <dl className="level0-entry__contract">
-            <div><dt>Runtime</dt><dd>Direct movement / no A*</dd></div>
-            <div><dt>Clock</dt><dd>18:30 / 30× / paused while reading</dd></div>
-            <div><dt>World</dt><dd>3 connected traversal loops</dd></div>
-          </dl>
-          {run ? <button type="button" className="level0-entry__resume" onClick={continueGame}>Return to district</button> : null}
-        </section>
-      </main>
-      {bibleOpen ? (
-        <Level0GameBible
-          locale={locale}
-          simulationPaused={Boolean(run)}
-          onClose={closeBible}
-          onUiStateChange={handleBibleUiState}
-        />
-      ) : null}
+          </section>
+        </main>
+        {bibleOpen ? (
+          <Level0GameBible
+            locale={locale}
+            simulationPaused={Boolean(run)}
+            onClose={closeBible}
+            onUiStateChange={(state) => { bibleUiStateRef.current = state; }}
+          />
+        ) : null}
       </>
     );
   }
 
   const failed = run.mission === 'L0_FAILED';
-  const backgroundControlsLocked = bibleOpen || characterOpen || pendingSafehouseAction !== null || terminalMission;
-  const cleanVisualProof =
-    typeof window !== 'undefined' &&
+  const backgroundControlsLocked =
+    bibleOpen || characterOpen || pendingSafehouseAction !== null || terminalMission;
+  const cleanVisualProof = typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('cleanVisual') === '1';
-  const nextLevelThreshold = getNextLevelThreshold(run.build.level);
-  const paranoiaPenalty = getParanoiaCheckPenalty(run.paranoia);
+  const paranoiaTier = deriveLevel0ParanoiaTier(run.paranoia);
+  const pendingResearch = pendingSafehouseAction?.kind === 'research'
+    ? LEVEL0_RESEARCH_CATALOG[pendingSafehouseAction.optionId]
+    : null;
+  const pendingResearchOptionId = pendingSafehouseAction?.kind === 'research'
+    ? pendingSafehouseAction.optionId
+    : null;
+  const pendingTimeCost = pendingSafehouseAction?.kind === 'wait' || pendingSafehouseAction?.kind === 'rest'
+    ? 30
+    : pendingResearch?.worldMinuteCost ?? 0;
 
   return (
     <main
       className={`level0-runtime${cleanVisualProof ? ' level0-runtime--clean-visual' : ''}`}
       data-testid="level0-runtime-hud"
     >
-      <div
-        data-testid="level0-runtime-background"
-        inert={backgroundControlsLocked ? true : undefined}
-      >
+      <div data-testid="level0-runtime-background" inert={backgroundControlsLocked ? true : undefined}>
         <Level0GameCanvas
           key={`${run.sessionId}:${runtime.sceneRevision}`}
           run={run}
@@ -871,108 +916,147 @@ const Level0RuntimeShell = () => {
           georgePresentationVisible={!backgroundControlsLocked}
           onSceneReady={setSceneReady}
           onPlayerCheckpoint={(position, facing) =>
-            dispatch(syncLevel0PlayerCheckpoint({ position, facing }))
-          }
+            dispatch(syncLevel0PlayerCheckpoint({ position, facing }))}
           onFeedback={(feedbackId) => dispatch(setLevel0Feedback(feedbackId))}
           onInteraction={handleInteraction}
           onObservationToggle={toggleObservation}
         />
 
         <header className="level0-runtime__topbar">
-        <button
-          type="button"
-          className="level0-runtime__menu"
-          disabled={backgroundControlsLocked}
-          onClick={openMenu}
-        >Menu <span>Esc</span></button>
-        <div className="level0-runtime__status">
-          <strong>{formatWorldTime(run.worldClock.currentMinute)}</strong>
-          <span>{run.worldClock.phase.replace('-', ' ')}</span>
-          <span className={run.worldClock.curfewActive ? 'is-danger' : ''}>
-            {run.worldClock.curfewActive ? 'CURFEW ACTIVE' : 'CURFEW 22:00'}
-          </span>
-          <span>DEADLINE 24:00</span>
-        </div>
-      </header>
+          <button
+            type="button"
+            className="level0-runtime__menu"
+            disabled={backgroundControlsLocked}
+            onClick={openMenu}
+          >
+            {ukrainian ? 'Меню' : 'Menu'} <span>Esc</span>
+          </button>
+          <div className="level0-runtime__status">
+            <strong>{formatWorldTime(run.worldClock.currentMinute)}</strong>
+            <span>{run.worldClock.phase.replace('-', ' ')}</span>
+            <span className={run.worldClock.curfewActive ? 'is-danger' : ''}>
+              {run.worldClock.curfewActive
+                ? ukrainian ? 'КОМЕНДАНТСЬКА ГОДИНА' : 'CURFEW ACTIVE'
+                : ukrainian ? 'КОМЕНДАНТСЬКА 22:00' : 'CURFEW 22:00'}
+            </span>
+            <span>{ukrainian ? 'ДЕДЛАЙН 24:00' : 'DEADLINE 24:00'}</span>
+          </div>
+        </header>
 
-      {observationActive ? (
-        <aside className="level0-runtime__observation" data-testid="level0-observation-overlay">
-          <strong>OBSERVATION / SIMULATION PAUSED</strong>
-          <span>Drag to pan. Wheel to zoom. O returns to movement.</span>
-        </aside>
-      ) : null}
+        {observationActive ? (
+          <aside className="level0-runtime__observation" data-testid="level0-observation-overlay">
+            <strong>{ukrainian ? 'СПОСТЕРЕЖЕННЯ / СИМУЛЯЦІЮ ПРИЗУПИНЕНО' : 'OBSERVATION / SIMULATION PAUSED'}</strong>
+            <span>{ukrainian ? 'Перетягуйте для огляду. Колесо змінює масштаб. O повертає рух.' : 'Drag to pan. Wheel to zoom. O returns to movement.'}</span>
+          </aside>
+        ) : null}
 
-      <section className="level0-runtime__dock">
-        <div className="level0-runtime__lane level0-runtime__lane--map">
-          <span className="lane-label">DISTRICT</span>
-          <strong>Tokyo / Hidzu perimeter</strong>
-          <small>
-            Public-to-controlled city seam · adaptive overview · close{' '}
-            {LEVEL0_RUNTIME_INITIAL_ZOOM_LABEL}
-          </small>
-        </div>
-        <div className="level0-runtime__lane">
-          <span className="lane-label">PROTAGONIST</span>
-          <strong>{run.identity.callsign} · LV {run.build.level}</strong>
-          <div className="level0-runtime__meters">
-            <span>HEALTH <b>{run.health}</b></span>
-            <span>PARANOIA <b>{run.paranoia} / −{paranoiaPenalty}</b></span>
+        <section className="level0-runtime__dock">
+          <div className="level0-runtime__lane level0-runtime__lane--map">
+            <span className="lane-label">{ukrainian ? 'РАЙОН' : 'DISTRICT'}</span>
+            <strong>Tokyo / Hidzu perimeter</strong>
+            <small>
+              {ukrainian ? 'Міський шов · огляд району · наближення ' : 'City seam · district overview · close '}
+              {LEVEL0_RUNTIME_INITIAL_ZOOM_LABEL}
+            </small>
           </div>
-          <small>
-            XP {run.build.xp}{nextLevelThreshold === null ? '' : ` / ${nextLevelThreshold}`}
-          </small>
-          <div className="level0-runtime__controls">
-            <button
-              type="button"
-              data-testid="level0-character-open"
-              ref={characterTriggerRef}
-              disabled={backgroundControlsLocked}
-              onClick={openCharacter}
-            >Character</button>
-          </div>
-        </div>
-        <div className="level0-runtime__lane level0-runtime__lane--feedback">
-          <span className="lane-label">GEORGE / RUNTIME</span>
-          <p role="status" aria-live="polite">{feedbackCopy}</p>
-          <div className="level0-runtime__controls">
-            <button
-              type="button"
-              data-testid="level0-observation"
-              aria-pressed={observationActive}
-              disabled={backgroundControlsLocked}
-              onClick={toggleObservation}
-            >
-              {observationActive ? 'Resume' : 'Observe'}
-            </button>
-            <button
-              type="button"
-              data-testid="level0-interact"
-              disabled={backgroundControlsLocked}
-              onClick={() => handleInteraction()}
-            >Interact</button>
-          </div>
-        </div>
-        <div className="level0-runtime__lane level0-runtime__lane--safehouse">
-          <span className="lane-label">CURRENT BEAT</span>
-          <strong>{run.mission.replace('L0_', '').split('_').join(' ')}</strong>
-          {run.safehouse.insideBoundary ? (
-            <div className="level0-runtime__controls">
-              {safehouseActions.map(({ actionId, availability }) => (
-                <button
-                  type="button"
-                  key={actionId}
-                  data-testid={`safehouse-${actionId}`}
-                  disabled={backgroundControlsLocked || !availability.available}
-                  title={availability.blockedReasonId}
-                  onClick={() => requestSafehouseAction(actionId)}
-                >
-                  {actionLabel(actionId)}
-                </button>
-              ))}
+          <div className="level0-runtime__lane" data-paranoia-tier={paranoiaTier}>
+            <span className="lane-label">{ukrainian ? 'ПРОТАГОНІСТ' : 'PROTAGONIST'}</span>
+            <strong>{describeLevel0Cover(run.identity.coverId, ukrainian)}</strong>
+            <div className="level0-runtime__meters">
+              <span>
+                {ukrainian ? 'ПАРАНОЯ' : 'PARANOIA'}{' '}
+                <b>{localizeLevel0Copy(LEVEL0_PARANOIA_TIER_COPY[paranoiaTier], ukrainian)}</b>
+              </span>
             </div>
-          ) : <small>Return to the safehouse boundary for planning actions.</small>}
-        </div>
-      </section>
+            <div className="level0-runtime__ability-strip" aria-label={ukrainian ? 'Здібності' : 'Abilities'}>
+              {run.abilities.heldAbilityIds.slice(0, 3).map((abilityId) => {
+                const state = resolveLevel0AbilityState(abilityId, run.paranoia);
+                return (
+                  <span key={abilityId} data-state={state.status}>
+                    {localizeLevel0Copy(LEVEL0_ABILITY_COPY[abilityId].label, ukrainian)}
+                  </span>
+                );
+              })}
+            </div>
+            <div className="level0-runtime__controls">
+              <button
+                type="button"
+                data-testid="level0-character-open"
+                ref={characterTriggerRef}
+                disabled={backgroundControlsLocked}
+                onClick={openCharacter}
+              >
+                {ukrainian ? 'Персонаж' : 'Character'}
+              </button>
+            </div>
+          </div>
+          <div className="level0-runtime__lane level0-runtime__lane--feedback">
+            <span className="lane-label">GEORGE / RUNTIME</span>
+            <p role="status" aria-live="polite">{feedbackCopy}</p>
+            <div className="level0-runtime__controls">
+              <button
+                type="button"
+                data-testid="level0-observation"
+                aria-pressed={observationActive}
+                disabled={backgroundControlsLocked}
+                onClick={toggleObservation}
+              >
+                {observationActive
+                  ? ukrainian ? 'Продовжити' : 'Resume'
+                  : ukrainian ? 'Спостерігати' : 'Observe'}
+              </button>
+              <button
+                type="button"
+                data-testid="level0-interact"
+                disabled={backgroundControlsLocked}
+                onClick={() => handleInteraction()}
+              >
+                {ukrainian ? 'Взаємодія' : 'Interact'}
+              </button>
+            </div>
+          </div>
+          <div className="level0-runtime__lane level0-runtime__lane--safehouse">
+            <span className="lane-label">{ukrainian ? 'ПОТОЧНИЙ ЕТАП' : 'CURRENT BEAT'}</span>
+            <strong>{run.mission.replace('L0_', '').split('_').join(' ')}</strong>
+            {run.safehouse.insideBoundary ? (
+              <>
+                <div className="level0-runtime__controls">
+                  {safehouseActions.map(({ actionId, availability }) => (
+                    <button
+                      type="button"
+                      key={actionId}
+                      data-testid={`safehouse-${actionId}`}
+                      disabled={backgroundControlsLocked || !availability.available}
+                      title={availability.blockedReasonId}
+                      onClick={() => requestSafehouseAction(actionId)}
+                    >
+                      {actionLabel(actionId, ukrainian)}
+                    </button>
+                  ))}
+                </div>
+                <div className="level0-runtime__research-actions">
+                  {Object.values(LEVEL0_RESEARCH_CATALOG).map((option) => {
+                    const state = run.abilities.researchState[option.id];
+                    return (
+                      <button
+                        type="button"
+                        key={option.id}
+                        data-testid={`safehouse-${option.id}`}
+                        disabled={backgroundControlsLocked || state !== 'available'}
+                        title={state === 'available' ? undefined : state}
+                        onClick={() => requestResearch(option.id)}
+                      >
+                        {localizeLevel0Copy(LEVEL0_RESEARCH_COPY[option.id].label, ukrainian)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            ) : (
+              <small>{ukrainian ? 'Поверніться до безпечного місця для планування.' : 'Return to the safehouse for planning actions.'}</small>
+            )}
+          </div>
+        </section>
       </div>
 
       {pendingSafehouseAction ? (
@@ -984,27 +1068,43 @@ const Level0RuntimeShell = () => {
           aria-labelledby="safehouse-confirmation-title"
         >
           <div>
-            <p>SAFEHOUSE ACTION / TIME PAUSED</p>
+            <p>{pendingSafehouseAction.kind === 'research'
+              ? ukrainian ? 'ДОСЛІДЖЕННЯ / ЧАС ЗУПИНЕНО' : 'RESEARCH / TIME PAUSED'
+              : ukrainian ? 'ДІЯ В БЕЗПЕЧНОМУ МІСЦІ / ЧАС ЗУПИНЕНО' : 'SAFEHOUSE ACTION / TIME PAUSED'}</p>
             <h2 id="safehouse-confirmation-title">
-              {pendingSafehouseAction === 'depart'
-                ? 'Leave the safehouse and create the operation Retry point?'
-                : pendingSafehouseAction === 'rest'
-                  ? `Rest until ${formatWorldTime(Math.min(24 * 60, run.worldClock.currentMinute + 30))}? Health becomes 100 and Paranoia falls by 40 (minimum 0).`
-                  : `Wait until ${formatWorldTime(Math.min(24 * 60, run.worldClock.currentMinute + 30))}?`}
+              {pendingSafehouseAction.kind === 'depart'
+                ? ukrainian
+                  ? 'Залишити безпечне місце та зафіксувати базовий стан цієї спроби?'
+                  : 'Leave the safehouse and record this attempt’s departure baseline?'
+                : pendingSafehouseAction.kind === 'rest'
+                  ? ukrainian
+                    ? `Відпочити до ${formatWorldTime(run.worldClock.currentMinute + 30)}? Параноя суттєво послабиться.`
+                    : `Rest until ${formatWorldTime(run.worldClock.currentMinute + 30)}? Paranoia will ease substantially.`
+                  : pendingSafehouseAction.kind === 'wait'
+                    ? ukrainian
+                      ? `Чекати до ${formatWorldTime(run.worldClock.currentMinute + 30)}?`
+                      : `Wait until ${formatWorldTime(run.worldClock.currentMinute + 30)}?`
+                    : pendingResearchOptionId
+                      ? ukrainian
+                        ? `${localizeLevel0Copy(LEVEL0_RESEARCH_COPY[pendingResearchOptionId].label, true)}? Це витратить факт і ${pendingResearch?.worldMinuteCost ?? 0} хвилин.`
+                        : `${localizeLevel0Copy(LEVEL0_RESEARCH_COPY[pendingResearchOptionId].label, false)}? This consumes its fact and ${pendingResearch?.worldMinuteCost ?? 0} minutes.`
+                      : ''}
             </h2>
-            {pendingSafehouseAction !== 'depart' &&
-            run.worldClock.currentMinute + 30 >= 24 * 60 &&
+            {pendingTimeCost > 0 &&
+            run.worldClock.currentMinute + pendingTimeCost >= 24 * 60 &&
             (!run.completion.medkitsReturned || !run.completion.transitValidated) ? (
               <p className="level0-runtime__deadline-warning">
-                Confirming will cross the 24:00 deadline and fail the operation.
+                {ukrainian
+                  ? 'Підтвердження перетне дедлайн 24:00 і провалить операцію.'
+                  : 'Confirming will cross the 24:00 deadline and fail the operation.'}
               </p>
             ) : null}
             <div className="level0-runtime__controls">
               <button type="button" data-testid="safehouse-confirm" onClick={confirmSafehouseAction}>
-                Confirm
+                {ukrainian ? 'Підтвердити' : 'Confirm'}
               </button>
               <button type="button" data-testid="safehouse-cancel" onClick={closeSafehouseConfirmation}>
-                Cancel
+                {ukrainian ? 'Скасувати' : 'Cancel'}
               </button>
             </div>
           </div>
@@ -1012,14 +1112,7 @@ const Level0RuntimeShell = () => {
       ) : null}
 
       {characterOpen ? (
-        <Level0CharacterPanel
-          run={run}
-          ukrainian={ukrainian}
-          onClose={closeCharacter}
-          onActivateLevel={activateCharacterLevel}
-          onAllocateAttribute={allocateCharacterAttribute}
-          onAllocateSkill={allocateCharacterSkill}
-        />
+        <Level0CharacterPanel run={run} ukrainian={ukrainian} onClose={closeCharacter} />
       ) : null}
 
       {failed ? (
@@ -1034,12 +1127,16 @@ const Level0RuntimeShell = () => {
           <h2 id="level0-failure-title">{failureTitle(run, ukrainian)}</h2>
           {run.failureSourceId ? (
             <small>
-              {ukrainian ? 'Джерело' : 'Source'}: {' '}
-              {describeLevel0Source(run.failureSourceId, ukrainian)}
+              {ukrainian ? 'Джерело' : 'Source'}: {describeLevel0Source(run.failureSourceId, ukrainian)}
             </small>
           ) : null}
-          <button type="button" onClick={retryOperation} disabled={!entryState.hasRetry}>
-            {ukrainian ? 'Повторити від виходу' : 'Retry from departure'}
+          <button
+            type="button"
+            data-testid="level0-restart-attempt"
+            onClick={restartOperationAttempt}
+            disabled={!entryState.hasAttemptBaseline}
+          >
+            {ukrainian ? 'Перезапустити спробу' : 'Restart Attempt'}
           </button>
           <button type="button" onClick={openMenu}>
             {ukrainian ? 'Повернутися до меню' : 'Return to menu'}
@@ -1052,12 +1149,12 @@ const Level0RuntimeShell = () => {
           locale={locale}
           simulationPaused={run.worldClock.pauseOwners.includes('bible')}
           onClose={closeBible}
-          onUiStateChange={handleBibleUiState}
+          onUiStateChange={(state) => { bibleUiStateRef.current = state; }}
         />
       ) : null}
 
       <span className="level0-runtime__storage" aria-hidden="true">
-        {LEVEL0_AUTOSAVE_KEY} / {LEVEL0_RETRY_KEY}
+        {LEVEL0_AUTOSAVE_KEY} / {LEVEL0_ATTEMPT_BASELINE_KEY}
       </span>
     </main>
   );

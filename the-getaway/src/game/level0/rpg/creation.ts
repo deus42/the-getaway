@@ -1,198 +1,122 @@
 import {
-  LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID,
+  CHARACTER_SPRITE_MANIFEST_BY_ID,
   isLevel0PlayerAppearanceId,
   type Level0PlayerAppearanceId,
 } from '../../../content/characters/spriteManifest';
+import { createInitialLevel0ResearchState } from './research';
 import type {
-  AttributeKey,
-  Level0CreationDraft,
-  Level0CreationErrorId,
-  Level0CreationValidation,
-  PlayerBuild,
-  PlayerIdentity,
-  SkillKey,
+  CoverIdentity,
+  Level0AbilityId,
+  Level0CoverId,
+  RunAbilities,
 } from './types';
 
-export const ATTRIBUTE_KEYS = [
-  'physical',
-  'mental',
-  'social',
-  'technical',
-] as const satisfies readonly AttributeKey[];
+export interface Level0CoverDefinition {
+  id: Level0CoverId;
+  playable: boolean;
+  appearancePresetId: Level0PlayerAppearanceId;
+  localizedName: { en: string; uk: string };
+  localizedFiction: { en: string; uk: string };
+  startingAbilityIds: readonly Level0AbilityId[];
+}
 
-export const SKILL_KEYS = [
-  'stealth',
-  'evasion',
-  'awareness',
-  'composure',
-  'insight',
-  'influence',
-  'systems',
-  'opsec',
-] as const satisfies readonly SkillKey[];
-
-export const LEVEL0_ATTRIBUTE_CREATION_BUDGET = 4;
-export const LEVEL0_SKILL_CREATION_BUDGET = 6;
-export const LEVEL0_ATTRIBUTE_CREATION_CAP = 3;
-export const LEVEL0_SKILL_CREATION_CAP = 2;
-export const LEVEL0_LONG_TERM_CAP = 5;
-export const LEVEL0_CALLSIGN_MAX_CODE_POINTS = 24;
-
-const callsignPattern = /^[\p{L}\p{N}](?:[\p{L}\p{N} .'’_-]*[\p{L}\p{N}])?$/u;
-
-const baseAttributes = (): Record<AttributeKey, number> => ({
-  physical: 1,
-  mental: 1,
-  social: 1,
-  technical: 1,
-});
-
-const baseSkills = (): Record<SkillKey, number> => ({
-  stealth: 0,
-  evasion: 0,
-  awareness: 0,
-  composure: 0,
-  insight: 0,
-  influence: 0,
-  systems: 0,
-  opsec: 0,
-});
-
-export const normalizeLevel0Callsign = (value: string): string =>
-  value.normalize('NFC').trim().replace(/\s+/gu, ' ');
-
-export const isValidLevel0Callsign = (value: unknown): value is string => {
-  if (typeof value !== 'string' || normalizeLevel0Callsign(value) !== value) return false;
-  const callsignLength = Array.from(value).length;
-  return callsignLength >= 1 &&
-    callsignLength <= LEVEL0_CALLSIGN_MAX_CODE_POINTS &&
-    callsignPattern.test(value);
+export const LEVEL0_COVER_CATALOG: Record<Level0CoverId, Level0CoverDefinition> = {
+  'cover.neighbor': {
+    id: 'cover.neighbor',
+    playable: true,
+    appearancePresetId: 'player_civilian_01',
+    localizedName: { en: 'The Neighbor', uk: 'Сусід' },
+    localizedFiction: {
+      en: 'You learned which shopkeepers talk, which queues move, and when a polite question opens more than a locked door. Tonight that familiarity is useful — until being watched makes every familiar face harder to read.',
+      uk: 'Ви знаєте, хто з крамарів говорить, які черги рухаються і коли ввічливе питання відкриває більше, ніж замкнені двері. Сьогодні ця близькість допомагає — доки нагляд не ускладнює читання кожного знайомого обличчя.',
+    },
+    startingAbilityIds: [
+      'ability.read_people',
+      'ability.negotiate',
+      'ability.blend_in',
+    ],
+  },
+  'cover.technician': {
+    id: 'cover.technician',
+    playable: false,
+    appearancePresetId: 'player_civilian_02',
+    localizedName: { en: 'The Technician', uk: 'Технік' },
+    localizedFiction: {
+      en: 'You kept ordinary systems working and learned what their service diagrams omit. This cover will become playable when its complete Tokyo route has been authored.',
+      uk: 'Ви підтримували звичайні системи в роботі й дізналися, чого немає в їхніх сервісних схемах. Ця роль стане доступною, коли буде створено її повний токійський маршрут.',
+    },
+    startingAbilityIds: [
+      'ability.terminal_craft',
+      'ability.trace_discipline',
+      'ability.spot_patterns',
+    ],
+  },
+  'cover.commuter': {
+    id: 'cover.commuter',
+    playable: false,
+    appearancePresetId: 'player_civilian_03',
+    localizedName: { en: 'The Commuter', uk: 'Пасажир' },
+    localizedFiction: {
+      en: 'You crossed Tokyo by timing doors, crowds, and the moments between official attention. This cover will become playable when its complete Tokyo route has been authored.',
+      uk: 'Ви перетинали Токіо, вгадуючи ритм дверей, натовпу й пауз між офіційними перевірками. Ця роль стане доступною, коли буде створено її повний токійський маршрут.',
+    },
+    startingAbilityIds: [
+      'ability.slip_away',
+      'ability.quiet_feet',
+      'ability.blend_in',
+    ],
+  },
+  'cover.archivist': {
+    id: 'cover.archivist',
+    playable: false,
+    appearancePresetId: 'player_civilian_04',
+    localizedName: { en: 'The Archivist', uk: 'Архівіст' },
+    localizedFiction: {
+      en: 'You noticed when a record changed, a name disappeared, or two harmless documents told one dangerous story. This cover will become playable when its complete Tokyo route has been authored.',
+      uk: 'Ви помічали, коли змінювався запис, зникало ім’я або два безпечні документи складалися в одну небезпечну історію. Ця роль стане доступною, коли буде створено її повний токійський маршрут.',
+    },
+    startingAbilityIds: [
+      'ability.spot_patterns',
+      'ability.steady_voice',
+      'ability.read_people',
+    ],
+  },
 };
 
-export const createLevel0CreationDraft = (
-  appearancePresetId = LEVEL0_DEFAULT_PLAYER_APPEARANCE_ID
-): Level0CreationDraft => ({
-  callsign: '',
-  appearancePresetId,
-  attributes: baseAttributes(),
-  skills: baseSkills(),
-});
+export const LEVEL0_COVER_IDS = Object.keys(LEVEL0_COVER_CATALOG) as Level0CoverId[];
 
-const allocatedAttributePoints = (attributes: Record<AttributeKey, number>) =>
-  ATTRIBUTE_KEYS.reduce((sum, key) => sum + attributes[key] - 1, 0);
+export const isLevel0CoverId = (value: unknown): value is Level0CoverId =>
+  typeof value === 'string' && value in LEVEL0_COVER_CATALOG;
 
-const allocatedSkillPoints = (skills: Record<SkillKey, number>) =>
-  SKILL_KEYS.reduce((sum, key) => sum + skills[key], 0);
+export interface Level0CoverSelection {
+  valid: boolean;
+  reasonId: 'cover.available' | 'cover.invalid' | 'cover.disabled';
+  identity: CoverIdentity | null;
+  abilities: RunAbilities | null;
+}
 
-const pushUnique = (errors: Level0CreationErrorId[], error: Level0CreationErrorId) => {
-  if (!errors.includes(error)) errors.push(error);
-};
-
-export const validateLevel0CreationDraft = (
-  draft: Level0CreationDraft
-): Level0CreationValidation => {
-  const errors: Level0CreationErrorId[] = [];
-  const normalizedCallsign = normalizeLevel0Callsign(draft.callsign);
-  const callsignLength = Array.from(normalizedCallsign).length;
-  if (!normalizedCallsign) pushUnique(errors, 'callsign.required');
-  else {
-    if (callsignLength > LEVEL0_CALLSIGN_MAX_CODE_POINTS) {
-      pushUnique(errors, 'callsign.too_long');
-    }
-    if (!callsignPattern.test(normalizedCallsign)) pushUnique(errors, 'callsign.invalid');
+export const validateLevel0CoverSelection = (coverId: unknown): Level0CoverSelection => {
+  if (!isLevel0CoverId(coverId)) {
+    return { valid: false, reasonId: 'cover.invalid', identity: null, abilities: null };
   }
-
-  if (!isLevel0PlayerAppearanceId(draft.appearancePresetId)) {
-    pushUnique(errors, 'appearance.invalid');
+  const cover = LEVEL0_COVER_CATALOG[coverId];
+  if (!cover.playable) {
+    return { valid: false, reasonId: 'cover.disabled', identity: null, abilities: null };
   }
-
-  const attributeValues = ATTRIBUTE_KEYS.map((key) => draft.attributes[key]);
-  if (attributeValues.some((value) => !Number.isInteger(value) || value < 1)) {
-    pushUnique(errors, 'attributes.invalid');
+  if (!isLevel0PlayerAppearanceId(cover.appearancePresetId) ||
+    !CHARACTER_SPRITE_MANIFEST_BY_ID[cover.appearancePresetId]) {
+    return { valid: false, reasonId: 'cover.invalid', identity: null, abilities: null };
   }
-  if (attributeValues.some((value) => value > LEVEL0_ATTRIBUTE_CREATION_CAP)) {
-    pushUnique(errors, 'attributes.over_cap');
-  }
-  const attributePoints = allocatedAttributePoints(draft.attributes);
-  if (attributePoints !== LEVEL0_ATTRIBUTE_CREATION_BUDGET) {
-    pushUnique(errors, 'attributes.unspent');
-  }
-
-  const skillValues = SKILL_KEYS.map((key) => draft.skills[key]);
-  if (skillValues.some((value) => !Number.isInteger(value) || value < 0)) {
-    pushUnique(errors, 'skills.invalid');
-  }
-  if (skillValues.some((value) => value > LEVEL0_SKILL_CREATION_CAP)) {
-    pushUnique(errors, 'skills.over_cap');
-  }
-  const skillPoints = allocatedSkillPoints(draft.skills);
-  if (skillPoints !== LEVEL0_SKILL_CREATION_BUDGET) {
-    pushUnique(errors, 'skills.unspent');
-  }
-
-  const valid = errors.length === 0;
-  const identity: PlayerIdentity | null = valid
-    ? { callsign: normalizedCallsign, appearancePresetId: draft.appearancePresetId }
-    : null;
-  const build: PlayerBuild | null = valid
-    ? {
-        attributes: { ...draft.attributes },
-        skills: { ...draft.skills },
-        level: 1,
-        xp: 0,
-        unspentSkillPoints: 0,
-        unspentAttributePoints: 0,
-      }
-    : null;
-
   return {
-    valid,
-    errors,
-    normalizedCallsign,
-    remainingAttributePoints: LEVEL0_ATTRIBUTE_CREATION_BUDGET - attributePoints,
-    remainingSkillPoints: LEVEL0_SKILL_CREATION_BUDGET - skillPoints,
-    identity,
-    build,
+    valid: true,
+    reasonId: 'cover.available',
+    identity: {
+      coverId,
+      appearancePresetId: cover.appearancePresetId,
+    },
+    abilities: {
+      heldAbilityIds: [...cover.startingAbilityIds],
+      researchState: createInitialLevel0ResearchState(),
+    },
   };
-};
-
-export type Level0SampleCharacterId = 'social_mental' | 'technical_evasion';
-
-export const createLevel0SampleCharacter = (
-  sampleId: Level0SampleCharacterId,
-  callsign: string,
-  appearancePresetId: Level0PlayerAppearanceId = sampleId === 'social_mental'
-    ? 'player_civilian_01'
-    : 'player_civilian_02'
-): Level0CreationDraft => {
-  const draft = createLevel0CreationDraft(appearancePresetId);
-  draft.callsign = callsign;
-  if (sampleId === 'social_mental') {
-    draft.attributes.mental = 3;
-    draft.attributes.social = 3;
-    draft.skills.composure = 2;
-    draft.skills.insight = 2;
-    draft.skills.influence = 2;
-  } else {
-    draft.attributes.physical = 3;
-    draft.attributes.technical = 3;
-    draft.skills.evasion = 2;
-    draft.skills.systems = 2;
-    draft.skills.opsec = 2;
-  }
-  return draft;
-};
-
-export const createConfirmedLevel0Sample = (
-  sampleId: Level0SampleCharacterId,
-  callsign: string,
-  appearancePresetId?: Level0PlayerAppearanceId
-): { identity: PlayerIdentity; build: PlayerBuild } => {
-  const result = validateLevel0CreationDraft(
-    createLevel0SampleCharacter(sampleId, callsign, appearancePresetId)
-  );
-  if (!result.identity || !result.build) {
-    throw new Error(`Invalid Level 0 sample character: ${result.errors.join(', ')}`);
-  }
-  return { identity: result.identity, build: result.build };
 };

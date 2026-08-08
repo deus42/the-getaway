@@ -102,6 +102,8 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 
 ## 9. UI, world, audio, and George feedback
 
+- The clock is spatial through a few repeated civic anchors — a transit departures board, the public checkpoint display, one Hidzu information screen, visible public clocks, and the last-train cadence — whose meaning changes over the evening. Anchors stay sparse: the city is never an oversized HUD, and the strongest reading is passing the same display twice.
+
 - The persistent HUD shows `HH:MM`, curfew state, and the deadline only when relevant.
 - Amber communicates time, objective urgency, and curfew. Crimson is reserved for an active danger state, not the normal clock.
 - Safehouse Wait and Rest previews state the resulting time and recovery before confirmation.

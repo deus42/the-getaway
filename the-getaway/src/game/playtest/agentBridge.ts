@@ -48,7 +48,7 @@ export type GetawayAgentAction =
   | { type: 'continueMission' }
   | { type: 'advanceMission' }
   | { type: 'triggerMissionFailure' }
-  | { type: 'retryMission' }
+  | { type: 'restartAttempt' }
   | { type: 'chooseDialogueOption'; index: number }
   | { type: 'setClock'; phase: 'day' | 'night' | 'midday' }
   | { type: 'waitForDialogue'; timeoutMs?: number }
@@ -650,7 +650,7 @@ export const validateAgentAction = (action: unknown): AgentActionValidation => {
     case 'continueMission':
     case 'advanceMission':
     case 'triggerMissionFailure':
-    case 'retryMission':
+    case 'restartAttempt':
       return { ok: true, message: 'ok' };
     case 'chooseDialogueOption':
       return isFiniteInteger(candidate.index) && candidate.index >= 0
@@ -1211,7 +1211,7 @@ const dispatchBridgeAction = async (
       );
     }
 
-    case 'retryMission': {
+    case 'restartAttempt': {
       const missionFailureOpen =
         beforeSnapshot.overlays.missionFailureOpen ||
         beforeSnapshot.player.health <= 0;
@@ -1220,31 +1220,32 @@ const dispatchBridgeAction = async (
           state,
           action.type,
           'no-op',
-          'Mission failure retry is not available because the failure overlay is closed.'
+          'Restart Attempt is not available because the failure overlay is closed.'
         );
       }
 
-      const retryButton = Array.from(document.querySelectorAll('button')).find((button) =>
-        button.textContent?.toLowerCase().includes('restart level 0')
-      );
-      if (!retryButton) {
+      const restartButton = Array.from(document.querySelectorAll('button')).find((button) => {
+        const text = button.textContent?.toLowerCase() ?? '';
+        return text.includes('restart attempt') || text.includes('restart level 0');
+      });
+      if (!restartButton) {
         return currentResult(
           state,
           action.type,
           'rejected',
-          'Mission failure retry button could not be found.'
+          'Restart Attempt button could not be found.'
         );
       }
 
-      retryButton.click();
+      restartButton.click();
       await waitFor(250);
       return result(
         beforeSnapshot,
         buildAgentSnapshot(store.getState()),
         action.type,
         'ok',
-        'Clicked mission failure retry.',
-        'Mission failure retry button was clicked through the live DOM.'
+        'Clicked Restart Attempt.',
+        'Restart Attempt was clicked through the live DOM.'
       );
     }
 

@@ -56,7 +56,7 @@ The safehouse is the protagonist's small pocket of control: a readable outdoor p
 
 - Safe waiting advances world time only in player-confirmed `30`-minute steps.
 - Rest advances `30` world minutes and removes `40` Paranoia.
-- Research options follow [[92 Character & Progression]]: one declared fact plus a world-minute cost per option, one ability granted, once each (`OPEN-ABL-002` owns exact values).
+- Research options follow [[92 Character, Covers, Abilities & Research]]: one declared fact plus a world-minute cost per option, one ability granted, once each (`OPEN-ABL-002` owns exact values).
 - The world starts at `18:30`, curfew begins at `22:00`, and the hard deadline is `00:00` while either medkit return or transit validation remains incomplete.
 - The safehouse is the autosave point, planning hub, recovery location, research location, George consultation point, and outbound-terminal location.
 - Autosave and `OperationAttemptBaseline` are different persisted objects with different purposes. Autosave stores the current compatible run at authored safe points; Restart Attempt restores the immutable baseline.
@@ -68,8 +68,8 @@ The safehouse is the protagonist's small pocket of control: a readable outdoor p
 
 ## 7. Inputs from other systems
 
-- Cover-select and [[92 Character & Progression]] supply the cover identity, held abilities, and research state.
-- [[43 Health, Failure & Recovery]] and [[60 Paranoia]] supply current resources and Rest effects.
+- Cover-select and [[92 Character, Covers, Abilities & Research]] supply the cover identity, held abilities, and research state.
+- [[43 Failure, Surrender & Recovery]] and [[60 Paranoia]] supply the condition and Rest effects.
 - [[80 Day-Night Cycle]] supplies current world time, curfew, deadline, and shared pause ownership.
 - [[91 Quests & Objectives]] supplies mission/objective state, operation acceptance, medkit return, credential issuance, transit validity, and completion state.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies facts, known world state, dossier data, and the outbound-terminal contract.
@@ -97,7 +97,7 @@ The safehouse is the protagonist's small pocket of control: a readable outdoor p
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- Breakdown at Paranoia `100`, capture, or midnight while either medkit return or transit validation remains incomplete enters `L0_FAILED` with the exact cause defined in [[43 Health, Failure & Recovery]].
+- Breakdown at Paranoia `100`, capture, or midnight while either medkit return or transit validation remains incomplete enters `L0_FAILED` with the exact cause defined in [[43 Failure, Surrender & Recovery]].
 - Restart Attempt restores `OperationAttemptBaseline`, including pre-departure resources, time, facts, objectives, known world state, safehouse actions, anchor, runtime generation, and content versions.
 - Restart Attempt explicitly excludes post-departure movement, facts, device state, medkit/evidence state, surveillance state, Paranoia changes, research, time, and outcomes.
 - An incompatible save never attempts Restart Attempt or partial migration; it explains the schema conflict and offers New Game.

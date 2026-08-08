@@ -20,7 +20,7 @@ The player may also back away before an interception becomes final when the surv
 
 ## 3. Starting state and prerequisites
 
-No combat mode, weapon, AP pool, combat HUD, enemy HP, cover state, attack animation requirement, or combat skill initializes in Level 0. Interception options appear only after an authored security encounter and only when supported by build/facts/context.
+No combat mode, weapon, AP pool, combat HUD, enemy HP, cover state, attack animation requirement, or combat skill initializes in Level 0. Interception options appear only after an authored security encounter and only when supported by a declared lit ability, designated fact, or costed path in the current context.
 
 ## 4. Complete happy-path behavior
 
@@ -48,7 +48,7 @@ No transition enters a combat scene or turn loop.
 ## 6. Rules and tuning values
 
 - Options draw from short deterministic gates — social, composure, evasion, or physical — passed by abilities, facts, or declared costed paths.
-- Requirements use [[92 Character & Progression]].
+- Requirements use [[92 Character, Covers, Abilities & Research]].
 - Costs are shown before confirmation and tuned through `OPEN-PAR-001`.
 - An option may be absent when fiction/build does not support it.
 - Capture is terminal for the attempt.

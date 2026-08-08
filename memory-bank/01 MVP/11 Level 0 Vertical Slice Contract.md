@@ -102,7 +102,7 @@ Naila and Brant are optional contacts. Both remain reachable before and after mi
 
 The mission remains completable after consulting both, one, or neither.
 
-The mechanical order is fixed—briefing and optional preparation precede the immutable operation-departure snapshot—but the exact physical loop between safehouse, Lira, contacts, and the departure action remains unresolved in `OPEN-LAYOUT-005`. Implementation may not invent a forced backtracking route or create the snapshot before optional preparation is complete.
+The mechanical order is fixed—briefing and optional preparation precede the immutable `OperationAttemptBaseline`—but the exact physical loop between safehouse, Lira, contacts, and the departure action remains unresolved in `OPEN-LAYOUT-005`. Implementation may not invent a forced backtracking route or create the baseline before optional preparation is complete.
 
 ## 5. Two primary timings
 
@@ -302,7 +302,7 @@ The persistent bottom dock is a fixed four-lane layout occupying 16–18% of the
 3. George;
 4. current quest beat.
 
-The Paranoia tier gauge and ability states are always visible with no numbers (`GDR-UI-005`). The minimap reveals only known information. The current-task and George lanes remain separate. The quest lane shows one current beat; George has one live authored sentence or prompt, not a generic chat box. George always explains why he lacks useful information; silence is never hidden gameplay information, and Level 0 gives him no personal desire or deletion arc. Dialogue, Character, dossier, feed, debrief, failure, and completion overlays share one visual language and pause simulation.
+The continuous read-only Paranoia slider, current named tier, and ability states are always visible with no numeric readout (`GDR-UI-005`). The slider position follows the exact internal value and marks the tier thresholds without becoming a player control. The minimap reveals only known information. The current-task and George lanes remain separate. The quest lane shows one current beat; George has one live authored sentence or prompt, not a generic chat box. George always explains why he lacks useful information; silence is never hidden gameplay information, and Level 0 gives him no personal desire or deletion arc. Dialogue, Character, dossier, feed, debrief, failure, and completion overlays share one visual language and pause simulation.
 
 ## 18. World and presentation
 

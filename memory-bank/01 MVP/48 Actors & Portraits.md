@@ -9,11 +9,11 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-Actors make the district feel inhabited, watched, and human rather than populated by tactical tokens or fantasy archetypes. The player's chosen appearance persists as their identity; named contacts, security, civilians, and the verifier network's human presence remain recognizable through grounded silhouettes, facing, motion, interaction, coherent portrait presentation, and subtle integration with authored light. This implements `GDR-PC-002`, `GDR-ART-001`, `GDR-ART-005`, `GDR-ART-011`, and `GDR-SUP-003`.
+Actors make the district feel inhabited, watched, and human rather than populated by tactical tokens or fantasy archetypes. The selected cover's authored appearance persists as the protagonist's identity; named contacts, security, civilians, and the verifier network's human presence remain recognizable through grounded silhouettes, facing, motion, interaction, coherent portrait presentation, and subtle integration with authored light. This implements `GDR-PC-006`, `GDR-ART-001`, `GDR-ART-005`, `GDR-ART-011`, and `GDR-SUP-003`.
 
 ## 2. Player-visible verbs
 
-- Choose one of four authored protagonist appearance presets during character creation.
+- Review four authored cover appearances during cover-select and confirm the one playable Level 0 cover.
 - Read an actor's identity, facing, idle state, movement, and interaction state in the world.
 - Approach and explicitly interact with Lira, Naila, Brant, human security, and authored civilian contexts where allowed.
 - Read the matching authored identity presentation in character, dialogue, George, debrief, or other approved portrait-bearing surfaces.
@@ -21,15 +21,15 @@ Actors make the district feel inhabited, watched, and human rather than populate
 
 ## 3. Starting state and prerequisites
 
-- New Game presents four authored visual presets before world initialization; there is no fixed Operative, mandatory Trace appearance, background, class, or package.
-- Confirmation persists the selected appearance into the Level 0 run and compatible continuation data.
+- New Game presents four authored cover identities before world initialization; one is playable and three remain visibly disabled. There is no fixed Operative, mandatory Trace appearance, free-text name, numeric build, class, or package.
+- Confirmation persists the selected cover and its authored appearance into the Level 0 run and compatible continuation data.
 - Level 0 actor content uses the approved grounded actor contract: twelve actor sets, `64x96`, eight directions, `idle`/`move`/`interact`, four frames per state, and shared anchors.
 - The twelve-set roster is fixed: four protagonist presets, Lira, Naila, Brant, two Hidzu Corporation security visual archetypes, and three civilian visual archetypes. T6 may define reusable silhouettes and wardrobe-role cues but may not name the archetypes, assign biographies, set counts or schedules, place authoritative actors, change the allocation, or add gameplay roles; T8/T10 own those content decisions.
 - Exact runtime scale is unresolved in `OPEN-ART-003`; character-creation/menu visual ownership is unresolved in `OPEN-UI-002`; performance/load budgets are unresolved in `OPEN-PERF-001`.
 
 ## 4. Complete happy-path behavior
 
-1. The player reviews four visually distinct grounded presets, chooses one, and confirms the character build.
+1. The player reviews four visually distinct grounded covers, confirms the playable one, and sees the three future covers remain honestly disabled.
 2. The selected protagonist identity appears consistently in the world and approved portrait-bearing surfaces.
 3. World actors render at a human-readable scale with stable feet/anchor placement, correct facing, and coherent idle, movement, and interaction animation.
 4. Lira, Naila, Brant, human security, and authored civilian groups remain visually distinguishable through grounded role/identity treatment rather than floating permanent labels or fantasy equipment.
@@ -38,7 +38,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 
 ## 5. State model and transitions
 
-- Protagonist appearance transitions from unselected to one of four authored preset IDs at character confirmation and remains stable for the run, save, Restart Attempt, and continuation data.
+- Protagonist identity transitions from unselected to one authored cover ID at confirmation; the cover supplies the stable appearance ID for the run, save, Restart Attempt, and continuation data.
 - A world actor presents one authoritative locomotion/interaction state at a time: `idle`, `move`, or `interact`, with one of eight facing directions and four frames for the active state.
 - Presentation mirrors authoritative gameplay position, facing, movement, interaction, dialogue, and schedule state; sprite/portrait rendering never owns those transitions.
 - Dialogue or another approved portrait-bearing surface selects the authored identity presentation for the same stable actor ID.
@@ -48,39 +48,39 @@ Actors make the district feel inhabited, watched, and human rather than populate
 
 - Exactly twelve grounded actor sets use `64x96` frames, eight directions, `idle`/`move`/`interact`, four frames, and shared anchors.
 - Attack animation is not required because Level 0 contains no active combat loop.
-- The protagonist has four authored appearance presets. There is no combinatorial body-part creator or fixed Operative/Trace identity.
+- The protagonist has four authored cover appearances. There is no combinatorial body-part creator, independent appearance picker, or fixed Operative/Trace identity.
 - Actor art follows graphic surveillance noir: grounded contemporary clothing and roles, readable midtones, strong ink silhouettes, restrained technology, and no fantasy-Neo styling.
 - The provisional `OPEN-ART-003` oracle keeps the canonical `64×96` source frame, origin `(0.50, 0.92)`, measured alpha height `54–64` px, and one replaceable manifest scale for all twelve actors. The earlier `1.15` and `1.30` greybox trials are evidence only. The complete GET-204 candidate first calibrates camera/building relationship to the approved street frame, then adjusts one shared actor scale if needed; revisions never use arbitrary per-scene scaling.
 - Actor placement and visual bases must remain aligned with gameplay anchors, walkable surfaces, collision, interaction reachability, and depth ordering.
 - `ActorLightRegion` metadata defines authored semantic amber/cyan regions. Runtime samples the strongest eligible region at each actor foot anchor, eases transitions, and applies a restrained tint only. Final strength and feathering remain open under `OPEN-ART-005`; the reversible baseline is strongest-region-only blending, `250 ms` easing, and restrained intensity.
-- Lighting is presentation-only. It never changes actor movement, collision, detection, camera visibility, checks, schedules, or civilian knowledge.
-- Character-creation/main-menu presentation may use the recorded `OPEN-UI-002` recommendation provisionally. `OPEN-PERF-001` has no approved target hardware, byte, memory, decode, or frame ceiling, so T6 records exact counts/bytes, estimated decoded texture bytes, requests, cold-load timing, and observed FPS but cannot pass a shipping-performance gate. Neither surface is final while its item remains open.
+- Lighting is presentation-only. It never changes actor movement, collision, detection, camera visibility, gate verdicts, schedules, or civilian knowledge.
+- Cover-select/main-menu presentation may use the recorded `OPEN-UI-002` recommendation provisionally. `OPEN-PERF-001` has no approved target hardware, byte, memory, decode, or frame ceiling, so T6 records exact counts/bytes, estimated decoded texture bytes, requests, cold-load timing, and observed FPS but cannot pass a shipping-performance gate. Neither surface is final while its item remains open.
 
 ## 7. Inputs from other systems
 
-- [[92 Character & Progression]] supplies stable protagonist identity, callsign, selected appearance, and persisted build.
+- [[92 Character, Covers, Abilities & Research]] supplies the stable cover, authored appearance mapping, held abilities, and research state.
 - [[41 Movement, Interaction & Observation]] supplies authoritative position, facing, locomotion, interaction, and focus state.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies security/civilian schedules and authoritative network behavior; art does not define detection.
 - [[90 Dialogue]] supplies stable speaker IDs and approved portrait-bearing dialogue state.
-- [[45 HUD & Information Architecture]] supplies character creation, Character, dialogue, George, debrief, and target-viewport presentation surfaces.
+- [[45 HUD & Information Architecture]] supplies cover-select, Character, dialogue, George, debrief, and target-viewport presentation surfaces.
 - [[30 Art Direction (MVP)]] supplies world palette, scale relationship, projection, lighting, and graphic surveillance-noir criteria.
 - `Level0LayoutContract` supplies actor anchors and valid ground surfaces.
 - The visual manifest supplies `ActorLightRegion` metadata and semantic palette tokens.
 
 ## 8. Effects on other systems
 
-- The chosen protagonist appearance persists through autosave, Restart Attempt, debrief, and future compatible continuation without changing attributes, skills, checks, or route eligibility.
+- The selected cover appearance persists through autosave, Restart Attempt, debrief, and future compatible continuation; presentation never changes held abilities, gate verdicts, or route eligibility.
 - Readable facing and movement let the player interpret human security, civilians, contacts, and public behavior, but visuals never create hidden perception or schedule state.
 - Actor identity connects world interaction, dialogue speaker, dossier/debrief reference, and any portrait without adding trust, class, faction meter, or combat role.
 - Consistent anchors and scale preserve collision, interaction, occlusion, camera coverage readability, and depth sorting.
-- Animation state grants no stealth, movement-speed, check, or surveillance modifier by itself.
+- Animation state grants no stealth, movement-speed, gate, or surveillance modifier by itself.
 - Light-region membership and tint grant no gameplay modifier and never become surveillance evidence.
 
 ## 9. UI, world, audio, and George feedback
 
 - World actors use grounded silhouettes and readable direction/motion at the accepted normal and overview framings, against dusk, blue-hour, and curfew presentation without roof-floating or scale drift.
 - Actors ease between neutral, semantic amber, and semantic cyan presentation as their foot anchors cross authored regions; no arbitrary per-actor tint is authored in scene code.
-- Character creation and Character surfaces show the selected authored preset and callsign/build identity through the approved or provisionally recorded `OPEN-UI-002` ownership split.
+- Cover-select and Character surfaces show the selected authored cover and its appearance/ability identity through the approved or provisionally recorded `OPEN-UI-002` ownership split.
 - Named-actor portrait presentation, where required by authored dialogue or debrief, uses the same stable identity and graphic-noir treatment as the world actor. Each identity portrait is a `256×256` PNG with one identity, no text, face/shoulders inside the central 80% safe area, registered provenance/hash/byte metrics, and a neutral diagnostic fallback.
 - Movement and interaction animation align with authored movement/interaction audio from [[49 Audio]]; visual events do not fire unrelated gameplay state.
 - George remains a private near-character AR presence visually distinct from a physical world actor. T6 supplies one separately registered `256×256` transparent idle/base asset; its proof placement is near the protagonist's upper-right at `28–36` screen pixels, suppressed while a full overlay owns focus, and excluded from collision, occlusion, depth, and world-state ownership. T9 owns final states, HUD/world placement, prompts, and suppression policy. Other actors do not react to him as a visible person.
@@ -91,7 +91,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Missing, mismatched, misanchored, unreadable, or fantasy-styled actor/portrait presentation is an acceptance failure; it does not justify changing gameplay topology, actor identity, or role.
 - If a visual asset cannot satisfy the complete matrix, the content remains unavailable for acceptance until corrected; no attack-capable or rejected fantasy asset silently replaces it.
 - Restart Attempt restores authoritative actor positions, schedules, interactions, and protagonist appearance from `OperationAttemptBaseline` without stale dialogue, pursuit, tint transition, or animation ownership.
-- Actor presentation cannot cause or resolve mission failure. Capture, Health, Paranoia, and deadline systems own failure and exact Restart Attempt state.
+- Actor presentation cannot cause or resolve mission failure. Breakdown, capture, and deadline systems own failure and exact Restart Attempt state.
 
 ## 11. Content-authoring requirements
 

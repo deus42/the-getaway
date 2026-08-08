@@ -79,7 +79,7 @@ Transitions are atomic, idempotent, and owned by explicit interaction or dialogu
 - [[46 Facts, Dossier, Minimap & Terminals]] owns objective/fact/outcome updates.
 - [[90 Dialogue]] owns medkit handoff and credential issuance through Lira.
 - [[44 Safehouse, Save & Restart Attempt]] owns outbound validation and persistence.
-- [[92 Character & Progression]] supplies the designated perception ability for the manifest recognition gate.
+- [[92 Character, Covers, Abilities & Research]] supplies the designated perception ability for the manifest recognition gate.
 - [[46 Facts, Dossier, Minimap & Terminals]] defines the one-function terminal contract.
 
 ## 8. Effects on other systems

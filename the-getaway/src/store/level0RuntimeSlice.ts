@@ -1,21 +1,29 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { LEVEL0_LAYOUT_CONTRACT } from '../content/levels/level0/layoutContract';
+import type { WorldPoint } from '../game/level0/layout/types';
 import {
+  commitLevel0GateVerdict,
+  type CommitLevel0GateInput,
+} from '../game/level0/rpg/gates';
+import {
+  applyLevel0ParanoiaEffect,
+  type Level0ParanoiaEffectInput,
+} from '../game/level0/rpg/paranoia';
+import {
+  applySafehouseResearch,
   applySafehouseRest,
   applySafehouseWait,
   createInitialLevel0RunState,
   normalizeLevel0RunForHydration,
-  restoreLevel0RetrySnapshot,
+  restartLevel0Attempt,
 } from '../game/level0/runtime/safehouse';
 import type {
-  AttributeKey,
+  Level0CoverId,
+  Level0ResearchOptionId,
   Level0RunState,
+  OperationAttemptBaseline,
   PauseOwner,
-  PlayerBuild,
-  PlayerIdentity,
-  RetrySnapshot,
   SafehouseActionId,
-  SkillKey,
 } from '../game/level0/runtime/types';
 import {
   acquirePauseOwner,
@@ -23,29 +31,12 @@ import {
   releasePauseOwner,
 } from '../game/level0/runtime/worldClock';
 import type { WorldClockEvent } from '../game/level0/runtime/worldClock';
-import type { WorldPoint } from '../game/level0/layout/types';
-import {
-  commitLevel0CheckResolution,
-  type CommitLevel0CheckInput,
-} from '../game/level0/rpg/checks';
-import {
-  applyLevel0ResourceEffect,
-  createLevel0ResourceEffect,
-  type Level0ResourceEffectInput,
-} from '../game/level0/rpg/resources';
-import {
-  activatePendingLevelUp,
-  allocateLevel0AttributePoint,
-  allocateLevel0SkillPoint,
-  awardLevel0Milestone as awardLevel0MilestoneDomain,
-  type Level0MilestoneId,
-} from '../game/level0/rpg/progression';
 
 export interface Level0RuntimeState {
   status: 'idle' | 'active' | 'incompatible';
   run: Level0RunState | null;
   feedbackId: string | null;
-  feedbackResourceEventIds: string[];
+  feedbackParanoiaEventIds: string[];
   clockEventIds: string[];
   sceneRevision: number;
 }
@@ -54,7 +45,7 @@ export const initialLevel0RuntimeState: Level0RuntimeState = {
   status: 'idle',
   run: null,
   feedbackId: null,
-  feedbackResourceEventIds: [],
+  feedbackParanoiaEventIds: [],
   clockEventIds: [],
   sceneRevision: 0,
 };
@@ -63,23 +54,16 @@ const safehouseBoundary = LEVEL0_LAYOUT_CONTRACT.anchors.find(
   (anchor) => anchor.id === 'safehouse.boundary'
 );
 
-if (!safehouseBoundary) {
-  throw new Error('Level 0 layout requires safehouse.boundary');
-}
+if (!safehouseBoundary) throw new Error('Level 0 layout requires safehouse.boundary');
 
-const isInsideSafehouseBoundary = (position: WorldPoint): boolean => {
-  const distance = Math.hypot(
-    position.x - safehouseBoundary.position.x,
-    position.y - safehouseBoundary.position.y
-  );
-  return distance <= safehouseBoundary.radius;
-};
+const isInsideSafehouseBoundary = (position: WorldPoint): boolean => Math.hypot(
+  position.x - safehouseBoundary.position.x,
+  position.y - safehouseBoundary.position.y
+) <= safehouseBoundary.radius;
 
 const applyClockFailure = (run: Level0RunState, events: WorldClockEvent[]): Level0RunState => {
   const deadline = events.find((event) => event.kind === 'deadline-failure');
-  if (!deadline || deadline.kind !== 'deadline-failure') {
-    return run;
-  }
+  if (!deadline || deadline.kind !== 'deadline-failure') return run;
   return {
     ...run,
     worldClock: acquirePauseOwner(run.worldClock, 'failure'),
@@ -96,20 +80,12 @@ const level0RuntimeSlice = createSlice({
   reducers: {
     initializeLevel0Run: (
       _state,
-      action: PayloadAction<{
-        sessionId: string;
-        identity: PlayerIdentity;
-        build: PlayerBuild;
-      }>
+      action: PayloadAction<{ sessionId: string; coverId: Level0CoverId }>
     ): Level0RuntimeState => ({
       status: 'active',
-      run: createInitialLevel0RunState(
-        action.payload.sessionId,
-        action.payload.identity,
-        action.payload.build
-      ),
+      run: createInitialLevel0RunState(action.payload.sessionId, action.payload.coverId),
       feedbackId: null,
-      feedbackResourceEventIds: [],
+      feedbackParanoiaEventIds: [],
       clockEventIds: [],
       sceneRevision: 1,
     }),
@@ -120,7 +96,7 @@ const level0RuntimeSlice = createSlice({
       status: 'active',
       run: normalizeLevel0RunForHydration(action.payload),
       feedbackId: null,
-      feedbackResourceEventIds: [],
+      feedbackParanoiaEventIds: [],
       clockEventIds: [],
       sceneRevision: 1,
     }),
@@ -128,7 +104,7 @@ const level0RuntimeSlice = createSlice({
       state.status = 'incompatible';
       state.run = null;
       state.feedbackId = 'save.incompatible';
-      state.feedbackResourceEventIds = [];
+      state.feedbackParanoiaEventIds = [];
       state.clockEventIds = [];
       state.sceneRevision += 1;
     },
@@ -170,11 +146,11 @@ const level0RuntimeSlice = createSlice({
     },
     setLevel0Feedback: (state, action: PayloadAction<string | null>) => {
       state.feedbackId = action.payload;
-      state.feedbackResourceEventIds = [];
+      state.feedbackParanoiaEventIds = [];
     },
     applyLevel0SafehouseAction: (state, action: PayloadAction<SafehouseActionId>) => {
       if (!state.run) return;
-      const resourceEventCount = state.run.rpg.resourceEvents.length;
+      const eventCount = state.run.rpg.paranoiaEvents.length;
       const result = action.payload === 'wait'
         ? applySafehouseWait(state.run)
         : action.payload === 'rest'
@@ -182,95 +158,63 @@ const level0RuntimeSlice = createSlice({
           : null;
       if (!result) {
         state.feedbackId = `safehouse.action.${action.payload}.not_implemented`;
-        state.feedbackResourceEventIds = [];
+        state.feedbackParanoiaEventIds = [];
         return;
       }
       state.run = result.run;
       state.clockEventIds = result.clockEventIds;
-      state.feedbackResourceEventIds = result.applied
-        ? result.run.rpg.resourceEvents.slice(resourceEventCount).map((event) => event.eventId)
+      state.feedbackParanoiaEventIds = result.applied
+        ? result.run.rpg.paranoiaEvents.slice(eventCount).map((event) => event.eventId)
         : [];
-      state.feedbackId = state.feedbackResourceEventIds.length > 0
+      state.feedbackId = state.feedbackParanoiaEventIds.length > 0
         ? null
         : result.applied
           ? `safehouse.action.${action.payload}.applied`
           : result.blockedReasonId ?? 'safehouse.blocked';
     },
-    commitLevel0RpgCheck: (state, action: PayloadAction<CommitLevel0CheckInput>) => {
+    researchLevel0Ability: (state, action: PayloadAction<Level0ResearchOptionId>) => {
       if (!state.run) return;
-      const result = commitLevel0CheckResolution(state.run, action.payload);
+      const result = applySafehouseResearch(state.run, action.payload);
       state.run = result.run;
-      state.feedbackResourceEventIds = [];
-      state.feedbackId = result.resolution
-        ? `check.result.${result.resolution.outcome}`
-        : result.blockedReasonId;
+      state.clockEventIds = result.clockEventIds;
+      state.feedbackParanoiaEventIds = [];
+      state.feedbackId = result.applied
+        ? 'research.applied'
+        : result.blockedReasonId ?? 'research.blocked';
     },
-    applyLevel0Resource: (
-      state,
-      action: PayloadAction<Omit<Level0ResourceEffectInput, 'worldMinute'>>
-    ) => {
+    commitLevel0Gate: (state, action: PayloadAction<CommitLevel0GateInput>) => {
       if (!state.run) return;
-      const result = applyLevel0ResourceEffect(state.run, createLevel0ResourceEffect({
-        ...action.payload,
-        worldMinute: state.run.worldClock.currentMinute,
-      }));
+      const result = commitLevel0GateVerdict(state.run, action.payload);
       state.run = result.run;
-      state.feedbackResourceEventIds = result.applied && result.event
+      state.feedbackParanoiaEventIds = [];
+      state.feedbackId = result.verdict
+        ? result.verdict.reasonId
+        : result.blockedReasonId ?? 'gate.blocked';
+    },
+    applyLevel0Paranoia: (state, action: PayloadAction<Level0ParanoiaEffectInput>) => {
+      if (!state.run) return;
+      const result = applyLevel0ParanoiaEffect(state.run, action.payload);
+      state.run = result.run;
+      state.feedbackParanoiaEventIds = result.applied && result.event
         ? [result.event.eventId]
         : [];
       state.feedbackId = result.applied
-        ? null
-        : result.event?.feedbackId ?? 'resource.effect.not_applied';
+        ? result.event?.feedbackId ?? null
+        : result.event?.feedbackId ?? 'paranoia.effect.not_applied';
       if (result.run.mission === 'L0_FAILED') state.sceneRevision += 1;
-    },
-    awardLevel0Milestone: (state, action: PayloadAction<Level0MilestoneId>) => {
-      if (!state.run) return;
-      const result = awardLevel0MilestoneDomain(state.run, action.payload);
-      state.run = result.run;
-      state.feedbackResourceEventIds = [];
-      state.feedbackId = result.applied
-        ? result.run.rpg.xpEvents[result.run.rpg.xpEvents.length - 1]?.feedbackId ?? null
-        : result.blockedReasonId ?? 'progression.milestone.already_awarded';
-    },
-    activateLevel0PendingLevel: (state) => {
-      if (!state.run) return;
-      const result = activatePendingLevelUp(state.run);
-      state.run = result.run;
-      state.feedbackResourceEventIds = [];
-      state.feedbackId = result.applied
-        ? 'level_up.activated'
-        : result.blockedReasonId ?? 'level_up.blocked';
-    },
-    allocateLevel0Skill: (state, action: PayloadAction<SkillKey>) => {
-      if (!state.run) return;
-      const result = allocateLevel0SkillPoint(state.run, action.payload);
-      state.run = result.run;
-      state.feedbackResourceEventIds = [];
-      state.feedbackId = result.applied
-        ? 'level_up.skill.allocated'
-        : result.blockedReasonId ?? 'level_up.blocked';
-    },
-    allocateLevel0Attribute: (state, action: PayloadAction<AttributeKey>) => {
-      if (!state.run) return;
-      const result = allocateLevel0AttributePoint(state.run, action.payload);
-      state.run = result.run;
-      state.feedbackResourceEventIds = [];
-      state.feedbackId = result.applied
-        ? 'level_up.attribute.allocated'
-        : result.blockedReasonId ?? 'level_up.blocked';
     },
     commitLevel0Departure: (state, action: PayloadAction<Level0RunState>) => {
       state.run = action.payload;
       state.feedbackId = 'safehouse.departure.complete';
-      state.feedbackResourceEventIds = [];
+      state.feedbackParanoiaEventIds = [];
       state.clockEventIds = [];
       state.sceneRevision += 1;
     },
-    restoreLevel0Retry: (state, action: PayloadAction<RetrySnapshot>) => {
+    restartAttempt: (state, action: PayloadAction<OperationAttemptBaseline>) => {
       state.status = 'active';
-      state.run = restoreLevel0RetrySnapshot(action.payload);
-      state.feedbackId = 'retry.restored';
-      state.feedbackResourceEventIds = [];
+      state.run = restartLevel0Attempt(action.payload);
+      state.feedbackId = 'restart_attempt.restored';
+      state.feedbackParanoiaEventIds = [];
       state.clockEventIds = [];
       state.sceneRevision += 1;
     },
@@ -280,20 +224,17 @@ const level0RuntimeSlice = createSlice({
 export const {
   acquireLevel0Pause,
   advanceLevel0Clock,
-  activateLevel0PendingLevel,
-  allocateLevel0Attribute,
-  allocateLevel0Skill,
-  applyLevel0Resource,
+  applyLevel0Paranoia,
   applyLevel0SafehouseAction,
-  awardLevel0Milestone,
   clearLevel0Run,
   commitLevel0Departure,
-  commitLevel0RpgCheck,
+  commitLevel0Gate,
   hydrateLevel0Run,
   initializeLevel0Run,
   markLevel0SaveIncompatible,
   releaseLevel0Pause,
-  restoreLevel0Retry,
+  researchLevel0Ability,
+  restartAttempt,
   setLevel0Feedback,
   syncLevel0PlayerCheckpoint,
 } = level0RuntimeSlice.actions;

@@ -57,11 +57,7 @@ Hidzu Corporation secretly supplies surveillance AI, identity infrastructure, an
 
 The protagonist is an American expatriate living in or moving through Hidzu Corporation-controlled Tokyo. They are not a fixed operative, soldier, courier archetype, or mandatory character named Trace.
 
-At New Game, the player chooses:
-
-- a callsign;
-- one of four authored appearances;
-- a grounded set of attributes and skills.
+At New Game, the player chooses among four authored civilian covers of the same protagonist. The playable Level 0 cover fixes its grounded appearance, fiction, and three binary starting abilities; three future covers remain visible and honestly disabled. There is no free-text name, point allocation, numeric attribute/skill build, class, or package.
 
 The protagonist seeks passage to Miami because they believe their missing father is connected to Operation Cold Iron. Hidzu Corporation does not consider them a problem when Level 0 begins. Their Tokyo chronology remains `OPEN-NAR-001`; the opening must not invent a prior flagging event.
 
@@ -119,7 +115,7 @@ Kobayashi appears in propaganda, civic messaging, or broadcast material rather t
 
 ### Opening
 
-1. The player creates a protagonist.
+1. The player selects the playable authored civilian cover.
 2. The protagonist begins at 18:30 inside the outdoor safehouse boundary.
 3. George introduces controls, the known Miami/father/Cold Iron goal, and the fact that Hidzu Corporation has no current concern; he does not invent immediate exposure.
 4. The protagonist meets Lira within the first meaningful story decision window.
@@ -138,7 +134,7 @@ The routes are not moral alignment choices or character classes. They are differ
 
 ### Cache and evidence
 
-The protagonist explicitly recovers the confiscated medical supplies. Removing them is a surveillance rule break only if a camera or Needle sees it. A nearby shipping manifest uses the dedicated chain `unknown → Naila warning → manifest recognized → manifest copied`. Naila's warning guarantees recognition; otherwise an authored Awareness check may recognize it. Copying is a separate five-world-minute action with no extra check. Failure or omission does not block the medkit objective.
+The protagonist explicitly recovers the confiscated medical supplies. Removing them is a surveillance rule break only if a camera or Needle sees it. A nearby shipping manifest uses the dedicated chain `unknown → Naila warning → manifest recognized → manifest copied`. Naila's warning guarantees recognition; otherwise `ability.spot_patterns` or the declared five-world-minute study path may satisfy `gate.manifest_recognition`. Copying is a separate five-world-minute action with no additional gate. Failure or omission does not block the medkit objective.
 
 The precise beneficiaries of the supplies, seizure incident, facility identity, and manifest contents remain open narrative facts and must be frozen before final dialogue/content authoring. Facility identity is `OPEN-NAR-015`.
 
@@ -157,7 +153,7 @@ Lira and George respond to the factual outcome ledger:
 - camera loop and trace;
 - hiding/blending recovery;
 - pursuit or interception;
-- Health loss and Paranoia peak;
+- peak Paranoia tier, significant sources, and recovery;
 - medkits returned;
 - manifest recognized, missed, or not inspected;
 - transit validated.

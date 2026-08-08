@@ -42,7 +42,7 @@ Conversations are RPG play. Lira establishes the bargain, Naila explains technic
 
 ### Paranoia is consequential and honest
 
-Paranoia is an internal 0–100 resource presented as the named tiers Calm, Uneasy, Shaken, and Breaking, caused by communicated rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored story shocks. Its thresholds penalize every deterministic check and 100 is fatal. The player may spend ten world minutes for ten relief once at the Transit Road vending machine and once at the Market Ring/Outer Space shrine; the first qualifying difficult surveillance escape may remove five once. It never fabricates clues, changes objective truth, lies through the HUD, or creates hallucinated evidence.
+Paranoia is an internal 0–100 resource presented as the named tiers Calm, Uneasy, Shaken, and Breaking, caused by communicated rule-break-linked surveillance exposure, pursuit, authored physical consequences, dangerous escape, capture outcomes, and authored story shocks. Each newly crossed tier may lock only the fragile abilities named by authored ability data; hardened abilities remain available. Reaching 100 stages a contextual breakdown and surrender rather than a medical death. The player may spend ten world minutes for ten relief once at the Transit Road vending machine and once at the Market Ring/Outer Space shrine; the first qualifying difficult surveillance escape may remove five once. It never fabricates clues, changes objective truth, lies through the HUD, or creates hallucinated evidence.
 
 ### Escape matters more than combat
 
@@ -115,11 +115,13 @@ No major Level 0 system is an island. The following relationships are design con
 | Time and schedules | Dusk/curfew context and deadline | Routes, civilians, security, lighting, audio, objectives | The same district supports two legible timings with different social/technical emphasis. |
 | Movement and layout | Position, facing, line of sight, interaction eligibility | Surveillance, discovery, hiding/blending, objectives | The player physically earns safety and knowledge; the game does not route for them. |
 | Surveillance network | Clear/Suspicious/Pursuit, source, last-known evidence | Paranoia, George, HUD, safehouse availability, outcome ledger | Escalation is attributable and recoverable rather than omniscient. |
-| Paranoia tiers and abilities | Visible tier gauge and ability locks | Gates, safehouse, failure, dialogue, debrief | Consequences shape choices and can end the attempt without creating combat. |
+| Paranoia tiers and abilities | Continuous read-only slider, named tier, and ability locks | Gates, safehouse, failure, dialogue, debrief | The player sees pressure accumulate continuously while named thresholds explain its consequences. |
 | Safehouse and persistence | Wait, Rest, autosave, immutable `OperationAttemptBaseline` | Time, recovery, progression, mission continuation | Recovery costs time; Restart Attempt restores one honest departure boundary. |
 | Facts and objectives | Knowledge precision and current required beat | HUD, terminals, dialogue, George, dossier, debrief | The player knows what to do without omniscient markers. |
 | Outcome ledger | What actually happened | Lira return, debrief, Miami continuation | The game never credits, condemns, or describes an action the player did not take. |
 | Art, actors, audio, localization, accessibility | Equivalent semantic presentation | Every system above | Geometry, state, warning, and meaning remain readable across viewports, languages, and sensory needs. |
+
+Street tension follows one law (`GDR-PROD-005`): the city never treats mere presence as guilt — time, crowds, and procedures continue without the player, and once the player commits, the system remembers exactly what it observed. Tension is anticipation → commitment → persistence, staged across three street phases: before the breach (perishable crowds, changing schedules, Needle's patrol, clocks on walls), during the breach (committed procedures and resolution intervals the network can watch), and after the breach (active recognition, reactive advisories, and familiar streets that now mean something different). Each area carries at most two dominant pressure sources, relief has geography, and the target feeling is temporarily anonymous, never permanently secure.
 
 The critical reconciliation seams are specified explicitly: facts → gates → George → objectives → dossier → debrief; surveillance rule breaks → concern → Paranoia → safehouse → Restart Attempt; time → schedules → routes → deadline; Blender geometry → collision → entrances → interaction/device anchors; and Paranoia tiers → ability locks → cause-specific failure → Restart Attempt.
 
@@ -193,8 +195,8 @@ Miami and the occupied-America campaign, additional districts and interiors, mor
 
 ### Character, condition, and persistence
 
-- [[92 Character & Progression]] — covers, binary abilities, gates, and research.
-- [[43 Health, Failure & Recovery]] — failure, surrender, and recovery.
+- [[92 Character, Covers, Abilities & Research]] — covers, binary abilities, gates, and research.
+- [[43 Failure, Surrender & Recovery]] — failure, surrender, and recovery.
 - [[60 Paranoia]] — stress sources, thresholds, penalties, honesty, and recovery.
 - [[44 Safehouse, Save & Restart Attempt]] — planning hub, Wait, Rest, autosave, `OperationAttemptBaseline`, and restoration.
 - [[93 Inventory (MVP)]] — why mission objects are explicit state rather than managed inventory.
@@ -234,6 +236,6 @@ Miami and the occupied-America campaign, additional districts and interiors, mor
 
 ## Bible acceptance standard
 
-This Bible is complete enough for implementation when a new engineer can trace every Level 0 transition to one state owner, triggering player action, prerequisites, facts/checks, world/HUD/dialogue/audio/George feedback, persistence/Restart Attempt behavior, failure/recovery outcome, outcome-ledger write, system chapter, and Linear owner. A missing exact value is acceptable only when it has a stable `OPEN-*`, an explicit affected gate, and no silently promoted implementation constant.
+This Bible is complete enough for implementation when a new engineer can trace every Level 0 transition to one state owner, triggering player action, prerequisites, abilities/facts/costed gate paths, world/HUD/dialogue/audio/George feedback, persistence/Restart Attempt behavior, failure/recovery outcome, outcome-ledger write, system chapter, and Linear owner. A missing exact value is acceptable only when it has a stable `OPEN-*`, an explicit affected gate, and no silently promoted implementation constant.
 
 The in-game projection is complete enough for players when every current Approved player-facing decision and required topic maps to a rendered section or to an explicit non-player-facing governance classification; all sixteen English and Ukrainian chapters have equivalent structure and meaning; every source/decision reference resolves in non-rendered metadata; forbidden uncertainty, history, tracker, and implementation language is absent; search and navigation reach every section; and start-menu, paused-menu, `F1`, responsive, focus, pause, Restart Attempt, and no-state-mutation behavior pass live human-control acceptance.

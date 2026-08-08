@@ -1,145 +1,84 @@
-# The Getaway · Neon Resistance Sandbox
+# The Getaway
 
-> Tactical stealth RPG authored by AI agents. Level 0 is our living lab: one occupied megacity, two distinct districts, and a HUD that never sleeps.
+The Getaway is a grounded dystopian surveillance RPG about escape, paranoia, dialogue, hiding, compromised technology, and the social cost of living under institutional observation.
 
-## Table of Contents
-- [Snapshot](#snapshot)
-- [Latest Transmission](#latest-transmission)
-- [Gameplay Pillars](#gameplay-pillars)
-- [Systems Online](#systems-online)
-- [Tech Stack & Architecture](#tech-stack--architecture)
-- [Working With The Game](#working-with-the-game)
-- [Content Authoring Pipeline](#content-authoring-pipeline)
-- [Narrative Authoring & Storylets](#narrative-authoring--storylets)
-- [Testing & QA](#testing--qa)
-- [Roadmap Signal](#roadmap-signal)
-- [License – Vibe MIT](#license--vibe-mit)
+The current MVP target is a 15–20 minute outdoor Level 0 vertical slice in Hidzu-controlled Tokyo. The protagonist is an ordinary expatriate trying to recover confiscated medical supplies for Lira and secure passage toward Miami while cameras, one verifier drone, curfew, and their own Paranoia narrow the available options.
 
-## Snapshot
-- **Perspective**: Isometric Phaser rendering with neon 2.5-D dressing and tactical overlays.
-- **Loop**: Brief in Slums safehouses, navigate Downtown megablocks, battle curfew patrols, and thread dialogue/quest outcomes into the resistance story.
-- **State of Level 0**: District-aware props, bilingual content parity, click-to-move traversal, stealth perception, and a fully AI-generated narrative pipeline.
+## Current product contract
 
-## Latest Transmission
-| Date | Drop | Highlights |
-| --- | --- | --- |
-| Oct 2025 | Mini-Map Overhaul | Layered controller with drag/zoom, waypoint previews, objective focus, and performance throttling. |
-| Oct 2025 | Cyberpunk HUD Revamp | Tactical HUD with holo dossier, minimap navigation boosts, reactive curfew alerts. |
-| Oct 2025 | District Atmospherics | Slums vs. Downtown prop palettes, neon signage, seeded NPC routines, loot glows, isometric object factory upgrades. |
-| Oct 2025 | Skill Tree & Progression | SkillTreePanel with combat bonuses, XP/level-up flow, character creation wizard (identity → attributes → background). |
-| Sep 2025 | Surveillance & Perception | Guard cones, alert escalations, patrol reinforcements, curfew state machine, click-to-move with path previews. |
+- Isometric outdoor district built as a dense four-block mission envelope.
+- Direct click-to-move and WASD movement; no player A*, automatic safest-path selection, or tactical route planner.
+- Four authored civilian covers at New Game: one playable in Level 0 and three visibly disabled future choices.
+- Binary named abilities, deterministic met/not-met gates, and exact reasons; no attributes, skills, XP, levels, or hidden rolls.
+- One condition resource, Paranoia, presented as Calm, Uneasy, Shaken, and Breaking rather than a number.
+- Safehouse research trades one declared fact plus world minutes for one ability, once per option.
+- Dialogue, contacts, facts, George, cameras, hiding/blending, and escape are the core systems.
+- No active combat loop, AutoBattle, weapons, EMP magic, deep inventory, procedural dialogue, or runtime LLM story generation.
 
-## Gameplay Pillars
-- **Infiltration Under Curfew**: Nightfall flips the city into lockdown; curfew alerts, patrol reinforcements, and cover callouts keep players hustling between safe zones.
-- **Choice-Driven Narrative**: Dialogue trees, faction alignments, and quest hooks respond to skill checks, backgrounds, and bilingual localization.
-- **Tactical Combat**: AP economy, cover mechanics, and equipment bonuses blend with skill-driven hit/dodge/crit maths for crunchy encounters.
-- **Living Districts**: District metadata drives props, signage, loot, and NPC routines so Slums feel reclaimed while Downtown stays corporate sterile.
-- **AI-Led Production**: Content, code, and roadmap execution flow from AI agents—human edits must explicitly document deviations per the license.
+The canonical design contract lives in [`memory-bank/01 MVP/Game Design.md`](memory-bank/01%20MVP/Game%20Design.md). Runtime or test code that contradicts the canonical specification is legacy evidence, not current product authority.
 
-## Systems Online
-### City & Atmosphere
-- **District Overhaul (Step 11.5)**: Procedurally dressed Slums/Downtown blocks with barricades, streetlights, billboards, and neon overlays sourced from `IsoObjectFactory`.
-- **NYC Grid Layout (Step 20)**: Four avenues × four streets carve 16 parcels; each door sits on a walkable tile for seamless interior transitions.
-- **Day/Night & Curfew (Steps 8, 10)**: Five-minute cycle triggers curfew enforcement, animated cover highlights, and patrol spawns.
+## Current implementation state
 
-### Tactical Layer
-- **Movement**: Grid-based keyboard controls plus breadth-first click-to-move with door traversal and path previews (Step 18).
-- **Combat Core**: Turn-based AP system, cover penalties, skill-informed accuracy, equipment bonuses, and reinforcement hooks (Steps 5, 6, 19, 23.5).
-- **Stealth Readability**: Vision cones, suspicion escalation, and network alerts telegraph when stealth is compromised (Step 19).
+- GET-204/205: a Neo Tokyo 2-derived, Hidzu-treated four-block production world is active in the Level 0 runtime.
+- GET-206: twelve grounded actor sets, portraits, and the George AR presentation are committed.
+- GET-216: the cover/ability/Paranoia/research version-3 runtime is being integrated and remains subject to live requester acceptance.
+- Surveillance causality, final dialogue/failure presentation, schedules/audio, and the complete mission route remain later tickets in the GET-139 program.
 
-### Narrative & Progression
-- **Dialogue & Quests (Steps 13–16)**: Branching conversations with skill gates, quest log integration, bilingual strings, and localized HUD feedback.
-- **Character Creation (Steps 22.1–22.3)**: Three-step wizard for identity, SPECIAL allocation, and background perks/equipment.
-- **Skills & Progression (Steps 23–24.2)**: Derived stat formulas, XP/level-up modal, skill tree branches with combat bonuses, and future perk hooks.
+Do not infer vertical-slice completion from a bootable scene, green fixture, or generated report. Human play and fixed-viewport live evidence are acceptance gates.
 
-### UX & Accessibility
-- Neon HUD arranged in a recon tri-column with minimap, status readouts, and action log.
-- Character sheets, skill trees, and overlays support keyboard navigation, ARIA live regions, and bilingual toggles.
-- Toast notifications and modal flows surface XP, curfew warnings, and skill gate feedback.
-- Layered minimap controller delivers cached tiles, enemy/objective markers, Shift-drag waypoint previews, keyboard panning, and high-contrast/auto-rotate options.
+## Stack and workspace
 
-## Tech Stack & Architecture
-- **React + Vite** host the HUD, overlays, character creation flow, and modal systems.
-- **Phaser** renders isometric districts, token sprites, vision cones, and path previews.
-- **Redux Toolkit** persists player/world/quest slices (with `localStorage` hydration and reset hooks).
-- **Content Pipeline** keeps authoring data immutable under `src/content/levels/<level-id>/locales/{en,uk}.ts`, cloned into runtime stores.
-- **Memory Bank** (implementation-plan, progress, architecture, plot) records roadmap scope, shipping milestones, and narrative canon.
+- `the-getaway/`: Vite, React, TypeScript, Redux Toolkit, and Phaser application.
+- `the-getaway/src/`: application and runtime source.
+- `the-getaway/public/`: optimized runtime assets.
+- `the-getaway/src/__tests__/`: Jest and Testing Library coverage.
+- `memory-bank/`: canonical Markdown game-design, architecture, roadmap, and readiness vault.
+- `progress/`: active Linear-task continuity notes.
 
-## Working With The Game
-```bash
-cd the-getaway
-yarn install      # first-time setup
-yarn dev          # Vite dev server + Phaser canvas on http://localhost:5174
-yarn build        # type-check + production bundle
-yarn lint         # ESLint across the mono-neon codebase
-yarn test         # Jest + Testing Library suites
-```
-
-## Content Authoring Pipeline
-1. Draft quests, dialogue branches, NPC routines, loot tables, and signage metadata inside `src/content/levels/<level-id>/locales`.
-2. Register new IDs through slice loaders—never mutate source exports directly; runtime clones keep authoring files pristine.
-3. Update relevant Redux selectors/services (`playerSlice`, `worldSlice`, `questsSlice`, etc.) if systems evolve.
-4. Mirror roadmap updates and completions in `memory-bank/progress.md`.
-
-## Narrative Authoring & Storylets
-### Storylet Workflow
-1. Define new narrative beats in the locale bundles under `src/content/storylets/{en,uk}.ts`, mirroring the structure in `types.ts`.
-2. Register each storylet in `src/content/storylets/index.ts` so the Redux slice can look it up by resource key.
-3. Wire mission/quest triggers through `storyletSlice.ts`—queue entries reference the storylet ID, locale keys, and any faction or skill rewards.
-4. Add coverage in `src/store/__tests__/storyletSlice.test.ts` (and related selector specs) to lock in trigger logic, queue ordering, and reward application.
-5. Run `yarn test --runTestsByPath src/store/__tests__/storyletSlice.test.ts` while iterating so regressions in queue logic surface quickly.
-
-### Scene Generation From Narrative Prompts
-Use the narrative triple pipeline when you want a mission prompt to spawn a Phaser-ready layout:
+## Run locally
 
 ```bash
 cd the-getaway
-yarn narrative:generate \
-  --level levels.slums_command_grid \
-  --mission missions.level0.recover_cache \
-  --quest quests.market_cache \
-  --story "The crew drags salvage carts into the stair-cut alley under the market signal tower, locking it down before the patrol loop returns."
+yarn install
+yarn dev
 ```
 
-- The CLI validates the generated payload, materialises prop placements, and writes JSON to `src/content/levels/<level-id>/missions/<mission-id>/generatedScenes/`.
-- Use `--input ./prompt.txt` instead of `--story` to read longer briefs from disk.
-- Pass `--dry-run` to preview validation and placement issues without writing files; add `--verbose` to surface triple-validation warnings.
-- For manual control, edit the emitted JSON directly or iterate on the mission prompt and rerun the CLI; advanced authors can fork the script to pass explicit triple bundles.
+The Vite development server uses `http://localhost:5174` with a strict port. The production preview uses `http://localhost:4174`.
 
-After generation:
-1. Register the new scene in `src/content/scenes/generatedScenes.ts` (resource key → definition).
-2. Append the scene key to the owning mission via the `generatedSceneKeys` array so gameplay systems can discover it.
-3. If placements need tweaking, adjust the JSON manually or rerun the CLI with refined prompts.
+## Verification
 
-### Validating Narrative Assets
-- `yarn test --runTestsByPath src/__tests__/narrativeValidation.test.ts` ensures all locale, mission, quest, and storylet references resolve.
-- `yarn test --runTestsByPath src/game/world/__tests__/worldGenerationPipeline.test.ts src/game/world/__tests__/relationRules.test.ts` confirms relation rules produce collision-safe placements.
-- Keep `memory-bank/architecture.md` and `memory-bank/progress.md` updated whenever you introduce new authoring patterns or complete roadmap steps.
+From `the-getaway/`:
 
-## Testing & QA
-- Jest suites cover combat maths, dialogue gating, skill allocation, curfew flows, and UI regression (`src/__tests__`).
-- `yarn test` for full coverage; target files (e.g., `dialogueOverlay.test.tsx`, `combat.test.ts`) when iterating fast.
-- `yarn build` validates TypeScript + bundler health before every commit.
-- Manual smoke: roam both districts, trigger curfew, engage patrols, and validate bilingual toggles.
+```bash
+yarn lint
+yarn build
+yarn test --runInBand
+yarn test --coverage --runInBand
+yarn playtest:agent -- --profile guided-level0 --max-steps 20 --codex
+```
 
-## Roadmap Signal
-- **Perk System (Step 24.3)**: Capstone perks and perk-aware combat hooks on deck.
-- **Equipment Durability & Encumbrance (Step 25+)**: Extend stat aggregation into movement penalties and maintenance loops.
-- **Directional Cover & Overwatch (Step 26+)**: Deepen tactical positioning with flanking, overwatch cones, and targeted shots.
-- Track the full roadmap inside `memory-bank/progress.md`—Level 0 continues to expand toward full campaign readiness.
+Sprite changes also require `yarn sprites:validate`. Visual or gameplay work additionally requires live normal-control inspection at the target desktop and mobile viewports; automated checks are regression evidence, not visual acceptance.
+
+## Canonical documentation
+
+- [Game Design](memory-bank/01%20MVP/Game%20Design.md)
+- [MVP Spine](memory-bank/01%20MVP/10%20MVP%20Spine.md)
+- [Level 0 Vertical Slice Contract](memory-bank/01%20MVP/11%20Level%200%20Vertical%20Slice%20Contract.md)
+- [Decision Register](memory-bank/01%20MVP/12%20Game%20Design%20Decision%20Register.md)
+- [Content and State Matrix](memory-bank/01%20MVP/13%20Level%200%20Content%20and%20State%20Matrix.md)
+- [Architecture](memory-bank/04%20Engineering/Architecture.md)
+- [Roadmap](memory-bank/04%20Engineering/Roadmap.md)
+- [MVP Readiness](memory-bank/01%20MVP/95%20MVP%20Readiness%20Checklist.md)
+
+## Legacy boundary
+
+The repository still contains dormant pre-pivot combat, storylet, numeric-progression, and older scene code. Do not extend those systems for Level 0 or treat their tests and copy as current design. GET-208/GET-179 own the broader retirement and agent-harness modernization work.
 
 ## License – Vibe MIT
+
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:
 
 - The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 - **Vibe Clause**: Contributions should respect the established all-AI workflow. If you introduce human-authored code, clearly document the deviation and ensure downstream users know how it diverges.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-## License – Vibe MIT
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, subject to the following conditions:
-
-- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-- **Vibe Clause**: Any derivative or contribution must be produced entirely by AI agents. If a human writes even a single line, the license automatically terminates for that work.
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

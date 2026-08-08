@@ -5,7 +5,6 @@ jest.mock('phaser', () => ({
 
 import { createInitialLevel0RunState } from '../game/level0/runtime/safehouse';
 import { createTestLevel0RunState } from '../game/level0/testing/createTestLevel0RunState';
-import { createConfirmedLevel0Sample } from '../game/level0/rpg/creation';
 import {
   preloadCharacterSpriteSheetRefs,
 } from '../game/visual/entities/characterSpriteAssets';
@@ -19,10 +18,9 @@ const createMockScene = (): Phaser.Scene => ({
 } as unknown as Phaser.Scene);
 
 describe('Level 0 actor runtime seam', () => {
-  it('requires a player-confirmed identity and build instead of a production sample default', () => {
+  it('requires a player-confirmed authored cover instead of a production sample default', () => {
     expect(() => createInitialLevel0RunState(
       'actor-missing-identity',
-      undefined as never,
       undefined as never
     )).toThrow();
   });
@@ -33,14 +31,12 @@ describe('Level 0 actor runtime seam', () => {
     );
   });
 
-  it('rejects an appearance outside the grounded protagonist roster', () => {
-    const sample = createConfirmedLevel0Sample('social_mental', 'Mara');
+  it('rejects a cover outside the authored cover catalog', () => {
     expect(() => createInitialLevel0RunState(
       'actor-invalid',
-      { ...sample.identity, appearancePresetId: 'hero_operative' },
-      sample.build
+      'cover.unknown' as never
     )).toThrow(
-      'Unknown Level 0 appearance preset: hero_operative'
+      'Level 0 requires an available authored cover: cover.invalid'
     );
   });
 

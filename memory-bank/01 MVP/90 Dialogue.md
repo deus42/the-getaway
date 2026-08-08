@@ -29,7 +29,7 @@ The player can:
 - Lira is the primary Level 0 contact.
 - Naila and Brant are optional preparation contacts.
 - Each conversation node has a stable ID, speaker, localized line, available choices, conditions, effects, and next-node behavior.
-- `PlayerBuild`, `FactLedger`, `WorldClockState`, mission state, and relevant outcome history are available to the resolver.
+- `CoverIdentity`, held/lit ability state, `FactLedger`, `WorldClockState`, mission state, and relevant outcome history are available to the resolver.
 - Dialogue begins only through explicit interaction in range with a currently available contact.
 - Dialogue acquires a full simulation pause before the first line appears.
 
@@ -37,7 +37,7 @@ The player can:
 
 1. The player explicitly speaks with Lira outside the safehouse.
 2. Lira explains the confiscated medical supplies, the Hidzu Corporation logistics site, the midnight deadline, and the promised outbound passage.
-3. The player’s exact choices can clarify the situation, expose build-specific understanding, and set practical tone without awarding currency or generic relationship points.
+3. The player’s exact choices can clarify the situation, expose cover-, ability-, or fact-specific understanding, and set practical tone without awarding currency or generic relationship points.
 4. Optional Naila and Brant conversations provide factual knowledge: camera/terminal topology and delivery/service behavior respectively.
 5. During or after infiltration, authored interactions present the gate verdict with its exact reason before every gated choice and reuse the identical verdict after commitment.
 6. On return, Lira reads the actual outcome ledger: contacts consulted, timing, camera handling, pursuit, Paranoia, medkits, and optional evidence.
@@ -68,19 +68,19 @@ Each choice resolves in this order:
 
 - Gates never roll random dice.
 - A gate passes when the player holds the designated lit ability or the designated fact, or accepts its declared costed path (`GDR-RPG-009`); the presentation is met/not-met with the exact reason, never arithmetic.
-- Preview always shows `needs N — you have M` plus Attribute, Skill, Paranoia, fact, and authored situational components; result uses the same resolver inputs and read model.
-- A designated fact may reveal a choice, lower a specific requirement, or guarantee a specific recognition. Facts are never universal numeric currency.
+- Preview and result use the same gate verdict and list each available or missing ability, fact, and declared costed path with its exact reason. No total or modifier exists.
+- A designated fact may reveal a choice, satisfy one specific path, or guarantee one specific recognition. Facts are never universal currency.
 - The selected UI choice is the protagonist’s exact spoken line, not an abstract intent label that produces surprising dialogue.
 - Every authored choice in the reached dialogue node remains visible when locked and states the exact missing ability, locking tier, fact, or cost. Undiscovered content belongs to a later unreached node; it is not hidden as a locked choice in the current node.
 - Every nonterminal failed gate changes the situation through its declared time, Paranoia, access, position, objective-precision, or surveillance effect and communicates that worse-but-real path. Only the final failed capture-escape choice may end the attempt.
-- Optional exposition grants no XP, credits, inventory, or relationship score.
+- Optional exposition grants no ability, undeclared fact, credits, inventory, or relationship score.
 - Dialogue pauses time, cameras, drone, NPC schedules, movement, and pursuit.
 - English and Ukrainian must produce equivalent state transitions and effects.
 - The Level 0 gate catalog and its ability/fact/costed-path mapping are catalogued in [[13 Level 0 Content and State Matrix]] under `OPEN-ABL-001`. Its recorded recommendations may drive reversible authored trials, but remain non-final until accepted.
 
 ## 7. Inputs from other systems
 
-- [[92 Character & Progression]] supplies the held abilities and the current Paranoia tier.
+- [[92 Character, Covers, Abilities & Research]] supplies the held abilities and the current Paranoia tier.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies mission state and the Fact Ledger.
 - [[80 Day-Night Cycle]] supplies contact availability and pause ownership.
 - [[40 George (AI Companion)]] consumes verified outcomes but does not resolve dialogue.

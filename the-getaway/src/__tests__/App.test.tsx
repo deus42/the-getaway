@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import App from '../App';
 import {
+  LEVEL0_ATTEMPT_BASELINE_KEY,
   LEVEL0_AUTOSAVE_KEY,
-  LEVEL0_RETRY_KEY,
-  readLevel0Retry,
+  readLevel0OperationAttemptBaseline,
 } from '../game/level0/runtime/persistence';
 import { PERSISTED_STATE_KEY, resetGame, store } from '../store';
 import { setLocale } from '../store/settingsSlice';
@@ -22,19 +22,9 @@ jest.mock('../components/level0/Level0GameCanvas', () => {
   };
 });
 
-const startNormalRun = async (callsign = 'Mara') => {
+const startNormalRun = async () => {
   fireEvent.click(await screen.findByTestId('level0-new-game'));
-  fireEvent.change(screen.getByTestId('level0-callsign'), { target: { value: callsign } });
-  fireEvent.click(screen.getByTestId('level0-create-attribute-mental-increase'));
-  fireEvent.click(screen.getByTestId('level0-create-attribute-mental-increase'));
-  fireEvent.click(screen.getByTestId('level0-create-attribute-social-increase'));
-  fireEvent.click(screen.getByTestId('level0-create-attribute-social-increase'));
-  for (let index = 0; index < 2; index += 1) {
-    fireEvent.click(screen.getByTestId('level0-create-skill-composure-increase'));
-    fireEvent.click(screen.getByTestId('level0-create-skill-insight-increase'));
-    fireEvent.click(screen.getByTestId('level0-create-skill-influence-increase'));
-  }
-  fireEvent.click(screen.getByTestId('level0-creation-confirm'));
+  fireEvent.click(await screen.findByTestId('level0-cover-select-confirm'));
   await screen.findByTestId('level0-game-canvas');
 };
 
@@ -154,7 +144,7 @@ describe('canonical Level 0 runtime entry', () => {
     expect(screen.queryByTestId('level0-start-menu')).not.toBeInTheDocument();
   });
 
-  it('applies safehouse actions and persists one operation-departure Retry snapshot', async () => {
+  it('applies safehouse actions and persists one operation-attempt baseline', async () => {
     render(<App />);
     await startNormalRun();
     act(() => {
@@ -170,10 +160,12 @@ describe('canonical Level 0 runtime entry', () => {
 
     fireEvent.click(screen.getByTestId('safehouse-depart'));
     fireEvent.click(screen.getByTestId('safehouse-confirm'));
-    await waitFor(() => expect(window.localStorage.getItem(LEVEL0_RETRY_KEY)).not.toBeNull());
+    await waitFor(() => expect(
+      window.localStorage.getItem(LEVEL0_ATTEMPT_BASELINE_KEY)
+    ).not.toBeNull());
 
-    const retry = readLevel0Retry(window.localStorage);
-    expect(retry.status).toBe('compatible');
+    const baseline = readLevel0OperationAttemptBaseline(window.localStorage);
+    expect(baseline.status).toBe('compatible');
     expect(store.getState().level0Runtime.run?.mission).toBe('L0_OPERATION_DEPARTED');
   });
 

@@ -1,10 +1,13 @@
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
-import { resolvePlayerSpriteSetId } from '../../../content/characters/spriteManifest';
-import { validateLevel0CreationDraft } from '../rpg/creation';
+import { validateLevel0CoverSelection } from '../rpg/creation';
+import { deriveLevel0ParanoiaTier } from '../rpg/gates';
+import { applyLevel0ParanoiaEffect } from '../rpg/paranoia';
 import {
-  applyLevel0ResourceEffect,
-  createLevel0ResourceEffect,
-} from '../rpg/resources';
+  LEVEL0_RESEARCH_CATALOG,
+  applyLevel0Research,
+  synchronizeLevel0ResearchState,
+} from '../rpg/research';
+import type { Level0CoverId, Level0ResearchOptionId } from '../rpg/types';
 import {
   acquirePauseOwner,
   createWorldClockState,
@@ -12,15 +15,14 @@ import {
 } from './worldClock';
 import type {
   Level0RunState,
-  PlayerBuild,
-  PlayerIdentity,
-  RetrySnapshot,
+  OperationAttemptBaseline,
+  OperationAttemptBaselineReadback,
   SafehouseActionAvailability,
   SafehouseActionId,
 } from './types';
 
-export const LEVEL0_RUN_SCHEMA_VERSION = 2;
-export const LEVEL0_RUNTIME_CONTENT_VERSION = 'level0-runtime-v2';
+export const LEVEL0_RUN_SCHEMA_VERSION = 3 as const;
+export const LEVEL0_RUNTIME_CONTENT_VERSION = 'level0-runtime-v3';
 
 export const LEVEL0_CONTENT_VERSIONS = {
   layout: LEVEL0_LAYOUT_CONTRACT.id,
@@ -31,50 +33,31 @@ const clone = <T>(value: T): T => JSON.parse(JSON.stringify(value)) as T;
 
 const getRequiredAnchorPosition = (anchorId: string) => {
   const anchor = LEVEL0_LAYOUT_CONTRACT.anchors.find((candidate) => candidate.id === anchorId);
-  if (!anchor) {
-    throw new Error(`Required Level 0 anchor is missing: ${anchorId}`);
-  }
+  if (!anchor) throw new Error(`Required Level 0 anchor is missing: ${anchorId}`);
   return { ...anchor.position };
 };
 
 export const createInitialLevel0RunState = (
   sessionId: string,
-  identity: PlayerIdentity,
-  build: PlayerBuild
+  coverId: Level0CoverId
 ): Level0RunState => {
-  if (!sessionId.trim()) {
-    throw new Error('Level 0 session ID is required');
+  if (!sessionId.trim()) throw new Error('Level 0 session ID is required');
+  const selection = validateLevel0CoverSelection(coverId);
+  if (!selection.valid || !selection.identity || !selection.abilities) {
+    throw new Error(`Level 0 requires an available authored cover: ${selection.reasonId}`);
   }
-  if (!resolvePlayerSpriteSetId(identity.appearancePresetId)) {
-    throw new Error(`Unknown Level 0 appearance preset: ${identity.appearancePresetId}`);
-  }
-  const confirmed = validateLevel0CreationDraft({
-    callsign: identity.callsign,
-    appearancePresetId: identity.appearancePresetId,
-    attributes: { ...build.attributes },
-    skills: { ...build.skills },
-  });
-  if (!confirmed.valid || build.level !== 1 || build.xp !== 0 ||
-    build.unspentSkillPoints !== 0 || build.unspentAttributePoints !== 0) {
-    throw new Error('Level 0 requires a valid confirmed creation build');
-  }
-
   return {
     schemaVersion: LEVEL0_RUN_SCHEMA_VERSION,
     contentVersions: { ...LEVEL0_CONTENT_VERSIONS },
     sessionId,
-    identity: { ...identity, callsign: confirmed.normalizedCallsign },
-    build: JSON.parse(JSON.stringify(build)) as PlayerBuild,
+    identity: clone(selection.identity),
+    abilities: clone(selection.abilities),
     rpg: {
-      resolvedChecks: {},
-      resourceEvents: [],
-      announcedParanoiaPenalties: [],
-      awardedMilestoneIds: [],
-      xpEvents: [],
-      pendingLevelUps: 0,
-      allocationEvents: [],
+      gateResolutions: {},
+      paranoiaEvents: [],
+      announcedParanoiaTiers: [],
+      researchEvents: [],
     },
-    health: 100,
     paranoia: 0,
     worldClock: createWorldClockState(),
     mission: 'L0_SAFEHOUSE_INTRO',
@@ -100,7 +83,7 @@ export const createInitialLevel0RunState = (
     },
     safehouse: {
       insideBoundary: true,
-      departureSnapshotCreated: false,
+      operationAttemptBaselineCreated: false,
       recoveryAvailable: true,
       transitCredentialState: 'not-issued',
       debriefAvailable: false,
@@ -137,12 +120,19 @@ export const normalizeLevel0RunForHydration = (run: Level0RunState): Level0RunSt
       : [];
   return {
     ...clone(run),
-    worldClock: {
-      ...clone(run.worldClock),
-      pauseOwners: durablePauseOwners,
+    abilities: {
+      ...clone(run.abilities),
+      researchState: synchronizeLevel0ResearchState(
+        Object.keys(run.facts.known),
+        run.abilities.researchState
+      ),
     },
+    worldClock: { ...clone(run.worldClock), pauseOwners: durablePauseOwners },
   };
 };
+
+const requiresProtectedSafehouseState = (actionId: SafehouseActionId): boolean =>
+  !['character', 'dossier'].includes(actionId);
 
 export const evaluateSafehouseAction = (
   run: Level0RunState,
@@ -153,42 +143,33 @@ export const evaluateSafehouseAction = (
     evaluatedAgainstSurveillanceLevel: run.surveillance.level,
     directlyObserved: run.surveillance.directlyObserved,
   };
-
   const blocked = (blockedReasonId: string): SafehouseActionAvailability => ({
     ...base,
     available: false,
     blockedReasonId,
   });
-
   if (run.mission === 'L0_FAILED' || run.mission === 'L0_COMPLETE') {
     return blocked('safehouse.blocked.terminal');
   }
-  if (!run.safehouse.insideBoundary) {
-    return blocked('safehouse.blocked.not_inside');
-  }
-  // Provisional OPEN-SAFE-001 seam: the boundary never changes network state,
-  // and all planning/recovery actions require Clear plus no direct observer.
-  if (run.surveillance.level !== 'clear') {
+  if (!run.safehouse.insideBoundary) return blocked('safehouse.blocked.not_inside');
+  if (requiresProtectedSafehouseState(actionId) && run.surveillance.level !== 'clear') {
     return blocked('safehouse.blocked.network_not_clear');
   }
-  if (run.surveillance.directlyObserved) {
+  if (requiresProtectedSafehouseState(actionId) && run.surveillance.directlyObserved) {
     return blocked('safehouse.blocked.observed');
   }
   if (actionId === 'depart') {
     if (run.mission !== 'L0_PREPARATION') {
       return blocked('safehouse.blocked.preparation_incomplete');
     }
-    if (run.safehouse.departureSnapshotCreated) {
+    if (run.safehouse.operationAttemptBaselineCreated) {
       return blocked('safehouse.blocked.already_departed');
     }
   }
-  if (
-    actionId === 'outbound-transit' &&
-    run.safehouse.transitCredentialState !== 'issued'
-  ) {
+  if (actionId === 'outbound-transit' &&
+    run.safehouse.transitCredentialState !== 'issued') {
     return blocked('safehouse.blocked.credential_missing');
   }
-
   return { ...base, available: true };
 };
 
@@ -203,24 +184,23 @@ const applyClockResult = (
   run: Level0RunState,
   clockResult: ReturnType<typeof jumpWorldClockMinutes>
 ): Level0RunState => {
-  const deadlineFailure = clockResult.events.some((event) => event.kind === 'deadline-failure');
   const deadlineEvent = clockResult.events.find((event) => event.kind === 'deadline-failure');
-  const worldClock = deadlineFailure
-    ? acquirePauseOwner(clockResult.state, 'failure')
-    : clockResult.state;
+  const deadlineFailure = deadlineEvent?.kind === 'deadline-failure';
   return {
     ...run,
-    worldClock,
+    worldClock: deadlineFailure
+      ? acquirePauseOwner(clockResult.state, 'failure')
+      : clockResult.state,
     mission: deadlineFailure ? 'L0_FAILED' : run.mission,
     failureCause: deadlineFailure ? 'failure.deadline' : run.failureCause,
     failureSourceId: deadlineFailure ? 'clock.deadline' : run.failureSourceId,
-    failureMissingRequirements: deadlineEvent?.kind === 'deadline-failure'
+    failureMissingRequirements: deadlineFailure
       ? [...deadlineEvent.missing]
       : run.failureMissingRequirements,
   };
 };
 
-const recordSafehouseAction = (run: Level0RunState, actionId: SafehouseActionId) => ({
+const recordSafehouseAction = (run: Level0RunState, actionId: SafehouseActionId): Level0RunState => ({
   ...run,
   safehouse: {
     ...run.safehouse,
@@ -233,18 +213,12 @@ const recordSafehouseAction = (run: Level0RunState, actionId: SafehouseActionId)
 export const applySafehouseWait = (run: Level0RunState): SafehouseEffectResult => {
   const availability = evaluateSafehouseAction(run, 'wait');
   if (!availability.available) {
-    return {
-      applied: false,
-      run,
-      blockedReasonId: availability.blockedReasonId,
-      clockEventIds: [],
-    };
+    return { applied: false, run, blockedReasonId: availability.blockedReasonId, clockEventIds: [] };
   }
   const clockResult = jumpWorldClockMinutes(run.worldClock, 30, run.completion);
-  const next = recordSafehouseAction(applyClockResult(run, clockResult), 'wait');
   return {
     applied: true,
-    run: next,
+    run: recordSafehouseAction(applyClockResult(run, clockResult), 'wait'),
     clockEventIds: clockResult.events.map((event) => event.id),
   };
 };
@@ -252,40 +226,17 @@ export const applySafehouseWait = (run: Level0RunState): SafehouseEffectResult =
 export const applySafehouseRest = (run: Level0RunState): SafehouseEffectResult => {
   const availability = evaluateSafehouseAction(run, 'rest');
   if (!availability.available) {
-    return {
-      applied: false,
-      run,
-      blockedReasonId: availability.blockedReasonId,
-      clockEventIds: [],
-    };
+    return { applied: false, run, blockedReasonId: availability.blockedReasonId, clockEventIds: [] };
   }
   const clockResult = jumpWorldClockMinutes(run.worldClock, 30, run.completion);
   let recovered = applyClockResult(run, clockResult);
-  if (recovered.mission !== 'L0_FAILED' && recovered.health < 100) {
-    recovered = applyLevel0ResourceEffect(recovered, createLevel0ResourceEffect({
-      eventId: `safehouse.rest.health.${recovered.worldClock.currentMinute}`,
-      resource: 'health',
-      amount: 100 - recovered.health,
-      sourceId: 'safehouse.rest',
-      feedbackId: 'resource.health.safehouse_rest',
-      worldMinute: recovered.worldClock.currentMinute,
-      retryTreatment: recovered.safehouse.departureSnapshotCreated
-        ? 'discard-on-retry'
-        : 'captured-at-departure',
-    })).run;
-  }
   if (recovered.mission !== 'L0_FAILED' && recovered.paranoia > 0) {
-    recovered = applyLevel0ResourceEffect(recovered, createLevel0ResourceEffect({
+    recovered = applyLevel0ParanoiaEffect(recovered, {
       eventId: `safehouse.rest.paranoia.${recovered.worldClock.currentMinute}`,
-      resource: 'paranoia',
       amount: -40,
       sourceId: 'safehouse.rest',
-      feedbackId: 'resource.paranoia.safehouse_rest',
-      worldMinute: recovered.worldClock.currentMinute,
-      retryTreatment: recovered.safehouse.departureSnapshotCreated
-        ? 'discard-on-retry'
-        : 'captured-at-departure',
-    })).run;
+      feedbackId: 'paranoia.safehouse_rest',
+    }).run;
   }
   return {
     applied: true,
@@ -294,15 +245,93 @@ export const applySafehouseRest = (run: Level0RunState): SafehouseEffectResult =
   };
 };
 
+export const applySafehouseResearch = (
+  run: Level0RunState,
+  optionId: Level0ResearchOptionId
+): SafehouseEffectResult => {
+  const availability = evaluateSafehouseAction(run, 'research');
+  if (!availability.available) {
+    return { applied: false, run, blockedReasonId: availability.blockedReasonId, clockEventIds: [] };
+  }
+  const option = LEVEL0_RESEARCH_CATALOG[optionId];
+  const knownFactIds = Object.keys(run.facts.known);
+  const researchState = synchronizeLevel0ResearchState(
+    knownFactIds,
+    run.abilities.researchState
+  );
+  const research = applyLevel0Research({
+    option,
+    knownFactIds,
+    heldAbilityIds: run.abilities.heldAbilityIds,
+    researchState,
+  });
+  if (!research.applied || !research.consumedFactId || !research.grantedAbilityId) {
+    return { applied: false, run, blockedReasonId: research.reasonId, clockEventIds: [] };
+  }
+  const clockResult = jumpWorldClockMinutes(
+    run.worldClock,
+    research.worldMinuteCost,
+    run.completion
+  );
+  const facts = { ...run.facts.known };
+  delete facts[research.consumedFactId];
+  const advanced = applyClockResult({
+    ...run,
+    facts: { known: facts },
+    abilities: {
+      heldAbilityIds: research.heldAbilityIds,
+      researchState: research.researchState,
+    },
+    rpg: {
+      ...run.rpg,
+      researchEvents: [
+        ...run.rpg.researchEvents,
+        {
+          eventId: `${optionId}.${run.rpg.researchEvents.length + 1}`,
+          optionId,
+          consumedFactId: research.consumedFactId,
+          grantedAbilityId: research.grantedAbilityId,
+          worldMinuteCost: research.worldMinuteCost,
+          completedAtWorldMinute: clockResult.state.currentMinute,
+        },
+      ],
+    },
+  }, clockResult);
+  return {
+    applied: true,
+    run: recordSafehouseAction(advanced, 'research'),
+    clockEventIds: clockResult.events.map((event) => event.id),
+  };
+};
+
+const projectOperationAttemptBaseline = (run: Level0RunState): OperationAttemptBaseline => clone({
+  schemaVersion: run.schemaVersion,
+  contentVersions: run.contentVersions,
+  sessionId: run.sessionId,
+  createdAtWorldMinute: run.worldClock.currentMinute,
+  identity: run.identity,
+  abilities: run.abilities,
+  rpg: run.rpg,
+  paranoia: run.paranoia,
+  worldClock: run.worldClock,
+  mission: run.mission,
+  objectives: run.objectives,
+  facts: run.facts,
+  mapKnowledge: run.mapKnowledge,
+  contacts: run.contacts,
+  safehouse: run.safehouse,
+  surveillance: run.surveillance,
+  player: run.player,
+  runtimeGeneration: run.runtimeGeneration,
+  completion: run.completion,
+});
+
 export const departLevel0Operation = (
   run: Level0RunState,
   position: { x: number; y: number }
-): { run: Level0RunState; snapshot: RetrySnapshot | null; created: boolean } => {
+): { run: Level0RunState; baseline: OperationAttemptBaseline | null; created: boolean } => {
   const availability = evaluateSafehouseAction(run, 'depart');
-  if (!availability.available) {
-    return { run, snapshot: null, created: false };
-  }
-
+  if (!availability.available) return { run, baseline: null, created: false };
   const departedRun: Level0RunState = {
     ...run,
     mission: 'L0_OPERATION_DEPARTED',
@@ -310,61 +339,32 @@ export const departLevel0Operation = (
     safehouse: {
       ...run.safehouse,
       insideBoundary: false,
-      departureSnapshotCreated: true,
+      operationAttemptBaselineCreated: true,
       usedActionIds: run.safehouse.usedActionIds.includes('depart')
         ? run.safehouse.usedActionIds
         : [...run.safehouse.usedActionIds, 'depart'],
     },
-    surveillance: {
-      ...run.surveillance,
-      level: 'clear',
-      directlyObserved: false,
-    },
-    player: {
-      position: { ...position },
-      facing: { ...run.player.facing },
-    },
+    player: { position: { ...position }, facing: { ...run.player.facing } },
     failureCause: null,
     failureSourceId: null,
     failureMissingRequirements: [],
   };
-
-  const snapshot: RetrySnapshot = clone({
-    schemaVersion: departedRun.schemaVersion,
-    contentVersions: departedRun.contentVersions,
-    sessionId: departedRun.sessionId,
-    createdAtWorldMinute: departedRun.worldClock.currentMinute,
-    identity: departedRun.identity,
-    build: departedRun.build,
-    rpg: departedRun.rpg,
-    health: departedRun.health,
-    paranoia: departedRun.paranoia,
-    worldClock: departedRun.worldClock,
-    mission: departedRun.mission,
-    objectives: departedRun.objectives,
-    facts: departedRun.facts,
-    mapKnowledge: departedRun.mapKnowledge,
-    contacts: departedRun.contacts,
-    safehouse: departedRun.safehouse,
-    surveillance: departedRun.surveillance,
-    player: departedRun.player,
-    runtimeGeneration: departedRun.runtimeGeneration,
-    completion: departedRun.completion,
-  });
-
-  return { run: departedRun, snapshot, created: true };
+  return {
+    run: departedRun,
+    baseline: projectOperationAttemptBaseline(departedRun),
+    created: true,
+  };
 };
 
-export const restoreLevel0RetrySnapshot = (snapshot: RetrySnapshot): Level0RunState => {
-  const restored = clone(snapshot);
+export const restartLevel0Attempt = (baseline: OperationAttemptBaseline): Level0RunState => {
+  const restored = clone(baseline);
   return {
     schemaVersion: restored.schemaVersion,
     contentVersions: restored.contentVersions,
     sessionId: restored.sessionId,
     identity: restored.identity,
-    build: restored.build,
+    abilities: restored.abilities,
     rpg: restored.rpg,
-    health: restored.health,
     paranoia: restored.paranoia,
     worldClock: { ...restored.worldClock, pauseOwners: [] },
     mission: restored.mission,
@@ -382,3 +382,15 @@ export const restoreLevel0RetrySnapshot = (snapshot: RetrySnapshot): Level0RunSt
     failureMissingRequirements: [],
   };
 };
+
+export const createOperationAttemptBaselineReadback = (
+  baseline: OperationAttemptBaseline
+): OperationAttemptBaselineReadback => ({
+  departureWorldMinute: baseline.createdAtWorldMinute,
+  contactsConsulted: (['naila', 'brant'] as const).filter(
+    (contact) => baseline.contacts[contact].consulted
+  ),
+  paranoiaTier: deriveLevel0ParanoiaTier(baseline.paranoia) as OperationAttemptBaselineReadback['paranoiaTier'],
+  heldAbilityIds: [...baseline.abilities.heldAbilityIds],
+  localizedRestorationMeaningKey: 'restart_attempt.restores_departure_baseline',
+});

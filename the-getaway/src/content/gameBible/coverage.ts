@@ -21,12 +21,12 @@ export const REQUIRED_GAME_BIBLE_TOPICS: RequiredGameBibleTopic[] = [
     'journey.escape', 'journey.return', 'journey.validation', 'journey.debrief', 'journey.ending',
   ]),
   ...topics('character', [
-    'character.callsign', 'character.appearance', 'character.attributes', 'character.skills',
-    'character.checks', 'character.facts', 'character.xp', 'character.level-up', 'character.persistence',
+    'character.cover', 'character.appearance', 'character.abilities', 'character.fragile-hardened',
+    'character.gates', 'character.facts', 'character.research', 'character.persistence', 'character.future-covers',
   ]),
   ...topics('condition', [
-    'condition.health', 'condition.paranoia', 'condition.penalties', 'condition.sources',
-    'condition.recovery', 'condition.failures', 'condition.capture', 'condition.retry',
+    'condition.paranoia', 'condition.tiers', 'condition.ability-locks', 'condition.sources',
+    'condition.recovery', 'condition.failures', 'condition.capture', 'condition.restart-attempt',
   ]),
   ...topics('movement', [
     'movement.direct', 'movement.collision', 'movement.interaction', 'movement.camera',
@@ -34,7 +34,7 @@ export const REQUIRED_GAME_BIBLE_TOPICS: RequiredGameBibleTopic[] = [
   ]),
   ...topics('time', [
     'time.start', 'time.acceleration', 'time.curfew', 'time.deadline', 'time.schedules',
-    'time.wait', 'time.rest', 'time.safehouse', 'time.autosave', 'time.retry-snapshot',
+    'time.wait', 'time.rest', 'time.safehouse', 'time.autosave', 'time.attempt-baseline',
   ]),
   ...topics('surveillance', [
     'surveillance.states', 'surveillance.evidence', 'surveillance.coverage',
@@ -47,14 +47,14 @@ export const REQUIRED_GAME_BIBLE_TOPICS: RequiredGameBibleTopic[] = [
   ]),
   ...topics('narrative', [
     'narrative.lira', 'narrative.naila', 'narrative.brant', 'narrative.dialogue',
-    'narrative.checks', 'narrative.george', 'narrative.truth', 'narrative.debrief',
+    'narrative.gates', 'narrative.george', 'narrative.truth', 'narrative.debrief',
   ]),
   ...topics('knowledge', [
     'knowledge.facts', 'knowledge.dossier', 'knowledge.objectives', 'knowledge.minimap',
     'knowledge.terminals', 'knowledge.social-feed', 'knowledge.provenance', 'knowledge.outcome-ledger',
   ]),
   ...topics('hud', [
-    'hud.four-lanes', 'hud.health-paranoia', 'hud.current-beat', 'hud.overlays',
+    'hud.four-lanes', 'hud.cover-paranoia', 'hud.current-beat', 'hud.overlays',
     'hud.bible', 'hud.search', 'hud.focus', 'hud.accessibility',
   ]),
   ...topics('world', [

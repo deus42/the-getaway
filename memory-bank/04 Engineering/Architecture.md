@@ -112,7 +112,7 @@ Current ownership is explicit:
 - `src/game/level0/interaction/interactionResolver.ts` owns knowledge, independently derived world-ownership, range, occlusion, and authoritative availability results; automatic discovery filters unknown or wrong-domain anchors instead of revealing their existence through an error;
 - `src/game/level0/art/` owns the T4 named-source city contract and the T5 production-profile resolver. The normal route selects the registered GET-205 Hidzu derivative; `visualTreatment=get204-1` is the explicit T4 diagnostic fallback, `visualProfile=desktop|mobile` is a diagnostic override, and ordinary profile selection uses viewport width. Every T5 layer retains T4 target/layout ownership and versioned Neo Tokyo 2 source provenance;
 - `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, the immutable `OperationAttemptBaseline`, and the `restartAttempt` action;
-- `src/game/level0/rpg/` owns cover validation, the authored ability/gate catalogs and pure gate resolver, the Paranoia tier derivation, and the resource/research ledgers, provisional tuning tables, fatal resource transitions, and safehouse/debrief progression rules;
+- `src/game/level0/rpg/` owns cover validation, the authored ability/gate catalogs and pure gate resolver, Paranoia tier derivation, Paranoia/research ledgers, provisional tuning tables, breakdown transitions, and safehouse research rules;
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
 - `src/game/level0/scene/Level0Scene.ts` owns live city-layer composition, explicit diagnostic fallback, separate actor transforms/hard foreground occlusion, camera, schedule atmosphere, and input. It renders one geometry-stable production composition from registered background tiles and same-source foreground crops; protagonist position or zoom must never replace one architectural plate with another or mutate actor scale;
 - `src/game/level0/playtest/level0AgentBridge.ts` derives diagnostics from the same store/layout and may dispatch only normal runtime events;
@@ -121,7 +121,7 @@ Current ownership is explicit:
 
 The active GET-205 asset pipeline is manifest-driven. `art/blender/get205/manifests/four-block-baked-treatment.json` and `build_four_block_baked_treatment.py` reproduce the same-master people-free render, sixteen foreground silhouettes, restrained facade identity, and non-colliding atmospheric surround. `scripts/build-get205-runtime-assets.mjs` publishes a hash-checked desktop profile (four overlapping background tiles plus sixteen full-resolution foregrounds) and a compact mobile profile (one half-resolution background plus sixteen half-resolution foregrounds) under `public/environment/level0/get205-hidzu-production-v1/`. The desktop profile preserves the logical `6400×3600` plate without any texture edge above `4096`; the mobile profile stays below the provisional `48 MiB` decoded-RGBA budget. The runtime imports the generated manifest as data rather than duplicating asset paths or depth anchors in scene code.
 
-The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 3 uses independent autosave and `OperationAttemptBaseline` keys plus exact nested envelopes, so legacy or stale development saves cannot hydrate or overwrite the canonical run. Validation reconstructs and checks normalized callsign/build budgets, every committed check from its recorded Paranoia/facts/contexts, the ordered resource before/after chain, threshold announcements, one-shot XP milestones, pending levels, allocation history, camera-group attempt history, grounding usage, Cold Iron evidence state, processed clock boundaries, and final build totals. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and cause-specific failure data that does not match the authoritative ledgers. `OperationAttemptBaseline` additionally requires the authored departure anchor and carries the complete RPG, surveillance, recovery, and schedule state. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists the baseline before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, check requirements, XP, and unresolved surveillance/art values remain provisional while their `OPEN-*` decisions are unresolved.
+The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 3 uses independent autosave and `OperationAttemptBaseline` keys plus exact nested envelopes, so legacy or stale development saves cannot hydrate or overwrite the canonical run. Validation checks the authored `CoverIdentity`, held ability IDs, research-state map, committed gate verdicts, ordered Paranoia event history, announced tier history, research events, camera-group attempt history, grounding usage, Cold Iron evidence state, processed clock boundaries, and the internal Paranoia value. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and cause-specific failure data that does not match the authoritative ledgers. `OperationAttemptBaseline` additionally requires the authored departure anchor and carries the complete cover, ability, research, Paranoia, surveillance, recovery, and schedule state. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists the baseline before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, ability/gate mappings, research options, and unresolved surveillance/art values remain provisional while their `OPEN-*` decisions are unresolved.
 
 ## 3. Application lifecycle
 
@@ -130,7 +130,7 @@ The target lifecycle is:
 ```text
 BOOT
   → MAIN_MENU
-  → L0_CHARACTER_CREATION
+  → L0_COVER_SELECT
   → L0_SAFEHOUSE_INTRO
   → L0_LIRA_BRIEFING
   → L0_PREPARATION
@@ -145,7 +145,7 @@ BOOT
   → CONTINUE_EXPLORING | END_DEMO
 ```
 
-Scene loading is an application side effect between valid character confirmation and `L0_SAFEHOUSE_INTRO`, not a second mission state. Any authored run failure enters `L0_FAILED` with one exact `failure.*` cause and exposes Restart Attempt. `failure.save_incompatible` prevents Level 0 hydration and offers New Game. Miami is continuation data only; no Level 1 scene is loaded.
+Scene loading is an application side effect between valid cover confirmation and `L0_SAFEHOUSE_INTRO`, not a second mission state. Any authored run failure enters `L0_FAILED` with one exact `failure.*` cause and exposes Restart Attempt only when an `OperationAttemptBaseline` exists. `failure.save_incompatible` prevents Level 0 hydration and offers New Game. Miami is continuation data only; no Level 1 scene is loaded.
 
 Starting or restarting a run must:
 
@@ -161,7 +161,7 @@ Starting or restarting a run must:
 
 | Domain | Authority | Runtime mirror | Persisted | Notes |
 |---|---|---|---|---|
-| Identity/build/progression | Redux | Actor/portrait selection | Yes | No fixed Operative/package state. |
+| Cover/abilities/research | Redux | Actor/portrait selection and gate presentation | Yes | No free-text name, numeric build, XP, level, or package state. |
 | Paranoia and ability locks | Redux | HUD and transient feedback | Yes | Changes only through authored effects; locks derive from the tier at read time. |
 | Mission/objectives/facts/outcomes | Redux | Markers, prompts, debrief | Yes | Stable keys and provenance. |
 | World time/schedules | Redux clock | Phaser schedule evaluation | Yes | Frame deltas emit clock progress only while unpaused. |
@@ -487,7 +487,7 @@ interface RuntimeGenerationState {
 }
 
 type Level0MissionState =
-  | 'L0_CHARACTER_CREATION'
+  | 'L0_COVER_SELECT'
   | 'L0_SAFEHOUSE_INTRO'
   | 'L0_LIRA_BRIEFING'
   | 'L0_PREPARATION'
@@ -795,6 +795,8 @@ Invalid clicks resolve against the layout’s walkable geometry and return a typ
 
 ### Interaction
 
+Committed street interactions implement the `GDR-INT-002` commit/resolve boundary: a deliberation surface (paused) previews the gate verdict, duration, and abort outcomes; confirmation snapshots that contract into the resolution interval, which runs with simulation active and resolves to completion or an explicit abort with its previewed outcome. Live world events during the interval may append observation/Paranoia sources to the ledger but cannot mutate the snapshotted contract.
+
 The interaction resolver evaluates:
 
 1. target exists and is currently available;
@@ -838,7 +840,7 @@ A pure network reducer receives typed evidence:
 
 It updates `SurveillanceState` according to the approved matrix. Visibility alone in ordinary public space creates no concern. A concern transition requires current valid `ObservationEvidence` paired with `SurveillanceRuleBreakEvidence`; it cannot query the hidden protagonist transform when no valid observer has supplied it. A full transition to `clear` resets recognition and active observer attribution.
 
-The safehouse boundary never dispatches a network-clear event by itself. A pure safehouse-availability resolver consumes `SafehouseState`, `SurveillanceState`, and current valid observation evidence and returns `SafehouseActionAvailability` records for Wait, Rest, save, level-up, George planning, and terminals. Until `OPEN-SAFE-001` is accepted, the resolver uses that queue entry's documented recommendation as explicit replaceable content data; UI and world interactions consume the same typed result and cannot invent a separate safe-zone policy. The provisional value cannot be treated as final acceptance evidence.
+The safehouse boundary never dispatches a network-clear event by itself. A pure safehouse-availability resolver consumes `SafehouseState`, `SurveillanceState`, and current valid observation evidence and returns `SafehouseActionAvailability` records for Wait, Rest, research, George planning, mission handoff, and terminals. Read-only Character and dossier access remain available anywhere. Until `OPEN-SAFE-001` is accepted, the resolver uses that queue entry's documented recommendation as explicit replaceable content data; UI and world interactions consume the same typed result and cannot invent a separate safe-zone policy. The provisional value cannot be treated as final acceptance evidence.
 
 ### Drone
 
@@ -850,13 +852,13 @@ Contexts are layout/content records, not tile tags inferred at runtime. Each dec
 
 ### Camera loop
 
-Only the connected camera terminal can request the single Level 0 camera-group loop, and that group can be used once per attempt. The check/effect resolver uses Systems and OpSec, applies exactly the target declared by the terminal, schedules active-loop expiry, and records `clean` or `traced`. That terminal history persists until `restartAttempt`; expiry never returns it to `unused`. There is no global hack bus.
+Only the connected camera terminal can request the single Level 0 camera-group loop, and that group can be used once per attempt. The gate/effect resolver uses `ability.terminal_craft` to operate the loop and `ability.trace_discipline` or a declared alternate path to determine whether it remains clean, applies exactly the target declared by the terminal, schedules active-loop expiry, and records `clean` or `traced`. That terminal history persists until `restartAttempt`; expiry never returns it to `unused`. There is no global hack bus.
 
 ## 9. Dialogue, facts, objectives, and George
 
 ### Dialogue graph
 
-Dialogue content is an authored graph with stable nodes and localized exact lines. The dialogue domain evaluates availability/checks, exposes the exact `preview` breakdown before every checked choice, commits typed effects atomically, advances the node, records the `result` breakdown, and follows the declared worse path on every nonterminal failure. React renders the read model; no UI component dispatches unrelated low-level state mutations.
+Dialogue content is an authored graph with stable nodes and localized exact lines. The dialogue domain evaluates availability and declared gate paths, exposes one exact `preview` verdict before every gated choice, commits typed effects atomically, advances the node, records the matching `result` verdict, and follows the declared worse path on every nonterminal failure. React renders the read model; no UI component dispatches unrelated low-level state mutations.
 
 ### Effect registry
 
@@ -888,17 +890,11 @@ Paranoia changes are idempotent authored effects with stable event/source IDs, s
 
 The vending-machine coffee and shrine actions use authored `GroundingActionDefinition` records and the attempt recovery ledger: each costs ten world minutes, removes ten Paranoia, and is consumed once. The first qualifying difficult surveillance escape may emit one authored −5 Paranoia event. Dialogue cannot create grounding relief. Physical consequence expresses only as time, Paranoia, or capture; no condition band drives a limp, movement multiplier, detection modifier, or civilian response.
 
-The Redux runtime keeps only ephemeral resource-event IDs for the currently visible feedback. The HUD resolves those IDs back to the authoritative run ledger and renders localized resource, signed amount, and authored source copy; it never derives player text from a machine ID. Persistent consequence summaries remain outcome-ledger data and never reuse transient resource logs.
+The Redux runtime keeps only ephemeral Paranoia-event IDs for currently visible feedback. The HUD resolves those IDs back to the authoritative run ledger and renders localized named-tier movement plus authored source copy; it never renders the internal 0–100 value or derives player text from a machine ID. Persistent consequence summaries remain outcome-ledger data and never reuse transient feedback logs.
 
-The pure check resolver obtains the Paranoia penalty from current value:
+The pure tier resolver maps the internal value to `calm`, `uneasy`, `shaken`, `breaking`, or terminal `breakdown`. Ability availability is derived from the current tier and the ability definition's `hardened` or `fragile` tag. A fragile ability locks at its declared tier; a hardened ability stays lit. Gates are binary and explain the exact ability, fact, costed path, or missing path—there is no arithmetic total or hidden roll.
 
-- `0–39`: 0;
-- `40–69`: −1;
-- `70–89`: −2;
-- `90–99`: −3;
-- `100`: fatal collapse before further check resolution.
-
-Research uses stable option IDs and an ordered research event ledger to prevent duplication. Option costs and granted abilities remain replaceable content data whether provisional or approved; they are not copied into the run state. A research option is consumed only in a clear, unobserved safehouse or during debrief, grants two skill points and every-third-level attribute points, and writes each level/skill/attribute mutation to the allocation ledger. Domain rejection remains authoritative and the Character UI disables the same actions with the same context explanation.
+Research uses stable option IDs and an ordered research-event ledger to prevent duplication. Option costs and granted abilities remain replaceable content data whether provisional or approved; they are not duplicated into event payloads beyond the exact resolved option outcome. A research option is consumed only in a clear, unobserved safehouse or during debrief, consumes its declared fact and 15 or 20 world minutes, grants exactly one declared ability, and writes one idempotent event. Domain rejection remains authoritative and the Character UI disables the same action with the same exact explanation.
 
 ## 11. Time, schedules, and pause
 
@@ -918,7 +914,7 @@ Use distinct storage keys and schema envelopes for:
 - operation-departure `OperationAttemptBaseline`;
 - settings/localization.
 
-Each envelope contains schema version, content/layout version, timestamp, and a deeply validated payload. Version 3 requires `CoverIdentity`, `RuayerBuild`, the complete `Level0RpgLedger`, surveillance/camera history, Cold Iron evidence, grounding/threshold history, and processed clock boundaries; there is no production default character or best-effort field filling. Check, resource, XP, threshold, pending-level, allocation, camera-history, boundary-idempotency, and final-build consistency is recomputed during hydration. Spatial checkpoints must be finite, walkable, and compatible with the active layout; facing is a nonzero unit vector; deterministic generation identifiers must match the active runtime; deadline failure requirements must equal the completion fields that remain false. Version 2 and other stale development saves are rejected explicitly with `failure.save_incompatible` and a New Game path.
+Each envelope contains schema version, content/layout version, timestamp, and a deeply validated payload. Version 3 requires `CoverIdentity`, `RunAbilities`, the complete `Level0RpgLedger`, internal Paranoia, surveillance/camera history, Cold Iron evidence, grounding/tier history, and processed clock boundaries; there is no production default character or best-effort field filling. Cover/appearance ownership, ability IDs, research-state/event consistency, gate-verdict provenance, Paranoia event ordering, announced-tier history, camera history, boundary idempotency, and terminal breakdown state are recomputed during hydration. Spatial checkpoints must be finite, walkable, and compatible with the active layout; facing is a nonzero unit vector; deterministic generation identifiers must match the active runtime; deadline failure requirements must equal the completion fields that remain false. Version 2 and other stale development saves are rejected explicitly with `failure.save_incompatible` and a New Game path.
 
 ### Autosave
 
@@ -1016,7 +1012,7 @@ Typed milestone probes cover creation, Lira acceptance, preparation, departure b
 
 ### Test layers
 
-1. Pure unit tests for reducers, checks, facts, schedules, state transitions, save validation, and geometry.
+1. Pure unit tests for reducers, gates, facts, schedules, state transitions, save validation, and geometry.
 2. Component tests for creation, dialogue, HUD, overlays, locked reasons, and localization.
 3. Phaser/module tests for movement, collision, camera, interaction, surveillance, drone, depth, and art-layer registration.
 4. Integrated deterministic scenarios for every acceptance row.
@@ -1038,7 +1034,7 @@ Required closeout commands remain those in `AGENTS.md` and [[01 MVP/95 MVP Readi
 9. Restore cover identity, abilities, gates, Paranoia tiers, research, and the Character screen.
 10. Implement surveillance, hiding/blending, Needle, single-use camera history, civilian presentation, and interception after the Restart Attempt foundation.
 11. Modernize GET-179's reachable-control vocabulary and milestone probes after the Restart Attempt foundation; its milestone plus surveillance block the legibility/content child.
-12. Implement exact checks, Cold Iron evidence, George explanations/readback, cause-specific failure, dialogue, dossier, minimap, and HUD infrastructure.
+12. Implement exact gate verdicts, Cold Iron evidence, George explanations/readback, cause-specific failure, dialogue, dossier, minimap, and HUD infrastructure.
 13. Author/integrate clock moments, named routes, grounding, street sound, mission content, onboarding, bilingual presentation, and end-to-end acceptance.
 14. Integrate actor light-region sampling only after the city/content child is delivered.
 

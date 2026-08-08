@@ -26,7 +26,7 @@ For a first read, use [[Game Design]] → [[10 MVP Spine]] → [[11 Level 0 Vert
 - [[40 George (AI Companion)]]
 - [[41 Movement, Interaction & Observation]]
 - [[42 Surveillance, Security & Civilian Behavior]]
-- [[43 Health, Failure & Recovery]]
+- [[43 Failure, Surrender & Recovery]]
 - [[44 Safehouse, Save & Restart Attempt]]
 - [[45 HUD & Information Architecture]]
 - [[46 Facts, Dossier, Minimap & Terminals]]
@@ -39,7 +39,7 @@ For a first read, use [[Game Design]] → [[10 MVP Spine]] → [[11 Level 0 Vert
 - [[80 Day-Night Cycle]]
 - [[90 Dialogue]]
 - [[91 Quests & Objectives]]
-- [[92 Character & Progression]]
+- [[92 Character, Covers, Abilities & Research]]
 - [[93 Inventory (MVP)]]
 
 Every canonical system specification uses this exact section contract:

@@ -5,7 +5,7 @@ const cover = (sectionId: string, ids: string[]): GameBibleDecisionCoverage =>
 
 export const GAME_BIBLE_DECISION_COVERAGE: GameBibleDecisionCoverage = {
   ...cover('identity.overview', [
-    'GDR-PROD-001', 'GDR-PROD-002', 'GDR-PROD-003', 'GDR-PROD-004',
+    'GDR-PROD-001', 'GDR-PROD-002', 'GDR-PROD-003', 'GDR-PROD-004', 'GDR-PROD-005',
   ]),
   ...cover('setting.overview', [
     'GDR-SET-001', 'GDR-SET-002', 'GDR-SET-003', 'GDR-SET-004',
@@ -30,14 +30,14 @@ export const GAME_BIBLE_DECISION_COVERAGE: GameBibleDecisionCoverage = {
   ]),
   ...cover('time.recovery', ['GDR-SAFE-001']),
   ...cover('movement.in-play', [
-    'GDR-MOV-001', 'GDR-MOV-002', 'GDR-INT-001', 'GDR-OBS-001', 'GDR-OBS-002',
+    'GDR-MOV-001', 'GDR-MOV-002', 'GDR-INT-001', 'GDR-INT-002', 'GDR-OBS-001', 'GDR-OBS-002',
   ]),
   ...cover('surveillance.in-play', [
     'GDR-SUR-001', 'GDR-SUR-002', 'GDR-SUR-003', 'GDR-SUR-004', 'GDR-SUR-005',
     'GDR-SUR-006', 'GDR-SUR-007', 'GDR-SUR-008',
   ]),
   ...cover('surveillance.system-links', [
-    'GDR-SUR-009', 'GDR-SUR-010', 'GDR-CIV-001',
+    'GDR-SUR-009', 'GDR-SUR-010', 'GDR-SUR-011', 'GDR-CIV-001',
   ]),
   ...cover('stealth.in-play', [
     'GDR-STL-001', 'GDR-STL-002', 'GDR-STL-003', 'GDR-ESC-001', 'GDR-ESC-002',
@@ -48,7 +48,7 @@ export const GAME_BIBLE_DECISION_COVERAGE: GameBibleDecisionCoverage = {
     'GDR-GEO-001', 'GDR-GEO-002', 'GDR-GEO-003', 'GDR-GEO-004',
   ]),
   ...cover('hud.overview', ['GDR-UI-001', 'GDR-UI-002', 'GDR-UI-004', 'GDR-UI-005']),
-  ...cover('knowledge.in-play', ['GDR-UI-003', 'GDR-SOC-001']),
+  ...cover('knowledge.in-play', ['GDR-UI-003', 'GDR-SOC-001', 'GDR-SOC-002']),
   ...cover('art.overview', [
     'GDR-ART-001', 'GDR-ART-003', 'GDR-ART-004', 'GDR-ART-005', 'GDR-ART-006',
     'GDR-ART-011', 'GDR-SUP-001', 'GDR-SUP-003',

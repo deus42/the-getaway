@@ -82,7 +82,7 @@ Facts are append-only and binary within a run. Acquisition stores fact key, prov
 - [[41 Movement, Interaction & Observation]] validates explicit world interaction.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies network resolution requirements and discovered device state.
 - [[44 Safehouse, Save & Restart Attempt]] owns transit validation, autosave, and snapshot restoration.
-- [[92 Character & Progression]] supplies the designated perception ability consulted by the manifest recognition gate and owns safehouse research.
+- [[92 Character, Covers, Abilities & Research]] supplies the designated perception ability consulted by the manifest recognition gate and owns safehouse research.
 - [[45 HUD & Information Architecture]] renders the current beat, minimap, and dossier access.
 - [[13 Level 0 Content and State Matrix]] defines objective IDs, fact keys, mission transitions, and outcome fields.
 

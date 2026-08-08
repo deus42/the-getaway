@@ -35,7 +35,7 @@ There is no generic stealth-mode toggle, crouch stance, noise-lure power, takedo
 - Authored hiding and blending contexts exist in the shared Level 0 layout contract.
 - A hiding or blending context declares its physical boundary, entry anchor, permitted surveillance states, invalidation rules, and readable fiction.
 - The player needs no specific build to avoid cameras, break line of sight, or use a valid hiding context.
-- Systems and OpSec matter only to the grounded terminal-based camera loop.
+- `ability.terminal_craft` and `ability.trace_discipline` matter only to the grounded terminal-based camera loop.
 
 ## 4. Complete happy-path behavior
 
@@ -73,16 +73,16 @@ The authoritative transition table and unresolved timing values live in [[13 Lev
 - Blending requires a credible active social context, such as a delivery flow, queue, waiting group, or service activity.
 - Level 0 uses authored noise events only. Doors, terminals, collisions, alarms, and scripted environmental events may create an investigation source. Walking and sprinting do not feed a universal radial noise meter.
 - Level 0 has one camera set. Its connected-terminal loop is usable once per attempt; history persists as `active`, then `clean` or `traced`, until Restart Attempt. It cannot disable the district, open doors, erase identity, or affect unrelated terminals.
-- A successful camera loop requires Systems. OpSec determines whether the successful action leaves a trace that moves the network to `Suspicious`.
+- A successful camera loop requires a lit `ability.terminal_craft`. A subsequent trace gate uses lit `ability.trace_discipline`, `fact.naila.camera_topology`, or the declared trace-risk path; a traced success moves the network to `Suspicious`.
 - The exact observation, confirmation, search/recovery, and camera-loop timings remain acceptance decisions under `OPEN-SUR-001` through `OPEN-SUR-004`; their recorded recommendations may be trialed only as isolated reversible tuning.
 
 ## 7. Inputs from other systems
 
 - [[41 Movement, Interaction & Observation]] supplies movement intent, collision, interaction range, and pause ownership.
 - [[42 Surveillance, Security & Civilian Behavior]] owns device geometry, network state, last-known position, and drone behavior.
-- [[60 Paranoia]] supplies the current check penalty and authored surveillance stress effects.
+- [[60 Paranoia]] supplies the current named tier, fragile-ability locks, and authored surveillance stress effects.
 - [[80 Day-Night Cycle]] supplies public-activity and curfew schedule state.
-- [[92 Character & Progression]] supplies Systems, OpSec, Evasion, Composure, Awareness, and relevant attributes.
+- [[92 Character, Covers, Abilities & Research]] supplies held/lit abilities and the shared gate resolver.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies discovered routes, facts, and current mission state.
 - The Level 0 layout contract supplies hiding, blending, entrance, terminal, and line-of-sight semantics.
 
@@ -91,7 +91,7 @@ The authoritative transition table and unresolved timing values live in [[13 Lev
 - Network transitions raise Paranoia only through declared authored effects.
 - Recovery changes route availability, George prompts, objective copy, and the outcome ledger.
 - A camera loop may create a fact, terminal event, trace, or debrief consequence.
-- Interception can cost Health, Paranoia, or time; failure can cause capture.
+- Interception can cost Paranoia, time, a fact, or a named route consequence; final failure can cause capture.
 - Dusk blending and curfew hiding become distinct debrief facts rather than interchangeable stealth scores.
 - Discovered cameras become persistent minimap knowledge for the current run.
 

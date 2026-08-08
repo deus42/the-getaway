@@ -1,7 +1,7 @@
 ---
 status: MVP
 type: system-specification
-tags: [failure, surrender, recovery]
+tags: [failure, surrender, recovery, paranoia]
 canonical: true
 ---
 
@@ -61,7 +61,7 @@ Failure is factual and cause-specific: the game names only what its ledgers know
 - [[60 Paranoia]] supplies the current tier, visible cause, and the breakdown transition.
 - [[80 Day-Night Cycle]] supplies the current time, deadline transition, and pause ownership.
 - [[44 Safehouse, Save & Restart Attempt]] supplies Rest eligibility, autosave state, baseline compatibility, and restoration data.
-- [[92 Character & Progression]] supplies gate outcomes; failure adds no undeclared gate modifier.
+- [[92 Character, Covers, Abilities & Research]] supplies gate outcomes; failure adds no undeclared gate modifier.
 - [[91 Quests & Objectives]] and transit state determine whether midnight can still fail the operation.
 
 ## 8. Effects on other systems

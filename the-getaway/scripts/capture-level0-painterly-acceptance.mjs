@@ -349,10 +349,10 @@ const captureRoute = async (browser, size) => {
   );
   await failurePage.waitForTimeout(250);
   await failureSession.capture('mission-failure');
-  await failureSession.act({ type: 'retryMission' });
+  await failureSession.act({ type: 'restartAttempt' });
   await failureSession.act({ type: 'startLevel0', name: 'Operative' });
   await waitForBridge(failurePage);
-  await failureSession.capture('mission-retry');
+  await failureSession.capture('restart-attempt');
 
   const finalSnapshot = await bridgeSnapshot(failurePage);
   await failurePage.close();

@@ -79,10 +79,11 @@ It also limits solution design. Hidzu Corporation infrastructure may correlate i
 - Audio uses restrained public announcements, device confirmation, drone hum, city ambience, and curfew transition.
 - George explains only what the protagonist knows about these systems.
 - Street time is embodied at 21:00, 21:30, 22:00, and 23:30; three spatial sound leaks and the named Transit Road, Market Ring, and Outer Space routes make the district readable through fiction.
+- Each area carries one tension identity of at most two dominant pressure sources (`GDR-PROD-005`): Transit Road — departing crowds plus verification commitment; Market Ring — Needle's cycle plus sustained terminal interaction; Outer Space — active recognition plus thinning escape contexts; the safehouse side — apparent relief plus deadline visibility. The two grounding actions sit deliberately in their areas' low-pressure pockets, so relief has geography. Opportunities degrade into alternatives on schedule rather than disappearing (a thinning crowd removes blending but leaves the service route; a closed shift adds a guarded time cost), and knowledge buys clocks: the world always shows honest physical cues, while facts upgrade cues into exact times.
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-Worldbuilding never introduces an untelegraphed fail state. Capture, deadline, Health, and Paranoia failures use the authored systems. Restart Attempt restores `OperationAttemptBaseline`; it does not randomize schedules or public behavior.
+Worldbuilding never introduces an untelegraphed fail state. Breakdown, capture, and deadline failures use the authored systems. Restart Attempt restores `OperationAttemptBaseline`; it does not randomize schedules or public behavior.
 
 Failure fiction remains proportional to implemented scope. Capture may end in administrative custody only after `OPEN-NAR-012` is resolved or used as an explicit provisional line; the game does not depict an unimplemented prison sequence. Midnight failure explains the lost credential/route only through the accepted or explicitly provisional `OPEN-NAR-007` fiction. A Restart Attempt is the same authored city and schedule, allowing the player to learn rather than hope for a different simulation roll.
 

@@ -56,14 +56,14 @@ World state never changes merely because George changes presentation state.
 - No undiscovered device/location/fact reveal.
 - Compare risk only from known facts and current visible state.
 - Every unavailable or insufficient response states why useful information is missing. Absence or silence never encodes hidden gameplay information.
-- Emit at most one authored Paranoia warning per attempt at the first crossings of 40, 70, and 90.
-- Before departure, read the actual departure time, consulted/skipped contacts, Health, Paranoia, and `OperationAttemptBaseline` restoration meaning; never substitute planned values for real state.
+- Emit at most one authored Paranoia warning per attempt on first entry into Uneasy, Shaken, and Breaking.
+- Before departure, read the actual departure time, consulted/skipped contacts, cover, held abilities, completed research, named Paranoia tier, and `OperationAttemptBaseline` restoration meaning; never substitute planned values for real state.
 - Level 0 gives George no personal want, deletion/freedom request, or secret agenda.
 - Dialogue and major overlays may suppress the floating avatar while retaining George as an available authored participant where specified.
 
 ## 7. Inputs from other systems
 
-Current objective; fact ledger; `ColdIronEvidenceState`; known locations/devices; world time; surveillance state/source/last-known position; blocked-action reason; Health; Paranoia; threshold-announcement history; departure-readback model; outcome ledger; language.
+Current objective; cover; held/lit/locked abilities; research state; fact ledger; `ColdIronEvidenceState`; known locations/devices; world time; surveillance state/source/last-known position; blocked-action reason; named Paranoia tier and latest source; tier-announcement history; departure-readback model; outcome ledger; language.
 
 George consumes read models, not mutable domain objects. Each authored response declares which facts and state fields justify it, which unknowns suppress it, and whether the response is valid during ordinary play, Observation, safehouse planning, a warning, or debrief.
 
@@ -71,7 +71,7 @@ George consumes read models, not mutable domain objects. Each authored response 
 
 George can focus an existing dossier section or known minimap item and add authored explanation. He does not create facts, objective state, recovery, surveillance effects, or success modifiers.
 
-Selecting a prompt can record that the response was viewed for UX continuity, but this presentation history cannot complete an objective, award XP, alter time, lower Paranoia, or become evidence that the protagonist learned an otherwise unknown fact.
+Selecting a prompt can record that the response was viewed for UX continuity, but this presentation history cannot complete an objective, grant an ability, alter time, lower Paranoia, or become evidence that the protagonist learned an otherwise unknown fact.
 
 ## 9. UI, world, audio, and George feedback
 
@@ -90,7 +90,7 @@ If George content is missing or invalid, the safe behavior is a bounded unavaila
 
 Each `GeorgePrompt` needs ID, available states, required facts, prohibited unknowns, player-facing question, answer, fact/inference confidence, permitted UI context, localization, cooldown/suppression behavior, and Plot Bible anchor.
 
-The minimum Level 0 inventory covers: opening controls and Miami purpose; Lira; each contact's acquired facts; unknown versus known camera risk; connected terminal; weak-OpSec trace; invalid hiding/blending; first Suspicious; last-known position; Needle dispatch/approach/verification; Pursuit; recovery; manifest present/recognized/copied/missed; Health loss; one line for each 40/70/90 Paranoia crossing; four street-clock moments; exact departure readback; curfew/deadline warnings; medkit return; transit validation; and debrief. Each state needs a no-spam rule and an equivalent English/Ukrainian meaning.
+The minimum Level 0 inventory covers: opening controls and Miami purpose; Lira; each contact's acquired facts; unknown versus known camera risk; connected terminal; traced camera work; invalid hiding/blending; first Suspicious; last-known position; Needle dispatch/approach/verification; Pursuit; recovery; manifest present/recognized/copied/missed; one line for first entry into each Uneasy/Shaken/Breaking tier; ability locks; research availability/completion; four street-clock moments; exact departure readback; curfew/deadline warnings; medkit return; transit validation; and debrief. Each state needs a no-spam rule and an equivalent English/Ukrainian meaning.
 
 ## 12. Edge cases and prohibited shortcuts
 

@@ -1,23 +1,33 @@
 import type { WorldPoint } from '../layout/types';
 import type {
+  CoverIdentity,
   Level0RpgLedger,
-  PlayerBuild,
-  PlayerIdentity,
+  RunAbilities,
 } from '../rpg/types';
 
 export type {
-  AttributeKey,
+  CommittedLevel0GateVerdict,
+  CoverIdentity,
+  Level0AbilityId,
+  Level0CoverId,
+  Level0GateId,
+  Level0GateRequirement,
+  Level0GateVerdict,
+  Level0ParanoiaEvent,
+  Level0ParanoiaTier,
+  Level0ResearchEvent,
+  Level0ResearchOptionId,
+  Level0ResearchState,
+  Level0ResearchStateRecord,
   Level0RpgLedger,
-  PlayerBuild,
-  PlayerIdentity,
-  SkillKey,
+  RunAbilities,
 } from '../rpg/types';
 
 export type PauseOwner =
   | 'menu'
   | 'bible'
   | 'settings'
-  | 'character_creation'
+  | 'cover_select'
   | 'character'
   | 'dossier'
   | 'social_feed'
@@ -27,8 +37,8 @@ export type PauseOwner =
   | 'safehouse_action'
   | 'george_consultation'
   | 'interception'
-  | 'retry_confirmation'
-  | 'level_up'
+  | 'restart_attempt_confirmation'
+  | 'research'
   | 'debrief'
   | 'mission_recap'
   | 'failure'
@@ -47,7 +57,7 @@ export interface WorldClockState {
 }
 
 export type Level0MissionState =
-  | 'L0_CHARACTER_CREATION'
+  | 'L0_COVER_SELECT'
   | 'L0_SAFEHOUSE_INTRO'
   | 'L0_LIRA_BRIEFING'
   | 'L0_PREPARATION'
@@ -77,13 +87,13 @@ export type Level0DeadlineRequirement = 'medkits-returned' | 'transit-validated'
 
 export type Level0FailureCause =
   | 'failure.deadline'
-  | 'failure.health'
-  | 'failure.paranoia'
-  | 'failure.capture';
+  | 'failure.breakdown'
+  | 'failure.capture'
+  | 'failure.save_incompatible';
 
 export interface SafehouseState {
   insideBoundary: boolean;
-  departureSnapshotCreated: boolean;
+  operationAttemptBaselineCreated: boolean;
   recoveryAvailable: boolean;
   transitCredentialState: 'not-issued' | 'issued' | 'validated';
   debriefAvailable: boolean;
@@ -97,7 +107,7 @@ export type SafehouseActionId =
   | 'character'
   | 'dossier'
   | 'george'
-  | 'level-up'
+  | 'research'
   | 'outbound-transit';
 
 export interface SafehouseActionAvailability {
@@ -143,13 +153,12 @@ export interface ContactState {
 export type ContactStateRecord = Record<'lira' | 'naila' | 'brant', ContactState>;
 
 export interface Level0RunState {
-  schemaVersion: number;
+  schemaVersion: 3;
   contentVersions: Record<string, string>;
   sessionId: string;
-  identity: PlayerIdentity;
-  build: PlayerBuild;
+  identity: CoverIdentity;
+  abilities: RunAbilities;
   rpg: Level0RpgLedger;
-  health: number;
   paranoia: number;
   worldClock: WorldClockState;
   mission: Level0MissionState;
@@ -170,15 +179,14 @@ export interface Level0RunState {
   failureMissingRequirements: Level0DeadlineRequirement[];
 }
 
-export interface RetrySnapshot {
-  schemaVersion: number;
+export interface OperationAttemptBaseline {
+  schemaVersion: 3;
   contentVersions: Record<string, string>;
   sessionId: string;
   createdAtWorldMinute: number;
-  identity: PlayerIdentity;
-  build: PlayerBuild;
+  identity: CoverIdentity;
+  abilities: RunAbilities;
   rpg: Level0RpgLedger;
-  health: number;
   paranoia: number;
   worldClock: WorldClockState;
   mission: Level0MissionState;
@@ -191,4 +199,12 @@ export interface RetrySnapshot {
   player: Level0PlayerRuntimeCheckpoint;
   runtimeGeneration: Level0RuntimeGenerationState;
   completion: Level0RunState['completion'];
+}
+
+export interface OperationAttemptBaselineReadback {
+  departureWorldMinute: number;
+  contactsConsulted: Array<'naila' | 'brant'>;
+  paranoiaTier: Exclude<import('../rpg/types').Level0ParanoiaTier, 'breakdown'>;
+  heldAbilityIds: import('../rpg/types').Level0AbilityId[];
+  localizedRestorationMeaningKey: string;
 }

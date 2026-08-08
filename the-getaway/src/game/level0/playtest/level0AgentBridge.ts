@@ -1,4 +1,6 @@
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../content/levels/level0/layoutContract';
+import { LEVEL0_COVER_CATALOG } from '../rpg/creation';
+import { deriveLevel0ParanoiaTier } from '../rpg/gates';
 import { isPointWalkableWithClearance } from '../layout/validator';
 import { isLevel0AnchorKnown } from '../runtime/mapKnowledge';
 import type { AppDispatch, RootState } from '../../../store';
@@ -17,7 +19,7 @@ import {
   LEVEL0_AGENT_INTERACTION_EVENT,
   LEVEL0_AGENT_MOVE_EVENT,
   LEVEL0_AGENT_MOVE_RESULT_EVENT,
-  LEVEL0_AGENT_RETRY_EVENT,
+  LEVEL0_AGENT_RESTART_ATTEMPT_EVENT,
 } from './events';
 import type { Level0AgentMoveResultDetail } from './events';
 import type { GameBibleUiState } from '../../../content/gameBible/types';
@@ -26,7 +28,7 @@ export {
   LEVEL0_AGENT_INTERACTION_EVENT,
   LEVEL0_AGENT_MOVE_EVENT,
   LEVEL0_AGENT_MOVE_RESULT_EVENT,
-  LEVEL0_AGENT_RETRY_EVENT,
+  LEVEL0_AGENT_RESTART_ATTEMPT_EVENT,
 } from './events';
 export { GETAWAY_AGENT_START_LEVEL0_EVENT } from '../../playtest/agentBridge';
 
@@ -39,6 +41,15 @@ const asPosition = (point: { x: number; y: number }) => ({
   x: Math.round(point.x),
   y: Math.round(point.y),
 });
+
+// The shared v1 agent snapshot still requires these retired combat-era fields.
+// GET-179 owns removing them from that cross-scene schema; Level 0 itself does
+// not read or derive gameplay from this compatibility-only projection.
+const REMOVED_SYSTEM_COMPATIBILITY_SHIM_UNTIL_GET_179 = {
+  health: 100,
+  maxHealth: 100,
+  level: 1,
+} as const;
 
 const layoutExtents = (() => {
   const xs = LEVEL0_LAYOUT_CONTRACT.bounds.map((point) => point.x);
@@ -109,6 +120,8 @@ const emptySnapshot = (state: ReturnType<Level0AgentStore['getState']>): Getaway
   const objectiveAnchors = LEVEL0_LAYOUT_CONTRACT.anchors.filter(
     (anchor) => anchor.kind === 'objective' && run !== null && isLevel0AnchorKnown(run, anchor)
   );
+  const paranoiaTier = run ? deriveLevel0ParanoiaTier(run.paranoia) : 'calm';
+  const agentParanoiaTier = paranoiaTier === 'breakdown' ? 'breaking' : paranoiaTier;
 
   return {
     schema: 'getaway_agent_snapshot_v1',
@@ -117,9 +130,11 @@ const emptySnapshot = (state: ReturnType<Level0AgentStore['getState']>): Getaway
     url: typeof window === 'undefined' ? null : window.location.href,
     player: {
       id: 'level0-player',
-      name: run?.identity.callsign || 'Unnamed expatriate',
-      health: run?.health ?? 0,
-      maxHealth: 100,
+      name: run
+        ? LEVEL0_COVER_CATALOG[run.identity.coverId].localizedName.en
+        : 'No cover selected',
+      health: REMOVED_SYSTEM_COMPATIBILITY_SHIM_UNTIL_GET_179.health,
+      maxHealth: REMOVED_SYSTEM_COMPATIBILITY_SHIM_UNTIL_GET_179.maxHealth,
       actionPoints: 0,
       maxActionPoints: 0,
       stamina: 0,
@@ -129,7 +144,7 @@ const emptySnapshot = (state: ReturnType<Level0AgentStore['getState']>): Getaway
       movementProfile: 'direct-collision-slide',
       stealthModeEnabled: false,
       stealthCooldownExpiresAt: null,
-      level: run?.build.level ?? 1,
+      level: REMOVED_SYSTEM_COMPATIBILITY_SHIM_UNTIL_GET_179.level,
       credits: 0,
       inventoryCount: 0,
     },
@@ -166,7 +181,7 @@ const emptySnapshot = (state: ReturnType<Level0AgentStore['getState']>): Getaway
     },
     paranoia: {
       value: run?.paranoia ?? 0,
-      tier: run && run.paranoia >= 70 ? 'high' : run && run.paranoia >= 40 ? 'elevated' : 'calm',
+      tier: agentParanoiaTier,
       frozen: (run?.worldClock.pauseOwners.length ?? 0) > 0,
     },
     suspicion: {
@@ -194,8 +209,8 @@ const emptySnapshot = (state: ReturnType<Level0AgentStore['getState']>): Getaway
       factionId: 'neutral',
       socialTags: ['contact'],
       position: asPosition(anchor.position),
-      health: 100,
-      maxHealth: 100,
+      health: REMOVED_SYSTEM_COMPATIBILITY_SHIM_UNTIL_GET_179.health,
+      maxHealth: REMOVED_SYSTEM_COMPATIBILITY_SHIM_UNTIL_GET_179.maxHealth,
     })),
     items: objectiveAnchors.map((anchor) => ({
       id: anchor.id,
@@ -353,8 +368,8 @@ const dispatchAction = async (
       }
       break;
     }
-    case 'retryMission':
-      window.dispatchEvent(new CustomEvent(LEVEL0_AGENT_RETRY_EVENT));
+    case 'restartAttempt':
+      window.dispatchEvent(new CustomEvent(LEVEL0_AGENT_RESTART_ATTEMPT_EVENT));
       break;
     case 'wait':
       await wait(action.ms ?? 500);

@@ -6,7 +6,7 @@ export type GameBibleSectionRole =
   | 'rules-and-examples'
   | 'connections'
   | 'feedback'
-  | 'failure-recovery-persistence-retry'
+  | 'failure-recovery-persistence-restart'
   | 'see-also';
 
 export type GameBibleBlock =
@@ -179,7 +179,7 @@ export const defineGameBibleChapter = (draft: GameBibleChapterDraft): GameBibleC
     {
       id: `${draft.id}.recovery`,
       title: draft.copy.recoveryTitle,
-      roles: ['failure-recovery-persistence-retry'],
+      roles: ['failure-recovery-persistence-restart'],
       blocks: [
         { type: 'paragraph', text: draft.copy.recoveryText },
         { type: 'bullets', items: draft.copy.recoveryPoints },

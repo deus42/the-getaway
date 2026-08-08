@@ -50,6 +50,8 @@ The player moves through a continuous, human-scale district by reading streets, 
 
 ## 6. Rules and tuning values
 
+- Committed street interactions follow the `GDR-INT-002` commit/resolve boundary: the interaction UI pauses simulation and previews the exact verdict, duration, and abort outcomes; confirmation closes the UI and runs a declared in-world resolution interval with simulation active; the previewed contract snapshots at commitment; live events may add observation or a named Paranoia source but never cancel the action, alter its declared results, or invent an abort cost; aborting produces its exact previewed outcome. Interval durations are trial values under `OPEN-INT-001`. Physical world animation (bolts withdrawing, data blocks copying, the protagonist holding position) carries the tension; a minimal indicator exists for accessibility, and no generic hold-progress bar replaces authored motion.
+
 - Click movement is direct intent, never A*, a queued path, or a threat-aware route.
 - WASD and click movement are equivalent supported control paths; new input overrides current intent immediately.
 - Collision sliding is required for natural wall and corner movement.
@@ -93,7 +95,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 - Returning from HUD or overlay focus restores world input without consuming a click that would also move the protagonist.
 - Observation cannot be used to let recovery timers, searches, patrols, cameras, or the deadline advance; all are paused together.
 - Movement and interaction may expose the player to authored surveillance, interception, Paranoia, capture, or deadline consequences, but those systems own the resulting failure.
-- Restart Attempt restores the operation-departure snapshot and departure anchor defined by [[44 Safehouse, Save & Restart Attempt]], with no post-departure movement or interaction state retained.
+- Restart Attempt restores `OperationAttemptBaseline` and its departure anchor as defined by [[44 Safehouse, Save & Restart Attempt]], with no post-departure movement or interaction state retained.
 
 ## 11. Content-authoring requirements
 

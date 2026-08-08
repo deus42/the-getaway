@@ -24,7 +24,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 ## 3. Starting state and prerequisites
 
 - On valid Level 0 initialization, the bottom dock is present with four lanes in this order: knowledge minimap, protagonist, George, current quest beat.
-- The run begins at the Calm tier with the cover's abilities lit; the tier gauge and ability states are visible in the protagonist lane.
+- The run begins at the Calm tier with the cover's abilities lit; the continuous Paranoia slider, named tier, and ability states are visible in the protagonist lane.
 - The quest lane begins with `l0.meet_lira`; it shows only the highest-priority incomplete primary objective.
 - The minimap initially knows the safehouse and Lira meeting point plus only devices physically visible from the starting context.
 - George initially exposes only authored opening context, controls, and current verified state.
@@ -35,7 +35,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 1. The player enters the safehouse with the world occupying the dominant viewport and the four-lane dock occupying only its approved height.
 2. The minimap updates as facts and physical discovery add legitimate knowledge; it never expands into a movement planner.
-3. The protagonist lane keeps the tier gauge and ability lock states visible through exploration, surveillance, overlays, failure risk, and recovery.
+3. The protagonist lane keeps the continuous Paranoia slider, named tier, and ability lock states visible through exploration, surveillance, overlays, failure risk, and recovery.
 4. George presents verified current context and authored questions in his lane while his private AR avatar remains a world presence near the protagonist.
 5. The quest lane advances one beat at a time from Lira through preparation, recovery, escape, return, transit, and debrief. Optional contact/evidence status remains compact or moves into the dossier.
 6. Opening the Game Design Bible from the start menu shows the finalized sixteen-chapter bilingual reference without constructing a run. Opening it from the paused menu retains the menu pause owner and adds the Bible owner. Eligible `F1` during play adds the Bible owner exactly once.
@@ -61,7 +61,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 - The persistent bottom dock has exactly four functional lanes: knowledge minimap, protagonist, George, and current quest beat.
 - Dock height is `16–18%` of the viewport at 1280x720, 1440x900, and 1920x1080.
-- The Paranoia tier is always visible and never renamed `Pressure`; per `GDR-UI-005` the lane shows the tier gauge and ability lit/locked states with no numbers and no Health.
+- Paranoia is always visible and never renamed `Pressure`; per `GDR-UI-005` the lane shows one continuous read-only slider with threshold ticks and the current named tier. Its position follows the exact internal value, but the UI prints no Paranoia number and shows no Health. Ability lit/locked states remain adjacent.
 - The quest lane shows one current beat. Optional preparation and evidence use compact indicators and the dossier rather than a competing objective list.
 - The minimap shows only discovered locations and cameras and never issues movement or displays a hidden safest route.
 - George uses authored contextual prompts and verified information; there is no generic chat box.
@@ -72,14 +72,14 @@ The HUD gives the player one stable operational read without shrinking the distr
 - Wide layout (`>=1200px`) uses a `264px` chapter rail, centered article no wider than `820px`/`76ch`, and `196px` on-page outline. Medium layout (`841–1199px`) uses a `224px` rail and inline section list. Narrow layout (`<=840px`) uses one column, a modal navigation drawer, an expandable on-page list, bounded table scrolling, and targets at least `44px`.
 - The player-visible copy contains finalized end-state design only. It exposes no `OPEN-*`, decision/ticket identifiers, tracker/dependency state, provisional/recommended/unresolved language, historical alternatives, implementation ownership, repository paths, raw wiki links, or test/build/coverage/commit state.
 - Search indexes localized chapter titles, summaries, section titles, body text, and keywords. Results preserve deterministic order and show chapter, section, and localized excerpt.
-- Exact lane widths are unresolved in `OPEN-UI-001`; cover-select/menu visual ownership in `OPEN-UI-002`; dialogue/dossier wireframes in `OPEN-UI-003`; and the tier-gauge/ability presentation in `OPEN-UI-004`.
+- Exact lane widths are unresolved in `OPEN-UI-001`; cover-select/menu visual ownership in `OPEN-UI-002`; and dialogue/dossier wireframes in `OPEN-UI-003`. The Paranoia slider presentation is resolved by `GDR-UI-005`.
 - Accessibility behavior remains an acceptance decision under `OPEN-ACC-001`; semantic localization ownership and equivalence remain acceptance decisions under `OPEN-LOC-001`, and the fiction language policy under `OPEN-NAR-014`. Recorded recommendations may be implemented provisionally through replaceable tokens and localized content.
 
 ## 7. Inputs from other systems
 
 - [[91 Quests & Objectives]] supplies the single current primary beat, optional indicators, deadline, and completion/failure state.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies known locations, cameras, contexts, objective precision, dossier entries, and terminal surfaces.
-- [[43 Health, Failure & Recovery]] and [[60 Paranoia]] supply the visible tier, ability locks, causes, and failure state.
+- [[43 Failure, Surrender & Recovery]] and [[60 Paranoia]] supply the visible tier, ability locks, causes, and failure state.
 - [[40 George (AI Companion)]] supplies verified summaries, authored prompts, bounded answers, and AR-avatar state.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies the current network state, source, last-known feedback, and known coverage.
 - [[80 Day-Night Cycle]] supplies current time, curfew/deadline context, and shared pause ownership.
@@ -100,7 +100,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 - The dock uses the locked graphic surveillance-noir language: world-first composition, readable midtones, strong silhouettes, restrained cyan technology, and crimson danger without broad fantasy glow.
 - The minimap distinguishes knowledge from unknown space and strengthens only discovered surveillance information.
-- The tier gauge, ability states, current beat, network risk, deadlines, blockers, and failure causes use their approved readable text and semantic state; exact color-independent companion treatment follows the recorded `OPEN-ACC-001` recommendation provisionally until accepted.
+- The Paranoia slider and named tier, ability states, current beat, network risk, deadlines, blockers, and failure causes use their approved readable text and semantic state; exact color-independent companion treatment follows the recorded `OPEN-ACC-001` recommendation provisionally until accepted.
 - The private George AR avatar remains near the protagonist while the George lane carries authored prompts and verified summaries; neither may occlude required world interaction.
 - Overlay, dialogue, terminal, objective, network, failure, and completion audio families come from [[49 Audio]] and remain secondary to readable state.
 - The Bible uses the same graphic-surveillance-noir semantic tokens but favors quiet long-form readability: warm practical gold for selected reading context, restrained cyan for supporting actions, and crimson only inside genuine danger/failure examples. Its dialog name, close action, chapter/section current state, result count, tables, headings, and drawer are exposed semantically; no meaning depends on color or sound.
@@ -170,7 +170,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 - Open and close dialogue, Character, dossier, social feed, George, a terminal, failure, and debrief while active simulation is nearby; nothing advances and focus returns cleanly.
 - `AC-L0-016`: complete return, terminal validation, progression, and debrief with the actual facts/outcomes shown and only `Continue Exploring` / `End Demo` terminal choices.
 - `AC-L0-017`: repeat an equivalent path in English and Ukrainian and confirm identical state, requirements, and layout viability.
-- `AC-L0-018`: at every target viewport, confirm dock height `16–18%`, all four functions remain present, the tier gauge and ability states are readable, and the district/actors dominate the frame.
+- `AC-L0-018`: at every target viewport, confirm dock height `16–18%`, all four functions remain present, the continuous Paranoia slider, named tier, and ability states are readable, and the district/actors dominate the frame.
 - From the no-run start menu, open the Bible through both the visible button and `F1`; confirm no run/pause state is created and close restores the invoker.
 - During active play, note time and position, open with `F1`, navigate/search in both languages, and confirm world time, movement, surveillance, actors, mission/outcomes, autosave, and Restart Attempt remain unchanged. Close and confirm exact state resumes.
 - Open above the paused menu; confirm both `menu` and `bible` owners coexist, then close the Bible and prove the menu remains paused. Repeated `F1`, Escape/close races, unmount, run replacement, New Game, and shell teardown never leak or double-release ownership.
@@ -179,4 +179,4 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 ## 16. Owning Linear ticket
 
-`T1` (`GET-201`) owns the player-facing Game Design Bible and corrects changed rules; `T7A` (`GET-216`) delivers the pivot's Bible content pass, the tier-gauge/ability lane data, and the lineage notes. `T9` (`GET-209`) owns the broader HUD, minimap/dossier, separate George/task lanes, overlays, focus, and localization infrastructure. `T9A` (`GET-213`) owns gate verdicts, George explanations, departure/failure legibility, and Restart Attempt presentation. `T6` (`GET-206`) owns protagonist/George visual assets; `T8A` (`GET-212`) owns network evidence; `T10` (`GET-210`) owns authored mission content, audio, localization completion, and end-to-end acceptance. Historic numeric HUD scope remains with `T7` (`GET-207`) as delivered evidence.
+`T1` (`GET-201`) owns the player-facing Game Design Bible and corrects changed rules; `T7A` (`GET-216`) delivers the pivot's Bible content pass, continuous Paranoia slider/ability lane data, and the lineage notes. `T9` (`GET-209`) owns the broader HUD, minimap/dossier, separate George/task lanes, overlays, focus, and localization infrastructure. `T9A` (`GET-213`) owns gate verdicts, George explanations, departure/failure legibility, and Restart Attempt presentation. `T6` (`GET-206`) owns protagonist/George visual assets; `T8A` (`GET-212`) owns network evidence; `T10` (`GET-210`) owns authored mission content, audio, localization completion, and end-to-end acceptance. Historic numeric HUD scope remains with `T7` (`GET-207`) as delivered evidence.

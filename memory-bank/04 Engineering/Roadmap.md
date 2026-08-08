@@ -202,7 +202,7 @@ Ownership:
 - twelve matching portraits;
 - Takahiro broadcast portrait and George AR art;
 - validated `64×96`, eight-direction, four-frame `idle/move/interact` sets;
-- character-creation/world/dialogue identity continuity.
+- cover-select/world/dialogue identity continuity.
 
 Exit gate: all matrices and anchors validate; actors are human-scale, readable without labels, grounded in the world, and visibly non-fantasy.
 

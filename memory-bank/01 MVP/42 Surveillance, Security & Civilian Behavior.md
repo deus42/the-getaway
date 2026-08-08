@@ -62,7 +62,8 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - Rendered camera coverage and detection use identical geometry and respect solid occlusion. Normal geometry creates blind spots; no special off-grid zone exists.
 - Every camera has readable facing, sweep, coverage, and current network state once discovered.
 - Normal play uses subtle status LEDs, IR glints, and authored wet-pavement reflections; Observation shows exact discovered coverage.
-- The unarmed drone is player-facing `Needle`, follows one authored patrol, and verifies `Suspicious` events at last-known positions and hiding areas. It cannot be fought, looted, or disabled by a fantasy gadget.
+- The unarmed drone is player-facing `Needle`, follows one authored patrol crossing the district's decision points (public verification approach, camera-terminal area, service-alley crossing, one escape junction), and verifies `Suspicious` events at last-known positions and hiding areas. It cannot be fought, looted, or disabled by a fantasy gadget. Its pass creates a periodic, learnable pressure wave; waiting it out is always safe and always costs the moving mission window.
+- Procedural commitment (`GDR-SUR-011`): Level 0 authors exactly one verification-lane set-piece. Posted signage states, in operational language, that exit after session initiation is recorded as incomplete processing; entry is free, the pass verdict is exact for a valid cover, and premature exit produces the previewed observed incomplete-verification event (`Suspicious` class, never capture).
 - Level 0 has one camera set, temporarily looped only from its connected terminal and usable once per attempt. History transitions `unused → active → clean|traced`; active duration remains unresolved in `OPEN-SUR-004`, but the final history persists until Restart Attempt.
 - The designated technical ability enables the loop action. Looping without the supporting operational fact leaves an explicit trace as its declared cost; when a valid observer detects that feed change, the paired typed rule break may set the network to at least `Suspicious` even though the loop succeeds.
 - Hiding and blending use discrete authored contexts. Darkness alone is not hiding; hiding cannot begin under direct observation; blending requires behavior credible for that social context.
@@ -78,7 +79,7 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - [[41 Movement, Interaction & Observation]] supplies protagonist position, facing, line-of-sight breaks, direction changes, explicit interactions, and full-pause Observation.
 - `Level0LayoutContract` supplies camera and security anchors, solid occlusion, network relationships, drone launch/search regions, entrances, and authored hiding or blending contexts.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies camera discovery, network facts, terminal ownership, and the knowledge boundary.
-- [[92 Character & Progression]] supplies the held abilities that gates consult.
+- [[92 Character, Covers, Abilities & Research]] supplies the held abilities that gates consult.
 - [[60 Paranoia]] supplies the current Paranoia tier and records communicated surveillance stress.
 - [[80 Day-Night Cycle]] supplies dusk, curfew, clock, and shared pause state.
 - Naila and Brant facts supply only their designated topology, terminal, timing, and behavior effects.
@@ -96,6 +97,7 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 
 - World rendering shows subtle camera status light/glint/reflection in normal play and exact discovered facing/sweep/coverage in Observation; both use detection geometry.
 - `Suspicious` uses an amber network change, names the source direction and last-known event, and communicates the Paranoia cause.
+- Active recognition renders as real network behavior, never an arcade alarm: a camera pauses its sweep at the last-known position, its service lamp shifts to institutional amber, a checkpoint enters manual-review mode, Needle diverts from patrol to verification route, and a connected security worker checks a display. Civilians still cannot know hidden state; security personnel and connected devices react because they actually receive network information.
 - `Pursuit` uses a crimson state change plus clear camera, security, and drone warnings focused on the last-known position.
 - Needle has one recognizable hum and distinct approach and verification warnings before confirmation.
 - Hiding or blending prompts name eligibility and explain direct observation, behavior, fact, gate, or state blockers.

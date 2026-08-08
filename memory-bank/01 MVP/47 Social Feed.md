@@ -9,7 +9,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-The social feed lets the player see how Hidzu Corporation-curated public reality surrounds the operation: safety propaganda, civic notices, managed sentiment, suppression, and transit information coexist with what the protagonist actually experiences. For Level 0 it is a small read-only atmosphere and context surface, not a social-media game or a source of procedural truth. This implements `GDR-SOC-001` and preserves the honesty constraints of `GDR-PAR-003` and `GDR-FACT-001`.
+The social feed lets the player see how Hidzu Corporation-curated public reality surrounds the operation: safety propaganda, civic notices, managed sentiment, suppression, and transit information coexist with what the protagonist actually experiences. For Level 0 it is a small read-only atmosphere and context surface, not a social-media game or a source of procedural truth. This implements `GDR-SOC-001` and `GDR-SOC-002` and preserves the honesty constraints of `GDR-PAR-003` and `GDR-FACT-001`.
 
 ## 2. Player-visible verbs
 
@@ -33,7 +33,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 1. The player opens the feed from its authored information surface; the world and autonomous simulation pause.
 2. The feed displays a bounded authored set of public posts/notices appropriate to the current approved content state.
 3. Each entry communicates atmosphere or public context without pretending to be neutral evidence or changing a hidden social score.
-4. Transit and civic information may clarify already-authored public context, but cannot replace Lira, Naila, Brant, the dossier, a deterministic check, or explicit terminal use.
+4. Transit and civic information may clarify already-authored public context, but cannot replace Lira, Naila, Brant, the dossier, an authored gate path, or explicit terminal use.
 5. The player closes the feed and returns to the prior focus state without time advancement, world input leakage, or mission mutation.
 
 ## 5. State model and transitions
@@ -47,6 +47,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 ## 6. Rules and tuning values
 
 - Level 0 social media is read-only atmosphere and public context.
+- Reactive advisories (`GDR-SOC-002`): public screens, announcements, and the feed may react to qualifying confirmed ledger events only — traced camera-feed change, incomplete verification session, Needle verification, confirmed protected-object removal, active local access restriction — with sector locality, authored latency (trial values under `OPEN-SOC-001`), and strict knowledge limits: never the player's identity before the network holds it, never the sole feedback for a critical state change. Authoring standard: the city gossips about you in the language of facilities management (for example, “Sector 3 access processing is operating under manual review”).
 - Required content families are Hidzu Corporation propaganda, civic or compliance notices, curated public sentiment, visible suppression, and transit information.
 - The feed is authored and deterministic. It contains no procedural posts, runtime LLM output, storylets, or emergent social graph.
 - The feed has no generic sentiment, trust, reputation, karma, follower, reach, or engagement value.
@@ -55,6 +56,8 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 - Exact content, localization, audio priority, and accessibility treatment must follow `OPEN-NAR-014`, `OPEN-LOC-001`, `OPEN-AUD-001`, and `OPEN-ACC-001`; no unresolved values are guessed here.
 
 ## 7. Inputs from other systems
+
+- The surveillance outcome ledger supplies qualifying advisory events with sector and world minute; advisories may never exceed that ledger.
 
 - [[20 Setting & Worldbuilding]] supplies Hidzu Corporation's public safety/efficiency identity and institutional control of identity, mobility, surveillance, and logistics.
 - [[35 Narrative Alignment]] supplies grounded tone and the rule that social absurdity or juxtaposition is never supernatural.
@@ -80,10 +83,10 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- The feed cannot directly fail the operation, trigger capture, change Health/Paranoia, or satisfy an objective.
+- The feed cannot directly fail the operation, trigger capture, change Paranoia or ability state, or satisfy an objective.
 - If no entry is available for a state, the surface communicates that bounded absence and leaves all game state unchanged; it does not generate filler.
 - Closing the feed always restores the prior pause/focus state cleanly.
-- Restart Attempt removes any post-departure presentation state and restores only the authored availability for the departure snapshot; it cannot preserve knowledge that the snapshot did not contain.
+- Restart Attempt removes any post-departure presentation state and restores only the authored availability in `OperationAttemptBaseline`; it cannot preserve knowledge the baseline did not contain.
 - An unavailable or malformed feed is a presentation/content acceptance failure, not permission to bypass a mission fact, terminal, or dialogue requirement.
 
 ## 11. Content-authoring requirements
@@ -99,8 +102,8 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 
 - No posting, replying, direct messaging, following, liking, sharing, searching, engagement loop, follower count, sentiment score, or social-risk simulation.
 - No procedural entry generation, runtime LLM, storylet, generic user simulation, or imported live social data.
-- No hidden fact, objective, surveillance device, route, check answer, manifest recognition, or transit validation revealed by merely opening or reading the feed.
-- No relationship, karma, trust, reputation, XP, or generic intel effect from reading.
+- No hidden fact, objective, surveillance device, route, gate answer, manifest recognition, or transit validation revealed by merely opening or reading the feed.
+- No relationship, karma, trust, reputation, ability, or generic intel effect from reading.
 - No feed content changes caused by Paranoia hallucination or false UI.
 - No critical state communicated only through color, sound, or feed copy; exact accessibility implementation remains gated by `OPEN-ACC-001`.
 
@@ -121,7 +124,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 - Open the feed during an active unpaused operation, read each available authored category, and close it; time, patrols, cameras, drone, movement, and mission state must not advance.
 - Compare a Hidzu Corporation public claim with already-known dossier facts; confirm the feed adds atmosphere/context but no hidden fact or generic score.
 - Trigger high Paranoia, reopen the feed, and confirm the content remains truthful and no fake entry or UI corruption appears.
-- Restart Attempt after viewing post-departure feed content and confirm no mission knowledge leaks beyond the departure snapshot.
+- Restart Attempt after viewing post-departure feed content and confirm no mission knowledge leaks beyond `OperationAttemptBaseline`.
 - `AC-L0-017` and `AC-L0-018`: verify equivalent English/Ukrainian state and readable overlay behavior at all target viewports after the OPEN language, UI, and accessibility decisions are accepted.
 
 ## 16. Owning Linear ticket

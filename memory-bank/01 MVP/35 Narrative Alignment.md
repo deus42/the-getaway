@@ -24,13 +24,13 @@ All narrative content follows [[03 Lore/Plot Bible]], [[11 Level 0 Vertical Slic
 
 ## 4. Complete happy-path behavior
 
-Character creation establishes a personal protagonist. George frames the Miami goal and current lack of Hidzu Corporation concern without a lore dump. Lira makes the humanitarian bargain. Optional Naila and Brant conversations provide distinct facts. World messages show Hidzu Corporation's public story. The optional manifest can be recognized and explicitly copied. Lira's return and the safehouse debrief interpret only actual outcomes and point toward the father, Cold Iron, and Miami.
+Cover-select establishes one authored civilian life and its binary abilities. George frames the Miami goal and current lack of Hidzu Corporation concern without a lore dump. Lira makes the humanitarian bargain. Optional Naila and Brant conversations provide distinct facts. World messages show Hidzu Corporation's public story. The optional manifest can be recognized and explicitly copied. Lira's return and the safehouse debrief interpret only actual outcomes and point toward the father, Cold Iron, and Miami.
 
 The emotional arc is `purpose → obligation → preparation → self-created exposure → controlled fear → earned escape → accountability → forward purpose`. Lira first asks for action, not allegiance. Naila and Brant reveal different survival literacies. The infiltration demonstrates the gap between Hidzu Corporation's public language and its effects. Return makes the player face the costs they accepted. Debrief converts those concrete events into durable self-knowledge and campaign direction.
 
 ## 5. State model and transitions
 
-Narrative follows stable mission states and node families. Each authored choice may change facts, objective precision, checks, time, Health, Paranoia, outcome ledger, or debrief. A line that promises a change must own a concrete state effect or be rewritten as opinion/speculation.
+Narrative follows stable mission states and node families. Each authored choice may change facts, objective precision, a gate verdict, time, Paranoia, a declared route consequence, the outcome ledger, or debrief. A line that promises a change must own a concrete state effect or be rewritten as opinion/speculation.
 
 | Narrative layer | Authority | Can change | Cannot claim |
 |---|---|---|---|
@@ -48,17 +48,17 @@ Narrative follows stable mission states and node families. Each authored choice 
 - George always gives the reason for insufficient information; silence is never a hidden clue. Level 0 adds no George deletion/freedom desire.
 - Humor is dry survival behavior, never a joke that erases human cost.
 - Surreal imagery is figurative or socially absurd, never supernatural.
-- Exposition grants no XP, credits, trust, reputation, or loot.
+- Exposition grants no abilities, facts beyond its authored fact effect, credits, trust, reputation, or loot.
 
 ## 7. Inputs from other systems
 
-Player build; Paranoia; fact ledger; mission state; world time; surveillance outcomes; Health; contacts; social-feed entries; location discovery; outcome ledger.
+Cover; held and currently lit abilities; research state; Paranoia tier; fact ledger; mission state; world time; surveillance outcomes; contacts; social-feed entries; location discovery; outcome ledger.
 
-Every input has a declared narrative use. Paranoia may change available Composure checks or how a cost is described, but not factual truth. A recognized manifest may change interpretation and continuation data, but not whether the medkits were returned. The network peak may change Lira's response, but it cannot imply capture if capture did not occur.
+Every input has a declared narrative use. Paranoia may lock declared `fragile` abilities or change how a cost is described, but not factual truth. A recognized manifest may change interpretation and continuation data, but not whether the medkits were returned. The network peak may change Lira's response, but it cannot imply capture if capture did not occur.
 
 ## 8. Effects on other systems
 
-Narrative activates objectives, grants facts, changes knowledge precision, presents checks, updates George/dossier/debrief, issues the transit credential, and determines Miami continuation data.
+Narrative activates objectives, grants authored facts, changes knowledge precision, presents gate verdicts and declared paths, updates George/dossier/debrief, issues the transit credential, and determines Miami continuation data.
 
 Narrative never performs the physical action it describes. A line can authorize the operation, issue a credential, or record a fact; the player still has to move, operate the cache, take the medkits, escape, hand them to Lira, and validate transit through the owning systems.
 
@@ -78,11 +78,11 @@ Fail-forward is not cosmetic failure. It must change a declared cost or route co
 
 For every node record speaker, audience, emotional intent, exact player line, prerequisites, visible requirement, fact inputs, state effects, fail-forward, history text, English/UK copy, Plot Bible anchor, and owning decision IDs.
 
-Every debrief clause also needs an exact ledger predicate and mutually compatible ordering. Content must cover contacts both/one/neither, dusk/curfew, camera history unused/active/clean/traced, network peak, Needle verification, interception, Health loss, Paranoia peak, the four Cold Iron evidence states, medkit return, transit validation, and deadline margin without producing contradictory prose.
+Every debrief clause also needs an exact ledger predicate and mutually compatible ordering. Content must cover contacts both/one/neither, dusk/curfew, camera history unused/active/clean/traced, network peak, Needle verification, interception, Paranoia peak and significant sources/recovery, cover/abilities/research, the four Cold Iron evidence states, medkit return, transit validation, and deadline margin without producing contradictory prose.
 
 ## 12. Edge cases and prohibited shortcuts
 
-No generic tone labels in place of exact speech; no promises of purchases, routes, gadgets, reputation, combat, or world change that do not occur; no mandatory exposition loops; no procedural generation; no calling the protagonist Trace unless entered as callsign; no Japanese cultural shorthand without review.
+No generic tone labels in place of exact speech; no promises of purchases, routes, gadgets, reputation, combat, or world change that do not occur; no mandatory exposition loops; no procedural generation; no calling the protagonist Trace or Operative; no Japanese cultural shorthand without review.
 
 ## 13. Removed behavior
 
@@ -97,8 +97,8 @@ Post-MVP relationship depth may remember conduct and commitments, but it is not 
 ## 15. Human-play acceptance examples
 
 - Each contact changes at least one practical piece of knowledge.
-- Two different builds see different but honest options.
-- Missing a check changes the route or information without silently dead-ending the mission.
+- A lit ability, designated fact, and declared costed path each produce different but honest gate options where authored.
+- An unmet or refused nonterminal gate changes the route, time, Paranoia, fact, or information without silently dead-ending the mission.
 - Lira's debrief never mentions an action the player did not take.
 - English and Ukrainian create identical state.
 - A player who skips both contacts receives a coherent story of acting with limited information rather than dialogue that assumes prior preparation.

@@ -53,7 +53,7 @@ describe('in-game Game Design Bible content', () => {
           'rules-and-examples',
           'connections',
           'feedback',
-          'failure-recovery-persistence-retry',
+          'failure-recovery-persistence-restart',
           'see-also',
         ]));
       }
