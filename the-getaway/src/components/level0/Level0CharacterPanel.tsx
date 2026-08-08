@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import { CHARACTER_SPRITE_MANIFEST_BY_ID } from '../../content/characters/spriteManifest';
 import { LEVEL0_COVER_CATALOG } from '../../game/level0/rpg/creation';
 import {
@@ -33,6 +33,10 @@ const Level0CharacterPanel = ({
   const portrait = CHARACTER_SPRITE_MANIFEST_BY_ID[run.identity.appearancePresetId]?.portrait.path;
   const cover = LEVEL0_COVER_CATALOG[run.identity.coverId];
   const tier = deriveLevel0ParanoiaTier(run.paranoia);
+  const tierLabel = localizeLevel0Copy(LEVEL0_PARANOIA_TIER_COPY[tier], ukrainian);
+  const paranoiaSliderStyle = {
+    '--paranoia-position': `${run.paranoia}%`,
+  } as CSSProperties;
   const knownFacts = Object.keys(run.facts.known);
   const latestParanoiaEvent = run.rpg.paranoiaEvents[run.rpg.paranoiaEvents.length - 1];
 
@@ -91,11 +95,25 @@ const Level0CharacterPanel = ({
         <section className="level0-character__condition" data-tier={tier}>
           <div>
             <span>{ukrainian ? 'СТАН ПАРАНОЇ' : 'PARANOIA CONDITION'}</span>
-            <strong>{localizeLevel0Copy(LEVEL0_PARANOIA_TIER_COPY[tier], ukrainian)}</strong>
+            <strong>{tierLabel}</strong>
           </div>
-          <span className="level0-character__condition-track" aria-hidden="true">
-            <i />
-          </span>
+          <div
+            className="level0-character__paranoia-slider"
+            data-testid="level0-paranoia-slider-character"
+            role="meter"
+            aria-label={ukrainian ? 'Параноя' : 'Paranoia'}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={run.paranoia}
+            aria-valuetext={tierLabel}
+            style={paranoiaSliderStyle}
+          >
+            <span className="level0-character__paranoia-fill" aria-hidden="true" />
+            <span className="level0-character__paranoia-thumb" aria-hidden="true" />
+            <span className="level0-character__paranoia-thresholds" aria-hidden="true">
+              <i /><i /><i />
+            </span>
+          </div>
           <small>
             {latestParanoiaEvent
               ? describeLevel0ParanoiaEvent(latestParanoiaEvent, ukrainian)

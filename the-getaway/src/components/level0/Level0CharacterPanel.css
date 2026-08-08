@@ -91,6 +91,7 @@
 }
 
 .level0-character__condition {
+  --paranoia-color: #6eb2b7;
   display: grid;
   grid-template-columns: minmax(150px, auto) minmax(180px, 1fr);
   gap: 12px 20px;
@@ -114,24 +115,55 @@
   grid-column: 1 / -1;
 }
 
-.level0-character__condition-track {
-  display: block;
-  height: 8px;
-  overflow: hidden;
+.level0-character__paranoia-slider {
+  position: relative;
+  align-self: center;
+  height: 10px;
+  border: 1px solid rgba(216, 209, 194, 0.18);
   background: #282d2f;
 }
 
-.level0-character__condition-track i {
-  display: block;
-  width: 18%;
-  height: 100%;
-  background: #6eb2b7;
+.level0-character__paranoia-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--paranoia-position);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--paranoia-color) 58%, #15191b), var(--paranoia-color));
 }
 
-.level0-character__condition[data-tier='uneasy'] .level0-character__condition-track i { width: 48%; background: #c9a45a; }
-.level0-character__condition[data-tier='shaken'] .level0-character__condition-track i { width: 72%; background: #c77d4a; }
-.level0-character__condition[data-tier='breaking'] .level0-character__condition-track i,
-.level0-character__condition[data-tier='breakdown'] .level0-character__condition-track i { width: 100%; background: #b94848; }
+.level0-character__paranoia-thumb {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: clamp(4px, var(--paranoia-position), calc(100% - 4px));
+  width: 8px;
+  height: 16px;
+  border: 1px solid #e0d6c3;
+  background: var(--paranoia-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--paranoia-color) 42%, transparent);
+  transform: translate(-50%, -50%);
+}
+
+.level0-character__paranoia-thresholds {
+  position: absolute;
+  inset: 0;
+}
+
+.level0-character__paranoia-thresholds i {
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 14px;
+  background: rgba(224, 214, 195, 0.38);
+}
+
+.level0-character__paranoia-thresholds i:nth-child(1) { left: 40%; }
+.level0-character__paranoia-thresholds i:nth-child(2) { left: 70%; }
+.level0-character__paranoia-thresholds i:nth-child(3) { left: 90%; }
+
+.level0-character__condition[data-tier='uneasy'] { --paranoia-color: #c9a45a; }
+.level0-character__condition[data-tier='shaken'] { --paranoia-color: #c77d4a; }
+.level0-character__condition[data-tier='breaking'],
+.level0-character__condition[data-tier='breakdown'] { --paranoia-color: #b94848; }
 
 .level0-character__columns {
   display: grid;

@@ -1,4 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { GameBibleUiState } from '../../content/gameBible/types';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../content/levels/level0/layoutContract';
@@ -892,6 +900,13 @@ const Level0RuntimeShell = () => {
   const cleanVisualProof = typeof window !== 'undefined' &&
     new URLSearchParams(window.location.search).get('cleanVisual') === '1';
   const paranoiaTier = deriveLevel0ParanoiaTier(run.paranoia);
+  const paranoiaTierLabel = localizeLevel0Copy(
+    LEVEL0_PARANOIA_TIER_COPY[paranoiaTier],
+    ukrainian
+  );
+  const paranoiaSliderStyle = {
+    '--paranoia-position': `${run.paranoia}%`,
+  } as CSSProperties;
   const pendingResearch = pendingSafehouseAction?.kind === 'research'
     ? LEVEL0_RESEARCH_CATALOG[pendingSafehouseAction.optionId]
     : null;
@@ -965,8 +980,25 @@ const Level0RuntimeShell = () => {
             <div className="level0-runtime__meters">
               <span>
                 {ukrainian ? 'ПАРАНОЯ' : 'PARANOIA'}{' '}
-                <b>{localizeLevel0Copy(LEVEL0_PARANOIA_TIER_COPY[paranoiaTier], ukrainian)}</b>
+                <b>{paranoiaTierLabel}</b>
               </span>
+              <div
+                className="level0-runtime__paranoia-slider"
+                data-testid="level0-paranoia-slider-hud"
+                role="meter"
+                aria-label={ukrainian ? 'Параноя' : 'Paranoia'}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={run.paranoia}
+                aria-valuetext={paranoiaTierLabel}
+                style={paranoiaSliderStyle}
+              >
+                <span className="level0-runtime__paranoia-fill" aria-hidden="true" />
+                <span className="level0-runtime__paranoia-thumb" aria-hidden="true" />
+                <span className="level0-runtime__paranoia-thresholds" aria-hidden="true">
+                  <i /><i /><i />
+                </span>
+              </div>
             </div>
             <div className="level0-runtime__ability-strip" aria-label={ukrainian ? 'Здібності' : 'Abilities'}>
               {run.abilities.heldAbilityIds.slice(0, 3).map((abilityId) => {

@@ -373,7 +373,7 @@
   margin-top: 8px;
 }
 
-.level0-runtime__meters span {
+.level0-runtime__meters > span {
   display: flex;
   justify-content: space-between;
   padding: 4px 6px;
@@ -387,12 +387,70 @@
   color: var(--l0-bone);
 }
 
-.level0-runtime__lane[data-paranoia-tier='calm'] .level0-runtime__meters span {
+.level0-runtime__lane[data-paranoia-tier='calm'] .level0-runtime__meters > span {
   border-left-color: var(--l0-teal);
 }
 
-.level0-runtime__lane[data-paranoia-tier='uneasy'] .level0-runtime__meters span {
+.level0-runtime__lane[data-paranoia-tier='uneasy'] .level0-runtime__meters > span {
   border-left-color: var(--l0-amber);
+}
+
+.level0-runtime__paranoia-slider {
+  --paranoia-color: var(--l0-teal);
+  position: relative;
+  height: 7px;
+  margin: 1px 2px 0;
+  border: 1px solid rgba(216, 209, 194, 0.16);
+  background: #282d2f;
+}
+
+.level0-runtime__paranoia-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--paranoia-position);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--paranoia-color) 52%, #15191b), var(--paranoia-color));
+}
+
+.level0-runtime__paranoia-thumb {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: clamp(3px, var(--paranoia-position), calc(100% - 3px));
+  width: 6px;
+  height: 11px;
+  border: 1px solid var(--l0-bone);
+  background: var(--paranoia-color);
+  transform: translate(-50%, -50%);
+}
+
+.level0-runtime__paranoia-thresholds {
+  position: absolute;
+  inset: 0;
+}
+
+.level0-runtime__paranoia-thresholds i {
+  position: absolute;
+  top: -2px;
+  width: 1px;
+  height: 9px;
+  background: rgba(224, 214, 195, 0.32);
+}
+
+.level0-runtime__paranoia-thresholds i:nth-child(1) { left: 40%; }
+.level0-runtime__paranoia-thresholds i:nth-child(2) { left: 70%; }
+.level0-runtime__paranoia-thresholds i:nth-child(3) { left: 90%; }
+
+.level0-runtime__lane[data-paranoia-tier='uneasy'] .level0-runtime__paranoia-slider {
+  --paranoia-color: var(--l0-amber);
+}
+
+.level0-runtime__lane[data-paranoia-tier='shaken'] .level0-runtime__paranoia-slider {
+  --paranoia-color: #c77d4a;
+}
+
+.level0-runtime__lane[data-paranoia-tier='breaking'] .level0-runtime__paranoia-slider,
+.level0-runtime__lane[data-paranoia-tier='breakdown'] .level0-runtime__paranoia-slider {
+  --paranoia-color: var(--l0-crimson);
 }
 
 .level0-runtime__ability-strip {
