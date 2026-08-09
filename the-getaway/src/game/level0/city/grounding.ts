@@ -1,20 +1,18 @@
 import { applyLevel0ParanoiaEffect } from '../rpg/paranoia';
 import { applyClockResult } from '../runtime/safehouse';
-import type { Level0RunState } from '../runtime/types';
+import type { Level0GroundingActionId, Level0RunState } from '../runtime/types';
 import { jumpWorldClockMinutes } from '../runtime/worldClock';
 import type { Level0CityCopy } from './routeNames';
 
 // Canonical action IDs per Architecture §Grounding.
-export type GroundingActionId =
-  | 'grounding.transit-road-vending-coffee'
-  | 'grounding.market-ring-shrine';
+export type GroundingActionId = Level0GroundingActionId;
 
 export interface GroundingActionDefinition {
-  id: GroundingActionId;
+  actionId: GroundingActionId;
   anchorId: string;
   // Approved fixed values (GDR-PAR-006): not tunable content.
-  worldMinutes: 10;
-  paranoiaRelief: 10;
+  worldMinuteCost: 10;
+  paranoiaDelta: -10;
   usesPerAttempt: 1;
   title: Level0CityCopy;
   confirmPreview: Level0CityCopy;
@@ -25,10 +23,10 @@ export interface GroundingActionDefinition {
 
 export const LEVEL0_GROUNDING_ACTIONS: Record<GroundingActionId, GroundingActionDefinition> = {
   'grounding.transit-road-vending-coffee': {
-    id: 'grounding.transit-road-vending-coffee',
+    actionId: 'grounding.transit-road-vending-coffee',
     anchorId: 'interaction.grounding.vending_coffee',
-    worldMinutes: 10,
-    paranoiaRelief: 10,
+    worldMinuteCost: 10,
+    paranoiaDelta: -10,
     usesPerAttempt: 1,
     title: { en: 'Vending-machine coffee', uk: 'Кава з автомата' },
     confirmPreview: {
@@ -46,10 +44,10 @@ export const LEVEL0_GROUNDING_ACTIONS: Record<GroundingActionId, GroundingAction
     cueId: 'cue.grounding.vending_coffee',
   },
   'grounding.market-ring-shrine': {
-    id: 'grounding.market-ring-shrine',
+    actionId: 'grounding.market-ring-shrine',
     anchorId: 'interaction.grounding.shrine',
-    worldMinutes: 10,
-    paranoiaRelief: 10,
+    worldMinuteCost: 10,
+    paranoiaDelta: -10,
     usesPerAttempt: 1,
     title: { en: 'Street shrine', uk: 'Вуличне святилище' },
     confirmPreview: {
@@ -72,7 +70,7 @@ export const LEVEL0_GROUNDING_ACTIONS: Record<GroundingActionId, GroundingAction
 // relief value itself is approved content (GDR-PAR-007) and lives here.
 export const LEVEL0_DIFFICULT_ESCAPE_RELIEF = {
   eventId: 'relief.difficult_escape',
-  paranoiaRelief: 5,
+  paranoiaDelta: -5,
   usesPerAttempt: 1,
 } as const;
 
@@ -98,10 +96,10 @@ export const resolveGroundingVerdict = (
   action: GroundingActionDefinition,
   options: { usedGroundingIds: readonly string[]; currentMinute: number }
 ): GroundingVerdict => {
-  if (options.usedGroundingIds.includes(action.id)) {
+  if (options.usedGroundingIds.includes(action.actionId)) {
     return { allowed: false, reasonId: 'grounding.blocked.used', reason: action.usedReason };
   }
-  if (options.currentMinute + action.worldMinutes > DEADLINE_MINUTE) {
+  if (options.currentMinute + action.worldMinuteCost > DEADLINE_MINUTE) {
     return {
       allowed: false,
       reasonId: 'grounding.blocked.deadline',
@@ -137,20 +135,24 @@ export const applyLevel0GroundingAction = (
   if (!verdict.allowed) {
     return { applied: false, run, blockedReasonId: verdict.reasonId, clockEventIds: [] };
   }
-  const clockResult = jumpWorldClockMinutes(run.worldClock, action.worldMinutes, run.completion);
+  const clockResult = jumpWorldClockMinutes(
+    run.worldClock,
+    action.worldMinuteCost,
+    run.completion
+  );
   let next = applyClockResult(run, clockResult);
   next = {
     ...next,
     recovery: {
       ...next.recovery,
-      usedGroundingActionIds: [...next.recovery.usedGroundingActionIds, action.id],
+      usedGroundingActionIds: [...next.recovery.usedGroundingActionIds, action.actionId],
     },
   };
   if (next.mission !== 'L0_FAILED' && next.paranoia > 0) {
     next = applyLevel0ParanoiaEffect(next, {
-      eventId: action.id,
-      amount: -action.paranoiaRelief,
-      sourceId: action.id,
+      eventId: action.actionId,
+      amount: action.paranoiaDelta,
+      sourceId: action.actionId,
       feedbackId: 'paranoia.grounding_relief',
     }).run;
   }
@@ -177,7 +179,7 @@ export const applyLevel0DifficultEscapeRelief = (
   if (next.paranoia > 0) {
     next = applyLevel0ParanoiaEffect(next, {
       eventId: LEVEL0_DIFFICULT_ESCAPE_RELIEF.eventId,
-      amount: -LEVEL0_DIFFICULT_ESCAPE_RELIEF.paranoiaRelief,
+      amount: LEVEL0_DIFFICULT_ESCAPE_RELIEF.paranoiaDelta,
       sourceId: LEVEL0_DIFFICULT_ESCAPE_RELIEF.eventId,
       feedbackId: 'paranoia.difficult_escape_relief',
     }).run;

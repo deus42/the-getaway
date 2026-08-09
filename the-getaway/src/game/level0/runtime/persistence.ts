@@ -188,12 +188,10 @@ const expectedClockPhase = (minute: number) =>
 
 const expectedProcessedBoundaries = (minute: number): string[] => {
   const ids: string[] = [];
-  if (minute >= 20 * 60) ids.push('clock.blue_hour');
-  if (minute >= 21 * 60) ids.push('street.wind_down_first');
-  if (minute >= 21 * 60 + 30) ids.push('street.wind_down_second');
-  if (minute >= 22 * 60) ids.push('clock.curfew', 'street.curfew_lockdown');
-  if (minute >= 23 * 60 + 30) ids.push('street.last_train');
-  if (minute >= 24 * 60) ids.push('clock.deadline');
+  if (minute >= 21 * 60) ids.push('clock.2100');
+  if (minute >= 21 * 60 + 30) ids.push('clock.2130');
+  if (minute >= 22 * 60) ids.push('clock.2200');
+  if (minute >= 23 * 60 + 30) ids.push('clock.2330');
   return ids;
 };
 

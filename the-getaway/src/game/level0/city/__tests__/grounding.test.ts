@@ -22,13 +22,13 @@ const runWithParanoia = (paranoia: number): Level0RunState => ({
 describe('Level 0 grounding actions (GDR-PAR-006 / GDR-PAR-007)', () => {
   it('keeps the approved fixed values and canonical Architecture IDs', () => {
     const actions = Object.values(LEVEL0_GROUNDING_ACTIONS);
-    expect(actions.map((action) => action.id).sort()).toEqual([SHRINE, COFFEE].sort());
+    expect(actions.map((action) => action.actionId).sort()).toEqual([SHRINE, COFFEE].sort());
     for (const action of actions) {
-      expect(action.worldMinutes).toBe(10);
-      expect(action.paranoiaRelief).toBe(10);
+      expect(action.worldMinuteCost).toBe(10);
+      expect(action.paranoiaDelta).toBe(-10);
       expect(action.usesPerAttempt).toBe(1);
     }
-    expect(LEVEL0_DIFFICULT_ESCAPE_RELIEF.paranoiaRelief).toBe(5);
+    expect(LEVEL0_DIFFICULT_ESCAPE_RELIEF.paranoiaDelta).toBe(-5);
     expect(LEVEL0_DIFFICULT_ESCAPE_RELIEF.usesPerAttempt).toBe(1);
   });
 
@@ -39,8 +39,8 @@ describe('Level 0 grounding actions (GDR-PAR-006 / GDR-PAR-007)', () => {
       );
       expect(anchor).toBeDefined();
       expect(anchor?.kind).toBe('interaction');
-      expect(anchor?.ownerId).toBe(action.id);
-      expect(getGroundingActionByAnchor(action.anchorId)?.id).toBe(action.id);
+      expect(anchor?.ownerId).toBe(action.actionId);
+      expect(getGroundingActionByAnchor(action.anchorId)?.actionId).toBe(action.actionId);
     }
     expect(getGroundingActionByAnchor('interaction.safehouse.wait')).toBeNull();
     expect(getGroundingActionByAnchor(undefined)).toBeNull();
@@ -90,13 +90,13 @@ describe('Level 0 grounding actions (GDR-PAR-006 / GDR-PAR-007)', () => {
       currentWorldMillisecond: (21 * 60 - 5) * 60_000,
       currentMinute: 21 * 60 - 5,
       phase: 'blue-hour',
-      processedBoundaryIds: ['clock.blue_hour'],
-      lastProcessedScheduleBoundaryId: 'clock.blue_hour',
+      processedBoundaryIds: [],
+      lastProcessedScheduleBoundaryId: undefined,
       scheduleStates: { lighting: 'blue-hour', publicActivity: 'active' },
     };
     const result = applyLevel0GroundingAction(beforeBoundary, SHRINE);
     expect(result.applied).toBe(true);
-    expect(result.clockEventIds).toEqual(['street.wind_down_first']);
+    expect(result.clockEventIds).toEqual(['clock.2100']);
   });
 
   it('blocks a use that would cross the midnight deadline instead of applying partial effects', () => {

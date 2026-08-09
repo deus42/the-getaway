@@ -44,14 +44,20 @@ export type PauseOwner =
   | 'failure'
   | 'completion';
 
+export type Level0ClockBoundaryId =
+  | 'clock.2100'
+  | 'clock.2130'
+  | 'clock.2200'
+  | 'clock.2330';
+
 export interface WorldClockState {
   currentWorldMillisecond: number;
   currentMinute: number;
   phase: 'dusk' | 'blue-hour' | 'curfew';
   curfewActive: boolean;
   deadlineReached: boolean;
-  lastProcessedScheduleBoundaryId?: string;
-  processedBoundaryIds: string[];
+  lastProcessedScheduleBoundaryId?: Level0ClockBoundaryId;
+  processedBoundaryIds: Level0ClockBoundaryId[];
   pauseOwners: PauseOwner[];
   scheduleStates: Record<string, string>;
 }
@@ -110,11 +116,15 @@ export type SafehouseActionId =
   | 'research'
   | 'outbound-transit';
 
+export type Level0GroundingActionId =
+  | 'grounding.transit-road-vending-coffee'
+  | 'grounding.market-ring-shrine';
+
 // Attempt recovery ledger (GET-214): grounding one-use and the single
 // difficult-escape relief. George threshold history lives in
 // rpg.announcedParanoiaTiers rather than a duplicate field here.
 export interface Level0AttemptRecoveryState {
-  usedGroundingActionIds: string[];
+  usedGroundingActionIds: Level0GroundingActionId[];
   difficultSurveillanceEscapeReliefUsed: boolean;
 }
 

@@ -39,15 +39,15 @@ describe('Level 0 street-moment content (GDR-TIME-004)', () => {
   });
 
   it('speaks the approved route names in signage language', () => {
-    const second = LEVEL0_STREET_MOMENT_CONTENT['street.wind_down_second'];
+    const second = LEVEL0_STREET_MOMENT_CONTENT['clock.2130'];
     expect(second.announcement.en).toContain('Market Ring');
     expect(second.announcement.uk).toContain('Ринков');
 
-    const lastTrain = LEVEL0_STREET_MOMENT_CONTENT['street.last_train'];
+    const lastTrain = LEVEL0_STREET_MOMENT_CONTENT['clock.2330'];
     expect(lastTrain.announcement.en).toContain('Transit Road');
     expect(lastTrain.announcement.uk).toContain('Транзитн');
 
-    const curfew = LEVEL0_STREET_MOMENT_CONTENT['street.curfew_lockdown'];
+    const curfew = LEVEL0_STREET_MOMENT_CONTENT['clock.2200'];
     expect(curfew.announcement.en).toContain('Hidzu Corporation');
     expect(curfew.announcement.uk).toContain('Хідзу');
   });

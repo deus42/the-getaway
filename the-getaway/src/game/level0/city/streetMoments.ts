@@ -29,8 +29,8 @@ export interface StreetMomentContent {
 // PA copy is restrained and single-purpose per moment. Ukrainian lines use the
 // grammatically declined forms of the GDR-SET-007 route names.
 export const LEVEL0_STREET_MOMENT_CONTENT: Record<StreetMomentId, StreetMomentContent> = {
-  'street.wind_down_first': {
-    id: 'street.wind_down_first',
+  'clock.2100': {
+    id: 'clock.2100',
     boundaryMinute: LEVEL0_STREET_WIND_DOWN_FIRST_MINUTE,
     cueId: 'cue.street.wind_down_first',
     announcement: {
@@ -42,8 +42,8 @@ export const LEVEL0_STREET_MOMENT_CONTENT: Record<StreetMomentId, StreetMomentCo
       uk: 'Оголошення гучномовця: згортання вечора',
     },
   },
-  'street.wind_down_second': {
-    id: 'street.wind_down_second',
+  'clock.2130': {
+    id: 'clock.2130',
     boundaryMinute: LEVEL0_STREET_WIND_DOWN_SECOND_MINUTE,
     cueId: 'cue.street.wind_down_second',
     announcement: {
@@ -55,8 +55,8 @@ export const LEVEL0_STREET_MOMENT_CONTENT: Record<StreetMomentId, StreetMomentCo
       uk: 'Оголошення гучномовця: ринок зачиняється',
     },
   },
-  'street.curfew_lockdown': {
-    id: 'street.curfew_lockdown',
+  'clock.2200': {
+    id: 'clock.2200',
     boundaryMinute: LEVEL0_CURFEW_MINUTE,
     cueId: 'cue.street.curfew_lockdown',
     announcement: {
@@ -68,8 +68,8 @@ export const LEVEL0_STREET_MOMENT_CONTENT: Record<StreetMomentId, StreetMomentCo
       uk: 'Оголошення гучномовця: комендантська година діє',
     },
   },
-  'street.last_train': {
-    id: 'street.last_train',
+  'clock.2330': {
+    id: 'clock.2330',
     boundaryMinute: LEVEL0_STREET_LAST_TRAIN_MINUTE,
     cueId: 'cue.street.last_train',
     announcement: {

@@ -13,16 +13,16 @@
   margin-top: 18px;
   max-width: 560px;
   padding: 8px 16px;
-  background: #101215e0;
-  border: 1px solid #c18d4f66;
-  color: #e8dcc0;
-  font: 600 12px/1.5 monospace;
+  background: color-mix(in srgb, var(--l0-ink) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--l0-amber) 40%, transparent);
+  color: var(--l0-bone);
+  font: 600 12px/1.5 var(--font-mono, monospace);
   letter-spacing: 0.08em;
   text-align: center;
 }
 
 .level0-street-moments__announcement-kicker {
-  color: #c18d4f;
+  color: var(--l0-amber);
   text-transform: uppercase;
   font-size: 10px;
 }
@@ -32,8 +32,8 @@
   left: 14px;
   bottom: clamp(128px, 20vh, 190px);
   padding: 4px 10px;
-  background: #101215c8;
-  color: #a8b5ad;
-  font: 500 11px/1.4 monospace;
+  background: color-mix(in srgb, var(--l0-ink) 78%, transparent);
+  color: var(--l0-muted);
+  font: 500 11px/1.4 var(--font-mono, monospace);
   letter-spacing: 0.06em;
 }

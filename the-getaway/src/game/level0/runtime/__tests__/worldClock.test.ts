@@ -62,8 +62,7 @@ describe('Level 0 world clock and pause ownership', () => {
     expect(crossing.state.curfewActive).toBe(true);
     expect(crossing.state.phase).toBe('curfew');
     expect(crossing.events).toEqual([
-      { id: 'clock.curfew', boundaryMinute: 22 * 60, kind: 'curfew' },
-      { id: 'street.curfew_lockdown', boundaryMinute: 22 * 60, kind: 'street-moment' },
+      { id: 'clock.2200', boundaryMinute: 22 * 60, kind: 'curfew' },
     ]);
 
     const later = advanceWorldClock(crossing.state, {
@@ -85,11 +84,10 @@ describe('Level 0 world clock and pause ownership', () => {
     expect(result.state.currentMinute).toBe(24 * 60);
     expect(result.events.map((event) => event.id)).toEqual([
       'clock.blue_hour',
-      'street.wind_down_first',
-      'street.wind_down_second',
-      'clock.curfew',
-      'street.curfew_lockdown',
-      'street.last_train',
+      'clock.2100',
+      'clock.2130',
+      'clock.2200',
+      'clock.2330',
       'clock.deadline',
     ]);
     expect(result.events[result.events.length - 1]).toEqual({
@@ -122,13 +120,10 @@ describe('Level 0 world clock and pause ownership', () => {
 
     expect(crossing.state.currentMinute).toBe(21 * 60);
     expect(crossing.events).toEqual([
-      { id: 'street.wind_down_first', boundaryMinute: 21 * 60, kind: 'street-moment' },
+      { id: 'clock.2100', boundaryMinute: 21 * 60, kind: 'street-moment' },
     ]);
-    expect(crossing.state.processedBoundaryIds).toEqual([
-      'clock.blue_hour',
-      'street.wind_down_first',
-    ]);
-    expect(crossing.state.lastProcessedScheduleBoundaryId).toBe('street.wind_down_first');
+    expect(crossing.state.processedBoundaryIds).toEqual(['clock.2100']);
+    expect(crossing.state.lastProcessedScheduleBoundaryId).toBe('clock.2100');
 
     const afterPauseOnBoundary = releasePauseOwner(
       acquirePauseOwner(crossing.state, 'menu'),
@@ -145,19 +140,14 @@ describe('Level 0 world clock and pause ownership', () => {
   it('treats hydration on either side of a street boundary as already-processed history', () => {
     const hydratedPastFirst = createWorldClockState(21 * 60 + 5);
     expect(processedStreetMomentIdsAt(hydratedPastFirst.currentMinute)).toEqual([
-      'street.wind_down_first',
+      'clock.2100',
     ]);
-    expect(hydratedPastFirst.processedBoundaryIds).toEqual([
-      'clock.blue_hour',
-      'street.wind_down_first',
-    ]);
+    expect(hydratedPastFirst.processedBoundaryIds).toEqual(['clock.2100']);
     expect(createWorldClockState(23 * 60 + 45).processedBoundaryIds).toEqual([
-      'clock.blue_hour',
-      'street.wind_down_first',
-      'street.wind_down_second',
-      'clock.curfew',
-      'street.curfew_lockdown',
-      'street.last_train',
+      'clock.2100',
+      'clock.2130',
+      'clock.2200',
+      'clock.2330',
     ]);
 
     const advanced = advanceWorldClock(hydratedPastFirst, {
@@ -174,6 +164,6 @@ describe('Level 0 world clock and pause ownership', () => {
     expect(crossedStreetMoments(23 * 60 + 30, 21 * 60 + 30)).toEqual([]);
     expect(
       crossedStreetMoments(20 * 60 + 55, 21 * 60 + 35).map((moment) => moment.id)
-    ).toEqual(['street.wind_down_first', 'street.wind_down_second']);
+    ).toEqual(['clock.2100', 'clock.2130']);
   });
 });

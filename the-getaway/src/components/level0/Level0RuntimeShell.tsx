@@ -677,7 +677,7 @@ const Level0RuntimeShell = () => {
     }
     const groundingAction = getGroundingActionByAnchor(result.anchor.id);
     if (groundingAction) {
-      requestGroundingAction(groundingAction.id);
+      requestGroundingAction(groundingAction.actionId);
       return;
     }
     dispatch(setLevel0Feedback(`interaction.preview.${result.anchor.id}`));
@@ -980,7 +980,7 @@ const Level0RuntimeShell = () => {
   const pendingTimeCost = pendingSafehouseAction?.kind === 'wait' || pendingSafehouseAction?.kind === 'rest'
     ? 30
     : pendingGrounding
-      ? pendingGrounding.worldMinutes
+      ? pendingGrounding.worldMinuteCost
       : pendingResearch?.worldMinuteCost ?? 0;
 
   return (

@@ -52,6 +52,25 @@ const Level0StreetMomentBanner = ({ run }: Level0StreetMomentBannerProps) => {
   const [queue, setQueue] = useState<StreetMomentId[]>([]);
   const announcedCueRef = useRef<StreetMomentId | null>(null);
   const processedSignatureRef = useRef('');
+  const previousRunRef = useRef({
+    sessionId: run.sessionId,
+    currentMinute: run.worldClock.currentMinute,
+  });
+
+  useEffect(() => {
+    const previous = previousRunRef.current;
+    const attemptReset =
+      previous.sessionId !== run.sessionId ||
+      run.worldClock.currentMinute < previous.currentMinute;
+    previousRunRef.current = {
+      sessionId: run.sessionId,
+      currentMinute: run.worldClock.currentMinute,
+    };
+    if (!attemptReset) return;
+    processedSignatureRef.current = '';
+    announcedCueRef.current = null;
+    setQueue([]);
+  }, [run.sessionId, run.worldClock.currentMinute]);
 
   const clockEventSignature = clockEventIds.join('|');
   useEffect(() => {
@@ -68,7 +87,7 @@ const Level0StreetMomentBanner = ({ run }: Level0StreetMomentBannerProps) => {
     if (!activeId) return undefined;
     if (announcedCueRef.current !== activeId) {
       announcedCueRef.current = activeId;
-      playLevel0FeedbackCue(activeId === 'street.last_train' ? 'last-train' : 'street-pa');
+      playLevel0FeedbackCue(activeId === 'clock.2330' ? 'last-train' : 'street-pa');
     }
     const timer = window.setTimeout(() => {
       setQueue((current) => current.slice(1));

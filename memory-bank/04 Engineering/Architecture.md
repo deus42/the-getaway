@@ -454,11 +454,10 @@ interface GroundingActionDefinition {
 interface Level0AttemptRecoveryState {
   usedGroundingActionIds: GroundingActionDefinition['actionId'][];
   difficultSurveillanceEscapeReliefUsed: boolean;
-  announcedParanoiaThresholds: Array<40 | 70 | 90>;
 }
 ```
 
-Frame time advances the clock only when `pauseOwners` is empty and the run is in an active exploration state. Boundary IDs persist as an idempotency set so 21:00, 21:30, 22:00, and 23:30 each fire exactly once across pause, autosave, hydration, and explicit clock jumps. Attempt recovery state makes both ten-minute/−10 grounding actions one-use, limits the qualifying difficult-escape relief to one −5 event, and lets George announce each 40/70/90 threshold once per attempt.
+Frame time advances the clock only when `pauseOwners` is empty and the run is in an active exploration state. Boundary IDs persist as an idempotency set so 21:00, 21:30, 22:00, and 23:30 each fire exactly once across pause, autosave, hydration, and explicit clock jumps. Attempt recovery state makes both ten-minute/−10 grounding actions one-use and limits the qualifying difficult-escape relief to one −5 event. George's once-per-attempt threshold history remains the single existing `Level0RpgLedger.announcedParanoiaTiers` record rather than a duplicate recovery field.
 
 ### Safehouse and Restart Attempt
 
