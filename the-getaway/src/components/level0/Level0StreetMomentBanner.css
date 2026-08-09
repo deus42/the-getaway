@@ -1,0 +1,39 @@
+.level0-street-moments {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.level0-street-moments__announcement {
+  margin-top: 18px;
+  max-width: 560px;
+  padding: 8px 16px;
+  background: #101215e0;
+  border: 1px solid #c18d4f66;
+  color: #e8dcc0;
+  font: 600 12px/1.5 monospace;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
+.level0-street-moments__announcement-kicker {
+  color: #c18d4f;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.level0-street-moments__caption {
+  position: absolute;
+  left: 14px;
+  bottom: clamp(128px, 20vh, 190px);
+  padding: 4px 10px;
+  background: #101215c8;
+  color: #a8b5ad;
+  font: 500 11px/1.4 monospace;
+  letter-spacing: 0.06em;
+}

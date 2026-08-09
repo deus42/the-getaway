@@ -483,7 +483,12 @@
       { "id": "objective.manifest", "kind": "objective", "position": { "x": 42, "y": 20.62 }, "radius": 1.1 },
       { "id": "audio.curfew.public", "kind": "audio", "position": { "x": 29, "y": 22 }, "radius": 6, "ownerId": "schedule.curfew" },
       { "id": "interaction.safehouse.wait", "kind": "interaction", "position": { "x": 14.8, "y": 31.6 }, "radius": 1.2, "ownerId": "safehouse.wait" },
-      { "id": "interaction.safehouse.rest", "kind": "interaction", "position": { "x": 16.2, "y": 31.6 }, "radius": 1.2, "ownerId": "safehouse.rest" }
+      { "id": "interaction.safehouse.rest", "kind": "interaction", "position": { "x": 16.2, "y": 31.6 }, "radius": 1.2, "ownerId": "safehouse.rest" },
+      { "id": "interaction.grounding.vending_coffee", "kind": "interaction", "position": { "x": 26.15, "y": 20.62 }, "radius": 1.2, "ownerId": "grounding.transit-road-vending-coffee" },
+      { "id": "interaction.grounding.shrine", "kind": "interaction", "position": { "x": 46, "y": 34.5 }, "radius": 1.2, "ownerId": "grounding.market-ring-shrine" },
+      { "id": "audio.ambience.restaurant", "kind": "audio", "position": { "x": 23.2, "y": 20.62 }, "radius": 5, "ownerId": "ambience.restaurant" },
+      { "id": "audio.ambience.workshop", "kind": "audio", "position": { "x": 36, "y": 34.5 }, "radius": 5, "ownerId": "ambience.workshop" },
+      { "id": "audio.ambience.apartment", "kind": "audio", "position": { "x": 14, "y": 34 }, "radius": 5, "ownerId": "ambience.apartment" }
     ]
   },
   "populationStaging": {

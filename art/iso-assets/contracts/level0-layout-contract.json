@@ -1084,6 +1084,61 @@
         "radius": 1.2,
         "required": true,
         "ownerId": "safehouse.rest"
+      },
+      {
+        "id": "interaction.grounding.vending_coffee",
+        "kind": "interaction",
+        "position": {
+          "x": 26.15,
+          "y": 20.62
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "grounding.transit-road-vending-coffee"
+      },
+      {
+        "id": "interaction.grounding.shrine",
+        "kind": "interaction",
+        "position": {
+          "x": 46,
+          "y": 34.5
+        },
+        "radius": 1.2,
+        "required": true,
+        "ownerId": "grounding.market-ring-shrine"
+      },
+      {
+        "id": "audio.ambience.restaurant",
+        "kind": "audio",
+        "position": {
+          "x": 23.2,
+          "y": 20.62
+        },
+        "radius": 5,
+        "required": true,
+        "ownerId": "ambience.restaurant"
+      },
+      {
+        "id": "audio.ambience.workshop",
+        "kind": "audio",
+        "position": {
+          "x": 36,
+          "y": 34.5
+        },
+        "radius": 5,
+        "required": true,
+        "ownerId": "ambience.workshop"
+      },
+      {
+        "id": "audio.ambience.apartment",
+        "kind": "audio",
+        "position": {
+          "x": 14,
+          "y": 34
+        },
+        "radius": 5,
+        "required": true,
+        "ownerId": "ambience.apartment"
       }
     ],
     "occluders": [

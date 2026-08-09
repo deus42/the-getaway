@@ -5,7 +5,10 @@ export type Level0FeedbackCue =
   | 'curfew'
   | 'paranoia'
   | 'recovery'
-  | 'mission';
+  | 'mission'
+  | 'street-pa'
+  | 'last-train'
+  | 'grounding';
 
 type AudioContextConstructor = typeof AudioContext;
 
@@ -19,6 +22,10 @@ const cueProfiles: Record<Level0FeedbackCue, { frequency: number; durationMs: nu
   paranoia: { frequency: 120, durationMs: 180, volume: 0.05 },
   recovery: { frequency: 520, durationMs: 130, volume: 0.035 },
   mission: { frequency: 740, durationMs: 170, volume: 0.045 },
+  // GET-214 street cues are provisional trial tones under OPEN-AUD-001.
+  'street-pa': { frequency: 620, durationMs: 190, volume: 0.04 },
+  'last-train': { frequency: 840, durationMs: 240, volume: 0.045 },
+  grounding: { frequency: 330, durationMs: 210, volume: 0.035 },
 };
 
 let audioContext: AudioContext | null = null;
@@ -43,6 +50,10 @@ const getAudioContext = (): AudioContext | null => {
   audioContext ??= new AudioContextImpl();
   return audioContext;
 };
+
+// Shared context for continuous Level 0 sources (threshold ambience), so cues
+// and ambience ride one AudioContext and one unlock gesture.
+export const getLevel0AudioContext = (): AudioContext | null => getAudioContext();
 
 const unlockAudio = () => {
   const context = getAudioContext();

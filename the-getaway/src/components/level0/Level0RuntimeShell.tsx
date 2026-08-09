@@ -51,6 +51,14 @@ import {
   departLevel0Operation,
   evaluateSafehouseAction,
 } from '../../game/level0/runtime/safehouse';
+import {
+  getGroundingActionByAnchor,
+  LEVEL0_GROUNDING_ACTIONS,
+  resolveGroundingVerdict,
+  type GroundingActionId,
+} from '../../game/level0/city/grounding';
+import { localizeLevel0CityCopy } from '../../game/level0/city/routeNames';
+import { getGeorgeThresholdLine } from '../../game/level0/city/georgeThresholdLines';
 import type {
   Level0RunState,
   PauseOwner,
@@ -61,6 +69,7 @@ import { PERSISTED_STATE_KEY, resetGame, store } from '../../store';
 import {
   acquireLevel0Pause,
   advanceLevel0Clock,
+  applyLevel0Grounding,
   applyLevel0SafehouseAction as applyLevel0SafehouseActionState,
   commitLevel0Departure,
   hydrateLevel0Run,
@@ -73,6 +82,7 @@ import {
   syncLevel0PlayerCheckpoint,
 } from '../../store/level0RuntimeSlice';
 import { setLocale } from '../../store/settingsSlice';
+import { playLevel0FeedbackCue } from '../../game/feedback/audioCues';
 import Level0CharacterPanel from './Level0CharacterPanel';
 import Level0CoverSelect from './Level0CoverSelect';
 import Level0GameBible from './Level0GameBible';
@@ -97,7 +107,8 @@ interface Level0EntryState {
 
 type PendingSafehouseAction =
   | { kind: 'wait' | 'rest' | 'depart' }
-  | { kind: 'research'; optionId: Level0ResearchOptionId };
+  | { kind: 'research'; optionId: Level0ResearchOptionId }
+  | { kind: 'grounding'; actionId: GroundingActionId };
 
 const getStorage = (): Storage | null =>
   typeof window === 'undefined' ? null : window.localStorage;
@@ -221,6 +232,18 @@ const FEEDBACK_COPY: Record<string, Level0LocalizedCopy> = {
     en: 'Observation closed. Exploration resumed.',
     uk: 'Режим спостереження закрито. Дослідження продовжено.',
   },
+  'grounding.applied': {
+    en: 'Ten quiet minutes pass. The street feels a little further away.',
+    uk: 'Минає десять тихих хвилин. Вулиця відступає трохи далі.',
+  },
+  'grounding.blocked.used': {
+    en: 'That moment has already been spent tonight.',
+    uk: 'Цю мить сьогодні вже витрачено.',
+  },
+  'grounding.blocked.deadline': {
+    en: 'There is no time left to stop. Midnight is too close.',
+    uk: 'Зупинятися вже немає часу. Північ надто близько.',
+  },
 };
 
 const IDLE_FEEDBACK_COPY: Level0LocalizedCopy = {
@@ -274,6 +297,9 @@ const failureTitle = (run: Level0RunState, ukrainian: boolean): string => {
 
 const pendingPauseOwner = (pending: PendingSafehouseAction): PauseOwner =>
   pending.kind === 'research' ? 'research' : 'safehouse_action';
+
+const pendingGroundingAction = (pending: PendingSafehouseAction | null) =>
+  pending?.kind === 'grounding' ? LEVEL0_GROUNDING_ACTIONS[pending.actionId] : null;
 
 const Level0RuntimeShell = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -470,6 +496,23 @@ const Level0RuntimeShell = () => {
     setPendingSafehouseAction(pending);
   }, [dispatch, pendingSafehouseAction, terminalMission]);
 
+  const requestGroundingAction = useCallback((actionId: GroundingActionId) => {
+    const currentRun = store.getState().level0Runtime.run;
+    if (!currentRun || pendingSafehouseAction || terminalMission) return;
+    const action = LEVEL0_GROUNDING_ACTIONS[actionId];
+    const verdict = resolveGroundingVerdict(action, {
+      usedGroundingIds: currentRun.recovery.usedGroundingActionIds,
+      currentMinute: currentRun.worldClock.currentMinute,
+    });
+    if (!verdict.allowed) {
+      dispatch(setLevel0Feedback(verdict.reasonId ?? 'grounding.blocked'));
+      return;
+    }
+    const pending: PendingSafehouseAction = { kind: 'grounding', actionId };
+    dispatch(acquireLevel0Pause(pendingPauseOwner(pending)));
+    setPendingSafehouseAction(pending);
+  }, [dispatch, pendingSafehouseAction, terminalMission]);
+
   const requestResearch = useCallback((optionId: Level0ResearchOptionId) => {
     const currentRun = store.getState().level0Runtime.run;
     if (!currentRun || pendingSafehouseAction || terminalMission) return;
@@ -505,6 +548,10 @@ const Level0RuntimeShell = () => {
       beginOperation();
     } else if (pendingSafehouseAction.kind === 'research') {
       dispatch(researchLevel0Ability(pendingSafehouseAction.optionId));
+      persistCurrentRun();
+    } else if (pendingSafehouseAction.kind === 'grounding') {
+      dispatch(applyLevel0Grounding(pendingSafehouseAction.actionId));
+      playLevel0FeedbackCue('grounding');
       persistCurrentRun();
     } else {
       dispatch(applyLevel0SafehouseActionState(pendingSafehouseAction.kind));
@@ -628,8 +675,20 @@ const Level0RuntimeShell = () => {
       requestSafehouseAction('depart');
       return;
     }
+    const groundingAction = getGroundingActionByAnchor(result.anchor.id);
+    if (groundingAction) {
+      requestGroundingAction(groundingAction.id);
+      return;
+    }
     dispatch(setLevel0Feedback(`interaction.preview.${result.anchor.id}`));
-  }, [dispatch, menuOpen, observationActive, requestSafehouseAction, terminalMission]);
+  }, [
+    dispatch,
+    menuOpen,
+    observationActive,
+    requestGroundingAction,
+    requestSafehouseAction,
+    terminalMission,
+  ]);
 
   useLayoutEffect(() => {
     document.documentElement.dataset.visualStyle = 'graphic-surveillance-noir-greybox';
@@ -791,7 +850,11 @@ const Level0RuntimeShell = () => {
     : [];
   const feedbackCopy = feedbackParanoiaEvents.length > 0
     ? feedbackParanoiaEvents
-      .map((event) => describeLevel0ParanoiaEvent(event, ukrainian))
+      .map((event) => {
+        const base = describeLevel0ParanoiaEvent(event, ukrainian);
+        const georgeLine = run ? getGeorgeThresholdLine(run, event, ukrainian) : null;
+        return georgeLine ? `${base} · George: ${georgeLine}` : base;
+      })
       .join(' · ')
     : runtime.feedbackId
       ? localizeLevel0Copy(FEEDBACK_COPY[runtime.feedbackId] ?? GENERIC_FEEDBACK_COPY, ukrainian)
@@ -913,9 +976,12 @@ const Level0RuntimeShell = () => {
   const pendingResearchOptionId = pendingSafehouseAction?.kind === 'research'
     ? pendingSafehouseAction.optionId
     : null;
+  const pendingGrounding = pendingGroundingAction(pendingSafehouseAction);
   const pendingTimeCost = pendingSafehouseAction?.kind === 'wait' || pendingSafehouseAction?.kind === 'rest'
     ? 30
-    : pendingResearch?.worldMinuteCost ?? 0;
+    : pendingGrounding
+      ? pendingGrounding.worldMinutes
+      : pendingResearch?.worldMinuteCost ?? 0;
 
   return (
     <main
@@ -926,6 +992,7 @@ const Level0RuntimeShell = () => {
         <Level0GameCanvas
           key={`${run.sessionId}:${runtime.sceneRevision}`}
           run={run}
+          locale={locale}
           movementPaused={movementPaused}
           observationActive={observationActive}
           georgePresentationVisible={!backgroundControlsLocked}
@@ -1102,9 +1169,13 @@ const Level0RuntimeShell = () => {
           <div>
             <p>{pendingSafehouseAction.kind === 'research'
               ? ukrainian ? 'ДОСЛІДЖЕННЯ / ЧАС ЗУПИНЕНО' : 'RESEARCH / TIME PAUSED'
-              : ukrainian ? 'ДІЯ В БЕЗПЕЧНОМУ МІСЦІ / ЧАС ЗУПИНЕНО' : 'SAFEHOUSE ACTION / TIME PAUSED'}</p>
+              : pendingSafehouseAction.kind === 'grounding'
+                ? ukrainian ? 'ХВИЛИНА НА ВУЛИЦІ / ЧАС ЗУПИНЕНО' : 'STREET MOMENT / TIME PAUSED'
+                : ukrainian ? 'ДІЯ В БЕЗПЕЧНОМУ МІСЦІ / ЧАС ЗУПИНЕНО' : 'SAFEHOUSE ACTION / TIME PAUSED'}</p>
             <h2 id="safehouse-confirmation-title">
-              {pendingSafehouseAction.kind === 'depart'
+              {pendingSafehouseAction.kind === 'grounding' && pendingGrounding
+                ? localizeLevel0CityCopy(pendingGrounding.confirmPreview, ukrainian)
+                : pendingSafehouseAction.kind === 'depart'
                 ? ukrainian
                   ? 'Залишити безпечне місце та зафіксувати базовий стан цієї спроби?'
                   : 'Leave the safehouse and record this attempt’s departure baseline?'

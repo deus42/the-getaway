@@ -3,9 +3,11 @@ import Phaser from 'phaser';
 import type { WorldPoint } from '../../game/level0/layout/types';
 import type { Level0RunState } from '../../game/level0/runtime/types';
 import { Level0Scene, type Level0SceneRuntime } from '../../game/level0/scene/Level0Scene';
+import Level0StreetMomentBanner from './Level0StreetMomentBanner';
 
 export interface Level0GameCanvasProps {
   run: Level0RunState;
+  locale: 'en' | 'uk';
   movementPaused: boolean;
   observationActive: boolean;
   georgePresentationVisible: boolean;
@@ -18,6 +20,7 @@ export interface Level0GameCanvasProps {
 
 const Level0GameCanvas = ({
   run,
+  locale,
   movementPaused,
   observationActive,
   georgePresentationVisible,
@@ -34,6 +37,7 @@ const Level0GameCanvas = ({
 
   const latestRef = useRef({
     run,
+    locale,
     movementPaused,
     observationActive,
     georgePresentationVisible,
@@ -45,6 +49,7 @@ const Level0GameCanvas = ({
   });
   latestRef.current = {
     run,
+    locale,
     movementPaused,
     observationActive,
     georgePresentationVisible,
@@ -62,6 +67,7 @@ const Level0GameCanvas = ({
 
     const runtime: Level0SceneRuntime = {
       getRun: () => latestRef.current.run,
+      getLocale: () => latestRef.current.locale,
       onSceneReady: (ready) => {
         if (mounted) setSceneReady(ready);
         latestRef.current.onSceneReady(ready);
@@ -157,6 +163,7 @@ const Level0GameCanvas = ({
           Loading district…
         </div>
       ) : null}
+      {sceneReady ? <Level0StreetMomentBanner run={run} /> : null}
     </div>
   );
 };

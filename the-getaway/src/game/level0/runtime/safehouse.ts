@@ -89,6 +89,10 @@ export const createInitialLevel0RunState = (
       debriefAvailable: false,
       usedActionIds: [],
     },
+    recovery: {
+      usedGroundingActionIds: [],
+      difficultSurveillanceEscapeReliefUsed: false,
+    },
     surveillance: {
       level: 'clear',
       directlyObserved: false,
@@ -180,7 +184,7 @@ export interface SafehouseEffectResult {
   clockEventIds: string[];
 }
 
-const applyClockResult = (
+export const applyClockResult = (
   run: Level0RunState,
   clockResult: ReturnType<typeof jumpWorldClockMinutes>
 ): Level0RunState => {
@@ -320,6 +324,7 @@ const projectOperationAttemptBaseline = (run: Level0RunState): OperationAttemptB
   mapKnowledge: run.mapKnowledge,
   contacts: run.contacts,
   safehouse: run.safehouse,
+  recovery: run.recovery,
   surveillance: run.surveillance,
   player: run.player,
   runtimeGeneration: run.runtimeGeneration,
@@ -373,6 +378,7 @@ export const restartLevel0Attempt = (baseline: OperationAttemptBaseline): Level0
     mapKnowledge: restored.mapKnowledge,
     contacts: restored.contacts,
     safehouse: { ...restored.safehouse, insideBoundary: false },
+    recovery: restored.recovery,
     surveillance: restored.surveillance,
     player: restored.player,
     runtimeGeneration: restored.runtimeGeneration,

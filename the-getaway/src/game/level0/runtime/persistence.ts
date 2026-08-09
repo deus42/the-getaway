@@ -103,6 +103,7 @@ const RUN_KEYS = [
   'mapKnowledge',
   'contacts',
   'safehouse',
+  'recovery',
   'surveillance',
   'player',
   'runtimeGeneration',
@@ -128,6 +129,7 @@ const BASELINE_KEYS = [
   'mapKnowledge',
   'contacts',
   'safehouse',
+  'recovery',
   'surveillance',
   'player',
   'runtimeGeneration',
@@ -187,7 +189,10 @@ const expectedClockPhase = (minute: number) =>
 const expectedProcessedBoundaries = (minute: number): string[] => {
   const ids: string[] = [];
   if (minute >= 20 * 60) ids.push('clock.blue_hour');
-  if (minute >= 22 * 60) ids.push('clock.curfew');
+  if (minute >= 21 * 60) ids.push('street.wind_down_first');
+  if (minute >= 21 * 60 + 30) ids.push('street.wind_down_second');
+  if (minute >= 22 * 60) ids.push('clock.curfew', 'street.curfew_lockdown');
+  if (minute >= 23 * 60 + 30) ids.push('street.last_train');
   if (minute >= 24 * 60) ids.push('clock.deadline');
   return ids;
 };
@@ -484,6 +489,20 @@ const isCompletion = (value: unknown): boolean =>
   isRecord(value) && hasExactKeys(value, ['medkitsReturned', 'transitValidated']) &&
   typeof value.medkitsReturned === 'boolean' && typeof value.transitValidated === 'boolean';
 
+const GROUNDING_ACTION_IDS = [
+  'grounding.transit-road-vending-coffee',
+  'grounding.market-ring-shrine',
+] as const;
+
+const isAttemptRecovery = (value: unknown): boolean =>
+  isRecord(value) &&
+  hasExactKeys(value, ['usedGroundingActionIds', 'difficultSurveillanceEscapeReliefUsed']) &&
+  isUniqueStringArray(value.usedGroundingActionIds) &&
+  (value.usedGroundingActionIds as string[]).every((id) =>
+    (GROUNDING_ACTION_IDS as readonly string[]).includes(id)
+  ) &&
+  typeof value.difficultSurveillanceEscapeReliefUsed === 'boolean';
+
 const hasSharedFields = (value: unknown): boolean => {
   if (!isRecord(value) || value.schemaVersion !== LEVEL0_RUN_SCHEMA_VERSION ||
     !hasCurrentContentVersions(value.contentVersions) || !isNonEmptyString(value.sessionId) ||
@@ -491,7 +510,8 @@ const hasSharedFields = (value: unknown): boolean => {
     !isWorldClock(value.worldClock) || !isNonEmptyString(value.mission) ||
     !MISSION_STATES.has(value.mission) || !isObjectives(value.objectives) ||
     !isFacts(value.facts) || !isMapKnowledge(value.mapKnowledge) || !isContacts(value.contacts) ||
-    !isSafehouse(value.safehouse) || !isSurveillance(value.surveillance) ||
+    !isSafehouse(value.safehouse) || !isAttemptRecovery(value.recovery) ||
+    !isSurveillance(value.surveillance) ||
     !isPlayer(value.player) || !isRuntimeGeneration(value.runtimeGeneration, value.sessionId) ||
     !isCompletion(value.completion)) return false;
   const currentWorldMinute = Number((value.worldClock as Record<string, unknown>).currentMinute);
@@ -574,6 +594,7 @@ const projectBaselineFromRun = (run: Level0RunState): OperationAttemptBaseline =
   mapKnowledge: run.mapKnowledge,
   contacts: run.contacts,
   safehouse: run.safehouse,
+  recovery: run.recovery,
   surveillance: run.surveillance,
   player: run.player,
   runtimeGeneration: run.runtimeGeneration,

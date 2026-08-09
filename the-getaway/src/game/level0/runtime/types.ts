@@ -110,6 +110,14 @@ export type SafehouseActionId =
   | 'research'
   | 'outbound-transit';
 
+// Attempt recovery ledger (GET-214): grounding one-use and the single
+// difficult-escape relief. George threshold history lives in
+// rpg.announcedParanoiaTiers rather than a duplicate field here.
+export interface Level0AttemptRecoveryState {
+  usedGroundingActionIds: string[];
+  difficultSurveillanceEscapeReliefUsed: boolean;
+}
+
 export interface SafehouseActionAvailability {
   actionId: SafehouseActionId;
   available: boolean;
@@ -167,6 +175,7 @@ export interface Level0RunState {
   mapKnowledge: MapKnowledgeState;
   contacts: ContactStateRecord;
   safehouse: SafehouseState;
+  recovery: Level0AttemptRecoveryState;
   surveillance: Level0SurveillanceRuntimeState;
   player: Level0PlayerRuntimeCheckpoint;
   runtimeGeneration: Level0RuntimeGenerationState;
@@ -195,6 +204,7 @@ export interface OperationAttemptBaseline {
   mapKnowledge: MapKnowledgeState;
   contacts: ContactStateRecord;
   safehouse: SafehouseState;
+  recovery: Level0AttemptRecoveryState;
   surveillance: Level0SurveillanceRuntimeState;
   player: Level0PlayerRuntimeCheckpoint;
   runtimeGeneration: Level0RuntimeGenerationState;

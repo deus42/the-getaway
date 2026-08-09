@@ -2,7 +2,9 @@ import {
   acquirePauseOwner,
   advanceWorldClock,
   createWorldClockState,
+  crossedStreetMoments,
   jumpWorldClockMinutes,
+  processedStreetMomentIdsAt,
   releasePauseOwner,
 } from '../worldClock';
 
@@ -61,6 +63,7 @@ describe('Level 0 world clock and pause ownership', () => {
     expect(crossing.state.phase).toBe('curfew');
     expect(crossing.events).toEqual([
       { id: 'clock.curfew', boundaryMinute: 22 * 60, kind: 'curfew' },
+      { id: 'street.curfew_lockdown', boundaryMinute: 22 * 60, kind: 'street-moment' },
     ]);
 
     const later = advanceWorldClock(crossing.state, {
@@ -82,7 +85,11 @@ describe('Level 0 world clock and pause ownership', () => {
     expect(result.state.currentMinute).toBe(24 * 60);
     expect(result.events.map((event) => event.id)).toEqual([
       'clock.blue_hour',
+      'street.wind_down_first',
+      'street.wind_down_second',
       'clock.curfew',
+      'street.curfew_lockdown',
+      'street.last_train',
       'clock.deadline',
     ]);
     expect(result.events[result.events.length - 1]).toEqual({
@@ -102,5 +109,71 @@ describe('Level 0 world clock and pause ownership', () => {
 
     expect(result.state.deadlineReached).toBe(true);
     expect(result.events).toEqual([]);
+  });
+
+  it('fires each street moment exactly once across ticks that land on the boundary', () => {
+    const completion = { medkitsReturned: false, transitValidated: false };
+    const beforeFirst = createWorldClockState(20 * 60 + 59);
+    const crossing = advanceWorldClock(beforeFirst, {
+      realMilliseconds: 2_000,
+      activeExploration: true,
+      completion,
+    });
+
+    expect(crossing.state.currentMinute).toBe(21 * 60);
+    expect(crossing.events).toEqual([
+      { id: 'street.wind_down_first', boundaryMinute: 21 * 60, kind: 'street-moment' },
+    ]);
+    expect(crossing.state.processedBoundaryIds).toEqual([
+      'clock.blue_hour',
+      'street.wind_down_first',
+    ]);
+    expect(crossing.state.lastProcessedScheduleBoundaryId).toBe('street.wind_down_first');
+
+    const afterPauseOnBoundary = releasePauseOwner(
+      acquirePauseOwner(crossing.state, 'menu'),
+      'menu'
+    );
+    const later = advanceWorldClock(afterPauseOnBoundary, {
+      realMilliseconds: 2_000,
+      activeExploration: true,
+      completion,
+    });
+    expect(later.events).toEqual([]);
+  });
+
+  it('treats hydration on either side of a street boundary as already-processed history', () => {
+    const hydratedPastFirst = createWorldClockState(21 * 60 + 5);
+    expect(processedStreetMomentIdsAt(hydratedPastFirst.currentMinute)).toEqual([
+      'street.wind_down_first',
+    ]);
+    expect(hydratedPastFirst.processedBoundaryIds).toEqual([
+      'clock.blue_hour',
+      'street.wind_down_first',
+    ]);
+    expect(createWorldClockState(23 * 60 + 45).processedBoundaryIds).toEqual([
+      'clock.blue_hour',
+      'street.wind_down_first',
+      'street.wind_down_second',
+      'clock.curfew',
+      'street.curfew_lockdown',
+      'street.last_train',
+    ]);
+
+    const advanced = advanceWorldClock(hydratedPastFirst, {
+      realMilliseconds: 10_000,
+      activeExploration: true,
+      completion: { medkitsReturned: false, transitValidated: false },
+    });
+    expect(advanced.state.currentMinute).toBe(21 * 60 + 10);
+    expect(advanced.events).toEqual([]);
+  });
+
+  it('reports no street crossings for equal or rewound minutes (pause and baseline restore)', () => {
+    expect(crossedStreetMoments(21 * 60, 21 * 60)).toEqual([]);
+    expect(crossedStreetMoments(23 * 60 + 30, 21 * 60 + 30)).toEqual([]);
+    expect(
+      crossedStreetMoments(20 * 60 + 55, 21 * 60 + 35).map((moment) => moment.id)
+    ).toEqual(['street.wind_down_first', 'street.wind_down_second']);
   });
 });

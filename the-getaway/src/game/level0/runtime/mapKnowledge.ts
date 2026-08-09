@@ -11,11 +11,21 @@ const SAFEHOUSE_WORLD_IDS = new Set([
   'interaction.safehouse.rest',
 ]);
 
+// Grounding anchors are ordinary street furniture: visible to anyone standing
+// in the district, so they are known without a discovery step (GDR-PAR-006).
+const STREET_FURNITURE_IDS = new Set([
+  'interaction.grounding.vending_coffee',
+  'interaction.grounding.shrine',
+]);
+
 export const isLevel0AnchorKnown = (run: Level0RunState, anchor: Level0Anchor): boolean => {
   if (
     SAFEHOUSE_WORLD_IDS.has(anchor.id) &&
     run.mapKnowledge.discoveredLocationIds.includes('safehouse.boundary')
   ) {
+    return true;
+  }
+  if (STREET_FURNITURE_IDS.has(anchor.id)) {
     return true;
   }
   switch (anchor.kind) {

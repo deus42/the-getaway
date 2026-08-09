@@ -61,6 +61,31 @@ import {
   isGet205RuntimeVisual,
   LEVEL0_RUNTIME_VISUAL as activeVisual,
 } from '../art/get205HidzuRuntime';
+import {
+  crowdStateAt,
+  LEVEL0_SHUTTER_DOORS,
+  shutterOverlayAlphaAt,
+  lastTrainCadenceActiveAt,
+  STREET_STAGE_ATMOSPHERE_MULTIPLIER,
+  streetStageAt,
+  type StreetStage,
+} from '../city/streetMoments';
+import {
+  getLevel0LoopDisplayName,
+  LEVEL0_LOOP_SIGNAGE,
+} from '../city/routeNames';
+import { playLevel0FeedbackCue } from '../../feedback/audioCues';
+import {
+  CIVILIAN_PHASE_PRESENTATION,
+  civilianGroupPhaseAt,
+  GET204_CROWD_HIDDEN_ACTOR_IDS,
+  LEVEL0_CIVILIAN_GROUPS,
+} from '../city/civilianSchedules';
+import {
+  LEVEL0_AMBIENCE_EMITTERS,
+  Level0ThresholdAmbience,
+  type AmbienceEmitterId,
+} from '../audio/thresholdAmbience';
 
 export const LEVEL0_SCENE_KEY = 'Level0RuntimeScene';
 export const LEVEL0_MIN_ZOOM = 0.5;
@@ -74,6 +99,7 @@ const GET205_ATMOSPHERE_COLORS: Record<Level0RunState['worldClock']['phase'], nu
 
 export interface Level0SceneRuntime {
   getRun(): Level0RunState | null;
+  getLocale(): 'en' | 'uk';
   onSceneReady(ready: boolean): void;
   isMovementPaused(): boolean;
   isObservationActive(): boolean;
@@ -174,6 +200,29 @@ const getGate1PopulationSpriteSheetRefs = () =>
     : []
   );
 
+const getCityCivilianSpriteSheetRefs = (): CharacterSpriteSheetRef[] =>
+  Object.values(LEVEL0_CIVILIAN_GROUPS).flatMap((group) =>
+    group.members.map((member) => ({
+      spriteSetId: member.spriteSetId,
+      state: 'idle' as const,
+      direction: member.facing,
+    }))
+  );
+
+const AMBIENCE_EMITTER_POSITIONS: Array<{
+  id: AmbienceEmitterId;
+  x: number;
+  y: number;
+  radius: number;
+}> = Object.values(LEVEL0_AMBIENCE_EMITTERS).flatMap((definition) => {
+  const anchor = LEVEL0_LAYOUT_CONTRACT.anchors.find(
+    (candidate) => candidate.id === definition.anchorId
+  );
+  return anchor
+    ? [{ id: definition.id, x: anchor.position.x, y: anchor.position.y, radius: anchor.radius }]
+    : [];
+});
+
 export class Level0Scene extends Phaser.Scene {
   private readonly runtime: Level0SceneRuntime;
 
@@ -211,6 +260,10 @@ export class Level0Scene extends Phaser.Scene {
 
   private readonly gate1PopulationActors = new Map<string, Level0SceneActorVisual>();
 
+  private readonly cityCivilianActors = new Map<string, Level0SceneActorVisual>();
+
+  private ambience: Level0ThresholdAmbience | null = null;
+
   private readonly get204WorldLayers = new Map<
     'close' | 'overview',
     Phaser.GameObjects.Image[]
@@ -219,6 +272,16 @@ export class Level0Scene extends Phaser.Scene {
   private scheduleAtmosphere: Phaser.GameObjects.Rectangle | null = null;
 
   private activeSchedulePhase: Level0RunState['worldClock']['phase'] | null = null;
+
+  private activeStreetStage: StreetStage | null = null;
+
+  private readonly shutterOverlays = new Map<string, Phaser.GameObjects.Graphics>();
+
+  private readonly loopSignageTexts = new Map<string, Phaser.GameObjects.Text>();
+
+  private signageLocaleUkrainian: boolean | null = null;
+
+  private lastTrainCadenceCueAt = 0;
 
   private minimumZoom = LEVEL0_MIN_ZOOM;
 
@@ -237,6 +300,7 @@ export class Level0Scene extends Phaser.Scene {
     const spriteSheetRefs = [
       ...resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId),
       ...getGate1PopulationSpriteSheetRefs(),
+      ...getCityCivilianSpriteSheetRefs(),
     ];
     preloadCharacterSpriteSheetRefs(
       this,
@@ -260,6 +324,7 @@ export class Level0Scene extends Phaser.Scene {
     registerCharacterSpriteSheetAnimations(this, [
       ...resolveLevel0SceneSpriteSheetRefs(run.identity.appearancePresetId),
       ...getGate1PopulationSpriteSheetRefs(),
+      ...getCityCivilianSpriteSheetRefs(),
     ]);
     this.movement = createIdleMovementState(run.player.position);
     this.movement.facing = { ...run.player.facing };
@@ -269,13 +334,19 @@ export class Level0Scene extends Phaser.Scene {
     this.createPlayerMarker(run);
     this.createContactActors();
     this.createGate1PopulationActors();
+    this.createCityCivilianActors();
+    this.createLoopSignage();
+    this.createShutterOverlays();
     this.createIntentMarkers();
     this.configureCamera(run.player.position);
     this.createGeorgePresentation();
     this.configureInput();
+    this.ambience = new Level0ThresholdAmbience();
     this.runtime.onSceneReady(true);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.teardownInput();
+      this.ambience?.dispose();
+      this.ambience = null;
       this.runtime.onSceneReady(false);
     });
   }
@@ -322,12 +393,18 @@ export class Level0Scene extends Phaser.Scene {
       this.collisionBlocked = fullyBlocked;
     }
 
+    const currentRun = this.runtime.getRun();
+    if (currentRun) {
+      this.renderCityCivilians(currentRun);
+      this.renderCrowdThinning(currentRun);
+      this.renderStreetPresentation(currentRun);
+    }
     this.renderMovementState();
     this.renderGet204WorldView();
     this.followPlayerUnlessObserving();
     this.renderGeorgePresentation();
-    const currentRun = this.runtime.getRun();
     if (currentRun) {
+      this.updateThresholdAmbience(currentRun);
       this.renderScheduleTreatment(currentRun);
       this.syncAnchorKnowledge(currentRun);
     }
@@ -456,14 +533,18 @@ export class Level0Scene extends Phaser.Scene {
   private renderScheduleTreatment(run: Level0RunState): void {
     if (!this.scheduleAtmosphere || !isGet205RuntimeVisual(activeVisual)) return;
     const phase = run.worldClock.phase;
+    const stage = streetStageAt(run.worldClock.currentMinute);
     const treatment = GET205_HIDZU_SCHEDULE_TREATMENTS[phase];
-    if (this.activeSchedulePhase !== phase) {
+    if (this.activeSchedulePhase !== phase || this.activeStreetStage !== stage) {
       this.get204WorldLayers.forEach((layers) => {
         layers.forEach((layer) => layer.setTint(treatment.tint));
       });
-      this.scheduleAtmosphere
-        .setFillStyle(GET205_ATMOSPHERE_COLORS[phase], treatment.atmosphereAlpha);
+      this.scheduleAtmosphere.setFillStyle(
+        GET205_ATMOSPHERE_COLORS[phase],
+        Math.min(1, treatment.atmosphereAlpha * STREET_STAGE_ATMOSPHERE_MULTIPLIER[stage])
+      );
       this.activeSchedulePhase = phase;
+      this.activeStreetStage = stage;
     }
     this.scheduleAtmosphere.setDisplaySize(this.scale.width, this.scale.height);
   }
@@ -654,6 +735,148 @@ export class Level0Scene extends Phaser.Scene {
     });
   }
 
+  private createCityCivilianActors(): void {
+    Object.values(LEVEL0_CIVILIAN_GROUPS).forEach((group) => {
+      const anchor = contract.anchors.find(
+        (candidate) => candidate.id === group.contextAnchorId
+      );
+      if (!anchor) return;
+      group.members.forEach((member) => {
+        const visual = this.createActorVisual(member.id, member.spriteSetId, member.facing, [
+          { spriteSetId: member.spriteSetId, state: 'idle', direction: member.facing },
+        ]);
+        const scenePosition = projection.layoutToScene({
+          x: anchor.position.x + member.offset.x,
+          y: anchor.position.y + member.offset.y,
+        });
+        visual.container
+          .setPosition(scenePosition.x, scenePosition.y)
+          .setDepth(100 + scenePosition.y)
+          .setAlpha(0)
+          .setData('cityScheduleAlpha', 0)
+          .setData('cityScheduleGroupId', group.id);
+        this.cityCivilianActors.set(member.id, visual);
+      });
+    });
+  }
+
+  private createLoopSignage(): void {
+    const ukrainian = this.runtime.getLocale() === 'uk';
+    LEVEL0_LOOP_SIGNAGE.forEach((signage) => {
+      const scenePosition = projection.layoutToScene(signage.position);
+      const text = this.add
+        .text(scenePosition.x, scenePosition.y, getLevel0LoopDisplayName(signage.loopId, ukrainian), {
+          fontFamily: 'monospace',
+          fontSize: '11px',
+          color: '#d8cfae',
+          backgroundColor: '#14161acc',
+          padding: { x: 5, y: 2 },
+        })
+        .setOrigin(0.5, 1)
+        .setAlpha(0.85)
+        .setDepth(90 + scenePosition.y);
+      this.loopSignageTexts.set(signage.loopId, text);
+    });
+    this.signageLocaleUkrainian = ukrainian;
+  }
+
+  private createShutterOverlays(): void {
+    LEVEL0_SHUTTER_DOORS.forEach((door) => {
+      const scenePosition = projection.layoutToScene(door.position);
+      const graphics = this.add.graphics();
+      const width = contract.projection.tileWidth * 0.62;
+      const height = contract.projection.tileHeight * 1.5;
+      graphics.fillStyle(0x0c0f13, 1);
+      graphics.fillRoundedRect(-width / 2, -height, width, height, 2);
+      graphics.lineStyle(1, 0x2a3038, 1);
+      for (let slat = 1; slat < 6; slat += 1) {
+        graphics.lineBetween(-width / 2, -height + (height / 6) * slat, width / 2, -height + (height / 6) * slat);
+      }
+      graphics
+        .setPosition(scenePosition.x, scenePosition.y)
+        .setAlpha(0)
+        .setDepth(100 + scenePosition.y);
+      this.shutterOverlays.set(door.id, graphics);
+    });
+  }
+
+  private renderStreetPresentation(run: Level0RunState): void {
+    const minute = run.worldClock.currentMinute;
+    const ukrainian = this.runtime.getLocale() === 'uk';
+    if (this.signageLocaleUkrainian !== ukrainian) {
+      this.signageLocaleUkrainian = ukrainian;
+      LEVEL0_LOOP_SIGNAGE.forEach((signage) => {
+        this.loopSignageTexts
+          .get(signage.loopId)
+          ?.setText(getLevel0LoopDisplayName(signage.loopId, ukrainian));
+      });
+    }
+    const shutterTarget = shutterOverlayAlphaAt(minute);
+    this.shutterOverlays.forEach((overlay) => {
+      overlay.setAlpha(overlay.alpha + (shutterTarget - overlay.alpha) * 0.04);
+    });
+    if (
+      lastTrainCadenceActiveAt(minute) &&
+      !run.worldClock.deadlineReached &&
+      !this.runtime.isMovementPaused() &&
+      this.time.now - this.lastTrainCadenceCueAt > 25_000
+    ) {
+      this.lastTrainCadenceCueAt = this.time.now;
+      playLevel0FeedbackCue('last-train');
+    }
+  }
+
+  private renderCityCivilians(run: Level0RunState): void {
+    const minute = run.worldClock.currentMinute;
+    Object.values(LEVEL0_CIVILIAN_GROUPS).forEach((group) => {
+      const anchor = contract.anchors.find(
+        (candidate) => candidate.id === group.contextAnchorId
+      );
+      if (!anchor) return;
+      const phase = civilianGroupPhaseAt(group, minute);
+      const presentation = CIVILIAN_PHASE_PRESENTATION[phase];
+      group.members.forEach((member) => {
+        const visual = this.cityCivilianActors.get(member.id);
+        if (!visual) return;
+        const target = projection.layoutToScene({
+          x: anchor.position.x + member.offset.x + presentation.offsetShift.x,
+          y: anchor.position.y + member.offset.y + presentation.offsetShift.y,
+        });
+        const container = visual.container;
+        const nextX = container.x + (target.x - container.x) * 0.04;
+        const nextY = container.y + (target.y - container.y) * 0.04;
+        container.setPosition(nextX, nextY).setDepth(100 + nextY);
+        const currentAlpha = Number(container.getData('cityScheduleAlpha') ?? 0);
+        container.setData(
+          'cityScheduleAlpha',
+          currentAlpha + (presentation.alpha - currentAlpha) * 0.05
+        );
+      });
+    });
+  }
+
+  private renderCrowdThinning(run: Level0RunState): void {
+    const hidden = new Set<string>(
+      GET204_CROWD_HIDDEN_ACTOR_IDS[crowdStateAt(run.worldClock.currentMinute)]
+    );
+    this.gate1PopulationActors.forEach((visual, actorId) => {
+      const target = hidden.has(actorId) ? 0 : 1;
+      const current = Number(visual.container.getData('cityCrowdAlpha') ?? 1);
+      visual.container.setData('cityCrowdAlpha', current + (target - current) * 0.05);
+    });
+  }
+
+  private updateThresholdAmbience(run: Level0RunState): void {
+    if (!this.ambience || !this.movement) return;
+    this.ambience.updateFrame({
+      playerX: this.movement.position.x,
+      playerY: this.movement.position.y,
+      stage: streetStageAt(run.worldClock.currentMinute),
+      paused: this.runtime.isMovementPaused(),
+      emitters: AMBIENCE_EMITTER_POSITIONS,
+    });
+  }
+
   private createGate1DroneVisual(actorId: string): Level0SceneActorVisual {
     const container = this.add.container(0, 0);
     const shadow = this.add.graphics();
@@ -697,14 +920,22 @@ export class Level0Scene extends Phaser.Scene {
       const multiplier = Number(
         visual.container.getData('get204WorldScaleMultiplier') ?? 1
       );
+      const crowdAlpha = Number(visual.container.getData('cityCrowdAlpha') ?? 1);
+      const populationAlpha = blend.actorAlpha * crowdAlpha;
       visual.container
-        .setAlpha(blend.actorAlpha)
-        .setVisible(blend.actorAlpha > 0.04);
+        .setAlpha(populationAlpha)
+        .setVisible(populationAlpha > 0.04);
       if (visual.sprite) {
         visual.sprite.setScale(blend.playerWorldScale * multiplier);
       } else {
         visual.container.setScale(multiplier);
       }
+    });
+    this.cityCivilianActors.forEach((visual) => {
+      const scheduleAlpha = Number(visual.container.getData('cityScheduleAlpha') ?? 0);
+      const civilianAlpha = blend.actorAlpha * scheduleAlpha;
+      visual.container.setAlpha(civilianAlpha).setVisible(civilianAlpha > 0.03);
+      visual.sprite?.setScale(blend.playerWorldScale);
     });
     this.playerOverviewMarker
       ?.setAlpha(blend.overviewAlpha * 0.9)

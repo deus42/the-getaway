@@ -162,6 +162,18 @@ const SOURCE_COPY: Record<string, Level0LocalizedCopy> = {
   'camera.identity_gate': { en: 'Identity-gate camera', uk: 'Камера перевірки особи' },
   'drone.verification': { en: 'Needle verification', uk: 'Перевірка Needle' },
   'interception.identity_gate': { en: 'Identity interception', uk: 'Перехоплення ідентифікації' },
+  'grounding.transit-road-vending-coffee': {
+    en: 'Vending-machine coffee on Transit Road',
+    uk: 'Кава з автомата на Транзитній дорозі',
+  },
+  'grounding.market-ring-shrine': {
+    en: 'Shrine at the Market Ring junction',
+    uk: 'Святилище на розвилці Ринкового кільця',
+  },
+  'relief.difficult_escape': {
+    en: 'Slipping a difficult surveillance escape',
+    uk: 'Вислизання зі складного стеження',
+  },
 };
 
 const humanizeStableId = (value: string): string => value

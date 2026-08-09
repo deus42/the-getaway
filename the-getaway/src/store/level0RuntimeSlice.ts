@@ -10,6 +10,11 @@ import {
   type Level0ParanoiaEffectInput,
 } from '../game/level0/rpg/paranoia';
 import {
+  applyLevel0DifficultEscapeRelief,
+  applyLevel0GroundingAction,
+  type GroundingActionId,
+} from '../game/level0/city/grounding';
+import {
   applySafehouseResearch,
   applySafehouseRest,
   applySafehouseWait,
@@ -203,6 +208,36 @@ const level0RuntimeSlice = createSlice({
         : result.event?.feedbackId ?? 'paranoia.effect.not_applied';
       if (result.run.mission === 'L0_FAILED') state.sceneRevision += 1;
     },
+    applyLevel0Grounding: (state, action: PayloadAction<GroundingActionId>) => {
+      if (!state.run) return;
+      const eventCount = state.run.rpg.paranoiaEvents.length;
+      const result = applyLevel0GroundingAction(state.run, action.payload);
+      state.run = result.run;
+      state.clockEventIds = result.clockEventIds;
+      state.feedbackParanoiaEventIds = result.applied
+        ? result.run.rpg.paranoiaEvents.slice(eventCount).map((event) => event.eventId)
+        : [];
+      state.feedbackId = result.applied
+        ? state.feedbackParanoiaEventIds.length > 0
+          ? null
+          : 'grounding.applied'
+        : result.blockedReasonId ?? 'grounding.blocked';
+      if (result.run.mission === 'L0_FAILED') state.sceneRevision += 1;
+    },
+    applyLevel0EscapeRelief: (state) => {
+      if (!state.run) return;
+      const eventCount = state.run.rpg.paranoiaEvents.length;
+      const result = applyLevel0DifficultEscapeRelief(state.run);
+      state.run = result.run;
+      state.feedbackParanoiaEventIds = result.applied
+        ? result.run.rpg.paranoiaEvents.slice(eventCount).map((event) => event.eventId)
+        : [];
+      state.feedbackId = result.applied
+        ? state.feedbackParanoiaEventIds.length > 0
+          ? null
+          : 'relief.applied'
+        : result.blockedReasonId ?? 'relief.blocked';
+    },
     commitLevel0Departure: (state, action: PayloadAction<Level0RunState>) => {
       state.run = action.payload;
       state.feedbackId = 'safehouse.departure.complete';
@@ -224,6 +259,8 @@ const level0RuntimeSlice = createSlice({
 export const {
   acquireLevel0Pause,
   advanceLevel0Clock,
+  applyLevel0EscapeRelief,
+  applyLevel0Grounding,
   applyLevel0Paranoia,
   applyLevel0SafehouseAction,
   clearLevel0Run,
