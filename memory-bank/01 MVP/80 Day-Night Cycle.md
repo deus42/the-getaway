@@ -59,7 +59,8 @@ The player cannot freely scrub time, wait in unsafe public space through a hidde
 | Boundary | State effect |
 |---|---|
 | 18:30 | New run begins; dusk schedules active. |
-| 21:00 | First PA/wind-down event, early shutter/crowd/sound changes, and aligned blue-hour presentation fire once. |
+| 20:00 | Blue-hour environment assets become authoritative after their complete set is ready; the prior dusk set crossfades out over 750 ms. |
+| 21:00 | First PA/wind-down event and early shutter/crowd/sound changes fire once. |
 | 21:30 | Second street wind-down step and route/civilian schedule changes fire once. |
 | 22:00 | Curfew becomes active; curfew schedules, announcement, and aligned lighting state fire once. |
 | 23:30 | Last-train/deadline street cadence and final civilian/service schedule step fire once. |
@@ -79,7 +80,9 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 - There is no passive Paranoia increase merely because curfew is active.
 - Curfew changes authored schedules and legal/social context; it does not make every outdoor tile instantly hostile.
 - The midnight check evaluates required completion state at the boundary and reports exactly what was not completed.
-- Transition art must use aligned dusk, blue-hour, and curfew layers; it cannot swap building geometry or interaction anchors.
+- Transition art uses aligned dusk, blue-hour, and curfew Cycles-baked asset sets from one immutable geometry/camera registration; it cannot swap building geometry or interaction anchors.
+- Blue hour prefetches at 19:50 and curfew at 21:50. At the 20:00 and 22:00 phase boundaries, the prior complete set remains visible until the target set is complete, then crossfades over 750 ms.
+- A direct wait/jump loads the actual target phase rather than replaying skipped art states. Restart Attempt or hydration rewind may request an earlier phase. Stale or failed loads never display partial layers, advance time, or alter schedule state.
 - Specific route windows and pacing remain under `OPEN-TIME-001`; the four street boundaries themselves are approved and fixed.
 
 ## 7. Inputs from other systems
@@ -105,9 +108,9 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 - The clock is spatial through a few repeated civic anchors — a transit departures board, the public checkpoint display, one Hidzu information screen, visible public clocks, and the last-train cadence — whose meaning changes over the evening. Anchors stay sparse: the city is never an oversized HUD, and the strongest reading is passing the same display twice.
 
 - The persistent HUD shows `HH:MM`, curfew state, and the deadline only when relevant.
-- Amber communicates time, objective urgency, and curfew. Crimson is reserved for an active danger state, not the normal clock.
+- HUD/UI amber communicates time, objective urgency, and curfew. Environment amber remains confined to visible windows, entrances, and lamp falloff under `GDR-ART-012`; crimson is reserved for active danger, not the normal clock.
 - Safehouse Wait and Rest previews state the resulting time and recovery before confirmation.
-- The world crossfades aligned authored lighting states without moving geometry or causing a visible pop.
+- The world crossfades aligned authored lighting states over 750 ms without moving geometry, showing a partial set, or causing a visible pop.
 - 21:00, 21:30, 22:00, and 23:30 each have one distinct readable street change; 22:00 remains the curfew transition.
 - George warns at authored thresholds before curfew and midnight, but does not repeat every minute or create a false emergency when the player is safe.
 - A paused screen visibly indicates that time is stopped when ambiguity would otherwise matter.
@@ -124,7 +127,7 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 
 - Author schedule states for Lira, Naila, Brant, civilian groups, service activity, security, cameras, Needle availability, hiding/blending contexts, terminals, and public screens at all four boundaries.
 - Author all four street moments and deadline warnings with equivalent English/Ukrainian semantics.
-- Author distinct dusk, blue-hour, and curfew ambience and lighting layers aligned to the same layout.
+- Author distinct dusk, blue-hour, and curfew ambience and lighting layers aligned to the same layout and camera. Environment color comes from those authored states rather than a multiplicative full-city tint.
 - Author safehouse Wait/Rest copy with resulting time and recovery values.
 - Author deterministic world-clock event IDs for waiting, resting, both grounding actions, 21:00, 21:30, 22:00, 23:30, and deadline crossing. `Level0OutcomeLedger` records only final primary timing and any `failure.deadline` result; it does not duplicate the full clock log.
 

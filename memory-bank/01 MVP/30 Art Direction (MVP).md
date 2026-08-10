@@ -11,7 +11,7 @@ canonical: true
 
 Level 0 should feel like a real Tokyo district whose ordinary public life has been reorganized around corporate identity control. The visual fantasy is not neon spectacle or fantasy noir; it is the unease of being a recognizable human body in a beautiful, legible, comprehensively watched city.
 
-The locked direction is **graphic surveillance noir**: strong ink silhouettes, readable midtones, cold institutional surfaces, sodium practical lighting, restrained technology cyan, and crimson reserved for real danger. Art must serve navigation, surveillance, hiding, blending, dialogue, and escape before atmosphere.
+The locked direction is **graphic surveillance noir**: a wet blue-black ambient field, strong ink silhouettes, readable midtones, cold institutional surfaces, localized sodium practicals, restrained technology cyan, and crimson reserved for real danger. Reflections and material response must be authored at source in Blender; a warm beige/ochre grade, dry/matte roads, generic neon spectacle, or tint-led substitute is outside the direction. Art must serve navigation, surveillance, hiding, blending, dialogue, and escape before atmosphere.
 
 ## 2. Player-visible verbs
 
@@ -45,7 +45,7 @@ The art must make it possible to:
 4. The city uses mostly low/mid-rise continuous street walls, resolved corners, compact ordinary streets and service alleys, no oversized plaza, and at most one restrained Hidzu Corporation landmark.
 5. Roads, sidewalks, curbs, crossings, alleys, setbacks, entrances, drainage, public furniture, utilities, and service details are authored as part of the city rather than a flat board beneath freestanding objects.
 6. Accepted visual geometry is back-propagated into the shared layout contract so collision, entrances, occlusion, masks, anchors, and rendered streets agree before each gate is committed.
-7. Blue-hour dusk is the primary look. Daylight and curfew remain coherent schedule variants of the same geometry; wet-surface response, warm practicals, cold institutional fill, and readable midtones remain motivated.
+7. Dusk, blue hour, and curfew share one wet blue-black material and ambient baseline. Blue hour is the canonical hero/reference balance; dusk is the least dark with more active windows and localized amber practicals; curfew has fewer lit windows, a darker ambient field, stronger surveillance sources, and sparse red threat accents.
 8. Runtime actors, camera indicators, interaction feedback, George, and the current HUD remain live layers above the environment. GET-204 does not redesign HUD behavior or information architecture.
 9. The first gate is an actual Blender close frame and four-block overview from the same named-source master. Only after that visual approval is the rebuild proven live through a clean city frame, the same scene with the current HUD, and the minimum-zoom composition.
 10. Fixed-viewport screenshots and human play—not asset counts, validators, offline composites, or internal ratings—determine visual acceptance.
@@ -61,11 +61,13 @@ The GET-204 world-art lifecycle is:
 - Failure at any stage returns to the responsible variable class. It does not unlock downstream tickets or get hidden with labels, fog, grading, or checklist evidence.
 - No visual checkpoint is committed before the requester accepts the complete live evidence.
 
-Presentation states are aligned environment layers:
+Presentation states are aligned environment asset sets from one immutable geometry and camera registration:
 
-- `dusk`: public life and readable material separation;
-- `blue-hour`: transitional ambience without geometry change;
-- `curfew`: reduced public activity, stronger surveillance presence, and motivated practical light without crushed values.
+- `dusk`: the least-dark wet blue-black state, with the most active windows and localized amber entrance/lamp pools;
+- `blue-hour`: the canonical hero/reference balance, with cool ambient structure, crisp wet-road reflections, restrained cyan devices/accents, and localized amber practicals;
+- `curfew`: fewer lit windows, a darker ambient field, stronger declared surveillance sources, and sparse threat-specific red without crushed walkability.
+
+Blue hour becomes authoritative at `20:00` and curfew at `22:00`. Their complete texture sets prefetch at `19:50` and `21:50`. At a boundary the old complete set stays visible until every target texture is ready, aligned replacement layers crossfade over `750 ms`, and only then may the old layers and textures be destroyed. Direct jumps load the actual target state; Restart Attempt and hydration rewinds may load an earlier state. A generation token rejects stale asynchronous completions. Failed transitions discard the partial target and retain the current complete state with an observable diagnostic; an initial-state failure is visibly fatal rather than partial or silently substituted.
 
 ## 6. Rules and tuning values
 
@@ -81,22 +83,27 @@ Presentation states are aligned environment layers:
 
 ### Color and value
 
-- Core palette: charcoal, bruised umber, muted teal, bone, and sodium amber.
-- Technology cyan identifies active Hidzu Corporation devices and connections; it is scarce.
+- Core palette: blue-black, charcoal, cold slate, muted teal, bone, and localized sodium amber.
+- Amber is confined to visible windows, entrances, and lamp falloff. It cannot carry the frame as a global grade.
+- Technology cyan identifies declared screens, cameras, terminals, Hidzu Corporation technology, and a small named set of non-directional building-integrated facade identity seams. It is scarce and never becomes wayfinding, a route marker, street-edge lighting, a floating panel, or generic architectural neon.
 - Dirty crimson identifies confirmed threat and Pursuit, not neutral architecture.
 - Lighting direction remains consistently upper-left for baked assets.
 - Midtones remain readable. Curfew cannot collapse actors, road edges, entrances, and building bases into one black band.
+- Roads and sidewalks are rain-darkened source materials with crisp specular response, roughness breakup, and authored puddle masks. Bloom, ripple blur, and post-render reflection compositing cannot supply the wetness contract.
 - Practical lights must be anchored to visible sources and respect the aligned environment state.
 
 ### Active GET-205 production path
 
-- GET-205 opens the accepted GET-204 Neo Tokyo 2 master as a derivative rather than rebuilding or replacing the four-block city. Its tracked treatment manifest adds only facade-scale Hidzu identity and a noninteractive atmospheric surround below the gameplay surface; all sixteen building transforms, the `58×44` topology, anchors, masks, collision, and actor ownership remain GET-204-owned.
-- The authoritative people-free environment source is one `6400×3600` Blender render with no hidden source clusters. Runtime zoom never swaps or crossfades a second architectural composition.
-- The desktop profile preserves that native render through four registered overlapping WebP background tiles plus sixteen same-source hard-occlusion foreground crops. Every texture edge is at most `3202` pixels, so the profile does not depend on an unsupported `6400`-pixel WebGL texture.
-- The mobile profile uses one `3200×1800` WebP background plus sixteen half-resolution foreground crops, approximately `39.46 MiB` estimated decoded RGBA and `1.01 MiB` compressed. Its initial zoom is `1.05`; desktop remains `2.00`.
-- `get205-hidzu-production-v1` is the normal Level 0 visual path. `?visualTreatment=get204-1` is the explicit diagnostic fallback, while `?visualProfile=desktop|mobile` is a diagnostic profile override. Normal profile selection uses viewport width, with mobile selected at `820` pixels or below.
-- Dusk, blue hour, and curfew apply restrained, geometry-stable tint/atmosphere treatments to the same environment layers. They never change collision, camera target, architecture, actor scale, occlusion depth, device geometry, or schedule rules.
-- Flattened derivatives, hashes, dimensions, source crops, depth anchors, profile budgets, and Neo Tokyo 2 provenance are versioned. Raw vendor geometry/textures and generated `.blend` files remain outside Git.
+- GET-205 derives a recoverable versioned v4 scene from the accepted `get205-four-block-baked-v3` master; v3 is never overwritten. The v4 treatment preserves all sixteen building transforms, footprints, collision geometry, anchors, the `58×44` topology, camera azimuth/elevation, crop registration, actors/HUD ownership, occlusion contract, profiles, and named Neo Tokyo 2 provenance.
+- The rebake uses Blender Cycles on the M1 Max Metal device, beginning at `128` adaptive samples with denoising. A `200%` road/reflection crop is mandatory; sampling increases when that crop shows sparkle, smeared reflection detail, or denoising artifacts.
+- Only the two vent-ring assemblies and `WAIT`/`REST` rooftop HVAC clutter may be removed. Each removal is selected through a connected-component fingerprint that records source object/material, bounds, vertex count, and hash; an entire material-split object cannot be deleted as a shortcut.
+- The first requester-facing output is only the blue-hour hero at `1440×900`, public-crossing center `{29,22}`, zoom `2.9`, `45°` azimuth, and `30°` elevation. Present `reference | candidate | delta notes` plus the verified `200%` road/reflection crop. The comparison page must resolve every image before presentation. No `6400×3600` master, runtime cutout, or alternate-state export begins before requester hero approval.
+- After hero approval, render aligned people-free dusk, blue-hour, and curfew masters at `6400×3600`, render zoom `2.0`, target `{29,22}`. Each state produces the same four desktop background tiles, one mobile background, and sixteen foreground cutouts; crops, dimensions, placement fields, and depth anchors are metadata-identical across states.
+- Build every state/profile derivative into a staging directory, validate the complete matrix, then atomically replace the public asset root. A failed render, budget check, hash check, or validator leaves current production assets intact. Raw vendor geometry/textures, generated `.blend` files, `.generated`, staging, playtest reports, and obsolete plate directories remain outside commits.
+- The production manifest advances directly to schema v2: placement/depth fields remain immutable, while every asset nests `path`, `sha256`, and `bytes` under `states[dusk|blue-hour|curfew]`; `source.stablePlates` records state-specific hashes. The geometry-facing camera/fit/occlusion layer contract remains stable and a typed resolver owns phase-specific texture paths and keys. The old GET-205 schema is not supported in parallel.
+- Page-stable desktop/mobile profile selection remains authoritative. `?visualTreatment=get204-1` remains the explicit diagnostic route, while `?visualProfile=desktop|mobile` remains a diagnostic profile override. Normal profile selection uses viewport width, with mobile selected at `820` pixels or below.
+- Runtime preloads only the run's current phase and follows the complete-set prefetch/crossfade/failure contract in Section 5. The GET-205 environment tint and atmosphere overlay retire as world-color authorities; clock, crowd, shutter, surveillance, audio, actor tint, and HUD behavior remain unchanged.
+- Each state's compressed payload may be at most `115%` of the current baseline: approximately `3.58 MB` desktop and `1.22 MB` mobile. Publication reports total transfer size, one-set decoded residency, and the two-set transition peak.
 
 ### Historical GET-205 pipeline evidence
 
@@ -116,7 +123,7 @@ The following records describe the earlier pre-four-block GET-205 generator and 
 ### Projection and runtime
 
 - Runtime base projection: `64×32`, `2:1` isometric.
-- Normal play uses a close 2:1 isometric frame with the protagonist in the lower-center lead area and actor/building relationships comparable to the approved street reference. The exact default zoom is calibrated from the complete live candidate.
+- Normal play uses a close 2:1 isometric frame with the protagonist in the lower-center lead area. `GDR-ART-014` fixes the human/building relationship to the locked KitBash blend: at `1440×900` with the `16–18%` dock, the protagonist's visible alpha body targets approximately `68–80 px`, excluding shadow, selection ring, and George. The protagonist, contacts, security, and civilians share one base scale; zoom changes the entire world uniformly and never counter-scales actors.
 - Maximum manual zoom-out reaches a deliberately composed four-block mission overview. The dense-city reference supplies only the coherence/density relationship and does not expand the level scope.
 - Building, collision, entrance, mask, and depth anchors derive from the shared layout contract and export metadata.
 - Generated environment layers must not be upscaled blurry composites, mismatched-angle plates, or per-building collage assembled independently in Phaser.
@@ -128,7 +135,7 @@ The following records describe the earlier pre-four-block GET-205 generator and 
 - Twelve grounded actor identities: four protagonists, Lira, Naila, Brant, two Hidzu Corporation security archetypes, and three civilian archetypes.
 - World contract: `64×96`, eight directions, four frames, `idle`, `move`, and `interact`; no attack animation is required.
 - Foot anchors remain stable within two pixels.
-- Actor presentation is calibrated with the four-block mission camera so the protagonist, nearby civilians, contacts, and security have the human presence shown in the approved street reference. A global sprite multiplier is secondary to the camera/building relationship and remains adjustable until the live frame is accepted.
+- Actor presentation is calibrated with the four-block mission camera so the protagonist, nearby civilians, contacts, and security reproduce the human/door/sidewalk/street/building relationship in the locked KitBash blend. One shared runtime scalar may be derived to meet that relationship; it is an implementation value, not a second visual authority. Reference 2 continues to guide social staging and camera intimacy only.
 - Actors sample authored `ActorLightRegion` metadata at their foot anchor and ease a subtle semantic amber/cyan tint. `OPEN-ART-005` owns final tint strength/feathering; its reversible baseline is strongest-region-only blending, `250 ms` easing, and restrained intensity.
 - World sprite, portrait, dialogue identity, and role silhouette must match.
 - Takahiro Kobayashi receives a propaganda/broadcast portrait; George receives separate AR presentation art.
@@ -181,10 +188,10 @@ The following records describe the earlier pre-four-block GET-205 generator and 
 
 ## 10. Failure, recovery, and Restart Attempt behavior
 
-- Missing or invalid art manifests use an explicit fallback and diagnostics; required production acceptance cannot rely on fallback assets.
+- A missing/invalid initial production state fails visibly with diagnostics; it cannot show a partial state or silently substitute another state. A transition failure retains the current complete state, discards partial target assets, emits an observable diagnostic, and retries at the next synchronization or reload.
 - Zoom corruption, seam exposure, anchor drift, detached shadows, unreadable curfew values, or required-object occlusion fails the visual gate.
 - The pipeline must reproduce a known export from versioned recipe/manifests without committing raw licensed geometry.
-- Restart Attempt and New Game must select the correct aligned visual state from world-clock state without stale layers from a previous run.
+- Restart Attempt, New Game, direct Wait jumps, and hydration rewinds must select the correct aligned visual state from world-clock state without stale layers from a previous run. A generation token prevents late asynchronous loads from displaying the wrong state.
 - Restart Attempt and scene rebuild clear transient actor-tint interpolation and resample the restored foot anchors deterministically.
 - If visual and gameplay geometry disagree, preserve the mission skeleton, identify the accepted visual geometry, and back-propagate it into the single layout/collision/mask/anchor contract. Neither hidden collision nor a visually weak legacy block may remain authoritative by accident.
 
@@ -193,7 +200,8 @@ The following records describe the earlier pre-four-block GET-205 generator and 
 - Maintain a source/provenance manifest for every Neo Tokyo asset used and keep all raw vendor files outside Git. Record requester-confirmed ownership honestly; do not invent a receipt or license tier.
 - Maintain the Level 0 master-scene recipe, camera/projection settings, transforms, material treatment, light rig, export layers, masks, anchors, and validation checks.
 - For GET-204, first produce an actual Blender close frame and four-block overview from the same named-source master. After that gate is approved, produce a clean live frame, the same frame with the current HUD, and a four-block overview at `1440×900` and `1920×1080`; verify `1280×720` compatibility before final closeout.
-- For GET-205, regenerate the production manifest and both runtime profiles with `yarn art:level0:t5:production` whenever the accepted stable plate or foreground silhouettes change. Hash-check every published derivative and inspect normal desktop, minimum overview, automatic mobile, dusk, blue-hour, and curfew states in the live Level 0 runtime before acceptance.
+- For GET-205, approve the single blue-hour hero gate before generating any master/runtime matrix. After approval, regenerate schema-v2 production assets and both profiles with `yarn art:level0:t5:production`; validate state completeness, hashes, immutable registration, targeted safehouse-component removal, payload/decode/residency budgets, and atomic publication before exposing the candidate.
+- Maintain versioned fixed-frame shadow, road, amber, and cyan masks for the reference-delta validator. Against `canvas-quality-target.png`, require shadow mean Lab `b* < 0` and no more than `+2` warmer, amber fraction no greater than `115%`, cyan/emissive fraction at least `85%`, road specular coverage at least `85%`, and luminance `p95–p05` spread at least `90%`. Freeze requester-approved per-state frames as regression baselines; these metrics support but never replace visual judgment.
 - Produce live captures for safehouse opening, dusk street, Lira, Naila, Brant, public route, curfew route, camera observation, Suspicious, Pursuit/drone, cache/manifest, minimum zoom, Character screen, dossier, failure, Restart Attempt, debrief, and completion.
 - Maintain actor manifests, deterministic generation recipes, pixel-derived metrics, integrity hashes, neutral fallback evidence, and matching portrait references for all required identities.
 - Author signage and public-screen copy in the approved cultural/language policy once that open decision is resolved.
@@ -205,6 +213,7 @@ The following records describe the earlier pre-four-block GET-205 generator and 
 - No independent building sprites arranged as a city collage, opaque parcel slabs, floating bases, empty board, or decorative perimeter.
 - No protecting rejected greybox geometry merely because it already exists. A topology change must preserve the mission skeleton, update the shared contract, and prove reachability/collision against the accepted city.
 - No giant permanent labels, x-ray actors, universal building transparency, broad path lines, debug outlines, or glow as a substitute for composition.
+- No cyan wayfinding, route marker, street-edge light, floating panel, generic cyberpunk neon, or full-city multiplicative tint. Existing non-emissive GET-214 route signage remains outside the T5 color authority.
 - No baked light that contradicts the upper-left rig or visible practical source.
 - No tiny actors against monumental buildings, fantasy-Neo costumes, attack poses, military loadouts, or magical gadgets.
 - No claim of visual success based on checklist completion, generated asset count, configuration, validator output, offline Blender output alone, or an internal/AI rating without live inspected frames.
@@ -223,13 +232,14 @@ Post-MVP may add complex interiors, additional Tokyo districts, Miami art produc
 
 1. At normal zoom, the hero intersection reads at street scale: the protagonist occupies the lower-center lead area; nearby civilians, security, entrances, cameras, and public furniture are immediately legible; buildings form a lived-in street canyon rather than monumental objects on a board.
 2. At maximum manual zoom-out, the scene reads as one deliberately composed continuous city with no seams, floating buildings, sparse board, empty perimeter, or corruption.
-3. The public route and curfew route feel like different uses of the same district rather than different map scripts.
+3. The aligned dusk, blue-hour, and curfew strip reads as three uses of the same wet blue-black district: dusk has more localized life, blue hour matches the hero balance, and curfew reduces windows while strengthening surveillance without geometry/crop drift.
 4. A camera, its connected terminal, and its current coverage read as one system without debug overlays.
-5. Curfew changes atmosphere and surveillance tension while actors, road edges, hiding places, and objectives remain readable.
+5. Curfew changes atmosphere and surveillance tension while actors, road edges, hiding places, and objectives remain readable. The `19:50`/`21:50` prefetches and `20:00`/`22:00` 750 ms boundaries show no black frame, partial set, stale completion, or leaked old texture.
 6. The bottom HUD stays within 18% at target viewports and preserves four clear information lanes.
 7. A clean city frame and the same live frame under the current HUD preserve the same world hierarchy; GET-204 does not fake quality by hiding the HUD or redesigning it.
-8. The requester accepts the complete rebuilt live district; automated validators and internal stage captures are green but are not treated as visual proof.
-9. At 1280×720, 1440×900, and 1920×1080, actors cross authored light regions with subtle eased amber/cyan integration and no gameplay change.
+8. The requester first accepts the verified `1440×900` blue-hour hero/reference/delta comparison and `200%` crop, then accepts the complete rebuilt live district; automated validators and internal stage captures are green but are not treated as visual proof.
+9. At `1280×720`, `1440×900`, `1920×1080`, and `390×844`, inspect the fixed three-state strip, reference A/B, clean world, current HUD, overview, both profiles, three known occlusion sites, actor feet, and the `0.60→3.25` zoom sweep.
+10. Initial selection, both prefetches/boundaries, direct jumps, Restart Attempt, hydration rewind, stale completions, failed loads, texture disposal, and single-/double-set residency match the authored state without changing clock, crowd, shutter, surveillance, audio, or HUD behavior.
 
 ## 16. Owning Linear ticket
 

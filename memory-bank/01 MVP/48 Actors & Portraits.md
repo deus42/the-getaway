@@ -25,7 +25,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Confirmation persists the selected cover and its authored appearance into the Level 0 run and compatible continuation data.
 - Level 0 actor content uses the approved grounded actor contract: twelve actor sets, `64x96`, eight directions, `idle`/`move`/`interact`, four frames per state, and shared anchors.
 - The twelve-set roster is fixed: four protagonist presets, Lira, Naila, Brant, two Hidzu Corporation security visual archetypes, and three civilian visual archetypes. T6 may define reusable silhouettes and wardrobe-role cues but may not name the archetypes, assign biographies, set counts or schedules, place authoritative actors, change the allocation, or add gameplay roles; T8/T10 own those content decisions.
-- Exact runtime scale is unresolved in `OPEN-ART-003`; character-creation/menu visual ownership is unresolved in `OPEN-UI-002`; performance/load budgets are unresolved in `OPEN-PERF-001`.
+- Human/world proportion is approved by `GDR-ART-014`; the exact shared runtime scalar is derived from the accepted GET-205 camera/export to reproduce that outcome. Character-creation/menu visual ownership remains unresolved in `OPEN-UI-002`; performance/load budgets remain unresolved in `OPEN-PERF-001`.
 
 ## 4. Complete happy-path behavior
 
@@ -50,7 +50,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Attack animation is not required because Level 0 contains no active combat loop.
 - The protagonist has four authored cover appearances. There is no combinatorial body-part creator, independent appearance picker, or fixed Operative/Trace identity.
 - Actor art follows graphic surveillance noir: grounded contemporary clothing and roles, readable midtones, strong ink silhouettes, restrained technology, and no fantasy-Neo styling.
-- The provisional `OPEN-ART-003` oracle keeps the canonical `64×96` source frame, origin `(0.50, 0.92)`, measured alpha height `54–64` px, and one replaceable manifest scale for all twelve actors. The earlier `1.15` and `1.30` greybox trials are evidence only. The complete GET-204 candidate first calibrates camera/building relationship to the approved street frame, then adjusts one shared actor scale if needed; revisions never use arbitrary per-scene scaling.
+- Keep the canonical `64×96` source frame, origin `(0.50, 0.92)`, measured alpha height `54–64` px, and one shared runtime scale for all twelve actors. Calibrate that scalar only after GET-205 fixes the camera/building relationship. At `1440×900` with the approved `16–18%` dock, the protagonist's visible alpha body targets approximately `68–80 px`, excluding shadow, selection ring, and George, while the human/door/sidewalk/street/building relationship must visually match the locked blend. The earlier `1.15`, `1.30`, `0.64`, and `0.96` values are evidence only; no per-preset, protagonist-only, per-scene, or per-zoom compensation is allowed.
 - Actor placement and visual bases must remain aligned with gameplay anchors, walkable surfaces, collision, interaction reachability, and depth ordering.
 - `ActorLightRegion` metadata defines authored semantic amber/cyan regions. Runtime samples the strongest eligible region at each actor foot anchor, eases transitions, and applies a restrained tint only. Final strength and feathering remain open under `OPEN-ART-005`; the reversible baseline is strongest-region-only blending, `250 ms` easing, and restrained intensity.
 - Lighting is presentation-only. It never changes actor movement, collision, detection, camera visibility, gate verdicts, schedules, or civilian knowledge.
@@ -101,12 +101,12 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Produce one separate `256×256` Takahiro Kobayashi civic-broadcast portrait with no embedded localized copy and one separate `256×256` transparent George AR idle/base asset; neither counts as an additional world actor set.
 - Lira presentation may communicate only the approved mission-facing medical-supplies role; T6 may not encode the unresolved identity, relationship, beneficiaries, or passage authority in `OPEN-NAR-004` through `OPEN-NAR-006`. Naila, Brant, and George presentation may use the explicit reversible recommendations for `OPEN-NAR-009`, `OPEN-NAR-010`, and `OPEN-NAR-011` without presenting them as approved biography or hardware.
 - Validate anchors, direction naming, frame order, scale, depth, interaction alignment, `ActorLightRegion` metadata, foot-anchor sampling, easing, semantic tokens, and all required lighting states before acceptance.
-- Keep runtime scales, entry-flow layouts, and production asset budgets reversible while `OPEN-ART-003`, `OPEN-UI-002`, and `OPEN-PERF-001` are provisional; resolve them before final asset acceptance.
+- Keep the derived shared runtime scalar reproducible and easy to recalibrate if the accepted camera/export changes. Entry-flow layouts and production asset budgets remain reversible while `OPEN-UI-002` and `OPEN-PERF-001` are provisional; resolve them before their final acceptance.
 
 ## 12. Edge cases and prohibited shortcuts
 
 - No actor on a roof or outside its gameplay ground anchor; no sliding feet, direction swap, anchor jitter, or portrait/world identity mismatch.
-- No permanent labels, oversized sprites, strict-perspective unreadability, or arbitrary per-scene scaling used to compensate for unresolved `OPEN-ART-003`.
+- No permanent labels, oversized sprites, protagonist-only enlargement, strict-perspective unreadability, arbitrary per-scene scaling, or zoom-dependent counter-scaling that violates `GDR-ART-014`.
 - No attack animation requirement, weapon pose, combat silhouette, fantasy operative armor, or package/class visual.
 - No fixed Trace/Operative, background-dependent appearance, or appearance effect on checks and routes.
 - No portrait text baked into assets; English/Ukrainian semantics remain in the content/localization layer.
@@ -119,7 +119,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - `GDR-REM-002`: Ghost/Wire/Force packages and loadout-driven appearance.
 - `GDR-REM-011`: fantasy-Neo actors, permanent labels, broad glow, and rejected presentation.
 - Fourteen attack-capable fantasy sheets; the current contract is twelve grounded noncombat sets.
-- Earlier `+18%` scaling; `GDR-SUP-003` replaces it with an approximate `+15%` starting target pending `OPEN-ART-003` acceptance.
+- Earlier `+18%`, provisional `+15%`, and technical `0.64`/`0.96` scale claims as visual authority; `GDR-ART-014` replaces them with the measured locked-blend relationship.
 
 ## 14. Post-MVP extensions
 
@@ -132,6 +132,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - T6's current acceptance gate covers assets, manifests, pixel-derived validation, a neutral appearance-selection seam, and live protagonist/contact ground-anchor presentation. Character screen, dialogue/debrief, authoritative Restart Attempt identity, security/civilian schedules, and final entitlement-backed city integration are deferred/not checked until T7/T9/T10 or runtime promotion.
 - `AC-L0-001`: review all four appearances through the neutral T6 selection seam, select each across repeat starts, and confirm the chosen identity appears in the safehouse. Final Character-screen and Restart Attempt proof belongs to T7/T9.
 - Meet Lira, Naila, and Brant and compare their live world/portrait identity, fixed facing, idle, and interaction readability without permanent labels; inspect their complete movement matrices in the deterministic proof board until T8 owns authored schedules.
+- At `1440×900`, compare a clean normal-play crop directly with the locked blend: the protagonist's visible alpha body is approximately `68–80 px`, surrounding human roles share the same base scale, doors and sidewalks retain the reference relationship, and overview zoom changes all world-space elements uniformly.
 - Use dusk delivery activity and curfew security movement; distinguish civilian/service/security roles while authoritative schedules and surveillance remain unchanged by art.
 - Trigger a live named-contact interaction and confirm both actor presentations return cleanly to idle. Final dialogue, Restart Attempt, and debrief identity continuity remains a T7/T9/T10 acceptance gate rather than evidence claimed by T6.
 - Inspect all twelve portraits, Takahiro's broadcast portrait, and George's AR base art for identity, crop, provenance, fallback, and grounded tone.

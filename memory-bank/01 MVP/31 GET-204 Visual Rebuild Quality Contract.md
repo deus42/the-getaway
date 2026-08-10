@@ -15,12 +15,12 @@ The committed generated-plate city is a protected fallback and useful visual-dir
 
 ## 2. Locked references
 
-### Approved KitBash + Reference 2 composition north star
+### Approved KitBash blend composition and proportion authority
 
 - File: `art/references/get205/kitbash-reference2-blend-concept-v1.png`
 - SHA-256: `b8e69fcbb4839cf2fb70fa80e03c42ff321e6a5ee00c2287f1f824f08e951c5d`
 - Provenance: AI-assisted previsualization generated from the real Neo Tokyo 2 catalog, an actual earlier Blender render, and Reference 2.
-- Owns: mission-sized four-block composition, close play angle, protagonist/building relationship, street-wall density, warm/cold value hierarchy, one restrained Hidzu Corporation landmark, and the intended blend of professional kit identity with authored game composition.
+- Owns: mission-sized four-block composition, close play angle, the authoritative human/door/sidewalk/street/building proportion, street-wall density, warm/cold value hierarchy, one restrained Hidzu Corporation landmark, and the intended blend of professional kit identity with authored game composition.
 - Does not own: production geometry, topology, collision, exact building identity, or entitlement. It cannot satisfy source-provenance acceptance and may not be promoted as game art.
 
 ### Reference 2 normal-play target
@@ -44,7 +44,7 @@ The committed generated-plate city is a protected fallback and useful visual-dir
 
 ## 3. Player-visible promise
 
-At normal play, the protagonist is large enough to read as a person rather than a token. The player sees nearby people, entrances, cameras, the controlled threshold, and at least one immediate route decision. Buildings create a credible street canyon without swallowing the character or turning the scene into a distant board.
+At normal play, the protagonist is identifiable without dominating the street. The player sees nearby people, entrances, cameras, the controlled threshold, and at least one immediate route decision. Buildings create the same credible street canyon and human/building hierarchy as the locked KitBash blend: people are part of the city, not oversized hero figurines or tiny tactical tokens.
 
 At manual overview, the same four blocks read as one compact mission space. No generated-plate seam, empty board, isolated catalog building, unfinished edge, giant tower cluster, or zoom corruption appears.
 
@@ -85,11 +85,12 @@ Raw vendor geometry, textures, extracted archives, and generated `.blend` files 
 Normal play uses a close classic 2:1 isometric camera:
 
 - protagonist in the lower-center lead area;
-- target visible protagonist height approximately `95–115 px` at `1440×900`;
+- at `1440×900` with the approved `16–18%` dock, target visible protagonist alpha-body height is approximately `68–80 px`, excluding shadow, selection ring, and George;
+- the protagonist is approximately doorway-scaled as in the blend and uses the same shared base scale as contacts, security, and civilians; identity and focus come from silhouette, framing, and restrained feedback rather than enlargement;
 - enough context for one immediate movement choice, one social context, and one surveillance relationship;
 - the camera cannot hide weak architecture by zooming into a portrait, and cannot expose more city by shrinking people into tokens.
 
-The overview camera uses the same master scene and projection. It reveals the four-block mission space, not an expanded city. Exact zoom values remain calibrated from actual rendered/live comparison rather than inherited from the rejected greybox or generated plate.
+The overview camera uses the same master scene and projection. It reveals the four-block mission space, not an expanded city. Actors and world zoom uniformly: no per-zoom actor counter-scale, per-scene scalar, protagonist-only multiplier, or art swap is allowed. The locked blend relationship is authoritative; the numeric target is its measurable `1440×900` acceptance band, not permission to tune proportions independently.
 
 Offline scale figures are allowed only as clearly separate proof objects. Production environment layers contain zero baked people. Protagonist, civilians, security, drone, George, and stateful devices remain runtime-owned.
 
@@ -127,7 +128,7 @@ People in proof renders are few and intentional: protagonist scale, one contact/
 
 The first requester gate contains two actual Blender renders:
 
-1. **Close play frame** — demonstrates Reference 2 camera intimacy, protagonist scale proxy, street-wall relationship, entrance/route readability, and material/light quality.
+1. **Close play frame** — demonstrates the locked blend's actor/door/sidewalk/street/building proportions, Reference 2 camera intimacy and social staging, entrance/route readability, and material/light quality.
 2. **Four-block overview** — demonstrates the same master scene, source identity, compact mission scope, three route identities, one restrained landmark, and no sparse-board silhouette.
 
 Each proof records Blender version, source inventory, selected asset prefixes, render settings, camera, image dimensions, and hashes. The approved generated concept may be shown beside them only as a target, never as evidence of the production result.
@@ -146,7 +147,7 @@ Reject and continue if any proof shows:
 
 - weak or untraceable KitBash identity;
 - AI-generated production architecture;
-- tiny protagonist or distant board-first framing;
+- an actor outside the locked blend proportion, including an oversized protagonist, protagonist-only enlargement, or a tiny tactical token;
 - monumental/tower-dominated massing;
 - isolated buildings, empty lots, oversized plaza, or sparse compound language;
 - flat roads, floating buildings, blank facades, or impossible light;

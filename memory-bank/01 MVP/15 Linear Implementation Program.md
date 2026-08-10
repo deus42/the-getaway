@@ -446,7 +446,7 @@ The earlier real Blender district also failed: it used genuine kit geometry but 
 
 ### Player promise
 
-Normal play feels close to Reference 2: the protagonist reads as a person, nearby entrances and civilians are legible, buildings make a credible street canyon, and the player can read an immediate movement choice plus a surveillance relationship.
+Normal play reproduces the locked KitBash blend's human/door/sidewalk/street/building proportions: the protagonist reads as a person without dominating the street, nearby entrances and civilians remain legible, buildings make a credible street canyon, and the player can read an immediate movement choice plus a surveillance relationship. Reference 2 supplies camera intimacy and social staging, not actor size.
 
 Manual overview reveals the same compact four-block mission space. It does not expose an empty board, isolated showcase buildings, a tower cluster, repeated generated plates, or corrupted edges.
 
@@ -457,10 +457,10 @@ The city is attractive, maintained, contemporary, and comprehensively watched. I
 1. `art/references/get205/kitbash-reference2-blend-concept-v1.png`
    * SHA-256: `b8e69fcbb4839cf2fb70fa80e03c42ff321e6a5ee00c2287f1f824f08e951c5d`
    * Approved AI-assisted previsualization.
-   * Owns the four-block composition, close camera, protagonist/building relationship, street-wall density, warm/cold value hierarchy, and one restrained Hidzu Corporation landmark.
+   * Owns the four-block composition, close camera, authoritative human/door/sidewalk/street/building proportions, street-wall density, warm/cold value hierarchy, and one restrained Hidzu Corporation landmark.
    * Does **not** own production geometry and may never be promoted as game architecture.
 2. `art/references/get204/street-play-target.png`
-   * Owns normal-play intimacy, actor prominence, social readability, and street context.
+   * Owns normal-play intimacy, social readability, surveillance readability, and street context; it does not own actor size.
 3. `art/references/get204/canvas-quality-target.png`
    * Owns material depth, facade richness, motivated lighting, readable midtones, and restrained wet response.
 4. `art/references/get204/dense-city-target.png`
@@ -526,7 +526,8 @@ The same master scene owns building geometry, camera family, public realm, mater
 
 * Normal play uses a close classic 2:1 isometric frame.
 * The protagonist occupies the lower-center lead area.
-* Target visible protagonist height is approximately 95–115 pixels at 1440×900.
+* At `1440×900` with the approved `16–18%` dock, target visible protagonist alpha-body height is approximately `68–80 px`, excluding shadow, selection ring, and George. The locked blend relationship outranks the numeric band.
+* Protagonist, contacts, security, and civilians use one shared base scale. Camera zoom changes the world and all human actors uniformly; no protagonist-only, per-scene, or per-zoom compensation is allowed.
 * The close frame retains one immediate route choice, one social context, and one surveillance relationship.
 * Overview uses the same master scene and reveals only the four-block mission space.
 * A few separate proxy figures may establish scale in offline renders.
@@ -555,7 +556,7 @@ The same master scene owns building geometry, camera family, public realm, mater
 
 The proof contains:
 
-* one close play frame showing the Reference 2 camera/actor relationship, entrance and route readability, source architecture, and rendering quality;
+* one close play frame showing the locked blend's actor/door/sidewalk/street/building proportions, Reference 2 camera intimacy/social staging, entrance and route readability, source architecture, and rendering quality;
 * one overview showing the same four-block master, compact mission scope, three functional identities, named source buildings, one restrained landmark maximum, and no sparse-board silhouette;
 * source inventory, Blender version, camera, dimensions, and hashes.
 
@@ -594,9 +595,9 @@ On failure, preserve the last measured baseline and change one variable class: s
 
 GET-204 depends on GET-203's delivered runtime, projection, direct-movement, and semantic-layout foundations, while explicitly superseding every rejected sparse-compound, nine-block, full-district, and generated-plate geometry assumption. It blocks GET-205 and downstream visual integration. Work already present for GET-205 or GET-208 is protected concurrent evidence only and does not transfer ownership into this ticket.
 
-The approved four-block envelope, three functional identities, three traversal loops, named Neo Tokyo 2 provenance, same-master Blender proof, and separate live-acceptance gate are current rules. Exact accepted bounds, widths, detailed anchors, masks, camera calibration, occluder behavior, and performance limits remain governed by `OPEN-MOV-003`, `OPEN-LAYOUT-001`, `OPEN-LAYOUT-002`, `OPEN-LAYOUT-004`, `OPEN-ART-003`, `OPEN-ART-004`, and `OPEN-PERF-001` until requester evidence freezes them; no implementation constant silently resolves those items.
+The approved four-block envelope, three functional identities, three traversal loops, named Neo Tokyo 2 provenance, same-master Blender proof, and separate live-acceptance gate are current rules. `GDR-ART-014` resolves the former actor-proportion open item through the locked blend; the derived runtime scalar remains an implementation value. Exact accepted bounds, widths, detailed anchors, masks, camera calibration, occluder behavior, and performance limits remain governed by `OPEN-MOV-003`, `OPEN-LAYOUT-001`, `OPEN-LAYOUT-002`, `OPEN-LAYOUT-004`, and `OPEN-PERF-001` until requester evidence freezes them; no implementation constant silently resolves those items. `GDR-ART-013` separately fixes the environment-state delivery and 750 ms crossfade contract.
 
-Implements `GDR-PROD-004`, `GDR-ART-002` through `GDR-ART-007`, `GDR-ART-009`, `GDR-ART-010`, `GDR-GOV-001`, `GDR-SUP-001`, and `GDR-SUP-002`. Canonical ownership is [[30 Art Direction (MVP)]] sections 3–6 and 9–15, [[31 GET-204 Visual Rebuild Quality Contract]], [[13 Level 0 Content and State Matrix]] section 13, [[41 Movement, Interaction & Observation]] camera and layout rules, [[04 Engineering/Architecture]] sections 5–7, and [[04 Engineering/Roadmap]] Gate 4.
+Implements `GDR-PROD-004`, `GDR-ART-002` through `GDR-ART-007`, `GDR-ART-009`, `GDR-ART-010`, `GDR-ART-014`, `GDR-GOV-001`, `GDR-SUP-001`, and `GDR-SUP-002`. Canonical ownership is [[30 Art Direction (MVP)]] sections 3–6 and 9–15, [[31 GET-204 Visual Rebuild Quality Contract]], [[13 Level 0 Content and State Matrix]] section 13, [[41 Movement, Interaction & Observation]] camera and layout rules, [[04 Engineering/Architecture]] sections 5–7, and [[04 Engineering/Roadmap]] Gate 4.
 
 ### Human-play acceptance after Blender approval
 
@@ -607,7 +608,7 @@ The later live candidate must:
 * prevent movement onto visible buildings and people;
 * align collision, entrances, occlusion, masks, and anchors with visible geometry;
 * preserve current controls, HUD, Menu, and gameplay ownership;
-* show a readable close frame and coherent four-block overview at 1440×900 and 1920×1080, with 1280×720 compatibility;
+* show a readable close frame and coherent four-block overview at 1440×900 and 1920×1080, with 1280×720 compatibility; the 1440×900 frame measures the `68–80 px` protagonist alpha-body band and visibly matches the blend's surrounding proportions;
 * contain no fallback leak, generated-plate seam, void, angle mismatch, or zoom corruption.
 
 The requester accepts the live result separately. Only then may closeout validation and an explicitly authorized commit occur.
@@ -630,38 +631,38 @@ An unchanged asset kit can provide coherent architecture but cannot by itself ex
 
 ### Player promise
 
-The same technically validated city now receives a Hidzu Corporation treatment. The player can read where identity is checked, which devices are active/connected, how cameras relate to terminals, where public service becomes controlled access, and when danger is merely ambient versus confirmed. Cold institutional surfaces and sodium practical light preserve readable midtones; cyan is scarce technology, crimson is real threat, and the protagonist/objective remain stronger than ambience. Dusk, blue hour, and curfew feel distinct but remain one city. The requester accepted the production baseline; the ticket stays nonterminal until the committed build is verified.
+The same technically validated city now receives a Hidzu Corporation treatment. The player can read where identity is checked, which devices are active/connected, how cameras relate to terminals, where public service becomes controlled access, and when danger is merely ambient versus confirmed. The locked target is blue-black, wet, reflective surveillance noir: cold institutional surfaces and cool ambient fill dominate, localized sodium practicals create motivated contrast, cyan is scarce active technology, and crimson is real threat. Streets and hard surfaces carry believable rain-darkened material response and restrained reflections rather than a beige/ochre wash. The protagonist/objective remain stronger than ambience, and dusk, blue hour, and curfew feel distinct while remaining one city. The ticket is visually unaccepted until the requester approves a live side-by-side comparison against the registered references.
 
 ### Starting state
 
-- Earlier T4/T5 offline compositions and the former three-gate/full-city plan are historical evidence only. GET-204's named-KitBash four-block Blender source was requester-accepted and committed at `2206f8b`. The same-source GET-205 production path is now the requester-accepted normal Level 0 visual baseline; its authorized acceptance commit moves the ticket to `In Review`, while `visualTreatment=get204-1` remains the explicit recovery/diagnostic fallback until the committed build is verified.
-- The approved visual relationship is recorded by the close street reference and the registered dense-city reference; exact objects are not binding.
-- Hidzu Corporation's institutional role is canonical, but Takahiro's formal title, district name, Japanese diegetic language, safehouse exterior, and crossfade details remain explicit OPEN items.
+- Earlier T4/T5 offline compositions and the former three-gate/full-city plan are historical evidence only. GET-204's named-KitBash four-block Blender source was requester-accepted and committed at `2206f8b`. GET-205 commit `c1f7cda` is a recoverable technical publication baseline only: on `2026-08-09` the requester rejected its warm, beige/ochre, comparatively dry and flat grade as materially different from the locked target. Preserve the accepted four-block geometry, topology, anchors, camera, KitBash provenance, and runtime publication path while rebuilding materials, lighting, wetness, reflections, atmosphere, and Hidzu integration from the authored Blender source.
+- Reference authority is explicit: `canvas-quality-target.png` owns blue-black wet material, lighting, and reflection quality; `kitbash-reference2-blend-concept-v1.png` owns the compact four-block source/composition relationship and the authoritative human/door/sidewalk/street/building proportions without becoming production geometry; `street-play-target.png` (Reference 2) owns normal-camera intimacy, inhabited social staging, surveillance readability, and HUD/world relationship but not actor size. The dense-city reference is overview-density guidance only.
+- Hidzu Corporation's institutional role is canonical, but Takahiro's formal title, district name, Japanese diegetic language, and the wider safehouse exterior remain explicit OPEN items. `GDR-ART-013` resolves the environment crossfade at 750 ms without resolving actor tint under `OPEN-ART-005`.
 - T5 may change materials, signage, lighting, civic/surveillance props, atmosphere, and flattened derivatives; it may not silently change topology, required anchors, device mechanics, or route viability.
 
 ### Complete player flow
 
-The player leaves the safehouse into a district that first reads as ordered civic infrastructure. Lira's area communicates the human edge of identity exclusion. The route toward Naila, Brant, and the logistics site uses repeated Hidzu Corporation wayfinding and public-screen language. Before curfew, delivery activity and queues make public blending plausible while cameras remain legible. During blue hour and curfew, public messaging, practical lights, reduced activity, and verifier presence shift the mood without hiding walkable space. The camera terminal, cache terminal, transit terminal, cameras, hiding/blending structures, entrances, manifest/cache, and outbound path each read through their proper fiction and knowledge state.
+The player leaves the safehouse into a district that first reads as ordered civic infrastructure. Lira's area communicates the human edge of identity exclusion. The route toward Naila, Brant, and the logistics site retains GET-214's existing non-emissive route signage and public-screen language; T5 adds no cyan wayfinding, route-marker, or street-edge lighting. Before curfew, delivery activity and queues make public blending plausible while cameras remain legible. During blue hour and curfew, public messaging, practical lights, reduced activity, and verifier presence shift the mood without hiding walkable space. The camera terminal, cache terminal, transit terminal, cameras, hiding/blending structures, entrances, manifest/cache, and outbound path each read through their proper fiction and knowledge state.
 
 ### System rules and state transitions
 
-The T5 lifecycle is `T4_REQUESTER_ACCEPTED_COMMIT → HIDZU_IDENTITY_PASS → RUNTIME_PROFILE_EXPORT → REQUESTER_VISUAL_ACCEPTANCE → ACCEPTANCE_COMMIT → COMMITTED_BUILD_VERIFICATION`. T5 consumes but does not redefine T3/T4 gameplay semantics. Dusk, blue-hour, and curfew layers stay aligned; schedule state selects atmosphere and public treatment, never a second geometry. Active technology cyan appears only on declared Hidzu Corporation devices/connections. Amber carries objective/time/curfew. Crimson appears only for confirmed danger/Pursuit. Neutral information uses muted teal/bone. Lighting remains motivated by visible sources with consistent upper-left direction.
+The T5 lifecycle is `COMMITTED_TECHNICAL_BASELINE → DOCUMENTATION_ENTRY_COMMIT → BLUE_HOUR_HERO_APPROVAL → THREE_STATE_EXPORT → LIVE_SIDE_BY_SIDE_ACCEPTANCE → ACCEPTANCE_COMMIT → COMMITTED_BUILD_VERIFICATION`. T5 consumes but does not redefine T3/T4 gameplay semantics. Dusk, blue-hour, and curfew are three Cycles-baked people-free asset sets from one immutable geometry/camera registration. Blue hour becomes authoritative at 20:00 and curfew at 22:00; each target prefetches ten authored minutes before its boundary and replaces the prior complete set through a 750 ms crossfade only after every target texture is ready. Active technology cyan appears on declared Hidzu Corporation devices/connections and a small named set of non-directional building-integrated accents. Cyan wayfinding, route-marker/street-edge lights, broad architectural neon, and multiplicative full-city phase tint are prohibited. Amber remains a localized practical/objective/time accent rather than the world grade. Crimson appears only for confirmed danger/Pursuit. Neutral information uses muted teal/bone. Lighting remains motivated by visible sources with consistent upper-left direction.
 
 Every placed or modified object must support navigation, surveillance, hiding/blending, line-of-sight cover, hazard, entrance, contact, mission interaction, safehouse, objective readability, or required civic atmosphere. Public screens and feed surfaces communicate authored Hidzu Corporation claims but never leak undiscovered operational facts.
 
 ### Internal milestones and proof gates
 
-1. Resolve/register the Direction B reference and convert it into explicit value, palette, material, silhouette, surveillance, UI-adjacency, and rejection criteria.
-2. Define Hidzu Corporation environmental grammar: identity frames, cameras, connected-device markers, terminals, checkpoint language, public screens, propaganda, transit/service wayfinding, and warnings.
-3. Apply material/value treatment while preserving the technically validated scale, street hierarchy, and midtone readability.
-4. Author aligned dusk, blue-hour, and curfew lighting/atmosphere plus identifiable amber/cyan practical-light pools; measure crossfade and performance after the OPEN gates close. T10B later owns `ActorLightRegion` metadata and runtime actor tinting.
-5. Integrate gameplay-serving hiding/blending structures, contact spaces, terminal/entrance cues, and required hazards without clutter.
-6. Inspect normal play, Observation, Suspicious/Pursuit presentation hooks, minimum zoom, and every fixed viewport.
-7. Obtain requester acceptance that the city reads as coherent Hidzu Corporation Tokyo before T6/T10 final visual integration.
+1. Register the reference roles above and convert them into explicit value, palette, wet-material, reflection, silhouette, surveillance, locked-blend proportion, UI-adjacency, and rejection criteria. Measure the `1440×900` protagonist alpha body separately from shadow, selection ring, and George.
+2. Define Hidzu Corporation environmental grammar: identity frames, cameras, connected-device markers, terminals, checkpoint language, public screens, propaganda, non-directional building-integrated accents, and warnings. Preserve existing non-emissive route signage; add no T5 wayfinding fixture.
+3. Derive a versioned v4 scene from the accepted v3 master and render one blue-hour hero only in Cycles Metal: `1440×900`, public-crossing centre `{29,22}`, zoom `2.9`, 45° azimuth, 30° elevation. Present `reference | candidate | delta notes` plus a 200% road/reflection crop. No `6400×3600` master, cutout matrix, or runtime state is produced before requester approval of that frame.
+4. After hero approval, author aligned dusk, blue-hour, and curfew people-free lighting/material states. Every state retains the wet blue-black baseline: dusk is least dark with the broadest localized window/practical activity; blue hour owns the approved reference balance; curfew reduces public amber and strengthens declared surveillance/device sources plus sparse red threat accents. T10B later owns `ActorLightRegion` metadata and runtime actor tinting.
+5. Remove only the two vent-ring assemblies and WAIT/REST rooftop HVAC clutter through recorded connected-component fingerprints containing source object/material, bounds, vertex count, and hash; never delete an entire material-split object. Preserve every building transform, footprint, collision region, anchor, route, and source-provenance record.
+6. Publish the three state/profile matrix through complete staging and validation before atomic replacement. Advance directly to manifest schema v2: keep placement/depth metadata immutable, nest `path`, `sha256`, and `bytes` under each asset's three states, add state-specific `source.stablePlates` hashes, and expose a typed phase resolver without parallel v1 support. Extend runtime with target-state prefetch, generation-token stale-request rejection, 750 ms complete-set crossfade, observable failure, and old-GameObject/texture disposal. Retire the full-city tint/atmosphere overlay as the world-color authority. Cap each state at 115% of the current compressed payload—approximately 3.58 MB desktop and 1.22 MB mobile—and report total transfer, one-set decoded residency, and two-set transition peak.
+7. Inspect normal play, Observation, Suspicious/Pursuit presentation hooks, minimum zoom, both profiles, state transitions, and every fixed viewport. Present the live game side by side with the exact registered references and obtain requester acceptance before T6/T9/T10 final visual integration.
 
 ### Content requirements
 
-Produce a visual reference board, palette/value guide, material set, practical-light inventory with stable region candidates, Hidzu Corporation logo/wayfinding/device grammar, propaganda/public-screen content templates, camera/terminal state treatments, schedule-state export layers, atmosphere layers, semantic theme tokens, and asset provenance for all committed derivatives. Author enough public messaging to express safety, efficiency, transit, identity continuity, civic sentiment, suppression, and controlled access without implying unresolved facts.
+Produce a visual reference board, palette/value guide, wet material set, practical-light inventory with stable region candidates, Hidzu Corporation logo/device/non-directional architectural-accent grammar, propaganda/public-screen content templates, camera/terminal state treatments, three aligned schedule-state exports, semantic theme tokens, component-removal fingerprints, and asset provenance for all committed derivatives. Existing non-emissive route signage remains GET-214-owned; T5 adds no wayfinding fixture. Author enough public messaging to express safety, efficiency, transit, identity continuity, civic sentiment, suppression, and controlled access without implying unresolved facts.
 
 ### World/UI/audio/George feedback
 
@@ -669,7 +670,7 @@ World feedback must prioritize current objective/action, actor, observation/thre
 
 ### Failure and recovery
 
-Visual acceptance fails on generic neon cyberpunk, fantasy ornament, crushed curfew blacks, impossible lights, broad glow, large translucent buildings, unmotivated fog, soft upscaled composites, slab bases, repeated plates, unreadable devices, hidden objectives, or decorative clutter. Correct treatment/lighting/export layers without reopening accepted topology unless measured gameplay evidence proves a real layout defect. Missing/invalid T5 art falls back observably to the accepted T4 live city, never to rejected greybox or generated-plate presentation; any fallback still fails T5 production acceptance.
+Visual acceptance fails on a warm beige/ochre world grade, dry or flat roads, weak material depth, missing wet reflections, post-process-only recoloring, generic neon cyberpunk, fantasy ornament, crushed curfew blacks, impossible lights, broad glow, large translucent buildings, unmotivated fog, soft upscaled composites, slab bases, repeated plates, unreadable devices, hidden objectives, or decorative clutter. Correct the authored Blender materials, lighting, atmosphere, and export layers without reopening accepted topology unless measured gameplay evidence proves a real layout defect. Missing/invalid initial-state T5 art fails visibly with an observable diagnostic rather than showing a partial set or silently substituting another world. A transition failure discards the partial target, retains the current complete state, diagnoses observably, and retries at the next synchronization or reload. The explicit `visualTreatment=get204-1` route remains a deliberate diagnostic choice, never an automatic production fallback.
 
 ### Explicit exclusions
 
@@ -677,24 +678,25 @@ Visual acceptance fails on generic neon cyberpunk, fantasy ornament, crushed cur
 - No gameplay detection, network transitions, dialogue, facts, or objective logic.
 - No raw licensed geometry or untracked production truth.
 - No fantasy-Neo costume/world language, generic neon abundance, broad cyan/crimson ambience, or city-wide transparency.
+- No cyan wayfinding, route-marker/street-edge light source, floating panel, oversized billboard, or multiplicative tint presented as authored state lighting.
 - No public-feed posting, messaging, social simulation, procedural propaganda, or hidden fact delivery.
 - No clutter added solely to make the city look busy.
 
 ### Dependencies and OPEN blockers
 
-Depends on a requester-accepted and committed GET-204 same-master live four-block candidate. Blocks T6, T10, and T10B visual integration. Critical acceptance blocker is `OPEN-NAR-015`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, `OPEN-ART-004`, and the color-independent visual-state portion of `OPEN-ACC-001`. Neo Tokyo 2 production use is approved; raw vendor source remains outside Git. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 provides authored practical-light regions but does not own actor tint behavior or `OPEN-ART-005`. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
+Depends on a requester-accepted and committed GET-204 same-master live four-block candidate. Blocks T6, T9, T10, and T10B final visual integration. Critical acceptance blocker is `OPEN-NAR-015`. High acceptance blockers are `OPEN-NAR-003`, `OPEN-NAR-013`, `OPEN-NAR-014`, `OPEN-LAYOUT-004`, and the color-independent visual-state portion of `OPEN-ACC-001`. `GDR-ART-013` resolves the former `OPEN-ART-004` environment-state/crossfade seam; actor-light transition behavior remains separate under `OPEN-ART-005`. Neo Tokyo 2 production use is approved; raw vendor source remains outside Git. Recorded recommendations may be trialed reversibly for live comparison; they remain non-final while open. T5 provides authored practical-light regions but does not own actor tint behavior or `OPEN-ART-005`. T5 does not own `OPEN-PERF-001`, but its export must remain measurable against the T4/T10 provisional or approved budget.
 
 ### Canonical decisions/spec sections
 
-Implements `GDR-SET-003`, `GDR-SET-005`, `GDR-SOC-001`, `GDR-ART-001`, `GDR-ART-002`, `GDR-ART-003`, `GDR-REM-011`, `GDR-SUP-004`, and the outdoor boundary in `GDR-PROD-004`. Canonical detail is in [[20 Setting & Worldbuilding]], [[30 Art Direction (MVP)]], [[35 Narrative Alignment]], [[47 Social Feed]], [[03 Lore/Plot Bible]] sections 3, 8, 11, and 12, and [[04 Engineering/Roadmap]] Gate 5.
+Implements `GDR-SET-003`, `GDR-SET-005`, `GDR-SOC-001`, `GDR-ART-001`, `GDR-ART-002`, `GDR-ART-003`, `GDR-ART-012`, `GDR-ART-013`, `GDR-ART-014`, `GDR-REM-011`, `GDR-SUP-004`, and the outdoor boundary in `GDR-PROD-004`. Canonical detail is in [[20 Setting & Worldbuilding]], [[30 Art Direction (MVP)]], [[31 GET-204 Visual Rebuild Quality Contract]], [[80 Day-Night Cycle]], [[35 Narrative Alignment]], [[47 Social Feed]], [[03 Lore/Plot Bible]] sections 3, 8, 11, and 12, and [[04 Engineering/Roadmap]] Gate 5.
 
 ### Human-play acceptance
 
-Fixed captures at 1280×720, 1440×900, and 1920×1080 must cover safehouse, dusk street, each contact area, public route, curfew route, camera/terminal relationship, cache/manifest, Suspicious/Pursuit hooks, and 0.60. A reviewer can distinguish objective, neutral civic system, active technology, caution, and confirmed danger without relying on color alone. Dusk and curfew are visibly different yet geometrically identical. Actors/placeholders, entrances, roads, and device state remain readable. The requester must agree the scene is Hidzu Corporation-controlled Tokyo, not a kit demo or fantasy cyberpunk collage.
+Fixed captures at 1280×720, 1440×900, 1920×1080, and automatic mobile 390×844 must cover safehouse, dusk street, each contact area, public route, curfew route, camera/terminal relationship, cache/manifest, Suspicious/Pursuit hooks, clean-world/current-HUD frames, overview, both profiles, three known occlusion sites, actor-foot stability, and the 0.60→3.25 zoom sweep. At 1440×900, include a fixed aligned dusk/blue-hour/curfew strip and direct side-by-side crops against the locked KitBash blend and `canvas-quality-target.png`, plus a Reference 2 comparison for camera/social/HUD treatment only. The normal frame must show approximately `68–80 px` of protagonist alpha body, exclude shadow/ring/George from that measure, preserve one shared human base scale, and retain the blend's door/sidewalk/street/building relationship. Prove initial state, 19:50/21:50 prefetch, 20:00/22:00 boundaries, direct jumps, Restart Attempt/hydration rewind, stale completion, load failure, 750 ms crossfade, post-transition GameObject/texture disposal, and one-/two-set residency without black frames or partial art. A reviewer can distinguish objective, neutral civic system, active technology, caution, and confirmed danger without relying on color alone. Wet roads, cool blue-black ambient values, crisp restrained reflections, actors/placeholders, entrances, and device states remain readable in all states. The requester must agree the live scene is Hidzu Corporation-controlled Tokyo and materially approaches the registered references—not a warm/dry kit demo, fantasy cyberpunk collage, oversized-character diorama, or technically valid substitute.
 
 ### Documentation and validation obligations
 
-Update Art Direction with the registered reference/rubric and implemented conventions, the asset/art manifest, Architecture only for realized theme/layer data flow, MVP Readiness evidence, and `progress/GET-205.md`. Validate source/provenance, semantic tokens, layer registration, practical-light sources, color-independent cues after `OPEN-ACC-001`, fixed captures, minimum zoom, and runtime crossfade after `OPEN-ART-004`. Use live inspected frames as the gate; validators and image-generation counts are supporting evidence only.
+Update Art Direction with the registered reference/rubric and implemented conventions, the asset/art manifest, Architecture only for realized theme/layer data flow, MVP Readiness evidence, and `progress/GET-205.md`. Add a fixed-frame reference-delta validator with versioned shadow, road, amber, and cyan masks. Against the supplied reference require shadow mean Lab `b* < 0` and no more than `+2` warmer, amber fraction no greater than `115%`, cyan/emissive fraction at least `85%`, road specular coverage at least `85%`, and luminance `p95–p05` spread at least `90%`; freeze approved per-state frames as later regression baselines. Validate source/provenance, semantic tokens, immutable registration, practical-light sources, safehouse component fingerprints, payload/decode budgets, color-independent cues after `OPEN-ACC-001`, fixed captures, and the `GDR-ART-013` runtime transition. Use live inspected frames as the gate; validators and image-generation counts are supporting evidence only.
 
 ## T6 — Grounded actors, portraits, and entry-flow presentation
 
@@ -712,10 +714,10 @@ The player chooses one of four distinct contemporary protagonist appearances and
 
 ### Starting state
 
-- T5 provides the requester-accepted and committed GET-205 graphic-surveillance-noir production city. Its normal desktop/mobile profiles are the immutable live comparison context for T6; GET-204 and the greybox are diagnostic evidence only. T3 supplies authoritative actor anchors and T7 supplies identity/build state when integrated.
+- T5 must first provide the requester-accepted blue-black, wet, reflective GET-205 rebake. The current GET-205 publication and committed T6 actor batch are recoverable technical baselines, not the immutable live comparison context. T3 supplies authoritative actor anchors and T7A supplies current cover/condition state when integrated.
 - Exactly twelve world actor sets are required: four protagonist presets, Lira, Naila, Brant, two Hidzu Corporation security archetypes, and three civilian archetypes.
 - The matrix is 64×96 frames, eight directions, four frames, and `idle`/`move`/`interact`; attack is not required.
-- The provisional `OPEN-ART-003` oracle uses `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one replaceable shared scale for all twelve actors. Earlier `1.15`/`1.30` greybox trials and the GET-205 production profile's `0.64` technical scale are evidence only. The accepted GET-205 close/live frame fixes the camera/building relationship first; any actor adjustment remains one shared world scale with no zoom compensation or arbitrary per-scene scaling.
+- GDR-ART-014 resolves actor proportion: keep `64×96`, origin `(0.50, 0.92)`, alpha height `54–64` px, and one shared base scale for all twelve actors. After GET-205 fixes the camera/building relationship, derive that scalar so the `1440×900` normal frame shows approximately `68–80 px` of protagonist alpha body, excluding shadow, selection ring, and George, and visibly matches the locked blend's human/door/sidewalk/street/building relationship. Earlier `1.15`, `1.30`, `0.64`, and committed `0.96` values are evidence only; no zoom compensation, protagonist-only multiplier, or arbitrary per-scene scaling is allowed.
 - T6 owns reusable security/civilian visual archetypes, not names, biographies, counts, schedules, or authoritative placements. Lira's unresolved identity/relationship is outside T6; her art may communicate only the approved medical-supplies role.
 - George hardware, Naila/Brant biography cues, entry-flow ownership, actor scale, and shipping budgets remain explicit OPEN items. `OPEN-PERF-001` has no numeric baseline, so T6 may record measurements but cannot pass shipping-performance acceptance.
 
@@ -732,13 +734,13 @@ The protagonist appearance transitions once from unselected to one authored pres
 ### Internal milestones and proof gates
 
 1. Resolve biographies/hardware boundaries needed for visual references without authoring final dialogue.
-2. Produce a shared scale, costume, silhouette, palette, portrait, and anchor reference tied to the current validated provisional world treatment.
+2. Reuse the locked blend as the shared proportion reference, then produce the costume, silhouette, palette, portrait, and anchor references tied to the accepted GET-205 world treatment. Derive one shared actor scalar only after the camera/export is fixed.
 3. Create four protagonist sets, then prove cover-select and world persistence with placeholder shell integration.
 4. Create Lira/Naila/Brant; prove world/portrait identity continuity.
 5. Create two security and three civilian sets; prove role readability in public/curfew contexts.
 6. Create twelve matching `256×256` identity portraits, one `256×256` Takahiro broadcast portrait, and one separately registered `256×256` transparent George AR idle/base asset; validate crop/safe area, provenance/hash/bytes, and neutral fallback.
 7. Validate every 8×3×4 matrix, direction order, origin, foot-anchor stability within two pixels, frame occupancy, depth, and fallback metadata.
-8. Capture all identities and all twelve portraits plus Takahiro and George at the accepted close normal frame and composed overview across dusk, blue hour, and curfew. T6 proves its neutral selection seam and live protagonist/contact anchors; Character, dialogue, Restart Attempt/debrief, and schedules remain deferred/not checked for T7/T9/T10.
+8. Capture all identities and all twelve portraits plus Takahiro and George at the accepted close normal frame and composed overview across dusk, blue hour, and curfew. At `1440×900`, record visible-alpha height and the surrounding door/sidewalk/street relationship against the locked blend. T6 proves its neutral selection seam and live protagonist/contact anchors; Character, dialogue, Restart Attempt/debrief, and schedules remain deferred/not checked for T7/T9/T10.
 
 ### Content requirements
 
@@ -756,7 +758,7 @@ Production acceptance fails for missing matrices, anchor drift, sliding feet, mi
 
 - No attack animations, weapons, combat silhouettes, fixed Trace/Operative, backgrounds, packages, or appearance-based mechanics.
 - No combinatorial body-part creator beyond four authored presets.
-- No permanent labels, arbitrary per-scene scaling, giant sprites, or art-owned collision/detection.
+- No permanent labels, arbitrary per-scene scaling, protagonist-only enlargement, zoom counter-scaling, giant sprites, or art-owned collision/detection.
 - No final dialogue prose, schedules, surveillance mechanics, HUD shell, or mission integration.
 - No invented Lira/Naila/Brant biography or George hardware before its OPEN decision.
 
@@ -1641,7 +1643,7 @@ Missing/invalid region metadata fails the production validator and falls back ob
 
 ### Dependencies and OPEN blockers
 
-Depends on T10A and the accepted T5/T6 city-light/foot-anchor foundations; blocks final GET-139 visual acceptance. `OPEN-ART-005` owns final intensity/feather. `OPEN-ART-004`, `OPEN-ART-003`, `OPEN-ACC-001`, and `OPEN-PERF-001` may affect surrounding visual/performance acceptance but cannot grant tint gameplay authority.
+Depends on T10A and the accepted T5/T6 city-light/foot-anchor foundations; blocks final GET-139 visual acceptance. `OPEN-ART-005` owns final intensity/feather. `GDR-ART-014` already owns actor/world proportion and cannot grant tint gameplay authority; `OPEN-ACC-001` and `OPEN-PERF-001` may affect surrounding visual/performance acceptance. `GDR-ART-013` owns environment-state delivery only and cannot grant actor tint gameplay authority.
 
 ### Canonical decisions/spec sections
 

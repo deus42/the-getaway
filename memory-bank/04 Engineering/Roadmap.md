@@ -151,7 +151,7 @@ Ownership:
 
 - one mission-sized four-block rebuild, with an actual Blender proof gate before any live runtime replacement;
 - one master scene using named assets from the requester-owned Neo Tokyo 2 kit plus necessary project-owned public-realm gap fills;
-- street-first normal framing, human-scale actors, continuous street walls, three functional identities, three loops, one restrained landmark maximum, and a composed four-block overview;
+- street-first normal framing and the locked KitBash-blend human/door/sidewalk/street/building proportions, continuous street walls, three functional identities, three loops, one restrained landmark maximum, and a composed four-block overview;
 - blue-hour primary materials/light with coherent daylight and curfew variants;
 - accepted geometry back-propagated into shared collision, occlusion, masks, entrances, and anchors;
 - versioned flattened derivatives, recipe/manifests, and validators without raw vendor geometry or textures;
@@ -204,7 +204,7 @@ Ownership:
 - validated `64×96`, eight-direction, four-frame `idle/move/interact` sets;
 - cover-select/world/dialogue identity continuity.
 
-Exit gate: all matrices and anchors validate; actors are human-scale, readable without labels, grounded in the world, and visibly non-fantasy.
+Exit gate: all matrices and anchors validate; actors match `GDR-ART-014` at normal play (`68–80 px` visible protagonist alpha body at `1440×900` with the approved dock), share one world-locked base scale at every zoom, remain readable without labels, stay grounded in the world, and are visibly non-fantasy.
 
 ## Gate 7 — identity, abilities, Paranoia, research
 
