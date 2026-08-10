@@ -30,14 +30,6 @@ import {
 import type { Level0RunState } from '../runtime/types';
 import { isLevel0AnchorKnown } from '../runtime/mapKnowledge';
 import {
-  LEVEL0_AGENT_MOVE_EVENT,
-  LEVEL0_AGENT_MOVE_RESULT_EVENT,
-} from '../playtest/events';
-import type {
-  Level0AgentMoveDetail,
-  Level0AgentMoveResultDetail,
-} from '../playtest/events';
-import {
   LEVEL0_CONTACT_ACTOR_PRESENTATIONS,
   LEVEL0_ACTOR_INTERACTION_DURATION_MS,
   LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
@@ -86,6 +78,12 @@ import {
   Level0ThresholdAmbience,
   type AmbienceEmitterId,
 } from '../audio/thresholdAmbience';
+import {
+  LEVEL0_AGENT_MOVE_EVENT,
+  LEVEL0_AGENT_MOVE_RESULT_EVENT,
+  type Level0AgentMoveDetail,
+  type Level0AgentMoveResultDetail,
+} from '../playtest/events';
 
 export const LEVEL0_SCENE_KEY = 'Level0RuntimeScene';
 export const LEVEL0_MIN_ZOOM = 0.5;
@@ -288,6 +286,27 @@ export class Level0Scene extends Phaser.Scene {
   private pointerDownAt: { x: number; y: number; cameraX: number; cameraY: number } | null = null;
 
   private pointerDragged = false;
+
+  private readonly handleAgentMove = (event: Event): void => {
+    const detail = (event as CustomEvent<Level0AgentMoveDetail>).detail;
+    const validRequest = detail &&
+      typeof detail.requestId === 'string' &&
+      detail.requestId.length > 0 &&
+      Number.isFinite(detail.x) &&
+      Number.isFinite(detail.y);
+    const result = !validRequest
+      ? { accepted: false, reason: 'invalid-request' }
+      : this.runtime.isMovementPaused() || this.runtime.isObservationActive()
+        ? { accepted: false, reason: 'movement-paused' }
+        : this.acceptLayoutClick({ x: detail.x, y: detail.y });
+    const response: Level0AgentMoveResultDetail = {
+      requestId: validRequest ? detail.requestId : 'invalid-request',
+      ...result,
+    };
+    window.dispatchEvent(new CustomEvent(LEVEL0_AGENT_MOVE_RESULT_EVENT, {
+      detail: response,
+    }));
+  };
 
   constructor(runtime: Level0SceneRuntime) {
     super({ key: LEVEL0_SCENE_KEY });
@@ -1118,11 +1137,11 @@ export class Level0Scene extends Phaser.Scene {
     this.input.on('pointermove', this.handlePointerMove, this);
     this.input.on('pointerup', this.handlePointerUp, this);
     this.input.on('wheel', this.handleWheel, this);
-    window.addEventListener(LEVEL0_AGENT_MOVE_EVENT, this.handleAgentMove);
     window.addEventListener(
       LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
       this.handleActorInteractionPresentation
     );
+    window.addEventListener(LEVEL0_AGENT_MOVE_EVENT, this.handleAgentMove);
   }
 
   private teardownInput(): void {
@@ -1132,11 +1151,11 @@ export class Level0Scene extends Phaser.Scene {
     this.input.off('pointermove', this.handlePointerMove, this);
     this.input.off('pointerup', this.handlePointerUp, this);
     this.input.off('wheel', this.handleWheel, this);
-    window.removeEventListener(LEVEL0_AGENT_MOVE_EVENT, this.handleAgentMove);
     window.removeEventListener(
       LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
       this.handleActorInteractionPresentation
     );
+    window.removeEventListener(LEVEL0_AGENT_MOVE_EVENT, this.handleAgentMove);
   }
 
   private readKeyboardInput(): KeyboardInputState {
@@ -1258,25 +1277,6 @@ export class Level0Scene extends Phaser.Scene {
 
     this.acceptLayoutClick(layoutPoint);
   }
-
-  private readonly handleAgentMove = (event: Event): void => {
-    const detail = (event as CustomEvent<Level0AgentMoveDetail>).detail;
-    if (!detail || typeof detail.requestId !== 'string') {
-      return;
-    }
-    let result: { accepted: boolean; reason: string };
-    if (!Number.isFinite(detail.x) || !Number.isFinite(detail.y)) {
-      result = { accepted: false, reason: 'invalid-position' };
-    } else if (this.runtime.isMovementPaused()) {
-      result = { accepted: false, reason: 'movement-paused' };
-    } else {
-      result = this.acceptLayoutClick({ x: detail.x, y: detail.y });
-    }
-    window.dispatchEvent(new CustomEvent<Level0AgentMoveResultDetail>(
-      LEVEL0_AGENT_MOVE_RESULT_EVENT,
-      { detail: { requestId: detail.requestId, ...result } }
-    ));
-  };
 
   private acceptLayoutClick(layoutPoint: WorldPoint): { accepted: boolean; reason: string } {
     if (!this.movement) return { accepted: false, reason: 'scene-not-ready' };

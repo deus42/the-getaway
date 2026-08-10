@@ -135,13 +135,14 @@ describe('canonical Level 0 runtime entry', () => {
     expect(window.localStorage.getItem(PERSISTED_STATE_KEY)).toBeNull();
   });
 
-  it('uses the same canonical start path for the agent shortcut', async () => {
-    window.history.replaceState({}, '', '/?agent=1&agentStart=level0&fresh=1');
+  it('does not let the diagnostic agent query bypass visible New Game', async () => {
+    window.history.replaceState({}, '', '/?agent=1&gateRun=fixture-gate-run');
     render(<App />);
 
-    expect(await screen.findByTestId('level0-game-canvas')).toBeInTheDocument();
-    expect(store.getState().level0Runtime.run?.sessionId).toBeTruthy();
-    expect(screen.queryByTestId('level0-start-menu')).not.toBeInTheDocument();
+    expect(await screen.findByTestId('level0-start-menu')).toBeInTheDocument();
+    expect(screen.getByTestId('level0-gate-run-marker')).toHaveTextContent('fixture-gate-run');
+    expect(store.getState().level0Runtime.run).toBeNull();
+    expect(screen.queryByTestId('level0-game-canvas')).not.toBeInTheDocument();
   });
 
   it('applies safehouse actions and persists one operation-attempt baseline', async () => {

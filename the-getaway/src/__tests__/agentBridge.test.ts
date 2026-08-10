@@ -25,11 +25,12 @@ describe('getaway agent bridge', () => {
     delete window.__getawayAgent;
   });
 
-  it('is disabled unless ?agent=1 is present and production mode is absent', () => {
+  it('is available only to explicitly gated test fixtures', () => {
     expect(shouldEnableGetawayAgentBridge('', 'development')).toBe(false);
     expect(shouldEnableGetawayAgentBridge('?agent=0', 'development')).toBe(false);
     expect(shouldEnableGetawayAgentBridge('?agent=1', 'production')).toBe(false);
-    expect(shouldEnableGetawayAgentBridge('?agent=1', 'development')).toBe(true);
+    expect(shouldEnableGetawayAgentBridge('?agent=1', 'development')).toBe(false);
+    expect(shouldEnableGetawayAgentBridge('?agent=1', 'test')).toBe(true);
   });
 
   it('does not install a global bridge without the query gate', () => {
@@ -52,16 +53,17 @@ describe('getaway agent bridge', () => {
     expect(window.__getawayAgent).toBeUndefined();
   });
 
-  it('installs a QA-safe snapshot bridge in development mode', () => {
+  it('installs a fixture-only snapshot bridge in test mode', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     expect(window.__getawayAgent?.version).toBe('getaway-agent-v1');
     const snapshot = window.__getawayAgent?.snapshot();
     expect(snapshot?.schema).toBe('getaway_agent_snapshot_v1');
+    expect(snapshot?.evidenceClass).toBe('fixture-only');
     expect(snapshot?.player.position).toEqual(store.getState().player.data.position);
     expect(snapshot?.player.inventoryCount).toBe(store.getState().player.data.inventory.items.length);
     expect('inventory' in (snapshot?.player ?? {})).toBe(false);
@@ -155,7 +157,7 @@ describe('getaway agent bridge', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     const result = await window.__getawayAgent!.dispatch({ type: 'wait', ms: 1 });
@@ -184,7 +186,7 @@ describe('getaway agent bridge', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     const result = await window.__getawayAgent!.dispatch({ type: 'toggleStealth' });
@@ -202,7 +204,7 @@ describe('getaway agent bridge', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     const result = await window.__getawayAgent!.dispatch({ type: 'advanceMission' });
@@ -230,7 +232,7 @@ describe('getaway agent bridge', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     const result = await window.__getawayAgent!.dispatch({ type: 'continueMission' });
@@ -251,7 +253,7 @@ describe('getaway agent bridge', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     const result = await window.__getawayAgent!.dispatch({ type: 'triggerMissionFailure' });
@@ -270,7 +272,7 @@ describe('getaway agent bridge', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     const result = await window.__getawayAgent!.dispatch({ type: 'interactNpc', role: 'missing-contact' });
@@ -288,7 +290,7 @@ describe('getaway agent bridge', () => {
     const cleanup = installGetawayAgentBridge({
       store,
       search: '?agent=1',
-      nodeEnv: 'development',
+      nodeEnv: 'test',
     });
 
     const dialogueResult = await window.__getawayAgent!.dispatch({ type: 'waitForDialogue', timeoutMs: 0 });

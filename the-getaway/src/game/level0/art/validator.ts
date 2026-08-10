@@ -69,6 +69,12 @@ const polygonsEqual = (left: WorldPolygon, right: WorldPolygon): boolean =>
     return candidate !== undefined && pointsEqual(point, candidate);
   });
 
+const isSafeRelativePath = (path: string): boolean =>
+  path.length > 0 &&
+  !path.startsWith('/') &&
+  !path.includes('\\') &&
+  !path.split('/').includes('..');
+
 const polygonBounds = (polygon: WorldPolygon) => {
   const xs = polygon.map((point) => point.x);
   const ys = polygon.map((point) => point.y);
@@ -695,8 +701,8 @@ const get204PolygonArea = (polygon: WorldPolygon): number => Math.abs(
 ) / 2;
 
 /**
- * Validates the four-block named-source candidate. Visual quality still comes
- * from the actual Blender renders and later live evidence; this validator only
+ * Validates the accepted four-block named-source runtime. Visual quality still
+ * comes from actual Blender renders and live evidence; this validator only
  * prevents known scope, provenance, and registration regressions.
  */
 export const validateGet204MissionDistrictRecipe = (
@@ -707,10 +713,10 @@ export const validateGet204MissionDistrictRecipe = (
   if (
     recipe.schemaVersion !== 3 ||
     recipe.ticket !== 'GET-204' ||
-    recipe.acceptanceState !== 'FOUR_BLOCK_BLENDER_SOURCE_CANDIDATE' ||
-    recipe.usage !== 'candidate-evidence'
+    recipe.acceptanceState !== 'FOUR_BLOCK_BLENDER_SOURCE_ACCEPTED' ||
+    recipe.usage !== 'runtime'
   ) {
-    errors.push('GET-204 mission district must use the schema-v3 Blender source candidate contract');
+    errors.push('GET-204 mission district must use the accepted schema-v3 Blender source runtime contract');
   }
 
   if (
@@ -736,6 +742,24 @@ export const validateGet204MissionDistrictRecipe = (
     recipe.source.rawSourceCommitted !== false
   ) {
     errors.push('GET-204 source must remain the external Neo Tokyo 2 FBX pack with complete texture fallback priority');
+  }
+  const archives = Reflect.get(recipe.source, 'archives') as
+    Get204FullDistrictRecipe['source']['archives'] | undefined;
+  const geometry = archives?.geometry;
+  const textures = archives?.textures;
+  if (
+    !geometry ||
+    !textures ||
+    !isSafeRelativePath(geometry.relativePath) ||
+    geometry.byteSize <= 0 ||
+    !SHA256_PATTERN.test(geometry.sha256) ||
+    !isSafeRelativePath(textures.relativePath) ||
+    textures.byteSize <= 0 ||
+    !SHA256_PATTERN.test(textures.sha256) ||
+    textures.extractedRoot !== recipe.source.textureSearchRoots[0] ||
+    textures.fileCount <= 0
+  ) {
+    errors.push('GET-204 source archives require exact geometry and current texture provenance');
   }
   Object.entries(recipe.source.objectSuffixExclusions ?? {}).forEach(([prefix, suffixes]) => {
     if (
@@ -917,6 +941,21 @@ export const validateGet204MissionDistrictRecipe = (
     counts[cluster.sourcePrefix] = (counts[cluster.sourcePrefix] ?? 0) + 1;
     return counts;
   }, {});
+  const sourcePlanBounds = recipe.source.structuralPlanBoundsMeters ?? {};
+  if (!exactSetMatch(Object.keys(sourcePlanBounds), Object.keys(sourceUseCounts))) {
+    errors.push('GET-204 source-plan bounds must exactly cover registered architecture roots');
+  }
+  Object.entries(sourcePlanBounds).forEach(([sourcePrefix, bounds]) => {
+    if (
+      !/^(?:Small|Medium)[A-J]$/.test(sourcePrefix) ||
+      !Number.isFinite(bounds.width) ||
+      !Number.isFinite(bounds.depth) ||
+      bounds.width <= 0 ||
+      bounds.depth <= 0
+    ) {
+      errors.push(`GET-204 source-plan bounds are invalid for ${sourcePrefix}`);
+    }
+  });
   if (Object.keys(sourceUseCounts).length < recipe.composition.density.minimumDistinctSourceRoots) {
     errors.push('GET-204 source candidate does not use enough distinct kit roots');
   }
@@ -955,6 +994,12 @@ export const validateGet204MissionDistrictRecipe = (
       cluster.streetWallInsetMeters > 1.25
     ) {
       errors.push('GET-204 source candidate prohibits cropped or generated architecture');
+    }
+    if (
+      Number.isFinite(cluster.rotationDegrees) &&
+      Math.abs(cluster.rotationDegrees % 90) > 0.0001
+    ) {
+      errors.push(`cluster ${cluster.id} collision transform must be orthogonal`);
     }
     if (
       cluster.cropRectangle.width <= 0 ||
@@ -1085,8 +1130,8 @@ export const validateGet204MissionDistrictRecipe = (
     errors.push('GET-204 art must run on the normal Level 0 path');
   }
   if (
-    recipe.runtime.fallbackPolicy !== 'fail-visible-on-required-candidate-asset' ||
-    recipe.runtime.runtimeIdentity !== 'get204-four-block-source-candidate-v1' ||
+    recipe.runtime.fallbackPolicy !== 'fail-visible-on-required-runtime-asset' ||
+    recipe.runtime.runtimeIdentity !== 'get204-four-block-source-v1' ||
     !recipe.runtime.prohibitedQueryValues.includes('visualGate=get204-1') ||
     !recipe.runtime.prohibitedFallbackProfiles.includes('level0-greybox')
   ) {

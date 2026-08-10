@@ -2,8 +2,8 @@
   "schemaVersion": 3,
   "id": "get204-four-block-kitbash-mission-v1",
   "ticket": "GET-204",
-  "acceptanceState": "FOUR_BLOCK_BLENDER_SOURCE_CANDIDATE",
-  "usage": "candidate-evidence",
+  "acceptanceState": "FOUR_BLOCK_BLENDER_SOURCE_ACCEPTED",
+  "usage": "runtime",
   "references": [
     {
       "role": "approved-composition-previsualization",
@@ -37,6 +37,32 @@
     "format": "FBX",
     "textureSearchRoots": ["Textures", "jpeg images", "c4d/tex"],
     "objectSuffixExclusions": { "SmallD": ["Ads"] },
+    "archives": {
+      "geometry": {
+        "relativePath": "obj.zip",
+        "byteSize": 104163817,
+        "sha256": "802ec8c3d46afb61493df59c598492b516cec2b02285556dc9e1d0520dd1286f"
+      },
+      "textures": {
+        "relativePath": "Textures.zip",
+        "byteSize": 679323340,
+        "sha256": "4ca91a0e83605c8ea0efd94225586faccf3285477094290bee3211f10d37defd",
+        "extractedRoot": "Textures",
+        "fileCount": 142
+      }
+    },
+    "structuralPlanBoundsMeters": {
+      "SmallA": { "width": 30.864108, "depth": 23.769938 },
+      "SmallB": { "width": 30.469918, "depth": 24.543155 },
+      "SmallC": { "width": 31.902854, "depth": 29.075595 },
+      "SmallD": { "width": 66.680595, "depth": 39.569669 },
+      "SmallE": { "width": 28.159449, "depth": 26.747216 },
+      "SmallF": { "width": 34.606577, "depth": 22.773462 },
+      "SmallG": { "width": 39.464049, "depth": 21.755677 },
+      "SmallH": { "width": 34.371451, "depth": 32.712771 },
+      "SmallI": { "width": 39.707317, "depth": 42.799616 },
+      "SmallJ": { "width": 31.71013, "depth": 38.72355 }
+    },
     "rawSourceCommitted": false
   },
   "coordinateSystem": {
@@ -512,8 +538,8 @@
   },
   "runtime": {
     "enablement": "normal-level0-path",
-    "fallbackPolicy": "fail-visible-on-required-candidate-asset",
-    "runtimeIdentity": "get204-four-block-source-candidate-v1",
+    "fallbackPolicy": "fail-visible-on-required-runtime-asset",
+    "runtimeIdentity": "get204-four-block-source-v1",
     "prohibitedQueryValues": ["visualGate=get204-1"],
     "prohibitedFallbackProfiles": ["level0-greybox"]
   },

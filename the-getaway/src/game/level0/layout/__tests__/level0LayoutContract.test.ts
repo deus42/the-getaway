@@ -6,6 +6,10 @@ import {
   validateLevel0LayoutContract,
 } from '../validator';
 import { LEVEL0_DIRECT_MOVEMENT_SPEED } from '../../movement/directMovement';
+import {
+  GET204_CITY_RECIPE,
+  resolveGet204ClusterCollisionFootprint,
+} from '../../art/get204City';
 
 const REQUIRED_ANCHOR_IDS = [
   'safehouse.boundary',
@@ -46,7 +50,7 @@ describe('Level0LayoutContract', () => {
     }, 0);
 
   it('uses the approved four-block source contract and canonical 2:1 projection', () => {
-    expect(LEVEL0_LAYOUT_CONTRACT.id).toBe('level0-get204-four-block-source-candidate-v1');
+    expect(LEVEL0_LAYOUT_CONTRACT.id).toBe('level0-get204-four-block-source-v1');
     expect(LEVEL0_LAYOUT_CONTRACT.schemaVersion).toBe(3);
     expect(LEVEL0_LAYOUT_CONTRACT.projection).toEqual({
       tileWidth: 64,
@@ -93,7 +97,7 @@ describe('Level0LayoutContract', () => {
     expect(LEVEL0_LAYOUT_CONTRACT.droneRegions[0]?.launchAnchorId).toBe('drone.launch');
   });
 
-  it('locks dense named mass across the three mission districts', () => {
+  it('locks measured named collision mass across the three mission districts', () => {
     const districtArea = polygonArea(LEVEL0_LAYOUT_CONTRACT.bounds);
     const buildingArea = LEVEL0_LAYOUT_CONTRACT.buildingFootprints.reduce(
       (sum, footprint) => sum + polygonArea(footprint.polygon),
@@ -107,7 +111,8 @@ describe('Level0LayoutContract', () => {
       'zone.logistics-civic-control',
     ]);
     expect(LEVEL0_LAYOUT_CONTRACT.buildingFootprints).toHaveLength(16);
-    expect(buildingArea / districtArea).toBeGreaterThanOrEqual(0.55);
+    expect(buildingArea / districtArea).toBeGreaterThanOrEqual(0.35);
+    expect(buildingArea / districtArea).toBeLessThan(0.4);
     expect(footprintIds.filter((id) => id.startsWith('cluster.safehouse.'))).toHaveLength(4);
     expect(footprintIds.filter((id) => id.startsWith('cluster.public.'))).toHaveLength(4);
     expect(footprintIds.filter((id) => id.startsWith('cluster.logistics.'))).toHaveLength(4);
@@ -130,12 +135,13 @@ describe('Level0LayoutContract', () => {
     )!;
 
     expect(polygonArea(threshold.polygon)).toBe(14);
-    expect(safehouse.polygon).toEqual([
-      { x: 2, y: 32.6 },
-      { x: 12, y: 32.6 },
-      { x: 12, y: 41.5 },
-      { x: 2, y: 41.5 },
-    ]);
+    const safehouseCluster = GET204_CITY_RECIPE.architecturalClusters.find(
+      ({ id }) => id === 'cluster.safehouse.home'
+    )!;
+    expect(safehouse.polygon).toEqual(
+      resolveGet204ClusterCollisionFootprint(safehouseCluster)
+    );
+    expect(safehouse.polygon).not.toEqual(safehouseCluster.footprint);
     expect(entrance.position).toEqual({ x: 13, y: 36.5 });
 
     [
@@ -249,6 +255,33 @@ describe('Level0LayoutContract', () => {
 
     expect(validateLevel0LayoutContract(overlap)).toContain(
       'building footprints cluster.safehouse.home and building.test.custom-overlap overlap'
+    );
+  });
+
+  it('rejects walkable pockets disconnected from the safehouse', () => {
+    const disconnected = cloneContract();
+    const walls = [
+      [{ x: 14, y: 35 }, { x: 17, y: 35 }, { x: 17, y: 35.5 }, { x: 14, y: 35.5 }],
+      [{ x: 14, y: 38.5 }, { x: 17, y: 38.5 }, { x: 17, y: 39 }, { x: 14, y: 39 }],
+      [{ x: 14, y: 35.5 }, { x: 14.5, y: 35.5 }, { x: 14.5, y: 38.5 }, { x: 14, y: 38.5 }],
+      [{ x: 16.5, y: 35.5 }, { x: 17, y: 35.5 }, { x: 17, y: 38.5 }, { x: 16.5, y: 38.5 }],
+    ];
+    walls.forEach((polygon, index) => {
+      disconnected.buildingFootprints.push({
+        id: `building.test.pocket-wall-${index}`,
+        function: 'test-only',
+        polygon,
+        height: 1,
+      });
+      disconnected.occluders.push(polygon.map((point) => ({ ...point })));
+    });
+
+    expect(validateLevel0LayoutContract(disconnected)).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(
+          /^walkable geometry has \d+ disconnected quarter-unit samples from safehouse\.spawn$/
+        ),
+      ])
     );
   });
 

@@ -125,6 +125,7 @@ const emptySnapshot = (state: ReturnType<Level0AgentStore['getState']>): Getaway
 
   return {
     schema: 'getaway_agent_snapshot_v1',
+    evidenceClass: 'fixture-only',
     bridgeVersion: GETAWAY_AGENT_VERSION,
     timestamp: new Date().toISOString(),
     url: typeof window === 'undefined' ? null : window.location.href,

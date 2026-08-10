@@ -23,12 +23,22 @@ import type {
   Level0ResearchOptionId,
 } from '../../game/level0/rpg/types';
 import {
-  GETAWAY_AGENT_START_LEVEL0_EVENT,
-  LEVEL0_AGENT_INTERACTION_EVENT,
-  LEVEL0_AGENT_RESTART_ATTEMPT_EVENT,
-  installLevel0AgentBridge,
-} from '../../game/level0/playtest/level0AgentBridge';
-import type { Level0AgentInteractionDetail } from '../../game/level0/playtest/events';
+  installLevel0PlaytestObserver,
+  resolveLevel0GateRunMarker,
+} from '../../game/level0/playtest/level0PlaytestObserverV2';
+import {
+  GET204_GATE_BLOCK_IDS,
+  GET204_GATE_ROUTE_CHECKPOINTS,
+  appendVisitedGet204GateBlock,
+  resolveGet204GateBlockId,
+  resolveNextGet204GateWaypoint,
+  type Get204GateBlockId,
+} from '../../game/level0/playtest/level0GateCoverage';
+import {
+  LEVEL0_AGENT_MOVE_EVENT,
+  LEVEL0_AGENT_MOVE_RESULT_EVENT,
+  type Level0AgentMoveResultDetail,
+} from '../../game/level0/playtest/events';
 import {
   LEVEL0_ACTOR_INTERACTION_PRESENTATION_EVENT,
   type Level0ActorInteractionPresentationDetail,
@@ -314,7 +324,16 @@ const Level0RuntimeShell = () => {
   const [characterOpen, setCharacterOpen] = useState(false);
   const [bibleOpen, setBibleOpen] = useState(false);
   const [pendingSafehouseAction, setPendingSafehouseAction] = useState<PendingSafehouseAction | null>(null);
-  const agentStartedRef = useRef(false);
+  const [gateBlockCoverage, setGateBlockCoverage] = useState<{
+    sessionId: string | null;
+    visited: readonly Get204GateBlockId[];
+  }>({ sessionId: null, visited: [] });
+  const [gateCollisionRoute, setGateCollisionRoute] = useState<{
+    sessionId: string | null;
+    completed: number;
+    pendingIndex: number | null;
+    error: string | null;
+  }>({ sessionId: null, completed: 0, pendingIndex: null, error: null });
   const newGameTriggerRef = useRef<HTMLButtonElement>(null);
   const coverSelectWasOpenRef = useRef(false);
   const characterTriggerRef = useRef<HTMLButtonElement>(null);
@@ -338,6 +357,141 @@ const Level0RuntimeShell = () => {
   const terminalMission = run?.mission === 'L0_FAILED' || run?.mission === 'L0_COMPLETE';
   const movementPaused = (run?.worldClock.pauseOwners.length ?? 0) > 0 || terminalMission;
   const ukrainian = locale === 'uk';
+  const gateRunMarker = typeof window === 'undefined'
+    ? null
+    : resolveLevel0GateRunMarker(window.location.search, process.env.NODE_ENV);
+  const gateCurrentBlockId = run ? resolveGet204GateBlockId(run.player.position) : null;
+  const visibleGateBlockCoverage = gateCurrentBlockId
+    ? appendVisitedGet204GateBlock(
+        gateBlockCoverage.sessionId === runSessionId ? gateBlockCoverage.visited : [],
+        run!.player.position
+      )
+    : [];
+  const gateWaypoint = run
+    ? resolveNextGet204GateWaypoint(visibleGateBlockCoverage, run.player.position)
+    : null;
+  const visibleGateRouteCompleted = gateCollisionRoute.sessionId === runSessionId
+    ? gateCollisionRoute.completed
+    : 0;
+  const visibleGateRoutePending = gateCollisionRoute.sessionId === runSessionId
+    ? gateCollisionRoute.pendingIndex
+    : null;
+  const gateRouteCheckpoint = GET204_GATE_ROUTE_CHECKPOINTS[visibleGateRouteCompleted] ?? null;
+  const gateCollisionRouteComplete =
+    visibleGateRouteCompleted === GET204_GATE_ROUTE_CHECKPOINTS.length;
+
+  const requestGateRouteCheckpoint = () => {
+    if (
+      !gateRunMarker || !runSessionId || !gateRouteCheckpoint ||
+      visibleGateRoutePending !== null || !sceneReady || menuOpen || movementPaused
+    ) return;
+    const pendingIndex = visibleGateRouteCompleted;
+    const requestId = `gate-route-${gateRunMarker}-${runSessionId}-${pendingIndex}`;
+    setGateCollisionRoute({
+      sessionId: runSessionId,
+      completed: visibleGateRouteCompleted,
+      pendingIndex,
+      error: null,
+    });
+    const acknowledgementTimeout = window.setTimeout(() => {
+      window.removeEventListener(LEVEL0_AGENT_MOVE_RESULT_EVENT, handleResult);
+      setGateCollisionRoute((current) => current.sessionId === runSessionId &&
+        current.pendingIndex === pendingIndex
+        ? { ...current, pendingIndex: null, error: 'SCENE DID NOT ACKNOWLEDGE CHECKPOINT' }
+        : current);
+    }, 1_000);
+    const handleResult = (event: Event) => {
+      const detail = (event as CustomEvent<Level0AgentMoveResultDetail>).detail;
+      if (detail?.requestId !== requestId) return;
+      window.clearTimeout(acknowledgementTimeout);
+      window.removeEventListener(LEVEL0_AGENT_MOVE_RESULT_EVENT, handleResult);
+      if (detail.accepted) return;
+      setGateCollisionRoute((current) => current.sessionId === runSessionId &&
+        current.pendingIndex === pendingIndex
+        ? { ...current, pendingIndex: null, error: `CHECKPOINT REJECTED: ${detail.reason}` }
+        : current);
+    };
+    window.addEventListener(LEVEL0_AGENT_MOVE_RESULT_EVENT, handleResult);
+    window.dispatchEvent(new CustomEvent(LEVEL0_AGENT_MOVE_EVENT, {
+      detail: { requestId, ...gateRouteCheckpoint.position },
+    }));
+  };
+
+  const gateRunMarkerElement = gateRunMarker ? (
+    <aside className="level0-gate-run-marker" data-testid="level0-gate-run-marker">
+      <strong>AI GAMER / {gateRunMarker}</strong>
+      {gateCurrentBlockId ? (
+        <>
+          <span data-testid="level0-gate-block-coverage">
+            CURRENT BLOCK {gateCurrentBlockId} / BLOCK COVERAGE {visibleGateBlockCoverage.length}/
+            {GET204_GATE_BLOCK_IDS.length}: {visibleGateBlockCoverage.join(', ')}
+          </span>
+          {gateWaypoint ? (
+            <span data-testid="level0-gate-next-block">
+              NEXT BLOCK {gateWaypoint.blockId} / MOVE {gateWaypoint.direction} via the central cross street
+            </span>
+          ) : (
+            <span data-testid="level0-gate-next-block">ALL FOUR BLOCKS VISITED</span>
+          )}
+          <span data-testid="level0-gate-collision-route">
+            COLLISION ROUTE {visibleGateRouteCompleted}/{GET204_GATE_ROUTE_CHECKPOINTS.length}
+            {gateCollisionRouteComplete
+              ? ' / CITY COLLISION ROUTE COMPLETE'
+              : ` / NEXT COLLISION CHECKPOINT ${gateRouteCheckpoint?.label ?? 'unavailable'}`}
+          </span>
+          {!gateCollisionRouteComplete && gateRouteCheckpoint ? (
+            <button
+              type="button"
+              className="level0-gate-run-marker__route"
+              disabled={
+                visibleGateRoutePending !== null || !sceneReady || menuOpen || movementPaused
+              }
+              onClick={requestGateRouteCheckpoint}
+            >
+              {visibleGateRoutePending === visibleGateRouteCompleted
+                ? `MOVING TO ${gateRouteCheckpoint.label}`
+                : `MOVE TO ${gateRouteCheckpoint.label}`}
+            </button>
+          ) : null}
+          {gateCollisionRoute.sessionId === runSessionId && gateCollisionRoute.error ? (
+            <span data-testid="level0-gate-route-error">{gateCollisionRoute.error}</span>
+          ) : null}
+        </>
+      ) : null}
+    </aside>
+  ) : null;
+
+  useEffect(() => {
+    if (!gateRunMarker || !runSessionId || !run) return;
+    setGateBlockCoverage((current) => {
+      const visited = current.sessionId === runSessionId ? current.visited : [];
+      const next = appendVisitedGet204GateBlock(visited, run.player.position);
+      return current.sessionId === runSessionId && next === visited
+        ? current
+        : { sessionId: runSessionId, visited: next };
+    });
+  }, [gateRunMarker, run, runSessionId]);
+
+  useEffect(() => {
+    if (!gateRunMarker || !runSessionId || !run) return;
+    setGateCollisionRoute((current) => {
+      if (current.sessionId !== runSessionId) {
+        return { sessionId: runSessionId, completed: 0, pendingIndex: null, error: null };
+      }
+      if (current.pendingIndex === null) return current;
+      const target = GET204_GATE_ROUTE_CHECKPOINTS[current.pendingIndex]?.position;
+      if (!target || Math.hypot(
+        run.player.position.x - target.x,
+        run.player.position.y - target.y
+      ) > 0.25) return current;
+      return {
+        sessionId: runSessionId,
+        completed: current.pendingIndex + 1,
+        pendingIndex: null,
+        error: null,
+      };
+    });
+  }, [gateRunMarker, run, runSessionId]);
 
   const persistCurrentRun = useCallback(() => {
     const storage = getStorage();
@@ -391,10 +545,6 @@ const Level0RuntimeShell = () => {
     setCoverSelectOpen(false);
     setMenuOpen(true);
   }, []);
-
-  const startAgentGame = useCallback(() => {
-    initializeNewRun('cover.neighbor');
-  }, [initializeNewRun]);
 
   const continueGame = useCallback(() => {
     if (run) {
@@ -793,40 +943,11 @@ const Level0RuntimeShell = () => {
     runSessionId,
   ]);
 
-  useEffect(() => {
-    if (typeof window === 'undefined' || agentStartedRef.current) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('agent') === '1' && params.get('agentStart') === 'level0') {
-      agentStartedRef.current = true;
-      if (params.get('fresh') === '1' || !entryState.compatibleAutosave) startAgentGame();
-      else continueGame();
-    }
-  }, [continueGame, entryState.compatibleAutosave, startAgentGame]);
-
-  useEffect(() => installLevel0AgentBridge({
+  useEffect(() => installLevel0PlaytestObserver({
     store,
-    nodeEnv: window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'development'
-      : 'production',
+    nodeEnv: process.env.NODE_ENV,
     getGameBibleUiState: () => bibleUiStateRef.current,
   }), []);
-
-  useEffect(() => {
-    const startFromAgent = () => startAgentGame();
-    const restartFromAgent = () => restartOperationAttempt();
-    const interactFromAgent = (event: Event) => {
-      const detail = (event as CustomEvent<Level0AgentInteractionDetail>).detail;
-      handleInteraction(detail?.anchorId);
-    };
-    window.addEventListener(GETAWAY_AGENT_START_LEVEL0_EVENT, startFromAgent);
-    window.addEventListener(LEVEL0_AGENT_RESTART_ATTEMPT_EVENT, restartFromAgent);
-    window.addEventListener(LEVEL0_AGENT_INTERACTION_EVENT, interactFromAgent);
-    return () => {
-      window.removeEventListener(GETAWAY_AGENT_START_LEVEL0_EVENT, startFromAgent);
-      window.removeEventListener(LEVEL0_AGENT_RESTART_ATTEMPT_EVENT, restartFromAgent);
-      window.removeEventListener(LEVEL0_AGENT_INTERACTION_EVENT, interactFromAgent);
-    };
-  }, [handleInteraction, restartOperationAttempt, startAgentGame]);
 
   const clockEventSignature = runtime.clockEventIds.join('|');
   useEffect(() => {
@@ -862,11 +983,14 @@ const Level0RuntimeShell = () => {
 
   if (coverSelectOpen) {
     return (
-      <Level0CoverSelect
-        ukrainian={ukrainian}
-        onCancel={cancelCoverSelect}
-        onConfirm={initializeNewRun}
-      />
+      <>
+        <Level0CoverSelect
+          ukrainian={ukrainian}
+          onCancel={cancelCoverSelect}
+          onConfirm={initializeNewRun}
+        />
+        {gateRunMarkerElement}
+      </>
     );
   }
 
@@ -953,6 +1077,7 @@ const Level0RuntimeShell = () => {
             onUiStateChange={(state) => { bibleUiStateRef.current = state; }}
           />
         ) : null}
+        {gateRunMarkerElement}
       </>
     );
   }
@@ -1259,6 +1384,7 @@ const Level0RuntimeShell = () => {
       <span className="level0-runtime__storage" aria-hidden="true">
         {LEVEL0_AUTOSAVE_KEY} / {LEVEL0_ATTEMPT_BASELINE_KEY}
       </span>
+      {gateRunMarkerElement}
     </main>
   );
 };

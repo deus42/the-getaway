@@ -155,16 +155,18 @@ const nearestWalkableCell = (
   return null;
 };
 
-export const findDisconnectedRequiredAnchors = (
+type WalkableReachability = {
+  bounds: ReturnType<typeof getPolygonExtents>;
+  visited: Set<string>;
+};
+
+const collectReachableWalkableCells = (
   contract: Level0LayoutContract,
-  startAnchorId: string,
-  requiredAnchorIds: readonly string[]
-): string[] => {
+  startAnchorId: string
+): WalkableReachability | null => {
   const startAnchor = findAnchor(contract, startAnchorId);
   const start = startAnchor ? nearestWalkableCell(contract, startAnchor.position) : null;
-  if (!start) {
-    return [...requiredAnchorIds];
-  }
+  if (!start) return null;
 
   const bounds = getPolygonExtents(contract.bounds);
   const queue: WorldPoint[] = [start];
@@ -196,11 +198,73 @@ export const findDisconnectedRequiredAnchors = (
     });
   }
 
-  return requiredAnchorIds.filter((anchorId) => {
-    const anchor = findAnchor(contract, anchorId);
-    const cell = anchor ? nearestWalkableCell(contract, anchor.position) : null;
-    return !cell || !visited.has(pointKey(cell));
-  });
+  return { bounds, visited };
+};
+
+const findDisconnectedRequiredAnchorsFromReachability = (
+  contract: Level0LayoutContract,
+  requiredAnchorIds: readonly string[],
+  reachability: WalkableReachability
+): string[] => requiredAnchorIds.filter((anchorId) => {
+  const anchor = findAnchor(contract, anchorId);
+  const cell = anchor ? nearestWalkableCell(contract, anchor.position) : null;
+  return !cell || !reachability.visited.has(pointKey(cell));
+});
+
+export const findDisconnectedRequiredAnchors = (
+  contract: Level0LayoutContract,
+  startAnchorId: string,
+  requiredAnchorIds: readonly string[]
+): string[] => {
+  const reachability = collectReachableWalkableCells(contract, startAnchorId);
+  if (!reachability) {
+    return [...requiredAnchorIds];
+  }
+
+  return findDisconnectedRequiredAnchorsFromReachability(
+    contract,
+    requiredAnchorIds,
+    reachability
+  );
+};
+
+const findDisconnectedWalkableSamplesFromReachability = (
+  contract: Level0LayoutContract,
+  reachability: WalkableReachability
+): WorldPoint[] => {
+  const disconnected: WorldPoint[] = [];
+  const step = LEVEL0_REACHABILITY_SAMPLE_STEP;
+  const columns = Math.round((reachability.bounds.maxX - reachability.bounds.minX) / step);
+  const rows = Math.round((reachability.bounds.maxY - reachability.bounds.minY) / step);
+  for (let row = 0; row <= rows; row += 1) {
+    for (let column = 0; column <= columns; column += 1) {
+      const point = {
+        x: reachability.bounds.minX + column * step,
+        y: reachability.bounds.minY + row * step,
+      };
+      if (
+        !reachability.visited.has(pointKey(point)) &&
+        isPointWalkableWithClearance(contract, point)
+      ) {
+        disconnected.push(point);
+      }
+    }
+  }
+
+  return disconnected;
+};
+
+export const findDisconnectedWalkableSamples = (
+  contract: Level0LayoutContract,
+  startAnchorId: string
+): WorldPoint[] => {
+  const reachability = collectReachableWalkableCells(contract, startAnchorId);
+  if (!reachability) {
+    throw new Error(
+      `Cannot audit city reachability without a walkable start anchor: ${startAnchorId}`
+    );
+  }
+  return findDisconnectedWalkableSamplesFromReachability(contract, reachability);
 };
 
 const duplicateIds = (ids: string[]): string[] => {
@@ -488,9 +552,30 @@ export const validateLevel0LayoutContract = (
   const requiredAnchorIds = contract.anchors
     .filter((anchor) => anchor.required)
     .map((anchor) => anchor.id);
-  findDisconnectedRequiredAnchors(contract, 'safehouse.spawn', requiredAnchorIds).forEach(
-    (anchorId) => errors.push(`required anchor ${anchorId} is disconnected from safehouse.spawn`)
-  );
+  const reachability = collectReachableWalkableCells(contract, 'safehouse.spawn');
+  if (!reachability) {
+    requiredAnchorIds.forEach((anchorId) => {
+      errors.push(`required anchor ${anchorId} is disconnected from safehouse.spawn`);
+    });
+    errors.push('city-wide reachability audit requires a walkable safehouse.spawn anchor');
+  } else {
+    findDisconnectedRequiredAnchorsFromReachability(
+      contract,
+      requiredAnchorIds,
+      reachability
+    ).forEach((anchorId) => {
+      errors.push(`required anchor ${anchorId} is disconnected from safehouse.spawn`);
+    });
+    const disconnectedSamples = findDisconnectedWalkableSamplesFromReachability(
+      contract,
+      reachability
+    );
+    if (disconnectedSamples.length > 0) {
+      errors.push(
+        `walkable geometry has ${disconnectedSamples.length} disconnected quarter-unit samples from safehouse.spawn`
+      );
+    }
+  }
 
   return [...new Set(errors)];
 };

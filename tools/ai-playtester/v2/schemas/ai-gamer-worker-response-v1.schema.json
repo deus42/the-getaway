@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ai_gamer_worker_response_v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "outcome",
+    "visibleGoalMet",
+    "summary",
+    "warnings",
+    "regression",
+    "blocker"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "ai_gamer_worker_response_v1"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": ["pass", "fail", "blocked"]
+    },
+    "visibleGoalMet": { "type": "boolean" },
+    "summary": { "type": "string", "minLength": 1 },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "regression": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "title", "observed", "attempts", "reproduction"],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": ["crash", "softlock", "incorrect-transition", "visible-input-failure"]
+            },
+            "title": { "type": "string", "minLength": 1 },
+            "observed": { "type": "string", "minLength": 1 },
+            "attempts": { "type": "integer", "minimum": 1 },
+            "reproduction": {
+              "anyOf": [
+                { "type": "null" },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["tool", "target"],
+                  "properties": {
+                    "tool": {
+                      "type": "string",
+                      "enum": ["click", "press_key"]
+                    },
+                    "target": {
+                      "type": "string",
+                      "pattern": "^(element|key):[^\\s]+$"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "blocker": {
+      "anyOf": [
+        { "type": "null" },
+        { "type": "string", "minLength": 1 }
+      ]
+    }
+  }
+}

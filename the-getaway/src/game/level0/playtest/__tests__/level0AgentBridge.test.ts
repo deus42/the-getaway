@@ -32,7 +32,7 @@ describe('Level 0 agent bridge', () => {
     const uninstall = installLevel0AgentBridge({ store, search: '?agent=1', nodeEnv: 'test' });
     const snapshot = window.__getawayAgent?.snapshot();
 
-    expect(snapshot?.world.areaId).toBe('level0-get204-four-block-source-candidate-v1');
+    expect(snapshot?.world.areaId).toBe('level0-get204-four-block-source-v1');
     expect(snapshot?.world.map.width).toBe(58);
     expect(snapshot?.player.position).toEqual({ x: 16, y: 32 });
     expect(snapshot?.player.name).toBe('The Neighbor');
@@ -91,7 +91,7 @@ describe('Level 0 agent bridge', () => {
       ).accepted
     );
     expect(rejected).toEqual([]);
-    expect(snapshot.world.map.nearbyWalkableTiles).not.toContainEqual({ x: 15, y: 9 });
+    expect(snapshot.world.map.nearbyWalkableTiles).not.toContainEqual({ x: 17, y: 9 });
     uninstall();
   });
 

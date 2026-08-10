@@ -118,10 +118,57 @@ const clusterHeight = (sourcePrefix: string): number => {
   return 7;
 };
 
+const polygonBounds = (polygon: WorldPolygon) => ({
+  left: Math.min(...polygon.map(({ x }) => x)),
+  right: Math.max(...polygon.map(({ x }) => x)),
+  top: Math.min(...polygon.map(({ y }) => y)),
+  bottom: Math.max(...polygon.map(({ y }) => y)),
+});
+
+/**
+ * Mirrors the accepted Blender placement calculation. The authored footprint
+ * remains the placement parcel; gameplay collision uses the measured source
+ * plan seated within that parcel.
+ */
+export const resolveGet204ClusterCollisionFootprint = (
+  cluster: Get204RegisteredArchitecturalCluster
+): WorldPolygon => {
+  const sourceBounds = GET204_CITY_RECIPE.source.structuralPlanBoundsMeters[
+    cluster.sourcePrefix
+  ];
+  if (!sourceBounds) {
+    throw new Error(`GET-204 cluster ${cluster.id} has no measured source-plan bounds`);
+  }
+
+  const rotation = ((cluster.rotationDegrees % 360) + 360) % 360;
+  if (rotation % 90 !== 0) {
+    throw new Error(`GET-204 cluster ${cluster.id} requires an orthogonal collision transform`);
+  }
+
+  const swapPlanAxes = rotation === 90 || rotation === 270;
+  const unit = GET204_CITY_RECIPE.coordinateSystem.layoutUnitMeters;
+  const width = (
+    swapPlanAxes ? sourceBounds.depth : sourceBounds.width
+  ) * cluster.uniformScale / unit;
+  const depth = (
+    swapPlanAxes ? sourceBounds.width : sourceBounds.depth
+  ) * cluster.uniformScale / unit;
+  const inset = cluster.streetWallInsetMeters / unit;
+  const parcel = polygonBounds(cluster.footprint);
+  const left = cluster.placementAnchor.endsWith('west')
+    ? parcel.left + inset
+    : parcel.right - inset - width;
+  const top = cluster.placementAnchor.startsWith('north')
+    ? parcel.top + inset
+    : parcel.bottom - inset - depth;
+
+  return rect(left, top, left + width, top + depth);
+};
+
 const buildingFootprints: Level0BuildingFootprint[] =
   GET204_CITY_RECIPE.architecturalClusters.map((cluster) => ({
     id: cluster.id,
-    polygon: cluster.footprint,
+    polygon: resolveGet204ClusterCollisionFootprint(cluster),
     height: clusterHeight(cluster.sourcePrefix),
     function: `${cluster.subdistrictId}:${cluster.role}`,
   }));
@@ -163,7 +210,7 @@ const entranceAnchor = (id: string): Level0Anchor => {
 };
 
 export const GET204_CITY_LAYOUT: Level0LayoutContract = {
-  id: 'level0-get204-four-block-source-candidate-v1',
+  id: 'level0-get204-four-block-source-v1',
   schemaVersion: 3,
   projection: {
     tileWidth: 64,

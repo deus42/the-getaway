@@ -24,7 +24,7 @@ Intentional local overrides to Vault defaults:
 - Shared execution, Never Guess, task continuity, reporting, and verification policy lives in the Vault Agent Operating System.
 - During Superpowers brainstorming, treat the local visual companion as pre-approved. When upcoming choices would benefit from browser mockups, diagrams, or side-by-side comparisons, open and use it automatically without asking for consent or repeating token-cost or local-URL warnings. Keep text-only questions in text, and honor an explicit opt-out for the current ask.
 - Before model-sensitive routing or claims, inspect current session/runtime metadata, the relevant local config or model-list command, and current official provider documentation. Treat model IDs, aliases, availability, context, pricing, reasoning controls, and tool support as volatile; mark stale or unavailable evidence explicitly and never silently substitute a different model.
-- Treat `yarn playtest:agent -- --codex` as a harness selection flag, not proof of an exact backing model. Record the effective model from current runtime/session evidence when model identity affects cost, capability, privacy, or acceptance.
+- The AI Gamer gate must pin each fresh Computer Use worker to the exact reviewed model and reasoning level. The requested CLI arguments alone are not model provenance: require current catalog/runtime evidence, fail closed on aliasing or fallback, and record the proven worker model in the gate report.
 - Keep the existing player-visible evidence gate: live playtesting and rendered screenshots outrank fixture, synthetic, or configuration-only success.
 
 ## Commit Identity Hygiene
@@ -148,9 +148,9 @@ Total Jest statement and line coverage must remain above 80%. Resolve regression
 
 For every `Feature` or `Improvement`, also run:
 
-`yarn playtest:agent -- --profile guided-level0 --max-steps 20 --codex`
+`yarn playtest:agent -- --ticket GET-XXX --mode closeout`
 
-Inspect the newest report under `reports/ai-playtests/`, address or explicitly defer each actionable in-scope finding, rerun when a fix changes behavior, and record the report path. `Bug` tasks run the AI gamer only when its scope needs it or the requester asks.
+Use `yarn playtest:agent -- --ticket GET-XXX --mode affected` as the normal development regression gate. Inspect the newest V2 report under `reports/ai-playtests/`, address or explicitly defer each actionable in-scope finding, rerun when a fix changes behavior, and record the report path. Only `pass` satisfies the gate; `fail` is a proven product regression and `blocked` is an operational/evidence failure that remains incomplete. `Bug` tasks run the AI Gamer only when their scope needs it or the requester asks.
 
 The Definition of Done is implementation + documentation + accepted live evidence + clean required checks + authorized commit + Linear summary + requester verification. A green fixture, contract matrix, or simulated agent state is not a substitute for live proof.
 

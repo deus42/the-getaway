@@ -1,68 +1,185 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import {
+  closeSync,
+  existsSync,
+  openSync,
+  readFileSync,
+  readSync,
+  readdirSync,
+  statSync,
+} from 'node:fs';
+import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { LEVEL0_LAYOUT_CONTRACT } from '../src/content/levels/level0/layoutContract';
+import { GET204_CITY_RUNTIME } from '../src/game/level0/art/get204City';
 import type {
-  Level0ArtManifest,
-  Level0SceneRecipe,
-  Level0SourceManifest,
+  Get204FullDistrictRecipe,
 } from '../src/game/level0/art/types';
-import {
-  validateLevel0ArtBundle,
-  validateLevel0SourceAndRecipe,
-} from '../src/game/level0/art/validator';
+import { validateGet204MissionDistrictRecipe } from '../src/game/level0/art/validator';
+import type { WorldPolygon } from '../src/game/level0/layout/types';
 import { validateLevel0LayoutContract } from '../src/game/level0/layout/validator';
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url));
 const repositoryRoot = resolve(scriptDirectory, '..', '..');
-const sourceManifestPath = resolve(
+const appPublicRoot = resolve(repositoryRoot, 'the-getaway/public');
+const missionDistrictRecipePath = resolve(
   repositoryRoot,
-  'art/blender/get204/manifests/source-manifest.json'
-);
-const sceneRecipePath = resolve(
-  repositoryRoot,
-  'art/blender/get204/manifests/scene-recipe.json'
+  'art/blender/get204/manifests/mission-district-rebuild.json'
 );
 const layoutExportPath = resolve(
   repositoryRoot,
   'art/iso-assets/contracts/level0-layout-contract.json'
 );
-const alignedExportRoot = resolve(
+const generatedMissionRoot = resolve(
   repositoryRoot,
-  'art/blender/get204/.generated/aligned-export'
+  'art/blender/get204/.generated/mission-district'
 );
-const alignedArtManifestPath = resolve(alignedExportRoot, 'art-manifest.json');
+const missionDistrictMetadataPath = resolve(generatedMissionRoot, 'metadata.json');
 
-const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
+interface MissionDistrictMetadata {
+  schemaVersion: number;
+  id: string;
+  ticket: string;
+  acceptanceState: string;
+  recipe: { path: string; sha256: string };
+  references: Get204FullDistrictRecipe['references'];
+  architecturalClusters: Array<{
+    id: string;
+    sourcePrefix: string;
+    artSource: string;
+    sourceObjectCount: number;
+    resolvedScale: number;
+    instanceCount: number;
+    placementAnchor: string;
+    streetWallInsetMeters: number;
+    collisionFootprint: WorldPolygon;
+    placedDimensionsMeters: [number, number, number];
+  }>;
+  sourcePropPlacements: Array<{
+    id: string;
+    sourcePrefix: string;
+    objectCount: number;
+  }>;
+  outputs: Array<{ path: string; sha256: string; bytes: number }>;
+  scene: string;
+  commitBoundary: Get204FullDistrictRecipe['commitBoundary'];
+}
 
-const sha256 = (bytes: Buffer): string => createHash('sha256').update(bytes).digest('hex');
+const readJson = <T,>(path: string): T => JSON.parse(readFileSync(path, 'utf8')) as T;
 
-const sha256File = (path: string): string => sha256(readFileSync(path));
+const sha256File = (path: string): string => {
+  const digest = createHash('sha256');
+  const buffer = Buffer.allocUnsafe(1024 * 1024);
+  const descriptor = openSync(path, 'r');
+  try {
+    let bytesRead = 0;
+    do {
+      bytesRead = readSync(descriptor, buffer, 0, buffer.length, null);
+      if (bytesRead > 0) digest.update(buffer.subarray(0, bytesRead));
+    } while (bytesRead > 0);
+  } finally {
+    closeSync(descriptor);
+  }
+  return digest.digest('hex');
+};
 
-const approximatelyEqual = (left: number, right: number): boolean =>
-  Math.abs(left - right) <= 0.000_001;
+const requireFile = (path: string, label: string): void => {
+  if (!existsSync(path) || !statSync(path).isFile()) {
+    throw new Error(`Missing ${label}: ${path}`);
+  }
+};
 
-const verifyExternalSource = (source: Level0SourceManifest): void => {
-  const sourceRoot = process.env[source.sourceRootVariable];
+const isStrictlyInside = (parent: string, candidate: string): boolean => {
+  const fromParent = relative(resolve(parent), resolve(candidate));
+  return Boolean(fromParent) &&
+    fromParent !== '..' &&
+    !fromParent.startsWith(`..${sep}`) &&
+    !isAbsolute(fromParent);
+};
+
+const resolveWithin = (parent: string, path: string, label: string): string => {
+  const resolved = resolve(parent, path);
+  if (!isStrictlyInside(parent, resolved)) {
+    throw new Error(`${label} escapes its owned root: ${path}`);
+  }
+  return resolved;
+};
+
+const resolveRepositoryPath = (path: string, label: string): string => {
+  if (isAbsolute(path)) {
+    throw new Error(`${label} must remain repository-relative: ${path}`);
+  }
+  const resolved = resolve(repositoryRoot, path);
+  if (!isStrictlyInside(repositoryRoot, resolved)) {
+    throw new Error(`${label} escapes the repository: ${path}`);
+  }
+  return resolved;
+};
+
+const approximatelyEqual = (left: number, right: number, tolerance = 0.000_01): boolean =>
+  Number.isFinite(left) && Number.isFinite(right) && Math.abs(left - right) <= tolerance;
+
+const exactSet = (actual: readonly string[], expected: readonly string[]): boolean =>
+  actual.length === expected.length &&
+  new Set(actual).size === actual.length &&
+  actual.every((entry) => expected.includes(entry));
+
+const polygonsApproximatelyEqual = (
+  actual: WorldPolygon,
+  expected: WorldPolygon
+): boolean => actual.length === expected.length && actual.every((point, index) => {
+  const expectedPoint = expected[index];
+  return expectedPoint !== undefined &&
+    approximatelyEqual(point.x, expectedPoint.x) &&
+    approximatelyEqual(point.y, expectedPoint.y);
+});
+
+const readPngSize = (path: string): { width: number; height: number } => {
+  const header = readFileSync(path).subarray(0, 24);
+  if (
+    header.length < 24 ||
+    header.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a'
+  ) {
+    throw new Error(`GET-204 runtime export is not a PNG: ${path}`);
+  }
+  return {
+    width: header.readUInt32BE(16),
+    height: header.readUInt32BE(20),
+  };
+};
+
+const verifyExternalSource = (
+  recipe: Get204FullDistrictRecipe
+): void => {
+  const sourceRoot = process.env[recipe.source.sourceRootVariable];
   if (!sourceRoot) {
     throw new Error(
-      `--verify-source requires ${source.sourceRootVariable} to point to the owned Neo Tokyo 2 pack`
+      `--verify-source requires ${recipe.source.sourceRootVariable} to point to the owned Neo Tokyo 2 pack`
     );
   }
 
-  const archivePath = resolve(sourceRoot, source.archiveRelativePath);
-  if (!existsSync(archivePath) || !statSync(archivePath).isFile()) {
-    throw new Error(`Missing recorded Neo Tokyo source archive: ${archivePath}`);
-  }
-  if (statSync(archivePath).size !== source.archiveBytes) {
-    throw new Error(`Neo Tokyo source archive byte size drifted: ${archivePath}`);
-  }
-  if (sha256File(archivePath) !== source.archiveSha256) {
-    throw new Error(`Neo Tokyo source archive content hash drifted: ${archivePath}`);
-  }
+  const resolvedSourceRoot = resolve(sourceRoot);
+  Object.entries(recipe.source.archives).forEach(([kind, archive]) => {
+    const archivePath = resolveWithin(
+      resolvedSourceRoot,
+      archive.relativePath,
+      `GET-204 ${kind} source archive`
+    );
+    requireFile(archivePath, `recorded Neo Tokyo ${kind} source archive`);
+    if (statSync(archivePath).size !== archive.byteSize) {
+      throw new Error(`Neo Tokyo ${kind} archive byte size drifted: ${archivePath}`);
+    }
+    if (sha256File(archivePath) !== archive.sha256) {
+      throw new Error(`Neo Tokyo ${kind} archive content hash drifted: ${archivePath}`);
+    }
+  });
 
-  const textureRoot = resolve(sourceRoot, source.textures.sourceRelativePath);
+  const textureInventory = recipe.source.archives.textures;
+  const textureRoot = resolveWithin(
+    resolvedSourceRoot,
+    textureInventory.extractedRoot,
+    'GET-204 source textures'
+  );
   if (!existsSync(textureRoot) || !statSync(textureRoot).isDirectory()) {
     throw new Error(`Missing recorded Neo Tokyo texture directory: ${textureRoot}`);
   }
@@ -70,152 +187,148 @@ const verifyExternalSource = (source: Level0SourceManifest): void => {
     .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
     .sort();
-  if (textureFiles.length !== source.textures.sourceFileCount) {
+  if (textureFiles.length !== textureInventory.fileCount) {
     throw new Error(
-      `Neo Tokyo texture count drifted: expected ${source.textures.sourceFileCount}, found ${textureFiles.length}`
+      `Neo Tokyo texture count drifted: expected ${textureInventory.fileCount}, found ${textureFiles.length}`
     );
   }
-  const textureDigest = createHash('sha256');
-  textureFiles.forEach((relativePath) => {
-    textureDigest.update(relativePath);
-    textureDigest.update('\0');
-    textureDigest.update(sha256File(resolve(textureRoot, relativePath)));
-    textureDigest.update('\n');
+  const unreadableTexture = textureFiles.find((relativePath) => {
+    const path = resolve(textureRoot, relativePath);
+    let descriptor: number | undefined;
+    try {
+      if (statSync(path).size <= 0) return true;
+      descriptor = openSync(path, 'r');
+      return readSync(descriptor, Buffer.alloc(1), 0, 1, 0) !== 1;
+    } catch {
+      return true;
+    } finally {
+      if (descriptor !== undefined) closeSync(descriptor);
+    }
   });
-  if (textureDigest.digest('hex') !== source.textures.contentSha256) {
-    throw new Error(`Neo Tokyo texture content digest drifted: ${textureRoot}`);
+  if (unreadableTexture) {
+    throw new Error(`Neo Tokyo texture is unreadable: ${resolve(textureRoot, unreadableTexture)}`);
   }
 };
 
-const verifyAlignedExport = (
-  source: Level0SourceManifest,
-  recipe: Level0SceneRecipe
-): void => {
-  if (!existsSync(alignedArtManifestPath) || !statSync(alignedArtManifestPath).isFile()) {
-    throw new Error(`Missing ignored GET-204 aligned export manifest: ${alignedArtManifestPath}`);
+const verifyMissionDistrictExport = (recipe: Get204FullDistrictRecipe): void => {
+  requireFile(missionDistrictMetadataPath, 'ignored GET-204 mission-district metadata');
+  const metadata = readJson<MissionDistrictMetadata>(missionDistrictMetadataPath);
+  const recipeRelativePath = relative(repositoryRoot, missionDistrictRecipePath).split(sep).join('/');
+  if (
+    metadata.schemaVersion !== 2 ||
+    metadata.ticket !== 'GET-204' ||
+    metadata.id !== recipe.id ||
+    metadata.acceptanceState !== recipe.acceptanceState ||
+    metadata.recipe.path !== recipeRelativePath ||
+    metadata.recipe.sha256 !== sha256File(missionDistrictRecipePath) ||
+    JSON.stringify(metadata.references) !== JSON.stringify(recipe.references) ||
+    JSON.stringify(metadata.commitBoundary) !== JSON.stringify(recipe.commitBoundary)
+  ) {
+    throw new Error('GET-204 mission-district metadata drifts from the current recipe.');
   }
-  const art = readJson<Level0ArtManifest>(alignedArtManifestPath);
-  const bundleErrors = validateLevel0ArtBundle(
-    { source, recipe, art },
-    LEVEL0_LAYOUT_CONTRACT
+
+  const expectedClusterIds = recipe.architecturalClusters.map(({ id }) => id);
+  const measuredClusterIds = metadata.architecturalClusters.map(({ id }) => id);
+  if (!exactSet(measuredClusterIds, expectedClusterIds)) {
+    throw new Error('GET-204 Blender metadata does not cover every registered city cluster.');
+  }
+  const runtimeFootprints = new Map(
+    LEVEL0_LAYOUT_CONTRACT.buildingFootprints.map((entry) => [entry.id, entry.polygon])
   );
-  if (bundleErrors.length > 0) {
-    throw new Error(`Invalid GET-204 aligned export:\n${bundleErrors.join('\n')}`);
-  }
-
-  const resolveExportFile = (relativePath: string): string => {
-    const path = resolve(alignedExportRoot, relativePath);
-    if (!path.startsWith(`${alignedExportRoot}/`)) {
-      throw new Error(`Aligned export path escapes its ignored root: ${relativePath}`);
-    }
-    return path;
-  };
-  let measuredTotalBytes = 0;
-  art.layers.flatMap((layer) => layer.tiles).forEach((tile) => {
-    const path = resolveExportFile(tile.imagePath);
-    if (!existsSync(path) || !statSync(path).isFile()) {
-      throw new Error(`Missing aligned export tile: ${path}`);
-    }
-    const byteSize = statSync(path).size;
-    if (byteSize !== tile.byteSize || sha256File(path) !== tile.sha256) {
-      throw new Error(`Aligned export tile content drifted: ${path}`);
-    }
-    measuredTotalBytes += byteSize;
-  });
-  if (measuredTotalBytes !== art.budget.measuredTotalBytes) {
-    throw new Error('Aligned export measured byte total drifted from the manifest.');
-  }
-
-  const anchorPath = resolveExportFile(art.anchorMetadata.path);
-  if (
-    !existsSync(anchorPath) ||
-    !statSync(anchorPath).isFile() ||
-    sha256File(anchorPath) !== art.anchorMetadata.sha256
-  ) {
-    throw new Error(`Aligned anchor metadata content drifted: ${anchorPath}`);
-  }
-  const anchorPayload = readJson<{
-    projection?: {
-      tileWidth?: number;
-      tileHeight?: number;
-      orientation?: string;
-      pixelOrigin?: { x?: number; y?: number };
-    };
-    anchors?: Array<{
-      id?: string;
-      kind?: string;
-      required?: boolean;
-      radiusLayoutUnits?: number;
-      layoutPosition?: { x?: number; y?: number };
-      worldPositionMeters?: { x?: number; y?: number; z?: number };
-      pixelPosition?: { x?: number; y?: number };
-      ownerId?: string;
-      tags?: string[];
-    }>;
-  }>(anchorPath);
-  if (anchorPayload.anchors?.length !== art.anchorMetadata.count) {
-    throw new Error('Aligned anchor metadata count drifted from the manifest.');
-  }
-  const projection = anchorPayload.projection;
-  if (
-    projection?.tileWidth !== recipe.camera.tileWidth ||
-    projection?.tileHeight !== recipe.camera.tileHeight ||
-    projection?.orientation !== 'isometric-2:1' ||
-    !approximatelyEqual(
-      projection?.pixelOrigin?.x ?? Number.NaN,
-      recipe.alignedExport.canvas.pixelOrigin.x
-    ) ||
-    !approximatelyEqual(
-      projection?.pixelOrigin?.y ?? Number.NaN,
-      recipe.alignedExport.canvas.pixelOrigin.y
-    )
-  ) {
-    throw new Error('Aligned anchor projection metadata drifts from the scene recipe.');
-  }
-  const anchorsById = new Map(anchorPayload.anchors?.map((anchor) => [anchor.id, anchor]));
-  if (
-    anchorsById.size !== LEVEL0_LAYOUT_CONTRACT.anchors.length ||
-    anchorsById.has(undefined)
-  ) {
-    throw new Error('Aligned anchor metadata IDs drift from the Level 0 layout contract.');
-  }
-  const unit = recipe.coordinateSystem.layoutUnitMeters;
-  const halfTileWidth = recipe.camera.tileWidth / 2;
-  const halfTileHeight = recipe.camera.tileHeight / 2;
-  LEVEL0_LAYOUT_CONTRACT.anchors.forEach((expected) => {
-    const actual = anchorsById.get(expected.id);
-    const expectedPixel = {
-      x:
-        (expected.position.x - expected.position.y) * halfTileWidth +
-        recipe.alignedExport.canvas.pixelOrigin.x,
-      y:
-        (expected.position.x + expected.position.y) * halfTileHeight +
-        recipe.alignedExport.canvas.pixelOrigin.y,
-    };
+  const measuredClusters = new Map(
+    metadata.architecturalClusters.map((entry) => [entry.id, entry])
+  );
+  recipe.architecturalClusters.forEach((cluster) => {
+    const measured = measuredClusters.get(cluster.id);
+    const runtimeFootprint = runtimeFootprints.get(cluster.id);
+    const sourceBounds = recipe.source.structuralPlanBoundsMeters[cluster.sourcePrefix];
+    const rotation = ((cluster.rotationDegrees % 360) + 360) % 360;
+    const swapPlanAxes = rotation === 90 || rotation === 270;
+    const expectedWidth = sourceBounds
+      ? (swapPlanAxes ? sourceBounds.depth : sourceBounds.width) * cluster.uniformScale
+      : Number.NaN;
+    const expectedDepth = sourceBounds
+      ? (swapPlanAxes ? sourceBounds.width : sourceBounds.depth) * cluster.uniformScale
+      : Number.NaN;
     if (
-      !actual ||
-      actual.kind !== expected.kind ||
-      actual.required !== expected.required ||
-      !approximatelyEqual(actual.radiusLayoutUnits ?? Number.NaN, expected.radius) ||
-      !approximatelyEqual(actual.layoutPosition?.x ?? Number.NaN, expected.position.x) ||
-      !approximatelyEqual(actual.layoutPosition?.y ?? Number.NaN, expected.position.y) ||
-      !approximatelyEqual(actual.worldPositionMeters?.x ?? Number.NaN, expected.position.x * unit) ||
-      !approximatelyEqual(actual.worldPositionMeters?.y ?? Number.NaN, expected.position.y * unit) ||
-      !approximatelyEqual(actual.worldPositionMeters?.z ?? Number.NaN, 0) ||
-      !approximatelyEqual(actual.pixelPosition?.x ?? Number.NaN, expectedPixel.x) ||
-      !approximatelyEqual(actual.pixelPosition?.y ?? Number.NaN, expectedPixel.y) ||
-      actual.ownerId !== expected.ownerId ||
-      JSON.stringify(actual.tags ?? []) !== JSON.stringify(expected.tags ?? [])
+      !measured ||
+      !runtimeFootprint ||
+      !sourceBounds ||
+      measured.sourcePrefix !== cluster.sourcePrefix ||
+      measured.artSource !== cluster.artSource ||
+      measured.sourceObjectCount < 1 ||
+      measured.instanceCount !== 1 ||
+      measured.placementAnchor !== cluster.placementAnchor ||
+      !approximatelyEqual(measured.resolvedScale, cluster.uniformScale) ||
+      !approximatelyEqual(
+        measured.streetWallInsetMeters,
+        cluster.streetWallInsetMeters
+      ) ||
+      !approximatelyEqual(measured.placedDimensionsMeters[0], expectedWidth, 0.025) ||
+      !approximatelyEqual(measured.placedDimensionsMeters[1], expectedDepth, 0.025) ||
+      !polygonsApproximatelyEqual(measured.collisionFootprint, runtimeFootprint)
     ) {
-      throw new Error(`Aligned anchor metadata drifts for ${expected.id}.`);
+      throw new Error(`GET-204 Blender/runtime cluster evidence drifted: ${cluster.id}`);
+    }
+  });
+
+  const expectedPropIds = recipe.sourcePropPlacements.map(({ id }) => id);
+  const measuredPropIds = metadata.sourcePropPlacements.map(({ id }) => id);
+  if (!exactSet(measuredPropIds, expectedPropIds)) {
+    throw new Error('GET-204 Blender metadata does not cover every registered source prop.');
+  }
+  const measuredProps = new Map(
+    metadata.sourcePropPlacements.map((entry) => [entry.id, entry])
+  );
+  recipe.sourcePropPlacements.forEach((prop) => {
+    const measured = measuredProps.get(prop.id);
+    if (
+      !measured ||
+      measured.sourcePrefix !== prop.sourcePrefix ||
+      measured.objectCount < 1
+    ) {
+      throw new Error(`GET-204 Blender source-prop evidence drifted: ${prop.id}`);
+    }
+  });
+
+  const scenePath = resolveRepositoryPath(metadata.scene, 'GET-204 Blender scene');
+  if (!isStrictlyInside(generatedMissionRoot, scenePath)) {
+    throw new Error('GET-204 Blender scene escapes the ignored mission-district root.');
+  }
+  requireFile(scenePath, 'ignored GET-204 Blender scene');
+
+  if (metadata.outputs.length === 0) {
+    throw new Error('GET-204 Blender metadata records no authoring output.');
+  }
+  metadata.outputs.forEach((output) => {
+    const path = resolveRepositoryPath(output.path, 'GET-204 Blender output');
+    if (!isStrictlyInside(generatedMissionRoot, path)) {
+      throw new Error(`GET-204 Blender output escapes its ignored root: ${output.path}`);
+    }
+    requireFile(path, 'GET-204 Blender output');
+    if (
+      output.bytes !== statSync(path).size ||
+      output.sha256 !== sha256File(path)
+    ) {
+      throw new Error(`GET-204 Blender output content drifted: ${output.path}`);
+    }
+  });
+
+  if (!exactSet(GET204_CITY_RUNTIME.layers.map(({ view }) => view), ['overview', 'close'])) {
+    throw new Error('GET-204 runtime export must provide one overview and one close layer.');
+  }
+  GET204_CITY_RUNTIME.layers.forEach((layer) => {
+    const path = resolveWithin(appPublicRoot, layer.path, 'GET-204 runtime layer');
+    requireFile(path, 'tracked GET-204 runtime layer');
+    const dimensions = readPngSize(path);
+    if (dimensions.width !== layer.width || dimensions.height !== layer.height) {
+      throw new Error(`GET-204 runtime layer dimensions drifted: ${layer.path}`);
     }
   });
 };
 
-const source = readJson<Level0SourceManifest>(sourceManifestPath);
-const recipe = readJson<Level0SceneRecipe>(sceneRecipePath);
-const layoutExportBytes = readFileSync(layoutExportPath);
-const layoutExport = JSON.parse(layoutExportBytes.toString('utf8')) as { contract?: unknown };
+const recipe = readJson<Get204FullDistrictRecipe>(missionDistrictRecipePath);
+const layoutExport = readJson<{ contract?: unknown }>(layoutExportPath);
 
 const layoutErrors = validateLevel0LayoutContract(LEVEL0_LAYOUT_CONTRACT);
 if (layoutErrors.length > 0) {
@@ -224,26 +337,23 @@ if (layoutErrors.length > 0) {
 if (JSON.stringify(layoutExport.contract) !== JSON.stringify(LEVEL0_LAYOUT_CONTRACT)) {
   throw new Error('Blender-facing Level 0 layout export is stale. Run yarn layout:level0:export.');
 }
-if (sha256(layoutExportBytes) !== recipe.layout.contractSha256) {
-  throw new Error('GET-204 scene recipe references a stale Level 0 layout-export hash.');
-}
 
-const planErrors = validateLevel0SourceAndRecipe(source, recipe, LEVEL0_LAYOUT_CONTRACT);
+const planErrors = validateGet204MissionDistrictRecipe(recipe);
 if (planErrors.length > 0) {
-  throw new Error(`Invalid GET-204 Blender source/scene plan:\n${planErrors.join('\n')}`);
+  throw new Error(`Invalid GET-204 mission-district plan:\n${planErrors.join('\n')}`);
 }
 
 if (process.argv.includes('--verify-source')) {
-  verifyExternalSource(source);
+  verifyExternalSource(recipe);
 }
 if (process.argv.includes('--verify-export')) {
-  verifyAlignedExport(source, recipe);
+  verifyMissionDistrictExport(recipe);
 }
 
 console.info(
-  `[level0-art] valid ${recipe.id}: ${source.selectedAssets.length} selected source roots, ` +
-    `${recipe.buildingPlacements.length} buildings, ${recipe.propPlacements.length} gameplay props, ` +
-    `${recipe.layers.length} aligned layers` +
+  `[level0-art] valid ${recipe.id}: ${recipe.composition.urbanBlocks.length} blocks, ` +
+    `${recipe.architecturalClusters.length} named-source clusters, ` +
+    `${recipe.sourcePropPlacements.length} source props` +
     (process.argv.includes('--verify-source') ? ', external source verified' : '') +
-    (process.argv.includes('--verify-export') ? ', ignored aligned export verified' : '')
+    (process.argv.includes('--verify-export') ? ', Blender/runtime export verified' : '')
 );

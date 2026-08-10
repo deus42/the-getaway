@@ -362,16 +362,14 @@ export interface Get204SemanticAnchor {
 }
 
 /**
- * Authoring and proof contract for the four-block GET-204 source rebuild. The
- * accepted Blender candidate promotes its geometry into the shared layout only
- * after the requester approves the rendered close and overview pair.
+ * Authoring and runtime contract for the accepted four-block GET-204 source.
  */
 export interface Get204FullDistrictRecipe {
   schemaVersion: 3;
   id: string;
   ticket: 'GET-204';
-  acceptanceState: 'FOUR_BLOCK_BLENDER_SOURCE_CANDIDATE';
-  usage: 'candidate-evidence';
+  acceptanceState: 'FOUR_BLOCK_BLENDER_SOURCE_ACCEPTED';
+  usage: 'runtime';
   references: Get204VisualReference[];
   source: {
     vendor: 'KitBash3D';
@@ -380,6 +378,24 @@ export interface Get204FullDistrictRecipe {
     format: 'FBX';
     textureSearchRoots: ['Textures', 'jpeg images', 'c4d/tex'];
     objectSuffixExclusions: Record<string, string[]>;
+    archives: {
+      geometry: {
+        relativePath: string;
+        byteSize: number;
+        sha256: string;
+      };
+      textures: {
+        relativePath: string;
+        byteSize: number;
+        sha256: string;
+        extractedRoot: 'Textures';
+        fileCount: number;
+      };
+    };
+    structuralPlanBoundsMeters: Record<string, {
+      width: number;
+      depth: number;
+    }>;
     rawSourceCommitted: false;
   };
   coordinateSystem: {
@@ -472,8 +488,8 @@ export interface Get204FullDistrictRecipe {
   };
   runtime: {
     enablement: 'normal-level0-path';
-    fallbackPolicy: 'fail-visible-on-required-candidate-asset';
-    runtimeIdentity: 'get204-four-block-source-candidate-v1';
+    fallbackPolicy: 'fail-visible-on-required-runtime-asset';
+    runtimeIdentity: 'get204-four-block-source-v1';
     prohibitedQueryValues: string[];
     prohibitedFallbackProfiles: string[];
   };

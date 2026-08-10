@@ -17,6 +17,53 @@
   font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
 }
 
+.level0-gate-run-marker {
+  position: fixed;
+  z-index: 10000;
+  top: 10px;
+  right: 10px;
+  padding: 6px 9px;
+  border: 1px solid rgba(88, 170, 178, 0.8);
+  background: rgba(10, 18, 21, 0.94);
+  color: #b9edf1;
+  font: 700 10px/1.2 "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+}
+
+.level0-gate-run-marker strong,
+.level0-gate-run-marker span {
+  display: block;
+}
+
+.level0-gate-run-marker span {
+  max-width: 520px;
+  margin-top: 3px;
+  color: #d4c9b3;
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+
+.level0-gate-run-marker__route {
+  display: block;
+  max-width: 520px;
+  margin-top: 6px;
+  padding: 5px 8px;
+  border: 1px solid rgba(207, 147, 69, 0.9);
+  background: rgba(31, 31, 31, 0.98);
+  color: #f1c27f;
+  font: 700 9px/1.2 "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  letter-spacing: 0.04em;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.level0-gate-run-marker__route:disabled {
+  border-color: rgba(140, 136, 127, 0.55);
+  color: #8c887f;
+  cursor: wait;
+}
+
 .level0-entry {
   display: grid;
   place-items: center;

@@ -54,7 +54,7 @@ yarn lint
 yarn build
 yarn test --runInBand
 yarn test --coverage --runInBand
-yarn playtest:agent -- --profile guided-level0 --max-steps 20 --codex
+yarn playtest:agent -- --ticket GET-XXX --mode closeout
 ```
 
 Sprite changes also require `yarn sprites:validate`. Visual or gameplay work additionally requires live normal-control inspection at the target desktop and mobile viewports; automated checks are regression evidence, not visual acceptance.

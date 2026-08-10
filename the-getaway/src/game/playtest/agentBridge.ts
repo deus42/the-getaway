@@ -73,6 +73,7 @@ export interface GetawayAgentActionResult {
 
 export interface GetawayAgentSnapshot {
   schema: 'getaway_agent_snapshot_v1';
+  evidenceClass: 'fixture-only';
   bridgeVersion: typeof GETAWAY_AGENT_VERSION;
   timestamp: string;
   url: string | null;
@@ -476,6 +477,7 @@ export const buildAgentSnapshot = (state: RootState): GetawayAgentSnapshot => {
 
   return {
     schema: 'getaway_agent_snapshot_v1',
+    evidenceClass: 'fixture-only',
     bridgeVersion: GETAWAY_AGENT_VERSION,
     timestamp: new Date().toISOString(),
     url: getBrowserUrl(),
@@ -609,7 +611,7 @@ export const shouldEnableGetawayAgentBridge = (
 ): boolean => {
   const normalizedSearch = search.startsWith('?') ? search : `?${search}`;
   const params = new URLSearchParams(normalizedSearch);
-  return params.get('agent') === '1' && nodeEnv !== 'production';
+  return params.get('agent') === '1' && nodeEnv === 'test';
 };
 
 export const validateAgentAction = (action: unknown): AgentActionValidation => {

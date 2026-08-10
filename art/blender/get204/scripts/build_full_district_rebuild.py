@@ -542,6 +542,19 @@ def place_architectural_clusters(
         if not sources:
             raise RuntimeError(f"Missing structural source collection {prefix}")
         source_bounds = bounds_for(sources)
+        registered_plan_bounds = recipe["source"]["structuralPlanBoundsMeters"].get(prefix)
+        if not registered_plan_bounds:
+            raise RuntimeError(f"Missing registered source-plan bounds for {prefix}")
+        if (
+            abs(source_bounds.dimensions[0] - float(registered_plan_bounds["width"])) > 0.025
+            or abs(source_bounds.dimensions[1] - float(registered_plan_bounds["depth"])) > 0.025
+        ):
+            raise RuntimeError(
+                f"Source-plan bounds drifted for {prefix}: "
+                f"{source_bounds.dimensions[0]:.3f}x{source_bounds.dimensions[1]:.3f}m != "
+                f"{float(registered_plan_bounds['width']):.3f}x"
+                f"{float(registered_plan_bounds['depth']):.3f}m"
+            )
         source_center = Vector((source_bounds.center[0], source_bounds.center[1], source_bounds.minimum[2]))
         left, top, right, bottom = polygon_bounds(placement["footprint"])
         rotation = int(placement["rotationDegrees"]) % 180
@@ -614,6 +627,12 @@ def place_architectural_clusters(
                 cropped_roof,
             ))
         placed_bounds = bounds_for(created)
+        collision_footprint = rect_polygon(
+            placed_bounds.minimum[0] / unit,
+            placed_bounds.minimum[1] / unit,
+            placed_bounds.maximum[0] / unit,
+            placed_bounds.maximum[1] / unit,
+        )
         evidence.append({
             "id": placement["id"],
             "sourcePrefix": prefix,
@@ -626,6 +645,7 @@ def place_architectural_clusters(
             "placementAnchor": placement["placementAnchor"],
             "streetWallInsetMeters": placement["streetWallInsetMeters"],
             "footprint": placement["footprint"],
+            "collisionFootprint": collision_footprint,
             "placedDimensionsMeters": list(placed_bounds.dimensions),
             "placedHeightMeters": placed_bounds.dimensions[2],
         })

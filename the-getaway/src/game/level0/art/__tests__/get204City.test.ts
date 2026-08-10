@@ -1,8 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { LEVEL0_LAYOUT_CONTRACT } from '../../../../content/levels/level0/layoutContract';
 import * as artValidator from '../validator';
-import { validateLevel0LayoutContract } from '../../layout/validator';
+import {
+  findDisconnectedWalkableSamples,
+  isPointWalkableWithClearance,
+  validateLevel0LayoutContract,
+} from '../../layout/validator';
 import type { Level0LayoutContract } from '../../layout/types';
 import type { Get204FullDistrictRecipe } from '../types';
 
@@ -21,6 +26,9 @@ const blenderBuilderPath = resolve(
   'art/blender/get204/scripts/build_full_district_rebuild.py'
 );
 const packageJsonPath = resolve(repositoryRoot, 'the-getaway/package.json');
+const appRoot = resolve(repositoryRoot, 'the-getaway');
+const t4PlanValidatorPath = resolve(appRoot, 'scripts/validate-level0-blender-plan.ts');
+const tsxPath = resolve(appRoot, 'node_modules/.bin/tsx');
 
 type CandidateManifest = Get204FullDistrictRecipe & {
   populationStaging: Get204FullDistrictRecipe['populationStaging'] & {
@@ -76,6 +84,21 @@ describe('GET-204 four-block named-KitBash source candidate', () => {
     );
   });
 
+  it('validates the current mission-district plan instead of the superseded T4 recipe', () => {
+    const validation = spawnSync(tsxPath, [t4PlanValidatorPath], {
+      cwd: appRoot,
+      encoding: 'utf8',
+    });
+
+    expect(validation.status).toBe(0);
+    expect(validation.stdout).toContain(
+      '[level0-art] valid get204-four-block-kitbash-mission-v1'
+    );
+    expect(`${validation.stdout}${validation.stderr}`).not.toContain(
+      'level0-tokyo-unchanged-kit-v2'
+    );
+  });
+
   it('locks the approved composition previsualization without treating it as geometry', () => {
     const candidate = readCandidate();
     expect(candidate).not.toBeNull();
@@ -116,7 +139,8 @@ describe('GET-204 four-block named-KitBash source candidate', () => {
 
     expect(candidate.schemaVersion).toBe(3);
     expect(candidate.id).toBe('get204-four-block-kitbash-mission-v1');
-    expect(candidate.acceptanceState).toBe('FOUR_BLOCK_BLENDER_SOURCE_CANDIDATE');
+    expect(candidate.acceptanceState).toBe('FOUR_BLOCK_BLENDER_SOURCE_ACCEPTED');
+    expect(candidate.usage).toBe('runtime');
     expect(candidate.composition.subdistricts.map(({ id }) => id)).toEqual([
       'safehouse-backstreets',
       'public-transit-commercial',
@@ -196,6 +220,27 @@ describe('GET-204 four-block named-KitBash source candidate', () => {
     });
   });
 
+  it('pins the exact geometry and texture archives used by the current source builder', () => {
+    const candidate = readCandidate();
+    expect(candidate).not.toBeNull();
+    if (!candidate) return;
+
+    expect(Reflect.get(candidate.source, 'archives')).toEqual({
+      geometry: {
+        relativePath: 'obj.zip',
+        byteSize: 104163817,
+        sha256: '802ec8c3d46afb61493df59c598492b516cec2b02285556dc9e1d0520dd1286f',
+      },
+      textures: {
+        relativePath: 'Textures.zip',
+        byteSize: 679323340,
+        sha256: '4ca91a0e83605c8ea0efd94225586faccf3285477094290bee3211f10d37defd',
+        extractedRoot: 'Textures',
+        fileCount: 142,
+      },
+    });
+  });
+
   it('centres close play on the public-contact seam and keeps streets human-scaled', () => {
     const candidate = readCandidate();
     expect(candidate).not.toBeNull();
@@ -261,7 +306,7 @@ describe('GET-204 four-block named-KitBash source candidate', () => {
     expect(recipe?.id).toBe('get204-four-block-kitbash-mission-v1');
     expect(validateCandidate(recipe as CandidateManifest)).toEqual([]);
     expect(runtime).toMatchObject({
-      id: 'get204-four-block-source-candidate-v1',
+      id: 'get204-four-block-source-v1',
       runtimeEnabled: true,
       defaultZoom: 2,
       actorScreenHeightTargetPx: { min: 95, max: 115 },
@@ -303,18 +348,70 @@ describe('GET-204 four-block named-KitBash source candidate', () => {
 
     expect(layout).toBeDefined();
     if (!layout) return;
-    expect(layout.id).toBe('level0-get204-four-block-source-candidate-v1');
+    expect(layout.id).toBe('level0-get204-four-block-source-v1');
     expect(validateLevel0LayoutContract(layout)).toEqual([]);
     expect(layout.buildingFootprints.length).toBeGreaterThanOrEqual(12);
     expect(layout.buildingFootprints.length).toBeLessThanOrEqual(16);
     expect(layout.traversalLoops).toHaveLength(3);
   });
 
+  it('derives every runtime blocker from accepted source-plan measurements', () => {
+    const candidate = readCandidate();
+    const runtimeModule = loadCityRuntime();
+    const resolveCollision = Reflect.get(
+      runtimeModule,
+      'resolveGet204ClusterCollisionFootprint'
+    );
+
+    expect(candidate).not.toBeNull();
+    expect(typeof resolveCollision).toBe('function');
+    if (!candidate || typeof resolveCollision !== 'function') return;
+
+    const sourcePlanBounds = Reflect.get(
+      candidate.source,
+      'structuralPlanBoundsMeters'
+    ) as Record<string, { width: number; depth: number }> | undefined;
+    const sourceRoots = [...new Set(
+      candidate.architecturalClusters.map(({ sourcePrefix }) => sourcePrefix)
+    )].sort();
+
+    expect(Object.keys(sourcePlanBounds ?? {}).sort()).toEqual(sourceRoots);
+
+    const layout = Reflect.get(runtimeModule, 'GET204_CITY_LAYOUT') as Level0LayoutContract;
+    candidate.architecturalClusters.forEach((cluster) => {
+      const blocker = layout.buildingFootprints.find(({ id }) => id === cluster.id);
+      expect(blocker?.polygon).toEqual(resolveCollision(cluster));
+      expect(blocker?.polygon).not.toEqual(cluster.footprint);
+    });
+  });
+
+  it('opens the measured lot padding and keeps the whole city walkable component connected', () => {
+    const runtimeModule = loadCityRuntime();
+    const movement = Reflect.get(
+      runtimeModule,
+      'GET204_CITY_MOVEMENT_CONTRACT'
+    ) as Level0LayoutContract;
+    [
+      { x: 47, y: 38.5 },
+      { x: 15, y: 12.5 },
+      { x: 19, y: 36 },
+      { x: 42, y: 17 },
+      { x: 41, y: 38 },
+    ].forEach((point) => {
+      expect(isPointWalkableWithClearance(movement, point)).toBe(true);
+    });
+
+    expect(findDisconnectedWalkableSamples(movement, 'safehouse.spawn')).toEqual([]);
+    expect(() => findDisconnectedWalkableSamples(movement, 'missing.start')).toThrow(
+      'Cannot audit city reachability without a walkable start anchor: missing.start'
+    );
+  });
+
   it('makes the approved four-block layout canonical for gameplay and art', () => {
     const runtimeModule = loadCityRuntime();
     const layout = Reflect.get(runtimeModule, 'GET204_CITY_LAYOUT') as Level0LayoutContract;
 
-    expect(LEVEL0_LAYOUT_CONTRACT.id).toBe('level0-get204-four-block-source-candidate-v1');
+    expect(LEVEL0_LAYOUT_CONTRACT.id).toBe('level0-get204-four-block-source-v1');
     expect(LEVEL0_LAYOUT_CONTRACT).toBe(layout);
     expect(LEVEL0_LAYOUT_CONTRACT.bounds).toEqual([
       { x: 0, y: 0 },
@@ -346,12 +443,16 @@ describe('GET-204 four-block named-KitBash source candidate', () => {
     const unsafe = JSON.parse(JSON.stringify(candidate)) as CandidateManifest;
     Reflect.set(unsafe.architecturalClusters[0], 'artSource', 'owned-kit-cropped');
     unsafe.architecturalClusters[0].verticalCropMeters = 12;
+    unsafe.architecturalClusters[0].rotationDegrees = 45;
     unsafe.architecturalClusters[1].role = 'district-landmark';
     Reflect.set(unsafe.populationStaging, 'bakedEnvironmentActorCount', 1);
     unsafe.coordinateSystem.bounds[1].x = 90;
+    delete unsafe.source.structuralPlanBoundsMeters.SmallA;
 
     expect(validateCandidate(unsafe)).toEqual(expect.arrayContaining([
       'GET-204 source candidate prohibits cropped or generated architecture',
+      'GET-204 source-plan bounds must exactly cover registered architecture roots',
+      'cluster cluster.safehouse.home collision transform must be orthogonal',
       'GET-204 four-block skyline allows one restrained landmark maximum',
       'GET-204 environment art must contain zero baked actors',
       'GET-204 mission district exceeds the approved compact bounds',

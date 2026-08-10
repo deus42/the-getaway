@@ -51,7 +51,8 @@ export const GAME_BIBLE_DECISION_COVERAGE: GameBibleDecisionCoverage = {
   ...cover('knowledge.in-play', ['GDR-UI-003', 'GDR-SOC-001', 'GDR-SOC-002']),
   ...cover('art.overview', [
     'GDR-ART-001', 'GDR-ART-003', 'GDR-ART-004', 'GDR-ART-005', 'GDR-ART-006',
-    'GDR-ART-011', 'GDR-SUP-001', 'GDR-SUP-003',
+    'GDR-ART-011', 'GDR-ART-012', 'GDR-ART-013', 'GDR-ART-014',
+    'GDR-SUP-001',
   ]),
   ...cover('world.overview', ['GDR-ART-002', 'GDR-SET-007']),
   ...cover('equivalence.in-play', ['GDR-AUD-001', 'GDR-AUD-002']),

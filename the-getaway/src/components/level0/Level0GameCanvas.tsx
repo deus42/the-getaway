@@ -139,7 +139,7 @@ const Level0GameCanvas = ({
     <div
       ref={containerRef}
       data-testid="level0-game-canvas"
-      data-runtime="get204-four-block-source-candidate-v1"
+      data-runtime="get204-four-block-source-v1"
       data-scene-ready={String(sceneReady)}
       style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#101215' }}
     >

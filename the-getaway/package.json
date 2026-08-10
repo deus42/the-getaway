@@ -11,6 +11,8 @@
     "art:level0:build": "yarn art:level0:footprints && uv run --with pillow python ../art/painterly/level0/scripts/build_runtime_assets.py --buildings-only",
     "preview": "vite preview",
     "playtest:agent": "tsx ../tools/ai-playtester/run.ts",
+    "playtest:agent:test": "node --import tsx --test ../tools/ai-playtester/v2/*.test.ts",
+    "playtest:agent:typecheck": "tsc -p ../tools/ai-playtester/tsconfig.json",
     "graphics:get155": "node scripts/generate-get155-preview-assets.mjs",
     "art:level0:validate": "tsx scripts/validate-level0-painterly-art.ts",
     "art:level0:t4:plan:validate": "tsx scripts/validate-level0-blender-plan.ts",
