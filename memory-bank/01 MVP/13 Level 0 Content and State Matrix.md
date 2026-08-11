@@ -172,7 +172,7 @@ Minimum authored content:
 
 Final count and placement remain acceptance decisions under `OPEN-LAYOUT-003` and `OPEN-CIV-001`; their recorded recommendations may be tested in reversible layout/content data.
 
-GET-205 v5 does not populate either blending context. Under `GDR-CIV-003`, every ambient civilian is removed from the T5 candidate and both `blend.delivery_activity` and `blend.public_queue` must resolve as unavailable with the explicit absent-population reason. The context IDs, geometry/capacity contract, and eventual time-state behavior remain canonical for GET-208; an empty context cannot grant blending eligibility. Under `GDR-SUR-013`, T5 retains only the public restricted-area guard and Needle, removes the static service-entrance guard, and adds no trespass/detection behavior.
+GET-205 v5 replaces random ambient allocation with an authored mission-stage minimum. `blend.public_queue` owns exactly two seated slots plus one standing slot at the transit shelter; it may resolve as eligible only while those three runtime actors and the authored schedule are active. Two additional seated café patrons occupy declared Transit Road restaurant furniture but do not create a generic blend zone. `blend.delivery_activity` remains unavailable with the explicit absent-population reason until GET-208 authors its group. All figures are runtime-owned, nonblocking, and absent from environment plates. Under `GDR-SUR-013`, T5 also retains the public restricted-area guard and Needle, removes the static service-entrance guard, and adds no trespass/detection behavior.
 
 ## 8. Terminal contract
 

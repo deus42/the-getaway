@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox gates and must run inline in the visible shared `main` workspace; this plan does not authorize subagents, a branch, a worktree, staging, or a commit.
 
-**Goal:** Replace the rejected sparse/dark GET-205 v4 city with a route-safe, source-traceable dense four-block v5 city that matches the locked blend's massing and the wet blue-black reference treatment, removes random ambient NPC allocation, and preserves the mission's executable topology.
+**Goal:** Replace the rejected sparse/dark GET-205 v4 city and rejected coverage-only first v5 greybox with a route-safe, source-traceable, mission-legible four-block v5 city that matches the locked blend's massing and wet blue-black treatment, removes random ambient NPC allocation, stages purposeful mission presence, and preserves executable topology.
 
-**Architecture:** Keep the accepted GET-204 recipe and recoverable GET-205 v3/v4 sources immutable. Introduce a new recipe/runtime identity whose footprint changes are gated by a versioned route/anchor/probe dataset. Require requester approval of a material-free greybox before facade work, then approval of one blue-hour hero before regenerating the three-state schema-v2 runtime matrix. Publish only through complete staging and atomic replacement.
+**Architecture:** Keep the accepted GET-204 recipe and recoverable GET-205 v3/v4 sources immutable, and preserve the first v5 coverage recipe/render as rejected revision evidence. Gate the corrected v5 recipe through the versioned route/anchor/probe dataset, a mid-band building mask, occlusion-aware per-identity masks, and a fixed-camera five-question mission-legibility read. Require requester approval of the mission-staged material-free greybox before facade work, then approval of one blue-hour hero before regenerating the three-state schema-v2 runtime matrix. Publish only through complete staging and atomic replacement.
 
 **Tech Stack:** Blender 5.0.1 Cycles/Metal, Python Blender scripts, Node.js contract/asset validators, Vite/React/TypeScript, Phaser, Jest, Yarn, Playwright browser evidence, Markdown canonical specifications, Linear MCP.
 
@@ -35,6 +35,7 @@
 - Modify: `memory-bank/01 MVP/95 MVP Readiness Checklist.md`
 - Modify: `memory-bank/04 Engineering/Architecture.md`
 - Modify: `memory-bank/04 Engineering/Roadmap.md`
+- Modify: `the-getaway/src/content/gameBible/traceability.ts` (decision classification only; preserve all pre-existing hunks)
 - Modify: `progress/GET-205.md`
 - Create: `docs/superpowers/plans/2026-08-11-get-205-density-rebuild.md`
 
@@ -58,6 +59,14 @@ Expected: new IDs occur once in their owning tables and are referenced consisten
 - [ ] Review only the intended documentation hunks against `HEAD` and the pre-edit dirty tree.
 - [ ] Ask for explicit authorization for `docs(GET-205): authorize density rebuild`.
 - [ ] If authorized, stage only the isolated GET-205 documentation/plan hunks, commit, verify configured human identity, read back the commit, and read back Linear again.
+
+The original entry gate is complete at `c7ed7f4a67dd0509838a4328d885b5967bbe9c41`. The first v5 greybox was then rejected, so corrected production is blocked by this additional amendment gate:
+
+- [ ] Record the rejected first-v5 recipe/render/metrics as recoverable failure evidence rather than overwriting or approving it.
+- [ ] Amend `GDR-ART-017`, add `GDR-ART-018`, and replace the people-free interpretation of `GDR-CIV-003` with the bounded transit/café mission-stage population.
+- [ ] Propagate the five-question legibility read, `0.95–1.05` density trial, at-least-ten/`0.005` identity floor, `0.15` identity cap, anchor mapping, and blend truth through every canonical T5 surface and the complete Linear description.
+- [ ] Run documentation validation and exact Linear semantic readback; leave GET-205 `In Progress`.
+- [ ] Ask for fresh authorization for the isolated amendment commit `docs(GET-205): stage mission-legible massing`. Do not alter the recipe, Blender scene, validators, actors, or runtime until that commit exists and is read back.
 
 ## Task 2: Recover and version the exact topology authority
 
@@ -170,9 +179,12 @@ Expected: pass without changing the live runtime.
 - Generated only: `art/blender/get205/.generated/dense-four-block-v5/massing/`
 
 - [ ] Import only named Neo Tokyo 2 sources and retain per-building root/material provenance. Start with source candidates such as `LargeB`, `MediumB`, `MediumI`, and compatible Small roots, but accept placements only through measured bounds and route validation.
-- [ ] Repack the four blocks into continuous street walls while keeping the declared route polygons and anchor discs clear. Use 12–16 individual identities. Do not merge them into one wall object/cutout owner.
+- [ ] Preserve the rejected first-v5 manifest, scene hash, hero, route report, density report, and identity-contribution report as revision `coverage-r1`; it remains failure evidence and is never overwritten as the corrected candidate.
+- [ ] Repack the four blocks into continuous street walls while keeping the declared route polygons and anchor discs clear. Split the two hero-dominant compounds into three or four independently source-fingerprinted parcels each with real seams. Use 12–16 individual identities and do not merge them into one wall object/cutout owner.
+- [ ] Place the tallest Hidzu destination at `entrance.logistics.public`. Stage the checkpoint/guard-post/barrier at its base without intersecting the public road or entrance clearance; keep Needle's launch/patrol volume visibly associated with the approach.
+- [ ] Add neutral, separately tagged greybox placeholders from actual anchors: transit shelter/bench/timetable; exactly two seated and one standing transit figure; café frontage/furniture with exactly two seated patrons; street-facing fixtures at all three terminals; recess geometry at all three hides; one public guard; and Needle. Validate every solid placeholder against routes and clearance discs. Figures, Needle, screens, and furniture remain outside the architecture density mask.
 - [ ] Add a separately tagged outside-bounds perimeter backdrop with no collision, entrance, anchor, interaction, or density-mask contribution.
-- [ ] Keep the fixed public-crossing camera registration. Assign neutral greybox materials only; disable facade dressing, labels, practical lights, emissives, state variation, and people.
+- [ ] Keep the fixed public-crossing camera registration. Assign neutral greybox materials only; disable facade dressing, labels, practical lights, emissives, and state variation. Mission figures are simple separately owned placeholders for composition and are never baked into production environment plates.
 - [ ] Export building footprint polygons and identity/depth metadata, then run the route validator before rendering.
 
 Run:
@@ -183,7 +195,7 @@ yarn art:level0:t5:massing:routes:validate
 yarn art:level0:t5:massing:render
 ```
 
-Expected: exact `1440×900` people-free greybox plus green topology report. Any route/probe failure aborts the render gate.
+Expected: exact `1440×900` mission-staged greybox plus green topology report. Any route/probe/placeholder intersection failure aborts the render gate.
 
 ## Task 5: Add the fixed building-density metric
 
@@ -195,9 +207,9 @@ Expected: exact `1440×900` people-free greybox plus green topology report. Any 
 - Modify: `the-getaway/scripts/get205-wet-rebake-merge.test.mjs`
 - Create: `the-getaway/scripts/get205-density-metric.test.mjs`
 
-- [ ] Write failing tests for fixed dimensions/registration, versioned mask hash, excluded roads/sky/HUD/actors/perimeter backdrop, candidate/reference building fraction, lower and upper bounds, and report image/hash integrity.
+- [ ] Write failing tests for fixed dimensions/registration, versioned mask hash, excluded roads/sky/HUD/actors/mission placeholders/perimeter backdrop, candidate/reference building fraction, lower and upper bounds, per-identity masks, meaningful-visibility threshold, largest-identity cap, and report image/hash integrity.
 - [ ] Measure the reference fraction from `kitbash-reference2-blend-concept-v1.png`; do not hand-enter a desired candidate percentage.
-- [ ] Implement the provisional `0.90–1.10` candidate/reference ratio from `OPEN-ART-006`, keeping visual requester judgment authoritative.
+- [ ] Implement the corrected provisional `0.95–1.05` candidate/reference ratio from `OPEN-ART-006`. At the fixed `720×450` analysis registration require at least ten occlusion-aware identity masks to contribute at least `0.005` of the full frame each and reject any identity above `0.15`. Declared recipe count never substitutes for rendered contribution; visual requester judgment remains authoritative.
 
 Run:
 
@@ -212,9 +224,10 @@ Expected: tests pass and the report records reference/candidate hashes, mask has
 ## Task 6: Stop for the requester massing gate
 
 - [ ] Verify every comparison image opens from a real local path.
-- [ ] Present one concise sheet: locked blend | v5 greybox | building mask/delta.
+- [ ] Present one concise sheet: locked blend | corrected raw v5 greybox | building mask/delta; also include the per-identity segmentation and mission-legibility key.
 - [ ] Present the route report with all invariant IDs, all 14 unchanged Class A verdicts, and fresh observed results for all 10 Class B points. Clearly distinguish historical Class B results from the proposed v5 expectations.
-- [ ] State the building-fraction ratio/band and any visible residual massing differences.
+- [ ] State the building-fraction ratio/band, meaningful identity count, largest identity share, and any visible residual massing differences.
+- [ ] Ask the requester to point to all five answers in the raw frame: where to go, what blocks the direct approach, where to blend, what to hack, and where to sneak. Labels on the diagnostic key cannot rescue a failed raw-frame read.
 - [ ] Stop. Do not author facades, materials, lighting, states, cutouts, NPC/runtime changes, or publication until explicit requester massing approval.
 - [ ] On approval, freeze the ten observed Class B outcomes as their v5 expectations, then record the accepted scene, recipe, footprint, topology-report, probe-fixture, mask, render, and comparison hashes in `progress/GET-205.md`, the manifest, and Linear.
 
@@ -235,7 +248,7 @@ Expected: tests pass and the report records reference/candidate hashes, mask has
 - [ ] Run shadow, amber, cyan, road-specular, luminance-spread, `p05`, source, camera, massing, and topology gates.
 - [ ] Present reference | candidate | delta notes plus 200% crop and stop for requester hero approval.
 
-## Task 8: Remove random ambient NPC allocation without implementing GET-208
+## Task 8: Replace random ambient NPC allocation with bounded mission-stage population
 
 **Files:**
 
@@ -245,9 +258,9 @@ Expected: tests pass and the report records reference/candidate hashes, mask has
 - Modify: `the-getaway/src/game/level0/city/__tests__/civilianSchedules.test.ts`
 - Modify only if already the owning seam: the existing blend-context availability resolver and its focused test
 
-- [ ] Write failing tests requiring zero ambient civilian presentations, exactly the public restricted-area guard plus Needle, no static service-entrance guard, and explicit absent-population unavailability for both blend contexts.
-- [ ] Remove the four static civilians and suppress the three delivery plus four public-queue schedule presentations from T5.
-- [ ] Preserve context IDs and future schedule data for GET-208; do not delete the canonical mechanic, add detection/trespass, or fake blend eligibility.
+- [ ] Write failing tests requiring exactly two seated plus one standing transit passenger in declared nonblocking slots, exactly two seated café patrons at declared furniture, exactly the public restricted-area guard plus Needle, no static service-entrance guard, no random/wandering allocation, public-queue eligibility tied to actual group/schedule state, and absent-population unavailability for delivery activity.
+- [ ] Remove the four static random civilians and random delivery/public-queue placement. Re-author only the fixed transit/café groups; keep actors runtime-owned and environment masters people-free.
+- [ ] Preserve context IDs and future GET-208 behavior data. Do not add delivery population, detection, trespass, civilian reaction/pathfinding, or interception behavior; do not let café patrons create generic blend eligibility.
 
 Run:
 
@@ -256,7 +269,7 @@ cd the-getaway
 yarn test src/game/level0/art/__tests__/get204City.test.ts src/game/level0/city/__tests__/civilianSchedules.test.ts --runInBand
 ```
 
-Expected: focused tests pass; unrelated protected GET-208 partial work is untouched.
+Expected: focused tests pass with exact slot ownership and blend truth; unrelated protected GET-208 partial work is untouched.
 
 ## Task 9: Bake all states and regenerate per-identity layers
 
@@ -316,7 +329,7 @@ Expected: focused runtime/route suites pass.
 
 - [ ] Start the normal app at `http://127.0.0.1:5174/` and use the default GET-205 path; reserve `visualTreatment=get204-1` for diagnostics.
 - [ ] Capture clean-world and current-HUD frames at `1440×900`, `1280×720`, and `1920×1080`; automatic mobile at `390×844`; overview; both profiles; three known occlusion sites; actor feet; and the `0.60→3.25` zoom sweep.
-- [ ] Capture the fixed three-state strip and reference A/B. Verify dense street walls, one Hidzu landmark, detailed warm/cold windows, controlled colors, visual restricted area, unreachable backdrop, zero random ambient civilians, honest blend unavailability, public guard plus Needle, and unguarded service route.
+- [ ] Capture the fixed three-state strip and reference A/B. Verify dense mission-legible street walls, the Hidzu destination/checkpoint, detailed warm/cold windows, controlled colors, visual restricted area, unreachable backdrop, exact nonblocking transit/café groups, no random actors, truthful public-queue/delivery availability, public guard plus Needle, and unguarded service route.
 - [ ] Exercise initial phase, both prefetches/boundaries, direct Wait jumps, Restart Attempt, hydration rewind, stale completion, failed load, retry, texture disposal, and one-/two-set residency without black frames or partial worlds.
 - [ ] Run `yarn playtest:agent -- --ticket GET-205 --mode affected`; inspect the newest V2 report and address every in-scope actionable finding.
 - [ ] Present the live side-by-side, overview, and mobile evidence. Stop for requester visual acceptance.
