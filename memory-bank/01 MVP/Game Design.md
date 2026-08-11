@@ -12,7 +12,7 @@ The canonical authoring Bible is a package rather than one enormous file. This h
 
 ## Game fantasy and identity
 
-The Getaway is a grounded dystopian surveillance RPG about becoming legible to systems that were not looking for you until your choices gave them a reason. The protagonist is an American expatriate living under Hidzu Corporation's ordinary civic systems in Tokyo in 2036. At Level 0's start, Hidzu Corporation does not consider them a problem. They are not a cyberpunk commando, chosen hero, or blank tactical unit. They are a civilian-scale person with an uneven RPG build, a missing father connected to Operation Cold Iron, a small network of people who may help, a need to reach Miami and investigate, and a private AI companion named George.
+The Getaway is a grounded dystopian surveillance RPG about becoming legible to systems that were not looking for you until your choices gave them a reason. The protagonist is an American expatriate living under Hidzu Corporation's ordinary civic systems in Tokyo in 2036. At Level 0's start, Hidzu Corporation does not consider them a problem. They are not a cyberpunk commando, chosen hero, or blank tactical unit. They are a civilian-scale person with an uneven RPG build, a missing father connected to Operation Cold Iron, a small network of people who may help, a need to reach Miami and investigate, and a private AI companion named George whose recognizable embodiment is a non-human cyan-core orb.
 
 The central fantasy is competence under observation. The player studies a city that appears orderly and useful, learns where its institutional systems are strong or fallible, chooses what risks to take, helps somebody who has been excluded by those systems, and leaves before the city converts concern into custody. Success comes from preparation, perception, social reading, operational security, composure, movement, hiding, blending, and knowing when to disengage.
 
@@ -50,7 +50,7 @@ Movement, observation, timing, line-of-sight breaks, hiding, blending, camera lo
 
 ### George is operational but bounded
 
-George is a private near-character AI presence, not an omniscient assistant. He summarizes verified state, explains blockers and why information is unavailable, compares known risks, distinguishes fact from inference, and offers authored contextual questions. Silence is never hidden information. He cannot move, interact, hack, choose, reveal unknown information, or mutate the world, and Level 0 gives him no deletion/freedom desire arc.
+George is a private near-character AI presence embodied by the recovered dark orb with its cyan concentric core, not an omniscient assistant or generic holographic person. He summarizes verified state, explains blockers and why information is unavailable, compares known risks, distinguishes fact from inference, and offers authored contextual questions. Silence is never hidden information. He cannot move, interact, hack, choose, reveal unknown information, or mutate the world, and Level 0 gives him no deletion/freedom desire arc.
 
 ### RPG identity persists
 
@@ -82,7 +82,7 @@ Level 0 is a 15–20 minute outdoor prologue. In one ordinary-control run it mus
 - readable cameras, explicit interactions, discrete hiding, social blending, one patrol drone, and last-known-position pursuit;
 - a meaningful optional Hidzu Corporation–Harrow shipping clue that never blocks the humanitarian objective;
 - Paranoia consequences with explicit safehouse recovery;
-- George in the HUD and as a private near-character AR presence;
+- George's canonical orb in the HUD and as a private near-character AR presence;
 - a factual operation dossier, knowledge-based minimap, deterministic debrief, and cause-specific failure reporting;
 - one real progression event that carries into the future campaign;
 - completion, all four run failures, and deterministic Restart Attempt through normal player controls.
@@ -169,7 +169,7 @@ See [[30 Art Direction (MVP)]], [[31 GET-204 Visual Rebuild Quality Contract]], 
 - three player-facing route names: Transit Road, Market Ring, and Outer Space;
 - two one-use grounding actions and three localized street-threshold ambience sources;
 - a small authored civilian/security cast and schedule set;
-- four protagonist appearances, twelve actor sets, matching portraits, and George AR art;
+- four protagonist appearances, twelve actor sets, matching portraits, and recovered George orb AR art;
 - English and Ukrainian semantic content;
 - one factual debrief and one progression event.
 

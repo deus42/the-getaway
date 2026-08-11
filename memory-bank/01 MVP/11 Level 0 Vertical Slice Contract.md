@@ -43,7 +43,7 @@ The player must feel vulnerable but capable. Their strength comes from preparati
 - Known locations: safehouse and Lira meeting point.
 - Known devices: none unless physically visible from the starting context.
 - Save: a new autosave is created after cover-select and Level 0 initialization.
-- George: available, private, and limited to opening context and controls.
+- George: available as the recovered private AR orb and limited to opening context and controls.
 
 ## 1. Cover-select
 
@@ -113,6 +113,7 @@ The mechanical order is fixed—briefing and optional preparation precede the im
 - Emphasizes observation, dialogue, credible behavior, and social blending.
 - Brant's fact identifies the safest window and expected conduct.
 - Ordinary visibility in public camera coverage is harmless while the network is `Clear`; concern begins only when a camera or Needle observes a declared rule break.
+- At 18:45, the transit shelter/public queue is credibly populated within its visible seated and standing capacity; it winds down after 21:30 and is inactive as a blending context at curfew.
 
 ### Curfew/service route
 
@@ -134,7 +135,7 @@ Both timings remain viable without their associated contact. Missing information
 - Invalid destinations provide a short reason and a reachable marker where appropriate.
 - Returning focus from any HUD or overlay never consumes a sacrificial movement click.
 - Observation is a full pause. The player may pan and inspect known devices, coverage, entrances, contacts, hiding/blending positions, objectives, facts, and one authored George prompt.
-- In normal play, discovered camera risk is readable only through subtle status light, IR glint, and authored reflections. Observation shows the exact discovered coverage from the same geometry.
+- In normal play, discovered camera risk is readable only through subtle status light, IR glint, and restrained authored wet-pavement reflections. Observation shows the exact discovered coverage from the same device state and geometry.
 - Observation cannot move the protagonist, operate a device, or change state.
 
 ## 7. Surveillance network
@@ -182,6 +183,7 @@ Rendered camera coverage and detection use the same geometry. Ordinary solid geo
 - A loop cannot open doors, erase identity, disable the district, or affect unrelated devices.
 - Exactly one unarmed verifier drone, player-facing name `Needle`, follows one authored patrol and verifies Suspicious events at last-known positions and hiding areas.
 - Needle has a recognizable hum plus distinct approach and verification warnings.
+- Needle's visible lamp is warm-white or restrained amber during neutral patrol, crimson only during active verification or Pursuit, and returns to neutral when that state ends.
 - The drone cannot be fought, looted, or disabled by a fantasy gadget.
 - Civilians may glance or shift slightly in response to visible camera attention, Needle, or visible player behavior. They never know hidden network state and never report the player.
 
@@ -192,8 +194,11 @@ Hiding uses discrete authored physical contexts such as service recesses, stair 
 - Darkness alone is not a universal hiding state.
 - A hiding context cannot be entered while directly observed.
 - A blending context requires behavior credible for that context.
+- `blend.public_queue` is the transit shelter. Its exact authored bench capacity is two or three visible seats with a separate standing capacity; runtime population never exceeds either envelope or claims an unavailable seat.
 - Each unavailable state explains why it cannot currently be used.
 - Successful recovery is earned through timing and state change, not an invisible cooldown while standing anywhere.
+
+Level 0 authors exactly one pedestrian verification-lane commitment. Queue rails, floor arrows, and an eye-height illuminated instruction panel explain direction and incomplete-processing consequence before entry. A valid cover receives the exact previewed verdict. Leaving after commitment but before completion creates the previewed `Suspicious` incomplete-verification event and never instant capture. It must not read as a vehicle checkpoint.
 
 ## 10. Medkit cache and optional manifest
 
@@ -258,6 +263,8 @@ Every change communicates its source; no number is shown in normal play.
 - Normal exploration rate: 30×.
 - Curfew: 22:00.
 - Idempotent street changes occur at 21:00, 21:30, 22:00, and 23:30 through PA announcements, shutters, thinning crowds, lighting, and the last-train cadence. Each boundary fires once even across pause, save, and restoration.
+- The same transit-shelter camera proves the schedule contrast at 18:45, after 21:30, and curfew. Environment plates remain people-free; all occupants are runtime-owned.
+- Recurring world screens keep one job each: transit departures/civic time, verification procedure/verdict/manual review, and a two-line normal-zoom Hidzu Corporation sector advisory derived only from eligible known state.
 - Hard deadline: 00:00 while either medkit return or transit validation remains incomplete.
 - Dialogue, menus, Character, dossier, observation, terminals, debrief, completion, and failure pause time and autonomous simulation.
 - Safe waiting advances in confirmed 30-minute steps.
@@ -302,7 +309,7 @@ The persistent bottom dock is a fixed four-lane layout occupying 16–18% of the
 3. George;
 4. current quest beat.
 
-The continuous read-only Paranoia slider, current named tier, and ability states are always visible with no numeric readout (`GDR-UI-005`). The slider position follows the exact internal value and marks the tier thresholds without becoming a player control. The minimap reveals only known information. The current-task and George lanes remain separate. The quest lane shows one current beat; George has one live authored sentence or prompt, not a generic chat box. George always explains why he lacks useful information; silence is never hidden gameplay information, and Level 0 gives him no personal desire or deletion arc. Dialogue, Character, dossier, feed, debrief, failure, and completion overlays share one visual language and pause simulation.
+The continuous read-only Paranoia slider, current named tier, and ability states are always visible with no numeric readout (`GDR-UI-005`). The slider position follows the exact internal value and marks the tier thresholds without becoming a player control. The minimap reveals only known information. The current-task and George lanes remain separate. The quest lane shows one current beat; George uses the canonical orb in both HUD and near-character forms and has one live authored sentence or prompt, not a generic chat box or human portrait bust. George always explains why he lacks useful information; silence is never hidden gameplay information, and Level 0 gives him no personal desire or deletion arc. Dialogue, Character, dossier, feed, debrief, failure, and completion overlays share one visual language and pause simulation.
 
 ## 18. World and presentation
 
@@ -311,6 +318,7 @@ The continuous read-only Paranoia slider, current named tier, and ability states
 - Normal play uses the requester-approved close street-first frame; maximum manual zoom-out reaches the composed four-block mission overview. Exact numeric values are calibrated and frozen from the accepted same-master GET-204 live candidate.
 - Runtime projection: 64×32, 2:1 isometric.
 - The requester-owned Neo Tokyo 2 pack is recomposed from named source assets in one Blender 5.0.1 master; project-authored gap fills are limited to public realm and gameplay needs. The approved AI-assisted concept guides composition, camera, and value but never substitutes for production geometry.
+- The locked blend's value/massing/proportion/source relationship is authoritative, but its AI-generated rooftop garnish and baked figures are not. Production roofs may be quieter; every retained prop has named Neo Tokyo 2 or project-authored gameplay/public-realm provenance.
 - Roads, sidewalks, curbs, alleys, crossings, entrances, public activity, hiding, and surveillance form the district.
 - Stable traversal IDs keep localized player-facing names: `loop.public-contact` = **Transit Road**, `loop.logistics-service` = **Market Ring**, and `loop.outer-escape` = **Outer Space**.
 - Authored threshold ambience comes from a Transit Road restaurant, Market Ring workshop, and safehouse-side apartment.
@@ -329,6 +337,10 @@ Acceptance requires normal-control proof at 1280×720, 1440×900, and 1920×1080
 - all four Cold Iron evidence states and the explicit five-world-minute copy action;
 - Clear, Suspicious recovery, Pursuit escape, and drone verification;
 - harmless ordinary public observation, every declared rule-break source, solid-geometry blind spots, one camera-set use, persistent clean/traced history, Clear recognition reset, Needle warnings, and presentation-only civilian reactions;
+- the pedestrian verification lane's readable instruction, valid pass, manual-review state, and premature-exit `Suspicious` result without vehicle framing or instant capture;
+- Needle's neutral amber/warm-white state, crimson verification/Pursuit state, and return to neutral;
+- same-camera transit-shelter population at 18:45, after 21:30, and curfew with exact visible seated/standing capacity and runtime-owned people;
+- transit, verification, and sector-advisory display roles at normal zoom in both languages, including truthful empty/error state and no hidden-fact leak;
 - both one-use grounding actions, the one difficult-escape relief, one George announcement at each first tier entry, and all four idempotent street-clock boundaries;
 - breakdown, capture, and midnight failures plus Restart Attempt;
 - capture reports with disconnected unseen gaps and cause-specific deadline/breakdown screens;

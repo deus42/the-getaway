@@ -9,7 +9,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-Time creates a legible operation deadline and changes how the same city can be crossed. Four authored street moments make the accelerated clock felt through public behavior, sound, shutters, and light while menus and conversations never punish the player for reading. This implements `GDR-TIME-001` through `GDR-TIME-004`.
+Time creates a legible operation deadline and changes how the same city can be crossed. Four authored street moments make the accelerated clock felt through public behavior, sound, shutters, and light while menus and conversations never punish the player for reading. This implements `GDR-TIME-001` through `GDR-TIME-004` and consumes the approved population/display presentation in `GDR-CIV-002`, the GET-205 population deferral in `GDR-CIV-003`, `GDR-SOC-003`, and `GDR-ART-015`.
 
 ## 2. Player-visible verbs
 
@@ -37,9 +37,9 @@ The player cannot freely scrub time, wait in unsafe public space through a hidde
 ## 4. Complete happy-path behavior
 
 1. The opening presents the current time and tells the player that curfew begins at 22:00 and outbound validation must occur before midnight.
-2. After Lira’s briefing, the player may prepare and enter the logistics site while public/service activity is still present.
+2. After Lira’s briefing, the player may prepare and enter the logistics site while public/service activity is still present. At `18:45`, the transit shelter/public queue, delivery activity, and nearby restaurant edge make the public timing visibly inhabited.
 3. If the player prefers the curfew route, they can return to or remain at the safehouse and advance time deliberately.
-4. At 21:00 and 21:30, announcements, shutters, crowds, and sound begin the authored wind-down. At 22:00, curfew schedules and lighting take effect. At 23:30, the last-train/deadline cadence makes the remaining margin legible.
+4. At 21:00 and 21:30, announcements, shutters, crowds, screens, and sound begin the authored wind-down. After `21:30`, the same public corner visibly contrasts with its `18:45` state without changing geometry or camera. At 22:00, curfew schedules and lighting take effect. At 23:30, the last-train/deadline cadence makes the remaining margin legible.
 5. The mission clock continues during active exploration and pauses whenever a declared pause owner is active.
 6. The player returns medkits to Lira and validates outbound transit before midnight.
 7. Safehouse debrief and ending choice occur while simulation is paused and do not consume mission time.
@@ -105,13 +105,15 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 
 ## 9. UI, world, audio, and George feedback
 
-- The clock is spatial through a few repeated civic anchors — a transit departures board, the public checkpoint display, one Hidzu information screen, visible public clocks, and the last-train cadence — whose meaning changes over the evening. Anchors stay sparse: the city is never an oversized HUD, and the strongest reading is passing the same display twice.
+- The clock is spatial through a few repeated civic anchors with stable jobs: the transit/bus-shelter departures board owns service/time, the pedestrian verification display owns procedure/verdict/manual review, one Hidzu advisory screen owns sector-scoped notices, and visible public clocks plus the last-train cadence reinforce time. Anchors stay sparse: the city is never an oversized HUD, and the strongest reading is passing the same display twice.
 
 - The persistent HUD shows `HH:MM`, curfew state, and the deadline only when relevant.
 - HUD/UI amber communicates time, objective urgency, and curfew. Environment amber remains confined to visible windows, entrances, and lamp falloff under `GDR-ART-012`; crimson is reserved for active danger, not the normal clock.
 - Safehouse Wait and Rest previews state the resulting time and recovery before confirmation.
 - The world crossfades aligned authored lighting states over 750 ms without moving geometry, showing a partial set, or causing a visible pop.
 - 21:00, 21:30, 22:00, and 23:30 each have one distinct readable street change; 22:00 remains the curfew transition.
+- At `18:45`, the transit shelter/public queue and delivery edge are visibly populated within authored capacity. After `21:30`, the same-camera corner shows departures, thinning queue/service activity, and changed screens without changing environment geometry or baking people into the plate.
+- The preceding population contrast is a GET-208/T10 acceptance obligation. During the GET-205 v5 visual rebuild, all ambient civilians are absent and both population-owned blend contexts report unavailable; T5 proves that the environment-state transition neither invents nor leaves behind people.
 - George warns at authored thresholds before curfew and midnight, but does not repeat every minute or create a false emergency when the player is safe.
 - A paused screen visibly indicates that time is stopped when ambiguity would otherwise matter.
 
@@ -125,9 +127,10 @@ Boundary history is persisted and restored. Advancing across a boundary, pausing
 
 ## 11. Content-authoring requirements
 
-- Author schedule states for Lira, Naila, Brant, civilian groups, service activity, security, cameras, Needle availability, hiding/blending contexts, terminals, and public screens at all four boundaries.
+- Author schedule states for Lira, Naila, Brant, civilian groups, service activity, security, cameras, Needle availability, hiding/blending contexts, terminals, and public screens at all four boundaries. `blend.public_queue` uses the shelter's exact seat/standing capacities and cannot remain active after its declared schedule closes. GET-205 does not author or display the civilian schedule; it exposes explicit absent-population unavailability until GET-208 restores it.
 - Author all four street moments and deadline warnings with equivalent English/Ukrainian semantics.
 - Author distinct dusk, blue-hour, and curfew ambience and lighting layers aligned to the same layout and camera. Environment color comes from those authored states rather than a multiplicative full-city tint.
+- GET-205 first authors an identical-camera state comparison with people-free environment layers, zero ambient civilians, and honest unavailable blend contexts. GET-208/T10 later adds the runtime-owned `18:45` and post-`21:30` population comparison and records active/occupied/full/closing/inactive context states plus the three display-role payloads.
 - Author safehouse Wait/Rest copy with resulting time and recovery values.
 - Author deterministic world-clock event IDs for waiting, resting, both grounding actions, 21:00, 21:30, 22:00, 23:30, and deadline crossing. `Level0OutcomeLedger` records only final primary timing and any `failure.deadline` result; it does not duplicate the full clock log.
 
@@ -157,6 +160,7 @@ Post-MVP may add longer authored schedules, indoor schedule changes, additional 
 4. Cross 21:00, 21:30, 22:00, and 23:30 around pause/save restoration; each public/activity/sound/light change fires exactly once without moving buildings or objectives.
 5. Rest previews and applies 30 minutes and 40 Paranoia recovery exactly once.
 6. A midnight failure identifies whether Lira hand-in or outbound validation was missing and Restart Attempt restores the departure clock.
+7. During GET-205, compare the same public-corner camera across environment states and prove zero ambient civilians, unavailable empty blend contexts, and no baked/left-behind actors. During GET-208/T10 acceptance, repeat it at `18:45` and after `21:30` with capacity-honest runtime population visibly thinning while display roles remain stable.
 
 ## 16. Owning Linear ticket
 

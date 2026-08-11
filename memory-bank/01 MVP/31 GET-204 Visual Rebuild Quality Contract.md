@@ -26,6 +26,7 @@ The committed generated-plate city is a protected fallback and useful visual-dir
 ### Reference 2 normal-play target
 
 - File: `art/references/get204/street-play-target.png`
+- Authority boundary: owns camera intimacy, inhabited social staging, surveillance readability, and HUD/world balance. It no longer owns actor size or human/building proportion; `GDR-ART-014` assigns those to the KitBash blend. Its human-head George depiction is not authoritative; `GDR-GEO-005` restores and owns George's canonical orb identity.
 - SHA-256: `66cc72f0ec09b928cf2d95f0fe3db61881776ba87f48c99c83852cf47583c9a9`
 - Owns: street-first camera, protagonist prominence, lower-center framing, human-scale architecture, social readability, clear entrances, and ordinary life under surveillance.
 
@@ -160,7 +161,8 @@ Reject and continue if any proof shows:
 ## 13. Ownership and governance
 
 - Owning Linear issue: GET-204; move to `In Review` after the authorized acceptance commit, never directly to `Done`.
-- The source-geometry Blender gate and live four-block city were requester-accepted and committed at `2206f8b`. GET-204 reopened on 2026-08-09 for city-wide source-measured collision correction; the corrected live behavior, full automated closeout, and two-worker AI Gamer gate now pass. Move the authorized corrective commit to `In Review`, keep it non-terminal until the requester verifies that committed build, and keep GET-205 parked until then.
+- The source-geometry Blender gate and live four-block city were requester-accepted and committed at `2206f8b`. GET-204 reopened on 2026-08-09 for city-wide source-measured collision correction; the corrected live behavior, full automated closeout, and two-worker AI Gamer gate now pass. Move the authorized corrective commit to `In Review` and keep it non-terminal until the requester verifies that committed build.
+- `GDR-ART-017` authorizes GET-205 to supersede this accepted massing through a new `get205-dense-four-block-v5` recipe and runtime identity. That descendant change does not mutate, relabel, or retroactively reject the GET-204 recipe: GET-204 remains immutable/recoverable evidence and the explicit diagnostic fallback. GET-205 preserves the executable two-road/three-alley/crossing/safehouse/anchor/loop contract, not every dead interstitial walkable gap, and must pass its own route/probe and greybox-density gates before facade work.
 - Preserve the accepted GET-204 live runtime as the explicit diagnostic fallback after the requester-accepted GET-205 production path becomes the normal Level 0 presentation.
 - No production runtime replacement or commit occurs without the relevant requester approval.
 - The Decision Register, Art Direction, Roadmap, MVP Readiness, Linear issue/comments, active plan, AGENTS source-provenance rule, and `progress/GET-204.md` must remain aligned.

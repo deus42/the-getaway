@@ -14,7 +14,7 @@ Authority flows from current requester directives through [[01 MVP/12 Game Desig
 
 1. **Specification before runtime.** No gameplay recovery or reimplementation begins until the documentation gate in `AGENTS.md` is satisfied.
 2. **One authority per state.** Redux owns persistent/domain state, Phaser owns frame-local presentation and simulation objects, React owns DOM presentation and player input for overlays, and content manifests own authored data.
-3. **Mission semantics and accepted geometry have separate authority.** The mission skeleton owns required places, route purposes, stable semantic IDs, and player behavior. The requester-accepted four-block Blender master owns detailed visible geometry. `Level0LayoutContract` is the one reconciled runtime record for walkability, footprints, entrances, occlusion, and gameplay anchors; neither a rejected greybox nor an unaccepted render may silently redefine the other authority.
+3. **Mission semantics and accepted geometry have separate authority.** The mission skeleton owns required places, route purposes, stable semantic IDs, and player behavior. The current requester-accepted versioned Blender master owns detailed visible geometry. `Level0LayoutContract` is the one reconciled runtime record for walkability, footprints, entrances, occlusion, and gameplay anchors; neither a rejected greybox nor an unaccepted render may silently redefine the other authority. A descendant visual ticket may replace massing only through a new identity plus an executable invariant-route/anchor gate, never by mutating the accepted recipe.
 4. **Truthful perception.** Surveillance rendering and detection consume the same resolved geometry and occlusion data.
 5. **Explicit effects.** Dialogue, interactions, terminals, and mission transitions commit typed effects; no component mutates unrelated domains opportunistically.
 6. **Deterministic recovery.** Autosave and `OperationAttemptBaseline` are distinct persisted records. `restartAttempt` restores the complete departure baseline rather than reversing later events.
@@ -114,12 +114,14 @@ Current ownership is explicit:
 - `src/game/level0/runtime/` owns authored-ID map knowledge, the clock, safehouse effects, exact schema and spatial validation, transient-pause normalization, autosave, the immutable `OperationAttemptBaseline`, and the `restartAttempt` action;
 - `src/game/level0/rpg/` owns cover validation, the authored ability/gate catalogs and pure gate resolver, Paranoia tier derivation, Paranoia/research ledgers, provisional tuning tables, breakdown transitions, and safehouse research rules;
 - `src/store/level0RuntimeSlice.ts` is the isolated serializable domain lane;
-- `src/game/level0/scene/Level0Scene.ts` owns live city-layer composition, explicit diagnostic fallback, separate actor transforms/hard foreground occlusion, camera, schedule atmosphere, and input. It renders one geometry-stable production composition from registered background tiles and same-source foreground crops; protagonist position or zoom must never replace one architectural plate with another or mutate actor scale;
+- `src/game/level0/scene/Level0Scene.ts` owns live city-layer composition, explicit diagnostic fallback, separate actor transforms/hard foreground occlusion, camera, generation-safe GET-205 lighting-set transitions, and input. It renders one geometry-stable production composition from registered background tiles and same-source foreground crops; protagonist position or zoom must never replace one architectural plate with another or mutate actor scale;
 - `src/game/level0/playtest/level0AgentBridge.ts` derives diagnostics from the same store/layout and may dispatch only normal runtime events;
 - `src/content/gameBible/` owns the finalized English/Ukrainian reference catalog, shared language-neutral rules, search extraction, relations, topic coverage, and non-rendered traceability; `src/components/level0/Level0GameBible.tsx` owns its accessible presentation and cannot dispatch game-domain effects;
 - `art/iso-assets/contracts/level0-layout-contract.json` is the deterministic Blender-facing export of the same contract.
 
-The active GET-205 asset pipeline is manifest-driven. `art/blender/get205/manifests/four-block-baked-treatment.json` and `build_four_block_baked_treatment.py` reproduce the same-master people-free render, sixteen foreground silhouettes, restrained facade identity, and non-colliding atmospheric surround. `scripts/build-get205-runtime-assets.mjs` publishes a hash-checked desktop profile (four overlapping background tiles plus sixteen full-resolution foregrounds) and a compact mobile profile (one half-resolution background plus sixteen half-resolution foregrounds) under `public/environment/level0/get205-hidzu-production-v1/`. The desktop profile preserves the logical `6400×3600` plate without any texture edge above `4096`; the mobile profile stays below the provisional `48 MiB` decoded-RGBA budget. The runtime imports the generated manifest as data rather than duplicating asset paths or depth anchors in scene code.
+The current realized GET-205 v4 asset pipeline is manifest-driven. `art/blender/get205/manifests/wet-blue-black-v4-states.json`, `safehouse-cleanup-v1.json`, and `reference-delta-v1.json` declare the three Cycles source states, bounded connected-component removal, and fixed-frame visual gates. `render_wet_blue_black_states.py` derives aligned people-free dusk, blue-hour, and curfew plates plus sixteen foreground silhouettes per state from the recoverable v4 master. `scripts/build-get205-runtime-assets.mjs` validates the complete matrix in staging and atomically publishes schema-v2 desktop and mobile profiles under `public/environment/level0/get205-hidzu-production-v1/`; failed validation or post-swap readback restores the prior public root. Placement, crop, depth, camera, fit, and occlusion metadata remain state-independent; each asset nests only `path`, `sha256`, and `bytes` under its three lighting states. The runtime imports that manifest through a typed phase resolver rather than duplicating asset paths or anchors in scene code. This v4 runtime was visually rejected on 2026-08-11 and is recoverable technical salvage, not the accepted endpoint.
+
+The approved but not yet realized GET-205 v5 boundary uses new recipe identity `get205-dense-four-block-v5` and runtime identity `get205-dense-four-block-production-v2`. Before facade or runtime work it must version the two roads, three alleys, crossing, safehouse threshold/court, traversal loops, and all required anchor-clearance discs; reject new footprints that intersect them; keep the recovered 24-point table's 14 Class A geometry/bounds outcomes invariant; record fresh v5 outcomes for its 10 actor/interstitial/guard-dependent Class B points; and pass a fixed-registration building-pixel-fraction band against the locked blend. After massing and hero approval, v5 regenerates the three state masters, 12–16 independent identity cutouts/depth anchors, collision/placement pins, profiles, hashes, budgets, and regression baselines. Until those gates pass and publication swaps atomically, the realized v4 architecture remains current and no v5 identity may resolve at runtime.
 
 The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 3 uses independent autosave and `OperationAttemptBaseline` keys plus exact nested envelopes, so legacy or stale development saves cannot hydrate or overwrite the canonical run. Validation checks the authored `CoverIdentity`, held ability IDs, research-state map, committed gate verdicts, ordered Paranoia event history, announced tier history, research events, camera-group attempt history, grounding usage, Cold Iron evidence state, processed clock boundaries, and the internal Paranoia value. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and cause-specific failure data that does not match the authoritative ledgers. `OperationAttemptBaseline` additionally requires the authored departure anchor and carries the complete cover, ability, research, Paranoia, surveillance, recovery, and schedule state. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists the baseline before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, ability/gate mappings, research options, and unresolved surveillance/art values remain provisional while their `OPEN-*` decisions are unresolved.
 
@@ -213,6 +215,27 @@ interface Level0TraversalLoopDisplayName {
   localizedDisplayNameKey: string;
 }
 
+interface Level0VerificationLane {
+  id: 'verification.lane.level0';
+  entryBoundary: WorldSegment;
+  committedRegion: WorldPolygon;
+  exitBoundary: WorldSegment;
+  queueRailOccluderIds: string[];
+  floorFlowAnchorIds: string[];
+  instructionDisplayAnchorId: string;
+}
+
+interface Level0BlendingContext {
+  id: string;
+  region: WorldPolygon;
+  entryAnchorId: string;
+  seatedCapacity: 2 | 3;
+  standingCapacity: number;
+  seatAnchorIds: string[];
+  standingAnchorIds: string[];
+  scheduleId: string;
+}
+
 interface Level0LayoutContract {
   id: string;
   schemaVersion: number;
@@ -225,6 +248,8 @@ interface Level0LayoutContract {
   buildingFootprints: Level0BuildingFootprint[];
   entrances: Level0Entrance[];
   droneRegions: Level0DroneRegion[];
+  verificationLanes: Level0VerificationLane[];
+  blendingContexts: Level0BlendingContext[];
   anchors: Level0Anchor[];
   occluders: WorldPolygon[];
   semanticMaskIds: string[];
@@ -232,7 +257,7 @@ interface Level0LayoutContract {
 }
 ```
 
-The contract is authored from approved rules plus explicitly recorded provisional layout data. Both Blender export and Phaser runtime consume it. The three stable loop IDs resolve through localization to **Transit Road**, **Market Ring**, and **Outer Space** without renaming internal IDs. Exact dimensions and anchors remain non-final while their review items are open and must stay replaceable through this contract.
+The contract is authored from approved rules plus explicitly recorded provisional layout data. Both Blender export and Phaser runtime consume it. The three stable loop IDs resolve through localization to **Transit Road**, **Market Ring**, and **Outer Space** without renaming internal IDs. The one verification-lane record aligns the authored pedestrian rails/arrows/panel with the runtime commitment boundaries. A blending context records visible seated and standing capacity; its runtime occupants may never exceed the declared anchors. Exact dimensions and anchors remain non-final while their review items are open and must stay replaceable through this contract.
 
 ### Cover identity and abilities
 
@@ -327,6 +352,16 @@ type SurveillanceRuleBreakKind =
   | 'failed-verification'
   | 'detected-camera-feed-change';
 type CameraGroupAttemptHistory = 'unused' | 'active' | 'clean' | 'traced';
+type NeedlePresentationState = 'neutral-patrol' | 'verification' | 'pursuit';
+
+interface CameraPresentationCue {
+  cameraId: string;
+  status: 'inactive' | 'active' | 'focused' | 'looped';
+  ledToken: string;
+  irGlintVisible: boolean;
+  pavementCueRegionId?: string;
+  coverageRevision: string;
+}
 
 interface ObservationEvidence {
   observerId: string;
@@ -399,9 +434,9 @@ interface CaptureReportReadModel {
 }
 ```
 
-Runtime geometry emits raw `ObservationEvidence`. A separate rule-break resolver emits `SurveillanceRuleBreakEvidence` only for the five approved behaviors. The transition owner may create concern or Paranoia only when valid visibility and valid rule-break evidence coincide; ordinary public camera visibility is inert. Solid geometry and ordinary occlusion create blind spots without an off-grid zone type. Returning fully to `clear` empties recognition sources and makes later ordinary public visibility harmless until another observed rule break.
+Runtime geometry emits raw `ObservationEvidence`. A separate rule-break resolver emits `SurveillanceRuleBreakEvidence` only for the five approved behaviors. The transition owner may create concern or Paranoia only when valid visibility and valid rule-break evidence coincide; ordinary public camera visibility is inert. `CameraPresentationCue` is derived from the same device state and coverage revision consumed by detection and Observation, so LED, IR glint, pavement cue, and exact discovered geometry cannot disagree. Solid geometry and ordinary occlusion create blind spots without an off-grid zone type. Returning fully to `clear` empties recognition sources and makes later ordinary public visibility harmless until another observed rule break.
 
-Each camera group has one attempt-long history. Activation may expire, but `clean` or `traced` remains authoritative until `restartAttempt`; Level 0 authors exactly one usable group. `Needle` is the localized player-facing name for the single verifier drone, while its internal ID remains stable. Civilians consume only current visible camera, Needle, and player-behavior presentation signals; they never read this hidden ledger, raise reports, or mutate surveillance.
+Each camera group has one attempt-long history. Activation may expire, but `clean` or `traced` remains authoritative until `restartAttempt`; Level 0 authors exactly one usable group. `Needle` is the localized player-facing name for the single verifier drone, while its internal ID remains stable. Its presentation state is derived from network/controller state: `neutral-patrol` uses warm-white/amber, while `verification` and `pursuit` alone use crimson. Civilians consume only current visible camera, Needle, and player-behavior presentation signals; they never read this hidden ledger, raise reports, or mutate surveillance.
 
 The capture-report selector reads only the surveillance ledger. It may connect sightings that the ledger can actually relate, but it never interpolates the protagonist's full movement path; unseen gaps remain disconnected. `CaptureReportReadModel` is unavailable for deadline and breakdown failures.
 
@@ -776,11 +811,11 @@ flowchart LR
 - GET-204 has two distinct requester gates: actual Blender close/overview source proof before runtime replacement, then close/current-HUD/overview proof in the live runtime. A validator cannot accept either gate, and an AI-generated concept cannot satisfy source provenance.
 - The complete live candidate must produce a close frame, a clean city frame, and a four-block mission overview from equivalent world/camera parameters.
 - T4 export validation proves projection and canvas containment, tile-grid registration, file hashes/bytes/budgets, layer semantics/fallbacks, and complete anchor values against the layout contract. Decoded raster-edge agreement remains a visual/runtime acceptance responsibility rather than a claim made by metadata validation alone.
-- T5 opens the exact accepted T4 four-block master and writes a separate ignored derivative scene. Its tracked manifest permits facade-scale Hidzu identity and one below-grade noninteractive atmospheric surround only; source-cluster transforms, public-realm geometry, topology, collision, masks, anchors, projection, and actor ownership remain immutable.
-- The authoritative T5 render is one people-free `6400×3600` stable plate with no hidden cluster. Sixteen same-scene alpha silhouettes provide hard foreground occlusion without baking people or duplicating a second architectural composition.
-- `scripts/build-get205-runtime-assets.mjs` verifies the stable source dimensions and registered foreground metadata, emits WebP derivatives, records hashes/bytes/crops/depth anchors, and replaces only its bounded production output root. Desktop tiling uses overlap so filtering cannot expose seams; mobile downsampling is a separate declared profile, not browser-side texture scaling.
-- Runtime schedule treatment consumes the existing authored `dusk`, `blue-hour`, and `curfew` clock phase. It changes only layer tint and one fixed-camera atmosphere rectangle; schedule treatment is noninteractive and cannot affect detection, pathing, collision, occlusion order, camera follow, or actor scale.
-- The earlier grammar-heavy T5 generator, staged publication pointer, and 17-frame evidence bundle remain historical research. They do not own the current four-block production runtime and cannot substitute for the current live close/overview/mobile/schedule acceptance frames.
+- The realized v4 T5 path opens the accepted T4 master in a separate ignored derivative and keeps source-cluster transforms, public-realm geometry, topology, collision, masks, anchors, projection, and actor ownership immutable. That restriction describes the rejected v4 implementation only. `GDR-ART-017` authorizes v5 to replace massing under a new identity after the preserved-route/anchor/probe greybox gate; it does not authorize mutation of T4/v4.
+- The realized v4 path owns three aligned people-free `6400×3600` stable plates and sixteen same-scene alpha silhouettes per state. The approved v5 replacement must regenerate all three plates and retain 12–16 per-building identity slices with independent depth anchors; a merged continuous-wall cutout is invalid because it breaks actor sorting at wall ends.
+- `scripts/build-get205-runtime-assets.mjs` verifies each stable source dimension and hash, rejects crop/depth/registration drift across states, emits WebP derivatives into owned staging, records state-specific paths/hashes/bytes under schema v2, and atomically replaces only its bounded production output root after full validation and readback. Desktop tiling uses overlap so filtering cannot expose seams; mobile downsampling is a separate page-stable profile, not browser-side texture scaling.
+- `get205HidzuRuntime.ts` resolves page-stable profile plus phase-specific paths and texture keys while preserving the geometry-facing layer contract. `get205LightingTransition.ts` prefetches complete blue-hour and curfew sets at `19:50` and `21:50`, keeps the old set until the target is complete, crossfades aligned layers for `750 ms`, then destroys the old GameObjects and textures. A generation token rejects stale direct-jump, Restart Attempt, hydration-rewind, and asynchronous completions. Transition failure discards the partial target, keeps the current complete state, emits an observable diagnostic, and retries on later synchronization; initial-state failure remains visibly fatal. Environment tint and the atmosphere rectangle no longer own city color. V5 must retain and revalidate this interface while replacing the asset/geometry identities; the old and new production identities are not supported simultaneously as automatic fallbacks.
+- The earlier grammar-heavy T5 generator, staged publication pointer, and 17-frame evidence bundle remain historical research recoverable from commit `7a6bba7`; their active manifest, runner, validator, mutation command, and Blender builder are retired. They do not own the current four-block production runtime and cannot substitute for the current live close/overview/mobile/schedule acceptance frames. `art:level0:t5:production` remains the sole T5 package entrypoint because it publishes the current four-block runtime profiles.
 - If a parallelogram footprint cannot match a visual base within one tile, author a custom polygon or multi-region footprint rather than trim-chasing.
 - One full master scene prevents per-building angle, scale, and light drift.
 - Raw vendor geometry and textures remain outside Git. Requester-authorized flattened game derivatives, original gap-fill assets, source manifests, recipes, and validators may be versioned after the complete live candidate is accepted; generated `.blend` files remain untracked.
@@ -844,11 +879,11 @@ The safehouse boundary never dispatches a network-clear event by itself. A pure 
 
 ### Drone
 
-Exactly one Level 0 verifier drone, player-facing **Needle**, receives dispatch targets from the network. Its runtime controller follows one authored patrol, moves toward stored legitimate last-known positions, verifies visible/hiding areas according to authored rules, searches, and returns. Presentation emits its authored hum, approach warning, and verification warning. It has no weapon, HP, combat turn, or defeat state.
+Exactly one Level 0 verifier drone, player-facing **Needle**, receives dispatch targets from the network. Its runtime controller follows one authored patrol, moves toward stored legitimate last-known positions, verifies visible/hiding areas according to authored rules, searches, and returns. Presentation emits its authored hum, approach warning, verification warning, and derived `NeedlePresentationState`; no independent visual toggle can leave the lamp crimson during neutral patrol. It has no weapon, HP, combat turn, or defeat state.
 
 ### Hiding and blending
 
-Contexts are layout/content records, not tile tags inferred at runtime. Each declares bounds, entry point, schedule, direct-observation restriction, allowed network states, recovery behavior, and player-facing fiction.
+Contexts are layout/content records, not tile tags inferred at runtime. Each declares bounds, entry point, schedule, direct-observation restriction, allowed network states, recovery behavior, and player-facing fiction. `blend.public_queue` additionally binds to the transit shelter's explicit seat/standing anchors and capacity; eligibility selectors consume the current schedule plus actual runtime occupancy. Environment plates never count as occupants.
 
 ### Camera loop
 
@@ -900,7 +935,7 @@ Research uses stable option IDs and an ordered research-event ledger to prevent 
 
 The clock service receives frame deltas only during active exploration with no pause owners. It advances at 30×, persists idempotent boundary IDs, and derives phase/curfew/deadline state. Authored city changes fire exactly once at 21:00, 21:30, 22:00, and 23:30 even when a pause, save hydration, or explicit clock jump straddles the boundary.
 
-Schedules are authored state tables keyed by world phase/boundary, not free-running NPC scripts. Schedule transitions can change availability, position/path definitions, public/blending context, shutters, crowd density, signage/light state, and ambience. They cannot move a currently interacting actor or mutate geometry silently. Spatial ambience has three authored world anchors: the Transit Road restaurant, Market Ring workshop, and safehouse-side apartment.
+Schedules are authored state tables keyed by world phase/boundary, not free-running NPC scripts. Schedule transitions can change availability, position/path definitions, public/blending context, shutters, crowd density, signage/light state, and ambience. They cannot move a currently interacting actor or mutate geometry silently. The transit-shelter schedule is populated at 18:45, winds down after 21:30, and disables blending at curfew while keeping occupancy within the layout contract's visible seated/standing anchors. Spatial ambience has three authored world anchors: the Transit Road restaurant, Market Ring workshop, and safehouse-side apartment.
 
 Safehouse Wait and Rest dispatch explicit clock jumps after confirmation. All boundary events between old and new time are processed deterministically.
 
@@ -940,6 +975,25 @@ The bottom dock is a fixed four-lane semantic layout:
 Selectors provide one read model per lane. CSS ownership remains component-local and uses semantic tokens. Level 0 styling is scoped through a visual-style data attribute. No component branches on raw theme IDs for painter logic.
 
 The George and current-task lanes remain distinct selectors and distinct presentation regions. Gated choices consume the shared gate-verdict read model (`GateVerdict` preakdown` preview/result read model; no HUD or dialogue component recalculates the margin. Canonical Bible content is corrected only when a changed approved rule would otherwise make it false—no epigraph, quotation, or decorative-fiction schema is added.
+
+### Civic display read models
+
+```ts
+type Level0CivicDisplayRole = 'transit' | 'verification' | 'sector-advisory';
+
+interface Level0CivicDisplayReadModel {
+  displayId: string;
+  role: Level0CivicDisplayRole;
+  primaryTextKey: string;
+  secondaryTextKey?: string;
+  stateId: string;
+  knowledgeSourceIds: string[];
+  emptyStateKey: string;
+  errorStateKey: string;
+}
+```
+
+Each physical recurring display is registered with exactly one role. Transit consumes departures and civic-clock state; verification consumes lane procedure, exact verdict, and manual-review state; sector advisory consumes only eligible authored civic-advisory events. The advisory renderer budgets two readable lines at normal zoom. A missing or invalid model uses that role's truthful empty/error state and cannot borrow another role, rotate generic advertising, or reveal an undiscovered fact. Japanese candidate copy and George translation remain replaceable content under `OPEN-NAR-014` until accepted.
 
 Persistent height must remain within 16–18% at supported desktop viewports. Overlays acquire pause/focus ownership and fit at `1280×720`. Overlay close returns focus to the correct world/control owner without issuing gameplay input.
 

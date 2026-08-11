@@ -22,7 +22,7 @@ This note holds narrative-facing visual motifs only. The canonical production ru
 - The protagonist, contacts, civilians, and security are modern human beings, not fantasy operatives.
 - Clothing communicates expatriate life, mutual aid, service work, public routine, and corporate security.
 - Citizens adapt posture, timing, routes, and conversation to being observed.
-- George is a private AR presence perceived only by the protagonist; he is not a physical companion.
+- George is a private AR presence perceived only by the protagonist. His canonical form is the recovered dark orb with a cyan concentric core and restrained geometric markers; he is not a physical companion or holographic human bust.
 
 ## Faction distinction
 

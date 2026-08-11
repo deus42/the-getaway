@@ -9,7 +9,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-The player survives a visible but fallible institutional network by understanding who and what can see an actual rule break, controlling what the network last knew, and behaving credibly in public space. Ordinary public visibility is harmless while `Clear`. Cameras, human security, civilians, and the named verifier drone Needle create recoverable pressure rather than omniscient pursuit or a combat encounter. This implements `GDR-SUR-001` through `GDR-SUR-010`, `GDR-CIV-001`, `GDR-STL-001` through `GDR-STL-003`, and `GDR-ESC-001` through `GDR-ESC-002`.
+The player survives a visible but fallible institutional network by understanding who and what can see an actual rule break, controlling what the network last knew, and behaving credibly in public space. Ordinary public visibility is harmless while `Clear`. Cameras, human security, civilians, and the named verifier drone Needle create recoverable pressure rather than omniscient pursuit or a combat encounter. This implements `GDR-SUR-001` through `GDR-SUR-013`, `GDR-CIV-001` through `GDR-CIV-003`, `GDR-STL-001` through `GDR-STL-003`, and `GDR-ESC-001` through `GDR-ESC-002`.
 
 ## 2. Player-visible verbs
 
@@ -18,6 +18,7 @@ The player survives a visible but fallible institutional network by understandin
 - Avoid observation or use a connected terminal to attempt a temporary camera loop.
 - Break line of sight, change direction, and enter an eligible authored hiding or blending context.
 - Behave credibly within delivery activity or a public queue.
+- Read the pedestrian verification lane's queue direction, posted commitment rule, and current procedure/verdict state before entering it.
 - Respond to Needle's authored hum, approach warning, and verification warning.
 - Resolve an authored interception through a supported social, composure, evasion, or physical escape option.
 
@@ -27,7 +28,7 @@ The player survives a visible but fallible institutional network by understandin
 - Hidzu Corporation has no recognition or concern about the protagonist at the start; ordinary public camera visibility alone cannot change that.
 - No camera is known unless it is physically visible from the starting context or revealed by an approved fact.
 - The protagonist begins in the safehouse boundary, outside active operation pursuit, with Paranoia `0`.
-- The district contains exactly one unarmed patrol drone. Exact human-security and civilian counts, schedules, and placements are unresolved by `OPEN-SEC-001`, `OPEN-CIV-001`, and `OPEN-LAYOUT-003`.
+- The district contains exactly one unarmed patrol drone. During the GET-205 v5 visual rebuild, the presentation also contains exactly one static public restricted-area guard, no static service-entrance guard, and no ambient civilians. Exact later human-security and civilian counts, schedules, and placements remain unresolved by `OPEN-SEC-001`, `OPEN-CIV-001`, and `OPEN-LAYOUT-003` for GET-208.
 - Camera looping requires the connected terminal and the designated technical ability. Hiding and blending require authored contexts and their declared eligibility rules.
 - Safehouse entry and action behavior under direct observation, `Suspicious`, or `Pursuit` remains an acceptance decision under `OPEN-SAFE-001`; its recorded recommendation may be implemented provisionally, but the network cannot gain an undocumented boundary reset.
 
@@ -35,7 +36,7 @@ The player survives a visible but fallible institutional network by understandin
 
 1. The player discovers a camera, public group, security presence, entrance, or context through sight, contact information, or authored observation.
 2. The world and knowledge surfaces show only the information legitimately discovered, using the same camera geometry that detection uses.
-3. On the dusk/public timing, the player reads delivery activity and uses credible blending behavior; on the curfew/service timing, the player times camera coverage and discrete hiding positions.
+3. On the dusk/public timing, the player reads delivery activity and the transit-shelter queue, including whether its visible seated/standing capacity still permits blending; on the curfew/service timing, the player times camera coverage and discrete hiding positions.
 4. A technical player may operate the connected terminal once per attempt. The designated technical ability enables a temporary loop; the supporting operational fact determines whether the persistent camera-group history becomes `clean` or `traced` after the active effect expires.
 5. If a camera or Needle sees a declared rule break and concern reaches `Suspicious`, the game identifies both the observation and rule-break source, the last-known position, and the Paranoia cause. The player breaks observation and reaches a credible hiding or blending context.
 6. If identity becomes confirmed, the network enters `Pursuit`. The player breaks sight, changes direction, and recovers through an authored context while cameras, security, and the drone search last-known evidence rather than true coordinates.
@@ -61,9 +62,9 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - Cameras and drone share truthful last-known evidence, not live protagonist coordinates.
 - Rendered camera coverage and detection use identical geometry and respect solid occlusion. Normal geometry creates blind spots; no special off-grid zone exists.
 - Every camera has readable facing, sweep, coverage, and current network state once discovered.
-- Normal play uses subtle status LEDs, IR glints, and authored wet-pavement reflections; Observation shows exact discovered coverage.
-- The unarmed drone is player-facing `Needle`, follows one authored patrol crossing the district's decision points (public verification approach, camera-terminal area, service-alley crossing, one escape junction), and verifies `Suspicious` events at last-known positions and hiding areas. It cannot be fought, looted, or disabled by a fantasy gadget. Its pass creates a periodic, learnable pressure wave; waiting it out is always safe and always costs the moving mission window.
-- Procedural commitment (`GDR-SUR-011`): Level 0 authors exactly one verification-lane set-piece. Posted signage states, in operational language, that exit after session initiation is recorded as incomplete processing; entry is free, the pass verdict is exact for a valid cover, and premature exit produces the previewed observed incomplete-verification event (`Suspicious` class, never capture).
+- Normal play uses a small readable status LED, IR glint, and restrained sheen/reflection on authored wet pavement; these cues describe the same current camera state as detection. Observation alone shows exact discovered coverage.
+- The unarmed drone is player-facing `Needle`, follows one authored patrol crossing the district's decision points (public verification approach, camera-terminal area, service-alley crossing, one escape junction), and verifies `Suspicious` events at last-known positions and hiding areas. It cannot be fought, looted, or disabled by a fantasy gadget. Its pass creates a periodic, learnable pressure wave; waiting it out is always safe and always costs the moving mission window. Its lamp is warm-white or restrained amber during neutral patrol, crimson only during active verification or `Pursuit`, and visibly returns to neutral afterward.
+- Procedural commitment (`GDR-SUR-011`): Level 0 authors exactly one pedestrian verification-lane set-piece. Queue rails and ground flow arrows make direction unambiguous. An eye-height illuminated instruction panel states, in operational language, that exit after session initiation is recorded as incomplete processing; entry is free, the pass verdict is exact for a valid cover, and premature exit produces the previewed observed incomplete-verification event (`Suspicious` class, never capture). It must not read as a vehicle checkpoint.
 - Level 0 has one camera set, temporarily looped only from its connected terminal and usable once per attempt. History transitions `unused → active → clean|traced`; active duration remains unresolved in `OPEN-SUR-004`, but the final history persists until Restart Attempt.
 - The designated technical ability enables the loop action. Looping without the supporting operational fact leaves an explicit trace as its declared cost; when a valid observer detects that feed change, the paired typed rule break may set the network to at least `Suspicious` even though the loop succeeds.
 - Hiding and blending use discrete authored contexts. Darkness alone is not hiding; hiding cannot begin under direct observation; blending requires behavior credible for that social context.
@@ -73,6 +74,9 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - Reaching or crossing the safehouse boundary does not authorize an implicit network transition. Exact availability and continued-search behavior use the approved or explicitly provisional `OPEN-SAFE-001` rule.
 - Returning fully to `Clear` resets recognition, so ordinary public visibility becomes harmless again until another observed rule break.
 - Civilians react only to visible camera attention, Needle, or visible player behavior with small glances or movement. They never know hidden network state and never report the player.
+- `blend.public_queue` uses the transit/bus shelter's actual geometry: the bench exposes an exact authored two- or three-seat capacity, standing queue capacity is separate, and occupancy never exceeds either visible envelope. Full or unavailable contexts state the real reason. The eventual GET-208 population is active at `18:45`, winds down after `21:30`, and is inactive at curfew under the shared schedule.
+- During the GET-205 v5 visual gate, `blend.public_queue` and `blend.delivery_activity` are explicitly unavailable because no ambient population exists. T5 may not fake eligibility, leave schedule-owned actors visible, or treat an empty context as blending cover.
+- The GET-205 restricted area is presentation-only: barrier, warning lights, signage, one public static guard, and Needle placement may communicate control, but detection, trespass, verification, scheduling, and interception remain GET-208-owned.
 
 ## 7. Inputs from other systems
 
@@ -91,15 +95,16 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - Surveillance records `networkPeak`, `needleVerified`, typed rule-break sources, used hiding or blending context IDs, and any authored `interceptionOutcome`.
 - Known camera, hiding, and blending facts update Observation, minimap, dossier, George, objectives, and debrief only through their designated effects.
 - Unresolved `Pursuit` blocks the Lira medkit handoff. Capture enters `L0_FAILED`.
-- Public activity and security schedules determine the credibility of dusk blending and curfew service movement without arbitrary bonuses. Civilians are presentation-only mirrors of visible events.
+- Once GET-208 restores authored population, public activity and security schedules determine the credibility of dusk blending and curfew service movement without arbitrary bonuses. During GET-205 v5, the absent population makes both blend contexts unavailable. Civilians remain presentation-only mirrors of visible events.
 
 ## 9. UI, world, audio, and George feedback
 
-- World rendering shows subtle camera status light/glint/reflection in normal play and exact discovered facing/sweep/coverage in Observation; both use detection geometry.
+- World rendering shows each discovered camera's small status LED, IR glint, and restrained wet-pavement sheen/reflection in normal play and exact discovered facing/sweep/coverage in Observation; both describe the same device state and use detection geometry.
 - `Suspicious` uses an amber network change, names the source direction and last-known event, and communicates the Paranoia cause.
 - Active recognition renders as real network behavior, never an arcade alarm: a camera pauses its sweep at the last-known position, its service lamp shifts to institutional amber, a checkpoint enters manual-review mode, Needle diverts from patrol to verification route, and a connected security worker checks a display. Civilians still cannot know hidden state; security personnel and connected devices react because they actually receive network information.
 - `Pursuit` uses a crimson state change plus clear camera, security, and drone warnings focused on the last-known position.
-- Needle has one recognizable hum and distinct approach and verification warnings before confirmation.
+- Needle has one recognizable hum and distinct approach and verification warnings before confirmation. Its neutral warm-white/amber lamp changes to crimson only for active verification or `Pursuit`, then visibly returns to neutral.
+- The pedestrian verification lane communicates direction and commitment through queue rails, ground arrows, an eye-height illuminated instruction panel, and its dedicated procedure/verdict/manual-review display before any prompt is required.
 - Hiding or blending prompts name eligibility and explain direct observation, behavior, fact, gate, or state blockers.
 - George may summarize verified source, last-known evidence, known context eligibility, and authored recovery choices. He cannot reveal the protagonist's hidden safety, an unknown camera, or the best route.
 - Surveillance, drone, transition, consequence, and curfew cues come from [[49 Audio]] and cannot be the only carrier of critical state.
@@ -115,11 +120,13 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 
 ## 11. Content-authoring requirements
 
-- Human-security count, roles, schedules, and verification coverage may use only the replaceable authored recommendation from `OPEN-SEC-001` until accepted; the resulting set must make both timings credible without creating combat.
-- Civilian count, schedules, group behavior, and blending cadence may use only the replaceable authored recommendation from `OPEN-CIV-001` until accepted; the resulting content must support public-route blending and small visible-event reactions without reporting or hidden-state knowledge.
+- For the GET-205 visual rebuild, retain only the static public restricted-area guard and Needle, remove the static service-entrance guard, and add no security behavior. Later human-security count, roles, schedules, and verification coverage may use only the replaceable recommendation from `OPEN-SEC-001` until GET-208 acceptance.
+- For the GET-205 visual rebuild, remove every ambient civilian and make both population-owned blend contexts unavailable. Later civilian counts, schedules, group behavior, and blending cadence may use only the replaceable recommendation from `OPEN-CIV-001` until GET-208 acceptance. `GDR-CIV-002` still fixes the transit-shelter capacity and eventual populated-to-wind-down relationship.
 - Author at minimum `hide.service_recess`, `hide.maintenance_bay`, `hide.transit_structure`, `blend.delivery_activity`, and `blend.public_queue` using the complete context schema in [[13 Level 0 Content and State Matrix]].
-- Every camera needs a stable ID, shared group ID, anchor, facing, sweep, exact shared coverage/detection geometry, discovery rule, normal-play light/reflection treatment, and connected-terminal relation.
-- Needle needs one authored patrol plus launch/search regions, last-known search behavior, hiding-area verification behavior, hum, approach/verification warnings, and noncombat exit behavior.
+- `blend.public_queue` must register the transit shelter, exact bench seat count (`2` or `3` according to final geometry), separate standing envelope/capacity, schedule state, occupied/full feedback, and honest entry/exit behavior.
+- Every camera needs a stable ID, shared group ID, anchor, facing, sweep, exact shared coverage/detection geometry, discovery rule, current-state LED/IR/wet-reflection treatment, and connected-terminal relation.
+- Needle needs one authored patrol plus launch/search regions, last-known search behavior, hiding-area verification behavior, hum, approach/verification warnings, neutral/verification/Pursuit lamp states, and noncombat exit behavior.
+- The verification lane needs pedestrian queue geometry, flow arrows, a readable eye-height instruction panel, dedicated procedure/verdict/manual-review display, commitment boundary, and the exact incomplete-processing consequence.
 - Every interception node must declare supported options, exact deterministic requirements, previewed costs, success outcome, fail-forward or capture result, and factual debrief effect.
 - Capture prose and presentation may use the explicit reversible `OPEN-NAR-012` recommendation; while open, only the mechanical rule that a final failed authored option causes capture and run failure is final.
 
@@ -132,7 +139,11 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - No universal darkness hiding, hiding while directly observed, or blending without context-credible behavior.
 - No passive curfew Paranoia, passive outdoor recovery, universal footstep-noise simulation, or noise-lure ability.
 - Camera looping cannot be repeated in one attempt, return to `unused` after expiry, open doors, erase identity, disable the district, affect unrelated devices, or bypass the declared trace cost.
+- No vehicle barrier or automotive checkpoint language may substitute for the approved pedestrian verification lane. No red idle Needle lamp may imply verification before a qualifying event exists.
 - Public space is not immunity from observed rule breaks. Civilians are authored social contexts and presentation-only visible-event mirrors, not reporters, hidden-state sensors, a simulated crowd, or generic cover bonus.
+- No blend context may report eligible while its required authored population is absent. GET-205 cannot replace removed civilians with random, decorative, baked, or schedule-unowned figures.
+- No visual restricted-area prop or static guard added by GET-205 may imply that trespass/detection behavior has been implemented. The unguarded service entrance remains a valid route until GET-208 explicitly changes its security behavior.
+- No public-queue actor may occupy nonexistent seating, overlap another capacity slot, or remain active after the context's schedule closes.
 - Security verifies and intercepts; it does not enter a tactical or automatic combat loop.
 - No safehouse boundary immunity or undocumented `Suspicious`/`Pursuit` reset.
 
@@ -161,7 +172,11 @@ The network never jumps directly from `Clear` to capture. Capture can occur only
 - `AC-L0-019`: exercise the safehouse boundary while observed, Suspicious, and in Pursuit; prove the accepted action gates and continued network behavior without a free reset.
 - `AC-L0-020` through `AC-L0-023`: prove harmless public observation, all five rule-break triggers, geometry blind spots, one-use/persistent camera history, recognition reset, Needle warnings, and civilian reactions limited to visible events.
 - `AC-L0-018`: inspect `Clear`, `Suspicious`, `Pursuit`, camera coverage, civilians, security, and drone states at every target viewport without visual corruption or HUD dependence.
+- Enter the pedestrian verification lane through normal controls: before commitment, read its flow and exit rule at gameplay zoom; verify a valid cover passes exactly, early exit produces the previewed incomplete-processing `Suspicious` event, and no vehicle-checkpoint language is needed.
+- At `18:45`, enter `blend.public_queue` only while a visible bench/standing slot exists; after `21:30`, observe the same context wind down; at curfew, confirm it is unavailable for the stated schedule reason.
+- During the GET-205 v5 visual gate, confirm both blend contexts are unavailable because their authored population is absent, exactly one public static guard plus Needle remains, and no random or stacked ambient civilians appear. The populated time-state proof resumes under GET-208.
+- Observe Needle on neutral patrol, active verification, `Pursuit`, and recovery; its lamp must be warm-white/amber, crimson, crimson, then neutral in those states, with no false idle alarm.
 
 ## 16. Owning Linear ticket
 
-`T8` (`GET-208`) owns the base surveillance, human-security, civilian, hiding, verifier-drone, and noncombat-interception framework. `T8A` (`GET-212`) owns rule-break evidence, harmless public observation, blind spots, camera presentation/history, Needle, recognition reset, civilian reactions, and surveillance Paranoia gating. `T3` (`GET-203`) supplies layout/runtime primitives; `T7` (`GET-207`) supplies gates, Paranoia, and Restart Attempt data; `T9` (`GET-209`) supplies knowledge and feedback surfaces; `T10` (`GET-210`) supplies authored mission content and end-to-end acceptance.
+`T5` (`GET-205`) owns only the temporary presentation boundary in `GDR-SUR-013` and `GDR-CIV-003`: one public static guard, Needle, no service guard, no ambient civilians, and honest unavailability for empty blend contexts. `T8` (`GET-208`) owns the base surveillance, human-security, civilian, hiding, verifier-drone, trespass/detection, schedules, and noncombat-interception framework. `T8A` (`GET-212`) owns rule-break evidence, harmless public observation, blind spots, camera presentation/history, Needle, recognition reset, civilian reactions, and surveillance Paranoia gating. `T3` (`GET-203`) supplies layout/runtime primitives; `T7` (`GET-207`) supplies gates, Paranoia, and Restart Attempt data; `T9` (`GET-209`) supplies knowledge and feedback surfaces; `T10` (`GET-210`) supplies authored mission content and end-to-end acceptance.

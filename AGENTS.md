@@ -19,6 +19,14 @@ Intentional local overrides to Vault defaults:
 - Commit only when the requester explicitly authorizes a commit.
 - Move Linear to `Done` only after the requester verifies the committed build.
 
+## Human-to-Deus voice
+
+- Write in plain, direct, conversational language, like a capable colleague speaking to Deus.
+- Prefer short sentences, concrete verbs, and the simplest wording that preserves the meaning.
+- Do not use slogans, theatrical framing, marketing cadence, fake gravitas, manifesto-style prose, or polished filler.
+- Do not turn a simple answer into a speech. Say the useful thing and stop.
+- Keep technical detail when it helps a decision; remove jargon and ceremony that do not.
+
 ## Execution Policy
 
 - Shared execution, Never Guess, task continuity, reporting, and verification policy lives in the Vault Agent Operating System.
@@ -123,7 +131,10 @@ When a visual direction depends on a licensed source pack, every production buil
 For a materially visual ticket, use the acceptance topology defined by its current canonical specification. Internal composition, look-development, export, and QA stages are production controls, not automatically requester-facing milestones or commit points. Before presenting any visual candidate:
 
 - read the complete live Linear description and comments plus the current canonical specification;
+- before replacing a recurring character, companion, HUD, or world identity, inspect current assets, canonical documents, and recoverable pre-rewrite Git history; record a preserve/supersede map in the active progress note. An underspecified current asset is not authorization to invent a new identity, and generated art may not silently replace a durable approved form;
 - name the exact reference frames, comparison viewport, camera relationship, and player-scale target in `progress/<Linear-key>.md`;
+- assign each reference an explicit authority boundary (for example materials/light, camera/human scale, composition/source relationship, or overview density). An incidental element inside a concept frame cannot supersede a separately approved identity;
+- when a requester locks one reference for proportions, record measurable human/door/sidewalk/street/building relationships and treat them as cross-ticket authority; sprite dimensions, readability heuristics, prior scale constants, and a second reference cannot silently override that relationship;
 - keep only that ticket active and leave downstream tickets parked;
 - integrate the full specified candidate into the live player-visible runtime;
 - inspect and reject weak intermediate frames internally instead of asking the requester to approve unfinished fragments;

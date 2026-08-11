@@ -9,7 +9,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-The social feed lets the player see how Hidzu Corporation-curated public reality surrounds the operation: safety propaganda, civic notices, managed sentiment, suppression, and transit information coexist with what the protagonist actually experiences. For Level 0 it is a small read-only atmosphere and context surface, not a social-media game or a source of procedural truth. This implements `GDR-SOC-001` and `GDR-SOC-002` and preserves the honesty constraints of `GDR-PAR-003` and `GDR-FACT-001`.
+The social feed lets the player see how Hidzu Corporation-curated public reality surrounds the operation: safety propaganda, civic notices, managed sentiment, suppression, and transit information coexist with what the protagonist actually experiences. For Level 0 it is a small read-only atmosphere and context surface, not a social-media game or a source of procedural truth. This implements `GDR-SOC-001` through `GDR-SOC-003` and preserves the honesty constraints of `GDR-PAR-003` and `GDR-FACT-001`.
 
 ## 2. Player-visible verbs
 
@@ -48,6 +48,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 
 - Level 0 social media is read-only atmosphere and public context.
 - Reactive advisories (`GDR-SOC-002`): public screens, announcements, and the feed may react to qualifying confirmed ledger events only — traced camera-feed change, incomplete verification session, Needle verification, confirmed protected-object removal, active local access restriction — with sector locality, authored latency (trial values under `OPEN-SOC-001`), and strict knowledge limits: never the player's identity before the network holds it, never the sole feedback for a critical state change. Authoring standard: the city gossips about you in the language of facilities management (for example, “Sector 3 access processing is operating under manual review”).
+- World displays have stable jobs under `GDR-SOC-003`: the transit/bus-shelter display shows departures and civic time; the verification-lane display shows procedure, verdict, and manual-review state; one Hidzu Corporation advisory display shows sector-scoped notices derived from eligible ledger events. The advisory layout supports two readable lines at normal zoom. No display silently changes roles or becomes generic advertising.
 - Required content families are Hidzu Corporation propaganda, civic or compliance notices, curated public sentiment, visible suppression, and transit information.
 - The feed is authored and deterministic. It contains no procedural posts, runtime LLM output, storylets, or emergent social graph.
 - The feed has no generic sentiment, trust, reputation, karma, follower, reach, or engagement value.
@@ -78,6 +79,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 - The feed uses the same graphic surveillance-noir overlay language as dialogue, dossier, debrief, failure, and completion, without becoming another persistent HUD lane.
 - Entries must distinguish institutional messaging, notices, curated sentiment, suppression, and transit information through authored semantic treatment; exact accessibility behavior may use only the recorded provisional `OPEN-ACC-001` baseline until accepted.
 - Feed opening, navigation, and closing emit the UI audio family from [[49 Audio]] using approved or explicitly provisional cleared/original sources and priority data under `OPEN-AUD-001`.
+- In-world screen treatment preserves the three stable roles from `GDR-SOC-003`. Transit departures/time, verification procedure/verdict, and Hidzu sector advisories never share a generic carousel or exchange functions during a phase change.
 - George may explain the difference between verified operational facts and authored public messaging when an approved prompt exists. He cannot infer suppressed truth, invent a post, or scrape unknown information.
 - Critical mission state remains visible through its owning HUD/dossier/world surface and is never available only in the feed.
 
@@ -93,9 +95,10 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 
 - Author a bounded Level 0 set covering all five approved families: Hidzu Corporation propaganda, notices, curated sentiment, suppression, and transit information.
 - Every entry needs a stable content ID, content family, explicit availability prerequisites if any, canonical semantic text, English/Ukrainian localization mapping, graphic treatment, and any approved relationship to mission/debrief state.
+- Author separate content schemas for `display.transit_departures`, `display.verification_lane`, and `display.hidzu_advisory`. The first owns service/time, the second procedure/verdict/manual review, and the third sector-scoped `GDR-SOC-002` notices with a two-line normal-zoom budget.
 - Entries must remain credible public communications within Hidzu Corporation-controlled Tokyo and must not resolve the OPEN narrative facts about the protagonist, Lira, the manifest, Hidzu Corporation leadership, or the district by implication.
 - Hidzu Corporation leadership copy and district identity remain acceptance decisions under `OPEN-NAR-003` and `OPEN-NAR-013`; entries may use only approved language or the explicitly recorded reversible recommendation.
-- Resolve `OPEN-NAR-014` and `OPEN-LOC-001` before shipping bilingual/in-fiction language treatment.
+- Resolve `OPEN-NAR-014` and `OPEN-LOC-001` before shipping bilingual/in-fiction language treatment. Until then, `未来は今日つくられる` and George's contextual translation remain replaceable candidate content, not a frozen slogan or final localization.
 - Keep feed content factual about its publisher's claim while making curation or suppression legible through authored context; do not use Paranoia or randomness to alter truth.
 
 ## 12. Edge cases and prohibited shortcuts
@@ -106,6 +109,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 - No relationship, karma, trust, reputation, ability, or generic intel effect from reading.
 - No feed content changes caused by Paranoia hallucination or false UI.
 - No critical state communicated only through color, sound, or feed copy; exact accessibility implementation remains gated by `OPEN-ACC-001`.
+- No screen-role carousel, decorative ad rotation, or generic billboard may replace the three declared civic-display jobs; no advisory may exceed its ledger knowledge or two-line normal-zoom information budget.
 
 ## 13. Removed behavior
 
@@ -126,6 +130,7 @@ The player cannot post, reply, message, follow, search, like, share, manipulate 
 - Trigger high Paranoia, reopen the feed, and confirm the content remains truthful and no fake entry or UI corruption appears.
 - Restart Attempt after viewing post-departure feed content and confirm no mission knowledge leaks beyond `OperationAttemptBaseline`.
 - `AC-L0-017` and `AC-L0-018`: verify equivalent English/Ukrainian state and readable overlay behavior at all target viewports after the OPEN language, UI, and accessibility decisions are accepted.
+- Pass the transit shelter, verification lane, and Hidzu advisory display at normal zoom before and after a qualifying ledger event; each fixture keeps its single job, the advisory remains two readable lines, and no screen leaks an undiscovered fact.
 
 ## 16. Owning Linear ticket
 

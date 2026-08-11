@@ -8,7 +8,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-George is a private, persistent AI companion who helps the protagonist think under surveillance. He should feel present, useful, fallible in the honest sense of lacking information, and emotionally familiar—not like a quest tooltip, omniscient narrator, free-text chatbot, or autonomous agent.
+George is a private, persistent AI companion who helps the protagonist think under surveillance. His canonical embodiment is the recovered non-human orb the player recognizes across the world and HUD. He should feel present, useful, fallible in the honest sense of lacking information, and emotionally familiar—not like a quest tooltip, generic holographic person, omniscient narrator, free-text chatbot, or autonomous agent.
 
 His fantasy is shared cognition, not delegated play. The protagonist still notices, chooses, moves, speaks, and acts. George helps organize what the protagonist has already perceived or learned, calls attention to a verified contradiction, and gives uncertainty a clear voice. His most important line is sometimes “I do not know,” because the player must be able to trust everything else he says.
 
@@ -20,7 +20,7 @@ The player can also ignore George. Prompts are optional support and cannot becom
 
 ## 3. Starting state and prerequisites
 
-George is available from the safehouse opening. The player perceives him through a fourth HUD lane and a floating near-character AR avatar. His exact hardware/origin and exposure model are `OPEN-NAR-009`; provisional content may use only that queue recommendation and may not invent an implant, cloud service, or broader network access.
+George is available from the safehouse opening. The player perceives him through a fourth HUD lane and a floating near-character AR orb. The orb form is approved and not provisional. His exact hardware/origin and exposure model remain `OPEN-NAR-009`; that open item may not change the orb identity or be used to invent an implant, cloud service, broader network access, human face, bust, or body.
 
 ## 4. Complete happy-path behavior
 
@@ -40,6 +40,8 @@ George presentation states:
 
 World state never changes merely because George changes presentation state.
 
+All five states preserve the same orb silhouette and visual grammar. `quiet` uses the least motion and intensity; `context` adds one restrained core/ring emphasis; `warning` is sharper but never strobes or becomes a danger marker; `insufficient` visibly settles or dims without implying secret information; `debrief` returns to a calm, legible presentation. State treatment never turns George into a portrait, body, emoji, or unrelated icon.
+
 | Knowledge class | George wording contract | Permitted action |
 |---|---|---|
 | Verified fact | State the fact and provenance plainly. | Focus the relevant known dossier/minimap item. |
@@ -51,6 +53,8 @@ World state never changes merely because George changes presentation state.
 
 - One persistent HUD observation at a time.
 - One small set of authored prompts per mission/state context.
+- The canonical orb keeps a dark circular body, cyan concentric core, four axial markers, central point, and restrained angular/framing marks. Refinement may improve material, edge quality, restrained glow, depth, or motion without replacing this grammar.
+- World and HUD forms use the same orb identity. The HUD may render it larger and crisper; the world form may use restrained transparency and hover motion.
 - No unrestricted free text.
 - No action execution, targeting, hacking, movement, or state mutation.
 - No undiscovered device/location/fact reveal.
@@ -75,8 +79,8 @@ Selecting a prompt can record that the response was viewed for UX continuity, bu
 
 ## 9. UI, world, audio, and George feedback
 
-- HUD lane: avatar/state, one concise line, authored prompt buttons.
-- World: private AR avatar near the protagonist, positioned without obscuring feet, interactions, cameras, or hiding contexts.
+- HUD lane: the canonical orb, its current presentation state, one concise line, and authored prompt buttons.
+- World: the same private AR orb near the protagonist, positioned without obscuring feet, interactions, cameras, or hiding contexts.
 - Audio: subtle presence/prompt/warning cues; no voice acting required.
 - Visual intensity follows semantic state, not ambient animation noise.
 
@@ -90,15 +94,17 @@ If George content is missing or invalid, the safe behavior is a bounded unavaila
 
 Each `GeorgePrompt` needs ID, available states, required facts, prohibited unknowns, player-facing question, answer, fact/inference confidence, permitted UI context, localization, cooldown/suppression behavior, and Plot Bible anchor.
 
+George visual authoring uses the recovered `GeorgeOrbLogo` geometry from pre-rewrite commit `49a4da7` as the identity source. Production assets may redraw it cleanly for world and HUD use, but must retain the approved silhouette and marks, record source/provenance, and include side-by-side proof against the recovered form. The current human-bust source and derivative remain historical evidence only and are not valid production fallback.
+
 The minimum Level 0 inventory covers: opening controls and Miami purpose; Lira; each contact's acquired facts; unknown versus known camera risk; connected terminal; traced camera work; invalid hiding/blending; first Suspicious; last-known position; Needle dispatch/approach/verification; Pursuit; recovery; manifest present/recognized/copied/missed; one line for first entry into each Uneasy/Shaken/Breaking tier; ability locks; research availability/completion; four street-clock moments; exact departure readback; curfew/deadline warnings; medkit return; transit validation; and debrief. Each state needs a no-spam rule and an equivalent English/Ukrainian meaning.
 
 ## 12. Edge cases and prohibited shortcuts
 
-No generic mission-summary answer to every prompt; no meaningful silence; no personal deletion/freedom arc; no personality meter; no adaptive imitation of player tone; no karma/faction judgment; no ambient spam; no spoilers; no claim that George saw an event absent from the ledger; no floating-avatar collision or public NPC reaction.
+No generic mission-summary answer to every prompt; no meaningful silence; no personal deletion/freedom arc; no personality meter; no adaptive imitation of player tone; no karma/faction judgment; no ambient spam; no spoilers; no claim that George saw an event absent from the ledger; no floating-avatar collision or public NPC reaction; no human face, portrait bust, body, party-member silhouette, or alternate assistant logo replacing the orb.
 
 ## 13. Removed behavior
 
-Free-text chat; personality mirroring; reputation/karma commentary; dynamic-event promotion; autonomous world actions; generic reassurance as Paranoia recovery; top-console or objectives-card-only presentation.
+Free-text chat; personality mirroring; reputation/karma commentary; dynamic-event promotion; autonomous world actions; generic reassurance as Paranoia recovery; top-console or objectives-card-only presentation; the generated human-bust AR replacement.
 
 ## 14. Post-MVP extensions
 
@@ -114,6 +120,7 @@ Future compromise can make George's channel risky only through explicit evidence
 - He explains each missing-information case, speaks once at each 40/70/90 Paranoia threshold, and reads the real departure state before confirmation.
 - His manifest interpretation differs correctly between recognized and missed evidence.
 - Both HUD and AR forms remain readable without duplicating the same sentence unnecessarily.
+- Side-by-side comparison against the recovered pre-rewrite orb confirms the same silhouette and core marks in the world and HUD; no human-face/bust presentation appears on any Level 0 surface or fallback.
 - Ignoring every optional George prompt leaves the operation completable and understandable through world, HUD, dialogue, and dossier feedback.
 - The same prompt in English and Ukrainian cites the same facts, preserves the same confidence class, and produces no state difference.
 

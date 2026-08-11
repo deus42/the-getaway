@@ -168,9 +168,11 @@ Minimum authored content:
 | `hide.maintenance_bay` | hiding | Curfew/service | Bay supports verifier search behavior |
 | `hide.transit_structure` | hiding | Shared return | Structure supports direction-change recovery |
 | `blend.delivery_activity` | blending | Dusk/public | Civilians/service workers create credible movement pattern |
-| `blend.public_queue` | blending | Dusk/public | Queue has visible start, behavior, and exit |
+| `blend.public_queue` | blending | Dusk/public | Transit/bus shelter has a visible queue start and exit, a bench with an exact authored two- or three-seat capacity, and a separate standing envelope; occupancy never exceeds visible capacity, the context is populated at 18:45, winds down after 21:30, and is inactive at curfew |
 
 Final count and placement remain acceptance decisions under `OPEN-LAYOUT-003` and `OPEN-CIV-001`; their recorded recommendations may be tested in reversible layout/content data.
+
+GET-205 v5 does not populate either blending context. Under `GDR-CIV-003`, every ambient civilian is removed from the T5 candidate and both `blend.delivery_activity` and `blend.public_queue` must resolve as unavailable with the explicit absent-population reason. The context IDs, geometry/capacity contract, and eventual time-state behavior remain canonical for GET-208; an empty context cannot grant blending eligibility. Under `GDR-SUR-013`, T5 retains only the public restricted-area guard and Needle, removes the static service-entrance guard, and adds no trespass/detection behavior.
 
 ## 8. Terminal contract
 
@@ -286,7 +288,7 @@ The approved mission skeleton first defines required places, route purposes, sta
 - `ActorLightRegion` metadata sampled at actor foot anchors for presentation-only semantic amber/cyan tint;
 - runtime/Blender semantic masks and projection metadata.
 
-The previous sparse/fenced four-block compound, exact `54×38`, exact `84×60` nine-block geometry, `96×72` experiment, and oversized full-district expansion are superseded and are not preservation constraints. Exact accepted bounds, widths, anchors, and counts within the current four-block envelope remain acceptance decisions under `OPEN-LAYOUT-001` through `OPEN-LAYOUT-004`; GET-204 freezes them through the accepted same-master live candidate. The exact pre-operation planning/departure topology is separately governed by `OPEN-LAYOUT-005`. Recorded recommendations may be trialed through replaceable layout data and diagnostics, but rejected greybox geometry, generated-plate geometry, or a partial prototype may not override the accepted Blender composition.
+The previous sparse/fenced four-block compound, exact `54×38`, exact `84×60` nine-block geometry, `96×72` experiment, and oversized full-district expansion are superseded and are not preservation constraints. GET-204's accepted recipe remains immutable and recoverable. `GDR-ART-017` authorizes GET-205 v5 to replace its massing through a new recipe/runtime identity while preserving an executable invariant dataset: the two roads, three alleys, crossing, safehouse threshold/court, traversal loops, and every required anchor clearance disc. Formerly walkable dead gaps inside blocks may become building mass only when the route/anchor validator keeps the recovered probe table's 14 Class A geometry/bounds outcomes unchanged and records fresh v5 outcomes for all 10 Class B actor/interstitial/guard-dependent points. Exact accepted bounds, widths, anchors, and counts remain governed by `OPEN-LAYOUT-001` through `OPEN-LAYOUT-006`; the exact pre-operation planning/departure topology is separately governed by `OPEN-LAYOUT-005`.
 
 ## 14. Human-play acceptance matrix
 

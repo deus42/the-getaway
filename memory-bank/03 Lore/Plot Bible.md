@@ -71,11 +71,11 @@ What is already true:
 
 ## 5. George
 
-George is the protagonist’s private AI companion. Only the protagonist perceives his floating AR presence.
+George is the protagonist’s private AI companion. Only the protagonist perceives his floating AR presence, whose canonical visible form is the recovered non-human dark orb with a cyan concentric core and restrained geometric markers.
 
 George is useful because he can organize verified facts, compare known risks, explain blocked actions, and preserve context under pressure. He is not omniscient, magical, or an autonomous hacker. He cannot invent evidence, reveal undiscovered surveillance, operate terminals, move the player, or guarantee uncertain outcomes.
 
-George’s physical/technical substrate—implant, wearable, lens, phone-linked system, or another form—remains `OPEN-NAR-009`. Until resolved, scripts should describe his private AR presence without asserting unsupported hardware.
+George’s physical/technical substrate—implant, wearable, lens, phone-linked system, or another form—remains `OPEN-NAR-009`. That open hardware question does not reopen his approved orb identity. Until resolved, scripts should describe his private AR channel without asserting unsupported hardware or depicting George as a human face, bust, or body.
 
 George’s voice is precise, dry, observant, and honest about uncertainty. He always explains why useful information is missing; silence is never a hidden clue. His humor should relieve pressure without turning fear into a gag. Level 0 gives him no personal desire, deletion/freedom request, or secret agenda.
 

@@ -23,7 +23,7 @@ The intended audience is a player who enjoys authored RPG consequence and system
 
 ### Surveillance
 
-The Hidzu Corporation network is visible, systemic, and fallible. Ordinary public camera visibility is harmless. Concern requires shared visibility plus an observed restricted-area breach, protected interaction, medkit removal, failed verification, or detected feed change. Cameras and Needle share truthful geometry and last-known information, lose recognition after full recovery to `Clear`, and never read the true player position through solid geometry. Blind spots are ordinary occlusion, never authored off-grid zones.
+The Hidzu Corporation network is visible, systemic, and fallible. Ordinary public camera visibility is harmless. Concern requires shared visibility plus an observed restricted-area breach, protected interaction, medkit removal, failed verification, or detected feed change. Cameras communicate their true state through device light, IR glint, and restrained wet-pavement response; Needle is neutral amber/warm-white until it is actually verifying or pursuing. The one verification commitment is a clearly signed pedestrian lane, not an ambush or vehicle gate. Cameras and Needle share truthful geometry and last-known information, lose recognition after full recovery to `Clear`, and never read the true player position through solid geometry. Blind spots are ordinary occlusion, never authored off-grid zones.
 
 ### Paranoia
 
@@ -39,7 +39,7 @@ Movement, observation, hiding, blending, timing, and evasion are the primary ten
 
 ### George
 
-George is the protagonist's private AI companion. He appears as a fourth HUD lane and a near-character AR avatar, summarizes verified state, explains blocked actions and missing information, compares known risk, and surfaces authored contextual questions. Silence is never hidden information; Level 0 adds no deletion/freedom desire arc. He cannot act for the player or reveal undiscovered information.
+George is the protagonist's private AI companion. He appears as the same recovered non-human cyan-core orb in a fourth HUD lane and near the character, summarizes verified state, explains blocked actions and missing information, compares known risk, and surfaces authored contextual questions. Silence is never hidden information; Level 0 adds no deletion/freedom desire arc. He cannot act for the player or reveal undiscovered information, and no human-face/bust presentation replaces the orb.
 
 ### Identity and abilities
 
@@ -47,7 +47,7 @@ The player chooses one of four authored covers of the same protagonist — the l
 
 ### City
 
-Level 0 is exactly four dense, continuous outdoor Tokyo mission blocks with three functional identities and three interlocking traversal loops. It contains recognizable public and service spaces, credible surveillance coverage, discrete hiding and blending contexts, and a two-to-three-minute outer loop. Architecture forms streets rather than sitting as isolated objects. This approved topology is distinct from both the rejected sparse/fenced four-block compound and the rejected oversized nine-block board.
+Level 0 is exactly four dense, continuous outdoor Tokyo mission blocks with three functional identities and three interlocking traversal loops. It contains recognizable public and service spaces, credible surveillance coverage, discrete hiding and blending contexts, and a two-to-three-minute outer loop. A capacity-honest transit shelter, stable transit/verification/advisory screens, and the same street before and after evening wind-down make public life and institutional control legible without baking people into the city art. Architecture forms streets rather than sitting as isolated objects. This approved topology is distinct from both the rejected sparse/fenced four-block compound and the rejected oversized nine-block board.
 
 ## Player agency contract
 
@@ -107,7 +107,7 @@ MVP quality is demonstrated in the actual player-visible build. A fixture can pr
 - one optional Cold Iron chain with unknown, Naila-warning, recognized, and copied states;
 - one named verifier drone, Needle, a small authored security set, and small authored civilian/blending groups that never report hidden state;
 - Transit Road, Market Ring, and Outer Space route names; four street-clock moments; two grounding actions; and three threshold ambience sources;
-- four authored covers (one playable, three visibly disabled), twelve grounded actor sets, matching portraits, and George AR presentation;
+- four authored covers (one playable, three visibly disabled), twelve grounded actor sets, matching portraits, and George's recovered orb AR presentation;
 - one research progression event plus three normal run failures (breakdown, capture, deadline) and deterministic Restart Attempt;
 - equivalent English and Ukrainian semantics and non-audio-only critical feedback.
 

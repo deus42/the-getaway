@@ -9,7 +9,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-The HUD gives the player one stable operational read without shrinking the district into a dashboard. It keeps only current, truthful, actionable state persistent—known world information, protagonist condition, George, and the current mission beat—while deeper reading surfaces pause the simulation. The George and current-task lanes stay separate. The complete in-game Game Design Bible is an optional long-form reference; changed rules are corrected there, and the one approved editorial addition is the short per-chapter design-lineage note of `GDR-GOV-009` — no decorative quotations, epigraphs, or alternate worldbuilding layer. This implements `GDR-UI-001` through `GDR-UI-005`, `GDR-GEO-001` through `GDR-GEO-004`, `GDR-RPG-007`, `GDR-FAIL-001`, `GDR-GOV-009`, and `GDR-GOV-001`.
+The HUD gives the player one stable operational read without shrinking the district into a dashboard. It keeps only current, truthful, actionable state persistent—known world information, protagonist condition, George, and the current mission beat—while deeper reading surfaces pause the simulation. The George and current-task lanes stay separate. George uses the same recovered cyan-core orb identity in the world and HUD; a human face, bust, body, or alternate logo is prohibited. The complete in-game Game Design Bible is an optional long-form reference; changed rules are corrected there, and the one approved editorial addition is the short per-chapter design-lineage note of `GDR-GOV-009` — no decorative quotations, epigraphs, or alternate worldbuilding layer. This implements `GDR-UI-001` through `GDR-UI-005`, `GDR-GEO-001` through `GDR-GEO-005`, `GDR-RPG-007`, `GDR-FAIL-001`, `GDR-GOV-009`, and `GDR-GOV-001`.
 
 ## 2. Player-visible verbs
 
@@ -27,7 +27,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 - The run begins at the Calm tier with the cover's abilities lit; the continuous Paranoia slider, named tier, and ability states are visible in the protagonist lane.
 - The quest lane begins with `l0.meet_lira`; it shows only the highest-priority incomplete primary objective.
 - The minimap initially knows the safehouse and Lira meeting point plus only devices physically visible from the starting context.
-- George initially exposes only authored opening context, controls, and current verified state.
+- George initially exposes only authored opening context, controls, and current verified state through the recovered orb presentation.
 - Before New Game, the start menu exposes `Game Design Bible` with an `F1` hint. Opening it creates no run and no pause state.
 - During an active run, the paused menu exposes the same action. Direct `F1` entry is eligible only when no higher-priority creation, Character, safehouse confirmation, dialogue, terminal, debrief, failure, completion, or other modal owner is active.
 
@@ -36,7 +36,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 1. The player enters the safehouse with the world occupying the dominant viewport and the four-lane dock occupying only its approved height.
 2. The minimap updates as facts and physical discovery add legitimate knowledge; it never expands into a movement planner.
 3. The protagonist lane keeps the continuous Paranoia slider, named tier, and ability lock states visible through exploration, surveillance, overlays, failure risk, and recovery.
-4. George presents verified current context and authored questions in his lane while his private AR avatar remains a world presence near the protagonist.
+4. George presents verified current context and authored questions in his lane while the same private cyan-core orb remains a world presence near the protagonist.
 5. The quest lane advances one beat at a time from Lira through preparation, recovery, escape, return, transit, and debrief. Optional contact/evidence status remains compact or moves into the dossier.
 6. Opening the Game Design Bible from the start menu shows the finalized sixteen-chapter bilingual reference without constructing a run. Opening it from the paused menu retains the menu pause owner and adds the Bible owner. Eligible `F1` during play adds the Bible owner exactly once.
 7. The player navigates a responsive reference manual: chapter rail, readable article, on-page outline, localized search results, and previous/next navigation. At `840px` and below, the rail becomes a focus-contained drawer and tables scroll only inside bounded regions.
@@ -64,7 +64,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 - Paranoia is always visible and never renamed `Pressure`; per `GDR-UI-005` the lane shows one continuous read-only slider with threshold ticks and the current named tier. Its position follows the exact internal value, but the UI prints no Paranoia number and shows no Health. Ability lit/locked states remain adjacent.
 - The quest lane shows one current beat. Optional preparation and evidence use compact indicators and the dossier rather than a competing objective list.
 - The minimap shows only discovered locations and cameras and never issues movement or displays a hidden safest route.
-- George uses authored contextual prompts and verified information; there is no generic chat box.
+- George uses authored contextual prompts and verified information; there is no generic chat box. His orb may vary pulse, motion, and cyan intensity by authored state but never changes silhouette or becomes a human presentation.
 - Every gated choice shows its met/not-met verdict with the exact reason before selection and the identical verdict after resolution (`GDR-RPG-007`, `GDR-RPG-009`).
 - Dialogue, Character, dossier, social feed, terminal, debrief, failure, and completion surfaces share one visual language and pause simulation according to their owning contract.
 - The complete Game Design Bible has exactly sixteen finalized-content chapters with equivalent English/Ukrainian chapter and section IDs, order, semantic block shapes, gameplay meaning, and shared approved numeric/state data.
@@ -80,7 +80,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 - [[91 Quests & Objectives]] supplies the single current primary beat, optional indicators, deadline, and completion/failure state.
 - [[46 Facts, Dossier, Minimap & Terminals]] supplies known locations, cameras, contexts, objective precision, dossier entries, and terminal surfaces.
 - [[43 Failure, Surrender & Recovery]] and [[60 Paranoia]] supply the visible tier, ability locks, causes, and failure state.
-- [[40 George (AI Companion)]] supplies verified summaries, authored prompts, bounded answers, and AR-avatar state.
+- [[40 George (AI Companion)]] supplies verified summaries, authored prompts, bounded answers, and canonical orb state.
 - [[42 Surveillance, Security & Civilian Behavior]] supplies the current network state, source, last-known feedback, and known coverage.
 - [[80 Day-Night Cycle]] supplies current time, curfew/deadline context, and shared pause ownership.
 - Dialogue, Character, feed, terminal, debrief, failure, and completion systems supply their semantic overlay models.
@@ -101,7 +101,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 - The dock uses the locked graphic surveillance-noir language: world-first composition, readable midtones, strong silhouettes, restrained cyan technology, and crimson danger without broad fantasy glow.
 - The minimap distinguishes knowledge from unknown space and strengthens only discovered surveillance information.
 - The Paranoia slider and named tier, ability states, current beat, network risk, deadlines, blockers, and failure causes use their approved readable text and semantic state; exact color-independent companion treatment follows the recorded `OPEN-ACC-001` recommendation provisionally until accepted.
-- The private George AR avatar remains near the protagonist while the George lane carries authored prompts and verified summaries; neither may occlude required world interaction.
+- The private George orb remains near the protagonist while the lane carries the same orb identity, authored prompts, and verified summaries; neither may occlude required world interaction.
 - Overlay, dialogue, terminal, objective, network, failure, and completion audio families come from [[49 Audio]] and remain secondary to readable state.
 - The Bible uses the same graphic-surveillance-noir semantic tokens but favors quiet long-form readability: warm practical gold for selected reading context, restrained cyan for supporting actions, and crimson only inside genuine danger/failure examples. Its dialog name, close action, chapter/section current state, result count, tables, headings, and drawer are exposed semantically; no meaning depends on color or sound.
 - The reference produces no critical audio-only meaning. A restrained open/close/navigation confirmation may use UI cues, while George and world feedback remain exactly as they were before the overlay opened.
@@ -138,7 +138,7 @@ The HUD gives the player one stable operational read without shrinking the distr
 
 - No oversized three-lane HUD, duplicate objective panels, permanent world labels, generic log wall, or dashboard that obscures the world.
 - No minimap path execution, hidden full-map knowledge, undiscovered camera reveal, threat-aware route, or automatic protagonist movement.
-- No unrestricted George input, invented answer, or UI action that mutates world state without the player's explicit authored action.
+- No unrestricted George input, invented answer, human face/bust/body, alternate-logo substitution, or UI action that mutates world state without the player's explicit authored action.
 - No hidden-information silence, merged George/current-task lane, pre-choice gate without its verdict and reason, numeric condition readout, or generic failure screen shared across all causes.
 - No reading/decision overlay may allow the clock, patrol, cameras, drone, movement, or deadline to leak forward while it owns pause.
 - No stale focus requiring a sacrificial click and no overlay click issuing movement beneath it.

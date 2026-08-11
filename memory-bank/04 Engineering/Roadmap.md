@@ -177,13 +177,18 @@ An AI-generated concept, validator, internal rating, or technical checkpoint can
 
 Ownership:
 
-- identity scanning, public screens, propaganda, corporate wayfinding, camera grammar, and checkpoint technology;
+- versioned dense four-block massing under an executable preserved-route/anchor/probe contract, with requester approval of a material-free greybox before facade work;
+- identity scanning, three stable public-screen roles, propaganda, corporate wayfinding, truthful camera grammar, and a pedestrian verification lane with queue rails, floor arrows, and an eye-height instruction panel;
 - cold institutional material, sodium practical lighting, and aligned curfew atmosphere;
 - technology cyan and danger crimson semantics;
+- warm-white/amber neutral Needle lighting and crimson-only verification/Pursuit lighting;
+- transit-shelter geometry with declared seated/standing capacity and people-free environment plates;
+- 12–16 per-building identity cutouts/depth anchors, one dominant Hidzu landmark, and unreachable outside-bounds backdrop mass;
+- temporary removal of all ambient civilians, explicit unavailable state for population-owned blend contexts, one public restricted-area guard plus Needle, and no static service-route guard; GET-208 retains all behavior/schedule ownership;
 - gameplay-serving entrances, terminals, hiding/blending structures, contact spaces, and hazards;
 - overview atmospheric depth without generic neon clutter.
 
-Successor gate: a technically validated, committed T5 treatment with complete fixed captures may unlock T6 while the treatment remains provisional. Final acceptance gate: the requester agrees the city reads specifically as Hidzu Corporation-controlled Tokyo while retaining route/objective/actor hierarchy at normal and minimum zoom.
+Sequence: separately committed documentation entry gate → exact route/anchor contract plus the recovered 24-probe fixture (14 Class A outcomes immutable; 10 Class B points freshly observed and frozen only with greybox approval) → requester-approved greybox massing and building-fraction band → requester-approved blue-hour hero → three-state/cutout/profile/manifest regeneration → fixed-camera live A/B, overview, and mobile acceptance. Successor gate: a technically validated, committed T5 treatment with complete fixed captures may unlock T6 while the treatment remains provisional. Final acceptance requires the requester to agree that the city reads specifically as dense Hidzu Corporation-controlled Tokyo while retaining every declared route/anchor and actor/objective hierarchy at normal and minimum zoom. T5 live evidence proves people-free source plates, zero random ambient civilians, honest unavailable blend contexts, one public restricted-area guard plus Needle, stable display roles, pedestrian restricted-area framing, camera-state cue alignment, wet blue-black material response, and sparse semantic color. The populated 18:45/post-21:30 contrast is explicitly deferred to GET-208/T10.
 
 ## Gate 6 — actor and portrait replacement
 
@@ -200,7 +205,7 @@ Ownership:
 - two Hidzu Corporation security archetypes;
 - three civilian archetypes;
 - twelve matching portraits;
-- Takahiro broadcast portrait and George AR art;
+- Takahiro broadcast portrait and the recovered canonical George cyan-core orb art;
 - validated `64×96`, eight-direction, four-frame `idle/move/interact` sets;
 - cover-select/world/dialogue identity continuity.
 
@@ -289,14 +294,16 @@ Ownership:
 
 - retain raw `ObservationEvidence` as geometry truth and add `SurveillanceRuleBreakEvidence` for the five approved concern sources;
 - keep ordinary public camera visibility harmless and derive blind spots only from normal geometry/occlusion;
-- render subtle warnings in normal play and exact discovered coverage only in Observation;
+- render status LED, IR glint, and restrained wet-pavement warnings from the same device/geometry state used for exact discovered Observation coverage;
 - author one camera group usable once per attempt, with `unused | active | clean | traced` history that persists until Restart Attempt;
-- author Needle's single patrol, hum, approach warning, verification warning, and valid last-known behavior;
+- author Needle's single patrol, hum, approach warning, verification warning, valid last-known behavior, amber/warm-white neutral lamp, and crimson-only verification/Pursuit lamp;
+- implement the readable pedestrian verification-lane commitment and its exact pass/manual-review/incomplete-processing outcomes;
+- enforce the transit-shelter blending context's visible seated/standing capacities and schedule eligibility;
 - reset recognition on full return to `Clear`;
 - keep civilian glances/movement presentation-only and based only on visible camera, Needle, or player behavior;
 - gate surveillance-origin Paranoia behind paired valid visibility and rule-break evidence.
 
-Exit gate: normal controls prove harmless public observation, all five concern causes, solid-geometry blind spots, one camera use, trace/history persistence, Clear recognition reset, Needle warnings, and civilians that neither know hidden state nor report the player.
+Exit gate: normal controls prove harmless public observation, all five concern causes, solid-geometry blind spots, one camera use, trace/history persistence, Clear recognition reset, truthful camera physical cues, pedestrian-lane pass/premature-exit behavior, Needle neutral-to-crimson state, honest shelter capacity/schedule eligibility, and civilians that neither know hidden state nor report the player.
 
 ### GET-179 modernization milestone — reachable Level 0 harness
 
@@ -320,15 +327,16 @@ Ownership:
 - authored dialogue graph/check/effect infrastructure;
 - Fact Ledger and knowledge-map selectors;
 - operation dossier and knowledge minimap;
-- George fourth lane, private AR avatar, and authored prompts;
+- George fourth lane, the same recovered private orb near the protagonist, and authored prompts;
 - fixed four-lane 16–18% dock;
 - Character-screen entry point and all major overlays;
 - read-only Hidzu Corporation social feed;
+- typed transit-departure/civic-clock, verification-procedure/verdict/manual-review, and two-line sector-advisory world-screen content contracts with stable roles and knowledge filtering;
 - English/Ukrainian content parity validation.
 
 T9 owns system infrastructure and presentation. T10 owns final Level 0 dialogue/debrief content and complete scenario integration.
 
-Exit gate: facts change routes/checks/objectives/George/debrief truthfully, unknown information does not leak, and all UI fits target viewports with no free-text or inactive systems.
+Exit gate: facts change routes/checks/objectives/George/debrief truthfully, unknown information does not leak, the three recurring screen roles never exchange jobs or fabricate content, and all UI fits target viewports with no free-text or inactive systems.
 
 ### T9A / GET-213 — Make checks, evidence, George, departure, and failure fully legible
 
@@ -364,6 +372,7 @@ Ownership:
 - final Lira/Naila/Brant dialogue and outcomes;
 - mission-object placements/interactions and optional manifest content;
 - authored schedules, hiding/blending contexts, camera/drone/security/civilian scenario content;
+- integrated pedestrian verification lane, truthful camera cues, Needle lamp semantics, transit-shelter capacities, and stable civic-display roles;
 - contextual onboarding;
 - complete audio content;
 - factual debrief and Miami continuation data;
@@ -373,7 +382,7 @@ Ownership:
 
 T10 integrates approved systems; it does not reimplement or redefine them.
 
-Exit gate: the complete 15–20 minute route matrix in [[01 MVP/13 Level 0 Content and State Matrix]] and [[01 MVP/95 MVP Readiness Checklist]] passes with normal player controls, no debug bridge, and requester visual/play acceptance.
+Exit gate: the complete 15–20 minute route matrix in [[01 MVP/13 Level 0 Content and State Matrix]] and [[01 MVP/95 MVP Readiness Checklist]] passes with normal player controls, no debug bridge, and requester visual/play acceptance, including the same-camera 18:45/post-21:30 street contrast and all pedestrian-lane/camera/Needle/shelter/display-role proofs.
 
 ### T10A / GET-214 — Make curfew, routes, recovery, and street sound live in the city
 
@@ -390,9 +399,11 @@ Ownership:
 - author the Transit Road vending-machine coffee and Market Ring/Outer Space shrine actions at ten minutes/−10 Paranoia, once each per attempt;
 - preserve one qualifying difficult-surveillance-escape −5 relief and one George warning at each 40/70/90 threshold;
 - author civilian schedule changes, threshold lines, and bilingual content;
+- schedule runtime-owned transit-shelter occupants within exact seated/standing capacities: populated at 18:45, visibly winding down after 21:30, inactive at curfew;
+- author schedule-aware transit departures/civic time, verification procedure/verdict/manual review, and eligible two-line sector advisories without screen-role swaps;
 - spatialize ambience at the Transit Road restaurant, Market Ring workshop, and safehouse-side apartment.
 
-Exit gate: all four clock boundaries fire once across pause/save restoration, named routes and grounding effects are exact in English/Ukrainian, civilian changes are authored, and all three street-sound locations are audible from their thresholds.
+Exit gate: all four clock boundaries fire once across pause/save restoration, named routes and grounding effects are exact in English/Ukrainian, the same shelter camera proves 18:45/post-21:30/curfew runtime population and honest capacity, all three display roles remain stable/readable, civilian changes are authored, and all three street-sound locations are audible from their thresholds.
 
 ### T10B / GET-215 — Blend actors into authored street lighting
 

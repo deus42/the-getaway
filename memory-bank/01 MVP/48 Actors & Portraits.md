@@ -9,7 +9,7 @@ canonical: true
 
 ## 1. Player fantasy and purpose
 
-Actors make the district feel inhabited, watched, and human rather than populated by tactical tokens or fantasy archetypes. The selected cover's authored appearance persists as the protagonist's identity; named contacts, security, civilians, and the verifier network's human presence remain recognizable through grounded silhouettes, facing, motion, interaction, coherent portrait presentation, and subtle integration with authored light. This implements `GDR-PC-006`, `GDR-ART-001`, `GDR-ART-005`, `GDR-ART-011`, and `GDR-SUP-003`.
+Actors make the district feel inhabited, watched, and human rather than populated by tactical tokens or fantasy archetypes. The selected cover's authored appearance persists as the protagonist's identity; named contacts, security, civilians, and the verifier network's human presence remain recognizable through grounded silhouettes, facing, motion, interaction, coherent portrait presentation, and subtle integration with authored light. George remains visually distinct through the recovered non-human orb identity of `GDR-GEO-005`; he is not a thirteenth human actor or portrait. This implements `GDR-PC-006`, `GDR-ART-001`, `GDR-ART-005`, `GDR-ART-011`, `GDR-ART-014`, and `GDR-GEO-005`.
 
 ## 2. Player-visible verbs
 
@@ -83,7 +83,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Cover-select and Character surfaces show the selected authored cover and its appearance/ability identity through the approved or provisionally recorded `OPEN-UI-002` ownership split.
 - Named-actor portrait presentation, where required by authored dialogue or debrief, uses the same stable identity and graphic-noir treatment as the world actor. Each identity portrait is a `256×256` PNG with one identity, no text, face/shoulders inside the central 80% safe area, registered provenance/hash/byte metrics, and a neutral diagnostic fallback.
 - Movement and interaction animation align with authored movement/interaction audio from [[49 Audio]]; visual events do not fire unrelated gameplay state.
-- George remains a private near-character AR presence visually distinct from a physical world actor. T6 supplies one separately registered `256×256` transparent idle/base asset; its proof placement is near the protagonist's upper-right at `28–36` screen pixels, suppressed while a full overlay owns focus, and excluded from collision, occlusion, depth, and world-state ownership. T9 owns final states, HUD/world placement, prompts, and suppression policy. Other actors do not react to him as a visible person.
+- George remains a private near-character AR presence visually distinct from a physical world actor. T6 supplies one separately registered transparent idle/base orb asset derived from the recovered pre-rewrite identity; the same dark circular body, cyan concentric core, axial markers, central point, and restrained framing must survive at gameplay scale. Proof placement is near the protagonist's upper-right at `28–36` screen pixels, suppressed while a full overlay owns focus, and excluded from collision, occlusion, depth, and world-state ownership. T9 owns final states, HUD/world placement, prompts, and suppression policy. Other actors do not react to him as a visible person.
 - Contextual prompts may identify an available interaction, but permanent labels cannot substitute for actor readability.
 
 ## 10. Failure, recovery, and Restart Attempt behavior
@@ -98,7 +98,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - Produce twelve coherent actor sets at `64x96`, each with eight directions, `idle`/`move`/`interact`, four frames per state, shared anchor metadata, and stable actor-set IDs.
 - Produce four authored protagonist appearance presets and map each to compatible world and portrait/identity presentation.
 - Produce matching `256×256` portraits for all twelve actor sets; every portrait maps to the same stable actor/appearance ID and grounded visual direction as its world set and records path, source reference, SHA-256, crop/safe area, compressed/decoded bytes, and fallback.
-- Produce one separate `256×256` Takahiro Kobayashi civic-broadcast portrait with no embedded localized copy and one separate `256×256` transparent George AR idle/base asset; neither counts as an additional world actor set.
+- Produce one separate `256×256` Takahiro Kobayashi civic-broadcast portrait with no embedded localized copy and one separate transparent George AR orb idle/base asset suitable for crisp HUD use and restrained world presentation; neither counts as an additional world actor set. The George asset must preserve `GDR-GEO-005`, cite the recovered `GeorgeOrbLogo` source in commit `49a4da7`, and must not use the current human-bust source as production input or fallback.
 - Lira presentation may communicate only the approved mission-facing medical-supplies role; T6 may not encode the unresolved identity, relationship, beneficiaries, or passage authority in `OPEN-NAR-004` through `OPEN-NAR-006`. Naila, Brant, and George presentation may use the explicit reversible recommendations for `OPEN-NAR-009`, `OPEN-NAR-010`, and `OPEN-NAR-011` without presenting them as approved biography or hardware.
 - Validate anchors, direction naming, frame order, scale, depth, interaction alignment, `ActorLightRegion` metadata, foot-anchor sampling, easing, semantic tokens, and all required lighting states before acceptance.
 - Keep the derived shared runtime scalar reproducible and easy to recalibrate if the accepted camera/export changes. Entry-flow layouts and production asset budgets remain reversible while `OPEN-UI-002` and `OPEN-PERF-001` are provisional; resolve them before their final acceptance.
@@ -111,6 +111,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - No fixed Trace/Operative, background-dependent appearance, or appearance effect on checks and routes.
 - No portrait text baked into assets; English/Ukrainian semantics remain in the content/localization layer.
 - No use of actor visuals as authoritative collision, detection, schedule, or mission state.
+- No human face, bust, body, portrait crop, or generic assistant emblem may replace George's recovered orb on any Level 0 actor, HUD, dialogue, fallback, or proof surface.
 - No stacked light regions, gameplay effect, hard snap, broad wash, or amber/cyan tint stronger than the accepted restrained presentation.
 
 ## 13. Removed behavior
@@ -135,7 +136,7 @@ Actors make the district feel inhabited, watched, and human rather than populate
 - At `1440×900`, compare a clean normal-play crop directly with the locked blend: the protagonist's visible alpha body is approximately `68–80 px`, surrounding human roles share the same base scale, doors and sidewalks retain the reference relationship, and overview zoom changes all world-space elements uniformly.
 - Use dusk delivery activity and curfew security movement; distinguish civilian/service/security roles while authoritative schedules and surveillance remain unchanged by art.
 - Trigger a live named-contact interaction and confirm both actor presentations return cleanly to idle. Final dialogue, Restart Attempt, and debrief identity continuity remains a T7/T9/T10 acceptance gate rather than evidence claimed by T6.
-- Inspect all twelve portraits, Takahiro's broadcast portrait, and George's AR base art for identity, crop, provenance, fallback, and grounded tone.
+- Inspect all twelve portraits and Takahiro's broadcast portrait for identity/crop, then inspect George separately against the recovered orb source for silhouette, marks, provenance, fallback, HUD/world continuity, and absence of any human-bust substitution.
 - `AC-L0-018`: at 1280x720, 1440x900, and 1920x1080, inspect the accepted close normal frame and four-block mission overview across dusk, blue hour, and curfew; actors must remain grounded, readable, correctly anchored, and proportionate to accepted architecture.
 - `AC-L0-029`: cross every authored light-region edge at all three viewports and in both languages; tint must follow the foot anchor, ease cleanly, remain subtle, and leave movement/detection unchanged.
 
