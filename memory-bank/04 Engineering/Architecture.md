@@ -121,7 +121,7 @@ Current ownership is explicit:
 
 The current realized GET-205 v4 asset pipeline is manifest-driven. `art/blender/get205/manifests/wet-blue-black-v4-states.json`, `safehouse-cleanup-v1.json`, and `reference-delta-v1.json` declare the three Cycles source states, bounded connected-component removal, and fixed-frame visual gates. `render_wet_blue_black_states.py` derives aligned people-free dusk, blue-hour, and curfew plates plus sixteen foreground silhouettes per state from the recoverable v4 master. `scripts/build-get205-runtime-assets.mjs` validates the complete matrix in staging and atomically publishes schema-v2 desktop and mobile profiles under `public/environment/level0/get205-hidzu-production-v1/`; failed validation or post-swap readback restores the prior public root. Placement, crop, depth, camera, fit, and occlusion metadata remain state-independent; each asset nests only `path`, `sha256`, and `bytes` under its three lighting states. The runtime imports that manifest through a typed phase resolver rather than duplicating asset paths or anchors in scene code. This v4 runtime was visually rejected on 2026-08-11 and is recoverable technical salvage, not the accepted endpoint.
 
-The approved but not yet realized GET-205 v5 boundary uses new recipe identity `get205-dense-four-block-v5` and runtime identity `get205-dense-four-block-production-v2`. Before facade or runtime work it must version the two roads, three alleys, crossing, safehouse threshold/court, traversal loops, and all required anchor-clearance discs; reject new footprints that intersect them; keep the recovered 24-point table's 14 Class A geometry/bounds outcomes invariant; record fresh v5 outcomes for its 10 actor/interstitial/guard-dependent Class B points; and pass a fixed-registration building-pixel-fraction band against the locked blend. After massing and hero approval, v5 regenerates the three state masters, 12–16 independent identity cutouts/depth anchors, collision/placement pins, profiles, hashes, budgets, and regression baselines. Until those gates pass and publication swaps atomically, the realized v4 architecture remains current and no v5 identity may resolve at runtime.
+The approved but not yet realized GET-205 v6 boundary uses recipe identity `get205-reference-native-v6` and runtime identity `get205-reference-native-production-v3`. [[32 GET-205 Reference-Native Layout Contract]] supplies one exact plan manifest for bounds, routes, parcel footprints/heights, dynamic gate collision, semantic anchors, camera constraints, and the replacement 22-static/four-dynamic probe fixture. Stable mission IDs and runtime/pipeline interfaces survive; old coordinates do not. Before facade/runtime work the generated layout must reproduce that seed, pass route/anchor/clearance and dynamic-gate checks, satisfy source/proportion feasibility and the camera boxes, and pass the requester's blind five-question greybox read. After plan and hero approval, v6 regenerates the three state masters, independent identity cutouts/depth anchors, collision/placement pins, profiles, hashes, budgets, and regression baselines. Until those gates pass and publication swaps atomically, the realized v4 architecture remains the recoverable runtime baseline and no v6 identity may resolve at runtime.
 
 The retired `the-getaway-state` schema remains disabled. Level 0 schema/runtime content version 3 uses independent autosave and `OperationAttemptBaseline` keys plus exact nested envelopes, so legacy or stale development saves cannot hydrate or overwrite the canonical run. Validation checks the authored `CoverIdentity`, held ability IDs, research-state map, committed gate verdicts, ordered Paranoia event history, announced tier history, research events, camera-group attempt history, grounding usage, Cold Iron evidence state, processed clock boundaries, and the internal Paranoia value. It also rejects non-walkable player/last-known positions, non-unit facing, mismatched generation/seed/layout identity, inconsistent clock boundaries, and cause-specific failure data that does not match the authoritative ledgers. `OperationAttemptBaseline` additionally requires the authored departure anchor and carries the complete cover, ability, research, Paranoia, surveillance, recovery, and schedule state. Transient overlay pause owners are never serialized; hydration derives only durable failure/completion ownership. Departure persists the baseline before the departed autosave, rejects stale-session or divergent-state conflicts, and recreates Phaser at the committed departure transform. Player transforms are checkpointed only after change at a bounded cadence rather than stored every render frame. Exact layout dimensions, start zoom, movement speed, safehouse policy, ability/gate mappings, research options, and unresolved surveillance/art values remain provisional while their `OPEN-*` decisions are unresolved.
 
@@ -663,7 +663,7 @@ interface Level0ArtManifest {
   schemaVersion: 2;
   id: string;
   usage: 'candidate-evidence' | 'runtime';
-  compositionStage: 'four-block-source' | 'quality-lookdev' | 'live-candidate';
+  compositionStage: 'reference-native-plan' | 'quality-lookdev' | 'live-candidate';
   recipeId: string;
   layoutContractId: string;
   projection: { tileWidth: 64; tileHeight: 32; orientation: 'isometric-2:1' };
@@ -789,33 +789,35 @@ The four current appearance IDs are defined once by the actor manifest and reuse
 
 ```mermaid
 flowchart LR
-  A["Approved mission skeleton, four-block envelope, and locked references"] --> B["Named-source Neo Tokyo 2 Blender master"]
-  B --> C["Close render and four-block overview from the same master"]
-  C --> D{"Requester accepts Blender source and composition?"}
-  D -- "No" --> B
-  D -- "Yes" --> E["Export candidate geometry, layers, collision, occlusion, entrances, and anchors"]
-  E --> F["Reconcile one Level0LayoutContract and integrate live"]
-  F --> G["Close, current-HUD, and four-block overview review"]
-  G --> H{"Requester accepts live candidate?"}
-  H -- "No" --> B
-  H -- "Yes" --> I["Closeout validation and authorized commit"]
-  I --> J["GET-204 verified; downstream ticket may start"]
+  A["Approved mission semantics, reference-native direction, and locked references"] --> B["Exact v6 plan manifest and raw greybox"]
+  B --> C{"Requester accepts plan and five-question read?"}
+  C -- "No" --> B
+  C -- "Yes" --> D["Named-source Neo Tokyo 2 Blender master"]
+  D --> E["Source hero and complete-neighborhood overview"]
+  E --> F{"Requester accepts source composition and look?"}
+  F -- "No" --> D
+  F -- "Yes" --> G["Export geometry, layers, collision, occlusion, entrances, anchors, and states"]
+  G --> H["Reconcile one Level0LayoutContract and integrate live"]
+  H --> I["Clean, current-HUD, and overview review"]
+  I --> J{"Requester accepts live candidate?"}
+  J -- "No" --> D
+  J -- "Yes" --> K["Closeout validation and authorized commit"]
 ```
 
 ### Contract discipline
 
-- The mission skeleton owns stable semantic IDs, required places, route purposes, and player-facing behavior. The current envelope is exactly four dense mission blocks with three functional identities and three interlocking loops. It does not preserve the rejected sparse/fenced four-block compound or `84×60` nine-block geometry.
-- The named-source Neo Tokyo 2 Blender master owns candidate street/building/public-realm geometry for those four blocks. The approved AI-assisted concept owns composition/camera/value relationships only. After the Blender proof is accepted, candidate geometry is reconciled into the one versioned layout contract; after the live result is accepted, that exact reconciled contract becomes the delivery boundary.
+- The mission skeleton owns stable semantic IDs, required place/route purposes, and player-facing behavior. `GDR-ART-019` and [[32 GET-205 Reference-Native Layout Contract]] own the current geography: a reference-native three-arm junction, real controlled gate, safehouse extension, logistics depth, and service/sneak bypass. No old coordinate is an invariant.
+- One versioned v6 plan manifest owns candidate streets, parcel envelopes, dynamic gate, anchors, and probes. The named-source Neo Tokyo 2 Blender master must realize that plan without replacing source identity. After plan, source, and live requester acceptance, that exact reconciled contract becomes the delivery boundary.
 - Phaser collision, entrances, occluders, devices, contacts, terminals, hiding/blending contexts, objectives, and rendered derivatives all consume the accepted contract; no hidden greybox geometry may coexist with a different visible city.
 - Architectural placement parcels are composition envelopes, not collision geometry. Each registered source root records its measured structural plan bounds; the runtime applies the cluster scale, orthogonal rotation, placement anchor, and street-wall inset to derive the visible-source collision AABB. The Blender builder verifies those measurements against the imported source and exports the placed collision footprint, while a city-wide quarter-unit reachability audit guards against disconnected walkable pockets.
-- GET-204 has two distinct requester gates: actual Blender close/overview source proof before runtime replacement, then close/current-HUD/overview proof in the live runtime. A validator cannot accept either gate, and an AI-generated concept cannot satisfy source provenance.
-- The complete live candidate must produce a close frame, a clean city frame, and a four-block mission overview from equivalent world/camera parameters.
+- V6 has distinct requester gates: raw plan/greybox proof before source facade work, source-derived hero/overview proof before runtime replacement, then clean/current-HUD/overview proof in the live runtime. A validator cannot accept any visual gate, and an AI-generated concept cannot satisfy source provenance.
+- The complete live candidate must produce a close frame, a clean city frame, and a complete mission-neighborhood overview from equivalent world/camera parameters.
 - T4 export validation proves projection and canvas containment, tile-grid registration, file hashes/bytes/budgets, layer semantics/fallbacks, and complete anchor values against the layout contract. Decoded raster-edge agreement remains a visual/runtime acceptance responsibility rather than a claim made by metadata validation alone.
-- The realized v4 T5 path opens the accepted T4 master in a separate ignored derivative and keeps source-cluster transforms, public-realm geometry, topology, collision, masks, anchors, projection, and actor ownership immutable. That restriction describes the rejected v4 implementation only. `GDR-ART-017` authorizes v5 to replace massing under a new identity after the preserved-route/anchor/probe greybox gate; `GDR-ART-018` adds fixed-camera per-identity isolation masks and mission-anchor staging so declared-but-occluded identities cannot satisfy acceptance. Neither decision authorizes mutation of T4/v4.
-- The realized v4 path owns three aligned people-free `6400×3600` stable plates and sixteen same-scene alpha silhouettes per state. The approved v5 replacement must regenerate all three plates and retain 12–16 per-building identity slices with independent depth anchors; a merged continuous-wall cutout is invalid because it breaks actor sorting at wall ends.
+- The realized v4 path opened the accepted T4 master in a separate derivative and kept its old topology/camera immutable. That restriction describes rejected v4 only. `GDR-ART-019` authorizes v6 to replace all geography under a new identity after the exact plan/greybox gate; fixed-camera per-identity isolation masks and mission staging remain required. No decision authorizes mutation of T4/v4/v5 historical sources.
+- The realized v4 path owns three aligned people-free `6400×3600` stable plates and sixteen same-scene alpha silhouettes per state. V6 regenerates all three plates and retains independent per-building identity slices/depth anchors; a merged continuous-wall cutout is invalid because it breaks actor sorting at wall ends.
 - `scripts/build-get205-runtime-assets.mjs` verifies each stable source dimension and hash, rejects crop/depth/registration drift across states, emits WebP derivatives into owned staging, records state-specific paths/hashes/bytes under schema v2, and atomically replaces only its bounded production output root after full validation and readback. Desktop tiling uses overlap so filtering cannot expose seams; mobile downsampling is a separate page-stable profile, not browser-side texture scaling.
-- `get205HidzuRuntime.ts` resolves page-stable profile plus phase-specific paths and texture keys while preserving the geometry-facing layer contract. `get205LightingTransition.ts` prefetches complete blue-hour and curfew sets at `19:50` and `21:50`, keeps the old set until the target is complete, crossfades aligned layers for `750 ms`, then destroys the old GameObjects and textures. A generation token rejects stale direct-jump, Restart Attempt, hydration-rewind, and asynchronous completions. Transition failure discards the partial target, keeps the current complete state, emits an observable diagnostic, and retries on later synchronization; initial-state failure remains visibly fatal. Environment tint and the atmosphere rectangle no longer own city color. V5 must retain and revalidate this interface while replacing the asset/geometry identities; the old and new production identities are not supported simultaneously as automatic fallbacks.
-- The earlier grammar-heavy T5 generator, staged publication pointer, and 17-frame evidence bundle remain historical research recoverable from commit `7a6bba7`; their active manifest, runner, validator, mutation command, and Blender builder are retired. They do not own the current four-block production runtime and cannot substitute for the current live close/overview/mobile/schedule acceptance frames. `art:level0:t5:production` remains the sole T5 package entrypoint because it publishes the current four-block runtime profiles.
+- `get205HidzuRuntime.ts` resolves page-stable profile plus phase-specific paths and texture keys while preserving the geometry-facing layer contract. `get205LightingTransition.ts` prefetches complete blue-hour and curfew sets at `19:50` and `21:50`, keeps the old set until the target is complete, crossfades aligned layers for `750 ms`, then destroys the old GameObjects and textures. A generation token rejects stale direct-jump, Restart Attempt, hydration-rewind, and asynchronous completions. Transition failure discards the partial target, keeps the current complete state, emits an observable diagnostic, and retries on later synchronization; initial-state failure remains visibly fatal. Environment tint and the atmosphere rectangle no longer own city color. V6 must retain and revalidate this interface while replacing the asset/geometry identities; the old and new production identities are not supported simultaneously as automatic fallbacks.
+- The earlier grammar-heavy T5 generator, staged publication pointer, and 17-frame evidence bundle remain historical research recoverable from commit `7a6bba7`; their active manifest, runner, validator, mutation command, and Blender builder are retired. They do not own v6 and cannot substitute for its live close/overview/mobile/schedule acceptance frames. `art:level0:t5:production` remains the package entrypoint but must publish only the accepted v6 identity after atomic validation.
 - If a parallelogram footprint cannot match a visual base within one tile, author a custom polygon or multi-region footprint rather than trim-chasing.
 - One full master scene prevents per-building angle, scale, and light drift.
 - Raw vendor geometry and textures remain outside Git. Requester-authorized flattened game derivatives, original gap-fill assets, source manifests, recipes, and validators may be versioned after the complete live candidate is accepted; generated `.blend` files remain untracked.
@@ -846,7 +848,7 @@ Player knowledge and world ownership are separate inputs. Knowledge controls whe
 
 ### Camera
 
-- Level 0 exposes a close street-first normal frame and a manual minimum zoom that reaches the composed four-block mission overview. Exact numeric values are frozen from the accepted same-master GET-204 live candidate rather than inherited from the greybox or generated plate.
+- Level 0 exposes a close street-first normal frame and a manual minimum zoom that reaches the complete mission-neighborhood overview. V6 camera translation/scale derive from the plan's normalized composition boxes and freeze only with requester greybox/live acceptance; old GET-204 target/zoom constants are not inherited.
 - Camera follow binds to the current protagonist after every load/restart.
 - Observation mode may pan independently while paused, then restores follow without a sacrificial click.
 - Minimap viewport derives from current camera transform, not stale render bounds.
@@ -1094,7 +1096,7 @@ Required closeout commands remain those in `AGENTS.md` and [[01 MVP/95 MVP Readi
 3. Restore the pre-rewrite foundation while recording every salvage/rejection.
 4. Establish target schema, pause, `OperationAttemptBaseline`, `restartAttempt`, and `Level0LayoutContract` foundations.
 5. Implement direct movement, interaction, camera, observation, and shared layout runtime.
-6. Rebuild the exact four-block GET-204 district from named Neo Tokyo 2 sources, obtain Blender close/overview approval, reconcile its geometry into the layout contract, integrate it live, and obtain separate live acceptance; only then may closeout and commit proceed.
+6. Build the exact reference-native v6 plan and obtain raw-greybox approval; then rebuild it from named Neo Tokyo 2 sources, obtain hero/overview approval, reconcile its geometry into the layout contract, integrate it live, and obtain separate live acceptance; only then may closeout and commit proceed.
 7. Add, technically validate, and commit the reversible Hidzu Corporation identity/world-art trial; requester acceptance remains its final visual gate.
 8. Replace actors and portraits.
 9. Restore cover identity, abilities, gates, Paranoia tiers, research, and the Character screen.
@@ -1113,7 +1115,7 @@ The following may exist in recovery archives or Git history but are not active t
 - fixed Operative/Trace initialization;
 - backgrounds and Ghost/Wire/Force packages;
 - A* or threat-aware player routing;
-- fixed `54×38` sparse/fenced four-block, `84×60` nine-block, `96×72`, or nine-parcel topology; the later approved dense four-block mission envelope is current and distinct;
+- fixed `54×38` sparse/fenced, `58×44` four-block/v5, `84×60` nine-block, `96×72`, or nine-parcel topology; current geography is the reference-native v6 plan under `GDR-ART-019`;
 - tactical/AP combat, AutoBattle, enemy turns, cover, weapon/loadout, attack sheets;
 - EMP, lure, breach, magic hacking, or universal movement-noise systems;
 - broad inventory/equipment/economy/crafting/weapon modifications;

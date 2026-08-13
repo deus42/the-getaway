@@ -59,9 +59,9 @@ The player moves through a continuous, human-scale district by reading streets, 
 - Observation fully pauses time and autonomous simulation. It may inspect only known state and may not move, interact, operate terminals, or reveal unknown surveillance.
 - Normal-play status lights, IR glints, and authored reflections provide subtle camera warnings. Observation draws exact discovered coverage from the same `ObservationEvidence` geometry.
 - Solid geometry and occlusion are the only spatial blind-spot contract. No special off-grid zone changes George, minimap, surveillance, or Paranoia behavior.
-- Normal play uses a close street-first camera with the protagonist in the lower-center lead area. Manual minimum zoom reaches the composed four-block mission overview. Exact numeric zooms and follow offset remain the only unresolved values in `OPEN-MOV-003` and are frozen from the accepted same-master GET-204 live candidate.
+- Normal play uses a close street-first camera with the protagonist in the lower-center lead area. Manual minimum zoom reaches the complete mission-neighborhood overview. V6 translation and orthographic scale derive from the accepted reference-native plan greybox; the remaining player-follow tuning stays under `OPEN-MOV-003`.
 - Exact direct-click arrival and blocked-click behavior is unresolved in `OPEN-MOV-001`; movement speed and isometric WASD mapping are unresolved in `OPEN-MOV-002`.
-- The approved topological envelope is exactly four dense mission blocks with three functional identities and three interlocking loops. Exact bounds, widths, anchors, context counts, and safehouse boundary presentation remain acceptance decisions under `OPEN-LAYOUT-001` through `OPEN-LAYOUT-004`; pre-operation planning/departure topology remains an acceptance decision under `OPEN-LAYOUT-005`. Their recorded recommendations may drive reversible layout trials. The old sparse/fenced four-block compound, `54×38`, `84×60` nine-block, and `96×72` experiments are not valid substitutes.
+- The approved topological direction is the reference-native mission plan in `GDR-ART-019`: life street, controlled HIDZU street with a real gate, south approach, safehouse extension, logistics depth, and one service/sneak bypass. [[32 GET-205 Reference-Native Layout Contract]] supplies the complete v6 coordinate seed; `OPEN-LAYOUT-007` keeps that seed reversible until requester plan/greybox acceptance. The old sparse compound, `54×38`, `58×44`, four-block, `84×60`, and `96×72` experiments are not valid substitutes.
 
 ## 7. Inputs from other systems
 
@@ -99,7 +99,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 
 ## 11. Content-authoring requirements
 
-- Author the `Level0LayoutContract` as the accepted semantic/spatial record for the four-block district boundary, three traversal loops, walkable and blocked surfaces, roads, sidewalks, alleys, crossings, service zones, building footprints, entrances, safehouse boundary, contacts, terminals, surveillance anchors, contexts, and objectives. The mission skeleton owns required functions; detailed geometry must agree with the requester-accepted same-master Blender composition.
+- Author the `Level0LayoutContract` as the accepted semantic/spatial record for the reference-native neighborhood boundary, three traversal purposes, dynamic checkpoint, walkable and blocked surfaces, roads, sidewalks, alleys, crossings, service zones, building footprints, entrances, safehouse boundary, contacts, terminals, surveillance anchors, contexts, and objectives. Stable semantic IDs and mission functions survive; exact geometry and coordinates must agree with the requester-accepted v6 plan and source scene.
 - Give every consequential interactable a stable identity, world anchor, eligibility rule, explicit action, unavailable reason, success transition, and player feedback.
 - Author only gameplay-serving city structure: traversable mass, cover from observation, hazards, cameras, entrances, pickups or mission objects, safehouse functions, active contacts, and semantic surface treatment.
 - Validate both primary timings, a no-contact route, interaction reachability, and camera/actor readability before locking the unresolved layout and movement values.
@@ -111,7 +111,7 @@ The player moves through a continuous, human-scale district by reading streets, 
 - Observation cannot move the player, use a terminal, acquire a fact, change surveillance, or reveal an undiscovered camera or route. It has no authored human vignettes or Paranoia reward.
 - Solid geometry must agree across collision, visible world edges, interaction reachability, and surveillance occlusion.
 - A focus transition must not require or consume a sacrificial click before WASD or click control works again.
-- Retired `54×38` sparse/fenced four-block, `84×60` nine-block, `96×72`, and nine-isolated-building layouts are not valid defaults. The current four-block mission envelope is a later approved replacement, not a restoration of the rejected compound.
+- Retired `54×38` sparse/fenced, `58×44` four-block/v5, `84×60` nine-block, `96×72`, and nine-isolated-building layouts are not valid defaults. The current reference-native v6 seed is a replacement, not a restoration or redressing of any rejected grid.
 
 ## 13. Removed behavior
 

@@ -149,9 +149,9 @@ Exit gate: autosave and `OperationAttemptBaseline` remain separate; departure wr
 
 Ownership:
 
-- one mission-sized four-block rebuild, with an actual Blender proof gate before any live runtime replacement;
+- one recoverable mission-sized four-block GET-204 source baseline, now superseded as current geography by the reference-native v6 plan;
 - one master scene using named assets from the requester-owned Neo Tokyo 2 kit plus necessary project-owned public-realm gap fills;
-- street-first normal framing and the locked KitBash-blend human/door/sidewalk/street/building proportions, continuous street walls, three functional identities, three loops, one restrained landmark maximum, and a composed four-block overview;
+- street-first normal framing and the locked KitBash-blend human/door/sidewalk/street/building proportions, continuous street walls, stable mission semantics, and a complete mission-neighborhood overview;
 - blue-hour primary materials/light with coherent daylight and curfew variants;
 - accepted geometry back-propagated into shared collision, occlusion, masks, entrances, and anchors;
 - versioned flattened derivatives, recipe/manifests, and validators without raw vendor geometry or textures;
@@ -159,25 +159,23 @@ Ownership:
 
 Internal sequence:
 
-1. Compose exactly four dense mission blocks from named Neo Tokyo 2 assets, using the approved KitBash + Reference 2 concept for relationships but never as production geometry.
-2. Complete public realm, camera/actor scale, materials, practical lighting, and a few non-baked scale figures in that one source-bound Blender scene.
-3. Internally reject and revise weak close or overview renders; present the best actual Blender pair for requester approval.
-4. Only after that approval, export candidate collision, occlusion, masks, entrances, and anchors from the accepted master and integrate a reversible live candidate.
-5. Present clean-world, current-HUD, and four-block overview live evidence. Only separate explicit live approval unlocks closeout and an authorized commit.
+1. Preserve the accepted GET-204 source/provenance baseline as historical evidence; current geography is rebuilt by T5 from the reference-native plan rather than extending this four-block composition.
+2. Preserve its source measurements, provenance, scale, collision, and visual lessons without carrying forward its four-block geography.
+3. Follow T5's current plan → greybox → source hero/overview → live integration sequence below.
 
-An AI-generated concept, validator, internal rating, or technical checkpoint cannot unlock T5. The actual Blender render is a mandatory source-geometry gate but not final delivery. Exit gate: the requester accepts the committed same-master live build as a coherent four-block city with readable people/routes, named KitBash provenance, no fallback leak, no void, no angle mismatch, and no zoom corruption.
+An AI-generated concept, validator, internal rating, or technical checkpoint cannot unlock T5. The GET-204 source/live proof remains historical evidence rather than current geography. Its exit evidence must stay recoverable while T5 replaces the layout under its own plan, source, and live gates.
 
 ## Gate 5 — Hidzu Corporation identity and surveillance-noir art
 
 ### T5 — Hidzu Corporation identity and graphic-surveillance-noir world art
 
 **Label:** Improvement
-**Depends on:** requester-accepted and committed GET-204 four-block same-master live rebuild
+**Depends on:** recoverable named-source GET-204 baseline and committed reference-native authority package
 **Blocks:** T6 and T10 visual integration
 
 Ownership:
 
-- versioned dense four-block massing under an executable preserved-route/anchor/probe contract, with requester approval of a mission-staged material-free greybox before facade work;
+- exact versioned reference-native v6 plan under `GDR-ART-019`, with requester approval of the dimensioned plan and mission-staged material-free greybox before facade work;
 - identity scanning, three stable public-screen roles, propaganda, corporate wayfinding, truthful camera grammar, and a pedestrian verification lane with queue rails, floor arrows, and an eye-height instruction panel;
 - cold institutional material, sodium practical lighting, and aligned curfew atmosphere;
 - technology cyan and danger crimson semantics;
@@ -188,7 +186,7 @@ Ownership:
 - gameplay-serving entrances, terminals, hiding/blending structures, contact spaces, and hazards;
 - overview atmospheric depth without generic neon clutter.
 
-Sequence: separately committed documentation entry gate → exact route/anchor contract plus the recovered 24-probe fixture (14 Class A outcomes immutable; 10 Class B points freshly observed and frozen only with greybox approval) → requester-approved mission-staged greybox with the five-question legibility read, mid-band building fraction, at least ten meaningful hero identities, and no identity above 15% → requester-approved blue-hour hero → three-state/cutout/profile/manifest regeneration → fixed-camera live A/B, overview, and mobile acceptance. Successor gate: a technically validated, committed T5 treatment with complete fixed captures may unlock T6 while the treatment remains provisional. Final acceptance requires the requester to agree that the city reads specifically as a playable Hidzu Corporation-controlled mission scene while retaining every declared route/anchor and actor/objective hierarchy at normal and minimum zoom. T5 live evidence proves people-free source plates, no random ambient allocation, exact transit/café mission groups, truthful public-queue and delivery-context availability, one public restricted-area guard plus Needle, stable display roles, pedestrian restricted-area framing, camera-state cue alignment, wet blue-black material response, and sparse semantic color. GET-208/T10 retains broader delivery, reaction, and schedule-behavior acceptance.
+Sequence: separately committed reference-native documentation gate → literal v6 plan manifest from [[32 GET-205 Reference-Native Layout Contract]] → dimensioned plan and requester-approved raw greybox with new static/dynamic probes, camera boxes, source/proportion feasibility, five-question read, at least ten meaningful hero identities, and no identity above 15% → requester-approved source-derived blue-hour hero → three-state/cutout/profile/manifest regeneration → fixed-camera live A/B, overview, and mobile acceptance. The old 58×44 grid, routes, anchors, camera pin, v5 density ratio, and 24-point fixture are historical. Successor gate: a technically validated, committed T5 treatment with complete fixed captures may unlock T6 while the treatment remains provisional. Final acceptance requires the requester to agree that the city reads specifically as the Reference 2 mission plan extended into playable geography. GET-208/T10 retains broader delivery, reaction, trespass, and schedule-behavior acceptance.
 
 ## Gate 6 — actor and portrait replacement
 

@@ -7,11 +7,13 @@ canonical: true
 
 # GET-204 Four-Block KitBash City Quality Contract
 
+> Historical boundary: this remains the acceptance and provenance record for the recoverable GET-204 source. `GDR-ART-019` and [[32 GET-205 Reference-Native Layout Contract]] supersede its four-block geography for current Level 0 production. Its named-source, proportion, same-master, and live-evidence lessons remain binding where the v6 contract carries them forward.
+
 ## 1. Authority and outcome
 
 GET-204 succeeds only when the requester sees and approves a superb live city built from a visually accepted Blender master. Ticket state, code volume, asset counts, validators, generated concepts, offline ratings, and technical effort are supporting evidence only.
 
-The committed generated-plate city is a protected fallback and useful visual-direction checkpoint, not the final source-geometry solution. The approved next step is to rebuild Level 0 as one mission-sized, four-block Tokyo district using named Neo Tokyo 2 assets. The live runtime is not replaced until an actual Blender close frame and overview pass requester review.
+Historical GET-204 scope rebuilt Level 0 as one mission-sized, four-block Tokyo district using named Neo Tokyo 2 assets, with the live runtime held until an actual Blender close frame and overview passed requester review. That source/provenance result remains recoverable; current v6 geography and its plan-first gate are owned by [[32 GET-205 Reference-Native Layout Contract]].
 
 ## 2. Locked references
 
@@ -20,8 +22,9 @@ The committed generated-plate city is a protected fallback and useful visual-dir
 - File: `art/references/get205/kitbash-reference2-blend-concept-v1.png`
 - SHA-256: `b8e69fcbb4839cf2fb70fa80e03c42ff321e6a5ee00c2287f1f824f08e951c5d`
 - Provenance: AI-assisted previsualization generated from the real Neo Tokyo 2 catalog, an actual earlier Blender render, and Reference 2.
-- Owns: mission-sized four-block composition, close play angle, the authoritative human/door/sidewalk/street/building proportion, street-wall density, warm/cold value hierarchy, one restrained Hidzu Corporation landmark, and the intended blend of professional kit identity with authored game composition.
-- Does not own: production geometry, topology, collision, exact building identity, or entitlement. It cannot satisfy source-provenance acceptance and may not be promoted as game art.
+- Historically owned: the four-block composition interpretation used by GET-204.
+- Still owns for v6: the literal core street/mission plan, close play angle, authoritative human/door/sidewalk/street/building proportion, street-wall density, warm/cold value hierarchy, one restrained Hidzu Corporation landmark, and the intended blend of professional kit identity with authored game composition.
+- Does not own: production geometry, source identity, or entitlement. It cannot satisfy source-provenance acceptance and may not be promoted as game art. `GDR-ART-019` and the v6 layout contract own the current topology/collision realization.
 
 ### Reference 2 normal-play target
 
@@ -47,7 +50,7 @@ The committed generated-plate city is a protected fallback and useful visual-dir
 
 At normal play, the protagonist is identifiable without dominating the street. The player sees nearby people, entrances, cameras, the controlled threshold, and at least one immediate route decision. Buildings create the same credible street canyon and human/building hierarchy as the locked KitBash blend: people are part of the city, not oversized hero figurines or tiny tactical tokens.
 
-At manual overview, the same four blocks read as one compact mission space. No generated-plate seam, empty board, isolated catalog building, unfinished edge, giant tower cluster, or zoom corruption appears.
+Historically, the GET-204 overview showed its four blocks as one compact mission space. Current v6 overview acceptance applies the same no-seam/no-empty-board/no-isolated-catalog/no-unfinished-edge/no-tower-cluster/no-zoom-corruption quality bar to the complete reference-native mission neighborhood.
 
 The city is attractive and maintained before it becomes threatening. Surveillance is embedded in credible contemporary civic life, not expressed through fantasy styling, generic neon, or military-compound language.
 
@@ -162,7 +165,7 @@ Reject and continue if any proof shows:
 
 - Owning Linear issue: GET-204; move to `In Review` after the authorized acceptance commit, never directly to `Done`.
 - The source-geometry Blender gate and live four-block city were requester-accepted and committed at `2206f8b`. GET-204 reopened on 2026-08-09 for city-wide source-measured collision correction; the corrected live behavior, full automated closeout, and two-worker AI Gamer gate now pass. Move the authorized corrective commit to `In Review` and keep it non-terminal until the requester verifies that committed build.
-- `GDR-ART-017` authorizes GET-205 to supersede this accepted massing through a new `get205-dense-four-block-v5` recipe and runtime identity. `GDR-ART-018` requires that replacement to stage the existing mission anchors and pass fixed-camera identity-contribution limits, not merely whole-frame coverage. Those descendant changes do not mutate, relabel, or retroactively reject the GET-204 recipe: GET-204 remains immutable/recoverable evidence and the explicit diagnostic fallback. GET-205 preserves the executable route/anchor/loop contract, not every dead interstitial walkable gap, and must pass its own route/probe, mission-legibility, identity, and density gates before facade work.
+- `GDR-ART-019` supersedes the accepted GET-204/v5 geography through `get205-reference-native-v6`. The GET-204 recipe remains immutable/recoverable evidence and an explicit diagnostic fallback; it is not relabeled or mutated. V6 preserves stable mission semantics and production machinery, not the old route/anchor/loop coordinates, and must pass its exact plan, replacement probes, dynamic gate, source/proportion, identity, and mission-legibility gates before facade work.
 - Preserve the accepted GET-204 live runtime as the explicit diagnostic fallback after the requester-accepted GET-205 production path becomes the normal Level 0 presentation.
 - No production runtime replacement or commit occurs without the relevant requester approval.
 - The Decision Register, Art Direction, Roadmap, MVP Readiness, Linear issue/comments, active plan, AGENTS source-provenance rule, and `progress/GET-204.md` must remain aligned.

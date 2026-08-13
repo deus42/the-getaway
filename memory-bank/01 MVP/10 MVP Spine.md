@@ -47,7 +47,7 @@ The player chooses one of four authored covers of the same protagonist — the l
 
 ### City
 
-Level 0 is exactly four dense, continuous outdoor Tokyo mission blocks with three functional identities and three interlocking traversal loops. It contains recognizable public and service spaces, credible surveillance coverage, discrete hiding and blending contexts, and a two-to-three-minute outer loop. A capacity-honest transit shelter, stable transit/verification/advisory screens, and the same street before and after evening wind-down make public life and institutional control legible without baking people into the city art. Architecture forms streets rather than sitting as isolated objects. This approved topology is distinct from both the rejected sparse/fenced four-block compound and the rejected oversized nine-block board.
+Level 0 is one dense reference-native outdoor Tokyo mission neighborhood with three interlocking traversal purposes. A tight junction splits into the public life street and the HIDZU-controlled street; the latter is physically closed by a checkpoint below the destination tower and can be bypassed through one service/sneak seam. The safehouse quarter extends behind the camera. A capacity-honest transit shelter, stable transit/verification/advisory screens, and the same streets before and after evening wind-down make public life and institutional control legible without baking people into the city art. Architecture forms continuous streets rather than sitting as isolated objects. [[32 GET-205 Reference-Native Layout Contract]] owns exact geography.
 
 ## Player agency contract
 
@@ -102,7 +102,7 @@ MVP quality is demonstrated in the actual player-visible build. A fixture can pr
 
 - one complete Lira operation and factual debrief;
 - optional Naila and Brant preparation with a viable neither-contact run;
-- dusk/public and curfew/service route contexts in the same four-block district;
+- dusk/public and curfew/service route contexts in the same reference-native neighborhood;
 - three one-function terminals: one-use camera feed, cache locker, and outbound validation;
 - one optional Cold Iron chain with unknown, Naila-warning, recognized, and copied states;
 - one named verifier drone, Needle, a small authored security set, and small authored civilian/blending groups that never report hidden state;

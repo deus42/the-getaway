@@ -19,7 +19,7 @@ This note preserves the conclusion of GET-155 and the rejected GET-180/iso-compi
 
 - A collection of separately rendered building sprites does not become a coherent city when assembled in Phaser.
 - Numeric footprint validation does not prove correct human scale, street rhythm, lighting, actor readability, or visual quality.
-- The sparse/fenced four-block compound, nine-parcel, `54×38`, `84×60`, and `96×72` experiments are not approved Level 0 topology. The later requester-approved dense four-block mission envelope is current and distinct.
+- The sparse/fenced four-block compound, dense `58×44` four-block envelope, nine-parcel, `54×38`, `84×60`, and `96×72` experiments are not approved Level 0 topology. Current geography is the reference-native v6 mission neighborhood in `GDR-ART-019` and [[32 GET-205 Reference-Native Layout Contract]].
 - Generated synthetic replacements, opaque parcel plates, and per-building collage are not production art direction.
 - Successful commands, validators, tests, or an AI visual rating are not requester acceptance.
 
@@ -32,7 +32,7 @@ The approved production path is defined in:
 - [[Roadmap]] — T3 mission/runtime skeleton → T4 complete live city rebuild → T5 Hidzu Corporation identity → T6 actor follow-up;
 - [[Building Positioning Runbook]] — measured alignment after the replacement layout is approved.
 
-The current path uses the requester-owned Neo Tokyo 2 pack in one four-block outdoor Level 0 Blender master scene, with original gap-fill work only where public realm or gameplay needs it. GET-204 first presents actual same-master close and four-block overview renders for source/composition approval, then exports, reconciles, integrates, and presents the live candidate for separate acceptance. The mission skeleton stays authoritative for semantics while accepted city geometry is back-propagated into the shared layout contract. Raw vendor geometry/textures and generated `.blend` files remain untracked; requester-approved flattened game derivatives, original gap-fill assets, recipes, manifests, metadata, and validators may be committed.
+The current path uses the requester-owned Neo Tokyo 2 pack in one reference-native outdoor Level 0 Blender master scene, with original gap-fill work only where public realm or gameplay needs it. GET-205 first presents the literal v6 plan and raw greybox, then actual same-master source hero and complete-neighborhood overview renders, and finally the integrated live candidate for separate acceptance. The mission skeleton stays authoritative for semantics while the v6 plan manifest owns geography and accepted source geometry must agree with it. Raw vendor geometry/textures and generated `.blend` files remain untracked; requester-approved flattened game derivatives, original gap-fill assets, recipes, manifests, metadata, and validators may be committed.
 
 ## Historical artifact boundary
 

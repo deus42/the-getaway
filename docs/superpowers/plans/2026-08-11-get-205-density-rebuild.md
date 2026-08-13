@@ -1,5 +1,7 @@
 # GET-205 Density Rebuild Implementation Plan
 
+> Superseded on 2026-08-12 by [GET-205 Reference-Native V6 Rebuild Plan](2026-08-12-get-205-reference-native-rebuild.md) and `GDR-ART-019`. This file is historical v5 planning evidence only; do not execute its preserved-topology, old-coordinate, density-band, or 24-probe instructions.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox gates and must run inline in the visible shared `main` workspace; this plan does not authorize subagents, a branch, a worktree, staging, or a commit.
 
 **Goal:** Replace the rejected sparse/dark GET-205 v4 city and rejected coverage-only first v5 greybox with a route-safe, source-traceable, mission-legible four-block v5 city that matches the locked blend's massing and wet blue-black treatment, removes random ambient NPC allocation, stages purposeful mission presence, and preserves executable topology.

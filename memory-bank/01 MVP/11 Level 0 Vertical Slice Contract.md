@@ -23,7 +23,7 @@ The player must feel vulnerable but capable. Their strength comes from preparati
 | Lira | Accept a humane operation with a credible deadline and reward. | Exact dialogue acceptance enters preparation. | Medkits, two timing contexts, midnight, and passage are understood. |
 | Preparation | Decide whether more knowledge is worth the time and travel. | Optional Naila/Brant facts are recorded, or consciously skipped. | Both, either, and neither-contact states remain viable. |
 | Departure | Commit one deterministic attempt. | George reads back the real departure time, contacts, the Paranoia tier, held abilities, and restoration meaning; confirmation creates `OperationAttemptBaseline`. | Baseline contains the complete departure state and no later outcome. |
-| Infiltration | Read and cross the four-block district. | Explicit route actions move the run into the logistics-site sequence. | Dusk/public and curfew/service routes use normal controls and truthful surveillance. |
+| Infiltration | Read and cross the reference-native mission neighborhood. | Explicit route actions move the run into the logistics-site sequence. | Dusk/public and curfew/service routes use normal controls and truthful surveillance. |
 | Recovery | Operate the cache and choose whether to investigate. | Explicit terminal use releases medkits; optional manifest inspection can recognize and then copy the evidence. | Mission object and evidence state cannot change through proximity; copying costs exactly five world minutes. |
 | Escape | Break the network's evidence chain. | Clear/Suspicious/Pursuit resolves through line of sight, direction, context, or authored interception. | The network searches only observed evidence and never hidden true position; a full return to `Clear` resets recognition. |
 | Return | Honor the bargain and make outcomes legible. | Explicit medkit handoff issues the credential. | Lira responds only to actual facts and ledger outcomes. |
@@ -66,7 +66,7 @@ The player begins inside a clearly readable safehouse boundary at 18:30.
 - Contextual onboarding teaches click-to-move, WASD, interaction, pause ownership, and George access without a separate tutorial screen.
 - The safehouse exposes rest, safe waiting, Character, dossier, George consultation, and the outbound terminal. Transit validation is visible but unavailable until Lira supplies the credential.
 - The player may inspect these actions before departure; unavailable actions explain why.
-- The safehouse is an outdoor-readable planning threshold within the four-block district, not a loading door to an unimplemented interior. Its visual boundary, world collision, surveillance behavior, and action availability must agree.
+- The safehouse is an outdoor-readable planning threshold in the quarter behind the hero neighborhood, not a loading door to an unimplemented interior. Its visual boundary, world collision, surveillance behavior, and action availability must agree.
 
 ## 3. Lira briefing
 
@@ -102,7 +102,7 @@ Naila and Brant are optional contacts. Both remain reachable before and after mi
 
 The mission remains completable after consulting both, one, or neither.
 
-The mechanical order is fixed—briefing and optional preparation precede the immutable `OperationAttemptBaseline`—but the exact physical loop between safehouse, Lira, contacts, and the departure action remains unresolved in `OPEN-LAYOUT-005`. Implementation may not invent a forced backtracking route or create the baseline before optional preparation is complete.
+The mechanical order is fixed—briefing and optional preparation precede the immutable `OperationAttemptBaseline`. [[32 GET-205 Reference-Native Layout Contract]] fixes the v6 physical seed for the safehouse, Lira, Naila, Brant, and departure anchors; the player may visit either, both, or neither optional contact without forced backtracking. The exact seed remains reversible under `OPEN-LAYOUT-007` until plan/greybox approval, but implementation may not create the baseline before optional preparation is complete.
 
 ## 5. Two primary timings
 
@@ -313,9 +313,9 @@ The continuous read-only Paranoia slider, current named tier, and ability states
 
 ## 18. World and presentation
 
-- Exactly four dense, continuous outdoor Tokyo mission blocks carrying three functional identities and three interlocking loops. This is not the rejected sparse/fenced four-block compound and not the rejected oversized nine-block board.
+- One dense reference-native outdoor Tokyo mission neighborhood: life street up-left, controlled HIDZU street up-right, a real gate and tower, safehouse quarter behind camera, logistics depth beyond the gate, and one service/sneak bypass. [[32 GET-205 Reference-Native Layout Contract]] owns exact v6 geography.
 - Full outer loop target: two to three minutes.
-- Normal play uses the requester-approved close street-first frame; maximum manual zoom-out reaches the composed four-block mission overview. Exact numeric values are calibrated and frozen from the accepted same-master GET-204 live candidate.
+- Normal play uses the requester-approved close street-first frame; maximum manual zoom-out reaches the complete mission-neighborhood overview. The v6 camera derives from the accepted reference-native plan greybox rather than inherited GET-204 constants.
 - Runtime projection: 64×32, 2:1 isometric.
 - The requester-owned Neo Tokyo 2 pack is recomposed from named source assets in one Blender 5.0.1 master; project-authored gap fills are limited to public realm and gameplay needs. The approved AI-assisted concept guides composition, camera, and value but never substitutes for production geometry.
 - The locked blend's value/massing/proportion/source relationship is authoritative, but its AI-generated rooftop garnish and baked figures are not. Production roofs may be quieter; every retained prop has named Neo Tokyo 2 or project-authored gameplay/public-realm provenance.

@@ -58,7 +58,7 @@ The player chooses one of four authored covers of the same protagonist and plays
 
 ### The city is continuous and human-scale
 
-Level 0 is exactly four dense, continuous mission blocks carrying three functional identities and three interlocking traversal loops. It is neither the rejected sparse/fenced four-block compound nor the rejected oversized nine-block board. Streets, sidewalks, alleys, entrances, ordinary public activity, hiding/blending contexts, and surveillance relationships make it read as a lived-in Tokyo district before it reads as a level.
+Level 0 is one reference-native mission neighborhood built around a tight three-arm junction. The public life street runs up-left; the HIDZU-controlled street runs up-right behind a real barrier and landmark tower; the safehouse sits behind the camera; and one shadowed service seam bypasses the checkpoint. Streets, narrow parcels, entrances, ordinary public activity, hiding/blending contexts, and surveillance relationships make the operation readable before it reads as a level. Exact geography is owned by [[32 GET-205 Reference-Native Layout Contract]].
 
 ## Setting and campaign premise
 
@@ -78,7 +78,7 @@ Level 0 is a 15–20 minute outdoor prologue. In one ordinary-control run it mus
 - a readable safehouse opening and contextual onboarding;
 - Lira's medkit recovery mission and promised outbound passage;
 - optional preparation through Naila and Brant, including a viable neither-contact route;
-- a dusk/public approach and a curfew/service approach through the same four-block district;
+- a dusk/public approach and a curfew/service approach through the same reference-native neighborhood;
 - readable cameras, explicit interactions, discrete hiding, social blending, one patrol drone, and last-known-position pursuit;
 - a meaningful optional Hidzu Corporation–Harrow shipping clue that never blocks the humanitarian objective;
 - Paranoia consequences with explicit safehouse recovery;
@@ -143,9 +143,9 @@ After explicit medkit return and transit validation, the deadline can no longer 
 
 The locked visual language is graphic surveillance noir: readable midtones, strong ink-like silhouettes, cold institutional materials, sodium practical light, restrained device-bound cyan, and crimson only for real restriction or danger. It is grounded and contemporary, not fantasy-Neo, broad-glow cyberpunk, or a dark tactical board.
 
-The city uses the requester-owned Neo Tokyo 2 kit in one named-source Blender 5.0.1 master. The approved AI-assisted four-block concept is a composition, camera, and value north star only. Every production building retains named source provenance; project-authored gap fills are limited to streets, public realm, navigation, and gameplay readability. The accepted master owns detailed visible geometry after its Blender gate; collision, occlusion, entrances, and anchors must then agree with it before live acceptance.
+The city uses the requester-owned Neo Tokyo 2 kit in one named-source Blender 5.0.1 master derived from the exact reference-native plan. The approved AI-assisted concept owns the core street/mission plan, composition, camera relationship, and value target, but never production geometry or provenance. Every production building retains named source provenance; project-authored gap fills are limited to streets, public realm, navigation, and gameplay readability. The accepted v6 master and plan contract must agree on collision, occlusion, entrances, anchors, and the real checkpoint before live acceptance.
 
-Normal play is close and street-first, with the protagonist readable in the lower-center lead area. Manual overview shows the complete four-block mission space without expanding scope. Actors are separate runtime entities: four protagonist appearances, Lira, Naila, Brant, two security roles, and three civilian archetypes, all with grounded idle/move/interact presentation and matching portraits. People are never baked into city plates. Their foot anchors may sample authored amber/cyan light regions with subtle eased presentation-only tint; lighting never changes detection or movement.
+Normal play is close and street-first, with the protagonist readable in the lower-center lead area. Manual overview shows the complete mission neighborhood without expanding scope. Actors are separate runtime entities: four protagonist appearances, Lira, Naila, Brant, two security roles, and three civilian archetypes, all with grounded idle/move/interact presentation and matching portraits. People are never baked into city plates. Their foot anchors may sample authored amber/cyan light regions with subtle eased presentation-only tint; lighting never changes detection or movement.
 
 Audio is mandatory semantic feedback. City ambience, footsteps, interactions, cameras, network transitions, Needle approach/verification, the 21:00/21:30/22:00/23:30 street changes, objectives, safehouse, failure, and completion have distinct authored cue families. A Transit Road restaurant, Market Ring workshop, and safehouse-side apartment provide three spatial threshold sound leaks. There is no Level 0 voice acting, and no critical meaning may be audio-only.
 
@@ -159,7 +159,7 @@ See [[30 Art Direction (MVP)]], [[31 GET-204 Visual Rebuild Quality Contract]], 
 
 ### Current Level 0 content
 
-- one four-block outdoor Tokyo district;
+- one reference-native outdoor Tokyo mission neighborhood;
 - one Lira medkit operation;
 - two optional preparation contacts;
 - two primary timings through one continuous space;

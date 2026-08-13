@@ -22,6 +22,7 @@ For a first read, use [[Game Design]] → [[10 MVP Spine]] → [[11 Level 0 Vert
 
 - [[20 Setting & Worldbuilding]]
 - [[30 Art Direction (MVP)]]
+- [[32 GET-205 Reference-Native Layout Contract]]
 - [[35 Narrative Alignment]]
 - [[40 George (AI Companion)]]
 - [[41 Movement, Interaction & Observation]]
