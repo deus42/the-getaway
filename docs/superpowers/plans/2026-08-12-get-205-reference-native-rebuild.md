@@ -1,6 +1,6 @@
 # GET-205 Reference-Native V6 Rebuild Plan
 
-> Status: authority draft. Production execution starts only after the documentation package is explicitly authorized, committed, read back, and `OPEN-LAYOUT-007` is exercised through the plan/greybox gate.
+> Status: documentation entry committed; dimensioned plan and amended raw greybox requester-approved; exact v6 seed, camera, and replacement probes frozen; the layout-closure plus real-source-geometry correction package awaits explicit commit authorization before source-facade production resumes. The camera-visible parcel-envelope hero is rejected evidence.
 
 **Goal:** Replace the inherited four-block geography with the literal Reference 2 mission plan, extended into the complete Level 0 neighborhood, while retaining stable mission semantics and the existing runtime/art-delivery machinery.
 
@@ -11,8 +11,8 @@
 ## Frozen authority
 
 - Current decision: `GDR-ART-019`.
-- Exact reversible seed: [[32 GET-205 Reference-Native Layout Contract]] sections 6.1–6.9.
-- Pending requester freeze: `OPEN-LAYOUT-007`.
+- Exact frozen seed: [[32 GET-205 Reference-Native Layout Contract]] sections 6.1–6.9.
+- Resolved requester freeze: `OPEN-LAYOUT-007` (2026-08-13).
 - Plan identity: `get205-reference-native-v6`.
 - Runtime identity after acceptance: `get205-reference-native-production-v3`.
 - Historic only: `58×44` grid, four-block invariant, v4/v5 route/footprint/anchor coordinates, `{29,22}` camera target, `x=36` landmark mandate, v5 `0.95–1.05` density ratio, and recovered 24-point fixture.
@@ -48,16 +48,28 @@ Planned production files (exact names finalized only after Task 1):
 5. Run all plan, route, anchor, clearance, static/dynamic probe, camera-box, and identity-contribution checks.
 6. Present raw reference/candidate first. The requester must point to destination, obstacle, blend, hack, and sneak before seeing the answer key and confirm “this is Reference 2's plan, extended.”
 7. If rejected, revise the canonical plan seed with the pointable reason; do not start facades.
-8. If accepted, resolve `OPEN-LAYOUT-007`, freeze the plan/greybox/camera baselines atomically, and request authorization for any resulting authority commit.
+8. Completed 2026-08-13: requester approved the amended raw frame; resolve `OPEN-LAYOUT-007`; freeze target `{21.177121,17.126983,1.621967}`, orthographic scale `25.687085`, the 22-static/four-dynamic probe fixture, and raw SHA-256 `ddf5a224da0eec2fe8af5b1c0bf2f7ca8f5e618080ef1d63b4a18c4c72aa7369`; request authorization for the resulting authority commit.
+
+### Foreground-band amendment after the rejected first raw frame
+
+1. Cap the named south-transit, south-market, south-service, south-corner, south-west, safehouse-workshop, and service terminal/mid/workshop strips at one floor with roof props at or below `0.5u`.
+2. Shift the three taller safehouse masses south-west outside the hero lower-band wedge; do not move the court, mission anchors, junction, gate, routes, or core identities.
+3. Encode explicit camera-clear wedges for the transit apron, café patio, and sneak mouth. No parcel, fixture, fence, or declared backdrop above one floor may intersect.
+4. Move the provisional target `1.5–2u` north from the rejected candidate. Completed result frozen at target `{21.177121,17.126983,1.621967}` and orthographic scale `25.687085` after requester approval.
+5. Run seed-only projection math first: roof-span `<=0.18H`, transit `>=80px`, café `>=60px`, sneak `>=2,500px`. Blender is blocked until all four pass; then produce exactly one neutral rerender and repeat the blind-read pack.
 
 ## Task 4 — Build the source-derived blue-hour hero
 
-1. Derive a v6 scene from recoverable named Neo Tokyo 2 source assets without overwriting any prior source.
-2. Realize each parcel as a separate source/provenance identity and independent future depth slice. A continuous wall is never one merged cutout.
-3. Build the real dynamic barrier, guard booth, beacons, fence, shelter, café, terminals, hide recesses, and Needle launch at the accepted plan anchors.
-4. Add detailed warm and cold windows, richer labels, controlled cool-white/cyan devices/identity accents, one dominant HIDZU face, sparse red warning/threat sources, readable cool fill, continuous wet road response, and reflections under every emitter.
-5. Use Cycles on Metal with adaptive samples and denoising; inspect the `200%` road/reflection crop for sparkle or smearing and raise sampling when needed.
-6. Render only the blue-hour `1440×900` hero from the frozen v6 camera. Present `reference | candidate | delta notes`, the crop, and two-sided visual metrics. Stop for requester hero approval.
+1. Preserve the frozen section-6 layout, camera, mission fixtures, light-color discipline, wet-material contract, and all already-green mission reads. Do not tune composition or add states/runtime work.
+2. **Phase 0 — durable source hygiene:** audit the historical GET-204 donor and rejected v6 hero without modifying either. Derive a new versioned v6 scene, remap every retained image to the durable local licensed cache or pack it into that derivative, save, reopen, and fail unless the reopened scene contains zero missing external images. Record the before/after dependency inventory; an in-memory basename remap or repaired-link count is diagnostic only.
+3. **Phase A — real source assembly:** replace the camera-visible parcel-envelope implementation on all 27 parcels with actual modeled buildings or kit-bashed assemblies fitted inside the frozen parcels, following the GET-204 source-catalog/registered-assembly pattern. Clear append parents while preserving world transforms, anchor donors by their measured structural street face, overflow away from protected streets, and preserve separate parcel identities/future depth slices. A continuous wall is never one merged cutout.
+4. Record per-parcel provenance in both manifest and saved scene: KB3D source collection, retained source objects/materials, source and placed bounds, transform, mesh complexity/hash evidence, and authored crop/cap/interior-closure work. Fail on an empty source parcel, unsupported manifest claim, camera-visible procedural envelope, or generated replacement facade. A deeply inset non-rendering closure may support masks/interiors only when it never obscures source architecture.
+5. Build/preserve the real dynamic barrier, guard booth, beacons, fence, shelter, café, terminals, hide recesses, and Needle launch at the accepted plan anchors. Build HIDZU tower/checkpoint identity as mounted dimensional geometry—frame/box, brackets/rails, dark returns, hex mark, extruded letters, and unit plates—with no banner planes or decals. Run a cheap frozen-camera glyph preview and fail mirrored/unreadable required copy. Compare the source-only silhouette with the approved greybox at IoU `>=0.85`; the allowance covers modeled relief only and cannot move or resize the frozen layout.
+6. **Phase B — bounded clutter:** add source-traceable storefront/roof detail plus provenance-recorded stalls, awnings, vending machines, poles/catenary, bins, planters, roadside cabinets, small shop boards, and non-emissive district-wayfinding fixtures along the life street and junction. Each object needs a declared building-identity, navigation, surveillance, human-scale, or civic-atmosphere purpose and must clear routes, anchors, and staging wedges.
+7. Preserve the accepted lighting discipline while the geometry changes: detailed warm/cold windows at the current density, controlled cool-white/cyan devices/identity accents, one dominant HIDZU face, sparse red warning/threat sources, readable cool fill, continuous wet road response, and reflections under every emitter. The sneak mouth remains dark; the transit group and Needle retain their approved reads.
+8. **Phase C — photographic finish:** after geometry/clutter/material/light gates pass, add restrained depth fog, physically motivated light-pool falloff, the established AgX/Filmic wet-blue-black grade, and subtle neutral grain. No tint-only authority, bloom, ripple blur, reflection composite, concealment of missing geometry, or reference pixels.
+9. Use Cycles on Metal with adaptive samples and denoising; inspect the `200%` road/reflection and facade-detail crops for sparkle, smearing, or flat painted detail and raise sampling when needed.
+10. Rerun all image-durability, glyph-parity, ART-016, provenance, source-geometry, silhouette, identity, mission-legibility, window, and clutter-clearance gates. Render only the blue-hour `1440×900` hero from the frozen camera. Present `reference | candidate | delta notes`, both crops, gate JSONs, and the blind five-question read. Stop for requester hero approval.
 
 ## Task 5 — Regenerate three states and runtime artifacts
 
@@ -80,7 +92,9 @@ Planned production files (exact names finalized only after Task 1):
 ## Stop conditions
 
 - Stop before production if the authority package is not committed/read back.
-- Stop before facade work if `OPEN-LAYOUT-007` is open or the blind greybox read fails.
+- Stop before facade work until the requester-approved layout closure is committed and read back.
+- Stop before the real-geometry corrective build until the amended layout-closure/source-hero authority package is committed and read back.
 - Stop before states/runtime if the blue-hour hero is not accepted.
 - Stop before closeout/commit if live visual/behavior acceptance is absent.
 - Never weaken the plan, route, dynamic-gate, probe, source/provenance, wet-look, proportion, manifest, or live-evidence gates to manufacture a pass.
+- Never execute the local replica/transplant prototypes as production recipes. They prove append/parent-clear/street-face mechanics and the visual difference between source geometry and parcel shells; their altered coordinates, three-wide-donor life wall, widened streets, camera, destructive regional clearing, plane signs, and decals are explicitly non-authoritative.

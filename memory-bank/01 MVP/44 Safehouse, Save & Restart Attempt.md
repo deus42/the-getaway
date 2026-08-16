@@ -29,7 +29,7 @@ The safehouse is the protagonist's small pocket of control: a readable outdoor p
 - Rest, safe waiting, research, Character, dossier, George consultation, and the outbound terminal are visible safehouse actions.
 - Transit validation begins unavailable because `fact.transit.credential_issued` has not been acquired; the action explains that blocker.
 - No `OperationAttemptBaseline` exists until the player has accepted Lira's operation, George has read back the real departure state, and the player confirms departure.
-- The v6 outdoor boundary, entrance, preparation, and departure seed is specified in [[32 GET-205 Reference-Native Layout Contract]] and remains reversible only under `OPEN-LAYOUT-007` until plan/greybox approval; Level 0 does not require a full interior.
+- The requester-approved v6 outdoor boundary, entrance, preparation, and departure seed is frozen in [[32 GET-205 Reference-Native Layout Contract]]; Level 0 does not require a full interior.
 - Safehouse entry and action availability while directly observed, Suspicious, or in Pursuit is unresolved in `OPEN-SAFE-001`. Until accepted, implementation may not assume that crossing the boundary clears surveillance or makes recovery/planning actions available.
 
 ## 4. Complete happy-path behavior
@@ -62,7 +62,7 @@ The safehouse is the protagonist's small pocket of control: a readable outdoor p
 - Autosave and `OperationAttemptBaseline` are different persisted objects with different purposes. Autosave stores the current compatible run at authored safe points; Restart Attempt restores the immutable baseline.
 - `OperationAttemptBaseline` is created exactly once per attempt at explicit confirmed departure, never after later movement, facts, choices, device changes, Paranoia changes, or time passage.
 - Dialogue, Character, dossier, George consultation, terminal UI, debrief, failure, and completion pause time and autonomous simulation while open.
-- Safehouse geometry/presentation follows the exact v6 seed under `OPEN-LAYOUT-007`; route time reserves remain governed by `OPEN-TIME-001`. Arbitrary waiting assumptions are forbidden.
+- Safehouse geometry/presentation follows the exact requester-approved v6 seed; route time reserves remain governed by `OPEN-TIME-001`. Arbitrary waiting assumptions are forbidden.
 - The v6 physical preparation/return loop comes from the new plan seed. The baseline remains after optional preparation without a long mandatory backtrack.
 - The network-state gate for entry, Wait, Rest, save, research, George planning, and terminals is blocked by `OPEN-SAFE-001`. Its recommended baseline is review input, not a current constant.
 
@@ -106,7 +106,7 @@ The safehouse is the protagonist's small pocket of control: a readable outdoor p
 
 ## 11. Content-authoring requirements
 
-- Author the exact outdoor safehouse boundary and anchors from [[32 GET-205 Reference-Native Layout Contract]] for Rest, Wait, research, Character, dossier, George consultation, departure, and `terminal.outbound_transit`; requester freeze waits on `OPEN-LAYOUT-007`.
+- Author the exact frozen outdoor safehouse boundary and anchors from [[32 GET-205 Reference-Native Layout Contract]] for Rest, Wait, research, Character, dossier, George consultation, departure, and `terminal.outbound_transit`.
 - Give every safehouse action a stable identity, prerequisite, preview, confirmation where consequential, success effect, unavailable reason, world/HUD/audio feedback, and localization node.
 - Bump and version the Level 0 schema for `OperationAttemptBaseline`; reject stale development saves containing retired `retry*` fields with an explicit explanation.
 - `OperationAttemptBaseline` must store schema version; cover identity; held abilities and research state; Paranoia and tier-announcement history; world time; mission/objective states; pre-departure contacts and facts; known locations/devices/contexts; used safehouse/grounding actions; departure anchor; deterministic runtime generation; and required content versions.

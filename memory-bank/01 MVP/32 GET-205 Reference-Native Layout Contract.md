@@ -27,7 +27,7 @@ This specification implements `GDR-ART-019`. It replaces the rejected attempt to
 
 - The operation still begins at 18:30 inside the safehouse boundary with the same cover, time, movement, interaction, mission, persistence, HUD, surveillance, and George systems.
 - Layout identity is `get205-reference-native-v6`; the eventual runtime production identity is `get205-reference-native-production-v3`.
-- The exact coordinate seed in section 6 is the mandatory reversible baseline under `OPEN-LAYOUT-007`. It leaves no implementation-level compositional discretion, but it is not frozen as the final accepted layout until the requester approves the dimensioned plan and raw greybox.
+- The amended coordinate seed in section 6 is the requester-approved, frozen v6 layout. `OPEN-LAYOUT-007` is resolved. No production stage may move its routes, parcels, anchors, fixtures, authored-presence slots, camera, or probe expectations without a new canonical decision and requester approval.
 - `kitbash-reference2-blend-concept-v1.png` is literal plan and hero-composition authority for the core neighborhood. It remains previsualization, never production geometry or provenance.
 - `canvas-quality-target.png` continues to own the wet blue-black material and lighting relationship. `GDR-ART-012`, `GDR-ART-013`, `GDR-ART-014`, and `GDR-ART-016` remain unchanged.
 - The accepted GET-204 source scene, the v4 wet rebake, and the rejected v5 recipes remain recoverable historical inputs. None is mutated in place.
@@ -59,15 +59,15 @@ Private space begins immediately north of the barrier line. The barrier is a rea
 
 ## 6. Rules and tuning values
 
-Sections 6.1–6.9 define the complete provisional v6 seed governed by `OPEN-LAYOUT-007`. An implementation may reproduce it literally for the plan/greybox gate after the documentation entry commit. Any deviation requires a stated geometric reason, an updated canonical seed, and requester review; an agent may not “improve” the composition ad hoc.
+Sections 6.1–6.9 define the complete frozen v6 seed. The requester approved the dimensioned plan, rejected its first roof-dominated raw projection, authorized only the bounded foreground-band amendment recorded below, and approved the amended raw greybox on 2026-08-13 after the blind five-question read. Any later deviation requires a new canonical decision and requester review; an agent may not “improve” the composition ad hoc. The source-facade blue-hour hero is the next stage, but it begins only after the layout-closure authority package is committed and read back.
 
 ### 6.1 Coordinate system and bounds
 
-- Plan bounds: `x = 0..44`, `y = 0..38` layout units.
+- Core plan bounds remain `x = 0..44`, `y = 0..38` layout units. The three displaced safehouse masses may extend to `x = -3` as a south-west service extension outside the hero frustum wedge; no route, anchor, mission fixture, or reference-native core parcel moves with them.
 - One layout unit remains `3 m`; movement speed and interaction radii do not change merely because coordinates move.
 - North is decreasing `y`; east is increasing `x`; the camera looks from the south-west toward the north-east.
 - Core Reference 2 neighborhood: `x = 4..33`, `y = 5.5..30`.
-- Safehouse extension behind the camera: `x = 12..25`, `y = 28.5..37`.
+- Safehouse court/lane extension: `x = 12..20.5`, `y = 28.5..35.5`. The three taller safehouse identity masses relocate south-west to `x = -3..8`, `y = 31..38`, outside the hero lower-band wedge.
 - Logistics depth beyond the gate: `x = 18.5..33`, `y = 5.5..15.8`.
 - No old `58×44` coordinate, footprint, route, anchor, or camera-centre pin is inherited.
 
@@ -83,7 +83,7 @@ All polygons are inclusive boundaries in layout units. Sidewalk strips are part 
 | `route.hidzu-private` | rectangle `(21.5,5.5)`–`(24.5,15.8)` | `3.0` | Controlled street beyond the barrier |
 | `space.gate-public-apron` | rectangle `(24.5,17.2)`–`(28,18.5)` | — | Public terminal/guard apron connecting the approach to the sneak-seam mouth |
 | `space.gate-operations-pad` | rectangle `(26.2,15.35)`–`(28,17.2)` | — | Restricted booth/Needle apron outside the public road lane |
-| `space.transit-stop-apron` | rectangle `(13,23.5)`–`(18,24.4)` | — | Recessed public strip for the shelter and queue frontage |
+| `space.transit-stop-apron` | rectangle `(13,23.5)`–`(18,25.4)` | — | Recessed public strip and explicit camera-clearance setback for the shelter and queue frontage |
 | `route.safehouse-lane` | rectangle `(15.5,28.5)`–`(21.5,31)` | `2.5` | Short preparation/departure connector |
 | `space.safehouse-court` | rectangle `(15.5,31)`–`(20.5,35.5)` | — | Outdoor-readable safehouse planning space |
 | `route.service-alley` | rectangle `(28,5.5)`–`(30,30)` | `2.0` | Service access linking logistics depth, terminal, shrine, and south return |
@@ -119,12 +119,12 @@ Every listed parcel is a separate identity, source/provenance record, collision 
 | `life.mixed` | `(13,16.5)`–`(16,20.5)` | 4 | Mixed frontage and labels |
 | `life.transit-corner` | `(16,16.5)`–`(19,20.5)` | 6 | Frames transit stop and public queue |
 | `life.junction-corner` | `(19,16.5)`–`(21.5,20.5)` | 5 | Turns the life wall into the HIDZU approach |
-| `life.south-west` | `(4,23.5)`–`(7,28.5)` | 3 | Low foreground edge |
-| `life.south-market` | `(7,23.5)`–`(10,28.5)` | 2 | Low public-market edge |
-| `life.south-service` | `(10,23.5)`–`(13,28.5)` | 3 | Low foreground edge; no roof clutter above `1` unit |
-| `life.south-transit-west` | `(13,24.4)`–`(15.5,28.5)` | 2 | Low backdrop behind the transit-stop apron |
-| `life.south-transit-east` | `(15.5,24.4)`–`(18,28.5)` | 3 | Low stepped backdrop behind the transit-stop apron |
-| `life.south-corner` | `(18,23.5)`–`(21.5,28.5)` | 2 | Keeps the crossing and street level visible |
+| `life.south-west` | `(4,23.5)`–`(7,28.5)` | 1 | Reference-like lower-edge roof sliver |
+| `life.south-market` | `(7,23.5)`–`(10,28.5)` | 1 | Reference-like lower-edge public-market sliver |
+| `life.south-service` | `(10,23.5)`–`(13,28.5)` | 1 | Reference-like lower-edge service sliver |
+| `life.south-transit-west` | `(13,25.4)`–`(15.5,28.5)` | 1 | One-unit shelter setback plus lower-edge backdrop |
+| `life.south-transit-east` | `(15.5,25.4)`–`(18,28.5)` | 1 | One-unit shelter setback plus lower-edge backdrop |
+| `life.south-corner` | `(18,23.5)`–`(21.5,28.5)` | 1 | Keeps the crossing and street level visible |
 | `hidzu.west-north` | `(18.5,5.5)`–`(21.5,8.5)` | 5 | Private-street canyon |
 | `hidzu.west-mid` | `(18.5,8.5)`–`(21.5,11.5)` | 4 | Private-street canyon |
 | `hidzu.west-south` | `(18.5,11.5)`–`(21.5,15.35)` | 6 | Frames the checkpoint without rivaling the tower |
@@ -132,22 +132,22 @@ Every listed parcel is a separate identity, source/provenance record, collision 
 | `logistics.depth-north` | `(30,5.5)`–`(33,10)` | 6 | Logistics depth beyond the gate |
 | `logistics.depth-south` | `(30,10)`–`(33,14.5)` | 5 | Logistics depth and service-entrance frame |
 | `service.north` | `(30,15)`–`(33,18)` | 4 | Service street wall |
-| `service.terminal` | `(30,18)`–`(33,21)` | 3 | Camera-loop terminal frontage |
-| `service.mid` | `(30,21)`–`(33,24)` | 5 | Right-frame identity wall |
-| `service.workshop` | `(30,24)`–`(33,27)` | 4 | Workshop/service identity |
+| `service.terminal` | `(30,18)`–`(33,21)` | 1 | Camera-loop frontage held below the sneak-mouth sight wedge |
+| `service.mid` | `(30,21)`–`(33,24)` | 1 | Lower-edge right-frame frontage held below the sneak-mouth sight wedge |
+| `service.workshop` | `(30,24)`–`(33,27)` | 1 | Lower-edge workshop strip held below the sneak-mouth sight wedge |
 | `service.shrine-wall` | `(30,27)`–`(33,30)` | 3 | Shrine threshold and south return |
-| `safehouse.workshop` | `(12,28.5)`–`(15.5,31)` | 2 | Low safehouse-lane frontage |
-| `safehouse.home` | `(12,31)`–`(15.5,37)` | 4 | Safehouse quarter identity |
-| `safehouse.corner` | `(20.5,31)`–`(24.5,37)` | 3 | Frames the court behind the camera |
-| `safehouse.service-edge` | `(24.5,30)`–`(28,37)` | 3 | Low service-return boundary |
+| `safehouse.workshop` | `(12,28.5)`–`(15.5,31)` | 1 | Low safehouse-lane foreground sliver |
+| `safehouse.home` | `(0.5,32)`–`(4,38)` | 4 | Safehouse identity shifted south-west outside the hero lower band |
+| `safehouse.corner` | `(4,32)`–`(8,38)` | 3 | Safehouse identity shifted south-west outside the hero lower band |
+| `safehouse.service-edge` | `(-3,31)`–`(0.5,38)` | 3 | Service-edge identity shifted south-west outside the hero lower band |
 
-`hidzu.landmark` is the only mass above seven floors and is at least two floors taller than every other parcel. Its podium may expose three `2.4`-unit facade bays but remains one landmark identity. Foreground parcels intersecting `y >= 23.5` and `x <= 21.5` remain at or below three floors with roof props below one unit so the crossing, people, barrier, and tower base stay visible.
+`hidzu.landmark` is the only mass above seven floors and is at least two floors taller than every other parcel. Its podium may expose three `2.4`-unit facade bays but remains one landmark identity. The south-transit pair, south-market, south-service, south-corner, south-west, safehouse workshop, and the service terminal/mid/workshop strip are exactly one floor with roof props at or below `0.5` unit. Taller safehouse masses remain south-west of the hero lower-band wedge. Three explicit no-occlusion wedges run from the camera to the transit apron, café patio, and sneak mouth; no parcel, fixture, or backdrop above one floor may intersect them.
 
 ### 6.5 Public-realm fixtures and authored presence
 
 | Element | Placement | Required presentation |
 |---|---|---|
-| Transit shelter | `(14.2,23.5)`–`(16.8,24.4)` | Bench, timetable screen toward camera, two seated and one standing passenger slots |
+| Transit shelter | `(14.2,23.5)`–`(16.8,25.4)` | Bench, timetable screen toward camera, two seated and one standing passenger slots; the extra one-unit apron is its projection clearance setback |
 | Café terrace | `(7.3,20.6)`–`(9.8,21.4)` | Awning, two tables, exactly two seated patron slots along the life-street edge |
 | Outbound terminal fixture | centred `(17.5,22.9)` | `1×0.6×1.6` unit camera-facing kiosk, clear of the shelter |
 | Cache terminal fixture | centred `(25.2,18.0)` | `1×0.6×1.6` unit camera-facing kiosk beside checkpoint, outside road lane |
@@ -217,9 +217,9 @@ The stable loop IDs and localized names survive; their world geometry is replace
 
 These stable IDs and purposes preserve the operation's mission grammar; their old coordinates and polygons are not preserved.
 
-### 6.8 Hero-camera derivation
+### 6.8 Hero-camera freeze
 
-The camera family remains `1440×900`, orthographic isometric, `45°` azimuth, `30°` elevation. The old target `{29,22}` and its crop registration are retired. The v6 camera solver derives translation and orthographic scale from the plan once, records the exact result in the versioned recipe, and may not move individual geometry to compensate for a bad crop.
+The requester-approved hero camera is frozen at `1440×900`, orthographic isometric, `45°` azimuth, `30°` elevation, target `{21.177121,17.126983,1.621967}`, and orthographic scale `25.687085`. The old target `{29,22}` and its crop registration are retired. The failed first-greybox candidate `{21.734958,18.626983,2.499995}` at scale `25.661101` remains failure evidence. Source-facade dressing, lighting, state bakes, cutout exports, runtime profiles, and regression captures must reproduce the frozen camera exactly; none may move mission geometry, retarget, or rescale to compensate for dressing.
 
 The solver must place these plan facts within the following normalized screen boxes in the raw greybox:
 
@@ -231,13 +231,15 @@ The solver must place these plan facts within the following normalized screen bo
 | Barrier and guard | `x 0.58–0.72`, `y 0.40–0.56` |
 | HIDZU identity face/crown | `x 0.57–0.76`, `y 0.08–0.35` |
 | Sneak-seam mouth | `x 0.54–0.66`, `y 0.55–0.68` |
-| Foreground roof band | lower edge only, at most `0.18H` |
+| Foreground roof band | each tagged foreground roof's projected vertical span is at most `0.18H`; the former `1 - top` diagnostic is invalid and retired |
 
 The tower crown and complete future HIDZU face must be inside the frame. The barrier and tower must overlap vertically as one destination/obstacle read. No other silhouette may exceed seven floors or compete with the landmark.
 
+Before any source-facade render, a seed-only projection preflight projects the parcel cuboids and three staging wedges through the frozen camera. It fails unless every named foreground parcel is exactly one floor; roof props are `<=0.5` unit; each displaced safehouse mass clears the lower band; the maximum tagged roof span is `<=0.18H`; and the transit apron, café patio, and sneak-mouth polygons project to at least `80`, `60`, and `2,500` pixels respectively with no intersecting parcel, fixture, fence segment, or declared perimeter mass above one floor. The approved amended greybox measured `0.116993H`, `3,032`, `1,228`, and `6,752` respectively. Dressed rendered masks remain the truth and must retain at least `80`, `60`, and `2,500` visible pixels.
+
 ### 6.9 Replacement probe fixture
 
-The 2026-08-08 24-point fixture is retained only with the rejected v4/v5 records. V6 authors a new fixture from this plan with `0.32` clearance.
+The 2026-08-08 24-point fixture is retained only with the rejected v4/v5 records. The requester-approved v6 invariant is the following 22-static/four-dynamic fixture with `0.32` clearance. Its baseline raw hero is `v6-raw-greybox-1440x900.png`, SHA-256 `ddf5a224da0eec2fe8af5b1c0bf2f7ca8f5e618080ef1d63b4a18c4c72aa7369`.
 
 Static geometry probes:
 
@@ -261,9 +263,9 @@ Static geometry probes:
 | 16 | `(20,18.5)` | rejected inside `life.junction-corner` |
 | 17 | `(26,11)` | rejected inside `hidzu.landmark` |
 | 18 | `(31.5,19.5)` | rejected inside `service.terminal` |
-| 19 | `(13.5,33)` | rejected inside `safehouse.home` |
+| 19 | `(2.2,34.5)` | rejected inside relocated `safehouse.home` |
 | 20 | `(25.5,16.2)` | rejected inside `gate.guard-booth` |
-| 21 | `(-0.5,22)` | rejected outside district |
+| 21 | `(-3.5,22)` | rejected outside amended district extension |
 | 22 | `(23,38.5)` | rejected outside district |
 
 Dynamic access probes:
@@ -284,7 +286,7 @@ Dynamic access probes:
 
 ## 8. Effects on other systems
 
-- `Level0LayoutContract`, building footprints, collision, entrances, anchor coordinates, camera constants, occlusion regions, proof starts, minimap geometry, surveillance geometry, route tests, and position-pinning tests must be regenerated together from `get205-reference-native-v6`.
+- `Level0LayoutContract`, building footprints, collision, entrances, anchor coordinates, frozen camera constants, occlusion regions, proof starts, minimap geometry, surveillance geometry, route tests, and position-pinning tests must be regenerated together from the approved `get205-reference-native-v6` seed.
 - Mission IDs, route-loop IDs and localized names, interaction IDs, facts, objectives, clock rules, HUD behavior, dialogue, persistence semantics, profile selection, tiled environment delivery, per-identity cutouts, and lighting-state preload/prefetch/crossfade interfaces remain stable.
 - The gate adds a real dynamic navigation boundary tied to existing verification state. GET-208 later supplies deeper detection/trespass behavior without changing this geometry.
 - The transit queue remains the only active blending context in GET-205; `blend.delivery_activity` stays authored but unavailable until GET-208.
@@ -302,19 +304,25 @@ Dynamic access probes:
 
 - A closed barrier blocks only the controlled direct lane, never the public junction, life street, approach, or sneak seam.
 - Failed asset, layout, collision, or camera validation leaves the currently published production world intact; v6 builds and validates in staging.
-- If the plan greybox fails route connectivity, source/proportion feasibility, or the raw five-question read, facades and state bakes do not begin.
+- If projection preflight, route connectivity, source/proportion feasibility, or dressed mission-legibility masks regress from the approved baseline, source-facade work stops and state bakes do not begin.
 - Restart Attempt restores gate state and player position through the existing attempt baseline; it does not restore an old coordinate system.
 - Existing initial texture failure, state-transition failure, stale-generation, and rollback rules remain unchanged.
 
 ## 11. Content-authoring requirements
 
-- Build one versioned plan manifest from sections 6.1–6.9 before Blender work. The manifest is the only source for footprints, anchors, routes, gate collision, proof starts, and the replacement probe fixture.
+- Keep one versioned plan manifest from sections 6.1–6.9 as the only source for footprints, anchors, routes, gate collision, proof starts, the frozen camera, and the replacement probe fixture.
 - Derive a v6 Blender scene from recoverable Neo Tokyo 2 source geometry. Every production building/prop keeps named source object, material, transform, license/provenance, and authored-change records.
+- Treat every GET-204/v4/v5 donor `.blend` as immutable input. The versioned v6 derivative owns texture repair: every image used by retained geometry is remapped to the durable local licensed cache or packed into the derivative, then the saved scene is reopened and audited. Rendering is blocked unless the reopened scene reports zero missing external images; an in-memory basename remap or aggregate repaired-link count is not durable evidence.
+- Realize all 27 parcels as visible Neo Tokyo 2 buildings or kit-bashed source assemblies fitted to the frozen section-6 envelopes. The saved scene and generated manifest must agree on each parcel's source collection, retained source objects/materials, source and placed bounds, transforms, mesh complexity/hash evidence, and authored crop/cap/interior-closure work. A parcel with no retained source geometry, or whose apparent facade is supplied by a camera-visible procedural envelope, emissive decal, painted window grid, or generated facade, fails source acceptance.
+- The approved greybox remains the massing authority, but modeled source relief uses a dressed-source/greybox silhouette IoU floor of `0.85` rather than the rejected proxy-box implementation's `0.90`. The tolerance covers facade depth, balconies, ledges, crowns, pipes, and bounded roof equipment only. The exact footprint, floor rhythm, mission fixtures, routes, staging wedges, and frozen camera remain immutable.
 - Use 12–16 materially visible per-identity cutouts in the hero neighborhood; additional safehouse/logistics identities may exist outside the hero. Never merge a continuous wall into one depth anchor.
 - Outside-bounds backdrop mass is allowed only behind the north/west/east frame edges, never as reachable fake geometry.
-- The plan gate package contains: dimensioned top-down plan, parcel/anchor overlay, raw fixed-camera greybox, Reference 2 side-by-side, occlusion-aware identity masks, route/probe report, and an annotated answer key supplied only after the requester performs the blind read.
-- The raw greybox must answer all five questions without HUD labels: where to go, what blocks the direct route, where to blend, what to hack, and where to sneak.
-- After plan approval, freeze exact camera constants and accepted plan/greybox frames as v6 baselines. Only then begin source-facade identity and wet blue-black look work.
+- The accepted greybox package contains the approved dimensioned plan, seed-only projection-preflight report, raw fixed-camera greybox, Reference 2 side-by-side, occlusion-aware identity masks, route/probe report, and answer key. The requester approved the raw frame only after independently identifying destination, obstacle, blend, hack, and sneak.
+- Source-facade work must rerun the same mission-legibility masks. Dressing may not bury any approved read. Keep the sneak mouth unlit and high-contrast against the lit gate; retain the transit group on its declared bench slots and use the shelter screen glow to support its thin `89 px` approved read; keep Needle visibly tied to the gate approach.
+- The source-facade hero uses real Neo Tokyo 2 identities, detailed warm and cold windows, the locked wet blue-black look, one dominant HIDZU tower identity, and the real restricted-area treatment. Random ambient NPC allocation remains prohibited.
+- Build the HIDZU identity as project-authored dimensional architecture. The landmark receives a projecting vertical steel frame with facade brackets/mount rails, dark sign box and returns, hex mark, and extruded letters with restrained emissive faces; the checkpoint receives a matching dimensional box sign and small unit plates. Banner/image planes, decals, and post-render sign panels fail. Before the full hero render, a low-sample preview from the frozen camera must prove every required glyph is readable and not mirrored.
+- Add a bounded, provenance-recorded clutter layer after the source assemblies pass: storefronts and varied source roof units on the parcels; stalls, awnings, vending machines, poles/catenary, bins, planters, roadside cabinets, small shop boards, and non-emissive district-wayfinding fixtures along the life street and junction. Each object must serve building identity, navigation, surveillance, human scale, or civic atmosphere; protected routes, clearance discs, staging sight wedges, and the dark sneak mouth stay clear.
+- Apply restrained depth fog, physically motivated practical falloff, the established AgX/Filmic wet-blue-black grade, and subtle neutral grain only after geometry, clutter, material, light, and legibility gates pass. This finish cannot import reference pixels, act as tint-only state authority, add bloom/ripple blur, composite reflections, or hide missing architecture.
 
 ## 12. Edge cases and prohibited shortcuts
 
@@ -324,8 +332,12 @@ Dynamic access probes:
 - Do not satisfy identity count through hidden objects, token slivers, one wall split into fake IDs, or declared recipe count without rendered masks.
 - Do not bake actors into environment plates or replace authored mission presence with random NPC allocation.
 - Do not use AI-generated concept geometry as production source identity.
+- Do not count a source prefix, cropped mesh count, texture relink, or hidden licensed object as proof that a parcel visibly uses real kit architecture. The rendered source geometry and the saved-scene provenance record must agree.
+- Do not retain a camera-visible parcel envelope merely to manufacture near-perfect silhouette overlap. Collision/mask proxies remain non-rendering; any interior closure must be inset behind the modeled source facade and must not appear as the building identity.
+- Do not overwrite a recoverable donor master, depend on a deleted temporary texture cache, accept a render-time-only texture remap as durability evidence, or render while any unpacked image path is unresolved after save/reopen.
+- Do not use the replica prototype's altered coordinates, three-wide-donor life wall, approach-straddling foreground mass, widened streets, camera, plane signs, or decals as production instructions. Its images and scripts demonstrate assembly mechanics and a minimum modeled-detail contrast only; the frozen v6 manifest and this contract remain authority.
 - Do not weaken the wet-look, proportion, source-provenance, three-state delivery, accessibility, or live-evidence gates during the topology rebuild.
-- Do not produce full-resolution state masters, cutouts, runtime assets, or publication changes before requester approval of the reference-native plan greybox.
+- Do not produce full-resolution state masters, cutouts, runtime assets, or publication changes before requester approval of the source-derived blue-hour hero.
 
 ## 13. Removed behavior
 
@@ -346,11 +358,22 @@ Dynamic access probes:
 
 ### Plan gate
 
+- Gate accepted by the requester on 2026-08-13. The approved raw baseline is `v6-raw-greybox-1440x900.png`, SHA-256 `ddf5a224da0eec2fe8af5b1c0bf2f7ca8f5e618080ef1d63b4a18c4c72aa7369`.
 - Inspect the dimensioned plan and confirm that it is Reference 2's implied Y/T intersection and mission staging extended into a safehouse quarter, logistics depth, service alley, and one sneak bypass—not another four-block reinterpretation.
 - Run all 22 static and four dynamic probes with exact recorded results; every required anchor has clearance and every required route state is connected as specified.
 - View the raw `1440×900` greybox before the key. A stranger can point to the HIDZU destination, checkpoint obstacle, transit blend, visible terminal, and shadow bypass. Any wrong or missing answer rejects the plan.
-- Confirm the tower/face is fully in frame, the gate and tower read together, the street-level crossing is unobstructed, and foreground roofs consume no more than `18%` of frame height.
+- Confirm the tower/face is fully in frame, the gate and tower read together, the street-level crossing is unobstructed, and every tagged foreground roof stays within the corrected `18%` projected-span gate.
 - Occlusion-aware masks show at least ten materially visible identities, each at least `0.005` of full frame, and no identity exceeds `0.15`. Metrics support the visual decision; they cannot pass a failed read.
+
+### Source-hero gate
+
+- Inspect the saved Blender scene and manifest: all 27 parcels contain visible retained Neo Tokyo 2 source geometry with named collection/object/material/transform/bounds/hash evidence, and the scene contains zero camera-visible procedural parcel envelopes or generated replacement facades.
+- Reopen the saved v6 derivative and inspect every image dependency. The report contains zero missing external images, names the packed or durable repo-local licensed path for each retained image, and proves that no historical donor master was modified.
+- Compare the source-only building silhouette with the approved raw greybox at the frozen camera. IoU is at least `0.85`; every deviation is attributable to modeled facade/roof relief rather than a footprint, parcel-height, fixture, route, camera, or sight-wedge change.
+- Inspect a facade-detail crop at `200%`. Modeled frames, ledges, balconies/storefront depth, pipes, and varied roof equipment must read as geometry rather than painted rectangles. Provenance counts cannot substitute for this visual check.
+- Inspect the low-sample HIDZU parity preview and final hero at the frozen camera. The tower and gate signs read forward, show physical mounts/returns/depth, and contain no camera-facing plane/decal substitute.
+- Inspect the life street and junction clutter inventory and render. Each retained object has a declared source and purpose, routes/clearances remain green, HIDZU stays dominant, and the sneak mouth remains dark.
+- Apply and judge depth fog, practical falloff, the AgX/Filmic grade, and subtle neutral grain only after the ungraded source/material/light frame passes. All existing ART-016, mission-legibility, identity, window, and color-discipline gates remain green.
 
 ### Live gate
 

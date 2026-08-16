@@ -102,7 +102,7 @@ Naila and Brant are optional contacts. Both remain reachable before and after mi
 
 The mission remains completable after consulting both, one, or neither.
 
-The mechanical order is fixed—briefing and optional preparation precede the immutable `OperationAttemptBaseline`. [[32 GET-205 Reference-Native Layout Contract]] fixes the v6 physical seed for the safehouse, Lira, Naila, Brant, and departure anchors; the player may visit either, both, or neither optional contact without forced backtracking. The exact seed remains reversible under `OPEN-LAYOUT-007` until plan/greybox approval, but implementation may not create the baseline before optional preparation is complete.
+The mechanical order is fixed—briefing and optional preparation precede the immutable `OperationAttemptBaseline`. The requester-approved [[32 GET-205 Reference-Native Layout Contract]] fixes the v6 physical seed for the safehouse, Lira, Naila, Brant, and departure anchors; the player may visit either, both, or neither optional contact without forced backtracking. Implementation may not move those anchors or create the baseline before optional preparation is complete.
 
 ## 5. Two primary timings
 
@@ -317,7 +317,7 @@ The continuous read-only Paranoia slider, current named tier, and ability states
 - Full outer loop target: two to three minutes.
 - Normal play uses the requester-approved close street-first frame; maximum manual zoom-out reaches the complete mission-neighborhood overview. The v6 camera derives from the accepted reference-native plan greybox rather than inherited GET-204 constants.
 - Runtime projection: 64×32, 2:1 isometric.
-- The requester-owned Neo Tokyo 2 pack is recomposed from named source assets in one Blender 5.0.1 master; project-authored gap fills are limited to public realm and gameplay needs. The approved AI-assisted concept guides composition, camera, and value but never substitutes for production geometry.
+- The requester-owned Neo Tokyo 2 pack is recomposed from named source assets in one Blender 5.0.1 master. Every v6 parcel visibly uses real modeled source geometry with parcel-complete provenance; camera-visible procedural envelopes, generated facades, painted-window shells, and provenance-only claims cannot substitute for architecture. Project-authored gap fills are limited to declared public-realm, building-identity, navigation, surveillance, human-scale, and civic-atmosphere needs. The approved AI-assisted concept guides composition, camera, and value but never substitutes for production geometry.
 - The locked blend's value/massing/proportion/source relationship is authoritative, but its AI-generated rooftop garnish and baked figures are not. Production roofs may be quieter; every retained prop has named Neo Tokyo 2 or project-authored gameplay/public-realm provenance.
 - Roads, sidewalks, curbs, alleys, crossings, entrances, public activity, hiding, and surveillance form the district.
 - Stable traversal IDs keep localized player-facing names: `loop.public-contact` = **Transit Road**, `loop.logistics-service` = **Market Ring**, and `loop.outer-escape` = **Outer Space**.
